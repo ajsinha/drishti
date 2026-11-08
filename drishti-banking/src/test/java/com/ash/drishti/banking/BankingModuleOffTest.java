@@ -129,4 +129,17 @@ class BankingModuleOffTest {
         assertThat(registry.functionOn("BI")).isTrue();
         assertThat(registry.functionOn("ECON")).isTrue();
     }
+
+    @Test
+    void theConsoleIsToldWhatIsGone() throws Exception {
+        // what the console draws every door from (ACCESS_MODEL.md section 2): the module not loaded with why, its lenses not open, its
+        // functions not available with the words to say; the public about answer lists the modules loaded
+        String auth = "Bearer " + tokens.mint("rita", List.of("risk"), 300);
+        String me = mvc.perform(get("/api/v1/modules").header("Authorization", auth)).andReturn().getResponse().getContentAsString();
+        assertThat(me).contains("\"off\":[{\"id\":\"banking\"").contains("drishti.modules.banking.enabled");
+        assertThat(me).contains("\"word\":\"VAR\",\"module\":\"banking\"").contains("VAR is not available to you: ask your administrator");
+        assertThat(me).doesNotContain("\"id\":\"risk\"").contains("\"id\":\"world\"").doesNotContain("\"word\":\"ECON\"");
+        String about = mvc.perform(get("/public/about")).andReturn().getResponse().getContentAsString();
+        assertThat(about).contains("\"modules\":[").doesNotContain("\"banking\"").contains("\"economy\"");
+    }
 }

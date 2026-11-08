@@ -73,7 +73,8 @@ async def build_home(request: Request, type_id: str = "", q: str = "", tiles: st
     ctx = {"me": ident(request), "bi_me": getattr(request.state, "bi_me", None) or {},
            "pack_switcher": getattr(request.state, "pack_switcher", None) or [], "PRODUCT": ""}
     reg = build_registry.loaded()
-    mine = [t for t in reg.types() if all(menus.holds(request, str(n), ctx) for n in t.requires)]
+    from core import modules
+    mine = [t for t in reg.types() if not modules.tag_hidden(t.domain) and all(menus.holds(request, str(n), ctx) for n in t.requires)]
     rows = await build_registry.gather(request, mine)
     lineage = build_registry.used_by(rows)
     words = [w for w in q.lower().split() if w]

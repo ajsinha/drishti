@@ -353,30 +353,26 @@ class BackendClient:
     async def command(self, text: str, ident=None) -> dict:
         return await self._send("POST", "/command", ident, json={"text": text})
 
-    async def var(self, method: str, path: str, ident, /, body=None, raw: bool = False, accept: str = "", **params) -> Any:
-        """The VaR engine (/api/v1/var, docs/guides/VAR_GUIDE.md section 11), as the user. The first answer of a business date
-        loads its vectors into the server's memory: it may take longer than a page read, so this waits up to a minute. ``accept``
-        (with ``raw``) asks for another format: the Arrow stream of a P&L path or a contribution table (2.9.7). The first three are
-        positional only: the lens's ``method`` (2.9.7) is one of the engine's parameters."""
-        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 60.0}
+    async def engine(self, method: str, path: str, ident, /, body=None, raw: bool = False, accept: str = "", timeout: float = 60.0,
+                     **params) -> Any:
+        """A compute engine's API, as the user (docs/architecture/DOMAIN_MODULES.md section 5, C7: the core client names no engine; a
+        module's typed calls are its own, over this one). ``path`` starts after /api/v1 (``/risk/var/scope``); a list value is sent as a
+        repeated parameter. The first answer of a business date loads the engine's inputs into the server's memory, so this waits up to
+        ``timeout`` seconds (a minute). ``raw`` returns the bytes and headers (an export); ``accept`` (with ``raw``) asks for another format
+        (the Arrow stream)."""
+        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "", [])}, "timeout": timeout}
         if body is not None:
             kw["json"] = body
         if raw:
             kw.update(raw=True, with_headers=True)
         if accept:
             kw["headers"] = {"Accept": accept}
-        return await self._send(method, "/var" + path, ident, **kw)
+        return await self._send(method, path, ident, **kw)
 
-    async def frtb(self, method: str, path: str, ident, /, **params) -> Any:
-        """Position sensitivities and FRTB-SA (/api/v1/frtb, /api/v1/sensitivities, /api/v1/risk-factors; docs/guides/FRTB_SA_GUIDE.md section
-        9), as the user. ``path`` starts at /api/v1 (``/frtb/sa``); a list value is sent as a repeated parameter (``override``). The first
-        answer of a date reads its sensitivities: it may take longer than a page read, so this waits up to a minute."""
-        return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
-
-    async def simm(self, method: str, path: str, ident, /, **params) -> Any:
-        """ISDA SIMM (/api/v1/simm; docs/guides/SIMM_GUIDE.md section 9), as the user. ``path`` starts at /api/v1 (``/simm``); a list value is
-        sent as a repeated parameter (``override``). The netting-set list computes every netting set of the date: this waits up to a minute."""
-        return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
+    async def modules(self, ident) -> dict:
+        """What the person may see (docs/architecture/ACCESS_MODEL.md section 2): the modules loaded and not (with why), the lenses open to
+        them and the functions they may not use (``GET /api/v1/modules``, as the person; core/modules.py reads it)."""
+        return await self._send("GET", "/modules", ident, timeout=10.0)
 
     async def explain_number(self, method: str, path: str, ident, body=None, **params) -> Any:
         """One Explain for every number (/api/v1/explain, docs/architecture/SHARED_SCREENS.md section 3), as the user. ``path`` starts after
@@ -396,16 +392,6 @@ class BackendClient:
         if raw:
             kw.update(raw=True, with_headers=True)
         return await self._send(method, "/pivot" + path, ident, **kw)
-
-    async def exposure(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
-        """The exposure engine (/api/v1/exposure, docs/guides/EXPOSURE_GUIDE.md section 11), as the user. The first answer of a business
-        date loads its paths (or maps its hot file): it may take longer than a page read, so this waits up to a minute."""
-        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 60.0}
-        if body is not None:
-            kw["json"] = body
-        if raw:
-            kw.update(raw=True, with_headers=True)
-        return await self._send(method, "/exposure" + path, ident, **kw)
 
     async def sources(self, ident=None) -> dict:
         return await self._get("/sources", ident)

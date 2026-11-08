@@ -21,12 +21,13 @@ from urllib.parse import urlencode
 from core.build_registry import Item, ObjectType, register
 from core.build_types import _ms, _rows
 from routes.common import ident
+from plugins.banking import risk_api
 
 
 async def baskets(request) -> list[Item]:
     """The VaR baskets the person may open (their own and those shared with them): a scope of positions and trades kept by name."""
     out = []
-    for b in _rows(await request.app.state.backend.var("GET", "/baskets", ident(request)), "baskets"):
+    for b in _rows(await risk_api.var(request.app.state.backend, "GET", "/baskets", ident(request)), "baskets"):
         name = str(b.get("name") or "")
         if name:
             owner = str(b.get("owner") or "")

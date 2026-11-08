@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Exposure commands (routes/exposure_routes.py): EXP opens the exposure explorer (/exposure) on the scope it means, as typed or spaced;
+"""Exposure commands (plugins/banking/routes/exposure_routes.py): EXP opens the exposure explorer (/exposure) on the scope it means, as typed or spaced;
 an id or a link of the retired stored exposure profile (EXP EXP-ALDERSHOT-FRA, /v/exposure-profile/EXP-ALDERSHOT-FRA) opens the same
 netting set there with a notice (docs/guides/EXPOSURE_GUIDE.md section 3)."""
-from routes.exposure_routes import exp_command, retired_link
+from plugins.banking.routes.exposure_routes import exp_command, retired_link
 
 
 def test_every_exp_command_opens_the_explorer():
@@ -56,5 +56,5 @@ def test_predeal_typed_says_its_screen_is_under_construction_and_names_the_servi
     r = client.get("/go?q=PREDEAL CP-ALDERSHOT LIKE 1000001 250M <GO>", follow_redirects=False)
     where = unquote(r.headers["location"])
     assert r.status_code == 303 and where.startswith("/t?error=PREDEAL")
-    assert "under construction" in where and "/api/v1/exposure/predeal" in where and "drishti.py exposure predeal" in where
+    assert "under construction" in where and "/api/v1/risk/exposure/predeal" in where and "drishti.py exposure predeal" in where
     assert exp_command("PREDEAL CP-ALDERSHOT".split()) is None                       # not an explorer command

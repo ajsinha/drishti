@@ -12,11 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Regulatory VaR's screens (routes/var_regulatory_routes.py; VAR_GUIDE.md sections 18.10, 18.11 and 18.14): the commands VAR <scope> BACKTEST,
+"""Regulatory VaR's screens (plugins/banking/routes/var_regulatory_routes.py; VAR_GUIDE.md sections 18.10, 18.11 and 18.14): the commands VAR <scope> BACKTEST,
 VAR <scope> STATS <period> and VAR REPORT <report> <period> open their pages; the pages are shells; their JSON goes to the server's VaR
 engine as the person, with the parameters checked and nothing else passed on; a file comes back as the server made it."""
-from routes.var_routes import var_command
-from routes.var_regulatory_routes import regulatory_command
+from plugins.banking.routes.var_routes import var_command
+from plugins.banking.routes.var_regulatory_routes import regulatory_command
+import engine_fakes  # noqa: E402
 
 
 def test_the_commands_open_their_pages():
@@ -47,7 +48,7 @@ def test_the_json_goes_to_the_engine_as_the_person(client, backend, monkeypatch)
         if raw:
             return b"PK\x03\x04", {"content-disposition": 'attachment; filename="x.xlsx"'}
         return {"ok": 1}
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     assert client.get("/api/var/backtesting?scope=DESK:RATES").json() == {"ok": 1}
     assert seen[-1] == ("GET", "/backtesting", None, {"scope": "DESK:RATES", "asOf": ""})
     r = client.get("/api/var/backtesting?scope=BANK&format=xlsx")

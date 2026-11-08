@@ -14,10 +14,10 @@
 
 """The MR cube in the console (docs/guides/MR_CUBE_GUIDE.md): a Pivot preset (config/pivot-presets.yaml ``mr``; the screen is
 ``/pivot?preset=mr``, terminal/pivot.html on source ``var`` with the MR lens: the headline strip, the lens controls, the time-travel slider and tabs
-A, B and C drawn by web/static/js/drishti_mr-lens.js). This module is its word and its lens's API, not a page: ``MCUBE <GO>`` opens the preset's
+A, B and C drawn by plugins/banking/static/js/drishti_mr-lens.js). This module is its word and its lens's API, not a page: ``MCUBE <GO>`` opens the preset's
 landing (the source's defaultView: desks by risk class, VaR); ``MCUBE <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO>``
 lays what was typed over it (the preset form of the PIVOT grammar); ``MCUBE @owner/name <GO>`` opens a saved pivot view; ``/mcube`` is the older
-address of the preset. The lens's own answers are the server's ``/api/v1/pivot/mr/...``,
+address of the preset. The lens's own answers are the server's ``/api/v1/risk/mr/...``,
 asked as the person through the same-origin proxy ``/api/pivot/mr/...``; the grid is the pivot engine's (pivot_routes.py)."""
 from __future__ import annotations
 
@@ -28,7 +28,9 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.backend import BackendError
 from core.csrf import json_body
+from plugins.banking import risk_api
 from routes.common import ident
+from core import plugins as _plugins
 
 router = APIRouter(include_in_schema=False)
 
@@ -112,7 +114,7 @@ async def page(request: Request, text: str = "", view: str = "", date: str = "")
 
 async def _call(request: Request, method: str, path: str, body=None, **params):
     try:
-        return JSONResponse(await request.app.state.backend.pivot(method, "/mr" + path, ident(request), body=body, **params),
+        return JSONResponse(await risk_api.mr(request.app.state.backend, method, path, ident(request), body=body, **params),
                             headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return _problem(e)
@@ -140,3 +142,17 @@ async def post(request: Request, action: str):
     if action not in ("headline", "detail", "history", "what-if"):
         return JSONResponse({"detail": "no such MR cube action"}, status_code=404)
     return await _call(request, "POST", "/" + action, await _body(request))
+
+
+# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2 and C5) ---------------------------------------------------------------
+def _ccube(typed: str):
+    """CCUBE: the Pivot's preset ccr (core/pivot_presets.py), under construction."""
+    if [w.upper() for w in typed.split()[:1]] != ["CCUBE"]:
+        return None
+    from core import pivot_presets
+    return RedirectResponse(pivot_presets.command(typed.split()) or "/pivot?preset=ccr", status_code=303)
+
+
+_plugins.command(redirect_for, needs=("VAR", "PIVOT", "MCUBE"))               # MCUBE [scope BY ...]: the pivot screen with the MR lens
+_plugins.command(_ccube, needs=("EXP", "PIVOT"))                              # CCUBE: the counterparty-risk cube
+_plugins.preset("mr", parse)                                                  # the MR preset's words lay a view over its landing

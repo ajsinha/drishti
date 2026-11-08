@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Drishti Trading's landings (docs/admin/EDITIONS.md › The design as built, section 14): the read-only figures of the Trader desk and Desk head, worked out
-by core/trading_landing.py from the servers' own answers as the person, and their "View as" choice.
+by plugins/banking/trading_landing.py from the servers' own answers as the person, and their "View as" choice.
 
 ``GET /api/home/trading/{part}``: ``me`` (who "my" is, and the picker's choices when the person may pick), ``valuations`` (P&L today, by
 book and trader, movers, DV01, the largest counterparty share), ``blotter`` (today's trades), ``risk`` (VaR, limits, positions),
@@ -21,7 +21,10 @@ book and trader, movers, DV01, the largest counterparty share), ``blotter`` (tod
 ``?for=desk`` a trader's figures are their desk's (the Desk head landing);
 ``POST /api/home/trading/check`` (the new-trade check). Each for a signed-in person whose edition or lens shows the trades (``TRD``; the
 check also the words ``VAR`` and ``EXP``, whose engines answer the VaR and exposure what-ifs); else ``404 DRS-4023``. ``GET /home/trading/view-as?as=trader:<id>|desk:<id>`` keeps the person's
-choice in their settings (``tradingView``) when they may pick (no mapping, or an administrator); ``as=`` empty forgets it."""
+choice in their settings (``tradingView``) when they may pick (no mapping, or an administrator); ``as=`` empty forgets it.
+
+Drishti Market's figures (``GET /api/home/market/{desk,moves,quality}``, plugins/banking/market_landing.py) are served here too: the banking module's
+landings, never the core's. The trading role's landing rule is registered with the core (core/plugins.py, DOMAIN_MODULES.md C6)."""
 from __future__ import annotations
 
 from urllib.parse import quote
@@ -29,11 +32,15 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import trading_landing as tl
+from core import asof
+from plugins.banking import market_landing
+from core import plugins as _plugins
+from plugins.banking import trading_landing as tl
+from core.user_cache import cache_key
 from core.backend import BackendError
 from core.csrf import json_body
 from routes.common import ident
-from routes.edition_routes import _patch, edition_of
+from routes.edition_routes import _patch, edition_of, stale_days
 
 router = APIRouter(include_in_schema=False)
 
@@ -126,3 +133,37 @@ async def view_as(request: Request):
         return RedirectResponse(f"/t?error={quote('DRS-4004 View as is trader:<id> or desk:<id>')}", status_code=303)
     await _patch(request, {"tradingView": as_ or None})
     return RedirectResponse("/", status_code=303)
+
+
+@router.get("/api/home/market/{part}")
+async def market_figures(request: Request, part: str):
+    """Drishti Market's landings: ``desk`` (A's tiles and USD curves), ``moves`` (A's biggest moves) and ``quality`` (C's checks), worked
+    out from the market-data pack's own answers with this person's identity, lens and date box, read-only and cached briefly
+    (plugins/banking/market_landing.py). For a signed-in person whose edition (or lens) shows the curves (CRV); else 404 DRS-4023."""
+    ed = edition_of(request)
+    if getattr(request.state, "identity", None) is None:
+        return JSONResponse({"detail": "sign in first"}, status_code=401)
+    if part not in ("desk", "moves", "quality"):
+        return JSONResponse({"code": "DRS-4004", "detail": f"no market figures {part}: desk, moves or quality"}, status_code=404)
+    if not ed.active or not ed.commands() or not ed.command_shown("CRV"):
+        return JSONResponse({"code": "DRS-4023", "detail": f"market data is not part of {ed.title if ed.active else 'a landing'}"},
+                            status_code=404)
+    me = ident(request)
+    key = cache_key(request, "market", asof.current())             # server, user, roles, as-of and known-at, lens
+    backend = request.app.state.backend
+    if part == "desk":
+        out = await market_landing.desk(backend, me, key)
+    elif part == "moves":
+        out = await market_landing.moves(backend, me, key)
+    else:
+        out = await market_landing.quality(backend, me, stale_days(ed), key)
+    return JSONResponse(out, headers={"Cache-Control": "no-store"})
+
+
+def _trading_landing(request, ed, offered: list[str], me, mine: dict) -> str | None:
+    """Drishti Trading: the person's trading role (desk-head, trader) picks the first landing, below their own choice (EDITIONS.md 14)."""
+    role = tl.trading_role(ed, request.app.state.settings, me, mine) if ed._get("trading") else ""
+    return ed.landing_by_role("trading.landing-by-role").get(role) if role else None
+
+
+_plugins.landing_rule(_trading_landing)

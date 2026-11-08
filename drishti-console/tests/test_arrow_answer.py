@@ -26,6 +26,7 @@ pa = pytest.importorskip("pyarrow")
 
 from core import arrow_answer  # noqa: E402
 from arrow_server_stream import server_stream  # noqa: E402
+import engine_fakes  # noqa: E402
 
 MEDIA = arrow_answer.MEDIA
 
@@ -95,7 +96,7 @@ def test_var_tables_are_negotiated(client, backend, monkeypatch):
         if raw:
             return json.dumps(path).encode(), _Headers({"content-type": "application/json"})      # the server answered JSON: it goes as JSON
         return path
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     contrib = {"var": 12.0, "rows": [{"key": "T-1", "componentVar": 4.5, "partial": False}, {"key": "T-2", "componentVar": 7.5, "partial": True}]}
     path = contrib
     r = client.get("/api/var/scope/contributions?scope=BANK&by=trade", headers={"Accept": MEDIA + ", application/json;q=0.9"})
@@ -110,13 +111,13 @@ def test_var_tables_are_negotiated(client, backend, monkeypatch):
 
     async def var_arrow(method, p, ident, body=None, raw=False, accept="", **params):
         return stream, _Headers({"content-type": MEDIA})
-    monkeypatch.setattr(backend, "var", var_arrow, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var_arrow)
     r = client.get("/api/var/scope/contributions?scope=BANK", headers={"Accept": MEDIA})
     assert r.headers["content-type"] == MEDIA and r.content == stream                                   # the server's bytes as they came
 
     async def var_mixed(method, p, ident, body=None, raw=False, accept="", **params):
         return json.dumps({"rows": [{"x": "a"}, {"x": 1}]}).encode(), _Headers({"content-type": "application/json"})
-    monkeypatch.setattr(backend, "var", var_mixed, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var_mixed)
     r = client.get("/api/var/scope/contributions?scope=BANK", headers={"Accept": MEDIA})
     assert r.headers["content-type"].startswith("application/json") and r.json() == {"rows": [{"x": "a"}, {"x": 1}]}
 

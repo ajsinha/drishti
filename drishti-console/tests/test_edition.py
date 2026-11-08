@@ -364,7 +364,7 @@ MARKET_ABOUT = {"product": "Drishti Market", "tagline": "Curves, surfaces and fi
 
 @pytest.fixture
 def market():
-    from core import market_landing
+    from plugins.banking import market_landing
     from market_fake import MarketBackend
     market_landing.forget()
     yield MarketBackend()
@@ -522,7 +522,7 @@ TRADING_ABOUT = {"product": "Drishti Trading", "tagline": "Your books, your P&L 
 
 @pytest.fixture
 def trading():
-    from core import trading_landing
+    from plugins.banking import trading_landing
     from trading_fake import TradingBackend
     trading_landing.forget()
     yield TradingBackend()

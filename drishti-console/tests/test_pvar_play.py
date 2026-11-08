@@ -15,7 +15,7 @@
 """The VaR Playground's Parametric tab (docs/architecture/PARAMETRIC_VAR.md section 10): the page has two tabs, VaR (the grid) and
 Parametric (measure=parametric, the same link otherwise); the Parametric tab carries the panel; the grid and the workbook ask the engine
 with measure=parametric. PLAY PVAR is gone: no command, no menu item."""
-from routes.play_routes import play_command
+from plugins.banking.routes.play_routes import play_command
 from test_play import RISK_ABOUT, _app, _server
 
 

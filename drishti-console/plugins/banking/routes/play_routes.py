@@ -15,8 +15,8 @@
 """The VaR Playground (docs/architecture/VAR_PLAYGROUND.md, docs/guides/VAR_GUIDE.md section 3.10): ``PLAY VAR <scope|ids> <GO>`` opens
 ``/play?scope=...`` (or ``/play?ids=...``), every VaR figure of the scope worked out in a spreadsheet-like grid (positions across,
 scenarios down, at most 500 positions, the rest in one Rest of scope column) with a tall explanation beside it, and exported as an .xlsx of
-real formulas that recalculates in Excel, LibreOffice and Google Sheets. The page is a shell: web/static/js/drishti_var-playground.js fills it
-from ``/api/play/grid``, which asks the server's VaR engine (``/api/v1/var/playground``) as the person, so their nodes, roles and masks
+real formulas that recalculates in Excel, LibreOffice and Google Sheets. The page is a shell: plugins/banking/static/js/drishti_var-playground.js fills it
+from ``/api/play/grid``, which asks the server's VaR engine (``/api/v1/risk/var/playground``) as the person, so their nodes, roles and masks
 apply. ``/api/play/export.xlsx`` streams the workbook (100, 500, 1,000, 10,000 or all positions), ``/api/play/estimate`` says what each
 choice is before it is made, ``/api/play/template.xlsx`` is the empty workbook.
 
@@ -29,18 +29,20 @@ from __future__ import annotations
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
-from starlette.background import BackgroundTask
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.backend import BackendError
-from routes import var_routes
+from core.workbook_stream import stream
+from plugins.banking.routes import var_routes
 from routes.common import ident, render
+from plugins.banking import risk_api
+from core import plugins as _plugins
 
 router = APIRouter(include_in_schema=False)
 
 WORD = "PLAY"
-#: the metric after PLAY: each metric's playground adds its word here (VAR_PLAYGROUND.md section 13); FRTB: routes/frtb_routes.py; SIMM:
-#: routes/simm_routes.py
+#: the metric after PLAY: each metric's playground adds its word here (VAR_PLAYGROUND.md section 13); FRTB: plugins/banking/routes/frtb_routes.py; SIMM:
+#: plugins/banking/routes/simm_routes.py
 METRICS = ("VAR", "FRTB", "SIMM")
 #: the link's lens words and the engine's names for them
 LENS = {"h": "horizon", "m": "method", "q": "confidence", "esq": "esConfidence", "set": "set"}
@@ -57,10 +59,10 @@ def play_command(words: list[str], user: str) -> str | None:
         return "/play" if len(words) == 1 else None
     rest = words[2:]
     if words[1].upper() == "FRTB":                            # PLAY FRTB <scope>, PLAY FRTB RUN <id>: the FRTB-SA Playground
-        from routes.frtb_routes import play_frtb_command
+        from plugins.banking.routes.frtb_routes import play_frtb_command
         return play_frtb_command(rest)
     if words[1].upper() == "SIMM":                            # PLAY SIMM <netting set>, PLAY SIMM RUN <id>: the SIMM Playground
-        from routes.simm_routes import play_simm_command
+        from plugins.banking.routes.simm_routes import play_simm_command
         return play_simm_command(rest)
     if not rest:
         return "/play"
@@ -95,7 +97,7 @@ def link(scope: str, **lens) -> str:
 @router.get("/play")
 async def page(request: Request, scope: str = "", ids: str = "", ccy: str = "", h: str = "", m: str = "", q: str = "", esq: str = "",
                set: str = "", measure: str = ""):  # noqa: A002 (the link's word)
-    """The playground's shell; the grid, the explanation and the export load in place (web/static/js/drishti_var-playground.js)."""
+    """The playground's shell; the grid, the explanation and the export load in place (plugins/banking/static/js/drishti_var-playground.js)."""
     lens = var_routes.lens_of(request, h, m, q, esq, set)
     target = scope.strip() or ids.strip()
     # the page's tabs (PARAMETRIC_VAR.md section 10): the grid (VaR), and Parametric (measure=parametric): the same link otherwise
@@ -133,7 +135,7 @@ async def grid(request: Request):
     if not p.get("scope") and not p.get("ids"):
         return JSONResponse({"code": "DRS-5001", "detail": "give a VaR scope (scope=DESK:RATES) or ids (ids=POS-1,T-1001)"}, status_code=400)
     try:
-        return JSONResponse(await request.app.state.backend.var("GET", "/playground", ident(request), **p), headers={"Cache-Control": "no-store"})
+        return JSONResponse(await risk_api.var(request.app.state.backend, "GET", "/playground", ident(request), **p), headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return _problem(e)
 
@@ -143,20 +145,9 @@ async def estimate(request: Request):
     """Each export choice's size, recalculation time and the applications that open it, before it is made."""
     p = {k: v for k, v in _params(request).items() if k in ("scope", "ids", "ccy", "set", "asOf")}
     try:
-        return JSONResponse(await request.app.state.backend.var("GET", "/playground/estimate", ident(request), **p))
+        return JSONResponse(await risk_api.var(request.app.state.backend, "GET", "/playground/estimate", ident(request), **p))
     except BackendError as e:
         return _problem(e)
-
-
-async def _stream(request: Request, path: str, params: dict, fallback: str):
-    try:
-        upstream = await request.app.state.backend.open_download(path + ("?" + urlencode(params) if params else ""), ident(request))
-    except BackendError as e:
-        return _problem(e)
-    disposition = upstream.headers.get("content-disposition") or f'attachment; filename="{fallback}"'
-    return StreamingResponse(upstream.aiter_bytes(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                             background=BackgroundTask(upstream.aclose),
-                             headers={"Content-Disposition": disposition, "Cache-Control": "no-store"})
 
 
 @router.get("/api/play/export.xlsx")
@@ -166,11 +157,28 @@ async def export(request: Request):
     p.pop("view", None)
     if not p.get("scope") and not p.get("ids"):
         return JSONResponse({"code": "DRS-5001", "detail": "give a VaR scope or ids"}, status_code=400)
-    return await _stream(request, "/var/playground.xlsx", p, "var-playground.xlsx")
+    return await stream(request, risk_api.path("/var/playground.xlsx"), p, "var-playground.xlsx")
 
 
 @router.get("/api/play/template.xlsx")
 async def template(request: Request, positions: int = 10, scenarios: int = 509):
     """The empty workbook: paste scenario PVs into Data, fill Config and FX, and every figure recalculates offline."""
-    return await _stream(request, "/var/playground/template", {"positions": positions, "scenarios": scenarios}, "var-playground-template.xlsx")
+    return await stream(request, risk_api.path("/var/playground/template"), {"positions": positions, "scenarios": scenarios}, "var-playground-template.xlsx")
 
+
+# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2 and C3) ---------------------------------------------------------------
+def _type_ahead(request, m) -> list[dict]:
+    """PLAY VAR <scope|ids>: the VaR Playground's own line in the type-ahead."""
+    w = (m.group(1) or "").strip()
+    if not w.upper().startswith("VAR"):
+        w = ("VAR " + w).strip()
+    me = getattr(request.state, "identity", None)
+    return [{"mnemonic": "PLAY", "title": "VaR Playground: every VaR figure worked in a grid and an Excel workbook of real formulas"
+             + (f", of {w[4:]}" if w[4:] else ""),
+             "subtitle": "PLAY VAR <scope or ids> <GO> (PLAY VAR DESK RATES, PLAY VAR BANK 10D SUM, PLAY VAR POS-10442 T-1001)",
+             "complete": f"PLAY {w}".strip(), "href": play_command(["PLAY"] + w.split(), (me.user if me else "") or "") or "/play",
+             "type": "play"}]
+
+
+_plugins.command(redirect_for, needs=("PLAY", "VAR"), user=True)              # PLAY VAR <scope|ids>: the VaR Playground
+_plugins.type_ahead(r"^\s*play(?:\s+(.*))?$", _type_ahead, needs=("PLAY", "VAR"))

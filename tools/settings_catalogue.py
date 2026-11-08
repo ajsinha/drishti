@@ -377,7 +377,11 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     import yaml
     rows: list[Row] = []
     problems: list[str] = []
-    catalogue = yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []
+    catalogue = []                                         # each module's engines (its jar's META-INF/drishti/engines.yaml) first, then the core's
+    for module_jar in sorted(ROOT.glob("drishti-*/src/main/resources/META-INF/drishti/engines.yaml")):
+        for e in yaml.safe_load(module_jar.read_text(encoding="utf-8")).get("engines") or []:
+            catalogue.append({**e, "_jar": module_jar.parents[2] / "engines"})
+    catalogue += yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []
     files = {e["file"] for e in catalogue}
     on_disk = {p.name for p in ENGINES_DIR.glob("*.yaml")}
     for name in sorted(on_disk - files):
@@ -389,7 +393,7 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     app_keys = _flat_keys(yaml.safe_load((ROOT / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")))
     for e in catalogue:
         f = ENGINES_DIR / e["file"]
-        jar = ENGINES_JAR / e["file"]
+        jar = e.get("_jar", ENGINES_JAR) / e["file"]
         if not f.is_file() or not jar.is_file():
             problems.append(f"the engine {e['id']} has no file config/engines/{e['file']} (and its jar copy)")
             continue

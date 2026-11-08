@@ -15,9 +15,9 @@
 """The Build home's registry of object types (2.9.11.e; docs/architecture/SHARED_SCREENS.md section 1, mock-up e1-build-home A, B and C).
 
 Every kind of thing a person may build (a connector, a table, a Sutra, a report, ...) is one :class:`ObjectType`, registered by the domain
-that owns it: the core's in ``core/build_types.py``, banking's in ``core/build_types_banking.py`` (the domain split moves that file with
-the rest of banking, nothing else changes). A type says its rail group (Data, Screens, Analysis, Work), its first-visit task tile (bring,
-shape, show, package), who may see it (``requires``, the sitemap's words), where + New starts one, and how to list what exists
+that owns it: the core's in ``core/build_types.py``, a module's in the file its plugin.yaml lists under ``registers:`` (banking's:
+``plugins/banking/build_types.py``, which moves with the rest of banking); a type of a module that is off is not offered. A type says its
+rail group (Data, Screens, Analysis, Work), its first-visit task tile (bring, shape, show, package), who may see it (``requires``, the sitemap's words), where + New starts one, and how to list what exists
 (``source``, an async function of the request answering :class:`Item` rows). The Work group's types are *derived*: they list rows of the
 other types (my drafts, waiting for review, recently changed).
 
@@ -118,8 +118,10 @@ def register(t: ObjectType) -> None:
 
 
 def loaded() -> Registry:
-    """The registry with every domain's types (each registers on import, once)."""
-    from core import build_types, build_types_banking  # noqa: F401  (registration on import)
+    """The registry with the core's types and every module's (each registers on import, once: a module's file is one its plugin.yaml
+    lists under ``registers:``; the core names none of them)."""
+    from core import build_types, plugins  # noqa: F401  (registration on import)
+    plugins.load()
     return REGISTRY
 
 

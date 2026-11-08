@@ -181,35 +181,19 @@ async def command_line(request: Request, q: str, limit: int | None) -> list:
         return [{"mnemonic": "EXPORT", "title": "Export data: every dataset, its dates; choose columns and filters, download a day" + (f", of {w}" if w else ""),
                  "subtitle": "EXPORT <GO> lists the datasets; EXPORT <dataset> [date] opens one (EXPORT trade-valuation 2026-09-30); download only, as .jsonl.gz; DATA works too",
                  "complete": f"EXPORT {w}".strip(), "href": "/data" + (f"?q={quote(w)}" if w else ""), "type": "data"}]
-    m = word(r"^\s*smat(?:\s+(.*))?$")
-    if m and ed.word_on("SMAT"):                                                   # SMAT <id> [N]: the scenario matrix (smat_routes.py)
-        from routes.smat_routes import smat_command
-        w = (m.group(1) or "").strip()
-        return [{"mnemonic": "SMAT", "title": "Scenario matrix: scenario P&L by scenario day across the last N business dates" + (f", of {w}" if w else ""),
-                 "subtitle": "SMAT <trade, position or VaR scope> [N] <GO> (SMAT DESK:RATES 20, SMAT POS <position>, SMAT TRD <trade> 30)",
-                 "complete": f"SMAT {w}".strip(), "href": smat_command(["SMAT"] + w.split()) or "/smat", "type": "smat"}]
-    m = word(r"^\s*play(?:\s+(.*))?$")
-    if m and ed.word_on("PLAY") and ed.word_on("VAR"):                          # PLAY VAR <scope|ids>: the VaR Playground (play_routes.py)
-        from routes.play_routes import play_command
-        w = (m.group(1) or "").strip()
-        if not w.upper().startswith("VAR"):
-            w = ("VAR " + w).strip()
-        me = _ident(request)
-        return [{"mnemonic": "PLAY", "title": "VaR Playground: every VaR figure worked in a grid and an Excel workbook of real formulas"
-                 + (f", of {w[4:]}" if w[4:] else ""),
-                 "subtitle": "PLAY VAR <scope or ids> <GO> (PLAY VAR DESK RATES, PLAY VAR BANK 10D SUM, PLAY VAR POS-10442 T-1001)",
-                 "complete": f"PLAY {w}".strip(), "href": play_command(["PLAY"] + w.split(), (me.user if me else "") or "") or "/play",
-                 "type": "play"}]
+    from core import plugins
+    own = plugins.suggest(request, ed, text)                                       # a module's word (SMAT, PLAY): its own suggestions
+    if own is not None:
+        return own
     m = word(r"^\s*what(?:\s+(.*))?$")
     if m and ed.word_on("WHAT"):                                                   # WHAT: the Knowledge pages, then the glossary's terms
         return await what_words(request, (m.group(1) or "").strip())
     m = re.match(r"(?i)^\s*form(?:\s+(\S*))?(?:\s+(\S*))?\s*$", text)
     if m and ed.word_on("FORM"):                           # FORM: packs you may open, then their kinds
         return await form_words(request, m.group(1), m.group(2), q.endswith(" "))
-    if re.match(r"(?i)^\s*var\s+\S", q) and ed.word_on("VAR"):          # a VAR command's horizons and confidences once a scope is typed
-        from routes.var_routes import var_suggestions
-        keyword = var_suggestions(q) + keyword
-    return keyword + await request.app.state.backend.suggest(q, _ident(request), limit)
+    keyword = plugins.hint_lines(ed, q) + keyword                                  # a module's lines first (a VAR command's horizons)
+    from core import modules
+    return modules.allowed(keyword + await request.app.state.backend.suggest(q, _ident(request), limit))   # a function off: not offered
 
 
 # ---- the other sources -----------------------------------------------------------------------------------------------------------------
@@ -305,7 +289,8 @@ async def builds(request: Request, q: str) -> list:
 async def _server(request: Request, q: str, limit: int | None) -> list:
     """The server's entities and commands (its order is its ranking; at least 30, since the server matched them, maybe on a field not shown),
     each tagged entity (it names an id) or command."""
-    items = await request.app.state.backend.suggest(q, _ident(request), limit)
+    from core import modules
+    items = modules.allowed(await request.app.state.backend.suggest(q, _ident(request), limit))   # a function off is not found either
     out = []
     for n, s in enumerate(items if isinstance(items, list) else []):
         s = dict(s)

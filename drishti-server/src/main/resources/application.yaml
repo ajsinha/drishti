@@ -39,17 +39,17 @@ spring:
     # (DRISHTI_PACKS_OVERLAY, default <data dir>/packs/added.yaml)
     import:
       # the engines' own files (docs/architecture/COMPUTE_ENGINES.md section 3): the jar's copy, then the site's, which wins key by key
-      - classpath:engines/var.yaml
+      - optional:classpath:engines/var.yaml   # the banking module's (its jar): absent when the module is not installed
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/var.yaml
-      - classpath:engines/exposure.yaml
+      - optional:classpath:engines/exposure.yaml   # the banking module's (its jar): absent when the module is not installed
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/exposure.yaml
-      - classpath:engines/sensitivities.yaml
+      - optional:classpath:engines/sensitivities.yaml   # the banking module's (its jar): absent when the module is not installed
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/sensitivities.yaml
-      - classpath:engines/frtb-sa.yaml
+      - optional:classpath:engines/frtb-sa.yaml   # the banking module's (its jar): absent when the module is not installed
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/frtb-sa.yaml
-      - classpath:engines/simm.yaml
+      - optional:classpath:engines/simm.yaml   # the banking module's (its jar): absent when the module is not installed
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/simm.yaml
-      - classpath:engines/mr-cube.yaml
+      - optional:classpath:engines/mr-cube.yaml   # the banking module's (its jar): absent when the module is not installed
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/mr-cube.yaml
       - classpath:engines/pivot.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/pivot.yaml

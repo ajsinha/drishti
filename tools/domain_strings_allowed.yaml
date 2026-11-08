@@ -1,0 +1,57 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Rule 4 of the domain boundaries (docs/architecture/DOMAIN_MODULES.md section 4): the core files that still name banking, and how
+# many times. Written by tools/domain_strings.py --write; it only shrinks.
+allowed:
+  drishti-bicompute/src/main/java/com/ash/drishti/bicompute/core/TopFirst.java: 1
+  drishti-bicompute/src/main/java/com/ash/drishti/bicompute/custom/CustomFunctions.java: 3
+  drishti-bicompute/src/main/java/com/ash/drishti/bicompute/explain/Explain.java: 2
+  drishti-bicompute/src/main/java/com/ash/drishti/bicompute/functions/Functions.java: 1
+  drishti-bicompute/src/main/java/com/ash/drishti/bicompute/lang/Lowered.java: 1
+  drishti-bicompute/src/main/java/com/ash/drishti/bicompute/rachana/EngineFunctions.java: 1
+  drishti-bicompute/src/main/java/com/ash/drishti/bicompute/scale/Progressive.java: 1
+  drishti-bicompute/src/main/java/com/ash/drishti/bicompute/scale/ScalePolicy.java: 1
+  drishti-bicompute/src/main/java/com/ash/drishti/bicompute/whatif/WhatIf.java: 1
+  drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java: 1
+  drishti-compute/src/main/java/com/ash/drishti/compute/shard/ShardMap.java: 1
+  drishti-console/core/app.py: 3
+  drishti-console/core/edition.py: 14
+  drishti-console/core/engines.py: 1
+  drishti-console/core/facts.py: 4
+  drishti-console/core/phone.py: 2
+  drishti-console/core/schemakit/plan.py: 2
+  drishti-console/routes/edition_routes.py: 3
+  drishti-console/routes/functions_routes.py: 2
+  drishti-console/routes/terminal_routes.py: 1
+  drishti-console/web/static/js/drishti_admin-connectors.js: 2
+  drishti-console/web/static/js/drishti_capacity-page.js: 1
+  drishti-console/web/static/js/drishti_explain.js: 1
+  drishti-console/web/static/js/drishti_pivot.js: 4
+  drishti-console/web/static/js/drishti_scope-delete.js: 2
+  drishti-console/web/templates/admin/connector_detail.html: 1
+  drishti-console/web/templates/bi/notebook.html: 1
+  drishti-console/web/templates/terminal/pivot.html: 1
+  drishti-console/web/templates/terminal/view.html: 1
+  drishti-engine/src/main/java/com/ash/drishti/engine/search/PhraseParser.java: 2
+  drishti-lakeconfig/src/main/java/com/ash/drishti/lakeconfig/LakeFiles.java: 2
+  drishti-registry/src/main/java/com/ash/drishti/registry/EmbeddedAccessRegistry.java: 2
+  drishti-registry/src/main/java/com/ash/drishti/registry/ModuleManifest.java: 2
+  drishti-server/src/main/java/com/ash/drishti/server/dist/XlsxFormulas.java: 1
+  drishti-server/src/main/java/com/ash/drishti/server/engines/EngineCatalogue.java: 2
+  drishti-server/src/main/java/com/ash/drishti/server/engines/EngineGateFilter.java: 1
+  drishti-server/src/main/java/com/ash/drishti/server/engines/EngineOffException.java: 1
+  drishti-server/src/main/java/com/ash/drishti/server/engines/EngineRegistry.java: 2
+  drishti-server/src/main/java/com/ash/drishti/server/modules/ApiAlias.java: 2
+  drishti-server/src/main/java/com/ash/drishti/server/pivot/RachanaFigures.java: 1

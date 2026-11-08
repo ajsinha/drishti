@@ -31,7 +31,7 @@ from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
 
-CATALOGUE = yaml.safe_load((CONSOLE / "config" / "engines.yaml").read_text(encoding="utf-8"))["engines"]
+CATALOGUE = engines.entries()
 MENUS = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
 LABELS = {str(it.get("id")): str(it.get("label")) for m in MENUS["menus"] for c in m.get("columns") or [] for it in c.get("items") or []}
 SHOWN = [e for e in CATALOGUE if e.get("installed") and (e.get("words") or e.get("console"))]
