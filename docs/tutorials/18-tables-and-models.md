@@ -13,8 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-
-# Tutorial 44 · Virtual tables and models: trade legs as a table, a model over it, BI's samples migrated
+# Tutorial 18 · Virtual tables and models
 
 A virtual table turns documents into rows and typed columns, once, for every reader. In this tutorial you define the trades' legs as a
 table, preview it over sample documents, add a column converted to US dollars and the desk's name looked up in a table of books, give a
