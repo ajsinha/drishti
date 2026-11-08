@@ -47,9 +47,9 @@ def run(browsers, body, width=1360, height=900):
     browsers.run(go(), timeout=120)
 
 
-SNAPSHOT = f"""() => {{
+SNAPSHOT = f"""() => {{   // a drawn graph's status says how long its layout and frame took: not part of the render
   const v = {ROOT}.querySelector('.view');
-  return {{ text: v.innerText, cells: [...v.querySelectorAll('td, th')].map((c) => c.textContent.trim()),
+  return {{ text: v.innerText.replace(/\\b\\d+ ms\\b/g, 'N ms'), cells: [...v.querySelectorAll('td, th')].map((c) => c.textContent.trim()),
     links: [...v.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')), tones: [...v.querySelectorAll('[class*="t-"]')].length }};
 }}"""
 
@@ -61,7 +61,7 @@ def test_the_showcase_draws_every_kind_with_the_libraries(browsers):
           const r = {ROOT}, E = window.echarts;
           const charts = [...r.querySelectorAll('[data-r-chart]')];
           return {{ kinds: [...new Set([...r.querySelectorAll('.pnl')].map((p) => p.getAttribute('data-kind')))].length,
-            unknown: r.querySelectorAll('[data-r-unknown]').length, charts: charts.length, drawn: charts.filter((c) => E && E.getInstanceByDom(c)).length,
+            unknown: r.querySelectorAll('[data-r-unknown]').length, charts: charts.length, drawn: charts.filter((c) => (E && E.getInstanceByDom(c)) || (c.classList.contains('dn') && c.querySelector('.dn-shell'))).length,
             tables: r.querySelectorAll('table.tbl').length, sorts: r.querySelectorAll('.tbl-sort').length, version: window.__rx.version }};
         }}""")
         assert got["version"] == "2.0.0" and got["unknown"] == 0 and got["kinds"] >= 20

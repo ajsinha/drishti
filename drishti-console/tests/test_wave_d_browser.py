@@ -19,8 +19,8 @@ never run with pytest -n.
 wes subscribes rita, hana and ann with a written summary, a webhook and texts; Run now: the fake SMTP holds each person's own mail (the summary on top for the two whom the
 AI policy opens ``subscription-narrative`` to, none for hana, and the history says why), the webhook server holds ONE signed post that holds no figure, the text gateway
 holds a text for the people who gave a number and none holds a figure. The Excel export has native charts for a person who sees every column, and none for a column that is
-masked. In the designer Suggest visuals proposes checked visuals, Add puts one on the page (and Undo takes it back), and Explain in plain words explains the Check panel;
-on the Model view the dataset helper's items are accepted one by one into the YAML. With DRISHTI_SHOTS set the documentation pictures are written.
+masked. In the designer Suggest visuals proposes checked visuals, Add puts one on the page (and Undo takes it back), and Explain in plain words explains the Check panel.
+With DRISHTI_SHOTS set the documentation pictures are written.
 
 Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use."""
 from __future__ import annotations
@@ -121,14 +121,6 @@ def receiver():
     r.server.shutdown()
 
 
-class WaveDStack(DistStack):
-    def prepare(self, work):
-        super().prepare(work)
-        # the dataset helper works in the Model view of a version 1 dataset (a model has its designer): the 2.1 sample, kept by the server's tests
-        old = bi_report_stack.ROOT / "drishti-server/src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml"
-        (work / "config/bi/datasets/trades-basic.dataset.yaml").write_text(old.read_text(encoding="utf-8"), encoding="utf-8")
-
-
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory, smtp, receiver):
     for port in (bi_report_stack.SERVER_PORT, bi_report_stack.CONSOLE_PORT):
@@ -137,7 +129,7 @@ def stack(tmp_path_factory, smtp, receiver):
     tmp = tmp_path_factory.mktemp("waved")
     (tmp / "ai").mkdir()
     (tmp / "ai" / "mock.yaml").write_text(MOCK)
-    s = WaveDStack(tmp, smtp.port)
+    s = DistStack(tmp, smtp.port)       # no 2.1 dataset beside it: migrated, it was a second trades-basic without the rules and the mask
     s.server_args += ["--drishti.ai.enabled=true", f"--drishti.ai.dir={tmp / 'ai'}", "--drishti.ai.default-model=mock/m", "--drishti.ai.watch=off",
                       "--drishti.bi.ai.values=aggregates",
                       "--drishti.ai.policy.features.[subscription-narrative].roles[0]=risk", "--drishti.ai.policy.features.[subscription-narrative].roles[1]=analyst",
