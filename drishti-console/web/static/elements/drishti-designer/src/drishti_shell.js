@@ -371,7 +371,7 @@ export class DesignerShell {
       const b = this.buttons[id], v = states[id];
       if (!b || b.tagName === 'A') { return; }                                 // a link is never off
       b.disabled = v !== true;
-      b.title = v === true ? b.getAttribute('data-title') : String(v || '');
+      b.title = v === true ? b.getAttribute('data-dd-title') : String(v || '');
     });
   }
 

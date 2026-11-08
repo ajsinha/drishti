@@ -44,7 +44,7 @@ import { entryAttrs } from './drishti_palette.js';
  * @returns {HTMLElement}
  */
 export function actionElement(doc, a, emit) {
-  const attrs = Object.assign({ 'data-act': a.id, title: a.title || null, 'data-title': a.title || '', hidden: !!a.hidden }, entryAttrs(a.attrs));
+  const attrs = Object.assign({ 'data-act': a.id, title: a.title || null, 'data-dd-title': a.title || '', hidden: !!a.hidden }, entryAttrs(a.attrs));
   const cls = 'dd-btn' + (a.primary ? ' dd-primary' : '');
   if (a.href !== undefined) { return h(doc, 'a', { cls: cls + ' dd-link', text: a.label, attrs: Object.assign(attrs, { href: a.href || '#' }) }); }
   if (a.choices) {

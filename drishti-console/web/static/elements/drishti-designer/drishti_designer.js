@@ -1397,7 +1397,7 @@
     var h = __lib("drishti-core").h;
     var entryAttrs = __m["src/drishti_palette.js"].entryAttrs;
     function actionElement(doc, a, emit) {
-      const attrs = Object.assign({ 'data-act': a.id, title: a.title || null, 'data-title': a.title || '', hidden: !!a.hidden }, entryAttrs(a.attrs));
+      const attrs = Object.assign({ 'data-act': a.id, title: a.title || null, 'data-dd-title': a.title || '', hidden: !!a.hidden }, entryAttrs(a.attrs));
       const cls = 'dd-btn' + (a.primary ? ' dd-primary' : '');
       if (a.href !== undefined) { return h(doc, 'a', { cls: cls + ' dd-link', text: a.label, attrs: Object.assign(attrs, { href: a.href || '#' }) }); }
       if (a.choices) {
@@ -1687,7 +1687,7 @@
           const b = this.buttons[id], v = states[id];
           if (!b || b.tagName === 'A') { return; }                                 // a link is never off
           b.disabled = v !== true;
-          b.title = v === true ? b.getAttribute('data-title') : String(v || '');
+          b.title = v === true ? b.getAttribute('data-dd-title') : String(v || '');
         });
       }
       setLabel(id, label) { const b = this.buttons[id]; if (b && b.tagName !== 'SELECT') { b.textContent = label; } }

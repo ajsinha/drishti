@@ -19,7 +19,11 @@
    that keeps the matches and the nodes above them (the rest leave the tree; their open state is remembered); the keys of a tree on the
    rows (arrows, Home and End, Right and Left to open, close and go up; Enter or Space: a node with children opens or closes, a node
    without shows its detail); and the detail: the host's words about a node in a box under the tree (Enter, a click; Enter again or
-   Escape closes it). The host's own keys on a node come first (onKey). Every text goes in as text, never as HTML. */
+   Escape closes it). The host's own keys on a node come first (onKey). Every text goes in as text, never as HTML.
+   A field list (the BI designer's Fields pane) adds: a node's line as a button that does the node's job (button: a click or the host's
+   Enter adds the field; its data-* attributes are the host's selectors; wire gives the host the button, for a drag), a mark that is a
+   link (href) or carries the host's data-* attributes, small buttons after the line (actions: remove a dataset), branches that start
+   closed (startOpen) and the node's column as wide as the panel (fill). */
 import { h, announce } from '../../drishti-core/src/drishti_index.js';
 import { HierarchyModel } from './drishti_tree-model.js';
 import { keyMove } from './drishti_tree-io.js';
@@ -37,7 +41,23 @@ export const OUTLINE_TONES = Object.freeze(['muted', 'accent', 'link', 'good', '
  * @property {string} [title] the words on hover (the reason, the whole text of a clipped mark)
  * @property {boolean} [mono=false] in the monospace face (a type, an example value)
  * @property {boolean} [clip=false] long text cut with an ellipsis
+ * @property {string} [href] a link (Move to the model): drawn after the line, outside its button
+ * @property {Object<string, string>} [attrs] the host's data-* attributes on the mark (its selectors)
  */
+
+/**
+ * A small button after a node's line.
+ * @typedef {Object} OutlineAction
+ * @property {string} label its words (a screen reader's name; the text when no icon)
+ * @property {string} [text] what it shows (default: the label)
+ * @property {string} [title]
+ * @property {boolean} [disabled]
+ * @property {Object<string, string>} [attrs] the host's data-* attributes
+ * @property {function(import('./drishti_tree-model.js').TreeNode): void} run
+ */
+
+/** The host's data-* attributes, the outline's own (data-dt-*) and every other name left out. */
+const dataAttrs = (a) => { const out = {}; Object.keys(a || {}).forEach((k) => { if (/^data-(?!dt-)[a-z0-9-]+$/.test(k) && a[k] !== null && a[k] !== undefined) { out[k] = String(a[k]); } }); return out; };
 
 /**
  * The options of an outline.
@@ -56,6 +76,16 @@ export const OUTLINE_TONES = Object.freeze(['muted', 'accent', 'link', 'good', '
  *   to show, or nothing after filling the box itself; no lines and an empty box: the node has no detail
  * @property {function(import('./drishti_tree-model.js').TreeNode, KeyboardEvent): boolean} [onKey] the host's keys on the focused node,
  *   before the outline's (true: handled)
+ * @property {function(import('./drishti_tree-model.js').TreeNode): ?{label: string, title: string, attrs: Object<string, string>}} [button] the
+ *   node's line as a button (its name for a screen reader, its title, the host's data-* attributes), or null: plain text
+ * @property {function(import('./drishti_tree-model.js').TreeNode, Event): void} [activate] a click on a node's button
+ * @property {function(import('./drishti_tree-model.js').TreeNode, HTMLElement): void} [wire] the host's own behaviour on a node's line (a drag
+ *   from a field list), each time it is drawn
+ * @property {function(import('./drishti_tree-model.js').TreeNode): ?Object<string, string>} [attrs] the host's data-* attributes on a node's
+ *   line (a table, a folder) when it is not a button
+ * @property {function(import('./drishti_tree-model.js').TreeNode): OutlineAction[]} [actions] small buttons after a node's line
+ * @property {function(import('./drishti_tree-model.js').TreeNode): boolean} [startOpen] false: the branch starts closed (a date's parts)
+ * @property {boolean} [fill=false] the node's column as wide as the panel (it follows the panel's width)
  */
 
 /**
@@ -132,6 +162,28 @@ export class TreeOutline {
     this.offSel = this.tree.on('selectionChanged', (p) => { if (p.ids && p.ids.length) { this.showDetail(p.ids[0]); } });
     this.onKeyDown = (e) => this.key(e);
     host.addEventListener('keydown', this.onKeyDown, true);
+    this.closeStarters(this.full.all());
+    const win = this.doc.defaultView;
+    if (o.fill && win && win.ResizeObserver) {
+      this.sizer = new win.ResizeObserver(() => this.fitWidth());
+      this.sizer.observe(host);
+    }
+  }
+
+  /** @private the branches the host wants closed at the start */
+  closeStarters(nodes) {
+    if (!this.o.startOpen) { return; }
+    let changed = false;
+    nodes.forEach((n) => { if (n.children.length && this.o.startOpen(n) === false && this.tree.model.open.delete(n.id)) { this.memory.delete(n.id); changed = true; } });
+    if (changed) { this.tree.model.events.emit('changed', { what: 'open' }); }
+  }
+
+  /** @private fill: the node's column as wide as the panel */
+  fitWidth() {
+    const g = this.tree.grid, w = Math.floor(this.host.clientWidth) - 2;
+    if (!g || w < 120) { return; }
+    const col = g.grid.model.columns.all()[0];
+    if (col && Math.abs(col.width - w) > 1) { g.grid.model.columns.setWidth(col.id, w); }
   }
 
   /** @private the tree's rows: the kept nodes, each with its node's own row */
@@ -149,10 +201,24 @@ export class TreeOutline {
   labelCell(p) {
     const n = p.row ? this.full.node(p.row.__id) : null;
     if (!n) { return null; }
-    const marks = this.o.marks ? this.o.marks(n) || [] : [];
-    return h(p.doc, 'span', { cls: 'dg-text dt-oline' }, [h(p.doc, 'span', { cls: 'dt-oname', text: n.label })].concat(marks.map((m) => h(p.doc, 'span', {
-      cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : ''),
-      text: String(m.text), attrs: { title: m.title || null } }))));
+    const o = this.o, doc = p.doc, marks = o.marks ? o.marks(n) || [] : [];
+    const mark = (m) => h(doc, m.href ? 'a' : 'span', {
+      cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : m.href ? 'link' : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : ''),
+      text: String(m.text), attrs: Object.assign({ title: m.title || null, href: m.href || null }, dataAttrs(m.attrs)) });
+    const inner = [h(doc, 'span', { cls: 'dt-oname', text: n.label })].concat(marks.filter((m) => !m.href).map(mark));
+    const b = o.button ? o.button(n) : null;
+    let line;
+    if (b) {
+      line = h(doc, 'button', { cls: 'dt-obtn', attrs: Object.assign({ type: 'button', title: b.title || null, 'aria-label': b.label || null }, dataAttrs(b.attrs)) }, inner);
+      if (o.activate) { line.addEventListener('click', (e) => o.activate(n, e)); }
+    } else { line = h(doc, 'span', { cls: 'dt-oline-text', attrs: dataAttrs(o.attrs ? o.attrs(n) : null) }, inner); }
+    if (o.wire) { o.wire(n, line); }
+    const acts = (o.actions ? o.actions(n) || [] : []).map((a) => {
+      const x = h(doc, 'button', { cls: 'dt-oact', text: a.text || a.label, attrs: Object.assign({ type: 'button', 'aria-label': a.label, title: a.title || a.label, disabled: !!a.disabled }, dataAttrs(a.attrs)) });
+      x.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); a.run(n); });
+      return x;
+    });
+    return h(doc, 'span', { cls: 'dg-text dt-oline' }, [line].concat(marks.filter((m) => m.href).map(mark), acts));
   }
 
   /** @private the tree's rows again (the kept nodes), the open state remembered across the filter */
@@ -178,7 +244,7 @@ export class TreeOutline {
     this.full.load(data);
     if (this.detailOf && !this.full.node(this.detailOf)) { this.closeDetail(); }
     this.memory.forEach((id) => { if (!this.full.node(id)) { this.memory.delete(id); } });
-    this.full.all().forEach((n) => { if (!known.has(n.id) && n.children.length && n.depth < d) { this.memory.add(n.id); } });   // a new branch opens as at the start
+    this.full.all().forEach((n) => { if (!known.has(n.id) && n.children.length && n.depth < d && !(this.o.startOpen && this.o.startOpen(n) === false)) { this.memory.add(n.id); } });   // a new branch opens as at the start
     const f = outlineFilter(this.full, this.query, this.o.text);
     this.keep = f.keep;
     this.tree.hits = new Set(f.hits);
@@ -283,6 +349,7 @@ export class TreeOutline {
 
   /** Takes the outline down. @returns {void} */
   destroy() {
+    if (this.sizer) { this.sizer.disconnect(); }
     this.offSel();
     this.host.removeEventListener('keydown', this.onKeyDown, true);
     this.tree.destroy();
