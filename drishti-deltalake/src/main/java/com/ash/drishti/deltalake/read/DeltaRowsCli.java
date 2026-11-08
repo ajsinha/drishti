@@ -75,6 +75,7 @@ public final class DeltaRowsCli {
 
     private DeltaRowsCli() {}
 
+    /** Reads the table the arguments name and writes its rows to standard output; exit 1 with the reason on standard error. */
     public static void main(String[] args) throws Exception {
         String table = null;
         Long version = null;
