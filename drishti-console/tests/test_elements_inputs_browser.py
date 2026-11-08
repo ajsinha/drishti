@@ -356,8 +356,7 @@ def test_the_filter_bar_drives_an_editable_grid_and_every_editor_undo_paste_and_
         # the select, Tab to the next cell; the date through drishti-inputs' picker; the checkbox by Space; text
         await cell(pg, "T1005", "DESK")
         await pg.keyboard.press("Enter")
-        await pg.select_option("#hx-grid .dg-editor select", label="Credit")
-        await pg.keyboard.press("Tab")
+        await pg.locator(".di-select-pop").get_by_role("option", name="Credit", exact=True).click()   # drishti-inputs' Select opens on the value; picking saves
         await pg.wait_for_function("() => window.__harness.writes.length === 2")
         assert (await row_of(pg, "T1005"))["DESK"] == "Credit"
         await cell(pg, "T1005", "TRADE_DATE")

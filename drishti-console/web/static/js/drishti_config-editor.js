@@ -25,6 +25,7 @@
   var dlg = root.querySelector('[data-propose-dialog]');
   var err = dlg.querySelector('[data-dlg-error]');
   var current = null;
+  var PF = window.Drishti.elements.inputs.formOf(dlg.querySelector('[data-propose-fields]'));   // the value and why: drishti-inputs' Form (core/admin_forms.py)
 
   function say(text, bad) { status.textContent = text; status.classList.toggle('bad', !!bad); }
   function post(url, body) {
@@ -42,17 +43,16 @@
       current = b.closest('tr');
       dlg.querySelector('[data-dlg-key]').textContent = current.dataset.key;
       dlg.querySelector('[data-dlg-was]').textContent = current.dataset.value ? '(now ' + current.dataset.value + ')' : '(now the default)';
-      dlg.querySelector('[data-dlg-value]').value = current.dataset.value || '';
-      dlg.querySelector('[data-dlg-reason]').value = '';
+      PF.setValue({ value: current.dataset.value || '', reason: '' });
       err.hidden = true;
       if (dlg.showModal) { dlg.showModal(); } else { dlg.setAttribute('open', ''); }
-      dlg.querySelector('[data-dlg-value]').focus();
+      PF.focusField('value');
     });
   });
   dlg.querySelector('[data-dlg-cancel]').addEventListener('click', function () { dlg.close(); });
   dlg.querySelector('[data-propose-form]').addEventListener('submit', function (e) {
     e.preventDefault();
-    var value = dlg.querySelector('[data-dlg-value]').value, reason = dlg.querySelector('[data-dlg-reason]').value.trim();
+    var value = String(PF.getField('value') || ''), reason = String(PF.getField('reason') || '').trim();
     if (!reason) { err.textContent = 'Say why: the approver reads it.'; err.hidden = false; return; }
     post('/admin/configuration/propose', { key: current.dataset.key, area: current.dataset.area, value: value,
                                           was: current.dataset.value || '', reason: reason }).then(function (r) {

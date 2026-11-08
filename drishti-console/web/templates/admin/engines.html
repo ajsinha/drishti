@@ -74,8 +74,7 @@
       <div data-eng-hides></div>
       <h4>On the server</h4>
       <div data-eng-effect></div>
-      <label class="eng-reason-l" for="eng-reason">Reason (required)</label>
-      <input id="eng-reason" class="eng-reason" data-eng-reason maxlength="500" autocomplete="off" placeholder="Why: kept in History and the audit log">
+      {{ admin_form('field', key='reason', title='Reason (required)', maxLength=500, hook={'data-eng-reason': '', 'class': 'eng-reason'}, placeholder='Why: kept in History and the audit log') }}
       <div class="eng-actions">
         <button type="button" class="btn-pill eng-primary" data-eng-apply disabled>Apply</button>
         <button type="button" class="btn-pill btn-ghost" data-eng-cancel>Cancel</button>

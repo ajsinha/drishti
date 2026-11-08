@@ -149,7 +149,7 @@
       if (!url) { say('Type the seed as host:port or an address.', true); return; }
       api('POST', '/admin/net/api/seeds', { url: url }).then(function (r) {
         say('Saved ' + r.file + (r.answered ? '; it answered and its members are listed.' : '; it did not answer yet (it is tried every round).'));
-        $('[data-seed]').value = '';
+        window.Drishti.elements.inputs.formOf(seedForm.querySelector('[data-di-form]')).setValue({ seed: '' });
         return refresh();
       }).catch(function (err) { say(err.message, true); });
     });

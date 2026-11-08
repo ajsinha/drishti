@@ -22,8 +22,7 @@
 <div class="adm">
   <h1>Audit log</h1>
   {% with tab='audit' %}{% include "admin/_nav.html" %}{% endwith %}
-  <form class="adm-bar" method="get" action="/admin/audit" role="search"><label for="as" class="visually-hidden">User</label>
-    <input id="as" name="subject" value="{{ subject }}" class="studio-in" placeholder="Filter by user"></form>
+  <form class="adm-bar" method="get" action="/admin/audit" role="search">{{ admin_form('search', name='subject', value=subject, title='User', placeholder='Filter by user') }}</form>
   <div class="tbl-wrap"><table class="tbl">
     <thead><tr><th>When (UTC)</th><th>Actor</th><th>Action</th><th>User</th><th>Detail</th></tr></thead>
     <tbody>{% for e in events %}<tr><td class="mono">{{ e.at[:19] | replace('T', ' ') }}</td><td class="mono">{{ e.actor }}</td>

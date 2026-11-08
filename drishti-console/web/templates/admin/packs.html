@@ -91,14 +91,11 @@
     on, and an optional signature. Then you see what it would change from the running version, with breaking changes marked, and confirm.</p>
   <div class="dep" data-deploy data-max-mb="{{ deploy_max_mb }}">
     <div class="dep-drop" data-drop>
-      <label for="depFile">Pack archive <span class="text-muted-d">(up to {{ deploy_max_mb }} MB; drop a file here or choose one)</span></label>
-      <input type="file" id="depFile" data-file accept=".tar.gz,.tgz,.zip,application/gzip,application/zip">
+      {{ admin_form('field', key='file', kind='file', title='Pack archive (up to ' ~ deploy_max_mb ~ ' MB; drop a file here or choose one)', accept='.tar.gz,.tgz,.zip,application/gzip,application/zip', hook={'data-file': ''}) }}
       <button type="button" class="btn-pill btn-accent" data-upload disabled>Upload and check</button>
     </div>
     <details class="dep-adv"><summary>Signed archive?</summary>
-      <label>Publisher <input class="studio-in" data-publisher autocomplete="off" placeholder="acme" aria-describedby="depSigHelp"></label>
-      <label>Signature (base64 Ed25519 of the archive) <input class="studio-in" data-signature autocomplete="off"></label>
-      <p class="adm-hint text-muted-d" id="depSigHelp">The publisher's key must be listed in <span class="mono">drishti.packs.registry.trusted-keys</span>. Unsigned archives are accepted unless the server requires signatures.</p>
+      {{ admin_form('pack_signature') }}
     </details>
     <p class="adm-msg" data-dep-msg role="status" aria-live="polite"></p>
     <div class="dep-result" data-result hidden></div>

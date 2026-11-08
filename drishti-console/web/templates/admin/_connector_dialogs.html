@@ -25,24 +25,18 @@
       <button type="button" role="tab" id="connTabHistory" aria-controls="connPaneHistory" aria-selected="false" tabindex="-1" data-tab="history">History</button>
     </div>
     <div role="tabpanel" id="connPaneForm" aria-labelledby="connTabForm" data-pane="form">
-      <div class="conn-grid">
-        <label>Name<input class="studio-in mono" data-f-name maxlength="64" pattern="[a-z0-9][a-z0-9\-]*" autocomplete="off" spellcheck="false" aria-describedby="connNameHelp" placeholder="trading-lake"></label>
-        <label>Plugin<select class="studio-in" data-f-plugin></select></label>
-        <label class="chk conn-on"><input type="checkbox" data-f-enabled checked> Connector is on</label>
-        <label class="conn-wide">Description<input class="studio-in" data-f-description maxlength="200" autocomplete="off" aria-describedby="connDescHelp"><span class="text-muted-d conn-hint" id="connDescHelp">One line saying what this connector reads; shown in the list.</span></label>
-      </div>
-      <p class="text-muted-d" id="connNameHelp">Lower case letters, digits and hyphens. The file is <span class="mono" data-file-name>name.yaml</span>; packs refer to the connector by this name.</p>
+      {{ admin_form('connector_head') }}{# the plugin's settings: a Form drishti_admin-connectors.js builds from the plugin's description #}
+      <p class="text-muted-d">The file: <span class="mono" data-file-name>name.yaml</span>.</p>
       <fieldset class="conn-set" data-kinds-set><legend>Kinds it serves</legend>
         <div class="conn-chips" data-chips aria-live="polite"></div>
-        <div class="conn-kind-add"><input class="studio-in mono" list="connKinds" data-kind-in placeholder="add a kind" aria-label="Add a kind" autocomplete="off" spellcheck="false">
-          <datalist id="connKinds"></datalist><button type="button" class="fk" data-kind-add>Add kind</button></div>
+        <div class="conn-kind-add">{{ admin_form('field', key='kind', title='Add a kind', mono=True, hook={'data-kind-in': ''}, placeholder='add a kind', layout='inline') }}
+          <button type="button" class="fk" data-kind-add>Add kind</button></div>
         <p class="text-muted-d">Empty: it serves whatever the packs route to it.</p>
       </fieldset>
       <div data-groups></div>
     </div>
     <div role="tabpanel" id="connPaneYaml" aria-labelledby="connTabYaml" data-pane="yaml" hidden>
-      <label class="visually-hidden" for="connYaml">The connector file as YAML</label>
-      <textarea class="studio-in mono conn-yaml" id="connYaml" data-yaml data-di-code="yaml" rows="18" spellcheck="false" autocomplete="off" wrap="off"></textarea>
+      {{ admin_form('field', key='yaml', kind='area', title='The connector file as YAML', rows=18, mono=True, hook={'data-yaml': '', 'data-di-code': 'yaml', 'class': 'conn-yaml'}) }}
       <p class="text-muted-d">Comments are kept as you type them. Both tabs edit the same draft: leaving this tab reads the text into the form.</p>
     </div>
     <div role="tabpanel" id="connPaneTest" aria-labelledby="connTabTest" data-pane="test" hidden>

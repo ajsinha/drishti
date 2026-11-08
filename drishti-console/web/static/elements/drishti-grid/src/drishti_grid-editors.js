@@ -17,7 +17,8 @@
    loses it, and it follows the cell as the grid scrolls). Per type: text, a number (shown with every digit in the grid's locale, read
    back loosely: 1.25m, (2,000), −5k), a date (drishti-inputs' business-date picker when that library is on the page, else the browser's
    date field), a formula (drishti-inputs' one-line CodeEditor in the column's codeMode, completing through its complete hook, when that
-   library is on the page), a select of the column's options, and a checkbox (no field: Space, Enter or a double click turns it). Started by Enter,
+   library is on the page), a choice of the column's options (drishti-inputs' Select when that library is on the page, else a field that
+   takes an option's words or value), and a checkbox (no field: Space, Enter or a double click turns it). Started by Enter,
    F2, a double click or typing (the typed character replaces the value); Enter commits and moves down (Shift+Enter up), Tab commits and
    moves right (Shift+Tab left), Escape cancels, leaving the field commits. A value that is not valid keeps the field open with the
    problem in words under it (role alert). The model's editing (drishti_grid-edit.js) does the rest. */
@@ -63,16 +64,16 @@ export class CellEditor {
     const box = this.el = h(this.doc, 'div', { cls: 'dg-editor dg-editor-' + ed, attrs: { role: 'presentation' } });
     const msg = this.msg = h(this.doc, 'div', { cls: 'dg-editor-msg', attrs: { role: 'alert', id: v.uid + '-edit-msg', hidden: true } });
     const label = col.header + ', row ' + (r + 1);
-    if (ed === 'select') {
-      const sel = this.input = h(this.doc, 'select', { cls: 'dg-editor-input', attrs: { 'aria-label': label, 'aria-describedby': msg.id } });
-      (col.options || []).forEach((x, i) => {
-        const val = x !== null && typeof x === 'object' ? x.value : x, lab = x !== null && typeof x === 'object' && x.label !== undefined ? x.label : String(x);
-        const op = h(this.doc, 'option', { text: lab, attrs: { value: String(i) } });
-        if (val === cur) { op.selected = true; }
-        if (o && o.initial && lab.toLowerCase().indexOf(o.initial.toLowerCase()) === 0 && !sel.dataset.typed) { op.selected = true; sel.dataset.typed = '1'; }
-        sel.appendChild(op);
-      });
-      box.appendChild(sel);
+    if (ed === 'select' && loaded('drishti-inputs') && loaded('drishti-inputs').Select) {   // drishti-inputs' Select: the options by their index
+      const host = h(this.doc, 'div', { cls: 'dg-editor-picker dg-editor-select' });
+      box.appendChild(host);
+      const opts = (col.options || []).map((x, i) => ({ value: String(i), label: x !== null && typeof x === 'object' && x.label !== undefined ? x.label : String(x !== null && typeof x === 'object' ? x.value : x) }));
+      let at = (col.options || []).findIndex((x) => (x !== null && typeof x === 'object' ? x.value : x) === cur);
+      if (o && o.initial) { const t = opts.findIndex((x) => x.label.toLowerCase().indexOf(o.initial.toLowerCase()) === 0); if (t >= 0) { at = t; } }   // a typed letter picks the first option it starts
+      const sel = this.choice = new (loaded('drishti-inputs').Select)(host, { options: opts, value: at >= 0 ? String(at) : null, placeholder: at >= 0 ? undefined : 'Pick one', label: label });
+      this.input = sel.control;
+      this.input.setAttribute('aria-describedby', msg.id);
+      sel.on('pick', () => Promise.resolve().then(() => { if (this.at && this.choice === sel) { this.commit({ dr: 0, dc: 0 }); } }));
     } else if (ed === 'date' && loaded('drishti-inputs') && loaded('drishti-inputs').DatePicker) {
       const host = h(this.doc, 'div', { cls: 'dg-editor-picker' });
       box.appendChild(host);
@@ -107,6 +108,10 @@ export class CellEditor {
     this.input.focus();
     if (this.input.select && !(o && o.initial)) { this.input.select(); }
     if (this.picker && !(o && o.initial)) { this.picker.open(); this.input.focus(); }
+    if (this.choice) {                                                                 // the list opens on the value once the focus has settled: arrows, Enter picks
+      const sel = this.choice;
+      this.doc.defaultView.setTimeout(() => { if (this.at && this.choice === sel) { sel.focus(); sel.open(); } }, 0);
+    }
     m.live.emit('cellEditStarted', { row: r, col: c, colId: col.id, rowId: m.idAt(r), value: cur, editor: ed });
     announce('Editing ' + label + '. Enter saves, Escape cancels');
     return true;
@@ -135,6 +140,7 @@ export class CellEditor {
     if (!this.at) { return; }
     const k = e.key;
     if (this.picker && this.picker.pop.isOpen() && (k === 'Escape' || k === 'ArrowDown' || k === 'ArrowUp')) { return; }   /* the calendar's own */
+    if (this.choice && this.choice.pop.isOpen() && k !== 'Tab') { return; }                                                     /* the open list's own: Enter picks, Escape closes */
     if (this.code && this.code.pop.isOpen() && (k === 'Escape' || k === 'Enter' || k === 'Tab' || k === 'ArrowDown' || k === 'ArrowUp')) { return; }   /* the completion's own */
     if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.cancel(); return; }
     if (k === 'Enter') { e.preventDefault(); e.stopPropagation(); this.commit({ dr: e.shiftKey ? -1 : 1, dc: 0 }); return; }
@@ -147,6 +153,7 @@ export class CellEditor {
     const a = this.doc.activeElement;
     if (this.el && this.el.contains(a)) { return; }
     if (this.picker && this.picker.pop.el && this.picker.pop.el.contains(a)) { return; }
+    if (this.choice && this.choice.pop.el && this.choice.pop.el.contains(a)) { return; }
     if (this.code && this.code.pop.el && this.code.pop.el.contains(a)) { return; }
     this.commit(null, true);
   }
@@ -154,7 +161,10 @@ export class CellEditor {
   /** @private the editor's value as the column's */
   read() {
     const at = this.at;
-    if (at.ed === 'select') { const i = this.input.value === '' ? -1 : +this.input.value, x = (at.col.options || [])[i]; return { value: x !== null && typeof x === 'object' ? x.value : x, error: null }; }
+    if (at.ed === 'select') {
+      const pick = this.choice ? this.choice.getValue() : this.input.value, i = pick === null || pick === '' ? -1 : +pick, x = (at.col.options || [])[i];
+      return { value: x !== null && typeof x === 'object' ? x.value : x, error: null };
+    }
     if (this.picker) {
       const t = this.input.value.trim();
       if (!t) { return { value: null, error: null }; }
@@ -217,6 +227,7 @@ export class CellEditor {
     this.at = null;
     if (this.picker) { this.picker.close(); this.picker = null; }
     if (this.code) { this.code.pop.close(); this.code = null; }
+    if (this.choice) { this.choice.destroy(); this.choice = null; }
     if (this.el) { this.el.remove(); this.el = null; }
     if (at) { this.view.model.live.emit('cellEditStopped', { row: at.r, col: at.c, saved: !!saved }); }
     this.view.body.schedule();
