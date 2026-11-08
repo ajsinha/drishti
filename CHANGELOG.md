@@ -28,9 +28,8 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
 - **Fixed: a Form's Select with an `aria-label` hook names its combobox** (drishti-inputs): the label went onto the `<drishti-select>`
   element as well, so one field was two labelled things (the Build workbench's enumerated options, the BI tile pickers).
 - **Fixed: an embedded live report follows its live tables again**: the server describes a report's model by its `datasets` (each with
-  its mode) since the table layer, and the frozen 1.x `<drishti-report>` and the console viewer's report-level live watch read
-  `dataset.tables`, so both took every report for static; the embed route names the model's datasets as `tables` for the frozen element
-  and the console reads `datasets`.
+  its mode) since the table layer, and the frozen 1.x `<drishti-report>` reads `dataset.tables`, so it took every report for static; the
+  embed route names the model's datasets as `tables` for the frozen element (the console viewer follows each visual's standing query).
 - **Fixed: the World lens's map landing draws the US sectors and the largest funds** (the capital-markets switch was set only on the
   explorer landing), and on a phone the known-at field takes a row of its own under the business date (its date and time were 19 px wide).
 - **The terminal's query form on the one server-drawn form** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):

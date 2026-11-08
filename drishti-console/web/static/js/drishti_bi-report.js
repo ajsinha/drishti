@@ -351,7 +351,7 @@
   }
 
   function startLive() {
-    const ids = (rep.dataset && (rep.dataset.datasets || []).some((t) => t.mode === 'live')) ? [reportId] : [];          // the model's datasets: one is live
+    const ids = (rep.dataset && (rep.dataset.tables || []).some((t) => t.mode === 'live')) ? [reportId] : [];
     if (board) { board.liveIds().forEach((id) => { if (ids.indexOf(id) < 0) { ids.push(id); } }); }          // the reports a board page's tiles show
     if (!ids.length) { return; }
     const min = Number(canvas.getAttribute('data-live-min')) || 250;
