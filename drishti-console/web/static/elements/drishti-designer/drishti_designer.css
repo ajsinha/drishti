@@ -132,8 +132,6 @@ a.dd-obj { text-decoration: none; }
 .dd-layout-terminal .dd-rail { flex-basis: var(--dd-left, 280px); }
 .dd-layout-terminal .dd-ptabs { display: none; }
 .dd-layout-terminal .dd-rail-panel + .dd-rail-panel { border-top: 1px solid var(--d-border); margin-top: 4px; padding-top: 4px; }
-.dd-layout-terminal .dd-node { display: grid; grid-template-columns: 1em minmax(0, 1fr) auto; font-size: 12px; padding-top: 1px; padding-bottom: 1px; }
-.dd-layout-terminal .dd-node-detail { font-size: 11px; text-align: right; }
 .dd-layout-terminal .dd-item-frame { border-radius: 0; }
 
 /* ---- the canvas ----------------------------------------------------------------------------------------------------------------- */
@@ -178,20 +176,6 @@ body.dd-dragging, body.dd-dragging * { cursor: grabbing; user-select: none; }
 .dd-inspector-head { font-size: 12px; font-weight: 600; color: var(--d-muted); }
 .dd-inspector-empty { font-size: 12px; color: var(--d-muted); margin: 0; }
 .dd-inspector [data-dd-mixed] .di-label::after { content: ' (mixed)'; color: var(--d-faint); font-weight: 400; }
-
-/* ---- the outline ---------------------------------------------------------------------------------------------------------------- */
-.dd-tree { list-style: none; margin: 0; padding: 0; font-size: 13px; }
-.dd-node { display: flex; align-items: baseline; gap: 6px; padding: 3px 6px 3px calc(6px + var(--dd-level, 0) * 16px); border-radius: 3px; cursor: pointer; outline: none; border-top: 2px solid transparent; border-bottom: 2px solid transparent; }
-.dd-node[aria-selected="true"] { background: var(--d-accent-tint); }
-.dd-node:focus-visible { box-shadow: inset 0 0 0 2px var(--d-link); }
-.dd-twisty { width: 1em; color: var(--d-muted); text-align: center; }
-.dd-node-detail { font-size: 11px; color: var(--d-muted); overflow-wrap: anywhere; }
-.dd-node { flex-wrap: wrap; }
-.dd-node-label { overflow-wrap: anywhere; }
-.dd-node.dd-drop-before { border-top-color: var(--d-accent); }
-.dd-node.dd-drop-after { border-bottom-color: var(--d-accent); }
-.dd-node.dd-drop-inside { background: var(--d-surface-2); box-shadow: inset 0 0 0 1px var(--d-accent); }
-.dd-tree.dd-dragging { cursor: grabbing; }
 
 /* ---- the YAML pane -------------------------------------------------------------------------------------------------------------- */
 .dd-yaml { display: flex; flex-direction: column; gap: 4px; min-width: 0; }

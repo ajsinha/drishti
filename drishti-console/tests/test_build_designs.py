@@ -126,7 +126,8 @@ def test_the_design_page_is_the_workbench_with_its_panes_and_samples(app_client)
     d = _new(app_client, "Page", empty=True, kind="trade")
     app_client.post(f"/build/designs/{d['id']}/files", json=_files(("a.json", _doc(1)), ("b.json", _doc(2))))
     page = app_client.get(f"/build/d/{d['id']}").text
-    assert "data-workbench" in page and "data-design-page" in page and 'role="tree"' in page and "sutra: my-layout" in page
+    # the shape tree is drishti-tree's outline, drawn in the browser into data-tree (a treegrid: test_build_designs_browser.py checks the role)
+    assert "data-workbench" in page and "data-design-page" in page and "<div data-tree></div>" in page and "sutra: my-layout" in page
     for pane in ("Design", "YAML", "Summary", "Inspector", "Problems", "Tests"):
         assert f'role="tab"' in page and f">{pane}" in page
     assert '"name": "a.json"' in page.replace("&#34;", '"') and '"name": "b.json"' in page.replace("&#34;", '"')

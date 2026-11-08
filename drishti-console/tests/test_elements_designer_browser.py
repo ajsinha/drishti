@@ -153,7 +153,7 @@ def test_the_studio_layout_palette_canvas_inspector_outline_yaml_and_four_eyes(b
         assert "id: v1" in lines[int(hl.split("-")[0]) - 1]
         # the outline selects on the canvas
         await pg.click("[data-dd-tab='outline']")
-        await pg.click("#hx-outline [data-dd-node='v3']")
+        await pg.click("#hx-outline [data-node='v3'] .dt-oname")
         assert await h(pg, "window.__harness.selection.primary()") == "v3"
         assert await h(pg, "document.querySelector('#hx-canvas [data-dd-id=v3]').classList.contains('dd-selected')")
         # the YAML read back: the canvas follows; a broken line is said and the design keeps what it had

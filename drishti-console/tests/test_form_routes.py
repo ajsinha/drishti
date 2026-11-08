@@ -60,7 +60,7 @@ def test_type_ahead_offers_only_packs_with_kinds_then_their_kinds(cl):
 
 def qf(page):
     """The form the page draws (drishti-inputs' Form): its schema and value, sent with the page."""
-    return json.loads(html.unescape(re.search(r'data-qf-schema="([^"]*)"', page).group(1)))
+    return json.loads(html.unescape(re.search(r'data-qf-fields data-schema="([^"]*)"', page).group(1)))
 
 
 def named(q):

@@ -35,7 +35,7 @@
     ({% for c, n in strangers.refusalsByCode.items() %}{{ c }}: {{ n }}{{ ', ' if not loop.last }}{% endfor %}).</p>{% endif %}
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   <div class="adm-bar">
-    <input class="studio-in" type="search" data-filter placeholder="Filter by name, id or origin" aria-label="Filter the applications" autocomplete="off">
+    {{ admin_form('embedding_filter') }}{# drishti-inputs' Forms from the server's schemas (core/admin_forms.py) #}
     <button type="button" class="btn-pill btn-accent" data-new>New application</button>
   </div>
   <div class="tbl-wrap"><table class="tbl adm-tbl" data-apps>
@@ -67,28 +67,7 @@
   <dialog class="adm-dialog emb-dialog" data-new-dialog aria-labelledby="embNewTitle">
     <div class="ds-head"><h2 id="embNewTitle">New host application</h2>
       <button type="button" class="btn-pill btn-ghost" data-close aria-label="Close without saving">Close</button></div>
-    <form data-new-form autocomplete="off">
-      <label>Name<input class="studio-in" name="name" required maxlength="100" placeholder="Client CRM"></label>
-      <label>Id (lower case letters, digits, hyphens)<input class="studio-in mono" name="id" required pattern="[a-z][a-z0-9\-]{1,31}" maxlength="32" placeholder="client-crm"></label>
-      <label>Origins, one per line (scheme, host, optional port; no path){% if emb.allowWildcardOrigins %} <span class="text-muted-d">https://*.suffix is allowed</span>{% endif %}
-        <textarea class="studio-in mono" name="origins" rows="3" required placeholder="https://crm.bank.example"></textarea></label>
-      <fieldset class="emb-auth"><legend>How the application signs in</legend>
-        <label><input type="radio" name="auth" value="secret" checked> Client secret (made now, shown once)</label>
-        <label><input type="radio" name="auth" value="key"> Public key: a JWK set; the application signs its requests</label>
-        <label><input type="radio" name="auth" value="both"> Both</label>
-        <label data-jwks-field hidden>JWK set (JSON, public keys only)<textarea class="studio-in mono" name="jwks" rows="5" placeholder='{"keys":[{"kty":"RSA","kid":"host-1","n":"...","e":"AQAB"}]}'></textarea></label>
-      </fieldset>
-      <fieldset class="emb-scopes"><legend>Scopes</legend>
-        {% for s in emb.scopes or ['embed:view'] %}<label><input type="checkbox" name="scope" value="{{ s }}"{% if loop.first %} checked{% endif %}> <span class="mono">{{ s }}</span></label>{% endfor %}
-      </fieldset>
-      <label>Kinds and reports it may show (comma separated; a report is <span class="mono">report:&lt;id&gt;</span>, every report <span class="mono">report:*</span>; empty: everything its users' roles open)<input class="studio-in mono" name="kinds" placeholder="trade, counterparty, report:file:report:trades-overview"></label>
-      <div class="emb-rates">
-        <label>Calls per minute<input class="studio-in" type="number" min="1" name="callsPerMinute" value="{{ emb.callsPerMinute or 600 }}"></label>
-        <label>Calls per user per minute<input class="studio-in" type="number" min="1" name="userCallsPerMinute" value="{{ emb.userCallsPerMinute or 60 }}"></label>
-        <label>Token life (seconds, 30&ndash;{{ emb.tokenMaxSeconds or 900 }})<input class="studio-in" type="number" min="30" max="{{ emb.tokenMaxSeconds or 900 }}" name="tokenSeconds" value="{{ [300, emb.tokenMaxSeconds or 900] | min }}"></label>
-      </div>
-      <label>Contact (optional)<input class="studio-in" name="contact" maxlength="200" placeholder="crm-team@bank.example"></label>
-    </form>
+    {{ admin_form('embedding_new', emb=emb) }}
     <p class="adm-msg" data-new-msg role="status" aria-live="polite"></p>
     <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-accent" data-create>Register</button></div>
   </dialog>
@@ -96,7 +75,7 @@
   <dialog class="adm-dialog emb-dialog" data-secret-dialog aria-labelledby="embSecretTitle">
     <h2 id="embSecretTitle">Client secret for <span data-secret-app></span></h2>
     <p class="adm-warn" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Copy it now. This is the only time it is shown; {{ PRODUCT }} keeps only a hash.</p>
-    <label>Client secret<input class="studio-in mono" data-secret-value readonly aria-label="Client secret" size="46"></label>
+    {{ admin_form('embedding_secret') }}
     <p class="text-muted-d" data-secret-note></p>
     <div class="adm-dlg-actions ds-actions">
       <button type="button" class="btn-pill btn-ghost" data-secret-copy>Copy</button>
@@ -106,7 +85,7 @@
   <dialog class="adm-dialog emb-dialog" data-rotate-dialog aria-labelledby="embRotTitle">
     <h2 id="embRotTitle">Rotate the secret of <span data-rotate-app></span></h2>
     <p class="text-muted-d">A new secret is made and shown once. The old one keeps working for the grace period, so the application can switch over without a gap; 0 ends it at once.</p>
-    <label>Grace period (seconds)<input class="studio-in" type="number" min="0" value="3600" data-rotate-grace></label>
+    {{ admin_form('embedding_rotate') }}
     <p class="adm-msg" data-rotate-msg role="status" aria-live="polite"></p>
     <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-ghost" data-close>Cancel</button>
       <button type="button" class="btn-pill btn-accent" data-rotate-go>Rotate</button></div>

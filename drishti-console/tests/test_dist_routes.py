@@ -118,7 +118,7 @@ def test_one_list_holds_the_scheduled_reports_and_the_subscriptions(client, back
     backend.reports_kept.clear()
     backend.subs_kept.clear()
     client.post("/reports", content="name=Losers&query=TRD+where+mtm+%3C+0&schedule=business-days+18%3A30&deliver=folder&date=today&enabled=on", headers=FORM)
-    client.post("/reports/subscribe", content="name=Morning&schedule=after-load&date=load&format=html&recipients=ash&target=" + quote(_target()), headers=FORM)
+    client.post("/reports/subscribe", content="name=Morning&schedule=after-load&date=load&format=html&recipients=ash&enabled=on&target=" + quote(_target()), headers=FORM)
     page = client.get("/reports").text
     assert page.count('data-row-kind="report"') == 1 and page.count('data-row-kind="subscription"') == 1
     assert "Losers" in page and "Morning" in page and "after a data load" in page or "after-load" in page
@@ -151,3 +151,17 @@ def test_the_menu_has_my_subscriptions_and_the_admin_list_is_for_administrators(
     assert "Paused ash/Morning" in done
     assert "Deleted ash/Morning" in client.post("/reports/all/ash/Morning/delete", follow_redirects=True).text
     assert client.post("/reports/all/ash/Morning/frobnicate").status_code == 404
+
+
+def test_an_unchecked_active_box_saves_a_report_and_a_subscription_paused(client, backend):
+    """An unchecked checkbox is not sent with a form: the missing "enabled" field is off, never on by default."""
+    backend.reports_kept.clear()
+    backend.subs_kept.clear()
+    client.post("/reports", content="name=Quiet&query=TRD&schedule=business-days+18%3A30&deliver=folder&date=today", headers=FORM)
+    client.post("/reports/subscribe", content="name=Hush&schedule=after-load&date=load&format=html&recipients=ash&target=" + quote(_target()), headers=FORM)
+    assert backend.reports_kept["Quiet"]["enabled"] is False
+    assert backend.subs_kept["Hush"]["enabled"] is False
+    client.post("/reports", content="name=Loud&query=TRD&schedule=business-days+18%3A30&deliver=folder&date=today&enabled=on", headers=FORM)
+    assert backend.reports_kept["Loud"]["enabled"] is True
+    bad = client.post("/reports/subscribe", content="name=Hush2&schedule=whenever&date=today&format=html&recipients=ash&target=" + quote(_target()), headers=FORM).text
+    assert 'name="enabled" checked' not in bad and 'name="enabled">' in bad                              # the page drawn again keeps it unchecked

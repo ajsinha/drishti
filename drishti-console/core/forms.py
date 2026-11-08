@@ -199,3 +199,12 @@ def summary(view: dict, shown: int = 3) -> str:
     if len(parts) > shown:
         return " \u00b7 ".join(parts[:shown] + [f"+{len(parts) - shown} more"])
     return " \u00b7 ".join(parts)
+
+
+def form_host(view: dict, presets: list[str], pack: str = "", kind: str = ""):
+    """The host the page puts where the criteria go: the one server-drawn form (``core/form_kit.host``: ``data-di-form`` with the schema
+    and value of ``form_schema``), embedded in the page's GET form; drishti_form.js finds it with ``formOf`` and adds its widgets."""
+    from core import form_kit
+    qf = form_schema(view, presets, pack, kind)
+    return form_kit.host(qf["schema"], qf["value"], attrs={"class": "qf-fields-host", "data-qf-fields": ""}, layout="columns",
+                         label="Search criteria")
