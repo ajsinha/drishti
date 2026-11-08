@@ -113,12 +113,13 @@ class LiveStack:
         if not jars or not Path(java).exists():
             raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
         work = self.tmp / "server"
+        from bi_samples import shipped
         for kind, names in LIVE_FILES.items():
             folder = work / "config" / "bi" / kind
             folder.mkdir(parents=True)
             for name in names:
                 suffix = {"reports": "report", "boards": "board"}[kind]
-                shutil.copy(ROOT / "config" / "bi" / kind / f"{name}.{suffix}.yaml", folder)
+                shutil.copy(shipped(kind, f"{name}.{suffix}.yaml"), folder)
         from bi_samples import copy_samples
         copy_samples(work / "config" / "bi", LIVE_MODELS)        # the models (the datasets of before the table layer are gone)
         wall = work / "config" / "bi" / "reports" / "desk-wall.report.yaml"

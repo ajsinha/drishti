@@ -45,8 +45,8 @@ def test_analyse_opens_a_pack_dataset_through_the_grouped_picker(browser):
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/bi/notebook")
     sel = page.locator("[data-dataset]")
-    expect(sel.locator("optgroup")).not_to_have_count(0, timeout=20000)
-    labels = page.evaluate("[...document.querySelectorAll('[data-dataset] optgroup')].map(g => g.label)")
+    page.wait_for_function(select_helpers.has_option("[data-dataset]", ">1"), timeout=20000)      # drishti-inputs' Select: its groups are its options'
+    labels = sorted({o["group"] for o in select_helpers.options(page, "[data-dataset]") if o.get("group")})
     assert any(x.startswith("Pack ") for x in labels), labels
     sel.select_option("dataset:pack.trading.trade")
     expect(page.locator("[data-fields-box]")).to_be_visible(timeout=20000)

@@ -80,4 +80,14 @@ async def definition(request: Request, id_: str):
         return await refuse(request, 403, "DRS-8005", "only a published report can be embedded")
     keep = {k: got.get(k) for k in KEPT}
     keep["problems"] = [p for p in (keep["problems"] or []) if p.get("level") == "error"]
+    keep["dataset"] = _with_live_tables(keep["dataset"])
     return await _json(request, keep)
+
+
+def _with_live_tables(model):
+    """The frozen 1.x <drishti-report> (web/embed/report.js) follows a report live when ``dataset.tables`` has a table of mode live; the
+    server describes the report's model by its ``datasets`` (each with its mode) since the table layer, so each one is named there too."""
+    if not isinstance(model, dict) or "tables" in model:
+        return model
+    tables = [{"name": d.get("alias"), "mode": d.get("mode"), "columns": []} for d in model.get("datasets") or [] if isinstance(d, dict)]
+    return {**model, "tables": tables}

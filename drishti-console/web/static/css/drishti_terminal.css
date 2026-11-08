@@ -445,6 +445,12 @@ body.embed .vhead { padding: var(--d-sp-9_6) var(--d-sp-12_8); }
   .asof-known .di-was-asof-known-in .di-datetime-row > * { flex: 1 1 0; min-width: 0; }
   .asof-known .di-was-asof-known-in :is(.di-control, .di-field) { min-width: 0; }
 }
+/* on a phone the known-at field takes a row of its own under the date: beside it, its date and time were too narrow to tap (19 px) */
+@media (max-width: 520px) {
+  .asof:has(.asof-known.on) { flex-wrap: wrap; }
+  .asof-known.on { flex: 1 0 100%; }
+  .asof-known.on .di-was-asof-known-in { flex: 1 1 auto; max-width: none; }
+}
 /* Structured search */
 .srch-form { display: flex; gap: var(--d-sp-8); margin: var(--d-sp-9_6) 0 var(--d-sp-4_8); }
 .srch-q { flex: 1; min-width: 0; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-6_4) var(--d-sp-9_6); }
