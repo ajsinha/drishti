@@ -2003,7 +2003,7 @@ source with the MR lens around it (headline strip, time-travel slider, tabs B an
 **correct non-additive totals**: every cell, subtotal and total is the VaR (or ES, SBM …) of its own set of trades, re-aggregated from their
 scenario P&L vectors, never a sum of other cells. How to use it: [MR_CUBE_GUIDE.md](../guides/MR_CUBE_GUIDE.md) and
 [PIVOT_GUIDE.md › Presets](../guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes); the tutorial is
-[tutorial 38](../tutorials/38-the-mr-cube-on-the-pivot-engine.md). This section keeps the product view: who it serves, what is still
+[tutorial 7, Part C](../tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals). This section keeps the product view: who it serves, what is still
 open, the build checklist, and the **shared cube core** and **data contracts** that the CCR cube ([section 7](#7-ccr-cube-lens)) reuses.
 
 ### 6.1 Who uses it and their questions
@@ -2074,7 +2074,7 @@ cell budget refusing a view with its count, never truncating (P7, now the pivot 
 | MCP3 | Synthetic data: sensitivities from the factor model, factor dictionary, limits, per-class vectors | **Partly built**: `position-sensitivity` and `risk-factor` demo data built; ladder limits are configuration; per-class vectors not built |
 | MCP4 | Console and lens: landing A with tabs B and C, phone tiers, renderer kind, help | **Partly built**: landing and tabs built; phone tiers beyond the pivot's narrow layout and a `cube-view` renderer kind not built |
 | MCP5 | Tests: totals never summed, explain adds up, shard equality | **Built**: `VarMrCubeShardTest`, `test_mcube.py`, `test_cube_presets.py`, `test_mr_cube_browser.py` |
-| MCP6 | Docs and the demo script | **Built**: the guide and tutorial 38 |
+| MCP6 | Docs and the demo script | **Built**: the guide and tutorial 7, Part C |
 
 **Success criteria** (all hold as built): the grand total equals `VAR BANK` (112,041,646 on the demo) exactly; the bank's total differs
 from the sum of the desks' VaR (367.9m) and equals the union's own VaR; every cell and total is equal on one server and on a sharded date.

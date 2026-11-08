@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 4, Connect your data (docs/tutorials/04-connect-your-data.md), written to docs/tutorials/img/t04/.
+"""Pictures of tutorial 15, Connect your data (docs/tutorials/15-connect-your-data.md), written to docs/tutorials/img/t04/.
 
 The connectors are the tutorial's own files (docs/tutorials/data/connectors/): desk-quotes reads a folder of JSON Lines with the shipped `file`
 plugin; desk-ledger is a PostgreSQL connector aimed at a port nothing listens on, so Test connection and the retry line have something to say."""

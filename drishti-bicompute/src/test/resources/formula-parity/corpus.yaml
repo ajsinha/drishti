@@ -27,7 +27,7 @@ formulas:
 - {formula: "sum(PNL) / count()", from: "FormulaFunctionTest"}
 - {formula: "sum(PNL, where=DESK == 'FX') / sum(abs(PNL))", from: "FormulaFunctionTest"}
 - {formula: "sum(PNL) / sum(PNL, where=PNL > 100)", from: "FormulaFunctionTest"}
-- {formula: "sum(RATE_PCT * NOTIONAL) / sum(NOTIONAL)", from: "tutorial 37, CustomFunctionsTest, PivotFunctionsApiTest, pivot.html, API_GUIDE"}
+- {formula: "sum(RATE_PCT * NOTIONAL) / sum(NOTIONAL)", from: "tutorial 7, Part B, CustomFunctionsTest, PivotFunctionsApiTest, pivot.html, API_GUIDE"}
 - {formula: "sum(RATE_PCT * NOTIONAL) / sum(abs(NOTIONAL))", from: "CustomFunctionsTest"}
 - {formula: "sum(PNL * NOTIONAL) / sum(NOTIONAL)", from: "FormulaFunctionTest"}
 - {formula: "stddev(PNL) / avg(NOTIONAL)", from: "FormulaFunctionTest"}
@@ -35,7 +35,7 @@ formulas:
 - {formula: "median(NOTIONAL) - median(PNL)", from: "ConsoleFiguresTest"}
 - {formula: "abs(sum(NOTIONAL)) / stddev_pop(PNL)", from: "ConsoleFiguresTest"}
 # the guides and tutorials
-- {formula: "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)", from: "tutorial 37"}
+- {formula: "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)", from: "tutorial 7, Part B"}
 - {formula: "sum(PNL, where=PNL < 0) / sum(abs(PNL))", from: "PIVOT_GUIDE"}
 - {formula: "percentile(PNL, 0.99) - percentile(PNL, 0.01)", from: "PIVOT_GUIDE, PIVOT_ENGINE"}
 - {formula: "wavg(PNL, NOTIONAL)", from: "PIVOT_ENGINE"}

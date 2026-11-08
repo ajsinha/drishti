@@ -23,7 +23,7 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 
 | You want to | Read |
 |---|---|
-| **Learn by doing** | [tutorial 10](../tutorials/10-first-bi-report.md) (a first report in twelve steps: map, bar, slicer, publish, filters, two datasets, relative dates, a tablet). Then [11](../tutorials/11-bi-that-runs-itself.md) (refresh, subscriptions, alerts, export, expected values), [12](../tutorials/12-live-bi-and-boards.md) (live BI and boards), [13](../tutorials/13-govern-bi.md) (governance), [14](../tutorials/14-python-and-analyse.md) (Python, Vega-Lite and the Notebook), [15](../tutorials/15-ai-in-drishti.md) (AI) [16](../tutorials/16-embed-drishti.md) (embedding) and [18](../tutorials/18-several-datasets-in-one-report.md) (several datasets in one report) |
+| **Learn by doing** | [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report) (a first report in twelve steps: map, bar, slicer, publish, filters, two datasets, relative dates, a tablet). Then [11](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself) (refresh, subscriptions, alerts, export, expected values), [12](../tutorials/08-reports-and-dashboards.md#part-f--live-bi-and-boards) (live BI and boards), [13](../tutorials/08-reports-and-dashboards.md#part-g--govern-bi) (governance), [14](../tutorials/09-notebook-and-python.md) (Python, Vega-Lite and the Notebook), [15](../tutorials/10-ai-assistant.md) (AI) [16](../tutorials/20-embed-drishti.md) (embedding) and [18](../tutorials/08-reports-and-dashboards.md#part-b--several-datasets-in-one-report) (several datasets in one report) |
 | Try each step with real answers | [section 30, its section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view): a stack with four people, querying datasets, row rules and masks at work |
 | Find your way round the pages, powers and workspaces | this guide, sections 2 to 12 |
 | Write or read a dataset (tables, relationships, measures, row rules, masks, live tables) | [section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules) |
@@ -34,7 +34,7 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 | Prepare data in Python step by step; work on a masked extract in SQL and Python cells | [section 34, its section 17](#17-data-prep-the-transform-editor), [USER_GUIDE.md › The Notebook](USER_GUIDE.md#the-notebook) |
 | Export a report or view as PDF, PNG, Excel or CSV; subscribe people by email | [section 33](#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) |
 | Write measures, visuals and tests in Python; explore a dataset as an extract; ask the AI helpers | [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [USER_GUIDE.md](USER_GUIDE.md#the-notebook), [section 29](#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number); Calc's `drishti_bi`: [USER_GUIDE.md](USER_GUIDE.md#19-the-bi-client) |
-| Show a report in another web application | [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide) (`<drishti-report>`, with `<drishti-search>` and `<drishti-about>`), [tutorial 16](../tutorials/16-embed-drishti.md) |
+| Show a report in another web application | [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide) (`<drishti-report>`, with `<drishti-search>` and `<drishti-about>`), [tutorial 20](../tutorials/20-embed-drishti.md) |
 | Publish, review, certify, trace lineage, move content between servers | [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
 | See what ships in `config/bi` and how the folder is read | [config/bi/README.md](../../config/bi/README.md) |
 | Grant the powers, set the limits | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
@@ -42,7 +42,7 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 | Understand the design and what each phase built | [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) (section 20: every phase and wave as built, ending in the one list of what is not built), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (the target design), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#results-computed-by-a-streaming-producer) (heavy continuous aggregation belongs in a producer), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (server-side pricing, proposed) |
 | Fix a problem | section 12 here, [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
-A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), then set up a stack with [section 30, its section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) (the *Set up* section) and do tutorial 10.
+A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), then set up a stack with [section 30, its section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) (the *Set up* section) and do tutorial 8, Part A.
 
 ## Contents
 
@@ -499,13 +499,13 @@ real data and query time while designing, Check, undo and redo, save and save a 
 **The BI essentials.** Scheduled refresh of datasets (`refresh:` with a clock, the pack's business-day calendar or `after-load`, retried with the shared policy, its state on the dataset page: [section 30, its section 7.2](#72-scheduled-refresh));
 time intelligence in the measure language (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`: [section 30, its section 4.1](#41-time-intelligence)), badged in the designer's Fields pane; the visuals **map** (countries by ISO code, regions by ISO 3166-2 code with a click that drills from the world to a country and its regions, or points by latitude and longitude, from a vendored
 country file: no tiles, no CDN), **funnel**, **histogram**, **box plot** and **bubble** in the visual catalogue, the designer, exports and `<drishti-report>`; and **true totals** for the measures of a matrix or table that do not add up, worked out by the engine
-([section 31, its sections 3.1 and 3.2](#31-the-map-funnel-histogram-box-plot-and-bubble)). Walk-through: [tutorial 10](../tutorials/10-first-bi-report.md); settings `drishti.bi.refresh.*` and `drishti.bi.report.distribution-rows` and `totals-max-rows`.
+([section 31, its sections 3.1 and 3.2](#31-the-map-funnel-histogram-box-plot-and-bubble)). Walk-through: [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report); settings `drishti.bi.refresh.*` and `drishti.bi.report.distribution-rows` and `totals-max-rows`.
 
 **The long tail.** The measure language has **window functions** (`lag`, `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `cumulative`: [section 30, its section 4.3](#43-window-functions)), badged in the Fields pane;
 a query may ask for measures of **several unrelated fact tables** at once (each aggregated alone at the shared fields, then joined, no fan-out: [section 30 3.1](#31-several-unrelated-fact-tables-in-one-query)); the rollups of a **live table are kept by group** as rows change ([section 30 7.1](#71-live-tables-phase-5));
 a dataset's **refresh state and history survive a restart** and its page has **Refresh now** ([7.2](#72-scheduled-refresh)); a slicer can be **relative-date** (*Last 30 days*, *This quarter to date*, business-day aware: [section 31 6.1](#61-the-relative-date-slicer));
 a report has **tablet layouts** beside the phone ones ([14.1](#141-a-tablet)); reports and datasets declare **expected values** that Check runs as a chosen role and that stop a publish while they fail ([section 31 17](#17-expected-values-tests)); an **entity view** shows a Drishti view inline for the selected key ([3.4](#34-the-entity-view));
-and the sample *Region economics* drills from the world map to Australian and US regions (illustrative figures, labelled). Walk-throughs: [tutorials 10, 11 and 12](../tutorials/10-first-bi-report.md).
+and the sample *Region economics* drills from the world map to Australian and US regions (illustrative figures, labelled). Walk-throughs: [tutorial 8](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report).
 
 **Several datasets.** Several facts in one model (composed `from:` / `join:` and derived datasets are replaced: a Transform feeds a Python dataset), per-visual datasets and links in reports, several extracts in a notebook, impact and lineage across all of them (`DRS-9014` to `9017`, `9075`; [section 30, its section 11](#11-composed-and-derived-datasets), [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase)).
 
@@ -561,10 +561,10 @@ columns, and the layers on disk) and a **query preview**: choose fields, measure
   (`POST /api/v1/bi/datasets/{id}/refresh`). Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
 * **API.** [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2). Problems: DRS-9010 to 9017 (the dataset, composed and derived datasets included) and 9020 to 9027 (the query) in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
-**Several datasets in BI.** *(Facts from several packs sit in one model with several fact tables, and a Transform feeds a Python dataset, [section 30, its section 11.5](#115-the-samples-converted); composed and derived datasets do not run.)* A dataset written in the older shape need not come from a connector: it may be **composed** of other datasets (`from:` and `join:`: each source is asked as the person reading, with *its own* row rules and masks, and the answers are joined, with measures of the dataset's own over the joined columns) or **derived** by a **Python Transform** that receives the sources' answers as masked pandas frames and returns the table. Either is used wherever a dataset is (reports, alerts, subscriptions, refresh, the Notebook); its page lists **Built from other datasets** and the Model view draws the sources, the join and the table. A **report** may name a dataset per visual and link fields across datasets, so a slicer on one filters the visuals of another ([section 31, its section 16](#16-reports-over-several-datasets)); the **Notebook** loads several extracts in one notebook, joins them in pandas, and promotes the join to a Transform. A join on a column a source masks for you is refused, and so is a YAML join that would repeat rows (`DRS-9015`: aggregate the many side by the key, swap the ends, or accept it with `allow-repeat: true` on the join, which Check then shows as a warning). The sample *Desk P&L vs counterparty exposure* is built both ways. Reference: [section 30, its section 11](#11-composed-and-derived-datasets); tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md).
+**Several datasets in BI.** *(Facts from several packs sit in one model with several fact tables, and a Transform feeds a Python dataset, [section 30, its section 11.5](#115-the-samples-converted); composed and derived datasets do not run.)* A dataset written in the older shape need not come from a connector: it may be **composed** of other datasets (`from:` and `join:`: each source is asked as the person reading, with *its own* row rules and masks, and the answers are joined, with measures of the dataset's own over the joined columns) or **derived** by a **Python Transform** that receives the sources' answers as masked pandas frames and returns the table. Either is used wherever a dataset is (reports, alerts, subscriptions, refresh, the Notebook); its page lists **Built from other datasets** and the Model view draws the sources, the join and the table. A **report** may name a dataset per visual and link fields across datasets, so a slicer on one filters the visuals of another ([section 31, its section 16](#16-reports-over-several-datasets)); the **Notebook** loads several extracts in one notebook, joins them in pandas, and promotes the join to a Transform. A join on a column a source masks for you is refused, and so is a YAML join that would repeat rows (`DRS-9015`: aggregate the many side by the key, swap the ends, or accept it with `allow-repeat: true` on the join, which Check then shows as a warning). The sample *Desk P&L vs counterparty exposure* is built both ways. Reference: [section 30, its section 11](#11-composed-and-derived-datasets); tutorials [10](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report) and [14](../tutorials/09-notebook-and-python.md).
 
 **Refresh and time.** A dataset page has a **Refresh** section: the dataset's `refresh:` schedule (a clock such as `daily 06:00`, `business-days 07:30` by the pack's holiday calendar, a cron, or `after-load`), its status, the last and next refresh, the rows, the time taken and the failures; a failed refresh is retried
-by the shared retry policy. Measures may use `ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year` and `running` over a date column. Reference: [section 30, its sections 4.1 and 7.2](#41-time-intelligence); walk-through: [tutorial 10](../tutorials/10-first-bi-report.md).
+by the shared retry policy. Measures may use `ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year` and `running` over a date column. Reference: [section 30, its sections 4.1 and 7.2](#41-time-intelligence); walk-through: [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report).
 
 
 ## 14. Reports: the viewer (phase 3)
@@ -643,7 +643,7 @@ authors expect them: the canvas on the left, then **Filters**, **Visualizations*
 
 * **Tablet.** The **Tablet** tab beside Phone arranges the page for a tablet (1024 px and narrower): the same list with *Wide* (the whole width instead of half) above a 768 px preview; it writes `layouts.tablet`.
 * **Phone.** The **Phone** tab beside Canvas and YAML arranges the page being edited for a phone (640 px and narrower): the visuals in phone order (**drag** a row or use its arrows), a **Hide** box and a **Rows** height for each, and a **390 px preview** drawn to scale beside it. *Back to automatic*
-  removes the page's arrangement. It writes `layouts.phone` of the YAML ([section 31, its section 14](#14-phone-and-tablet-layouts); walk-through: [tutorial 16](../tutorials/16-embed-drishti.md)).
+  removes the page's arrangement. It writes `layouts.phone` of the YAML ([section 31, its section 14](#14-phone-and-tablet-layouts); walk-through: [tutorial 20](../tutorials/20-embed-drishti.md)).
 
   ![The Phone tab](img/bi-elements/designer-phone-tab.png)
 * **Fields.** The dataset's tables, their columns (a date opens into its parts: year, quarter, month, week, day), its measures and its hierarchies, with a search box. **Drag a field onto the canvas** and the best
@@ -675,7 +675,7 @@ authors expect them: the canvas on the left, then **Filters**, **Visualizations*
 * **Undo and redo** (`Ctrl+Z`, `Ctrl+Y`) walk the last 100 changes; **Save** (`Ctrl+S`) keeps the draft in your workspace; the page warns before you leave with unsaved changes. **Publish** is on the item page
   (review, versions and audience as for any item); a report with errors is refused (`DRS-9030`).
 
-The designer needs the `bi-author` power. Its step-by-step use is [tutorial 10](../tutorials/10-first-bi-report.md) (steps 2 to 5).
+The designer needs the `bi-author` power. Its step-by-step use is [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report) (steps 2 to 5).
 
 **Mistakes while designing.** The canvas preview asks the server for each visual separately and leaves **incomplete visuals** (a required well is empty) out of the question, so one unfinished visual shows its own note (*Add a field to the axis well*) while the others still draw; if the server names another visual's problem the preview leaves that visual out too and asks again. (The published report view keeps its strictness: a report with errors is not drawn.) The Check list names the visual of each problem: its title, its id, its number on the page and the page. A field dropped on a visual says where it fell: *already in the table "Books"* is not an error, and a field that fits no well says which wells the visual has and offers a way out (drop it on a well, or on an empty part of the canvas to start a visual). A report whose YAML names **no dataset** opens with a **Choose a dataset** box (it writes `dataset:` into the draft; save to keep it). From a dataset's page, **New report on this dataset** opens the designer's start with it chosen; with no dataset to read, the start page says so and links to the Datasets page.
 
@@ -712,7 +712,7 @@ The Model view calls the dataset checks (`POST /api/v1/bi/datasets/validate`, wh
 
 ## 17. Publishing and governance (phase 4)
 
-The reference is [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments); the walk-through is [tutorial 13](../tutorials/13-govern-bi.md). On an item's page (`/bi/i/<id>`) four sections are new, and the rail has **Environments**.
+The reference is [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments); the walk-through is [tutorial 8, Part G](../tutorials/08-reports-and-dashboards.md#part-g--govern-bi). On an item's page (`/bi/i/<id>`) four sections are new, and the rail has **Environments**.
 
 * **History** (people who may edit the item). Every save of the body is a saved state with who, when and the message you wrote in *What changed* in the Edit form. Pick two (or press *Compare with draft*) and *Show the differences* for the side-by-side diff; *Restore as draft* makes a state the draft again as a new state, so nothing is lost. Below the table is the review record: requests, decisions with their comments, certifications, revocations, imports.
 * **Review** (shown while an item is proposed, to the people who may decide, including any bi-steward). The request and its note, what changed, Check, what it does to reports, and a data preview answered with the reviewer's own rows and masks. Press *Decide in Approvals*: the item opens in the one Approvals queue with the same diff, its effect and the rules; write your comment and press *Approve* or *Reject*. The author is told in the inbox; four-eyes still applies.
@@ -725,7 +725,7 @@ A phone shows the same sections one column wide with finger-sized buttons; the t
 
 ## 18. Live reports and boards (phase 5)
 
-The references are [section 30](#71-live-tables-phase-5) (live tables), [section 31](#13-live-visuals) (live visuals) and [section 31, its section 23](#23-boards-report-pages-of-live-tiles); the walk-through is [tutorial 12](../tutorials/12-live-bi-and-boards.md).
+The references are [section 30](#71-live-tables-phase-5) (live tables), [section 31](#13-live-visuals) (live visuals) and [section 31, its section 23](#23-boards-report-pages-of-live-tiles); the walk-through is [tutorial 8, Part F](../tutorials/08-reports-and-dashboards.md#part-f--live-bi-and-boards).
 
 **A live report.** Open **Live trading desk** from the catalogue (the samples are shipped with the site; a business user sees them unless *Hide samples* is on). Above the pages is the **live indicator**: a dot and a word (**Live**, **Paused**, **Stale**, **Feed failing**,
 **Disconnected**, **Paused (tab in background)**), *Last update 07:49:57* (when the table last changed), and **Pause** / **Resume**. The visuals redraw in place as the table changes, at most four times a second; Pause holds the picture, Resume catches up at once.
@@ -753,15 +753,15 @@ A report page, one visual, or a Sutra view leaves Drishti as **PDF, PNG, Excel o
 gets them: the engine is asked as that person, so their row rules and masks apply. A subscription takes a schedule (`business-days 07:30`, `weekly mon 07:30 business`, `monthly last 18:00 business`,
 `after-load`), a form (the tables in the email, a PDF or an Excel file) and recipients (users and `role:NAME`; never an outside address). *Run now*, *Pause*, a history with each
 delivery's status, retries with the shared retry policy, an audit trail. The list is on **Reports** in the top bar, merged with the scheduled reports. Reference: [section 33](#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding); walk-through:
-[tutorial 11](../tutorials/11-bi-that-runs-itself.md); settings `drishti.distribution.*`; codes `DRS-9060` and `DRS-9061`.
+[tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself); settings `drishti.distribution.*`; codes `DRS-9060` and `DRS-9061`.
 
 **Alerts.** *Alert me* (the bell in a visual's frame; or click a number on a view) watches one number: a visual of a report, a measure of a dataset or a field of a Sutra entity. It fires when the number crosses a limit
 (`above`, `below`, `between`, `outside`), moves too far (a percentage or an amount, against the previous look or the previous business day) or does not arrive by a time. It looks on a schedule, after a data load, or when a live table changes (after a quiet time).
 **Each person is judged on their own number**: the engine applies their row rules and masks; a masked number is never judged or shown. It stays quiet after firing until the number is back inside the limit (the *hysteresis*), and not again within the *cooldown*.
 It tells you in your inbox (the *Alerts* tab, and the bell), by email to your own address and in the chat bridges (a post with no number); there is a history, an audit trail, pause and resume. A board tile whose colour turns red can tell everyone who reads the board the same way (`notify:`, [section 31, its section 23](#notifications-a-tile-tells-people-when-it-turns-red)). The page is **Alerts** (`/alerts`), linked from **Reports** in the top bar;
-the reference is [section 33, its section 4](#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md); settings `drishti.alerts.*`; code `DRS-9062`. Alerts also have retries of a failed delivery, webhook and text-message channels ([section 33, its section 6](#6-webhooks-and-text-messages)) and, for subscriptions, a written summary ([section 29.9](#299-a-written-summary-at-the-top-of-a-subscriptions-email)). Not built: escalation.
+the reference is [section 33, its section 4](#4-alerts-on-numbers); walk-through: [tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself); settings `drishti.alerts.*`; code `DRS-9062`. Alerts also have retries of a failed delivery, webhook and text-message channels ([section 33, its section 6](#6-webhooks-and-text-messages)) and, for subscriptions, a written summary ([section 29.9](#299-a-written-summary-at-the-top-of-a-subscriptions-email)). Not built: escalation.
 
-**Embedding.** `<drishti-report>` shows a published report, one page or one visual, in **another web application's** page (a Web Component, no iframe), masked whatever the user's roles, with slicers, cross-filter and live updates; the administrator lists the reports a host application may show (`report:<id>` or `report:*`) in Admin → Embedding. Reference: [section 33, its section 5](#5-embedding-a-report-in-another-web-application); developer guide: [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#drishti-report); walk-through: [tutorial 16](../tutorials/16-embed-drishti.md); scope `embed:report`.
+**Embedding.** `<drishti-report>` shows a published report, one page or one visual, in **another web application's** page (a Web Component, no iframe), masked whatever the user's roles, with slicers, cross-filter and live updates; the administrator lists the reports a host application may show (`report:<id>` or `report:*`) in Admin → Embedding. Reference: [section 33, its section 5](#5-embedding-a-report-in-another-web-application); developer guide: [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#drishti-report); walk-through: [tutorial 20](../tutorials/20-embed-drishti.md); scope `embed:report`.
 
 ## 20. Python in BI (phase 6)
 
@@ -770,7 +770,7 @@ versioned, reviewed and published like any item; **Check the Python** on its pag
 (`python:`, `inputs:`, `by:`: [section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 4.2), and a report's **`python` visual** (designer, group *Python*) shows it, or any item named in `format.python`
 ([section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3.3). The code runs on the **console**, in a short-lived worker with no network, a scratch folder only and CPU, memory, time and output limits (never in the browser: a 2.2 visual's `format.run: browser` runs there too).
 It only ever receives the rows the viewer may see, masked as the server masked them. The sample report **Desk P&L risk (Python)** shows a Python measure and a Python visual. Reference, the sandbox, the settings and the codes `DRS-9070` to `9074`:
-[section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python); a short walk-through: [tutorial 14](../tutorials/14-python-and-analyse.md).
+[section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python); a short walk-through: [tutorial 9](../tutorials/09-notebook-and-python.md).
 
 ## 21. The Notebook
 
@@ -785,7 +785,7 @@ A **Profile** tab shows every column of the extract. **Save as a notebook** keep
 (versions, review and publishing like any item; *Open in the Notebook* on its page reopens it, rebuilt for whoever opens it). **Promote** turns a SQL cell
 into a visual of a new or an existing report draft, and a Python cell into a Python Measure or Visual draft (or, for a cell that joins several extracts, a
 Python Transform draft); nothing is published. Slicing is the **Pivot**'s ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)): one analysis path, Pivot, then Report.
-Reference: [USER_GUIDE.md › The Notebook](USER_GUIDE.md#the-notebook); walk-through: [tutorial 14](../tutorials/14-python-and-analyse.md).
+Reference: [USER_GUIDE.md › The Notebook](USER_GUIDE.md#the-notebook); walk-through: [tutorial 9](../tutorials/09-notebook-and-python.md).
 
 ## 22. With AI: describe a report, ask the data, explain a number (stage 2)
 
@@ -1205,8 +1205,8 @@ recipient their own statement, made as them ([section 31, its section 24](#24-st
 ![The Paper tab and page 2 of the preview](img/bi-wave-d/statement-designer.jpg)
 
 From the command line: `drishti.py bi statement preview <report>` lists the pages with their header and footer, `drishti.py bi statement file <report> -o
-statement.pdf` writes the PDF (`--format xlsx` the workbook) ([CLI_GUIDE.md](CLI_GUIDE.md#bi-statement)); tutorial 20 does both in the UI, the CLI and the
-YAML ([20-statements-and-field-parameters.md](../tutorials/20-statements-and-field-parameters.md)).
+statement.pdf` writes the PDF (`--format xlsx` the workbook) ([CLI_GUIDE.md](CLI_GUIDE.md#bi-statement)); tutorial 8, Part C does both in the UI, the CLI and the
+YAML ([20-statements-and-field-parameters.md](../tutorials/08-reports-and-dashboards.md#part-c--statements-and-field-parameters)).
 
 ## 28. Background runs: long BI questions
 
@@ -1601,7 +1601,7 @@ POST /api/v1/bi/ai/draft  {"dataset": "trades-basic@1", "request": "x"}         
 { "status": 403, "code": "DRS-9002", "detail": "DRS-9002 rita does not hold the bi-author power (an administrator grants it on a role)" }
 ```
 
-(The second call is the checker at work: tutorial 15's mock answers every draft with the same world-economics report, which names nothing of
+(The second call is the checker at work: tutorial 10's mock answers every draft with the same world-economics report, which names nothing of
 `trades-basic@1`; it was told the problems once, answered the same, and the draft was refused, not shown.)
 
 ![Describe a report in the designer](img/bi-ai/bi-ai-describe.png)
@@ -1633,7 +1633,7 @@ POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "n
 { "status": 403, "code": "DRS-4018", "detail": "DRS-4018 feature 'bi-ask' is not open to your roles" }
 ```
 
-(Captured on tutorial 15's stack, whose AI policy opens `bi-ask` to `admin` and `bi-writer` only, hence rita's refusal; with no policy entry for the
+(Captured on tutorial 10's stack, whose AI policy opens `bi-ask` to `admin` and `bi-writer` only, hence rita's refusal; with no policy entry for the
 feature she would be answered, with her own row rules and masks.)
 
 The body names a `report` (the question is asked of the dataset that report reads, with the report's grants) or a `dataset` (a catalogue id). In `aggregates` mode `summary` is the model's
@@ -1750,7 +1750,7 @@ tools itself (the MCP client exists; no BI hook uses it).
 
 ## 30. Datasets: the YAML, the expression language and the security rules
 
-Reference for the **dataset** of Drishti Rūpaka (BI) (live tables are section 7.1; window functions 4.3; several facts 3.1). For the walk-through see [tutorial 10](../tutorials/10-first-bi-report.md) (step 1, [section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) for the stored datasets, and [tutorial 12](../tutorials/12-live-bi-and-boards.md) for a live table); for the pages that show a dataset see this document sections 13 and 16; for datasets built from other datasets (composed and derived are replaced: several facts are one model, a Transform is a Python dataset) see
+Reference for the **dataset** of Drishti Rūpaka (BI) (live tables are section 7.1; window functions 4.3; several facts 3.1). For the walk-through see [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report) (step 1, [section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) for the stored datasets, and [tutorial 8, Part F](../tutorials/08-reports-and-dashboards.md#part-f--live-bi-and-boards) for a live table); for the pages that show a dataset see this document sections 13 and 16; for datasets built from other datasets (composed and derived are replaced: several facts are one model, a Transform is a Python dataset) see
 [section 11](#11-composed-and-derived-datasets); for the design see [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) sections 6 and 7, 20.2 and 20.10; for the HTTP API see
 [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2); for the settings see
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
@@ -1789,7 +1789,7 @@ Unknown top-level keys are a warning. The shipped samples are **models** in `con
 multi-table dataset is a model whose tables are datasets of their own: `trading-risk` reads `trading-risk-trades`, `trading-risk-netting-sets` and
 the rest), every one commented and in the packs' UPPER_SNAKE column names: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row
 rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which [section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) reads, and the live `live-trading` and
-`live-exposure` (section 7.1, [tutorial 12](../tutorials/12-live-bi-and-boards.md)); `world-economics` (real World Bank data by country) and
+`live-exposure` (section 7.1, [tutorial 8, Part F](../tutorials/08-reports-and-dashboards.md#part-f--live-bi-and-boards)); `world-economics` (real World Bank data by country) and
 `region-economics` (Australian and US states, illustrative figures rounded from public figures, not for reporting) feed the map reports. The examples
 on this page are written in the same names and run on the demo lakes (`drishti.py lake demo`).
 
@@ -2439,7 +2439,7 @@ The 2.1 sample files (`counterparty-exposure.dataset.yaml`, the composed `desk-p
 | `config/bi/reports/banking/pnl-vs-exposure.report.yaml` | a report over `trading-risk@1` with a slicer and a donut that read `counterparty-exposure@1` (section 31, its section 16) |
 | `config/bi/notebooks/banking/pnl-vs-exposure-pandas.notebook.yaml` | the join done by hand in pandas over two masked extracts (USER_GUIDE.md › The Notebook, section 2) |
 
-All are `sample: true`. A test compares the Python dataset with an independent join of the two models, as each reader (`test_bi_multi_dataset_browser.py`). Tutorials 10 and 14 walk through them.
+All are `sample: true`. A test compares the Python dataset with an independent join of the two models, as each reader (`test_bi_multi_dataset_browser.py`). Tutorials 8 and 9 walk through them.
 
 ### 12. Build a dataset in the browser: the wizard
 
@@ -2465,7 +2465,7 @@ The wizard keeps the dataset as one document and writes the same YAML sections 1
 
 After saving: **Open the Model view**, **Open the dataset page**, and (when you may publish) **Publish it, then start a report**. A report reads a *published* dataset and a draft in a personal workspace cannot be published, so save into a shared workspace of which you are a member, or **Move to workspace** later. A dataset page with no schedule offers **Set a schedule** to an author who may edit it: a choice and a time, written as `refresh:` into a new saved state (the same conversion, so nothing else changes).
 
-The console's two helper calls (`POST /bi/wizard/yaml` writes a JSON document as YAML, key order kept; `POST /bi/wizard/parse` reads YAML into the document and says whether it is `tables`, `composed` or `derived`) are same-origin and decide no access; saving goes through the BI calls and the server decides. A text over 400,000 characters is refused (`413`), an unparsable one or a text that is not a mapping `422 DRS-9003`. Walk-through: [tutorial 10, step 13](../tutorials/10-first-bi-report.md#step-13--a-dataset-and-a-model-of-your-own-in-the-wizard).
+The console's two helper calls (`POST /bi/wizard/yaml` writes a JSON document as YAML, key order kept; `POST /bi/wizard/parse` reads YAML into the document and says whether it is `tables`, `composed` or `derived`) are same-origin and decide no access; saving goes through the BI calls and the server decides. A text over 400,000 characters is refused (`413`), an unparsable one or a text that is not a mapping `422 DRS-9003`. Walk-through: [tutorial 8, step 13](../tutorials/08-reports-and-dashboards.md#step-13--a-dataset-and-a-model-of-your-own-in-the-wizard).
 
 ### 13. Model-layer datasets (`rachana: 2`)
 
@@ -2754,11 +2754,11 @@ provenance:
 
 ### 17. Worked examples: the shipped models, row rules and the Model view
 
-The tutorials teach BI in order ([tutorial 10](../tutorials/10-first-bi-report.md) to [14](../tutorials/14-python-and-analyse.md)). This page keeps the recipes they do not repeat: a stack with four people
+The tutorials teach BI in order ([tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report) to [14](../tutorials/09-notebook-and-python.md)). This page keeps the recipes they do not repeat: a stack with four people
 so row rules and masks can be seen at work, reading and querying the shipped models, changing a measure in a copy, seeing a wrong dataset refused, starting a model from the packs, and drawing a relationship in
-the Model view. Everything else is a tutorial: reports and the designer are [tutorial 10](../tutorials/10-first-bi-report.md), subscriptions, alerts and export
-[tutorial 11](../tutorials/11-bi-that-runs-itself.md), live BI and boards [tutorial 12](../tutorials/12-live-bi-and-boards.md), governance [tutorial 13](../tutorials/13-govern-bi.md), Python and the Notebook
-[tutorial 14](../tutorials/14-python-and-analyse.md). The references are [section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions), [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql), [section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave), [section 31, its section 23](#23-boards-report-pages-of-live-tiles) and [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
+the Model view. Everything else is a tutorial: reports and the designer are [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report), subscriptions, alerts and export
+[tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself), live BI and boards [tutorial 8, Part F](../tutorials/08-reports-and-dashboards.md#part-f--live-bi-and-boards), governance [tutorial 8, Part G](../tutorials/08-reports-and-dashboards.md#part-g--govern-bi), Python and the Notebook
+[tutorial 9](../tutorials/09-notebook-and-python.md). The references are [section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions), [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql), [section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave), [section 31, its section 23](#23-boards-report-pages-of-live-tiles) and [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
 
 Every answer below was captured on a fresh clone over the **demo lakes** (`drishti.py lake demo`: sixty business days of the seven packs, 5,000 trades for
 each of ENDUR, CALYPSO and MUREX, 15,000 trade valuations a day). The demo lakes end on **today's** business date, so your dates differ from the ones
@@ -2814,7 +2814,7 @@ window to be two people at once.
 #### Open the catalogue and the models
 
 Type `BI <GO>` (or `RUPAKA <GO>`) in the command line, or choose **BI** in the top bar, then **Models** (and **Datasets**) in the rail. The samples show as
-*promoted* and *sample* (the three above; the two live ones are in [tutorial 12](../tutorials/12-live-bi-and-boards.md); `world-economics` and
+*promoted* and *sample* (the three above; the two live ones are in [tutorial 8, Part F](../tutorials/08-reports-and-dashboards.md#part-f--live-bi-and-boards); `world-economics` and
 `region-economics` feed the map reports). As an author (`wes`) the page also offers **Start a model from the packs** (below).
 
 ![the datasets page](img/bi-datasets/datasets-list.png)
@@ -3103,7 +3103,7 @@ Drag a box by its header and its place is kept in the YAML under `layout:`. Only
 ## 31. Reports: the YAML, the visuals and how they behave
 
 A **report** is pages of **visuals** on a 12-column grid, bound to the fields and measures of one **dataset** ([section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules)). This is the reference for the file, for the visual
-catalogue, for how a visual becomes a query, and for what people can do with a report on the page. To read or build one step by step see [tutorial 10](../tutorials/10-first-bi-report.md) (a first report; [tutorial 12](../tutorials/12-live-bi-and-boards.md) for a live one); for the
+catalogue, for how a visual becomes a query, and for what people can do with a report on the page. To read or build one step by step see [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report) (a first report; [tutorial 8, Part F](../tutorials/08-reports-and-dashboards.md#part-f--live-bi-and-boards) for a live one); for the
 pages (viewer, designer, Model view) see this document sections 14 to 16 and 18. The design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) sections 8 and 9; what is built is its sections 20.3 and 20.5.
 
 Three sample reports ship in `config/bi/reports/` (and a fourth for Python, **Desk P&L risk (Python)**, section 3.3), each marked `sample: true` and commented line by line: **Trades overview** (on `trades-basic`), **Counterparty risk** (cross-pack, on
@@ -3805,7 +3805,7 @@ Mistakes are `DRS-9031` with the path (`layouts.phone.desk.order: page 'desk' ha
 **Where it applies.** The console's viewer uses it when the **screen** is 640 px wide or narrower (and swaps back to the grid when the window grows, with no reload); `<drishti-report>` uses it when the **element** is that narrow, whatever the host page's width, so a report in a narrow card of a desktop page gets it too
 (section 15). Between 641 and 760 px the automatic single column applies. The designer's **Phone tab** edits it: for the page being edited it lists the visuals in phone order (drag a row or use its arrows to reorder, *Hide*, *Rows* for the height) beside a 390 px preview drawn to scale; each change is a step of
 the undo history, *Back to automatic* removes the page's entry, and a visual or page deleted later is dropped from the layouts by the designer. The sample *Live trading desk* ships with one (`config/bi/reports/banking/live-trading-desk.report.yaml`); the picture of the tab and of the result is in the tutorial
-([tutorial 16](../tutorials/16-embed-drishti.md)).
+([tutorial 20](../tutorials/20-embed-drishti.md)).
 
 ![The designer's Phone tab](img/bi-elements/designer-phone-tab.png)
 
@@ -4190,7 +4190,7 @@ pages:
 
 A **board** is a wall of tiles for a screen on the wall of a trading desk, a risk team or an operations room. Each tile is one visual of a report; the board lays them out, keeps them up to date as the data ticks, turns its pages by itself in **kiosk** mode, and colours a tile amber or red when its number crosses a threshold.
 
-**A board is a report page**: a page with `layout: board` holds **tiles** (visuals of other reports, with their alert colours) beside the report's **own visuals**, which take the report's filters, slicers, cross-filter and drill like on any page. There is no separate `board` kind: a stored board item is converted to a report when the server starts, the shipped samples are reports (`config/bi/reports/banking/desk-wall.report.yaml`, `python-wall.report.yaml`), and the old addresses (`/bi/b/<id>`, `/bi/design/board/<id>`) open the report viewer and the report designer (section 12). For the live tables behind tiles see [section 30](#71-live-tables-phase-5); for the visuals see [section 31](#13-live-visuals); for the pages see this document section 18; for a walk-through with pictures see [tutorial 12](../tutorials/12-live-bi-and-boards.md).
+**A board is a report page**: a page with `layout: board` holds **tiles** (visuals of other reports, with their alert colours) beside the report's **own visuals**, which take the report's filters, slicers, cross-filter and drill like on any page. There is no separate `board` kind: a stored board item is converted to a report when the server starts, the shipped samples are reports (`config/bi/reports/banking/desk-wall.report.yaml`, `python-wall.report.yaml`), and the old addresses (`/bi/b/<id>`, `/bi/design/board/<id>`) open the report viewer and the report designer (section 12). For the live tables behind tiles see [section 30](#71-live-tables-phase-5); for the visuals see [section 31](#13-live-visuals); for the pages see this document section 18; for a walk-through with pictures see [tutorial 8, Part F](../tutorials/08-reports-and-dashboards.md#part-f--live-bi-and-boards).
 
 
 #### 23.1 What a board is, and is not
@@ -4632,7 +4632,7 @@ analyst's every trade with MTM masked; and two recipients of the same role and d
 | `POST` | `/api/v1/bi/reports/statement/file` | the same body plus `format: pdf` (default), `xlsx` or `jsonl` (the statement's table rows, one a line): the file, made for the caller, with `X-Statement-Pages`, one `X-Statement-Cut` per line of the preview's `cut` and `X-Statement-Hint` when no data is held (the preview's text, URL-encoded UTF-8); any other format is `422 DRS-9038` *a statement is made as pdf or xlsx* |
 | `POST` | `/api/v1/export/pdf` · `/xlsx` | a statement page as for any export (`{type: report, id, page, state?, date?}`): the statement |
 
-Captured on the test stack of `drishti-console/tests/test_bi_wave_d_browser.py` with the report of tutorial 20
+Captured on the test stack of `drishti-console/tests/test_bi_wave_d_browser.py` with the report of tutorial 8, Part C
 ([monthly-statement.report.yaml](../tutorials/data/monthly-statement.report.yaml), `period: month`):
 
 ```
@@ -4702,7 +4702,7 @@ own orientation inside one statement (the paper is the report's); recipients out
 
 ## 32. Publishing and governance: versions, review, certification, lineage, impact, environments
 
-This is the reference for Rūpaka publishing and governance (phase 4, extended by rename detection, import rollback, BI inside pack archives and lineage past the connector). A dataset or report is not just a file: it is saved, reviewed, certified, and moved between servers, and a change to a dataset can break the reports built on it. This page says exactly how each of those works, what each person sees, which refusal comes back, and what is **not built**. For the pages see this document section 17; for the walk-through with pictures see [tutorial 13](../tutorials/13-govern-bi.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) sections 10 and 11 and what is built is its section 20.4. The settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibigovernance--publishing-and-governance-phase-4): `revisions-keep`, `preview-rows`, `refuse-breaking`, `revoke-certification`, `bundle-max-bytes` and `tell-people` (the inbox notices; off, the audit log and the history still record everything).
+This is the reference for Rūpaka publishing and governance (phase 4, extended by rename detection, import rollback, BI inside pack archives and lineage past the connector). A dataset or report is not just a file: it is saved, reviewed, certified, and moved between servers, and a change to a dataset can break the reports built on it. This page says exactly how each of those works, what each person sees, which refusal comes back, and what is **not built**. For the pages see this document section 17; for the walk-through with pictures see [tutorial 8, Part G](../tutorials/08-reports-and-dashboards.md#part-g--govern-bi); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) sections 10 and 11 and what is built is its section 20.4. The settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibigovernance--publishing-and-governance-phase-4): `revisions-keep`, `preview-rows`, `refuse-breaking`, `revoke-certification`, `bundle-max-bytes` and `tell-people` (the inbox notices; off, the audit log and the history still record everything).
 
 ### 1. Saved states and published versions
 
@@ -5057,7 +5057,7 @@ visual, or a Sutra view, saved as PDF, a picture, an Excel workbook or CSV) and 
 Section 4: **alerts** on a number, and notifications from a board tile, to the inbox, email and the chat bridges.
 Section 5: a report **embedded** in another web application (`<drishti-report>`, with `<drishti-about>` and `<drishti-search>`), and the report's own phone layout ([section 31](#14-phone-and-tablet-layouts)).
 Also: charts in Excel exports (section 1), a written summary at the top of a subscription's email (section 2), retries of a failed alert delivery (section 4.6), and webhook and text-message channels for alerts and subscriptions (section 6).
-The walk-throughs with pictures are [tutorial 11](../tutorials/11-bi-that-runs-itself.md) (export, subscribe and alerts); this is the reference.
+The walk-throughs with pictures are [tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself) (export, subscribe and alerts); this is the reference.
 
 **One rule runs through all of it: the file or the mail is made for the person who gets it.** The numbers are asked of the data engine *as that person*, so their row rules and their
 masks apply; nothing is copied from the sender's screen. A desk head's export holds her desk; an analyst whose column is masked gets the mask. **A masked
@@ -5065,7 +5065,7 @@ cell reads `•••` in every format** (CSV, Excel, PDF, PNG and the mail's bo
 
 ### 0. Scheduled searches and the Reports page
 
-The **Reports** page (`Views`, `Reports`, `/reports`) lists every scheduled report and subscription you have, with a box to find one, and links to your alerts and the BI reports. Learn it by doing in [tutorial 9](../tutorials/09-reports.md) (scheduled searches) and [tutorial 11](../tutorials/11-bi-that-runs-itself.md) (BI subscriptions, alerts, export); this page is the reference.
+The **Reports** page (`Views`, `Reports`, `/reports`) lists every scheduled report and subscription you have, with a box to find one, and links to your alerts and the BI reports. Learn it by doing in [tutorial 8, Part E](../tutorials/08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions) (scheduled searches) and [tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself) (BI subscriptions, alerts, export); this page is the reference.
 
 #### Scheduled reports
 
@@ -5088,7 +5088,7 @@ and `X-Drishti-Business-Date` headers); a folder delivery is a `.csv` or a `.jso
 
 A report runs **as you**: it sees what your roles let you see when it runs, with the same masked fields. If your
 account is disabled or deleted, it stops. The list shows each report's next run and its last run (rows, where the
-file went, or the error); **Run now** runs one at once. The walk-through (name, search, when, deliver to, and the file that appears) is [tutorial 9](../tutorials/09-reports.md).
+file went, or the error); **Run now** runs one at once. The walk-through (name, search, when, deliver to, and the file that appears) is [tutorial 8, Part E](../tutorials/08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions).
 
 ##### Export, and subscriptions
 
@@ -5100,7 +5100,7 @@ business date. A file made for you can be shared; it holds no one else's numbers
 the last business day of the month and every hour, at a time you pick; *on a schedule I write (advanced)* and **Advanced: the schedule as text** take any schedule, such as `after-load trade`
 (**after the day's data lands**). You choose the form (the tables in the email, a PDF, an Excel file or a JSON Lines file attached). A BI author or an administrator can also subscribe other people or a role; each of them receives a render made for
 them. Your subscriptions are on **Reports** in the top bar, in one list with your scheduled reports: *Run now*, *Pause*, *Resume*, *Delete*, and *History* (who was sent what, and if it failed, why). Reference:
-[sections 1 and 2](#1-export) below; walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md).
+[sections 1 and 2](#1-export) below; walk-through: [tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself).
 
 ### 1. Export
 
@@ -5829,7 +5829,7 @@ report, and a report names it. It runs **on the server's compute pool** `python`
 
 A third interface, the **Transform**, turns the answers of several model queries into a table that a **Python dataset** publishes (section 13): it is how Python joins models.
 
-This is the reference. For a walk-through see [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 13, what is built is its section 20.8.
+This is the reference. For a walk-through see [tutorial 9](../tutorials/09-notebook-and-python.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 13, what is built is its section 20.8.
 Python in the *terminal* (Calc) is a different thing: [USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view).
 
 ### 1. At a glance
@@ -6152,7 +6152,7 @@ Python Transform pnl-vs-exposure: 18 rows in 218 ms (first run); the same reader
 
 ![The sample's Python dataset: made by the Python Transform pnl-vs-exposure, keyed by counterparty, and the columns its Transform returns](../tutorials/img/t14/12-python-dataset.jpg)
 
-Settings: `drishti.bi.transform.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets). The sample is `config/bi/python/banking/pnl-vs-exposure.python.yaml` with the Python dataset `desk-pnl-vs-exposure-py-result` and the model `desk-pnl-vs-exposure-py` over it ([tutorial 14, step 8](../tutorials/14-python-and-analyse.md#step-8--two-models-a-python-transform-and-a-join-in-the-notebook)).
+Settings: `drishti.bi.transform.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets). The sample is `config/bi/python/banking/pnl-vs-exposure.python.yaml` with the Python dataset `desk-pnl-vs-exposure-py-result` and the model `desk-pnl-vs-exposure-py` over it ([tutorial 9, step 8](../tutorials/09-notebook-and-python.md#step-8--two-models-a-python-transform-and-a-join-in-the-notebook)).
 
 ### 14. Vega-Lite output
 
@@ -6427,7 +6427,7 @@ drishti.py bi item new me FILE.python.yaml                                # the 
 drishti.py bi item new me FILE.dataset.yaml
 ```
 
-Real output of the first on the demo lakes ([tutorial 14, step 12](../tutorials/14-python-and-analyse.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor)):
+Real output of the first on the demo lakes ([tutorial 9, step 12](../tutorials/09-notebook-and-python.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor)):
 
 ```
 trades: 1,000 rows of dataset:pack.trading.trade as of 2026-10-16

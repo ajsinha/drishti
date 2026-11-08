@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 8, Share and collaborate (docs/tutorials/08-share-and-collaborate.md), written to docs/tutorials/img/t08/.
+"""Pictures of tutorial 1, Part D, Share and collaborate (docs/tutorials/01-first-15-minutes.md), written to docs/tutorials/img/t08/.
 
 You (the development administrator) share a filtered view of the swap MX-20000001 with Vera (a viewer), write in its discussion and mention her; Vera
 answers. Two people, one browser at a time: each sign-in clears the other's session."""

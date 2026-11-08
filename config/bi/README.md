@@ -56,7 +56,7 @@ Where to read more, in the order a newcomer wants it:
 
 | For | Read |
 |---|---|
-| a tour of the pages and a walk-through with the samples in this folder | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md) (start here), [docs/tutorials/10-first-bi-report.md](../../docs/tutorials/10-first-bi-report.md) |
+| a tour of the pages and a walk-through with the samples in this folder | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md) (start here), [docs/tutorials/08-reports-and-dashboards.md](../../docs/tutorials/08-reports-and-dashboards.md) |
 | the dataset and model formats (`datasets/`, `models/`) | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) |
 | the report format (`reports/`): a report names its model with `model: <name>@<major>` (a 2.1 live report still names a `dataset:`) | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) |
 | boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) |

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 4: a PostgreSQL connector with TLS and its own pool size. Nothing listens on port 59997 on purpose:
+# Tutorial 15: a PostgreSQL connector with TLS and its own pool size. Nothing listens on port 59997 on purpose:
 # it shows what a connector that cannot connect looks like, and it never touches a real database.
 plugin: jdbc
 kinds: [ledger-entry]

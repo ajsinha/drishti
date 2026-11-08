@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 1, Your first 15 minutes (docs/tutorials/01-first-15-minutes.md), written to docs/tutorials/img/t01/."""
+"""Pictures of tutorial 1, Part A, Your first 15 minutes (docs/tutorials/01-first-15-minutes.md), written to docs/tutorials/img/t01/."""
 from __future__ import annotations
 
 from _tut import ADMIN, ADMIN_PASSWORD, OUT, SERVER_ENV, command, go, login, page_shot  # noqa: F401

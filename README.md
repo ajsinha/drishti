@@ -51,7 +51,7 @@ Access is decided in one place, the **access registry**: licence → module → 
 | **core** | everything without an industry: connectors, lakes, Sutras, search, the Pivot, BI, tables and models, approvals, alerts, Explain, Admin; GLEIF's legal entities as reference data |
 | **banking** | VaR and ES (historical and parametric, backtests, the market-risk cube), counterparty exposure and the pre-deal check, sensitivities, FRTB-SA, SIMM, the official results; the trading, market-data, market-risk and counterparty-risk packs; the drishti-risk library |
 | **capital markets** | US equities (SEC EDGAR filings and facts, indices), funds and ETFs, and the market data's functions (curves, FX, volatilities, equities, bonds) |
-| **economy**, with the public sector | economies, forecasts, governments, elections and news; World Bank development indicators, central banks (FRED, Bank of Canada), Statistics Canada, the OECD, official press releases and GDELT world events ([PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md), [tutorial 46](docs/tutorials/46-public-sector-data.md)) |
+| **economy**, with the public sector | economies, forecasts, governments, elections and news; World Bank development indicators, central banks (FRED, Bank of Canada), Statistics Canada, the OECD, official press releases and GDELT world events ([PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md), [tutorial 14](docs/tutorials/14-public-sector-data.md)) |
 
 - **A module** is on when it is installed, licensed and enabled (`config/modules/<module>.yaml`, or `/api/v1/admin/modules` with a
   reason, audited). A module that is off
@@ -73,24 +73,24 @@ The banking module's engines run on the server in Java, for any scope; the conso
   expression (`BANK - DESK:CREDIT`). Drill from the bank to a trade with contributions that add up, hierarchies from rows or from the
   trades' own columns, limits per node with one limit rule (within, near, breach), any reporting currency, the 509- or 250-scenario
   window, intraday updates, the official end-of-day record, history and backtests ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md),
-  [tutorial 25](docs/tutorials/25-var-from-the-bank-to-a-trade.md)). Regulatory reporting to the cell:
+  [tutorial 2, Part A](docs/tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade)). Regulatory reporting to the cell:
   [REGULATORY_VAR_REPORTING.md](docs/guides/REGULATORY_VAR_REPORTING.md).
 - **Parametric VaR as a cross-check** (`PVAR`, or the explorer's Parametric toggle): the normal fitted to the scope's own scenario P&L,
   beside historical VaR; never the official figure ([VAR_GUIDE.md section 3.12](docs/guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar),
-  [tutorial 43](docs/tutorials/43-parametric-var-beside-historical.md)).
+  [tutorial 2, Part B](docs/tutorials/02-var-from-the-bank-to-a-trade.md#part-b--parametric-var-beside-historical-the-fat-tail-gap)).
 - **The market-risk cube** (`MCUBE`): VaR by desk and risk class as a Pivot preset, each cell equal to the VaR engine's answer for its
-  scope ([MR_CUBE_GUIDE.md](docs/guides/MR_CUBE_GUIDE.md), [tutorial 38](docs/tutorials/38-the-mr-cube-on-the-pivot-engine.md)).
+  scope ([MR_CUBE_GUIDE.md](docs/guides/MR_CUBE_GUIDE.md), [tutorial 7, Part C](docs/tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals)).
 - **Counterparty exposure** (EE, PFE, EPE, EEPE) from the simulator's paths, with netting and collateral on each path
-  ([EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [tutorial 26](docs/tutorials/26-exposure-from-the-bank-to-a-trade.md)).
+  ([EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [tutorial 3](docs/tutorials/03-exposure-from-the-bank-to-a-trade.md)).
 - **The pre-deal check** (`PREDEAL`, Counterparties → Pre-deal check, `POST /api/v1/risk/exposure/predeal`): a new trade copied from a
   booked one or described, added to its netting set path by path, held to the counterparty's credit limit and each tenor bucket, and
   answered **approve**, **refer** or **decline** with the reasons, the headroom and the exposure before and after; every check audited
   ([EXPOSURE_GUIDE.md section 18.9](docs/guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check)).
 - **FRTB-SA** (sensitivities-based method, default risk charge, residual risk add-on) for any VaR scope, its parameters as configuration
-  ([FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), [tutorial 30](docs/tutorials/30-frtb-sa-from-the-cases-to-a-desk.md)).
+  ([FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), [tutorial 4](docs/tutorials/04-frtb-sa.md)).
 - **SIMM** initial margin per netting set and over any scope. ISDA's calibrated numbers are licensed, so the parameter file ships empty
   and the bank installs its own ([SIMM_GUIDE.md](docs/guides/SIMM_GUIDE.md#4-the-licensed-parameter-file),
-  [tutorial 32](docs/tutorials/32-simm-from-the-examples-to-a-netting-set.md)).
+  [tutorial 5](docs/tutorials/05-simm.md)).
 
 **Explained.** Every computed number has one **Explain**: hover for a preview, click (or **E**) for the formula, the inputs and lineage,
 why it moved between two dates (in steps that add up) and an Excel workbook with live formulas. VaR, FRTB-SA and SIMM each have a
@@ -107,16 +107,16 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 - **A keyboard-driven terminal**: type-ahead over every source, linked views of any entity, impact (F8), the raw document (F9), any past
   business day, history and compare, live views that tick, one keymap (`?` lists the keys of the screen) and one search (Alt+K) over
   entities, commands, screens and Help ([USER_GUIDE.md](docs/guides/USER_GUIDE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md),
-  [tutorial 2](docs/tutorials/02-look-up-anything.md)).
+  [tutorial 1, Part B](docs/tutorials/01-first-15-minutes.md#part-b--look-up-anything)).
 - **Search** by value (`TRD where QUANTITY > 200m order by QUANTITY desc`), in plain words parsed without any AI service, or with a form;
-  monitors and alerts on one alert engine ([tutorial 3](docs/tutorials/03-query-by-form.md)).
+  monitors and alerts on one alert engine ([tutorial 1, Part C](docs/tutorials/01-first-15-minutes.md#part-c--query-by-form)).
 - **The Pivot** (`PIVOT`): any kind, search, table or measure as a pivot, every total computed from its own members, saved views, live
   pivots, Excel export with formulas, and **Pivot → Report** when a view should become a report
-  ([PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md), [tutorial 33](docs/tutorials/33-the-pivot-engine.md)).
+  ([PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md), [tutorial 7, Part A](docs/tutorials/07-pivot-cubes-and-explain.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk)).
 - **Business intelligence on the table layer**: tables and models written in Rachana (Build › Tables & models, with the YAML live
   beside the form), reports and boards, row rules across facts, governance and distribution, and the **Notebook** with one Python
   runtime on the server's sandboxed pool ([TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md), [BI_GUIDE.md](docs/guides/BI_GUIDE.md),
-  [tutorial 44](docs/tutorials/44-virtual-tables-and-models.md), [tutorial 10](docs/tutorials/10-first-bi-report.md)).
+  [tutorial 18](docs/tutorials/18-tables-and-models.md), [tutorial 8, Part A](docs/tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)).
 - **One grammar.** Rachana paths and expressions are used in Sutras, search, the Pivot, BI and custom functions; the **function
   catalogue** lists every function with its rules and its Excel, SAS and MATLAB counterparts ([FUNCTIONS.md](docs/guides/FUNCTIONS.md),
   [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md)).
@@ -127,10 +127,10 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   from the shape of the data. One pipeline draws every entity of every kind ([SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)).
 - **Domain packs** bring an industry's kinds, functions, Sutras, links, roles and connectors in YAML only; a pack can be made from your
   own JSON Schema or JSON Lines ([PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [SCHEMA_TO_PACK_GUIDE.md](docs/guides/SCHEMA_TO_PACK_GUIDE.md),
-  [tutorial 5](docs/tutorials/05-build-a-pack.md)).
+  [tutorial 19, Part A](docs/tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data)).
 - **The Build home** (`/build`) is the one place for what people build: connectors, lakes, tables and models, Sutras, packs, reports and
   boards, pivot views, functions, VaR baskets, each with what it uses and what uses it, and the drafts waiting for review
-  ([tutorial 6](docs/tutorials/06-design-a-screen.md)).
+  ([tutorial 19, Part B](docs/tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page)).
 - **Drishti Elements**: the console's JavaScript and CSS as eleven libraries, each with its own version under one release train:
   drishti-core (formats, theme, API client, dialogs, the filter model), drishti-inputs (date and range pickers on the bank's calendars,
   Select, multi-select, combobox, forms from a schema, the code editor), drishti-grid (with pivot, cell editing, write-back and an AG
@@ -150,7 +150,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 
 - **Connectors**: Delta Lake and Apache Iceberg (Drishti's own engines, no Hadoop, local disk or S3), JDBC databases, DuckDB, MongoDB,
   Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds
-  ([CONNECTORS.md](docs/connectors/CONNECTORS.md), [tutorial 4](docs/tutorials/04-connect-your-data.md)). The plugins,
+  ([CONNECTORS.md](docs/connectors/CONNECTORS.md), [tutorial 15](docs/tutorials/15-connect-your-data.md)). The plugins,
   `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`, `feeds`, `news`, `yfinance`.
 - **Lakes, each in its own folder**, each described by one lake file (`config/lakes/<lake>.yaml`: where it is, every table's partitions,
   columns, load mode and retention):
@@ -166,11 +166,11 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   | `regulators` | the SEC, the Federal Reserve, OSFI and other central banks (shipped empty) |
 
   The banking module adds the official VaR and exposure records (`config/lakes/banking/`) ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md),
-  [tutorial 45](docs/tutorials/45-load-your-own-data-into-a-new-lake.md)).
+  [tutorial 16, Part A](docs/tutorials/16-load-your-own-data-into-a-new-lake.md#part-a--a-new-lake-of-your-own)).
 - **The load rules**: JSON Lines is the data standard. A plain file is one table and one business date (`<name>.<YYYY-MM-DD>.jsonl.gz`);
   a `.ready` file says the file is complete and names its lake; a tar archive carries several tables and dates and loads all or nothing.
   Every row carries its load id, so `drishti.py lake undo <load-id>` removes exactly one load. The **data inbox** loads what your ETL
-  drops, and the parallel Java loader handles large loads ([tutorial 36](docs/tutorials/36-load-files-with-the-data-inbox.md)).
+  drops, and the parallel Java loader handles large loads ([tutorial 16, Part C](docs/tutorials/16-load-your-own-data-into-a-new-lake.md#part-c--load-files-automatically-with-the-data-inbox)).
 - **drishti-feeds** pulls external data into the lakes every day: one feed file per source (`config/feeds/<feed>.yaml`: datasets, target
   lake, schedule, licence), incremental pulls, a polite client, a run ledger, three load routes (the Java loader, the Python loader, the
   inbox), `drishti.py feed list|run|status|schedule`, and Admin → Data loads → Feeds with an alert when a run fails. The data goes under
@@ -183,22 +183,22 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 
 - **Arrow Flight and Flight SQL** (off as shipped): data, BI models, pivot views and VaR scenario P&L vectors to Python, Java, JDBC and ODBC
   clients, over TLS, read only, with the reader's entitlements and masks ([FLIGHT_GUIDE.md](docs/guides/FLIGHT_GUIDE.md),
-  [tutorial 35](docs/tutorials/35-data-out-with-arrow-flight.md)). Single-node reads are tested; the three-node end to end is under
+  [tutorial 17](docs/tutorials/17-data-out-with-arrow-flight.md)). Single-node reads are tested; the three-node end to end is under
   construction. Client examples: [examples/clients/](examples/clients/README.md).
 - **REST API** under `/api/v1` with API tokens; the banking engines under `/api/v1/risk/…` ([API_GUIDE.md](docs/guides/API_GUIDE.md)).
 - **Embedding**: live views, panels and reports inside other web applications ([CLIENT_RENDERER.md](docs/architecture/CLIENT_RENDERER.md),
-  [tutorial 16](docs/tutorials/16-embed-drishti.md)).
+  [tutorial 20](docs/tutorials/20-embed-drishti.md)).
 
 ## Operate
 
 - **Security**: passwords or OpenID Connect, roles per kind, field masks, API tokens, an access log and an audit trail; **off by default**
-  for a developer machine and turned on for any shared one ([USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md), [tutorial 17](docs/tutorials/17-run-it-in-production.md)).
+  for a developer machine and turned on for any shared one ([USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md), [tutorial 21](docs/tutorials/21-run-it-in-production.md)).
 - **Admin → Configuration**: every setting in three tiers (everyday, admin, expert), with its value in effect and where it came from; a
   change is a proposal a second administrator approves. Every setting is listed in [CONFIGURATION.md](docs/admin/CONFIGURATION.md).
 - **Modules and engines on or off** per node ([OPERATIONS.md section 22](docs/admin/OPERATIONS.md#22-modules-on-or-off); Admin → Engines,
   [section 21](docs/admin/OPERATIONS.md#21-compute-engines-on-or-off)).
 - **Clustering** (Drishti\*net, off by default): servers join by gossip, any member answers any request, VaR shards across members
-  ([OPERATIONS.md section 18](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 19](docs/tutorials/19-a-cluster-of-three.md)).
+  ([OPERATIONS.md section 18](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 22](docs/tutorials/22-a-cluster-of-three.md)).
 - **Linear algebra**: OpenBLAS is bundled for Linux and Windows x86-64, **off as shipped**; turn it on per node after measuring
   ([OPERATIONS.md section 2.1](docs/admin/OPERATIONS.md#21-server-requirements-native-libraries-blas)).
 - **Deployment** by hand, with systemd, Docker Compose ([deploy/docker/compose.yaml](deploy/docker/compose.yaml)), AWS ECS, and on
@@ -208,7 +208,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 ## Run it
 
 [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) installs and starts Drishti from a clean machine, and
-[tutorial 1](docs/tutorials/01-first-15-minutes.md) walks through your first quarter of an hour. The short version, from the repository
+[tutorial 1, Part A](docs/tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around) walks through your first quarter of an hour. The short version, from the repository
 root, with a 64-bit Java 21 (JDK) and [uv](https://docs.astral.sh/uv/) for the console's Python (Maven ships with the repository):
 
 ```bash

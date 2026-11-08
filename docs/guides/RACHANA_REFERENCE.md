@@ -5486,7 +5486,7 @@ Each phase migrates screens only where the equivalence test proves the view unch
 
 ## Screen designer and the Build workbench
 
-New to the workbench? Follow [tutorial 6 · Design a screen](../tutorials/06-design-a-screen.md) (and [tutorial 5](../tutorials/05-build-a-pack.md) to build a pack), with a picture of every step. This page is the reference for everything the workbench does, by mouse or keyboard.
+New to the workbench? Follow [tutorial 19, Part B · Design a screen](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page) (and [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) to build a pack), with a picture of every step. This page is the reference for everything the workbench does, by mouse or keyboard.
 
 
 You have JSON documents (trades, shipments, patients, sensor readings) and you want a screen for them. The **workbench** (*Build → New screen*, then the design's page) is where you make it: bring your files, let Drishti draft a first screen, then **drag panels and fields onto the real screen**, size them on the grid, fill their options in a form, and watch every sample of your data against it while you work. The result is an ordinary Sutra (the layout file Drishti reads), and the YAML is one tab away when you want it.
@@ -8199,7 +8199,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one) | the Chart icon on tables (*How a panel behaves*), `chart: false` on a table, and the new `chart` panel kind with its options, states and CSV |
 | this document, [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) | the `chart` kind's options; promotion from the popup |
 | `config/help.yaml` | the context help card `table-chart: user-guide#chart-any-table`, and the popup's `?` links it |
-| [Tutorial 21](../tutorials/21-an-entity-over-time.md) and the tables tutorial | a section *Chart it* with UI, keys and the resulting YAML of a promoted chart panel, with screenshots (desktop and phone) |
+| [Tutorial 1, Part E](../tutorials/01-first-15-minutes.md#part-e--an-entity-over-time) and the tables tutorial | a section *Chart it* with UI, keys and the resulting YAML of a promoted chart panel, with screenshots (desktop and phone) |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | the planned `drishti.charts.*` (with C2; none was built yet) |
 | [API_GUIDE.md](API_GUIDE.md) | `for=chart`, `/api/v1/me/charts`, `bi/drafts/from-chart` |
 | [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) N7 | `charts` among the replicated namespaces |

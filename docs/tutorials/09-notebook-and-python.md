@@ -13,11 +13,11 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 14 · Python and the Notebook
+# Tutorial 9 · The Notebook and Python
 
 SQL measures cover most questions. When a figure needs a real function (a standard deviation of P&L per desk, a histogram, a model) you write it in **Python**, and Drishti runs it **sandboxed, on the rows the person looking may see**. And when you do not yet know the question, the **Notebook** gives you
 an extract of a model to query with **SQL** on the server, work on in **Python** on the server's compute pool, keep as a **notebook**, and **promote** to a measure, a visual or a report draft (slicing is the **Pivot**'s). This tutorial does both on the demo trades, through the
-model `trades-basic@1` (2.2: every sample is a model over datasets). Every step shows it **in the UI**, **on the command line** (`python3 tools/drishti.py`, or `curl`) and **as YAML**, or says why one of the three does not apply.
+model `trades-basic@1` (every sample is a model over datasets). Every step shows it **in the UI**, **on the command line** (`python3 tools/drishti.py`, or `curl`) and **as YAML**, or says why one of the three does not apply.
 
 ## Time to complete
 
@@ -25,8 +25,8 @@ About 60 minutes (step 12: 15 minutes).
 
 ## Before you start
 
-- The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
-  business date 2026-10-16) and tutorial 10 done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (SQL cells need only `bi`).
+- The quick-start environment of [tutorial 8, Part A](08-reports-and-dashboards.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
+  business date 2026-10-16) and tutorial 8, Part A done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (SQL cells need only `bi`).
 - Python on the server: compute switched on, and the server's compute pool `python` pointed at an interpreter that carries the pinned libraries (`DRISHTI_COMPUTE_ENABLED=true`, `DRISHTI_PYTHON=<python with pandas, numpy, pyarrow and scipy at the versions of config/compute/locks/python.lock>`; [OPERATIONS.md](../admin/OPERATIONS.md)). Every Python item runs on that pool, in a strict sandbox (no network, files held to its own folder), never in the console or your browser; on a Windows server Python is off and says why.
   the browser. **Calc** (the step that asks a BI model from a view, Alt+C) is the one exception: it is Python on the screen you are on, in your browser, so its
   runtime must be installed once on the console with `tools/fetch-pyodide.sh` ([GETTING_STARTED.md](../guides/GETTING_STARTED.md)); without it Calc says
@@ -506,6 +506,7 @@ POST /api/v1/alerts/rules/Desk%20volatility%20ceiling/check
 `reduce: max` watches the largest of the desks' figures; `first` or a filter on one desk watches one.
 
 <a id="step-12--prepare-raw-trades-step-by-step-the-transform-editor-240"></a>
+
 ## Step 12 · Prepare raw trades step by step: the Transform editor
 
 Step 8 made a Transform from two **models**. Before a model exists you often want to clean the **raw rows** first: drop matured trades, fix a type,
@@ -599,7 +600,7 @@ The steps run where every Python item runs, on the server's compute pool; the sn
 
 ## Next steps
 
-- [Tutorial 15](15-ai-in-drishti.md): ask the data in words.
+- [Tutorial 10](10-ai-assistant.md): ask the data in words.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, section 13 for the Transform and
   section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook): the page, limits and notebooks. [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) is Calc, the Python panel inside a screen.
 

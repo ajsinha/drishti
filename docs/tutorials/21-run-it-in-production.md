@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 17 · Run it in production
+# Tutorial 21 · Run it in production
 
 Everything so far ran on your own machine as the development administrator. This tutorial is the walk from there to a shared installation you can hand to other people: **security on**, **your own administrator** instead of the development one, **roles and BI powers** that give each person what they need and no more, **tokens** and the secret that signs them, **backups** that you have tried
 to restore, the **heap** and the **connection pools** sized for the machine and the databases, **health** you can watch, an **upgrade** you can roll back, and where to look when something goes wrong. It is a checklist you do, with the real output of each check. The complete reference is [OPERATIONS.md](../admin/OPERATIONS.md), and every step
@@ -25,9 +25,9 @@ About 60 minutes (most of it waiting for a restart or a backup you then read).
 
 ## Before you start
 
-- A running server and console with sign-in on: the quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes,
+- A running server and console with sign-in on: the quick-start environment of [tutorial 8, Part A](08-reports-and-dashboards.md#before-you-start) (the demo lakes,
   the run configurations **Drishti server (demo lakes)** and **Drishti console**, whose variables are the development values this tutorial replaces);
-  you have used Admin, Users and Roles in tutorials 8, 11 and 13, and the personal API token of tutorial 1 is in `DRISHTI_TOKEN`.
+  you have used Admin, Users and Roles in tutorials 1 and 8, and the personal API token of tutorial 1, Part A is in `DRISHTI_TOKEN`.
 - Shell access to the machine that runs the server (you restart it a few times) and `tar`, `curl` and `python3`.
 - The pictures and outputs were made on ports 18943 and 17943; yours are 18480 and 17480. Paths and ports in the outputs are shortened to `~/drishti` and the defaults.
 
@@ -102,7 +102,7 @@ You should see the built-in roles (read-only, from configuration) and the ones y
 
 - **Give people the smallest role that does their job.** `viewer` reads; `trader` and the pack roles read their own packs' kinds; `author` designs screens; `approver` approves them; `admin` administers.
 - **`raw` is the power to see masked fields.** Keep `drishti.security.redact` listing every field that must read `•••` to people without `raw`: a mask hides only the field it names, so list every field that holds the value ([CONFIGURATION.md](../admin/CONFIGURATION.md#field-masks)). Embedded views always mask, whatever the user's roles.
-- **BI powers** are in **Admin → BI** ([tutorial 13](13-govern-bi.md)): `bi` opens BI, `bi-author` creates and publishes in workspaces, `bi-steward` certifies, `bi-admin` manages and can force. The BI settings page also says who may create shared workspaces.
+- **BI powers** are in **Admin → BI** ([tutorial 8, Part G](08-reports-and-dashboards.md#part-g--govern-bi)): `bi` opens BI, `bi-author` creates and publishes in workspaces, `bi-steward` certifies, `bi-admin` manages and can force. The BI settings page also says who may create shared workspaces.
 - **Packs** limit what a user's kinds can reach: a user sees only the packs ticked on their account.
 
 ![Admin, BI: the roles with the four BI powers as columns (shown in tutorial 13)](img/t13/01-bi-settings.jpg)
@@ -117,13 +117,13 @@ There are three kinds of token, and they are not the same thing.
 |---|---|---|---|
 | **Session** (the cookie) | signing in at the console | what the user's roles allow | until sign-out or until the user is disabled |
 | **Personal API token** (`drk_...`) | the user, in **My account → API tokens** | **reads** as its owner; may change things only if given a write scope, and then must expire | up to 90 days; stops at once when the owner is disabled |
-| **Embed token** | a host application's backend ([tutorial 16](16-embed-drishti.md)) | read-only and always masked, for one origin and scope | minutes |
+| **Embed token** | a host application's backend ([tutorial 20](20-embed-drishti.md)) | read-only and always masked, for one origin and scope | minutes |
 
 Personal tokens are listed for everyone in **Admin → Tokens**:
 
 ![Admin, API tokens: the owner, name, id, created, expires, last used and status, with a Revoke button](img/t17/06-tokens.jpg)
 
-You should see the token of tutorial 1 (`tutorials`), who owns it, its scopes (*read only*, or *writes* and the write scopes it holds), when it was last used (in the console's time zone, named) and its status, and **Revoke**. A secret is never stored, only its hash; every creation and revocation is in the audit log. On **My account** a person makes their own:
+You should see the token of tutorial 1, Part A (`tutorials`), who owns it, its scopes (*read only*, or *writes* and the write scopes it holds), when it was last used (in the console's time zone, named) and its status, and **Revoke**. A secret is never stored, only its hash; every creation and revocation is in the audit log. On **My account** a person makes their own:
 
 ![My account, API tokens: a name, days, and the scopes: read always; ai:use, bi:write, design:write, loads:write, packs:admin and others to tick](img/t17/07-account.jpg)
 
@@ -252,7 +252,7 @@ You should see `UP` four times. (`pythonRuntime` says whether Calc's browser Pyt
 
 ![Admin, Health: the overall status DEGRADED, "17 of 19 connectors up", the version, uptime, heap 418/15576 MB, threads and Java; the temp folders of the server and the console; and "1 thing failed and will be tried again by themselves"](img/t17/08-health.jpg)
 
-You should see the status (`OK`, `DEGRADED` when any source is down, stale or a pack has a problem, `DOWN` when no source is up), the version and the heap against its ceiling, and what is being retried: below it each connector with its state, last update, read latency and last error. (The picture is of a stack whose lake was never built, so its lake connectors are `DOWN` and retried with growing waits: a fresh install looks like this until `drishti.py lake demo` builds the lakes. On the quick-start environment every connector of the seven packs is `UP`; the one `DOWN` in the output below is the store of the `desk-quotes` pack of [tutorial 5](05-build-a-pack.md), whose lake was not built. The heap figure is the 2 GB ceiling you set above.)
+You should see the status (`OK`, `DEGRADED` when any source is down, stale or a pack has a problem, `DOWN` when no source is up), the version and the heap against its ceiling, and what is being retried: below it each connector with its state, last update, read latency and last error. (The picture is of a stack whose lake was never built, so its lake connectors are `DOWN` and retried with growing waits: a fresh install looks like this until `drishti.py lake demo` builds the lakes. On the quick-start environment every connector of the seven packs is `UP`; the one `DOWN` in the output below is the store of the `desk-quotes` pack of [tutorial 19, Part A](19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data), whose lake was not built. The heap figure is the 2 GB ceiling you set above.)
 Under the status line, **Temp folders** names the one folder each process keeps (`drishti-<pid>` for the server, `drishti-console-<pid>` for each console worker process, under `drishti.tmp-dir` / `DRISHTI_TMP_DIR`, default `tmp/server` in the data folder, and `tmp_dir` / `DRISHTI_CONSOLE_TMP_DIR`, default `tmp/console` in the data folder) with its size and file count: DuckDB's spill, exports, uploads and Python scratch all live there, and a clean stop removes it. The folders of processes that died are listed there and left for you to delete; nothing removes them automatically. If a figure there keeps growing, something is holding files open; the folder is the first place to look and is safe to leave alone. Start the server's JVM with `-Djava.io.tmpdir=` set to its temp base (`java -Djava.io.tmpdir=data/tmp/server -jar ...`): the JVM reads it only at start, and without it the native libraries of DuckDB, RocksDB and CatBoost unpack into `/tmp` and stay there after a killed process. Health warns, with the exact flag, when it was not passed ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
 **The type-ahead index.** A connector that serves search keeps the ids it suggests as you type. With `index.days` above 1 it keeps several business days, so a past date suggests the ids of that day, and it can keep closed days on disk (`DRISHTI_INDEX_DIR`). Each connector's row on this page says how it is doing (`type-ahead index: 3 days (2 on disk, 0.1 MB), 30,000 ids, 1.6 MB, warm`), and the index follows its source by itself: a data-load signal rebuilds past days and every `index.reload-every` (10 minutes) a changed day is rebuilt. When you cannot wait (a past day was corrected with no signal), open **Admin → Connectors → the connector → Index** and press **Reload** on the day, **Reload kind**, or **Reload all**:
@@ -349,8 +349,8 @@ once a day; **Delete permanently** needs the name typed. Everything above is in 
 
 - [OPERATIONS.md](../admin/OPERATIONS.md) for everything above in full, and [CONFIGURATION.md](../admin/CONFIGURATION.md) for every setting. [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) for users, roles, single sign-on and embedding.
 - [PERFORMANCE.md](../admin/PERFORMANCE.md) and [PERFORMANCE.md, method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) before you size a big installation; [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) and the runbooks in [the runbooks](../admin/OPERATIONS.md#17-runbooks) for incidents.
-- Several servers, each with its own data, as one cluster: [tutorial 19](19-a-cluster-of-three.md) and [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one).
-- The tutorials again, now as users: [tutorial 8](08-share-and-collaborate.md) and [tutorial 9](09-reports.md) are what your people will do first.
+- Several servers, each with its own data, as one cluster: [tutorial 22](22-a-cluster-of-three.md) and [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one).
+- The tutorials again, now as users: [tutorial 1, Part D](01-first-15-minutes.md#part-d--share-and-collaborate) and [tutorial 8, Part E](08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions) are what your people will do first.
 
 ## If something goes wrong
 

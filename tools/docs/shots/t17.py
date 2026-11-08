@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 17, Run it in production (docs/tutorials/17-run-it-in-production.md), written to docs/tutorials/img/t17/.
+"""Pictures of tutorial 21, Run it in production (docs/tutorials/21-run-it-in-production.md), written to docs/tutorials/img/t17/.
 
 The administration pages an operator lives in: the users (with the development administrator's warning), making an administrator of your own and switching the
 development one off, roles, API tokens, the health page (heap, connectors), the caches and the audit log. Run last of the tutorials' pictures: it disables the development

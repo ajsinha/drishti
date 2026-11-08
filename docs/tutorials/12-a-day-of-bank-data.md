@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 7 · Load data daily
+# Tutorial 12 · A day of bank data: load it daily
 
 In production your own job loads the store every day, and its last step tells Drishti: *this pack's data for this business date has landed*. Drishti then refreshes what it caches, checks that the data
 can be read, looks at the alerts that follow loads and tells the right people. If the job never calls, Drishti notices that too. In this tutorial you play the job: set an expectation, announce
@@ -25,7 +25,7 @@ About 30 minutes.
 
 ## Before you start
 
-- [Tutorial 1](01-first-15-minutes.md) done, with the token for the command line. The token must have the scope `loads:write` (tutorial 1 ticked it). A real nightly job should use its own token with that one scope and nothing else.
+- [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done, with the token for the command line. The token must have the scope `loads:write` (tutorial 1, Part A ticked it). A real nightly job should use its own token with that one scope and nothing else.
 - Signed in as the development administrator for the pages. The pack here is `trading` and its kind is `trade`: one kind served by three connectors (`trade-endur`,
   `trade-calypso`, `trade-murex`), 15,000 trades a day on the demo lakes. The dates below are the lakes' (2026-10-13 to 2026-10-16 here); use yours.
 - Drishti never copies or transforms your data: it reads the store your job loaded (see [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) for the whole story). `lake demo` and
@@ -280,13 +280,13 @@ download is audited: Admin → Audit lists it as `data.download` with the date, 
 
 - Wire your own job: [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) section 11 has copy-ready recipes; make a token with only `loads:write` for it ([Permissions](../guides/DATA_GUIDE.md#10-permissions)).
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) section 4 covers alerts on numbers in full: thresholds, changes, hysteresis, cooldown, delivery.
-- [Tutorial 8 · Share and collaborate](08-share-and-collaborate.md).
+- [Tutorial 1, Part D · Share and collaborate](01-first-15-minutes.md#part-d--share-and-collaborate).
 
 ## If something goes wrong
 
 | You see | Meaning |
 |---|---|
-| `403 ... lacks the scope loads:write` | the token was made without that scope; make another (tutorial 1, Step 9) |
+| `403 ... lacks the scope loads:write` | the token was made without that scope; make another (tutorial 1, step 9) |
 | `verified: failed` and exit 1 | the load was announced `ready` but Drishti cannot read the kind for that date: the data is not where the connector looks |
 | an expectation `missing` for a day you did load | the load was announced for another kind, pack or business date: compare with `data loads` |
 | nothing is expected on a weekend | the calendar has no business day there, by design |

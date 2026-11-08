@@ -1200,7 +1200,7 @@ against them.
    40+ recipes, Python/DAX differences), `API_GUIDE.md, Drishti SQL` (DSQL reference), BI_GUIDE.md v2, MODELS.md, API guide; tutorials
    10–18 migrated (UI, CLI, YAML).
 
-**Accepted when:** (1) every shipped sample, test and tutorial 10–18 runs on datasets and models in the UI alone; the
+**Accepted when:** (1) every shipped sample, test and tutorial 8, Part A–18 runs on datasets and models in the UI alone; the
 v1 format and old expression syntax are refused; the equivalence harness is green apart from its allow-list; (2) the
 same question as a visual, an MQ and a DSQL statement gives one plan hash, one answer and one cache entry per security
 signature; (3) a dataset with subset, filter, explicit grain, an expression column, a Python column and grouping, and an
@@ -1322,7 +1322,7 @@ three servers on scratch ports (shared and separate lakes, overlapping packs), o
 
 **Carried from 2.4.0 into the end** (product owner, 2026-10-19, to sooner): a full rehearsal of every
 browser suite (the live and embed suites and a whole-console run over the console's channel relay), the pictures of
-tutorial 14 (25–29, on a demo lake rebuilt with `NOTIONAL`) and of tutorial 16 (11, the React sample after `fetch-vendor.sh`),
+tutorial 9 (25–29, on a demo lake rebuilt with `NOTIONAL`) and of tutorial 20 (11, the React sample after `fetch-vendor.sh`),
 and the two `test_tree_rows.py` browser tests that failed once in a full console run (they pass alone).
 
 **Accepted when:** (1) three servers started from one seed act as one to a console connected to any of them; (2) a
@@ -2825,7 +2825,7 @@ datasets until W3, the boards are unchanged (they name reports), and the noteboo
 | `notebooks/banking/pnl-vs-exposure-pandas` | `model: trading-risk@1`; extracts `{ name, query: { shape: rows, select: { fields: [...] } } }`: the trades fields and the netting-set fields as two row extracts of one model |
 | `python/pnl-vs-exposure` | `inputs: [pnl, exposure]` (the Python dataset's input names); the function's renames of `Desk P&L` follow the MQ's column names (`P&L 1d`) |
 | `python/desk-pnl-volatility`, `pnl-histogram`, `pnl-vega` | unchanged |
-| tutorials 10 to 18 and their data | rewritten in W4 against the converted samples (UI first, then CLI and YAML) |
+| tutorials 8, 9, 10, 20 and 21 and their data | rewritten in W4 against the converted samples (UI first, then CLI and YAML) |
 
 #### 8.3 The converter
 
@@ -3092,7 +3092,7 @@ consumer YAML migration and the designers' full form (W4), AI on MQ beyond *ask*
 | **C1** Console on MQ | console | M | designer previews, slicer values, Analyse Slice and extracts (`explore_routes.extract_for`) send MQ; *Query* panel per visual; implicit-model header and *Make it a model* | S3 (API stub first) |
 | **C2** Dataset wizard v2 and model view as editor (first cut) | console | M | the three-step wizard (9.2) for connector, Python, model and `extends`; the Model view edits a model: datasets panel, pack-reference suggestions, roles, measures tab with defaults, security tab with *Preview as* | S1, S2 |
 | **M1** Converter and equivalence harness | migration | M | `drishti.py bi migrate` (8.3) on a temporary copy, the plan report, the equivalence harness (8.6); no shipped file changed in W1 | S1, S3 |
-| **D1** Docs and tutorials | docs | M | new guides `BI_GUIDE.md` (v2) and `MODELS.md`, `MODEL_QUERY.md` (MQ reference), API and CLI; tutorial 10 gets a new first part "From a pack dataset to a report in five minutes" (UI, CLI, YAML); the rest of 10–18 move in W4 | each WP as it lands |
+| **D1** Docs and tutorials | docs | M | new guides `BI_GUIDE.md` (v2) and `MODELS.md`, `MODEL_QUERY.md` (MQ reference), API and CLI; tutorial 8, Part A gets a new first part "From a pack dataset to a report in five minutes" (UI, CLI, YAML); the rest of 10–18 move in W4 | each WP as it lands |
 
 **Order with two builders.** Builder A (server): S1 → S3 → S5 → S6. Builder B: S2 → C2 → S4 → C1 → M1. D1 follows each
 WP (written by the builder of the WP, reviewed in the experience wave). S3 publishes the MQ request/response types first
@@ -3300,7 +3300,7 @@ What the model guarantees, without anyone writing a join:
 
 * **MTM and PFE peak per counterparty in one visual** are each aggregated at their own grain (trades, netting sets),
   then meet through `counterparties`. Summing a joined trade-by-netting-set table instead would repeat each netting
-  set's exposure once per trade (the trap of tutorial 18).
+  set's exposure once per trade (the trap of tutorial 8, Part B).
 * **A filter on a shared dimension filters every fact;** a filter on one fact's own column filters **only that fact**.
   `trades.currency = USD` narrows MTM and P&L, not exposure or limits; the visual's footnote says so.
 * **Security per dataset:** a desk-head's rule cuts `trades` to their desks before any join; exposure, collateral and
@@ -3393,7 +3393,7 @@ Companion notes: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#results-computed-by
 design adopts and adapts.
 
 **How to read this document.** Sections 1 to 19 are the **design**: they say what Rūpaka should be and, where building changed the design, say **As built** in place. Section 20 is the build plan and, for each of phases 1 to 5, a **"as built"** subsection that lists exactly what exists and what does not; when a design section and an "as built" subsection differ, the subsection is right. The user documents are
-[BI_GUIDE.md](../guides/BI_GUIDE.md) (start here), [tutorial 10](../tutorials/10-first-bi-report.md), [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles) and [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments). The module names of the 2.1 design (`drishti-bi-core`, `-query`, `-live`, `-ai`; its diagram was replaced and is archived, section 17) were never modules: the code is one server package, with the same one-way dependencies.
+[BI_GUIDE.md](../guides/BI_GUIDE.md) (start here), [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report), [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles) and [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments). The module names of the 2.1 design (`drishti-bi-core`, `-query`, `-live`, `-ai`; its diagram was replaced and is archived, section 17) were never modules: the code is one server package, with the same one-way dependencies.
 
 **The goal.** Drishti becomes a business-intelligence platform as nimble and as capable as commercial BI products, with
 **Power BI** as the benchmark, while keeping what Drishti already does that they do not: live data at
@@ -4105,7 +4105,7 @@ since the server started and only the current body is kept. (Phases 2 to 5, belo
 #### 20.2 Phase 2
 
 Phase 2 (datasets and the query engine) is built; the references are [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) (the YAML, the expression language, security), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13, the walk-through
-[tutorial 10](../tutorials/10-first-bi-report.md), [API_GUIDE.md](../guides/API_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.bi.query`). Measurements were in the proof of concept's notes, RUPAKA_POC.md section 11, since deleted (in git at tag v2.9.5).
+[tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report), [API_GUIDE.md](../guides/API_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.bi.query`). Measurements were in the proof of concept's notes, RUPAKA_POC.md section 11, since deleted (in git at tag v2.9.5).
 
 **Built.**
 
@@ -4136,7 +4136,7 @@ and reports (built in phase 3, section 20.3). The columns layer is **per dataset
 #### 20.3 Phase 3
 
 Phase 3 (reports, the visual catalogue, filters and interactions, the designer, the Model view) is built; the reference is [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 14 to 16, the walk-through
-is [tutorial 10](../tutorials/10-first-bi-report.md), the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.report.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+is [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report), the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.report.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 **Built.**
 
@@ -4173,7 +4173,7 @@ relationships used by a measure (the engine joins as written, 20.2); several fac
 
 #### 20.4 Phase 4
 
-Phase 4 (publishing and governance) is built; the reference is [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 17, the walk-through is [tutorial 13](../tutorials/13-govern-bi.md), the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It extends the phase 1 publish-with-review rather than replacing it.
+Phase 4 (publishing and governance) is built; the reference is [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 17, the walk-through is [tutorial 8, Part G](../tutorials/08-reports-and-dashboards.md#part-g--govern-bi), the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It extends the phase 1 publish-with-review rather than replacing it.
 
 **Built (sections 10 and 11).**
 
@@ -4189,7 +4189,7 @@ Phase 4 (publishing and governance) is built; the reference is [BI_GUIDE.md](../
 #### 20.5 Phase 5
 
 Phase 5 (streaming BI) is built; the references are [BI_GUIDE.md 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5), [BI_GUIDE.md 13](../guides/BI_GUIDE.md#13-live-visuals), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#live-bi-a-reports-live-tables),
-[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [tutorial 12](../tutorials/12-live-bi-and-boards.md), the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
+[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [tutorial 8, Part F](../tutorials/08-reports-and-dashboards.md#part-f--live-bi-and-boards), the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
 and the Perspective retest, in RUPAKA_POC.md section 12, since deleted (in git at tag v2.9.5). Codes `DRS-9050` to `9053`.
 
 **Built.**
@@ -4202,7 +4202,7 @@ and the Perspective retest, in RUPAKA_POC.md section 12, since deleted (in git a
 * **Perspective.** `perspective-grid` and `perspective-pivot` over the rows of one table: first read as **masked Arrow**, updates as the rows whose `updateSeq` is above the last answer's (JSON, by key; the whole set again when rows left), Perspective pivoting in the browser; a plain-table fallback when WebAssembly cannot start. **CSP resolved properly**: a report or board page that holds a Perspective visual
   gets, in its own response only, `'wasm-unsafe-eval'` and the SHA-256 of the **four** styles Perspective 3.8.0 writes (`core/perspective_csp.py`); every other BI page keeps `style-src 'self'` and no WebAssembly; the engine's worker is a script of this origin; the hash list was measured on the real pages by `tools/perspective-style-hashes.py` and checked by a Chromium test (all removed, when Perspective was no longer vendored). The retest: RUPAKA_POC.md section 12, since deleted (in git at tag v2.9.5).
 * **Boards.** `config/bi/boards/<id>.board.yaml` and `board` items: pages of tiles, each a visual of a report on the report grid, per-tile **alert colouring** by threshold (warn and crit, in words as well as colour), **kiosk** (full screen, menus hidden) with **auto-rotating pages**, the live indicator and pause, Perspective and rolling-chart tiles; a parser with every problem coded (`DRS-9052`, reserved `notify` as `DRS-9053`); the publish check; the API (`GET /bi/boards/{id}`, `POST /bi/boards/validate`). No external notifications.
-* **Samples.** The live datasets `live-trading` and `live-exposure` (over the demo ticker's trades and netting sets), the reports **Live trading desk** and **Live exposure**, the board **Desk wall**; tutorial 12 with real screenshots.
+* **Samples.** The live datasets `live-trading` and `live-exposure` (over the demo ticker's trades and netting sets), the reports **Live trading desk** and **Live exposure**, the board **Desk wall**; tutorial 8, Part F with real screenshots.
 * **Measured** (this machine, the demo source changing 360 of 750 trades about twice a second, so about 800 row changes a second into one live table with queries answered at p50 15 ms and p95 24 ms over HTTP meanwhile; Perspective at 10,000 rows): RUPAKA_POC.md section 12, since deleted (in git at tag v2.9.5).
 
 **Not built, and not faked.**
@@ -4219,7 +4219,7 @@ and the Perspective retest, in RUPAKA_POC.md section 12, since deleted (in git a
 #### 20.6 Phase 7, part 1
 
 Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**; part 2, **alerts and board notifications**, follows below it; the references are [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 19, the walk-through
-[tutorial 11](../tutorials/11-bi-that-runs-itself.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#export-and-subscriptions-apiv1), the settings `drishti.distribution.*` and the retry area
+[tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself), the API [API_GUIDE.md](../guides/API_GUIDE.md#export-and-subscriptions-apiv1), the settings `drishti.distribution.*` and the retry area
 `drishti.retry.distribution.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). Codes `DRS-9060` and `DRS-9061`.
 
 **Built.**
@@ -4245,7 +4245,7 @@ Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**
 ##### 20.6, part 2: alerts on measures, fields and board tiles
 
 References: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](../guides/BI_GUIDE.md#4-alerts-on-numbers), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#notifications-a-tile-tells-people-when-it-turns-red), the walk-through
-[tutorial 11](../tutorials/11-bi-that-runs-itself.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#alerts-apiv1), the settings `drishti.alerts.*` in
+[tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself), the API [API_GUIDE.md](../guides/API_GUIDE.md#alerts-apiv1), the settings `drishti.alerts.*` in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialerts--the-one-alert-engine). Code `DRS-9062`; `DRS-9053` now refuses only `notifications` and `subscriptions`.
 
 **Built.**
@@ -4273,7 +4273,7 @@ References: [BI_GUIDE.md › Distribution: scheduled reports, export, subscripti
 ##### 20.6, part 3: embedding and phone layouts (phase 7 complete)
 
 References: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 5](../guides/BI_GUIDE.md#5-embedding-a-report-in-another-web-application) (embedding), [BI_GUIDE.md](../guides/BI_GUIDE.md#14-phone-and-tablet-layouts) (`layouts.phone`), [CLIENT_RENDERER.md › Drishti Elements: the design, section 18](CLIENT_RENDERER.md#18-drishti-report-a-published-report-in-another-web-application)
-(the element), the developer guide [CLIENT_RENDERER.md of the guides](CLIENT_RENDERER.md#19-drishti-elements-developer-guide), the walk-through [tutorial 16](../tutorials/16-embed-drishti.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#embedding-a-report-embedv1reports),
+(the element), the developer guide [CLIENT_RENDERER.md of the guides](CLIENT_RENDERER.md#19-drishti-elements-developer-guide), the walk-through [tutorial 20](../tutorials/20-embed-drishti.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#embedding-a-report-embedv1reports),
 the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.lifecycle` in [CONFIGURATION.md](../admin/CONFIGURATION.md). No new code: a refused report is `DRS-8005`, a retired API `DRS-8006`.
 
 **Built.**
@@ -4301,7 +4301,7 @@ the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.
 
 #### 20.7 BI essentials (wave 3)
 
-References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) (section 4.1 time intelligence, 7.2 scheduled refresh), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) (3.1 the new visuals, 3.2 true totals), [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 13 and 15, [tutorial 10](../tutorials/10-first-bi-report.md),
+References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) (section 4.1 time intelligence, 7.2 scheduled refresh), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) (3.1 the new visuals, 3.2 true totals), [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 13 and 15, [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report),
 [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.refresh.*`, `drishti.bi.report.distribution-rows` and `totals-max-rows` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It moves five items from "not built" to built.
 
 **Built.**
@@ -4322,7 +4322,7 @@ References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-express
 
 #### 20.8 Python in BI (phase 6)
 
-References: [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) (the reference), [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 4.2, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3.3, [tutorial 14](../tutorials/14-python-and-analyse.md),
+References: [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) (the reference), [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 4.2, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3.3, [tutorial 9](../tutorials/09-notebook-and-python.md),
 [API_GUIDE.md](../guides/API_GUIDE.md#reports-apiv1bireports-phase-3), the settings `drishti.bi.report.python-*` and `compute.pools.python` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `PythonBiTest`, `PythonBiApiTest`, `PythonRunsTest`, `test_items.py`,
 `test_bi_python.py`, `test_bi_python_browser.py`.
 
@@ -4393,7 +4393,7 @@ Reference: [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-fro
 
 #### 20.9 Analyse (phase 9, lean)
 
-References: [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) (the reference), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
+References: [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) (the reference), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 9](../tutorials/09-notebook-and-python.md),
 the console's `bi.notebook.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
 
 **Built (a lean slice of the phase).**
@@ -4416,7 +4416,7 @@ page itself still has no WebAssembly: only DuckDB's own worker compiles it. Pyth
 #### 20.10 Several datasets (composed datasets, Python Transforms, reports over several datasets)
 
 References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 11 (the reference), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 13, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 16, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) section 2, [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13,
-tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md), [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.transform.*` and the console's `bi.notebook.max_extracts` in
+tutorials [10](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report) and [14](../tutorials/09-notebook-and-python.md), [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.transform.*` and the console's `bi.notebook.max_extracts` in
 [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `ComposedDatasetApiTest`, `TransformServiceTest`, `SampleDatasetsTest`, `test_items.py`, `test_bi_multi_dataset_browser.py`.
 
 The question ("more than one dataset in BI, joined, even by Python") is answered at three levels, and the one rule that decides every design choice is **each source is asked as the reader, before anything is joined**.

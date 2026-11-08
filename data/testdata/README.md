@@ -87,8 +87,8 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    from the committed snapshot ([below](#the-market-snapshot-news-and-markets-offline)). On a machine with internet, set it to `false`
    (and enable the live connectors) to see live quotes and headlines instead.
 
-   **The demo ticker (tutorial 12, live BI and boards).** The lakes are daily snapshots: they do not tick, so on these servers a live
-   visual's chip says **Listening** (following, nothing has changed) rather than **Live**. Tutorial 12's live trades and exposure come
+   **The demo ticker (tutorial 8, Part F, live BI and boards).** The lakes are daily snapshots: they do not tick, so on these servers a live
+   visual's chip says **Listening** (following, nothing has changed) rather than **Live**. Tutorial 8, Part F's live trades and exposure come
    from the **demo source**, which ticks by itself about twice a second: start the server with `DRISHTI_DEMO_ENABLED=true` (the run
    configuration **Drishti server**, or edit **Drishti server (demo lakes)** and set that variable to `true`). With it on, a sample
    answers before the lake for an id both hold; the lakes still answer every other id.

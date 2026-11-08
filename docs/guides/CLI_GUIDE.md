@@ -1783,7 +1783,7 @@ server connection:
 drishti-console/.venv/bin/python tools/drishti.py server health
 ```
 
-On the quick-start server (the demo lakes, sign-in on, the token in `DRISHTI_TOKEN`) after tutorials 4 and 5, which add the
+On the quick-start server (the demo lakes, sign-in on, the token in `DRISHTI_TOKEN`) after tutorials 15 and 19, which add the
 `desk-quotes` pack and its connectors, and with a connector file of [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) that points
 at a folder this machine does not have:
 
@@ -1933,7 +1933,7 @@ desk-quotes           1.0.0    yes     yes  yes    1
 (exit 0)
 ```
 
-The seven packs come from `DRISHTI_PACKS`; `desk-quotes` was **added** by an administrator (tutorial 5) and is in the overlay file.
+The seven packs come from `DRISHTI_PACKS`; `desk-quotes` was **added** by an administrator (tutorial 19, Part A) and is in the overlay file.
 
 ```bash
 python3 tools/drishti.py server packs load my-bank       # POST /api/v1/admin/packs/my-bank/load
@@ -2168,7 +2168,7 @@ path-sum-java BOOK-FX~delay-ms=900  REFUSED  (req-mvncbpgc-b05a980336d9)
 ```
 
 Exit codes: 0 (`ready`, `computing` or `stale`); 1 when the answer is `failed` or `refused`, or the server said no; 2 for usage.
-[Tutorial 23](../tutorials/23-computed-panels.md) walks through them.
+[Tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector) walks through them.
 
 ### `var`: the VaR engine
 
@@ -2224,7 +2224,7 @@ drishti.py var playground DESK:DESK-RATES --measure parametric     the Parametri
 While parametric VaR is on (`drishti.var.parametric.enabled`), `show` prints `parametric VaR 58,409,229 USD = z·σ − μ = 2.3263 ×
 24,792,909 − (-732,297)   ES 58,693,229   fat-tail gap +16,224,451 (+27.8%)   a cross-check, not official` for `DESK:DESK-RATES` on the
 demo data; `parts` adds the *Param. component* and *ρ* columns and, with `--matrix`, the correlation matrix and the engine that computed
-it (`openblas` or `java`); `--json` carries the API's `parametric` block ([tutorial 43](../tutorials/43-parametric-var-beside-historical.md)).
+it (`openblas` or `java`); `--json` carries the API's `parametric` block ([tutorial 2, Part B](../tutorials/02-var-from-the-bank-to-a-trade.md#part-b--parametric-var-beside-historical-the-fat-tail-gap)).
 
 `--horizon`, `--method`, `--confidence` and `--es-confidence` read any answer through a lens: the headline then says
 `horizon    10-day (sum)` and `VaR 99%   274,544,283 USD   (the 5th worst of 500 overlapping windows)` on the demo data; limit use is
@@ -2232,7 +2232,7 @@ printed only when the lens is the limit's own (else *limit is for 1-day 99%: not
 with `--window` keeps the comparison ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)).
 
 Exit codes: 0; 1 when the server said no (the code and its message on standard error) or a what-if was refused or failed; 2 for usage.
-[Tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) walks through them with the demo data.
+[Tutorial 2, Part A](../tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) walks through them with the demo data.
 
 ### `exposure`: the exposure engine
 
@@ -2265,7 +2265,7 @@ drishti.py exposure predeal "PREDEAL CP-ALDERSHOT RATES 250M 5Y"           descr
 
 Exit codes: 0; 1 when the server said no (the code and its message on standard error); 2 for usage. Both what-if methods (`--method
 paths`, the default and exact, and `addon`) are the server's exposure engine's.
-[Tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md) walks through them with the test data.
+[Tutorial 3](../tutorials/03-exposure-from-the-bank-to-a-trade.md) walks through them with the test data.
 
 ### `server packs deploy`, `history`, `rollback` and `datasource`
 
@@ -2687,7 +2687,7 @@ drishti.py bi transform snippets [--json]                                       
 drishti.py bi transform snippet ID [NAME=VALUE ...] [--inputs a,b]                              one step (a list: a,b; a mapping: from:to,from:to)
 ```
 
-Captured, the steps of [tutorial 14, step 12](../tutorials/14-python-and-analyse.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor):
+Captured, the steps of [tutorial 9, step 12](../tutorials/09-notebook-and-python.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor):
 
 ```text
 $ python3 tools/drishti.py bi transform input docs/tutorials/data/endur-trades-cleaned.dataset.yaml --rows 2
@@ -2715,7 +2715,7 @@ drishti.py bi item tests ID [--role R]                                          
 drishti.py bi dataset refresh ID [--now] [--wait S]                                 the refresh state; --now refreshes and waits until it ends (a rachana 2 dataset: through the models that read it)
 ```
 
-Publishing is `bi catalogue publish ID` (above). Captured, the steps of [tutorial 11](../tutorials/11-bi-that-runs-itself.md):
+Publishing is `bi catalogue publish ID` (above). Captured, the steps of [tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself):
 
 ```text
 $ python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/trades-daily.dataset.yaml
@@ -2747,7 +2747,7 @@ drishti.py bi statement file REPORT|--file F [--format pdf|xlsx|jsonl] [-o OUT] 
 ```
 
 `REPORT` is the report's id (`file:report:<name>` for a shipped file); `--file` sends a draft's YAML (a BI author). `--date` is the statement's date: its
-`period` is worked out from it. `--param` gives a parameter of the report's model (a field parameter's choice, a what-if value). Captured, tutorial 20:
+`period` is worked out from it. `--param` gives a parameter of the report's model (a field parameter's choice, a what-if value). Captured, tutorial 8, Part C:
 
 ```text
 $ python3 tools/drishti.py bi statement preview bi-39eb12fe47 --date 2026-10-08

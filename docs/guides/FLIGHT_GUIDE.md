@@ -22,7 +22,7 @@ belongs to, without a JSON step and without copying the lake: the kinds of every
 vectors and the in-memory lake, each with the same entitlements, masks, busy protection and audit as the screens.
 
 The exact form of every request, its schema and its errors are in the [reference](FLIGHT_REFERENCE.md); a hands-on walk from a token to a
-pandas DataFrame is [tutorial 35](../tutorials/35-data-out-with-arrow-flight.md); the clients have their own sections
+pandas DataFrame is [tutorial 17](../tutorials/17-data-out-with-arrow-flight.md); the clients have their own sections
 in the reference ([Python](FLIGHT_REFERENCE.md#71-python), [Java](FLIGHT_REFERENCE.md#72-java), [JDBC](FLIGHT_REFERENCE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program), [ODBC](FLIGHT_REFERENCE.md#74-odbc-excel-power-bi-tableau)).
 Working examples to start from, every one read only (Python notebooks from a token to VaR scenario P&L, a live stream, DuckDB and the
 in-memory lake; Java; Excel through Python) are in [examples/clients](../../examples/clients/README.md). Later: C#/.NET, R and Go client sections (the service already answers any Flight client). How the service is built and why: [DATA_ARCHITECTURE.md section 11](../architecture/DATA_ARCHITECTURE.md#11-arrow-flight-drishtis-data-to-any-client).
@@ -345,6 +345,6 @@ Clients: [JDBC](FLIGHT_REFERENCE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program) (
 stream with resume, Stop); the server's `FlightServerTest` runs it inside the server with real tokens, entitlements and the audit; the
 `FlightSqlServiceTest` runs Flight SQL in process (statements, the model by comment and header, the catalog, prepared statements,
 an update refused); the console's `test_flight_client.py` runs the Python client against a stand-in service over TLS. On one node, every read form, the
-stream across an intraday batch, Stop and resume are run against a real server ([tutorial 35](../tutorials/35-data-out-with-arrow-flight.md)).
+stream across an intraday batch, Stop and resume are run against a real server ([tutorial 17](../tutorials/17-data-out-with-arrow-flight.md)).
 The end to end on a three-node cluster (endpoints on every node, a node stopped mid-read, a VaR stream through an intraday batch) is
 **not measured yet**; it is listed in [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md).

@@ -112,10 +112,10 @@ FOLD_WHAT = {
 }
 
 #: guide sections and tutorials of a kind: (document under docs/, the heading's start); anchors are computed from the heading
-_VAR = [("guides/VAR_GUIDE.md", "15.13 "), ("tutorials/25-var-from-the-bank-to-a-trade.md", "# ")]
-_EXP = [("guides/EXPOSURE_GUIDE.md", "16. "), ("tutorials/26-exposure-from-the-bank-to-a-trade.md", "# ")]
+_VAR = [("guides/VAR_GUIDE.md", "15.13 "), ("tutorials/02-var-from-the-bank-to-a-trade.md", "# ")]
+_EXP = [("guides/EXPOSURE_GUIDE.md", "16. "), ("tutorials/03-exposure-from-the-bank-to-a-trade.md", "# ")]
 _TRD = [("guides/PACK_DEVELOPER_GUIDE.md", "Trading"), ("knowledge/trades-and-products.md", "# "),
-        ("tutorials/24-correct-a-trade-and-approve-it.md", "# ")]
+        ("tutorials/11-correct-and-approve.md", "# ")]
 LINKS = {
     "trade": _TRD,
     "pnl-vector": [("guides/VAR_GUIDE.md", "15.2 "), ("guides/VAR_GUIDE.md", "8.4 ")] + _VAR,
@@ -133,17 +133,17 @@ LINKS = {
     "cva": _EXP, "sa-ccr": _EXP, "simm": _EXP,
     "trade-valuation": [("contracts/TVAL.md", "# ")] + _EXP,
     "frtb-sensitivity": [("contracts/FRTB.md", "# ")], "pnl-explain": [("contracts/PNL.md", "# ")], "stress-result": [("contracts/STR.md", "# ")],
-    "fund": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
-    "fund-holder": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
+    "fund": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/13-world-data.md", "# ")],
+    "fund-holder": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/13-world-data.md", "# ")],
     "position-sensitivity": [("contracts/FRTB.md", "20. "), ("guides/FRTB_SA_GUIDE.md", "# ")],
     "risk-factor": [("contracts/FRTB.md", "21. "), ("guides/FRTB_SA_GUIDE.md", "# ")],
-    "index-funds": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
+    "index-funds": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/13-world-data.md", "# ")],
 }
 PACK_LINKS = {
     "core": [("knowledge/entities-and-ownership.md", "# "), ("knowledge/counterparty-credit-risk.md", "# ")],
     "market-data": [("knowledge/market-data.md", "# ")],
-    "gleif": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/entities-and-ownership.md", "# "), ("tutorials/27-groupings-and-analytics.md", "# ")],
-    "us-equities": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/companies-funds-and-etfs.md", "# "), ("tutorials/27-groupings-and-analytics.md", "# ")],
+    "gleif": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/entities-and-ownership.md", "# "), ("tutorials/06-groupings-and-analytics.md", "# ")],
+    "us-equities": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/companies-funds-and-etfs.md", "# "), ("tutorials/06-groupings-and-analytics.md", "# ")],
     "news-and-markets": [("guides/EXTERNAL_DATA.md", "# ")],
     "world-economy": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/economies.md", "# ")],
     "market-risk": [("knowledge/market-risk.md", "# ")],

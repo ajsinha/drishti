@@ -21,7 +21,7 @@ qualifier, bucket and labels); the netting-set master gives each netting set its
 calculation currency and add-ons. **ISDA's numbers are licensed: Drishti ships none.** The bank installs its licensed parameter file, one
 per SIMM version; until it does, no SIMM figure is computed. Every figure opens in a playground that shows the same calculation as
 spreadsheet formulas, with the method choices as switches you can flip, compare and reproduce. The tutorial is
-[tutorial 32](../tutorials/32-simm-from-the-examples-to-a-netting-set.md); the data contract is [SIMM.md](../contracts/SIMM.md); the
+[tutorial 5](../tutorials/05-simm.md); the data contract is [SIMM.md](../contracts/SIMM.md); the
 design behind it is [SENSITIVITIES_AND_FRTB_SA.md section 8](#5-the-method).
 
 ## Contents

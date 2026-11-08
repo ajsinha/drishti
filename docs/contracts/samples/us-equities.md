@@ -277,7 +277,7 @@ Fields no record above has, found by reading all 586 rows, with how many rows fi
 - Data contract: [USEQ in the us-equities pack's contracts](../packs/us-equities.md#useq-us-company-us-company) (`config/packs/capitalmarkets/us-equities/contracts/us-company.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [Companies, funds and ETFs](../../knowledge/companies-funds-and-etfs.md)
-- [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
+- [Tutorial 6 · Groupings and analytics, computed](../../tutorials/06-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="index-membership"></a>
@@ -403,7 +403,7 @@ None: all 6 rows were read, and every field any of them has is in the record abo
 - Data contract: [IDX in the us-equities pack's contracts](../packs/us-equities.md#idx-index-members-index-membership) (`config/packs/capitalmarkets/us-equities/contracts/index-membership.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [Companies, funds and ETFs](../../knowledge/companies-funds-and-etfs.md)
-- [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
+- [Tutorial 6 · Groupings and analytics, computed](../../tutorials/06-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="filing-feed"></a>
@@ -536,7 +536,7 @@ None: all 6 rows were read, and every field any of them has is in the record abo
 - Data contract: [EDGAR in the us-equities pack's contracts](../packs/us-equities.md#edgar-edgar-filings-browser-filing-feed) (`config/packs/capitalmarkets/us-equities/contracts/filing-feed.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [Companies, funds and ETFs](../../knowledge/companies-funds-and-etfs.md)
-- [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
+- [Tutorial 6 · Groupings and analytics, computed](../../tutorials/06-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="filing"></a>
@@ -640,7 +640,7 @@ None: all 11,691 rows were read, and every field any of them has is in the recor
 - Data contract: [FILING in the us-equities pack's contracts](../packs/us-equities.md#filing-sec-filing-filing) (`config/packs/capitalmarkets/us-equities/contracts/filing.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [Companies, funds and ETFs](../../knowledge/companies-funds-and-etfs.md)
-- [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
+- [Tutorial 6 · Groupings and analytics, computed](../../tutorials/06-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="financial-fact"></a>
@@ -751,5 +751,5 @@ None: all 4,026 rows were read, and every field any of them has is in the record
 - Data contract: [FACT in the us-equities pack's contracts](../packs/us-equities.md#fact-financial-fact-financial-fact) (`config/packs/capitalmarkets/us-equities/contracts/financial-fact.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [Companies, funds and ETFs](../../knowledge/companies-funds-and-etfs.md)
-- [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
+- [Tutorial 6 · Groupings and analytics, computed](../../tutorials/06-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

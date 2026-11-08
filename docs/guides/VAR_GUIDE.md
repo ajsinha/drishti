@@ -24,7 +24,7 @@ reports of Canada and the US, the lenses and editions that show VaR, the configu
 It is **the one complete document on VaR**: methodology, the calculation worked step by step,
 Drishti's implementation and the regulatory side; other documents link here. Anything described that is not in the code says
 **design, not built** and names the plan row that will build it. The hands-on walk-through is
-[tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) (twelve steps on the test data). In the console, **F1** on the explorer
+[tutorial 2, Part A](../tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) (twelve steps on the test data). In the console, **F1** on the explorer
 (or its **?**) opens this guide.
 
 **Start here:** [Input, computed, cache and the official record](#input-computed-cache-and-the-official-record-compute-first) says in
@@ -1010,7 +1010,7 @@ computes nothing); on a phone the drawer is a bottom sheet.
 for you and in the link (`nc=0`). **Worked in the playground** (and the Explain drawer's Workbook tab) opens the VaR Playground's **Parametric tab**
 on the scope ([section 3.10](#310-the-var-playground-play-var)): the figures, the steps, each position's μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the
 Euler components that add up to the parametric VaR, and the workbook's Parametric tab. The MR cube and the pivot offer `pvar()` beside
-`var()` and `comp_var()`. [Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through it on the demo data.
+`var()` and `comp_var()`. [Tutorial 2, Part B](../tutorials/02-var-from-the-bank-to-a-trade.md#part-b--parametric-var-beside-historical-the-fat-tail-gap) walks through it on the demo data.
 
 ### 3.13 The VaR Playground's workbook, cell by cell
 
@@ -1253,7 +1253,7 @@ signed** (bought positive, sold negative), so a position's quantity is the net o
 `FLAT`; `POSITION_TYPE` says `fungible` (several trades) or `single-trade`. On 2026-09-30 the rules give **7,984 positions**: 359
 securities, 212 listed, 7,413 OTC; 476 are fungible and 111 net buys against sells. The engine counts 7,993: nine positions whose
 trades sit under two limit letters are split in two ([section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)). Example: `POS-BOOK-EQD-2~SEC-WARRANT-USD-01` is
-nine trades of one warrant in `BOOK-EQD-2`, with a VaR of 67,209 against 111,930 for the trades alone. The bond future of tutorial 25 is
+nine trades of one warrant in `BOOK-EQD-2`, with a VaR of 67,209 against 111,930 for the trades alone. The bond future of tutorial 2, Part A is
 in `POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-02` (the *listed* rule).
 
 The same trades and rules always give the same positions, and every official capture records them (each position with its trades, the

@@ -20,12 +20,12 @@ EEE, PFE, EPE, EEPE, EAD), the explorer screen by screen, scopes from the bank t
 the pre-deal what-if, exposure as a kind, who sees what, the command line, the API and the settings (Part I); the data contract: every
 input column, formula, answer, error code, the official results, retention, the stored profiles against computed exposure and the decisions
 (Part II); how the engine holds a date's netting-set path matrices in memory and on local disk, its sizes and what is still open (Part
-III). The hands-on walk-through is [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md) (the test data, from the bank to a
+III). The hands-on walk-through is [tutorial 3](../tutorials/03-exposure-from-the-bank-to-a-trade.md) (the test data, from the bank to a
 trade). In the console, **F1** on the explorer (or its **?**) opens this guide.
 
 Each measure has exactly two documents, the guide and one tutorial, and two help entries: the exposure data contract is Part II of this
 guide. Where the original proposal said otherwise, the code wins and the difference is stated (**Implementation:**).
-VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
+VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 2, Part A.
 
 For the proposed counterparty credit risk cube on this engine (allocated exposure, the GLEIF group roll-up, limits by tenor with
 headroom, CVA, SA-CCR, SIMM, wrong-way risk, pre-deal pricing on paths, every data contract), see the design:
@@ -203,7 +203,7 @@ How to read it:
   below the sum of the quantiles. That is why Drishti sums path matrices, never stored PFEs.
 
 **The bank and its legal entities** (the demo lake on the data's own date, `--as-of data`: 74 netting sets with paths of 76, 8,022
-live trades; `drishti.py exposure show BANK`, `tree`; tutorial 26 steps 1 and 2):
+live trades; `drishti.py exposure show BANK`, `tree`; tutorial 3, steps 1 and 2):
 
 | Scope | Peak PFE 95% | EPE | Note |
 |---|---|---|---|
@@ -537,7 +537,7 @@ YYYY-MM-DD` (default the newest with paths), `--q Q` (default 0.95), `--collater
 | `reload` | drop the loaded dates (administrators): the next request maps the hot file again or reads the lake; `?date=` one date only | `drishti.py exposure reload [--date D]` |
 | `whatif <scope>` | a pre-deal what-if: `--like TRADE` (`--factor`, default 1; −1 its unwind), `--set NETTING_SET` (default a set of its own), or `--candidates FILE.json`; `--method paths|addon` (default `paths`) | `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA` |
 
-Real output of each on the test data: [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md). Tests: `tools/test_expcli.py`.
+Real output of each on the test data: [tutorial 3](../tutorials/03-exposure-from-the-bank-to-a-trade.md). Tests: `tools/test_expcli.py`.
 
 ## 11. The API
 

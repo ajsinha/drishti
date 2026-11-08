@@ -93,7 +93,7 @@ Everything else (the shell, BI, Pivot, Build, designer, admin, Help, embed, phon
 | Help pages | the 19 listed under section `risk` and the banking pages of `analytics` (MR cube, funds) and `knowledge` (market risk, counterparty credit risk, trades and products, market data, companies, funds and ETFs) |
 | Contracts | `CVA`, `FRTB`, `FRTB_DATA_STRUCTURES`, `PNL`, `SACCR`, `SIMM`, `TRADING_GROUPINGS`, `COLL`, `GRP`, `LIM`, `MC`, `NSET`, `STR`, `TVAL`, `WWR`, the banking packs' pages and samples |
 
-`GROUPINGS_ANALYTICS_GUIDE` and tutorial 27 are mixed (generic groupings, equity beta and correlation): split when the analytics move.
+`GROUPINGS_ANALYTICS_GUIDE` and tutorial 6 are mixed (generic groupings, equity beta and correlation): split when the analytics move.
 
 ### 2.4 Packs, configuration, engines and API
 

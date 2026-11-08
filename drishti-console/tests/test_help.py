@@ -207,7 +207,48 @@ connector-news connector-yfinance connector-kafka connector-activemq connector-r
 real-data user-management operations configuration troubleshooting runbook-source-down runbook-sutra-broken runbook-live-latency runbook-sign-in clients
 developer-guide api how-it-fits elements-guide elements ai-providers mcp-client rupaka about-this-page-design collaboration architecture quant-service
 decisions plan release-notes changelog notices sutra-guide rachana-guide plugins build-a-pack sutra-studio""".split() + [
-    "docs-tutorials-22-build-a-screen-with-the-designer",     # tutorial 22, merged into tutorial 6 as its part B (the tutorial tracks, 2026-11-04)
+    "docs-tutorials-22-build-a-screen-with-the-designer",     # the Sutra designer tutorial, now tutorial 19's part B
+    # the 41 tutorials merged into 22 (h-docs, 2026-11-08): each old address opens its tutorial, or the part of it
+    "docs-tutorials-02-look-up-anything",
+    "docs-tutorials-03-query-by-form",
+    "docs-tutorials-04-connect-your-data",
+    "docs-tutorials-05-build-a-pack",
+    "docs-tutorials-06-design-a-screen",
+    "docs-tutorials-07-load-data-daily",
+    "docs-tutorials-08-share-and-collaborate",
+    "docs-tutorials-09-reports",
+    "docs-tutorials-10-first-bi-report",
+    "docs-tutorials-11-bi-that-runs-itself",
+    "docs-tutorials-12-live-bi-and-boards",
+    "docs-tutorials-13-govern-bi",
+    "docs-tutorials-14-python-and-analyse",
+    "docs-tutorials-15-ai-in-drishti",
+    "docs-tutorials-16-embed-drishti",
+    "docs-tutorials-17-run-it-in-production",
+    "docs-tutorials-18-several-datasets-in-one-report",
+    "docs-tutorials-19-a-cluster-of-three",
+    "docs-tutorials-20-statements-and-field-parameters",
+    "docs-tutorials-21-an-entity-over-time",
+    "docs-tutorials-23-computed-panels",
+    "docs-tutorials-24-correct-a-trade-and-approve-it",
+    "docs-tutorials-25-var-from-the-bank-to-a-trade",
+    "docs-tutorials-26-exposure-from-the-bank-to-a-trade",
+    "docs-tutorials-27-groupings-and-analytics",
+    "docs-tutorials-28-funds-and-etfs",
+    "docs-tutorials-29-var-on-iceberg",
+    "docs-tutorials-30-frtb-sa-from-the-cases-to-a-desk",
+    "docs-tutorials-31-news-in-memory-only",
+    "docs-tutorials-32-simm-from-the-examples-to-a-netting-set",
+    "docs-tutorials-33-the-pivot-engine",
+    "docs-tutorials-34-one-file-per-lake",
+    "docs-tutorials-35-data-out-with-arrow-flight",
+    "docs-tutorials-36-load-files-with-the-data-inbox",
+    "docs-tutorials-37-custom-functions-and-explain",
+    "docs-tutorials-38-the-mr-cube-on-the-pivot-engine",
+    "docs-tutorials-43-parametric-var-beside-historical",
+    "docs-tutorials-44-virtual-tables-and-models",
+    "docs-tutorials-45-load-your-own-data-into-a-new-lake",
+    "docs-tutorials-46-public-sector-data",
 ]
 
 
@@ -227,23 +268,23 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
                                                            "Reference", "Knowledge", "Internal"]
     assert next(c for c in heads if c["id"] == "internal")["roles"] == ["admin"]
     total = len(_pages(catalogue))
-    # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 25), the product owner's request of 2026-10-26: VaR help is two pages.
-    # 49: plus exposure's two (the exposure guide and tutorial 26), the same rule (each measure has exactly two documents and two entries).
-    # 51: plus the groupings and analytics' two (the guide and tutorial 27, 2.9.2), the same rule.
+    # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 2, Part A), the product owner's request of 2026-10-26: VaR help is two pages.
+    # 49: plus exposure's two (the exposure guide and tutorial 3), the same rule (each measure has exactly two documents and two entries).
+    # 51: plus the groupings and analytics' two (the guide and tutorial 6, 2.9.2), the same rule.
     # 52: plus External data (docs/guides/EXTERNAL_DATA.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
     # external data extraction, with examples.
-    # 54: plus the funds pack's two (the funds and ETFs guide and tutorial 28, 2.9.2), the same rule (two documents, two entries).
+    # 54: plus the funds pack's two (the funds and ETFs guide and tutorial 13, Part C, 2.9.2), the same rule (two documents, two entries).
     # 62: plus Knowledge (the product owner's request of 2026-10-26), a section of its own at the top: the home with the glossary and
     # the seven domain pages (docs/knowledge/, WHAT <GO>).
     # 63: plus the eighth Knowledge page, Companies, funds and ETFs (2.9.3).
     # 64: plus Using Drishti with Databricks Delta Lake or Apache Iceberg (docs/guides/DATA_GUIDE.md, 2.9.5), the product owner's
     # request of 2026-10-28: one page, under Data beside the connector guides.
-    # 66: plus the lake configuration's two (the lake guide and tutorial 34) and Data out's two (the Arrow Flight guide and tutorial 35),
+    # 66: plus the lake configuration's two (the lake guide and tutorial 16, Part B) and Data out's two (the Arrow Flight guide and tutorial 17),
     # 2.9.11.c, the same rule (a feature's guide and tutorial, two entries); Flight's reference and client pages are reached from its guide.
     # 2.9.11.b's data inbox, custom functions and MR cube tutorials raised the ceiling to 70; 2.9.11.c's lake and Flight pages to 72.
     # 73: plus Schema to pack (docs/guides/SCHEMA_TO_PACK_GUIDE.md, 2.9.11.c), split from the data guide when it passed 1,500 lines.
-    # 75: plus virtual tables' two (the tables guide and tutorial 44, 2.9.11.d), the same rule (a feature's guide and tutorial).
-    # 77: plus the public sector's two (the Public sector guide and tutorial 46, 2.9.11.g), the same rule (a domain's guide and tutorial).
+    # 75: plus virtual tables' two (the tables guide and tutorial 18, 2.9.11.d), the same rule (a feature's guide and tutorial).
+    # 77: plus the public sector's two (the Public sector guide and tutorial 14, 2.9.11.g), the same rule (a domain's guide and tutorial).
     # 76: the docs fold (2.9.11.g): the in-memory lake guide became a section of the data lake guide; the cap is the count, so a new
     # listed page needs a page folded first.
     assert 30 <= total <= 76, total
@@ -275,7 +316,7 @@ def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_
     assert page.status_code == 200 and "Your first 15 minutes" in page.text and "Run it in production" in page.text
     links = sorted(set(re.findall(r'href="(/help/docs-tutorials-[0-9a-z-]+)"', page.text)))
     written = sorted((CONSOLE.parent / "docs" / "tutorials").glob("[0-9][0-9]-*.md"))
-    assert len(links) == len(written), links          # every written tutorial, counted from the files (tutorial 22 merged into 6, 2026-11-04)
+    assert len(links) == len(written), links          # every written tutorial, counted from the files (the tutorials merged into 22, 2026-11-08)
     shots = 0
     for href in links:
         t = client.get(href)
@@ -385,8 +426,8 @@ def test_a_section_page_pairs_each_guide_with_its_tutorial_and_searches_only_its
     assert "Value at risk" in page and "Counterparty" in page and "Capital" in page and ">VAR<" in page
     row = page[page.index('href="/help/docs-guides-var-guide"'):]
     row = row[:row.index("</li>")]
-    assert 'href="/help/docs-tutorials-25-var-from-the-bank-to-a-trade"' in row and "data-help-pair" in row
-    assert page.count('href="/help/docs-tutorials-25-var-from-the-bank-to-a-trade"') == 1      # the tutorial has no row of its own
+    assert 'href="/help/docs-tutorials-02-var-from-the-bank-to-a-trade"' in row and "data-help-pair" in row
+    assert page.count('href="/help/docs-tutorials-02-var-from-the-bank-to-a-trade"') == 1      # the tutorial has no row of its own
     assert 'name="section" value="risk"' in page and "each guide beside its tutorial" in page
     hits = client.get("/help/search", params={"q": "backtesting", "section": "risk"}).text
     found = set(re.findall(r'<li><a href="/help/([\w-]+)"', hits))

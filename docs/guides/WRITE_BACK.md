@@ -21,7 +21,7 @@ the source, an owned record, or an amendment sent through a connector, after app
 sections 1 to 7 are for the **Sutra author** (forms, cells, drawers, drafts, submitting a change), sections 8 to 15 for the
 **administrator** (switching it on, where a change goes, approval, the edit log, Admin → Edits, `writes:`, audit, problems). Section 16 is the design
 and its reasons ([section 16](#16-the-design-and-its-reasons), for developers); the worked example is
-[tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
+[tutorial 11](../tutorials/11-correct-and-approve.md).
 
 A panel's `form:` lets people change the records it shows, or start new ones, without leaving the screen. Three ways in, chosen in
 the Sutra:
@@ -273,7 +273,7 @@ People who watch the record see the new value at once on its page (masked for th
 From the command line, the same request: `drishti.py change submit d-4ab964fa3060 --reason "booking typo"` or
 `drishti.py change propose --kind trade --id MX-20000012 --set NOTIONAL=28001250 --from NOTIONAL=28000000 --reason "booking typo"`
 ([TOOLS.md](TOOLS.md)); the API is `POST /api/v1/changes` ([API_GUIDE.md](API_GUIDE.md#write-back-changes)). A worked example with
-pictures is [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
+pictures is [tutorial 11](../tutorials/11-correct-and-approve.md).
 
 ## 5. With the Sutra designer
 
@@ -312,7 +312,7 @@ Write-back lets people change records from a Sutra's forms, the CLI (`drishti.py
 the person, approved by someone else where the policy says so, applied one at a time per record, in order, and audited. The design, with
 the reasons behind each choice, is [section 16](#16-the-design-and-its-reasons); how a Sutra author makes a form submit is in the forms
 guide ([section 4a](#4a-submitting-a-change-write-back)); a worked example is
-[tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
+[tutorial 11](../tutorials/11-correct-and-approve.md).
 
 **It is off as shipped**, at three levels, and all must be on before anything is written:
 
@@ -1156,7 +1156,7 @@ W1 to W7 are built, and built, in `drishti-server` (`com.ash.drishti.server.edit
 layer in `drishti-engine`, `form.save` in `drishti-rachana`, the console's Submit, the Approvals queue and Admin → Edits, and
 `drishti.py change` / `edits`. The administrator's guide is [the section for administrators](#for-administrators-write-back-is-off-as-shipped); the author's is
 [section 4a](#4a-submitting-a-change-write-back); a worked example is
-[tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
+[tutorial 11](../tutorials/11-correct-and-approve.md).
 
 | Wave | Status | Implementation |
 |---|---|---|
@@ -1164,7 +1164,7 @@ layer in `drishti-engine`, `form.save` in `drishti-rachana`, the console's Submi
 | W2 | **built** | four-eyes approval (`drishti_edit_request`, compare-and-set decisions, never your own, the policy's approver roles), the Approvals queue, a record's history (`GET /entities/{kind}/{id}/history`), `drishti.py change ...` |
 | W3 | **built** (PostgreSQL and the edit primary; S3 not built) | lane ownership by conditional UPDATE with a lease taken on the database's clock, the ring (rendezvous hashing over the alive members) suggesting who tries, renewal every lease/3 and a lane stopped at once when renewal fails, every append, apply and command fenced by the epoch; a change submitted on any node forwarded to its lane's owner (signed, on behalf of the person: `POST /net/edits/append`); applied changes broadcast to the other members (caches dropped, viewers and consoles told); `edit.log: auto` with its rule and the explicit values checked; the edit primary: the other nodes forward the whole write-back API to it (`EditForwardFilter`) and copy its overlays (`edit.follow`), *Edits are paused* while it is unreachable; Admin → Edits with the store, lanes and warnings |
 | W4 | **built** (JDBC) | `SourcePlugin.writeKey/checkWrite/write`; connector files' `writes:` parsed, kept by the form and template updates, validated at load (guard and idempotency required, unknown `:param` refused: a warning on `writes.<command>`, the connector read-only for it); writes switched on per connector by an administrator (audited, the switch ledger); the outbox: `command: pending` in the apply's transaction, sent in seq order, one in flight per record, `sent`/`applied`/`refused` fenced, `reply` and `next-load` confirmation, resend with the same change id after a failover; a refusal withdraws the pending overlay and fires the triggers again. File, Delta and Iceberg connectors never write (the lake is not written per edit); every other plugin is refused at load |
-| W5 | **built** (forms) | Submit on a form beside the table, on the cells' review and on the New drawer's last step; the phone width shows the sheet full-screen; the forms guide, the API and tools guides, the admin guide and tutorial 24 |
+| W5 | **built** (forms) | Submit on a form beside the table, on the cells' review and on the New drawer's last step; the phone width shows the sheet full-screen; the forms guide, the API and tools guides, the admin guide and tutorial 11 |
 | W6 | **built** | `form.save` (`kind`, `target`, `connector`, `command`, `create`, `approval`, `reason`) in the schema and lint; Submit turns the draft into one change per record (`POST /changes {draft}`), the server re-checks the form's rules, the draft is closed with the change id when applied and marked when refused, conflicted or rejected; the review and confirm sheet (`POST /changes/preview`); the trading pack's book desk ships with `save:` (a trade's correction, one approver) |
 | W7 | **built** | `edit.applied` published after the commit to every reactive connector (`ReactiveHub.publish`, a `write-back` event: the change id as its id, the fields changed, the watermark `L<lane> -> seq`; `when: confirmed` / `refused` for a source target); durable by the edit log (a per-lane cursor, `drishti_edit_cursor`, replayed when a lane is gained); the submitter told of the recompute; every live view of the record (and of the page row) reads it again with its own masks, also for a record no source streams; the consoles hear `edit` events (the submitter's steps, *changed by … just now* for viewers, the name only for who may see the edit history) |
 

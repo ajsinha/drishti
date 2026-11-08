@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 4 · Connect your data
+# Tutorial 15 · Connect your data
 
 A **connector** is one small YAML file that tells Drishti where a store of data is and how to read it. In this tutorial you connect a folder of JSON Lines files (a desk's end-of-day
 quotes) with the shipped `file` plugin, use **Test connection**, read the connector's own page, and then see what a connector that cannot connect looks like: a PostgreSQL connector with TLS and
@@ -25,7 +25,7 @@ About 30 minutes.
 
 ## Before you start
 
-- [Tutorial 1](01-first-15-minutes.md) done, with the token for the command line (`DRISHTI_SERVER` and `DRISHTI_TOKEN` set). You sign in as the development administrator: connectors are an administrator's page.
+- [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done, with the token for the command line (`DRISHTI_SERVER` and `DRISHTI_TOKEN` set). You sign in as the development administrator: connectors are an administrator's page.
 - The sample data of this tutorial, in the repository: `docs/tutorials/data/desk-quotes/` (ten business days, one `desk-quote.jsonl` of six quotes in each day's folder) and the connector files
   in `docs/tutorials/data/connectors/`. Start the server from the repository root (the run configurations do): the connector's `root` is relative to the folder the server runs in.
 - The kind is called `desk-quote`, not `quote`: `quote` already belongs to the `news-and-markets` pack (its market quotes), and two packs cannot own one kind.
@@ -78,7 +78,7 @@ text; leaving a tab carries the draft to the other. Now press **Test connection*
 ![Test connection: reachable, and for each kind the newest business dates and how many documents](img/t04/03-test-connection.jpg)
 
 You should see *Reachable: health UP* with the time it took, an amber note, and a table: kind `desk-quote`, business dates `2026-09-30`, `2026-09-29`, `2026-09-28` and 6 rows each.
-The note says `kind 'desk-quote' is not owned by a loaded pack`: Drishti reads the data, but no pack yet knows what a desk quote *is*, so no screen exists for it. Tutorial 5 builds
+The note says `kind 'desk-quote' is not owned by a loaded pack`: Drishti reads the data, but no pack yet knows what a desk quote *is*, so no screen exists for it. Tutorial 19, Part A builds
 that pack. Test never changes what runs. Press **Save**.
 
 ![The connectors list after saving: desk-quotes, file, kind desk-quote, running](img/t04/04-saved.jpg)
@@ -309,11 +309,11 @@ $ drishti-console/.venv/bin/python tools/drishti.py connector delete desk-ledger
 deleted desk-ledger (its text is kept in <data>/connectors/history/)
 ```
 
-You should see both commands answer in one line. Keep `desk-quotes`: tutorial 5 builds the pack that reads it.
+You should see both commands answer in one line. Keep `desk-quotes`: tutorial 19, Part A builds the pack that reads it.
 
 ## Next steps
 
-- [Tutorial 5 · Build a pack from your data](05-build-a-pack.md) gives the `desk-quote` kind a screen.
+- [Tutorial 19, Part A · Build a pack from your data](19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) gives the `desk-quote` kind a screen.
 - [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) is the reference, with an example for every store; [TLS.md](../connectors/TLS.md) the shared TLS settings;
   [POSTGRES_CONNECTOR.md](../../plugins/drishti-plugin-jdbc/README.md) the real thing, with its own pool and a loader.
 - To try a real PostgreSQL, start your own throwaway container and point a connector at it; never aim a tutorial at a database that matters.
@@ -325,5 +325,5 @@ You should see both commands answer in one line. Keep `desk-quotes`: tutorial 5 
 | `DRS-5031 ... not valid` | the file has a literal credential, a key that is not allowed, or bad YAML; the message names it |
 | `DRS-5032` | the file changed since you read it (another editor), or a connector that packs use would be switched off: repeat with `--confirm` if you mean it |
 | `DRS-5033` | no such connector |
-| Test says `kind ... is not owned by a loaded pack` | the data is readable but no pack defines the kind; deploy one (tutorial 5) |
+| Test says `kind ... is not owned by a loaded pack` | the data is readable but no pack defines the kind; deploy one (tutorial 19, Part A) |
 | Test says rows 0 | the `root` is wrong (the path is relative to where the server was started), the files are not named `<kind>.jsonl`, or the date folders are outside `lookback-days` |

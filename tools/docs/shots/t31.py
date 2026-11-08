@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 31, news held in memory only (docs/tutorials/31-news-in-memory-only.md), written to docs/tutorials/img/t31/. Run it
+"""Pictures of tutorial 16, Part D, news held in memory only (docs/tutorials/16-load-your-own-data-into-a-new-lake.md), written to docs/tutorials/img/t31/. Run it
 on its own: it starts its own scratch server with the in-memory lake on, the example connector news-store (root: mem://news) in a scratch
 connectors folder and the example store and tables (config/examples/in-memory-lake.yaml) in the scratch folder's application.local.yaml:
 

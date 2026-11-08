@@ -20,7 +20,7 @@ of its own (Public sector). Six packs, each filled every day by its own feed, sh
 member's cycle, the press releases of central banks, regulators and governments, and what the world's news said about a country yesterday.
 Every source's licence is recorded; what may not be redistributed is marked internal only.
 
-The hands-on companion is [Tutorial 46](../tutorials/46-public-sector-data.md). The feeds machinery (run, load, schedule, monitor, write a
+The hands-on companion is [Tutorial 14](../tutorials/14-public-sector-data.md). The feeds machinery (run, load, schedule, monitor, write a
 feed) is the [External data guide](EXTERNAL_DATA.md); every column of every kind is in the data contracts (section 4).
 
 ## Contents

@@ -486,7 +486,7 @@ Fields no record above has, found by reading all 9,937 rows, with how many rows 
 - Data contract: [LEI in the gleif pack's contracts](../packs/gleif.md#lei-lei-legal-entity-lei-entity) (`config/packs/core/gleif/contracts/lei-entity.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [Entities and ownership](../../knowledge/entities-and-ownership.md)
-- [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
+- [Tutorial 6 · Groupings and analytics, computed](../../tutorials/06-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="lei-relationship"></a>
@@ -626,7 +626,7 @@ Fields no record above has, found by reading all 9,347 rows, with how many rows 
 - Data contract: [LEIR in the gleif pack's contracts](../packs/gleif.md#leir-lei-parent-relationship-lei-relationship) (`config/packs/core/gleif/contracts/lei-relationship.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [Entities and ownership](../../knowledge/entities-and-ownership.md)
-- [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
+- [Tutorial 6 · Groupings and analytics, computed](../../tutorials/06-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="lei-mapping"></a>
@@ -753,5 +753,5 @@ None: all 3,381 rows were read, and every field any of them has is in the record
 - Data contract: [LEIM in the gleif pack's contracts](../packs/gleif.md#leim-isin-or-bic-to-lei-lei-mapping) (`config/packs/core/gleif/contracts/lei-mapping.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [Entities and ownership](../../knowledge/entities-and-ownership.md)
-- [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
+- [Tutorial 6 · Groupings and analytics, computed](../../tutorials/06-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

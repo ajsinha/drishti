@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 46 · Public sector data and free news
+# Tutorial 14 · Public sector data and free news
 
 Where is Canada on GDP per head, when did the Bank of Canada last move, what did Statistics Canada release this morning, which OECD
 member has the highest inflation, what did the Fed publish this week, and how did the world's news read the United States yesterday? The
@@ -28,7 +28,7 @@ About 30 minutes (the first runs of the feeds download a few megabytes).
 
 ## Before you start
 
-- [Tutorial 1](01-first-15-minutes.md) done: a server and console you can build, start and stop.
+- [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done: a server and console you can build, start and stop.
 - A network to the public sources (the feeds' tests use recorded answers; this tutorial uses the real sources).
 - Optional: a [free FRED key](https://fred.stlouisfed.org/docs/api/api_key.html) in `DRISHTI_FRED_API_KEY` for the Federal Reserve's
   series; without it the Bank of Canada's still load.

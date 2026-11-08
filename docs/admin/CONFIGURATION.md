@@ -6412,13 +6412,13 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_SUTRA_REVIEW` | `drishti.governance.enabled` | `true` | server | With review on, a Studio save is a proposal; an approver (role flag approve, or an admin) makes it live. |
 | `DRISHTI_SUTRA_WATCH` | `drishti.rachana.watch` | `auto` | server | auto: file events, else polling (inotify limit reached); poll: always poll (network file systems) |
 | `DRISHTI_SYNTHETIC_HISTORY` | `drishti.regulatory.synthetic-history` (engine) | `false` | engine | a demo server may seed synthetic official records before its oldest one; never on a bank's server |
-| `DRISHTI_T35_PASSWORD` | screenshot tools | none | tools | Tutorial 35's shots: that reader's password |
-| `DRISHTI_T35_TOKEN_FILE` | screenshot tools | none | tools | Tutorial 35's shots: a scratch file the new token is kept in for the later steps |
-| `DRISHTI_T35_USER` | screenshot tools | none | tools | Tutorial 35's shots: the reader who signs in (default the administrator) |
-| `DRISHTI_T36_WORK` | screenshot tools | none | tools | Tutorial 36's shots: the working folder of the data inbox run |
-| `DRISHTI_T37_FN` | screenshot tools | `fn:you/wret@1` | tools | Tutorial 37's shots: the saved function shown |
-| `DRISHTI_T37_PASSWORD` | screenshot tools | none | tools | Tutorial 37's shots: that author's password |
-| `DRISHTI_T37_USER` | screenshot tools | none | tools | Tutorial 37's shots: the function's author who signs in |
+| `DRISHTI_T35_PASSWORD` | screenshot tools | none | tools | Tutorial 17's shots: that reader's password |
+| `DRISHTI_T35_TOKEN_FILE` | screenshot tools | none | tools | Tutorial 17's shots: a scratch file the new token is kept in for the later steps |
+| `DRISHTI_T35_USER` | screenshot tools | none | tools | Tutorial 17's shots: the reader who signs in (default the administrator) |
+| `DRISHTI_T36_WORK` | screenshot tools | none | tools | Tutorial 16, Part C's shots: the working folder of the data inbox run |
+| `DRISHTI_T37_FN` | screenshot tools | `fn:you/wret@1` | tools | Tutorial 7, Part B's shots: the saved function shown |
+| `DRISHTI_T37_PASSWORD` | screenshot tools | none | tools | Tutorial 7, Part B's shots: that author's password |
+| `DRISHTI_T37_USER` | screenshot tools | none | tools | Tutorial 7, Part B's shots: the function's author who signs in |
 | `DRISHTI_TABLES_ROOT` | `drishti.tables.root` | `./config/tables` | server | the definitions' folder: config/tables/&lt;domain&gt;/&lt;name&gt;.table.yaml and .model.yaml |
 | `DRISHTI_TMP_DIR` | java.io.tmpdir, the console's tmp\_dir | `<data dir>/tmp` | server, console, tools | The base of every temporary folder Drishti makes |
 | `DRISHTI_TOKEN` | drishti.py | none | tools | A personal API token for the command line and tools (secret) |

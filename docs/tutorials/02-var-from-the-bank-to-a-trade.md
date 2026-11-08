@@ -13,31 +13,40 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 25 · VaR from the bank to a trade
+# Tutorial 2 · VaR from the bank to a trade
 
-Value at risk answers *how much could this lose in a day, and where does that loss come from?* In this tutorial you build the market-risk
-pack's VaR data into a lake, open the bank's VaR, drill down to one trade without a page load, read the P&L path and the contributions,
-write your own scopes (a desk minus a book plus a portfolio; a rule), see how Drishti derives positions, save a basket and capture it,
-read the history and the backtest, look at how the date sits in memory and on disk, read VaR as an ordinary computed kind, and ask the
-what-if what a hedge would do, then read the bank over ten days and at another confidence. Each step shows the UI, the command line (`drishti.py var …`) and the YAML behind it, with real
-output from the committed test data. Everything else about VaR (every measure, column, setting, endpoint and error code, the data
-contract and how the engine stores a date) is in the one reference, [VAR_GUIDE.md](../guides/VAR_GUIDE.md); each step ends with the guide's sections
-that go further.
+Value at risk from the whole bank down to one trade, on the committed VaR test data. Part A is historical VaR: build the data, open the
+bank, drill to a trade, read the P&L path and the contributions, write your own scopes, capture and compare, the history and the backtest, the
+what-if, intraday, limit letters, ten days and another confidence, the scenario matrix, the regulatory backtest and the VaR Playground. Part B
+sets parametric VaR beside it and reads the fat-tail gap. Part C reads the same VaR from an Iceberg lake, to the cent. Every step shows the UI,
+the command line and the YAML or JSON behind it.
 
 ## Time to complete
 
-About 50 minutes.
+About 1 h 30 min in all; each part can be done on its own day.
+
+- Part A · Historical VaR from the bank to a trade: About 50 minutes.
+- Part B · Parametric VaR beside historical: the fat-tail gap: About 25 minutes.
+- Part C · The same VaR on Iceberg: About 15 minutes (most of it the build).
 
 ## Before you start
 
-- [Tutorial 1](01-first-15-minutes.md) done: a server and console you can build, start and stop.
+- [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done: a server and console you can build, start and stop.
 - The market-risk pack loaded (it is in the quick-start packs).
 - For the command-line steps: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens), or `--user`
   with sign-in off. The outputs below were captured as the user `rita` with sign-in off.
 
 The VaR data is **synthetic** (a correlated, fat-tailed factor market over the committed trades), not prices.
 
+**Part B · Parametric VaR beside historical: the fat-tail gap.**
+
+- [Part A](#part-a--historical-var-from-the-bank-to-a-trade), step 1, done: the VaR tables built on the test data's own date, 2026-09-30
+  (`drishti.py lake demo --as-of data --only market-risk/...`), so your numbers are the ones below.
+- Parametric VaR is on as shipped (`drishti.var.parametric.enabled`, below).
+
 ## What you will learn
+
+**Part A · Historical VaR from the bank to a trade**
 
 - where the VaR inputs live (one P&L vector of 509 scenario days per live trade) and how a date is loaded;
 - what VaR, ES, component, incremental VaR and diversification mean on real numbers, and that components add up;
@@ -52,6 +61,31 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 - the scenario matrix (`SMAT`): a book's scenarios across five business dates, its tail outlined each day, a scenario charted against −VaR.
 - the VaR Playground (`PLAY VAR`): every figure worked out cell by cell, and the same as an Excel workbook of real formulas.
 
+**Part B · Parametric VaR beside historical: the fat-tail gap**
+
+- what parametric VaR and ES are (z·σ − μ of the scope's own vector) and why they are a cross-check, never official;
+- how to read the fat-tail gap, the skew, the excess kurtosis and the days beyond the parametric VaR;
+- the **?** on every parametric figure: the server's own lines, the formula with the scope's numbers;
+- the normal curve over the P&L histogram, the **N** toggle, and the tail bin by bin against the days the normal expects;
+- the Euler components z·cov(Pᵢ, P)/σ − μᵢ, which add up to the parametric VaR exactly, and the parts' correlation matrix;
+- `pvar()` beside `var()` in the MR cube and the pivot;
+- the VaR Playground's **Parametric** tab: every parametric figure worked out, and the workbook's **Parametric** tab of real formulas.
+
+**Part C · The same VaR on Iceberg**
+
+- that VaR, ES and the limit letters read from an Iceberg risk lake equal Delta's to the cent.
+
+### Part A · Historical VaR from the bank to a trade
+
+Value at risk answers *how much could this lose in a day, and where does that loss come from?* In this part you build the market-risk
+pack's VaR data into a lake, open the bank's VaR, drill down to one trade without a page load, read the P&L path and the contributions,
+write your own scopes (a desk minus a book plus a portfolio; a rule), see how Drishti derives positions, save a basket and capture it,
+read the history and the backtest, look at how the date sits in memory and on disk, read VaR as an ordinary computed kind, and ask the
+what-if what a hedge would do, then read the bank over ten days and at another confidence. Each step shows the UI, the command line (`drishti.py var …`) and the YAML behind it, with real
+output from the committed test data. Everything else about VaR (every measure, column, setting, endpoint and error code, the data
+contract and how the engine stores a date) is in the one reference, [VAR_GUIDE.md](../guides/VAR_GUIDE.md); each step ends with the guide's sections
+that go further.
+
 ## Step 1 · Build the VaR data and open the bank
 
 **From the command line.** Build the four VaR tables into the lake on the test data's own date (2026-09-30), so your numbers are the
@@ -62,7 +96,7 @@ python3 tools/drishti.py lake demo --as-of data \
   --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio,market-risk/var-limit
 ```
 
-Start the server and console (tutorial 1), then ask for the bank:
+Start the server and console (tutorial 1, Part A), then ask for the bank:
 
 ```text
 $ drishti.py var show BANK
@@ -780,6 +814,7 @@ only at 1-day 99%, and the backtest only at 1 day.
 **Further in the guide:** [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)
 (both methods, when each is right, their limits, the overlapping windows, the full-revaluation slot), [section 12](../guides/VAR_GUIDE.md#12-settings)
 (the settings).
+
 ## Step 16 · The scenario matrix: scenarios across the days
 
 The explorer shows one business date. The **scenario matrix** (`SMAT`) shows one trade, position or node across several: the
@@ -967,16 +1002,301 @@ and 500 positions, is tested on every build.
 **Further in the guide:** [VAR_GUIDE.md section 3.10](../guides/VAR_GUIDE.md#310-the-var-playground-play-var) and
 [VAR_PLAYGROUND.md](../guides/VAR_GUIDE.md) (every tab and every formula).
 
+### Part B · Parametric VaR beside historical: the fat-tail gap
+
+Historical VaR ranks a scope's own 509 scenario P&Ls and reads the 6th worst. **Parametric VaR** fits a normal distribution to the same
+509 numbers and reads its 1% tail: z·σ − μ. It is a **cross-check, never the official VaR**: limits, limit use, the backtest, official
+records and regulatory reports stay historical. Where the two differ, the difference is the **fat-tail gap**: positive when the scope's
+real tail is heavier than a normal with the same σ predicts. In this part you turn on the VaR explorer's **Parametric** toggle on the
+bank (`PVAR BANK` opens it that way), read a desk's **?** line by line, see the normal curve over the P&L histogram, compare the tail bin
+by bin, check that the Euler components add up to the cent, read the correlation matrix, put `pvar()` in the MR cube, and work every
+figure out in the VaR Playground's **Parametric** tab and its workbook. Each step shows the UI,
+the command line and the JSON or YAML behind it, with real output from the committed test data. The reference is
+[VAR_GUIDE.md sections 3.12 and 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check); the design and its reasons are
+in [PARAMETRIC_VAR.md](../guides/VAR_GUIDE.md).
+
+## Step 19 · Turn on Parametric on the bank
+
+**The UI.** Type `VAR BANK <GO>` and tick **Parametric** beside the tiles (or type `PVAR BANK <GO>`: the same explorer with the toggle
+on; `&pm=1` in the link). Beside the historical tiles come three more: **Parametric VaR**, **Parametric ES** and the **Fat-tail gap**;
+the tree gains the **Parametric** and **Gap** columns. Untick it and the explorer is historical only again.
+
+![VAR BANK with Parametric on: the historical and parametric tiles, the tree's Parametric and Gap columns](img/t43/01-bank-parametric.jpg)
+
+**The command line.**
+
+```text
+$ drishti.py var show BANK --date 2026-09-30
+VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
+  VaR 99%   112,041,646 USD   (the 6th worst of 509)
+  ES 97.5%   160,143,809 USD   (mean of the 13 worst)
+  ...
+  parametric VaR 122,130,910 USD = z·σ − μ = 2.3263 × 53,901,012 − (3,261,595)   ES 122,748,342   fat-tail gap -10,089,265 (-8.3%)   a cross-check, not official
+```
+
+`--no-parametric` leaves the line out (the API's `parametric=false`).
+
+**The YAML.** The measure's settings sit in the VaR engine's file, `config/engines/var.yaml`:
+
+```yaml
+drishti:
+  var:
+    parametric:
+      enabled: ${DRISHTI_VAR_PARAMETRIC_ENABLED:true}   # off: no block, no toggle, no playground Parametric tab, no pvar() (asked: refused in words)
+      weighting: equal               # equal (1/N, sigma with N - 1) or ewma (lambda below)
+      lambda: 0.94
+      horizon-rule: lens             # the lens's own vector, or square-root-of-time
+      curve-points: 121
+      matrix-max-parts: 60
+      show-curve: true
+```
+
+**You should see** historical VaR 112,041,646 and parametric VaR 122,130,910 for the bank: a **negative** gap of −10,089,265 (−8.3%).
+Diversified across ten desks, the bank's worst days were milder than a normal with the same σ predicts, even though the vector's excess
+kurtosis is 23.66: one very bad day stretches σ, and the normal spreads it over the whole tail.
+
+## Step 20 · A desk's ? read line by line
+
+**The UI.** Open `PVAR DESK DESK-RATES` (or click **Rates · Swaps and options** in the tree) and press the **?** beside the Parametric VaR
+tile. It opens the server's own lines (a bottom sheet on a phone); the console places the text and computes nothing.
+
+![PVAR DESK DESK-RATES with the ? open on the Parametric VaR tile](img/t43/02-rates-describe.jpg)
+
+**The JSON.** The same lines are the headline's `parametric.describe`
+(`GET /api/v1/risk/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30`):
+
+```text
+Parametric VaR 99% · 1 day · Rates · Swaps and options
+A cross-check, not the official VaR. The official figure is historical: 74,633,680.
+Method: normal (variance–covariance) on this scope's own scenario P&L vector: the same 509 values historical VaR ranks.
+Window: 509 scenario days, the set HS-509, ending 2026-09-29.
+Weighting: equal (1/n each); EWMA off.
+Confidence: 99% → z = 2.3263.
+Horizon: 1 day.
+n, μ, σ: 509 · −732,297 · 24,792,909 (sample, n − 1).
+VaR = z·σ − μ = 2.3263 × 24,792,909 − (−732,297) = 57,676,932 − (−732,297) = 58,409,229
+ES = σ·φ(z_ES)/(1 − 0.975) − μ = 24,792,909 × 2.3378 − (−732,297) = 58,693,229.
+Historical VaR (6th worst of 509): 74,633,680.
+Fat-tail gap = historical − parametric = +16,224,451 (+27.8%). Positive: the scope's real tail is heavier than a normal with the same σ, so the normal understates the loss. Skew −0.38, excess kurtosis 1.94 (a normal has 0 and 0). 12 scenario days lie beyond the parametric VaR; the normal expects 5.09.
+Computed in the server (VaR engine), never in the browser.
+```
+
+**The command line.** `drishti.py var show DESK:DESK-RATES --date 2026-09-30` prints the same in one line:
+`parametric VaR 58,409,229 USD = z·σ − μ = 2.3263 × 24,792,909 − (-732,297)   ES 58,693,229   fat-tail gap +16,224,451 (+27.8%)`.
+
+**You should see** the opposite of the bank: the rates desk's historical VaR (74,633,680) is 27.8% above its parametric VaR (58,409,229).
+Check the formula yourself: 2.3263 × 24,792,909 = 57,676,932, and subtracting a mean of −732,297 gives 58,409,229. Twelve of the 509
+days lie beyond the parametric VaR where the normal expects 5.09: the tail is fat.
+
+## Step 21 · The normal curve over the P&L histogram
+
+**The UI.** With Parametric on, the P&L path's histogram carries the **fitted normal**: a smooth blue line, the historical VaR marker (solid, at
+−74.6m) and the parametric one (dashed, at −58.4m), both tails lightly shaded and the gap bracket between them. Hover the curve for its
+formula. Press **N** (the *Normal curve* toggle) to hide the curve, the parametric marker, its tail and the bracket; the choice is
+remembered for you and in the link (`&nc=0`).
+
+![The rates desk's P&L histogram with the normal curve, both markers and the gap bracket](img/t43/03-rates-normal-curve.jpg)
+
+**The JSON.** `GET /api/v1/risk/var/scope/path?scope=DESK:DESK-RATES&asOf=2026-09-30` → `parametric`: the server sends every point, the
+browser draws them.
+
+```json
+{"var": 58409229, "gap": 16224451, "mu": -732297.11, "sigma": 24792909.20, "n": 509, "binWidth": 4545795.83,
+ "markers": {"historical": -74633680.0, "parametric": -58409228.72},
+ "curve": {"x": [-119535289.0, -117944260.46, "... 121 points"], "y": [0.00038, 0.00052, "..."]},
+ "curveDescribe": ["Fitted normal N(μ, σ²) · n = 509 · μ −732,297 · σ 24,792,909",
+                   "Expected days per bin at P&L x = n × bin width × φ((x − μ)/σ)/σ (bin width 4,545,796)", "..."]}
+```
+
+**You should see** the curve sit on the bars' scale (expected days per bin of 4,545,796) and the dashed parametric marker to the right of
+the solid historical one: a positive gap.
+
+## Step 22 · The tail bin by bin
+
+**The UI.** The histogram of step 21 shows it: the bars beyond the solid marker against the curve under them. Each book's gap is its
+**Gap** cell in the tree (expand the rates desk).
+
+**The JSON.** The same path answer: `histogram.counts` (the days) beside `parametric.expected` (the normal's days). The worst bins of the
+rates desk:
+
+| Bin (USD) | Scenario days | The normal expects |
+|---|---|---|
+| −119,535,289 to −114,989,493 | 1 | 0.00 |
+| −96,806,310 to −92,260,514 | 1 | 0.03 |
+| −87,714,718 to −83,168,922 | 1 | 0.11 |
+| −83,168,922 to −78,623,126 | 1 | 0.20 |
+| −78,623,126 to −74,077,331 | 2 | 0.36 |
+| −74,077,331 to −69,531,535 | 1 | 0.62 |
+
+**You should see** six days below −69.5m where the normal expects about 1.3: the tail the normal misses. The books' gaps differ in sign
+(`BOOK-RATES-1` +2,098,588, `BOOK-RATES-2` −2,183,557, `BOOK-RATES-3` +7,054,283 on the tree).
+
+## Step 23 · The components add up, and the correlations
+
+**The UI.** Open **Worked in the playground** on the rates desk (step 25): its **Parametric** tab lists each position's Euler component
+z·cov(Pᵢ, P)/σ − μᵢ with μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the standalone VaR, and Σ components beside the parametric VaR. The parts' correlation
+matrix is on the command line and in the API below.
+
+**The command line.**
+
+```text
+$ drishti.py var parts DESK:DESK-RATES --date 2026-09-30 --matrix
+DESK:DESK-RATES  by book  VaR 74,633,680  ES 75,377,415 USD  sum of components 74,633,680
+Part          Standalone VaR  Component VaR  % of VaR  Incremental VaR  Component ES  Param. component  ρ
+------------  --------------  -------------  --------  ---------------  ------------  ----------------  -----
+BOOK-RATES-1      33,153,425     30,612,282      41.0       -5,131,638    10,403,265         2,992,868  0.089
+BOOK-RATES-2      30,872,370     25,280,825      33.9       21,654,002    20,263,766        16,411,411  0.466
+BOOK-RATES-3      61,499,103     18,740,573      25.1       26,690,191    44,710,384        39,004,950  0.724
+parametric VaR 58,409,229: the components add up to 58,409,229; diversification 60,146,355
+correlations (openblas):
+              BOOK-RATES-1  BOOK-RATES-2  BOOK-RATES-3
+------------  ------------  ------------  ------------
+BOOK-RATES-1          1.00         -0.07         -0.42
+BOOK-RATES-2         -0.07          1.00         -0.04
+BOOK-RATES-3         -0.42         -0.04          1.00
+```
+
+**The JSON.** `GET /api/v1/risk/var/scope/contributions?scope=DESK:DESK-RATES&asOf=2026-09-30&matrix=true`: per row `pComponentVar`, `rho`,
+`sigma`, `mu`; totals `pSumComponent`, `pDiversification`; and `parametric.matrix {keys, labels, correlation, covariance, truncated,
+engine}`. `matrix=true` with `parametric=false` is refused (`400`): the matrix is parametric.
+
+**You should see** 2,992,868 + 16,411,411 + 39,004,950 = 58,409,229, the parametric VaR to the unit. The components rank the books
+differently from historical: `BOOK-RATES-3` carries 39.0m of the parametric VaR but only 18.7m of the historical one, because its P&L
+moves with the desk's (ρ 0.724) while `BOOK-RATES-1` hedges it (ρ 0.089, correlation −0.42 with book 3). The matrix is computed through
+the linear-algebra seam (`openblas` here; `java` when that engine is off: the same figures).
+
+## Step 24 · pvar() in the MR cube
+
+**The UI.** `MCUBE <GO>`, then add the measure **Parametric VaR** (`pvar()`) beside `var()` in the values; or in any pivot of the VaR
+source. Each cell is z·σ − μ of the cell's own summed vector, so, like VaR, a total is never the sum of its rows.
+
+![The MR cube with var() and pvar() by desk](img/t43/04-mr-cube-pvar.jpg)
+
+**The command line.**
+
+```text
+$ drishti.py pivot run --source var --rows MGMT.DESK --values "var()" --values "pvar()" --date 2026-09-30
+VaR · MR cube · 2026-09-30 · 11 cells · 2 sets, 0 from the cache · 1 queries · 2 ms · exact
+MGMT.DESK                                              var()                    pvar()
++ DESK-COMM                                       17,514,512                41,831,180
++ DESK-CREDIT                                    130,670,864               126,006,967
++ DESK-EQD                                        35,827,767                22,108,846
++ DESK-FI                                         33,274,561                23,016,541
++ DESK-FX                                         24,060,533                34,417,545
++ DESK-INFL                                       24,933,130                24,837,290
++ DESK-MM                                         15,446,375                13,731,339
++ DESK-RATES                                      74,633,680                58,409,229
++ DESK-SFT                                         1,536,322                 1,483,558
++ DESK-STRUCT                                      9,987,431                18,801,995
+Grand total                                      112,041,646               122,130,910
+computed as: exact
+```
+
+**The JSON.** A view's values: `{"values": ["var()", "pvar()"]}` (`POST /api/v1/pivot/query`, source `var`).
+
+**You should see** every row and the grand total equal to the tree's figures of step 19 and 20. The gap changes sign from desk to desk:
+the commodities desk's parametric VaR (41.8m) is more than twice its historical one (17.5m), the rates desk's 22% below.
+
+## Step 25 · Work it out by hand: the playground's Parametric tab and its workbook
+
+**The UI.** With Parametric on, press **Worked in the playground** (or the foot of any **?**), or type `PLAY VAR DESK DESK-RATES <GO>`
+and choose the **Parametric** tab (`&measure=parametric` in the link): the server's figures and steps, each position's μ, σ, cov, ρ and
+component, each scenario's weight, deviation and square. **Export** writes the
+workbook; its **Parametric** tab holds the named cells and checks in formulas (`NORM.S.INV`), recalculated by Excel or LibreOffice equal
+to the engine to the cent.
+
+![The VaR Playground's Parametric tab on the rates desk: the figures and their steps](img/t43/05-playground-parametric.jpg)
+
+**The command line.**
+
+```text
+$ drishti.py var playground DESK:DESK-RATES --date 2026-09-30 --measure parametric
+1 · The vector: the portfolio's P&L under each of the 509 scenarios (the PnL tab's Portfolio column).
+2 · μ = Σ wⱼ·vⱼ = −732,297 (equal weights, 1/n each).
+3 · σ = √(Σ (vⱼ − μ)² / (n − 1)) = 24,792,909.
+4 · z = NORM.S.INV(0.99) = 2.326348.
+5 · VaR = z·σ − μ = 2.3263 × 24,792,909 − (−732,297) = 57,676,932 − (−732,297) = 58,409,229; ES = σ × 2.337803 − μ = 58,693,229.
+6 · POS-BOOK-RATES-1~MX-20000081: cov(Pᵢ, P) = 1.7773e+11, ρ = 0.0104.
+7 · Its component = z·cov/σ − μᵢ = 160,373.
+8 · The components add up to the VaR: Σ = 58,409,229 = 58,409,229.
+Rates · Swaps and options on 2026-09-30 in USD: 500 of 1358 positions, 509 scenarios
+...
+$ drishti.py var playground DESK:DESK-RATES --date 2026-09-30 --measure parametric --count 100 --xlsx rates.xlsx
+wrote rates.xlsx (2,702,682 bytes): the VaR Playground workbook, every figure a formula (Main, Config, Data, FX, PnL, Parametric, Explain, Provenance)
+```
+
+**The JSON.** `GET /api/v1/risk/var/playground?scope=DESK:DESK-RATES&asOf=2026-09-30&measure=parametric` carries the panel's figures and
+`parametric.steps`; the workbook is `GET /api/v1/risk/var/playground.xlsx` with the same parameters.
+
+**You should see** the eight steps end with the components adding up to 58,409,229, and in the workbook the Parametric tab's checks all
+true: the sheet's VaR and ES equal the engine's to the cent.
+
+### Part C · The same VaR on Iceberg
+
+Delta Lake is Drishti's default lake format; Apache Iceberg is a full alternative, chosen by configuration. This part reads the same VaR
+from the risk lake built into Iceberg. The build itself, the official results on Iceberg, Admin → Lakes and the way back to Delta are
+[tutorial 16, Part E](16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg).
+
+## Step 26 · The same VaR on Iceberg
+
+**Before this step**, with the server stopped, build the VaR inputs into Iceberg (step 1's `--only` list with `--store risk=iceberg`; the
+build and its output are [tutorial 16, step 30](16-load-your-own-data-into-a-new-lake.md#step-30--build-the-var-data-into-iceberg)), then start the server again:
+
+```bash
+drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio,market-risk/var-limit
+```
+
+**In the UI.** `VAR BANK`, then **Limit letters** in the select above the tree and **LL-0011**:
+
+![VAR BANK read from the Iceberg risk lake: 112.04 million, as on Delta](img/t29/01-bank-on-iceberg.jpg)
+
+![The limit letters from Iceberg: LL-0011 29.28 million, its desks](img/t29/05-letters-on-iceberg.jpg)
+
+**From the command line:**
+
+```text
+$ drishti.py var show BANK
+VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
+  VaR 99%   112,041,646 USD   (the 6th worst of 509)
+  ES 97.5%   160,143,809 USD   (mean of the 13 worst)
+  limit      150,000,000 USD   use 74.7%
+  …
+  9572 trades in 7993 positions
+  pnl-vector and scenario-pv (1339 trades from scenario PVs) · batch B-2026-09-30-01 of 2026-09-30 · data version risk-store=7affffbb8b218c|scenario-pv:risk-store=7affffddd82bf9
+  …
+$ drishti.py var show LL:LL-0011
+  VaR 99%   29,280,653 USD   …   limit 41,000,000 USD   use 71.4%
+$ drishti.py var show BANK --ccy EUR
+  VaR 99%   111,837,045 EUR   …
+```
+
+**You should see** exactly Part A's figures: 112,041,646 and 160,143,809 for the bank, 29,280,653 for LL-0011, 111,837,045 EUR.
+Only the data version differs: an Iceberg fingerprint of the date's files instead of Delta's. The equality is tested on every scope,
+both currencies, VaR, ES, components and intraday batches (`VarFormatEqualityTest`), and for exposure (`ExposureFormatEqualityTest`).
+Intraday batches on an Iceberg lake are Iceberg appends made by the pricing system's writer or by the Kafka stream (whose `pv-updates`
+connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --load` appends to Delta only
+([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
+
+**Further:** [VAR_GUIDE.md section 15.1](../guides/VAR_GUIDE.md#151-where-they-live) and
+[section 29.3](../guides/VAR_GUIDE.md#293-how-the-lake-tools-and-the-delta-plugin-carry-a-vector).
+
 ## Next steps
 
-- Read the same vectors through a normal distribution: [tutorial 43](43-parametric-var-beside-historical.md), parametric VaR beside historical and the fat-tail gap.
 - Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the
   data contract (Part II), sizing for a bank of a million trades and the benchmark (Part III), troubleshooting.
+- Back to Delta, and the official results on Iceberg: [tutorial 16, Part E](16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg).
 - Load your own batch: the columns are in [VAR_GUIDE.md section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines); send the data-load
-  signal ([tutorial 7](07-load-data-daily.md)) and the date is reloaded and captured officially.
-- Put a computed VaR on your own screen: a Sutra panel can read `var-result` like [tutorial 23](23-computed-panels.md)'s computed panels.
+  signal ([tutorial 12](12-a-day-of-bank-data.md)) and the date is reloaded and captured officially.
+- Put a computed VaR on your own screen: a Sutra panel can read `var-result` like [tutorial 19, Part C](19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)'s computed panels.
+- [VAR_GUIDE.md section 3.12](../guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar) (the screen) and
+  [section 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check) (the method, EWMA, the 10-day lens, the decomposition).
+- [PARAMETRIC_VAR.md](../guides/VAR_GUIDE.md): the design, the worked example and the open questions.
+- [API_GUIDE.md, VaR engine](../guides/API_GUIDE.md#var-engine-apiv1riskvar): the `parametric` block, `parametric=false`, `matrix=true`,
+  `measure=parametric`; [CLI_GUIDE.md, var](../guides/CLI_GUIDE.md#var-the-var-engine): `--no-parametric`, `--matrix`, `--measure`.
+- [Tutorial 7, Part C](07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals): the MR cube.
 
-## When something goes wrong
+## If something goes wrong
 
 | You see | Do |
 |---|---|

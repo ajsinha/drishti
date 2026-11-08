@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 24 · Correct a trade and approve it: write-back
+# Tutorial 11 · Correct a trade and approve it: write-back
 
 **Write-back** lets people change records from a screen's forms, as change requests: checked as the person, approved by someone else
 where the policy says so, applied one at a time per record and audited. In this tutorial you switch editing on, correct a trade's
@@ -29,7 +29,7 @@ About 20 minutes.
 
 ## Before you start
 
-- [Tutorial 1](01-first-15-minutes.md) done: a server and console you can start and stop, with the trading pack (it is on by default).
+- [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done: a server and console you can start and stop, with the trading pack (it is on by default).
 - Two people: the one who corrects and an approver. With sign-in off (the default for a laptop) you are everyone; the approval step
   calls the API as a second name. With sign-in on, give one person a role with **Submit edits** and another a role with the approve power.
 - For the command-line steps: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens, with the
@@ -172,5 +172,5 @@ the sheet take the whole screen, with the difference, the destination and the re
 - Make your own screen's form submit: add `save:` to its `form:` ([WRITE_BACK.md section 4a](../guides/WRITE_BACK.md#4a-submitting-a-change-write-back)).
 - Send amendments to a booking system: a JDBC connector's `writes:` with its guard and idempotency clause, switched on in Admin → Edits
   ([WRITE_BACK.md section 13](../guides/WRITE_BACK.md#13-writing-to-a-source-writes), [JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record)).
-- Recompute on a change: a reactive connector with a `write-back` trigger ([tutorial 23](23-computed-panels.md)).
+- Recompute on a change: a reactive connector with a `write-back` trigger ([tutorial 19, Part C](19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)).
 - Run several servers: PostgreSQL for the Drishti database, or an edit primary ([WRITE_BACK.md section 11](../guides/WRITE_BACK.md#11-the-edit-log-lanes-and-the-cluster)).

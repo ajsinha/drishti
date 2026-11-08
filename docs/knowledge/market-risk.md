@@ -197,7 +197,7 @@ trade wins, and the figures say *intraday*. The official end-of-day numbers stay
 ## 4. A worked example on the demo data
 
 From a scratch server over the demo lake built on the test data's own date (`drishti.py lake demo --as-of data`, as the
-[VaR guide](../guides/VAR_GUIDE.md) and [tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) use it): business date
+[VaR guide](../guides/VAR_GUIDE.md) and [tutorial 2, Part A](../tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) use it): business date
 **2026-09-30**, batch `B-2026-09-30-01`, scenario set `HS-509`. (The default `lake demo` moves the days to end today, and trades
 matured since drop out, so its figures differ.)
 
@@ -341,7 +341,7 @@ P&L by risk factor.
 ## 7. Where to go deeper
 
 - [VaR guide](../guides/VAR_GUIDE.md): every measure with worked numbers, the explorer, scopes, captures, backtesting, the data contract.
-- [Tutorial 25: VaR from the bank to a trade](../tutorials/25-var-from-the-bank-to-a-trade.md): fifteen hands-on steps, the last the scenario matrix.
+- [Tutorial 2, Part A: VaR from the bank to a trade](../tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade): fifteen hands-on steps, the last the scenario matrix.
 - [The scenario matrix](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) (`SMAT`): a trade, position or node's scenarios across its last N business dates, the tail outlined each day.
 - [Counterparty credit risk](counterparty-credit-risk.md): the other half of trading risk.
 - [Trades and products](trades-and-products.md): what a trade, a book and a desk are.

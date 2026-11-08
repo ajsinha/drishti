@@ -16,7 +16,7 @@
 # Groupings and analytics guide
 
 *Revision 1.0 · the one reference for the groupings and analytics computed instead of stored. The
-hands-on companion is [tutorial 27](../tutorials/27-groupings-and-analytics.md).*
+hands-on companion is [tutorial 6](../tutorials/06-groupings-and-analytics.md).*
 
 Seven pages that used to be **stored copies** of figures are **computed from the fundamental data when they are opened**:
 

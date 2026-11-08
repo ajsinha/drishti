@@ -50,7 +50,7 @@ also use in your own applications.** This release carries the work planned as 2.
 - **Lenses** ([LENSES.md](docs/admin/LENSES.md)): Risk, Trading, Market, CRO and the two cubes (banking), World and **Public sector**
   (economy), CIO and Oversight (core), each with its modules, functions, Home cards and chips.
 - **The public sector**, the first new domain, in the economy module with its own lens ([PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md),
-  [tutorial 46](docs/tutorials/46-public-sector-data.md)): six packs and ten functions: World Bank development indicators (`WDI`, `WDIS`,
+  [tutorial 46](docs/tutorials/14-public-sector-data.md)): six packs and ten functions: World Bank development indicators (`WDI`, `WDIS`,
   with the world map by GDP per head), central banks from FRED and the Bank of Canada (`CBANK`, `CBSER`), Statistics Canada (`NSTAT`),
   the OECD (`OECD`, `OECDS`), the press releases of the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, the US Federal Register and the
   Canada Gazette (`PRESS`, `PREL`) and GDELT's world events by country and tone (`GDELT`). The free news is in the World lens too.
@@ -822,7 +822,7 @@ limit letters; connector files that upgrade themselves safely.**
   LL:LL-0011`, the VaR page's hierarchy select, official VaR and exposure records for every hierarchy. Data without the column skips
   that hierarchy alone, with a warning (`DRS-5211`, Admin → Health, *not available* in the select); the rest answers as before.
 - **Iceberg, as a full alternative to Delta** ([ICEBERG_CONNECTOR 18–19](plugins/drishti-plugin-iceberg/README.md),
-  [tutorial 29](docs/tutorials/29-var-on-iceberg.md)): VaR, intraday (files and Kafka) and exposure read from Iceberg, equal to Delta
+  [tutorial 29](docs/tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg)): VaR, intraday (files and Kafka) and exposure read from Iceberg, equal to Delta
   to the cent (VAR BANK 112,041,646 on 2026-09-30 on both); `lake build --format iceberg`, `build_demo_lakes.py --store risk=iceberg`;
   Admin → Lakes and `lake maintain` for Iceberg (the Format column, snapshot expiry, orphan files, the 7-year floor); official results
   published as Delta or Iceberg, to a folder or to S3, with BI's readers following; `deploy/aws/iceberg/` scripts. Delta stays the

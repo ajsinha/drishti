@@ -177,5 +177,5 @@ booked the trade. See [Entities and ownership](entities-and-ownership.md).
 
 - [Market risk](market-risk.md) and [Counterparty credit risk](counterparty-credit-risk.md): what the trades feed.
 - [Trading groupings contract](../contracts/TRADING_GROUPINGS.md) (CTRD, LTRD, PTRD, ITRD) and [trade valuations](../contracts/TVAL.md).
-- [Tutorial 21: an entity over time](../tutorials/21-an-entity-over-time.md) (`TRD 1000015 30 <GO>`).
+- [Tutorial 1, Part E: an entity over time](../tutorials/01-first-15-minutes.md#part-e--an-entity-over-time) (`TRD 1000015 30 <GO>`).
 - [Data and contracts](data-and-contracts.md): where the trades come from and how they are loaded.

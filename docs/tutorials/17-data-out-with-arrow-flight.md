@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 35 · Data out: from a token to a pandas DataFrame of a desk's VaR scenario P&L
+# Tutorial 17 · Data out: from a token to a pandas DataFrame of a desk's VaR scenario P&L
 
 In this tutorial you turn Arrow Flight on, make a token that may read data, read a desk's VaR scenario P&L into pandas, read the same
 from Java and from a JDBC tool, follow a live intraday stream, and see your reads on Admin → Data out. Each step shows the UI, the command
@@ -28,7 +28,7 @@ About 20 minutes.
 
 ## Before you start
 
-- The server and console running on the demo lake ([tutorial 1](01-first-15-minutes.md)), VaR on (the default).
+- The server and console running on the demo lake ([tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around)), VaR on (the default).
 - Python 3.10 or newer with `pyarrow` and `pandas`; for step 5 a JDK 17 or newer; for step 6 DBeaver.
 - The server's certificate and its CA as PEM files (a test PKI is fine on your own machine).
 
@@ -42,7 +42,7 @@ About 20 minutes.
 
 ## Step 1 · Turn Flight on
 
-**UI.** Admin → Engines → Arrow Flight → On, reason "tutorial 35"; restart the server.
+**UI.** Admin → Engines → Arrow Flight → On, reason "this tutorial"; restart the server.
 **File.** `config/engines/flight.yaml`: `enabled: true`, `tls.certificate` and `tls.private-key` naming your PEM files.
 **Check.** Admin → Data out shows *Running, port 18815, TLS*.
 
