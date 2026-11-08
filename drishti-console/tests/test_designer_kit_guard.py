@@ -131,7 +131,6 @@ FORM_WINDOW = 25      # lines after the loop's head that the label and the input
 # file (relative to drishti-console/web) -> still draws a form pane by hand (each moving onto Form or drishti-grid editing); only shrinks
 FORMS_ALLOWED = {
     "static/js/drishti_admin-lakes.js",          # a lake's fields: the classifier and promote checkboxes per field (-> drishti-grid editing)
-    "static/js/drishti_bi-transform.js",         # a transform step's parameters (-> Form: a column select, a checkbox list, a choice)
 }
 
 
@@ -169,7 +168,7 @@ def test_no_console_script_draws_an_inspector_or_form_pane_by_hand(hand_forms):
 def test_the_form_allow_list_only_shrinks_and_is_capped(hand_forms):
     stale = [f"{name}: gone or on Form now (take it off the list)" for name in sorted(FORMS_ALLOWED) if not hand_forms.get(name)]
     assert not stale, "\n".join(stale)
-    assert len(FORMS_ALLOWED) <= 2                # 3 when the rule was made (2026-11-07, wip/e-panes), 2 now; it ends at 0
+    assert len(FORMS_ALLOWED) <= 1                # 3 when the rule was made (2026-11-07, wip/e-panes), 1 now; it ends at 0
 
 
 def test_the_form_guard_finds_what_it_looks_for():
