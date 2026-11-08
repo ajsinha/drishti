@@ -490,6 +490,358 @@ On Windows, the same command in PowerShell with the jar's path; nothing else is 
 file, with S3 and Iceberg examples, is [CLI_REFERENCE.md section 4.13](CLI_REFERENCE.md#713-the-parallel-lake-loader); the design and the memory model
 are [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload).
 
+### 3.4 Pushing data from your own programs
+
+Your system writes the rows; Drishti loads them. The safe way, at any volume, is the **data inbox** (section 3.1): your program writes a
+JSON Lines file (gzipped) into the inbox, and its `.ready` file **last**. Both programs below were run against a server with the inbox on
+and their rows checked in the lake; they are checked in under [examples/lake-push/](examples/lake-push/) (`push_inbox.py`,
+`PushInbox.java`), and a test keeps this page equal to them.
+
+**The three rules every pusher follows:**
+
+1. **Write, then rename.** The data file is written outside the inbox (here `<dataload>/staging/`, beside `inbox/` on the same file
+   system) and renamed in when complete: one atomic rename, so the inbox never sees half a file.
+2. **The `.ready` file last**, the same way, with `sha256:` and `rows:` of what you wrote: a file cut short is refused before anything is
+   written. The inbox also waits until both are unchanged for `stable-seconds` (30).
+3. **`mode: replace`** for a day you may send again: a re-run replaces that business date in one commit, never doubles it.
+
+**Name the file `<table>.<YYYY-MM-DD>.jsonl.gz`** (the business date in the name), or give `table:` and `business-date:` in the `.ready`
+file. The table is a pack's kind or, with `connector:`, one of its tables: for trades, whose kind `trade` has one table per source system,
+name the connector (`trade-endur` writes `trading/trade_endur`). **Give `key:`** (the id field, `TRADE_ID`) when the lake has no entry for
+the table yet: a lake made by its first load takes the pack's layout, and the rows need an id.
+
+#### (a) Python: one file, a tar, and `lake build`
+
+The script uses Python's standard library only. One file:
+
+```bash
+python3 push_inbox.py --inbox <data>/dataload/inbox --table trade_endur --date 2026-11-06 --source export.jsonl.gz \
+    --lake risklake --pack trading --kind trade --connector trade-endur --key TRADE_ID
+```
+
+```text
+pushed <data>/dataload/inbox/trade_endur.2026-11-06.jsonl.gz and trade_endur.2026-11-06.jsonl.gz.ready
+```
+
+```yaml
+# the .ready file it wrote (captured)
+pack: trading
+kind: trade
+connector: trade-endur
+lake: risklake
+mode: replace
+key: TRADE_ID
+sha256: ef759f8486980a5b311b5efdf90ea575be65655412b28e983963b61dfb4139c6
+rows: 164
+```
+
+**A tar of several dates (and tables)**, all or nothing: `<table>/<YYYY-MM-DD>/part-0001.jsonl.gz` inside. A tar's folders are **kinds**
+(`risk-hierarchy`, `scenario-pv`) with one table in the lake; a kind with several tables (trades: one per source system) goes as one file
+per table and date instead, with `connector:`.
+
+```bash
+python3 push_inbox.py --inbox <data>/dataload/inbox --tar eod-2026-11-02 \
+    --part risk-hierarchy:2026-10-30:nodes-1030.jsonl --part risk-hierarchy:2026-11-02:nodes-1102.jsonl \
+    --folders risk-hierarchy=market-risk --lake demo
+```
+
+You should see the pair go through the inbox within a cycle; the outbox's `eod-2026-11-02.tar.loaded.json` says `"outcome" : "loaded"`
+and the table has a folder per date (`business_date=2026-10-30`, `business_date=2026-11-02`). The demo lake's file describes its tables with
+their `id:`; for a tar into another lake, give each table its entry (with `id:`) in that lake's file first (section 2), since a tar's
+`.ready` has no per-table `key:`.
+
+```python
+"""Push rows into a Drishti lake through the data inbox (docs/guides/DATA_LAKE_GUIDE.md section 3.4). Python's standard library only.
+
+One file:  push_inbox.py --inbox <data>/dataload/inbox --table trade_endur --date 2026-11-06 --source rows.jsonl.gz --lake risklake \
+               --pack trading --kind trade --connector trade-endur --key TRADE_ID
+A tar:     push_inbox.py --inbox ... --tar eod-2026-11-06 --part trade_endur:2026-11-06:a.jsonl.gz --part risk_hierarchy:2026-11-06:b.jsonl \
+               --folders trade_endur=trading,risk_hierarchy=market-risk --lake risklake
+
+The data file is written in <dataload>/staging/ and renamed into the inbox when complete (one atomic rename); its .ready file,
+with the SHA-256 and the row count, is written LAST, the same way. A re-run of a day is safe with --mode replace."""
+from __future__ import annotations
+
+import argparse
+import gzip
+import hashlib
+import io
+import json
+import os
+import tarfile
+from pathlib import Path
+
+
+def documents(source: Path):
+    """Your rows, one JSON object each: here read from a JSON Lines export (.jsonl or .jsonl.gz); yield dicts from your program instead."""
+    opener = gzip.open if source.name.endswith(".gz") else open
+    with opener(source, "rt", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                yield json.loads(line)
+
+
+def write_jsonl_gz(rows, out) -> int:
+    """Rows as gzipped JSON Lines into a binary stream; the number written."""
+    n = 0
+    with gzip.GzipFile(fileobj=out, mode="wb", mtime=0) as gz:
+        for row in rows:
+            gz.write((json.dumps(row, separators=(",", ":"), ensure_ascii=False) + "\n").encode("utf-8"))
+            n += 1
+    return n
+
+
+def sha256_of(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def place(inbox: Path, name: str, write) -> Path:
+    """Writes inbox/<name> atomically: first into <dataload>/staging/ (beside the inbox, the same file system), flushed, then renamed in."""
+    staging = inbox.parent / "staging"
+    staging.mkdir(parents=True, exist_ok=True)
+    final, tmp = inbox / name, staging / name
+    with open(tmp, "wb") as f:
+        write(f)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, final)
+    return final
+
+
+def ready_text(keys: dict) -> str:
+    return "".join(f"{k}: {json.dumps(v) if isinstance(v, dict) else v}\n" for k, v in keys.items() if v is not None)
+
+
+def push_file(inbox: Path, table: str, day: str, rows, **keys) -> Path:
+    """One table, one business date: inbox/<table>.<day>.jsonl.gz, then its .ready with sha256 and rows."""
+    counted = {}
+    data = place(inbox, f"{table}.{day}.jsonl.gz", lambda f: counted.setdefault("rows", write_jsonl_gz(rows, f)))
+    note = {**keys, "sha256": sha256_of(data), "rows": counted["rows"]}
+    place(inbox, data.name + ".ready", lambda f: f.write(ready_text(note).encode("utf-8")))
+    return data
+
+
+def push_tar(inbox: Path, name: str, parts: list[tuple[str, str, object]], **keys) -> Path:
+    """Several tables and dates in one archive: <table>/<YYYY-MM-DD>/part-0001.jsonl.gz each; one .ready, all or nothing."""
+    total = 0
+
+    def write(f):
+        nonlocal total
+        with tarfile.open(fileobj=f, mode="w") as tar:
+            for table, day, rows in parts:
+                buf = io.BytesIO()
+                total += write_jsonl_gz(rows, buf)
+                info = tarfile.TarInfo(f"{table}/{day}/part-0001.jsonl.gz")
+                info.size = buf.tell()
+                buf.seek(0)
+                tar.addfile(info, buf)
+
+    data = place(inbox, f"{name}.tar", write)
+    note = {**keys, "sha256": sha256_of(data), "rows": total}
+    place(inbox, data.name + ".ready", lambda f: f.write(ready_text(note).encode("utf-8")))
+    return data
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--inbox", required=True, type=Path, help="<data>/dataload/inbox of the inbox's owner node")
+    ap.add_argument("--table"), ap.add_argument("--date"), ap.add_argument("--source", type=Path)
+    ap.add_argument("--tar", help="an archive's name (without .tar)")
+    ap.add_argument("--part", action="append", default=[], help="table:YYYY-MM-DD:source, for --tar")
+    ap.add_argument("--folders", help="table=pack,... for --tar")
+    ap.add_argument("--lake"), ap.add_argument("--pack"), ap.add_argument("--kind"), ap.add_argument("--connector")
+    ap.add_argument("--key", help="the id field, when the lake entry and the pack name none (TRADE_ID)")
+    ap.add_argument("--mode", default="replace", choices=["replace", "append"])
+    ap.add_argument("--hold", action="store_true", help="the inbox waits until hold is removed from the .ready file")
+    a = ap.parse_args()
+    a.inbox.mkdir(parents=True, exist_ok=True)
+    common = {"lake": a.lake, "mode": a.mode, "hold": True if a.hold else None}
+    if not a.tar:
+        common["key"] = a.key
+    if a.tar:
+        parts = [(t, d, documents(Path(s))) for t, d, s in (p.split(":", 2) for p in a.part)]
+        folders = dict(x.split("=", 1) for x in a.folders.split(",")) if a.folders else None
+        out = push_tar(a.inbox, a.tar, parts, folders=folders, **common)
+    else:
+        out = push_file(a.inbox, a.table, a.date, documents(a.source), pack=a.pack, kind=a.kind, connector=a.connector, **common)
+    print("pushed", out, "and", out.name + ".ready")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+**Without the inbox**, the same rows straight into a lake from the machine that holds it (the `.ready` file is optional here; command-line
+options win over it):
+
+```bash
+python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake risklake \
+    --pack config/packs/banking/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates
+```
+
+```text
+… lake-build ok exit=0 … domain=trading kind=trade engine=drishti mode=overwrite-dates rows=100 rejected=0 dates=1 partitions=4 seconds=2.573
+```
+
+#### (b) Java: the JDK alone
+
+`Files`, `GZIPOutputStream` and `MessageDigest`; no other library. `push(...)` takes your own JSON lines; `main` reads them from a file:
+
+```bash
+javac PushInbox.java
+java PushInbox <data>/dataload/inbox trade_endur 2026-11-04 rows.jsonl lake=risklake pack=trading kind=trade connector=trade-endur key=TRADE_ID
+```
+
+```text
+pushed <data>/dataload/inbox/trade_endur.2026-11-04.jsonl.gz and trade_endur.2026-11-04.jsonl.gz.ready (100 rows)
+```
+
+```java
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Push rows into a Drishti lake through the data inbox (docs/guides/DATA_LAKE_GUIDE.md section 3.4), with the JDK alone.
+ *
+ * <pre>
+ * javac PushInbox.java
+ * java PushInbox &lt;data&gt;/dataload/inbox trade_endur 2026-11-06 rows.jsonl lake=risklake pack=trading kind=trade connector=trade-endur key=TRADE_ID
+ * </pre>
+ *
+ * The rows (one JSON object a line) are written gzipped into &lt;dataload&gt;/staging/ and renamed into the inbox when complete; the
+ * .ready file, with the given keys, mode replace, the SHA-256 and the row count, is written last the same way. Your program passes its
+ * own JSON lines to {@link #push}.
+ */
+public final class PushInbox {
+
+    private PushInbox() {
+    }
+
+    /** One table, one business date: inbox/&lt;table&gt;.&lt;day&gt;.jsonl.gz, then its .ready with {@code keys} (lake, pack, kind, ...). */
+    public static Path push(Path inbox, String table, String day, Iterable<String> jsonLines, Map<String, String> keys) throws IOException {
+        Path staging = inbox.resolveSibling("staging");                 // beside the inbox: the same file system, so the move is one rename
+        Files.createDirectories(inbox);
+        Files.createDirectories(staging);
+        String name = table + "." + day + ".jsonl.gz";
+        Path tmp = staging.resolve(name);
+        long rows = 0;
+        try (OutputStream out = Files.newOutputStream(tmp);
+             BufferedWriter w = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(out, 1 << 16), StandardCharsets.UTF_8))) {
+            for (String line : jsonLines) {
+                w.write(line);
+                w.write('\n');
+                rows++;
+            }
+        }
+        Map<String, String> note = new LinkedHashMap<>(keys);
+        note.putIfAbsent("mode", "replace");                              // a re-run of the day replaces it
+        note.put("sha256", sha256(tmp));
+        note.put("rows", Long.toString(rows));
+        Path data = Files.move(tmp, inbox.resolve(name), StandardCopyOption.ATOMIC_MOVE);
+        StringBuilder ready = new StringBuilder();
+        note.forEach((k, v) -> ready.append(k).append(": ").append(v).append('\n'));
+        Path marker = staging.resolve(name + ".ready");
+        Files.writeString(marker, ready);
+        Files.move(marker, inbox.resolve(name + ".ready"), StandardCopyOption.ATOMIC_MOVE);   // last: the inbox takes the pair from now on
+        return data;
+    }
+
+    static String sha256(Path file) throws IOException {
+        try (DigestInputStream in = new DigestInputStream(Files.newInputStream(file), MessageDigest.getInstance("SHA-256"))) {
+            in.transferTo(OutputStream.nullOutputStream());
+            return HexFormat.of().formatHex(in.getMessageDigest().digest());
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        if (args.length < 4) {
+            System.err.println("usage: java PushInbox <inbox> <table> <YYYY-MM-DD> <rows.jsonl> [key=value ...]   (lake=, pack=, kind=, connector=, key=, mode=)");
+            System.exit(2);
+        }
+        Map<String, String> keys = new LinkedHashMap<>();
+        for (int i = 4; i < args.length; i++) {
+            String[] kv = args[i].split("=", 2);
+            keys.put(kv[0], kv[1]);
+        }
+        List<String> lines;
+        try (InputStream in = Files.newInputStream(Path.of(args[3]))) {
+            lines = new String(in.readAllBytes(), StandardCharsets.UTF_8).lines().filter(l -> !l.isBlank()).toList();
+        }
+        Path data = push(Path.of(args[0]), args[1], args[2], lines, keys);
+        System.out.println("pushed " + data + " and " + data.getFileName() + ".ready (" + lines.size() + " rows)");
+    }
+}
+```
+
+**The parallel loader instead of the inbox** (every core, bounded memory, a file of any size; section 3.3): `lake build … --engine java`
+into a lake whose file gives the table its `id:` (here the demo lake's `trading.trade_endur`), or the loader alone from the server's jar
+with a load file:
+
+```bash
+python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake demo \
+    --pack config/packs/banking/trading --connector trade-endur --mode overwrite-dates --engine java
+```
+
+```text
+… lake-build ok exit=0 … domain=trading kind=trade engine=java-loader mode=overwrite-dates rows=100 rejected=0 dates=1 partitions=4 seconds=2.129
+```
+
+```bash
+java -Xmx4g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-2.9.11.g-exec.jar --config load-trades.yaml
+```
+
+#### (c) Where the inbox is, and watching it load
+
+| | |
+|---|---|
+| The inbox | `<data>/dataload/inbox/` on the inbox's **owner** node (`drishti.dataload.dir`, default `<data>/dataload`; `<data>` is `DRISHTI_DATA_DIR`). Turn it on: Admin → Engines → **Data inbox**, or `DRISHTI_DATALOAD_ENABLED=true` (section 3.1) |
+| Which table | the `.ready` file's keys, else the first rule of `config/dataload.yaml`, else the name's table (section 5.1) |
+| Which date | the `.ready` file's `business-date:`, else the name's date, else business today (section 5.2) |
+| Which lake | the `.ready` file's `lake:`, else the rule's, else `drishti.dataload.lake` (`demo`) |
+| Watch it | **Admin → Data loads → Inbox** (Waiting, Loading, Last cycles, Failures with **Retry**); `drishti.py dataload status`; `GET /api/v1/admin/dataload` |
+| Load now | **Load now** on the Inbox screen; `drishti.py dataload run`; `POST /api/v1/admin/dataload/run` |
+| Its report | `outbox/<day>/<run>/<file>.loaded.json` (tables, dates, Delta versions, rows); a refusal: `failed/<day>/<run>/<file>.failed.json` with the reason in words |
+| Undo a load | `drishti.py dataload undo <load id>` (a dry run, then `--yes`), `POST /api/v1/admin/dataload/undo`; section 5.5 |
+
+#### (d) At scale
+
+- **One file per table and business date**, gzipped, up to a few GB each; or **one tar** per batch when several tables of one-table kinds
+  must land together (all or nothing). Many small files cost more than a few large ones: aim for 100 MB to 2 GB per file.
+- **One `.ready` per data file**; or, when a whole batch is written, one `ready.all` in the inbox releases every file there at once.
+- **Order:** a cycle takes every ready, stable file at that moment, oldest first, and loads the files of one table together; files that
+  become ready during a run wait for the next cycle (`interval`, 10 minutes; **Load now** starts one at once). Send a table's dates in
+  order when a later date depends on an earlier one.
+- **Idempotent:** `mode: replace` (and the ledger, which skips a file whose SHA-256 was already loaded) make a re-run safe.
+- **Throughput:** the loader runs as its own process (`loader-heap`, 4g) on every core; a cycle can be bounded with `max-files` and
+  `max-gb`; keep the inbox and the lake on local or fast shared storage; exclude them from real-time antivirus scanning.
+- **Hold and release:** `hold: true` keeps a pair waiting (shown as *held*) until you remove the key, for example until a risk run is
+  signed off.
+- **Checks:** a wrong `sha256:` or `rows:`, an unknown key, a bad date or mode, a table that cannot be routed, or rejected rows over
+  `reject-max-percent` (0) send the pair to `failed/` with the reason, and nothing is committed; **Retry** (or `drishti.py dataload
+  retry`) puts it back after you fix it. Every row a load rejects is listed in the load's `*.rejects.jsonl` with its line and reason.
+
 ## 4. The `.ready` file, every key
 
 The `.ready` file says that its data file is complete, and may say how to load it. It is YAML or JSON; **empty is fine**. The inbox reads
@@ -499,24 +851,52 @@ it, and so do `lake build` and the parallel loader for a file given on their com
 (`trade_endur.2026-11-06.ready`, `eod.tar.ready`). A short name that could release two data files (`trades.ready` beside `trades.jsonl`
 and `trades.jsonl.gz`) releases neither, and the Inbox screen says why.
 
-**A full, annotated example** (every key; a real file uses only those it needs):
+### 4.0 A complete `.ready` file, every key
+
+Every key a `.ready` file can carry, each with what it does and its default. All are optional: a real file uses only those it needs (most
+need none, or `lake:`, `mode:`, `sha256:` and `rows:`). The keys are one list shared by the inbox and the command-line loaders
+(`ReadyNote.KEYS` in drishti-dataload, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
+by `drishti-console/tests/test_docs_ready_example.py`, so a renamed key fails the docs.
 
 ```yaml
-# trade_endur.2026-11-06.jsonl.gz.ready
-lake: risklake                  # the lake the file goes to, over the rule's and the inbox's (section 5.1); a lake with no file yet is created
-pack: trading                   # the pack whose kind and recommended layout the table uses
-kind: trade                     # the pack's kind, when the pack has several
-connector: trade-endur          # the pack's connector whose table is written (here trading/trade_endur), when several serve the kind
-table: trade_endur              # the table, over the name's (refused for a tar)
-business-date: 2026-11-06       # every row's business date, over the name's (YYYY-MM-DD; refused for a tar)
-mode: replace                   # replace (the date replaced) or append (rows added); section 5.3
-key: TRADE_ID                   # the id field (default: the lake entry's or the pack's)
-sha256: 3f0c...                 # 64 hex characters: the file's checksum, checked before anything is written (inbox)
-rows: 1048576                   # the documents the file holds (a tar: all its files), checked before anything is written (inbox)
-new-table: false                # true: this file may create a table no pack has (with pack:, and new-tables: true in the inbox)
-hold: false                     # true: the file waits in the inbox until this key is removed or set to false
-# folders: {trades: trading, scenario_pv: market-risk}   a tar only: each table folder's pack
+# trade_endur.2026-11-06.jsonl.gz.ready   (YAML; JSON works too; an EMPTY file is fine and only says "the data file beside me is complete")
+#
+# --- Where the rows go -----------------------------------------------------------------------------------------------------------------------
+lake: risklake               # the lake (its file config/lakes/<lake>.yaml; created at <data>/delta/<lake> when it has none yet).
+                             #   Default: the routing rule's lake:, else drishti.dataload.lake (demo as shipped). Section 5.1
+pack: trading                # the pack whose kind and recommended layout (promoted columns, id, partitions) the table takes.
+                             #   Default: the rule's pack:, else the pack that has a kind or table named like the file
+kind: trade                  # the pack's kind, when the pack has several. Default: the rule's kind:, else the one the file name names
+connector: trade-endur       # the pack's connector whose table is written (here trading/trade_endur), when several serve the kind.
+                             #   Default: the rule's connector:, else the first that serves the kind
+table: trade_endur           # the table, instead of the name's. Default: the file name's table (trade_endur.2026-11-06...). Refused for a tar
+#
+# --- Which business date -----------------------------------------------------------------------------------------------------------------------
+business-date: 2026-11-06    # every row's business date (YYYY-MM-DD), the partition. Default: the date in the file name, else the
+                             #   business today (New York calendar). Refused for a tar: a tar's folders name their dates. Section 5.2
+#
+# --- How it loads ------------------------------------------------------------------------------------------------------------------------------
+mode: replace                # replace: the file's business date(s) replaced in one commit, so a re-run is safe; append: rows added.
+                             #   Default: the lake entry's load-mode (replace in the shipped lake files), else drishti.dataload.default-mode (append)
+key: TRADE_ID                # the id field. Default: the lake entry's id:, else the pack's key, else a field named id. A new table needs one
+new-table: false             # true: this file may create a table no pack has (with pack:, and drishti.dataload.new-tables: true). Default false
+#
+# --- A tar only ----------------------------------------------------------------------------------------------------------------------------------
+folders: {scenario-pv: market-risk, risk-hierarchy: market-risk}
+                             # each top folder's pack (a tar holds <kind>/<YYYY-MM-DD>/ files). Default: the one pack with a kind of
+                             #   that name, else a pack of that name with one kind; an unresolved folder refuses the whole tar. Section 4.4
+#
+# --- Checks before anything is written (the inbox: a mismatch sends the pair to failed/, nothing committed) -------------------------------
+sha256: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae
+                             # the data file's SHA-256, 64 hexadecimal characters (sha256sum, Get-FileHash). Default: not checked
+rows: 1048576                # the documents the file holds (a tar: all its files together). Default: not checked
+#
+# --- Hold it ---------------------------------------------------------------------------------------------------------------------------------------
+hold: false                  # true: the pair waits in the inbox, shown as held, until this key is removed or set to false. Default false
 ```
+
+The example names every key at once to show them: a real tar's `.ready` refuses `table:` and `business-date:`, and `folders:` is meant
+for a tar only. The table below says the same per key.
 
 | Key | Value | Notes |
 |---|---|---|
@@ -577,31 +957,33 @@ The Inbox screen shows it as *held*; delete the `hold:` line (or set it to `fals
 
 ### 4.4 A tar with several tables and dates
 
-A tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<table>/<YYYY-MM-DD>/<files>.jsonl[.gz]`, nothing else (operating-system litter
-such as `__MACOSX/` and `.DS_Store` is ignored):
+A tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<folder>/<YYYY-MM-DD>/<files>.jsonl[.gz]`, nothing else (operating-system litter
+such as `__MACOSX/` and `.DS_Store` is ignored). **Each top folder is a kind** of its pack (`scenario-pv`, `risk-hierarchy`) that has one
+table in the lake:
 
 ```text
 eod-2026-11-06.tar.gz
-├── trade_endur/2026-11-06/part-0001.jsonl.gz
-├── trade_endur/2026-11-06/part-0002.jsonl.gz
-├── scenario_pv/2026-11-05/restated.jsonl.gz
-├── scenario_pv/2026-11-06/positions.jsonl.gz
-└── risk_hierarchy/2026-11-06/nodes.jsonl
+├── scenario-pv/2026-11-05/restated.jsonl.gz
+├── scenario-pv/2026-11-06/part-0001.jsonl.gz
+├── scenario-pv/2026-11-06/part-0002.jsonl.gz
+└── risk-hierarchy/2026-11-06/nodes.jsonl
 ```
 
 ```yaml
-# eod-2026-11-06.tar.ready
+# eod-2026-11-06.tar.gz.ready
 lake: risklake
-folders: {trade_endur: trading, scenario_pv: market-risk, risk_hierarchy: market-risk}
+folders: {scenario-pv: market-risk, risk-hierarchy: market-risk}
 rows: 2050326
 ```
 
 **A tar names its own tables and dates; nothing overrides them**: `business-date:` or `table:` in its `.ready` is refused. Each folder's
-pack is `folders:`, else the pack that already has a table of that name, else a pack of that name with one kind; an unresolved folder
-refuses the whole archive. Every table of the archive shares one load id, and **an archive loads completely or not at all**: if one
-table's load fails, the tables already committed are undone and the archive goes to `failed/` saying what failed and what was rolled
-back. Make one from dated files with `tar -czf eod-2026-11-06.tar.gz trade_endur scenario_pv risk_hierarchy` run in the folder holding
-the three table folders.
+pack is `folders:`, else the one pack with a kind of that name, else a pack of that name with one kind; an unresolved folder refuses the
+whole archive, listing the kinds there are. A kind with **several tables in the lake** (trades: `trade_endur`, `trade_calypso`,
+`trade_murex`) cannot go in a tar: the archive is refused naming the tables; send each table as its own file with `connector:` (section
+3.4). The lake's entry gives each table its id (`id:`), since a tar's `.ready` has no per-table `key:`. Every table of the archive shares
+one load id, and **an archive loads completely or not at all**: if one table's load fails, the tables already committed are undone and the
+archive goes to `failed/` saying what failed and what was rolled back. Make one from dated folders with
+`tar -czf eod-2026-11-06.tar.gz scenario-pv risk-hierarchy` run in the folder holding them.
 
 ### 4.5 Checks: sha256 and rows
 

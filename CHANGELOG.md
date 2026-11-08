@@ -109,6 +109,12 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   with `DRISHTI_MODULES_<MODULE>_ENABLED` or `POST /api/v1/admin/modules`: the documents, the settings index, the module files' comments
   and the messages (the API's `DRS-1025`, an engine's *not installed* reason, the console's *not available* line, the start log's
   packs-not-loaded line) name those, and no longer a page.
+- **Pushing data from your own programs** ([DATA_LAKE_GUIDE.md section 3.4](docs/guides/DATA_LAKE_GUIDE.md#34-pushing-data-from-your-own-programs)):
+  a Python script (standard library only) and a Java program (the JDK alone) that write JSON Lines into the data inbox safely (written
+  beside the inbox, renamed in, the `.ready` file with its SHA-256 and row count last), a tar of several dates, the same through
+  `lake build` and the parallel loader, where the inbox is and how to watch it, and running it at scale; both programs are checked in under
+  `docs/guides/examples/lake-push/` and were run against a server. Section 4.0 is one complete `.ready` file with every key, what it does and
+  its default; `test_docs_ready_example.py` parses it with the real key list. A tar's folders are kinds with one table in the lake (section 4.4).
 
 ### Drishti Elements, and one way for each job (2.9.11.e)
 
