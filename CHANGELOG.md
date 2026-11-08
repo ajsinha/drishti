@@ -4361,7 +4361,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   PACK_DEVELOPER_GUIDE *Facts for Home*, CONFIGURATION (`ui.facts.*`, `ui.home_cards`); Help: F1 on Home and `/help/fact-of-the-day`
   open the user guide's section. Tests: `drishti-console/tests/test_home_facts.py`.
 
-- **Knowledge: Companies, funds and ETFs (2026-10-27).** An eighth Knowledge page, `docs/knowledge/companies-funds-and-etfs.md`, in
+- **Knowledge: Companies, funds and ETFs (2026-10-27).** An eighth Knowledge page, `docs/knowledge/world.md#1-companies-funds-and-etfs`, in
   the same seven parts as the others: what a company's ticker, CIK, SIC code and division, share classes (GOOG and GOOGL), EDGAR filings
   and XBRL facts are; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index
   funds, computed index weights, active share and fund overlap; how the us-equities, funds and gleif packs connect. The worked example
@@ -4409,10 +4409,10 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 
 - **Knowledge: what the words of your data mean, and how the data connects them (2.9.2; product owner, 2026-10-26).** A new section at
   the top of the help centre, [docs/knowledge/](docs/knowledge/README.md): a home with every term A to Z, and one page per domain,
-  [Market risk](docs/knowledge/market-risk.md), [Counterparty credit risk](docs/knowledge/counterparty-credit-risk.md),
-  [Trades and products](docs/knowledge/trades-and-products.md), [Entities and ownership](docs/knowledge/entities-and-ownership.md),
-  [Market data](docs/knowledge/market-data.md), [Data and contracts](docs/knowledge/data-and-contracts.md) and
-  [Economies](docs/knowledge/economies.md). Each has the same seven parts: the idea in plain words, a glossary (each term with the
+  [Market risk](docs/knowledge/risk.md#1-market-risk), [Counterparty credit risk](docs/knowledge/risk.md#2-counterparty-credit-risk),
+  [Trades and products](docs/knowledge/risk.md#3-trades-and-products), [Entities and ownership](docs/knowledge/data.md#2-entities-and-ownership),
+  [Market data](docs/knowledge/data.md#1-market-data), [Data and contracts](docs/knowledge/data.md#3-data-and-contracts) and
+  [Economies](docs/knowledge/world.md#2-economies). Each has the same seven parts: the idea in plain words, a glossary (each term with the
   command that shows it on the demo data), how the data connects (the kinds, their link columns from the packs' contracts and the id
   conventions), a worked example with real numbers and their business date, questions to ask your data, common confusions, and where
   to go deeper. Market risk also explains how a P&L vector is made from scenario PVs (same valuation date, absolute and relative

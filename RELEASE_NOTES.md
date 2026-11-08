@@ -889,7 +889,7 @@ finally right.**
   your business date, and only those that hold today are shown. Seven ship: a book over its VaR limit while its desk is within, a
   desk that lowers VaR, posted collateral raising exposure, VaR against peak PFE, the most-held company, two managers holding one
   portfolio, a fund's weights above its net assets. Quick cards below: VAR BANK, EXP BANK, FUND SPY, DATAMAP.
-- **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/companies-funds-and-etfs.md)): share classes, NAV,
+- **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/world.md#1-companies-funds-and-etfs)): share classes, NAV,
   look-through, expense ratios, active share and overlap on the demo data; 23 new `WHAT` terms (162 in all); "What does this mean?"
   on USEQ, FUND, HELD and TRACK.
 - **Index membership from the tracking ETFs** ([External data](docs/guides/EXTERNAL_DATA.md)): the S&P 500, Nasdaq-100 and Dow members

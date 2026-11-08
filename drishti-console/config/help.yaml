@@ -161,17 +161,12 @@ sections:
       - title: "Start here"
         words: [WHAT]
         guides:
-          - { slug: knowledge, doc: knowledge/README.md, title: "Knowledge home and glossary", icon: lightbulb, kind: knowledge, summary: "The eight Knowledge pages and every term of the glossary A to Z, each with its meaning and the page that explains it; WHAT <term> opens any of them from the command line." }
+          - { slug: knowledge, doc: knowledge/README.md, title: "Knowledge home and glossary", icon: lightbulb, kind: knowledge, summary: "The three Knowledge pages (Risk, Data, World) and every term of the glossary A to Z, each with its meaning and the page that explains it; WHAT <term> opens any of them from the command line." }
       - title: "The domains"
         guides:
-          - { slug: knowledge-market-risk, packs: [market-risk], doc: knowledge/market-risk.md, title: "Market risk", icon: graph-down-arrow, kind: knowledge, summary: "VaR and expected shortfall in plain words, P&L vectors and historical simulation, positions, portfolios and hierarchies, contributions and diversification, backtesting; how the data connects, the bank's VaR worked through on the demo data, questions to ask and common confusions." }
-          - { slug: knowledge-counterparty-credit-risk, packs: [counterparty-risk], doc: knowledge/counterparty-credit-risk.md, title: "Counterparty credit risk", icon: shield-exclamation, kind: knowledge, summary: "Counterparties, agreements, CSAs, netting sets and collateral; EE, PFE, EPE, EEPE and why PFE does not add up; limits, CVA, SA-CCR and SIMM in brief; CP-ALDERSHOT worked through on the demo data, questions to ask and common confusions." }
-          - { slug: knowledge-trades-and-products, packs: [trading], doc: knowledge/trades-and-products.md, title: "Trades and products", icon: receipt, kind: knowledge, summary: "A trade and its three booking systems, statuses, products, notional and MTM, legs and events, books, desks and traders, valuations; what links to a trade, on the demo data." }
-          - { slug: knowledge-entities-and-ownership, packs: [core, gleif], doc: knowledge/entities-and-ownership.md, title: "Entities and ownership", icon: diagram-3, kind: knowledge, summary: "The LEI and GLEIF, direct and ultimate parents, ownership groups and countries, the bank's legal entities, counterparties and their groups, issuers; who owns whom, on the demo data." }
-          - { slug: knowledge-market-data, packs: [market-data], doc: knowledge/market-data.md, title: "Market data", icon: graph-up, kind: knowledge, summary: "Curves, fixings, FX spot and forwards, volatility surfaces and cubes, credit curves, equities, indices and commodities, correlations and beta; how they link to what uses them." }
-          - { slug: knowledge-data-and-contracts, doc: knowledge/data-and-contracts.md, title: "Data and contracts", icon: file-earmark-ruled, kind: knowledge, summary: "Packs, kinds and commands; fundamental, engine input, {product}'s own and computed data; data contracts, business dates, links and ids; where the data comes from (with External data); DATAMAP draws it all, each join checked against the data." }
-          - { slug: knowledge-companies-funds-and-etfs, packs: [us-equities, funds, gleif], doc: knowledge/companies-funds-and-etfs.md, title: "Companies, funds and ETFs", icon: briefcase, kind: knowledge, summary: "Tickers, CIK, SIC codes and divisions, share classes (GOOG and GOOGL), EDGAR filings and XBRL facts; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index funds, computed index weights and active share, fund overlap; how the us-equities, funds and gleif packs connect, on the demo data." }
-          - { slug: knowledge-economies, packs: [world-economy], doc: knowledge/economies.md, title: "Economies", icon: globe, kind: knowledge, summary: "GDP, growth, inflation, unemployment, debt and the current account; IMF forecasts, country groups and governments; how a counterparty links to its economy, on the demo data." }
+          - { slug: knowledge-risk, packs: [market-risk, counterparty-risk, trading], doc: knowledge/risk.md, title: "Risk", icon: graph-down-arrow, kind: knowledge, summary: "Market risk: VaR and expected shortfall in plain words, P&L vectors and historical simulation, positions, portfolios and hierarchies, contributions and diversification, backtesting. Counterparty credit risk: counterparties, agreements, CSAs, netting sets and collateral; EE, PFE, EPE, EEPE and why PFE does not add up; limits, CVA, SA-CCR and SIMM in brief. Trades and products: a trade and its three booking systems, statuses, products, notional and MTM, legs and events, books, desks and traders, valuations. Each with how the data connects, a worked example on the demo data (the bank's VaR, CP-ALDERSHOT), questions to ask and common confusions." }
+          - { slug: knowledge-data, packs: [market-data, core, gleif], doc: knowledge/data.md, title: "Data", icon: file-earmark-ruled, kind: knowledge, summary: "Market data: curves, fixings, FX spot and forwards, volatility surfaces and cubes, credit curves, equities, indices and commodities, correlations and beta. Entities and ownership: the LEI and GLEIF, direct and ultimate parents, ownership groups and countries, the bank's legal entities, counterparties and their groups, issuers. Data and contracts: packs, kinds and commands; fundamental, engine input, {product}'s own and computed data; data contracts, business dates, links and ids; where the data comes from; DATAMAP draws it all. Each on the demo data." }
+          - { slug: knowledge-world, packs: [us-equities, funds, gleif, world-economy], doc: knowledge/world.md, title: "World", icon: globe, kind: knowledge, summary: "Companies, funds and ETFs: tickers, CIK, SIC codes and divisions, share classes (GOOG and GOOGL), EDGAR filings and XBRL facts; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index funds, computed index weights and active share, fund overlap. Economies: GDP, growth, inflation, unemployment, debt and the current account; IMF forecasts, country groups and governments; how a counterparty links to its economy. Each on the demo data." }
   - id: internal
     groups:
       - title: "Internal"
@@ -465,23 +460,33 @@ moved:
   docs-guides-external-data: external-data   # guides/EXTERNAL_DATA.md by its path (2.9.7)
   docs-architecture-regulatory-var-reporting: docs-guides-regulatory-var-reporting   # architecture/REGULATORY_VAR_REPORTING.md moved to guides/ and listed under Use
 
+  # h-docs (2.9.11.h), knowledge pages 9 -> 4 (moved: aliases):
+  knowledge-market-risk: knowledge-risk#1-market-risk   # docs/knowledge/market-risk.md folded into docs/knowledge/risk.md
+  knowledge-counterparty-credit-risk: knowledge-risk#2-counterparty-credit-risk   # docs/knowledge/counterparty-credit-risk.md folded into docs/knowledge/risk.md
+  knowledge-trades-and-products: knowledge-risk#3-trades-and-products   # docs/knowledge/trades-and-products.md folded into docs/knowledge/risk.md
+  knowledge-market-data: knowledge-data#1-market-data   # docs/knowledge/market-data.md folded into docs/knowledge/data.md
+  knowledge-entities-and-ownership: knowledge-data#2-entities-and-ownership   # docs/knowledge/entities-and-ownership.md folded into docs/knowledge/data.md
+  knowledge-data-and-contracts: knowledge-data#3-data-and-contracts   # docs/knowledge/data-and-contracts.md folded into docs/knowledge/data.md
+  knowledge-companies-funds-and-etfs: knowledge-world#1-companies-funds-and-etfs   # docs/knowledge/companies-funds-and-etfs.md folded into docs/knowledge/world.md
+  knowledge-economies: knowledge-world#2-economies   # docs/knowledge/economies.md folded into docs/knowledge/world.md
+
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
 knowledge:
-  var: knowledge-market-risk                                            # the VaR explorer
-  var-result: knowledge-market-risk#term-var                            # VRES
-  smat: knowledge-market-risk#term-scenario-matrix                      # the scenario matrix, SMAT (2.9.7)
-  play: knowledge-market-risk#term-var-playground                       # the VaR Playground, PLAY VAR
-  desk: knowledge-market-risk#term-risk-hierarchy                       # DESK (a node of the risk hierarchies: its VaR and limits)
-  exposure: knowledge-counterparty-credit-risk                          # the exposure explorer
-  exposure-result: knowledge-counterparty-credit-risk#term-exposure-profile   # EXP as a kind
-  counterparty: knowledge-counterparty-credit-risk#term-counterparty    # CPTY
-  netting-set: knowledge-counterparty-credit-risk#term-netting-set      # NSET
-  csa: knowledge-counterparty-credit-risk#term-csa                      # CSA
-  us-company: knowledge-companies-funds-and-etfs#term-us-company        # USEQ
-  fund: knowledge-companies-funds-and-etfs#term-look-through            # FUND (the fact sheet and its Look-through tab)
-  fund-holder: knowledge-companies-funds-and-etfs#term-held-by-funds    # HELD
-  index-funds: knowledge-companies-funds-and-etfs#term-index-fund       # TRACK
+  var: knowledge-risk#1-market-risk                                            # the VaR explorer
+  var-result: knowledge-risk#term-var                            # VRES
+  smat: knowledge-risk#term-scenario-matrix                      # the scenario matrix, SMAT (2.9.7)
+  play: knowledge-risk#term-var-playground                       # the VaR Playground, PLAY VAR
+  desk: knowledge-risk#term-risk-hierarchy                       # DESK (a node of the risk hierarchies: its VaR and limits)
+  exposure: knowledge-risk#2-counterparty-credit-risk                          # the exposure explorer
+  exposure-result: knowledge-risk#term-exposure-profile   # EXP as a kind
+  counterparty: knowledge-risk#term-counterparty    # CPTY
+  netting-set: knowledge-risk#term-netting-set      # NSET
+  csa: knowledge-risk#term-csa                      # CSA
+  us-company: knowledge-world#term-us-company        # USEQ
+  fund: knowledge-world#term-look-through            # FUND (the fact sheet and its Look-through tab)
+  fund-holder: knowledge-world#term-held-by-funds    # HELD
+  index-funds: knowledge-world#term-index-fund       # TRACK
   keyboard: user-guide#keyboard                                   # the ? list's link: every key of the console (drishti_keys.js)
   global-search: user-guide#search-everything-altk                # the global search, Alt+K (drishti-insight's search)
 

@@ -37,7 +37,7 @@ class KnowledgeTest(unittest.TestCase):
     def test_the_glossary_is_valid(self):
         self.assertEqual([], K.problems(self.data))
         self.assertGreaterEqual(len(self.data["terms"]), 100)
-        for domain in ("market-risk", "counterparty-credit-risk"):          # the two pages the product owner asked for first
+        for domain in ("risk", "data", "world"):          # every page has its terms
             self.assertGreaterEqual(sum(1 for e in self.data["terms"] if e["domain"] == domain), 20, domain)
 
     def test_the_pages_are_current(self):
@@ -60,8 +60,8 @@ class KnowledgeTest(unittest.TestCase):
 
     def test_a_word_that_names_two_terms_and_a_bare_placeholder_are_refused(self):
         data = {"domains": self.data["domains"], "terms": [
-            {"term": "A", "synonyms": ["same"], "domain": "market-risk", "meaning": "one"},
-            {"term": "B", "synonyms": ["Same"], "domain": "market-risk", "meaning": "two <id> here"},
+            {"term": "A", "synonyms": ["same"], "domain": "risk", "meaning": "one"},
+            {"term": "B", "synonyms": ["Same"], "domain": "risk", "meaning": "two <id> here"},
             {"term": "C", "domain": "nowhere", "meaning": "three `<id>` is fine", "colour": "red"}]}
         bad = "\n".join(K.problems(data))
         self.assertIn("'same' names both A and B", bad)
@@ -71,8 +71,8 @@ class KnowledgeTest(unittest.TestCase):
         self.assertNotIn("C: a <placeholder>", bad)
 
     def test_a_section_has_its_terms_in_file_order_with_their_commands(self):
-        section = K.domain_section(self.data, "counterparty-credit-risk")
-        terms = [e["term"] for e in self.data["terms"] if e["domain"] == "counterparty-credit-risk"]
+        section = K.domain_section(self.data, "risk")
+        terms = [e["term"] for e in self.data["terms"] if e["domain"] == "risk"]
         found = re.findall(r'<a id="(term-[a-z0-9-]+)"></a>', section)
         self.assertEqual([K.anchor(t) for t in terms], found)
         self.assertIn("`NSET NS-ALDERSHOT-LDN <GO>`", section)
