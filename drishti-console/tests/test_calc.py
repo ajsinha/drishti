@@ -14,6 +14,7 @@
 
 """Calc, the console side: the panel on a view (offered by a pack, allowed by a role), its routes, the runtime folder,
 and the security headers that let only its worker compile WebAssembly."""
+import html
 import re
 from pathlib import Path
 
@@ -253,7 +254,7 @@ def test_the_backend_client_sends_a_field_path_and_reads_columns_with_a_longer_w
 
 
 def test_administrators_give_a_role_calc_in_admin_roles(client, backend):
-    page = client.get("/admin/roles").text
-    assert 'name="calc"' in page and "Use Calc" in page
+    page = html.unescape(client.get("/admin/roles").text)      # the role form is drishti-inputs' Form from the server's schema
+    assert '"name":"calc"' in page and "Use Calc" in page and '"calc":false' in page
     client.post("/admin/api/roles/quant", json={"kinds": ["*"], "calc": True})
     assert ("admin", "PUT", "/role-definitions/quant", {"kinds": ["*"], "calc": True}) in backend.calls

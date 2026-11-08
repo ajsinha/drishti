@@ -99,6 +99,8 @@ def register_host() -> str:
     jwks = json.dumps({"keys": [{"kty": "RSA", "kid": KEY["kid"], "n": enc(KEY["n"]), "e": enc(KEY["e"])}]})
     made = _admin_call("POST", "/admin/embed/apps", {"id": APP_ID, "name": "Elements demo", "origins": [HOST], "scopes": ["embed:view", "embed:about"],
                                                      "jwks": jwks, "subjectTypes": ["jwt"], "callsPerMinute": 100000, "userCallsPerMinute": 100000})
+    if "secret" not in made:                 # already registered (a stack this file left running): a new secret, shown once; the old one works an hour more
+        made = _admin_call("POST", f"/admin/embed/apps/{APP_ID}/rotate-secret", {"graceSeconds": 3600})
     return made["secret"]
 BROWSERS = ["chromium", "firefox", "webkit"]
 # Since 2.3.0 trades are static (a trade changes when its source books a version) and the market-risk valuations tick: the host shows valuations

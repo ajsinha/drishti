@@ -800,7 +800,7 @@
       sec.addEventListener('click', function (e) {
         var s = forms[id], td = e.target.closest && e.target.closest('td.fm-editable');
         if (!s) { return; }
-        if (s.form.edit === 'cells' && td) { if (!td.querySelector('input,select,textarea')) { editCell(s, td); } return; }
+        if (s.form.edit === 'cells' && td) { if (!td.querySelector('input,select,textarea,drishti-select')) { editCell(s, td); } return; }
         var tr = e.target.closest && e.target.closest('tbody > tr[data-frow]');
         if (s.form.edit !== 'beside' || !tr || e.target.closest('a, button, [data-fm-side]')) { return; }
         beside(s, rowIndex(s, tr));
