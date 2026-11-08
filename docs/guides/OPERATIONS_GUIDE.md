@@ -3547,7 +3547,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-5204` | a VaR date cannot be built for room (the mapped tier's disk under the guard, or the heap tier's `drishti.var.memory-budget-mb`); remembered with `Retry-After`: [21.7](#217-large-books-timeouts-grouped-pages-and-caches) |
 | `DRS-5208` | a PV record does not say what it is: add `VALUE_TYPE`, `GRAIN`, the id, `CURRENCY` and `SOURCE_SYSTEM` at the source, or `drishti.py var convert FILE --set ...`; if every record of a date is refused, check the connector's layout promotes those columns |
 | `DRS-5209` | a record disagrees with its system's pin (`drishti.var.inputs`, read at start): the source changed what it sends, or the pin is wrong |
-| `DRS-5212` | a `var-limit` row names a node the date does not have (a warning; the row is unused): check its `NODE_ID` against the tree |
+| `DRS-5212` | a [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)) row names a node the date does not have (a warning; the row is unused): check its `NODE_ID` against the tree |
 | `DRS-5213` | the hierarchies' configuration is not valid, or a hierarchy with `ids: leaf` has a value under two parents: fix it, or `ids: path` |
 | `DRS-5214` | the tree of a hierarchy the date does not have: `GET /api/v1/risk/var/tree` lists the date's |
 | `DRS-5216` | VaR sharding: a partial sum was asked for another data version or shard map than the owner holds: ask again in a moment; persistent: check every member reads the same tables (`drishti.py var shards`) |

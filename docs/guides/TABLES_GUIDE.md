@@ -281,7 +281,7 @@ A sample is JSON Lines (plain or `.gz`), one entity a line: the document itself,
 The preview expands the grain, walks `$`, `@` and `^`, evaluates filters and calculated columns with Rachana, and shows at most 10,000 rows.
 A sample has no entity id or business date unless it is in the lake's form: the preview numbers its documents (`row-1`). `related(...)`
 reads another table's sample given with `--related TABLE=FILE.jsonl` (repeatable), and `fx(...)` the spot rates of `--fx FILE.jsonl`
-(documents with `PAIR_NAME: "EUR/USD"` and `MID`, the market-data pack's `fx-spot`: a pair as quoted, its inverse, or through USD); without
+(documents with `PAIR_NAME: "EUR/USD"` and `MID`, the market-data pack's [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)): a pair as quoted, its inverse, or through USD); without
 them `related` finds nothing and only a currency to itself converts.
 
 ```text

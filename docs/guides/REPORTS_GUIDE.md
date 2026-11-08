@@ -738,7 +738,7 @@ INVALID  (del2, aggregate scope, type any)
 
 #### Start a model from the packs
 
-Choose kinds (here `trade-valuation`, `desk`, `counterparty`, `netting-set`): each is a pack table, **the packs' link graph becomes
+Choose kinds (here [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)), `desk`, `counterparty`, [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set))): each is a pack table, **the packs' link graph becomes
 relationships, across packs**, and relationships the data suggests are proposed with their match rate.
 
 ![start from the packs](img/bi-datasets/start-from-packs.png)

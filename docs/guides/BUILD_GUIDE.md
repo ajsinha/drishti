@@ -56,7 +56,7 @@ Contents:
   [31. The packs that ship](#31-the-packs-that-ship-turning-them-on-who-sees-which) · [32. Designing for phones](#32-designing-for-phones)
 
 Two packs have guides of their own: the funds and ETFs pack ([FUNDS_GUIDE.md](FUNDS_GUIDE.md): FUND, HELD, TRACK, the look-through,
-the contracts of `fund`, `fund-holder` and `index-funds`, sources, licences and the refresh script) and the computed groupings and analytics
+the contracts of `fund`, [`fund-holder`](../contracts/samples/funds.md#fund-holder) ([contract](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder)) and [`index-funds`](../contracts/samples/funds.md#index-funds) ([contract](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds)), sources, licences and the refresh script) and the computed groupings and analytics
 (LEIG, LEIC, SIC, ECG, CORR, EQB, the USEQ ratios, PXH: [GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md)).
 
 ## 1. What a pack is
@@ -1058,9 +1058,9 @@ history:
 
 Unknown keys are warnings; a wrong value is an error (`DRS-2061`) that `sutra lint <pack-dir>` and the deploy check report; on a running server the
 pack shows the problem on Admin → Packs and in Health and the kind keeps its default history. Every day's row is masked exactly as the kind's view is.
-What the shipped packs declare: trading `trade` (derived pages off); market-data `equity`, `equity-index`, `fx-spot`, `ir-curve`, `credit-curve`,
-`commodity`, `bond`, `inflation-index` as market charts; counterparty-risk `netting-set`, `credit-limit`, `cva` and market-risk `var`,
-`trade-valuation`, `pnl-explain` with their measures as columns.
+What the shipped packs declare: trading `trade` (derived pages off); market-data `equity`, [`equity-index`](../contracts/samples/market-data.md#equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)), [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)), [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)), [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)),
+`commodity`, `bond`, [`inflation-index`](../contracts/samples/market-data.md#inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)) as market charts; counterparty-risk [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), [`credit-limit`](../contracts/samples/counterparty-risk.md#credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)), `cva` and market-risk `var`,
+[`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)), [`pnl-explain`](../contracts/samples/market-risk.md#pnl-explain) ([contract](../contracts/packs/market-risk.md#pnl-pl-explain-pnl-explain)) with their measures as columns.
 
 ### 4.8 Connectors: the pack names them, the site owns them
 
@@ -1353,7 +1353,7 @@ lists every sample (`kind` and `id` needed; `title` and `subtitle` for the type-
 block that becomes its provenance (shown in *How this view was built* and in `F9`):
 
 ```json
-{"DESK_ID":"DESK-COMM","NAME":"Commodities","HEAD":"T. Brennan","BOOKS":[{"ID":"BOOK-COMM-1","TRADES":28,"MTM":7760837}, …],"VAR_99":10946782,"MTM":14609595,"LEGAL_ENTITY":"LE-NY", …,"_meta":{…}}
+{"DESK_ID":"DESK-COMM", …,"_meta":{"source":"ENDUR","generation":3,"live":true,"walk":{"MTM":25000}}}
 ```
 
 A line's id is its catalogue entry: the entry at its position when the document holds that id as a top-level value, else the first top-level value

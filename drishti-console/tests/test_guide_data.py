@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The guides' data sections (tools/docs/guide_data.py, tools/docs/guide_data.yaml): every section is current, every shown field is in its
-kind's data contract, and the shortening of long arrays is the documented one."""
+"""The guides' data sections (tools/docs/guide_data.py, tools/docs/guide_data.yaml): every section is current and links each dataset's
+data contract and its example, never a copied record."""
 from __future__ import annotations
 
 import importlib.util
@@ -41,22 +41,25 @@ def test_every_guide_data_section_is_current_and_in_its_contract():
 
 
 @pytest.mark.static
-def test_a_field_outside_the_contract_and_a_missing_sample_are_reported():
+def test_a_missing_sample_and_a_kind_without_a_contract_are_reported():
     tool = _tool()
     cons = tool.contracts()
     guide = {"id": "t", "number": 9, "file": "docs/guides/VAR_GUIDE.md", "datasets": [
-        {"kind": "var-limit", "title": "t", "required": "yes", "for": "t", "about": "t",
-         "sample": "market-risk/var-limit/var-limit.*.jsonl.gz", "fields": ["NOT_A_FIELD"]},
         {"kind": "var-limit", "title": "u", "required": "yes", "for": "t", "about": "t", "sample": "market-risk/none/*.jsonl.gz"},
         {"kind": "no-such-kind", "title": "v", "required": "yes", "for": "t", "about": "t"}]}
     _, problems = tool.build(guide, cons)
     text = "\n".join(problems)
-    assert "NOT_A_FIELD" in text and "no file matches" in text and "no data contract for kind 'no-such-kind'" in text
+    assert "no file matches" in text and "no data contract for kind 'no-such-kind'" in text
 
 
 @pytest.mark.static
-def test_long_arrays_are_shortened_as_documented():
+def test_a_dataset_links_its_contract_and_its_example_and_copies_neither():
     tool = _tool()
-    out = tool.fmt({"V": list(range(20)), "O": [{"a": 1}, {"a": 2}, {"a": 3}, {"a": 4}], "S": [1, 2, 3]})
-    assert "/* … 12 more … */," in out and '"V": [\n    0,' in out and "    19\n  ]" in out
-    assert "/* … 2 more … */\n  ]" in out and "\n    3\n  ]" in out
+    guide = {"id": "t", "number": 9, "file": "docs/guides/VAR_GUIDE.md", "datasets": [
+        {"kind": "scenario-pv", "title": "t", "required": "yes", "for": "t", "about": "t",
+         "sample": "market-risk/scenario-pv/scenario-pv-*.tar"}]}
+    block, problems = tool.build(guide, tool.contracts())
+    assert not problems
+    assert "(../contracts/samples/market-risk.md#scenario-pv)" in block
+    assert "(../../config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml)" in block
+    assert "```" not in block and "SCENARIO_PV_ID\":" not in block

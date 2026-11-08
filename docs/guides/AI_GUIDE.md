@@ -920,7 +920,7 @@ Adding a product is configuration plus, if no adapter fits, a small adapter in t
 
 The server assembles market data from its own sources, as of the date the user is looking at, using the same
 routing, history and redaction as views: the curves, surfaces and fixings the pricer spec names are read like any
-entity (`ir-curve`, `fx-vol-surface`, `rate-fixing` …), for the business date, and sent with the trade. A price for
+entity ([`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)), [`fx-vol-surface`](../contracts/samples/market-data.md#fx-vol-surface) ([contract](../contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)), [`rate-fixing`](../contracts/samples/market-data.md#rate-fixing) ([contract](../contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) …), for the business date, and sent with the trade. A price for
 2026-09-29 therefore uses 2026-09-29's market, the same market the screens show for that date, and the result records
 which entities and dates it used (provenance, as on every view). If an input is missing for the date, the request is
 refused with the name of the missing entity rather than priced on another day's data.
@@ -932,7 +932,7 @@ refused with the name of the missing entity rather than priced on another day's 
 | **Calc** | `await drishti.pricer.price_async("trade", "MX-20000001")`, `scenario_async(…, shift={"USD-OIS": +25})`, `implied_vol_async(…)`, `curve_async(…)` | DataFrames and charts of NPV, Greeks, cashflows; numpy and pandas stay in the browser for analysis |
 | **A Valuation panel** | opens a trade; a Sutra binds a panel to the pricer (a `quant:` source on a `kv` or `table` panel) | model NPV beside booked MTM, the difference, Greeks by tenor, model and market date; computed when the view opens, then cached |
 | **The what-if drawer** | a key the Sutra assigns (for example F6) on a trade or netting set | sliders and named scenarios from the pack (rates +25 bp, steepener, vols +2); the entity repriced live, shown as a before/after waterfall |
-| **Overnight batch** (later) | an operator schedules a book's repricing | results loaded into the lake as a dated kind (`trade-valuation`), so they are searchable, pivotable and comparable over days like anything else |
+| **Overnight batch** (later) | an operator schedules a book's repricing | results loaded into the lake as a dated kind ([`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))), so they are searchable, pivotable and comparable over days like anything else |
 
 ### 9. The API
 

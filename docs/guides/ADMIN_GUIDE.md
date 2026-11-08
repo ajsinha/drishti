@@ -100,7 +100,7 @@ Go to **Admin → Roles** and click **New role**. Fill in:
 |---|---|
 | Name | `credit-analyst` |
 | Description | `Reads counterparties and credit curves` |
-| Kinds it opens | `counterparty` and `credit-curve` (one per line) |
+| Kinds it opens | `counterparty` and [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)) (one per line) |
 | Powers | leave them unticked |
 
 Click **Save**. You should see *Created credit-analyst.* The row shows the two kinds, *0* users, and who changed it and when. Instead of

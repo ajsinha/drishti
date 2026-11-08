@@ -61,6 +61,19 @@
   shared columns as one table in README section 11; GRP's group limit (its own approved limit, not the sum of the members'); LIM's
   worked figures to the 2026-09-30 data; the provenance sub-fields, the official figure columns and the API answers' fields named in
   tables.
+- **Guides link an input's two homes and copy neither** (the product owner's rule): an input's fields live in its data contract
+  (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, published on `docs/contracts/packs/<pack>.md`) and its JSON example in
+  its data sample (`docs/contracts/samples/<domain>.md#<kind>`); guides and tutorials only link them. The guides' data sections
+  (`tools/docs/guide_data.py`: VaR, exposure, FRTB-SA, SIMM, funds, groupings, pivot) now link each dataset's contract page, its YAML and
+  its example instead of printing a record (55 JSON records, about 1,800 lines, gone; the spec's `where`, `pick`, `member` and `fields`
+  removed); the hand-written field tables of VaR's inputs (§15.2–15.5, 15.9, 15.15, 15.16), exposure's `simulation-run` and
+  `exposure-path` and the funds' `fund`, `fund-holder` and `index-funds` (about 430 lines) became one *Fields and example* line each;
+  the copied records in PUBLIC_SECTOR §4, DATA_GUIDE §11.16, BUILD_GUIDE §5.4 and tutorial 16's step 3 became links (the tutorial now
+  shows the files' first lines with a command). Every guide and tutorial naming an input kind links its example and its contract (about
+  180 mentions and 50 table rows). `tools/test_guide_contract_links.py` checks it: a page naming a kind (its `<kind>.contract.yaml`, or
+  the kind in backticks) links its sample section and its contract, every sample link exists, and no ```json block copies a contract
+  record (three or more of one contract's fields, half the block's keys); three Sutra walk-throughs of `GET …/raw` answers are allowed,
+  each with its reason, and the list only shrinks.
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 

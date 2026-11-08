@@ -537,7 +537,7 @@ curl -X POST $S/api/v1/me/tokens -H "Authorization: Bearer $RISK_ETL_SESSION" -H
 # -> {"secret":"drk_...", ...}   shown once: put it in your scheduler's secret store, as DRISHTI_TOKEN
 ```
 
-The same token announces `stress-scenario` and `stress-result` and nothing else: a call for another kind is `403`, for a pack it cannot reach `404 DRS-5011`,
+The same token announces [`stress-scenario`](../contracts/samples/market-risk.md#stress-scenario) ([contract](../contracts/packs/market-risk.md#scn-stress-scenario-stress-scenario)) and [`stress-result`](../contracts/samples/market-risk.md#stress-result) ([contract](../contracts/packs/market-risk.md#str-stress-result-stress-result)) and nothing else: a call for another kind is `403`, for a pack it cannot reach `404 DRS-5011`,
 and it cannot change expectations, users, tokens or packs.
 
 ### 11. Recipes
@@ -945,7 +945,7 @@ Taking data **out** of Drishti, a dataset and a day at a time: `EXPORT <GO>` (Vi
 
 ### 1. What a dataset is
 
-A dataset is a **stored kind** of a loaded pack that a connector serves (`trade-valuation`, `trade`, `netting-set`); computed kinds (VaR, EE
+A dataset is a **stored kind** of a loaded pack that a connector serves ([`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)), `trade`, [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set))); computed kinds (VaR, EE
 and PFE, the what-ifs) hold no rows and are not listed. For each the view shows:
 
 | Fact | Where it comes from |
@@ -1887,7 +1887,7 @@ with the default lake (`<data>/delta`) nothing changes; with `--lake DIR` each f
 #### Template updates
 
 A connector file generated once from an older pack template can lack kinds the pack serves now (seen in the field: `macro-store`
-without `region-economy` and `country-group`, `civic-store` without `office-holder`, `risk-store` without `trade-valuation`, and old
+without [`region-economy`](../contracts/samples/world-economy.md#region-economy) ([contract](../contracts/packs/world-economy.md#rege-region-economy-region-economy)) and `country-group`, `civic-store` without [`office-holder`](../contracts/samples/world-economy.md#office-holder) ([contract](../contracts/packs/world-economy.md#offc-office-holder-office-holder)), `risk-store` without `trade-valuation`, and old
 files still naming `central-bank-decision`, `trade-flow` and `price-basket`, which no pack uses any more). The server compares every
 connector that has text (a file or a shared edit) with its pack's current template, at start and every
 `drishti.connectors.template-check-ms` (60 s), and sorts the difference into three parts:
@@ -3272,7 +3272,7 @@ every data type, every field explained for the query that must produce it, is in
 | Business days | 60 (USNY calendar; the test data's 2026-07-08 to 2026-09-30) |
 | Trades | 5,000 per source system on the last day, 15,000 in all (4,407 ENDUR, 3,471 CALYPSO, 4,198 MUREX on the first); about 3–7% amended each day (`TRADE_VERSION` moves) |
 | Source systems | `ENDUR` (ids `1000001` …), `CALYPSO` (`CLY-3000001` …), `MUREX` (`MX-20000001` …): ids unique across them |
-| Tables | 85 (measured 2026-10-28): 3 trade tables, the test-data datasets of the banking packs (with `var-limit`), the reference tables of world-economy and news-and-markets, the public-data snapshots of us-equities, gleif and funds |
+| Tables | 85 (measured 2026-10-28): 3 trade tables, the test-data datasets of the banking packs (with [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit))), the reference tables of world-economy and news-and-markets, the public-data snapshots of us-equities, gleif and funds |
 | Disk | about 3.4 GB (measured 2026-10-28, `du` of the 89 tables; the committed test data: about 181 MB, the VaR data on three business dates) |
 | Counterparties | fictitious look-alikes (`CP-NORTHPLAINS`, `CP-VAULTGUARD`, …), with UEN, country of risk, legal entity, agreements and netting sets holding their trades |
 
@@ -3581,16 +3581,16 @@ every kind below 40 times and checks the identities in the second column. The ki
 
 | Kind (pack) | Moves together, and the identity that holds after any tick | Stays still, and why |
 |---|---|---|
-| `ir-curve` (market-data) | one shift for the curve (a small tilt and per-tenor blur): every `ZERO_RATE` (%), every `QUOTE`, every `FORWARDS[].RATE` (%); each `DF = exp(-ZERO_RATE/100 × tenor)`; `TEN_Y` is the 10Y zero rate; `SLOPE_2S_10S` is 10Y less 2Y in bp | `MATURITY`, instruments, conventions |
-| `fx-spot` | `MID` with `BID` and `ASK` by the same amount (the spread is constant); `CHANGE_1D = MID / previous close - 1`; today's `HISTORY` point is `MID` | the earlier history |
+| [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) (market-data) | one shift for the curve (a small tilt and per-tenor blur): every `ZERO_RATE` (%), every `QUOTE`, every `FORWARDS[].RATE` (%); each `DF = exp(-ZERO_RATE/100 × tenor)`; `TEN_Y` is the 10Y zero rate; `SLOPE_2S_10S` is 10Y less 2Y in bp | `MATURITY`, instruments, conventions |
+| [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | `MID` with `BID` and `ASK` by the same amount (the spread is constant); `CHANGE_1D = MID / previous close - 1`; today's `HISTORY` point is `MID` | the earlier history |
 | `equity` | `PRICE`; `MARKET_CAP`; `CHANGE_1D`; today's history point and today's bar (`OHLC`: close is the price, high and low stretch, volume builds) | the bars before today, identifiers, beta |
-| `equity-index` | `LEVEL`; `CHANGE_1D`; today's history point | constituents and weights (a rebalance, not a tick) |
+| [`equity-index`](../contracts/samples/market-data.md#equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)) | `LEVEL`; `CHANGE_1D`; today's history point | constituents and weights (a rebalance, not a tick) |
 | `commodity` | `FRONT`; today's bar (close, high, low, volume) | contract specification |
-| `commodity-curve` | `FRONT` with every month (parallel, a little blur); `FRONT` is the first month; `ROLL`; `SHAPE` flips between backwardation and contango when the first two months swap | open interest (end of day) |
-| `credit-curve` | `SPREAD_5Y` with every tenor's spread; `HAZARD = SPREAD / 1e4 / (1 - recovery)`; `SURVIVAL = exp(-HAZARD × tenor)`; `PD_1Y = 1 - SURVIVAL(1Y)` | recovery, clause (terms) |
+| [`commodity-curve`](../contracts/samples/market-data.md#commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | `FRONT` with every month (parallel, a little blur); `FRONT` is the first month; `ROLL`; `SHAPE` flips between backwardation and contango when the first two months swap | open interest (end of day) |
+| [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)) | `SPREAD_5Y` with every tenor's spread; `HAZARD = SPREAD / 1e4 / (1 - recovery)`; `SURVIVAL = exp(-HAZARD × tenor)`; `PD_1Y = 1 - SURVIVAL(1Y)` | recovery, clause (terms) |
 | `bond` | `PRICE`; `YIELD` from the price and modified duration; `Z_SPREAD` moves against the price; today's history point | the coupon schedule, the terms |
-| `trade-valuation` (market-risk) | `MTM`; `PNL_1D = MTM - opening MTM` | the trade's terms (in the `trade` kind, which does not tick) |
-| `netting-set` (counterparty-risk) | each listed trade's `MTM` walks; each asset class's total (`BY_ASSET`) is its trades (plus the unlisted ones, fixed) and `NET_MTM` is the sum; `UTILISATION` moves with it (exposure itself, EE and PFE, is not stored on the netting set: the exposure engine computes it) | collateral (moves on margin calls), the agreement |
+| [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)) (market-risk) | `MTM`; `PNL_1D = MTM - opening MTM` | the trade's terms (in the `trade` kind, which does not tick) |
+| [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) (counterparty-risk) | each listed trade's `MTM` walks; each asset class's total (`BY_ASSET`) is its trades (plus the unlisted ones, fixed) and `NET_MTM` is the sum; `UTILISATION` moves with it (exposure itself, EE and PFE, is not stored on the netting set: the exposure engine computes it) | collateral (moves on margin calls), the agreement |
 | `book` (core) | each of the ten largest trades' `MTM` (`TOP_TRADES`) walks; `MTM` is those plus the rest (fixed) | trade count and DV01 (end of day) |
 
 The retired example packs in `examples/packs/` keep their own walks (key risk indicators, card and deposit accounts, LCR, intraday
@@ -3606,12 +3606,10 @@ Every loader except Delta Lake's reads the same JSON lines, one per entity per b
 ```json
 {"domain": "trading", "kind": "trade", "id": "MX-20000001", "date": "2026-09-17",
  "doc": "{\"SOURCE_SYSTEM\": \"MUREX\", \"TRADE_ID\": \"MX-20000001\", \"TRADE_STATUS\": \"AMENDED\", …}",
- "columns": {"TRADE_ID": "MX-20000001", "SOURCE_SYSTEM": "MUREX", "PRODUCT_TYPE": "IRS_FIXFLOAT", "TRADE_STATUS": "AMENDED",
-             "CURRENCY": "AUD", "QUANTITY": 242000000.0, "MATURITY_DATE": "2032-06-25", "COUNTERPARTY": "CP-MERIDIAN-RE",
-             "LEGAL_ENTITY": "LE-NY", "PORTFOLIO": "BOOK-RATES-3", "TRADER_ID": "TRDR-ASHAH", …}}
+ "columns": {"TRADE_ID": "MX-20000001", …}}
 ```
 
-`columns` carries the fields the pack promotes (the trading pack's `layout.trade.columns`), taken from the same document. Two
+`columns` carries the fields the pack promotes (the trading pack's `layout.trade.columns`), taken from the same document. The trade's own fields are its [contract](../contracts/packs/trading.md#trd-trade-trade) and a whole record, every field explained, is its [example](../contracts/samples/trades.md#murex). Two
 generators write it, by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): rows of several kinds or days go
 in a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders, each row in its own date's folder, and the loaders file each row under its
 folder's date (never the row's `date`, which stays in the row as data):

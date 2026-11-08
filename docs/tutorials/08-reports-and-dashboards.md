@@ -969,7 +969,7 @@ lives in.)
 
 You should see what one row is (*One row per trade valuation per business date*), the key (`id`), the time mode (*snapshot*), the source (*the
 trade-valuation kind of the market-risk pack, through risk-store*) and the columns: `COUNTERPARTY` **references** `counterparty`, `DESK` references
-`desk`, `NETTING_SET` references `netting-set`, `PORTFOLIO` references `book`, `TRADER_ID` references `trader`. Now open **Exposure official results: netting sets** (search `exposure official`).
+`desk`, `NETTING_SET` references [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), `PORTFOLIO` references `book`, `TRADER_ID` references `trader`. Now open **Exposure official results: netting sets** (search `exposure official`).
 
 ![The dataset page of Exposure official results: netting sets (latest version): keyed by NODE_ID, read from the exposure-official-cpty kind of the pack, with its columns and COUNTERPARTY referencing counterparty](img/t18/02-netting-set-dataset.jpg)
 
@@ -2131,7 +2131,7 @@ BI reports.
 
 ## Step 38 · Start from a search
 
-Run a search that finds what you want to see every day: the trades whose valuation lost more than 200 million. Valuations are their own kind, `trade-valuation`
+Run a search that finds what you want to see every day: the trades whose valuation lost more than 200 million. Valuations are their own kind, [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))
 (mnemonic `TVAL`, one per trade per day, from the market-risk pack); the trade itself carries no MTM. Type:
 
 ```text

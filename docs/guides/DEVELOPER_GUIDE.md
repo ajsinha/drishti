@@ -1622,7 +1622,7 @@ and this chapter links there instead of repeating them. Named connectors are **f
 #### Entities, kinds and documents
 
 Everything Drishti shows is an **entity**: a trade, a counterparty, a curve, a margin call. Each entity has a
-**kind** (`trade`, `counterparty`, `ir-curve`) and an **id** (`MX-20000001`, `CP-ALDERSHOT`). The data behind an
+**kind** (`trade`, `counterparty`, [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve))) and an **id** (`MX-20000001`, `CP-ALDERSHOT`). The data behind an
 entity is one **document**: a JSON object, as your system holds it. Drishti lays the document out on screen by
 itself (and with a Sutra, if a pack ships one for the kind), so you do not reshape your data for Drishti; you only
 tell Drishti where to find it.

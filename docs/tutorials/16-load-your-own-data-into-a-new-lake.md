@@ -248,15 +248,20 @@ data/tmp/drop/risk_hierarchy.2026-11-06.jsonl  rows: 26  sha256: a8ef6dcae92b7c1
 
 The script writes the same bytes every time for the same date, so your checksums are these. Use a date that is not in the future on
 your machine (a business date may never be). Each file is named `<table>.<YYYY-MM-DD>.<extension>`: the load takes the business date
-from the name, never from a row. One line of each:
+from the name, never from a row. Look at the first line of each:
 
-```json
-{"TRADE_ID": "7000001", "TRADE_VERSION": 1, "SOURCE_SYSTEM": "ENDUR", "TRADE_STATUS": "VALIDATED", "PRODUCT_TYPE": "TRS", "PRODUCT_GROUP": "Credit", "DESK": "DESK-CREDIT", "BOOK": "BOOK-CREDIT-2", "PORTFOLIO": "BOOK-CREDIT-2", "COUNTERPARTY_ID": "CP-LONGFIELD", "LEGAL_ENTITY": "LE-NY", "TRADER_ID": "TR-105", "BUY_SELL_CODE": "BUY", "CURRENCY": "JPY", "QUANTITY": 444000.0, "NOTIONAL": 44400000.0, "TRADE_DATE": "2026-10-04", "MATURITY_DATE": "2036-08-15", "UPDATED_AT": "2026-11-06T05:48:00Z"}
-{"VALUE_TYPE": "PV", "GRAIN": "POSITION", "POSITION_ID": "POS-BOOK-RATES-3~SEC-SWAPTION-CAD-0001", "SCENARIO_PV_ID": "SPV-POS-BOOK-RATES-3~SEC-SWAPTION-CAD-0001-HS-509", "DESK": "DESK-RATES", "TT_BOOK": "BOOK-RATES-3", "PRODUCT_TYPE": "SWAPTION", "DIRECTION": "SHORT", "BASE_PV": -759516.49, "SCENARIO_PV": [-769997.21, -779760.78, ...], ...}
-{"NODE_ID": "BANK", "HIERARCHY": "MGMT", "LEVEL": "BANK", "PARENT_ID": null, "NAME": "The bank", "BUSINESS_DATE": "2026-11-06"}
+```bash
+for f in data/tmp/drop/*.jsonl*; do echo "== $f"; (zcat -f "$f" | head -1 | cut -c1-300); done
 ```
 
-(The scenario-PV line is shortened: it carries 509 numbers and the rest of the fields.)
+Each line is one record of its kind: a trade, a trade's scenario PVs (509 numbers, one per scenario day), a hierarchy node. What every
+field means is the kind's data contract, and a real record with every field explained is its example:
+
+| File | Kind | Contract | Example |
+|---|---|---|---|
+| `trade_endur…` | `trade` | [trade](../contracts/packs/trading.md#trd-trade-trade) | [an Endur trade](../contracts/samples/trades.md#endur) |
+| `scenario_pv…` | `scenario-pv` | [scenario-pv](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | [scenario PVs](../contracts/samples/market-risk.md#scenario-pv) |
+| `risk_hierarchy…` | `risk-hierarchy` | [risk-hierarchy](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) | [a hierarchy node](../contracts/samples/market-risk.md#risk-hierarchy) |
 
 **You should see** the three files in `data/tmp/drop/` with exactly the rows and checksums above: 2,000 trades, 300 scenario-PV
 rows, 26 hierarchy nodes.

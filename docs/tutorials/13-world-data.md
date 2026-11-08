@@ -138,7 +138,7 @@ mnemonics:
     label: Economic forecast
 ```
 
-A counterparty's `ECONOMY` is a link column of its data contract (`config/packs/core/core/contracts/counterparty.contract.yaml`,
+A counterparty's `ECONOMY` is a link column of its data contract ([`config/packs/core/core/contracts/counterparty.contract.yaml`](../contracts/packs/core.md#cpty-counterparty-counterparty) ([example](../contracts/samples/core.md#counterparty)),
 `ECONOMY → economy`): the link follows the country of risk, which may differ from where the counterparty is registered.
 
 **You should see** the UK's figures:

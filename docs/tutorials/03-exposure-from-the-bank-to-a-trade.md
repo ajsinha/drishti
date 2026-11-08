@@ -94,7 +94,7 @@ matured trade, so fewer trades fit than before and only CP-SUMMIT stays without 
 The command line at the top carries the PFE confidence (q 95% or 99%), collateralised or uncollateralised, and the official-capture chip;
 the tree on the left holds the bank, its legal entities, counterparties, netting sets and an open set's trades, each with its peak PFE.
 
-**What it reads.** The counterparty-risk pack's connector `exposure-store` keeps the paths as a vector column of the `exposure-path`
+**What it reads.** The counterparty-risk pack's connector `exposure-store` keeps the paths as a vector column of the [`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path))
 table (`config/packs/banking/counterparty-risk/pack.yaml`):
 
 ```yaml
@@ -163,7 +163,7 @@ Solaris Energy Corp.         41,436,951         7.4   29,674,485
 
 **What it means.** London's peak PFE (558.8 million at 2M) is far below the sum of its counterparties' own peaks: their bad paths are
 not the same paths and their peaks fall on different dates. The contributions are the paths around London's 95% quantile at its peak
-date, scaled to add up to it. The limit column reads the pack's stored `credit-limit` rows as stored: they were sized on
+date, scaled to add up to it. The limit column reads the pack's stored [`credit-limit`](../contracts/samples/counterparty-risk.md#credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)) rows as stored: they were sized on
 stored profiles, so the use is low (5.0% for Aldershot).
 
 **You should see** LE-LDN at 558,766,819 with 17 netting sets and 2,403 trades (`drishti.py exposure show LE:LE-LDN`), Bramble the
@@ -526,7 +526,7 @@ $ drishti.py exposure retention        (abridged)
 
 The record holds 124 scopes (74 netting sets, 23 counterparties, 22 groups, the four legal entities and the bank's management node)
 and the 43 nodes of the limit letters, a hierarchy built from the exposure paths' `LIMIT_LETTER` and `DESK` (167 in all;
-with the market-risk pack's `risk-hierarchy` in the lake too, every MGMT and LEGAL node is captured as well: 250 scopes on the test data,
+with the market-risk pack's [`risk-hierarchy`](../contracts/samples/market-risk.md#risk-hierarchy) ([contract](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy)) in the lake too, every MGMT and LEGAL node is captured as well: 250 scopes on the test data,
 `LL:LL~LL-0011` among them). It is also appended to the tables `risk-results/exposure-official` and `risk-results/exposure-official-cpty`
 of the lake: Delta by default (`"published": "… (Delta version 0)"`), Iceberg with `drishti.ccr.exposure.official.format: iceberg`
 ([EXPOSURE_GUIDE.md section 20](../guides/EXPOSURE_GUIDE.md); [tutorial 16, Part E](16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg) for VaR's). A

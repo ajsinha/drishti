@@ -17,10 +17,10 @@
 #
 # Per guide:   id, file, number (the section's number: the table is <number>.1, the datasets <number>.2 …), note (after the table).
 # Per dataset: kind; contract (the contract's kind when it differs, null when the kind has none); label (instead of `kind`); title;
-#              sample (a glob under data/testdata: a .jsonl.gz, or a tar of <table>/<date>/*.jsonl.gz); pick (first | last, default
-#              last); member (a tar member glob); where (field: value); fields (the fields shown, in order); required; for (the table's
-#              one line); guide (a link to the guide's own field table); about (the explanation, by hand); sample_note and
-#              contract_note (said instead when there is no sample or no contract).
+#              sample (a glob under data/testdata: a .jsonl.gz, or a tar of <table>/<date>/*.jsonl.gz; its folder <domain>/<table> names
+#              the example's section, docs/contracts/samples/<domain>.md#<table>); required; for (the table's one line); guide (a link
+#              to the guide's own section); about (the explanation, by hand: what it is for, never its fields or a record); sample_note
+#              and contract_note (said instead when there is no sample or no contract).
 
 guides:
 
@@ -62,7 +62,6 @@ guides:
       - kind: pnl-vector
         title: P&L vectors per trade (accepted)
         sample: market-risk/pnl-vector/pnl-vector-*.tar
-        where: {SOURCE_SYSTEM: CALYPSO}
         required: "**one of the two**, per trade"
         for: each trade's scenario P&L, computed by the source
         guide: "[15.2](#152-pnl-vector-one-pl-vector-per-trade)"
@@ -156,9 +155,6 @@ guides:
         label: The trades
         title: "`trade_murex`, `trade_endur`, `trade_calypso`"
         sample: trades/murex/trade_murex.*.jsonl.gz
-        pick: first
-        fields: [SOURCE_SYSTEM, TRADE_ID, TRADE_VERSION, TRADE_STATUS, TRADE_DATE, PRODUCT_GROUP, PRODUCT_TYPE, BUY_SELL_CODE, QUANTITY,
-                 PRICE, CURRENCY, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TT_BOOK, TRADER_ID, STRATEGY, START_DATE, MATURITY_DATE]
         required: optional for the number, used by the screens
         for: the trades themselves, linked from every position
         about: |
@@ -378,8 +374,6 @@ guides:
       - kind: fund
         title: the fund's fact sheet and holdings
         sample: funds/fund/fund.tar
-        fields: [TICKER, NAME, TYPE, SERIES_ID, CIK, REGISTRANT, LEI, IS_ETF, IS_INDEX, INDEX_ID, ADVISER, REPORT_DATE, TOTAL_ASSETS,
-                 NET_ASSETS, EXPENSE_RATIO, RETURN_LAST_YEAR, HOLDING_COUNT, TOP10_PCT, BY_SECTOR, HOLDINGS, VS_INDEX]
         required: "**yes**"
         for: the FUND page, its holdings and look-through
         guide: "[8](#8-fund)"
@@ -421,7 +415,6 @@ guides:
       - kind: us-company
         title: the US companies
         sample: us-equities/us-company/us-company.*.jsonl.gz
-        fields: [TICKER, NAME, SIC, SIC_DESCRIPTION, CURRENCY, FISCAL_YEAR, REVENUE, NET_INCOME, FINANCIALS]
         required: for SIC and the USEQ ratios
         for: each company's sector and financials
         guide: "[16](#16-the-useq-ratios)"
@@ -502,9 +495,6 @@ guides:
         label: The trades
         title: the examples' table
         sample: trades/murex/trade_murex.*.jsonl.gz
-        pick: first
-        fields: [SOURCE_SYSTEM, TRADE_ID, TRADE_STATUS, TRADE_DATE, PRODUCT_GROUP, PRODUCT_TYPE, BUY_SELL_CODE, QUANTITY, CURRENCY,
-                 COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID, MATURITY_DATE]
         required: for the table source `trade`
         for: 'the rows of the guide''s examples (`"source": "trade"`)'
         guide: "[3](#3-sources-and-fields)"

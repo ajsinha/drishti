@@ -117,9 +117,9 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
 
 ![VAR BANK: the hierarchy with every node's VaR and limit bar, the six tiles, the P&L path](img/t25/01-bank.jpg)
 
-**What it reads.** The market-risk pack's connector `risk-store` keeps the P&L vector as a `list<double>` column of the `pnl-vector`
+**What it reads.** The market-risk pack's connector `risk-store` keeps the P&L vector as a `list<double>` column of the [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector))
 table, and the trades a batch sends as **scenario PVs** in their own currency as the `list<double>` column `SCENARIO_PV` of
-the `scenario-pv` table, with each currency's scenario FX in `fx-scenario` (`config/packs/banking/market-risk/pack.yaml`):
+the [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv)) table, with each currency's scenario FX in [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario)) (`config/packs/banking/market-risk/pack.yaml`):
 
 ```yaml
 connectors:
@@ -655,7 +655,7 @@ record is still the morning run's. The same updates can come from Kafka (the `pv
 
 A **limit letter** is the letter of authority a trade's VaR limit is granted under. Every P&L and scenario-PV row of the demo carries one
 (`LIMIT_LETTER`: twelve letters dealt over the books, two books split between two letters), and the market-risk pack configures a third
-hierarchy built from it, beside MGMT and LEGAL from the `risk-hierarchy` rows:
+hierarchy built from it, beside MGMT and LEGAL from the [`risk-hierarchy`](../contracts/samples/market-risk.md#risk-hierarchy) ([contract](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy)) rows:
 
 ```yaml
 # config/packs/banking/market-risk/pack.yaml (generated from tools/packgen/banking/kept/market-risk.yaml); drishti.var.hierarchies wins over it
@@ -666,7 +666,7 @@ hierarchies:
 ```
 
 Its nodes are every distinct path of the rows' values (`LL~LL-0011`, `LL~LL-0011/DESK-RATES`), its limits come from the new kind
-`var-limit` (one row per node, USD), and its word names a node in any scope (`LL:LL-0011`). Every VaR limit lives in
+[`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)) (one row per node, USD), and its word names a node in any scope (`LL:LL-0011`). Every VaR limit lives in
 `var-limit`, with its currency: MGMT's and LEGAL's too (`limits: var-limit` above) and each portfolio's (a row of hierarchy `PORTFOLIO`);
 the `risk-hierarchy` rows and the portfolios carry none. The limits are the same, so every limit use below is unchanged.
 
@@ -1303,7 +1303,7 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 | *no P&L vectors in any connector* | build the lake (step 1); is the market-risk pack loaded? |
 | other numbers than these | you built the lake with `--as-of today`: trades matured since 2026-09-30 drop out; rebuild with `--as-of data` |
 | the bank's VaR is 112,035,906 and the provenance says only `pnl-vector` | the lake has no `scenario-pv` table (built without it, or `--only` without it): the Endur trades are missing too (8,233 trades); rebuild with the `--only` list of step 1 |
-| `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in `fx-spot` ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
+| `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
 | `PORT <id>` says *no source holds portfolio/…* | the page opens on today's date; pick **2026-09-30** in the date box (the explorer finds the newest date by itself) |
 | step 11 answers `400` *… has no P&L vector* | the copied trade or scope has no vectors on the date (matured, cancelled, typed wrong): check it with `VAR SCOPE <it>` |
 | *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |

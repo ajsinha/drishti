@@ -234,12 +234,12 @@ Funds tracking the S&P 500, by net assets (a fund opens its page)  (table, track
 
 The contracts are `config/packs/capitalmarkets/funds/contracts/<kind>.contract.yaml` (checked by `python3 tools/contracts.py check`, published as
 [docs/contracts/packs/funds.md](../contracts/packs/funds.md)); each column's meaning is the pack's glossary,
-`config/packs/capitalmarkets/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/fundsglossary.py`. The tables
-below list every column with its type, whether it is the key, its meaning (with its unit), its source and an example from the
-snapshot. Source names are the SEC data sets' tables and columns: **N-PORT** `FUND_REPORTED_INFO`, `FUND_REPORTED_HOLDING`,
-`IDENTIFIERS`, `MONTHLY_TOTAL_RETURN`, the derivative tables of part C.11; **N-CEN** `FUND_REPORTED_INFO`, `ETF`, `ADVISER`,
-`CUSTODIAN`, `AUTHORIZED_PARTICIPANT` ...; the **risk/return summary**'s XBRL tags in `num.tsv`. A column of a list is written
-`LIST.COLUMN`.
+`config/packs/capitalmarkets/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/fundsglossary.py`. Every column's
+type, key, meaning (with its unit) and source is the contract; a real record of the snapshot with every field explained is the kind's
+example on [docs/contracts/samples/funds.md](../contracts/samples/funds.md). The sources are the SEC data sets' tables and columns:
+**N-PORT** `FUND_REPORTED_INFO`, `FUND_REPORTED_HOLDING`, `IDENTIFIERS`, `MONTHLY_TOTAL_RETURN`, the derivative tables of part C.11;
+**N-CEN** `FUND_REPORTED_INFO`, `ETF`, `ADVISER`, `CUSTODIAN`, `AUTHORIZED_PARTICIPANT` ...; the **risk/return summary**'s XBRL tags
+in `num.tsv`.
 
 ## 8. fund
 
@@ -249,221 +249,7 @@ search form and the type-ahead read them; the type-ahead also `NAME` and `TICKER
 (us-company), `FUND` to another `FUND`, `LEI`, `ADVISER_LEI`, `CUSTODIAN_LEI` and a counterparty's `CPTY_LEI` to `LEI` (gleif's
 lei-entity), `INDEX_ID` to `IDX` (index-membership).
 
-| Column | Type | Key | Meaning | Source (SEC table.column, or how it is made) | Links to | Example |
-|---|---|---|---|---|---|---|
-| `TICKER` | id | key | The fund's ticker: its ETF share class where it has one, else its oldest share class; a unit investment trust's listed ticker. | SEC company_tickers_mf.json, N-CEN SECURITY_EXCHANGE, the Nasdaq Trader directory, company_tickers_exchange.json |  | QQQ |
-| `NAME` | text |  | The series name as filed (upper-case names title-cased). | N-PORT FUND_REPORTED_INFO.SERIES_NAME |  | Invesco QQQ Trust, Series 1 |
-| `TYPE` | text |  | ETF, Mutual fund, Mutual fund with an ETF share class, or ETF (unit investment trust). | N-CEN FUND_REPORTED_INFO.IS_ETF, ETF.tsv, the Nasdaq Trader directory |  | ETF |
-| `FUND_KEY` | text |  | The SEC series id, or CIK<cik> for a fund without one (a unit investment trust). | N-PORT FUND_REPORTED_INFO.SERIES_ID, REGISTRANT.CIK |  | S000101292 |
-| `SERIES_ID` | id |  | The SEC series id (S and nine digits). | N-PORT FUND_REPORTED_INFO.SERIES_ID |  | S000101292 |
-| `CIK` | text |  | The registrant's SEC Central Index Key (ten digits). | N-PORT REGISTRANT.CIK |  | 0001067839 |
-| `REGISTRANT` | text |  | The trust or company the series belongs to. | N-PORT REGISTRANT.REGISTRANT_NAME |  | Invesco QQQ Trust, Series 1 |
-| `LEI` | text |  | The fund's (series') LEI; opens its GLEIF record. | N-PORT FUND_REPORTED_INFO.SERIES_LEI | LEI (gleif) | 549300VY6FEJBCIMET58 |
-| `REGISTRANT_LEI` | text |  | The registrant's LEI. | N-PORT REGISTRANT.LEI |  | 549300VY6FEJBCIMET58 |
-| `TICKERS` | text |  | Every share class ticker, the fund's own first; the type-ahead matches any of them (FUND VTSAX opens VTI). | SEC company_tickers_mf.json |  | QQQ |
-| `CLASSES` | record list |  | Each share class: id, ticker, name, expense ratio and three-month return. | company_tickers_mf.json, N-CEN SHARES_OUTSTANDING, risk/return summary, N-PORT MONTHLY_TOTAL_RETURN |  |  |
-| `CLASSES.CLASS_ID` | id |  | The SEC class id (C and nine digits). | company_tickers_mf.json classId |  | C000271435 |
-| `CLASSES.TICKER` | id |  | The share class's ticker. | company_tickers_mf.json symbol |  | QQQ |
-| `CLASSES.CLASS_NAME` | text |  | The class's name (Admiral Shares, Class A ...). | N-CEN SHARES_OUTSTANDING.CLASS_NAME |  | Investor Shares |
-| `CLASSES.EXPENSE_RATIO` | rate |  | The class's net expense ratio (gross where no net one is filed). (%) | risk/return summary NetExpensesOverAssets, ExpensesOverAssets |  | 0.18 |
-| `CLASSES.RETURN_3M` | amount |  | The class's three monthly returns compounded. (%) | N-PORT MONTHLY_TOTAL_RETURN |  | 27.64 |
-| `CLASS_COUNT` | integer |  | How many share classes the fund has. (classes) | company_tickers_mf.json |  | 1 |
-| `PRIMARY_CLASS` | text |  | The class id of TICKER; its fees and returns are the page's. | company_tickers_mf.json |  | C000271435 |
-| `IS_ETF` | boolean |  | True when the fund is, or has, an exchange-traded share class. | N-CEN IS_ETF, ETF.tsv, SECURITY_EXCHANGE; the Nasdaq Trader directory |  | True |
-| `IS_INDEX` | boolean |  | True when the fund says it is an index fund, or its name names a tracked index. | N-CEN FUND_REPORTED_INFO.IS_INDEX |  | True |
-| `IS_FUND_OF_FUNDS` | boolean |  | True when the fund invests in other funds. | N-CEN FUND_REPORTED_INFO.IS_FUND_OF_FUND |  | False |
-| `IS_TARGET_DATE` | boolean |  | True for a target-date fund. | N-CEN FUND_REPORTED_INFO.IS_TARGET_DATE |  | False |
-| `IS_MASTER_FEEDER` | boolean |  | True when the fund is part of a master-feeder structure. | N-CEN FUND_REPORTED_INFO.IS_MASTER_FEEDER |  | False |
-| `INDEX_ID` | id |  | The us-equities index the fund tracks (SP500, NDX, DJIA), matched by its name; opens IDX. | computed from the name (N-CEN says whether a fund is an index fund, not which index) | IDX (index-membership) | NDX |
-| `EXCHANGE` | text |  | Where the ETF share class lists. | the Nasdaq Trader directory; N-CEN SECURITY_EXCHANGE |  | Nasdaq |
-| `CREATION_UNIT` | amount |  | Shares in one creation unit of the ETF. (shares) | N-CEN ETF.NUM_SHARES_PER_CREATION_UNIT |  | 100000.0 |
-| `AP_COUNT` | integer |  | How many authorised participants the ETF reports. (firms) | N-CEN AUTHORIZED_PARTICIPANT |  | 40 |
-| `AUTHORISED_PARTICIPANTS` | record list |  | The ten most active authorised participants by purchases and redemptions. | N-CEN AUTHORIZED_PARTICIPANT |  |  |
-| `AUTHORISED_PARTICIPANTS.NAME` | text |  | The authorised participant. | N-CEN AUTHORIZED_PARTICIPANT.PARTICIPANT_NAME |  | Merrill Lynch Pro |
-| `AUTHORISED_PARTICIPANTS.LEI` | text |  | Its LEI. | N-CEN AUTHORIZED_PARTICIPANT.PARTICIPANT_LEI | LEI (gleif) | 549300PMHS66E71I2D34 |
-| `AUTHORISED_PARTICIPANTS.PURCHASES` | amount |  | Creation units it bought over the year, by value. (USD) | N-CEN AUTHORIZED_PARTICIPANT.PURCHASE_VALUE |  | 14638424000.0 |
-| `AUTHORISED_PARTICIPANTS.REDEMPTIONS` | amount |  | Creation units it redeemed over the year, by value. (USD) | N-CEN AUTHORIZED_PARTICIPANT.REDEEM_VALUE |  | 6246681000.0 |
-| `ADVISER` | text |  | The fund's investment adviser. | N-CEN ADVISER.ADVISER_NAME |  | The Vanguard Group, Inc. |
-| `ADVISER_LEI` | text |  | The adviser's LEI; opens its GLEIF record. | N-CEN ADVISER.ADVISER_LEI | LEI (gleif) | 5493002789CX3L0CJP65 |
-| `SUB_ADVISERS` | text |  | Up to six sub-advisers. | N-CEN ADVISER (sub-advisers) |  | Geode Capital Management, LLC |
-| `CUSTODIAN` | text |  | The fund's custodian (not a sub-custodian). | N-CEN CUSTODIAN.CUSTODIAN_NAME |  | JPMorgan Chase Bank NA |
-| `CUSTODIAN_LEI` | text |  | The custodian's LEI. | N-CEN CUSTODIAN.CUSTODIAN_LEI | LEI (gleif) | 7H6GLXDRUGQFU57RNE97 |
-| `ADMINISTRATOR` | text |  | The fund's administrator (not a sub-administrator). | N-CEN ADMIN.ADMIN_NAME |  | THE VANGUARD GROUP, INC. |
-| `TRANSFER_AGENT` | text |  | The fund's transfer agent. | N-CEN TRANSFER_AGENT.TRANSFERAGENT_NAME |  | The Vanguard Group, Inc. |
-| `AUDITOR` | text |  | The registrant's independent public accountant. | N-CEN PUBLIC_ACCOUNTANT.PUB_ACCOUNTANT_NAME |  | PRICEWATERHOUSECOOPERS LLP |
-| `AUDITOR_LEI` | text |  | The accountant's LEI. | N-CEN PUBLIC_ACCOUNTANT.PUB_ACCOUNTANT_LEI |  | 5493002GVO7EO8RNNS37 |
-| `LENDS_SECURITIES` | boolean |  | True when the fund lent securities in the year. | N-CEN FUND_REPORTED_INFO.DID_LEND_SECURITIES |  | False |
-| `NCEN_PERIOD` | date |  | The fiscal year end of the N-CEN report used. | N-CEN SUBMISSION.REPORT_ENDING_PERIOD |  | 2025-12-31 |
-| `NCEN_ACCESSION` | text |  | The N-CEN filing used. | N-CEN SUBMISSION.ACCESSION_NUMBER |  | 0000036405-26-000103 |
-| `GLEIF_RELATIONSHIPS` | record list |  | The fund's relationships in GLEIF: managed by, sub-fund of (its umbrella), feeder to. | GLEIF golden copy level 2 (rr.csv) |  |  |
-| `GLEIF_RELATIONSHIPS.TYPE` | text |  | Managed by, Sub-fund of or Feeder to. | GLEIF rr.csv Relationship.RelationshipType |  | Managed by |
-| `GLEIF_RELATIONSHIPS.LEI` | text |  | The manager's, umbrella's or master fund's LEI. | GLEIF rr.csv Relationship.EndNode.NodeID | LEI (gleif) | EJW8VXOT5RJ3PPMVEB49 |
-| `GLEIF_RELATIONSHIPS.STATUS` | text |  | ACTIVE or INACTIVE. | GLEIF rr.csv Relationship.RelationshipStatus |  | ACTIVE |
-| `RANK` | integer |  | The fund's rank by net assets among the funds with a ticker. | computed |  | 7 |
-| `REPORT_DATE` | date |  | The date the N-PORT report is as of. | N-PORT SUBMISSION.REPORT_DATE |  | 2026-06-30 |
-| `FILED` | date |  | The date the N-PORT report was filed. | N-PORT SUBMISSION.FILING_DATE |  | 2026-08-28 |
-| `ACCESSION` | text |  | The N-PORT filing used. | N-PORT SUBMISSION.ACCESSION_NUMBER |  | 0001067839-26-000030 |
-| `NPORT_URL` | text |  | The filing's folder on EDGAR. | computed from CIK and ACCESSION |  | https://www.sec.gov/Archives/edgar/da... |
-| `TOTAL_ASSETS` | amount |  | Total assets. (USD) | N-PORT FUND_REPORTED_INFO.TOTAL_ASSETS |  | 492478331787.0 |
-| `NET_ASSETS` | amount |  | Net assets: what the 200 are chosen by. (USD) | N-PORT FUND_REPORTED_INFO.NET_ASSETS |  | 490103179942.0 |
-| `EXPENSE_RATIO` | rate |  | The net expense ratio of the fund's share class (gross where no net one is filed). (%) | risk/return summary NetExpensesOverAssets, ExpensesOverAssets |  | 0.18 |
-| `GROSS_EXPENSE_RATIO` | rate |  | Total annual operating expenses before waivers. (%) | risk/return summary ExpensesOverAssets |  | 0.18 |
-| `MANAGEMENT_FEE` | amount |  | The management fee. (%) | risk/return summary ManagementFeesOverAssets |  | 0.18 |
-| `TURNOVER` | amount |  | Portfolio turnover in the last fiscal year. (%) | risk/return summary PortfolioTurnoverRate |  | 7.98 |
-| `PROSPECTUS_FILED` | date |  | The date of the risk/return summary used. | risk/return summary sub.tsv filed |  | 2025-12-19 |
-| `ANNUAL_RETURNS` | record list |  | Up to ten calendar-year total returns of the share class (the prospectus bar chart). | risk/return summary AnnualReturnPercent, AnnlRtrPct |  |  |
-| `ANNUAL_RETURNS.YEAR` | text |  | The calendar year. | risk/return summary num.tsv ddate |  | 2015 |
-| `ANNUAL_RETURNS.RETURN` | amount |  | The year's total return. (%) | risk/return summary AnnualReturnPercent, AnnlRtrPct |  | 9.53 |
-| `RETURN_LAST_YEAR` | amount |  | The latest calendar-year return filed. (%) | risk/return summary AnnualReturnPercent, AnnlRtrPct |  | 25.58 |
-| `RETURN_YEAR` | integer |  | The year of RETURN_LAST_YEAR. | risk/return summary |  | 2024 |
-| `RETURN_3M` | amount |  | The share class's three monthly returns of the report compounded. (%) | N-PORT MONTHLY_TOTAL_RETURN |  | 27.64 |
-| `FLOWS` | record list |  | Each of the report's three months: sales, reinvestments, redemptions, net flow and the class's return. | N-PORT FUND_REPORTED_INFO SALES_FLOW_MON1-3 ... |  |  |
-| `FLOWS.MONTH` | text |  | The month (yyyy-mm), the third being the report's. | computed from REPORT_DATE |  | 2026-04 |
-| `FLOWS.SALES` | amount |  | Shares sold (subscriptions), by value. (USD) | N-PORT FUND_REPORTED_INFO.SALES_FLOW_MONn |  | 56960297589.31 |
-| `FLOWS.REINVESTMENT` | amount |  | Distributions reinvested. (USD) | N-PORT FUND_REPORTED_INFO.REINVESTMENT_FLOW_MONn |  | 0.0 |
-| `FLOWS.REDEMPTIONS` | amount |  | Shares redeemed, by value. (USD) | N-PORT FUND_REPORTED_INFO.REDEMPTION_FLOW_MONn |  | 46510905488.86 |
-| `FLOWS.NET_FLOW` | amount |  | Sales plus reinvestment less redemptions. (USD) | computed |  | 10449392100.45 |
-| `FLOWS.RETURN` | amount |  | The share class's total return in the month. (%) | N-PORT MONTHLY_TOTAL_RETURN.MONTHLY_TOTAL_RETURNn |  | 15.656032 |
-| `SALES` | amount |  | The three months' sales. (USD) | N-PORT SALES_FLOW_MON1-3 |  | 216564959011.07 |
-| `REDEMPTIONS` | amount |  | The three months' redemptions. (USD) | N-PORT REDEMPTION_FLOW_MON1-3 |  | 205720139470.74 |
-| `REINVESTMENT` | amount |  | The three months' reinvested distributions. (USD) | N-PORT REINVESTMENT_FLOW_MON1-3 |  | 0 |
-| `NET_FLOW` | amount |  | Sales plus reinvestment less redemptions over the three months. (USD) | computed |  | 10844819540.33 |
-| `HOLDING_COUNT` | integer |  | Every holding the fund reported. (holdings) | N-PORT FUND_REPORTED_HOLDING |  | 105 |
-| `HOLDINGS_SHOWN` | integer |  | Holdings kept in HOLDINGS (the 600 largest by value). (holdings) | computed |  | 105 |
-| `HOLDINGS_REST_COUNT` | integer |  | Holdings not kept. (holdings) | computed |  | 0 |
-| `HOLDINGS_REST_PCT` | rate |  | The weight of the holdings not kept. (% of net assets) | computed |  | 0 |
-| `HOLDINGS_REST_VALUE` | amount |  | The value of the holdings not kept. (USD) | computed |  | 0 |
-| `TOP10_PCT` | rate |  | The weight of the ten largest holdings. (% of net assets) | computed |  | 45.0 |
-| `TOP50_PCT` | rate |  | The weight of the fifty largest holdings. (% of net assets) | computed |  | 87.448 |
-| `HHI` | amount |  | The sum of the squared weights (as fractions): 1 is one holding, near 0 is many small ones. | computed |  | 0.02927 |
-| `LARGEST` | text |  | The largest holding by value. | computed | FUND | NVIDIA Corp. |
-| `LARGEST_PCT` | rate |  | The largest holding's weight. (% of net assets) | computed |  | 7.596757 |
-| `WITH_LEI` | integer |  | Holdings whose issuer LEI was filed. (holdings) | computed |  | 101 |
-| `EQUITY_PCT` | rate |  | The weight of common equity (asset category EC). (% of net assets) | computed |  | 99.927 |
-| `US_COMPANY_PCT` | rate |  | The weight of the holdings that are us-equities companies. (% of net assets) | computed |  | 91.196 |
-| `US_COMPANIES` | integer |  | How many us-equities companies the fund holds. (companies) | computed |  | 79 |
-| `BY_ASSET` | record list |  | The weight by N-PORT asset category. | computed |  |  |
-| `BY_ISSUER_TYPE` | record list |  | The weight by issuer type. | computed |  |  |
-| `BY_COUNTRY` | record list |  | The weight by country, the largest ten. | computed |  |  |
-| `BY_SECTOR` | record list |  | The weight of the us-equities companies held, by SIC division. | computed |  |  |
-| `DERIVATIVE_COUNT` | integer |  | How many derivatives the fund holds. (positions) | computed |  | 1 |
-| `DERIVATIVES_NOTIONAL` | amount |  | The notionals added up, by size. (USD) | computed |  | 327348711.0 |
-| `DERIVATIVES` | record list |  | The fifty largest derivative positions by notional, with their counterparties. | N-PORT part C.11 |  |  |
-| `COUNTERPARTIES` | record list |  | The counterparties of the derivatives and repos, by notional: positions, notional, value. | N-PORT DERIVATIVE_COUNTERPARTY, REPURCHASE_COUNTERPARTY |  |  |
-| `COUNTERPARTIES.NAME` | text |  | The counterparty. | N-PORT DERIVATIVE_COUNTERPARTY_NAME |  | Chicago Mercantile Exchange Inc. |
-| `COUNTERPARTIES.LEI` | text |  | The counterparty's LEI; opens its GLEIF record. | N-PORT DERIVATIVE_COUNTERPARTY_LEI | LEI (gleif) | SNZ2OJLFK8MNNCLQOF39 |
-| `COUNTERPARTIES.POSITIONS` | integer |  | Positions with the counterparty. (positions) | computed |  | 1 |
-| `COUNTERPARTIES.NOTIONAL` | amount |  | Their notionals added up, by size. (USD) | computed |  | 327348711.0 |
-| `COUNTERPARTIES.VALUE` | amount |  | Their values added up. (USD) | computed |  | 8409789.0 |
-| `COUNTERPARTY_COUNT` | integer |  | How many counterparties. (counterparties) | computed |  | 1 |
-| `HOLDINGS` | record list |  | The 600 largest holdings by value, each with its identifiers and links. | N-PORT FUND_REPORTED_HOLDING, IDENTIFIERS |  |  |
-| `MOST_HELD_COMPANY` | id |  | The largest us-equities company the fund holds. | computed | USEQ | NVDA |
-| `MOST_HELD_NAME` | text |  | That company's name. | us-equities |  | Nvidia |
-| `ALSO_HELD_BY` | record list |  | The ten other funds holding that company the most, by value. | computed from fund-holder |  |  |
-| `ACTIVE_SHARE` | rate |  | Half the sum of the differences between the fund's and the index's weights (VS_INDEX). (%) | computed |  | 11.21 |
-| `VIEWS` | record list |  | The page's tabs: Look-through holdings, and the fund against its index when there is one. | computed |  |  |
-| `VIEWS.VIEW` | text |  | LOOK_THROUGH or VS_INDEX. | computed |  | LOOK_THROUGH |
-| `VIEWS.TITLE` | text |  | The tab's title. | computed |  | Look-through holdings |
-| `VS_INDEX` | record |  | The fund against its tracked index (or the S&P 500 for reference); index weights computed from SEC data. | computed |  |  |
-| `VS_INDEX.INDEX_ID` | id |  | The us-equities index. | us-equities index-membership | IDX (index-membership) | NDX |
-| `VS_INDEX.INDEX_NAME` | text |  | Its name. | us-equities index-membership |  | Nasdaq-100 |
-| `VS_INDEX.BASIS` | text |  | tracks (the fund tracks it) or reference (an equity fund compared with the S&P 500). | computed |  | tracks |
-| `VS_INDEX.WEIGHTING` | text |  | market capitalisation computed from SEC data (capped as the Nasdaq-100 caps it), share price for the Dow, or equal weights. | computed |  | market capitalisation computed from S... |
-| `VS_INDEX.MEMBERS` | integer |  | The index's members as the us-equities pack lists them. (companies) | us-equities index-membership (the holdings of SPY, QQQ and DIA) |  | 99 |
-| `VS_INDEX.MEMBERS_WEIGHTED` | integer |  | Members with a market capitalisation the filings support. (companies) | computed |  | 84 |
-| `VS_INDEX.MEMBERS_NOT_WEIGHTED` | text |  | Members left out of the weights, by ticker. | computed |  | ABNB, APP, BKNG, CRWD, CRWV, DASH, DD... |
-| `VS_INDEX.MEMBERS_HELD` | amount |  | Listed members the fund holds. (companies) | computed |  | 98 |
-| `VS_INDEX.FUND_IN_INDEX_PCT` | rate |  | The fund's weight in the listed members. (% of net assets) | computed |  | 99.2 |
-| `VS_INDEX.NOT_IN_INDEX_PCT` | rate |  | The rest: other companies, cash, futures. (% of net assets) | computed |  | 0.8 |
-| `VS_INDEX.ACTIVE_SHARE` | rate |  | Half the sum of the absolute weight differences over the members weighted. (%) | computed |  | 11.21 |
-| `VS_INDEX.LARGEST_DIFF_COMPANY` | text |  | The company with the largest difference. | computed |  | ASML |
-| `VS_INDEX.LARGEST_DIFF_NAME` | text |  | Its name. | us-equities |  | ASML Holding |
-| `VS_INDEX.LARGEST_DIFF` | amount |  | Fund weight less index weight. (% points) | computed |  | -1.915 |
-| `VS_INDEX.AS_OF` | date |  | The fund's report date. | N-PORT SUBMISSION.REPORT_DATE |  | 2026-06-30 |
-| `VS_INDEX.ROWS` | record list |  | The 25 largest weights in either, side by side. | computed |  |  |
-| `VS_INDEX.ROWS.COMPANY` | id |  | The us-equities company. | us-equities | USEQ (us-company) | AAPL |
-| `VS_INDEX.ROWS.NAME` | text |  | Its name. | us-equities |  | Apple Inc. |
-| `VS_INDEX.ROWS.SECTOR` | text |  | Its SIC division. | us-equities |  | Manufacturing |
-| `VS_INDEX.ROWS.FUND_PCT` | rate |  | The company's weight in the fund over the members weighted. (%) | computed |  | 10.655 |
-| `VS_INDEX.ROWS.INDEX_PCT` | rate |  | Its computed market-cap weight in the index. (%) | computed: SEC shares outstanding times the price N-PORT implies |  | 18.474 |
-| `VS_INDEX.ROWS.DIFF` | amount |  | Fund less index. (% points) | computed |  | -7.819 |
-| `VS_INDEX.SECTORS` | record list |  | Fund and index weights by SIC division. | computed |  |  |
-| `VS_INDEX.SECTORS.SECTOR` | text |  | The division. | us-equities |  | Manufacturing |
-| `VS_INDEX.SECTORS.FUND_PCT` | rate |  | The fund's weight in it. (%) | computed |  | 67.8 |
-| `VS_INDEX.SECTORS.INDEX_PCT` | rate |  | The index's weight in it. (%) | computed |  | 61.38 |
-| `VS_INDEX.SECTORS.TILT` | amount |  | Fund less index. (% points) | computed |  | 6.42 |
-| `PROVENANCE.SOURCE` | text |  | Where the data comes from. | written by tools/packgen/funds/fundsbuild.py |  | U.S. Securities and Exchange Commissi... |
-| `PROVENANCE.LICENCE` | text |  | The source's licence (public domain). | written by tools/packgen/funds/fundsbuild.py |  | Public domain (U.S. Government work);... |
-| `PROVENANCE.RETRIEVED_AT` | date |  | The date the data sets were downloaded. | the download cache |  | 2026-10-26 |
-| `PROVENANCE.NOTE` | text |  | What the document holds and from which filings. | written by tools/packgen/funds/fundsbuild.py |  | Holdings, flows and returns as the fu... |
-| `HOLDINGS.NAME` | text |  | The issuer's name as the fund filed it. | N-PORT FUND_REPORTED_HOLDING.ISSUER_NAME |  | NVIDIA Corp. |
-| `HOLDINGS.TITLE` | text |  | The title of the security or contract. | N-PORT FUND_REPORTED_HOLDING.ISSUER_TITLE |  | NVIDIA Corp. |
-| `HOLDINGS.TICKER` | id |  | The security's ticker where the fund gave one, written as us-equities writes it (BRK/B is BRK-B). | N-PORT IDENTIFIERS.IDENTIFIER_TICKER |  | NVDA |
-| `HOLDINGS.CUSIP` | text |  | The security's CUSIP (none for N/A or zeros). | N-PORT FUND_REPORTED_HOLDING.ISSUER_CUSIP |  | 67066G104 |
-| `HOLDINGS.ISIN` | text |  | The security's ISIN where the fund gave one. | N-PORT IDENTIFIERS.IDENTIFIER_ISIN |  | US67066G1040 |
-| `HOLDINGS.LEI` | text |  | The issuer's Legal Entity Identifier; opens its GLEIF record (gleif pack). | N-PORT FUND_REPORTED_HOLDING.ISSUER_LEI | LEI (gleif) | 549300S4KLFTLO7GSQ80 |
-| `HOLDINGS.ASSET` | text |  | N-PORT's asset category: EC common equity, EP preferred, DBT debt, ABS-MBS, ABS-ASBS, ABS-CBDO, ABS-O, DCO, DCR, DE, DFE, DIR, DO derivatives, SN, LON, RA repo, STIV, RE, COMM, OTHER. | N-PORT FUND_REPORTED_HOLDING.ASSET_CAT |  | EC |
-| `HOLDINGS.ISSUER_TYPE` | text |  | CORP, UST, USGA, USGSE, MUN, NUSS (non-US sovereign), PF (private fund), RF (registered fund), OTHER. | N-PORT FUND_REPORTED_HOLDING.ISSUER_TYPE |  | CORP |
-| `HOLDINGS.COUNTRY` | text |  | The country of investment or issuer (ISO 3166). | N-PORT FUND_REPORTED_HOLDING.INVESTMENT_COUNTRY |  | US |
-| `HOLDINGS.CURRENCY` | text |  | The currency the holding is denominated in. | N-PORT FUND_REPORTED_HOLDING.CURRENCY_CODE |  | USD |
-| `HOLDINGS.VALUE` | amount |  | The holding's value as reported, in US dollars. (USD) | N-PORT FUND_REPORTED_HOLDING.CURRENCY_VALUE |  | 37231945639.46 |
-| `HOLDINGS.PCT` | rate |  | The holding's value over the fund's net assets. (% of net assets) | N-PORT FUND_REPORTED_HOLDING.PERCENTAGE |  | 7.596757 |
-| `HOLDINGS.BALANCE` | amount |  | Shares, principal amount or contracts held, in UNIT. | N-PORT FUND_REPORTED_HOLDING.BALANCE |  | 186075994.0 |
-| `HOLDINGS.UNIT` | text |  | NS shares, PA principal amount, NC contracts, OU other units. | N-PORT FUND_REPORTED_HOLDING.UNIT |  | NS |
-| `HOLDINGS.PAYOFF` | text |  | Long, Short or N/A. | N-PORT FUND_REPORTED_HOLDING.PAYOFF_PROFILE |  | Long |
-| `HOLDINGS.DERIVATIVE` | text |  | FWD, FUT, SWP, OPT, SWO, WAR or OTH for a derivative; empty otherwise. | N-PORT FUND_REPORTED_HOLDING.DERIVATIVE_CAT |  | SWP |
-| `HOLDINGS.CPTY` | text |  | The derivative's or repo's counterparty ('(cleared)' for a centrally cleared repo). | N-PORT DERIVATIVE_COUNTERPARTY, REPURCHASE_COUNTERPARTY |  | LCH Ltd. |
-| `HOLDINGS.CPTY_LEI` | text |  | The counterparty's LEI; opens its GLEIF record. | N-PORT DERIVATIVE_COUNTERPARTY_LEI, REPURCHASE_COUNTERPARTY.LEI | LEI (gleif) | F226TOH6YD6XJB17KS62 |
-| `HOLDINGS.NOTIONAL` | amount |  | A derivative's notional (a forward's amount bought), as filed. | N-PORT FUT_FWD_NONFOREIGNCUR_CONTRACT, NONFOREIGN_EXCHANGE_SWAP, FWD_FOREIGNCUR_CONTRACT_SWAP, SWAPTION_OPTION_WARNT_DERIV |  | 3516800000.0 |
-| `HOLDINGS.EXPIRY` | date |  | A derivative's expiry, termination or settlement date; a repo's maturity. | N-PORT the derivative tables, REPURCHASE_AGREEMENT.MATURITY_DATE |  | 2051-06-16 |
-| `HOLDINGS.UNREALIZED` | amount |  | A derivative's unrealised appreciation (negative: depreciation). (USD) | N-PORT the derivative tables, UNREALIZED_APPRECIATION |  | 1208405914.91 |
-| `HOLDINGS.REFERENCE` | text |  | The index or basket a derivative references. | N-PORT DESC_REF_INDEX_BASKET.INDEX_NAME |  | S&P500 EMINI FUT Sep26 |
-| `HOLDINGS.COMPANY` | id |  | The us-equities company the holding is (by ticker, else by the issuer's LEI for an equity); opens USEQ. | computed: the committed us-equities companies | USEQ (us-company) | NVDA |
-| `HOLDINGS.FUND` | text |  | The pack's fund the holding is (a fund of funds holding another fund); opens FUND. | computed: the share class tickers | FUND | ABALX |
-| `HOLDINGS.SECTOR` | text |  | The SIC division of the us-equities company. | us-equities us-company.SECTOR (SEC EDGAR) |  | Manufacturing |
-| `HOLDINGS.ALSO_IN` | integer |  | How many other funds of the pack hold the same company. (funds) | computed from every fund's holdings |  | 86 |
-| `DERIVATIVES.NAME` | text |  | The issuer's name as the fund filed it. | N-PORT FUND_REPORTED_HOLDING.ISSUER_NAME |  | CME E-Mini NASDAQ 100 Index Future |
-| `DERIVATIVES.TITLE` | text |  | The title of the security or contract. | N-PORT FUND_REPORTED_HOLDING.ISSUER_TITLE |  | CME E-Mini NASDAQ 100 Index Future |
-| `DERIVATIVES.CURRENCY` | text |  | The currency the holding is denominated in. | N-PORT FUND_REPORTED_HOLDING.CURRENCY_CODE |  | USD |
-| `DERIVATIVES.VALUE` | amount |  | The holding's value as reported, in US dollars. (USD) | N-PORT FUND_REPORTED_HOLDING.CURRENCY_VALUE |  | 8409789.3 |
-| `DERIVATIVES.PCT` | rate |  | The holding's value over the fund's net assets. (% of net assets) | N-PORT FUND_REPORTED_HOLDING.PERCENTAGE |  | 0.001716 |
-| `DERIVATIVES.PAYOFF` | text |  | Long, Short or N/A. | N-PORT FUND_REPORTED_HOLDING.PAYOFF_PROFILE |  | N/A |
-| `DERIVATIVES.DERIVATIVE` | text |  | FWD, FUT, SWP, OPT, SWO, WAR or OTH for a derivative; empty otherwise. | N-PORT FUND_REPORTED_HOLDING.DERIVATIVE_CAT |  | FUT |
-| `DERIVATIVES.TYPE` | text |  | The derivative category in words (Future, Swap, Option ...). | computed from DERIVATIVE_CAT |  | Future |
-| `DERIVATIVES.CPTY` | text |  | The derivative's or repo's counterparty ('(cleared)' for a centrally cleared repo). | N-PORT DERIVATIVE_COUNTERPARTY, REPURCHASE_COUNTERPARTY |  | Chicago Mercantile Exchange Inc. |
-| `DERIVATIVES.CPTY_LEI` | text |  | The counterparty's LEI; opens its GLEIF record. | N-PORT DERIVATIVE_COUNTERPARTY_LEI, REPURCHASE_COUNTERPARTY.LEI | LEI (gleif) | SNZ2OJLFK8MNNCLQOF39 |
-| `DERIVATIVES.NOTIONAL` | amount |  | A derivative's notional (a forward's amount bought), as filed. | N-PORT FUT_FWD_NONFOREIGNCUR_CONTRACT, NONFOREIGN_EXCHANGE_SWAP, FWD_FOREIGNCUR_CONTRACT_SWAP, SWAPTION_OPTION_WARNT_DERIV |  | 327348710.7 |
-| `DERIVATIVES.EXPIRY` | date |  | A derivative's expiry, termination or settlement date; a repo's maturity. | N-PORT the derivative tables, REPURCHASE_AGREEMENT.MATURITY_DATE |  | 2026-09-18 |
-| `DERIVATIVES.UNREALIZED` | amount |  | A derivative's unrealised appreciation (negative: depreciation). (USD) | N-PORT the derivative tables, UNREALIZED_APPRECIATION |  | 8409789.3 |
-| `DERIVATIVES.REFERENCE` | text |  | The index or basket a derivative references. | N-PORT DESC_REF_INDEX_BASKET.INDEX_NAME |  | NASDAQ 100 Stock Index |
-| `BY_ASSET.KEY` | text |  | The code grouped by (an asset category, issuer type, country or SIC division). | computed |  | EC |
-| `BY_ASSET.LABEL` | text |  | The code in words; Other (n) gathers the smallest. | computed |  | Common equity |
-| `BY_ASSET.PCT` | rate |  | The holdings' weight added up. (% of net assets) | computed from N-PORT PERCENTAGE |  | 99.927 |
-| `BY_ASSET.VALUE` | amount |  | The holdings' value added up. (USD) | computed from N-PORT CURRENCY_VALUE |  | 489744804272.0 |
-| `BY_ASSET.COUNT` | integer |  | The number of holdings in the group. (holdings) | computed |  | 102 |
-| `BY_ISSUER_TYPE.KEY` | text |  | The code grouped by (an asset category, issuer type, country or SIC division). | computed |  | CORP |
-| `BY_ISSUER_TYPE.LABEL` | text |  | The code in words; Other (n) gathers the smallest. | computed |  | Corporate |
-| `BY_ISSUER_TYPE.PCT` | rate |  | The holdings' weight added up. (% of net assets) | computed from N-PORT PERCENTAGE |  | 99.927 |
-| `BY_ISSUER_TYPE.VALUE` | amount |  | The holdings' value added up. (USD) | computed from N-PORT CURRENCY_VALUE |  | 489744804272.0 |
-| `BY_ISSUER_TYPE.COUNT` | integer |  | The number of holdings in the group. (holdings) | computed |  | 102 |
-| `BY_COUNTRY.KEY` | text |  | The code grouped by (an asset category, issuer type, country or SIC division). | computed |  | US |
-| `BY_COUNTRY.LABEL` | text |  | The code in words; Other (n) gathers the smallest. | computed |  | US |
-| `BY_COUNTRY.PCT` | rate |  | The holdings' weight added up. (% of net assets) | computed from N-PORT PERCENTAGE |  | 94.927 |
-| `BY_COUNTRY.VALUE` | amount |  | The holdings' value added up. (USD) | computed from N-PORT CURRENCY_VALUE |  | 465238883928.0 |
-| `BY_COUNTRY.COUNT` | integer |  | The number of holdings in the group. (holdings) | computed |  | 93 |
-| `BY_SECTOR.KEY` | text |  | The code grouped by (an asset category, issuer type, country or SIC division). | computed |  | Manufacturing |
-| `BY_SECTOR.LABEL` | text |  | The code in words; Other (n) gathers the smallest. | computed |  | Manufacturing |
-| `BY_SECTOR.PCT` | rate |  | The holdings' weight added up. (% of net assets) | computed from N-PORT PERCENTAGE |  | 58.061 |
-| `BY_SECTOR.VALUE` | amount |  | The holdings' value added up. (USD) | computed from N-PORT CURRENCY_VALUE |  | 284557152390.0 |
-| `BY_SECTOR.COUNT` | integer |  | The number of holdings in the group. (holdings) | computed |  | 42 |
-| `ALSO_HELD_BY.FUND` | text |  | The fund's ticker; opens FUND. | computed | FUND | VTI |
-| `ALSO_HELD_BY.FUND_NAME` | text |  | The fund's name. | N-PORT FUND_REPORTED_INFO.SERIES_NAME |  | Vanguard Total Stock Market Index Fund |
-| `ALSO_HELD_BY.TYPE` | text |  | The fund's type. | N-CEN FUND_REPORTED_INFO.IS_ETF, the Nasdaq Trader directory |  | Mutual fund with an ETF share class |
-| `ALSO_HELD_BY.PCT` | rate |  | The company's weight in the fund (every line of it added). (% of net assets) | N-PORT FUND_REPORTED_HOLDING.PERCENTAGE |  | 6.3554 |
-| `ALSO_HELD_BY.VALUE` | amount |  | The value the fund holds. (USD) | N-PORT FUND_REPORTED_HOLDING.CURRENCY_VALUE |  | 146036467451.0 |
-| `ALSO_HELD_BY.SHARES` | amount |  | The shares the fund holds (balances in shares only). (shares) | N-PORT FUND_REPORTED_HOLDING.BALANCE |  | 729853903.0 |
-| `ALSO_HELD_BY.REPORT_DATE` | date |  | The date the fund's report is as of. | N-PORT SUBMISSION.REPORT_DATE |  | 2026-06-30 |
-| `ALSO_HELD_BY.NET_ASSETS` | amount |  | The fund's net assets. (USD) | N-PORT FUND_REPORTED_INFO.NET_ASSETS |  | 2297839156548.0 |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/fund.contract.yaml), published as [FUND: `fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#fund).
 
 ## 9. fund-holder
 
@@ -472,64 +258,13 @@ from every holding of every fund (not only those a fund page keeps): a holding i
 (an equity) when its CUSIP is one some fund filed with the company's ticker, its issuer LEI is the company's, or its issuer name is the
 company's (legal suffixes and punctuation aside).
 
-| Column | Type | Key | Meaning | Source (SEC table.column, or how it is made) | Links to | Example |
-|---|---|---|---|---|---|---|
-| `TICKER` | id | key | The us-equities company's ticker. | us-equities us-company.TICKER | USEQ, HELD | AAPL |
-| `COMPANY` | id |  | The company; opens USEQ. | us-equities | USEQ (us-company) | AAPL |
-| `NAME` | text |  | The company's name. | us-equities us-company.NAME |  | Apple Inc. |
-| `SECTOR` | text |  | Its SIC division. | us-equities us-company.SECTOR |  | Manufacturing |
-| `FUNDS` | integer |  | How many of the pack's funds hold it. (funds) | computed from every fund's holdings |  | 85 |
-| `ETFS` | integer |  | How many of them are ETFs. (funds) | computed |  | 26 |
-| `TOTAL_VALUE` | amount |  | The value the funds hold together. (USD) | computed from N-PORT CURRENCY_VALUE |  | 831040821744.0 |
-| `TOTAL_SHARES` | amount |  | The shares the funds hold together. (shares) | computed from N-PORT BALANCE |  | 2809918580.0 |
-| `SHARES_OUTSTANDING` | integer |  | The company's shares outstanding (10-K cover). (shares) | us-equities us-company.SHARES_OUTSTANDING (SEC XBRL dei) |  | 14776353000 |
-| `PCT_OF_SHARES` | rate |  | Shares held over shares outstanding; empty where the filed count cannot be compared. (%) | computed |  | 19.016 |
-| `AVG_WEIGHT` | rate |  | Its average weight in the funds holding it. (% of net assets) | computed |  | 5.425 |
-| `MAX_WEIGHT` | rate |  | Its largest weight in a fund. (% of net assets) | computed |  | 14.5683 |
-| `TOP_HOLDER` | text |  | The fund holding the most, by value. | computed | FUND | VTI |
-| `HOLDERS` | record list |  | Every fund holding it, by value (at most 250). | computed |  |  |
-| `TOP_WEIGHTS` | record list |  | The ten funds where it weighs the most. | computed |  |  |
-| `TOP_WEIGHTS.FUND` | id |  | The fund's ticker. | computed | FUND | VGT |
-| `TOP_WEIGHTS.PCT` | rate |  | The company's weight in it. (% of net assets) | computed |  | 14.5683 |
-| `HOLDERS.FUND` | id |  | The fund's ticker; opens FUND. | computed | FUND | VTI |
-| `HOLDERS.FUND_NAME` | text |  | The fund's name. | N-PORT FUND_REPORTED_INFO.SERIES_NAME |  | Vanguard Total Stock Market Index Fund |
-| `HOLDERS.TYPE` | text |  | The fund's type. | N-CEN FUND_REPORTED_INFO.IS_ETF, the Nasdaq Trader directory |  | Mutual fund with an ETF share class |
-| `HOLDERS.PCT` | rate |  | The company's weight in the fund (every line of it added). (% of net assets) | N-PORT FUND_REPORTED_HOLDING.PERCENTAGE |  | 5.8716 |
-| `HOLDERS.VALUE` | amount |  | The value the fund holds. (USD) | N-PORT FUND_REPORTED_HOLDING.CURRENCY_VALUE |  | 134920536524.0 |
-| `HOLDERS.SHARES` | amount |  | The shares the fund holds (balances in shares only). (shares) | N-PORT FUND_REPORTED_HOLDING.BALANCE |  | 466272244.0 |
-| `HOLDERS.REPORT_DATE` | date |  | The date the fund's report is as of. | N-PORT SUBMISSION.REPORT_DATE |  | 2026-06-30 |
-| `HOLDERS.NET_ASSETS` | amount |  | The fund's net assets. (USD) | N-PORT FUND_REPORTED_INFO.NET_ASSETS |  | 2297839156548.0 |
-| `PROVENANCE.SOURCE` | text |  | Where the data comes from. | written by tools/packgen/funds/fundsbuild.py |  | U.S. Securities and Exchange Commissi... |
-| `PROVENANCE.LICENCE` | text |  | The source's licence (public domain). | written by tools/packgen/funds/fundsbuild.py |  | Public domain (U.S. Government work);... |
-| `PROVENANCE.RETRIEVED_AT` | date |  | The date the data sets were downloaded. | the download cache |  | 2026-10-26 |
-| `PROVENANCE.NOTE` | text |  | What the document holds and from which filings. | written by tools/packgen/funds/fundsbuild.py |  | Every holding of the pack's funds in ... |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund-holder.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/fund-holder.contract.yaml), published as [HELD: `fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#fund-holder).
 
 ## 10. index-funds
 
 One document per us-equities index that at least one fund tracks, keyed by `INDEX` (command `TRACK`): SP500, NDX, DJIA.
 
-| Column | Type | Key | Meaning | Source (SEC table.column, or how it is made) | Links to | Example |
-|---|---|---|---|---|---|---|
-| `INDEX` | id | key | The us-equities index code (SP500, NDX, DJIA). | us-equities index-membership.INDEX | IDX | NDX |
-| `NAME` | text |  | The index's name. | us-equities index-membership.NAME |  | Nasdaq-100 |
-| `FUNDS` | integer |  | How many of the pack's funds track it. (funds) | computed |  | 2 |
-| `ETFS` | integer |  | How many of them are ETFs. (funds) | computed |  | 2 |
-| `TOTAL_NET_ASSETS` | amount |  | Their net assets added up. (USD) | computed from N-PORT NET_ASSETS |  | 587254661099.0 |
-| `LARGEST` | text |  | The largest tracking fund. | computed | FUND | QQQ |
-| `ROWS` | record list |  | The tracking funds by net assets. | computed |  |  |
-| `ROWS.FUND` | id |  | The fund's ticker; opens FUND. | computed | FUND | QQQ |
-| `ROWS.NAME` | text |  | Its name. | N-PORT SERIES_NAME |  | Invesco QQQ Trust, Series 1 |
-| `ROWS.TYPE` | text |  | Its type. | N-CEN IS_ETF |  | ETF |
-| `ROWS.IS_ETF` | boolean |  | True for an ETF. | N-CEN IS_ETF |  | True |
-| `ROWS.NET_ASSETS` | amount |  | Its net assets. (USD) | N-PORT NET_ASSETS |  | 490103179942.0 |
-| `ROWS.EXPENSE_RATIO` | rate |  | Its net expense ratio. (%) | risk/return summary NetExpensesOverAssets |  | 0.18 |
-| `ROWS.MEMBERS_HELD` | amount |  | Listed members it holds. (companies) | computed |  | 98 |
-| `ROWS.ACTIVE_SHARE` | rate |  | Against the computed index weights. (%) | computed |  | 11.21 |
-| `ROWS.REPORT_DATE` | date |  | Its N-PORT report date. | N-PORT REPORT_DATE |  | 2026-06-30 |
-| `PROVENANCE.SOURCE` | text |  | Where the data comes from. | written by tools/packgen/funds/fundsbuild.py |  | U.S. Securities and Exchange Commissi... |
-| `PROVENANCE.LICENCE` | text |  | The source's licence (public domain). | written by tools/packgen/funds/fundsbuild.py |  | Public domain (U.S. Government work);... |
-| `PROVENANCE.RETRIEVED_AT` | date |  | The date the data sets were downloaded. | the download cache |  | 2026-10-26 |
-| `PROVENANCE.NOTE` | text |  | What the document holds and from which filings. | written by tools/packgen/funds/fundsbuild.py |  | The pack's funds whose name names thi... |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`index-funds.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/index-funds.contract.yaml), published as [TRACK: `index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#index-funds).
 
 ## 11. Validation and conventions
 
@@ -681,9 +416,7 @@ samples, README, glossary and guide).
 
 ## 18. Funds data: every dataset the pages read
 
-Every dataset the funds pages reads, what it is for, whether it is required, where its sample lives, and one real record from the shipped sample
-data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The field-by-field rules of each kind are its
-**data contract** ([docs/contracts/packs/](../contracts/packs/README.md)); how files are named, dated and loaded is
+Every dataset the funds pages reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
@@ -700,178 +433,20 @@ data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more
 
 One document per fund: its identity, share classes, fees, returns and its holdings, the FUND page and the Look-through holdings tab.
 
-- **Data contract:** [`fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund) (FUND), key `TICKER`; 88 fields, 60 required.
-- **Sample:** `data/testdata/funds/fund/fund.tar` → `fund/2026-10-26/snapshot.part-01.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "TICKER": "VTI",
-  "NAME": "Vanguard Total Stock Market Index Fund",
-  "TYPE": "Mutual fund with an ETF share class",
-  "SERIES_ID": "S000002848",
-  "CIK": "0000036405",
-  "REGISTRANT": "Vanguard Index Funds",
-  "LEI": "HJ2RZRUQEVF2A5SPRB21",
-  "IS_ETF": true,
-  "IS_INDEX": true,
-  "INDEX_ID": "",
-  "ADVISER": "The Vanguard Group, Inc.",
-  "REPORT_DATE": "2026-06-30",
-  "TOTAL_ASSETS": 2299997814240.0,
-  "NET_ASSETS": 2297839156548.0,
-  "EXPENSE_RATIO": 0.03,
-  "RETURN_LAST_YEAR": 17.14,
-  "HOLDING_COUNT": 3546,
-  "TOP10_PCT": 32.034,
-  "BY_SECTOR": [
-    {
-      "KEY": "Manufacturing",
-      "LABEL": "Manufacturing",
-      "PCT": 46.649,
-      "VALUE": 1071907734774.0,
-      "COUNT": 232
-    },
-    {
-      "KEY": "Services",
-      "LABEL": "Services",
-      "PCT": 17.356,
-      "VALUE": 398801660119.0,
-      "COUNT": 82
-    },
-    /* … 7 more … */
-  ],
-  "HOLDINGS": [
-    {
-      "NAME": "NVIDIA Corp",
-      "TITLE": "NVIDIA CORP",
-      "CUSIP": "67066G104",
-      "ISIN": "US67066G1040",
-      /* … 13 more keys … */
-    },
-    {
-      "NAME": "Apple Inc",
-      "TITLE": "APPLE INC",
-      "CUSIP": "037833100",
-      "ISIN": "US0378331005",
-      /* … 13 more keys … */
-    },
-    /* … 598 more … */
-  ],
-  "VS_INDEX": {
-    "INDEX_ID": "SP500",
-    "INDEX_NAME": "S&P 500",
-    "BASIS": "reference",
-    "WEIGHTING": "market capitalisation computed from SEC data",
-    /* … 13 more keys … */
-  }
-}
-```
-
-The record shows 21 of its 89 fields; omitted here: `FUND_KEY`, `REGISTRANT_LEI`, `TICKERS`, `CLASSES`, `CLASS_COUNT`, `PRIMARY_CLASS`, `IS_FUND_OF_FUNDS`, `IS_TARGET_DATE` and 60 more.
+- **Data contract:** [`fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund) (FUND), key `TICKER`; 88 fields, 60 required; the file [`fund.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/fund.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/funds.md#fund) (files `data/testdata/funds/fund/fund.tar`).
 
 ### 18.3 `fund-holder`: who holds a company
 
 One row per held company: the funds that hold it and how much, read by HELD and the company page's Held by funds panel.
 
-- **Data contract:** [`fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder) (HELD), key `TICKER`; 16 fields, 14 required.
-- **Sample:** `data/testdata/funds/fund-holder/fund-holder.2026-10-26.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "TICKER": "A",
-  "NAME": "Agilent Technologies",
-  "COMPANY": "A",
-  "SECTOR": "Manufacturing",
-  "FUNDS": 43,
-  "ETFS": 15,
-  "TOTAL_VALUE": 7751546198.0,
-  "TOTAL_SHARES": 57800330.0,
-  "SHARES_OUTSTANDING": 283498871,
-  "PCT_OF_SHARES": 20.388,
-  "AVG_WEIGHT": 0.1313,
-  "MAX_WEIGHT": 1.4933,
-  "TOP_HOLDER": "VTI",
-  "HOLDERS": [
-    {
-      "FUND": "VTI",
-      "FUND_NAME": "Vanguard Total Stock Market Index Fund",
-      "TYPE": "Mutual fund with an ETF share class",
-      "PCT": 0.0518,
-      "VALUE": 1190260009.0,
-      "SHARES": 8960777.0,
-      "REPORT_DATE": "2026-06-30",
-      "NET_ASSETS": 2297839156548.0
-    },
-    {
-      "FUND": "VOO",
-      "FUND_NAME": "Vanguard 500 Index Fund",
-      "TYPE": "Mutual fund with an ETF share class",
-      "PCT": 0.0582,
-      "VALUE": 972761510.0,
-      "SHARES": 7323357.0,
-      "REPORT_DATE": "2026-06-30",
-      "NET_ASSETS": 1671231561960.0
-    },
-    /* … 41 more … */
-  ],
-  "TOP_WEIGHTS": [
-    {
-      "FUND": "VGHCX",
-      "PCT": 1.4933
-    },
-    {
-      "FUND": "XLV",
-      "PCT": 0.6532
-    },
-    /* … 8 more … */
-  ],
-  "PROVENANCE": {
-    "SOURCE": "U.S. Securities and Exchange Commission: Form N-PORT, Form N-CEN and prospectus risk/return summary data sets; mutual fund ticker file",
-    "LICENCE": "Public domain (U.S. Government work); SEC fair access policy (descriptive User-Agent, at most 10 requests a second)",
-    "RETRIEVED_AT": "2026-10-26",
-    "NOTE": "Every holding of the pack's funds in this company (Form N-PORT), each fund as of its own report date."
-  }
-}
-```
-
-The record shows 16 of its 17 fields; omitted here: `_meta`.
+- **Data contract:** [`fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder) (HELD), key `TICKER`; 16 fields, 14 required; the file [`fund-holder.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/fund-holder.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/funds.md#fund-holder) (files `data/testdata/funds/fund-holder/fund-holder.*.jsonl.gz`).
 
 ### 18.4 `index-funds`: funds tracking an index
 
 One row per index: the funds that track it, read by TRACK and the index page.
 
-- **Data contract:** [`index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds) (TRACK), key `INDEX`; 8 fields, 8 required.
-- **Sample:** `data/testdata/funds/index-funds/index-funds.2026-10-26.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "INDEX": "DJIA",
-  "NAME": "Dow Jones Industrial Average",
-  "FUNDS": 1,
-  "ETFS": 1,
-  "TOTAL_NET_ASSETS": 45207847202.0,
-  "LARGEST": "DIA",
-  "ROWS": [
-    {
-      "FUND": "DIA",
-      "NAME": "SPDR Dow Jones Industrial Average ETF Trust",
-      "TYPE": "ETF (unit investment trust)",
-      "NET_ASSETS": 45207847202.0,
-      "EXPENSE_RATIO": null,
-      "MEMBERS_HELD": 30,
-      "ACTIVE_SHARE": 1.8,
-      "REPORT_DATE": "2026-07-31",
-      "IS_ETF": true
-    }
-  ],
-  "PROVENANCE": {
-    "SOURCE": "U.S. Securities and Exchange Commission: Form N-PORT, Form N-CEN and prospectus risk/return summary data sets; mutual fund ticker file",
-    "LICENCE": "Public domain (U.S. Government work); SEC fair access policy (descriptive User-Agent, at most 10 requests a second)",
-    "RETRIEVED_AT": "2026-10-26",
-    "NOTE": "The pack's funds whose name names this index (N-CEN says whether a fund is an index fund, not which index); index weights are not public."
-  }
-}
-```
-
-The record shows 8 of its 9 fields; omitted here: `_meta`.
+- **Data contract:** [`index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds) (TRACK), key `INDEX`; 8 fields, 8 required; the file [`index-funds.contract.yaml`](../../config/packs/capitalmarkets/funds/contracts/index-funds.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/funds.md#index-funds) (files `data/testdata/funds/index-funds/index-funds.*.jsonl.gz`).
 <!-- guide-data:end -->

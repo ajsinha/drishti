@@ -57,7 +57,7 @@ reporting and legal teams to decide. Drishti computes the figures, lays them out
 | Report or figure | Who needs it | Drishti | Section |
 |---|---|---|---|
 | Trading VaR by risk type, period end, average, high, low (annual report) | every listed Canadian bank; §217.212 in the US | **Built** (the pilot `annual-report-var`); rows by risk type **Built — needs the bank's data** (a risk-type hierarchy or the planned risk-type mapping) | [3.2](#32-annual-report-trading-var-by-risk-type-canada-mda) |
-| Backtesting: exceptions, zone, multiplier, chart | US subpart F, OSFI internal models, Pillar 3 MR2, §217.212 | **Built — needs the bank's data** (`desk-pnl`); the pilot `var-backtesting-chart` | [3.3](#33-backtesting-chart-and-exceptions-both-countries) |
+| Backtesting: exceptions, zone, multiplier, chart | US subpart F, OSFI internal models, Pillar 3 MR2, §217.212 | **Built — needs the bank's data** ([`desk-pnl`](../contracts/samples/market-risk.md#desk-pnl)); the pilot `var-backtesting-chart` | [3.3](#33-backtesting-chart-and-exceptions-both-countries) |
 | VaR and stressed VaR, 1-day and 10-day, latest, 60-day and 12-week averages | US subpart F, FFIEC 102 | **Built** | [3.7](#37-us-market-risk-capital-217204), [3.8](#38-ffiec-102-market-risk-regulatory-report-us) |
 | Market risk capital (VaR term + stressed VaR term + add-ons) and its RWA | US subpart F, FFIEC 102, FR Y-9C | **Not built (designed)**: needs the planned capital inputs | [4.7](#47-capital) |
 | FFIEC 102 and §217.212 report definitions | US filers | **Not built (designed)**: every figure but the add-ons is built | [3.8](#38-ffiec-102-market-risk-regulatory-report-us), [3.9](#39-217212-market-risk-disclosures-us) |
