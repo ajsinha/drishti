@@ -241,7 +241,22 @@ def net_node(*, tags=(), peer_only=(), **_) -> Markup:
                   label="This node")
 
 
+def connector_head(**_) -> Markup:
+    """Admin › Connectors' editor, the Form tab's head: the name, the plugin (the page's script lists the plugins), on or off, and the
+    words. The plugin's own settings are a Form the script builds from the plugin's
+    description (``/admin/connectors/api/plugins``)."""
+    props = {"name": K.text("Name", None, mono=True, maxLength=64, pattern="[a-z0-9][a-z0-9\\-]*", hook={"data-f-name": ""}, placeholder="trading-lake",
+                            patternMessage="lower case letters, digits and hyphens", description="The file is name.yaml; packs refer to the connector by this name."),
+             "plugin": K.select("Plugin", None, [], hook={"data-f-plugin": ""}),
+             "enabled": K.check("Connector is on", None, hook={"data-f-enabled": ""}),
+             "description": K.text("Description", None, maxLength=200, hook={"data-f-description": ""},
+                                   description="One line saying what this connector reads; shown in the list.")}
+    return K.host(K.schema(props), {"name": "", "plugin": "", "enabled": True, "description": ""}, attrs={"data-conn-head": ""},
+                  layout="columns", label="The connector")
+
+
 BUILDERS: dict[str, Callable[..., Markup]] = {
+    "connector_head": connector_head,
     "net_explain": net_explain, "net_node": net_node,
     "lake_file": lake_file, "lake_fields": lake_fields, "lake_target": lake_target,
     "capacity_growth": capacity_growth, "capacity_download": capacity_download,

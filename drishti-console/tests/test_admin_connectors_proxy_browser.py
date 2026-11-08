@@ -85,7 +85,7 @@ def test_the_page_and_the_editor_show_the_proxy_and_the_test_says_it_went_throug
     dlg = page.locator("[data-edit-dialog]")
     dlg.locator("[data-f-name]").wait_for()
     assert dlg.locator("[data-group='proxy'] legend").inner_text() == "Proxy"
-    now = dlg.locator("[data-proxy-now]").inner_text()
+    now = dlg.locator("[data-group='proxy'] > .di-help").inner_text()
     assert "Effective proxy: http://proxy.corp:3128" in now and "site default" in now and "password ***" in now
     for s in ("proxy", "proxy.url", "proxy.username", "proxy.password"):
         assert dlg.locator(f"[data-setting='{s}']").count() == 1, s
@@ -94,7 +94,7 @@ def test_the_page_and_the_editor_show_the_proxy_and_the_test_says_it_went_throug
     sent = len(backend.calls)
     dlg.locator("[data-setting='proxy.password']").fill("hunter2")
     dlg.locator("[data-save]").click()
-    err = dlg.locator("div.conn-field:has([data-setting='proxy.password']) [data-field-err]").inner_text()
+    err = dlg.locator(".di-form-field:has(> [data-setting='proxy.password']) > .di-msg").inner_text()
     assert "never written into a connector file" in err
     assert not any(c[0] == "PUT" for c in backend.calls[sent:])
     dlg.locator("[data-setting='proxy.password']").fill("${PROXY_PASSWORD}")
