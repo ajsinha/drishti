@@ -1238,9 +1238,9 @@ what the old control wrote. The second BI pass moved the drill-through target (i
 datasets (repeatable rows), the bookmarks (each name a field; the new one's name and slicer choices a form), the Filters pane's editor (a
 submitted `Form` whose fields follow the kind of filter through `when` and a dependent condition list, every control named as before;
 Pick from the data a row of checkboxes), the Phone and Tablet rows' hide, wide and height, a report measure's name and formula, the
-Copilot's question and a transform step's parameters (`drishti_bi-transform.js` off the form guard's allow-list). **Still their own**
-(the next pass): the wells' add lists and the Fields and Visualizations panes (→ `Palette`, which needs per-entry hooks first) and the
-BI Studio shell (→ `DesignerShell`).
+Copilot's question and a transform step's parameters (`drishti_bi-transform.js` off the form guard's allow-list). The Visualizations are drishti-designer's `Palette` (an entry's own `attrs`, data-* only, so `data-type` stays) and the wells' Add a
+field a `Form` select. **Still their own** (the next pass): the Fields pane (→ `Palette`, with its folders, date parts and badges) and
+the BI Studio shell (→ `DesignerShell`).
 
 ## 13. Risks
 
