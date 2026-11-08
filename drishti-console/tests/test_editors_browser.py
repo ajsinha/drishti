@@ -168,6 +168,7 @@ def gcode(pg, key, rid, c, text):
     """A formula cell (drishti-inputs' one-line code editor over the cell) given new text, as a paste, then Enter."""
     gcell(pg, key, rid, c)
     wait(pg, "!!document.querySelector('.dg-editor-code .CodeMirror')")
+    wait(pg, OPEN)          # over its cell and focused: the editor stays hidden until its row is drawn, and Enter in a hidden editor goes nowhere
     pg.evaluate("""t => { const cm = document.querySelector('.dg-editor-code .CodeMirror').CodeMirror; cm.focus();
       cm.replaceRange(t, { line: 0, ch: 0 }, { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }, 'paste'); }""", text)
     pg.keyboard.press("Enter")

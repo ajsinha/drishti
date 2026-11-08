@@ -376,7 +376,9 @@ the VaR explorer: the baskets leave the left-hand column for two drop-downs, and
 
 ### 1.5 Relationship to the other lenses
 
-| | Risk | Oversight ([section 5](#5-oversight-lens)) |
+The Risk lens beside the Oversight lens ([section 5](#5-oversight-lens)):
+
+| | Risk | Oversight |
 |---|---|---|
 | **Persona** | Risk managers near the desks; credit risk officers | The second line's governance: head of market risk, the CRO's team, limit framework, reporting |
 | **Actions** | Read, compute, what-if, capture | Govern: explain, review, approve, escalate, close a breach; RNIV; sign-off |
@@ -2400,7 +2402,9 @@ vectors, never statistics, so every cell is equal to the bit to one server. **No
 
 #### 6.5.13 MR versus CCR: two cubes on one core
 
-| | MR cube | CCR cube ([section 7](#7-ccr-cube-lens)) |
+The MR cube beside the CCR cube ([section 7](#7-ccr-cube-lens)):
+
+| | MR cube | CCR cube |
 |---|---|---|
 | Core ([6.5.1](#651-the-pivot-model-and-the-three-measure-classes) to [6.5.12](#6512-caching-and-memory-budgets)) | shared | shared |
 | Data grain | position (or trade) × scenario; position × risk factor | trade × path × time step |

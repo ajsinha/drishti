@@ -237,7 +237,8 @@ def test_inspector_explain_expand_collapse_hide_path_groups_encodings_and_types(
         await pg.click("#g-inspector [data-act='path']")
         path = await pg.evaluate(f"() => {G}.pathNow()")
         assert path["nodes"][0] == "TRD-1000" and path["nodes"][-1] == "GRP-3" and len(path["nodes"]) >= 4
-        assert "path:" in await pg.locator("#g-inspector .dn-status").text_content()
+        # the status line is drawn with the canvas on the next animation frame (draw() coalesces a frame's changes), so it is waited for
+        await pg.wait_for_function("() => document.querySelector('#g-inspector .dn-status').textContent.includes('path:')", timeout=10000)
         await pg.click("#g-inspector [data-act='clearpath']")
         assert await pg.evaluate(f"() => {G}.pathNow()") is None
         # group by country, open a group
