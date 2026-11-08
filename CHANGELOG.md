@@ -144,6 +144,21 @@
   status, the inbox route's `.ready` and tar, the java and python routes into a temporary lake, the command line and the schedule
   output; Admin → Feeds in the console and the server; one `--live` smoke per feed for a person to run.
 
+### Fixes (the train's bulk drill)
+
+- **Drishti's lake writer and a partition value with a space**: Kernel hands a partition's folder percent-encoded
+  (`PRODUCT_GROUP=Fixed%20income`); the writer wrote the file there while every read looked in `Fixed income`, so a Calypso or Murex
+  trade load by `PRODUCT_GROUP` failed with "the write failed, nothing was committed". The writer now decodes a `file:` URI exactly as the
+  reads do (`LakeWriterTest`).
+- **The public-sector feeds keep their working history as JSON Lines** (the data standard): a series' points, the kept releases and
+  GDELT's per-day country aggregates under `<data>/datafeeds/<feed>/history/` are `.jsonl`, a row a line.
+- **A pack filled by a feed counts as served without the demo connector**: `PacksServedWithoutDemoTest` accepts a Delta connector
+  reading the lake an enabled feed loads the kind into (the six public-sector packs, `worldlake` and `newslake`); PACK_DEVELOPER_GUIDE
+  step 16 says so.
+- Tests brought up to date: the demo lake's trades by `PRODUCT_TYPE` (Endur) and `PRODUCT_GROUP` (Calypso, Murex); the engines' and
+  publishers' sources found in their domain modules; `css_visual_check.py` names the demo lake's variable through `lakeconfig`; importing
+  `drishti-stack/stack.py` in a test leaves no `__pycache__` in the checkout.
+
 ## 2.9.11.h (unreleased)
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.

@@ -51,6 +51,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 from javacmd import java_cmd  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
+import lakeconfig  # noqa: E402  (the demo lake root's variable)
 
 WORK = ROOT / "data" / "tmp" / "cssvis"
 MAIN = Path("/home/ashutosh/IdeaProjects/drishti")
@@ -127,7 +129,7 @@ def lake() -> Path:
 
 
 def lake_env(delta: Path) -> dict:
-    return {"DRISHTI_DELTA_ROOT": str(delta), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_SECURITY_ENABLED": "false",
+    return {lakeconfig.DEMO_ROOT_ENV: str(delta), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_SECURITY_ENABLED": "false",
             "DRISHTI_COMPUTE_ENABLED": "false"}
 
 

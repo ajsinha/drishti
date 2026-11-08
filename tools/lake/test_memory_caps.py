@@ -91,7 +91,9 @@ def test_every_launcher_asks_the_one_place_and_passes_arrows_cap():
 
 
 def test_the_stack_turns_the_figures_into_flags(monkeypatch):
-    sys.path.insert(0, str(ROOT / "drishti-stack"))
+    # read without leaving drishti-stack/__pycache__ in the checkout (litter test_no_hidden_names sees when it runs at the same time)
+    monkeypatch.setattr(sys, "dont_write_bytecode", True)
+    monkeypatch.syspath_prepend(str(ROOT / "drishti-stack"))
     import stack
 
     answers = {"--extra-only": "4864", "--arrow-only": "4608"}
