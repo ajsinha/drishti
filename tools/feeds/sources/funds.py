@@ -45,7 +45,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -74,7 +74,7 @@ def _sec_user_agent() -> str:
 def _quarters(first_year: int | None, n: int, today: datetime | None = None) -> list[str]:
     """The quarters to try, newest first: the n before today's (a quarter's data set is published after it ends), or every one from
     first_year."""
-    t = today or datetime.now(timezone.utc)
+    t = today or datetime.now()                   # the business calendar: local time
     y, q = t.year, (t.month - 1) // 3 + 1
     out = []
     while True:
@@ -307,7 +307,7 @@ def refresh(a, log=print, opener=None) -> int:
     else:
         out, pack_dir, testdata = COMMITTED, COMMITTED, B.ROOT / "data" / "testdata"
     run = B.Run(PACK, a, out, log)
-    run.first_year = a.since or (datetime.now(timezone.utc).year - a.years + 1 if a.years else None)
+    run.first_year = a.since or (datetime.now().year - a.years + 1 if a.years else None)
     run.dl = Downloader(run, **({"opener": opener} if opener else {}))
     if a.dry_run:
         log(f"dry run: {PACK}, sources {', '.join(s.name for s in selected)}" + (f", widened {scope}" if widened else ""))

@@ -21,6 +21,7 @@
    resize and autosize by the handle, the row checkboxes. */
 import { h } from '../../drishti-core/src/drishti_index.js';
 import { GridPointer } from './drishti_grid-pointer.js';
+import { DENSITIES } from './drishti_grid-model-base.js';
 import { getValue, formatValue } from './drishti_columns.js';
 import { headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, cfBackground, figureRange, ruleFor, cellLook } from './drishti_grid-ui.js';
 
@@ -151,6 +152,11 @@ export class GridBody extends GridPointer {
     const m = this.model, v = this.view, vp = m.viewport, doc = this.doc;
     const disp = v.displayColumns();
     const win = doc.defaultView, touch = !!(win && win.matchMedia && win.matchMedia('(pointer: coarse)').matches);
+    // rows that open and close (a tree, groups, a pivot) are 45 px tall (44 within the border) on a touch screen (a phone, a tablet), so the twisty is a target a
+    // finger can hit (its 44 px width is the sheet's); every other grid keeps its density's height
+    const twisty = touch && !!(m.pivotMode || m.rowModel.treeData || (m.rowModel.groupBy && m.rowModel.groupBy.length));
+    const want = twisty ? Math.max(45, DENSITIES[m.density] || 28) : DENSITIES[m.density] || vp.rowHeight;
+    if (vp.rowHeight !== want) { vp.rowHeight = want; }
     const rh = vp.rowHeight, hrh = touch ? Math.max(44, rh + 4) : rh + 4;   // a heading is a target a finger can hit on a touch screen (44 px)
     const sp = this.paneSpans(disp);
     const pinned = v.o.pinnedTopRows || [];

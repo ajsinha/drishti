@@ -20,50 +20,24 @@
 (function () {
   'use strict';
   var U = window.Drishti.PackUI, el = U.el;
-  var SVG = 'http://www.w3.org/2000/svg';
 
-  function svg(tag, attrs, text) {
-    var e = document.createElementNS(SVG, tag);
-    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
-    if (text !== undefined) { e.textContent = text; }
-    return e;
-  }
-
-  /** The graph: kinds as boxes on a circle, a link as an arrow from the kind that holds the field to the kind it points at. */
+  /** The graph of the kinds and their links: drishti-graph (Drishti Elements), the kinds on a circle, an arrow from the kind that holds the
+   *  field to the kind it points at, the field on the arrow; the adjacency table (▦) gives the same in words. */
   function graph(plan) {
-    var kinds = plan.kinds.map(function (k) { return k.kind; });
-    var n = kinds.length, W = 560, H = n > 2 ? 300 : 150, cx = W / 2, cy = H / 2, rx = W / 2 - 90, ry = H / 2 - 34;
-    var pos = {};
-    kinds.forEach(function (k, i) {
-      var a = (2 * Math.PI * i) / Math.max(n, 1) - Math.PI / 2;
-      pos[k] = n === 1 ? { x: cx, y: cy } : { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) };
-    });
-    var s = svg('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'pk-graph', role: 'img', 'aria-label': 'Kinds and the links between them' });
-    var defs = svg('defs'), mk = svg('marker', { id: 'pkArrow', viewBox: '0 0 10 10', refX: '9', refY: '5', markerWidth: '7', markerHeight: '7', orient: 'auto-start-reverse' });
-    mk.appendChild(svg('path', { d: 'M0 0L10 5L0 10z', class: 'pk-arrow' }));
-    defs.appendChild(mk);
-    s.appendChild(defs);
-    s.appendChild(svg('title', {}, plan.edges.length ? plan.edges.map(function (e) { return e.from + ' to ' + e.to + ' by ' + e.field; }).join('; ') : 'No links between the kinds'));
-    var BW = 112, BH = 28;
-    plan.edges.forEach(function (e) {
-      var a = pos[e.from], b = pos[e.to];
-      if (!a || !b) { return; }
-      if (e.from === e.to) {
-        s.appendChild(svg('path', { d: 'M' + (a.x + 30) + ' ' + (a.y - BH / 2) + ' c 28 -34 70 -6 36 16', class: 'pk-edge', 'marker-end': 'url(#pkArrow)', fill: 'none' }));
-        return;
-      }
-      var dx = b.x - a.x, dy = b.y - a.y, len = Math.sqrt(dx * dx + dy * dy) || 1, ux = dx / len, uy = dy / len;
-      var k = Math.min(BW / 2 / Math.abs(ux || 1e-6), BH / 2 / Math.abs(uy || 1e-6)) + 3;
-      s.appendChild(svg('line', { x1: a.x + ux * k, y1: a.y + uy * k, x2: b.x - ux * k, y2: b.y - uy * k, class: 'pk-edge', 'marker-end': 'url(#pkArrow)' }));
-      s.appendChild(svg('text', { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - 3, class: 'pk-edge-t', 'text-anchor': 'middle' }, e.field));
-    });
-    kinds.forEach(function (k) {
-      var p = pos[k], g = svg('g', {});
-      g.appendChild(svg('rect', { x: p.x - BW / 2, y: p.y - BH / 2, width: BW, height: BH, rx: 7, class: 'pk-node' }));
-      g.appendChild(svg('text', { x: p.x, y: p.y + 4, 'text-anchor': 'middle', class: 'pk-node-t' }, k.length > 16 ? k.slice(0, 15) + '…' : k));
-      s.appendChild(g);
-    });
-    return s;
+    var host = el('div', { class: 'pk-graph', 'aria-label': 'Kinds and the links between them' });
+    var E = window.Drishti.elements;
+    host.setAttribute('data-links', plan.edges.length ? plan.edges.map(function (e) { return e.from + ' to ' + e.to + ' by ' + e.field; }).join('; ') : 'No links between the kinds');
+    if (!E || !E.graph) { host.textContent = host.getAttribute('data-links'); return host; }
+    setTimeout(function () {
+      if (!host.isConnected) { return; }
+      host.__drishtiGraph = new E.graph.Graph(host, {
+        data: { directed: true, nodes: plan.kinds.map(function (k) { return { id: k.kind, label: k.kind, type: 'kind' }; }),
+          edges: plan.edges.map(function (e) { return { source: e.from, target: e.to, label: e.field }; }) },
+        mode: 'table', tables: false, card: false, minimap: false, layout: 'circular', height: plan.kinds.length > 2 ? 300 : 180, density: 'compact',
+        types: { kind: { label: 'Kinds', shape: 'square', colour: 'link' } }
+      });
+    }, 0);
+    return host;
   }
 
   function field(label, control, hint, cls) {

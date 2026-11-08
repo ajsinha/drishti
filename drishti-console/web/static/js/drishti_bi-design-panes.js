@@ -158,25 +158,36 @@
 
     // ---- Visualizations: the catalogue ---------------------------------------------------------------------------------
     const types = q('[data-types]');
+    let typePalette = null;
     function drawTypes() {
       B.clear(types);
-      const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-add-visual': '', title: 'Add an empty visual of the type chosen below' }, B.icon('plus-lg'), ' Add visual');
-      const pick = h('select', { class: 'studio-select', 'data-add-visual-type': '', 'aria-label': 'Type of the visual to add' });
-      Object.keys(D.catalogue.visuals).forEach((t) => pick.appendChild(h('option', { value: t, text: t })));
-      pick.value = 'table';
-      add.addEventListener('click', () => D.addVisual(pick.value));
-      types.appendChild(h('p', { class: 'bi-addvisual' }, add, ' ', pick));
-      GROUPS.forEach(([title, list]) => {
-        types.appendChild(h('p', { class: 'bi-type-group', text: title }));
-        const row = h('div', { class: 'bi-typegrid', role: 'group', 'aria-label': title });
-        list.forEach((t) => {
-          const b = h('button', { type: 'button', class: 'bi-vtype', 'data-type': t, 'aria-label': t, title: t + ' (click to use it; drag onto the canvas to add one there)', 'aria-pressed': 'false' }, B.icon(ICONS[t]), h('span', { text: t }));
-          b.addEventListener('click', () => chooseType(t));
-          D.hub.draggable(b, { payload: () => ({ vtype: t }), label: () => t });
-          row.appendChild(b);
-        });
-        types.appendChild(row);
-      });
+      let pickType = 'table';
+      const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-add-visual': '', title: 'Add an empty visual of the type chosen beside it' }, B.icon('plus-lg'), ' Add visual');
+      add.addEventListener('click', () => D.addVisual(pickType));
+      const bar = h('div', { class: 'bi-addvisual' });
+      types.appendChild(bar);
+      const all = Object.keys(D.catalogue.visuals);
+      B.formatPane.form(bar, { label: 'Add a visual', value: { type: pickType }, on: { type: (x) => { pickType = x || 'table'; } },
+        fields: { type: { type: 'string', title: 'Type of the visual to add', enum: all, widget: 'select', allowEmpty: false, hook: 'data-add-visual-type' } } });
+      bar.appendChild(add);
+      const host = h('div', { class: 'bi-typepalette' });
+      types.appendChild(host);
+      const entries = [];
+      GROUPS.forEach(([title, list]) => list.forEach((t) => entries.push({ id: t, label: t, category: title, icon: 'bi bi-' + ICONS[t], payload: { vtype: t }, attrs: { 'data-type': t } })));
+      typePalette = new window.Drishti.elements.designer.Palette(host, { entries, hub: D.hub, label: 'Visualizations', placeholder: 'Search the visuals' });
+      typePalette.on('add', (e) => chooseType(e.entry.id));
+      markTypes();
+    }
+
+    /** What a well may take ({value, label}): fields as table.column, measures, and the model's field parameters (2.6.0: the reader's
+     *  parameter slicer chooses which field or measure the visual draws). */
+    function choicesFor(kind, ds0) {
+      const ds = ds0 || D.dataset, out = [];
+      if (kind !== 'measure') { (ds.tables || []).forEach((t) => t.columns.forEach((c) => out.push({ value: t.name + '.' + c.name, label: t.name + ' › ' + c.name }))); }
+      if (kind !== 'field') { (ds.measures || []).forEach((m) => out.push({ value: m.name, label: m.name + ' (measure)' })); }
+      (ds.parameters || []).filter((p) => p.kind === 'field' && (kind === 'any' || D.paramKind('param.' + p.name) === kind))
+        .forEach((p) => out.push({ value: 'param.' + p.name, label: (p.title || p.name) + ' (' + (p.fields || []).map(B.label).join(' / ') + ')' }));
+      return out;
     }
 
     /** What would be lost turning `v` into `type`: the wells' items no well of the new type takes (or takes beyond its room). */
@@ -228,35 +239,11 @@
 
     function markTypes() {
       const v = D.sel();
-      B.qa('.bi-vtype', types).forEach((b) => b.setAttribute('aria-pressed', v && v.type === b.getAttribute('data-type') ? 'true' : 'false'));
+      B.qa('[data-dd-entry]', types).forEach((b) => b.setAttribute('aria-selected', v && v.type === b.getAttribute('data-type') ? 'true' : 'false'));
     }
 
     // ---- Build: wells --------------------------------------------------------------------------------------------------
     const build = q('[data-build]');
-    function optionsFor(kind, ds0) {
-      const ds = ds0 || D.dataset;
-      const frag = document.createDocumentFragment();
-      if (kind !== 'measure') {
-        (ds.tables || []).forEach((t) => {
-          const g = h('optgroup', { label: t.name });
-          t.columns.forEach((c) => g.appendChild(h('option', { value: t.name + '.' + c.name, text: c.name })));
-          frag.appendChild(g);
-        });
-      }
-      if (kind !== 'field') {
-        const g = h('optgroup', { label: 'Measures' });
-        (ds.measures || []).forEach((m) => g.appendChild(h('option', { value: m.name, text: m.name })));
-        frag.appendChild(g);
-      }
-      // the model's field parameters (2.6.0): the reader's parameter slicer chooses which field or measure the visual draws
-      const fp = (ds.parameters || []).filter((p) => p.kind === 'field' && (kind === 'any' || D.paramKind('param.' + p.name) === kind));
-      if (fp.length) {
-        const g = h('optgroup', { label: 'Field parameters', 'data-field-params': '' });
-        fp.forEach((p) => g.appendChild(h('option', { value: 'param.' + p.name, text: (p.title || p.name) + ' (' + (p.fields || []).map(B.label).join(' / ') + ')', 'data-field-param': p.name })));
-        frag.appendChild(g);
-      }
-      return frag;
-    }
 
     function drawBuild() {
       B.clear(build);
@@ -282,13 +269,12 @@
           li.appendChild(x);
           ul.appendChild(li);
         });
-        const add = h('select', { class: 'studio-select bi-wadd', 'aria-label': 'Add to ' + w, 'data-add': w }, h('option', { value: '', text: spec.kind === 'measure' ? 'Add a measure…' : spec.kind === 'field' ? 'Add a field…' : 'Add a field or measure…' }), optionsFor(spec.kind, D.dsOf(v).dataset));
-        add.addEventListener('change', () => {
-          if (!add.value) { return; }
-          const name = add.value;
-          D.withIdx(D.idxOf(v), () => D.change('Add ' + B.label(name), () => { D.putInWell(v, w, name); D.auto.delete(v.id); }));
-        });
-        const fs = h('fieldset', { class: 'bi-well', 'data-well': w }, h('legend', {}, w, h('small', { class: 'text-muted-d', text: ' ' + (spec.kind === 'any' ? 'fields and measures' : spec.kind + 's') + (spec.required ? ', needed' : '') + (spec.max ? ', up to ' + spec.max : '') })), ul, add);
+        // the well's "Add a field…": a drishti-inputs Form select (data-add="<well>")
+        const offer = choicesFor(spec.kind, D.dsOf(v).dataset), addBox = h('div', { class: 'bi-fform bi-wadd' });
+        B.formatPane.form(addBox, { label: 'Add to ' + w, fields: { add: { type: 'string', title: 'Add to ' + w, enum: offer.map((o) => o.value), enumLabels: offer.map((o) => o.label), widget: 'select',
+          emptyLabel: spec.kind === 'measure' ? 'Add a measure…' : spec.kind === 'field' ? 'Add a field…' : 'Add a field or measure…', hook: { 'data-add': w } } },
+        on: { add: (name) => { if (name) { D.withIdx(D.idxOf(v), () => D.change('Add ' + B.label(name), () => { D.putInWell(v, w, name); D.auto.delete(v.id); })); } } } });
+        const fs = h('fieldset', { class: 'bi-well', 'data-well': w }, h('legend', {}, w, h('small', { class: 'text-muted-d', text: ' ' + (spec.kind === 'any' ? 'fields and measures' : spec.kind + 's') + (spec.required ? ', needed' : '') + (spec.max ? ', up to ' + spec.max : '') })), ul, addBox);
         D.hub.target({ el: fs, accepts: (p) => !!p && !p.vtype, over: () => fs.classList.add('bi-drop'), leave: () => fs.classList.remove('bi-drop'), drop: (x, y, p) => {      // a field dropped on the well
           fs.classList.remove('bi-drop');
           const clash = D.dsConflict(v, p.dataset || '');

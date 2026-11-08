@@ -44,8 +44,9 @@
 
 import { parseNumberText } from '../../drishti-core/src/drishti_index.js';
 
-/** The editors a column may name; a column without one gets its type's. */
-export const EDITORS = Object.freeze(['text', 'number', 'date', 'select', 'checkbox']);
+/** The editors a column may name; a column without one gets its type's. 'code' is a formula: drishti-inputs' one-line CodeEditor (the
+ *  column's codeMode, default Rachana, and its complete hook) when that library is on the page, else text. */
+export const EDITORS = Object.freeze(['text', 'number', 'date', 'select', 'checkbox', 'code']);
 
 /**
  * A column's editor: its editor, else checkbox for a boolean, date for a date, number for a number, select when it has options, text.

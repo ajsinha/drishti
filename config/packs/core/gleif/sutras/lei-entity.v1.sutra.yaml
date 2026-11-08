@@ -21,8 +21,9 @@ doc:
   summary: "A legal entity's LEI record: facts, renewal (late flagged), its parents chain and its children (a click opens one beside)."
   description: >-
     One page per LEI. The strip gives the legal name's country, legal form, entity and registration status, the renewal (red when
-    the renewal is late, amber when it is due within a month), the number of children and the group. The parents chain lists the
-    direct parent and each one above it up to the ultimate parent, each a link; the children table lists the entities it
+    the renewal is late, amber when it is due within a month), the number of children and the group. The parents chain is a tree
+    from the ultimate parent down through each parent to this entity (highlighted), each a link; it opens as an org chart (one
+    chain), and Tree grid shows the same rows as a table with the level and the LEI. The children table lists the entities it
     directly consolidates, and a click opens the child's key facts beside the table. On the right: the key facts, the legal and
     headquarters addresses, the registration (first registered, last updated, next renewal, the managing LOU, GLEIF's record), the
     identifiers (BICs, ISIN count, MIC, OpenCorporates), the reporting exceptions that say why a parent is not reported, the
@@ -48,18 +49,23 @@ strip:
   - { label: Children, bind: "nonblank($.CHILD_COUNT, 0)", fmt: entities0 }
   - { label: Ownership group, bind: "link($.LEI_GROUP, 'lei-group', $.LEI_GROUP == $.LEI ? 'Its own group' : last($.PARENTS).NAME)" }
 panels:
+  # the chain as a tree: the ultimate parent at the top, each parent over the one below it, this entity at the foot (a chain opens as
+  # the org chart; Tree grid shows the same rows as a table)
   - id: parents
     kind: table
-    title: Parents chain (direct parent first, up to the ultimate parent)
+    title: Parents chain (the ultimate parent at the top, down to this entity)
     key: F2
     code: PAR
-    rows: $.PARENTS
+    rows: "take($.PARENTS, -1)"
+    children: "@.LEI == $.LEI ? null : (@.LEVEL == 1 ? $ : let(k = @.LEVEL, $.PARENTS[?@.LEVEL == k - 1]))"
+    expand: all
+    highlight: "@.LEI == $.LEI"
     search: false
     when: "size($.PARENTS) > 0"
     columns:
+      - { label: Entity, bind: "link(@.LEI, 'lei-entity', @.NAME)" }
+      - { label: Relationship, bind: "@.LEI == $.LEI ? 'This entity' : @.RELATIONSHIP" }
       - { label: Level, bind: "@.LEVEL" }
-      - { label: Relationship, bind: "@.RELATIONSHIP" }
-      - { label: Parent, bind: "link(@.LEI, 'lei-entity', @.NAME)" }
       - { label: LEI, bind: "@.LEI" }
   - use: gleif/entity-list@1
     with: { id: children, title: "Children (a click opens one beside)", rows: $.CHILDREN, c: KIDS, c-label: Their children, key: F3, code: KIDS,

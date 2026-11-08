@@ -250,8 +250,9 @@ From top to bottom:
 - **The breadcrumb** with **Back**: Bank › legal entity › counterparty › netting set › trade. Every click on the tree, the board, a
   netting set or a trade moves the whole screen to the new scope in place, with no page load; Back returns to the scope before.
 - **The tree** (left): the bank, the legal entities, their counterparties (largest peak PFE first), the netting sets and, under the
-  open netting set, its trades with the largest EE contribution; each row shows its peak PFE. A netting set the run has no paths for is
-  marked and opens the no-paths state ([section 13](#13-troubleshooting)).
+  open netting set, its trades with the largest EE contribution (asked when the set opens); each row shows its peak PFE, the server's
+  figure for that node (peak PFE does not add up: a parent's is never its children's sum). A netting set the run has no paths for is
+  marked and opens the no-paths state ([section 13](#13-troubleshooting)). On a touch screen the + and − are a finger's size.
 - **The tiles** (the headline): **Peak PFE** at the chosen q (with its tenor and date), **EPE** (first year, time-weighted), **EEPE**
   (running max of EE), **EAD (IMM, info)** (α 1.4 × EEPE), and either **Limit used** (a counterparty with a stored credit limit: peak PFE
   at the limit's confidence over the limit, coloured by use) or **Collateral effect** (EE at the peak tenor against the

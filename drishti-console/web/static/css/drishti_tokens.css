@@ -50,6 +50,9 @@
   --d-grad-from: #e8a33a;
   --d-grad-to: #7fb2ff;
   --d-nav: rgba(14, 22, 40, .86);
+  --d-nav-from: #0e1628;          /* the solid navigation band (drawn by the blue, green and crimson themes); every theme carries it */
+  --d-nav-via: #16233f;
+  --d-nav-to: #0e1628;
   --d-shadow: 0 10px 40px rgba(0, 0, 0, .35);
   --d-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --d-font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;

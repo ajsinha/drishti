@@ -319,7 +319,7 @@ def test_designer_change_a_well_set_a_filter_check_save_and_reload(stack, browse
     draft = new_draft(page)
     page.drag_and_drop('[data-field="trade.DESK"]', "[data-canvas-grid]", target_position={"x": 60, "y": 40})
     page.wait_for_selector('.bi-dvis[data-type="table"]')
-    page.click('.bi-vtype[data-type="bar"]')                                                              # change the visual's type: the fields follow
+    page.click('[data-types] [data-type="bar"]')                                                              # change the visual's type: the fields follow
     settled_design(page)
     page.select_option('[data-add="values"]', "Notional")                                                  # a well, by the select (no dragging)
     settled_design(page)

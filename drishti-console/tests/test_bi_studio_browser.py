@@ -107,7 +107,7 @@ def add(page, vtype):
     """A new visual of a type from the Visualizations pane, then its Build tab."""
     deselect(page)
     before = len(model(page)["pages"])
-    page.click(f'.bi-vtype[data-type="{vtype}"]')
+    page.click(f'[data-types] [data-type="{vtype}"]')
     page.wait_for_function("(t) => { const v = window.drishtiBi.design.sel(); return v && v.type === t; }", arg=vtype)
     assert len(model(page)["pages"]) == before
     page.click("[data-ptab='build']")

@@ -1038,7 +1038,7 @@ One row per element of `rows`.
 | `moreLabel` | | `"<N> more"` | Expression for the text of the "more" line, evaluated against the document (not a row). |
 | `totalLabel` | | `Total` | Text of the total row's label cell. |
 | `link` | | | Accepted, no effect (see above). |
-| `children` | | none | Expression evaluated per row (`@` is the row) giving the rows nested under it, for example `children: "@.RESETS"`. A row that has children shows a ▸/▾ toggle and expands in place, indented, to any depth (up to `drishti.panels.tree-depth`, 12). Columns evaluate against each child with `@`. `total: true` columns sum the rows that have no children only, so nothing counts twice. A number, a list or a boolean is `DRS-2029`. A table with `children` is not sorted, paged or given per-column filters; its filter keeps the ancestors of the rows that match. |
+| `children` | | none | Expression evaluated per row (`@` is the row) giving the rows nested under it, for example `children: "@.RESETS"`. A row that has children opens and closes in place, indented, to any depth (up to `drishti.panels.tree-depth`, 12). Columns evaluate against each child with `@`. `total: true` columns sum the rows that have no children only, so nothing counts twice. A number, a list or a boolean is `DRS-2029`. The rows may also be built from flat data: `children` may give one record (one child) or read the document (`$`) and a name bound with `let`, as the GLEIF parents chain does. See [Tree rows](#tree-rows-in-the-browser) for how the browser draws it. |
 | `expand` | | `1` | Levels shown open at first: `1` shows only the top level, `2` opens those to show their children, `all` opens every level. A whole number from 1 or `all` (`DRS-2029` otherwise). |
 | `levels` | | none | A drill-down: the rows each row opens to, level by level, each level with its own `rows` (read with `@` the row above), `title`, `crumb` and `columns`; 1 to 6 levels. See [levels: drill down level by level](#levels-drill-down-level-by-level). Not with `children` or `pivot` (`DRS-2029`). |
 | `crumb` | | `'#' + (#index + 1)` | With `levels`: an expression naming a first-level row in the breadcrumb (`"'Cash flow ' + @.FLOW_ID"`). |
@@ -1255,6 +1255,35 @@ The tabs come from `each`, one per element, **whatever the count** (a cap has on
 | no `span` or `height` | the panels take the size of their tabs panel (`DRS-2030`) |
 | an `id` on each, unique within the tab (`DRS-2010`, `DRS-2024`) | the live view and the CSV name the panels by it |
 | `panels:` on any other kind | `DRS-2023`: only `tabs` take it |
+
+#### Tree rows in the browser
+
+A table or ladder with `children` is drawn by **drishti-tree** (Drishti Elements' table tree), in the console, the client renderer and
+an embedded view alike, from the rows the server sent: every cell is the server's text, tone and link, and nothing is added up in the
+browser. It has two modes, switched above it:
+
+- **Tree grid** (the default): the rows on drishti-grid's tree data, a column per heading; + and − (or → and ←) open and close a row,
+  `expand` sets what is open at first. The filter box (absent with `search: false`) keeps the rows whose cells hold every word typed and
+  the ancestors of those rows; the grid's own column menus sort siblings and filter by column. The footer (a total, "n more") shows
+  under it.
+- **Org chart**: the same rows as boxes from the top down, each with its first cell and the next two columns; a box's ▸/▾ opens it,
+  the arrows walk the tree, Enter or a double click opens the row's link. **A tree that is one chain** (one top row, at most one row
+  under each) **opens as the org chart**: a chain of owners reads better as boxes than as a table.
+
+The mode, the open rows and the filter survive a live update that draws the panel again. The server's own table stays in the page,
+hidden: it is what prints and what a page without scripts shows (its rows below `expand` closed).
+
+A **parents chain held flat** (each record one level, the top last) becomes a tree with `take`, `let` and the document: the GLEIF
+entity's chain, from its ultimate parent down to the entity itself (highlighted):
+
+```yaml
+  - id: parents
+    kind: table
+    rows: "take($.PARENTS, -1)"                                   # the ultimate parent, the list's last
+    children: "@.LEI == $.LEI ? null : (@.LEVEL == 1 ? $ : let(k = @.LEVEL, $.PARENTS[?@.LEVEL == k - 1]))"
+    expand: all
+    highlight: "@.LEI == $.LEI"
+```
 
 A table inside a tab can be a **tree whose children come from a nested array of the row**: `children: "@.RESETS"` evaluates, for each
 cash flow, to that cash flow's own resets, which open under it. The child rows are another kind of row than the cash flows (a reset has
@@ -5519,7 +5548,7 @@ Everything you do is an **operation** on the design (add a panel, move it, set a
 | `ohlc`, `distribution`, `grid`, `steps` | Open/high/low/close rows; a list of numbers; a table of numbers on one axis (a surface); signed steps that sum to a total (a waterfall). |
 | `graph`, `tree`, `text` | Nodes and edges; rows that hold rows of the same shape; long text. |
 
-Conflicts (the same field with different types in different files) and rare fields (in fewer than half of the records) are listed above the tree: a panel built on a rare field is empty for many samples. Filter by path or role; arrows move, Right and Left open and close, **Enter** shows a field's reason, examples and files. Each opened field has two buttons, **Suggest panels…** and **Bind to selected panel** (also the keys `S` and `B`), and every field can be **dragged** onto the canvas (section 6).
+Conflicts (the same field with different types in different files) and rare fields (in fewer than half of the records) are listed above the tree: a panel built on a rare field is empty for many samples. The tree is a compact tree grid (drishti-tree's outline): each field's row shows its name, type, role (hover it for the reason), presence and a few examples. Filter by path or role (the paths that do not match leave the tree, the ones above a match stay); **Expand** and **Collapse** open or close every branch; arrows move, Home and End jump, Right and Left open, close and go up, **Enter** (or a click) shows a field's reason, examples and files under the tree, and Enter again or Escape closes it. Each opened field has two buttons, **Suggest panels…** and **Bind to selected panel** (also the keys `S` and `B`), and every field can be **dragged** onto the canvas (section 6).
 
 **Palette.** The 22 panel kinds, each with an icon and a line on what it shows. Drag one onto the canvas, or press its **Add** button (section 5).
 

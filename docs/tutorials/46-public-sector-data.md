@@ -67,6 +67,9 @@ curl -s "$DRISHTI_SERVER/api/v1/modules" -H "Authorization: Bearer $DRISHTI_TOKE
 enabled: true            # false, then a restart: the economy's packs, functions and lenses are gone; banking is untouched
 ```
 
+You should see the economy module on in Admin → Modules, and *Public sector* among the lenses in Views (the `curl` prints its
+record with its ten functions).
+
 More: [PUBLIC_SECTOR_GUIDE.md sections 1 and 2](../guides/PUBLIC_SECTOR_GUIDE.md#1-the-module-its-lens-and-its-functions).
 
 ## Step 2 · Run the six feeds
@@ -86,6 +89,11 @@ Each run ends with one line, `feed ok exit=0 feed=oecd date=... files=2 rows=...
 writes nothing.
 
 **UI.** Admin → Data loads → Feeds: one row a feed with its last run, rows, lake and licence; *Run now* runs one.
+
+world-development is the one fetcher of the World Bank's development indicators: the world-economy feed reads them from its output, so
+run world-development first (its schedule does: 06:30, then world-economy at 06:45).
+
+You should see six `feed ok` lines, and six green rows in Admin → Data loads → Feeds, each with its rows and its lake.
 
 **YAML.** A feed file, `config/feeds/oecd.yaml` (shortened):
 
@@ -112,7 +120,7 @@ More: [section 5](../guides/PUBLIC_SECTOR_GUIDE.md#5-the-feeds) and the [Externa
 every indicator with its latest year; click *GDP growth (annual %)* to open its history (`WDIS WDIS-CAN-NY_GDP_MKTP_KD_ZG`). The world
 map is shaded by GDP per head; click Brazil to open `WDI-BRA`.
 
-![WDI WDI-CAN: Canada's development profile, its indicators and the world map by GDP per head (the feed's recorded data for 2026-11-06)](img/t46/03-wdi-canada.png)
+![WDI WDI-CAN: Canada's development profile, its indicators and the world map by GDP per head (the feed's recorded data for 2026-11-06)](img/t46/03-wdi-canada.jpg)
 
 **Command line.**
 
@@ -128,6 +136,8 @@ panels:
   - use: region-map@1
     with: { highlight: $.ISO3, link-kind: development-profile, link-id: "WDI-{iso3}", shade-kind: development-profile, shade-field: $.GDP_PER_CAPITA }
 ```
+
+You should see Canada's strip and indicators, the map with Canada highlighted, and the curl printing the start of `WDI-CAN`'s record.
 
 More: [section 3](../guides/PUBLIC_SECTOR_GUIDE.md#3-the-screens) and the contract page
 [world-development.md](../contracts/packs/world-development.md).
@@ -153,6 +163,11 @@ options:
     - { source: boc, code: V39079, bank: BOC, title: "Bank of Canada target for the overnight rate", unit: "%" }
 ```
 
+*(screenshot filled in the heavy run: `CBANK CBANK-BOC`, the policy rate, its last move and the bank's series)*
+
+You should see the policy rate, its last move date and its size in basis points, the same three numbers on the screen and from the
+command line.
+
 More: [section 5](../guides/PUBLIC_SECTOR_GUIDE.md#5-the-feeds) (the FRED key).
 
 ## Step 5 · National statistics and the OECD: NSTAT, OECD
@@ -175,6 +190,11 @@ options:
     - { vector: 41690973, title: "Consumer price index, all-items (Canada)", unit: "index 2002=100", topic: Prices }
 ```
 
+*(screenshot filled in the heavy run: `OECD OECD-CAN`, the members on a map shaded by inflation)*
+
+You should see the CPI's latest value with its release time, the OECD map shaded by inflation, and `feed status` with the last run and
+its rows.
+
 More: [section 7](../guides/PUBLIC_SECTOR_GUIDE.md#7-changing-what-is-pulled).
 
 ## Step 6 · Official news: PRESS and PREL
@@ -184,7 +204,7 @@ More: [section 7](../guides/PUBLIC_SECTOR_GUIDE.md#7-changing-what-is-pulled).
 <GO>`: the strip says *Internal only: yes* and why (the Bank of England allows no commercial reuse). In the World lens, `PRESS` and
 `GDELT` are there too.
 
-![PRESS PRESS-FED: the Federal Reserve Board's latest releases, each title a release in Drishti and each address the original](img/t46/06-press-fed.png)
+![PRESS PRESS-FED: the Federal Reserve Board's latest releases, each title a release in Drishti and each address the original](img/t46/06-press-fed.jpg)
 
 **Command line.**
 
@@ -203,6 +223,8 @@ options:
         why-internal: "The Bank of England allows personal and internal non-commercial use only" }
 ```
 
+You should see the Fed's releases newest first with working links, and for `PRESS-BOE` the command line printing `True` and the reason.
+
 More: [section 6](../guides/PUBLIC_SECTOR_GUIDE.md#6-licences-and-internal-only-data).
 
 ## Step 7 · World events: GDELT
@@ -218,6 +240,10 @@ python3 tools/drishti.py feed run gdelt-events --dry-run      # the days it woul
 ```
 
 **YAML.** `config/feeds/gdelt-events.yaml`: `history-days: 30`, `min-events: 20`, `top-stories: 5`.
+
+*(screenshot filled in the heavy run: `GDELT GDELT-USA`, the day's events, the tone by day and the map by tone)*
+
+You should see the United States' events, tone and map, and the dry run listing only the days after the last one read.
 
 More: [section 3](../guides/PUBLIC_SECTOR_GUIDE.md#3-the-screens).
 
@@ -235,6 +261,8 @@ python3 tools/drishti.py feed schedule --windows world-development       # Task 
 
 **YAML.** Each feed's `schedule: {at: "HH:MM", days: daily | weekdays}` (local time).
 
+You should see one cron line per feed (a service and a timer for systemd, a task for Windows), each at the feed's own time.
+
 More: [External data](../guides/EXTERNAL_DATA.md).
 
 ## Step 9 · Change what a feed pulls
@@ -247,14 +275,17 @@ options:
     - { code: SH.XPD.CHEX.GD.ZS, field: HEALTH_SPENDING, unit: "% of GDP" }
 ```
 
-**Command line.** Pull again (the source has not changed, so ask for it with `--since`), then check the contract:
+**Command line.** Pull again (a new indicator is pulled even when the World Bank has not changed), then check the contract:
 
 ```bash
-python3 tools/drishti.py feed run world-development --since 2026-01-01
+python3 tools/drishti.py feed run world-development
 python3 tools/contracts.py check        # names HEALTH_SPENDING until the contract and config/about.yaml describe it
 ```
 
 **UI.** `WDI WDI-CAN <GO>`: the new row in the indicators table.
+
+You should see *Current health expenditure (% of GDP)* in Canada's indicators, and `contracts.py check` naming `HEALTH_SPENDING` until
+the contract describes it.
 
 More: [section 7](../guides/PUBLIC_SECTOR_GUIDE.md#7-changing-what-is-pulled).
 

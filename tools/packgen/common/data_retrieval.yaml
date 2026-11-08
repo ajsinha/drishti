@@ -22,7 +22,7 @@
 # External sources: id -> what the guide says of it. `feed` is the data feed that pulls it (config/feeds/<feed>.yaml) and `source`
 # its SOURCE argument (after --); a source typed into a generator names the generator as `script` instead.
 external:
-  worldbank: { title: "World Bank World Development Indicators and Worldwide Governance Indicators", url: "https://api.worldbank.org/v2",
+  worldbank: { title: "World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed)", url: "https://api.worldbank.org/v2",
                licence: "CC BY 4.0", internal: false, feed: world-economy, source: worldbank }
   imf: { title: "IMF World Economic Outlook (DataMapper)", url: "https://www.imf.org/external/datamapper/api/v1",
          licence: "IMF terms: reuse with attribution; commercial reuse needs the IMF's permission", internal: true,
@@ -84,7 +84,7 @@ external:
   gleif-funds: { title: "GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to)", url: "https://goldencopy.gleif.org",
                  licence: "CC0 1.0", internal: false, feed: funds, source: gleif }
   # the public-sector module's feeds (config/feeds/<feed>.yaml; `source` is the feed): daily, incremental, into worldlake or newslake
-  wdi: { title: "World Bank World Development Indicators API (v2)", url: "https://api.worldbank.org/v2", licence: "CC BY 4.0",
+  wdi: { title: "World Bank World Development Indicators API (v2), pulled only by the world-development feed", url: "https://api.worldbank.org/v2", licence: "CC BY 4.0",
          internal: false, feed: world-development }
   fred: { title: "FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY)", url: "https://api.stlouisfed.org/fred",
           licence: "FRED API terms; the default series are US government works (public domain)", internal: false,
@@ -219,13 +219,13 @@ packs:
       simulation-run: { generator: ccr }
   world-economy:
     kinds:
-      economy: { external: [worldbank, imf] }
+      economy: { external: [wdi, worldbank, imf] }
       economic-forecast: { external: [imf] }
-      fiscal-position: { external: [worldbank, imf] }
-      labour-market: { external: [worldbank] }
-      macro-indicator: { external: [worldbank] }
-      social-indicator: { external: [worldbank, undp] }
-      jurisdiction: { external: [factbook, worldbank] }
+      fiscal-position: { external: [wdi, imf] }
+      labour-market: { external: [wdi] }
+      macro-indicator: { external: [wdi] }
+      social-indicator: { external: [wdi, undp] }
+      jurisdiction: { external: [factbook, worldbank, wdi] }
       region: { external: [worldbank, factbook] }
       election: { external: [factbook] }
       office-holder: { external: [factbook] }

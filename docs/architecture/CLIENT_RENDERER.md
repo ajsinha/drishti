@@ -430,7 +430,7 @@ click on a point, a node or a place that names an entity opens it in place.
 |---|---|---|
 | bar and gauge widths | `drishti_view.js` (`data-w`, CSSOM) | `behave.widths`, the same |
 | tabs | `drishti_view.js` (click) | click, and arrows, Home and End |
-| tree rows | `drishti_tree-rows.js` | open and close, the filter box keeping ancestors |
+| tree rows | `drishti_tree-rows.js` loads drishti-tree's table tree | the same: drishti-tree's `treeTables` (the tree grid, or the org chart for one chain; the filter box keeping ancestors) |
 | drill-down | `drishti_drill.js` (levels, crumbs, Esc; the address `?dr.<panel>=` and Back) | levels, crumbs, Up and Esc **in place**: the host's address never changes |
 | sorting, filtering, paging | `drishti_tables.js` + `drishti_colfilter.js` (funnels, per-column filters, the chart button, the address) | `'library'`: heading buttons (ascending, descending, the server's order, the console's value rules), one filter box, 25 a page with a pager; **`'console'` (1.0.0): the console's funnels, per-column filters and Chart any table** (the chart dialog opens over the host's page, never a window) |
 | Pivot (a table whose Sutra says `pivot:`) | a link to the pivot screen (`/pivot?source=panel/…`) | both modes: the link; the pivot screen itself is a console screen (every figure the server's pivot engine); a nested `pivot` panel is redrawn by `drishti_pivot-grid.js` in `'console'` mode |

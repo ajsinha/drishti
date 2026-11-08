@@ -59,13 +59,16 @@ const script = (url) => memo('script:' + url, () => new Promise((resolve, reject
 }));
 
 // the console's own scripts, in order: Drishti Elements' drishti-core, drishti-grid (every table's sort, filter and pages; tree rows draw nested
-// pivots with it) and drishti-chart (the panel charts), the table engine (served from the allow-list in routes/embed_routes.py), and
-// drishti-inputs (the controls' multi-select and dates; its style sheet goes on the host's page too: a picker's list floats in its body)
-export const ENHANCERS = ['elements-core', 'elements-grid', 'elements-chart', 'pivot-engine', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'elements-inputs', 'controls'];
+// pivots with it), drishti-chart (the panel charts), drishti-graph (a graph panel) and drishti-tree (a table with children), the table engine (served from the allow-list in routes/embed_routes.py), and
+// drishti-inputs (the controls' multi-select and dates; its rules are adopted by the host's document too: a picker's list floats in its body)
+export const ENHANCERS = ['elements-core', 'elements-grid', 'elements-chart', 'elements-graph', 'elements-tree', 'pivot-engine', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'elements-inputs', 'controls'];
+// a picker's list floats in the host page's body, outside the element: drishti-inputs' rules are adopted by the host's document as a
+// constructed sheet, as the element adopts its own (a <link> to the console would be refused by a host CSP with style-src 'self')
 const inputsSheet = (server) => memo('isheet:' + server, async () => {
-  const link = document.createElement('link');
-  link.rel = 'stylesheet'; link.href = server + API + '/elements/drishti-inputs/drishti_inputs.css';
-  document.head.appendChild(link);
+  const text = await (await fetch(server + API + '/elements/drishti-inputs/drishti_inputs.css')).text();
+  const s = new CSSStyleSheet();
+  s.replaceSync(text);
+  document.adoptedStyleSheets = document.adoptedStyleSheets.concat([s]);
 });
 export const chartLibs = (server) => memo('charts:' + server, async () => {
   await inputsSheet(server);

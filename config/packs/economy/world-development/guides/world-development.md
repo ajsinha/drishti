@@ -115,8 +115,8 @@ One World Development Indicator of one country by year: the history, the latest 
 |---|---|---|---|---|---|---|---|
 | `SERIES_ID` | id | key | required |  | `WDIS-CAN-EG_ELC_ACCS_ZS` (pattern `^WDIS-`) |  | WDIS-, the country's ISO alpha-3 code and the indicator's code with its dots as underscores. |
 | `NAME` | text |  | required |  | `Canada · Access to electricity (% of population)` |  | The country and the indicator, as one name. |
-| `WDI_PROFILE` | id |  | required |  | `WDI-CAN` (pattern `^WDI-`) | `development-profile` | The country's development-profile page (WDI-<ISO3>). |
-| `ISO3` | text |  | required |  | `CAN` |  | The country's ISO 3166-1 alpha-3 code. |
+| `WDI_PROFILE` | id |  | optional |  | `WDI-CAN` (pattern `^WDI-`) | `development-profile` | The country's development-profile page (WDI-<ISO3>); empty for a World Bank aggregate (the world, a region, an income group), which has series but no profile. |
+| `ISO3` | text |  | required |  | `CAN` |  | The country's ISO 3166-1 alpha-3 code, or the World Bank aggregate's code (WLD the world, EAS ... SSF the regions, HIC ... LIC the income groups). |
 | `COUNTRY_NAME` | text |  | optional |  | `Canada` |  | The economy's name as the World Bank writes it. |
 | `INDICATOR_CODE` | text |  | required |  | `EG.ELC.ACCS.ZS` |  | The indicator's code in the World Bank API. |
 | `INDICATOR` | text |  | required |  | `Access to electricity (% of population)` |  | The indicator's name as the World Bank publishes it. |
@@ -160,14 +160,14 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `WDI` | `development-profile` | external: World Bank World Development Indicators API (v2) (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-profile/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
-| `WDIS` | `development-series` | external: World Bank World Development Indicators API (v2) (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-series/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `WDI` | `development-profile` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-profile/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `WDIS` | `development-series` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-series/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
 
 ### External sources
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| World Bank World Development Indicators API (v2) | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/drishti.py feed run world-development` |
+| World Bank World Development Indicators API (v2), pulled only by the world-development feed | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/drishti.py feed run world-development` |
 
 ```bash
 python3 tools/drishti.py feed status world-development                  # its last runs: last success, rows, failures (offline: the run ledger)

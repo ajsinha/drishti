@@ -14,7 +14,8 @@
 
 """The data map (``/datamap``, ``DATAMAP [domain|kind] <GO>``; docs/guides/USER_GUIDE.md "The data map"), under Views, for everyone: the
 user's packs as domains, their kinds with counts from the lake, and the joins their data contracts declare, each checked against the data.
-One page, two views: **Map** (domain regions, kind nodes, join lines; the selected kind's joins lit, a side panel with its join fields
+One page, two views: **Map** (drishti-graph: domains as frames, kinds as nodes, joins as edges, or the joins as a layered DAG; the
+selected kind's joins lit, a side panel with its join fields
 and their coverage, the commands that open it and its contract, guide and WHAT links) and **Cards** (one card per domain; the open one a
 table of its kinds, counts, joins and open commands, where its data comes from and the domains it crosses into). Selection, the domain
 chips and Find are shared; the view and the selection are in the address. The model is core/datamap.py; ``/datamap/data`` serves it as
@@ -55,8 +56,11 @@ async def _functions(backend, me) -> dict:
         return {"packs": []}
 
 
+LAYOUTS = ("grouped", "layered", "force", "radial", "circular")      # the map's layouts (drishti-graph); grouped draws the domains as frames
+
+
 @router.get("/datamap")
-async def page(request: Request, q: str = "", view: str = "", kind: str = "", domain: str = "", chip: str = "", find: str = ""):
+async def page(request: Request, q: str = "", view: str = "", kind: str = "", domain: str = "", chip: str = "", find: str = "", layout: str = ""):
     try:
         m = await model(request)
     except BackendError as e:
@@ -73,7 +77,7 @@ async def page(request: Request, q: str = "", view: str = "", kind: str = "", do
     view = "cards" if view == "cards" else "map"
     words = " ".join(w for w in (kind or (open_domain["id"] if open_domain and domain else "")).split())
     return render(request, "terminal/datamap.html", m=m, view=view, selected=selected, open_domain=open_domain, chip=chip if chip in domains else "",
-                  find=find, screen="datamap", command_text=(f"{datamap.WORD} {words}".strip()))
+                  find=find, layout=layout if layout in LAYOUTS else "grouped", screen="datamap", command_text=(f"{datamap.WORD} {words}".strip()))
 
 
 @router.get("/datamap/data")

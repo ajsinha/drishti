@@ -53,15 +53,17 @@ fields:
   example: Canada · Access to electricity (% of population)
 - name: WDI_PROFILE
   type: id
-  presence: required
-  description: The country's development-profile page (WDI-<ISO3>).
+  presence: optional
+  description: The country's development-profile page (WDI-<ISO3>); empty for a World Bank aggregate (the world, a region, an income
+    group), which has series but no profile.
   example: WDI-CAN
   pattern: ^WDI-
   link: development-profile
 - name: ISO3
   type: text
   presence: required
-  description: The country's ISO 3166-1 alpha-3 code.
+  description: The country's ISO 3166-1 alpha-3 code, or the World Bank aggregate's code (WLD the world, EAS ... SSF the regions, HIC
+    ... LIC the income groups).
   example: CAN
 - name: COUNTRY_NAME
   type: text
@@ -181,7 +183,6 @@ validation:
   fields:
   - SERIES_ID
   - NAME
-  - WDI_PROFILE
   - ISO3
   - INDICATOR_CODE
   - INDICATOR

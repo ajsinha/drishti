@@ -84,14 +84,28 @@ def human(n: int) -> str:
 
 def is_committed(path: Path) -> bool:
     """True for a folder of the repository that git tracks: inside the repository and not under the git-ignored data
-    folder, or under data/testdata (the one committed part of data/)."""
+    folder, or under data/testdata (the one committed part of data/); a git-ignored folder elsewhere in the repository (the tests'
+    scratch, drishti-console/test-tmp/, where the drill and the builders put TMPDIR and --basetemp) is not committed."""
     p, root = Path(path).expanduser().resolve(), ROOT.resolve()
     if not p.is_relative_to(root):
         return False
     data = root / "data"
     if p.is_relative_to(data / "testdata"):
         return True
-    return not p.is_relative_to(data)
+    if p.is_relative_to(data):
+        return False
+    return not _git_ignored(p, root)
+
+
+def _git_ignored(p: Path, root: Path) -> bool:
+    """git check-ignore on the path (it need not exist); False without git or outside a work tree (a copy of the release: then
+    everything in it counts as committed, as before)."""
+    import subprocess
+    try:
+        r = subprocess.run(["git", "-C", str(root), "check-ignore", "-q", "--", str(p)], capture_output=True, timeout=20)
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return r.returncode == 0
 
 
 class Refusal(Exception):

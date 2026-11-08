@@ -18,8 +18,9 @@ The server's ``GET /api/v1/datamap`` gives the user's packs, their kinds with co
 declare, each checked against the data (how many of the ids a join holds name an entity that exists). This module adds what the console
 knows: the commands that open each kind (the command registry, ``/api/v1/functions``), the links to its data contract, its pack's guide
 and its Knowledge entry (only links the help library resolves), the domains (config/datamap.yaml, presentation only: a pack it does not
-name is a domain of its own), the findings (joins whose ids mostly name nothing) and an automatic layout: domains as boxes on shelves,
-each kind a node in its domain's grid, the most joined first. Nothing is hand-placed.
+name is a domain of its own), the findings (joins whose ids mostly name nothing) and one edge per pair of joined kinds. The page lays
+the map out itself with drishti-graph (domains as frames on shelves, each kind a node in its domain's grid, the most joined first; or
+the joins as a layered DAG). Nothing is hand-placed.
 """
 from __future__ import annotations
 
@@ -31,8 +32,6 @@ from urllib.parse import quote
 import yaml
 
 WORD = "DATAMAP"           # a reserved command word (routes/terminal_routes.py, the server's PackLoader.RESERVED_WORDS)
-NODE_W, NODE_H, GAP, PAD, HEAD = 150, 50, 14, 14, 30     # the layout's unit sizes, in SVG pixels
-CANVAS_W = 1180            # domains are packed on shelves this wide (the canvas scrolls inside its box on a phone)
 
 
 def load_config(path: Path) -> dict:
@@ -93,38 +92,6 @@ def _domains(config: dict, packs: list[dict]) -> tuple[list[dict], dict]:
             out.append({"id": _slug(n), "title": titles[n], "packs": [n]})
             of_pack[n] = _slug(n)
     return out, of_pack
-
-
-def _layout(domains: list[dict], kinds: list[dict], joins: list[dict]) -> tuple[int, int]:
-    """Positions every domain box and kind node: a domain's kinds in a grid of one to three columns, the most joined first; domains packed
-    left to right on shelves of CANVAS_W. Deterministic: the same packs and contracts give the same picture."""
-    degree: dict[str, int] = {}
-    for j in joins:
-        degree[j["from"]] = degree.get(j["from"], 0) + 1
-        degree[j["to"]] = degree.get(j["to"], 0) + 1
-    by_domain: dict[str, list[dict]] = {}
-    for k in kinds:
-        k["degree"] = degree.get(k["kind"], 0)
-        by_domain.setdefault(k["domain"], []).append(k)
-    x = y = shelf = 0
-    width = 0
-    for d in domains:
-        mine = sorted(by_domain.get(d["id"], []), key=lambda k: (-k["degree"], k["computed"], k["label"].lower()))
-        cols = 1 if len(mine) <= 3 else 2 if len(mine) <= 8 else 3
-        rows = max(1, math.ceil(len(mine) / cols))
-        w = cols * NODE_W + (cols - 1) * GAP + 2 * PAD
-        h = HEAD + rows * NODE_H + (rows - 1) * GAP + PAD
-        if x and x + w > CANVAS_W:
-            x, y, shelf = 0, y + shelf + 24, 0
-        d["box"] = {"x": x + 10, "y": y + 10, "w": w, "h": h}
-        for i, k in enumerate(mine):
-            k["x"] = x + 10 + PAD + (i % cols) * (NODE_W + GAP)
-            k["y"] = y + 10 + HEAD + (i // cols) * (NODE_H + GAP)
-            k["w"], k["h"] = NODE_W, NODE_H
-        x += w + 24
-        shelf = max(shelf, h)
-        width = max(width, x)
-    return width + 10, y + shelf + 30
 
 
 def _contract_anchor(path: Path, kind: str) -> str:
@@ -229,13 +196,15 @@ def build(server: dict, functions: dict, config: dict, packs: list[dict], lib=No
             findings.append({"from": j["from"], "field": j["field"], "to": j["to"],
                              "text": f"{known[j['from']]['label']}.{j['field']} → {known[j['to']]['label']}: {j['text']}"})
         joins.append(j)
-    width, height = _layout(domains, kinds, joins)
-    lines: dict[tuple, dict] = {}                       # one line per pair of kinds, whatever the number of fields joining them
+    degree: dict[str, int] = {}
     for j in joins:
-        a, b = known[j["from"]], known[j["to"]]
-        line = lines.setdefault((j["from"], j["to"]), {"from": j["from"], "to": j["to"], "fields": [], "low": False, "cross": j["cross"],
-                                                       "x1": a["x"] + NODE_W // 2, "y1": a["y"] + NODE_H // 2,
-                                                       "x2": b["x"] + NODE_W // 2, "y2": b["y"] + NODE_H // 2})
+        degree[j["from"]] = degree.get(j["from"], 0) + 1
+        degree[j["to"]] = degree.get(j["to"], 0) + 1
+    for k in kinds:
+        k["degree"] = degree.get(k["kind"], 0)       # how many joins meet it (the map draws the most joined first in its domain)
+    lines: dict[tuple, dict] = {}                       # one edge per pair of kinds, whatever the number of fields joining them
+    for j in joins:
+        line = lines.setdefault((j["from"], j["to"]), {"from": j["from"], "to": j["to"], "fields": [], "low": False, "cross": j["cross"]})
         line["fields"].append(j["field"])
         line["low"] = line["low"] or j["low"]
     for d in domains:
@@ -265,7 +234,7 @@ def build(server: dict, functions: dict, config: dict, packs: list[dict], lib=No
             links.append({"label": "Knowledge: " + guides[know].title, "href": f"/help/{know}"})
         d["links"] = links
     return {"businessDate": server.get("businessDate"), "state": server.get("state") or "ready", "domains": domains, "kinds": kinds,
-            "joins": joins, "lines": list(lines.values()), "findings": findings, "width": width, "height": height, "low": low,
+            "joins": joins, "lines": list(lines.values()), "findings": findings, "low": low,
             "counted": sum(1 for k in kinds if k.get("count") is not None), "packs": len(server_packs)}
 
 

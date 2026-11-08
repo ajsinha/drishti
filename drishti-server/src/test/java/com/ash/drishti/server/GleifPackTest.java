@@ -100,6 +100,24 @@ class GleifPackTest extends PublicPacksOnLakes {
     }
 
     @Test
+    void anEntitysParentsChainIsATreeFromTheUltimateParentDownToTheEntity() throws Exception {
+        String bank = "03D0JEWFDFUS0SEEKG89";                                           // TD Bank, N.A.: three parents above it
+        JsonNode rows = panel(view("lei-entity", bank).path("panels"), "parents").path("data").path("rows");
+        assertThat(rows.size()).isEqualTo(1);                                           // the ultimate parent at the top
+        JsonNode r = rows.get(0);
+        assertThat(r.path("cells").get(1).path("text").asText()).isEqualTo("Ultimate parent");
+        for (int level = 3; level > 0; level--) {                                        // each parent over the one below it
+            assertThat(r.path("cells").get(2).path("text").asText()).isEqualTo(String.valueOf(level));
+            assertThat(r.path("children").size()).isEqualTo(1);
+            r = r.path("children").get(0);
+        }
+        assertThat(r.path("cells").get(3).path("text").asText()).isEqualTo(bank);       // the entity itself at the foot, highlighted
+        assertThat(r.path("cells").get(1).path("text").asText()).isEqualTo("This entity");
+        assertThat(r.path("highlight").asBoolean()).isTrue();
+        assertThat(r.path("children").size()).isZero();
+    }
+
+    @Test
     void aClickOnAChildOpensItsKeyFactsBeside() throws Exception {
         JsonNode v = view("lei-entity", JPM);
         String lei = panel(v.path("panels"), "children").path("data").path("rows").get(0).path("cells").get(3).path("text").asText();

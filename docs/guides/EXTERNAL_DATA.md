@@ -94,14 +94,18 @@ data/datafeeds/
 |---|---|---|---|---|---|
 | `gleif` | GLEIF golden copy, LEI API, mapping files | gleif: lei-entity, lei-relationship, lei-mapping | `referencelake` | CC0, redistributable | 05:30 |
 | `funds` | SEC Form N-PORT, N-CEN, risk/return summaries; Nasdaq Trader; GLEIF | funds: fund, fund-holder, index-funds | `capitalmarket` | public domain | 06:15 |
-| `world-economy` | IMF WEO, UNDP HDI, CIA Factbook, World Bank WGI and country list (not WDI: the public sector's world-development feed owns it) | world-economy: region-economy, jurisdiction, party, office-holder, election, region, social-indicator (economy, macro-indicator, economic-forecast, labour-market and fiscal-position are keyed on WDI series: they return when the pack reads WDI from world-development's tables) | `worldlake` | **internal only** (the IMF forecasts) | 06:45 |
+| `world-economy` | World Bank WDI (read from the world-development feed's output, never the API), WGI and country list; IMF WEO, UNDP HDI, CIA Factbook | world-economy: economy, macro-indicator, economic-forecast, labour-market, fiscal-position, region-economy, jurisdiction, party, office-holder, election, region, social-indicator | `worldlake` | **internal only** (the IMF forecasts) | 06:45 |
 | `us-equities` | SEC EDGAR; index members from SPY, DIA, QQQ and IWM N-PORT holdings (S&P 500, Dow 30, Nasdaq-100, Russell 2000); Nasdaq Trader; GLEIF; Wikidata | us-equities: us-company, index-membership, filing-feed, filing, financial-fact | `capitalmarket` | public domain, CC0 | 07:00 |
 | `news-and-markets` | Yahoo Finance quotes, Google News headlines (through Drishti's own live connectors) | news-and-markets: quote, news | `newslake` | **internal only** | 07:30 |
 | `market-data` | ECB euro reference rates, US Treasury par curve, SOFR, euro short-term rate | market-data: fx-spot, ir-curve, rate-fixing (each under its own date) | `capitalmarket` | attribution | weekdays 18:30 |
 | `yahoo-prices` | Yahoo Finance daily prices of the us-equities companies (through a running server's connector) | us-equities: price-history | `capitalmarket` | **internal only**, off as shipped | weekdays 22:30 |
 
-Each source has one feed: the World Bank's development indicators (WDI) are the world-development feed's, so world-economy runs with
-`-- --no-wdi` (its committed demo snapshot, `--snapshot`, still builds the whole pack). The funds feed runs before us-equities on purpose: its N-PORT download cache gives us-equities its index members.
+Each source has one fetcher: the World Bank's development indicators (WDI) are pulled only by the public sector's world-development
+feed, which takes every `kind: wdi` code of `tools/realdata/sources.yaml` (and the World Bank's world, region and income-group
+aggregates) into its development-series. world-economy, and its committed demo snapshot (`--snapshot`), read them from that feed's
+latest output in `<data>/datafeeds/world-development/<date>/` and never call the WDI API; with no such output the run fails in words:
+`run feed run world-development first`. Feeds run in the order of their schedule, so world-development (06:30) runs before
+world-economy (06:45), as funds runs before us-equities: its N-PORT download cache gives us-equities its index members.
 
 `drishti.py feed list` prints the same from the feed files. Each feed's source, data contract (with JSON examples) and licence are its
 pack's README and the [External data](EXTERNAL_DATA.md) page.
@@ -498,7 +502,7 @@ python3 -m pytest tools/feeds/tests/test_live.py --live -k gleif        # the re
 
 | Pack | `SOURCE` | Where it comes from | Licence | Use |
 |---|---|---|---|---|
-| world-economy | `worldbank` | World Bank WDI and WGI, `https://api.worldbank.org/v2` | CC BY 4.0 | committable, with attribution |
+| world-economy | `worldbank` | World Bank WGI and the country list, `https://api.worldbank.org/v2`; WDI from the world-development feed's output | CC BY 4.0 | committable, with attribution |
 | world-economy | `imf` | IMF World Economic Outlook, DataMapper, `https://www.imf.org/external/datamapper/api/v1` | IMF terms: reuse with attribution, commercial reuse needs the IMF's permission | IMF data: **internal only** |
 | world-economy | `undp` | UNDP Human Development Index, `https://hdr.undp.org/data-center/documentation-and-downloads` | CC BY 3.0 IGO | committable, with attribution |
 | world-economy | `factbook` | CIA World Factbook, the factbook.json mirror at a pinned commit, `https://github.com/factbook/factbook.json` | public domain (mirror CC0 1.0) | committable |
@@ -524,7 +528,7 @@ python3 -m pytest tools/feeds/tests/test_live.py --live -k gleif        # the re
 | funds | `ncen` | SEC Form N-CEN data sets (ETF facts, service providers, authorised participants), `https://www.sec.gov/data-research/sec-markets-data/form-n-cen-data-sets` | public domain (US Government work) | committable |
 | funds | `rr` | SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns), `https://www.sec.gov/data-research/sec-markets-data/mutual-fund-prospectus-riskreturn-summary-data-sets` | public domain (US Government work) | committable |
 | funds | `gleif` | GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to), `https://goldencopy.gleif.org` | CC0 1.0 | committable |
-| world-development | `wdi` | World Bank World Development Indicators, `https://api.worldbank.org/v2` (the world-development feed) | CC BY 4.0 | redistributable, with attribution |
+| world-development | `wdi` | World Bank World Development Indicators, `https://api.worldbank.org/v2` (the world-development feed, the one fetcher of WDI) | CC BY 4.0 | redistributable, with attribution |
 | central-banks | `fred` | FRED, Federal Reserve Bank of St. Louis, `https://api.stlouisfed.org/fred` (key: `DRISHTI_FRED_API_KEY`) | FRED API terms; the default series are US government works | redistributable (default series) |
 | central-banks | `boc` | Bank of Canada Valet API, `https://www.bankofcanada.ca/valet` | Bank of Canada terms: free use with attribution | redistributable, with attribution |
 | national-statistics | `statcan` | Statistics Canada Web Data Service, `https://www150.statcan.gc.ca/t1/wds/rest` | Statistics Canada Open Licence | redistributable, with attribution |
@@ -622,7 +626,7 @@ Each pack built on external data: its sources, what its feed writes and where, h
 
 ### world-economy
 
-**Sources:** `worldbank` (World Bank WDI and WGI, CC BY 4.0), `imf` (IMF WEO, **internal only**), `undp` (UNDP HDI, CC BY 3.0 IGO),
+**Sources:** `worldbank` (World Bank WGI and country list from the API; WDI read from the world-development feed's latest output, which must have run first; CC BY 4.0), `imf` (IMF WEO, **internal only**), `undp` (UNDP HDI, CC BY 3.0 IGO),
 `factbook` (CIA World Factbook, public domain). The regional figures of `region-economy` are typed into the generator by hand from US
 Census Bureau and BEA figures (illustrative, rounded): there is no fetch for them.
 
@@ -649,14 +653,17 @@ Where it writes:
 **Widening.** `--since 2000` or `--years 25` fetches a longer window; `--scope` adds indicators:
 
 ```bash
-python3 tools/drishti.py feed run world-economy --snapshot -- worldbank --since 2000 --scope SP.DYN.LE00.IN:social,EN.GHG.ALL.PC.CE.AR5
+python3 tools/drishti.py feed run world-economy --snapshot -- worldbank --since 2000 --scope GOV_WGI_RL.STD:governance
 python3 tools/drishti.py feed run world-economy --snapshot -- imf --scope GGXWDG_NGDP:fiscal
 ```
 
-A scope item is a World Bank indicator code (it has dots) or an IMF WEO code, optionally `:group` (economy, labour, fiscal,
-social, governance; default economy). The name, unit and definition come from the source's own metadata. A widened build
-always goes to the data folder. To widen the committed pack, add the indicator to `tools/realdata/sources.yaml` (one line, with
-its name, unit and definition) and run `feed run world-economy --snapshot --internal-ok`.
+A scope item is a World Bank governance (WGI) code or an IMF WEO code, optionally `:group` (economy, labour, fiscal, social,
+governance; default economy). The name, unit and definition come from the source's own metadata. A development indicator (WDI)
+is refused here: the world-development feed is its one fetcher. Add it to `tools/realdata/sources.yaml` (`kind: wdi`, one line with
+its name, unit, scale and definition), run `feed run world-development` (it pulls every `kind: wdi` code of that file), then this
+feed. `--since` reaches back only as far as the world-development output does for WDI (it pulls from `sources.yaml`'s `years.first`
+or its own `years`, whichever is earlier; the log says when the window is shorter). A widened build always goes to the data folder.
+To widen the committed pack, add the indicator to `tools/realdata/sources.yaml` and run `feed run world-economy --snapshot --internal-ok`.
 
 **Check it:** the feed runs `tools/packgen/world/make.py --check`; `ECON IND <GO>` opens India's economy, `FCST <GO>` the IMF
 forecasts. **Offline:** `feed run world-economy --offline` rebuilds from the cache.
@@ -1179,7 +1186,7 @@ committed but a few sample documents (from the feeds' recorded fixtures). The gu
 
 | Feed (pack) | Sources | Key | Writes |
 |---|---|---|---|
-| `world-development` | World Bank WDI | none | `development-profile`, `development-series` into worldlake |
+| `world-development` | World Bank WDI (its one fetcher; world-economy reads this output) | none | `development-profile`, `development-series` into worldlake |
 | `central-banks` | FRED; Bank of Canada Valet | `DRISHTI_FRED_API_KEY` (FRED only: without it the Bank of Canada's series still load) | `central-bank`, `rate-series` into worldlake |
 | `national-statistics` | Statistics Canada WDS | none | `statistics-series` into worldlake |
 | `oecd` | OECD Data Explorer (SDMX) | none | `oecd-country`, `oecd-series` into worldlake |

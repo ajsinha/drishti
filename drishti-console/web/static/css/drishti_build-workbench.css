@@ -137,13 +137,11 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb .btn-pill { padding: var(--d-sp-1_92) var(--d-sp-9_6); font-size: var(--d-fs-12_48); }
 .wb .studio-in { padding: var(--d-sp-3_2) var(--d-sp-7_2); font-size: var(--d-fs-13_12); }
 .wb .bs-h { font-size: var(--d-fs-14_72); margin: 0 0 var(--d-sp-5_6); }
-.wb .bs-row { padding: var(--d-sp-1_92) var(--d-sp-4_8); gap: var(--d-sp-5_6); }
 .wb .bs-actions { gap: var(--d-sp-4_8); }
-.wb-left .bs-name, .wb-left .bs-type { font-size: var(--d-fs-12_8); }
+.wb [data-tree] .bs-actions { margin-top: var(--d-sp-4_8); }
 .wb-sec { margin-bottom: var(--d-sp-9_6); }
 .wb-sec > summary { cursor: pointer; }
 .wb-palette { max-height: 15rem; overflow: auto; padding-right: var(--d-sp-3_2); }
-.wb-left .bs-tree { max-height: 22rem; overflow: auto; }
 .wb-field-row, .wb-frame .pnl-h, .wb-frame .dd-edge { user-select: none; -webkit-user-select: none; }
 
 /* the YAML editor wears the console's colours, as Studio's does (drishti_terminal.css scopes those rules to Studio's own pane) */

@@ -162,7 +162,8 @@
     shell.setYamlState(!S ? '' : S.readOnly ? 'read-only' : !S.ok ? 'not valid yet: the visual side keeps the last valid version' : S.valid ? 'live · valid' : 'live · with problems',
       !S || !S.ok ? 'bad' : S.valid ? 'good' : 'warn');
     pane.editor.setProblems((S && S.problems || []).map(function (p) {
-      return { line: p.line || 1, severity: p.level === 'error' ? 'error' : p.level === 'warning' ? 'warning' : 'info', message: (p.code ? p.code + ' ' : '') + p.message };
+      var lv = String(p.level || p.severity || 'error').toLowerCase();             // a problem without a level (the YAML that does not read) is an error
+      return { line: p.line || 1, severity: lv === 'warning' || lv === 'warn' ? 'warning' : lv === 'info' ? 'info' : 'error', message: (p.code ? p.code + ' ' : '') + p.message };
     }));
     highlight(false);
   }

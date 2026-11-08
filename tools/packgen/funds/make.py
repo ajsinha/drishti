@@ -64,18 +64,20 @@ def build(cache: Path, retrieved: str | None = None) -> dict[str, dict[str, dict
 
 
 def retrieved_at(cache: Path) -> str:
-    """The date the newest N-PORT data set was downloaded (its cache entry, else its file time): the snapshot's date."""
+    """The date the newest N-PORT data set was downloaded (its cache entry, else its file time): the snapshot's date, a day of the
+    business calendar (local time, filedate.local_day), so an evening download is never dated tomorrow."""
     import json
-    from datetime import datetime, timezone
+    sys.path.insert(0, str(ROOT / "tools" / "lake"))
+    import filedate  # noqa: E402  (the one business-date rule)
     z = R.newest(cache / "nport", "_nport.zip")
     try:
         idx = json.loads((cache / "cache-index.json").read_text(encoding="utf-8"))
         when = idx.get(f"nport/{z.name}", {}).get("fetched", "")
         if when:
-            return when[:10]
+            return filedate.local_day(when).isoformat()
     except (OSError, ValueError, AttributeError):
         pass
-    return datetime.fromtimestamp(z.stat().st_mtime, timezone.utc).strftime("%Y-%m-%d")
+    return filedate.local_day(z.stat().st_mtime).isoformat()
 
 
 def _money(v) -> str:

@@ -329,12 +329,14 @@ def test_drill_tree_and_tabs_work_in_place_by_keyboard(lab):
     assert lab.locator("#host #p-tabin [role=tab]").nth(1).get_attribute("aria-selected") == "true"
     assert lab.locator("#host #p-tabin #tabin-pane-1").is_visible()
     render(lab, "showcase")
-    tog = lab.locator("#host #p-tree .tr-tog").first
-    shown = lab.locator("#host #p-tree tbody tr:not([hidden])").count()
-    tog.focus()
-    lab.keyboard.press("Enter")
-    assert lab.locator("#host #p-tree tbody tr:not([hidden])").count() > shown       # expand: 1 shows the desks closed
-    assert tog.get_attribute("aria-expanded") == "true"
+    tree = lab.locator("#host #p-tree .dt-tp")                                          # the tree table: drishti-tree's tree grid
+    tree.locator(".dg-row").first.wait_for()
+    shown = tree.locator(".dg-row").count()
+    closed = tree.locator(".dg-row[aria-expanded='false']").first
+    closed.locator(".dg-cell").first.click()
+    lab.keyboard.press("ArrowRight")
+    lab.wait_for_function("(n) => document.getElementById('host').shadowRoot.querySelectorAll('#p-tree .dt-tp .dg-row').length > n", arg=shown)
+    assert lab.locator("#host #p-tree table.tbl-tree").is_hidden()                    # the server's table stays, hidden
 
 
 def test_targets_are_44_px_on_a_phone(browser, site):
@@ -343,7 +345,7 @@ def test_targets_are_44_px_on_a_phone(browser, site):
     page.goto(H.ORIGIN + "/render-test/lab.html")
     page.wait_for_function("() => window.__lab === true")
     render(page, "showcase", {"tables": True})
-    small = page.evaluate("""() => [...document.getElementById('host').shadowRoot.querySelectorAll('.pnl-help, .tr-tog, .tab-head, .md-btn, .tbl-sort, .tbl-pg-b')]
+    small = page.evaluate("""() => [...document.getElementById('host').shadowRoot.querySelectorAll('.pnl-help, .tab-head, .md-btn, .tbl-sort, .tbl-pg-b')]
       .filter((e) => e.checkVisibility()).map((e) => [e.className, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)])
       .filter(([, w, h]) => w < 44 || h < 44)""")
     assert small == []

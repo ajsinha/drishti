@@ -21,7 +21,7 @@
 {% block title %}Exposure · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}exposure{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/css/drishti_exposure.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_exposure.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='EXP ' ~ scope ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'exposure') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
@@ -49,7 +49,7 @@
     <aside class="xx-panel xx-tree-panel" aria-label="Scopes"{{ part(PP, 'tree') }}>
       <div data-resize="panel" data-resize-key="exposure.scopes" data-resize-var="--xx-side" data-resize-min="220" data-resize-max="800" aria-label="Resize the Scope panel"></div>
       <div class="xx-ph"><h2>Scope</h2><span class="xx-fresh" data-xx-fresh="tree">peak PFE</span></div>
-      <div class="xx-tree" role="tree" data-xx-tree></div>
+      <div class="xx-tree" data-xx-tree></div>
     </aside>
     <section class="xx-main">
       <div class="xx-nopaths" data-xx-nopaths role="status" hidden></div>
@@ -73,4 +73,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_exposure-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="/static/elements/drishti-tree/drishti_tree.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_exposure-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}

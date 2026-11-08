@@ -111,9 +111,9 @@ def test_from_the_bank_to_a_trade_in_place_and_back(stack, browser):
     painted(pg, "BANK")
     pg.evaluate("window.__marker = 1")                                       # survives only while the page is not reloaded
     # the tree: the bank, its legal entities, their counterparties
-    wait(pg, "document.querySelectorAll('.xx-tree .xx-row[data-scope]').length > 3", PAINT_S)
-    assert pg.locator('.xx-tree .xx-row[data-scope="BANK"]').count() == 1
-    assert pg.locator('.xx-tree .xx-row[data-scope^="LE:"]').count() >= 1
+    wait(pg, "document.querySelectorAll('.xx-tree .dg-row[data-scope]').length > 3", PAINT_S)
+    assert pg.locator('.xx-tree .dg-row[data-scope="BANK"]').count() == 1
+    assert pg.locator('.xx-tree .dg-row[data-scope^="LE:"]').count() >= 1
     # the counterparty board, sorted by peak PFE
     assert pg.get_attribute("[data-exposure]", "data-tab-painted") == "board"
     wait(pg, "document.querySelectorAll('[data-xx-pane] drishti-grid .dg-row[data-scope^=\"CPTY:\"]').length > 1")    # drishti-grid, terminal layout

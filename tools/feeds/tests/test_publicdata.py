@@ -86,6 +86,8 @@ def test_committed_folders():
     assert B.is_committed(B.ROOT / "data" / "testdata")
     assert not B.is_committed(B.ROOT / "data" / "datafeeds" / "sources")
     assert not B.is_committed(Path("/tmp/elsewhere"))
+    if (B.ROOT / ".git").exists():                  # the tests' scratch inside the repository is git-ignored: not committed
+        assert not B.is_committed(B.ROOT / "drishti-console" / "test-tmp" / "pytest" / "build")
 
 
 def test_cache_reuses_fresh_files_and_records_checksums(tmp_path):
@@ -195,16 +197,24 @@ def test_world_economy_dry_run_writes_nothing(capsys, data_dir):
     assert not (data_dir / "datafeeds" / "sources" / "world-economy").exists()
 
 
-def test_world_economy_scope_adds_an_indicator(we_run):
-    meta = [{"page": 1}, [{"id": "SP.DYN.LE00.IN", "name": "Life expectancy at birth, total (years)", "unit": "",
-                           "source": {"id": "2"}, "sourceNote": "Life expectancy at birth indicates ..."}]]
-    url = "https://api.worldbank.org/v2/indicator/SP.DYN.LE00.IN?format=json"
-    we_run.http = B.Http(we_run.cache, pause=0, opener=Opener({url: json.dumps(meta).encode()}), log=lambda *a: None)
-    we_run.scope = ["SP.DYN.LE00.IN:social"]
+def test_world_economy_scope_adds_a_governance_indicator_and_refuses_a_wdi_one(we_run):
+    """--scope widens the WGI series; a WDI code is the world-development feed's (its one fetcher): refused, saying where it goes."""
+    wgi = [{"page": 1}, [{"id": "GOV_WGI_RL.STD", "name": "Rule of Law: Standard Error", "unit": "", "source": {"id": "3"},
+                          "sourceNote": "Rule of Law captures ..."}]]
+    wdi = [{"page": 1}, [{"id": "SP.DYN.LE00.IN", "name": "Life expectancy at birth, total (years)", "unit": "",
+                          "source": {"id": "2"}, "sourceNote": "Life expectancy at birth indicates ..."}]]
+    api = "https://api.worldbank.org/v2/indicator"
+    we_run.http = B.Http(we_run.cache, pause=0, opener=Opener({f"{api}/GOV_WGI_RL.STD?format=json": json.dumps(wgi).encode(),
+                                                               f"{api}/SP.DYN.LE00.IN?format=json": json.dumps(wdi).encode()}),
+                         log=lambda *a: None)
+    we_run.scope = ["GOV_WGI_RL.STD:governance"]
     cfg = {"sources": we_run.cfg["sources"], "indicators": []}
     WE.WorldBank().widen(we_run, cfg)
     i = cfg["indicators"][0]
-    assert (i["key"], i["kind"], i["group"]) == ("sp_dyn_le00_in", "wdi", "social") and i["name"].startswith("Life expectancy")
+    assert (i["key"], i["kind"], i["group"]) == ("gov_wgi_rl_std", "wgi", "governance") and i["name"].startswith("Rule of Law")
+    we_run.scope = ["SP.DYN.LE00.IN:social"]
+    with pytest.raises(B.Refusal, match="world-development"):
+        WE.WorldBank().widen(we_run, {"sources": we_run.cfg["sources"], "indicators": []})
     with pytest.raises(B.Refusal, match="unknown group"):
         WE.indicator("X.Y", "x", "", "x", "wdi", "weather")
 

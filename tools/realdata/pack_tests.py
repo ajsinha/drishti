@@ -46,7 +46,7 @@ def header() -> str:
 
 def files(pack: str, docs: dict, base: Path | None = None) -> dict[Path, str]:
     """Everything under <base>/tests for the pack (base defaults to config/packs/<domain>/<pack>); kinds without documents (--no-imf) are skipped,
-    and so are sample ids a narrower build has no document for (--no-wdi: the world-development feed owns WDI)."""
+    and so are sample ids a narrower build has no document for."""
     tests = (base or pack_dir(pack)) / "tests"
     cfg, out = spec()[pack], {}
     for kind, t in cfg["kinds"].items():

@@ -103,6 +103,9 @@ def test_each_landing_fills_from_the_engines_and_fits(browser, risk_console, lan
             page.wait_for_function("() => document.querySelectorAll('[data-rl-heat] .rl-cell').length >= 4")
             assert page.locator("[data-rl-hierarchies] button").count() == 3
             assert page.locator(".rl-cell.r").count() == 1
+            # the hierarchy is drishti-tree (varHierarchyTree): the server's VaR per node, a node's name the link to the VaR explorer
+            page.wait_for_function("() => document.querySelectorAll('[data-rl-tree] drishti-tree .dg-row[data-scope]').length >= 3")
+            assert "/var?scope=" in page.locator("[data-rl-tree] .dg-row[data-scope] a").first.get_attribute("href")
             page.wait_for_function("() => document.querySelectorAll('[data-rl-feed] li').length >= 2")
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
         assert not page.evaluate(AUDIT)
