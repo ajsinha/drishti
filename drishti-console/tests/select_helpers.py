@@ -104,7 +104,7 @@ async def _pick_async(locator, value=None, label=None, index=None):
 
 
 def install_playwright_shim():
-    """Makes Page.select_option, Locator.select_option and Locator.input_value work on a <drishti-select> (sync and async API)."""
+    """Makes Page.select_option, Page.input_value, Locator.select_option and Locator.input_value work on a <drishti-select> (sync and async API)."""
     try:
         from playwright.sync_api import Locator, Page
         from playwright.async_api import Locator as ALocator, Page as APage
@@ -129,6 +129,10 @@ def install_playwright_shim():
     def page_select_option(self, selector, value=None, *, index=None, label=None, element=None, **kw):
         return select_option(self.locator(selector), value, index=index, label=label, element=element, **kw)
 
+    def page_input_value(self, selector, **kw):
+        kw.pop("strict", None)
+        return input_value(self.locator(selector).first, **kw)
+
     async def aselect_option(self, value=None, *, index=None, label=None, element=None, **kw):
         if element is None and await self.first.evaluate(IS_SELECT):
             return await _pick_async(self.first, value, label, index)
@@ -143,6 +147,10 @@ def install_playwright_shim():
     async def apage_select_option(self, selector, value=None, *, index=None, label=None, element=None, **kw):
         return await aselect_option(self.locator(selector), value, index=index, label=label, element=element, **kw)
 
-    Locator.select_option, Locator.input_value, Page.select_option = select_option, input_value, page_select_option
-    ALocator.select_option, ALocator.input_value, APage.select_option = aselect_option, ainput_value, apage_select_option
+    async def apage_input_value(self, selector, **kw):
+        kw.pop("strict", None)
+        return await ainput_value(self.locator(selector).first, **kw)
+
+    Locator.select_option, Locator.input_value, Page.select_option, Page.input_value = select_option, input_value, page_select_option, page_input_value
+    ALocator.select_option, ALocator.input_value, APage.select_option, APage.input_value = aselect_option, ainput_value, apage_select_option, apage_input_value
     Locator._drishti_select = True

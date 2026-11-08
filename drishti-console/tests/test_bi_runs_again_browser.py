@@ -81,7 +81,7 @@ def test_run_again_of_a_failed_run_follows_the_new_run_with_a_busy_button(browse
         assert page.eval_on_selector("[data-run-again-as]", "s => document.querySelector('label[for=\"' + s.id + '\"]') !== null")
         go = page.locator('[data-run-drawer] [data-run-act="rerun"]')
         assert go.inner_text().strip() == "Run again" and "btn-accent" in go.get_attribute("class")
-        sizes = page.evaluate("[...document.querySelectorAll('[data-run-again] select, [data-run-again] button')].map(e => Math.round(e.getBoundingClientRect().height))")
+        sizes = page.evaluate("[...document.querySelectorAll('[data-run-again] .di-select-control, [data-run-again] .bi-run-again-go')].map(e => Math.round(e.getBoundingClientRect().height))")
         assert abs(sizes[0] - sizes[1]) <= 1, sizes                       # one control group: one height
         before = len([x for x in backend.asked if x[0].endswith("/rerun")])
         page.select_option("[data-run-again-as]", "latest")              # choosing does nothing on its own

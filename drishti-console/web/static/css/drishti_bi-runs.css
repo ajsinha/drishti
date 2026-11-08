@@ -125,7 +125,8 @@ p.bi-run-acts { display: flex; flex-wrap: wrap; gap: var(--d-sp-7_2); margin-top
 .bi-run-again { display: flex; flex-direction: column; gap: var(--d-sp-3_2); flex: 1 1 100%; }
 .bi-run-again > label { font-size: var(--d-fs-12_8); font-weight: 600; color: var(--d-muted); }
 .bi-run-again-row { display: flex; align-items: stretch; flex-wrap: wrap; gap: 0; }
-.bi-run-again-row select { flex: 0 1 auto; min-width: 14rem; height: 2.5rem; min-height: 2.5rem; margin: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.bi-run-again-row drishti-select { flex: 0 1 auto; min-width: 14rem; margin: 0; display: flex; }   /* drishti-inputs' Select: its control joins the button */
+.bi-run-again-row .di-select-control { flex: 1; height: 2.5rem; min-height: 2.5rem; border-top-right-radius: 0; border-bottom-right-radius: 0; }
 .bi-run-again-row .btn-pill { height: 2.5rem; min-height: 2.5rem; margin: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; display: inline-flex; align-items: center; gap: var(--d-sp-7_2); font-weight: 600; }
 .bi-run-again-go[disabled] { opacity: .85; cursor: progress; }
 .bi-spin { display: inline-block; width: .95em; height: .95em; box-sizing: border-box; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: bi-spin .75s linear infinite; }
@@ -137,7 +138,8 @@ p.bi-run-acts { display: flex; flex-wrap: wrap; gap: var(--d-sp-7_2); margin-top
 .bi-run-dmsg .btn-pill { margin-left: var(--d-sp-6_4); min-height: 2.25rem; }
 @media (max-width: 640px) {
   .bi-run-again-row { flex-direction: column; gap: var(--d-sp-6_4); }
-  .bi-run-again-row select, .bi-run-again-row .btn-pill { width: 100%; min-width: 0; min-height: 44px; height: auto; border-radius: var(--d-radius); justify-content: center; }
+  .bi-run-again-row drishti-select, .bi-run-again-row .btn-pill { width: 100%; min-width: 0; min-height: 44px; height: auto; border-radius: var(--d-radius); justify-content: center; }
+  .bi-run-again-row .di-select-control { height: auto; min-height: 44px; border-radius: var(--d-radius); }
 }
 
 /* a phone (16 px gutters): filters stack, the table scrolls inside its wrap, the drawer is the whole screen */
