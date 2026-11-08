@@ -1900,7 +1900,7 @@ APIs behind the page (new, admin token): `GET /api/v1/net/members`, `POST /api/v
 
 ### 14. Configuration
 
-Managed **the way connectors are** ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)), not in `application.yaml`
+Managed **the way connectors are** ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)), not in `application.yaml`
 (decided by the product owner, 2026-10-18). `application.yaml` holds only where the files are and how they are watched:
 
 ```yaml
@@ -2086,7 +2086,7 @@ The soak also exercises history queries ([DATA_ARCHITECTURE.md](DATA_ARCHITECTUR
   counterparty-risk, **b** trading, the reference trading and counterparty-risk (trading brings core and market-data; no market-risk).
   Before a server starts, the soak writes a connector file into the node's connector folder for every Delta connector of those packs whose
   tables its lake lacks (`<lake>/<domain>/<table>/_delta_log`): the pack's template with `enabled: "false"`, the documented way
-  ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) section 3). On **c**'s MUREX lake that is `trade-endur`, `trade-calypso`,
+  ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) section 3). On **c**'s MUREX lake that is `trade-endur`, `trade-calypso`,
   `market-store`, `legal-store` and `collateral-store`. So no server retries a store it cannot read, and none warns `deprecated` about
   `--drishti.sources.connectors.<name>.enabled=false`, which the soak does not pass.
 

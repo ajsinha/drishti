@@ -150,7 +150,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 
 - **Connectors**: Delta Lake and Apache Iceberg (Drishti's own engines, no Hadoop, local disk or S3), JDBC databases, DuckDB, MongoDB,
   Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds
-  ([CONNECTORS.md](docs/connectors/CONNECTORS.md), [tutorial 4](docs/tutorials/04-connect-your-data.md)). The plugins,
+  ([docs/guides/DATA_GUIDE.md section 8](docs/guides/DATA_GUIDE.md#8-connectors), [tutorial 4](docs/tutorials/04-connect-your-data.md)). The plugins,
   `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`, `feeds`, `news`, `yfinance`.
 - **Lakes, each in its own folder**, each described by one lake file (`config/lakes/<lake>.yaml`: where it is, every table's partitions,
   columns, load mode and retention):

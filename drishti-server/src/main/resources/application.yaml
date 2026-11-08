@@ -314,7 +314,7 @@ drishti:
     # Named connectors: several instances of a plugin, each with its own settings. They live in FILES, one per connector:
     #   <connectors-dir>/<name>.yaml     the file name is the connector's logical name; packs refer to it by that name.
     # The folder is watched: a changed file restarts only that connector, a new file starts one, a deleted file stops it.
-    # See docs/connectors/CONNECTOR_FILES.md and Admin -> Connectors. Ready-made files: config/connectors.examples/.
+    # See docs/guides/DATA_GUIDE.md section 9 and Admin -> Connectors. Ready-made files: config/connectors.examples/.
     connectors-dir: ${DRISHTI_CONNECTORS_DIR:./config/connectors}   # created on first write
     connectors-watch: auto                  # auto (file events, polling as a fallback) | poll | off
     connectors-poll: 5s                     # how often the files are looked at (also the safety net beside file events)
@@ -1030,7 +1030,7 @@ drishti:
     fingerprint-cache-size: 100000  # one per (entity, generation; in a cluster, caller signature): about 30 MB full
     bind-parallelism: 0             # 0 = one binding thread per core
   db:
-    pool:                            # connection pools of every database connector and the identity database (docs/connectors/CONNECTOR_FILES.md)
+    pool:                            # connection pools of every database connector and the identity database (docs/guides/DATA_GUIDE.md section 9)
       size: 20                       # most connections open at once; a connector's own pool-size wins (SQLite and DuckDB are embedded and not pooled)
       min-idle: 2                    # idle connections kept when quiet
       idle-timeout: 10m              # an idle connection beyond min-idle is closed after this long
@@ -1039,7 +1039,7 @@ drishti:
       leak-threshold: 60s            # a connection borrowed longer than this is logged with the borrower's stack (0 = off)
       statement-timeout: 5m          # longest one statement may run (PostgreSQL, MongoDB and Aerospike operations; 0 = none)
   http:
-    proxy:                           # the site's outbound HTTP proxy (docs/connectors/TLS.md): OFF unless url is set (or from-environment is true)
+    proxy:                           # the site's outbound HTTP proxy (docs/guides/DATA_GUIDE.md section 10): OFF unless url is set (or from-environment is true)
       url: ${DRISHTI_HTTP_PROXY_URL:}                 # http://host:port; http and https targets both go through it (https via CONNECT)
       username: ${DRISHTI_HTTP_PROXY_USERNAME:}       # Basic proxy authentication
       password: ${DRISHTI_HTTP_PROXY_PASSWORD:}       # only a ${ENV} placeholder (a literal in this file is refused at start)

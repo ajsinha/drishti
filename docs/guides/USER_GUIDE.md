@@ -2564,7 +2564,7 @@ between them without the menu.
 | Roles | `/admin/roles` | Define roles: the kinds each opens, and its powers |
 | Packs | `/admin/packs` | Switch a domain pack off or on for everyone; deploy an archive; see which connectors a pack reads through (**Data source**, read only) |
 | Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) |
-| Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
+| Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
 | Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
 | Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)) |
 | AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI.md](../admin/AI.md#1-model-providers)) |
@@ -2676,7 +2676,7 @@ same way (not while another loaded pack builds on it). See
 In the *Pack* column every title is a link (Tab to it, Enter opens it) to `/admin/packs/<name>`; *Builds on*, *needed by* and *Connectors* link to the
 packs and connectors they name. The page gathers what the list can only hint at:
 
-![Admin → Packs → one pack: status, kinds with their mnemonics, Sutras, connectors, loads and history](../connectors/img/connector_files/12-pack-detail.jpg)
+![Admin → Packs → one pack: status, kinds with their mnemonics, Sutras, connectors, loads and history](img/connector_files/12-pack-detail.jpg)
 
 - **Summary:** title, version, code, description, the **Sample** badge, who changed it and when, and the status: **on**, **off**, **not loaded**, or **refused**
   (a pack whose files could not be used) with the reason and, when the server is trying again, *failed — next retry in Ns (attempt k)* and **Retry now**.
@@ -2694,7 +2694,7 @@ packs and connectors they name. The page gathers what the list can only hint at:
 
 In *Admin → Connectors* the connector name is a link to `/admin/connectors/<name>` (the *Used by* column links to the packs):
 
-![Admin → Connectors → one connector: summary, TLS certificates and their expiry, packs, settings, the file and its history](../connectors/img/connector_files/11-connector-detail.jpg)
+![Admin → Connectors → one connector: summary, TLS certificates and their expiry, packs, settings, the file and its history](img/connector_files/11-connector-detail.jpg)
 
 It shows the plugin, where the connector is defined (file, pack or the deprecated `application.yaml`), whether it is on, its **status** and the plugin's own health,
 the time of its last update, and, when it failed, *next retry in Ns (attempt k)* with **Retry now**. **TLS** says whether it is on, which protocols, whether the
@@ -2704,7 +2704,7 @@ packs and kinds that use it (links), the **settings in effect** with credentials
 **Disable/Enable** and **Reset to pack default** (or **Delete**, for a file no pack suggests) work as on the list, with the same questions when packs use the connector.
 Both pages are for administrators, work in both themes and on a phone, where every link and button is at least 44 px:
 
-![The connector page on a phone](../connectors/img/connector_files/13-connector-detail-phone.jpg) ![The pack page on a phone](../connectors/img/connector_files/14-pack-detail-phone.jpg)
+![The connector page on a phone](img/connector_files/13-connector-detail-phone.jpg) ![The pack page on a phone](img/connector_files/14-pack-detail-phone.jpg)
 
 ### Admin → Connectors → Index: reload type-ahead for a past day
 

@@ -487,7 +487,7 @@ Fields no record above has, found by reading all 9,937 rows, with how many rows 
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="lei-relationship"></a>
 
@@ -627,7 +627,7 @@ Fields no record above has, found by reading all 9,347 rows, with how many rows 
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="lei-mapping"></a>
 
@@ -754,4 +754,4 @@ None: all 3,381 rows were read, and every field any of them has is in the record
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

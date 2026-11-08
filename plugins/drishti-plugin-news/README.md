@@ -91,7 +91,7 @@ starts.
 | `retry-factor` | string | `2` | Growth of the wait (2) |
 | `retry-jitter` | string | `0.2` | Random spread of each wait, so many failing reads do not repeat together |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -148,7 +148,7 @@ $.ITEMS`. An annotated copy is `config/connectors.examples/other/news.yaml`. The
 - Below: [turning it on](#turning-it-on), [the pipeline step by step](#the-pipeline-step-by-step), [health, errors and retries](#health-errors-and-retries), [using it from a pack](#using-it-from-a-pack), [how it is built](#how-it-is-built), [tests](#tests).
 - [The yfinance connector](../drishti-plugin-yfinance/README.md) (the same pattern for quotes) and
   [connectors that compute data on demand](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS (and the outbound proxy)](../../docs/connectors/TLS.md), [packs](../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), [TLS (and the outbound proxy)](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [packs](../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ## Turning it on
 
@@ -160,7 +160,7 @@ every plugin (the plugin ships inside `drishti-server`).
 **Privacy.** Every time a headline list is not in the cache, the entity's name (and the edition's language and country) is sent to
 `news.google.com`. For a company or a country that is harmless; for a client, a counterparty under review or an internal project name it
 may not be: switching it on is a decision for the site. Behind a mirror, set `base-url` to it; HTTPS on a private CA takes the shared
-[`tls.*`](../../docs/connectors/TLS.md) settings.
+[`tls.*`](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) settings.
 
 **Ids.** `NEWS-Federal_Reserve` gives the newest headlines that name the Federal Reserve (or an alias), `NEWS-Toyota@ja-JP` the same from
 the Japanese edition, `NEWS-Federal_Reserve~all` everything the feed returned, without the relevance filter (the publisher lists and
@@ -188,7 +188,7 @@ is served and health says why.
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
+The settings and rules are shared by every HTTP-based connector: [DATA_GUIDE.md, the outbound proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
 A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}`
 placeholder, never a literal. Google News is reached through the proxy when one applies; the first request of a name and every retry use
 it. Health ends `via proxy host:port (source)`. Tested in `NewsProxyTest` (through the proxy with a login, no-proxy bypass, the site

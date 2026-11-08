@@ -74,7 +74,7 @@ ready-made copies in `config/net.examples/`). The ones that shape it:
 | `node.yaml` `secret` | secret | none (needed with `enabled: true`) | The cluster key, only as `${DRISHTI_NET_SECRET}`; signs every call |
 | `node.yaml` `previous-secret` | secret | none | A second key also accepted during a rollover |
 | `node.yaml` `advertise-url` | URL | this machine's primary IPv4 address with the server's port | The address peers call this node at; `localhost`, loopback, wildcard and link-local addresses are refused |
-| `node.yaml` `tls.*` | TLS settings | none | Mutual TLS between nodes ([TLS](../../TLS.md)) |
+| `node.yaml` `tls.*` | TLS settings | none | Mutual TLS between nodes ([TLS](../../../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy)) |
 | `peers/<name>.yaml` `url` | URL | none | A seed peer's real address; one seed is enough, gossip finds the rest |
 | `peers/<name>.yaml` `tags`, `tls.*` | list, TLS settings | none | The tags it should carry; TLS overrides for this peer |
 | `routing.yaml` `forward-timeout` | duration | `5s` | One peer fetch (a history waits at least this, or the read's budget) |
@@ -125,4 +125,4 @@ view's provenance names the node for administrators, and Admin → Net → *Rout
 
 - [Drishti*net: the operator's guide](../../../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one): a cluster of three, the files, security, routing, Admin → Net.
 - [Drishti*net: the design](../../../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) and [history queries](../../../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time).
-- [Connector files](../../CONNECTOR_FILES.md) (the net files are managed the same way) and [TLS](../../TLS.md).
+- [Connector files](../../../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (the net files are managed the same way) and [TLS](../../../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).

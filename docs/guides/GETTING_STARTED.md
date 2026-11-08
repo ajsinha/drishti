@@ -257,7 +257,7 @@ memory was measured on the seven-day lakes). What it did:
   store's stored columns and rollups so no old figure is served. Running `lake demo` again later is safe either way: a running
   server also notices each rebuilt Delta date by itself. `--no-signal` skips both.
 - **Checked the connector files.** The packs' Delta connectors read `${DRISHTI_DELTA_ROOT:<data>/delta}`; with the default lake
-  nothing changes and the server writes the files at its first start ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
+  nothing changes and the server writes the files at its first start ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 
 Other options: `--lake DIR` builds elsewhere (the connector files are then pointed there, their earlier text kept under
 `data/connectors/history/`), `--only trades/,core/counterparty` builds some datasets, `--with-real FILE` adds a local real extract to
@@ -330,7 +330,7 @@ same call answers `401 DRS-5010 missing bearer token` until you send a token (St
 
 At its first start the server writes one **connector file** per connector the packs suggest into `config/connectors/`
 (`trade-endur.yaml`, `market-store.yaml`, …) and a generated marker for each under `data/connectors/generated/`; edit the YAML to
-point a connector elsewhere ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
+point a connector elsewhere ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 
 ## Step 7 · Start the console
 
@@ -659,7 +659,7 @@ nothing to type. Every one uses `$PROJECT_DIR$` (the repository root), the proje
 | **Drishti server (QA profile)** | The same, with **its own data folder `data/qa/data`** (git-ignored) so QA never touches `./data` or another stack. | **18580** |
 | **Drishti server (debug-friendly)** | The QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti` and `-Xmx1g`: for stepping through code without logging in (pair it with a console whose sign-in is off too). | 18580 |
 | **Drishti build server jar** | Maven: `package -DskipTests -pl drishti-app -am`; produces `drishti-server/target/drishti-server-<version>-exec.jar`. | |
-| **Build demo lakes** (PyCharm) | `drishti.py lake demo`: the seven packs' tables in the demo lake, `data/delta/demo`, sixty business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); about 15 minutes and 3.4 GB ([measured](../connectors/DEMO_DATA.md)); the sixty days end on today's business date. Then start **Drishti server (demo lakes)**. | |
+| **Build demo lakes** (PyCharm) | `drishti.py lake demo`: the seven packs' tables in the demo lake, `data/delta/demo`, sixty business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); about 15 minutes and 3.4 GB ([measured](DATA_GUIDE.md#11-the-demo-data)); the sixty days end on today's business date. Then start **Drishti server (demo lakes)**. | |
 | **Drishti server (demo lakes)** | **Drishti server** with the samples off (`DRISHTI_DEMO_ENABLED=false`), so every page reads the demo lakes, and `-Xmx4g` (15,000 trades a day over sixty days and the BI tables of them). | 18480 |
 | **QA pack make (from JSON)**, **QA lake build (big JSON to Delta)**, **QA server smoke**, **QA doctor** (PyCharm) | The command-line tools of [CLI_GUIDE.md](CLI_GUIDE.md) as Python run configurations in `drishti-console/run-configs/`. Edit **Parameters** to point at your file (see section 6). | against 18580 |
 
@@ -912,7 +912,7 @@ drishti:
 ```
 
 Connectors are not configured here: each is a YAML file of its own in `config/connectors/`
-([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
+([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 
 ### The console
 
@@ -1180,7 +1180,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Know which packs exist and what commands they offer | [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) |
 | Change how a screen looks | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
-| Connect your own data | [CONNECTORS.md](../connectors/CONNECTORS.md) and [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) |
+| Connect your own data | [DATA_GUIDE.md section 8](DATA_GUIDE.md#8-connectors) and [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors) |
 | Build a Delta lake from your own JSON export | [TOOLS.md](TOOLS.md) (`drishti.py lake build`) |
 | Build Drishti from source, run the tests | [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide), [Running from IntelliJ IDEA and PyCharm](#running-from-intellij-idea-and-pycharm) |
 | See every document | [the documentation map](../README.md) |

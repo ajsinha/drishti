@@ -85,14 +85,9 @@ sections:
           - { slug: docs-tutorials-46-public-sector-data, doc: tutorials/46-public-sector-data.md, title: "Public sector tutorial", icon: mortarboard, kind: tutorial, summary: "Nine hands-on steps, each in the UI, on the command line and in YAML: turn the packs on, run the six feeds, a country's development, a central bank, national statistics and the OECD, official press releases and what is internal only, GDELT's world events, scheduling the feeds daily, changing what a feed pulls." }
   - id: data
     groups:
-      - title: "Connect"
-        guides:
-          - { slug: connectors, doc: connectors/CONNECTORS.md, title: Connectors, icon: plug, summary: "One reference with a section per plugin (file, Delta, Iceberg, DuckDB, PostgreSQL, MongoDB, Redis, Aerospike, Cassandra, S3, REST, feeds, news, Kafka, ActiveMQ, RabbitMQ, demo): when to use it and a connector file." }
-          - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: file-earmark-code, summary: "One YAML file per connector in config/connectors: the format, how packs suggest templates, several connectors serving one kind (the union of trade connectors), precedence, live reload, the Admin page, the API and the CLI." }
-          - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS and proxy", icon: lock, summary: "The shared tls settings (private CA, PEM, PKCS12 and JKS, mutual TLS, expiry, rotation) and the outbound HTTP proxy for connectors, AI providers and MCP servers." }
       - title: "Loads and lakes"
         guides:
-          - { slug: data-guide, pair: docs-tutorials-36-load-files-with-the-data-inbox, doc: guides/DATA_GUIDE.md, title: "Data guide: connectors, the load signal, formats, external data, Export data", icon: cloud-arrow-down, summary: "Your ETL loads the data; {product} acts on it: one call (API or drishti.py data landed) marks a batch landed, the Data loads page, expectations and late data; JSON Lines as the standard and Arrow where it pays; every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, SEC, GLEIF ...) with its licence, the internal-only rule and one refresh script per pack; a pack from JSON Schema files or a folder of JSON Lines; and taking data out: Export data (EXPORT), every dataset with its dates, a simple selection and a day downloaded as .jsonl.gz, streamed and audited. Lakes, the data inbox and loading are the Data lake and data load guide." }
+          - { slug: data-guide, pair: docs-tutorials-36-load-files-with-the-data-inbox, doc: guides/DATA_GUIDE.md, title: "Data guide: connectors, the load signal, formats, external data, Export data", icon: cloud-arrow-down, summary: "Your ETL loads the data; {product} acts on it: one call (API or drishti.py data landed) marks a batch landed, the Data loads page, expectations and late data; JSON Lines as the standard and Arrow where it pays; every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, SEC, GLEIF ...) with its licence, the internal-only rule and one refresh script per pack; a pack from JSON Schema files or a folder of JSON Lines; and taking data out: Export data (EXPORT), every dataset with its dates, a simple selection and a day downloaded as .jsonl.gz, streamed and audited; connectors: which plugin for which store (each plugin's README one click away), unions of several systems for one kind, history from a lake with live from a stream, secrets; connector files, live reload, Admin → Connectors, the API, the CLI, health and connection pools; TLS (private CA, PEM, PKCS12 and JKS, mutual TLS, expiry, rotation) and the outbound HTTP proxy for connectors, AI providers and MCP servers; the demo data: the test data, the demo lakes, every other store and your bank's names. Lakes, the data inbox and loading are the Data lake and data load guide." }
           - { slug: docs-tutorials-36-load-files-with-the-data-inbox, doc: tutorials/36-load-files-with-the-data-inbox.md, title: "Data inbox tutorial: load files automatically", icon: mortarboard, kind: tutorial, summary: "Eight hands-on steps, each in the UI, on the command line (drishti.py dataload status|run|retry) and in YAML: turn the data inbox on, write a routing rule, drop a day of trades with its .ready marker, watch it load on Admin -> Data loads -> Inbox, release a batch with ready.all, a failed file fixed and retried, a duplicate skipped, the outbox reports and the ledger." }
           - { slug: data-lake-guide, pair: docs-tutorials-45-load-your-own-data-into-a-new-lake, doc: guides/DATA_LAKE_GUIDE.md, title: "Data lake and data load guide", icon: database, summary: "One home for lakes and loading, with real examples: what a lake is (config/lakes/<lake>.yaml, each lake in its own folder data/delta/<lake>/), every key of the lake file with a worked risklake.yaml (trades, positions, scenario PVs, VaR nodes), why few partition columns (the folder-explosion arithmetic) and what to use instead, the file layout and its rules of thumb, retention and maintenance; loading three ways (the data inbox, drishti.py lake build, the parallel loader); every key of the .ready file including lake:, routing rules, business dates, replace and append, repeats and undo; pointing the connectors at a lake, the demo lake's one-time move, checking a load and troubleshooting, sizing a day of 1M trades and 50K positions x 509 scenarios; and reading a Databricks or Iceberg lakehouse (built and planned)." }
           - { slug: docs-tutorials-45-load-your-own-data-into-a-new-lake, doc: tutorials/45-load-your-own-data-into-a-new-lake.md, title: "Tutorial: load your own data into a new lake", icon: mortarboard, kind: tutorial, summary: "Seven hands-on steps, each in the UI, on the command line and in YAML: write config/lakes/risklake.yaml, route files to it, drop a day of trades, scenario PVs and VaR nodes with full .ready files, watch them load, point the connectors at risklake and restart, check and undo a load, and go back to the demo." }
@@ -198,8 +193,8 @@ moved:
   docs-guides-flight-java: docs-guides-flight-reference#72-java   # java folded into docs/guides/FLIGHT_REFERENCE.md
   docs-guides-flight-jdbc: docs-guides-flight-reference#73-jdbc-dbeaver-datagrip-any-jdbc-program   # jdbc folded into docs/guides/FLIGHT_REFERENCE.md
   docs-guides-flight-odbc: docs-guides-flight-reference#74-odbc-excel-power-bi-tableau   # odbc folded into docs/guides/FLIGHT_REFERENCE.md
-  docs-connectors-news: connectors   # news folded into plugins/drishti-plugin-news/README.md
-  docs-connectors-yfinance: connectors   # yfinance folded into plugins/drishti-plugin-yfinance/README.md
+  docs-connectors-news: data-guide#8-connectors   # news folded into plugins/drishti-plugin-news/README.md
+  docs-connectors-yfinance: data-guide#8-connectors   # yfinance folded into plugins/drishti-plugin-yfinance/README.md
   docs-connectors-reactive-connector: docs-connectors-types-reactive-readme   # reactive connector folded into docs/connectors/types/reactive/README.md
   docs-architecture-parametric-var: docs-guides-var-guide   # parametric var folded into docs/guides/VAR_GUIDE.md
   docs-architecture-var-playground: docs-guides-var-guide   # var playground folded into docs/guides/VAR_GUIDE.md
@@ -214,24 +209,24 @@ moved:
   docs-lenses-ccr-cube-lens: lenses#7-ccr-cube-lens   # ccr cube lens folded into docs/lenses/README.md
   docs-lenses-cro-lens: lenses#8-cro-lens   # cro lens folded into docs/lenses/README.md
   docs-lenses-cio-lens: lenses#9-cio-lens   # cio lens folded into docs/lenses/README.md
-  docs-connectors-activemq-connector: connectors   # activemq connector folded into plugins/drishti-plugin-activemq/README.md
-  docs-connectors-aerospike-connector: connectors   # aerospike connector folded into plugins/drishti-plugin-aerospike/README.md
-  docs-connectors-cassandra-connector: connectors   # cassandra connector folded into plugins/drishti-plugin-cassandra/README.md
-  docs-connectors-delta-connector: connectors   # delta connector folded into plugins/drishti-plugin-delta/README.md
-  docs-connectors-demo-connector: connectors   # demo connector folded into plugins/drishti-plugin-demo/README.md
-  docs-connectors-duckdb-connector: connectors   # duckdb connector folded into plugins/drishti-plugin-duckdb/README.md
-  docs-connectors-feeds-connector: connectors   # feeds connector folded into plugins/drishti-plugin-feeds/README.md
-  docs-connectors-file-connector: connectors   # file connector folded into plugins/drishti-plugin-file/README.md
-  docs-connectors-redis-connector: connectors   # redis connector folded into plugins/drishti-plugin-redis/README.md
-  docs-connectors-mongodb-connector: connectors   # mongodb connector folded into plugins/drishti-plugin-mongodb/README.md
-  docs-connectors-postgres-connector: connectors   # postgres connector folded into plugins/drishti-plugin-jdbc/README.md
-  docs-connectors-jdbc-queries: connectors   # jdbc queries folded into plugins/drishti-plugin-jdbc/README.md
-  docs-connectors-iceberg-connector: connectors   # iceberg connector folded into plugins/drishti-plugin-iceberg/README.md
-  docs-connectors-iceberg-external-connector: connectors   # iceberg external connector folded into plugins/drishti-plugin-iceberg-external/README.md
-  docs-connectors-s3-connector: connectors   # s3 connector folded into plugins/drishti-plugin-s3/README.md
-  docs-connectors-kafka-connector: connectors   # kafka connector folded into plugins/drishti-plugin-kafka/README.md
-  docs-connectors-rabbitmq-connector: connectors   # rabbitmq connector folded into plugins/drishti-plugin-rabbitmq/README.md
-  docs-connectors-rest-connector: connectors   # rest connector folded into plugins/drishti-plugin-rest/README.md
+  docs-connectors-activemq-connector: data-guide#8-connectors   # activemq connector folded into plugins/drishti-plugin-activemq/README.md
+  docs-connectors-aerospike-connector: data-guide#8-connectors   # aerospike connector folded into plugins/drishti-plugin-aerospike/README.md
+  docs-connectors-cassandra-connector: data-guide#8-connectors   # cassandra connector folded into plugins/drishti-plugin-cassandra/README.md
+  docs-connectors-delta-connector: data-guide#8-connectors   # delta connector folded into plugins/drishti-plugin-delta/README.md
+  docs-connectors-demo-connector: data-guide#8-connectors   # demo connector folded into plugins/drishti-plugin-demo/README.md
+  docs-connectors-duckdb-connector: data-guide#8-connectors   # duckdb connector folded into plugins/drishti-plugin-duckdb/README.md
+  docs-connectors-feeds-connector: data-guide#8-connectors   # feeds connector folded into plugins/drishti-plugin-feeds/README.md
+  docs-connectors-file-connector: data-guide#8-connectors   # file connector folded into plugins/drishti-plugin-file/README.md
+  docs-connectors-redis-connector: data-guide#8-connectors   # redis connector folded into plugins/drishti-plugin-redis/README.md
+  docs-connectors-mongodb-connector: data-guide#8-connectors   # mongodb connector folded into plugins/drishti-plugin-mongodb/README.md
+  docs-connectors-postgres-connector: data-guide#8-connectors   # postgres connector folded into plugins/drishti-plugin-jdbc/README.md
+  docs-connectors-jdbc-queries: data-guide#8-connectors   # jdbc queries folded into plugins/drishti-plugin-jdbc/README.md
+  docs-connectors-iceberg-connector: data-guide#8-connectors   # iceberg connector folded into plugins/drishti-plugin-iceberg/README.md
+  docs-connectors-iceberg-external-connector: data-guide#8-connectors   # iceberg external connector folded into plugins/drishti-plugin-iceberg-external/README.md
+  docs-connectors-s3-connector: data-guide#8-connectors   # s3 connector folded into plugins/drishti-plugin-s3/README.md
+  docs-connectors-kafka-connector: data-guide#8-connectors   # kafka connector folded into plugins/drishti-plugin-kafka/README.md
+  docs-connectors-rabbitmq-connector: data-guide#8-connectors   # rabbitmq connector folded into plugins/drishti-plugin-rabbitmq/README.md
+  docs-connectors-rest-connector: data-guide#8-connectors   # rest connector folded into plugins/drishti-plugin-rest/README.md
   lake-guide: data-lake-guide   # docs/guides/DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
   docs-guides-lake-guide: data-lake-guide
   docs-architecture-data-load-rules: data-lake-guide#5-routing-business-dates-modes-repeats-and-undo   # DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
@@ -253,7 +248,7 @@ moved:
   var-horizon: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen   # 10-day VaR, √10 and the sum (2.9.7)
   ten-day-var: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen
   var-confidence: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen   # the confidence chosen (2.9.7)
-  template-updates: connector-files#upgrades                          # Admin -> Connectors -> Template updates, Use the pack's value (2.9.5)
+  template-updates: data-guide#upgrades                          # Admin -> Connectors -> Template updates, Use the pack's value (2.9.5)
   var-on-iceberg: docs-tutorials-29-var-on-iceberg                        # tutorial 29: the risk lake and official results on Iceberg (2.9.5)
   in-memory-lake: data-lake-guide#13-the-in-memory-lake                                    # the in-memory lake (2.9.11)
   memory-lake: data-lake-guide#13-the-in-memory-lake
@@ -317,27 +312,27 @@ moved:
   live: docs-architecture-data-architecture#1-live-updates
   performance: docs-admin-performance
   scale-benchmark: benchmark#9-the-stores-compared-10000-to-50000-trades-a-day   # SCALE_BENCHMARK.md merged into BENCHMARK.md
-  connector-proxy: connector-tls#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers
-  connector-demo: connectors#demo
-  demo-data: connectors#demo-data
-  connector-file: connectors#file
-  connector-delta: connectors#delta-lake
-  connector-iceberg: connectors#apache-iceberg
-  connector-duckdb: connectors#duckdb
-  connector-postgres: connectors#postgresql-and-jdbc
-  jdbc-queries: connectors#postgresql-and-jdbc
-  connector-mongodb: connectors#mongodb
-  connector-redis: connectors#redis
-  connector-aerospike: connectors#aerospike
-  connector-cassandra: connectors#apache-cassandra
-  connector-s3: connectors#s3
-  connector-rest: connectors#rest
-  connector-feeds: connectors#public-feeds
-  connector-news: connectors#news
-  connector-yfinance: connectors#yahoo-finance
-  connector-kafka: connectors#kafka
-  connector-activemq: connectors#activemq
-  connector-rabbitmq: connectors#rabbitmq
+  connector-proxy: data-guide#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers
+  connector-demo: data-guide#82-which-connector
+  demo-data: data-guide#11-the-demo-data
+  connector-file: data-guide#82-which-connector
+  connector-delta: data-guide#82-which-connector
+  connector-iceberg: data-guide#82-which-connector
+  connector-duckdb: data-guide#82-which-connector
+  connector-postgres: data-guide#82-which-connector
+  jdbc-queries: data-guide#82-which-connector
+  connector-mongodb: data-guide#82-which-connector
+  connector-redis: data-guide#82-which-connector
+  connector-aerospike: data-guide#82-which-connector
+  connector-cassandra: data-guide#82-which-connector
+  connector-s3: data-guide#82-which-connector
+  connector-rest: data-guide#82-which-connector
+  connector-feeds: data-guide#82-which-connector
+  connector-news: data-guide#82-which-connector
+  connector-yfinance: data-guide#82-which-connector
+  connector-kafka: data-guide#82-which-connector
+  connector-activemq: data-guide#82-which-connector
+  connector-rabbitmq: data-guide#82-which-connector
   operationalising: deploy
   real-data: external-data#the-world-economy-data-in-detail
   runbook-source-down: operations#171-source-down-or-slow
@@ -363,13 +358,13 @@ moved:
   build-a-pack: pack-developer-guide
   sutra-studio: rachana-reference#screen-designer-and-the-build-workbench
   # The 2.9.6 documentation merge (one home per topic): a merged-away document's path slug opens the section that took it over.
-  docs-connectors-connector-recipes: connectors#combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into CONNECTORS.md
-  docs-connectors-connector-operations: connector-files#12-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into CONNECTOR_FILES.md section 12 and TROUBLESHOOTING
+  docs-connectors-connector-recipes: data-guide#84-combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into docs/guides/DATA_GUIDE.md section 8
+  docs-connectors-connector-operations: data-guide#912-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into docs/guides/DATA_GUIDE.md section 9.12 and TROUBLESHOOTING
   docs-architecture-how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6)
   docs-architecture-live-bi: docs-architecture-data-architecture#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is DATA_ARCHITECTURE.md
   docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # deleted (2.9.6); D1 to D6 now BI_DESIGN section 14
   docs-architecture-screen-builder: rachana-reference#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is RACHANA_REFERENCE › Screen designer, section 32
-  docs-architecture-cassandra-connector-design: connectors   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
+  docs-architecture-cassandra-connector-design: data-guide#8-connectors   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
   docs-admin-load-and-memory: docs-admin-performance#9-many-users-soak-runs-and-memory-profiling   # deleted (2.9.6); its method is PERFORMANCE method 9
   admin-artifacts: deploy#18-admin--artifacts-install-and-uninstall-safely   # Admin -> Artifacts' help link; docs/admin/ARTIFACTS.md merged into OPERATIONALISING.md section 18
   docs-guides-operationalising: deploy   # OPERATIONALISING.md is listed as Deploy, promote and roll back
@@ -472,6 +467,10 @@ moved:
   docs-architecture-pivot-engine: docs-architecture-architecture#26-the-pivot-engine   # docs/architecture/PIVOT_ENGINE.md: use folded into PIVOT_GUIDE.md, design into ARCHITECTURE.md section 26
   docs-architecture-computed-attributes: docs-architecture-data-architecture#12-computed-and-derived-attributes   # docs/architecture/COMPUTED_ATTRIBUTES.md: what is built into DATA_ARCHITECTURE.md section 12, open steps into IMPLEMENTATION_PLAN.md
   docs-architecture-var-sharding: docs-architecture-data-architecture#13-var-sharding-how-it-is-built   # docs/architecture/VAR_SHARDING.md folded into DATA_ARCHITECTURE.md sections 13 and 14 (operators) and VAR_GUIDE.md section 28
+  connectors: data-guide#8-connectors   # docs/connectors/CONNECTORS.md folded into docs/guides/DATA_GUIDE.md section 8
+  connector-files: data-guide#9-connector-files-and-admin--connectors   # docs/connectors/CONNECTOR_FILES.md folded into DATA_GUIDE.md section 9
+  connector-tls: data-guide#10-tls-and-the-outbound-proxy   # docs/connectors/TLS.md folded into DATA_GUIDE.md section 10
+  docs-connectors-demo-data: data-guide#11-the-demo-data   # docs/connectors/DEMO_DATA.md folded into DATA_GUIDE.md section 11
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
@@ -545,7 +544,6 @@ contextual:
   bi-transform: bi-guide#17-data-prep-the-transform-editor
   bi-notebook: user-guide#the-notebook
 
-  # h-docs (2.9.11.h), knowledge pages 9 -> 4:
 
   # h-docs (2.9.11.h), tutorials 39 -> 22:
 

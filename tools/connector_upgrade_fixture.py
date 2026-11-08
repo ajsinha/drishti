@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The connector files an older release's server generated, as the fixture of the upgrade drill stage (ConnectorUpgradeTest,
-docs/connectors/CONNECTOR_FILES.md "Upgrades"): each connector template of the demo packs at a git revision rendered the way that
+docs/guides/DATA_GUIDE.md section 9 "Upgrades"): each connector template of the demo packs at a git revision rendered the way that
 server wrote it (its header, the template's fields in the server's order, settings flattened to dotted keys, lists as comma text) with
 the marker it kept in <data>/connectors/generated/, plus deliberately edited files:
 

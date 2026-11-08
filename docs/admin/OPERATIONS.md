@@ -393,9 +393,9 @@ After a pack upgrade a connector file generated from the older template can lack
 `template-updates: additive` (the default, `config/connectors-settings.yaml`) the server adds the missing kinds and settings itself,
 keeping every edit, and logs it; with `notify` it only lists them. Either way **Admin → Connectors → Template updates** shows each
 drifted connector beside its template with *Add missing kinds*, *Regenerate from template*, *Remove obsolete kinds* and *Fix all
-additive*. See [CONNECTOR_FILES.md, Template updates](../connectors/CONNECTOR_FILES.md#template-updates).
+additive*. See [../guides/DATA_GUIDE.md section 9, Template updates](../guides/DATA_GUIDE.md#template-updates).
 
-An upgrade is airtight ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades)): a file nobody edited
+An upgrade is airtight ([../guides/DATA_GUIDE.md section 9, Upgrades](../guides/DATA_GUIDE.md#upgrades)): a file nobody edited
 carries a stamp (`# drishti-template: …`) and is replaced in full by the pack's new template, the file before kept beside it
 (`.before-upgrade-….bak`), logged and audited (`connector-template-upgrade`); an edited file gets every key its template gained at any
 depth (settings, kinds, layout lists, a reactive connector's parameters, result, reads, triggers, limits …) and keeps every value it has.
@@ -630,7 +630,7 @@ kinds and routes; the profile changes only the store.
 
 The profiles still work but are deprecated: copy the example files for your store from `config/connectors.examples/<store>/` into
 `config/connectors/` instead (a file replaces the pack's template wholesale, whereas a profile overlays it setting by setting), and
-drop the profile ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md#11-moving-off-applicationyaml-and-the-old-data-source-override)).
+drop the profile ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#911-moving-off-applicationyaml-and-the-old-data-source-override)).
 
 **Aerospike at scale, and retention.** Each domain is three sets: `<domain>` (a record per entity per business date,
 the document and the pack's promoted fields as bins), `<domain>_ix` (a record per entity listing its dates) and
@@ -741,7 +741,7 @@ Connectors are site resources: one YAML file each in `config/connectors/` (`DRIS
 connector's name. The packs name the connectors they read through; their `pack.yaml` `connectors:` sections are templates from
 which the server writes a missing file once, at the first start, and never overwrites it afterwards. The variables below are
 read by those templates and by `${NAME:default}` references inside connector files. See
-[CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md).
+[../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
 
 **Changing a connector without a restart.** Edit the file (or use **Admin → Connectors**, `/admin/connectors`, or
 `drishti.py connector apply`). The folder is watched (`drishti.sources.connectors-watch`, default `auto`, with a poll every 5 s as
@@ -755,7 +755,7 @@ name, a credential written in clear, an unset `${VARIABLE}` without a default, a
 server and does not stop the connector: the last good configuration keeps running. The problem is in the log, in **Admin → Health**
 (the `connectors` block: `badFiles` with the message, `watch`, `deprecated`) and on the Connectors page. A pack row in Health
 lists `connectorsNotConfigured` when a pack routes a kind to a connector that has no file (views of that kind say `DRS-1011`). The
-table of messages and fixes is in [CONNECTOR_FILES.md, section 12](../connectors/CONNECTOR_FILES.md#12-health-and-problems).
+table of messages and fixes is in [../guides/DATA_GUIDE.md section 9.12](../guides/DATA_GUIDE.md#912-health-and-problems).
 
 | Variable | Default | Used by | What it does |
 |---|---|---|---|
@@ -1133,7 +1133,7 @@ Work through this list for every shared installation. Each item says how to chec
     `GET /api/v1/bi/poc/bench` answers `404`.
 17. **AI and MCP stay off unless wanted.** `drishti.ai.enabled` and `drishti.mcp.enabled` are `false` by default; switch them on only with
     provider files in `config/ai` whose keys are `${ENV}` references, the policy limits set (`drishti.ai.policy`: `per-user-per-day`,
-    `cost-per-user-per-day`, `mask-redacted: true`) and an outbound proxy if the host needs one ([TLS.md (proxy)](../connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)).
+    `cost-per-user-per-day`, `mask-redacted: true`) and an outbound proxy if the host needs one ([DATA_GUIDE.md, the outbound proxy](../guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)).
     Check: `GET /api/v1/admin/ai` shows `enabled` as you intend and `keySet` for each provider, never a key.
 18. **Embedding stays off unless wanted.** `drishti.embed.enabled` is `false` by default. When it is on, each host application is registered with exact
     origins (`drishti.embed.allow-wildcard-origins` stays `false`), the narrowest scopes and kinds it needs, and a secret or key kept by its backend
@@ -2820,7 +2820,7 @@ A line such as `connector trade-endur failed to start` is followed by the cause;
   `drishti.sources.plugins` in `application.yaml` is not retried: correct it and restart the server.
 - **A connector's file has a mistake.** The last good configuration keeps running; Admin → Health (`connectors.badFiles`) and the
   Connectors page give the message. Fix the file, or restore an earlier text from the page's History
-  ([CONNECTOR_FILES.md › Health and problems](../connectors/CONNECTOR_FILES.md#12-health-and-problems)).
+  ([../guides/DATA_GUIDE.md section 9, Health and problems](../guides/DATA_GUIDE.md#912-health-and-problems)).
 - **The source is healthy but slow.** Give it more time in `application.local.yaml` next to the server jar, then restart. Raising the
   link budget makes every view with slow links wait longer, so raise it only as far as needed; for lake and stream connectors a bigger
   `cache-mb` also helps ([PERFORMANCE.md](PERFORMANCE.md#example-3-connector-caches)).
@@ -3256,7 +3256,7 @@ In the in-process test of three servers (`NetMembershipTest`), the three list ea
 
 ### 3. The files of config/net/
 
-Drishti*net is configured the way connectors are ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)): one folder of small YAML files,
+Drishti*net is configured the way connectors are ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)): one folder of small YAML files,
 watched, each checked against its schema before it is used. `application.yaml` holds only where the folder is and how it is watched
 ([CONFIGURATION.md](CONFIGURATION.md#drishtinet--drishtinet-the-cluster-folder)):
 
@@ -3411,7 +3411,7 @@ previous key: when no peer has for a while (every node is at step 2), do step 3.
 rollover. In the in-process test of three servers, 13,542 signed calls made through the three steps were all taken.
 
 **Mutual TLS.** Between nodes on an untrusted network, give each node a certificate: inbound, the server's own TLS with client certificates
-(`server.ssl.*`, `server.ssl.client-auth: need`), outbound, `tls.*` in node.yaml (the shared TLS settings of [TLS.md](../connectors/TLS.md):
+(`server.ssl.*`, `server.ssl.client-auth: need`), outbound, `tls.*` in node.yaml (the shared TLS settings of [DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy):
 `keystore`, `truststore`, their passwords as `${ENV}` references), with `https://` addresses. Mutual TLS comes on top of the cluster key, never in
 its place. Admin → Net → Security lists the configured certificates and when each expires.
 

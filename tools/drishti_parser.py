@@ -185,7 +185,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     dl = add(d, "load", h.cmd_data_load, "data load: load the demo data (1,791 sample documents x 10 days, optionally a trade book) into a store (tools/load-<store>.sh)",
              epilog="examples:\n  drishti.py data load --store delta\n  drishti.py data load --store files --trades 10000 --days 3\n"
                     "  drishti.py data load --store postgres jdbc:postgresql://localhost:5433/drishti --trades 10000 --user u --password p\n"
-                    "Other options are passed to the script unchanged. Keep local runs small (10,000 trades); see docs/connectors/DEMO_DATA.md.")
+                    "Other options are passed to the script unchanged. Keep local runs small (10,000 trades); see docs/guides/DATA_GUIDE.md section 11.")
     dl.add_argument("--store", required=True, choices=LOADERS)
     dl.add_argument("target", nargs="*", help="the store's root, URL or database (the script's default when omitted; mongodb takes a URI and a database)")
     dl.add_argument("--trades", type=int, help="also generate a trade book of this many trades a day")

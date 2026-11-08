@@ -364,7 +364,7 @@ A change file holds only that day's new and changed documents, so it is not a da
 the changes applied by key. `lake demo --only trades/endur` does that for one dataset, `--only core` for one pack.
 
 **Pointing packs at the lakes.** Each pack's Delta connectors read `${DRISHTI_DELTA_ROOT:<data>/delta}`; at its first start the server
-writes them to `config/connectors/<name>.yaml` ([CONNECTOR_FILES.md](../../docs/connectors/CONNECTOR_FILES.md)). `lake demo --lake
+writes them to `config/connectors/<name>.yaml` ([../../docs/guides/DATA_GUIDE.md section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)). `lake demo --lake
 /elsewhere` writes the files to point there (or start the server with `DRISHTI_DELTA_ROOT=/elsewhere`); a file that points at another
 folder is updated, its earlier text kept in `data/connectors/history/`. Without a lake the packs' samples answer, as before.
 

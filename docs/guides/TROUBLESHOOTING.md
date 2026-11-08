@@ -284,7 +284,7 @@ two providers, add `retries: 2` to the provider file (a 429 is tried again, a 40
 ### An AI provider says "could not be reached" with a private CA, or "the proxy refused the request"
 
 `tls.ca-file` names the CA that signed the **server's** certificate (not the client's); with mutual TLS add `tls.cert-file` and `tls.key-file`; a certificate with only a Common Name fails the name check, so
-re-issue it with the host as a subject alternative name ([TLS.md section 11](../connectors/TLS.md#11-troubleshooting)). Behind a proxy, `proxy.url`, `proxy.username` and `proxy.password` (an `${ENV}`) are the
+re-issue it with the host as a subject alternative name ([DATA_GUIDE.md section 10.11](DATA_GUIDE.md#1011-troubleshooting)). Behind a proxy, `proxy.url`, `proxy.username` and `proxy.password` (an `${ENV}`) are the
 file's or the site's; the proxy must allow `CONNECT` to the vendor's host.
 
 ### Too many retry lines in the log
@@ -994,7 +994,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 ### A connector does not start, or a connector file is bad
 
-Connectors are files, one per connector, in `config/connectors/` (the file name is the connector's name); see [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md).
+Connectors are files, one per connector, in `config/connectors/` (the file name is the connector's name); see [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors).
 
 - **What you see:** Admin → Health is **DEGRADED** with `connectors.badFiles`, or a connector shows `failed` in Admin → Connectors and in `drishti.py connector list`;
   the log says `connector file site-quotes.yaml is not usable; the last good configuration keeps running: ...`.
@@ -1023,7 +1023,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
   `curl -v -x http://proxy:3128 --proxy-user svc:… https://target/` (a `407` there is the same 407) and `curl -v --proxytunnel -x http://proxy:3128 https://target/` (the CONNECT).
 - **Fix:** correct `proxy.username` and the environment variable or file behind `proxy.password`; ask for the target on the proxy's allow-list (usually port 443); correct `proxy.url`
   (`http://host:port`, never `https://`); add the host to `proxy.no-proxy` if it should go direct, or write `proxy: none`. A `PKIX` error through a proxy is the target's (or a
-  re-signing proxy's) certificate: `tls.ca-file`. Full table: [PROXY.md, section 11](../connectors/TLS.md#proxy-11-troubleshooting).
+  re-signing proxy's) certificate: `tls.ca-file`. Full table: [PROXY.md, section 11](DATA_GUIDE.md#proxy-11-troubleshooting).
 
 ### A connector will not connect over TLS, or stops at start with a `tls.` message
 
@@ -1035,7 +1035,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
   signed by an authority the connector trusts, or its name is not in the certificate.
 - **Check:** `openssl s_client -connect host:port -servername host -CAfile ca.pem -verify_hostname host < /dev/null` shows
   whether the chain and the name pass (`Verification: OK`). The exact messages and what each means:
-  [TLS.md, sections 8 and 11](../connectors/TLS.md#8-start-up-checks-and-their-messages).
+  [DATA_GUIDE.md sections 10.8 and 10.11](DATA_GUIDE.md#108-start-up-checks-and-their-messages).
 - **Fix:** put the issuing CA in `tls.ca-file` or `tls.truststore`; re-issue the server certificate with its names as SANs
   (last resort `tls.verify-hostname: false`, which warns at every start); give the client certificate and key for mutual
   TLS. Per connector: [Kafka](../../plugins/drishti-plugin-kafka/README.md#common-errors-and-fixes),
@@ -1062,7 +1062,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 - **What you see:** `UP (TLS certificate CN=drishti (tls.cert-file) expires in 12 days (2026-10-22))` in Admin → Health.
 - **Cause:** a certificate the connector was given (its client certificate or its CA) is within 30 days of its end date.
   The source is still up; this is the warning.
-- **Fix:** rotate it and restart the source ([TLS.md, section 10](../connectors/TLS.md#10-rotation)).
+- **Fix:** rotate it and restart the source ([DATA_GUIDE.md section 10.10](DATA_GUIDE.md#1010-rotation)).
 
 ### A Kafka connector skips every message of a topic written with a schema registry
 
@@ -1108,7 +1108,7 @@ calls.
 | The overall status is `DEGRADED` | `curl -s $B/admin/health \| jq '{summary, failedToStart, packs: [.packs[] \| select(.status!="OK") \| {name, connectorsDown, sutraProblems}]}'` | fix what is listed; a switched-off connector does not degrade |
 | Admin health answers `403` | the caller is not an administrator | use `/api/v1/sources` (anyone), or an admin token |
 
-Every setting of a connector is in its plugin's README and its own document ([CONNECTORS.md](../connectors/CONNECTORS.md) links each); health, caches, disk state and timeouts are in [CONNECTOR_FILES.md section 12](../connectors/CONNECTOR_FILES.md#12-health-and-problems).
+Every setting of a connector is in its plugin's README and its own document ([DATA_GUIDE.md section 8](DATA_GUIDE.md#8-connectors) links each); health, caches, disk state and timeouts are in [DATA_GUIDE.md section 9.12](DATA_GUIDE.md#912-health-and-problems).
 
 ## Monitoring endpoints
 
@@ -1530,7 +1530,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-5443` | the scope sums more netting sets than an interactive answer may: read the official record (`GET /api/v1/risk/exposure/official`), narrow the scope, or raise `drishti.ccr.exposure.max-scope-netting-sets` |
 | `DRS-5444` | a row of the date's exposure paths was rejected (another length than the run's `PATHS`, NaN, a grid index outside the grid): the answer's provenance lists the trade and the reason; fix the row upstream and reload the date |
 | `DRS-5445` | the date's netting-set matrices exceed the exposure engine's memory budget: raise `drishti.ccr.exposure.memory-budget-gb` or the heap, or lower `drishti.ccr.exposure.hot-dates` |
-| `DRS-5031` | a connector file or body is not valid (HTTP 422): bad name, unknown plugin, unknown top-level key, a missing required setting, a wrong type, a `name:` that is not the file name, or a literal credential. Fix: the message names the setting; credentials are `${ENV_VAR}` or `file:/path`; see [CONNECTOR_FILES.md, section 12](../connectors/CONNECTOR_FILES.md#12-health-and-problems) |
+| `DRS-5031` | a connector file or body is not valid (HTTP 422): bad name, unknown plugin, unknown top-level key, a missing required setting, a wrong type, a `name:` that is not the file name, or a literal credential. Fix: the message names the setting; credentials are `${ENV_VAR}` or `file:/path`; see [DATA_GUIDE.md section 9.12](DATA_GUIDE.md#912-health-and-problems) |
 | `DRS-5033` | no connector of that name (HTTP 404): check the spelling with `drishti.py connector list`; the file name is the name |
 | `DRS-5040` | Admin → Artifacts: no such installed pack, connector or BI file, or no such archive (HTTP 404): check the name in the list; an archive older than `drishti.admin.uninstalled-keep` is pruned |
 | `DRS-9203` | a compute pool is busy (HTTP 429): its queue for the request's class is full; try again in a moment, or raise `workers.max` or the queue |

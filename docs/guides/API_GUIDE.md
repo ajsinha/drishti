@@ -1629,7 +1629,7 @@ Admin → Packs → Registry from a script ([PACK_DEVELOPER_GUIDE.md](PACK_DEVEL
 ### Connectors (`/api/v1/admin/connectors`)
 
 A **connector** is a site resource: one YAML file in `config/connectors/` whose file name is the connector's name. A pack names the connectors it reads
-through; it does not carry their settings ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) is the reference; the CLI wraps these calls:
+through; it does not carry their settings ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors) is the reference; the CLI wraps these calls:
 `drishti.py connector list|get|apply|delete|test|plugins|enable|disable|reset|history`). Every call needs an administrator, and a personal token the
 `packs:admin` scope for the writes (the reads are administrator-only). From the console the same-origin and CSRF rules apply. Every change is audited, with setting
 *names* and never values: `connector-saved`, `connector-deleted`, `connector-reset`, `connector-enabled`, `connector-disabled`, `connector-restored`,

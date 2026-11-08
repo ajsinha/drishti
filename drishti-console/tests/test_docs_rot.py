@@ -249,9 +249,8 @@ EXAMPLE_PATHS = {
     "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank",
                                             "MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
                                             "sources.html", "sources.js", "test_sources.py"),
-    "docs/connectors/CONNECTORS.md": ("config/packs/equity-desk",),
     "docs/guides/CLI_GUIDE.md": ("config/packs/curves-demo",),
-    "docs/guides/DATA_GUIDE.md": ("docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),
+    "docs/guides/DATA_GUIDE.md": ("config/packs/equity-desk", "docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),
 }
 
 

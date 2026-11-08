@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The shared ``tls.*`` settings of the connectors (docs/connectors/TLS.md; Java: ``com.ash.drishti.api.tls.TlsHttp``) for the console's HTTPS clients: the AI providers and the
+"""The shared ``tls.*`` settings of the connectors (docs/guides/DATA_GUIDE.md section 10; Java: ``com.ash.drishti.api.tls.TlsHttp``) for the console's HTTPS clients: the AI providers and the
 MCP servers. The same keys mean the same thing:
 
 * trust: ``tls.ca-file`` (a PEM file, or the PEM text itself), ``tls.truststore`` (PKCS12; **JKS is not built in the console**: ``keytool -importkeystore -deststoretype PKCS12``

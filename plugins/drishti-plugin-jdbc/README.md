@@ -133,7 +133,7 @@ It is read-only in both modes: its database user needs `SELECT` only. A URL that
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10).
 <!-- settings:end -->
 
 ## Data structure
@@ -524,7 +524,7 @@ the server; for another database put its driver jar on the class path or in `DRI
 
 ## Writes: commands that change a record
 
-A jdbc connector may declare `writes:` ([writes](../../docs/connectors/CONNECTOR_FILES.md#writes-saving-to-the-source)): the
+A jdbc connector may declare `writes:` ([writes](../../docs/guides/DATA_GUIDE.md#writes-saving-to-the-source)): the
 statements write-back sends through its outbox for a form whose `save.target` is `source`. One command is one transaction: the
 `already-applied` query first (it finds this change id: a resend writes nothing and is confirmed), then `sql`, committed only when it
 touched exactly `expect-rows` rows; 0 rows means the record moved (the change ends *refused at the source: conflicted*) and the
@@ -554,7 +554,7 @@ own change id (`<id>#1`, `#2`), on a connection borrowed from the connector's po
 
 A password is an `${ENV}` placeholder or a `file:` reference, never a literal, and a URL that carries one (`jdbc:…//user:pw@host`,
 `?password=…`) is refused. For `jdbc:postgresql://` the connector hands the shared `tls.*` settings
-([TLS.md](../../docs/connectors/TLS.md), [the keys](../../docs/admin/CONFIGURATION.md#shared-tls)) to the driver through its own
+([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [the keys](../../docs/admin/CONFIGURATION.md#shared-tls)) to the driver through its own
 socket factory, so a private CA bundle, a PKCS12/JKS store and a client key in any PEM format (PKCS#1, SEC1, encrypted) work.
 `tls.*` needs `tls.enabled: true` and **replaces** the driver's options: a URL with `sslmode`, `sslrootcert`, `sslfactory` or
 `ssl=true` beside `tls.*` is refused.
@@ -611,7 +611,7 @@ Every connection comes from a pool, `pool-size` connections at most (default `dr
 connector starts while the database is down. A read borrows one for one query and returns it at once; nothing holds a connection
 across a stream to a client. `statement-timeout` is set as the connection's `statement_timeout`; a borrow held longer than
 `pool-leak-threshold` is logged with the borrower's stack. `pool-size` must be at least `scan-threads` plus the reads you expect at
-once (and, in query mode, room for parts). See [connection pools](../../docs/connectors/CONNECTOR_FILES.md#14-connection-pools) and
+once (and, in query mode, room for parts). See [connection pools](../../docs/guides/DATA_GUIDE.md#914-connection-pools) and
 [sizing them](../../docs/admin/OPERATIONS.md#sizing-the-database-connection-pools). The loader uses its own pool: one connection
 for the whole load (it holds the advisory lock) and one per batch, never more than `--pool-size`.
 
@@ -633,5 +633,5 @@ jdbc:postgresql://localhost:5432/drishti` (one table per banking domain, ten bus
 
 ## See also
 
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

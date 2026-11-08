@@ -1674,7 +1674,7 @@ drishti-console/.venv/bin/python tools/drishti.py testdata capture-market
 x 10 business days) in that store, and with `--trades N` a generated trade book of N trades a day for `--days` days. Stores:
 `delta`, `files`, `postgres`, `duckdb`, `iceberg`, `mongodb`, `redis`, `aerospike`, `cassandra`. The scripts run from the repository root, so
 a relative root is relative to it. Options after the known ones go to the script unchanged. Everything about the scripts, the
-stores and the sizes is in [DEMO_DATA.md](../connectors/DEMO_DATA.md).
+stores and the sizes is in [DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data).
 
 **`drishti.py data load --help`**
 
@@ -1702,7 +1702,7 @@ examples:
   drishti.py data load --store delta
   drishti.py data load --store files --trades 10000 --days 3
   drishti.py data load --store postgres jdbc:postgresql://localhost:5433/drishti --trades 10000 --user u --password p
-Other options are passed to the script unchanged. Keep local runs small (10,000 trades); see docs/connectors/DEMO_DATA.md.
+Other options are passed to the script unchanged. Keep local runs small (10,000 trades); see docs/guides/DATA_GUIDE.md section 11.
 ```
 
 | Size | Command | Use |
@@ -1751,7 +1751,7 @@ drishti-console/.venv/bin/python tools/build_demo_lakes.py --store all=delta    
 An Iceberg system's trades go to `data/iceberg/trading/trade_<system>` and its connector file `trade-<system>.yaml` is switched to
 `plugin: iceberg` (one connector per system, never two); the closing lines list each system's store. It works with `--only`,
 `--files-only`, `--source-dir --system`, `--server` and `--dry-run`, and needs the server's exec jar (it writes Iceberg with it). The
-details: [TOOLS.md, section 4.9](TOOLS.md#49-the-demo-lakes-lake-demo) and [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage).
+details: [TOOLS.md, section 4.9](TOOLS.md#49-the-demo-lakes-lake-demo) and [DATA_GUIDE.md section 11](DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage).
 
 ## 7. `server`: health and packs
 
@@ -1784,7 +1784,7 @@ drishti-console/.venv/bin/python tools/drishti.py server health
 ```
 
 On the quick-start server (the demo lakes, sign-in on, the token in `DRISHTI_TOKEN`) after tutorials 4 and 5, which add the
-`desk-quotes` pack and its connectors, and with a connector file of [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) that points
+`desk-quotes` pack and its connectors, and with a connector file of [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors) that points
 at a folder this machine does not have:
 
 ```text
@@ -2348,7 +2348,7 @@ connectors of desk-demo   [files in /srv/drishti/config/connectors; change them 
 
 ### `connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history
 
-Admin → Connectors from the terminal ([the model, the file format and every store's example: CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
+Admin → Connectors from the terminal ([the model, the file format and every store's example: DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 A **connector** is one YAML file in the connector folder (`config/connectors/`, `drishti.sources.connectors-dir`), and **the file name is the connector's name**.
 Packs only name the connectors they read through. You need an administrator; a personal API token needs the **`packs:admin`** scope. All commands take the usual
 `--server`, `--token-file`, `--user`, `--timeout` and `--json` (machine-readable output). Exit: **0** done; **1** refused by the server (with the `DRS-` code) or, for `test`, the
@@ -3199,7 +3199,7 @@ python3 tools/drishti.py data load --store delta --trades 10000 --days 3        
 ```
 
 Larger books (hundreds of thousands to a million trades a day) are for a machine sized for them: see
-[DEMO_DATA.md](../connectors/DEMO_DATA.md) for the sizes and what each store needs.
+[DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data) for the sizes and what each store needs.
 
 ## 11. JSON output formats
 

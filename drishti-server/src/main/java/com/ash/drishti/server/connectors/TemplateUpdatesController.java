@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Admin &rarr; Connectors &rarr; Template updates: connectors that drifted from their pack's current template (additive,
  * conflicting and obsolete parts) and the buttons that fix them. Administrators only; every change is audited and kept in the
- * connector's history. CONNECTOR_FILES.md, "Template updates".
+ * connector's history. docs/guides/DATA_GUIDE.md section 9, "Template updates".
  */
 @RestController
 @RequestMapping("/api/v1/admin/connectors/template-updates")

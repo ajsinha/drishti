@@ -101,7 +101,7 @@ For a REST catalog set `DRISHTI_ICEBERG_CATALOG=rest`, `DRISHTI_ICEBERG_URI`, `D
 ## See also
 
 - [The Iceberg connector](../../../plugins/drishti-plugin-iceberg/README.md) and the [iceberg connector README](../../../plugins/drishti-plugin-iceberg/README.md).
-- [Connector files](../../../docs/connectors/CONNECTOR_FILES.md) (copying examples, the trade union note) and [Demo data](../../../docs/connectors/DEMO_DATA.md).
+- [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (copying examples, the trade union note) and [Demo data](../../../docs/guides/DATA_GUIDE.md#11-the-demo-data).
 
 The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching
 file in [config/lakes.examples/iceberg/](../../lakes.examples/iceberg/): copy both (docs/guides/DATA_LAKE_GUIDE.md).

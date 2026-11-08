@@ -807,7 +807,7 @@ def _links(page: dict, c: dict) -> list[str]:
         title, a = _heading(doc, start)
         title = re.sub(r"\s*\([^)]*\d\.\d+\.\d+[^)]*\)", "", title)
         out.append(f"- [{title}](../../../{doc}{'#' + a if a else ''})")
-    out.append("- [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and "
+    out.append("- [The test data and the demo lakes](../../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and "
                "the [index of every data sample](../README.md).")
     return list(OrderedDict.fromkeys(out))
 

@@ -167,7 +167,7 @@ reads position and equality deletes and answers *known at* from older snapshots.
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -481,7 +481,7 @@ curve from 10,000 to 50,000 trades a day and the other stores side by side are i
 
 ## Security: TLS and credentials
 
-The shared `tls.*` settings ([TLS.md](../../docs/connectors/TLS.md), [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls))
+The shared `tls.*` settings ([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls))
 secure the **object store** that holds the data and metadata (MinIO, Ceph, a gateway on a private CA):
 
 | Setting | Meaning |
@@ -518,7 +518,7 @@ Check with `curl --cacert /etc/drishti/tls/ca.pem https://minio.example.com:9000
 
 ## Outbound proxy
 
-The shared `proxy.*` settings ([TLS.md, proxy](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers),
+The shared `proxy.*` settings ([DATA_GUIDE.md section 10, proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers),
 [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-proxy)): a `proxy:` block in `settings:` (or `proxy: none`) overrides the
 site default. A REST catalog's own client takes it as `rest.client.proxy.*` (when the catalog is not on `no-proxy`), the object store's
 S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kept), and Hadoop's S3A gets `fs.s3a.proxy.*`. Health adds
@@ -569,7 +569,7 @@ never a stack trace at each refresh.
 ## See also
 
 - [The iceberg-external connector](../drishti-plugin-iceberg-external/README.md) for tables other engines lay out.
-- [The delta connector](../drishti-plugin-delta/README.md) (the shared design), [Connectors](../../docs/connectors/CONNECTORS.md#apache-iceberg),
-  [Connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS](../../docs/connectors/TLS.md) and
+- [The delta connector](../drishti-plugin-delta/README.md) (the shared design), [Connectors](../../docs/guides/DATA_GUIDE.md#82-which-connector),
+  [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) and
   [DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

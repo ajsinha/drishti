@@ -158,7 +158,7 @@ A site that reaches the model endpoint only through a forward proxy puts a `prox
 sets the site default once: `drishti.http.proxy.*` on the server, `DRISHTI_HTTP_PROXY_URL` and friends in the console. `proxy: none` in a file goes direct whatever the site says.
 `http://` and `https://` endpoints both go through an `http://` proxy; an https endpoint is tunnelled with `CONNECT`, so `tls.*` (a private CA, a client certificate) still applies to the
 endpoint itself. OpenAI-compatible and Anthropic providers use it on the server (the JDK HTTP client) and in the console (`httpx`). A literal `proxy.password` refuses the file without
-repeating it; a wrong proxy login is reported as a failure of the call without the password. Everything is in [TLS.md (proxy)](../connectors/TLS.md#proxy-9-the-console-ai-and-mcp-clients). Tested in
+repeating it; a wrong proxy login is reported as a failure of the call without the password. Everything is in [DATA_GUIDE.md, the outbound proxy](../guides/DATA_GUIDE.md#proxy-9-the-console-ai-and-mcp-clients). Tested in
 `AiProxyTest` (Java) and `tests/test_ai_proxy.py` (console) against a fake proxy on loopback. Admin -> AI does not display the proxy yet.
 
 #### A provider that cannot be set up is retried
@@ -383,12 +383,12 @@ limits, roles, labels-only: section 4). **Every one is off until you copy its ex
   `ListFoundationModels` for Bedrock. A vendor's new model id is a line in `models:`, never a code change. A logical name is the id with characters outside `A-Za-z0-9._-` replaced by `_`
   (`openai/gpt-oss-20b` is `openai_gpt-oss-20b`); `groq/llama-3.3-70b-versatile` addresses a model as `<provider>/<logical name>`.
 * **Health.** `health()` never calls the network: it is *down* for `enabled: false` and for a missing key, credential or region (with the variable to set), else *ok*; once a certificate given by `tls.*` is
-  less than 30 days from expiry the text carries the sentence of [TLS.md](../connectors/TLS.md#9-certificate-expiry). `probe()` (Python also `aprobe()`) makes one cheap live call (the model list; Ollama
+  less than 30 days from expiry the text carries the sentence of [DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#109-certificate-expiry). `probe()` (Python also `aprobe()`) makes one cheap live call (the model list; Ollama
   `/api/tags`) and answers the same shape; Admin shows both.
 * **`describe_config()`** shows the file with every secret as `********` (the key, `header.*` credentials, `proxy.password`, `aws-*`, `client-secret`, `tls.*` passwords); the file's other settings are shown as written.
 * **Keys only as `${ENV}`.** `api-key`, `aws-access-key-id`, `aws-secret-access-key`, `aws-session-token`, `client-secret` and the `tls.*` passwords accept an `${ENV_NAME}` placeholder or nothing; a literal is
   refused at load, naming the setting. When `api-key` is left out, a preset reads the vendor's own variable (the table below).
-* **Proxy.** The shared `proxy.*` block (or the site default) applies to every call, an `https://` target tunnelled with CONNECT: [TLS.md (proxy)](../connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
+* **Proxy.** The shared `proxy.*` block (or the site default) applies to every call, an `https://` target tunnelled with CONNECT: [DATA_GUIDE.md, the outbound proxy](../guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
 * **TLS.** The shared `tls.*` block of the connectors applies to every provider type (section 11.9).
 * **Errors** name the cause and never carry the response body: HTTP 401/403 `(authentication failed ...)`, 404 `(not found: check base-url, the path and the model id)`, 429 kind `RATE_LIMITED`, a slow
   endpoint kind `TIMEOUT`, anything else `FAILED`. `retries: n` tries again after a 5xx, a 429 or a connection failure.
@@ -542,7 +542,7 @@ With the key variable unset, `health()` says `down` and what to set (captured): 
 
 #### 11.9 TLS: the same block as the connectors
 
-Every provider type (and the console's MCP client) reads the connectors' `tls:` block ([TLS.md](../connectors/TLS.md) is the reference; in a provider file `tls:` is flattened to `tls.*` as everywhere):
+Every provider type (and the console's MCP client) reads the connectors' `tls:` block ([DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) is the reference; in a provider file `tls:` is flattened to `tls.*` as everywhere):
 trust (`ca-file` as a PEM file or the PEM text, `truststore`, `trust-jvm-default`), a client identity for mutual TLS (`cert-file` + `key-file` + `key-password`, or `keystore`), `protocols`, `cipher-suites`,
 `verify-hostname` (on by default), `insecure-trust-all` (refused unless `DRISHTI_ALLOW_INSECURE_TLS=true`). Passwords are `${ENV}` placeholders or `...-password-file`, never literals. A `tls.*` key against an
 `http://` address is an error at load, never a silent downgrade. Through an HTTP proxy the same settings hold (CONNECT tunnel, TLS end to end). The expiry of every certificate given is read at start and shown in
@@ -622,7 +622,7 @@ proxy: {url: http://proxy.corp.example:3128, username: svc-drishti, password: ${
 A Streamable HTTP server is reached through the file's `proxy:` block, the site default (`drishti.http.proxy.*`; in the console the `DRISHTI_HTTP_PROXY_*` environment
 variables) or directly, exactly as an AI provider and a connector are: `http://` proxy, https servers tunnelled with `CONNECT` and keeping `tls.*`, the password an `${ENV}` placeholder
 (a literal refuses the file), a wrong login reported without the password. The initialize handshake, `tools/list`, calls and the closing DELETE all use it. Reference:
-[TLS.md (proxy)](../connectors/TLS.md#proxy-9-the-console-ai-and-mcp-clients). The `mock` transport has no network and ignores it.
+[DATA_GUIDE.md, the outbound proxy](../guides/DATA_GUIDE.md#proxy-9-the-console-ai-and-mcp-clients). The `mock` transport has no network and ignores it.
 
 A server is **connected on first use**. Two things can go wrong, and both are retried by themselves (`drishti.retry.mcp.*`, defaults: 5 s,
 doubling, up to 5 min, jitter; the console has `retry.mcp.*`):

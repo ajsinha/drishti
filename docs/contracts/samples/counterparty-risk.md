@@ -122,7 +122,7 @@ None: all 24 rows were read, and every field any of them has is in the record ab
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="collateral-balance"></a>
 
@@ -222,7 +222,7 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="credit-limit"></a>
 
@@ -319,7 +319,7 @@ None: all 1,440 rows were read, and every field any of them has is in the record
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="csa"></a>
 
@@ -428,7 +428,7 @@ None: all 76 rows were read, and every field any of them has is in the record ab
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="cva"></a>
 
@@ -532,7 +532,7 @@ None: all 4,373 rows were read, and every field any of them has is in the record
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="margin-call"></a>
 
@@ -625,7 +625,7 @@ None: all 152 rows were read, and every field any of them has is in the record a
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="netting-set"></a>
 
@@ -777,7 +777,7 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="sa-ccr"></a>
 
@@ -879,7 +879,7 @@ None: all 76 rows were read, and every field any of them has is in the record ab
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="simm"></a>
 
@@ -964,7 +964,7 @@ None: all 24 rows were read, and every field any of them has is in the record ab
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="simulation-run"></a>
 
@@ -1091,7 +1091,7 @@ None: all 1 rows were read, and every field any of them has is in the record abo
 - [15.2 `simulation-run`: the run's identity and grid (reference row)](../../guides/EXPOSURE_GUIDE.md#152-simulation-run-the-runs-identity-and-grid-reference-row)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="exposure-path"></a>
 
@@ -1198,4 +1198,4 @@ None: all 7,540 rows were read, and every field any of them has is in the record
 - [21. Validation, errors and data quality](../../guides/EXPOSURE_GUIDE.md#21-validation-errors-and-data-quality)
 - [Tutorial 26 · Exposure from the bank to a trade](../../tutorials/26-exposure-from-the-bank-to-a-trade.md)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

@@ -28,7 +28,7 @@ gossip-port: auto                    # gossip, probes and digests on a port of t
                                      # with queries is never wrongly suspected: auto (a free port, advertised through gossip), a
                                      # number (a firewall that must name it: open it between the nodes), or off (the server's port)
 # previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}   # also accepted during a key rollover (OPERATIONS.md, "Rotating the key")
-# tls:                               # mutual TLS between nodes, the shared tls settings (docs/connectors/TLS.md)
+# tls:                               # mutual TLS between nodes, the shared tls settings (docs/guides/DATA_GUIDE.md section 10)
 #   keystore: /etc/drishti/net/node.p12
 #   keystore-password: ${DRISHTI_NET_KEYSTORE_PASSWORD}
 #   truststore: /etc/drishti/net/cluster-ca.p12

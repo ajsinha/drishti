@@ -470,7 +470,7 @@ internal use only. The External data page says which is which.
   licence and refresh script.
 - [Data contracts](../contracts/README.md): the rules every contract shares, and [every command's contract](../contracts/packs/README.md).
 - [The command catalog](../guides/COMMAND_CATALOG.md): every command with its class.
-- [Data loads](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) and [connectors](../connectors/CONNECTORS.md).
+- [Data loads](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) and [connectors](../guides/DATA_GUIDE.md#8-connectors).
 - [Risk](risk.md): [market risk](risk.md#1-market-risk), [counterparty credit risk](risk.md#2-counterparty-credit-risk) and
   [trades and products](risk.md#3-trades-and-products), what this data feeds; [Economies](world.md#2-economies), where a counterparty's
   country leads.

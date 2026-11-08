@@ -522,7 +522,7 @@ measure of the model (`Desk P&L volatility: { python: desk-pnl-volatility, input
 
 - [Tutorial 13](13-govern-bi.md): publish with a review, certify, and see what a change would break.
 - [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5) is the live-table reference.
-- [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) and [DEMO_DATA.md](../connectors/DEMO_DATA.md) say exactly what ticks and how.
+- [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) and [../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#11-the-demo-data) say exactly what ticks and how.
 
 ## If something goes wrong
 

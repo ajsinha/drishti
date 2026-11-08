@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The shared ``tls.*`` settings of the connectors (docs/connectors/TLS.md) for the AI providers, against fake HTTPS servers with a test CA: a private CA is trusted only when
+"""The shared ``tls.*`` settings of the connectors (docs/guides/DATA_GUIDE.md section 10) for the AI providers, against fake HTTPS servers with a test CA: a private CA is trusted only when
 configured, mutual TLS is refused without the client certificate, the other trust and identity forms (PEM text, PKCS12, encrypted key with an ${ENV} password), hostname
 verification, the insecure switch, the expiry note, and everything through an HTTP proxy that tunnels with CONNECT. No real network."""
 import datetime as dt

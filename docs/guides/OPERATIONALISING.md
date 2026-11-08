@@ -307,7 +307,7 @@ Parquet files plus a `_delta_log`; the log decides what is visible, and a new co
 - **Ingest into the live lake with the tool** (`data ingest --lake`): it commits through Delta, so readers see the new version only when it is complete. This is the normal route for a daily load.
 - **Copy a finished lake or partitions:** build it in a stage folder, copy **the Parquet data files first and `_delta_log/` last** (the log is what makes files visible), for example `rsync -a stage/trading/trade_endur/ live/trading/trade_endur/ --exclude _delta_log && rsync -a stage/trading/trade_endur/_delta_log/ live/trading/trade_endur/_delta_log/`. Replacing a whole lake: `mv lake lake.old && mv lake.new lake`, then restart or wait for the connector (`refresh-seconds`, 10; the search index within about a minute). For `s3a://`, upload the same way (data first, log last) with `aws s3 sync`.
 
-Keep local test loads small ([DEMO_DATA.md](../connectors/DEMO_DATA.md)). For what the layout must be, see the manifest's `data.ingest` and [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md).
+Keep local test loads small ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)). For what the layout must be, see the manifest's `data.ingest` and [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md).
 
 ## 9. Check it after a deploy
 
@@ -564,7 +564,7 @@ needs the **packs:admin** scope (and its user the admin role). Every option and 
 A pack does not carry connection settings. It **names** the connectors it reads through (`connectors:` in `pack.yaml`, a list of names) and says which
 connector answers each kind (`routes:`). A **connector** is a site resource: one YAML file in `config/connectors/`, whose file name is the connector's
 name (`config/connectors/trade-endur.yaml` is `trade-endur`). The file holds the plugin (a Delta lake, JSON Lines files, a database...), the kinds it
-serves and its settings (a `root`, a JDBC `url`...). The whole reference, with an example for every store, is [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md);
+serves and its settings (a `root`, a JDBC `url`...). The whole reference, with an example for every store, is [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors);
 what an operator needs is here.
 
 ```
@@ -610,14 +610,14 @@ changed. **New connector** and **Edit** open a form generated from the plugin's 
 holds, and closes it; nothing that runs is changed. Save writes the file atomically (the old text goes to `<data dir>/connectors/history/`), applies it to that connector and says
 what state it reached; two editors cannot overwrite each other (the page sends the file's ETag and a stale one is refused with *changed since you read it*).
 
-![Admin -> Connectors: every connector with origin, plugin, kinds, status, who uses it and when it changed](../connectors/img/connector_files/01-connectors-list.jpg)
+![Admin -> Connectors: every connector with origin, plugin, kinds, status, who uses it and when it changed](img/connector_files/01-connectors-list.jpg)
 
-![Test connection: a failure explained in words](../connectors/img/connector_files/04-test-connection.jpg)
+![Test connection: a failure explained in words](img/connector_files/04-test-connection.jpg)
 
 **Admin → Packs → Data source** (a button on every loaded pack) is now a **read-only view**: the pack's connectors, each with its state, plugin, the kinds
 this pack takes from it and what defines it, with **Edit** links to Admin → Connectors. It changes nothing.
 
-![Admin -> Packs -> Data source: the pack's connectors, one not configured, with Edit and Create links](../connectors/img/connector_files/07-pack-connectors.jpg)
+![Admin -> Packs -> Data source: the pack's connectors, one not configured, with Edit and Create links](img/connector_files/07-pack-connectors.jpg)
 
 **A connector the pack names but nobody defined.** The pack still loads. Its kinds report `DRS-1011` (HTTP 404, "connector not configured"), Admin → Health
 shows the pack as degraded with `connectorsNotConfigured`, and the Data source view marks the connector **not configured** with a **Create** link that opens a
@@ -666,7 +666,7 @@ An override the server cannot place (neither a template nor a file says which pl
 
 Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.packs.deploy`](../admin/CONFIGURATION.md#drishtipacksdeploy) (also at Help → Configuration in the console).
 
-The endpoints (`/api/v1/admin/packs/...` for deploy and history, `/api/v1/admin/connectors` for connectors; administrator only; a personal token needs `packs:admin`): [API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors) and [CONNECTOR_FILES.md, section 9](../connectors/CONNECTOR_FILES.md#9-the-rest-api).
+The endpoints (`/api/v1/admin/packs/...` for deploy and history, `/api/v1/admin/connectors` for connectors; administrator only; a personal token needs `packs:admin`): [API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors) and [DATA_GUIDE.md section 9.9](DATA_GUIDE.md#99-the-rest-api).
 
 ### 17.7 Troubleshooting
 
@@ -681,7 +681,7 @@ The endpoints (`/api/v1/admin/packs/...` for deploy and history, `/api/v1/admin/
 | history says *reverted* | the server could not start with the new files and put the old ones back | read `server.log` at that time; fix the pack and redeploy |
 | *a credential is never written into a connector file* (`DRS-5031`) | a secret setting is not `${NAME}` or `file:/path` | export the variable for the server process and write the reference |
 | *refers to an environment variable that is not set* | the server process has no such variable | set it in the process environment (not your shell) and restart; the last good configuration keeps running meanwhile |
-| a connector file edit does nothing, or Health lists a bad file | `connectors-watch: off`, the file name breaks the rule, or the text is invalid | see [CONNECTOR_FILES.md, section 12](../connectors/CONNECTOR_FILES.md#12-health-and-problems) |
+| a connector file edit does nothing, or Health lists a bad file | `connectors-watch: off`, the file name breaks the rule, or the text is invalid | see [DATA_GUIDE.md section 9.12](DATA_GUIDE.md#912-health-and-problems) |
 | a kind answers `DRS-1011` | the pack names a connector with no file | create it in Admin → Connectors (the Create link on Data source) or `drishti.py connector apply` |
 
 ## 18. Admin → Artifacts: install and uninstall safely
@@ -695,7 +695,7 @@ Everything an administrator installs on a Drishti site is a file or a folder tha
 The same safe uninstall is on the pages you already use: **Admin → Packs** (an *Uninstall…* button on each pack), **Admin → Connectors** (on each connector with a
 file, the list and the connector's own page) and **Admin → BI** (a *Shipped files* table). They all open the same dialog, so the answer is the same wherever you
 start. The folders are still watched: an artifact you add, edit or delete by hand is picked up ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched),
-[CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [config/bi/README.md](../../config/bi/README.md)). This page is the careful way to do the same.
+[DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [config/bi/README.md](../../config/bi/README.md)). This page is the careful way to do the same.
 
 ### 18.1 The list
 
@@ -798,7 +798,7 @@ The *Install* section of the page has three cards:
 
 - **A pack.** Upload an archive on **Admin → Packs → Deploy an archive** (`.tar.gz` or `.zip`): it is verified and previewed (breaking changes marked) before
   anything changes, and the version it replaces is kept for roll-back ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)). The card links there.
-- **A connector.** **Admin → Connectors → New connector**: a form or YAML, tested before it is saved ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
+- **A connector.** **Admin → Connectors → New connector**: a form or YAML, tested before it is saved ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 - **A BI file.** Choose a file named `<name>.<kind>.yaml` (`kind` is `table`, `model`, `report`, `board`, `notebook` or `python`). A dataset file in BI's old
   form (`<name>.dataset.yaml`) is refused with `DRS-9196`: migrate it with `drishti.py tables migrate` and upload the tables and model it writes. **Nothing is written yet**: the server
   checks it and tells you what it found.
@@ -944,5 +944,5 @@ $ printf 'dataset: lab-more\ntitle: x\n' | curl -s -X POST --data-binary @- -H '
 | A BI report is blank after its dataset was disabled | A hidden dataset is not in the catalogue; **Enable** it again. |
 | The page says *administrators only* | Only an administrator may use it; a token cannot (`token-never`). |
 
-See also: [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [BI_GUIDE.md](BI_GUIDE.md), [OPERATIONS.md](../admin/OPERATIONS.md),
+See also: [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [BI_GUIDE.md](BI_GUIDE.md), [OPERATIONS.md](../admin/OPERATIONS.md),
 [API_GUIDE.md](API_GUIDE.md#administration-artifacts-apiv1adminartifacts), [TROUBLESHOOTING.md](TROUBLESHOOTING.md) and [tutorial 17](../tutorials/17-run-it-in-production.md).

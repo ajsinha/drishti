@@ -278,7 +278,7 @@ Fields no record above has, found by reading all 586 rows, with how many rows fi
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [1. Companies, funds and ETFs](../../knowledge/world.md#1-companies-funds-and-etfs)
 - [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="index-membership"></a>
 
@@ -404,7 +404,7 @@ None: all 6 rows were read, and every field any of them has is in the record abo
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [1. Companies, funds and ETFs](../../knowledge/world.md#1-companies-funds-and-etfs)
 - [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="filing-feed"></a>
 
@@ -537,7 +537,7 @@ None: all 6 rows were read, and every field any of them has is in the record abo
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [1. Companies, funds and ETFs](../../knowledge/world.md#1-companies-funds-and-etfs)
 - [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="filing"></a>
 
@@ -641,7 +641,7 @@ None: all 11,691 rows were read, and every field any of them has is in the recor
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [1. Companies, funds and ETFs](../../knowledge/world.md#1-companies-funds-and-etfs)
 - [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="financial-fact"></a>
 
@@ -752,4 +752,4 @@ None: all 4,026 rows were read, and every field any of them has is in the record
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [1. Companies, funds and ETFs](../../knowledge/world.md#1-companies-funds-and-etfs)
 - [Tutorial 27 · Groupings and analytics, computed](../../tutorials/27-groupings-and-analytics.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

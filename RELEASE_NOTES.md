@@ -829,7 +829,7 @@ limit letters; connector files that upgrade themselves safely.**
   default.
 - **Your own lake** ([EXTERNAL_LAKES](docs/guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg)): Databricks Delta tables or Iceberg tables from Spark, Databricks,
   Trino or Snowflake, path-based or through a REST catalog (Unity Catalog, Polaris, Glue), by configuration only.
-- **Connector upgrades made airtight** ([CONNECTOR_FILES "Upgrades"](docs/connectors/CONNECTOR_FILES.md)): a file nobody edited follows
+- **Connector upgrades made airtight** ([CONNECTOR_FILES "Upgrades"](docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)): a file nobody edited follows
   the pack's new template; an edited one gains every missing key and keeps its values; each conflict has **Use the pack's value**; the
   file before is kept beside it (`.before-upgrade-….bak`); an upgrade test in the drill.
 - **Also:** P&L-vector ids are `PNL-<trade>-<set>` (`PV-` ids still read); one download button per panel with a CSV / JSON Lines menu;

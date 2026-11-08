@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Connector files that have drifted from their pack's current template (CONNECTOR_FILES.md, "Template updates"). A file generated
+ * Connector files that have drifted from their pack's current template (docs/guides/DATA_GUIDE.md section 9, "Template updates"). A file generated
  * once from an older template can lack kinds the pack serves now; this finds, for each connector with text (a file or a shared
  * edit):
  * <ul>

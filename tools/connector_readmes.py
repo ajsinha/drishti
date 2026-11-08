@@ -76,9 +76,9 @@ def settings_block(plugin: str, cat: dict) -> tuple[str, list[str]]:
         rows.append([f"`{s['name']}`", _type(s), f"`{s['default']}`" if s.get("default") not in (None, "") else "", meaning])
     lines = ["| Setting | Type | Default | Meaning |", "|---|---|---|---|"] + ["| " + " | ".join(_cell(c) for c in r) + " |" for r in rows]
     common = ", ".join(f"`{c['name']}`" for c in cat.get("common") or [])
-    extra = [f"Every connector also takes {common} (docs/connectors/CONNECTOR_FILES.md)."]
+    extra = [f"Every connector also takes {common} (docs/guides/DATA_GUIDE.md section 9)."]
     if spec.get("tls"):
-        extra.append("It takes the shared `tls.*` settings (docs/connectors/TLS.md)" + (
+        extra.append("It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10)" + (
             ", also under " + ", ".join(f"`{p}*`" for p in spec["tls-prefixes"]) if spec.get("tls-prefixes") else "") + ".")
     if spec.get("proxy"):
         extra.append("It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).")

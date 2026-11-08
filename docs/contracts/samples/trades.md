@@ -1088,7 +1088,7 @@ Fields no record above has, found by reading all 12,477 rows, with how many rows
 - [Trading](../../guides/PACK_DEVELOPER_GUIDE.md#trading)
 - [3. Trades and products](../../knowledge/risk.md#3-trades-and-products)
 - [Tutorial 24 · Correct a trade and approve it: write-back](../../tutorials/24-correct-a-trade-and-approve-it.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="calypso"></a>
 
@@ -8141,7 +8141,7 @@ Fields no record above has, found by reading all 18,493 rows, with how many rows
 - [Trading](../../guides/PACK_DEVELOPER_GUIDE.md#trading)
 - [3. Trades and products](../../knowledge/risk.md#3-trades-and-products)
 - [Tutorial 24 · Correct a trade and approve it: write-back](../../tutorials/24-correct-a-trade-and-approve-it.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="murex"></a>
 
@@ -20147,4 +20147,4 @@ Fields no record above has, found by reading all 19,596 rows, with how many rows
 - [Trading](../../guides/PACK_DEVELOPER_GUIDE.md#trading)
 - [3. Trades and products](../../knowledge/risk.md#3-trades-and-products)
 - [Tutorial 24 · Correct a trade and approve it: write-back](../../tutorials/24-correct-a-trade-and-approve-it.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

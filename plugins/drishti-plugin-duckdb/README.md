@@ -94,7 +94,7 @@ DuckDB 1.5 or later wrote the file (the storage format).
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9).
 <!-- settings:end -->
 
 ## Data structure
@@ -258,7 +258,7 @@ The connectors of one server naming the same `path` share one DuckDB instance op
 `memory-limit` and `threads` and a spill directory under the JVM's temporary directory. Each read borrows a duplicated connection;
 DuckDB runs statements of different connections at once. Reads per connector are bounded by `pool-size` permits (a read waiting more
 than 5 seconds fails). DuckDB is **not pooled** in the network sense: no database connections, no idle timeout, and the site pool
-settings do not apply ([connection pools](../../docs/connectors/CONNECTOR_FILES.md#14-connection-pools)); Admin shows the reads running
+settings do not apply ([connection pools](../../docs/guides/DATA_GUIDE.md#914-connection-pools)); Admin shows the reads running
 and waiting, marked *embedded, not pooled*. Tables are always qualified with the database name (`"drishti".trading.entities`), because
 a file named like a schema would otherwise be ambiguous.
 
@@ -324,6 +324,6 @@ Limits:
 
 ## See also
 
-- [The PostgreSQL connector](../drishti-plugin-jdbc/README.md) (the table mode it mirrors) and [Connector files](../../docs/connectors/CONNECTOR_FILES.md).
-- [The demo data](../../docs/connectors/DEMO_DATA.md) (data of any size) and [the data lake guide](../../docs/guides/DATA_LAKE_GUIDE.md) (load rules).
+- [The PostgreSQL connector](../drishti-plugin-jdbc/README.md) (the table mode it mirrors) and [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
+- [The demo data](../../docs/guides/DATA_GUIDE.md#11-the-demo-data) (data of any size) and [the data lake guide](../../docs/guides/DATA_LAKE_GUIDE.md) (load rules).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

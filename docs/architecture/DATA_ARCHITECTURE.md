@@ -36,7 +36,7 @@ write-back tables are built), **loading** (section 7: the data inbox), **the lak
 | 10. The parallel lake loader | built |
 | 11. Arrow Flight | built |
 
-The people who load data read [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md) and [DATA_GUIDE.md](../guides/DATA_GUIDE.md); the connectors are [CONNECTORS.md](../connectors/CONNECTORS.md)
+The people who load data read [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md) and [DATA_GUIDE.md](../guides/DATA_GUIDE.md); the connectors are [../guides/DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connectors)
 and the per-store documents; VaR's intake is the parallel lake loader ([section 10](#10-the-parallel-lake-loader-drishti-lakeload)). Each section keeps its own numbering.
 
 ## Contents
@@ -3191,7 +3191,7 @@ The effective text is the overlay if present, else the file. Every node's `Conne
 hot-reloads as for a file edit; at start the overlaid names are applied by the first scan (the start-up properties come from the
 files alone). A save compares the etag the edit was based on with the store's current effective text and writes by compare-and-set,
 so two administrators on two nodes get one `409 DRS-5032`. Reset removes the overlay. There is nothing to import (the files were and
-stay the base). Pack template updates (CONNECTOR_FILES.md, "Template updates") write through the same overlay.
+stay the base). Pack template updates (../guides/DATA_GUIDE.md section 9, "Template updates") write through the same overlay.
 
 **Data loads overrides** (`drishti.loads.config-store`: `content`, default; `file`): `loads/config/<pack>.yaml`, read on every use,
 saved by compare-and-set; the folder `<data>/loads/config` imported once (`system/imports/loads-config.json`) and kept.
