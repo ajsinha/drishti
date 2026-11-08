@@ -55,7 +55,7 @@
       </div>
       <div data-fr-pane="scenarios" hidden><div class="fr-grid" data-fr-scen aria-label="The three correlation scenarios"></div></div>
       <div data-fr-pane="contrib" hidden>
-        <label class="pg-chip">By <select data-fr-by><option>DESK</option><option>TT_BOOK</option><option>LEGAL_ENTITY</option><option>PRODUCT_TYPE</option><option>POSITION</option></select></label>
+        <label class="pg-chip">By <drishti-select data-fr-by label="Contributions by"><option>DESK</option><option>TT_BOOK</option><option>LEGAL_ENTITY</option><option>PRODUCT_TYPE</option><option>POSITION</option></drishti-select></label>
         <div class="fr-grid" data-fr-contrib aria-label="Contributions"></div>
       </div>
     </section>
@@ -64,7 +64,7 @@
   {% else %}
   <div class="fr-choices" data-fr-choices aria-label="Choices: every method choice as a switch"></div>
   <div class="pg-ctrls" role="toolbar">
-    <label class="pg-chip">Compare with <select data-fr-compare aria-label="A switch flipped"><option value="">(none)</option></select></label>
+    <label class="pg-chip">Compare with <drishti-select data-fr-compare label="A switch flipped"><option value="">(none)</option></drishti-select></label>
     <span class="pg-actions">
       <button type="button" class="pg-btn" data-fr-save title="Save this run as a recipe: PLAY FRTB RUN <id> computes it again to the cent">Save recipe</button>
       <button type="button" class="pg-btn primary" data-fr-export title="The workbook of live formulas: the switches are cells of Config">Export to Excel</button>
