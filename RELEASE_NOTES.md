@@ -191,6 +191,11 @@ Follow these steps when upgrading an installation of 2.9.11.d.
     `exposure-whatif` with its kind and the command `XWIF` are gone; the exact what-if (`POST /api/v1/risk/exposure/what-if`) answers the
     same request field by field from Java. A never-edited `exposure-whatif.yaml` connector file is removed at start (kept as
     `.retired-<time>.bak`).
+14. **Iceberg connectors with `engine: library` whose `root` holds a space, a `%` or non-ASCII letters**: the library engine kept that
+    lake in a folder spelled the way `java.nio` encodes it (`my%20lake` beside `my lake`). It now uses the folder the root names. Move
+    the tables from the encoded folder into the named one (or set `root` to the encoded folder's name), then restart. Nothing else
+    changes for Iceberg users: tables written by other engines with special partition values, which failed with *no such file*, now
+    read. Lakes follow the Iceberg spec ([DATA_LAKE_GUIDE.md section 15](docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance)).
 
 ### Removed endpoints and screens
 

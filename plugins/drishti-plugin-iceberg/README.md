@@ -405,7 +405,7 @@ java -cp <plugin classpath> com.ash.drishti.plugin.iceberg.IcebergMaintenance ./
 | `--relayout` (`--force`: every day) | rewrites, sorted into files of `file-rows`, only days that drifted (overlapping id ranges, oversized or too many files, delete files, a missing promoted column); one validated commit per day |
 | `--columns kind:path,path` | adds promoted columns and fills them from the documents |
 | `--rewrite-manifests` | regroups manifests one per month of business dates |
-| `--expire-hours H` | expires snapshots older than H hours (168), keeping the current one; `-1` skips it |
+| `--expire-hours H` | expires snapshots older than H hours (168), keeping the current one and every branch's and tag's snapshot (as the Apache library does); `-1` skips it |
 | `--remove-orphans --older-than-hours H` | deletes unreferenced files older than H hours (at least 72) ([DATA_ARCHITECTURE.md section 16](../../docs/architecture/DATA_ARCHITECTURE.md#16-vector-columns-and-orphan-files)) |
 | `--floor-days D` | never drops a date, nor expires a snapshot, within D days (`lake maintain` passes 2,557 for `risk` and `risk-results`) |
 | `--dry-run`, `--json`, `--kinds`, `--spill-dir`, `--buffer-mb`, `--catalog …`, `--set` | report only; one JSON line a table; scope; the sort; the catalog |
@@ -429,7 +429,10 @@ engine cannot reach is read by the library; asked for by name, `native` refuses 
 maintained by the other. The native engine reads metadata, manifests (v1, v2) and Parquet by **field id** (renames, added columns,
 widened types, `schema.name-mapping.default`), prunes over every partition transform, applies deletes by sequence number, and commits
 safely (a hard link on local disk, a conditional PUT on S3, the catalog's requirements through REST). It refuses by name, never reading
-wrongly: format version 3, encrypted tables, ORC and Avro data files, unknown types, S3 remote signing.
+wrongly: format version 3, encrypted tables, ORC and Avro data files, unknown types, S3 remote signing. File paths are opened as
+written, never percent-decoded (a partition folder `g=a%2Fb` another writer made is that folder). The loader writes only tables
+partitioned by `business_date` alone and refuses one another engine re-partitioned. The full feature table, both directions:
+[DATA_LAKE_GUIDE.md section 15](../../docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
 **Caches.** The native engine reads each Parquet footer once and keeps it (`-Ddrishti.parquet.footer-cache-mb`, 64, shared with Delta),
 plus parsed manifests (`drishti.iceberg.manifest-cache-entries`) and delete files (`drishti.iceberg.delete-cache-rows`); the library
@@ -528,6 +531,8 @@ S3 file IO gets the SDK's proxy configuration (`https://` tunnelled, `tls.*` kep
 
 - Only promoted fields are fast; effective-mode kinds are not read as columns; live overlays are not in column searches.
 - Only Parquet data files; no encrypted tables; format version 3 is refused. Time travel reaches back only as far as snapshots are kept.
+  Branches and tags other than `main` are not read by name (expiry keeps their snapshots). Spec compliance, feature by feature:
+  [DATA_LAKE_GUIDE.md section 15](../../docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 - The library engine reads a footer on every single read, needs Hadoop (and `winutils.exe` on Windows), and path-based tables on S3
   need one writer at a time there.
 
