@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 32 · SIMM from the hand-built examples to a netting set
+# Tutorial 5 · SIMM from the hand-built examples to a netting set
 
 ISDA SIMM, the initial margin each side of uncleared derivatives holds against the other, computed by Drishti per netting set, collect
 and post, from the same sensitivities FRTB-SA reads. In this tutorial you install a parameter version, run the hand-built examples (small
@@ -296,4 +296,4 @@ IM_EQUITY: 172400000
 
 - The [SIMM guide](../guides/SIMM_GUIDE.md): every formula, the parameter file's keys, the refusal codes and what is not built yet.
 - The [data contract](../contracts/SIMM.md): the CRIF mapping, the CSA's terms and the computed kind `simm-result`.
-- [Tutorial 30](30-frtb-sa-from-the-cases-to-a-desk.md): FRTB-SA from the same sensitivities.
+- [Tutorial 4](04-frtb-sa.md): FRTB-SA from the same sensitivities.
