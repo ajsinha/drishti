@@ -2940,6 +2940,7 @@
         if (!it || it.disabled) { return; }
         this.close(true);
         this.setValue(it.value, true);
+        this.emit('pick', { value: this.value, option: this.getOption() });      // every pick, the same value too (a cell editor saves on it)
       }
       getValue() { return this.value; }
       getOption() { const v = this.value; return v === null ? null : this.options.find((x) => same(x.value, v)) || null; }

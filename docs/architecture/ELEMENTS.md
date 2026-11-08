@@ -663,6 +663,12 @@ library with its module: an unlicensed module's library is not served, its kinds
     beside it: `minimum`, `maximum`, `increment`), a text field's `format` **`password`** or **`search`**, `maxLength`, `mono`,
     `autocomplete` and **`suggest`** (values offered as one types, any text taken), and the layout **`inline`** (the fields in a row, for
     a filter bar). The server's side is `core/form_kit.py` (12.3, sixth pass).
+  - **Selects on `Select`.** drishti-grid's select cell editor is a `Select` that opens on the cell's value (a pick saves, through the
+    `Select`'s new **`pick`** event, which fires for every pick, the same value too; without drishti-inputs on the page the cell takes
+    an option's words or value typed). FRTB-SA's and SIMM's playground choices (the method switches, *Compare with*, *By*, *Side*) are
+    `<drishti-select>`s heard through `drishti:change`. Tests pick as a person does: `tests/select_helpers.py` (`choose`), and
+    Playwright's `select_option` and `input_value` on a `<drishti-select>` open it and click the option or read its value (installed by
+    `conftest.py`). Still native: a `Form`'s own select field (next).
 
   | Was | Now |
   |---|---|
@@ -1502,7 +1508,8 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
 - [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
 - [x] drishti-inputs' single-choice `Select` (`<drishti-select>`, 8.2); the VaR family's and the exposure screens' native selects replaced (12.2: hierarchy, horizon, confidences, currency, the pre-deal form)
-- [ ] The library's own native selects (a form's enum select, the grid's select editor) and FRTB-SA's and SIMM's choice selects on `Select`
+- [x] drishti-grid's select editor and FRTB-SA's and SIMM's choice selects on `Select` (8.2)
+- [ ] A `Form`'s select field on `Select` (built on wip/e-admin-2-select; the screens' tests still to adapt)
 - [x] drishti-renderer 2.0.0 on the libraries (8.5; the console's controls, funnels and Zoom still its scripts until their screens move)
 - [x] drishti-insight 0.1.0 (8.10): the one Explain, the one search box, the Approvals queue and the workbook export, in the manifest, so
   packing and the gallery include it
