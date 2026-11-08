@@ -402,7 +402,10 @@ Select cells (click, Shift+click or Shift+arrows) and press `G`. With nothing se
 (sum, count) is drawn as bars that sum to the total. **A measure that does not add up is never stacked**: VaR by desk is drawn as the desks'
 bars beside the bank's, with the diversification as its own bar, and the chart says so in words. The diversification is the engine's
 own gap of the charted column (each open row's `diversificationByColumn` in the answer, Σ parts − total; drawn as total − Σ parts): the
-browser adds up nothing. A bar's click opens that member in the
+browser adds up nothing. The gap is given only when the row's total and every one of its parts have the figure; when one has none (a
+measure computed for a view's first cells only, such as the MR cube's stressed VaR and SBM, or a hidden cell) it is `null` and no bar is
+drawn: never a sum of some of the parts. Which cells get such a capped measure is fixed by the view: its first N cells in the grid's
+order, row by row as shown, each row's columns left to right ([section 29.2](#292-the-measures) section 2). A bar's click opens that member in the
 grid. ECharts is vendored; nothing comes from a CDN.
 
 ## 10. Export
@@ -1080,6 +1083,15 @@ where it does not. `dv01()`, `cs01()` and `sbm()` are offered only when the FRTB
 `var()`, `es()`, `pv()` and `trades()` only. A figure the cube cannot give in a cell (stressed VaR past `stressed-max-cells`, SBM of a cell
 no scope text names, a limit of a cell that is not a whole node) is empty, with its reason in the cell's notes; never a zero.
 
+**Which cells get stressed VaR and SBM.** Each is a run of an engine on the cell's scope, so a view gets them for a fixed set of its cells:
+the first `stressed-max-cells` (100) and `sbm-max-cells` (60) cells **in the grid's order**: row by row as the grid shows them (with
+subtotals below, the grand total row comes last), each row's columns left to right, column total last; a cell without trades is not a
+cell. Every other cell is empty, with the note *stressed VaR is computed for the first 100 cells of a view, row by row as the grid shows
+them*, even when its figure is in the cache from another view. So the same view always shows the same figures, whatever was asked
+before it or at the same time. A view is not sorted or ranked for a top N by either measure (the order decides which cells are
+computed), and a row's diversification of either is shown only when the row's total and every one of its parts have the figure: never a
+sum of some of the parts.
+
 ### 29.3 The inputs
 
 The cube adds no input of its own: it reads the VaR engine's book of the business date and, for the sensitivity measures, the FRTB-SA
@@ -1215,7 +1227,7 @@ The cell budget, busy protection and the cache are the pivot engine's ([section 
 | `drishti.cube.mr.risk-classes` | the derived `RISK_CLASS` dimension (IR, CR, FX, EQ, CM by product group as shipped) |
 | `drishti.cube.mr.grids` | the ladders' bucket grids, in years (`BANK-IR-TENOR`, `FRTB-GIRR`) |
 | `drishti.cube.mr.ladder-limits` | two-sided DV01 limits per currency and bucket (`"USD 2-5Y": 1500000`) |
-| `drishti.cube.mr.sbm-max-cells`, `stressed-max-cells` | the cells whose SBM, and whose stressed VaR, one evaluation computes |
+| `drishti.cube.mr.sbm-max-cells`, `stressed-max-cells` | the cells of a view that get SBM (60), and stressed VaR (100): its first, in the grid's order ([section 29.2](#292-the-measures)) |
 | `drishti.cube.mr.sparkline-dates`, `sparkline-max-cells` | the open business dates a sparkline reads, and the most cells of a view that get one |
 | `drishti.cube.mr.what-if-rows` | the most rows the what-if side by side computes (the total always added) |
 

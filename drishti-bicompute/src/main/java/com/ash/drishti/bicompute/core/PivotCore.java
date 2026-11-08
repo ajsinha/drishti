@@ -255,6 +255,10 @@ public final class PivotCore {
         final AggregationPlan.Money money;
         /** Levels whose top N a Space-Saving summary chose first (parent node key and dimension), with the words for provenance. */
         final Map<String, String> topChosen = new LinkedHashMap<>();
+        /** The capped measures (function index to its cap): computed after the grid is laid out, for its first cells only. */
+        final Map<Integer, PivotProvider.Cap> capped = new LinkedHashMap<>();
+        /** The set each known cell came from (a capped measure asks the provider for the cell alone, cut from it). */
+        final Map<CellKey, CellSet> origin = new HashMap<>();
 
         Computation(Viewer viewer, PivotView asked) {
             this(viewer, asked, ScaleOptions.AUTO);
@@ -313,6 +317,18 @@ public final class PivotCore {
                 for (Hooks h : hooks) {
                     h.functions(viewer, view, provider, this.scale, functions, est, work.notes);
                 }
+            }
+            for (int i = 0; i < functions.size(); i++) {
+                Optional<PivotProvider.Cap> cap = provider.cap(functions.get(i).fn().name());
+                if (cap.isPresent()) {
+                    capped.put(i, cap.get());
+                }
+            }
+            for (Map.Entry<String, PivotView.Sort> s : view.sort().entrySet()) {
+                refuseCapped(measureIndex(s.getValue().by(), true), "sorted");
+            }
+            for (Map.Entry<String, PivotView.Top> t : view.top().entrySet()) {
+                refuseCapped(measureIndex(t.getValue().by(), false), "ranked for a top N");
             }
             this.holistic = functions.stream().anyMatch(f -> f.fn().kind() == Kind.HOLISTIC);
             for (FunctionCall f : functions) {
@@ -490,6 +506,7 @@ public final class PivotCore {
                 newRows = nextRows;
                 newCols = nextCols;
             }
+            capped(PivotAnswer.gridOrder(this));
         }
 
         /** The members of each new group (from its set crossed with the other axis's total): the nodes, sorted, top N, opened. */
@@ -605,8 +622,77 @@ public final class PivotCore {
             return c;
         }
 
+        /** A sort or a top N by a capped measure is refused in words: which cells get its figure follows the grid's order, set by them. */
+        private void refuseCapped(int mi, String how) {
+            if (mi >= 0 && capped.containsKey(mi)) {
+                throw PivotView.bad(functions.get(mi).label() + " is computed for the first " + capped.get(mi).cells() + " cells of a view only, "
+                        + "in the grid's order, so the view is not " + how + " by it: sort or rank by another value");
+            }
+        }
+
         /** Asks the provider for the sets, through the cache: a set whose every function is cached is not asked again. */
         void evaluate(List<CellSet> sets) {
+            List<Integer> which = new ArrayList<>();
+            for (int f = 0; f < functions.size(); f++) {
+                if (!capped.containsKey(f)) {
+                    which.add(f);                                   // a capped measure waits for the grid (capped(), below)
+                }
+            }
+            evaluate(sets, which);
+        }
+
+        /**
+         * The capped measures for the first cells of {@code order} (the grid's order; PivotProvider.cap): those cells are asked of the
+         * provider one by one, each cut from the set it came from (through the cache: a cell's figure is its own, whichever view asks), and
+         * every other known cell carries the cap's note and no figure, even when a figure of it is cached. The same view therefore always
+         * gets the same figures, whatever was asked before it or beside it.
+         */
+        void capped(List<CellKey> order) {
+            if (capped.isEmpty()) {
+                return;
+            }
+            Map<List<Integer>, List<CellSet>> byFunctions = new LinkedHashMap<>();
+            List<CellKey> known = order.stream().filter(cells::containsKey).distinct().toList();
+            for (int i = 0; i < known.size(); i++) {
+                List<Integer> fs = new ArrayList<>();
+                for (Map.Entry<Integer, PivotProvider.Cap> e : capped.entrySet()) {
+                    if (i < e.getValue().cells()) {
+                        fs.add(e.getKey());
+                    }
+                }
+                if (!fs.isEmpty()) {
+                    byFunctions.computeIfAbsent(fs, k -> new ArrayList<>()).add(alone(known.get(i)));
+                }
+            }
+            Set<CellKey> first = new java.util.HashSet<>();
+            for (Map.Entry<Integer, PivotProvider.Cap> e : capped.entrySet()) {
+                first.clear();
+                first.addAll(known.subList(0, Math.min(known.size(), e.getValue().cells())));
+                for (Map.Entry<CellKey, Cell> c : cells.entrySet()) {
+                    if (!first.contains(c.getKey())) {
+                        c.getValue().states[e.getKey()] = null;
+                        c.getValue().notes.put(e.getKey(), e.getValue().note());
+                    }
+                }
+            }
+            byFunctions.forEach((fs, sets) -> evaluate(sets, fs));
+        }
+
+        /** One known cell as a set of its own: the set it came from, restricted to the cell's coordinates. */
+        private CellSet alone(CellKey key) {
+            CellSet from = origin.get(key);
+            Map<String, String> at = new LinkedHashMap<>(from.at());
+            for (String d : from.grouping()) {
+                at.put(d, key.coords().get(d));
+            }
+            return new CellSet(from.grouping(), at, from.exclude(), from.marks());
+        }
+
+        /**
+         * Asks the provider for the functions {@code which} of the sets, through the cache. With no function to ask (every value of the view
+         * is capped) the provider is still asked, for the cells and their members.
+         */
+        private void evaluate(List<CellSet> sets, List<Integer> which) {
             if (sets.isEmpty()) {
                 return;
             }
@@ -617,15 +703,15 @@ public final class PivotCore {
             for (CellSet s : sets) {
                 work.setsAsked++;
                 List<Integer> missing = new ArrayList<>();
-                for (int f = 0; f < functions.size(); f++) {
+                for (int f : which) {
                     Object hit = scale.sampled() ? null : cache.get(prefix + s.signature() + "|" + functions.get(f).id());
                     if (hit instanceof Cached c) {
-                        absorb(c, f);
+                        absorb(c, f, s);
                     } else {
                         missing.add(f);
                     }
                 }
-                if (missing.isEmpty()) {
+                if (missing.isEmpty() && !which.isEmpty()) {
                     work.setsFromCache++;
                 } else {
                     byMissing.computeIfAbsent(missing, k -> new ArrayList<>()).add(s);
@@ -642,6 +728,9 @@ public final class PivotCore {
                     work.rowsRead = Math.max(0, work.rowsRead) + parts.stats().rowsRead();
                 }
                 for (Partials.SetResult r : parts.sets()) {
+                    if (fns.isEmpty()) {
+                        members(r);
+                    }
                     for (int j = 0; j < fns.size(); j++) {
                         int f = e.getKey().get(j);
                         Cached c = new Cached(new TreeMap<>(), new TreeMap<>(), new HashMap<>(), new HashMap<>());
@@ -662,7 +751,7 @@ public final class PivotCore {
                         if (!scale.sampled() && !uncacheable) {
                             cache.put(prefix + r.set().signature() + "|" + functions.get(f).id(), c, bytes);
                         }
-                        absorb(c, f);
+                        absorb(c, f, r.set());
                     }
                 }
             }
@@ -727,13 +816,9 @@ public final class PivotCore {
             return OrderedMerge.merge(p, parts);
         }
 
-        private void absorb(Cached c, int f) {
+        private void absorb(Cached c, int f, CellSet from) {
             for (Map.Entry<CellKey, Object> x : c.states.entrySet()) {
-                Cell cell = cells.computeIfAbsent(x.getKey(), k -> {
-                    Cell nc = new Cell();
-                    nc.states = new Object[functions.size()];
-                    return nc;
-                });
+                Cell cell = cell(x.getKey(), from);
                 cell.states[f] = x.getValue();
                 cell.members = Math.max(cell.members, c.members.getOrDefault(x.getKey(), 0L));
                 if (c.scopes.containsKey(x.getKey())) {
@@ -741,6 +826,27 @@ public final class PivotCore {
                 }
                 if (c.notes.containsKey(x.getKey())) {
                     cell.notes.put(f, c.notes.get(x.getKey()));
+                }
+            }
+        }
+
+        /** A known cell, made when first seen (with the set it came from). */
+        private Cell cell(CellKey key, CellSet from) {
+            origin.putIfAbsent(key, from);
+            return cells.computeIfAbsent(key, k -> {
+                Cell nc = new Cell();
+                nc.states = new Object[functions.size()];
+                return nc;
+            });
+        }
+
+        /** The cells of a set asked for no function (every value of the view is capped): their members and scopes only. */
+        private void members(Partials.SetResult r) {
+            for (Map.Entry<CellKey, Partials.Entry> x : r.cells().entrySet()) {
+                Cell cell = cell(x.getKey(), r.set());
+                cell.members = Math.max(cell.members, x.getValue().members());
+                if (x.getValue().scope() != null) {
+                    cell.scope = x.getValue().scope();
                 }
             }
         }
@@ -838,6 +944,7 @@ public final class PivotCore {
         coords.keySet().forEach(k -> c.dim(Dim.parse(k)));
         CellSet s = CellSet.of(new ArrayList<>(coords.keySet()), coords);
         c.evaluate(List.of(s));
+        c.capped(List.of(CellKey.of(coords)));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("coords", coords);
         Cell cell = c.cells.get(CellKey.of(coords));
@@ -875,6 +982,7 @@ public final class PivotCore {
         Map<CellKey, Long> members = new TreeMap<>();
         java.util.Set<String> shape = new java.util.TreeSet<>(set.grouping());
         shape.addAll(set.marks().keySet());
+        c.capped(c.cells.keySet().stream().filter(k -> k.coords().keySet().equals(shape) && c.matchesAt(k, set.at())).sorted().toList());
         for (Map.Entry<CellKey, Cell> e : c.cells.entrySet()) {
             CellKey k = e.getKey();
             if (!k.coords().keySet().equals(shape) || !c.matchesAt(k, set.at())) {
