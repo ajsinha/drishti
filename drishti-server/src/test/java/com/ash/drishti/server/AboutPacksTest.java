@@ -63,7 +63,7 @@ class AboutPacksTest {
 
     private List<String> kindsOf(String pack) throws IOException {
         List<String> out = new ArrayList<>();
-        yaml.readTree(Files.readString(PACKS_DIR.resolve(pack).resolve("pack.yaml"))).path("kinds").forEach(k -> out.add(k.asText()));
+        yaml.readTree(Files.readString(com.ash.drishti.api.PackFolders.of(PACKS_DIR, pack).resolve("pack.yaml"))).path("kinds").forEach(k -> out.add(k.asText()));
         return out;
     }
 
@@ -92,7 +92,7 @@ class AboutPacksTest {
         List<String> failures = new ArrayList<>();
         int rendered = 0;
         for (String pack : PACKS) {
-            Path samples = PACKS_DIR.resolve(pack).resolve("samples");
+            Path samples = com.ash.drishti.api.PackFolders.of(PACKS_DIR, pack).resolve("samples");
             for (String kind : kindsOf(pack)) {
                 AboutText t = catalog.forKind(kind).orElseThrow();
                 {

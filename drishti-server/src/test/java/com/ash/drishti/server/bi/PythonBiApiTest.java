@@ -63,7 +63,7 @@ class PythonBiApiTest {
 
     static {
         try {
-            for (String f : List.of("../tables/bi/trades_basic_trade.table.yaml", "../tables/banking/trades-basic.model.yaml", "python/banking/desk-pnl-volatility.python.yaml",
+            for (String f : List.of("../tables/banking/trades_basic_trade.table.yaml", "../tables/banking/trades-basic.model.yaml", "python/banking/desk-pnl-volatility.python.yaml",
                     "python/banking/pnl-histogram.python.yaml", "reports/banking/python-desk-risk.report.yaml")) {
                 Path to = FOLDER.resolve(f.replace("../", ""));
                 Files.createDirectories(to.getParent());

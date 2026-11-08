@@ -65,7 +65,7 @@ bi:                                      # BI datasets, models, reports and boar
   datasets: [banking.market_risk_var_latest, banking.market_risk_var_official, banking.counterparty_exposure_counterparties, banking.counterparty_exposure_netting_sets,
              banking.counterparty_exposure_official, banking.counterparty_exposure_official_counterparties, banking.counterparty_exposure_official_netting_sets,
              banking.live_exposure_netting,
-             bi.trading_risk_*]                     # trades with their counterparties' and netting sets' exposure (the Counterparty risk report)
+             banking.trading_risk_*]                     # trades with their counterparties' and netting sets' exposure (the Counterparty risk report)
   models: [market-risk-var, counterparty-exposure, live-exposure, trading-risk]
 
 phone:                                   # the phone display in this edition (docs/architecture/MOBILE_DISPLAY.md), over the site's ui.phone

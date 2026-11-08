@@ -39,7 +39,7 @@ import org.springframework.core.env.PropertySource;
  *
  * <p>The layer holds the file's keys under {@code drishti.edition-spec.*} (read by {@link Editions#of}) and the server settings the
  * edition presets: {@code drishti.packs.enabled}, {@code drishti.branding.product}/{@code tagline}, each feature of the edition through the
- * mapping in {@code features.yaml} beside the edition files, and the file's raw {@code server:} block. A preset of a setting the product
+ * mapping in {@code features.yaml} in the lens folder ({@code drishti.lens-dir}), and the file's raw {@code server:} block. A preset of a setting the product
  * writes as {@code ${VARIABLE:default}} keeps the variable: {@code DRISHTI_PACKS} set still wins over the edition's packs.
  */
 public final class EditionEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
@@ -71,7 +71,7 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
             props.put("drishti.packs.enabled", preset(env, "drishti.packs.enabled", String.join(",", packs)));
         }
         spec.path("branding").fields().forEachRemaining(e -> props.put("drishti.branding." + e.getKey(), preset(env, "drishti.branding." + e.getKey(), e.getValue().asText())));
-        Map<String, List<String>> mapping = featureMapping(file.getParent(), "server");
+        Map<String, List<String>> mapping = featureMapping(Path.of(env.getProperty(Editions.DIR, Editions.DEFAULT_DIR)), "server");   // the lens folder's features.yaml
         spec.path("features").fields().forEachRemaining(e -> {
             String value = e.getValue().asText().strip();
             for (String key : mapping.getOrDefault(e.getKey(), List.of())) {
@@ -92,8 +92,8 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
     }
 
     /**
-     * Which settings each feature of an edition presets on one side ({@code server} or {@code console}): {@code features.yaml} beside the
-     * edition files, {@code feature -> {server: [keys], console: [keys]}}. Missing: no feature presets.
+     * Which settings each feature of an edition presets on one side ({@code server} or {@code console}): {@code features.yaml} in the
+     * lens folder, {@code feature -> {server: [keys], console: [keys]}}. Missing: no feature presets.
      */
     public static Map<String, List<String>> featureMapping(Path dir, String side) {
         Map<String, List<String>> out = new LinkedHashMap<>();

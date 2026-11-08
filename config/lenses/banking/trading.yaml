@@ -66,7 +66,7 @@ features:                                # presets of existing switches (config/
   embed: off
 
 bi:                                      # the trading and VaR datasets and models that exist (no exposure, stress or regulatory item)
-  datasets: [bi.trading_risk_*, bi.trading_cashflows_*, banking.trades_basic_trade, banking.live_trading_trade, banking.market_risk_var_latest,
+  datasets: [banking.trading_risk_*, banking.trading_cashflows_*, banking.trades_basic_trade, banking.live_trading_trade, banking.market_risk_var_latest,
              banking.market_risk_var_official]
   models: [trading-risk, trading-cashflows, trades-basic, live-trading, market-risk-var]
 

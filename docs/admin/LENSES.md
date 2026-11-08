@@ -240,7 +240,7 @@ more lines in the same file.
 | **Features** | BI (the lens's datasets), VaR, exposure, the data map, Export data, layouts, workspaces, monitors, alerts, reports, lakes | Calc and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Help** | Get started, Risk measures, Data, Operate, Reference, Knowledge (market risk, counterparty credit risk, core, trading, market data), Internal for administrators | Analytics and BI, Build; other packs' Knowledge pages; documents not in the catalogue |
 | **Admin** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, BI, scopes (every person's VaR baskets), configuration | AI, collaboration, embedding, edits, compute (404) |
-| **BI** | `banking.market_risk_var_latest`, `banking.market_risk_var_official`, the `banking.counterparty_exposure_*` datasets, `banking.live_exposure_netting`, `bi.trading_risk_*`; models `market-risk-var`, `counterparty-exposure`, `live-exposure`, `trading-risk`, and the reports on them | every other dataset, model, report and board |
+| **BI** | `banking.market_risk_var_latest`, `banking.market_risk_var_official`, the `banking.counterparty_exposure_*` datasets, `banking.live_exposure_netting`, `banking.trading_risk_*`; models `market-risk-var`, `counterparty-exposure`, `live-exposure`, `trading-risk`, and the reports on them | every other dataset, model, report and board |
 | **Branding** | **Drishti Risk**, "VaR and exposure from your own pricing data", with Drishti's name and eye | nothing, by default |
 
 A hidden command is hidden from people only. The engines still read every kind they need (the VaR engine reads P&L vectors, positions,
@@ -279,7 +279,7 @@ out.
 | **Menus** | Views (Terminal, Search, Functions, Export data, Reports, Workspaces, Monitors, Alerts); Engines; one **Markets** menu (rates, vols, FX, credit, equities and commodities: `menus.markets`); Blotter, Positions, Risk, Counterparties; Help. BI and Admin by command only (`BI <GO>`; `ADMIN <GO>` for administrators) | Forms, Data map, Build; BI and Admin in the bar |
 | **Features** | VaR, exposure, BI (the lens's datasets), layouts, workspaces, monitors, alerts, reports, lakes | Calc, Python visuals, the designer, Studio, Build, forms, the data map, AI, embedding |
 | **Help** | Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data), with the other sections but Build | Build; the public-data packs' Knowledge pages |
-| **BI** | `bi.trading_risk_*`, `bi.trading_cashflows_*`, `banking.trades_basic_trade`, `banking.live_trading_trade`, the VaR datasets; their models and reports | exposure, stress, world and market-data items |
+| **BI** | `banking.trading_risk_*`, `banking.trading_cashflows_*`, `banking.trades_basic_trade`, `banking.live_trading_trade`, the VaR datasets; their models and reports | exposure, stress, world and market-data items |
 | **Branding** | **Drishti Trading**, "Your books, your P&L and your limits, and whether the next trade fits" | |
 
 `SMAT BOOK BOOK-RATES-1 20` opens the scenario matrix: the book's scenarios across its last 20 business dates; a trade's, a position's and
