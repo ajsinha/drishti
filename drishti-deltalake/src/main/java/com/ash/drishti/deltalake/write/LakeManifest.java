@@ -59,7 +59,7 @@ public record LakeManifest(String table, List<String> partitionColumns, List<Col
     /**
      * A staged file: its rows all have these partition values ({@code business_date} as yyyy-MM-dd; a null value is null). A part of a
      * table in memory has no file: its staged rows come from {@code source} (the replenish jobs of the in-memory lake never stage on a
-     * disk, docs/architecture/IN_MEMORY_LAKE.md section 8).
+     * disk, docs/architecture/DATA_ARCHITECTURE.md section 8).
      */
     public record Part(Path file, long rows, Map<String, String> values, java.util.function.Supplier<java.io.Reader> source) {
 
@@ -85,7 +85,8 @@ public record LakeManifest(String table, List<String> partitionColumns, List<Col
         List<Part> parts = new ArrayList<>();
         for (JsonNode p : n.path("parts")) {
             Map<String, String> values = new LinkedHashMap<>();
-            p.path("values").fields().forEachRemaining(e -> values.put(e.getKey(), e.getValue().isNull() ? null : e.getValue().asText()));
+            p.path("values").fields().forEachRemaining(e -> values.put(e.getKey(),        // an empty value is null, as Spark writes it
+                    e.getValue().isNull() || e.getValue().asText().isEmpty() ? null : e.getValue().asText()));
             parts.add(new Part(Path.of(p.path("file").asText()), p.path("rows").asLong(), values));
         }
         Map<String, String> properties = new LinkedHashMap<>();

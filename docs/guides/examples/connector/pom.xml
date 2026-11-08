@@ -17,13 +17,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <!-- The teaching plugin of docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md. Built and tested with the rest, never shipped:
+  <!-- The teaching plugin of docs/guides/DEVELOPER_GUIDE.md. Built and tested with the rest, never shipped:
        the server does not depend on it and it is not one of the nineteen plugins. -->
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>2.9.11.d</version>
+    <version>2.9.11.g</version>
     <relativePath>../../../../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-example-dayfolder</artifactId>

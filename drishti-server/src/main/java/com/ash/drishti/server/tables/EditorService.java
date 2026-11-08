@@ -61,7 +61,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 /**
- * The editors of tables, virtual tables, semantic models and Python-driven tables (EDITORS.md sections 1 to 4) on the table layer: the
+ * The editors of tables, virtual tables, semantic models and Python-driven tables (docs/architecture/SHARED_SCREENS.md sections 1 to 4) on the table layer: the
  * objects a person may open, each definition's YAML and document, the checks as typed (the layer's own, with every problem at its line), the
  * Text toggle's statement, a live preview read on the server as the person may see the source (rows, totals by the pivot engine, checks,
  * the cost of a join across connectors), a model's measures with the engine's "adds up?", the Access matrix, impact, history, and saving
@@ -74,6 +74,8 @@ public final class EditorService {
     static final String PREFS = "editors";
     static final String VIEW = "view";
     static final Set<String> MODES = Set.of("visual", "yaml", "both");
+    /** The designer shell's layouts (ELEMENTS.md section 8.9): studio (the default), side by side, terminal. */
+    static final Set<String> LAYOUTS = Set.of("studio", "side-by-side", "terminal");
     /** The rows a preview shows; its totals and checks are over every row read. */
     static final int SHOWN = 20;
     /** The documents a + New suggestion reads to propose columns. */
@@ -131,7 +133,7 @@ public final class EditorService {
         }
     }
 
-    /** Editing: administrators and BI authors (VIRTUAL_TABLES.md V9: the power to edit BI datasets). */
+    /** Editing: administrators and BI authors (docs/architecture/ARCHITECTURE.md V9: the power to edit BI datasets). */
     boolean mayEdit(Principal p) {
         return !securityOn || entitlements.isAdmin(p) || access.has(p, BiAccess.AUTHOR);
     }
@@ -145,9 +147,12 @@ public final class EditorService {
 
     // ---- preferences -------------------------------------------------------------------------------------------------------------
 
-    /** The person's view: {@code {mode: visual|yaml|both, yamlOpen: true|false}}. */
+    /** The person's view: {@code {mode: visual|yaml|both, yamlOpen: true|false, layout: studio|side-by-side|terminal}}. */
     public Map<String, Object> prefs(Principal p) {
-        Map<String, Object> out = new LinkedHashMap<>(Map.of("mode", "both", "yamlOpen", true));
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("mode", "both");
+        out.put("yamlOpen", true);
+        out.put("layout", "studio");
         Optional<JsonNode> got = preferences.get(p.user(), PREFS, VIEW);
         got.ifPresent(n -> {
             if (MODES.contains(n.path("mode").asText())) {
@@ -155,6 +160,9 @@ public final class EditorService {
             }
             if (n.has("yamlOpen")) {
                 out.put("yamlOpen", n.path("yamlOpen").asBoolean(true));
+            }
+            if (LAYOUTS.contains(n.path("layout").asText())) {
+                out.put("layout", n.path("layout").asText());
             }
         });
         return out;
@@ -171,6 +179,13 @@ public final class EditorService {
         }
         if (body.get("yamlOpen") instanceof Boolean b) {
             now.put("yamlOpen", b);
+        }
+        Object layout = body.get("layout");
+        if (layout != null) {
+            if (!LAYOUTS.contains(String.valueOf(layout))) {
+                throw new DrishtiException(ErrorCode.BI_INVALID, "layout is studio, side-by-side or terminal");
+            }
+            now.put("layout", String.valueOf(layout));
         }
         preferences.put(p.user(), PREFS, VIEW, JSON.valueToTree(now));
         return now;
@@ -513,7 +528,7 @@ public final class EditorService {
     static final int SAMPLE_INPUT_ROWS = 5_000;
 
     /**
-     * A Python-driven table's sample run (EDITORS.md section 4): each input read as {@code p} may see it on {@code date} (a table by its name, or a
+     * A Python-driven table's sample run (docs/architecture/SHARED_SCREENS.md section 4): each input read as {@code p} may see it on {@code date} (a table by its name, or a
      * model query), the build function {@code source} run once on the compute pool with them ({@code build(inputs, params)}), and its rows checked
      * against the table's output contract (the columns and their types, the keys unique, the never-empty columns). Needs bi-author.
      */
@@ -796,7 +811,7 @@ public final class EditorService {
     }
 
     /**
-     * The cost of the table's look-ups across connectors (EDITORS.md section 2): each side's rows as read now, the memory they take, the time
+     * The cost of the table's look-ups across connectors (docs/architecture/SHARED_SCREENS.md section 2): each side's rows as read now, the memory they take, the time
      * the read took, and a warning above {@code drishti.tables.scan-warn-rows} when the table does not filter.
      */
     private Map<String, Object> cost(TableDef t, Catalogue over, Counting counting, TableReads.Read read, long ms, ViewerContext who) {

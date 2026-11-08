@@ -15,7 +15,7 @@
 -->
 # Elements demo: a host application for `<drishti-view>`
 
-The proof of concept of [Drishti Elements](../../docs/architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design) (build step 0): a tiny "host" web
+The proof of concept of [Drishti Elements](../../docs/architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements) (build step 0): a tiny "host" web
 application on **its own origin** that shows live Drishti views in a Shadow DOM, without an iframe.
 
 It has its own sign-in (a demo cookie), its own backend endpoint that asks Drishti for a token **server to server** (the
@@ -28,7 +28,7 @@ listed at `/api/csp-reports`.
 
 **The tokens are real.** The host's backend signs a short assertion about its signed-in user with its own RSA key
 (`demo-host-key.json`: a DEMO key, never use it anywhere real) and exchanges it, with its client secret, at the Drishti
-**server** (`POST /api/v1/embed/token`, RFC 8693, [API_GUIDE](../../docs/guides/API_GUIDE.md#embedding-views-in-another-web-application)).
+**server** (`POST /api/v1/embed/token`, RFC 8693, [API_REFERENCE](../../docs/guides/API_REFERENCE.md#24-embedding-views-in-another-web-application)).
 The page gets a five-minute, read-only, always-masked embed token. Both demo users must exist in Drishti (the exchange refuses
 a stranger).
 
@@ -39,7 +39,7 @@ Three processes, on ports that are free. The commands are from the repository ro
 
 ```bash
 # 1. the Drishti server: security on, embedding on, the trading, counterparty-risk and market-risk packs, a scratch folder for ./data
-./mvnw -o -q package -DskipTests -pl drishti-server -am
+./mvnw -o -q package -DskipTests -pl drishti-app -am
 mkdir -p /tmp/drishti-elements && cd /tmp/drishti-elements
 DRISHTI_PACKS=trading,counterparty-risk,market-risk DRISHTI_PACKS_DIR=<repo>/config/packs DRISHTI_SECURITY_ENABLED=true \
 DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_ENABLED=true \
@@ -85,7 +85,7 @@ drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_embed_e
 ```
 
 Results and what they changed in the plan are in the *Step 0 results* section of
-[CLIENT_RENDERER.md](../../docs/architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design).
+[EMBED_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements).
 
 ## Files
 
@@ -98,6 +98,6 @@ Results and what they changed in the plan are in the *Step 0 results* section of
 
 ## Framework samples
 
-`/report` is the page of `<drishti-report>` (the live desk report and one of its visuals); `/report?report=file:report:trades-overview&visual=by-desk` shows another report in the same card (a catalogue id, `file:report:<name>` or `bi-<hex>`; register it in the application's kinds as `report:<id>`), as tutorial 16 does with a report on a model.
+`/report` is the page of `<drishti-report>` (the live desk report and one of its visuals); `/report?report=file:report:trades-overview&visual=by-desk` shows another report in the same card (a catalogue id, `file:report:<name>` or `bi-<hex>`; register it in the application's kinds as `report:<id>`), as tutorial 20 does with a report on a model.
 
 The host also serves the React, Vue and Angular sample pages of `docs/guides/examples/embed/` at `/samples/<framework>/` (a search box, a view, its About body and a report in each). Fetch the framework builds first (`bash docs/guides/examples/embed/fetch-vendor.sh`); register the application with the scopes `embed:view embed:about embed:report embed:search`. The Angular page runs the JIT compiler, so only `/samples/angular/` is served with `'unsafe-eval'`.

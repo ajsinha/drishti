@@ -1,0 +1,52 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin -> Ad-hoc scopes: every person's saved VaR baskets, filtered by owner, each with Delete (a confirm dialog with an optional reason:
+   /static/js/drishti_scope-delete.js). The server allows an administrator to delete anyone's; each delete is audited (var-basket-delete). #}
+{% extends "base.html" %}
+{% block title %}Ad-hoc scopes · {{ PRODUCT }}{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-scope-admin data-me="{{ viewer }}">
+  <h1>Ad-hoc scopes</h1>
+  {% with tab='scopes' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="text-muted-d">The VaR baskets people saved from <em>Construct your basket</em>: named mixes of portfolios, trades, positions,
+    counterparties and rules. Each is private to its owner, shared read-only with the people or roles named. You may delete any of them:
+    the people it was shared with lose it too, the owner gets a notice in their inbox (with your reason, when you give one), and captures
+    taken of it are kept and still open. Every delete is in the <a href="/admin/audit">audit log</a> as
+    <span class="mono">var-basket-delete</span>.</p>
+  <form class="adm-bar" method="get" action="/admin/scopes" role="search">
+    {{ admin_form('search', name='owner', value=owner, title='Owner', placeholder='Filter by owner', hook={'data-scope-owner': ''}) }}
+    <button type="submit" class="btn-pill btn-ghost">Filter</button>{% if owner %} <a href="/admin/scopes">Show everyone's</a>{% endif %}</form>
+  <p class="adm-msg" data-msg role="status" aria-live="polite">{% if error %}The VaR engine did not answer: {{ error.detail }}{% endif %}</p>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-scope-table>
+    <thead><tr><th>Owner</th><th>Name</th><th>Scope</th><th>Shared with</th><th>Created</th><th>Updated</th><th class="n">Size</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>{% for b in rows %}
+      <tr data-basket="{{ b.id }}" data-owner="{{ b.owner }}" data-name="{{ b.name }}" data-version="{{ b.version }}" data-shared="{{ (b.sharedWith or []) | join(',') }}">
+        <td class="mono">{{ b.owner }}</td>
+        <td><a href="/var?scope={{ ('BASKET:' ~ b.id) | urlencode }}">{{ b.name }}</a>{% if b.description %}<div class="text-muted-d small">{{ b.description }}</div>{% endif %}</td>
+        <td class="mono small" title="{{ b.scope | truncate(2000) }}">{{ b.scope | truncate(80) }}{% if b.parts %}<div class="text-muted-d small">a sheet of {{ b.parts }} parts</div>{% endif %}</td>
+        <td>{{ (b.sharedWith or []) | join(', ') or '—' }}</td>
+        <td class="mono">{{ (b.createdAt or '')[:10] }}</td><td class="mono">{{ (b.updatedAt or '')[:10] }}</td>
+        <td class="mono n">{{ b.bytes }} B</td>
+        <td class="adm-actions"><button type="button" class="fk" data-scope-delete aria-label="Delete the basket {{ b.id }}">Delete</button></td></tr>
+    {% else %}<tr><td colspan="8">{% if owner %}No baskets of an owner matching “{{ owner }}”.{% else %}Nobody has saved a basket yet.{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-scopes.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -16,7 +16,7 @@
 # Arrow Flight reference
 
 Every request form, its JSON, its schema in Arrow, its errors, the scope it needs and its limits. How to turn Flight on, tokens, the
-cluster and operations: [FLIGHT_GUIDE.md](FLIGHT_GUIDE.md). Error codes with their HTTP equivalents: [API_GUIDE.md](API_GUIDE.md#error-code-table).
+cluster and operations: [FLIGHT_GUIDE.md](FLIGHT_GUIDE.md). The clients, one section each: [section 7](#7-clients). Error codes with their HTTP equivalents: [API_REFERENCE.md](API_REFERENCE.md#error-code-table).
 
 ## 1. The calls
 
@@ -70,7 +70,7 @@ line and Export data's `data.flight` on the kind. One part; any member may answe
 {"form": "model", "request": {"model": "trades-basic", "query": {"select": {"fields": ["trade.DESK"], "measures": ["MTM"]}, "sort": [{"by": "MTM", "desc": true}], "limit": 50}}}
 ```
 
-`query` is an MQ query ([BI_GUIDE.md](BI_GUIDE.md)); the request may also be the MQ text or JSON with `model` in it, or
+`query` is an MQ query ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)); the request may also be the MQ text or JSON with `model` in it, or
 `{"model": …, "sql": "<a DSQL statement>"}` (what Flight SQL sends, section 6). Needs the BI power.
 Schema: the answer's columns (text utf8, integers int64, decimals float64); metadata `drishti.model`, `drishti.masked`. Scope:
 `data:read` or `data:read:bi`. Snapshot only.
@@ -103,7 +103,7 @@ or `data:read:var`. A stream (`var.scenarios` only) sends the vector again after
 {"form": "lake", "request": {"lake": "feeds", "kind": "news.headlines", "paths": ["SEQ", "HEADLINE"], "cursor": "SEQ"}, "stream": true, "resume": 1200}
 ```
 
-The table is found in the lake configuration ([LAKE_CONFIG.md](../architecture/LAKE_CONFIG.md)) by lake and kind, never through a
+The table is found in the lake configuration ([DATA_LAKE_GUIDE.md section 2](DATA_LAKE_GUIDE.md#2-the-lake-file-every-key)) by lake and kind, never through a
 connector's settings; it is then read as its kind (section 3.1's keys and checks). A table of the in-memory lake is answered by the node
 that owns its store. `cursor` (a stream): a whole-number column that grows with each append; the sequence of a batch is its largest
 cursor value. Scope: `data:read` or `data:read:<lake>`.
@@ -133,7 +133,7 @@ Per read, from the person's roles (`drishti.engines.flight.limits`): rows, bytes
 
 ## 6. Flight SQL
 
-Read-only SQL over the BI models (DSQL, [API_GUIDE.md › Drishti SQL](API_GUIDE.md#drishti-sql-apiv1bisql)) on the same port; how to use it:
+Read-only SQL over the BI models (DSQL, [API_REFERENCE.md › Drishti SQL](API_REFERENCE.md#8-drishti-sql-apiv1bisql)) on the same port; how to use it:
 [FLIGHT_GUIDE.md](FLIGHT_GUIDE.md#12-flight-sql-sql-over-the-bi-models-from-jdbc-and-odbc-tools), section 12.
 
 | Flight SQL call | Answers |
@@ -152,5 +152,223 @@ Read-only SQL over the BI models (DSQL, [API_GUIDE.md › Drishti SQL](API_GUIDE
 
 **The model of a statement**: its first line `-- model: <model>` or `/* model: <model> */`, else the call's header `model` (a JDBC URL's
 `model=`); neither: `DRS-5603`. `EXPLAIN` is refused (`DRS-5603`; the BI SQL console answers it). The statement's own refusals are the
-BI SQL codes (`DRS-9150` to `DRS-9178`, [API_GUIDE.md](API_GUIDE.md#error-code-table)), carried in a `DRS-5603` or `DRS-5602` message.
+BI SQL codes (`DRS-9150` to `DRS-9178`, [API_REFERENCE.md](API_REFERENCE.md#error-code-table)), carried in a `DRS-5603` or `DRS-5602` message.
 Scope: `data:read` or `data:read:bi`, and the BI power.
+
+## 7. Clients
+
+One section per client: install, connect, read, stream, errors. Working examples, every one read only, are in
+[examples/clients](../../examples/clients/README.md). C#/.NET, R and Go are not written up yet; the service answers any Flight client.
+
+### 7.1 Python
+
+**Install.** `pip install pyarrow` (16 or newer; it brings `pyarrow.flight`), and pandas or polars if you want them. Copy
+`clients/python/drishti_flight.py` next to your script or notebook: one file, no other dependency.
+
+**Connect.**
+
+```python
+from drishti_flight import Flight
+f = Flight("grpc+tls://drishti-1.bank.example:18815", token="drk_…", ca="bank-ca.pem")
+f.whoami()          # {"person": …, "scopes": ["data:read"], "limits": {…}}
+```
+
+`url`, `token` and `ca` may come from `DRISHTI_FLIGHT_URL`, `DRISHTI_TOKEN` and `DRISHTI_FLIGHT_CA`. An application acting for a person
+passes `on_behalf_of="alice"`; a service asking for client certificates takes `cert=` and `key=`.
+
+**Read.**
+
+```python
+trades = f.kind("trade", paths=["TRADE_ID", "PRODUCT_TYPE", "QUANTITY"], where=["PRODUCT_TYPE = BASIS_SWAP"])
+df = trades.to_pandas()                         # or polars.from_arrow(trades)
+pnl = f.measure("var.scenarios", "DESK:RATES", date="2026-09-30")
+parts = f.measure("var.parts", "DESK:RATES", by="position")
+risk = f.model("trades-basic", {"select": {"fields": ["trade.DESK"], "measures": ["MTM"]}})
+cells = f.pivot({"pivot": 1, "source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "count()"}]})
+f.catalogue()                                   # what this token may read
+```
+
+Run on the test data of 2026-09-30:
+
+```text
+>>> df.head(3); len(df)
+      TRADE_ID PRODUCT_TYPE    QUANTITY
+0  MX-20000013   BASIS_SWAP   7000000.0
+1  MX-20000014   BASIS_SWAP  64000000.0
+2  MX-20000015   BASIS_SWAP  63000000.0
+72
+>>> pnl.to_pandas()
+     SCENARIO SCENARIO_DATE         PNL
+0           0    2024-09-17  11293350.0
+1           1    2024-09-18  17864629.0
+...
+508       508    2026-09-29  -2066043.0
+[509 rows x 3 columns]
+>>> parts.num_rows
+1358
+>>> cells.num_rows, cells.schema.names
+75 ['ROW', 'COLUMN', 'PRODUCT_TYPE', 'MEASURE', 'VALUE', 'MEMBERS']
+>>> len(f.catalogue())
+199
+```
+
+`read` asks for the plan and reads each part from its nodes in parallel, the next node of a part when one does not answer.
+
+**Stream.**
+
+```python
+req = f.request("measure", "measure('var.scenarios', 'DESK:RATES')")
+for seq, batch in f.stream(req):                # a pyarrow.RecordBatch after each intraday batch
+    print(seq, batch.num_rows)
+```
+
+Keep the last `seq`; `f.stream(req, resume=seq)` continues after it.
+
+**The command line.**
+
+```bash
+python3 clients/python/drishti_flight.py --url grpc+tls://drishti-1.bank.example:18815 --token "$DRISHTI_TOKEN" --ca bank-ca.pem \
+    kind trade --paths TRADE_ID,PRODUCT_TYPE --where "PRODUCT_TYPE = IRS" > irs.csv
+python3 clients/python/drishti_flight.py --out pnl.parquet measure var.scenarios DESK:RATES
+```
+
+**Examples.** Nine notebooks, each cell explained: connect and the catalogue, a kind into pandas and polars, a BI model, a pivot view over
+trade legs, a desk's VaR scenario P&L with the VaR scenario and ES tail marked, a live stream with resume, a join in DuckDB, an
+in-memory lake table, and a direct lake read for users who already hold lake access
+([examples/clients/python](../../examples/clients/README.md#python-notebooks-python)). Excel from Python, no add-in:
+[examples/clients/excel](../../examples/clients/excel/README.md).
+
+**Errors.** A refusal raises `FlightRefused` with `.code` (`DRS-5604` …) and the words (section 4).
+
+### 7.2 Java
+
+**Install.** Maven: `org.apache.arrow:flight-core` and `org.apache.arrow:arrow-memory-netty`, version 19.0.0 or newer (the server's own).
+Start the JVM (Java 17 to 21) with `--add-opens=java.base/java.nio=ALL-UNNAMED` (Arrow's memory module needs it; Arrow 19's memory
+module does not start on Java 25).
+
+**Connect.**
+
+```java
+BufferAllocator alloc = new RootAllocator();
+FlightClient client = FlightClient.builder(alloc, Location.forGrpcTls("drishti-1.bank.example", 18815))
+        .trustedCertificates(Files.newInputStream(Path.of("bank-ca.pem"))).build();
+CallOption session = client.authenticateBasicToken("token", System.getenv("DRISHTI_TOKEN")).orElseThrow();
+```
+
+An application acting for a person adds the header at the handshake:
+`client.authenticateBasicToken("token", token, new HeaderCallOption(headers))` with `x-drishti-on-behalf-of: alice` in `headers`.
+
+**Read.**
+
+```java
+byte[] request = """
+    {"form": "measure", "request": {"measure": "var.scenarios", "scope": "DESK:RATES"}}""".getBytes(StandardCharsets.UTF_8);
+FlightInfo info = client.getInfo(FlightDescriptor.command(request), session);
+for (FlightEndpoint e : info.getEndpoints()) {          // each part, from the first of its nodes (try the next when one is down)
+    try (FlightStream s = client.getStream(e.getTicket(), session)) {
+        while (s.next()) {
+            VectorSchemaRoot root = s.getRoot();
+            Float8Vector pnl = (Float8Vector) root.getVector("PNL");
+            // …
+        }
+    }
+}
+```
+
+Run (the elided body printing each batch's rows, its first P&L and the worst; Java 21; the test data of 2026-09-30):
+
+```text
+1 endpoint(s)
+a batch of 509 rows from grpc+tls://192.168.2.77:18825; PNL[0] = 11,293,350.00; the worst = -119,535,289.00
+metadata: {drishti.scope=DESK:RATES, drishti.var=7.463368E7, drishti.es=7.5377415E7, drishti.measure=var.scenarios, drishti.date=2026-09-30, drishti.currency=USD, drishti.intraday=0}
+```
+
+A part on another node needs a client for that node's location (`e.getLocations().get(0)`), authenticated the same way.
+
+**Stream.** Add `"stream": true` to the request and read the ticket with `getStream`; each batch's sequence is
+`s.getLatestMetadata().getLong(0)`. Ask again with `"resume": <sequence>` after a break.
+
+**Example.** `ReadKindAndVarPnl.java`, one file run with the source launcher (a kind, then a desk's VaR scenario P&L with the engine's VaR
+and ES, each part from the first node that answers): [examples/clients/java](../../examples/clients/java/README.md).
+
+**Errors.** A refusal is a `FlightRuntimeException`; `e.getMessage()` starts with the code (`DRS-5604: …`) and
+`e.status().metadata().get("drishti-code")` carries it alone.
+
+### 7.3 JDBC (DBeaver, DataGrip, any JDBC program)
+
+Flight SQL (section 6): read-only SQL over the BI models, answered by the same path as the BI SQL console.
+
+**Install.** The Apache Arrow Flight SQL JDBC driver: one jar, `org.apache.arrow:flight-sql-jdbc-driver`, version 19.0.0 or newer. No
+installer, so it runs on machines where no program may be installed. On Java 17 or later start the tool's JVM with
+`--add-opens=java.base/java.nio=ALL-UNNAMED` (DBeaver: `dbeaver.ini`, a line under `-vmargs`).
+
+**Connect.**
+
+```text
+jdbc:arrow-flight-sql://drishti-1.bank.example:18815/?useEncryption=true&token=<API token with data:read>&model=trading-risk@1
+```
+
+| Property | Means |
+|---|---|
+| `useEncryption=true` | TLS (always on at Drishti's Flight port) |
+| `token=` | a personal API token with `data:read` (or `data:read:bi`); the driver sends it on every call, the service keeps one session for it |
+| `trustStore=`, `trustStorePassword=` | the bank's CA as a Java trust store, when the JVM's own does not hold it, with `useSystemTrustStore=false` (the driver reads `trustStore` only then; `disableCertificateVerification=true` on a test machine only) |
+| `model=` | the BI model statements read, unless a statement names its own with a first line `-- model: <model>` (the driver sends this property as the header `model`) |
+
+In DBeaver: Database → New connection → **Arrow Flight SQL** (or a generic JDBC connection with the jar), the URL above. The navigator
+shows one catalog, a schema per BI model you may read, and a table per alias of the model with its columns.
+
+**Read.**
+
+```java
+try (Connection c = DriverManager.getConnection("jdbc:arrow-flight-sql://drishti-1.bank.example:18815/?useEncryption=true&token="
+        + System.getenv("DRISHTI_TOKEN") + "&model=trading-risk@1");
+     ResultSet rs = c.createStatement().executeQuery("SELECT trades.DESK, MEASURE('Notional') FROM trades GROUP BY trades.DESK")) {
+    while (rs.next()) {
+        System.out.println(rs.getString(1) + " " + rs.getDouble(2));
+    }
+}
+```
+
+Run against a server with a test PKI (`&trustStore=ca.jks&trustStorePassword=…&useSystemTrustStore=false` added to the URL; Java 21; the
+test data of 2026-09-30):
+
+```text
+DESK-COMM 8.850170019852502E11
+DESK-CREDIT 3.4835024551415E11
+DESK-EQD 4.3052971792252997E11
+DESK-FI 4.0315015623297003E11
+DESK-FX 3.7284221311835E11
+DESK-INFL 1.299456220881E11
+DESK-MM 1.30992079528E11
+DESK-RATES 6.0533722239374E11
+DESK-SFT 2.27897073212E11
+DESK-STRUCT 1.06026316978E11
+```
+
+A prepared statement works the same way (read only, no parameters).
+
+**Example.** `JdbcFlightSql.java`, plain JDBC with the driver jar: without arguments it lists the models you may read and their tables;
+with a model and a statement it runs the statement:
+[examples/clients/java](../../examples/clients/java/README.md#jdbc-through-flight-sql).
+
+**Errors.** The driver shows the service's message, starting with its code: `DRS-5603` (no model named, a statement DSQL refuses, with
+the BI SQL code in the words), `DRS-5602` (the token or the person may not read the model), `DRS-5604` (the rows limit of your role).
+
+### 7.4 ODBC (Excel, Power BI, Tableau)
+
+**Install.** An Arrow Flight SQL ODBC driver (third-party). It is an **installer**, so it cannot go on machines where no program may be
+installed: there, use the JDBC jar (7.3) or the Python client (7.1), or get an Excel workbook from a Flight read through Python
+([examples/clients/excel](../../examples/clients/excel/README.md)).
+
+**Connect.** A DSN with host `drishti-1.bank.example`, port `18815`, encryption (TLS) on, the bank's CA, and an API token with `data:read`
+as the token (or as the password, with any user name). Name the BI model with the driver's extra connection property `model=<model>`
+when it passes such properties as headers; otherwise begin each statement with a line `-- model: <model>`.
+
+**Read.** In Excel: Data → Get Data → From ODBC → the DSN → a schema (a BI model) → a table (one of its aliases), or Advanced options
+with a statement such as `-- model: trading-risk@1` then `SELECT trades.DESK, MEASURE('Notional') FROM trades GROUP BY trades.DESK`. In
+Power BI the same through its ODBC connector. The answer is one row per desk, the same figures as the JDBC example above (the same
+service answers both); the ODBC driver itself is not part of Drishti's test runs.
+
+**Errors.** The tool shows the service's message, starting with its code (`DRS-5603` no model named or a statement refused, `DRS-5602`
+not allowed, `DRS-5604` the rows limit).

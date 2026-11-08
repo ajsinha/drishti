@@ -9,7 +9,7 @@
 How the console's browser tests are run so that their time grows with the machine, not with the number of pages: where the time
 went, the design that replaced it, the numbers it must hold, how it was validated, and the rules every new browser test follows. The
 testing architecture as a whole (the test pyramid, the drill's stages) is in [ARCHITECTURE.md, "Testing architecture"](ARCHITECTURE.md#22-testing-architecture);
-the drill's every option is in [PACK_DEVELOPER_GUIDE.md section 2.6](../guides/PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh).
+the drill's every option is in [BUILD_GUIDE.md section 2.6](../guides/DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh).
 
 ## Contents
 
@@ -21,6 +21,7 @@ the drill's every option is in [PACK_DEVELOPER_GUIDE.md section 2.6](../guides/P
 6. [Rules for browser tests](#6-rules-for-browser-tests)
 7. [Measuring a run](#7-measuring-a-run)
 8. [Next candidates](#8-next-candidates)
+9. [Manual QA](#9-manual-qa)
 
 ## 1. The problem
 
@@ -227,12 +228,23 @@ the lake. A file split later asks the same lake and pays only its server's start
 
 ### 3.13 A component on a page of its own
 
-A console component that needs no data (the resize handles, `static/js/drishti_resize.js`) is tested on a page of its own markup, with
+A console component that needs no data (the resize handles, drishti-core's `static/elements/drishti-core/src/drishti_resize.js`) is tested on a page of its own markup, with
 no server: `browsers.page(width, height, route=...)` answers `http://render.test/<page>.html` with the test's HTML and a strict
 `Content-Security-Policy` header (`script-src 'self'; style-src 'self'`), and `/static/...` from the console's files. The test waits on
 the component's own condition (`wait_for_function`) and `Drishti.settled()`, and checks `window.__csp` is empty: nothing inline. Each
 behaviour is one `spread` test of a second or two (`tests/test_resize_browser.py`); the screens that use the component keep one test
 each in their own files for the real markup.
+
+### 3.14 The CSS visual check
+
+A change to the console's CSS that must not change the look (tokens in place of literals, folded rules) is proved by pictures:
+`tools/dev/css_visual_check.py run --before <base checkout> --after . --out data/tmp/cssvis/out` takes ten screens (landing, the VaR
+explorer, Pivot, a BI report, Build home, Admin, Help, and landing, VaR and Help at phone width) in every theme of `drishti_tokens.css`
+from both checkouts against one scratch server (so both read the same data: a VaR lake built once under `data/tmp/cssvis/`), and
+compares them pixel by pixel (a per-channel difference of 2 on at most 0.05% of the pixels counts as anti-aliasing). It prints a
+screen × theme table, writes a diff image for each picture that differs and exits 1 when one does. The theme is set as the app sets
+it (`localStorage 'drishti.theme'`), the pictures wait on `Drishti.settled()`, and parts that change on their own (the clock, the
+paint timings) are masked.
 
 ## 4. Numbers to hold
 
@@ -326,6 +338,12 @@ old pauses and starts in the test's `BASELINE`, which may only go down.
   leave the lake as it found it.
 - The files that start the same signed-in server (`DRISHTI_SECURITY_ENABLED`, the test token secret) could ask with `shared=True` once
   each is shown to leave the server as it found it.
+
+## 9. Manual QA
+
+Beside the automated harness, the manual QA of an installation (deploy, verify every part, the per-OS checklist, a cluster of three, and the
+offline rehearsal with your own trade files on a machine without internet access) has one home: [DEPLOYMENT_AND_QA_GUIDE.md](../DEPLOYMENT_AND_QA_GUIDE.md),
+with the offline rehearsal in its [section 11](../DEPLOYMENT_AND_QA_GUIDE.md#11-offline-qa-with-your-own-trade-files).
 
 ---
 

@@ -54,11 +54,34 @@ def test_every_row_has_the_one_shape():
     heads = re.findall(r"^\| Key \| .* \|$", gen, re.M)
     assert heads and set(heads) == {"| " + " | ".join(cat.COLUMNS) + " |"}
     rows = [ln for ln in gen.splitlines() if ln.startswith("| `") and "Variable" not in ln]
-    eight = [r for r in rows if len(re.split(r"(?<!\\)\|", r)) - 2 == 8]
-    assert len(eight) > 1500
-    for r in eight:
-        meaning = re.split(r"(?<!\\)\|", r)[6].strip()
-        assert meaning, r
+    nine = [r for r in rows if len(re.split(r"(?<!\\)\|", r)) - 2 == 9]
+    assert len(nine) > 1500
+    for r in nine:
+        cells = re.split(r"(?<!\\)\|", r)
+        assert cells[6].strip(), r
+        assert cells[9].strip() in cat.TIERS, r
+
+
+def test_every_setting_has_a_tier_from_the_one_list():
+    """The tier of each setting lives in tools/settings_schemas.yaml (tiers); everyday stays small: what a business lead changes."""
+    rows, _ = cat.all_rows()
+    assert cat.assign_tiers(rows) == []
+    assert all(r.tier in cat.TIERS for r in rows)
+    everyday = sorted(r.key for r in rows if r.tier == "everyday")
+    assert len(everyday) <= 25, everyday
+    assert "drishti.lenses" in everyday and "drishti.var.confidence" in everyday and "features.build" in everyday
+    assert not [r.key for r in rows if r.tier == "everyday" and ("branding" in r.key or "ui-kit" in r.key or r.area == "ui-kit")]
+    assert {r.tier for r in rows if r.key.startswith("drishti.branding.") or r.area == "ui-kit"} == {"admin"}
+
+
+def test_the_tier_check_names_an_area_without_a_tier(monkeypatch):
+    spec = cat.schemas()
+    spec["tiers"] = {**spec["tiers"], "areas": {k: v for k, v in spec["tiers"]["areas"].items() if k != "simm"},
+                     "everyday": [*spec["tiers"]["everyday"], "server:drishti.no-such-key"]}
+    monkeypatch.setattr(cat, "schemas", lambda: spec)
+    rows, _ = cat.all_rows()
+    found = cat.assign_tiers(rows)
+    assert any("has no tier" in f and "simm" in f for f in found) and any("drishti.no-such-key is no setting" in f for f in found)
 
 
 def _flat(node, prefix=""):
@@ -105,7 +128,7 @@ def test_every_key_of_the_config_files_is_a_row():
     every = _row_keys(_generated())
     for rel in ("config/store/store.yaml", "config/runs/runs.yaml", "config/edit/edit.yaml", "config/edit/lanes.yaml",
                 "config/edit/policy.yaml", "config/edit/retention.yaml", "config/net.examples/node.yaml", "config/net.examples/gossip.yaml",
-                "config/net.examples/routing.yaml", "config/ui-kit/brand.yaml", "config/editions/default-packs.yaml"):
+                "config/net.examples/routing.yaml", "config/ui-kit/brand.yaml", "config/packs/default-packs.yaml"):
         entries = [e for e in S.read_commented_yaml(ROOT / rel) if not e.section]
         missing = [e.key for e in entries if e.key not in every and not any(e.key.startswith(c + ".") for c in ("themes",))]
         assert not missing, f"{rel}: {missing}"
@@ -143,12 +166,12 @@ def test_the_comment_reader():
     assert S.placeholder_default("${DRISHTI_FEEDS:${drishti.data.dir}/feeds}") == "./data/feeds"
     assert S.placeholder_default("${ANTHROPIC_API_KEY}") is None
     assert S.env_names("${A_B:${C_D:x}}") == ["A_B", "C_D"]
-    assert S.since("2.9.7 (RESOURCES_AND_SCALE.md 6.4): the log") == "2.9.7" and S.since("section 5.6") == ""
+    assert S.since("2.9.7 (CLUSTER_GUIDE.md 6.4): the log") == "2.9.7" and S.since("section 5.6") == ""
     assert cat.is_secret("drishti.security.secret") and not cat.is_secret("drishti.bi.ai.max-tokens")
 
 
 def test_the_engines_area_lists_every_engine_file_key_and_the_old_names(tmp_path, monkeypatch):
-    """COMPUTE_ENGINES.md section 12: the Engines area holds every key of every config/engines/*.yaml (the server area none of them), the
+    """ADMIN_GUIDE.md section 12: the Engines area holds every key of every config/engines/*.yaml (the server area none of them), the
     old switch names once each, and --check fails when a file and its jar copy differ or a key is in both application.yaml and a file."""
     rows, problems = cat.engine_rows()
     assert not problems, problems

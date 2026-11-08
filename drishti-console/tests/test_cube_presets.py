@@ -63,7 +63,7 @@ def test_the_cubes_own_page_is_gone_and_its_address_leads_to_the_preset(backend,
     app, c = _app(backend, monkeypatch, RISK_ABOUT)
     r = c.get("/mcube", params={"text": "DESK:RATES BY MGMT.BOOK", "date": "2026-09-30"}, follow_redirects=False)
     assert r.status_code == 308 and r.headers["location"] == "/pivot?preset=mr&text=DESK%3ARATES+BY+MGMT.BOOK&date=2026-09-30"
-    src = (Path(__file__).resolve().parents[1] / "routes" / "mcube_routes.py").read_text(encoding="utf-8")
+    src = (Path(__file__).resolve().parents[1] / "plugins" / "banking" / "routes" / "mcube_routes.py").read_text(encoding="utf-8")
     assert "render(" not in src and "import render" not in src                                  # no page of its own: the preset is the Pivot's
     tpl = (Path(__file__).resolve().parents[1] / "web" / "templates" / "terminal" / "pivot.html").read_text(encoding="utf-8")
     assert "{{ cube.title }}" in tpl and ">MR cube<" not in tpl and ">MCUBE<" not in tpl                    # the screen's name is the preset's
@@ -83,7 +83,7 @@ def test_the_ccr_preset_is_under_construction_behind_its_counterparties_door(bac
     assert 'data-preset-name="ccr"' in page and 'data-source=""' in page
     reg = (Path(__file__).resolve().parents[2] / "config" / "under-construction.yaml").read_text(encoding="utf-8")
     assert "id: ccr-cube-preset" in reg and "menus: [ccr-cube]" in reg
-    menus = (Path(__file__).resolve().parents[1] / "config" / "menus.yaml").read_text(encoding="utf-8")
+    menus = (Path(__file__).resolve().parents[1] / "config" / "sitemap.yaml").read_text(encoding="utf-8")
     assert 'id: ccr-cube, cmd: CCUBE, href: "/pivot?preset=ccr"' in menus
     assert pivot_presets.command("CCUBE <GO>".split()) == "/pivot?preset=ccr"
     r = c.get("/go", params={"q": "CCUBE <GO>"}, follow_redirects=False)
@@ -95,5 +95,5 @@ def test_the_var_explorer_opens_its_scope_in_the_mr_preset(backend, monkeypatch)
     page = c.get("/var", params={"scope": "DESK:RATES"}).text
     m = re.search(r'<a class="vx-link vx-cube" data-vx-cube href="([^"]*)"', page)
     assert m and html.unescape(m.group(1)) == "/pivot?preset=mr&text=DESK%3ARATES"
-    js = (Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "drishti_var-explorer.js").read_text(encoding="utf-8")
+    js = (Path(__file__).resolve().parents[1] / "plugins" / "banking" / "static" / "js" / "drishti_var-explorer.js").read_text(encoding="utf-8")
     assert '"/pivot?preset=mr&text=" + encodeURIComponent' in js

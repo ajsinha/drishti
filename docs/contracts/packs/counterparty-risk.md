@@ -17,7 +17,7 @@
 
 # Data contracts of the counterparty-risk pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/counterparty-risk/guides/counterparty-risk.md](../../../config/packs/counterparty-risk/guides/counterparty-risk.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/banking/counterparty-risk/guides/counterparty-risk.md](../../../config/packs/banking/counterparty-risk/guides/counterparty-risk.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -33,7 +33,6 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [XRUN](#xrun-exposure-simulation-run-simulation-run) | `simulation-run` | input | active | 24 | 3 |
 | [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 21 | 6 |
 | [EXP](#exp-exposure-profile-of-a-scope-computed-exposure-result) | `exposure-result` | computed | active | 27 | 0 |
-| [XWIF](#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | `exposure-whatif` | computed | active | 27 | 0 |
 | [XOFC](#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | `exposure-official-cpty` | computed | active | 32 | 0 |
 | [NSMTM](#nsmtm-netting-set-mtm-totals-derived-from-the-trade-valuations-nset-mtm) | `nset-mtm` | computed | active | 21 | 0 |
 | [CPMTM](#cpmtm-counterparty-mtm-totals-derived-from-the-trade-valuations-cpty-mtm) | `cpty-mtm` | computed | active | 16 | 0 |
@@ -44,7 +43,7 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 
 |  |  |
 |---|---|
-| Contract | [agreement.contract.yaml](../../../config/packs/counterparty-risk/contracts/agreement.contract.yaml) · version 1.0 |
+| Contract | [agreement.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/agreement.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | legal-docs |
@@ -55,7 +54,7 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `legal-store` (plugin `delta`), table `<root>/legal/agreement/` |
 | Test data | data/testdata/counterparty-risk/agreement |
-| Worked example | [counterparty-risk/agreement](../samples/counterparty-risk/agreement.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/agreement](../samples/counterparty-risk.md#agreement) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -111,7 +110,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 |  |  |
 |---|---|
-| Contract | [csa.contract.yaml](../../../config/packs/counterparty-risk/contracts/csa.contract.yaml) · version 1.0 |
+| Contract | [csa.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/csa.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | legal-docs |
@@ -122,7 +121,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `legal-store` (plugin `delta`), table `<root>/legal/csa/` |
 | Test data | data/testdata/counterparty-risk/csa |
-| Worked example | [counterparty-risk/csa](../samples/counterparty-risk/csa.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/csa](../samples/counterparty-risk.md#csa) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -187,7 +186,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 
 |  |  |
 |---|---|
-| Contract | [netting-set.contract.yaml](../../../config/packs/counterparty-risk/contracts/netting-set.contract.yaml) · version 1.0 |
+| Contract | [netting-set.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | xva-engine |
@@ -198,7 +197,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/netting-set/` |
 | Test data | data/testdata/counterparty-risk/netting-set |
-| Worked example | [counterparty-risk/netting-set](../samples/counterparty-risk/netting-set.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/netting-set](../samples/counterparty-risk.md#netting-set) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -291,7 +290,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 
 |  |  |
 |---|---|
-| Contract | [credit-limit.contract.yaml](../../../config/packs/counterparty-risk/contracts/credit-limit.contract.yaml) · version 1.0 |
+| Contract | [credit-limit.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/credit-limit.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | limits-system |
@@ -302,7 +301,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/credit-limit/` |
 | Test data | data/testdata/counterparty-risk/credit-limit |
-| Worked example | [counterparty-risk/credit-limit](../samples/counterparty-risk/credit-limit.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/credit-limit](../samples/counterparty-risk.md#credit-limit) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -358,7 +357,7 @@ Credit, debit and funding valuation adjustments with sensitivities.
 
 |  |  |
 |---|---|
-| Contract | [cva.contract.yaml](../../../config/packs/counterparty-risk/contracts/cva.contract.yaml) · version 1.0 |
+| Contract | [cva.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/cva.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | xva-engine |
@@ -369,7 +368,7 @@ Credit, debit and funding valuation adjustments with sensitivities.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/cva/` |
 | Test data | data/testdata/counterparty-risk/cva |
-| Worked example | [counterparty-risk/cva](../samples/counterparty-risk/cva.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/cva](../samples/counterparty-risk.md#cva) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -433,7 +432,7 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 
 |  |  |
 |---|---|
-| Contract | [sa-ccr.contract.yaml](../../../config/packs/counterparty-risk/contracts/sa-ccr.contract.yaml) · version 1.0 |
+| Contract | [sa-ccr.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/sa-ccr.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | capital-engine |
@@ -444,7 +443,7 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/sa-ccr/` |
 | Test data | data/testdata/counterparty-risk/sa-ccr |
-| Worked example | [counterparty-risk/sa-ccr](../samples/counterparty-risk/sa-ccr.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/sa-ccr](../samples/counterparty-risk.md#sa-ccr) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -510,7 +509,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 
 |  |  |
 |---|---|
-| Contract | [collateral-balance.contract.yaml](../../../config/packs/counterparty-risk/contracts/collateral-balance.contract.yaml) · version 1.0 |
+| Contract | [collateral-balance.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/collateral-balance.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | collateral-system |
@@ -521,7 +520,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/collateral-balance/` |
 | Test data | data/testdata/counterparty-risk/collateral-balance |
-| Worked example | [counterparty-risk/collateral-balance](../samples/counterparty-risk/collateral-balance.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/collateral-balance](../samples/counterparty-risk.md#collateral-balance) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -575,7 +574,7 @@ A variation or initial margin call and its settlement status.
 
 |  |  |
 |---|---|
-| Contract | [margin-call.contract.yaml](../../../config/packs/counterparty-risk/contracts/margin-call.contract.yaml) · version 1.0 |
+| Contract | [margin-call.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/margin-call.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | collateral-system |
@@ -586,7 +585,7 @@ A variation or initial margin call and its settlement status.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/margin-call/` |
 | Test data | data/testdata/counterparty-risk/margin-call |
-| Worked example | [counterparty-risk/margin-call](../samples/counterparty-risk/margin-call.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/margin-call](../samples/counterparty-risk.md#margin-call) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -648,7 +647,7 @@ Initial margin by risk class and product class.
 
 |  |  |
 |---|---|
-| Contract | [simm.contract.yaml](../../../config/packs/counterparty-risk/contracts/simm.contract.yaml) · version 1.0 |
+| Contract | [simm.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/simm.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | margin-engine |
@@ -659,7 +658,7 @@ Initial margin by risk class and product class.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/simm/` |
 | Test data | data/testdata/counterparty-risk/simm |
-| Worked example | [counterparty-risk/simm](../samples/counterparty-risk/simm.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/simm](../samples/counterparty-risk.md#simm) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -709,7 +708,7 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 
 |  |  |
 |---|---|
-| Contract | [simulation-run.contract.yaml](../../../config/packs/counterparty-risk/contracts/simulation-run.contract.yaml) · version 1.0 |
+| Contract | [simulation-run.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/simulation-run.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py) |
@@ -721,7 +720,7 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 | Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/simulation-run/` |
 | Columns | `RUN_ID`, `CALIBRATION`, `PATHS`, `STATUS`, `BATCH_ID` |
 | Test data | data/testdata/counterparty-risk/simulation-run |
-| Worked example | [counterparty-risk/simulation-run](../samples/counterparty-risk/simulation-run.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/simulation-run](../samples/counterparty-risk.md#simulation-run) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -779,7 +778,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 
 |  |  |
 |---|---|
-| Contract | [exposure-path.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-path.contract.yaml) · version 1.1 |
+| Contract | [exposure-path.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/exposure-path.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py) |
@@ -792,7 +791,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
 | Vectors | `MTM` |
 | Test data | data/testdata/counterparty-risk/exposure-path |
-| Worked example | [counterparty-risk/exposure-path](../samples/counterparty-risk/exposure-path.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [counterparty-risk/exposure-path](../samples/counterparty-risk.md#exposure-path) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -858,10 +857,10 @@ The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) a
 
 |  |  |
 |---|---|
-| Contract | [exposure-result.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-result.contract.yaml) · version 1.0 |
+| Contract | [exposure-result.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/exposure-result.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
-| Source | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.server.exposure.ExposureResultEngine) |
+| Source | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.banking.exposure.ExposureResultEngine) |
 | Grain | One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked. |
 | Key | — |
 | Id pattern | — |
@@ -912,74 +911,13 @@ The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) a
 - No stored key: an answer's id is the scope asked (the id in the request); EXP <scope> <GO> opens it, and EXP EXP-<cp>-<le> (an id of the retired exposure-profile kind) opens EXP NSET:NS-<cp>-<le>.
 - Computed as the viewer with the exposure engine's entitlements (EXPOSURE_GUIDE.md section 9); cached per view signature, data version, scope and parameters.
 
-## XWIF: Exposure what-if before dealing (computed, Python) (`exposure-whatif`)
-
-A scope's exposure before and after candidate trades kept in the person's private sandbox, by the exact paths method (each candidate's values on every path of the day's run added to its netting set, collateral and exposure computed again), computed when asked by the Python exposure engine from the scope's exposure-result; never stored.
-
-|  |  |
-|---|---|
-| Contract | [exposure-whatif.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-whatif.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | active |
-| Source | computed by Drishti: the reactive connector exposure-whatif (python engine drishti_compute.exposure.whatif:ExposureWhatIfEngine, pool exposure) |
-| Grain | One answer per question (the scope, the sandbox, the parameters q, collateral and sets, the business date), computed when asked. |
-| Key | — |
-| Id pattern | — |
-| Dated by | `on request` |
-| Cadence | on change (due: computed on request and again when the date's inputs load (data-version trigger); never for a sandbox by a trigger) |
-| Storage | connector `exposure-whatif` (plugin `reactive`) |
-
-**Fields**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `SCOPE` | text | required |  | The base scope (the id), e.g. CPTY:CP-ALDERSHOT or NSET:NS-ALDERSHOT-NY. |  |  |
-| `CANONICAL` | text | required |  | — |  |  |
-| `BUSINESS_DATE` | date | required |  | — |  |  |
-| `RUN_ID` | text | required |  | The simulation run every candidate's paths must be of. |  |  |
-| `CONFIDENCE` | rate | required |  | — |  |  |
-| `COLLATERAL_MODEL` | text | required |  | lagged, current or none, as asked. |  |  |
-| `METHOD` | text | required |  | paths (the exact method; the conservative addon proxy is the Java engine's, POST /api/v1/exposure/what-if). |  |  |
-| `ITEMS` | integer | required |  | The candidate trades of the sandbox (0 without one). |  |  |
-| `BEFORE_PEAK_PFE` | amount | required | USD | — |  |  |
-| `AFTER_PEAK_PFE` | amount | required | USD | — |  |  |
-| `CHANGE_PEAK_PFE` | amount | required | USD | — |  |  |
-| `BEFORE_PEAK_PFE_TENOR` | text | optional |  | — |  |  |
-| `AFTER_PEAK_PFE_TENOR` | text | optional |  | — |  |  |
-| `BEFORE_EPE` | amount | required | USD | — |  |  |
-| `AFTER_EPE` | amount | required | USD | — |  |  |
-| `CHANGE_EPE` | amount | required | USD | — |  |  |
-| `BEFORE_EEPE` | amount | required | USD | — |  |  |
-| `AFTER_EEPE` | amount | required | USD | — |  |  |
-| `CHANGE_EEPE` | amount | required | USD | — |  |  |
-| `BEFORE_PEAK_EE` | amount | required | USD | — |  |  |
-| `AFTER_PEAK_EE` | amount | required | USD | — |  |  |
-| `CHANGE_PEAK_EE` | amount | required | USD | — |  |  |
-| `BEFORE_CE` | amount | required | USD | — |  |  |
-| `AFTER_CE` | amount | required | USD | — |  |  |
-| `CHANGE_CE` | amount | required | USD | — |  |  |
-| `FLAGS` | text | optional |  | exact. |  |  |
-| `ENGINE` | text | required |  | — |  |  |
-
-**Links:** `SCOPE` → `exposure-result`.
-
-**Validation**
-
-- required: fields `BEFORE_PEAK_PFE`, `AFTER_PEAK_PFE`
-
-**Notes**
-
-- No stored key: an answer's id is the base scope (the id in the request); the parameters ride on it (sandbox, q, collateral, sets).
-- The candidates' paths are supplied in the sandbox (TRADE_ID, LABEL, NETTING_SET, MTM of G x P values of the run, MTM0, LIFE_YEARS, RUN_ID), priced elsewhere (an upstream what-if service, or a copy of a booked trade's paths, scaled); a candidate joins a netting set the scope covers whole, or none (a netting set of its own, uncollateralised).
-- The tables profile (TENOR, DATE, T, EE_BASE, EE, ENE_BASE, ENE, PFE_BASE, PFE, INCREMENTAL_EE, INCREMENTAL_PFE) and items (TRADE_ID, LABEL, NETTING_SET, PEAK_PFE_ALONE, INCREMENTAL_PEAK_PFE) come with the answer.
-
 ## XOFC: Exposure official results by netting set and counterparty (published) (`exposure-official-cpty`)
 
 The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, as the server captured and published it (one row per scope, business date and result version); read only, for BI and other readers, never an engine's input.
 
 |  |  |
 |---|---|
-| Contract | [exposure-official-cpty.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-official-cpty.contract.yaml) · version 1.1 |
+| Contract | [exposure-official-cpty.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/exposure-official-cpty.contract.yaml) · version 1.1 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the official end-of-day exposure capture (ExposureOfficial), appended by ExposurePublisher to risk-results/exposure-official-cpty |
@@ -1044,11 +982,11 @@ The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE,
 
 ## NSMTM: Netting-set MtM totals (derived from the trade valuations) (`nset-mtm`)
 
-A netting set's MtM totals derived from the trade valuations of its live trades, once per business date, shown beside the netting set's stored figures (quick win Q1 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the netting-set engine computes them).
+A netting set's MtM totals derived from the trade valuations of its live trades, once per business date, shown beside the netting set's stored figures (docs/architecture/DATA_ARCHITECTURE.md section 12, until the netting-set engine computes them).
 
 |  |  |
 |---|---|
-| Contract | [nset-mtm.contract.yaml](../../../config/packs/counterparty-risk/contracts/nset-mtm.contract.yaml) · version 1.0 |
+| Contract | [nset-mtm.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/nset-mtm.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation |
@@ -1071,7 +1009,7 @@ A netting set's MtM totals derived from the trade valuations of its live trades,
 | `MTM_CURRENCIES` | text list | optional |  | The currencies of the members' MTM: USD alone means the sums are exact, otherwise not converted |  |  |
 | `VALUATION_DATES` | date list | optional |  | The members' valuation dates: the business date alone |  |  |
 | `TRADES` | record list | derived |  | Every member of a live status, with LIVE false for one past its maturity date, largest MTM first |  |  |
-| `TRADE_COUNT` | integer | derived |  | Live trades: Live (COMPUTED_ATTRIBUTES.md section 3): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the valuation date |  |  |
+| `TRADE_COUNT` | integer | derived |  | Live trades: Live (DATA_ARCHITECTURE.md section 12): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the valuation date |  |  |
 | `NET_MTM` | amount | derived | USD | Sum of the live trades' MTM (each in USD; the sum currency is USD, section 3) |  |  |
 | `GROSS_POSITIVE_MTM` | amount | derived | USD | Sum of the live trades' positive MTM |  |  |
 | `GROSS_NEGATIVE_MTM` | amount | derived | USD | Sum of the live trades' negative MTM |  |  |
@@ -1118,11 +1056,11 @@ A netting set's MtM totals derived from the trade valuations of its live trades,
 
 ## CPMTM: Counterparty MtM totals (derived from the trade valuations) (`cpty-mtm`)
 
-A counterparty's MtM totals derived from the trade valuations of its live trades in netting sets, once per business date, shown beside the counterparty's stored NET_MTM (quick win Q2 of docs/architecture/COMPUTED_ATTRIBUTES.md).
+A counterparty's MtM totals derived from the trade valuations of its live trades in netting sets, once per business date, shown beside the counterparty's stored NET_MTM (docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes).
 
 |  |  |
 |---|---|
-| Contract | [cpty-mtm.contract.yaml](../../../config/packs/counterparty-risk/contracts/cpty-mtm.contract.yaml) · version 1.0 |
+| Contract | [cpty-mtm.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/cpty-mtm.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation |
@@ -1143,7 +1081,7 @@ A counterparty's MtM totals derived from the trade valuations of its live trades
 | `MTM_CURRENCIES` | text list | optional |  | The currencies of the members' MTM: USD alone means the sums are exact |  |  |
 | `VALUATION_DATES` | date list | optional |  | The members' valuation dates: the business date alone |  |  |
 | `TRADES` | record list | derived |  | Every member of a live status, with its netting set and LIVE |  |  |
-| `TRADE_COUNT` | integer | derived |  | Live trades: Live (COMPUTED_ATTRIBUTES.md section 3): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the valuation date |  |  |
+| `TRADE_COUNT` | integer | derived |  | Live trades: Live (DATA_ARCHITECTURE.md section 12): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the valuation date |  |  |
 | `NET_MTM` | amount | derived | USD | Sum of the live trades' MTM over every netting set of the counterparty |  |  |
 | `GROSS_POSITIVE_MTM` | amount | derived | USD | Sum of the live trades' positive MTM |  |  |
 | `GROSS_NEGATIVE_MTM` | amount | derived | USD | Sum of the live trades' negative MTM |  |  |
@@ -1176,5 +1114,5 @@ A counterparty's MtM totals derived from the trade valuations of its live trades
 
 **Notes**
 
-- Derived, never stored: built from the trade valuations directly, not from nset-mtm (a derived kind cannot read another derived kind of its connector: COMPUTED_ATTRIBUTES.md section 8.1, check (a)); the per-set positive parts come from group() over its rows.
+- Derived, never stored: built from the trade valuations directly, not from nset-mtm (a derived kind cannot read another derived kind of its connector: DATA_ARCHITECTURE.md section 12, check (a)); the per-set positive parts come from group() over its rows.
 - Shown on the counterparty page beside the stored NET_MTM with the difference; retires when NSET computes counterparty scopes.

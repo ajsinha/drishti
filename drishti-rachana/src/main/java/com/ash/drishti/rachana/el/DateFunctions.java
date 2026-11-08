@@ -49,7 +49,7 @@ final class DateFunctions {
     static final Set<String> INTERVALS = Set.of("day", "week", "month", "quarter", "year", "business_day");
 
     static void register(Functions.Table t) {
-        // asof(): the view's or the query's as-of date; today() is read as asof() (BI_FOUNDATION_2911E.md Q7)
+        // asof(): the view's or the query's as-of date; today() is read as asof() (docs/architecture/ARCHITECTURE.md §28 Q7)
         t.fn("asof", 0, 0, (a, c) -> c.asOf() == null ? null : c.asOf().toString());
         t.old("today", "asof", 0, 0);
         DatePartFunctions.register(t);

@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Id map files are released, not left to the collector (2.9.7, RESOURCES_AND_SCALE.md section 7.3): a mapping is shared per file, closed
+ * Id map files are released, not left to the collector (2.9.7, CLUSTER_GUIDE.md section 7.3): a mapping is shared per file, closed
  * once its readers are done, a read after that is refused ("ask again"), a released file is deleted only after it is unmapped, and the
  * folder is trimmed to its cap least recently mapped first.
  */

@@ -30,7 +30,7 @@ public final class IdentityRepositories {
 
     public interface PackStates extends JpaRepository<PackStateEntity, String> {}
 
-    /** The administrators' switches of commands and packs (Admin → Commands): the newest state of each. */
+    /** The administrators' switches of commands and packs (Admin → Functions): the newest state of each. */
     public interface Switches extends JpaRepository<SwitchEntity, String> {}
 
     /** Every change of a switch, newest first for the history. */
@@ -113,16 +113,6 @@ public final class IdentityRepositories {
         List<NoteEntity> findByKindAndEntityIdOrderByIdAsc(String kind, String entityId);
 
         long countByKindAndEntityId(String kind, String entityId);
-    }
-
-    public interface Alerts extends JpaRepository<AlertEntity, Long> {
-        List<AlertEntity> findByUsernameOrderByIdDesc(String username, Pageable page);
-
-        long countByUsername(String username);
-
-        void deleteByUsernameAndIdLessThan(String username, Long id);
-
-        void deleteByUsername(String username);
     }
 
     public interface Audit extends JpaRepository<AuditEventEntity, Long> {

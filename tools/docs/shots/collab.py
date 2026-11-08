@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of Share with a note, the inbox and Discussion (docs/guides/USER_GUIDE.md, docs/architecture/COLLABORATION.md, Share and Discussion, end to end),
+"""The pictures of Share with a note, the inbox and Discussion (docs/guides/USER_GUIDE.md, docs/architecture/ARCHITECTURE.md §31, Share and Discussion, end to end),
 written to docs/guides/img/collab/.
 
 Sign-in is ON with two people on the trade MX-20000001: `asha` (role `author`, raw: sees every field) shares the view, pinned to a past
@@ -79,7 +79,7 @@ def share_dialog(c: Ctx):
     c.page.keyboard.press("Alt+s")
     c.page.locator("[data-share-dialog]:not([hidden])").wait_for()
     c.page.locator("[data-shr-to]").fill("ver")
-    c.page.locator(".shr-list [role=option]").first.wait_for()
+    c.page.locator(".di-combo-pop [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
     c.page.locator("[data-shr-note]").fill(note)
     c.page.wait_for_timeout(600)
@@ -134,12 +134,12 @@ def discussion(c: Ctx):
     c.page.locator("#aboutDrawer:not([hidden])").wait_for()
     c.until("document.activeElement && document.activeElement.id === 'discBody'", 30)
     c.page.keyboard.type("@ver")
-    c.page.locator("#discOpts [role=option]").first.wait_for()
+    c.page.locator(".di-combo-pop [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
     c.page.keyboard.type(f"is {secret} the right trader? He is {{$.TRADER_ID}} here, and the quantity is {{")
-    c.page.locator("#discOpts [role=option]").first.wait_for()
+    c.page.locator(".di-combo-pop [role=option]").first.wait_for()
     c.page.keyboard.type("QUANTITY")
-    c.page.locator("#discOpts [role=option]").first.wait_for()
+    c.page.locator(".di-combo-pop [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
     c.page.keyboard.press("Control+Enter")
     c.page.locator(".disc-c").first.wait_for(timeout=30000)

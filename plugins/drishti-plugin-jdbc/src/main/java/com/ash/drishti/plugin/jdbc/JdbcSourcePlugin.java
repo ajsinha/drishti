@@ -50,14 +50,14 @@ import java.util.concurrent.TimeUnit;
  * {@code generation}, if present, is the version; {@code business_date}, if present, is the date the row is for.
  * More queries per kind ({@code query.<kind>.<part>} for nested parts, {@code ids.<kind>} for type-ahead,
  * {@code columns.<kind>} for searches over a day's promoted fields, {@code reverse.<kind>} for reverse lookups) are
- * described in {@link QueryMode} and {@code docs/connectors/JDBC_QUERIES.md}.
+ * described in {@link QueryMode} and {@code plugins/drishti-plugin-jdbc/README.md}.
  * Connections are pooled ({@link JdbcPool}), each opened on first use and replaced whenever it is found broken, so the
  * connector starts while the database is down and recovers by itself when it comes back; every borrow is for one unit of work.
  *
  * <p><b>Table mode</b> ({@code table: reference.entities}): every kind of a data domain in one PostgreSQL table of
  * {@code (kind, id, business_date, doc jsonb)} rows, dated, with search and reverse lookups; {@code mode.<kind>}
  * is {@code snapshot} (default) or {@code effective}, partitioned by month for scale. See {@link PostgresLayout},
- * {@link TableCatalog} and {@code docs/connectors/POSTGRES_CONNECTOR.md}.
+ * {@link TableCatalog} and {@code plugins/drishti-plugin-jdbc/README.md}.
  */
 public final class JdbcSourcePlugin implements SourcePlugin {
 
@@ -106,7 +106,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         return JdbcWrites.check(command, block, known);
     }
 
-    /** One {@code writes:} command (WRITE_BACK.md › The design and its reasons, section 5.4) on a pooled connection, in its own transaction ({@link JdbcWrites}). */
+    /** One {@code writes:} command (APPROVALS_GUIDE.md › The design and its reasons, section 5.4) on a pooled connection, in its own transaction ({@link JdbcWrites}). */
     @Override
     public com.ash.drishti.api.write.WriteResult write(com.ash.drishti.api.write.WriteCommand command) throws Exception {
         return withConnection(c -> JdbcWrites.run(c, command));

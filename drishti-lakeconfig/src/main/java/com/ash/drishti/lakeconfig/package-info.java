@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * The lake configuration (docs/architecture/LAKE_CONFIG.md, docs/guides/DATA_LAKE_GUIDE.md): {@code config/lakes/<lake>.yaml}, one file per
+ * The lake configuration (docs/architecture/DATA_ARCHITECTURE.md, docs/guides/DATA_LAKE_GUIDE.md): {@code config/lakes/<lake>.yaml}, one file per
  * lake, describes where the lake is and every table in it, and every writer and reader refers to it.
  *
  * <p><b>Why a module of its own.</b> Its consumers sit on both sides of the plugin boundary and at both ends of the build: the parallel

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A pinned link opened signed out, in a real browser against a real server with sign-in on (COLLABORATION.md, build step 1): the
+"""A pinned link opened signed out, in a real browser against a real server with sign-in on (ARCHITECTURE.md §31, build step 1): the
 sign-in page keeps the link, signing in lands on the pinned date with the as-shared banner, the reader's own saved date is not
 touched, and the next page they open is their own (live).
 

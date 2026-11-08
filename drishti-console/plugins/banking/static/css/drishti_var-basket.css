@@ -1,0 +1,106 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* "Construct your basket" (drishti_var-basket.js, drishti_var-basket-sheet.js): one sheet like Excel at the top of the VaR explorer. The theme's tokens
+   for every colour (drishti_tokens.css), so every theme reads. */
+.vb { background: var(--d-surface); border: 1px solid var(--d-accent); border-radius: var(--d-radius-6); padding: var(--d-sp-10) var(--d-sp-12); display: grid; gap: var(--d-sp-8);
+  color: var(--d-ink); font-size: var(--d-fs-12_5); margin-bottom: var(--d-sp-10); min-width: 0; }
+.vb .mono { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
+.vb-head { display: flex; flex-wrap: wrap; gap: var(--d-sp-4) var(--d-sp-12); align-items: center; }
+.vb-head-r { margin-left: auto; display: flex; flex-wrap: wrap; gap: var(--d-sp-6); align-items: center; }
+.vb-title { margin: 0; font-size: var(--d-fs-14); font-weight: 600; color: var(--d-ink); }
+.vb-state { font: 500 var(--d-fs-11) var(--d-font-mono); color: var(--d-muted); }
+.vb-state.saved { color: var(--d-ok); }
+.vb-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: var(--d-radius-14); overflow: hidden; }
+.vb-segb { border: 0; background: transparent; color: var(--d-muted); padding: var(--d-sp-3) var(--d-sp-11); font-size: var(--d-fs-12); cursor: pointer; }
+.vb-segb.on { background: var(--d-surface-2); color: var(--d-ink); font-weight: 600; }
+.vb-input.vb-pick { width: auto; max-width: 260px; }
+.vb-row { display: flex; flex-wrap: wrap; gap: var(--d-sp-6); align-items: center; }
+.vb-find { position: relative; flex: 1 1 360px; min-width: 0; max-width: 560px; }
+.vb-how { flex: 1 1 260px; }
+.vb-input { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-3); padding: var(--d-sp-4) var(--d-sp-7); font-size: var(--d-fs-12);
+  width: 100%; min-width: 0; }
+.vb-input:focus { outline: 2px solid var(--d-accent); outline-offset: -1px; }
+.vb-row > .vb-input { flex: 1 1 200px; width: auto; }
+.vb-input.vb-narrow { flex: 0 1 220px; }
+.vb-input.vb-tiny { flex: 0 0 64px; }
+.vb-input.vb-name { flex: 0 1 240px; }
+.vb-input.vb-share { flex: 0 1 260px; }
+.vb-lbl { color: var(--d-muted); font-size: var(--d-fs-12); }
+.vb-btn { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var(--d-border); padding: var(--d-sp-3) var(--d-sp-9); font-size: var(--d-fs-11_5); white-space: nowrap; }
+.vb-btn:hover { border-color: var(--d-muted); color: var(--d-ink); }
+.vb-btn.primary { background: var(--d-fill); color: var(--d-on-fill); border-color: var(--d-fill); font-weight: 600; }
+.vb-btn:disabled { opacity: .45; cursor: default; }
+.vb-bank { display: flex; flex-wrap: wrap; gap: var(--d-sp-4); align-items: baseline; margin: 0; cursor: pointer; }
+.vb-bank input { accent-color: var(--d-accent); }
+.vb-hints { position: absolute; left: 0; right: 0; top: calc(100% + 2px); z-index: var(--d-z-popover); background: var(--d-surface); border: 1px solid var(--d-border);
+  border-radius: var(--d-radius-4); box-shadow: var(--d-elev-list); max-height: 320px; overflow: auto; }
+.vb-hint { display: flex; gap: var(--d-sp-8); align-items: baseline; padding: var(--d-sp-5) var(--d-sp-9); cursor: pointer; border-bottom: 1px solid var(--d-border); }
+.vb-hint:last-child { border-bottom: 0; }
+.vb-hint.on, .vb-hint:hover { background: var(--d-highlight); }
+.vb-hint .k { font: 600 var(--d-fs-10) var(--d-font-mono); color: var(--d-accent); min-width: 52px; text-transform: uppercase; }
+.vb-hint .t { font-weight: 600; white-space: nowrap; }
+.vb-hint .n { color: var(--d-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.vb-hint .d { margin-left: auto; color: var(--d-muted); font-size: var(--d-fs-11_5); white-space: nowrap; }
+.vb-hint.flagged .d { color: var(--d-bad); white-space: normal; }
+.vb-hint.none { color: var(--d-muted); cursor: default; }
+
+/* the sheet: drishti-grid with cell editing (drishti_var-basket-sheet.js); each cell coloured by the server's check of it */
+.vbs { min-width: 0; }
+.vbs .dg-cell > [data-vb-cell] { display: block; height: 100%; min-width: 100%; margin: 0 -8px; padding: 0 var(--d-sp-8); box-sizing: content-box; }
+.vbs .okc { background: color-mix(in srgb, var(--d-ok) 14%, transparent); }
+.vbs .badc { background: color-mix(in srgb, var(--d-bad) 15%, transparent); color: var(--d-bad); }
+.vbs .warnc { background: color-mix(in srgb, var(--d-warn) 16%, transparent); color: var(--d-warn); }
+.vbs .pending { color: var(--d-muted); }
+
+.vb-checks { display: flex; flex-wrap: wrap; gap: var(--d-sp-6) var(--d-sp-8); align-items: center; min-height: 0; }
+.vb-checks:empty { display: none; }
+.vb-checks .pill { display: inline-block; padding: var(--d-sp-1) var(--d-sp-8); border-radius: var(--d-radius-10); font-size: var(--d-fs-11_5); font-weight: 600; }
+.vb-checks .pill.g { background: color-mix(in srgb, var(--d-ok) 14%, transparent); color: var(--d-ok); }
+.vb-checks .pill.r { background: color-mix(in srgb, var(--d-bad) 15%, transparent); color: var(--d-bad); }
+.vb-checks .pill.a { background: color-mix(in srgb, var(--d-warn) 16%, transparent); color: var(--d-warn); }
+.vb-reasons { flex: 1 1 100%; margin: 0; padding: 0 0 0 var(--d-sp-16); font-size: var(--d-fs-12); }
+.vb-reasons li { cursor: pointer; }
+.vb-reasons li.bad { color: var(--d-bad); }
+.vb-reasons li.warn { color: var(--d-warn); }
+.vb-reasons li.vb-more { color: var(--d-muted); cursor: default; }
+.vb-kpis { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: stretch; min-height: 20px; }
+.vb-kpis.computing { opacity: .6; }
+.vb-kpi { background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-6) var(--d-sp-12); min-width: 140px; }
+.vb-kpi .k { font-size: var(--d-fs-10_5); color: var(--d-muted); text-transform: uppercase; letter-spacing: .04em; }
+.vb-kpi .v { font-size: var(--d-fs-18); margin-top: var(--d-sp-1); }
+.vb-kpi .s { font-size: var(--d-fs-11); color: var(--d-muted); margin-top: var(--d-sp-1); }
+.vb-kpi.pos .v { color: var(--d-pos); }
+.vb-kpi.edge-a { border-left: 3px solid var(--d-warn); }
+.vb-ms { align-self: flex-end; color: var(--d-muted); font-size: var(--d-fs-11); }
+.vb-card { border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-8) var(--d-sp-10); display: grid; gap: var(--d-sp-6); }
+.vb-card h3 { margin: 0; font-size: var(--d-fs-13); }
+.vb-card h3 span { color: var(--d-muted); font-weight: 400; font-size: var(--d-fs-12); margin-left: var(--d-sp-6); }
+.vb-note { color: var(--d-muted); font-size: var(--d-fs-12); margin: var(--d-sp-2) 0; }
+.vb-err { color: var(--d-bad); margin: var(--d-sp-4) 0; font-size: var(--d-fs-12); }
+.vb-msg { color: var(--d-muted); font-size: var(--d-fs-12); flex: 1 1 200px; }
+.vb-wlist, .vb-grid { min-width: 320px; margin-top: var(--d-sp-6); }
+.vb-grid .dg-row.vb-sub > .dg-cell { color: var(--d-muted); font-size: var(--d-fs-11_5); }
+.vb-shade { position: fixed; inset: 0; z-index: var(--d-z-shade); background: var(--d-scrim-ink); display: flex; align-items: flex-start; justify-content: center;
+  padding: 70px var(--d-sp-16) var(--d-sp-16); overflow-y: auto; }
+.vb.popup { width: min(1200px, 100%); box-shadow: var(--d-elev-dialog); margin: 0; }
+.tool.basket { font-size: var(--d-fs-13); gap: var(--d-sp-4); }
+.vx-edit { margin-left: var(--d-sp-4); }
+@media (max-width: 640px) {
+  .vb-head-r { margin-left: 0; }
+  .vb-hint { flex-wrap: wrap; }
+  .vb-hint .d { margin-left: 0; white-space: normal; }
+  .vb-kpi { min-width: 0; flex: 1 1 40%; }
+}

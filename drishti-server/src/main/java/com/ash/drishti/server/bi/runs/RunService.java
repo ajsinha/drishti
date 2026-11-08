@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The BI runs pipeline (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 3, 6, 8, 10, 11, 12): submit, wait inline, become visible, run, store, notify.
+ * The BI runs pipeline (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 3, 6, 8, 10, 11, 12): submit, wait inline, become visible, run, store, notify.
  *
  * <ul>
  *   <li>A question is computed <b>as its runner</b>: its {@link Work} is a closure the endpoint built with the runner's bound model (their row rules
@@ -669,7 +669,7 @@ public final class RunService {
         Long bytes = null;
         boolean keep = f.visible || f.background || props.store().keepInteractive() && seconds >= props.store().minSeconds();
         if (keep && com.ash.drishti.memlake.Retention.current().mentions(f.q.question() + " " + f.q.dataVersion())) {
-            keep = false;            // memory-only data (IN_MEMORY_LAKE.md section 8): the run's definition is kept, its rows are recomputed when opened
+            keep = false;            // memory-only data (docs/architecture/DATA_ARCHITECTURE.md section 8): the run's definition is kept, its rows are recomputed when opened
         }
         if (keep) {
             f.lock.lock();

@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The lowering of the two functions that read another source (BI_FOUNDATION_2911E.md Q15 and Q29), which Rachana parses and checks but
+ * The lowering of the two functions that read another source (docs/architecture/ARCHITECTURE.md §28 Q15 and Q29), which Rachana parses and checks but
  * leaves to the layer: {@code fx(ccy, to)} reads the installation's one FX source at the row's business date, and
  * {@code related(domain.table.COLUMN, on = key)} reads one column of the row another table holds under that key (one many-to-one hop).
  * Each call becomes a value of the row, worked out per row before the expression runs ({@link #values}), and the expression reads it as a

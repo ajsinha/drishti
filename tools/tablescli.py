@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The table layer on the command line (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_GUIDE.md "tables"): virtual tables and models
+"""The table layer on the command line (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_REFERENCE.md "tables"): virtual tables and models
 under config/tables, checked, previewed over sample documents, traced (lineage), offered for new tables, and BI's datasets and models
 migrated into them.
 
@@ -78,11 +78,11 @@ def register(groups, ctx: dict) -> None:
 
     add("list", "every table and model of the catalogue", "examples:\n  drishti.py tables list\n  drishti.py tables list --json")
     p = add("check", "check every table and model, and the catalogue (names, references, cycles); --sample adds the checks a sample allows",
-            "examples:\n  drishti.py tables check\n  drishti.py tables check --sample bi.trading_risk_trades=data/samples/trades.jsonl")
+            "examples:\n  drishti.py tables check\n  drishti.py tables check --sample banking.trading_risk_trades=data/samples/trades.jsonl")
     p.add_argument("--sample", action="append", metavar="TABLE=FILE.jsonl", help="sample documents for a table (repeatable)")
     p.add_argument("--stored", action="append", metavar="NAME,...", help="stored tables' names (lake tables, kinds): a virtual table named like one is refused")
     p = add("preview", "a table's first rows over sample documents (JSON Lines, one entity a line)",
-            "examples:\n  drishti.py tables preview bi.trading_cashflows_cashflows --sample trades.jsonl --limit 10\n"
+            "examples:\n  drishti.py tables preview banking.trading_cashflows_cashflows --sample trades.jsonl --limit 10\n"
             "  drishti.py tables preview trading.trade_legs --sample trades.jsonl --related core.books=books.jsonl --fx fx-spot.jsonl")
     p.add_argument("name", metavar="TABLE", help="the table (or its was: name)")
     p.add_argument("--sample", action="append", required=True, metavar="FILE.jsonl", help="the sample documents")
@@ -90,7 +90,7 @@ def register(groups, ctx: dict) -> None:
     p.add_argument("--fx", metavar="FILE.jsonl", help="spot rates (PAIR_NAME 'EUR/USD', MID), what fx() reads; without it only a currency to itself converts")
     p.add_argument("--limit", type=int, help="the most rows shown (default 20)")
     p = add("lineage", "who uses a table or a model: models, tables over it, look-ups",
-            "examples:\n  drishti.py tables lineage bi.trading_risk_trades\n  drishti.py tables lineage trading-risk")
+            "examples:\n  drishti.py tables lineage banking.trading_risk_trades\n  drishti.py tables lineage trading-risk")
     p.add_argument("name", metavar="NAME", help="a table or a model")
     p = add("offer", "the flat virtual table offered for a table a data load created: one column per scalar field of the sample, typed; "
             "the lists of objects as grains to choose instead; --write accepts it (a new file under config/tables/<domain>/)",

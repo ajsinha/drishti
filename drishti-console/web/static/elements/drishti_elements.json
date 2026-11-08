@@ -1,0 +1,152 @@
+{
+  "elements": "1.0.0",
+  "about": "Drishti Elements: the console's JavaScript as reusable libraries. Each library: ES modules under src/ and one bundled file written by tools/elements/build.py. css and scripts (a vendored engine) paths are relative to the static root; module: the domain module a library is licensed with. assets: folders under the static root a library reads at run time (map shapes, the code editor's engine), shipped with it by the distribution (tools/elements/dist.py).",
+  "libraries": {
+    "drishti-core": {
+      "version": "1.1.0",
+      "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines",
+      "entry": "src/drishti_index.js",
+      "requires": [],
+      "css": [
+        "css/drishti_tokens.css",
+        "css/drishti_resize.css"
+      ]
+    },
+    "drishti-inputs": {
+      "version": "0.3.0",
+      "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": [
+        "elements/drishti-inputs/drishti_inputs.css"
+      ],
+      "assets": [
+        "vendor/codemirror/"
+      ]
+    },
+    "drishti-grid": {
+      "version": "0.4.0",
+      "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions)",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core",
+        "drishti-inputs"
+      ],
+      "css": [
+        "elements/drishti-grid/drishti_grid.css"
+      ]
+    },
+    "drishti-tree": {
+      "version": "0.2.0",
+      "title": "The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core",
+        "drishti-inputs",
+        "drishti-grid"
+      ],
+      "css": [
+        "elements/drishti-tree/drishti_tree.css",
+        "elements/drishti-grid/drishti_grid.css"
+      ]
+    },
+    "drishti-designer": {
+      "version": "0.2.0",
+      "title": "The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review)",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core",
+        "drishti-inputs",
+        "drishti-tree"
+      ],
+      "css": [
+        "elements/drishti-designer/drishti_designer.css"
+      ]
+    },
+    "drishti-data": {
+      "version": "0.1.0",
+      "title": "Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": []
+    },
+    "drishti-chart": {
+      "version": "0.2.0",
+      "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core",
+        "drishti-inputs"
+      ],
+      "css": [
+        "elements/drishti-chart/drishti_chart.css"
+      ],
+      "scripts": [
+        "vendor/echarts/echarts.min.js"
+      ],
+      "assets": [
+        "vendor/echarts/maps/"
+      ]
+    },
+    "drishti-graph": {
+      "version": "0.1.0",
+      "title": "The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core",
+        "drishti-inputs",
+        "drishti-grid"
+      ],
+      "css": [
+        "elements/drishti-graph/drishti_graph.css",
+        "elements/drishti-grid/drishti_grid.css"
+      ]
+    },
+    "drishti-insight": {
+      "version": "0.1.0",
+      "title": "Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": [
+        "css/drishti_explain.css",
+        "css/drishti_approvals.css"
+      ]
+    },
+    "drishti-risk": {
+      "version": "0.2.0",
+      "title": "The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core",
+        "drishti-grid",
+        "drishti-chart"
+      ],
+      "css": [],
+      "module": "banking"
+    },
+    "drishti-renderer": {
+      "version": "2.0.0",
+      "title": "The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-tree, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core",
+        "drishti-grid",
+        "drishti-chart",
+        "drishti-data",
+        "drishti-graph",
+        "drishti-tree"
+      ],
+      "css": [
+        "elements/drishti-grid/drishti_grid.css",
+        "elements/drishti-graph/drishti_graph.css",
+        "elements/drishti-tree/drishti_tree.css"
+      ]
+    }
+  }
+}

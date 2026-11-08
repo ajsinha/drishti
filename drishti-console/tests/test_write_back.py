@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Write-back, the console's half (docs/guides/WRITE_BACK.md): /api/changes passes each call to the server as the signed-in person
+"""Write-back, the console's half (docs/guides/APPROVALS_GUIDE.md): /api/changes passes each call to the server as the signed-in person
 (the review sheet, submit, approve, a record's history) and hands back the server's refusal with its code; Review -> Changes lists the
 changes waiting for an approver with Approve and Reject for one the server says the reader may decide; Admin -> Edits shows the store,
 the lanes, the warnings and each connector's writes with its switch; a page with a form loads drishti_write-back.js; the live connection
@@ -39,11 +39,9 @@ def _sender(calls, answers):
 
 def test_changes_pass_through_as_the_person_with_the_servers_refusal(client, backend, monkeypatch):
     calls = []
-    off = BackendError(403, "DRS-9301", "editing is off on this server")
     monkeypatch.setattr(backend, "_send", _sender(calls, {
         ("GET", "/changes/settings"): {"enabled": True, "mayEdit": True, "approver": False, "kinds": ["trade"]},
         ("POST", "/changes/preview"): {"ok": True, "changes": [{"kind": "trade", "entity": "MX-1", "diff": [], "approvals": 1}]},
-        ("POST", "/changes/" + CHG + "/approve"): off,
         ("POST", "/changes"): {"changes": [{"id": CHG, "state": "awaiting", "needed": 1}]},
     }))
     assert client.get("/api/changes/settings").json()["mayEdit"] is True
@@ -51,32 +49,16 @@ def test_changes_pass_through_as_the_person_with_the_servers_refusal(client, bac
     sent = client.post("/api/changes", json={"draft": "d-0123456789ab", "reason": "typo"})
     assert sent.status_code == 202 and sent.json()["changes"][0]["state"] == "awaiting"
     assert ("POST", "/changes", {"draft": "d-0123456789ab", "reason": "typo"}) in calls
-    refused = client.post("/api/changes/" + CHG + "/approve", json={})
-    assert refused.status_code == 403 and refused.json()["code"] == "DRS-9301"
-    assert client.post("/api/changes/nope/approve", json={}).status_code == 400
-    assert client.post("/api/changes/" + CHG + "/delete", json={}).status_code == 400
+    # deciding is not here any more: a change is approved, rejected or withdrawn in the one Approvals queue
+    assert client.post("/api/changes/" + CHG + "/approve", json={}).status_code in (404, 405)
     client.get("/api/entities/trade/MX 1/history")
     assert calls[-1][1] == "/entities/trade/MX%201/history"
     assert client.post("/api/changes", content="x", headers={"Content-Type": "text/plain"}).status_code == 415
 
 
-def test_review_changes_lists_what_waits_with_approve_and_reject_for_an_approver(client, backend, monkeypatch):
-    calls = []
-    change = {"id": CHG, "kind": "trade", "entity": "MX-1", "target": "overlay", "by": "asha", "at": "2026-10-25T10:00:00Z", "reason": "typo",
-              "items": [{"path": "$.NOTIONAL", "from": 1000, "to": 1250}], "state": "awaiting", "needed": 1, "approvals": [], "mayDecide": True}
-    monkeypatch.setattr(backend, "_send", _sender(calls, {
-        ("GET", "/changes/settings"): {"enabled": True, "mayEdit": True, "approver": True},
-        ("GET", "/changes?"): {"changes": [change]},
-    }))
-    page = client.get("/review/changes")
-    assert page.status_code == 200
-    assert "NOTIONAL: 1000 → <b>1250</b>" in page.text and "data-approve=\"" + CHG in page.text and "data-reject=\"" + CHG in page.text
-    assert ("GET", "/changes?limit=200&state=awaiting", None) in calls
-    got = client.post("/review/changes/" + CHG + "/reject", data={"note": "wrong ticket"}, follow_redirects=False)
-    assert got.status_code == 303 and calls[-1] == ("POST", "/changes/" + CHG + "/reject", {"reason": "wrong ticket"})
-    monkeypatch.setattr(backend, "_send", _sender(calls, {("GET", "/changes/settings"): {"enabled": False}, ("GET", "/changes?"): {"changes": []}}))
-    off = client.get("/review/changes").text
-    assert "data-edit-off" in off and "data-none" in off
+def test_review_changes_is_now_the_approvals_queue(client):
+    r = client.get("/review/changes", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/approvals?kind=change"
 
 
 def test_admin_edits_shows_the_store_lanes_warnings_and_connector_writes(client, backend, monkeypatch):

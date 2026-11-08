@@ -56,7 +56,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * The cases of the one parity proof of 2.9.11.e (docs/architecture/BI_FOUNDATION_2911E.md section 5): what BI answers today for every
+ * The cases of the one parity proof of 2.9.11.e (docs/architecture/ARCHITECTURE.md §28 section 5): what BI answers today for every
  * shipped model and report, every person and every date, recorded by {@link BiFoundationRecorder} on the tree before anything moves and
  * compared by {@link BiFoundationParityTest} on every later commit. It extends what {@code BiParityRecorder} (the totals of one test dataset,
  * 2.9.11.b) does, from totals to every answer and every person.
@@ -96,7 +96,7 @@ public final class BiFoundationCases {
     /** The shipped BI folder, read only. */
     static final Path BI = Path.of("..", "config", "bi");
 
-    /** The shipped table layer (config/tables): the tables and models BI reads since the switch (BI_FOUNDATION_2911E.md step 5), read only. */
+    /** The shipped table layer (config/tables): the tables and models BI reads since the switch (docs/architecture/ARCHITECTURE.md §28 step 5), read only. */
     static final Path TABLES = Path.of("..", "config", "tables");
 
     /**
@@ -449,7 +449,7 @@ public final class BiFoundationCases {
     /** Every report of config/bi (on a model, on a dataset, and the boards: reports whose pages are walls of tiles), parsed. */
     static Map<String, Report> reports() throws IOException {
         Map<String, Report> out = new TreeMap<>();
-        try (Stream<Path> s = Files.list(BI.resolve("reports"))) {
+        try (Stream<Path> s = Files.walk(BI.resolve("reports"), 2)) {                  // and its domain folders
             for (Path f : s.filter(p -> p.toString().endsWith(".report.yaml")).sorted().toList()) {
                 ReportParser.Result r = ReportParser.parse(Files.readString(f));
                 if (r.report() != null) {

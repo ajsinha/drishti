@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The designer with several datasets (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16): the Fields pane's "Add dataset" and one tree for each, the dataset a visual reads (`dataset:` on
+/* The designer with several datasets (REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16): the Fields pane's "Add dataset" and one tree for each, the dataset a visual reads (`dataset:` on
    the visual, blank for the report's own), the refusal of a field of another dataset in a visual that already reads one, and the LINKS panel that suggests
    fields of different datasets that mean the same (ticked ones are written to the report's `links:`) and offers a composed dataset built on them as a draft
    to review. The engine, the validator and the viewer already understand all of it; this file is the author's way in. Same-origin JSON only. */
@@ -97,12 +97,10 @@
   function drawPicker() {
     const sel = D.q('[data-dataset-picker]');
     if (!sel) { return; }
-    B.clear(sel);
-    sel.appendChild(h('option', { value: '', text: 'Choose a dataset' }));
-    all.filter((d) => d.id !== D.dataset.id && extra.indexOf(d.id) < 0).forEach((d) => {
+    sel.component.setOptions([{ value: '', label: 'Choose a dataset' }].concat(all.filter((d) => d.id !== D.dataset.id && extra.indexOf(d.id) < 0).map((d) => {   // drishti-inputs' Select
       const why = B.datasetWhy(d);
-      sel.appendChild(h('option', { value: strip(d.id), text: d.title + (why ? ' (' + why + ')' : ''), disabled: !!why }));
-    });
+      return { value: strip(d.id), label: d.title + (why ? ' (' + why + ')' : ''), disabled: !!why };
+    })), '');
   }
 
   // ---- links ---------------------------------------------------------------------------------------------------------
@@ -184,7 +182,7 @@
     if (sig !== usedSig) { usedSig = sig; if (D.drawFields) { D.drawFields(); } }
   });
 
-  /** A composed dataset (BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11.1) on the first ticked link, or the first suggestion: shown as text for review, created as a draft only on the button. */
+  /** A composed dataset (REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11.1) on the first ticked link, or the first suggestion: shown as text for review, created as a draft only on the button. */
   function composedDraft(sg) {
     const tick = sg.find((s) => linked(s.fields)) || sg[0];
     const host = D.q('[data-composed-draft]');

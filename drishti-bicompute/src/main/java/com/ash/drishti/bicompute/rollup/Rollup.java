@@ -32,7 +32,7 @@ import java.util.TreeSet;
 import java.util.function.Function;
 
 /**
- * One rollup on one date (PIVOT_ENGINE.md section 9.6): per partition, the parts absorbed and the partial states per grain cell key (members
+ * One rollup on one date (ARCHITECTURE.md section 26.6): per partition, the parts absorbed and the partial states per grain cell key (members
  * and one state per function, in the definition's order). The partitions are merged in partition order, then cell-key order, so the merged
  * rows are the same whatever order the loads came in. Encoded to bytes with each function's own codec (what is kept on disk).
  */

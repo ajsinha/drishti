@@ -48,7 +48,7 @@
       {% if init.review and init.canSave %}<label for="wbNote" class="visually-hidden">What changed (for the reviewer)</label>
       <input id="wbNote" class="studio-in wb-note" data-note placeholder="What changed? (for the reviewer)" maxlength="300">{% endif %}
       <button type="button" class="btn-pill btn-ghost" data-save{% if not init.canSave %} aria-disabled="true" title="Designing is open to everyone; saving needs the author right (or saving is off here). Ctrl+S says so."{% elif init.review %} title="Submit for review: an approver makes it live (Ctrl+S)"{% else %} title="Save to the registry: views use it now (Ctrl+S)"{% endif %}><i class="bi bi-{{ 'send' if init.review else 'save' }}" aria-hidden="true"></i> {{ 'Submit for review' if init.review else 'Save' }}</button>
-      {% if init.review %}<a class="btn-pill btn-ghost" href="/build/reviews" title="Sutras waiting for review"><i class="bi bi-check2-square" aria-hidden="true"></i> Reviews{% if pending %} <span class="bell-count">{{ pending }}</span>{% endif %}</a>{% endif %}
+      {% if init.review %}<a class="btn-pill btn-ghost" href="/approvals?kind=sutra" title="Sutras waiting for review, in the Approvals queue"><i class="bi bi-check2-square" aria-hidden="true"></i> Approvals</a>{% endif %}
       <button type="button" class="btn-pill btn-ghost" data-ship-menu aria-haspopup="dialog" title="Export a pack fragment, share a read-only link{% if init.fileBinding %}, bind to a file{% endif %}"><i class="bi bi-box-arrow-up" aria-hidden="true"></i> Ship</button>
       <button type="button" class="btn-pill btn-ghost" data-palette-open title="Command palette (Ctrl+K)"><i class="bi bi-command" aria-hidden="true"></i> Commands</button>
       <a class="btn-pill btn-ghost" href="/help/rachana-reference#screen-designer-and-the-build-workbench" title="The screen designer guide (F1)"><i class="bi bi-question-circle" aria-hidden="true"></i> Guide</a>
@@ -79,10 +79,8 @@
         <p class="text-muted-d" data-data-note></p>
       </section>
       <details class="wb-sec" open data-palette-box><summary id="wbPalette" class="bs-h">Add a panel</summary>
-        <p class="text-muted-d bs-keys">Click Add, or drag a kind onto the canvas.</p>
-        <label for="wbKindFilter" class="visually-hidden">Filter the panel kinds</label>
-        <input id="wbKindFilter" class="studio-in" type="search" placeholder="Filter the 22 kinds" autocomplete="off" data-kind-filter>
-        <ul class="wb-palette" aria-label="Panel kinds" data-palette></ul>
+        <p class="text-muted-d bs-keys">Click or press Enter on a kind, or drag it onto the canvas.</p>
+        <div class="wb-palette" data-palette></div>
       </details>
       <details class="wb-sec" open><summary id="wbShape" class="bs-h">Shape</summary>
         <div data-skipped></div>
@@ -93,7 +91,7 @@
             <span class="text-muted-d" data-counts aria-live="polite"></span>
             <button type="button" class="btn-pill btn-ghost" data-expand-all>Expand</button><button type="button" class="btn-pill btn-ghost" data-collapse-all>Collapse</button></div>
           <p class="text-muted-d bs-keys">Drag a field onto the canvas. Or: arrows move, Enter opens a field, S suggests panels, B binds it to the selected panel.</p>
-          <ul class="bs-tree" role="tree" aria-label="Shape of the samples" data-tree></ul>
+          <div data-tree></div>
         </div>
       </details>
     </aside>
@@ -119,7 +117,7 @@
         </div>
         <div class="wb-pane" id="wbPaneYaml" role="tabpanel" aria-labelledby="wbTabYaml" hidden data-split-ok>
           <div class="bs-status text-muted-d" data-field-help hidden></div>
-          <textarea data-yaml-src aria-label="Sutra (YAML)" spellcheck="false">{{ design.sutra }}</textarea>
+          <div data-yaml-src data-text="{{ design.sutra }}"></div>{# drishti-designer's YamlPane (build/drishti_yamltab.js); data-text: the Sutra as saved #}
         </div>
         <div class="wb-pane studio-summary" id="wbPaneSummary" role="tabpanel" aria-labelledby="wbTabSummary" hidden data-summary></div>
         <div class="wb-pane wb-notes" id="wbPaneNotes" role="tabpanel" aria-labelledby="wbTabNotes" hidden data-notes>
@@ -160,7 +158,7 @@
           <p class="text-muted-d wb-about-intro">The <strong>controls</strong> of this screen: dropdowns over the record's own data, date and number ranges, a search box. Panels read them as <code>ctl.&lt;id&gt;</code> in <code>rows</code>, <code>where</code>, <code>limit</code> and <code>title</code>; readers' choices are in the address, so a link reproduces them. They are the <code>controls:</code> section of the Sutra.
             <a href="/help/rachana-reference#the-controls-tab" class="lnk">How it works</a></p>
           <div class="wb-about-bar"><label for="wbCtlKind" class="visually-hidden">Kind of control to add</label>
-            <select id="wbCtlKind" class="studio-in" data-ctl-new-kind><option>dropdown</option><option>multi-select</option><option>cascading</option><option>toggle</option><option>segmented</option><option>date</option><option>date-range</option><option>number-range</option><option>top-n</option><option>search</option></select>
+            <drishti-select id="wbCtlKind" data-ctl-new-kind label="Kind of control to add"><option>dropdown</option><option>multi-select</option><option>cascading</option><option>toggle</option><option>segmented</option><option>date</option><option>date-range</option><option>number-range</option><option>top-n</option><option>search</option></drishti-select>
             <button type="button" class="btn-pill btn-ghost" data-ctl-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Add control</button>
             <button type="button" class="btn-pill btn-ghost" data-ctl-starter title="A search box in the header of the first table"><i class="bi bi-magic" aria-hidden="true"></i> Starter</button>
             <span class="text-muted-d" data-ctl-status role="status"></span></div>
@@ -201,7 +199,7 @@
     <span class="wb-group" role="group" aria-label="Preview width">
       <button type="button" class="btn-pill btn-ghost" data-width="desktop" aria-pressed="true"><i class="bi bi-laptop" aria-hidden="true"></i> Desktop</button>
       <button type="button" class="btn-pill btn-ghost" data-width="phone" aria-pressed="false"><i class="bi bi-phone" aria-hidden="true"></i> Phone</button></span>
-    <span class="wb-group"><label for="wbTheme">Theme</label> <select id="wbTheme" class="studio-in" data-theme-pick><option value="">(current)</option></select></span>
+    <span class="wb-group"><label for="wbTheme">Theme</label> <drishti-select id="wbTheme" data-theme-pick label="Theme"><option value="">(current)</option></drishti-select></span>
     <span class="wb-group"><label class="btn-pill btn-ghost" for="wbPreviewFile"><i class="bi bi-upload" aria-hidden="true"></i> Preview with a file…
       <input id="wbPreviewFile" class="bs-file" type="file" accept=".json,.jsonl,application/json" data-preview-file></label>
       <span data-file-chip hidden><button type="button" class="btn-pill btn-ghost" data-file-clear>Back to the samples</button></span></span>
@@ -216,23 +214,20 @@
 {% endblock %}
 {% block scripts %}
 <script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_cm-yaml.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_studio-yaml.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_studio-assist.js?v={{ ASSET_V }}"></script>
+{% include "_designer_kit.html" %}
 <script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_geomap.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_charts.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_geomap.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_charts.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_multiselect.js?v={{ ASSET_V }}" data-manual></script>
 <script src="/static/js/drishti_controls.js?v={{ ASSET_V }}" data-manual></script>
 <script src="/static/js/drishti_pivot-engine.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_pivot-grid.js?v={{ ASSET_V }}"></script>
+
 <script src="/static/js/drishti_tree-rows.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_drill.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_layout-rules.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_build-files.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_build-shape-tree.js?v={{ ASSET_V }}"></script>
-{% for f in ["grid-keys", "ops", "yamlmodel", "drag", "menus", "palette", "expr", "forms", "actions", "canvas", "inspector", "data", "notes", "yamltab", "problems", "about", "form-tab", "controls-tab", "tests", "draft", "versions", "ship", "saving", "commands", "workbench"] %}
+{% for f in ["ops", "yamlmodel", "drag", "menus", "palette", "expr", "forms", "actions", "canvas", "inspector", "data", "notes", "yamltab", "problems", "about", "form-tab", "controls-tab", "tests", "draft", "versions", "ship", "saving", "commands", "workbench"] %}
 <script src="/static/js/build/drishti_{{ f }}.js?v={{ ASSET_V }}"></script>
 {% endfor %}
 {% endblock %}

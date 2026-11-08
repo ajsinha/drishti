@@ -99,9 +99,10 @@ def test_example_sources_parse():
 
 
 def _contract_fields(kind):
-    """The fields of a kind's data contract (config/packs/*/contracts/<kind>.contract.yaml): what a Flight read of the kind may ask for."""
+    """The fields of a kind's data contract (config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml): what a Flight read of the kind may ask for."""
     import yaml
-    for p in sorted((REPO / "config" / "packs").glob(f"*/contracts/{kind}.contract.yaml")):
+    from core.pack_paths import pack_dirs
+    for p in sorted(f for d in pack_dirs(REPO / "config" / "packs").values() for f in d.glob(f"contracts/{kind}.contract.yaml")):
         doc = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
         if doc.get("kind") == kind:
             return {f["name"] for f in doc.get("fields") or []}
@@ -142,7 +143,7 @@ def _model_queries():
     out = []
     sources = [(p.name, p.read_text(encoding="utf-8")) for p in [EXAMPLES / "excel" / "flight_to_excel.py",
                                                                     REPO / "clients" / "python" / "drishti_flight.py",
-                                                                    REPO / "docs" / "guides" / "flight" / "PYTHON.md"]]
+                                                                    REPO / "docs" / "guides" / "FLIGHT_REFERENCE.md"]]   # the Python client section (§7) of the one Flight reference
     sources += [(nb.name, "\n".join("".join(c["source"]) for c in json.loads(nb.read_text(encoding="utf-8"))["cells"])) for nb in NOTEBOOKS]
     for where, text in sources:
         for m in re.finditer(r'\.model\("[\w@.-]+", (\{.*?\})\)', text, re.S):
@@ -155,12 +156,12 @@ def _model_queries():
 
 
 def test_every_model_query_uses_the_servers_keys():
-    """A Flight model query is the MQ JSON (BI_GUIDE.md): select {fields, measures}, where, sort, limit ...; the old report-visual body
+    """A Flight model query is the MQ JSON (REPORTS_GUIDE.md): select {fields, measures}, where, sort, limit ...; the old report-visual body
     ({"fields", "measures", "orderBy"}) is refused with DRS-9150 "unknown key 'fields'"."""
     keys, queries = _mq_keys(), _model_queries()
     assert {"select", "where", "sort", "limit"} <= keys
     found = {w for w, _ in queries}
-    assert {"03_bi_model_query.ipynb", "flight_to_excel.py", "drishti_flight.py", "PYTHON.md", "FLIGHT_REFERENCE.md"} <= found, found
+    assert {"03_bi_model_query.ipynb", "flight_to_excel.py", "drishti_flight.py", "FLIGHT_REFERENCE.md"} <= found, found
     for where, q in queries:
         assert set(q) <= keys, f"{where}: unknown key(s) {sorted(set(q) - keys)} in {q}"
         assert set(q.get("select") or {}) <= {"fields", "measures"}, (where, q)

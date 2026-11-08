@@ -180,11 +180,11 @@ def test_a_file_is_saved_with_its_version_and_a_bad_one_shows_its_line(browser, 
     page.locator("[data-rev]").first.click()
     page.locator("[data-diff]").wait_for(state="visible")
     assert "- fanout: 2" in page.locator("[data-diff]").inner_text() and "+ fanout: 3" in page.locator("[data-diff]").inner_text()
-    page.locator("[data-yaml]").fill("interval: 1s\nfanout: lots\n")
+    page.locator("[data-yaml]").evaluate("(e, t) => { e.value = t; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }", "interval: 1s\nfanout: lots\n")   # the code area is drishti-inputs' code editor: typed through its text area
     page.locator("[data-save]").click()
     page.locator("[data-problems] li").first.wait_for(timeout=10000)
     assert "line 2: fanout: 'lots' is not a whole number" in page.locator("[data-problems]").inner_text()
-    page.locator("[data-yaml]").fill("interval: 2s\nfanout: 3\n")
+    page.locator("[data-yaml]").evaluate("(e, t) => { e.value = t; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }", "interval: 2s\nfanout: 3\n")   # the code area is drishti-inputs' code editor: typed through its text area
     page.locator("[data-save]").click()
     page.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Saved gossip.yaml')", timeout=10000)
     put = [c for c in backend.net_calls if c[0] == "PUT"]

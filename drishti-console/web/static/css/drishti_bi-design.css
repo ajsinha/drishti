@@ -13,39 +13,31 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3: the report designer and the Model view (BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 6.2 and 9). The designer uses the whole width: the BI rail steps aside. Panes sit to the
+/* Rupaka phase 3: the report designer and the Model view (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 6.2 and 9). The designer uses the whole width: the BI rail steps aside. Panes sit to the
    right of the canvas as in Power BI (Filters, Visualizations, Fields); below 1100 px they go under it. Colours are theme tokens. */
 .bi-shell-design { grid-template-columns: minmax(0, 1fr); max-width: none; }
 .bi-shell-design .bi-rail { display: none; }
-.bi-design { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
-.bi-dbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem 1rem; }
-.bi-dtitle { display: flex; align-items: center; gap: .6rem; min-width: 0; }
-.bi-dtitle h1 { font-size: 1.25rem; margin: 0; padding: 0; overflow-wrap: anywhere; }
-.bi-dtitle h1::before, .bi-dtitle h1::after { content: none; }
-.bi-dback { color: var(--d-muted); padding: .3rem; border-radius: 6px; }
-.bi-dactions { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
-.bi-dactions .bi-viewas { width: auto; flex: 0 0 auto; max-width: 13rem; }
-.bi-preview-toggle { margin: 0 .4rem; }
-.bi-checkpanel { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .9rem; background: var(--d-surface); }
-.bi-checkpanel h2 { font-size: 1rem; margin: 0 0 .3rem; }
-.bi-readonly { border: 1px solid var(--d-warn); border-radius: var(--d-radius); padding: .4rem .8rem; list-style: none; color: var(--d-ink); }
-.bi-dmain { display: grid; grid-template-columns: minmax(0, 1fr) var(--bi-filters, 12rem) var(--bi-vis, 15rem) var(--bi-fields, 13rem); gap: .75rem; align-items: start; }
+.bi-design { display: flex; flex-direction: column; gap: var(--d-sp-8); min-width: 0; }
+.bi-checkpanel { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-9_6) var(--d-sp-14_4); background: var(--d-surface); }
+.bi-checkpanel h2 { font-size: var(--d-fs-16); margin: 0 0 var(--d-sp-4_8); }
+.bi-readonly { border: 1px solid var(--d-warn); border-radius: var(--d-radius); padding: var(--d-sp-6_4) var(--d-sp-12_8); list-style: none; color: var(--d-ink); }
+.bi-dmain { display: grid; grid-template-columns: minmax(0, 1fr) var(--bi-filters, 12rem) var(--bi-vis, 15rem) var(--bi-fields, 13rem); gap: var(--d-sp-12); align-items: start; }
 .bi-dmain.bi-nofilters { grid-template-columns: minmax(0, 1fr) 0 var(--bi-vis, 15rem) var(--bi-fields, 13rem); }
 .bi-dmain.bi-nofilters .bi-pane-filters { display: none; }
 .bi-pane-vis { resize: vertical; min-height: 30rem; }
-.bi-pane-head { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+.bi-pane-head { display: flex; align-items: center; justify-content: space-between; gap: var(--d-sp-6_4); }
 .bi-pane-head h2 { margin: 0; }
 .bi-mpanes { display: none; }
 .bi-tab-rename { width: 9rem; }
 .bi-dleft { min-width: 0; }
-.bi-dtabs { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: .4rem; border-bottom: 1px solid var(--d-border); margin-bottom: .5rem; }
-.bi-viewtabs { display: flex; gap: .15rem; }
+.bi-dtabs { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--d-sp-6_4); border-bottom: 1px solid var(--d-border); margin-bottom: var(--d-sp-8); }
+.bi-viewtabs { display: flex; gap: var(--d-sp-2_4); }
 .bi-tab-add { min-width: 2.4rem; justify-content: center; }
 button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-dview { min-width: 0; }
 .bi-dgrid-wrap { position: relative; }
 .bi-dgrid { position: relative; min-height: 20rem; padding: 0; background-image: repeating-linear-gradient(to right, var(--d-border) 0, var(--d-border) 1px, transparent 1px, transparent calc(100% / 12)); background-size: 100% 100%; background-clip: content-box; border: 1px dashed var(--d-border); border-radius: var(--d-radius); align-content: start; }
-.bi-dempty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; color: var(--d-muted); pointer-events: none; margin: 0; text-align: center; padding: 1rem; }
+.bi-dempty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: var(--d-sp-8); color: var(--d-muted); pointer-events: none; margin: 0; text-align: center; padding: var(--d-sp-16); }
 .bi-dvis { cursor: default; }
 .bi-dvis.bi-selected { outline: 2px solid var(--d-accent); outline-offset: 0; box-shadow: 0 0 0 4px var(--d-accent-tint); }
 .bi-dvis.bi-drop { outline: 2px dashed var(--d-link); }
@@ -55,62 +47,45 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-resize { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; touch-action: none; background: linear-gradient(135deg, transparent 50%, var(--d-accent) 50%); border-bottom-right-radius: var(--d-radius); z-index: 3; }
 .bi-dvis { position: relative; }
 .bi-dropnote { text-align: center; }
-.bi-pane { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .65rem; min-width: 0; max-height: calc(100vh - 7rem); overflow: auto; }
-.bi-pane h2 { font-size: .95rem; margin: 0 0 .5rem; }
-.bi-fhead { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--d-muted); margin: .7rem 0 .3rem; }
-.bi-ptabs { display: flex; gap: .15rem; margin: .6rem 0 .4rem; border-bottom: 1px solid var(--d-border); }
-.bi-types .bi-type-group { margin: .3rem 0 .15rem; font-size: .72rem; color: var(--d-muted); text-transform: uppercase; letter-spacing: .04em; }
-.bi-typegrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .25rem; }
-.bi-vtype { display: flex; flex-direction: column; align-items: center; gap: .1rem; background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: 6px; color: var(--d-ink); padding: .3rem .1rem; cursor: pointer; font-size: .6rem; line-height: 1.1; min-height: 3rem; overflow: hidden; }
-.bi-vtype i { font-size: 1.1rem; }
-.bi-vtype span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bi-vtype:hover { border-color: var(--d-accent); }
-.bi-vtype[aria-pressed="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); color: var(--d-accent-strong); }
-.bi-vtype:focus-visible, .bi-field:focus-visible, .bi-chipbtn:focus-visible, .bi-swatch:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
-.bi-build-head { margin: .2rem 0 .4rem; font-size: .85rem; }
-.bi-well { border: 1px dashed var(--d-border); border-radius: 6px; padding: .3rem .4rem .4rem; margin: 0 0 .45rem; min-width: 0; }
+.bi-pane { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-9_6) var(--d-sp-10_4); min-width: 0; max-height: calc(100vh - 7rem); overflow: auto; }
+.bi-pane h2 { font-size: var(--d-fs-15_2); margin: 0 0 var(--d-sp-8); }
+.bi-fhead { font-size: var(--d-fs-12_8); text-transform: uppercase; letter-spacing: .04em; color: var(--d-muted); margin: var(--d-sp-11_2) 0 var(--d-sp-4_8); }
+.bi-ptabs { display: flex; gap: var(--d-sp-2_4); margin: var(--d-sp-9_6) 0 var(--d-sp-6_4); border-bottom: 1px solid var(--d-border); }
+.bi-build-head { margin: var(--d-sp-3_2) 0 var(--d-sp-6_4); font-size: var(--d-fs-13_6); }
+.bi-well { border: 1px dashed var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-4_8) var(--d-sp-6_4) var(--d-sp-6_4); margin: 0 0 var(--d-sp-7_2); min-width: 0; }
 .bi-well.bi-drop { border-color: var(--d-link); background: var(--d-highlight); }
-.bi-well legend { font-size: .78rem; float: none; width: auto; padding: 0 .25rem; margin: 0; font-weight: 600; }
-.bi-chiplist { list-style: none; margin: 0 0 .25rem; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
-.bi-wchip { display: flex; align-items: center; gap: .1rem; background: var(--d-accent-tint); border: 1px solid var(--d-border); border-radius: 6px; padding: .1rem .15rem .1rem .45rem; font-size: .8rem; }
+.bi-well legend { font-size: var(--d-fs-12_48); float: none; width: auto; padding: 0 var(--d-sp-4); margin: 0; font-weight: 600; }
+.bi-chiplist { list-style: none; margin: 0 0 var(--d-sp-4); padding: 0; display: flex; flex-direction: column; gap: var(--d-sp-3_2); }
+.bi-wchip { display: flex; align-items: center; gap: var(--d-sp-1_6); background: var(--d-accent-tint); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-1_6) var(--d-sp-2_4) var(--d-sp-1_6) var(--d-sp-7_2); font-size: var(--d-fs-12_8); }
 .bi-wchip span { flex: 1 1 auto; overflow-wrap: anywhere; }
-.bi-chipbtn { background: none; border: 0; color: var(--d-muted); cursor: pointer; min-width: 1.6rem; min-height: 1.6rem; border-radius: 4px; }
+.bi-chipbtn { background: none; border: 0; color: var(--d-muted); cursor: pointer; min-width: 1.6rem; min-height: 1.6rem; border-radius: var(--d-radius-4); }
 .bi-chipbtn:hover:not(:disabled) { color: var(--d-ink); background: var(--d-highlight); }
 .bi-chipbtn:disabled { opacity: .3; }
 .bi-wadd, .bi-pane select, .bi-pane input:not([type="checkbox"]):not([type="color"]), .bi-pane textarea { max-width: 100%; width: 100%; box-sizing: border-box; }
-.bi-frow { display: flex; flex-direction: column; gap: .15rem; font-size: .78rem; color: var(--d-muted); margin: 0 0 .45rem; min-width: 0; }
-.bi-fieldset { border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .45rem .45rem; margin: 0 0 .45rem; min-width: 0; }
-.bi-fieldset legend { font-size: .78rem; float: none; width: auto; padding: 0 .25rem; margin: 0; color: var(--d-muted); }
-.bi-small { padding: .15rem .6rem; font-size: .78rem; min-height: 1.8rem; }
-.bi-swatches { display: flex; flex-wrap: wrap; gap: .25rem; }
-.bi-swatch { width: 1.6rem; height: 1.6rem; border-radius: 4px; border: 2px solid var(--d-border); cursor: pointer; }
+.bi-frow { display: flex; flex-direction: column; gap: var(--d-sp-2_4); font-size: var(--d-fs-12_48); color: var(--d-muted); margin: 0 0 var(--d-sp-7_2); min-width: 0; }
+.bi-fieldset { border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-4_8) var(--d-sp-7_2) var(--d-sp-7_2); margin: 0 0 var(--d-sp-7_2); min-width: 0; }
+.bi-fieldset legend { font-size: var(--d-fs-12_48); float: none; width: auto; padding: 0 var(--d-sp-4); margin: 0; color: var(--d-muted); }
+.bi-small { padding: var(--d-sp-2_4) var(--d-sp-9_6); font-size: var(--d-fs-12_48); min-height: 1.8rem; }
+.bi-swatches { display: flex; flex-wrap: wrap; gap: var(--d-sp-4); }
+.bi-swatch { width: 1.6rem; height: 1.6rem; border-radius: var(--d-radius-4); border: 2px solid var(--d-border); cursor: pointer; }
 .bi-swatch[aria-pressed="true"] { border-color: var(--d-ink); box-shadow: 0 0 0 2px var(--d-accent); }
-.bi-cond { display: grid; grid-template-columns: 1fr 3.2rem 4.5rem 2.4rem 1.7rem; gap: .2rem; align-items: center; margin-bottom: .25rem; }
+.bi-cond { display: grid; grid-template-columns: 1fr 3.2rem 4.5rem 2.4rem 1.7rem; gap: var(--d-sp-3_2); align-items: center; margin-bottom: var(--d-sp-4); }
 .bi-cond input[type="color"] { padding: 0; min-height: 1.9rem; }
-.bi-fieldtable { margin: 0 0 .35rem; }
-.bi-fieldtable > summary { cursor: pointer; font-weight: 600; font-size: .85rem; padding: .15rem 0; overflow-wrap: anywhere; }
-.bi-fieldlist { list-style: none; margin: 0; padding: 0 0 0 .5rem; }
-.bi-field { display: flex; align-items: center; gap: .35rem; width: 100%; text-align: left; background: none; border: 0; color: var(--d-ink); font: inherit; font-size: .82rem; padding: .15rem .25rem; border-radius: 4px; cursor: grab; min-height: 1.7rem; }
-.bi-field:hover { background: var(--d-highlight); }
-.bi-field-name { flex: 1 1 auto; overflow-wrap: anywhere; }
-.bi-fieldparts > summary { cursor: pointer; font-size: .75rem; color: var(--d-muted); padding-left: 1.2rem; }
-.bi-parts { padding-left: 1.2rem; }
-.bi-fsec { margin-bottom: .4rem; }
-.bi-filterlist { list-style: none; margin: 0 0 .25rem; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
-.bi-fitem { display: flex; align-items: center; gap: .1rem; background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: 6px; padding: .1rem .15rem .1rem .45rem; font-size: .78rem; }
+[data-fields-tree] .dt-obtn { cursor: grab; }                                         /* a field is dragged onto the canvas or a well */
+.bi-fsec { margin-bottom: var(--d-sp-6_4); }
+.bi-filterlist { list-style: none; margin: 0 0 var(--d-sp-4); padding: 0; display: flex; flex-direction: column; gap: var(--d-sp-3_2); }
+.bi-fitem { display: flex; align-items: center; gap: var(--d-sp-1_6); background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-1_6) var(--d-sp-2_4) var(--d-sp-1_6) var(--d-sp-7_2); font-size: var(--d-fs-12_48); }
 .bi-filter-text { flex: 1 1 auto; overflow-wrap: anywhere; }
-.bi-feditor { display: flex; flex-direction: column; gap: .3rem; border: 1px solid var(--d-accent); border-radius: 6px; padding: .45rem; margin-top: .25rem; }
-.bi-picklist { max-height: 9rem; overflow: auto; border: 1px solid var(--d-border); border-radius: 6px; padding: .2rem .3rem; margin-top: .25rem; }
-.bi-picklist label { display: flex; align-items: center; gap: .4rem; font-size: .8rem; }
-.bi-suggestions { display: flex; flex-wrap: wrap; gap: .25rem; margin: 0 0 .4rem; min-height: 1.8rem; }
-.bi-suggest { background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: 999px; color: var(--d-ink); font-family: var(--d-font-mono); font-size: .75rem; padding: .1rem .55rem; cursor: pointer; }
-.bi-suggest:hover { border-color: var(--d-accent); }
-.bi-problem { list-style: disc; margin-bottom: .2rem; font-size: .85rem; color: var(--d-ink); }
+.bi-feditor { display: flex; flex-direction: column; gap: var(--d-sp-4_8); border: 1px solid var(--d-accent); border-radius: var(--d-radius-6); padding: var(--d-sp-7_2); margin-top: var(--d-sp-4); }
+.bi-picklist { max-height: 9rem; overflow: auto; border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-3_2) var(--d-sp-4_8); margin-top: var(--d-sp-4); }
+.bi-picklist label { display: flex; align-items: center; gap: var(--d-sp-6_4); font-size: var(--d-fs-12_8); }
+.bi-suggest { background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius-pill); color: var(--d-ink); font-family: var(--d-font-mono); font-size: var(--d-fs-12); padding: var(--d-sp-1_6) var(--d-sp-8_8); cursor: pointer; }
+.bi-problem { list-style: disc; margin-bottom: var(--d-sp-3_2); font-size: var(--d-fs-13_6); color: var(--d-ink); }
 .bi-problem-error strong { color: var(--d-bad); }
 .bi-problem-warning strong { color: var(--d-warn); }
 .bi-problem-link { cursor: pointer; }
 .bi-problem-link:hover { text-decoration: underline; }
-.bi-design .CodeMirror { height: 32rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); font: .82rem/1.5 var(--d-font-mono); background: var(--d-bg-2); color: var(--d-ink); }
+.bi-design .CodeMirror { height: 32rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); font: var(--d-fs-13_12)/1.5 var(--d-font-mono); background: var(--d-bg-2); color: var(--d-ink); }
 .bi-design .CodeMirror-gutters { background: var(--d-bg); border-right: 1px solid var(--d-border); }
 .bi-design .CodeMirror-linenumber { color: var(--d-faint); }
 .bi-design .CodeMirror-cursor { border-left-color: var(--d-accent); }
@@ -129,107 +104,72 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 }
 @media (max-width: 760px) {
   .bi-dmain { grid-template-columns: minmax(0, 1fr); }
-  .bi-dactions .btn-pill { flex: 1 1 8rem; }
 }
 @media (pointer: coarse) {
-  .bi-vtype, .bi-field, .bi-chipbtn, .bi-viewas { min-height: 44px; min-width: 44px; }
+  .bi-chipbtn { min-height: 44px; min-width: 44px; }
 }
 
-/* the Model view (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.2): tables as boxes with their columns, relationships as lines */
-.bi-model { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: .75rem; align-items: start; }
-.bi-diagram { position: relative; min-height: 28rem; border: 1px dashed var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); overflow: auto; }
-.bi-diagram-inner { position: relative; min-width: 100%; }
-.bi-lines { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
-.bi-lines line, .bi-lines path { stroke: var(--d-link); stroke-width: 2; fill: none; }
-.bi-lines .bi-line-off { stroke-dasharray: 5 4; stroke: var(--d-muted); }
-.bi-lines .bi-line-feed { stroke-dasharray: 2 5; stroke: var(--d-muted); stroke-width: 1.5; }
-.bi-lines .bi-line-hit { pointer-events: stroke; stroke: transparent; stroke-width: 12; cursor: pointer; }
-.bi-lines text { fill: var(--d-ink); font-size: 12px; font-family: var(--d-font-mono); paint-order: stroke; stroke: var(--d-surface); stroke-width: 3px; }
-.bi-lines .bi-line-sel { stroke: var(--d-accent); stroke-width: 3; }
-.bi-tbox { position: absolute; width: 14rem; background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius); box-shadow: var(--d-shadow); }
-.bi-tbox:focus-within { border-color: var(--d-accent); }
-.bi-tbox header { display: flex; align-items: center; gap: .3rem; padding: .3rem .5rem; background: var(--d-accent-tint); border-bottom: 1px solid var(--d-border); font-weight: 600; font-size: .85rem; cursor: grab; touch-action: none; user-select: none; border-radius: var(--d-radius) var(--d-radius) 0 0; }
-.bi-tbox header span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.bi-tbox header small { margin-left: auto; color: var(--d-muted); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 6rem; }
-.bi-tbox ul { list-style: none; margin: 0; padding: .15rem 0; max-height: 14rem; overflow: auto; }
-.bi-col { display: flex; align-items: center; gap: .3rem; padding: .1rem .5rem; font-size: .78rem; min-height: 1.5rem; cursor: grab; }
-.bi-col:hover, .bi-col.bi-over { background: var(--d-highlight); }
-.bi-col.bi-over { outline: 2px dashed var(--d-link); outline-offset: -2px; }
-.bi-col .bi-coltype { margin-left: auto; color: var(--d-muted); font-size: .68rem; }
-.bi-col:focus-visible { outline: 2px solid var(--d-link); outline-offset: -2px; }
-.bi-relpanel { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .7rem; }
-.bi-relpanel h2, .bi-relpanel h3 { font-size: .95rem; margin: .2rem 0 .4rem; }
-.bi-rellist { list-style: none; margin: 0 0 .5rem; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
-.bi-rel { border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .45rem; font-size: .8rem; background: var(--d-surface-2); }
-.bi-rel.bi-selected { border-color: var(--d-accent); }
-.bi-rel code { overflow-wrap: anywhere; display: block; }
-.bi-rel small { display: block; margin: .15rem 0; }
-@media (max-width: 1100px) { .bi-model { grid-template-columns: minmax(0, 1fr); } }
-.bi-cond2 { display: grid; grid-template-columns: 1fr 1fr; gap: .25rem; margin: .25rem 0; }
-.bi-nr { max-width: none; border: 0; padding: 0; margin: 0; background: none; display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
-.bi-nr button { grid-column: 1 / -1; }
-.bi-small-note { font-size: .78rem; margin: 0 0 .4rem; }
+/* the Model view (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 6.2): tables as boxes with their columns, relationships as lines */
+.bi-model { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: var(--d-sp-12); align-items: start; }
+@media (max-width: 1100px) { .bi-model { grid-template-columns: minmax(0, 1fr); } }.bi-small-note { font-size: var(--d-fs-12_48); margin: 0 0 var(--d-sp-6_4); }
 
-/* Rupaka phase 7: the Phone tab - the visuals in phone order beside a 390 px screen drawn to scale (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6) */
-.bi-phone-edit { display: grid; grid-template-columns: minmax(0, 1fr) 422px; gap: 1rem; align-items: start; }
-.bi-phone-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
-.bi-phone-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; border: 1px solid var(--d-border); border-radius: 6px; padding: .35rem .5rem; background: var(--d-surface); cursor: grab; }
+/* Rupaka phase 7: the Phone tab - the visuals in phone order beside a 390 px screen drawn to scale (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.6) */
+.bi-phone-edit { display: grid; grid-template-columns: minmax(0, 1fr) 422px; gap: var(--d-sp-16); align-items: start; }
+.bi-phone-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--d-sp-5_6); }
+.bi-phone-row { display: flex; align-items: center; gap: var(--d-sp-8); flex-wrap: wrap; border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-5_6) var(--d-sp-8); background: var(--d-surface); cursor: grab; }
 .bi-phone-row.bi-phone-hidden { opacity: .6; border-style: dashed; }
 .bi-phone-row.bi-phone-drag { opacity: .4; }
 .bi-phone-row.bi-phone-over { outline: 2px dashed var(--d-link); outline-offset: 1px; }
 .bi-phone-grip { color: var(--d-muted); }
 .bi-phone-name { flex: 1 1 8rem; min-width: 0; overflow-wrap: anywhere; }
-.bi-phone-move { min-width: 32px; min-height: 32px; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface-2); color: var(--d-ink); }
+.bi-phone-move { min-width: 32px; min-height: 32px; border: 1px solid var(--d-border); border-radius: var(--d-radius-6); background: var(--d-surface-2); color: var(--d-ink); }
 .bi-phone-move:disabled { opacity: .35; }
-.bi-phone-rowlabel { display: inline-flex; align-items: center; gap: .3rem; font-size: .8rem; }
+.bi-phone-settings .di-form-body { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--d-sp-8); }
+.bi-phone-settings .di-form-field { margin: 0; font-size: var(--d-fs-12_8); }
 .bi-phone-rows { width: 4.5rem; }
-.bi-phone-actions { margin: .6rem 0 0; }
-.bi-phone-frame { width: 422px; max-width: 100%; border: 2px solid var(--d-border); border-radius: 22px; padding: 14px 16px; background: var(--d-surface-2); }
-.bi-phone-screen { width: 390px; max-width: 100%; max-height: 640px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--d-bg); }
-.bi-phone-card { border: 1px solid var(--d-border); border-radius: 6px; padding: .5rem .6rem; background: var(--d-surface); display: flex; flex-direction: column; gap: .2rem; flex: none; box-sizing: border-box; }
+.bi-phone-actions { margin: var(--d-sp-9_6) 0 0; }
+.bi-phone-frame { width: 422px; max-width: 100%; border: 2px solid var(--d-border); border-radius: var(--d-radius-22); padding: var(--d-sp-14) var(--d-sp-16); background: var(--d-surface-2); }
+.bi-phone-screen { width: 390px; max-width: 100%; max-height: 640px; overflow-y: auto; display: flex; flex-direction: column; gap: var(--d-sp-10); background: var(--d-bg); }
+.bi-phone-card { border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-8) var(--d-sp-9_6); background: var(--d-surface); display: flex; flex-direction: column; gap: var(--d-sp-3_2); flex: none; box-sizing: border-box; }
 @media (max-width: 1100px) { .bi-phone-edit { grid-template-columns: minmax(0, 1fr); } }
 @media (pointer: coarse) { .bi-phone-move, .bi-phone-row input[type="checkbox"] { min-width: 44px; min-height: 44px; } }
 
 /* The Tablet tab: the same list above a 768 px screen drawn to scale, two half-width columns (a visual ticked Wide spans both) */
 .bi-tablet-edit { grid-template-columns: minmax(0, 1fr); }
-.bi-tablet-frame { width: 800px; max-width: 100%; box-sizing: border-box; border: 2px solid var(--d-border); border-radius: 18px; padding: 16px; background: var(--d-surface-2); }
-.bi-tablet-screen { width: 768px; max-width: 100%; max-height: 640px; overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; background: var(--d-bg); }
+.bi-tablet-frame { width: 800px; max-width: 100%; box-sizing: border-box; border: 2px solid var(--d-border); border-radius: var(--d-radius-18); padding: var(--d-sp-16); background: var(--d-surface-2); }
+.bi-tablet-screen { width: 768px; max-width: 100%; max-height: 640px; overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--d-sp-10); background: var(--d-bg); }
 .bi-tablet-screen .bi-phone-card { min-width: 0; overflow: hidden; }
 /* several datasets: a tree for each, the dataset tag on a visual, the links panel */
-.bi-dstree { margin: 0 0 .5rem; border-bottom: 1px solid var(--d-border); }
-.bi-dstree > summary { cursor: pointer; font-weight: 700; font-size: .9rem; padding: .2rem 0; display: flex; align-items: center; gap: .3rem; }
-.bi-dstree > summary .bi-chipbtn { margin-left: auto; }
-.bi-dstag { position: absolute; top: .15rem; right: .4rem; z-index: 2; font-size: .7rem; padding: 0 .4rem; border-radius: 999px; background: var(--d-surface); border: 1px solid var(--d-border); color: var(--d-muted); max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
-.bi-adddataset { margin: .3rem 0; }
-.bi-linkspanel { margin-top: .6rem; border-top: 1px solid var(--d-border); padding-top: .4rem; }
-.bi-linklist { list-style: none; margin: 0 0 .5rem; padding: 0; font-size: .82rem; }
-.bi-linklist li { padding: .15rem 0; overflow-wrap: anywhere; }
-.bi-composed-yaml { max-height: 14rem; overflow: auto; font-size: .75rem; background: var(--d-surface); border: 1px solid var(--d-border); padding: .4rem; white-space: pre; }
+.bi-dstag { position: absolute; top: .15rem; right: .4rem; z-index: 2; font-size: var(--d-fs-11_2); padding: 0 var(--d-sp-6_4); border-radius: var(--d-radius-pill); background: var(--d-surface); border: 1px solid var(--d-border); color: var(--d-muted); max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+.bi-adddataset { margin: var(--d-sp-4_8) 0; }
+.bi-linkspanel { margin-top: var(--d-sp-9_6); border-top: 1px solid var(--d-border); padding-top: var(--d-sp-6_4); }
+.bi-linklist { list-style: none; margin: 0 0 var(--d-sp-8); padding: 0; font-size: var(--d-fs-13_12); }
+.bi-linklist li { padding: var(--d-sp-2_4) 0; overflow-wrap: anywhere; }
+.bi-composed-yaml { max-height: 14rem; overflow: auto; font-size: var(--d-fs-12); background: var(--d-surface); border: 1px solid var(--d-border); padding: var(--d-sp-6_4); white-space: pre; }
 @media (pointer: coarse) {
-  .bi-adddataset .btn-pill, .bi-adddataset .studio-select, .bi-linkspanel .btn-pill, .bi-dstree .bi-chipbtn, .bi-linklist input[type="checkbox"] { min-height: 44px; min-width: 44px; }
+  .bi-adddataset .btn-pill, .bi-adddataset .studio-select, .bi-linkspanel .btn-pill, .bi-linklist input[type="checkbox"] { min-height: 44px; min-width: 44px; }
 }
 .bi-dvis { position: relative; }
-.bi-fieldset[data-format-options] { display: flex; flex-direction: column; gap: .15rem; }
-.bi-fieldset[data-format-options] label.bi-checkrow, [data-bookmarks] .bi-cond { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.bi-fieldset[data-format-options] { display: flex; flex-direction: column; gap: var(--d-sp-2_4); }
+.bi-fieldset[data-format-options] label.bi-checkrow, [data-bookmarks] .bi-cond { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-6_4); }
 @media (pointer: coarse) {
   .bi-fieldset[data-format-options] label.bi-checkrow, [data-bookmarks] .btn-pill, [data-bookmarks] .studio-in { min-height: 44px; }
   [data-bookmarks] .bi-chipbtn { min-height: 44px; min-width: 44px; }
 }
 
-/* a phone: the toolbar shows icons, and the panes are reached through tabs under the canvas */
+/* a phone: the panes are reached through tabs under the canvas */
 @media (max-width: 760px) {
-  .bi-dactions .bi-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .bi-dactions .btn-pill, .bi-dactions .bi-checkrow { flex: 0 0 auto; min-width: 44px; min-height: 44px; justify-content: center; }
-  .bi-dactions .bi-preview-toggle { display: none; }
-  .bi-mpanes { display: flex; gap: .25rem; overflow-x: auto; margin: .4rem 0; }
+  .bi-mpanes { display: flex; gap: var(--d-sp-4); overflow-x: auto; margin: var(--d-sp-6_4) 0; }
   .bi-mpanes .bi-tab { min-height: 44px; flex: 0 0 auto; }
   .bi-dmain[data-mpane="canvas"] .bi-pane, .bi-dmain[data-mpane="vis"] .bi-pane:not(.bi-pane-vis), .bi-dmain[data-mpane="fields"] .bi-pane:not(.bi-pane-fields), .bi-dmain[data-mpane="filters"] .bi-pane:not(.bi-pane-filters) { display: none; }
   .bi-dmain[data-mpane]:not([data-mpane="canvas"]) .bi-dleft { display: none; }
   .bi-pane-vis { resize: none; min-height: 0; }
 }
-@media (pointer: coarse) { .bi-pane-head button, .bi-addvisual .btn-pill, .bi-addvisual select, .bi-chipbtn, .bi-vtype { min-height: 44px; min-width: 44px; } }
+@media (pointer: coarse) { .bi-pane-head button, .bi-addvisual .btn-pill, .bi-addvisual select, .bi-chipbtn { min-height: 44px; min-width: 44px; } }
 
 /* a draft that cannot be changed (proposed, shipped, no edit power): what would change it looks switched off */
-.bi-ro .bi-vtype, .bi-ro .bi-field, .bi-ro .bi-vis-btn[data-act="delete"], .bi-ro .bi-vis-btn[data-act="duplicate"], .bi-ro .bi-resize { opacity: .45; cursor: not-allowed; }
-.bi-ro .bi-vtype:hover { border-color: var(--d-border); }
+.bi-ro [data-fields-tree] .dt-obtn, .bi-ro .bi-vis-btn[data-act="delete"], .bi-ro .bi-vis-btn[data-act="duplicate"], .bi-ro .bi-resize { opacity: .45; cursor: not-allowed; }
 .bi-ro [data-save]:disabled { opacity: .45; cursor: not-allowed; }
+/* the Visualizations: drishti-designer's Palette, the selected visual's type marked; the add bar a Form and its button */
+.bi-addvisual { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--d-sp-4); }
+.bi-typepalette [data-dd-entry][aria-selected="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); }

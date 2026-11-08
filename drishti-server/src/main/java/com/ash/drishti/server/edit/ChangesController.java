@@ -15,8 +15,6 @@
  */
 package com.ash.drishti.server.edit;
 
-import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Write-back's API (WRITE_BACK.md › The design and its reasons, section 13): submit a change (or a form's draft), see what a submission would do (the review and confirm
+ * Write-back's API (APPROVALS_GUIDE.md › The design and its reasons, section 13): submit a change (or a form's draft), see what a submission would do (the review and confirm
  * sheet), list changes, read one, approve, reject or withdraw, and a record's history. The same requests as the console and the CLI;
  * a token needs the {@code edit} scope (application.yaml: {@code token-scopes}). With write-back off every write answers
  * {@code 403 DRS-9301} and the reads answer empty.
@@ -72,7 +70,7 @@ public class ChangesController {
         return ResponseEntity.accepted().body(Map.of("changes", out));
     }
 
-    /** The review and confirm sheet (WRITE_BACK.md 18.2): the difference, where it goes, who approves, what it recomputes. Writes nothing. */
+    /** The review and confirm sheet (APPROVALS_GUIDE.md 18.2): the difference, where it goes, who approves, what it recomputes. Writes nothing. */
     @PostMapping("/changes/preview")
     public Map<String, Object> preview(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         return preview.preview(p, body);
@@ -90,24 +88,6 @@ public class ChangesController {
         return edits.get(p, id);
     }
 
-    @PostMapping("/changes/{id}/approve")
-    public Map<String, Object> approve(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        requireOn();
-        return edits.approve(p, id, body == null ? null : body.path("note").asText(null));
-    }
-
-    @PostMapping("/changes/{id}/reject")
-    public Map<String, Object> reject(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        requireOn();
-        return edits.reject(p, id, body == null ? null : body.path("reason").asText(null));
-    }
-
-    @PostMapping("/changes/{id}/withdraw")
-    public Map<String, Object> withdraw(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        requireOn();
-        return edits.withdraw(p, id);
-    }
-
     /** A record's changes from the edit log, newest first, and its version (what a form opens on). */
     @GetMapping("/entities/{kind}/{id}/history")
     public Map<String, Object> history(@PathVariable String kind, @PathVariable String id, @RequestParam(defaultValue = "50") int limit,
@@ -118,11 +98,5 @@ public class ChangesController {
         m.put("version", edits.version(kind, id));
         m.put("changes", edits.history(p, kind, id, Math.max(1, Math.min(limit, 500))));
         return m;
-    }
-
-    private void requireOn() {
-        if (!edits.settings().enabled()) {
-            throw new DrishtiException(ErrorCode.EDIT_OFF, "editing is off on this server (edit.enabled in config/edit/edit.yaml)");
-        }
     }
 }

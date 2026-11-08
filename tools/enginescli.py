@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """`drishti.py server engines` (and `drishti.py admin engines`, the same): Admin -> Engines from the command line
-(docs/architecture/COMPUTE_ENGINES.md section 10; the API: /api/v1/admin/engines, administrators only, never a personal token).
+(docs/guides/ADMIN_GUIDE.md section 10; the API: /api/v1/admin/engines, administrators only, never a personal token).
 
     list [--cluster] [--json]                 every engine: state, memory, needs, its file (--cluster: every node side by side)
     show <id> [--sources]                     one engine: state, memory, needs, used by, what turning it off hides; --sources: where its switch comes from
@@ -224,7 +224,7 @@ def register(server_sub, admin_sub, srv, ctx: dict) -> None:
         p = sub.add_parser("blas", help="blas java|native|status: linear algebra on the pure-Java path or the bundled OpenBLAS, live",
                            description="The Linear algebra switch of Admin -> Engines (engine openblas): java chooses the pure-Java path (a notice, "
                                        "the same figures); native runs the self-test against Java first and refuses in words if it fails. "
-                                       "docs/admin/OPERATIONS.md section 2.1.")
+                                       "docs/guides/OPERATIONS_GUIDE.md section 2.1.")
         acts = p.add_subparsers(dest="blas_cmd", metavar="ACTION", required=True)
         for act, what in (("status", "this server's path, the cluster's and each member's"), ("java", "switch to the pure-Java path (with a reason)"),
                           ("native", "switch back to OpenBLAS after its self-test (with a reason)")):

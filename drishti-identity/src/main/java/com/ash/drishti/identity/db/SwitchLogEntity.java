@@ -24,7 +24,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 
 /**
- * One applied change of a switch ({@code drishti_switch_log}), the audit trail Admin → Commands shows: who, when, why, and the node it
+ * One applied change of a switch ({@code drishti_switch_log}), the audit trail Admin → Functions shows: who, when, why, and the node it
  * was made on. A change learned from another node is written here too, once ({@code scope, name, grantee, stamp, node} is unique).
  */
 @Entity

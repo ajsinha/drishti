@@ -51,7 +51,7 @@ settings:
 auth: Credentials in the uri as ${ENV} references (a literal password is refused); TLS through tls.* (or tls=true in the uri); x.509 certificate log-in with auth-mechanism x509.
 licence: MongoDB Java driver, sync (Apache-2.0), bundled; no native library.
 windows: Works the same on Windows (pure Java driver); the server is yours to run, and tools/load-mongodb.sh needs bash.
-doc: docs/connectors/MONGODB_CONNECTOR.md
+doc: plugins/drishti-plugin-mongodb/README.md
 ---
 # The mongodb connector
 
@@ -96,7 +96,7 @@ day's ids from a covered query, both re-read every `refresh-seconds`. Retention 
 | `columns-cache-mb` | int | `1024` | Memory for days' column sets |
 | `reverse-index` | boolean | `true` | Build the reverse index |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10).
 <!-- settings:end -->
 
 ## Data structure
@@ -144,11 +144,264 @@ with `tools/load-mongodb.sh mongodb://localhost:27017 drishti` (add `--trades N 
 - `UP (no trading_columns collection: …)`: the writer does not write the narrow copy; reload with the loader.
 - `tls.* is set but TLS is not switched on: set tls.enabled: true (or put tls=true in the uri)`: switch TLS on.
 - `DOWN: cannot reach MongoDB (Exception authenticating)` with x.509: the certificate's subject is not a user in `$external`.
+- `DRS-1003 … has not reached MongoDB yet`: a connector without `kinds` that has not reached MongoDB since start fails reads rather
+  than letting another store answer; fix the connection, or list `kinds`.
+- A trade is in type-ahead but does not open on a date: its day was deleted or expired; with a lake behind, older days come from there.
+- Searches say `partial: true`: a field the query reads is not promoted; add it to `layout.<kind>.columns` and reload.
+- The first search on a past day is slow: that day's columns are being read (once per day per `columns-seconds`); raise `read-threads`.
+- `dayReads` keeps growing in health: `columns-cache-mb` is too small for the days in use.
+- TLS: `PKIX path building failed`: the server certificate's CA is not in `tls.ca-file`; `Prematurely reached end of stream`: plain
+  text to a `requireTLS` server, set `tls.enabled: true`; `tls.enabled is true but the uri says tls=false`: remove one of them;
+  `auth-mechanism: x509 logs in with a client certificate: …`: x.509 needs TLS and a client certificate.
 
-Every health text is in the full document, section *Diagnosing*.
+`GET /api/v1/admin/health` shows the catalogue: `kinds`, `datesIndexed`, `ids`, `columnSets`, `columnSetsMb`, `dayReads`,
+`documentReads`.
+
+## Why this layout
+
+The obvious layout, one document per trade with an array of daily versions, hits MongoDB's 16 MB document limit after about 2,300
+days of a 7 KB trade and rewrites the whole document for every day; a collection per day multiplies collections and indexes. One
+collection per data domain with two small indexes answers everything:
+
+- **A document per entity per day** is one version (about 7 KB) whatever the history; adding or removing a day touches only that
+  day's documents.
+- **The key carries the date.** Keys sort as `kind/id/yyyyMMdd`, so an entity's days are adjacent in the `_id` index and the newest
+  on or before a date is the last key of a short range: no extra `{kind, id, date}` index.
+- **`day_ids` ends with `id`,** so a day's ids come from the index alone, already sorted (type-ahead, and splitting a day into id
+  ranges read at once); the date as a number makes a kind's dates a distinct scan of the index.
+- **The `_columns` collection.** MongoDB reads whole documents from storage even when a query projects two fields: a day's promoted
+  fields from `trading` decompress 7 KB per trade, from `trading_columns` about 600 bytes. A day of a million trades took 1.5–2.6 s
+  through the connector from `trading` and 0.4–0.8 s from `trading_columns`, for a second small write per row and about 7 % more
+  disk. The documents keep `c` as well, so an operator can query `trading` alone
+  (`db.trading.find({kind: "trade", date: 20260930, "c.QUANTITY": {$gt: 5e8}})`).
+- **zstd block compression,** set by the loader when it creates a collection: 6,875 bytes a document uncompressed, about 1,050 on disk.
+- **The document as text** (`--doc-format string`, the default): Drishti needs JSON, and an embedded BSON document must be written
+  out as JSON on every read. Measured on 100,000 trades, a point read took 43–82 µs as text against 113–163 µs as BSON, which is
+  5 % smaller on disk. Choose `bson` only when operators query fields that are not promoted.
+
+The pack declares the promoted fields on the connector that stores the kind, as for Delta Lake (how to choose them:
+[the delta connector](../drishti-plugin-delta/README.md)); a connector file flattens them to `layout.<kind>.columns` and, replacing
+the pack's template wholesale, repeats them. The collection is the `collection` setting, else the `domain`. A path becomes a field of
+`c` with its dots as two underscores (`MongoLayout.field`); numbers are stored as doubles and read as numeric columns, the rest as
+text. The layout's `sort-by`, `file-rows` and `row-group-rows` do not apply.
+
+## Loading
+
+`tools/load-mongodb.sh` loads the banking packs' samples (`tools/packgen/banking/make_data.py`), and optionally a generated book,
+through `MongoLoader` (in the plugin):
+
+```bash
+tools/load-mongodb.sh mongodb://localhost:27017 drishti                            # the samples: 1,791 documents x 10 days
+tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000 --days 3    # and a book of trades, streamed
+tools/load-mongodb.sh mongodb://localhost:27017 drishti --keep-days 90             # then delete days beyond the 90 newest
+tools/load-mongodb.sh mongodb://localhost:27017 drishti --ttl-days 130             # documents expire 130 days after their date
+```
+
+- **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`),
+  as `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write them: tars of `<kind>/<YYYY-MM-DD>/rows.jsonl`
+  folders; `-` reads standard input (one kind on one date). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and
+  `.jsonl.gz` in it, in name order.
+- **Business dates come from outside the row** ([the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
+  a tar's folder names the date; a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-`) is one kind on one date: `--as-of`, else
+  its `.ready` file's `business-date:`, else the date in its name, else the business today. Rows whose own `date` differs are loaded
+  under the file's date and counted; a plain file of two kinds, or `--as-of` with a tar, is refused. A row dated after tomorrow in
+  the business zone is not loaded and the load ends with an error.
+- **Each line is a replace-or-insert by `_id`** in the domain's collection and, with promoted fields, another in `<domain>_columns`,
+  in unordered bulk writes of `--batch` operations, at most `--in-flight` batches at once on virtual threads. Loading the same rows
+  again changes nothing; a restated entity replaces its document of the day. Nothing is deleted: an entity the stream no longer
+  carries keeps its document of the day until retention takes it. The two writes are not one transaction: after a failed load,
+  load the batch again.
+- **A new day is not shown half written:** a (kind, day) the collection does not hold yet is recorded in `<domain>_loading` before
+  its first document and removed when the load has written every document; the connector leaves such days out of its catalogue.
+- **Collections are prepared on first use:** created with zstd compression, with the `day_ids` index (and the TTL index with
+  `--ttl-days`).
+- **Throughput:** 30,000 trade-days in 3 s, the generator included; a million-trade day is estimated at one to two minutes, bound
+  by the source of the rows rather than by the writes.
+
+Options: `--keep-days N`, `--ttl-days N`, `--doc-format string|bson` (`string`), `--batch N` (1000), `--in-flight N` (16),
+`--pool-size N` (20), `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar), `--future-days N` (1), `--zone Z`
+(`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).
+
+**Your own writer** (a Kafka consumer, a batch job) writes the same documents: `MongoLayout.record(...)` builds the domain document,
+`MongoLayout.columnsRecord(record)` its narrow copy and `MongoLayout.prepare(db, collection, ttl)` the collections and indexes. Any
+language can write them: the shape is under [Data structure](#data-structure).
+
+## How the connector reads
+
+- **Catalogue,** at start and every `refresh-seconds`: the kinds (`distinct("kind")`, or the `kinds` setting), each kind's dates
+  (`distinct("date", {kind})` on `day_ids`), the ids for type-ahead (a snapshot kind's newest day by a covered query on `day_ids`;
+  an effective kind's `_id` range), and whether `<collection>_columns` and the indexes exist. Every `read-threads`-th id becomes a
+  boundary for splitting a day into ranges. The newest day's columns of each promoted kind are then read in the background.
+- **One entity** is one indexed read: a snapshot kind `find({_id: "trade/MX-20000017/20260930"})` on the newest date on or before
+  the date asked (within `lookback-days`); an effective kind `find({_id: {$gte: "counterparty/CP-X/", $lte:
+  "counterparty/CP-X/20260930"}, id: "CP-X"}).sort({_id: -1}).limit(1)`. The stored text goes to the JSON parser as it is.
+- **A day's columns,** from `trading_columns` when it exists (else from `trading`, and health says so):
+  `find({kind, date, id: {$gte: a, $lt: b}}, {_id: 0, id: 1, c: 1}).sort({id: 1}).hint("day_ids")`, the day split at the id
+  boundaries into `read-threads` ranges read at once on virtual threads. A BSON decoder writes each value straight into `double[]`
+  or `String[]` arrays, sharing repeated texts. Column sets are kept within `columns-cache-mb` and re-read in the background
+  `columns-seconds` after they were read, while searches keep using the last read. At most `heavy-reads` day reads run at once. A
+  day the collection does not hold answers "not held", so the router asks the next connector for the kind.
+- **Reverse lookups** scan the cached column set's promoted text values. An index such as `{kind: 1, date: 1, "c.NETTING_SET": 1,
+  id: 1}` on `trading_columns` would answer the same as a covered query, but the connector does not need it; create it only for
+  operators' own queries. A kind without promoted fields is answered from documents (at most `max-load-rows`), filtered on the
+  server first (`doc` contains `"<id>"`) when stored as text. `reverse-index: false` turns reverse lookups off.
+- **Derived kinds and impact** work from the column set as on Delta Lake.
+- **History** (`TRD 1000015 30`, [history queries](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)):
+  one indexed range read over the entity's keys, newest first; a snapshot kind keeps only the days its catalogue lists.
+
+## Retention, sizing and scale-out
+
+Retention is set at load time; the connector has none.
+
+- **`--keep-days N`:** after loading, each kind keeps its N newest days on or before the load's newest business date, deleted from
+  both collections with `deleteMany({kind, date: {$lt: cutoff}})` (a range of `day_ids`). When a kind would lose more than
+  `--max-drop-share` of its days, nothing is deleted and the load fails, unless `--force-drop`. A million-trade day is estimated at
+  20–40 s of deletes: run it with the nightly load.
+- **`--ttl-days N`:** every document gets `expireAt` (its business date plus N days, midnight UTC) and both collections a TTL index;
+  MongoDB's TTL monitor deletes what expired every 60 seconds, with no job to schedule, at the cost of one more index entry per
+  document and a million single deletes a day spread over its passes.
+
+Either way, a deleted day answers "not held" and the next source for the kind is asked.
+
+**Size per business day of a million trades** (estimated from the measured sizes: about 1,050 bytes on disk per document, 75 per
+`_columns` document, 14–32 per index entry):
+
+| History in MongoDB | Documents (each collection) | Data on disk (zstd) | Indexes (both collections) |
+|---|---|---|---|
+| 1 business day | 1 million | about 1.1 GB | about 70–90 MB |
+| 90 business days | 90 million | about 100 GB | about 7 GB |
+| 7 years (1,760 days) | 1.76 billion | about 2 TB | about 140 GB |
+
+MongoDB does not keep its indexes in memory by design: seven years is a matter of disk and of a WiredTiger cache large enough for
+the indexes of the days users open.
+
+- **Replica sets:** `uri: mongodb://m1,m2,m3/?replicaSet=rs0`; `read-preference: secondaryPreferred` sends Drishti's reads,
+  including day reads, to secondaries, away from the loader's writes (they may lag by the replication delay while a day loads).
+- **Sharding:** shard both collections on `{kind: 1, id: "hashed"}` (`sh.shardCollection("drishti.trading", {kind: 1, id:
+  "hashed"})`, the same for `trading_columns`). A point read goes to one shard; a day read goes to every shard in parallel. Never
+  shard on `date`: a whole day would land on one shard.
+- **Recent history in MongoDB, the years in a lake:** a Delta Lake (or Iceberg) connector for the same kind with the same layout,
+  MongoDB first in the route. A read falls through to the lake for a day MongoDB does not hold; a search, pick list, derived kind
+  or impact takes the first connector that holds the business day; type-ahead merges both.
+- **Server memory:** type-ahead ids about 150 MB and a day's column set (19 fields) about 220 MB per million entities (estimates),
+  within `columns-cache-mb`. Documents are not cached. Give the server at least 8 GB of heap per million entities a day.
+
+**Limits:** the first search on a business day other than the newest waits for that day's columns; only promoted fields are fast
+(other fields read at most 20,000 documents, `partial`); `effective` kinds are read as documents; the catalogue re-reads every id
+of the newest day every `refresh-seconds` (raise it with tens of millions of entities); `--doc-format bson` doubles the read time.
+
+## Measured results
+
+A developer workstation, one MongoDB 7.0 node in Docker (2 GB, `--wiredTigerCacheSizeGB 0.5`), **10,000 trades a day over three
+business days** plus the banking samples, a Drishti server with `-Xmx2g`, times over HTTP after warm-up:
+
+| Question | Time |
+|---|---|
+| load the samples / 30,000 trade-days | 1 s / 3 s |
+| server start (catalogue and type-ahead included) | 5.3 s |
+| type-ahead | 12–20 ms |
+| open a trade (view), first / again | 17 ms / 13 ms |
+| a trade's document on a past date | 6 ms |
+| searches over a day's columns (21 to 689 matches of 10,000) | 8–14 ms |
+| pick list (1,000 matches) | 7 ms |
+| desk P&L / impact of a netting set (1,482 trades), first / again | 11–13 ms / 59 ms, 33 ms |
+| a search on another business day, first (cold) / again | 13–21 ms / 7 ms |
+| `--keep-days 2`: 21,787 documents deleted / TTL monitor: 10,000 documents | 386 ms / 173 ms |
+| server heap in use | 142–268 MB |
+
+Every search scanned all 10,000 trades of the day from columns (`partial: false`). A million trades a day has not been measured;
+straight lines through the scale benchmark's points (10,000 to 50,000 trades a day,
+[BENCHMARK.md, section 9](../../docs/admin/BENCHMARK.md#9-the-stores-compared-10000-to-50000-trades-a-day)) put the newest day's
+searches at 70–180 ms and impact at about 130 ms. Treat them as an order of magnitude.
+
+## Security: TLS, certificate log-in and credentials
+
+TLS is on when `tls.enabled: true`, or the URI says so (`tls=true`, `ssl=true`, a `mongodb+srv://` address); the shared `tls.*`
+settings ([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [the keys](../../docs/admin/CONFIGURATION.md#shared-tls)) add a private CA and a
+client certificate. `tls.*` keys without TLS switched on, or `tls.enabled: true` beside `tls=false` in the URI, are start-up errors.
+`tls.verify-hostname: false` is the driver's `tlsAllowInvalidHostnames`; the driver takes protocol versions from the JVM
+(`jdk.tls.client.protocols`), so `tls.protocols` cannot narrow them. A literal password in the `uri` is refused: give it as an
+`${ENV}` reference. `auth-mechanism: x509` logs in with the client certificate (`MONGODB-X509`) as its subject, which must exist in
+`$external`; `x509-user` names the subject when the server should not derive it.
+
+```yaml
+# config/connectors/positions-mongo.yaml: TLS on a private CA, user and password from the environment
+plugin: mongodb
+kinds: [position]
+settings:
+  uri: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo.example.com:27017/?authSource=admin
+  database: drishti
+  collection: positions
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem
+```
+
+```yaml
+# config/connectors/mongodb-x509.yaml: the client certificate as the log-in, no password
+plugin: mongodb
+kinds: [position]
+description: Positions in MongoDB, certificate log-in
+settings:
+  uri: mongodb://mongo-1.example.com:27017,mongo-2.example.com:27017/?replicaSet=rs0
+  database: drishti
+  collection: positions
+  auth-mechanism: x509
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key
+```
+
+The server side, as in the integration test (`MongoTlsTest`, `mongo:7`); `mongod` reads one file with the certificate and key, and
+`--tlsCAFile` makes it validate client certificates (add `--tlsAllowConnectionsWithoutCertificates` when only some clients use one).
+For x.509 log-in, create the user named by the certificate's subject in RFC 2253 form, exactly (`CN=drishti,OU=risk,O=Example` is
+another user than `CN=drishti`):
+
+```
+cat server.pem server.key > server-full.pem
+mongod --bind_ip_all --tlsMode requireTLS --tlsCertificateKeyFile /tls/server-full.pem --tlsCAFile /tls/ca.pem
+openssl x509 -noout -subject -nameopt RFC2253 -in /etc/drishti/tls/client.pem
+mongosh --tls --tlsCAFile ca.pem --tlsCertificateKeyFile client-full.pem "mongodb://mongo.example.com:27017" --eval \
+  'db.getSiblingDB("$external").runCommand({createUser: "CN=drishti", roles: [{role: "readWrite", db: "drishti"}]})'
+mongosh --tls --tlsCAFile ca.pem --tlsCertificateKeyFile client-full.pem \
+  "mongodb://mongo.example.com:27017/?authMechanism=MONGODB-X509&authSource=%24external" --eval 'db.runCommand({connectionStatus: 1})'
+```
+
+(`client-full.pem` is `cat client.pem client.key`.) Health names a certificate with under 30 days left:
+`UP (TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))`.
+
+## Connection pool
+
+The MongoDB driver keeps the pool; Drishti sets it from `pool-size` (`maxPoolSize`, default `drishti.db.pool.size`), `pool-min-idle`
+(`minPoolSize`), `pool-idle-timeout` (`maxConnectionIdleTime`), `pool-max-lifetime` (`maxConnectionLifeTime`),
+`pool-connection-timeout` (`maxWaitTime`: an operation that finds every connection busy fails after this) and `statement-timeout`
+(the socket read timeout). Operations check a connection out for one call (cursors are closed with their block); Admin shows open,
+in use, idle, waiting and the longest current checkout, and one held longer than `pool-leak-threshold` is logged with the taker's
+stack. The loader's `--pool-size N` bounds its writes in flight. See
+[connection pools](../../docs/guides/DATA_GUIDE.md#914-connection-pools).
+
+## Production checklist
+
+1. Declare `layout.<kind>.columns` for every large kind; load with the `columns` in each row so `_columns` is written.
+2. Load with the loader, or write `MongoLayout.record` and `columnsRecord`; check Admin → Health says `UP` (indexes and `_columns`).
+3. Choose the history MongoDB keeps: `--keep-days` in the nightly load, or `--ttl-days`.
+4. Run a replica set and read from secondaries; shard on `{kind: 1, id: "hashed"}` when one set no longer holds the history.
+5. Put a Delta Lake (or Iceberg) connector behind it for the full history, with the same layout.
+6. Give the server at least 8 GB of heap per million entities a day; size `columns-cache-mb` for the days users open.
+7. Measure on your data (`elapsedMs`, `scanned` and `partial` of a search).
+
+A quick start (MongoDB 8.0 does not start on some recent Linux kernels; `mongo:7` does):
+
+```bash
+docker run -d --name mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
+tools/load-mongodb.sh mongodb://localhost:27017 drishti                       # the samples, 10 business days
+tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000        # and 10,000 trades a day for 3 days
+cp config/connectors.examples/mongodb/*.yaml config/connectors/               # the banking domains on MongoDB
+```
 
 ## See also
 
-- [The full MongoDB connector document](../../docs/connectors/MONGODB_CONNECTOR.md): layout, loading, retention, sharding, measured results.
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

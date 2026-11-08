@@ -41,7 +41,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * The layer's on-load materialisation (BI_FOUNDATION_2911E.md 3.4): a table's rows for a business date written as Parquet under
+ * The layer's on-load materialisation (docs/architecture/ARCHITECTURE.md §28 3.4): a table's rows for a business date written as Parquet under
  * {@link StoreLayout} ({@code <store>/<domain>/<name>/v<major>/<date>/part-*.parquet}), each build a file of its own moved in with
  * {@link FileSwap} (a query reading the previous file goes on; a replaced file is swept later). The rows are the table's own definition
  * over its source's documents for the date ({@link Source}), as a preview computes them; DuckDB writes the Parquet. A cache: rebuilt at

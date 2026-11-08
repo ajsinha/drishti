@@ -17,7 +17,9 @@ operation, the Problems tab (a refused edit with its line, a field the samples r
 take back. Fixtures and helpers are test_workbench_browser.py's."""
 import json
 
-from test_workbench_browser import browser, drag, kinds, open_design, page, settle, state, wait  # noqa: F401 - fixtures and helpers
+import select_helpers
+
+from test_workbench_browser import browser, drag, formula_value, kinds, open_design, page, settle, state, type_formula, wait  # noqa: F401 - fixtures and helpers
 from wb_live import BROWSER_WAIT_MS, live_console, showcase_json, showcase_sutra  # noqa: F401 - the fixture
 
 
@@ -34,7 +36,7 @@ def test_the_inspector_edits_options_the_title_and_lists_and_completes_expressio
     labels = lambda: page.evaluate("window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).panels.filter(p => p.id === 'terms')[0].values.columns.map(c => c.label)")
     first = labels()
     rev = state(page, "rev")
-    page.get_by_role("button", name="Move down: columns 1").click()
+    page.get_by_role("button", name="Move columns 1 down").click()
     settle(page, rev)
     assert labels()[:2] == [first[1], first[0]]
     rev = state(page, "rev")
@@ -43,12 +45,12 @@ def test_the_inspector_edits_options_the_title_and_lists_and_completes_expressio
     assert len(labels()) == len(first) - 1
     # an expression field completes shape paths
     page.locator('[data-preview] [data-panel="coupons"] .pnl-h').click()
-    rows = page.get_by_label("rows *")
-    rows.fill("$.sch")                                                             # typed in lower case: the UPPER_SNAKE path is offered
-    page.locator(".wb-expr .wb-menu-i").first.wait_for()
-    assert page.locator(".wb-expr .wb-menu-i").first.inner_text().startswith("$.SCHEDULE")
+    type_formula(page, "req.rows", "$.sch")                                         # typed in lower case: the UPPER_SNAKE path is offered
+    offer = page.locator(".di-complete-pop .di-option-label >> visible=true").first  # the code editor's own completion list
+    offer.wait_for()
+    assert offer.inner_text().startswith("$.SCHEDULE")
     page.keyboard.press("Enter")
-    assert page.get_by_label("rows *").input_value().startswith("$.SCHEDULE")
+    assert formula_value(page, "req.rows").startswith("$.SCHEDULE")
     # the title region has its own form
     page.locator("[data-preview] .vtitle").click()
     pill = page.get_by_label("Pill (text, may hold ${…})")
@@ -127,9 +129,8 @@ def test_phone_width_theme_and_the_sample_switcher_in_the_status_bar(live_consol
     assert page.evaluate("document.querySelector('.wb-frame').getBoundingClientRect().width") < 420
     page.locator('[data-width="desktop"]').click()
     assert page.evaluate("!document.querySelector('.wb-phone')")
-    options = page.locator("[data-theme-pick] option").all_inner_texts()
-    assert len(options) >= 4
-    choice = page.locator("[data-theme-pick] option").nth(2).get_attribute("value")
+    assert len(select_helpers.labels(page, "[data-theme-pick]")) >= 4
+    choice = select_helpers.values(page, "[data-theme-pick]")[2]
     page.select_option("[data-theme-pick]", choice)
     assert page.evaluate("document.documentElement.getAttribute('data-theme')") == choice
 

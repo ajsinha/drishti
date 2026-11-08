@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Busy protection: the one gate in front of new heavy work (docs/admin/OPERATIONS.md, "Busy protection"; IMPLEMENTATION_PLAN.md 2.9.11
+ * Busy protection: the one gate in front of new heavy work (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"; IMPLEMENTATION_PLAN.md 2.9.11
  * row 8). New sign-ins, date loads (VaR, exposure), Data view downloads, BI runs and bulk loads ask it first; when the server is short of
  * memory (the heap after the last collection), its load slots are full, the open dates' heap is well over its safety net, it answers too
  * many requests at once, or its disk is nearly full, the work is refused politely: {@code 503}, {@code Retry-After}, a {@code DRS-95xx}
@@ -178,7 +178,7 @@ public final class AdmissionGate {
     private final List<OffHeap> offHeaps = new CopyOnWriteArrayList<>();
 
     /**
-     * A memory store joins the readings (IN_MEMORY_LAKE.md section 6): its use against its cap is shown on Health's busy card. Its writes
+     * A memory store joins the readings (docs/architecture/DATA_ARCHITECTURE.md section 6): its use against its cap is shown on Health's busy card. Its writes
      * are bounded by the store itself (the eviction ladder, then a refusal), so it never makes new work wait here.
      */
     public void memoryStore(String name, LongSupplier used, LongSupplier cap) {

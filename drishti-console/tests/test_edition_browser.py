@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Risk's three Home landings in a browser (EDITIONS.md › The design as built, section 7): the console with the stand-in server answering the engines'
+"""Drishti Risk's three Home landings in a browser (LENSES.md › The design): the console with the stand-in server answering the engines'
 VaR and exposure calls as the engines shape them (port 17962). Each landing fills its panels from those answers, fits a phone without
 sideways scrolling, and draws in every theme; skipped when Playwright or its Chromium is missing."""
 import threading
@@ -26,21 +26,24 @@ from conftest import CONSOLE, FakeBackend  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 from test_page_widths_browser import AUDIT  # noqa: E402
 from scratch_ports import worker_port  # noqa: E402
+import engine_fakes  # noqa: E402
 
 PORT = worker_port(17962)
 THEMES = ["terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"]
 TREE = {"hierarchy": "MGMT", "title": "Management", "hierarchies": ["MGMT", "LEGAL", "LL"], "businessDate": "2026-09-30", "currency": "USD",
-        "nodes": [{"id": "MGMT~BANK", "scope": "NODE:MGMT~BANK", "name": "BANK", "level": "bank", "depth": 0, "var": 112_040_000, "limitUse": 0.78},
-                  {"id": "MGMT~DIV-MARKETS", "scope": "NODE:MGMT~DIV-MARKETS", "name": "DIV-MARKETS", "level": "division", "depth": 1, "var": 101_600_000, "limitUse": 0.81},
-                  {"id": "MGMT~DESK-COMM", "scope": "NODE:MGMT~DESK-COMM", "name": "DESK-COMM", "level": "desk", "depth": 2, "var": 41_200_000, "limitUse": 1.08},
-                  {"id": "MGMT~DESK-RATES", "scope": "NODE:MGMT~DESK-RATES", "name": "DESK-RATES", "level": "desk", "depth": 2, "var": 33_800_000, "limitUse": 0.86},
-                  {"id": "MGMT~DESK-FX", "scope": "NODE:MGMT~DESK-FX", "name": "DESK-FX", "level": "desk", "depth": 2, "var": 19_500_000, "limitUse": 0.61}]}
+        "nodes": [{"id": "MGMT~BANK", "scope": "NODE:MGMT~BANK", "name": "BANK", "level": "bank", "depth": 0, "var": 112_040_000, "limitUse": 0.78, "limitStatus": "within"},
+                  {"id": "MGMT~DIV-MARKETS", "scope": "NODE:MGMT~DIV-MARKETS", "name": "DIV-MARKETS", "level": "division", "depth": 1, "var": 101_600_000, "limitUse": 0.81, "limitStatus": "near"},
+                  {"id": "MGMT~DESK-COMM", "scope": "NODE:MGMT~DESK-COMM", "name": "DESK-COMM", "level": "desk", "depth": 2, "var": 41_200_000, "limitUse": 1.08, "limitStatus": "breach"},
+                  {"id": "MGMT~DESK-RATES", "scope": "NODE:MGMT~DESK-RATES", "name": "DESK-RATES", "level": "desk", "depth": 2, "var": 33_800_000, "limitUse": 0.86, "limitStatus": "near"},
+                  {"id": "MGMT~DESK-FX", "scope": "NODE:MGMT~DESK-FX", "name": "DESK-FX", "level": "desk", "depth": 2, "var": 19_500_000, "limitUse": 0.61, "limitStatus": "within"}]}
 EXP_TREE = {"groups": [{"id": "(no group)", "children": [
-    {"scope": "CPTY:CP-ALDERSHOT", "id": "CP-ALDERSHOT", "label": "Aldershot", "epe": 88_600_000, "limit": {"use": 1.04}, "children": [{}, {}]},
-    {"scope": "CPTY:CP-SUMMIT", "id": "CP-SUMMIT", "label": "Summit", "epe": 40_700_000, "limit": {"use": 0.44}, "children": [{}]}]}]}
+    {"scope": "CPTY:CP-ALDERSHOT", "id": "CP-ALDERSHOT", "label": "Aldershot", "epe": 88_600_000, "limit": {"use": 1.04, "status": "breach"}, "children": [{}, {}]},
+    {"scope": "CPTY:CP-SUMMIT", "id": "CP-SUMMIT", "label": "Summit", "epe": 40_700_000, "limit": {"use": 0.44, "status": "within"}, "children": [{}]}]}]}
 
 
 class RiskBackend(FakeBackend):
+    engine = engine_fakes.method
+
     async def var(self, method, path, ident, body=None, raw=False, **params):
         return {"/scope": {"var": 112_040_000, "es": 131_000_000, "confidence": 0.99, "businessDate": "2026-09-30", "currency": "USD"},
                 "/scope/history": {"backtest": {"days": 250, "exceptions": 5, "light": "amber", "kupiecPValue": 0.21}},
@@ -85,13 +88,13 @@ def test_each_landing_fills_from_the_engines_and_fits(browser, risk_console, lan
         root.wait_for()
         page.wait_for_function("() => !document.querySelector('[data-rl-date]') || document.querySelector('[data-rl-date]').textContent !== '…'")
         if landing == "desk":
-            page.wait_for_function("() => document.querySelectorAll('[data-rl-desks] tr').length >= 3")
+            page.wait_for_function("() => document.querySelectorAll('[data-rl-desks] .dg-row').length >= 3")
             assert page.locator("[data-rl-var]").first.inner_text() == "112.04m"
             assert page.locator("[data-rl-epe]").first.inner_text() == "947.20m"
             assert page.locator("[data-rl-backtest]").first.inner_text() == "amber · 5"
             page.wait_for_function("() => document.querySelector('[data-rl-breaches]').textContent === '2'")   # one VaR, one credit
-            assert "DESK-COMM" in page.locator("[data-rl-desks] tr").first.inner_text()
-            assert "Aldershot" in page.locator("[data-rl-cptys] tr").first.inner_text()
+            assert "DESK-COMM" in page.locator("[data-rl-desks] .dg-row").first.inner_text()
+            assert "Aldershot" in page.locator("[data-rl-cptys] .dg-row").first.inner_text()
         elif landing == "command":
             assert page.locator("#rlCmd").is_visible()
             assert page.locator(".rl-chip", has_text="VAR BANK").count() == 1
@@ -100,6 +103,9 @@ def test_each_landing_fills_from_the_engines_and_fits(browser, risk_console, lan
             page.wait_for_function("() => document.querySelectorAll('[data-rl-heat] .rl-cell').length >= 4")
             assert page.locator("[data-rl-hierarchies] button").count() == 3
             assert page.locator(".rl-cell.r").count() == 1
+            # the hierarchy is drishti-tree (varHierarchyTree): the server's VaR per node, a node's name the link to the VaR explorer
+            page.wait_for_function("() => document.querySelectorAll('[data-rl-tree] drishti-tree .dg-row[data-scope]').length >= 3")
+            assert "/var?scope=" in page.locator("[data-rl-tree] .dg-row[data-scope] a").first.get_attribute("href")
             page.wait_for_function("() => document.querySelectorAll('[data-rl-feed] li').length >= 2")
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
         assert not page.evaluate(AUDIT)
@@ -112,7 +118,7 @@ def test_the_desk_landing_draws_in_every_theme(browser, risk_console):
     page = ctx.new_page()
     try:
         page.goto(f"{risk_console}/?landing=desk", wait_until="load")
-        page.wait_for_function("() => document.querySelectorAll('[data-rl-desks] tr').length >= 3")
+        page.wait_for_function("() => document.querySelectorAll('[data-rl-desks] .dg-row').length >= 3")
         seen = set()
         for theme in THEMES:
             page.evaluate(f"document.documentElement.setAttribute('data-theme', '{theme}')")

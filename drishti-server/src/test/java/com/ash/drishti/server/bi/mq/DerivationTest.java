@@ -38,10 +38,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Dataset derivation (docs/architecture/BI_DESIGN.md section 3.1): a narrowing dataset keeps a subset of its base's columns, filters, keeps one row per key
+ * Dataset derivation (docs/architecture/ARCHITECTURE.md §28 section 3.1): a narrowing dataset keeps a subset of its base's columns, filters, keeps one row per key
  * (the latest by a column, never a silent distinct) and derives columns along a pack reference ({@code related}); each answers what the same
  * arithmetic over the base answers, and the plan shows the derivation above the dataset's scan. Grouping to a coarser grain is a summary table of
- * the layer (BI_FOUNDATION_2911E.md Q13), read through its model's answer, not a derivation.
+ * the layer (docs/architecture/ARCHITECTURE.md §28 Q13), read through its model's answer, not a derivation.
  */
 class DerivationTest {
 

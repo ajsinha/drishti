@@ -14,7 +14,7 @@
 
 # Drishti console image for Amazon ECS with EFS, a separate container from the server (docs/architecture/AWS_DEPLOYMENT.md
 # section 6). Build from the repository root:
-#   docker build -f deploy/docker/ecs/console.Dockerfile -t drishti-console-ecs:2.9.11.d .
+#   docker build -f deploy/docker/ecs/console.Dockerfile -t drishti-console-ecs:2.9.11.g .
 # Calc's Python runtime (Pyodide) and DuckDB-Wasm are fetched in the first stage (pinned, SHA-256 checked), so a running
 # console needs no internet.
 FROM python:3.13-slim AS pyodide
@@ -33,7 +33,7 @@ COPY --from=pyodide /src/drishti-console/ .
 # the help centre renders the repository's documents; packs as shipped, outside the EFS paths (as in the server image)
 COPY docs/ /opt/drishti/docs/
 COPY config/packs/ /opt/drishti/shipped/packs/
-COPY config/editions/ /opt/drishti/config/editions/
+COPY config/lenses/ /opt/drishti/config/lenses/
 COPY tools/packbundle.py /opt/drishti/tools/packbundle.py
 COPY LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/
 COPY deploy/docker/ecs/console-entrypoint.sh /opt/drishti/bin/entrypoint.sh

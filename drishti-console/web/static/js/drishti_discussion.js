@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Discussion (COLLABORATION.md, Discussion): the second tab of the side drawer (the first is About, drishti_about.js). Threads on the whole view, on a
+/* Discussion (ARCHITECTURE.md §31, Discussion): the second tab of the side drawer (the first is About, drishti_about.js). Threads on the whole view, on a
    panel (the comment badge in the panel header, beside its ?) or on a field; reply, edit within the window, retract, resolve, follow and
    mute, and for administrators hide and lock. A comment's pin ("gen 1702 · 2 Oct") and *Open as it was* come from the server's thread
    answer (the console adds the link). New comments for people who follow a thread arrive on the bell's live connection (drishti_channel.js) and
@@ -59,16 +59,11 @@
     return Array.prototype.map.call(view.querySelectorAll('.pnl[data-panel]'), function (p) { return { id: p.getAttribute('data-panel'), title: ((p.querySelector('h3') || {}).textContent || p.getAttribute('data-panel')).trim() }; });
   }
   function fillAnchors() {
-    anchor.textContent = '';
-    anchor.appendChild(new Option('The whole view (' + id + ')', 'entity'));
-    var g = V.el('optgroup'); g.label = 'A panel';
-    panels().forEach(function (p) { g.appendChild(new Option(p.title, 'panel:' + p.id)); });
-    if (g.children.length) { anchor.appendChild(g); }
-    var f = V.el('optgroup'); f.label = 'A field';
-    fields().forEach(function (x) { f.appendChild(new Option(x.label, 'field:' + x.path)); });
-    if (f.children.length) { anchor.appendChild(f); }
+    anchor.component.setOptions([{ value: 'entity', label: 'The whole view (' + id + ')' }]      // drishti-inputs' Select: the view, a panel, a field
+      .concat(panels().map(function (p) { return { value: 'panel:' + p.id, label: p.title, group: 'A panel' }; }))
+      .concat(fields().map(function (x) { return { value: 'field:' + x.path, label: x.label, group: 'A field' }; })), 'entity');
   }
-  function aim(value) { if (value && Array.prototype.some.call(anchor.options, function (o) { return o.value === value; })) { anchor.value = value; } }
+  function aim(value) { if (value && anchor.component.options.some(function (o) { return o.value === value; })) { anchor.value = value; } }
 
   function total() { return counts.entity + Object.keys(counts.panels).reduce(function (n, k) { return n + counts.panels[k]; }, 0) + Object.keys(counts.fields).reduce(function (n, k) { return n + counts.fields[k]; }, 0); }
   function badges() {
@@ -106,7 +101,7 @@
     if (!threads.length) { list.appendChild(V.el('p', 'disc-empty', only.panel || only.path ? 'No comments here yet.' : 'No comments yet. Start the discussion below.')); }
     var c = ctx();
     threads.forEach(function (t) { list.appendChild(V.thread(t, c)); });
-    list.querySelectorAll('form[data-reply]').forEach(function (f) { var ta = f.querySelector('textarea'); window.Drishti.Compose.attach(ta, f.querySelector('ul'), { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields }); });
+    list.querySelectorAll('form[data-reply]').forEach(function (f) { var ta = f.querySelector('textarea'); window.Drishti.Compose.attach(ta, { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields }); });
     scope.hidden = !(only.panel || only.path);
     var label = only.panel ? (panels().filter(function (p) { return p.id === only.panel; })[0] || {}).title || only.panel : only.path;
     scope.querySelector('[data-disc-scope-name]').textContent = label || '';
@@ -146,8 +141,8 @@
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     if (!box.value.trim()) { say(msg, 'Write something first.', true); return; }
-    var a = anchor.value.split(':'), pg = page(), opt = anchor.options[anchor.selectedIndex];
-    var body = { anchor: a[0], generation: pg.generation, asOf: pg.asOf, knownAt: pg.knownAt, body: box.value, label: opt.textContent };
+    var a = String(anchor.value || 'entity').split(':'), pg = page(), opt = anchor.component.getOption();
+    var body = { anchor: a[0], generation: pg.generation, asOf: pg.asOf, knownAt: pg.knownAt, body: box.value, label: opt ? opt.label : '' };
     if (a[0] === 'panel') { body.panel = a[1]; var p = document.getElementById('p-' + a[1]); if (p && p.getAttribute('data-gate-kind')) { body.gateKind = p.getAttribute('data-gate-kind'); } }
     if (a[0] === 'field') { body.path = a.slice(1).join(':'); }
     api('POST', base, body).then(function (r) { posted(r, msg, box); });
@@ -197,9 +192,8 @@
         var ta = inline(li, cur.body || '', 'Edit your comment', function (text, note) {
           api('PATCH', '/api/comment/' + cid, { body: text, revision: Number(li.getAttribute('data-revision')) }).then(function (r) { go(r, note); });
         });
-        var opts = V.el('ul', 'shr-list disc-opts'); opts.id = 'discEditList-' + cid; opts.hidden = true; opts.setAttribute('role', 'listbox'); opts.setAttribute('aria-label', 'Suggestions');
-        ta.parentNode.insertBefore(opts, ta.nextSibling); tools.hidden = true;
-        window.Drishti.Compose.attach(ta, opts, { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields });
+        tools.hidden = true;
+        window.Drishti.Compose.attach(ta, { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields });
         break;
       }
       case 'retract':
@@ -223,14 +217,13 @@
     }
   }
   list.addEventListener('click', function (e) { var b = e.target.closest('button[data-act]'); if (b && !b.disabled) { act(b); } });
-  filterEl.addEventListener('change', load);
+  filterEl.addEventListener('drishti:change', load);
   scope.querySelector('[data-disc-scope-clear]').addEventListener('click', function () { only = { panel: '', path: '' }; load(); });
 
   // the drawer's tab, the header button, the keyboard
   document.querySelectorAll('[data-discussion-open]').forEach(function (b) { b.addEventListener('click', function () { if (host.isOpen() && host.tab() === 'discussion') { host.close(); } else { open(); } }); });
-  document.addEventListener('keydown', function (e) {
-    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.code === 'KeyN' || e.key === 'n')) { e.preventDefault(); open(); }
-  });
+  window.Drishti.keys.register({ id: 'discussion.open', keys: ['Alt+N'], scope: 'screen', area: 'view', group: 'View', typing: true,
+    description: 'Discussion: the second tab of the side drawer', run: function () { open(); } });
   document.addEventListener('drishti:drawer', function (e) {
     document.querySelectorAll('[data-discussion-open]').forEach(function (b) { b.setAttribute('aria-expanded', e.detail.open && e.detail.tab === 'discussion' ? 'true' : 'false'); });
     if (e.detail.open && e.detail.tab === 'discussion' && !threads.length) { load(); }
@@ -253,7 +246,7 @@
     form.hidden = !conf.collaborate;
     if (!conf.collaborate) { say(msg, 'You can read this discussion; writing needs the collaborate right.', false); }
     box.maxLength = conf.maxText;
-    window.Drishti.Compose.attach(box, form.querySelector('[data-disc-opts]'), { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields });
+    window.Drishti.Compose.attach(box, { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields });
     if (!embed) {
       panelBadges(document);
       if (window.Drishti.view && window.Drishti.view.enhance) {                  // a panel swapped in later (a result landed, a control, a live patch,

@@ -49,7 +49,7 @@ class AlertsStack(DistStack):
     def __init__(self, tmp, smtp_port: int):
         super().__init__(tmp, smtp_port)
         bi_report_stack.CONNECTOR = bi_report_stack.CONNECTOR.replace("rescan-seconds: 3600", FAST_RESCAN)
-        self.server_args += ["--drishti.alerts.measure.load-delay=1s", "--drishti.alerts.measure.tick=1s", "--drishti.alerts.measure.min-gap=0s"]
+        self.server_args += ["--drishti.alerts.load-delay=1s", "--drishti.alerts.tick=1s", "--drishti.alerts.min-gap=0s"]
 
     def prepare(self, work):
         super().prepare(work)

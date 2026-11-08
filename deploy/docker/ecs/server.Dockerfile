@@ -14,7 +14,7 @@
 
 # Drishti server image for Amazon ECS with EFS (docs/architecture/AWS_DEPLOYMENT.md section 5). Build from the repository
 # root after ./mvnw -q package -DskipTests:
-#   docker build -f deploy/docker/ecs/server.Dockerfile -t drishti-server-ecs:2.9.11.d .
+#   docker build -f deploy/docker/ecs/server.Dockerfile -t drishti-server-ecs:2.9.11.g .
 # Java 21 by default; Java 25: --build-arg BASE_IMAGE=eclipse-temurin:25-jre
 ARG BASE_IMAGE=eclipse-temurin:21-jre
 FROM ${BASE_IMAGE}
@@ -25,7 +25,7 @@ WORKDIR /opt/drishti
 COPY drishti-server/target/drishti-server-*-exec.jar app.jar
 # shipped packs live outside the EFS paths, so a mount never hides them; installed packs go to data/packs/installed (EFS)
 COPY config/packs/ shipped/packs/
-COPY config/editions/ /opt/drishti/config/editions/
+COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/ui-kit/ shipped/ui-kit/
 COPY deploy/docker/ecs/server-entrypoint.sh bin/entrypoint.sh
 COPY deploy/bin/drishti-node.sh bin/drishti-node.sh

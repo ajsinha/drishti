@@ -1,0 +1,435 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the position-sensitivity input (command SENS): docs/guides/FRTB_SA_GUIDE.md
+# section 2; the MR cube's D8 (docs/architecture/LENSES.md section 7.9). Demo data: tools/packgen/sensitivity/make_sensitivity_data.py.
+kind: position-sensitivity
+mnemonic: SENS
+pack: market-risk
+version: '1.0'
+class: input
+status: active
+title: 'Position sensitivities'
+description: 'The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank''s
+  pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price
+  deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB
+  standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube''s ladders and heat maps, sensitivity
+  limits and P&L explain. Read by the server''s FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket.'
+source: The bank's pricing and risk systems (the same run that produces the scenario PVs or P&L vectors)
+grain: One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID
+  (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure.
+key:
+- SENSITIVITY_ID
+id-pattern:
+- ^SENS-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: the full run after the close, with the scenario PVs (by 06:30 New York the next business day in the demo); intraday batches
+    replace a position's record whole
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/position-sensitivity/
+  columns:
+  - SENSITIVITY_ID
+  - GRAIN
+  - POSITION_ID
+  - TRADE_ID
+  - SOURCE_SYSTEM
+  - BATCH_ID
+  - STATUS
+  - DESK
+  - TT_BOOK
+  - PRODUCT_TYPE
+  - CURRENCY
+  test-data:
+  - data/testdata/market-risk/position-sensitivity
+fields:
+- name: SENSITIVITY_ID
+  type: id
+  presence: required
+  description: The record's id, SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID> (the business key).
+  example: SENS-POS-BOOK-RATES-1~MX-20000002-B-SENS-2026-09-30-01
+  pattern: ^SENS-
+- name: GRAIN
+  type: text
+  presence: required
+  description: 'What the record is for: POSITION (POSITION_ID, the position Drishti derives by the pack''s position rules) or TRADE
+    (TRADE_ID). One source system sends one grain on one date.'
+  example: POSITION
+  enum:
+  - POSITION
+  - TRADE
+- name: POSITION_ID
+  type: id
+  presence: optional
+  description: The position, POS-<TT_BOOK>~<key> as the pack's position rules derive it; required when GRAIN is POSITION, and on a TRADE
+    record the position the trade belongs to when the source knows it.
+  example: POS-BOOK-RATES-1~MX-20000002
+  pattern: ^POS-
+  link: position
+- name: TRADE_ID
+  type: id
+  presence: optional
+  description: The trade; required when GRAIN is TRADE.
+  example: MX-20000002
+  link: trade
+- name: TRADE_IDS
+  type: id list
+  presence: optional
+  description: The trades a position record covers (for drill-through and the completeness check against the vectors).
+  example: MX-20000002
+  link: trade
+- name: SOURCE_SYSTEM
+  type: text
+  presence: required
+  description: The system that computed the sensitivities (the trades' booking or risk system).
+  example: MUREX
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The business date the sensitivities are for (YYYY-MM-DD); the lake's partition.
+  example: '2026-09-30'
+- name: BATCH_ID
+  type: id
+  presence: required
+  description: The run that produced the record; the full run and each intraday batch have their own. One full run per date and source.
+  example: B-SENS-2026-09-30-01
+- name: RUN_KIND
+  type: text
+  presence: required
+  description: 'FULL (the run after the close: every live position) or INTRADAY (only the changed positions; a later COMPUTED_AT wins).'
+  example: FULL
+  enum:
+  - FULL
+  - INTRADAY
+- name: COMPUTED_AT
+  type: timestamp
+  presence: required
+  description: The as-of of the sensitivities, when the run computed them (UTC); a restated record carries a later one.
+  example: '2026-09-30T06:10:00Z'
+- name: RESTATEMENT
+  type: integer
+  presence: required
+  description: 0 for the first delivery of the date, 1, 2 ... for each restatement of it.
+  example: 0
+- name: STATUS
+  type: text
+  presence: required
+  description: 'ok; proxied (valued with a proxy, PROXY_REASON says which: counted and shown beside every sum); failed (no
+    sensitivities: SENSITIVITIES null, never zeros).'
+  example: ok
+  enum:
+  - ok
+  - proxied
+  - failed
+- name: PROXY_REASON
+  type: text
+  presence: optional
+  description: Why a proxied record was proxied (the missing curve or surface and its proxy).
+  example: 'volatility surface missing on the date: the underlying''s index surface used'
+- name: PRICER
+  type: text
+  presence: optional
+  description: The pricing library or model family (audit).
+  example: demo-factor-model
+- name: MODEL_VERSION
+  type: text
+  presence: optional
+  description: The model version (audit).
+  example: demo-sens-1
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: The legal entity that books the position (the LEGAL hierarchy), as on the P&L vectors.
+  example: LE-NY
+  link: legal-entity
+- name: DIVISION
+  type: id
+  presence: required
+  description: The division of the management hierarchy, as on the P&L vectors.
+  example: DIV-MARKETS
+- name: DESK
+  type: id
+  presence: required
+  description: The desk of the management hierarchy, as on the P&L vectors.
+  example: DESK-RATES
+  link: desk
+- name: TT_BOOK
+  type: id
+  presence: required
+  description: The trading book.
+  example: BOOK-RATES-1
+  link: book
+- name: LIMIT_LETTER
+  type: id
+  presence: optional
+  description: The limit letter of authority the position sits under (the LL hierarchy), as on the P&L vectors.
+  example: LL-0001
+- name: FRTB_DESK
+  type: id
+  presence: optional
+  description: The regulatory trading desk (FRTB desk) when the bank's desk structure differs from the management desks; else the
+    regulatory-desk mapping decides.
+  example: FD-USD-RATES
+- name: PRODUCT_GROUP
+  type: text
+  presence: required
+  description: The product group of the position's trades (Rates, Credit, FX, Equity, Commodity, Inflation, ...).
+  example: Rates
+- name: PRODUCT_TYPE
+  type: text
+  presence: required
+  description: The product type of the position's trades; with PRODUCT_GROUP it decides the residual-risk add-on's class.
+  example: IRS_FIXFLOAT
+- name: TRADE_STATUS
+  type: text
+  presence: required
+  description: The trades' status; a CANCELLED record carries an empty SENSITIVITIES list.
+  example: NEW
+- name: MATURITY_DATE
+  type: date
+  presence: required
+  description: The position's last maturity (the live rule; the DRC's maturity scaling).
+  example: '2031-04-15'
+- name: CURRENCY
+  type: text
+  presence: required
+  description: The position's own currency (ISO 4217); each element carries the currency of its VALUE.
+  example: EUR
+- name: VOL_CONVENTION
+  type: text
+  presence: optional
+  description: 'How the record''s rates vegas are delivered (decision 3): LOGNORMAL (the default, absent means it) or NORMAL (VEGA per basis
+    point of normal volatility, IMPLIED_VOL in basis points); one source declares one convention.'
+  example: LOGNORMAL
+  enum:
+  - LOGNORMAL
+  - NORMAL
+- name: SENSITIVITIES
+  type: record list
+  presence: required
+  description: 'The sparse list of the position''s sensitivities: one element per risk factor and measure, never the same twice;
+    empty only when TRADE_STATUS is CANCELLED, null when STATUS is failed.'
+nested:
+  SENSITIVITIES[]:
+  - name: RISK_FACTOR
+    type: id
+    presence: required
+    description: 'The risk factor by the naming standard (the risk-factor dictionary): IR/CURVE/<ccy>/<curve>/<tenor>, IR/BASIS/<ccy>,
+      INF/<index>[/<tenor>], CR/SPREAD/<issuer>/<BOND or CDS>/<tenor>, FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>,
+      CM/PRICE/<underlying>/<location>/<tenor>, VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]; a curvature element names the
+      curvature factor: IR/CURVE/<ccy> (the currency), CR/SPREAD/<issuer>, EQ/SPOT/<underlying>, CM/PRICE/<underlying> (the commodity),
+      FX/SPOT/<ccy>. A bank''s own
+      names are mapped to these by the dictionary''s SOURCE_NAMES; a name that is not mapped is refused, never guessed.'
+    example: IR/CURVE/USD/SOFR/10Y
+    link: risk-factor
+  - name: MEASURE
+    type: text
+    presence: required
+    description: 'What VALUE measures: DV01, CS01, IE01 (P&L for +1 basis point of the rate, spread or inflation rate); DELTA (P&L for
+      a +1% relative move of the spot or price, and for an equity repo, EQ/REPO, the P&L for +1 basis point of the repo rate, MAR21.20);
+      VEGA (P&L for +1 volatility point: 0.01 of lognormal implied volatility, or 1 basis point of normal volatility for a source whose
+      record declares VOL_CONVENTION NORMAL); CURVATURE_UP and CURVATURE_DOWN (the change in value for the regulatory curvature shock up
+      and down, SHOCK_SIZE, delta included: V(x+shock) − V(x) and V(x−shock) − V(x), MAR21.5); GAMMA (decisions 2 and 7: from a source
+      that cannot revalue, the second derivative of the position''s value to a parallel shift of the curvature factor, per basis point
+      squared for a curve (IR/CURVE/<ccy> or a curve point, per currency; CR/SPREAD/<issuer>) and per (1%) squared for a spot or price;
+      Drishti estimates curvature from it as −½ · Γ · h², labelled an estimate). BETA and BASE_CORR are reserved for SIMM.'
+    example: DV01
+    enum:
+    - DV01
+    - CS01
+    - IE01
+    - DELTA
+    - VEGA
+    - CURVATURE_UP
+    - CURVATURE_DOWN
+    - GAMMA
+    - BETA
+    - BASE_CORR
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: the element's CURRENCY
+    description: The sensitivity, in the element's currency, signed from the bank's point of view (a gain positive). Finite; a factor
+      that could not be computed fails the record, never a zero.
+    example: -19565.62
+  - name: CURRENCY
+    type: text
+    presence: required
+    description: The currency of VALUE (ISO 4217), converted to the reporting currency at the date's FX when summed.
+    example: USD
+  - name: RISK_CLASS
+    type: text
+    presence: optional
+    description: 'The FRTB risk class of the factor (GIRR, CSR_NS, CSR_SEC_NCTP, CSR_SEC_CTP, EQ, COMM, FX); derived from the dictionary
+      when absent, and the dictionary wins when they differ (a warning).'
+    example: GIRR
+    enum:
+    - GIRR
+    - CSR_NS
+    - CSR_SEC_NCTP
+    - CSR_SEC_CTP
+    - EQ
+    - COMM
+    - FX
+  - name: FRTB_BUCKET
+    type: text
+    presence: optional
+    description: The FRTB bucket (MAR21.39 to MAR21.89; the currency for GIRR and FX); the dictionary wins when they differ (a warning).
+    example: EUR
+  - name: TENOR
+    type: text
+    presence: optional
+    description: The factor's tenor or option expiry (MAR21.8's vertices); empty on a curvature, spot or price factor without one.
+    example: 5Y
+  - name: SIMM_BUCKET
+    type: text
+    presence: optional
+    description: The ISDA SIMM bucket of the factor (Residual when none applies); the dictionary wins when they differ (a warning).
+    example: '1'
+  - name: SHOCK_SIZE
+    type: rate
+    presence: optional
+    unit: basis points (rates and spreads) or a fraction of the spot or price
+    description: The curvature shock applied (required on CURVATURE_UP and CURVATURE_DOWN), checked against the risk weight of the
+      factor's bucket (MAR21.5, MAR21.98 to MAR21.101); a different shock is a warning.
+    example: 170
+  - name: IMPLIED_VOL
+    type: rate
+    presence: optional
+    unit: fraction
+    description: The implied volatility of a VEGA element, for the vega risk sensitivity (vega × implied volatility, MAR21.25).
+    example: 0.28
+links:
+- field: TRADE_ID
+  kind: trade
+- field: DESK
+  kind: desk
+- field: TT_BOOK
+  kind: book
+- field: LEGAL_ENTITY
+  kind: legal-entity
+validation:
+- rule: required
+  fields:
+  - SENSITIVITY_ID
+  - GRAIN
+  - SOURCE_SYSTEM
+  - BUSINESS_DATE
+  - BATCH_ID
+  - RUN_KIND
+  - COMPUTED_AT
+  - RESTATEMENT
+  - STATUS
+  - LEGAL_ENTITY
+  - DIVISION
+  - DESK
+  - TT_BOOK
+  - PRODUCT_GROUP
+  - PRODUCT_TYPE
+  - TRADE_STATUS
+  - MATURITY_DATE
+  - CURRENCY
+  - SENSITIVITIES
+- rule: unique
+  key:
+  - SENSITIVITY_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: SENSITIVITY_ID
+  pattern: ^SENS-
+- rule: enum
+  field: GRAIN
+  values:
+  - POSITION
+  - TRADE
+- rule: link
+  field: POSITION_ID
+  kind: position
+- rule: link
+  field: TRADE_ID
+  kind: trade
+- rule: link
+  field: TRADE_IDS
+  kind: trade
+- rule: enum
+  field: RUN_KIND
+  values:
+  - FULL
+  - INTRADAY
+- rule: enum
+  field: STATUS
+  values:
+  - ok
+  - proxied
+  - failed
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
+- rule: link
+  field: DESK
+  kind: desk
+- rule: link
+  field: TT_BOOK
+  kind: book
+- rule: enum
+  field: VOL_CONVENTION
+  values:
+  - LOGNORMAL
+  - NORMAL
+- rule: link
+  field: SENSITIVITIES[].RISK_FACTOR
+  kind: risk-factor
+- rule: enum
+  field: SENSITIVITIES[].MEASURE
+  values:
+  - DV01
+  - CS01
+  - IE01
+  - DELTA
+  - VEGA
+  - CURVATURE_UP
+  - CURVATURE_DOWN
+  - GAMMA
+  - BETA
+  - BASE_CORR
+- rule: enum
+  field: SENSITIVITIES[].RISK_CLASS
+  values:
+  - GIRR
+  - CSR_NS
+  - CSR_SEC_NCTP
+  - CSR_SEC_CTP
+  - EQ
+  - COMM
+  - FX
+notes:
+- 'JSON Lines, one record per line (UTF-8, gzip). Example line: {"SENSITIVITY_ID":"SENS-POS-BOOK-RATES-1~MX-20000002-B-SENS-2026-09-30-01","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~MX-20000002","SOURCE_SYSTEM":"MUREX","BUSINESS_DATE":"2026-09-30","BATCH_ID":"B-SENS-2026-09-30-01","RUN_KIND":"FULL","COMPUTED_AT":"2026-09-30T06:10:00Z","RESTATEMENT":0,"STATUS":"ok","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"IRS_FIXFLOAT","TRADE_STATUS":"NEW","MATURITY_DATE":"2031-04-15","CURRENCY":"EUR","SENSITIVITIES":[{"RISK_FACTOR":"IR/CURVE/EUR/ESTR/5Y","MEASURE":"DV01","VALUE":-19565.62,"CURRENCY":"USD"}]}'
+- 'Refusals, each counted per source: a factor name not in the dictionary or not mapped (the element); VALUE null, NaN or infinite
+  (the element); a currency without FX on the date (the element); the same factor and measure twice (the record); a second full run of
+  a source on a date (the run). Warnings: a curvature without SHOCK_SIZE or with a shock other than the bucket''s; a position with
+  vectors and no sensitivities, or the reverse (completeness, by desk); a bucket that differs from the dictionary''s.'
+- 'Decided (2026-11-01, decision 3): rates vega in lognormal volatility points by default; a source sending normal volatility declares
+  VOL_CONVENTION NORMAL on its records (VEGA per basis point of normal volatility, IMPLIED_VOL in basis points) and is converted on load:
+  the vega risk sensitivity is VEGA × IMPLIED_VOL.'
+- 'Decided (2026-11-01 and 2026-11-02, decisions 2 and 7): curvature is revalued (CURVATURE_UP and CURVATURE_DOWN) where the source can;
+  a source that cannot sends GAMMA and the curvature Drishti derives is an estimate, an analysis figure until the supervisor accepts it.'
+- 'Conventions turned into the regulatory sensitivities by Drishti (docs/guides/FRTB_SA_GUIDE.md section 2.3): FRTB
+  s_k = DV01 × 10,000 (MAR21.8''s per-unit definition), s_k = DELTA × 100, the vega risk sensitivity VEGA × 100 × IMPLIED_VOL; SIMM takes
+  DV01 and CS01 per basis point and DELTA per one per cent as delivered.'
+review:
+- 'The due time of the full run and of intraday batches at the bank.'

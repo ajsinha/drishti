@@ -25,6 +25,7 @@ import pytest
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
+import select_helpers as S  # noqa: E402
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from core.backend import BackendError  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
@@ -230,7 +231,7 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     page.click("[data-new]")
     dlg = page.locator("[data-edit-dialog]")
     dlg.locator("[data-f-name]").wait_for()
-    assert dlg.locator("[data-f-plugin] option").all_inner_texts() == ["file", "jdbc"]
+    assert S.values(page, "[data-edit-dialog] [data-f-plugin]") == ["file", "jdbc"]               # drishti-inputs' Select
     assert dlg.locator("[data-setting='root']").count() == 1                                      # the default plugin's own fields
     dlg.locator("[data-f-plugin]").select_option("jdbc")
     for s in ("url", "user", "password", "pool-size", "tls.enabled", "tls.ca-file", "tls.truststore-password"):
@@ -238,7 +239,7 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     assert dlg.locator("[data-group='tls'] legend").inner_text() == "TLS"                         # a TLS section because the plugin supports TLS
     assert dlg.locator("[data-setting='root']").count() == 0                                      # and the file plugin's fields are gone
     assert dlg.locator("[data-setting='url']").get_attribute("aria-required") == "true"
-    assert "(required)" in dlg.locator("label[for$='url']").inner_text()
+    assert "(required)" in dlg.locator(".di-form-field:has(> [data-setting='url']) > label").inner_text()
     assert dlg.locator("[data-setting='pool-size']").get_attribute("placeholder") == "4"          # defaults show as placeholders
     assert dlg.locator("[data-setting='password']").get_attribute("placeholder") == "${ENV_VAR} or file:/run/secrets/name"
     dlg.locator("[data-f-name]").fill("orders-db")
@@ -253,7 +254,7 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     sent = len(backend.calls)
     dlg.locator("[data-setting='password']").fill("hunter2")
     dlg.locator("[data-save]").click()
-    err = dlg.locator("div.conn-field:has([data-setting='password']) [data-field-err]").inner_text()
+    err = dlg.locator(".di-form-field:has(> [data-setting='password']) > .di-msg").inner_text()
     assert "never written into a connector file" in err and "${PASSWORD}" in err
     assert dlg.locator("[data-setting='password']").get_attribute("aria-invalid") == "true"
     assert not any(c[0] == "PUT" for c in backend.calls[sent:])
@@ -291,15 +292,21 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     dlg = page.locator("[data-edit-dialog]")
     dlg.locator("[data-f-description]").wait_for()
     assert dlg.locator("[data-f-name]").get_attribute("readonly") is not None                     # the name is the file name: it does not change
-    assert dlg.locator("[data-f-plugin]").is_disabled()
+    assert dlg.locator("[data-f-plugin] .di-select-control").get_attribute("aria-disabled") == "true"
     assert dlg.locator("[data-setting='user']").input_value() == "drishti"
     dlg.locator("[data-tab='yaml']").click()
     yaml = dlg.locator("[data-yaml]")
     assert "url: jdbc:postgresql://db.example.com:5432/orders" in yaml.input_value()
-    yaml.fill(yaml.input_value().rstrip("\n") + "\n  pool-size: 12\n")
+    # typed into the code editor as a person types (CodeMirror's +input), then the form tab clicked: the editor's blur is the text area's
+    # "change" (upgradeCodeArea), straight after its "input" events
+    page.wait_for_function("() => !!(document.querySelector('[data-yaml]').drishtiCode || {}).cm")
+    yaml.evaluate("e => { window.__changes = 0; e.addEventListener('change', () => { window.__changes++; }); }")
+    yaml.evaluate("""e => { const cm = e.drishtiCode.cm, end = { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length };
+      cm.focus(); cm.setCursor(end); cm.replaceRange((cm.getLine(cm.lastLine()) ? '\\n' : '') + '  pool-size: 12', end, end, '+input'); }""")
     dlg.locator("[data-tab='form']").click()
     dlg.locator("[data-setting='pool-size']").wait_for()
     page.wait_for_function("() => document.querySelector('[data-setting=\"pool-size\"]').value === '12'")   # the YAML edit reached the form
+    assert page.evaluate("window.__changes") == 1                                                  # one "change" on leaving, none for the page's own text
     dlg.locator("[data-f-description]").fill("Orders database")
     dlg.locator("[data-save]").click()
     page.wait_for_function("() => document.querySelector('tr[data-conn=\"orders-db\"] .text-muted-d') !== null && document.body.innerText.includes('Orders database')", timeout=15000)
@@ -389,7 +396,7 @@ def test_the_editor_works_from_the_keyboard(browser, conn_console):
     tab.focus()
     page.keyboard.press("ArrowRight")                                                              # arrow keys move between the tabs
     page.wait_for_function("() => document.querySelector('[data-tab=\"yaml\"]').getAttribute('aria-selected') === 'true'")
-    assert dlg.locator("[data-yaml]").is_visible() and dlg.locator("[data-pane='form']").is_hidden()
+    assert dlg.locator(".di-code-host").is_visible() and dlg.locator("[data-pane='form']").is_hidden()       # the YAML's code editor
     page.keyboard.press("ArrowLeft")
     page.wait_for_function("() => document.querySelector('[data-tab=\"form\"]').getAttribute('aria-selected') === 'true'")
     page.keyboard.press("Escape")
@@ -410,7 +417,7 @@ def test_the_page_fits_a_phone_and_the_dark_theme_with_big_targets(browser, conn
     box = dlg.bounding_box()
     assert box["x"] >= 0 and box["x"] + box["width"] <= 391
     assert page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth + 1")
-    for sel in ("[data-save]", "[data-test]", "[data-tab='yaml']", "[data-close]", "[data-kind-add]", "[data-f-name]", "[data-f-plugin]"):
+    for sel in ("[data-save]", "[data-test]", "[data-tab='yaml']", "[data-close]", "[data-kind-add]", "[data-f-name]", "[data-f-plugin] .di-select-control"):
         b = dlg.locator(sel).first.bounding_box()
         assert b["height"] >= 44 - 1, (sel, b)                                                     # 44px touch targets
     colour = page.evaluate("() => getComputedStyle(document.querySelector('[data-edit-dialog]')).color")
@@ -438,7 +445,7 @@ def test_a_refused_save_shows_its_error_beside_save_and_on_the_field(browser, co
     save = dlg.locator("[data-save]").bounding_box()
     box = msg.bounding_box()
     assert box["y"] + box["height"] <= save["y"] + save["height"] + 1 and box["y"] + box["height"] <= 700      # in the sticky bar, on screen, not below the long form
-    assert "whole number" in dlg.locator("div.conn-field:has([data-setting='pool-size']) [data-field-err]").inner_text()
+    assert "whole number" in dlg.locator(".di-form-field:has(> [data-setting='pool-size']) > .di-msg").inner_text()
     assert page.evaluate("() => document.activeElement.getAttribute('data-setting')") == "pool-size"           # focused and scrolled to
     assert dlg.locator("[data-save]").is_enabled() and dlg.locator("[data-save]").inner_text() == "Save"       # not stuck on Saving...
     assert "bad-db" not in backend.files

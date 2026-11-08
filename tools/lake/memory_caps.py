@@ -13,15 +13,15 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""The in-memory lake's caps for the launchers (docs/architecture/IN_MEMORY_LAKE.md section 3a): prints the MB the JVM's direct-memory
+"""The in-memory lake's caps for the launchers (docs/architecture/DATA_ARCHITECTURE.md section 3a): prints the MB the JVM's direct-memory
 limit must have, 256 (the server's own buffers) plus every memory store's max-mb, read from the configuration the server reads
 (application.local.yaml in the working folder, then the files named on the command line), with ${VAR:default} resolved from the
 environment and DRISHTI_LAKE_MEMORY_<STORE>_MAX_MB overriding a store. DRISHTI_LAKE_MEMORY_MB, when set, is the stores' sum itself.
-A store is a lake (config/lakes/<store>.yaml, root: mem://<store>, memory.max-mb; docs/guides/IN_MEMORY_LAKE_GUIDE.md), and the old place,
+A store is a lake (config/lakes/<store>.yaml, root: mem://<store>, memory.max-mb; docs/guides/DATA_LAKE_GUIDE.md), and the old place,
 drishti.lake.memory.stores, still counts. This is the one place the lake files are read without the Java reader (tools/lake/lakeconfig.py):
 the launcher runs before any JVM, to size the JVM, and reads two keys only (root and memory.max-mb).
 
-Arrow's off-heap memory (docs/guides/FLIGHT_GUIDE.md section 10; ARROW_FLIGHT.md, As built) is sized here too, the same way: the
+Arrow's off-heap memory (docs/guides/FLIGHT_GUIDE.md section 10; docs/architecture/DATA_ARCHITECTURE.md, As built) is sized here too, the same way: the
 official Arrow library's buffers (the compute workers' exchange, BI answers sent as Arrow, Arrow Flight) are direct memory, so the limit
 also gets ``arrow_mb()``: the exchange's budget (``DRISHTI_ARROW_EXCHANGE_MB``, 512) plus, when the engine ``flight`` is on (its file
 config/engines/flight.yaml, or DRISHTI_FLIGHT_ENABLED), Flight's ``memory.total-mb``. The launchers pass the same figure to the server as
@@ -81,7 +81,7 @@ def lake_stores() -> dict[str, int]:
     out: dict[str, int] = {}
     if not folder.is_dir():
         return out
-    for f in sorted(folder.glob("*.yaml")):
+    for f in sorted([*folder.glob("*.yaml"), *folder.glob("*/*.yaml")]):        # and the domain folders (Lakes.files)
         doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         root = resolve(doc.get("root") or "")
         if not root.startswith("mem://"):
@@ -102,7 +102,7 @@ def caps_mb(files: list[Path]) -> int:
 
 
 def engine_file() -> Path:
-    """The in-memory lake's own file (docs/architecture/COMPUTE_ENGINES.md): DRISHTI_ENGINES_DIR, default ./config/engines."""
+    """The in-memory lake's own file (docs/guides/ADMIN_GUIDE.md): DRISHTI_ENGINES_DIR, default ./config/engines."""
     return Path(os.environ.get("DRISHTI_ENGINES_DIR") or "config/engines") / "memory-lake.yaml"
 
 

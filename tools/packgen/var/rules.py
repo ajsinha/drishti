@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The condition of a RULE portfolio (VAR_GUIDE.md section 5.4): the small part of DEL the server's engine evaluates over a
-position's columns (com.ash.drishti.compute.var.PositionRule), so a rule's members are the same here and there.
+position's columns (com.ash.drishti.banking.compute.var.PositionRule), so a rule's members are the same here and there.
 
     PRODUCT_GROUP == 'Rates' and CURRENCY in ('USD', 'CAD')
     'hedge' in TAGS or not DIRECTION == 'LONG'

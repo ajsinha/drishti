@@ -17,7 +17,7 @@
 
 # Data contracts of the market-risk pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/market-risk/guides/market-risk.md](../../../config/packs/market-risk/guides/market-risk.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/banking/market-risk/guides/market-risk.md](../../../config/packs/banking/market-risk/guides/market-risk.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -48,7 +48,7 @@ A named historical or hypothetical shock set.
 
 |  |  |
 |---|---|
-| Contract | [stress-scenario.contract.yaml](../../../config/packs/market-risk/contracts/stress-scenario.contract.yaml) · version 1.0 |
+| Contract | [stress-scenario.contract.yaml](../../../config/packs/banking/market-risk/contracts/stress-scenario.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | stress-engine |
@@ -59,7 +59,7 @@ A named historical or hypothetical shock set.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/stress-scenario/` |
 | Test data | data/testdata/market-risk/stress-scenario |
-| Worked example | [market-risk/stress-scenario](../samples/market-risk/stress-scenario.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/stress-scenario](../samples/market-risk.md#stress-scenario) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -104,7 +104,7 @@ P&L of a desk under a scenario, by book.
 
 |  |  |
 |---|---|
-| Contract | [stress-result.contract.yaml](../../../config/packs/market-risk/contracts/stress-result.contract.yaml) · version 1.0 |
+| Contract | [stress-result.contract.yaml](../../../config/packs/banking/market-risk/contracts/stress-result.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | stress-engine |
@@ -115,7 +115,7 @@ P&L of a desk under a scenario, by book.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/stress-result/` |
 | Test data | data/testdata/market-risk/stress-result |
-| Worked example | [market-risk/stress-result](../samples/market-risk/stress-result.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/stress-result](../samples/market-risk.md#stress-result) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -165,7 +165,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 
 |  |  |
 |---|---|
-| Contract | [frtb-sensitivity.contract.yaml](../../../config/packs/market-risk/contracts/frtb-sensitivity.contract.yaml) · version 1.0 |
+| Contract | [frtb-sensitivity.contract.yaml](../../../config/packs/banking/market-risk/contracts/frtb-sensitivity.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | frtb-engine |
@@ -176,7 +176,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/frtb-sensitivity/` |
 | Test data | data/testdata/market-risk/frtb-sensitivity |
-| Worked example | [market-risk/frtb-sensitivity](../samples/market-risk/frtb-sensitivity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/frtb-sensitivity](../samples/market-risk.md#frtb-sensitivity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -239,7 +239,7 @@ Daily P&L attributed to risk factors, new trades and residual.
 
 |  |  |
 |---|---|
-| Contract | [pnl-explain.contract.yaml](../../../config/packs/market-risk/contracts/pnl-explain.contract.yaml) · version 1.0 |
+| Contract | [pnl-explain.contract.yaml](../../../config/packs/banking/market-risk/contracts/pnl-explain.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | pnl-explain |
@@ -250,7 +250,7 @@ Daily P&L attributed to risk factors, new trades and residual.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-explain/` |
 | Test data | data/testdata/market-risk/pnl-explain |
-| Worked example | [market-risk/pnl-explain](../samples/market-risk/pnl-explain.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/pnl-explain](../samples/market-risk.md#pnl-explain) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -307,7 +307,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 
 |  |  |
 |---|---|
-| Contract | [trade-valuation.contract.yaml](../../../config/packs/market-risk/contracts/trade-valuation.contract.yaml) · version 1.0 |
+| Contract | [trade-valuation.contract.yaml](../../../config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | risk-engine |
@@ -319,7 +319,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/trade-valuation/` |
 | Columns | `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `NETTING_SET`, `TRADER_ID`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `PNL_1D`, `DV01`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE` |
 | Test data | data/testdata/market-risk/trade-valuation |
-| Worked example | [market-risk/trade-valuation](../samples/market-risk/trade-valuation.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/trade-valuation](../samples/market-risk.md#trade-valuation) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -385,7 +385,7 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 
 |  |  |
 |---|---|
-| Contract | [position.contract.yaml](../../../config/packs/market-risk/contracts/position.contract.yaml) · version 1.0 |
+| Contract | [position.contract.yaml](../../../config/packs/banking/market-risk/contracts/position.contract.yaml) · version 1.0 |
 | Class | drishti-owned |
 | Status | active |
 | Source | Drishti (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/guides/VAR_GUIDE.md section 15.6) |
@@ -478,7 +478,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 
 |  |  |
 |---|---|
-| Contract | [portfolio.contract.yaml](../../../config/packs/market-risk/contracts/portfolio.contract.yaml) · version 1.0 |
+| Contract | [portfolio.contract.yaml](../../../config/packs/banking/market-risk/contracts/portfolio.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
@@ -490,7 +490,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/portfolio/` |
 | Columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` |
 | Test data | data/testdata/market-risk/portfolio |
-| Worked example | [market-risk/portfolio](../samples/market-risk/portfolio.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/portfolio](../samples/market-risk.md#portfolio) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -557,7 +557,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 
 |  |  |
 |---|---|
-| Contract | [pnl-vector.contract.yaml](../../../config/packs/market-risk/contracts/pnl-vector.contract.yaml) · version 1.1 |
+| Contract | [pnl-vector.contract.yaml](../../../config/packs/banking/market-risk/contracts/pnl-vector.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
@@ -570,7 +570,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `REPORTING_CCY`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-vector |
-| Worked example | [market-risk/pnl-vector](../samples/market-risk/pnl-vector.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/pnl-vector](../samples/market-risk.md#pnl-vector) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -663,7 +663,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 
 |  |  |
 |---|---|
-| Contract | [scenario-pv.contract.yaml](../../../config/packs/market-risk/contracts/scenario-pv.contract.yaml) · version 1.1 |
+| Contract | [scenario-pv.contract.yaml](../../../config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/make_var_data.py, scenario_fx.py) |
@@ -676,7 +676,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `SCENARIO_PV` |
 | Test data | data/testdata/market-risk/scenario-pv |
-| Worked example | [market-risk/scenario-pv](../samples/market-risk/scenario-pv.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/scenario-pv](../samples/market-risk.md#scenario-pv) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -775,7 +775,7 @@ A currency's rate against USD today and under each historical scenario, as the r
 
 |  |  |
 |---|---|
-| Contract | [fx-scenario.contract.yaml](../../../config/packs/market-risk/contracts/fx-scenario.contract.yaml) · version 1.0 |
+| Contract | [fx-scenario.contract.yaml](../../../config/packs/banking/market-risk/contracts/fx-scenario.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/scenario_fx.py) |
@@ -787,7 +787,7 @@ A currency's rate against USD today and under each historical scenario, as the r
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/fx-scenario/` |
 | Columns | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` |
 | Test data | data/testdata/market-risk/fx-scenario |
-| Worked example | [market-risk/fx-scenario](../samples/market-risk/fx-scenario.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/fx-scenario](../samples/market-risk.md#fx-scenario) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -829,7 +829,7 @@ The historical scenario days of a business date, oldest first: index i of every 
 
 |  |  |
 |---|---|
-| Contract | [scenario-set.contract.yaml](../../../config/packs/market-risk/contracts/scenario-set.contract.yaml) · version 1.1 |
+| Contract | [scenario-set.contract.yaml](../../../config/packs/banking/market-risk/contracts/scenario-set.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
@@ -840,7 +840,7 @@ The historical scenario days of a business date, oldest first: index i of every 
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/scenario-set/` |
 | Test data | data/testdata/market-risk/scenario-set |
-| Worked example | [market-risk/scenario-set](../samples/market-risk/scenario-set.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/scenario-set](../samples/market-risk.md#scenario-set) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -880,7 +880,7 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 
 |  |  |
 |---|---|
-| Contract | [risk-hierarchy.contract.yaml](../../../config/packs/market-risk/contracts/risk-hierarchy.contract.yaml) · version 1.0 |
+| Contract | [risk-hierarchy.contract.yaml](../../../config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
@@ -892,7 +892,7 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-hierarchy/` |
 | Columns | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME` |
 | Test data | data/testdata/market-risk/risk-hierarchy |
-| Worked example | [market-risk/risk-hierarchy](../samples/market-risk/risk-hierarchy.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/risk-hierarchy](../samples/market-risk.md#risk-hierarchy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -940,7 +940,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 
 |  |  |
 |---|---|
-| Contract | [var-limit.contract.yaml](../../../config/packs/market-risk/contracts/var-limit.contract.yaml) · version 1.1 |
+| Contract | [var-limit.contract.yaml](../../../config/packs/banking/market-risk/contracts/var-limit.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/make_var_data.py) |
@@ -952,7 +952,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/var-limit/` |
 | Columns | `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY` |
 | Test data | data/testdata/market-risk/var-limit |
-| Worked example | [market-risk/var-limit](../samples/market-risk/var-limit.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/var-limit](../samples/market-risk.md#var-limit) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -990,7 +990,7 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 
 |  |  |
 |---|---|
-| Contract | [desk-pnl.contract.yaml](../../../config/packs/market-risk/contracts/desk-pnl.contract.yaml) · version 1.0 |
+| Contract | [desk-pnl.contract.yaml](../../../config/packs/banking/market-risk/contracts/desk-pnl.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/desk_pnl.py); a bank's finance and front-office P&L systems |
@@ -1002,7 +1002,7 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/desk-pnl/` |
 | Columns | `DESK_PNL_ID`, `DESK_ID`, `LEGAL_ENTITY`, `ACTUAL_PNL`, `HYPOTHETICAL_PNL`, `FEES_AND_COMMISSIONS`, `CURRENCY`, `SOURCE`, `AS_OF` |
 | Test data | data/testdata/market-risk/desk-pnl |
-| Worked example | [market-risk/desk-pnl](../samples/market-risk/desk-pnl.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/desk-pnl](../samples/market-risk.md#desk-pnl) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1040,7 +1040,7 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 
 |  |  |
 |---|---|
-| Contract | [pnl-history.contract.yaml](../../../config/packs/market-risk/contracts/pnl-history.contract.yaml) · version 1.0 |
+| Contract | [pnl-history.contract.yaml](../../../config/packs/banking/market-risk/contracts/pnl-history.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/pnl_history.py, run by make_var_data.py) |
@@ -1053,7 +1053,7 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 | Columns | `HIERARCHY`, `NODE_ID`, `LEVEL`, `CURRENCY`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-history |
-| Worked example | [market-risk/pnl-history](../samples/market-risk/pnl-history.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/pnl-history](../samples/market-risk.md#pnl-history) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1099,7 +1099,7 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 
 |  |  |
 |---|---|
-| Contract | [position-sensitivity.contract.yaml](../../../config/packs/market-risk/contracts/position-sensitivity.contract.yaml) · version 1.0 |
+| Contract | [position-sensitivity.contract.yaml](../../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | The bank's pricing and risk systems (the same run that produces the scenario PVs or P&L vectors) |
@@ -1111,7 +1111,7 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/position-sensitivity/` |
 | Columns | `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`, `CURRENCY` |
 | Test data | data/testdata/market-risk/position-sensitivity |
-| Worked example | [market-risk/position-sensitivity](../samples/market-risk/position-sensitivity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/position-sensitivity](../samples/market-risk.md#position-sensitivity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1188,7 +1188,7 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 - Refusals, each counted per source: a factor name not in the dictionary or not mapped (the element); VALUE null, NaN or infinite (the element); a currency without FX on the date (the element); the same factor and measure twice (the record); a second full run of a source on a date (the run). Warnings: a curvature without SHOCK_SIZE or with a shock other than the bucket's; a position with vectors and no sensitivities, or the reverse (completeness, by desk); a bucket that differs from the dictionary's.
 - Decided (2026-11-01, decision 3): rates vega in lognormal volatility points by default; a source sending normal volatility declares VOL_CONVENTION NORMAL on its records (VEGA per basis point of normal volatility, IMPLIED_VOL in basis points) and is converted on load: the vega risk sensitivity is VEGA × IMPLIED_VOL.
 - Decided (2026-11-01 and 2026-11-02, decisions 2 and 7): curvature is revalued (CURVATURE_UP and CURVATURE_DOWN) where the source can; a source that cannot sends GAMMA and the curvature Drishti derives is an estimate, an analysis figure until the supervisor accepts it.
-- Conventions turned into the regulatory sensitivities by Drishti (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 2.3): FRTB s_k = DV01 × 10,000 (MAR21.8's per-unit definition), s_k = DELTA × 100, the vega risk sensitivity VEGA × 100 × IMPLIED_VOL; SIMM takes DV01 and CS01 per basis point and DELTA per one per cent as delivered.
+- Conventions turned into the regulatory sensitivities by Drishti (docs/guides/FRTB_SA_GUIDE.md section 2.3): FRTB s_k = DV01 × 10,000 (MAR21.8's per-unit definition), s_k = DELTA × 100, the vega risk sensitivity VEGA × 100 × IMPLIED_VOL; SIMM takes DV01 and CS01 per basis point and DELTA per one per cent as delivered.
 
 **To review (1)**
 
@@ -1200,7 +1200,7 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 
 |  |  |
 |---|---|
-| Contract | [risk-factor.contract.yaml](../../../config/packs/market-risk/contracts/risk-factor.contract.yaml) · version 1.0 |
+| Contract | [risk-factor.contract.yaml](../../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | The bank's risk-factor master (often kept in the market-data system or the FRTB engine) |
@@ -1212,7 +1212,7 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-factor/` |
 | Columns | `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `TENOR`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET` |
 | Test data | data/testdata/market-risk/risk-factor |
-| Worked example | [market-risk/risk-factor](../samples/market-risk/risk-factor.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/risk-factor](../samples/market-risk.md#risk-factor) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1278,10 +1278,10 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 
 |  |  |
 |---|---|
-| Contract | [var-result.contract.yaml](../../../config/packs/market-risk/contracts/var-result.contract.yaml) · version 1.3 |
+| Contract | [var-result.contract.yaml](../../../config/packs/banking/market-risk/contracts/var-result.contract.yaml) · version 1.3 |
 | Class | computed |
 | Status | active |
-| Source | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine) |
+| Source | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.banking.var.VarResultEngine) |
 | Grain | One answer per question (the scope asked for and the business date), computed when asked. |
 | Key | — |
 | Id pattern | — |
@@ -1321,7 +1321,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `CHILDREN_NOTE` | text | optional |  | When CHILDREN is limited: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567". |  |  |
 | `WORST` | record list | required |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |  |  |
 | `PNL` | vector | required | CURRENCY | The scope's P&L under each scenario day, oldest first (unrounded). |  |  |
-| `PARAMETRIC_VAR` | amount | optional | CURRENCY | Parametric VaR, a cross-check beside historical (PARAMETRIC_VAR.md): z·σ − μ at CONFIDENCE, positive for a loss; never official, never a limit's measure. |  |  |
+| `PARAMETRIC_VAR` | amount | optional | CURRENCY | Parametric VaR, a cross-check beside historical (docs/guides/VAR_GUIDE.md): z·σ − μ at CONFIDENCE, positive for a loss; never official, never a limit's measure. |  |  |
 | `PARAMETRIC_ES` | amount | optional | CURRENCY | Parametric ES: σ·φ(z_ES)/(1 − ES_CONFIDENCE) − μ. |  |  |
 | `PARAMETRIC_MU` | amount | optional | CURRENCY | μ of the lens's vector (the normal's mean). |  |  |
 | `PARAMETRIC_SIGMA` | amount | optional | CURRENCY | σ of the lens's vector (sample, N − 1, or EWMA-weighted). |  |  |
@@ -1353,7 +1353,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 
 |  |  |
 |---|---|
-| Contract | [var-official.contract.yaml](../../../config/packs/market-risk/contracts/var-official.contract.yaml) · version 1.2 |
+| Contract | [var-official.contract.yaml](../../../config/packs/banking/market-risk/contracts/var-official.contract.yaml) · version 1.2 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official |
@@ -1418,11 +1418,11 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 
 ## SSPNL: Stress P&L of a scenario across desks (derived from the stress results) (`stress-scenario-pnl`)
 
-The bank's stress P&L under one scenario: the desks' stored stress results added (additive), with each desk's limit use and breach, once per business date (quick win Q4 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the stress engine STR).
+The bank's stress P&L under one scenario: the desks' stored stress results added (additive), with each desk's limit use and breach, once per business date (docs/architecture/DATA_ARCHITECTURE.md section 12, until the stress engine STR).
 
 |  |  |
 |---|---|
-| Contract | [stress-scenario-pnl.contract.yaml](../../../config/packs/market-risk/contracts/stress-scenario-pnl.contract.yaml) · version 1.0 |
+| Contract | [stress-scenario-pnl.contract.yaml](../../../config/packs/banking/market-risk/contracts/stress-scenario-pnl.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector mr-derived over the kind stress-result |
@@ -1495,7 +1495,7 @@ What the market risk capital needs besides VaR, stressed VaR and the backtest: t
 
 |  |  |
 |---|---|
-| Contract | [capital-input.contract.yaml](../../../config/packs/market-risk/contracts/capital-input.contract.yaml) · version 1.0 |
+| Contract | [capital-input.contract.yaml](../../../config/packs/banking/market-risk/contracts/capital-input.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's regulatory capital team (supervisory letters) and its specific-risk and default-risk engines |
@@ -1554,7 +1554,7 @@ The jump-to-default inputs of the FRTB standardised default risk charge for non-
 
 |  |  |
 |---|---|
-| Contract | [default-risk.contract.yaml](../../../config/packs/market-risk/contracts/default-risk.contract.yaml) · version 1.0 |
+| Contract | [default-risk.contract.yaml](../../../config/packs/banking/market-risk/contracts/default-risk.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's risk system or issuer master (obligor, seniority, rating) with the positions' notionals and market values |
@@ -1607,7 +1607,7 @@ Finance's daily trading P&L of each legal entity from the general ledger, with t
 
 |  |  |
 |---|---|
-| Contract | [finance-pnl.contract.yaml](../../../config/packs/market-risk/contracts/finance-pnl.contract.yaml) · version 1.0 |
+| Contract | [finance-pnl.contract.yaml](../../../config/packs/banking/market-risk/contracts/finance-pnl.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's general ledger or product control sub-ledger |
@@ -1662,7 +1662,7 @@ The trading desks as the regulators see them, beside the management hierarchy's 
 
 |  |  |
 |---|---|
-| Contract | [regulatory-desk.contract.yaml](../../../config/packs/market-risk/contracts/regulatory-desk.contract.yaml) · version 1.0 |
+| Contract | [regulatory-desk.contract.yaml](../../../config/packs/banking/market-risk/contracts/regulatory-desk.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's market risk and Volcker compliance teams (the desk inventory approved with the models) |
@@ -1715,7 +1715,7 @@ The residual risk add-on's inputs (Basel MAR23): one row per trade and business 
 
 |  |  |
 |---|---|
-| Contract | [residual-risk.contract.yaml](../../../config/packs/market-risk/contracts/residual-risk.contract.yaml) · version 1.0 |
+| Contract | [residual-risk.contract.yaml](../../../config/packs/banking/market-risk/contracts/residual-risk.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's product control or risk system (the instruments with residual risk and their exclusions) |
@@ -1764,7 +1764,7 @@ Which regulatory risk type each trade belongs to, for VaR by risk type (interest
 
 |  |  |
 |---|---|
-| Contract | [risk-type-map.contract.yaml](../../../config/packs/market-risk/contracts/risk-type-map.contract.yaml) · version 1.0 |
+| Contract | [risk-type-map.contract.yaml](../../../config/packs/banking/market-risk/contracts/risk-type-map.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's market risk methodology team (a reference table kept with the risk hierarchies) |
@@ -1814,7 +1814,7 @@ The cash each trade pays or receives on a business date (coupons, principal, opt
 
 |  |  |
 |---|---|
-| Contract | [trade-cash-flow.contract.yaml](../../../config/packs/market-risk/contracts/trade-cash-flow.contract.yaml) · version 1.0 |
+| Contract | [trade-cash-flow.contract.yaml](../../../config/packs/banking/market-risk/contracts/trade-cash-flow.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's settlement or back-office cash-flow system (the flows a trade's PV stops counting on their payment date) |
@@ -1867,7 +1867,7 @@ The trade-level facts the Volcker metrics (12 CFR 248 appendix A) need that a tr
 
 |  |  |
 |---|---|
-| Contract | [volcker-trade.contract.yaml](../../../config/packs/market-risk/contracts/volcker-trade.contract.yaml) · version 1.0 |
+| Contract | [volcker-trade.contract.yaml](../../../config/packs/banking/market-risk/contracts/volcker-trade.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's trade capture or compliance system (the Volcker desk mapping and customer classification) |

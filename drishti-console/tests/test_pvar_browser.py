@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Parametric VaR in a real browser (docs/architecture/PARAMETRIC_VAR.md section 15; VAR_GUIDE.md section 3.12), over the market-risk
+"""Parametric VaR in a real browser (docs/guides/VAR_GUIDE.md section 15; VAR_GUIDE.md section 3.12), over the market-risk
 pack's committed VaR data built into a scratch lake:
 
 - ``PVAR BANK`` (an alias) opens the explorer with the Parametric toggle on: the three tiles (parametric VaR, parametric ES, the fat-tail
@@ -46,23 +46,27 @@ def test_pvar_view_a_the_tooltips_and_the_curve(browser, stack):
     pvar = api["parametric"]["var"]
     tile = pg.inner_text("[data-vp-tile='pvar']")
     assert "Parametric VaR" in tile
-    pg.click("[data-vp-tile='pvar'] .vp-q")
-    pop = pg.inner_text(".vp-pop")
+    pg.click("[data-vp-tile='pvar'] .vp-q")                                       # the ? is its Explain: the drawer, the server's lines
+    wait(pg, "(() => { const d = document.querySelector('[data-explain-drawer]'); return d && !d.hidden && d.dataset.state === 'ready' && d.dataset.tab === 'formula'; })()", seconds=120)
+    pop = pg.inner_text("[data-explain-drawer]")
     assert "not the official VaR" in pop and f"{pvar:,}".replace("-", "−") in pop          # the server's number, as the server wrote it
     assert "never in the browser" in pop
     pg.keyboard.press("Escape")
-    assert pg.is_hidden(".vp-pop")
+    assert pg.is_hidden("[data-explain-drawer]")
     wait(pg, "document.querySelector('[data-vx-tree]').classList.contains('vp-cols')")
-    assert "Parametric" in pg.inner_text("[data-vx-tree] .vx-row.hdr") and "Gap" in pg.inner_text("[data-vx-tree] .vx-row.hdr")
+    assert "Parametric" in pg.inner_text("[data-vx-tree] .dg-hrow.dg-hleaf") and "Gap" in pg.inner_text("[data-vx-tree] .dg-hrow.dg-hleaf")
     # with the two parametric columns the scope names stay readable (they were once squeezed to "…") and a row stays one line high
-    sizes = pg.evaluate("""[...document.querySelectorAll('[data-vx-tree] .vx-row:not(.hdr)')].slice(0, 6).map(r => ({
-        name: r.firstElementChild.getBoundingClientRect().width, high: r.getBoundingClientRect().height}))""")
+    sizes = pg.evaluate("""[...document.querySelectorAll('[data-vx-tree] .dg-row')].slice(0, 6).map(r => ({
+        name: r.querySelector('.dg-cell[aria-colindex="1"]').getBoundingClientRect().width, high: r.getBoundingClientRect().height}))""")
     assert sizes and all(s["name"] >= 120 for s in sizes), sizes
     assert all(s["high"] < 34 for s in sizes), sizes
-    wait(pg, "!!document.querySelector('[data-vx-histo] .vp-curve')", seconds=60)
-    assert pg.locator("[data-vx-histo] .vp-mark").count() >= 1 and pg.locator("[data-vx-histo] .vp-gap-label").count() == 1
+    # the fitted normal over the bars (drishti-risk's P&L distribution): the server's curve, the parametric marker, the fat-tail gap
+    built = "(document.querySelector('[data-vx-histo] drishti-chart') || {chart: {}}).chart.built"
+    wait(pg, "!!%s && %s.option.series.some((x) => x.name === 'fitted normal')" % (built, built), seconds=60)
+    assert pg.evaluate("%s.option.series[0].markLine.data.filter((l) => /^parametric/.test(l.name || '')).length" % built) >= 1
+    assert pg.evaluate("%s.figures.fatTailGap !== undefined" % built)
     pg.keyboard.press("n")
-    wait(pg, "!document.querySelector('[data-vx-histo] .vp-curve')")
+    wait(pg, "!%s.option.series.some((x) => x.name === 'fitted normal')" % built)
     assert "nc=0" in pg.url
     pg.reload()
     wait(pg, "document.querySelectorAll('[data-vp-tiles] .vp-tile').length === 3", seconds=60)
@@ -74,7 +78,7 @@ def test_pvar_view_a_the_tooltips_and_the_curve(browser, stack):
 def test_the_playground_parametric_tab(browser, stack):
     pg = page(browser, stack, "/play?scope=BANK")
     pg.click("[data-pg-tab-parametric]")
-    wait(pg, "document.querySelectorAll('[data-pg-param-positions] tbody tr').length > 0", seconds=90)
+    wait(pg, "((document.querySelector('[data-pg-param-positions] drishti-grid') || {}).grid ? document.querySelector('[data-pg-param-positions] drishti-grid').grid.model.rowCount() : 0) > 0", seconds=90)
     assert "measure=parametric" in pg.url
     assert "Parametric VaR = z·σ − μ" in pg.inner_text("[data-pg-param-figures]")
     assert pg.is_hidden(".pg-body")                                                     # the tab, in place of the grid
@@ -98,6 +102,8 @@ def test_the_phone_sheet(browser, stack):
     pg = page(browser, stack, "/var?scope=BANK&pm=1", width=390)
     wait(pg, "document.querySelectorAll('[data-vp-tiles] .vp-tile').length === 3", seconds=60)
     pg.click("[data-vp-tile='pgap'] .vp-q")
-    assert "sheet" in pg.get_attribute(".vp-pop", "class")
+    wait(pg, "(() => { const d = document.querySelector('[data-explain-drawer]'); return d && !d.hidden && d.dataset.state === 'ready' && d.dataset.tab === 'formula'; })()", seconds=120)
+    box = pg.locator("[data-explain-drawer]").bounding_box()                     # a sheet from the bottom
+    assert box["width"] >= 389 and box["y"] > 100
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     assert not pg.errors, pg.errors

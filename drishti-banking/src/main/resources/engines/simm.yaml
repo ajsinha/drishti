@@ -1,0 +1,35 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/engines/simm.yaml: the ISDA SIMM engine (docs/guides/SIMM_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
+# file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
+# (docs/guides/ADMIN_GUIDE.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+drishti:
+  engines:
+    simm:
+      enabled: ${DRISHTI_SIMM_ENABLED:true}   # run SIMM on this node: /api/v1/simm, SIMM, PLAY SIMM; needs sensitivities (live)
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  simm:                              # ISDA SIMM per netting set and regime, collect and post (docs/guides/SIMM_GUIDE.md section 9)
+    parameters-dir: ${DRISHTI_SIMM_PARAMETERS:./config/simm}   # the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed)
+    default-version: ""              # the version for a CSA naming none and for analytic scopes; blank: the installed one with the latest effective date
+    netting-set-kind: netting-set    # the netting sets and their trades
+    csa-kind: csa                    # the CSAs; their SIMM terms (SIMM_VERSION, IM_COLLECT_REGIMES, IM_POST_REGIMES, IM_CALCULATION_CURRENCY, add-ons) when present
+    add-on-kind: simm-addon          # the notional add-on lines; none served: no notional add-on
+    external-kind: crif-external     # the counterparty's call (HEADER rows) for the comparison; none served: "no call"
+    stored-kind: simm                # the stored figures shown, labelled "stored, not computed", for netting sets without sensitivities
+    default-product-class: RatesFX   # the product class of a PRODUCT_GROUP not in drishti.simm.product-classes (built-in mapping: SIMM_GUIDE.md section 3.3)
+    max-factors: 1500                # the most factors one playground grid and workbook holds
+    recipes-dir: ${drishti.data.dir:./data}/simm/recipes   # saved playground recipes (PLAY SIMM RUN <id>)
+    cache-minutes: 10                # how long a date's netting sets and CSAs stay in memory after they are read
+    playground-template: ""          # a bank's workbook template folder; blank: the built-in playground/simm/template/

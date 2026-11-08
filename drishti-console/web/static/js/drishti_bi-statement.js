@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The statement designer of BI Studio (2.6.0, docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24.5): a page with layout: statement is paper. The Paper tab of the designer
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* The statement designer of BI Studio (2.6.0, docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24.5): a page with layout: statement is paper. The Paper tab of the designer
    sets the report's `statement:` (paper size, orientation, margins, the header and footer with their tokens, the period it covers, the text size) with
    plain controls, and previews the statement page by page as the server lays it out for you (POST /bi/api/reports/statement/preview: the same pages the
    PDF draws, with your own masks and row rules). Each band's page break, keep-together, repeated column titles and grouping are in Format, under
@@ -62,8 +63,7 @@
     return h('label', { class: 'bi-frow bi-st-row' }, h('span', { text: label }), ctl, hint ? h('small', { class: 'text-muted-d', text: hint }) : null);
   }
   function select(options, value, attrs, onChange) {
-    const s = h('select', Object.assign({ class: 'studio-select' }, attrs), options.map((o) => h('option', { value: Array.isArray(o) ? o[0] : o, text: Array.isArray(o) ? o[1] : o })));
-    s.value = value;
+    const s = B.select(attrs, options, value);                            // drishti-inputs' Select
     s.addEventListener('change', () => onChange(s.value));
     return s;
   }
@@ -115,6 +115,8 @@
     const files = h('span', { class: 'bi-st-files', 'data-st-files': '' });
     const sheet = h('div', { class: 'bi-st-stage', 'data-st-stage': '' });
     host.appendChild(h('div', { class: 'bi-st-bar' }, h('label', { class: 'bi-st-date' }, 'Statement date ', date), go, prev, where, next, files));
+    const I = window.Drishti.elements && window.Drishti.elements.inputs;
+    if (I) { I.upgradeDateInput(date); }                                    // drishti-inputs' date picker; the field keeps its value
     host.appendChild(sheet);
     go.addEventListener('click', () => preview());
     prev.addEventListener('click', () => { if (S.at > 0) { S.at--; draw(); } });
@@ -126,12 +128,9 @@
     });
     // QA2-15: Page Down and Page Up page the preview while the Paper tab is shown, wherever the focus is (not only after a click on the
     // sheet), except in a field, where they keep their own meaning
-    document.addEventListener('keydown', (e) => {
-      if (!S.shown || !S.answer || host.contains(e.target) || e.defaultPrevented) { return; }
-      if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable || e.altKey || e.ctrlKey || e.metaKey) { return; }
-      if (e.key === 'PageDown') { next.click(); e.preventDefault(); }
-      if (e.key === 'PageUp') { prev.click(); e.preventDefault(); }
-    });
+    window.Drishti.keys.register({ id: 'bi.statement.page', keys: ['PageDown', 'PageUp'], scope: 'screen', area: 'bi-statement', group: 'Statement',
+      description: 'On the Paper tab: the next or previous page of the preview', when: (e) => !!(S.shown && S.answer) && !host.contains(e.target),
+      run: (e) => { (e.key === 'PageDown' ? next : prev).click(); } });
     downloads(files);
   }
 

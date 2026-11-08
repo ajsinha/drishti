@@ -279,7 +279,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         // local disk or object storage (s3a://, abfs://, gs://), read by the native engine or Hadoop's (`engine`): the
         // rest of the connector does not know which
         String root = ctx.setting("root", com.ash.drishti.api.DataDir.under("delta/demo"));   // no root and no lake: the demo lake's own folder
-        // a lake in memory (mem://, IN_MEMORY_LAKE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
+        // a lake in memory (mem://, docs/architecture/DATA_ARCHITECTURE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
         // no id-map files, no document cache on disk, no index segments on disk (the memory caches still apply)
         this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root);
         this.lake = LakeStore.of(root, ctx.setting("domain", ""), ctx.settings());
@@ -973,7 +973,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private final Map<String, Counted> counted = new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
-     * The date's rows from the add actions of the current snapshot (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1): the sum of {@code numRecords} in
+     * The date's rows from the add actions of the current snapshot (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1): the sum of {@code numRecords} in
      * their statistics; a file without statistics counts its bytes ÷ the bytes per row of the files that have both. No data file is read. A date
      * without files holds 0 rows. Empty when the log cannot be read now, or no file of the table has a record count to learn from.
      */
@@ -1189,7 +1189,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's vectors for the keys of {@code range} (a VaR shard, VAR_SHARDING.md): a file whose statistics (the first key column's
+     * The date's vectors for the keys of {@code range} (a VaR shard, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a file whose statistics (the first key column's
      * {@code minValues} and {@code maxValues}, its {@code nullCount}) show none of them is not read; the reader checks every row.
      */
     @Override
@@ -1217,7 +1217,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         }
         String keyColumn = range == null || range.columns().isEmpty() ? null : cols.get(range.columns().get(0));
         java.util.function.Predicate<io.delta.kernel.data.Row> keep = keyColumn == null ? f -> true : f -> {
-            String[] b = DeltaTable.textBounds(f, keyColumn);
+            String[] b = DeltaTable.textBounds(f, l.get().phys(keyColumn));   // statistics name a column-mapped table's columns physically
             return range.mayHold(b[0], b[1], b[2] == null || !"0".equals(b[2]));
         };
         try {

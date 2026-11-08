@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The scenario matrix in the console (SMAT, routes/smat_routes.py; VAR_GUIDE.md section 3.9): the command and its spaced forms, the
+"""The scenario matrix in the console (SMAT, plugins/banking/routes/smat_routes.py; VAR_GUIDE.md section 3.9): the command and its spaced forms, the
 page and its JSON, Arrow, CSV and Arrow file read from the server as the person, gaps said in the export (never zeros), the links on the
 entity pages and the VaR page offered only where the word is (Drishti Risk and Trading; not Market or World, DRS-4023), FUNC and the
 type-ahead. The server's own logic (the values against the stored vectors, PV to P&L, ranks, gaps, masks) is VarMatrixApiTest's."""
@@ -29,7 +29,8 @@ from core import arrow_answer
 from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
-from routes.smat_routes import smat_command, to_csv
+from plugins.banking.routes.smat_routes import smat_command, to_csv
+import engine_fakes  # noqa: E402
 
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
 MARKET_ABOUT = {"product": "Drishti Market", "tagline": "Curves", "edition": {"name": "market", "title": "Drishti Market"}}
@@ -105,7 +106,7 @@ def _var(backend, monkeypatch, sent: list):
             return json.dumps(ANSWER).encode(), {"content-type": "application/json"}
         return ANSWER
 
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
 
 
 def test_the_page_and_its_answers_are_read_as_the_person(backend, monkeypatch):
@@ -155,7 +156,7 @@ def test_market_and_world_have_no_scenario_matrix(backend, monkeypatch, about):
     assert "SMAT is not part of" in c.get("/api/smat/matrix?id=T1").json()["detail"]
     r = c.get("/go", params={"q": "SMAT T1 <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and "DRS-4023" in r.headers["location"]
-    assert not [s for s in c.get("/api/suggest", params={"q": "SMAT T1"}).json() if s.get("mnemonic") == "SMAT"]
+    assert not [s for s in c.get("/api/search", params={"in": "command", "q": "SMAT T1"}).json()["items"] if s.get("mnemonic") == "SMAT"]
     assert "data-smat-link" not in c.get("/v/trade/IRS-48213").text                  # no link that would only answer DRS-4023
 
 
@@ -164,7 +165,7 @@ def test_the_links_follow_the_edition_and_the_lens(backend, monkeypatch):
     view = c.get("/v/trade/IRS-48213").text
     assert 'data-smat-link href="/smat?id=IRS-48213"' in view
     assert "drishti_smat-link.js" in c.get("/var?scope=DESK:RATES").text                      # the VaR page's link, added to its header strip
-    s = [x for x in c.get("/api/suggest", params={"q": "SMAT DESK RATES 20"}).json() if x.get("mnemonic") == "SMAT"]
+    s = [x for x in c.get("/api/search", params={"in": "command", "q": "SMAT DESK RATES 20"}).json()["items"] if x.get("mnemonic") == "SMAT"]
     assert s and s[0]["href"] == "/smat?id=DESK%3ARATES&days=20"
     # the same instance with the word switched off (a site's edition.commands.words.SMAT: off): no link, no script, the word refused
     app.state.editions.instance.spec["commands"]["words"]["SMAT"] = False

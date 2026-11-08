@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Shared pieces of the capital and margin pictures (tutorial 30, FRTB-SA, module t30; tutorial 32, SIMM, module t32): the VaR pictures'
+"""Shared pieces of the capital and margin pictures (tutorial 4, FRTB-SA, module t30; tutorial 5, SIMM, module t32): the VaR pictures'
 scratch lake (see _var.py) with the position sensitivities, the factor dictionary and the counterparty-risk pack's netting sets and CSAs
 added, and the toy SIMM parameter file of the tests installed as a version (round illustrative numbers, never ISDA's)."""
 from __future__ import annotations
@@ -37,7 +37,7 @@ def start_servers(work) -> list:
     """The toy SIMM version in the scratch folder's simm/, then the VaR scratch stack over the larger lake."""
     simm = work / "simm"
     simm.mkdir(parents=True, exist_ok=True)
-    shutil.copy(ROOT / "drishti-compute" / "src" / "test" / "resources" / "simm" / "simm-toy.yaml", simm / "simm-toy.yaml")
+    shutil.copy(ROOT / "drishti-compute-banking" / "src" / "test" / "resources" / "simm" / "simm-toy.yaml", simm / "simm-toy.yaml")
     os.environ["DRISHTI_SIMM_PARAMETERS"] = str(simm)          # read by the scratch server started below (it inherits the environment)
     lake = work / "delta"
     if (lake / "risk" / "position-sensitivity").is_dir():       # a kept scratch folder (DRISHTI_SHOTS_WORK) already holds the lake: start on it

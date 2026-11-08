@@ -13,11 +13,13 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The Sutra designer's Outline mode (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31; core/designer_outline.py). The screen as a list: its
    sections, the panels in each and what a click opens under a table, each in plain words. Drag an item to reorder it or move it to
-   another section; drop it on a table's "opens on a click" line to nest it (a short sentence asks where it opens); drag a child out
-   (or press Un-nest) to put it back on the page; "+ Add a section". Picking an item shows its description and settings. After every
-   step the live preview is drawn again in place (its panels swapped, no reload), and the outline is read again. */
+   another section; drop it on a table (or its "opens on a click" line) to nest it (a short sentence asks where it opens); drag a child
+   out (or press Un-nest) to put it back on the page; "+ Add a section". Picking an item shows its description and settings. The tree is
+   the one outline (drishti-tree's TreeOutline, drishti-designer's Outline: its keys, Alt+arrows and drags); this script turns its moves into the server's steps. After every step
+   the live preview is drawn again in place (its panels swapped, no reload), and the outline is read again. */
 (function () {
   'use strict';
   var root = document.querySelector('[data-outline]');
@@ -25,7 +27,9 @@
   var draft = root.dataset.draft, kind = root.dataset.kind, id = root.dataset.id;
   var tree = root.querySelector('[data-ol-tree]'), detail = root.querySelector('[data-ol-detail]'), msg = root.querySelector('[data-ol-msg]');
   var frame = root.querySelector('[data-ol-preview]'), sutra = root.querySelector('[data-ol-sutra]');
-  var state = null, picked = null, rev = 0, dragging = null;
+  var D = window.Drishti.elements.designer, state = null, rev = 0, items = {};
+  var picks = new D.Selection();                                     // the outline's picked item: its settings shown beside it
+  var outline = new D.Outline(tree, { label: 'The screen, as an outline', selection: picks, canDrop: canDrop });
 
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -68,82 +72,64 @@
     });
   }
 
-  /* the tree */
-  function isChild(d) { return d && d.parent != null; }
-  function drag(li, data) {
-    li.setAttribute('draggable', 'true');
-    li.addEventListener('dragstart', function (e) { dragging = data; e.dataTransfer.setData('text/x-ol', JSON.stringify(data)); e.dataTransfer.effectAllowed = 'move'; root.classList.add('ol-dragging'); e.stopPropagation(); });
-    li.addEventListener('dragend', function () { dragging = null; root.classList.remove('ol-dragging'); });
-  }
-  function target(node, onDrop) {
-    node.addEventListener('dragover', function (e) { if (dragging) { e.preventDefault(); e.stopPropagation(); node.classList.add('ol-over'); } });
-    node.addEventListener('dragleave', function () { node.classList.remove('ol-over'); });
-    node.addEventListener('drop', function (e) {
-      node.classList.remove('ol-over');
-      if (!dragging) { return; }
-      e.preventDefault(); e.stopPropagation();
-      var d = dragging; dragging = null; root.classList.remove('ol-dragging');
-      onDrop(d);
-    });
+  /* the tree: sections (s:), their panels (p:), what a click on a table opens (c:) and the table's drop line (n:) */
+  function canDrop(from, to, where) {
+    var d = items[from], t = items[to];
+    if (!d || !t) { return false; }
+    if (t.kind === 'child') { return 'A panel a click opens moves with its table: drop it on the page to un-nest it'; }
+    if (d.kind === 'child') { return t.kind === 'nest' ? 'That already opens on a click: un-nest it first' : true; }
+    if (t.kind === 'panel' && where === 'inside' && !t.data.table) { return 'Only a table opens a panel on a click: drop it above or below ' + t.data.title; }
+    return true;
   }
   function moveTo(d, to, section) {
-    if (isChild(d)) { return step({ op: 'unnest', parent: d.parentId }); }          // a child dragged onto the page: back on the page
     var at = d.index < to ? to - 1 : to;
     return step({ op: 'move', index: d.index, to: at, section: section });
   }
+  function moved(e) {                                                 /* the outline's move, as the server's step */
+    var d = items[e.id], t = items[e.target];
+    if (d.kind === 'child') { step({ op: 'unnest', parent: d.data.parentId }); return; }       // a child dragged onto the page: back on the page
+    if (t.kind === 'nest') { ask(d.data, t.data); return; }
+    if (t.kind === 'section') { moveTo(d.data, t.end, t.data.id || ''); return; }
+    if (e.where === 'inside') { ask(d.data, t.data); return; }                                // onto a table: it opens on a click there
+    moveTo(d.data, e.where === 'after' ? t.data.index + 1 : t.data.index, t.section);
+  }
+  outline.on('move', moved);
+  outline.on('open', function (e) { show(e.id); });
+  picks.on('change', function () { show(picks.primary()); });
 
-  function select(kindOf, data, li) {
-    picked = { kind: kindOf, key: kindOf + ':' + (data.id || data.index) };
-    tree.querySelectorAll('[aria-selected="true"]').forEach(function (x) { x.setAttribute('aria-selected', 'false'); });
-    if (li) { li.setAttribute('aria-selected', 'true'); }
-    showDetail(kindOf, data);
+  function show(key) {
+    var it = key && items[key];
+    if (!it || it.kind === 'nest' || (it.kind === 'section' && !it.data.id)) { return; }
+    showDetail(it.kind, it.data);
   }
 
   function draw() {
-    tree.innerHTML = '';
-    var all = [];
+    items = {};
+    var all = [], nodes = [];
     state.sections.forEach(function (s) { s.panels.forEach(function (p) { all.push(p); }); });
     state.sections.forEach(function (s, si) {
       if (si === 0 && !s.panels.length && state.sections.length > 1) { return; }
-      var head = el('div', { 'class': 'ol-sec-h', 'data-ol-section': s.id || '' }, [
-        el('i', { 'class': 'bi ' + (s.id ? 'bi-collection' : 'bi-window'), 'aria-hidden': 'true' }), ' ', el('strong', { text: s.title }),
-        el('span', { 'class': 'ol-meta', text: ' · ' + s.panels.length + ' panel' + (s.panels.length === 1 ? '' : 's') })]);
-      var sec = el('li', { 'class': 'ol-sec', role: 'treeitem', 'aria-expanded': 'true', 'aria-selected': 'false', tabindex: '0', 'data-ol-sec': s.id || '' }, [head]);
-      if (s.id) { sec.addEventListener('click', function (e) { if (e.target.closest('.ol-item')) { return; } select('section', s, sec); }); }
       var end = s.panels.length ? s.panels[s.panels.length - 1].index + 1 : (all.length ? all[all.length - 1].index + 1 : 0);
-      target(head, function (d) { moveTo(d, end, s.id || ''); });
-      var list = el('ol', { role: 'group', 'class': 'ol-group' });
+      var sk = 's:' + (s.id || ''), panels = [];
+      items[sk] = { kind: 'section', data: s, end: end };
       s.panels.forEach(function (p) {
-        var li = el('li', { 'class': 'ol-item', role: 'treeitem', 'aria-selected': 'false', tabindex: '0', 'data-ol-panel': p.id || String(p.index) }, [
-          el('div', { 'class': 'ol-row' }, [el('span', { 'class': 'ol-grip', 'aria-hidden': 'true', text: '⋮⋮' }),
-            el('span', { 'class': 'ol-title', text: p.title }), el('span', { 'class': 'ol-desc', text: p.description })])]);
-        drag(li, { index: p.index, id: p.id });
-        target(li.firstChild, function (d) { moveTo(d, p.index, s.id || ''); });
-        li.addEventListener('click', function (e) { if (e.target.closest('.ol-child')) { return; } e.stopPropagation(); select('panel', p, li); });
-        li.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select('panel', p, li); } });
-        if (p.children.length || p.table) {
-          var kids = el('ol', { role: 'group', 'class': 'ol-children' });
-          p.children.forEach(function (c) {
-            var cli = el('li', { 'class': 'ol-item ol-child', role: 'treeitem', 'aria-selected': 'false', tabindex: '0', 'data-ol-child': c.id }, [
-              el('div', { 'class': 'ol-row' }, [el('span', { 'class': 'ol-grip', 'aria-hidden': 'true', text: '↳' }),
-                el('span', { 'class': 'ol-title', text: c.title }), el('span', { 'class': 'ol-desc', text: c.description + ' · opens ' + c.opens })])]);
-            var cd = { parent: p.index, parentId: p.id, child: c };
-            drag(cli, cd);
-            cli.addEventListener('click', function (e) { e.stopPropagation(); select('child', cd, cli); });
-            kids.appendChild(cli);
-          });
-          if (p.table) {
-            var nest = el('li', { 'class': 'ol-nest', 'data-ol-nest': p.id, text: 'Drop a panel here: it opens on a click on a row of ' + p.title });
-            target(nest, function (d) { if (isChild(d)) { say('That already opens on a click: un-nest it first'); return; } ask(d, p); });
-            kids.appendChild(nest);
-          }
-          li.appendChild(kids);
+        var pk = 'p:' + (p.id || p.index), kids = [];
+        items[pk] = { kind: 'panel', data: p, section: s.id || '' };
+        p.children.forEach(function (c) {
+          items['c:' + c.id] = { kind: 'child', data: { parent: p.index, parentId: p.id, child: c } };
+          kids.push({ id: 'c:' + c.id, label: c.title, detail: c.description + ' · opens ' + c.opens, icon: 'bi bi-arrow-return-right', attrs: { 'data-ol-child': c.id } });
+        });
+        if (p.table) {
+          items['n:' + p.id] = { kind: 'nest', data: p };
+          kids.push({ id: 'n:' + p.id, label: 'Drop a panel here: it opens on a click on a row of ' + p.title, fixed: true, cls: 'ol-nest', attrs: { 'data-ol-nest': p.id } });
         }
-        list.appendChild(li);
+        panels.push({ id: pk, label: p.title, detail: p.description, children: kids, attrs: { 'data-ol-panel': p.id || String(p.index), 'data-ol-in': s.id || '' } });
       });
-      sec.appendChild(list);
-      tree.appendChild(sec);
+      nodes.push({ id: sk, label: s.title, detail: s.panels.length + ' panel' + (s.panels.length === 1 ? '' : 's'), icon: 'bi ' + (s.id ? 'bi-collection' : 'bi-window'),
+        fixed: true, cls: 'ol-sec', attrs: { 'data-ol-sec': s.id || '' }, children: panels });
     });
+    outline.setNodes(nodes);
+    picks.prune(function (k) { return !!items[k]; });
     sutra.textContent = state.yaml || '';
     root.setAttribute('data-ol-rev', String(++rev));
   }
@@ -152,26 +138,24 @@
   function ask(d, parent) {
     var p = null;
     state.sections.forEach(function (s) { s.panels.forEach(function (x) { if (x.index === d.index) { p = x; } }); });
-    var where = el('select', { 'class': 'dz-pill', 'aria-label': 'where it opens', 'data-ol-place': '' });
-    Object.keys(state.places).forEach(function (k) { where.appendChild(el('option', { value: k, text: state.places[k] })); });
-    where.value = 'detail-below';
+    var where = el('drishti-select', { 'class': 'dz-select', 'data-ol-place': '' });              // drishti-inputs' Select
+    where.options = { label: 'where it opens', value: 'detail-below', options: Object.keys(state.places).map(function (k) { return { value: k, label: state.places[k] }; }) };
     detail.innerHTML = '';
     detail.appendChild(el('h3', { 'class': 'dz-h', text: 'Open it on a click' }));
     detail.appendChild(el('div', { 'class': 'dz-sentence' }, ['a row in ', el('b', { text: parent.title }), ' shows ', el('b', { text: (p || {}).title || 'the panel' }), ' in ', where]));
     detail.appendChild(el('div', { 'class': 'dz-row' }, [
       el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-ol-nest-apply': '', text: 'Make it so', on: { click: function () {
         step({ op: 'nest', index: d.index, under: parent.id, place: where.value }).then(function () {   // the new child picked: its settings shown
-          var c = p && tree.querySelector('[data-ol-child="' + p.id + '"]'); if (c) { c.click(); } }); } } }),
+          if (p && items['c:' + p.id]) { picks.set(['c:' + p.id], 'step'); } }); } } }),
       el('button', { type: 'button', 'class': 'dz-btn', text: 'Cancel', on: { click: function () { detail.innerHTML = ''; } } })]));
-    where.focus();
+    where.component.focus();
   }
 
   function settingSelect(label, options, value, onChange, attr) {
-    var s = el('select', { 'class': 'dz-pill', 'aria-label': label });
+    var s = el('drishti-select', { 'class': 'dz-select' });                  // drishti-inputs' Select
     s.setAttribute(attr, '');
-    options.forEach(function (o) { s.appendChild(el('option', { value: o[0], text: o[1] })); });
-    s.value = String(value);
-    s.addEventListener('change', function () { onChange(s.value); });
+    s.options = { label: label, value: options.some(function (o) { return String(o[0]) === String(value); }) ? String(value) : undefined, options: options.map(function (o) { return { value: o[0], label: o[1] }; }) };
+    s.addEventListener('drishti:change', function () { onChange(s.value); });
     return el('label', { 'class': 'ol-set' }, [label + ' ', s]);
   }
 
@@ -230,10 +214,7 @@
   function load() {
     return api('GET', '/designer/outline/state/' + encodeURIComponent(draft)).then(function (s) {
       state = s; draw();
-      if (picked) {                                                              // the picked item stays picked after a step, if it is still there
-        var li = picked.kind === 'panel' ? tree.querySelector('[data-ol-panel="' + picked.key.slice(6) + '"]') : null;
-        if (li) { li.click(); }
-      }
+      show(picks.primary());                                                     // the picked item stays picked after a step, if it is still there
     });
   }
 

@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 /**
- * The checks of docs/architecture/LAKE_CONFIG.md section 6, run at start and by {@code drishti.py lake check}: every Delta or Iceberg
+ * The checks of docs/architecture/DATA_ARCHITECTURE.md section 6, run at start and by {@code drishti.py lake check}: every Delta or Iceberg
  * connector names a known lake; every table of a lake file that exists on a local disk matches it (its format, its partition columns,
  * its promoted columns present). A difference is reported, never rewritten. A table on S3 or in memory is reported as not checked from
  * here (the server's connector checks it when it opens the table).

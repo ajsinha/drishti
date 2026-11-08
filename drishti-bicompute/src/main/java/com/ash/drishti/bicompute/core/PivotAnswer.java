@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A computed view as the API answers it (PIVOT_ENGINE.md section 4.4): the rows and columns as shown (nested levels in display order, with
+ * A computed view as the API answers it (ARCHITECTURE.md section 26.2): the rows and columns as shown (nested levels in display order, with
  * headers and subtotals below or above each open group, Others and the grand totals), every visible cell's finished figures keyed by
  * {@code rowKey|colKey}, the show-as figures, diversification beside holistic totals, and the provenance shared by every cell.
  */
@@ -117,6 +117,30 @@ final class PivotAnswer {
         out.put("provenanceShared", shared(c, id));
         if (!c.work.notes.isEmpty()) {
             out.put("notes", c.work.notes);
+        }
+        return out;
+    }
+
+    /**
+     * The view's cells in the grid's order, as {@link #build} lays them out: row by row as shown (a header row shares its total's cells and
+     * is skipped), each row's columns left to right. A capped measure is computed for the first of these (PivotProvider.cap).
+     */
+    @SuppressWarnings("unchecked")
+    static List<CellKey> gridOrder(PivotCore.Computation c) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        emitRows(c, c.rows.root, rows, "above".equals(c.view.subtotals()));
+        List<Map<String, Object>> cols = new ArrayList<>();
+        emitCols(c, c.cols.root, cols);
+        List<CellKey> out = new ArrayList<>();
+        for (Map<String, Object> r : rows) {
+            if ("header".equals(r.get("kind"))) {
+                continue;
+            }
+            for (Map<String, Object> col : cols) {
+                Map<String, String> coords = new TreeMap<>((Map<String, String>) r.get("coords"));
+                coords.putAll((Map<String, String>) col.get("coords"));
+                out.add(CellKey.of(coords));
+            }
         }
         return out;
     }
@@ -294,7 +318,8 @@ final class PivotAnswer {
     /**
      * Σ children − node for every holistic measure of every open row node (the gap a holistic total shows): at the column total as
      * {@code diversification}, and at every column as {@code diversificationByColumn} (column key to the same figures), so a chart of any
-     * column draws the engine's own gap and the browser never adds up the parts.
+     * column draws the engine's own gap and the browser never adds up the parts. Only when the node and every child have the figure: when
+     * one has none (a capped measure past its cells, a cell with a note) the gap is null, never a sum of some of the parts.
      */
     @SuppressWarnings("unchecked")
     private static void diversification(PivotCore.Computation c, List<Map<String, Object>> rows, Map<String, Map<String, Object>> cells,
@@ -335,18 +360,29 @@ final class PivotAnswer {
             if (f.fn().kind() != Kind.HOLISTIC || f.fn().plainSum()) {
                 continue;
             }
+            if (!cells.containsKey(node.key() + "|" + colKey)) {
+                continue;
+            }
             Double total = v(cells, node.key() + "|" + colKey, f.label());
             double sum = 0;
-            boolean any = false;
+            int parts = 0;
+            boolean all = total != null;
             for (Axis.Node ch : node.children) {
+                if (!cells.containsKey(ch.key() + "|" + colKey)) {
+                    continue;                          // no members there: nothing to add
+                }
                 Double x = v(cells, ch.key() + "|" + colKey, f.label());
                 if (x != null) {
                     sum += x;
-                    any = true;
+                    parts++;
+                } else {
+                    all = false;
                 }
             }
-            if (total != null && any) {
+            if (all && parts > 0) {
                 d.put(f.label(), sum - total);
+            } else if (total != null || parts > 0) {
+                d.put(f.label(), null);                // a part or the total has no figure (a capped measure): never a partial sum
             }
         }
         return d;

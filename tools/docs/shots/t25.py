@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 25, VaR from the bank to a trade (docs/tutorials/25-var-from-the-bank-to-a-trade.md), written to docs/tutorials/img/t25/,
+"""Pictures of tutorial 2, Part A, VaR from the bank to a trade (docs/tutorials/02-var-from-the-bank-to-a-trade.md), written to docs/tutorials/img/t25/,
 over the committed VaR test data (see _var.py). Run it on its own (it builds its own lake and starts its own scratch server and console):
 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t25
@@ -26,7 +26,7 @@ from _tut import OUT
 import subprocess
 import sys
 
-from _var import HIGH, LAKE, WIDE, open_var, painted, server, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
+from _var import HIGH, LAKE, WIDE, choose, open_var, painted, server, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
 from shotlib import ROOT
 from shotlib import Ctx, register
 
@@ -109,7 +109,7 @@ def capture(c: Ctx):
     open_var(c, "/var?scope=DESK:DESK-FX")
     painted(c, "DESK:DESK-FX")
     c.page.locator('.vx-tab[data-tab="captures"]').click()
-    c.page.locator("[data-vx-cap-note]").fill("tutorial 25")
+    c.page.locator("[data-vx-cap-note]").fill("tutorial 2, Part A")
     c.page.locator("[data-vx-capture]").click()
     c.until("document.querySelector('[data-var]').dataset.lastCapture && "
             "document.querySelectorAll('[data-vx-captable] tbody tr[data-capture]').length > 0")
@@ -161,7 +161,7 @@ def reporting_currency(c: Ctx):
     open_var(c, "/var?scope=BANK")
     painted(c, "BANK")
     c.until("document.querySelector('[data-var]').dataset.ccyReady === 'true'", 60)
-    c.page.select_option("[data-vx-ccy]", "EUR")
+    choose(c, "[data-vx-ccy]", "EUR")
     c.until("document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf('EUR') >= 0", 90)
     painted(c, "BANK")
     tab(c, "ccy")
@@ -256,8 +256,8 @@ def scenario_matrix(c: Ctx):
     scenario selected and charted against -VaR, its details (rank, PV, FX, days in the tail, source)."""
     _more_dates()
     open_var(c, "/go?q=" + "SMAT BOOK BOOK-RATES-1 5 <GO>".replace(" ", "+"))
-    c.until("document.querySelectorAll('[data-sm-tbody] tr[data-key]').length > 10 && document.querySelector('[data-sm-kv] dt') !== null", 600)
-    c.page.locator("[data-sm-tbody] tr[data-key]").nth(1).locator("td").nth(4).click()
+    c.until("document.querySelectorAll('[data-sm-scroll] .dg-row[data-key]').length > 10 && document.querySelector('[data-sm-kv] dt') !== null", 600)
+    c.page.locator("[data-sm-scroll] .dg-row[data-key]").nth(1).locator(".dg-cell[data-c='4']").click()
     c.page.wait_for_timeout(600)
     c.save("20-scenario-matrix.jpg")
 

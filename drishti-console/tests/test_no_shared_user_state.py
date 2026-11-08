@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""No module of the console keeps state one person could read of another (docs/admin/USER_MANAGEMENT.md section 6). A module-level dict,
+"""No module of the console keeps state one person could read of another (docs/guides/ADMIN_GUIDE.md section 6). A module-level dict,
 list or set in core/ or routes/ is either a constant table (an UPPERCASE name the module never changes after import: no item set, no
 append, add, update, pop, clear...) or listed below with the reason it holds nothing of a person's, or is keyed by the person, server, roles
 and as-of (core/user_cache.py). A new one fails here until it is moved to the app's state, keyed by core.user_cache, or listed with its
@@ -27,22 +27,29 @@ from conftest import CONSOLE
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
-DIRS = ("core", "routes")
+DIRS = ("core", "routes", "plugins")   # plugins: each domain module's console code (DOMAIN_MODULES.md)
 MUTABLE_CALLS = {"dict", "list", "set", "defaultdict", "OrderedDict", "deque", "Counter", "WeakValueDictionary", "WeakKeyDictionary", "LRU"}
 CHANGES = {"append", "add", "update", "pop", "popitem", "clear", "setdefault", "extend", "insert", "remove", "discard", "move_to_end",
            "appendleft", "__setitem__", "sort"}
 
 #: module-level mutable state, each with why it holds nothing one person could read of another
 ALLOWED = {
-    "core/menus.py:_cache": "the parsed menus.yaml by file stamp: configuration, the same for everyone",
+    "core/plugins.py:_commands": "the modules' command hooks, registered at import (code, not data: DOMAIN_MODULES.md C2)",
+    "core/plugins.py:_retired": "the modules' retired-link hooks, registered at import (code, not data)",
+    "core/plugins.py:_type_ahead": "the modules' type-ahead hooks, registered at import (code, not data: C3)",
+    "core/plugins.py:_hints": "the modules' type-ahead lines, registered at import (code, not data: C3)",
+    "core/plugins.py:_presets": "the Pivot presets' word grammars by lens, registered at import (code, not data: C5)",
+    "core/plugins.py:_landing_rules": "the modules' landing rules, registered at import (code, not data: C6)",
+    "core/menus.py:_cache": "the parsed sitemap.yaml by file stamp: configuration, the same for everyone",
+    "core/guides.py:_RENDERED": "Help's pages rendered by file and mtime: the same documents for everyone (who may read a page is checked per request)",
     "core/external_lib.py:_paths": "folders added to sys.path for the console's own libraries: configuration",
     "core/channel_relay.py:HANDLERS": "relay operation to its handler function, registered at import by the routes (code, not data); "
                                       "what a relay holds is per app (app.state.relay)",
     "routes/embed_routes.py:_cache": "the embed loader's script text by version: static assets, the same for everyone",
     "routes/designer_routes.py:_LOCKS": "one asyncio.Lock per draft id (a person's own draft; a lock holds no data)",
-    "core/trading_landing.py:_FLIGHT": "reads running now, by core.user_cache.user_key (server, user, roles, as-of): never served across people",
-    "core/trading_landing.py:_CACHE": "an LRU keyed by core.user_cache.user_key (server, user, roles, as-of and known-at, lens)",
-    "core/market_landing.py:_CACHE": "an LRU keyed by core.user_cache.cache_key (made by routes/edition_routes.py) or user_key",
+    "plugins/banking/trading_landing.py:_FLIGHT": "reads running now, by core.user_cache.user_key (server, user, roles, as-of): never served across people",
+    "plugins/banking/trading_landing.py:_CACHE": "an LRU keyed by core.user_cache.user_key (server, user, roles, as-of and known-at, lens)",
+    "plugins/banking/market_landing.py:_CACHE": "an LRU keyed by core.user_cache.cache_key (made by routes/edition_routes.py) or user_key",
     "core/ai/llm/registry.py:_PROVIDERS": "the provider classes registered at import (code, not data)",
     "core/ai/providers/__init__.py:FACTORIES": "the provider factories registered at import (code, not data)",
 }

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The embed API for ``<drishti-report>`` (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 18; Rupaka phase 7).
+"""The embed API for ``<drishti-report>`` (docs/guides/EMBED_GUIDE.md › Drishti Elements: the design, section 18; Rupaka phase 7).
 
 A published BI report in another web application: its definition (``GET /embed/v1/reports/{id}``), one visual's rows under the
 page's slicers and selections (``POST .../query``), and the visual types (``GET /embed/v1/reports/catalogue``). Live updates use the
@@ -80,4 +80,14 @@ async def definition(request: Request, id_: str):
         return await refuse(request, 403, "DRS-8005", "only a published report can be embedded")
     keep = {k: got.get(k) for k in KEPT}
     keep["problems"] = [p for p in (keep["problems"] or []) if p.get("level") == "error"]
+    keep["dataset"] = _with_live_tables(keep["dataset"])
     return await _json(request, keep)
+
+
+def _with_live_tables(model):
+    """The frozen 1.x <drishti-report> (web/embed/report.js) follows a report live when ``dataset.tables`` has a table of mode live; the
+    server describes the report's model by its ``datasets`` (each with its mode) since the table layer, so each one is named there too."""
+    if not isinstance(model, dict) or "tables" in model:
+        return model
+    tables = [{"name": d.get("alias"), "mode": d.get("mode"), "columns": []} for d in model.get("datasets") or [] if isinstance(d, dict)]
+    return {**model, "tables": tables}

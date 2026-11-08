@@ -1,0 +1,101 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# World development · the economy module's public-sector World Bank pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Development Indicators by
+# country and year, filled daily by the world-development feed (config/feeds/world-development.yaml) into the worldlake lake.
+pack: world-development
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+version: 1.0.0
+code: WDEV             # typed alone, opens this pack's overview
+title: World development
+description: >-
+  World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life
+  expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API
+  (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its
+  history by year. Filled daily by the world-development feed into the worldlake lake.
+kinds: [development-profile, development-series]
+sutras: sutras
+mnemonics:
+  WDI:  { kind: development-profile, label: Development profile }
+  WDIS: { kind: development-series, label: Development indicator series }
+graph:
+  id-patterns:
+    - { pattern: "^WDI-", kind: development-profile }
+    - { pattern: "^WDIS-", kind: development-series }
+  fields:
+    WDI_PROFILE: { kind: development-profile, label: Development profile }
+    WDI_SERIES:  { kind: development-series, label: Series }
+  badges:
+    development-profile: "$.INCOME_GROUP"
+    development-series: "fmt($.LATEST, 'price2') + ' ' + $.UNIT"
+connectors:
+  development-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [development-profile, development-series]
+    settings:
+      lake: worldlake
+      lake-tables: development.development-profile,development.development-series
+lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
+  tables:
+    development.development-profile:
+      id: PROFILE_ID
+      promote:
+      - ISO3
+      - COUNTRY_NAME
+      - REGION
+      - INCOME_GROUP
+      - POPULATION
+      - GDP_PER_CAPITA
+      - GDP_GROWTH
+      - INFLATION
+      - UNEMPLOYMENT
+      - LIFE_EXPECTANCY
+      retention: 260
+    development.development-series:
+      id: SERIES_ID
+      promote:
+      - ISO3
+      - COUNTRY_NAME
+      - INDICATOR_CODE
+      - INDICATOR
+      - UNIT
+      - LATEST
+      - LATEST_YEAR
+      retention: 260
+routes:                # the connector that answers each kind
+  development-profile: development-store
+  development-series: development-store
+form:                          # FORM world-development: the search form of each kind
+  development-profile:
+    - { path: PROFILE_ID, label: Profile id, type: id, group: Identity, help: "One or many: paste a list (WDI-CAN, WDI-BRA)." }
+    - { path: COUNTRY_NAME, label: Country, type: text, group: Identity }
+    - { path: REGION, type: enum, group: Identity }
+    - { path: INCOME_GROUP, label: Income group, type: enum, group: Identity }
+    - { path: GDP_PER_CAPITA, label: "GDP per head, USD", type: amount, group: Latest }
+    - { path: INFLATION, label: "Inflation, %", type: number, group: Latest }
+    - { path: UNEMPLOYMENT, label: "Unemployment, %", type: number, group: Latest }
+  development-series:
+    - { path: SERIES_ID, label: Series id, type: id, group: Identity }
+    - { path: COUNTRY_NAME, label: Country, type: text, group: Identity }
+    - { path: INDICATOR, type: text, group: Indicator, help: "INDICATOR contains growth finds every growth series." }
+    - { path: INDICATOR_CODE, label: World Bank code, type: text, group: Indicator }
+    - { path: LATEST, type: number, group: Latest }
+console:
+  examples:
+    - ["WDI WDI-CAN", "Canada · the latest of every indicator, the world map by GDP per head"]
+    - ["WDI WDI-NGA", "Nigeria · a lower-middle-income economy"]
+    - ["WDIS WDIS-IND-NY_GDP_MKTP_KD_ZG", "India · real GDP growth by year"]
+    - ["WDIS WDIS-BRA-SI_POV_DDAY", "Brazil · poverty headcount by year"]
+  help: config/help.yaml

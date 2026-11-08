@@ -1,5 +1,5 @@
 # Drishti console image (all front-end assets are vendored; no network needed at runtime).
-#   docker build -f deploy/docker/console.Dockerfile -t drishti-console:2.9.11.d .
+#   docker build -f deploy/docker/console.Dockerfile -t drishti-console:2.9.11.g .
 #
 # Calc's Python runtime (Pyodide) is not in git: the first stage installs it with tools/fetch-pyodide.sh (a pinned
 # release, its SHA-256 checked), so the image serves it and a running console needs no internet. A runtime already
@@ -21,7 +21,7 @@ COPY --from=pyodide /src/drishti-console/ .
 # The help centre renders the repository's documents, so they ship with the console.
 COPY docs/ /opt/drishti/docs/
 COPY config/packs/ /opt/drishti/config/packs/
-COPY config/editions/ /opt/drishti/config/editions/
+COPY config/lenses/ /opt/drishti/config/lenses/
 # Build -> New pack makes its bundle with the same module as `drishti.py pack bundle` (builder.tools_dir, ../tools from the console).
 COPY tools/packbundle.py /opt/drishti/tools/packbundle.py
 COPY LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/

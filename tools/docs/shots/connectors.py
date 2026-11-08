@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of the connector developer guide (docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md), written to docs/connectors/img/connectors/.
+"""The pictures of the connector developer guide (docs/guides/DEVELOPER_GUIDE.md), written to docs/connectors/img/connectors/.
 
 This guide needs its own scratch server: the teaching plugin (docs/guides/examples/connector, built with ./mvnw package) in a plugin folder,
 a connector over its sample folder, and two connectors pointed at ports nothing listens on, so Admin -> Health shows UP and DOWN
@@ -64,7 +64,7 @@ def start_servers(work: Path) -> list:
     given = os.environ.get("DRISHTI_SHOTS_SERVER_JAR", "")
     jar = Path(given) if given else (sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar")) or [None])[-1]
     if jar is None or not jar.exists():
-        sys.exit("build the server first (./mvnw -o package -DskipTests -pl drishti-server -am) or pass --server-jar")
+        sys.exit("build the server first (./mvnw -o package -DskipTests -pl drishti-app -am) or pass --server-jar")
     plugin = sorted((EXAMPLE / "target").glob("drishti-example-dayfolder-*.jar"))
     if not plugin:
         sys.exit("build the teaching plugin first: ./mvnw -o -q package -DskipTests -pl docs/guides/examples/connector -am")
@@ -115,7 +115,7 @@ def dayfolder_view(c: Ctx):
 @shot("business-date-picker.jpg")
 def date_picker(c: Ctx):
     c.page.goto(f"{c.base}/asof?d=2026-09-29&next=/v/trade/T-1")          # what picking the date in the top bar does
-    c.page.wait_for_selector("input#asofDate")
+    c.page.wait_for_selector("#asofDate + .di-upgraded input")
     c.page.wait_for_timeout(1500)
     c.save("business-date-picker.jpg")
 

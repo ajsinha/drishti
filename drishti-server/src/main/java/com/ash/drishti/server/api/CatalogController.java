@@ -57,7 +57,7 @@ public class CatalogController {
 
     private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
 
-    /** The edition's command allow-list (EDITIONS.md › The design as built, section 5.3); none: every command shown. */
+    /** The edition's command allow-list (LENSES.md › The design); none: every command shown. */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
         this.edition = edition;
@@ -109,9 +109,9 @@ public class CatalogController {
         m.put("packs", packs(null));
         m.put("copyright", branding.copyright());
         m.put("notice", branding.notice());
-        m.put("edition", edition.edition().about());       // the instance's edition, or the caller's lens       // {name, title, packs, allowOnly}, or null: the full Drishti (EDITIONS.md)
+        m.put("edition", edition.edition().about());       // the instance's edition, or the caller's lens       // {name, title, packs, allowOnly}, or null: the full Drishti (LENSES.md)
         com.ash.drishti.server.engines.EngineCluster c = engines;
-        m.put("engines", c == null ? null : c.about());    // the compute engines: here and in the cluster (COMPUTE_ENGINES.md section 5.2)
+        m.put("engines", c == null ? null : c.about());    // the compute engines: here and in the cluster (ADMIN_GUIDE.md section 5.2)
         return m;
     }
 
@@ -148,7 +148,7 @@ public class CatalogController {
         }).toList();
     }
 
-    /** The pack's console settings without the example commands whose command an administrator turned off (Admin → Commands). */
+    /** The pack's console settings without the example commands whose command an administrator turned off (Admin → Functions). */
     private Object withoutInactive(Object console) {
         if (!(console instanceof Map<?, ?> c) || !(c.get("examples") instanceof List<?> examples) || packAccess.commands() == null && !edition.edition().active()) {
             return console;

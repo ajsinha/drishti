@@ -391,7 +391,7 @@ def main(argv: list[str] | None = None) -> int:
             shutil.rmtree(into, ignore_errors=True)
         for day, path in files:                          # each file's dates from its name (a tar's from its folders): the load rules
             run([py, str(DRISHTI), "lake", "build", "--from", str(path),
-                 "--pack", str(ROOT / "config" / "packs" / "trading"), "--connector", f"trade-{system}", "--key", "TRADE_ID",
+                 "--pack", str(ROOT / "config" / "packs" / "banking" / "trading"), "--connector", f"trade-{system}", "--key", "TRADE_ID",
                  "--mode", REPLACE, "--lake", "demo", "--lake-root", str(into)], a.dry_run,     # the layout: config/lakes/demo.yaml
                 f"2/3 {path.name} ({day})", into / "trading" / f"trade_{system}")
         if iceberg:

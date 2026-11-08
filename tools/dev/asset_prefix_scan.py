@@ -45,10 +45,10 @@ NAMESPACE = "Drishti"
 FOLDERS = ("", "js", "js/build", "css", "img", "img/guide", "img/icons", "calc")
 
 # Published, immutable code: never rewritten, and every name it uses is a contract the rest must keep.
-FROZEN = ("drishti-console/web/static/render/", "drishti-console/web/embed/", "drishti-console/web/elements/package/",
+FROZEN = ("drishti-console/web/static/render/", "drishti-console/web/embed/",
           "drishti-console/web/elements/integrity.json")
 # History: what was true then stays as it was written.
-HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md", "docs/architecture/IMPLEMENTATION_HISTORY.md")
+HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md")
 # Never read: test data, third-party code, the tool itself.
 SKIP = ("data/", "external_lib/", "drishti-console/web/static/vendor/", "tools/vendor-js/node_modules/", "tools/dev/asset_prefix",
         "drishti-console/tests/test_asset_names.py",

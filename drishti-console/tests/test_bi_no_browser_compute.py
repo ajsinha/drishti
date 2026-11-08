@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave B, console lane task 1 (docs/architecture/BI_DESIGN.md principle P3 and section 12.2, acceptance 3): no BI page computes. No BI page loads WebAssembly,
+"""Wave B, console lane task 1 (docs/architecture/ARCHITECTURE.md §28 principle P3 and section 12.2, acceptance 3): no BI page computes. No BI page loads WebAssembly,
 Pyodide, DuckDB-Wasm or a worker; every BI page has the strict policy without 'wasm-unsafe-eval'; the Slice of Analyse is worked out by the console and a Python
 cell runs on the console, never in the browser."""
 import re
@@ -71,7 +71,7 @@ def client():
     return TestClient(app)
 
 
-@pytest.mark.parametrize("path", ["/bi", "/bi/r/r1", "/bi/b/b1", "/bi/notebook", "/bi/designer", "/bi/design/d1", "/bi/datasets", "/bi/models", "/bi/catalogue"])
+@pytest.mark.parametrize("path", ["/bi/catalogue", "/bi/r/r1", "/bi/b/b1", "/bi/notebook", "/bi/designer", "/bi/design/d1", "/bi/datasets", "/bi/models", "/bi/catalogue"])
 def test_every_bi_page_has_the_strict_policy(client, path):
     r = client.get(path)
     assert r.status_code == 200, path

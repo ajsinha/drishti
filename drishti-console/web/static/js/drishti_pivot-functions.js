@@ -17,15 +17,15 @@
 /* The pivot screen's Why, What-if and Functions cards (PIVOT_GUIDE.md; mock-up A, scene 2): "why did it move" asks the server for the
    difference between two cells (or a cell on two dates) in steps that add up and draws them as a waterfall; a what-if sends an overlay and
    lists the cells it changes; the playground checks a custom function (the harness, the states after each part and merge, the cost, a
-   little pivot of the sample) and saves it as a version; the list shows the functions and lets an approver approve or withdraw one.
+   little pivot of the sample) and saves it as a version; the list shows the functions and lets an approver withdraw one (a submitted version is approved in the one Approvals queue).
    Nothing here computes a figure: every number is the drishti-bicompute engine's. */
 (function () {
   "use strict";
   var root = document.querySelector("[data-pivot-screen]");
   if (!root || !window.Drishti.PivotScreen) { return; }
   var S = window.Drishti.PivotScreen;
-  var esc = window.Drishti.PivotCore.esc;
-  var gridFmt = window.Drishti.PivotCore.fmt;
+  var esc = S.esc;
+  var gridFmt = S.fmt;
   /** A figure of these cards: as the grid formats it from 1 up; below 1, four significant digits (0.007, 0.006429), never rounded to
       0.01 or 0.00: a return or a rate is often that small. */
   var fmt = function (v) {
@@ -89,8 +89,8 @@
     var cat = S.catalogue() || {};
     var fields = (cat.fields || []).map(function (f) { return f.name; }).filter(function (n) { return !/^_|~/.test(n); });
     var all = dims.concat(fields.filter(function (f) { return dims.indexOf(f) < 0; }));
-    if (!by.options.length || by.getAttribute("data-for") !== all.join(",")) {
-      by.innerHTML = all.map(function (d) { return "<option>" + esc(d) + "</option>"; }).join("");
+    if (!by.component.options.length || by.getAttribute("data-for") !== all.join(",")) {   // drishti-inputs' Select (<drishti-select>)
+      by.component.setOptions(all, all[0]);
       by.setAttribute("data-for", all.join(","));
     }
     var sel = S.selection();
@@ -104,39 +104,29 @@
     }
   }
 
+  // the two dates of "Why did it move?": drishti-inputs' date pickers (typed T-1, ME or 6 Nov 2026, or a calendar), any day of the source
+  var dates = {from: null, to: null};
+  (function () {
+    var I = window.Drishti.elements && window.Drishti.elements.inputs;
+    if (!I) { return; }
+    dates.from = new I.DatePicker($("[data-pf-from-date]"), {label: "First date", businessOnly: false, shortcuts: true, placeholder: "the view's date"});
+    dates.to = new I.DatePicker($("[data-pf-to-date]"), {label: "Second date", businessOnly: false, shortcuts: true, placeholder: "the same date"});
+  })();
+
+  /** The one Explain (drishti-insight, SHARED_SCREENS.md section 3) of the difference between the two cells or dates, at Why it moved:
+      the server's pivot explainer (kind pivot) answers with the steps that add up, drawn by the one renderer; this card only asks. */
   function explain() {
     var v = S.view();
     if (!v) { return fail(new Error("build a view first")); }
     var body = {view: v, from: coords($("[data-pf-from]").value), by: $("[data-pf-by]").value, order: $("[data-pf-order]").value};
     var to = $("[data-pf-to]").value.trim();
     if (to) { body.to = coords(to); }
-    var fd = $("[data-pf-from-date]").value.trim();
-    var td = $("[data-pf-to-date]").value.trim();
+    var fd = dates.from ? dates.from.getValue() || "" : "";
+    var td = dates.to ? dates.to.getValue() || "" : "";
     if (fd) { body.fromDate = fd; }
     if (td) { body.toDate = td; }
-    call("POST", "/explain", body).then(drawWaterfall).catch(fail);
-  }
-
-  function drawWaterfall(e) {
-    $("[data-pf-words]").textContent = e.words + " " + e.method + ".";
-    var steps = e.steps.slice();
-    if (Math.abs(e.residual.value) > 0) { steps.push({member: "residual: " + e.residual.name, cause: "residual", step: e.residual.value, cumulative: e.difference}); }
-    var lo = 0, hi = 0, run = 0;
-    steps.forEach(function (s) { run += s.step; lo = Math.min(lo, run, run - s.step); hi = Math.max(hi, run, run - s.step); });
-    var span = hi - lo || 1;
-    var html = ["<div><b>member</b></div><div><b>cause</b></div><div></div><div class='pf-num'><b>step</b></div>"];
-    run = 0;
-    steps.forEach(function (s) {
-      var from = run;
-      run += s.step;
-      var left = (Math.min(from, run) - lo) / span * 100;
-      var width = Math.max(0.5, Math.abs(s.step) / span * 100);
-      html.push("<div>" + esc(String(s.member)) + "</div><div>" + esc(s.cause) + "</div>"
-        + "<div class='pf-track'><span class='pf-bar" + (s.step < 0 ? " neg" : "") + "' style='left:" + left.toFixed(2) + "%;width:" + width.toFixed(2) + "%'></span></div>"
-        + "<div class='pf-num'>" + (s.step >= 0 ? "+" : "") + esc(fmt(s.step)) + "</div>");
-    });
-    html.push("<div><b>difference</b></div><div></div><div></div><div class='pf-num'><b>" + esc(fmt(e.difference)) + "</b></div>");
-    $("[data-pf-waterfall]").innerHTML = html.join("");
+    if (!window.Drishti.Explain) { return fail(new Error("Explain is not on this page")); }
+    window.Drishti.Explain.open({kind: "pivot", measure: "cell", body: body}, "why", $("[data-pf-explain]"));
   }
 
   // ---- what-if ----------------------------------------------------------------------------------------------------------------------
@@ -253,7 +243,7 @@
       var html = ["<table><thead><tr><th>function</th><th>language</th><th>kind</th><th>status</th><th></th></tr></thead><tbody>"];
       r.functions.forEach(function (f) {
         html.push("<tr><td><code>" + esc(f.ref) + "</code></td><td>" + esc(f.language) + "</td><td>" + esc(f.kind) + "</td><td>" + esc(f.status)
-          + "</td><td><button type='button' class='pv-btn' data-pf-act='approve' data-pf-ref='" + esc(f.id + "@" + f.version) + "'>Approve</button> "
+          + "</td><td>" + (f.status === "submitted" ? "<a class='pv-btn' data-pf-approvals href='/approvals/function/" + esc(encodeURIComponent(f.id.replace("/", ":") + "@" + f.version).replace(/%3A/g, ":").replace(/%40/g, "@")) + "'>In Approvals</a> " : "")
           + "<button type='button' class='pv-btn' data-pf-act='revoke' data-pf-ref='" + esc(f.id + "@" + f.version) + "'>Withdraw</button> "
           + "<button type='button' class='pv-btn' data-pf-use='" + esc(f.ref + "(" + f.inputs.map(function (i) { return i.name; }).join(", ") + ")") + "'>Use</button></td></tr>");
       });
@@ -274,7 +264,7 @@
       S.notice("Add it to Values as: " + t.getAttribute("data-pf-use") + " (put your fields in place of the inputs)");
     } else {
       var ref = t.getAttribute("data-pf-ref");
-      var reason = window.prompt((t.getAttribute("data-pf-act") === "approve" ? "Approve " : "Withdraw ") + ref + ": your reason", "");
+      var reason = window.prompt("Withdraw " + ref + ": your reason", "");
       if (reason === null) { return; }
       var slash = ref.indexOf("/");
       call("POST", "/functions/" + encodeURIComponent(ref.slice(0, slash)) + "/" + encodeURIComponent(ref.slice(slash + 1)) + "/" + t.getAttribute("data-pf-act"),
@@ -282,11 +272,10 @@
     }
   });
 
-  document.addEventListener("keydown", function (e) {
-    var tag = (e.target.tagName || "").toLowerCase();
-    if (tag === "input" || tag === "select" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) { return; }
-    var k = e.key.toLowerCase();
-    var which = {w: "explain", i: "whatif", u: "functions"}[k];
-    if (which) { e.preventDefault(); open(which); }
+  // W, I and U open the cards (the one keymap, drishti_keys.js)
+  [["W", "explain", "Why did it move? Two cells or dates, explained"], ["I", "whatif", "What-if: private, never written to the lake"],
+    ["U", "functions", "Custom functions"]].forEach(function (c) {
+    window.Drishti.keys.register({id: "pivot.card." + c[1], keys: [c[0], "Shift+" + c[0]], scope: "screen", area: "pivot-cards", group: "Pivot", description: c[2],
+      run: function () { open(c[1]); }});
   });
 })();

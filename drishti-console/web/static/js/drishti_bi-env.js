@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 4 (docs/guides/BI_GUIDE.md, "Environments"): export a workspace as a bundle, and import one: a dry run that lists what would be created, changed,
+/* Rupaka phase 4 (docs/guides/REPORTS_GUIDE.md, "Environments"): export a workspace as a bundle, and import one: a dry run that lists what would be created, changed,
    left alone or refused, then the import. The bundle is read in the browser and sent as JSON; the server checks every checksum. Text only, never markup. */
 (function () {
   'use strict';
@@ -30,10 +30,9 @@
     return m;
   }
 
+  /** A workspace <drishti-select> (drishti-inputs' Select) offers these workspaces, after the blank choice when there is one. */
   function fill(sel, list, blank) {
-    clear(sel);
-    if (blank) { sel.appendChild(h('option', { value: '', text: blank })); }
-    list.forEach(function (w) { sel.appendChild(h('option', { value: w.personal ? 'me' : w.id, text: w.name + (w.personal ? ' (personal)' : '') })); });
+    sel.component.setOptions((blank ? [{ value: '', label: blank }] : []).concat(list.map(function (w) { return { value: w.personal ? 'me' : w.id, label: w.name + (w.personal ? ' (personal)' : '') }; })));
   }
 
   B.api('GET', '/me').then(function (me) {

@@ -74,7 +74,7 @@ public class DataLoadConfiguration {
                 signal(loads, new LoadForwarding(peers.getIfAvailable()), LoadForwarding.node(node)), busy(gate));
     }
 
-    /** The inbox as a compute engine (COMPUTE_ENGINES.md): live on and off; its thread is {@code dataload-cycle}. */
+    /** The inbox as a compute engine (ADMIN_GUIDE.md): live on and off; its thread is {@code dataload-cycle}. */
     @Bean
     public BasicEngine dataloadComputeEngine(DataInbox inbox) {
         return new BasicEngine("dataload").onStart(inbox::start).onStop(inbox::stop).threads("dataload-");

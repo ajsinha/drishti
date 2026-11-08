@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * BI reduced to the edition's datasets (the table layer's tables, by name) (docs/admin/EDITIONS.md › The design as built, section 5.5; {@code bi.datasets} and {@code bi.models} of the edition
+ * BI reduced to the edition's datasets (the table layer's tables, by name) (docs/guides/ADMIN_GUIDE.md › The design; {@code bi.datasets} and {@code bi.models} of the edition
  * file): a dataset is offered when the edition lists it, a model when the edition lists it, and a report, board, Python visual or
  * notebook when the dataset or model it reads is offered (a report that names neither is not). Themes and other items that read no
  * data are always offered. Applied where the BI catalogue is built and where an item is opened by its id, so a hidden item is neither
@@ -43,7 +43,7 @@ public final class EditionBi {
         this.context = context;
     }
 
-    /** Whether a dataset (or model) is built on a compute engine that runs nowhere in the cluster (COMPUTE_ENGINES.md section 5.2). */
+    /** Whether a dataset (or model) is built on a compute engine that runs nowhere in the cluster (ADMIN_GUIDE.md section 5.2). */
     private volatile java.util.function.Predicate<String> engineOff = name -> false;
     private final Map<String, String> reads = new ConcurrentHashMap<>();
 
@@ -104,7 +104,7 @@ public final class EditionBi {
         switch (kind == null ? "" : kind) {
             case "dataset":
                 return edition.datasetShown(dataset.isEmpty() ? own : dataset);
-            case "table":                                                   // the table layer's tables are BI's datasets (BI_FOUNDATION_2911E.md step 5)
+            case "table":                                                   // the table layer's tables are BI's datasets (docs/architecture/ARCHITECTURE.md §28 step 5)
                 return edition.datasetShown(root.path("table").asText(own));
             case "model":
                 return edition.modelShown(model.isEmpty() ? own : model);

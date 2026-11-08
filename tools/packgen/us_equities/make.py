@@ -43,9 +43,10 @@ import fetch as F  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))
 import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
-PACK = ROOT / "config" / "packs" / "us-equities"
+PACK = ROOT / "config" / "packs" / "capitalmarkets" / "us-equities"
 DEFAULT_CACHE = ROOT / "data" / "cache" / "us-equities"
-INDEX_NAMES = {"DJIA": "Dow Jones Industrial Average", "NDX": "Nasdaq-100", "SP500": "S&P 500", **{c: n for c, (n, _t) in F.LISTS.items()}}
+INDEX_NAMES = {"DJIA": "Dow Jones Industrial Average", "NDX": "Nasdaq-100", "SP500": "S&P 500", "R2000": "Russell 2000",
+               **{c: n for c, (n, _t) in F.LISTS.items()}}
 # the world-economy economy of a company whose business address is abroad: EDGAR's codes for the Canadian provinces and the UK
 ECONOMY_ABROAD = {**{f"A{i}": "ECON-CAN" for i in range(10)}, "B0": "ECON-CAN", "X0": "ECON-GBR"}
 CONCEPTS = {  # concept -> label, unit, what it is
@@ -125,8 +126,8 @@ def _load_json(p: Path):
 def _other_packs() -> tuple[set[str], set[str]]:
     """core legal-entity LEIs (a company links to one whose LEI matches) and the news-and-markets companies (CO-<ticker>)."""
     leis, cos = set(), set()
-    for f, key, into in ((ROOT / "config/packs/core/samples/legal-entity.jsonl", "LEI", leis),
-                         (ROOT / "config/packs/news-and-markets/samples/listed-company.jsonl", "COMPANY_ID", cos)):
+    for f, key, into in ((ROOT / "config/packs/core/core/samples/legal-entity.jsonl", "LEI", leis),
+                         (ROOT / "config/packs/economy/news-and-markets/samples/listed-company.jsonl", "COMPANY_ID", cos)):
         if f.is_file():
             for line in f.read_text(encoding="utf-8").splitlines():
                 if line.strip():
@@ -430,7 +431,7 @@ The concepts are `REVENUE`, `NET-INCOME`, `ASSETS`, `LIABILITIES`, `EQUITY`, `EP
 | Kind | Documents | What one holds |
 |---|---|---|
 | `us-company` | {companies} | CIK, ticker, exchange and listing market, SIC with its description and division, state of incorporation, fiscal year end, LEI, headquarters, founded, website, index memberships, the latest year's figures, ten years of financials, the latest {filings_per} filings |
-| `index-membership` | {indexes} | the members of the S&P 500, Nasdaq-100 and Dow as their tracking ETF (SPY, QQQ, DIA) reports holding them, and the bank lists, with their sector and latest revenue; members by sector |
+| `index-membership` | {indexes} | the members of the S&P 500, Nasdaq-100, Dow and Russell 2000 as their tracking ETF (SPY, QQQ, DIA, IWM) reports holding them, and the bank lists, with their sector and latest revenue; members by sector |
 | `sic-sector` | computed ({sectors} codes and `ALL`) | the companies of one SIC code ranked by revenue; `ALL` lists every code. Computed from the companies when asked by the derived connector `us-equities-groupings` (since 2.9.2): nothing is stored |
 | `filing-feed` | {feeds} | the latest {feed_rows} filings of the companies, all forms or one |
 | `filing` | {filing_count} | one filing: form, filing and report dates, document, 8-K items, links to the document and its EDGAR index |
@@ -467,7 +468,7 @@ opens its LEI record, and the record links back to the company.
 | SEC EDGAR: `company_tickers_exchange.json`, `submissions/CIK##########.json`, `api/xbrl/companyfacts` | tickers, CIK, names, SIC, addresses, filings (metadata and links only), annual XBRL facts | Public domain (U.S. Government work). Fetched under the SEC's fair access policy: a descriptive User-Agent with a contact, under 10 requests a second |
 | Nasdaq Trader symbol directory (`nasdaqlisted.txt`, `otherlisted.txt`) | the listing market | Public directory file |
 | GLEIF LEI records | the LEI, legal name and registration status | CC0 1.0 |
-| SEC Form N-PORT of SPY, QQQ and DIA (read from the funds pack's download cache) | index membership: the stocks each tracking ETF holds on its report date | Public domain (U.S. Government work) |
+| SEC Form N-PORT of SPY, QQQ, DIA and IWM (read from the funds pack's download cache) | index membership: the stocks each tracking ETF holds on its report date | Public domain (U.S. Government work) |
 | Wikidata | headquarters, founded, website, LEI, the date a member joined its index | CC0 1.0 |
 
 **Not included:** index weights and index levels (proprietary to S&P Dow Jones Indices and Nasdaq), GICS sectors (proprietary to MSCI and
@@ -487,16 +488,16 @@ tracking ETF holds stay in the pack, in no index.
 
 ## Refreshing the data
 
-The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/EXTERNAL_DATA.md`, us-equities):
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/EXTERNAL_DATA.md`, us-equities):
 
 ```bash
-python3 tools/publicdata/us_equities.py status                 # licences, last refreshed, cached size
-python3 tools/publicdata/us_equities.py refresh --dry-run      # what would be fetched; changes nothing
-python3 tools/publicdata/us_equities.py refresh                # the network (about 1,100 SEC and 500 GLEIF calls), then make.py and --check
-python3 tools/publicdata/us_equities.py refresh --scope TSLA,FILINGS:40,YEARS:15   # a wider build in the data folder, not this pack
+python3 tools/drishti.py feed status us-equities                 # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run us-equities --dry-run      # what would be fetched; changes nothing
+python3 tools/drishti.py feed run us-equities --snapshot                # the network (about 1,100 SEC and 500 GLEIF calls), then make.py and --check
+python3 tools/drishti.py feed run us-equities --snapshot -- --scope TSLA,FILINGS:40,YEARS:15   # a wider build in the data folder, not this pack
 ```
 
-`tools/publicdata/us-equities.sh` and `tools/windows/publicdata-us-equities.ps1` run the same script. Underneath it are the
+`tools/feeds/feed.sh run us-equities` and `tools/windows/feed.ps1 run us-equities` run the same command. Underneath it are the
 generator's two steps, which can also be run by hand:
 
 ```bash
@@ -507,7 +508,7 @@ python3 tools/packgen/us_equities/make.py --check                              #
 
 `fetch.py` keeps what it downloaded (delete a file to fetch it again) and reduces each company's XBRL facts to the annual values of the
 seven concepts, so the cache stays small. Prices are never part of a refresh into the pack: the script's `prices` source writes a
-snapshot to the data folder only (internal use only). Set `DRISHTI_SEC_USER_AGENT` to your own name and contact before running it.
+snapshot to the data folder only (internal use only). Set `DRISHTI_FEEDS_USER_AGENT` to your own name and contact before running it.
 
 After a refresh, rebuild the lake so the server reads the new snapshot: `python3 tools/drishti.py lake demo` (or
 `python3 tools/build_demo_lakes.py`), then restart the server or let it pick the tables up at its next refresh.
@@ -545,14 +546,14 @@ def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description="Build the us-equities pack from the fetched cache (no network).")
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     p.add_argument("--check", action="store_true")
-    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/us-equities; "
-                                               "tools/publicdata/us_equities.py points a widened build at the data folder)")
+    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/capitalmarkets/us-equities; "
+                                               "drishti.py feed run us-equities points a widened build at the data folder)")
     p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed "
                                                   "pack; beside a widened build's pack folder otherwise)")
     a = p.parse_args(argv)
     global PACK
-    PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "us-equities"
-    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "us-equities")
+    PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "capitalmarkets" / "us-equities"
+    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "capitalmarkets" / "us-equities")
     if a.cache.joinpath("wikidata.json").is_file():
         docs = build(a.cache)
     elif a.check:

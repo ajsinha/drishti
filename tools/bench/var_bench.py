@@ -118,7 +118,7 @@ def load(a) -> int:
     total = 0.0
     for kind in a.kinds.split(","):
         cmd = [py if Path(py).exists() else sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "build", "--from", str(Path(a.data) / kind),
-               "--pack", str(ROOT / "config" / "packs" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", KEYS[kind],
+               "--pack", str(ROOT / "config" / "packs" / "banking" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", KEYS[kind],
                "--mode", "overwrite-dates", "--lake", a.lake, "--engine", a.engine, "-q"]     # each file's (tar folder's) date: the load rules
         for s in a.loader_set or []:
             cmd += ["--loader-set", s]
@@ -270,7 +270,7 @@ class Bench:
         return sum(p.stat().st_size for p in (self.work / "logs").glob("*.log*") if not p.name.startswith("gc-"))
 
     def status(self, n: str) -> dict:
-        st, body, _ = http(f"{self.url(n)}/api/v1/var/status", self.tok, 60)
+        st, body, _ = http(f"{self.url(n)}/api/v1/risk/var/status", self.tok, 60)
         try:
             return json.loads(body) if st == 200 else {"http": st}
         except ValueError:
@@ -281,7 +281,7 @@ class Bench:
         n = self.names[0]
         jfr = self.work / "jfr" / f"{n}-open-{date}.jfr"
         self.jcmd(n, "JFR.start", f"name=open-{date}", "settings=profile", f"filename={jfr}")
-        st, body, secs = http(f"{self.url(n)}/api/v1/var/scope?scope=BANK&asOf={date}", self.tok, 1800)
+        st, body, secs = http(f"{self.url(n)}/api/v1/risk/var/scope?scope=BANK&asOf={date}", self.tok, 1800)
         self.jcmd(n, "JFR.stop", f"name=open-{date}")
         self.out.put("first_open_s", round(secs, 2), "s", businessDate=date, http=st, error=None if st == 200 else body[:300])
         if st == 200:
@@ -357,7 +357,7 @@ class Bench:
             self.first_open(dates[0])
             self.snapshot("two_dates")
             if a.mode == "cluster":
-                st, body, _ = http(f"{self.url('a')}/api/v1/var/shards?asOf={dates[-1]}", self.tok, 60)
+                st, body, _ = http(f"{self.url('a')}/api/v1/risk/var/shards?asOf={dates[-1]}", self.tok, 60)
                 (self.work / "shards.json").write_text(body, encoding="utf-8")
             if a.hold:
                 print(f"holding {a.hold} s: {', '.join(self.url(n) for n in self.names)}; token in {self.work / 'token.txt'}", flush=True)

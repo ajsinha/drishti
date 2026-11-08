@@ -17,11 +17,14 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
+from core import half_up
+
 TEMPLATES = Path(__file__).resolve().parents[1] / "web" / "templates"
 
 
 def no_data(panel: dict) -> str:
     env = Environment(loader=FileSystemLoader(str(TEMPLATES)), autoescape=True)
+    half_up.install(env)
     return str(env.get_template("_macros/panels.html").module.no_data(panel))
 
 

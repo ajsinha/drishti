@@ -12,7 +12,7 @@
 #
 #   See the LICENSE file in the root of this repository for the full terms.
 # Hand-kept sections of the market-risk pack's manifest: tools/packgen/banking/make_packs.py appends them to
-# config/packs/market-risk/pack.yaml as written. Edit them here, not there.
+# config/packs/banking/market-risk/pack.yaml as written. Edit them here, not there.
 
 # History queries (TRD 1000015 30, docs/architecture/DATA_ARCHITECTURE.md › History queries: an entity over time, section 6): how this pack's kinds look over time.
 # Only the shape: any dated kind has a history without an entry here.
@@ -50,7 +50,7 @@ positions:
 # distinct path of values a node under one root (LL~BANK), its members the rows (a letter may hold part of a book). ids: path (default,
 # LL~LL-0003/DESK-RATES) or leaf (LL~DESK-RATES, when each value has one parent). word: the scope word naming a node (LL:LL-0003).
 # limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no limit). Every VaR
-# limit lives in var-limit, with its currency (decision 8 of docs/architecture/COMPUTED_ATTRIBUTES.md): the risk-hierarchy rows
+# limit lives in var-limit, with its currency (docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes): the risk-hierarchy rows
 # and the portfolios carry none (a portfolio's limit is the var-limit row of hierarchy PORTFOLIO and its id).
 hierarchies:
   MGMT: { title: Management, source: risk-hierarchy, limits: var-limit }

@@ -24,6 +24,7 @@ import pytest
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
+import select_helpers  # noqa: E402
 from table_chart_backend import serve  # noqa: E402
 
 THEMES = ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue")
@@ -142,8 +143,8 @@ def test_a_masked_column_is_offered_greyed_and_never_plotted(ctx, stack):
     page.click("#p-flows [data-table-chart]")
     d = drawn(page)
     for sel in ('[data-tc-k="x"]', '[data-tc-k="s0-field"]'):
-        opt = page.locator(sel + ' option[value="Limit"]')
-        assert opt.count() == 1 and opt.is_disabled() and "hidden for your role" in opt.inner_text()
+        opt = [o for o in select_helpers.options(page, sel) if o["value"] == "Limit"]
+        assert len(opt) == 1 and opt[0]["disabled"] and "hidden for your role" in opt[0]["label"]
     assert "Limit hidden for your role, not charted" in d["status"]
     # a crafted choice of the masked column is refused by the engine's normalise
     page.evaluate("(() => { const c = window.Drishti.tableChart.current(); c.change(n => { n.series[0].field = 'Limit'; n.x.field = 'Limit'; }); })()")
@@ -221,9 +222,9 @@ def test_view_as_table_export_and_point_navigation_by_keyboard(ctx, stack):
     page.keyboard.press("End")
     page.wait_for_function("/\\((\\d+) of \\1\\)/.test(document.querySelector('[data-tc-live]').textContent)")
     page.keyboard.press("t")
-    page.wait_for_selector(".tc-table table tbody tr")
+    page.wait_for_selector(".tc-table .dg-row")                                       # the chart's data, drawn by drishti-grid
     assert page.locator('[data-tc-act="table"]').get_attribute("aria-pressed") == "true"
-    rows = page.locator(".tc-table tbody tr").count()
+    rows = int(page.locator(".tc-table [aria-rowcount]").get_attribute("aria-rowcount")) - 1   # every row, not only those drawn
     with page.expect_download() as dl:
         page.click('[data-tc-act="csv"]')
     text = open(dl.value.path(), encoding="utf-8-sig").read().strip().splitlines()

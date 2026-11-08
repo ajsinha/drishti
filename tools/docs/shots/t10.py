@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 10, Your first BI report (docs/tutorials/10-first-bi-report.md), written to docs/tutorials/img/t10/.
+"""Pictures of tutorial 8, Part A, Your first BI report (docs/tutorials/08-reports-and-dashboards.md), written to docs/tutorials/img/t10/.
 
 A report is built on the World economics sample dataset in the designer (two cards, a map, a bar, a dropdown slicer), looked at (a click on a country, the
 drill to its regions and back), published, and then the slicers of the Trades overview sample and the cross-filter of Counterparty risk are shown."""
@@ -66,7 +66,7 @@ def design(c: Ctx):
     c.save("04-cards.jpg")
     # a map: choose the type with nothing selected, then its two wells
     p.click("[data-canvas-grid]", position=grid_cell(p, 11, 0))
-    p.click('.bi-vtype[data-type="map"]')
+    p.click('[data-types] [data-type="map"]')
     p.wait_for_selector('[data-well="location"]')
     p.select_option('[data-add="location"]', "economies.ISO3")
     p.select_option('[data-add="values"]', "GDP per capita (USD)")
@@ -75,13 +75,13 @@ def design(c: Ctx):
     c.save("05-map.jpg")
     # a bar of the largest economies, and a dropdown slicer on the region
     p.click("[data-canvas-grid]", position=grid_cell(p, 11, 0))
-    p.click('.bi-vtype[data-type="bar"]')
+    p.click('[data-types] [data-type="bar"]')
     p.wait_for_selector('[data-well="axis"]')
     p.select_option('[data-add="axis"]', "economies.NAME")
     p.select_option('[data-add="values"]', "GDP (USD bn)")
     settled_design(p)
     p.click("[data-canvas-grid]", position=grid_cell(p, 11, 0))
-    p.click('.bi-vtype[data-type="slicer"]')
+    p.click('[data-types] [data-type="slicer"]')
     p.wait_for_selector('.bi-dvis[data-type="slicer"]')
     p.select_option('[data-add="field"]', "economies.REGION_NAME")
     p.click("[data-ptab='format']")
@@ -169,12 +169,12 @@ def dropdown(c: Ctx):
     open_report(c, OVERVIEW, "products")
     element_shot(c, "18-donut-top.jpg", '[data-visual="share"]', pad=6)
     c.page.evaluate("window.scrollTo(0, 0)")
-    c.page.locator('[data-visual="pick-product"] summary.ms-sum').click()
-    c.page.locator('[data-visual="pick-product"] .ms-q').fill("SWAP")
+    c.page.locator('[data-visual="pick-product"] .di-ms-control').click()
+    c.page.locator('[data-visual="pick-product"] input[role=combobox]').fill("SWAP")
     c.page.wait_for_timeout(600)
     c.save("16-dropdown-open.jpg", clip={"x": 240, "y": 230, "width": 1040, "height": 670})
     for name in ("AMORT_SWAP", "BASIS_SWAP"):
-        c.page.locator('[data-visual="pick-product"] .ms-pop label', has_text=name).first.click()
+        c.page.locator('.di-ms-pop .di-option', has_text=name).first.click()
     c.page.wait_for_timeout(600)
     c.page.keyboard.press("Escape")
     c.page.mouse.click(1100, 200)
@@ -274,8 +274,8 @@ def two_datasets(c: Ctx):
     open_report(c, PNL_REPORT)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("29-two-datasets-report.jpg")
-    c.page.locator('[data-visual="sector"] summary.ms-sum').click()
-    c.page.locator('[data-visual="sector"] .ms-pop label', has_text="Banking").first.click()
+    c.page.locator('[data-visual="sector"] .di-ms-control').click()
+    c.page.locator('.di-ms-pop .di-option', has_text="Banking").first.click()
     c.page.wait_for_timeout(600)
     c.page.keyboard.press("Escape")
     c.page.locator("h1").first.click()
@@ -340,7 +340,7 @@ TABLET = RELATIVE.replace("report: relative-dates", "report: tablet-demo").repla
 
 @shot("33-tablet-tab.jpg", also=("34-tablet-view.jpg",))
 def tablet(c: Ctx):
-    """The designer's Tablet tab (order, Wide, rows) and the report on an 820 px screen: the bar across, the cards in two columns (tutorial 10 step 12's YAML)."""
+    """The designer's Tablet tab (order, Wide, rows) and the report on an 820 px screen: the bar across, the cards in two columns (tutorial 8, step 12's YAML)."""
     login(c, height=900)
     clean_items(c, "Tablet demo")
     made = bi(c, "POST", "/workspaces/me/items", {"kind": "report", "title": "Tablet demo", "body": TABLET})

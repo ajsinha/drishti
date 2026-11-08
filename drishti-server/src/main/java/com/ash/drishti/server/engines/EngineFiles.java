@@ -36,7 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The site's engine files, {@code config/engines/<id>.yaml} (DRISHTI_ENGINES_DIR; docs/architecture/COMPUTE_ENGINES.md section 8, "Writing
+ * The site's engine files, {@code config/engines/<id>.yaml} (DRISHTI_ENGINES_DIR; docs/guides/ADMIN_GUIDE.md section 8, "Writing
  * the file"): the server writes only the switch ({@code enabled}, keeping its environment variable) and {@code changed}, keeping every comment
  * and every other key, atomically (a temporary file in the same folder, then a rename), creating the file from the jar's copy when the site
  * has none. A file changed on disk since the page read it, or a folder that cannot be written, is refused with {@code 409 DRS-1023}.

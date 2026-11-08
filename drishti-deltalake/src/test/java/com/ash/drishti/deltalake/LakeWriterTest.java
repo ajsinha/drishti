@@ -119,6 +119,54 @@ class LakeWriterTest {
         assertTrue(read(table).get("2026-10-02|300").contains("\"TRADE_ID\":300"));
     }
 
+    /** A partition value with a space (the Calypso and Murex trades by PRODUCT_GROUP: "Fixed income"): Kernel hands its folder
+     *  percent-encoded; the file is written in the folder the reads decode it to, and a re-run replaces it. */
+    @Test
+    void aPartitionValueWithASpaceIsWrittenWhereItIsRead() throws IOException {
+        Path table = tmp.resolve("lake/trading/trade_calypso");
+        run(manifest(table, "overwrite-dates", stage("a.rows", 0, 5, "Fixed income", 1.0).toString(), "2026-10-01", "Fixed income",
+                stage("b.rows", 5, 3, "FX", 1.0).toString(), "2026-10-01", "FX"), new ByteArrayOutputStream());
+        assertTrue(Files.isDirectory(table.resolve("business_date=2026-10-01/PRODUCT_TYPE=Fixed income")));
+        assertTrue(Files.notExists(table.resolve("business_date=2026-10-01/PRODUCT_TYPE=Fixed%20income")));
+        assertEquals(8, read(table).size());
+        run(manifest(table, "overwrite-partitions", stage("c.rows", 100, 2, "Fixed income", 1.0).toString(), "2026-10-01", "Fixed income"),
+                new ByteArrayOutputStream());
+        Map<String, String> rows = read(table);
+        assertEquals(2 + 3, rows.size());
+        assertTrue(rows.containsKey("2026-10-01|100") && !rows.containsKey("2026-10-01|0"));
+    }
+
+    /** The Delta protocol's path rules (as Spark and Databricks write them): a partition folder is the Hive-escaped value (%, :, /,
+     *  = and # as %XX, a space literal), add.path is that path URI-encoded, partitionValues the raw value, an empty value null in
+     *  __HIVE_DEFAULT_PARTITION__; the table reads back through the native engine (no second decoding of the folder's %XX). */
+    @Test
+    void partitionFoldersFollowTheDeltaProtocolsPathRules() throws IOException {
+        Path table = tmp.resolve("lake/trading/trade_x");
+        run(manifest(table, "overwrite-dates", stage("a.rows", 0, 2, "100%", 1.0).toString(), "2026-10-01", "100%",
+                stage("b.rows", 2, 2, "a:b/c=d#e", 1.0).toString(), "2026-10-01", "a:b/c=d#e",
+                stage("c.rows", 4, 2, "", 1.0).toString(), "2026-10-01", ""), new ByteArrayOutputStream());
+        Path day = table.resolve("business_date=2026-10-01");
+        assertTrue(Files.isDirectory(day.resolve("PRODUCT_TYPE=100%25")), () -> listing(table));
+        assertTrue(Files.isDirectory(day.resolve("PRODUCT_TYPE=a%3Ab%2Fc%3Dd%23e")));
+        assertTrue(Files.isDirectory(day.resolve("PRODUCT_TYPE=__HIVE_DEFAULT_PARTITION__")));
+        try (var folders = Files.list(day)) {
+            assertEquals(3, folders.count());                   // no decoded twin (PRODUCT_TYPE=100%, a:b/...) and no nested folder
+        }
+        String log = Files.readString(table.resolve("_delta_log/00000000000000000000.json"));
+        assertTrue(log.contains("PRODUCT_TYPE=100%2525/"), log);
+        assertTrue(log.contains("\"PRODUCT_TYPE\":\"100%\""), log);
+        assertTrue(log.contains("\"PRODUCT_TYPE\":null"), log);
+        assertEquals(6, read(table).size());
+    }
+
+    private static String listing(Path table) {
+        try (var all = Files.walk(table)) {
+            return all.map(p -> table.relativize(p).toString()).sorted().collect(java.util.stream.Collectors.joining("\n"));
+        } catch (IOException e) {
+            return e.toString();
+        }
+    }
+
     @Test
     void aNewTableTakesTheManifestsPropertiesAndLongColumns() throws IOException {
         Path table = tmp.resolve("lake/risk-results/var-official");

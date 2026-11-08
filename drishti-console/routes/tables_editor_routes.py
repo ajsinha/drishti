@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The editors of tables, virtual tables, semantic models and Python-driven tables (docs/architecture/EDITORS.md sections 1 to 4;
+"""The editors of tables, virtual tables, semantic models and Python-driven tables (docs/architecture/SHARED_SCREENS.md sections 1 to 4;
 docs/guides/TABLES_GUIDE.md section 11): Build › Tables & models. One page, three panes, drawn by static/js/drishti_editors.js and its
 editor scripts; every check, preview, total, "adds up?" and save is the server's (``/api/v1/tables/editor/...``), read as the signed-in
 person. The console adds nothing but the page and a same-origin pass-through of the editor API (an allow-list of its paths); nothing is

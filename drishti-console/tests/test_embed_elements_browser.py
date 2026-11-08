@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Embedded views (docs/architecture/CLIENT_RENDERER.md, build step 0, run against the real token exchange of steps 1 to 3): the acceptance criteria, in Chromium,
+"""Embedded views (docs/guides/EMBED_GUIDE.md, build step 0, run against the real token exchange of steps 1 to 3): the acceptance criteria, in Chromium,
 Firefox and WebKit, against a HOST application on another origin (tools/elements-demo) and a real scratch server.
 
 The stack is three processes: the Drishti server (port 18969, the built jar, security on, the trading pack), the console
@@ -99,6 +99,8 @@ def register_host() -> str:
     jwks = json.dumps({"keys": [{"kty": "RSA", "kid": KEY["kid"], "n": enc(KEY["n"]), "e": enc(KEY["e"])}]})
     made = _admin_call("POST", "/admin/embed/apps", {"id": APP_ID, "name": "Elements demo", "origins": [HOST], "scopes": ["embed:view", "embed:about"],
                                                      "jwks": jwks, "subjectTypes": ["jwt"], "callsPerMinute": 100000, "userCallsPerMinute": 100000})
+    if "secret" not in made:                 # already registered (a stack this file left running): a new secret, shown once; the old one works an hour more
+        made = _admin_call("POST", f"/admin/embed/apps/{APP_ID}/rotate-secret", {"graceSeconds": 3600})
     return made["secret"]
 BROWSERS = ["chromium", "firefox", "webkit"]
 # Since 2.3.0 trades are static (a trade changes when its source books a version) and the market-risk valuations tick: the host shows valuations
@@ -172,7 +174,7 @@ def stack(request, tmp_path_factory):
         jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
-            pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+            pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
         work = tmp / "server"
         work.mkdir()
         env = dict(os.environ, DRISHTI_PACKS="trading,counterparty-risk,market-risk", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true",
@@ -524,18 +526,19 @@ def test_browser_capabilities(host, browser):
     h.open()
     h.until(lambda: len(h.events("tick", "main")) >= 2, 20, "composed events (document-level listener saw the element's ticks)")
     show(h, "counterparty", "CP-ALDERSHOT")                                # a view with an ECharts chart: the counterparty's relations graph (an xchart)
-    h.until(lambda: h.js("document.querySelector('#main').shadowRoot.querySelectorAll('.xchart svg').length") > 0, 15, "the charts")
+    # the relations graph is drawn by drishti-graph on a canvas (since the graph and tree work); every other chart kind by ECharts in SVG
+    h.until(lambda: h.js("document.querySelector('#main').shadowRoot.querySelectorAll('.xchart svg, .xchart canvas').length") > 0, 15, "the charts")
     got = h.js("""(() => { const r = document.querySelector('#main').shadowRoot;
       return { adopted: r.adoptedStyleSheets.length, token: getComputedStyle(document.querySelector('#main')).getPropertyValue('--d-ink').trim(),
         pill: getComputedStyle(r.querySelector('.pill')).borderTopWidth,
         fontLoaded: [...document.fonts].some((f) => f.family.includes('bootstrap-icons') && f.status === 'loaded'),
         iconCheck: document.fonts.check('16px bootstrap-icons'),
-        chartPaths: r.querySelectorAll('.chart svg path').length, xchart: r.querySelectorAll('.xchart svg').length,
+        chartPaths: r.querySelectorAll('.chart svg path, .chart canvas').length, xchart: r.querySelectorAll('.xchart svg, .xchart canvas').length,
         styleEls: r.querySelectorAll('style').length, hostLeak: getComputedStyle(document.body).getPropertyValue('--d-ink').trim() }; })()""")
     assert got["adopted"] == 2 and got["token"]                           # adoptedStyleSheets under a CSP without 'unsafe-inline'
     assert got["pill"] not in ("", "0px")                                  # the console's panel styles apply in the shadow root
     assert got["fontLoaded"] and got["iconCheck"]                          # the icon font through FontFace
-    assert got["chartPaths"] > 0 and got["xchart"] > 0                    # ECharts drew inside the shadow root
+    assert got["chartPaths"] > 0 and got["xchart"] > 0                    # the chart drew inside the shadow root
     assert got["hostLeak"] == ""                                           # the element's tokens do not leak into the host page
     assert h.js("window.__viol") == []
     assert h.page.evaluate("getComputedStyle(document.querySelector('h2')).textTransform") == "uppercase"      # and the host's styles did not enter either
@@ -593,13 +596,14 @@ def test_measurements(stack, browser):
     stack.record("frames", {"count": len(frames), "median_bytes": statistics.median(frames), "max_bytes": max(frames)})
 
 
-# ---- 11. the console's enhancers inside the element (CLIENT_RENDERER.md build step 6) ---------------------------------------------
+# ---- 11. the console's enhancers inside the element (EMBED_GUIDE.md build step 6) ---------------------------------------------
 SR = "document.querySelector('#main').shadowRoot"
 PAGED = ("<div class='tbl-wrap'><table class='tbl' aria-label='Injected'><thead><tr><th>Name</th><th>Amount</th></tr></thead><tbody>"
          + "".join(f"<tr><td>row{i:02d}</td><td>{(i * 37) % 31}</td></tr>" for i in range(30)) + "</tbody></table></div>")
 TREE = ("<div class='tbl-wrap'><table class='tbl tbl-tree' data-plain data-tree><thead><tr><th>Item</th></tr></thead><tbody>"
-        "<tr data-depth='0'><td><span class='tr-ind tr-d0'><button type='button' class='tr-tog' aria-expanded='false' aria-label='Expand Parent'>▸</button>Parent</span></td></tr>"
-        "<tr data-depth='1'><td><span class='tr-ind tr-d1'>Child</span></td></tr></tbody></table></div>")
+        "<tr data-depth='0' data-kids><td><span class='tr-ind tr-d0'><button type='button' class='tr-tog' aria-expanded='false' aria-label='Expand Parent'>▸</button></span>Parent</td></tr>"
+        "<tr data-depth='1'><td><span class='tr-ind tr-d1'>Child</span></td></tr>"
+        "<tr data-depth='1'><td><span class='tr-ind tr-d1'>Sibling</span></td></tr></tbody></table></div>")   # two children: not a chain, so the tree grid
 
 
 def inject(h, html):
@@ -609,7 +613,7 @@ def inject(h, html):
 def test_enhancers_are_registered_and_the_host_page_is_untouched(host):
     h = host()
     h.open()
-    h.until(lambda: h.js("!!(window.drishtiModules && window.drishtiModules.tables && window.drishtiModules.treeRows && window.drishtiModules.pivotGrid)"), 20, "modules registered")
+    h.until(lambda: h.js("!!(window.drishtiModules && window.drishtiModules.tables && window.drishtiModules.treeRows)"), 20, "modules registered")
     show(h, "netting-set", NETTING_SET)                                    # a live view with a table (a valuation has none)
     # one namespace and none of the globals the console's scripts publish on its own pages
     assert h.js("[window.Drishti.about, window.drishtiPivot, window.Drishti.charts, window.Drishti.view, window.Drishti.pivotEngine, window.drishtiPivotGrid]") == [None] * 6
@@ -668,15 +672,17 @@ def test_column_filters_work_inside_the_element_and_leave_the_host_page_alone(ho
 
 
 def test_tree_row_expands_inside_the_element(host):
+    """A table with children inside the element is drishti-tree's tree grid (its bundle served as elements-tree, its sheet part of
+    <drishti-view>'s); the server's table stays hidden."""
     h = host()
     h.open()
     inject(h, TREE)
-    t = h.page.locator("#main").locator(".injected table.tbl-tree")
-    child = t.locator("tbody tr").nth(1)
-    expect(child).to_be_hidden()
-    t.locator(".tr-tog").click()
-    expect(child).to_be_visible()
-    expect(t.locator(".tr-tog")).to_have_attribute("aria-expanded", "true")
+    tree = h.page.locator("#main").locator(".injected .dt-tp")
+    expect(tree.locator(".dg-row")).to_have_count(1)
+    expect(h.page.locator("#main").locator(".injected table.tbl-tree")).to_be_hidden()
+    tree.locator(".dg-row[aria-expanded] .dg-tw").click()
+    expect(tree.locator(".dg-row")).to_have_count(3)
+    expect(tree.locator(".dg-row[aria-expanded]")).to_have_attribute("aria-expanded", "true")
 
 
 def test_a_tables_pivot_inside_the_element_is_a_link_to_the_console_s_pivot_screen(host):
@@ -828,16 +834,16 @@ def test_a_zoomed_table_fits_the_elements_height_and_restores_its_page_size(host
     btn = h.page.locator("#main").locator("#p-fitx .pnl-zoom-btn")
     expect(btn).to_be_visible(timeout=15000)
     size = "#p-fitx .tbl-pg-size"
-    assert h.js(f"{SR}.querySelector('{size}').selectedOptions[0].textContent") == "25 rows"
+    assert h.js(f"{SR}.querySelector('{size}').component.getOption().label") == "25 rows"
     btn.click()
-    h.until(lambda: str(h.js(f"{SR}.querySelector('{size}').selectedOptions[0].textContent")).startswith("Fit ("), 10, "fit applied")
+    h.until(lambda: str(h.js(f"{SR}.querySelector('{size}').component.getOption().label")).startswith("Fit ("), 10, "fit applied")
     h.page.wait_for_timeout(300)
     r = h.js(f"(() => {{ const b = {SR}.querySelector('#p-fitx .pnl-b'), t = {SR}.querySelector('#p-fitx table.tbl');"
              " return [[...t.tBodies[0].rows].filter(x => !x.hidden).length, b.scrollHeight > b.clientHeight + 1]; })()")
     assert r[0] >= 5 and r[1] is False, r
     assert h.js("localStorage.getItem('drishti.tableRows')") is None
     h.page.keyboard.press("Escape")
-    h.until(lambda: h.js(f"{SR}.querySelector('{size}').selectedOptions[0].textContent") == "25 rows", 10, "page size restored")
+    h.until(lambda: h.js(f"{SR}.querySelector('{size}').component.getOption().label") == "25 rows", 10, "page size restored")
 
 
 def test_zoom_works_under_a_trusted_types_host_at_phone_width(host):
@@ -1015,7 +1021,7 @@ def test_slots_show_host_content_and_a_missing_token_is_an_event(host):
 
 
 def test_twenty_elements_on_ten_entities_cost_the_page_one_connection(host, stack):
-    """The small load test of CLIENT_RENDERER.md › Drishti Elements: the design, step 11 (house rule: small and local): 20 elements, 10 entities, one page. One channel GET for all of them, every element live, and the
+    """The small load test of EMBED_GUIDE.md › Drishti Elements: the design, step 11 (house rule: small and local): 20 elements, 10 entities, one page. One channel GET for all of them, every element live, and the
     frame latency the console reports is recorded."""
     h = host()
     h.open()
@@ -1035,7 +1041,7 @@ def test_twenty_elements_on_ten_entities_cost_the_page_one_connection(host, stac
 
 
 def test_a_panel_element_shows_one_panel_of_the_view_without_the_header(host):
-    """<drishti-panel> (CLIENT_RENDERER.md › Drishti Elements: the design, step 14): one panel of a view in a card of the host's own; it is <drishti-view> with the `panel` attribute and no header."""
+    """<drishti-panel> (EMBED_GUIDE.md › Drishti Elements: the design, step 14): one panel of a view in a card of the host's own; it is <drishti-view> with the `panel` attribute and no header."""
     h = host()
     h.open()
     pid = h.js("document.querySelector('#main').view.panels.filter(p => p.kind !== 'links')[0].id")

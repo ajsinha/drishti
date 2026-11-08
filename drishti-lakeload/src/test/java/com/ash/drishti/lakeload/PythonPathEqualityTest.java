@@ -104,13 +104,13 @@ class PythonPathEqualityTest {
         // the last date's tar (scenario-pv/2026-09-30/: the normal set's files and the stress set's), dated by its folder
         Path data = REPO.resolve("data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar");
         assumeTrue(Files.isRegularFile(data), "no market-risk scenario PVs in data/testdata");
-        List<String> common = new ArrayList<>(List.of("--from", data.toString(), "--pack", REPO.resolve("config/packs/market-risk").toString(),
+        List<String> common = new ArrayList<>(List.of("--from", data.toString(), "--pack", REPO.resolve("config/packs/banking/market-risk").toString(),
                 "--kind", "scenario-pv", "--key", "SCENARIO_PV_ID"));
         compare(common, null, "SCENARIO_PV", null, LocalDate.parse("2026-09-30"));
     }
 
     /**
-     * The duplicate-record rule (TOOLS.md section 4.13) gives the same table on both paths and both formats: a plain {@code pv.jsonl}
+     * The duplicate-record rule (CLI_REFERENCE.md section 4.13) gives the same table on both paths and both formats: a plain {@code pv.jsonl}
      * beside its {@code pv.jsonl.gz} (the case that once made the paths differ) with ids repeated across the two files and within the
      * {@code .gz}; without {@code COMPUTED_AT} the last copy read is kept (pv.jsonl sorts before pv.jsonl.gz), with it the latest (some
      * copies without one, some ties).

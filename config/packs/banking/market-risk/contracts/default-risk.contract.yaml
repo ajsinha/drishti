@@ -1,0 +1,180 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Planned data contract of the default-risk input (proposed command DRCI): docs/contracts/FRTB.md section 3.3,
+# docs/contracts/FRTB.md section 6; read by the FRTB-SA engine's default risk charge (MAR22) when a connector serves it.
+kind: default-risk
+mnemonic: DRCI
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Default risk inputs (the DRC, per position and obligor)'
+description: 'The jump-to-default inputs of the FRTB standardised default risk charge for non-securitisations (Basel MAR22): one row per
+  position (or trade), obligor and business date, with the obligor''s bucket, the seniority, the credit quality, the bond-equivalent
+  notional and market value and the maturity. Optional: without it the FRTB-SA answer says "DRC not computed: no default-risk inputs",
+  never 0. Planned: no command and no data yet; the engine reads it when a connector serves the kind (docs/guides/FRTB_SA_GUIDE.md).'
+source: The bank's risk system or issuer master (obligor, seniority, rating) with the positions' notionals and market values
+grain: One row per position (or trade), obligor and BUSINESS_DATE, keyed by DEFAULT_RISK_ID (DRC-<POSITION_ID or TRADE_ID>-<OBLIGOR>-<BATCH_ID>).
+key:
+- DEFAULT_RISK_ID
+id-pattern:
+- ^DRC-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: with the position sensitivities of the date
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/default-risk/
+  columns:
+  - DEFAULT_RISK_ID
+  - POSITION_ID
+  - TRADE_ID
+  - OBLIGOR
+  - DRC_BUCKET
+  - SENIORITY
+  - CREDIT_QUALITY
+  - NOTIONAL
+  - MARKET_VALUE
+  - CURRENCY
+fields:
+- name: DEFAULT_RISK_ID
+  type: id
+  presence: required
+  description: The row's id, DRC-<POSITION_ID or TRADE_ID>-<OBLIGOR>-<BATCH_ID> (the business key).
+  example: DRC-POS-BOOK-CREDIT-1~CLY-3000087-5493001KJTIIGC8Y1R12-B-DRC-2026-09-30-01
+  pattern: ^DRC-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The business date (YYYY-MM-DD).
+  example: '2026-09-30'
+- name: POSITION_ID
+  type: id
+  presence: optional
+  description: The position (POS-<TT_BOOK>~<key>) the row is of; required when the source sends by position.
+  example: POS-BOOK-CREDIT-1~CLY-3000087
+  pattern: ^POS-
+  link: position
+- name: TRADE_ID
+  type: id
+  presence: optional
+  description: The trade the row is of, when the source sends by trade.
+  example: CLY-3000087
+- name: BATCH_ID
+  type: id
+  presence: required
+  description: The delivery's batch (one full run per source and date).
+  example: B-DRC-2026-09-30-01
+- name: OBLIGOR
+  type: id
+  presence: required
+  description: The issuer or reference entity, an LEI preferred.
+  example: 5493001KJTIIGC8Y1R12
+- name: DRC_BUCKET
+  type: text
+  presence: required
+  description: 'The DRC bucket (MAR22.22): CORPORATE, SOVEREIGN or LOCAL_GOVERNMENT_MUNICIPALITY.'
+  example: CORPORATE
+  enum:
+  - CORPORATE
+  - SOVEREIGN
+  - LOCAL_GOVERNMENT_MUNICIPALITY
+- name: SENIORITY
+  type: text
+  presence: required
+  description: 'The seniority (MAR22.12, MAR22.19): COVERED_BOND, SENIOR, NON_SENIOR or EQUITY. A short offsets a long of the same obligor
+    when its seniority is the same or lower.'
+  example: SENIOR
+  enum:
+  - COVERED_BOND
+  - SENIOR
+  - NON_SENIOR
+  - EQUITY
+- name: CREDIT_QUALITY
+  type: text
+  presence: required
+  description: 'The credit quality (MAR22.24): AAA, AA, A, BBB, BB, B, CCC, UNRATED or DEFAULTED (100% whatever the seniority).'
+  example: BBB
+  enum:
+  - AAA
+  - AA
+  - A
+  - BBB
+  - BB
+  - B
+  - CCC
+  - UNRATED
+  - DEFAULTED
+- name: NOTIONAL
+  type: amount
+  presence: required
+  unit: CURRENCY
+  description: The bond-equivalent notional, positive for a long credit exposure (loses on default), negative for a short (a bought CDS).
+  example: 10000000
+- name: MARKET_VALUE
+  type: amount
+  presence: required
+  unit: CURRENCY
+  description: The bond-equivalent market value, signed as the notional (P&L = MARKET_VALUE − NOTIONAL, MAR22.14).
+  example: 9800000
+- name: CURRENCY
+  type: text
+  presence: required
+  description: The currency of NOTIONAL and MARKET_VALUE (ISO 4217), converted to the reporting currency at the date's FX.
+  example: USD
+- name: MATURITY_DATE
+  type: date
+  presence: optional
+  description: The instrument's maturity (of the derivative, not its underlying), for the scaling min(max(M, 0.25), 1) (MAR22.15 to
+    MAR22.18); not for cash equity.
+  example: '2028-09-30'
+- name: CASH_EQUITY_MATURITY
+  type: rate
+  presence: optional
+  description: For cash equity, 0.25 or 1 (years) at the bank's choice (MAR22.16); absent, the parameter file's.
+  example: 1
+- name: RECOVERY_INDEPENDENT
+  type: boolean
+  presence: optional
+  description: 'The price does not depend on the recovery (MAR22.12): the LGD is 100%.'
+  example: false
+validation:
+- rule: required
+  fields:
+  - DEFAULT_RISK_ID
+  - BUSINESS_DATE
+  - BATCH_ID
+  - OBLIGOR
+  - DRC_BUCKET
+  - SENIORITY
+  - CREDIT_QUALITY
+  - NOTIONAL
+  - MARKET_VALUE
+  - CURRENCY
+- rule: unique
+  key:
+  - DEFAULT_RISK_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: DEFAULT_RISK_ID
+  pattern: ^DRC-
+notes:
+- 'JSON Lines, one row per line (UTF-8, gzip). Example line: {"DEFAULT_RISK_ID":"DRC-POS-BOOK-CREDIT-1~CLY-3000087-5493001KJTIIGC8Y1R12-B-DRC-2026-09-30-01","BUSINESS_DATE":"2026-09-30","POSITION_ID":"POS-BOOK-CREDIT-1~CLY-3000087","BATCH_ID":"B-DRC-2026-09-30-01","OBLIGOR":"5493001KJTIIGC8Y1R12","DRC_BUCKET":"CORPORATE","SENIORITY":"SENIOR","CREDIT_QUALITY":"BBB","NOTIONAL":10000000,"MARKET_VALUE":9800000,"CURRENCY":"USD","MATURITY_DATE":"2028-09-30"}'
+- 'Signs are checked on load: a bought CDS has a negative NOTIONAL, a sold put on a bond a positive one; MARKET_VALUE has the notional''s sign.'
+review:
+- 'Whether the bank''s risk system delivers the obligor, seniority and rating with the positions, or Drishti joins them from an issuer master.'

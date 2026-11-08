@@ -93,11 +93,11 @@ def test_the_wordmark_font_is_not_named_after_the_product():
 
 @pytest.mark.static
 def test_the_menus_and_the_edition_pages_never_write_the_product_name():
-    """The menus and footer as data (config/menus.yaml) say {product}; the edition's landing, its script and the lens links take the
-    product from configuration (EDITIONS.md › The design as built, section 5.10)."""
+    """The menus and footer as data (config/sitemap.yaml) say {product}; the edition's landing, its script and the lens links take the
+    product from configuration (LENSES.md › The design)."""
     import yaml
 
-    menus = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+    menus = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
     shown = [str(i.get(k, "")) for m in menus["menus"] for c in m["columns"] for i in c["items"] for k in ("label", "desc")]
     shown += [str(i.get("label", "")) for i in menus["footer"]]
     assert not [t for t in shown if NAME.search(t)]

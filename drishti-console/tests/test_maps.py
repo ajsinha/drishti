@@ -167,7 +167,7 @@ def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_
     assert props["level"]["x-hook"] == "format-level" and props["level"]["type"] == "string" and props["level"]["x-types"] == ["map"]
     assert props["drill"]["x-hook"] == "format-drill" and props["drill"]["type"] == "boolean" and props["drill"]["x-types"] == ["map"]
     pane = (CONSOLE / "web" / "static" / "js" / "drishti_bi-format-pane.js").read_text(encoding="utf-8")
-    assert "'data-' + prop['x-hook']" in pane, "the pane gives each control the data attribute its x-hook names"
+    assert "prop['x-hook'] ? prop['x-hook']" in pane and "hook: hook" in pane, "the pane gives each control (a Form field's hook: data-<hook>) the data attribute its x-hook names"
     for page in ("bi/report.html", "bi/design.html"):           # a board is a report page since 2.4.0 (no bi/board.html)
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
         assert text.index("drishti_geomap.js") < text.index("drishti_bi-visuals.js"), page
@@ -175,4 +175,4 @@ def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
         assert text.index("drishti_geomap.js") < text.index("drishti_charts.js"), page
     embed = (CONSOLE / "web" / "embed" / "assets.js").read_text(encoding="utf-8")
-    assert "'geomap', 'charts'" in embed and "['geomap'].concat(" in embed
+    assert "'geomap', 'charts'" in embed and "'geomap'].concat(" in embed          # the report's libraries: drishti-core and -grid, then geomap, then BI's

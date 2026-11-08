@@ -32,13 +32,15 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   }
 
+  var F = window.Drishti.elements.core;                                         // numbers by drishti-core
+  function at1(p) { return Math.round(p * 10) / 10; }                       // a position in per cent of a track (geometry, not a figure)
   function fmt(v, unit) {
     if (v == null || v === '') { return '—'; }
     if (typeof v === 'boolean') { return v ? 'yes' : 'no'; }
     if (typeof v === 'string') { return v; }
-    if (unit === 'share' || unit === 'factor') { return v.toLocaleString('en-US', { maximumFractionDigits: 4 }); }
+    if (unit === 'share' || unit === 'factor') { return F.formatNumber(v, { maxDecimals: 4, minus: '-' }); }
     var a = Math.abs(v);
-    return v.toLocaleString('en-US', { maximumFractionDigits: a >= 100 ? 0 : a >= 10 ? 1 : 2 });
+    return F.formatNumber(v, { maxDecimals: a >= 100 ? 0 : a >= 10 ? 1 : 2, minus: '-' });
   }
 
   /** Widths, positions and colours given as data-w, data-l, data-bg and data-sw: set through the CSSOM (the console's CSP refuses style attributes). */
@@ -122,8 +124,8 @@
     $('[data-cap-bars]').innerHTML = rows.map(function (r) {
       var fill = r.ratio == null ? 0 : Math.min(1, r.ratio) * 100, tick = r.now != null && r.has ? Math.min(1, r.now / r.has) * 100 : null;
       return '<div class="cap-hb" data-cap-bar="' + r.id + '"><div><b>' + esc(r.label) + '</b> ' + why(whyOf[r.id][0], whyOf[r.id][1]) + '</div>' +
-        '<div class="cap-track" role="img" aria-label="' + esc(r.label + ': needs ' + amount(r.need, r.unit) + ' of ' + amount(r.has, r.unit)) + '"><i class="' + r.state + '" data-w="' + fill.toFixed(1) + '"></i>' +
-        (tick != null ? '<b data-l="' + tick.toFixed(1) + '" title="now"></b>' : '') + '</div>' +
+        '<div class="cap-track" role="img" aria-label="' + esc(r.label + ': needs ' + amount(r.need, r.unit) + ' of ' + amount(r.has, r.unit)) + '"><i class="' + r.state + '" data-w="' + at1(fill) + '"></i>' +
+        (tick != null ? '<b data-l="' + at1(tick) + '" title="now"></b>' : '') + '</div>' +
         '<div class="cap-n">' + esc(amount(r.need, r.unit)) + ' needed · ' + esc(amount(r.has, r.unit)) + ' here' + (r.now != null ? ' <span class="cap-muted">/ ' + esc(amount(r.now, r.unit)) + ' now</span>' : '') + ' ' + pill(r.state) + '</div></div>';
     }).join('');
     styled($('[data-cap-bars]'));
@@ -247,7 +249,7 @@
       return [p[1], x];
     });
     $('[data-cap-stack]').setAttribute('aria-label', 'Heap after a collection ' + fmt(total) + ' MB by part');
-    $('[data-cap-stack]').innerHTML = parts.map(function (p, i) { return p[1] > 0 ? '<i data-w="' + (p[1] / total * 100).toFixed(2) + '" data-bg="var(--cap-c' + (i + 1) + ')" title="' + esc(p[0] + ': ' + fmt(p[1]) + ' MB') + '"></i>' : ''; }).join('');
+    $('[data-cap-stack]').innerHTML = parts.map(function (p, i) { return p[1] > 0 ? '<i data-w="' + Math.round(p[1] / total * 10000) / 100 + '" data-bg="var(--cap-c' + (i + 1) + ')" title="' + esc(p[0] + ': ' + fmt(p[1]) + ' MB') + '"></i>' : ''; }).join('');
     $('[data-cap-legend]').innerHTML = parts.map(function (p, i) { return p[1] > 0 ? '<span data-sw="var(--cap-c' + (i + 1) + ')">' + esc(p[0]) + ' <b>' + fmt(p[1]) + ' MB</b> (' + Math.round(p[1] / total * 100) + '%)</span>' : ''; }).join('') +
       '<span class="cap-tot">After a collection <b>' + fmt(total) + ' MB</b> ÷ ' + v('LiveShare') + ' + loads ' + fmt(v('HeapLoadTransient')) + ' MB = ' + fmt(v('XmxRawMB')) + ' MB → <b>-Xmx' + v('XmxGB') + 'g</b></span>';
     styled($('[data-cap-stack]'));
@@ -282,36 +284,52 @@
     return out.map(function (p) { return '<div class="cap-box a" data-cap-warning="' + esc(p[0].name) + '"><b>' + esc(p[0].label) + ':</b> ' + esc(p[1]) + '</div>'; }).join('');
   }
 
-  function buildInputs() {
-    var form = $('[data-cap-inputs]'), group = null, h = '';
+  // the plan's inputs: one drishti-inputs Form from the planner's own list (a fieldset per group; a list of choices a select; a number read
+  // loosely and shown grouped, its problem in words); each field's block carries data-cap-field (the name), marked "ch" when changed
+  var paths = {};
+  function inputSchema() {
+    var props = {}, groups = {};
     st.plan.inputs.forEach(function (i) {
-      if (i.group !== group) { h += (group ? '</fieldset>' : '') + '<fieldset class="cap-grp"><legend>' + esc(i.group) + '</legend>'; group = i.group; }
-      var cur = st.inputs[i.name] != null ? st.inputs[i.name] : i['default'], id = 'cap-in-' + i.name, ctl;
-      if (i.choices) {
-        ctl = '<select id="' + id + '" name="' + esc(i.name) + '">' + i.choices.map(function (c) { return '<option' + (String(c) === String(cur) ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select>';
-      } else {
-        ctl = '<input id="' + id + '" name="' + esc(i.name) + '" value="' + esc(i.kind === 'text' ? cur : Number(cur).toLocaleString('en-US', { maximumFractionDigits: 6 })) + '"' + (i.kind === 'text' ? '' : ' inputmode="decimal"') + ' spellcheck="false">';
-      }
-      h += '<div class="cap-fld" data-cap-field="' + esc(i.name) + '"><label for="' + id + '">' + esc(i.label) + '<small>' + esc(i.hint) + '</small></label>' + ctl + '<span class="cap-muted">' + esc(i.unit === 'text' ? '' : i.unit) + '</span></div>';
+      var g = groups[i.group] || (groups[i.group] = 'g' + Object.keys(groups).length);
+      if (!props[g]) { props[g] = { type: 'object', title: i.group, properties: {}, hook: { 'class': 'cap-grp' } }; }
+      var fs = { title: i.label + (i.unit && i.unit !== 'text' ? ' (' + i.unit + ')' : ''), description: i.hint, hook: { 'data-cap-in': i.name } };
+      if (i.choices) { Object.assign(fs, { type: 'string', widget: 'select', allowEmpty: false, 'enum': i.choices.map(String) }); }
+      else if (i.kind === 'text') { fs.type = 'string'; } else { fs.type = 'number'; }
+      props[g].properties[i.name] = fs;
+      paths[i.name] = g + '.' + i.name;
     });
-    form.innerHTML = h + '</fieldset>';
+    return { type: 'object', properties: props };
+  }
+  function inputValue() {
+    var v = {};
+    st.plan.inputs.forEach(function (i) {
+      var cur = st.inputs[i.name] != null ? st.inputs[i.name] : i['default'], p = paths[i.name].split('.');
+      (v[p[0]] = v[p[0]] || {})[p[1]] = i.choices ? String(cur) : cur;
+    });
+    return v;
+  }
+  function buildInputs() {
+    var host = $('[data-cap-inputs]');
+    if (!st.form) {
+      st.form = new window.Drishti.elements.inputs.Form(host, { schema: inputSchema(), value: inputValue(), live: true, label: 'Inputs', pathAttr: 'data-cap-path' });
+      st.form.on('change', onInput);
+    } else { st.form.setValue(inputValue()); }
     markChanged();
   }
 
   function markChanged() {
     st.plan.inputs.forEach(function (i) {
-      var f = page.querySelector('[data-cap-field="' + i.name + '"]');
-      if (f) { f.classList.toggle('ch', st.inputs[i.name] != null && String(typed(i.name, st.inputs[i.name])) !== String(i['default'])); }
+      var f = page.querySelector('[data-cap-path="' + paths[i.name] + '"]');
+      if (f) { f.setAttribute('data-cap-field', i.name); f.classList.toggle('ch', st.inputs[i.name] != null && String(typed(i.name, st.inputs[i.name])) !== String(i['default'])); }
     });
   }
 
   function onInput(e) {
-    var el = e.target, name = el.name, inp;
-    if (!name) { return; }
+    var name = String(e.path).split('.').pop(), inp;
     inp = st.plan.inputs.filter(function (i) { return i.name === name; })[0];
-    var v = typed(name, el.value);
-    el.setAttribute('aria-invalid', v === undefined ? 'true' : 'false');
-    if (v === undefined) { return; }
+    if (!inp) { return; }
+    var v = typed(name, e.value);
+    if (v === undefined) { return; }                                   // the field says what does not read
     if (String(v) === String(inp['default'])) { delete st.inputs[name]; } else { st.inputs[name] = v; }
     save();
     markChanged();
@@ -380,9 +398,6 @@
   }
 
   function wire() {
-    $('[data-cap-inputs]').addEventListener('submit', function (e) { e.preventDefault(); });
-    $('[data-cap-inputs]').addEventListener('input', onInput);
-    $('[data-cap-inputs]').addEventListener('change', onInput);
     $('[data-cap-edit]').addEventListener('click', function () { setView(page.querySelector('[data-cap-view="plan"]').hidden); });
     $('[data-cap-refresh]').addEventListener('click', loadLive);
     $('[data-cap-reset]').addEventListener('click', function () { st.inputs = {}; save(); buildInputs(); recompute(); });
@@ -410,13 +425,7 @@
       page.querySelectorAll('[data-factor]').forEach(function (x) { x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
       renderGrowth();
     });
-    page.querySelectorAll('[data-cap-grow]').forEach(function (r) {
-      r.addEventListener('input', function () {
-        st.grow[r.getAttribute('data-cap-grow')] = parseFloat(r.value);
-        page.querySelector('[data-cap-grow-out="' + r.getAttribute('data-cap-grow') + '"]').textContent = r.value + (r.getAttribute('data-cap-grow') === 'intraday' ? '%' : '');
-        renderGrowth();
-      });
-    });
+    growth().on('change', function (e) { st.grow[e.path] = Number(e.value); renderGrowth(); });
     page.addEventListener('click', function (e) {
       var w = e.target.closest('.cap-why');
       page.querySelectorAll('.cap-why.open').forEach(function (x) { if (x !== w) { x.classList.remove('open'); } });
@@ -428,20 +437,20 @@
       if (e.key === 'Escape') { page.querySelectorAll('.cap-why.open').forEach(function (x) { x.classList.remove('open'); }); }
       if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('cap-why')) { e.preventDefault(); e.target.classList.toggle('open'); }
     });
-    window.addEventListener('keydown', function (e) {                // F1: the guide's Capacity section, not the Admin guide's top
-      if (e.key === 'F1' && page.getAttribute('data-help')) { e.preventDefault(); window.location.href = page.getAttribute('data-help'); }
-    }, true);
+    if (page.getAttribute('data-help')) {                               // F1: the guide's Capacity section, not the Admin guide's top
+      window.Drishti.keys.register({ id: 'capacity.help', keys: ['F1', 'Alt+Shift+1'], scope: 'screen', area: 'capacity', group: 'Help', typing: true,
+        description: 'Help: the Capacity section of the guide', run: function () { window.location.href = page.getAttribute('data-help'); } });
+    }
     if (phone.matches) { page.querySelectorAll('details[data-tier="more"]').forEach(function (d) { d.removeAttribute('open'); }); }
     document.addEventListener('visibilitychange', function () { if (!document.hidden) { loadLive(); } });
     st.timer = setInterval(function () { if (!document.hidden) { loadLive(); } }, 60000);
   }
 
+  function growth() { return window.Drishti.elements.inputs.formOf(page.querySelector('[data-cap-growth-fields]')); }   // the sliders (core/admin_forms.py)
+
   function seedGrowth() {
     var t = value('Trades'), u = value('IntradayUpdatesDay');
-    var set = function (k, v) { var r = page.querySelector('[data-cap-grow="' + k + '"]'); r.value = v; page.querySelector('[data-cap-grow-out="' + k + '"]').textContent = v + (k === 'intraday' ? '%' : ''); };
-    set('intraday', t > 0 ? Math.round(u / t * 100) : 0);
-    set('HotDates', value('HotDates'));
-    set('Users', value('Users'));
+    growth().setValue({ intraday: t > 0 ? Math.round(u / t * 100) : 0, HotDates: value('HotDates'), Users: value('Users') });
   }
 
   try { st.inputs = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { st.inputs = {}; }

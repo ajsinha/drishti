@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin > Collaboration (COLLABORATION.md, Administrators and compliance): search threads, moderate (hide, unhide, lock), legal holds, the
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* Admin > Collaboration (ARCHITECTURE.md §31, Administrators and compliance): search threads, moderate (hide, unhide, lock), legal holds, the
    compliance export, chain verification, the retention dry run and the bridges. The server decides every right call by call; the page
    only draws the sections the caller's roles open and says in words what the server refused. Everything is put in with textContent;
    times arrive as <name>Local, in the top bar's zone. */
@@ -42,11 +43,13 @@
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); })
       .catch(function () { return { ok: false, status: 0, j: { detail: 'The console could not be reached. Try again.' } }; });
   }
-  function fields(form) {
-    var o = {};
-    Array.prototype.forEach.call(form.elements, function (f) {
-      if (!f.name) { return; }
-      if (f.type === 'checkbox') { o[f.name] = f.checked; } else if (f.value.trim()) { o[f.name] = f.value.trim(); }
+  /* every form is drishti-inputs' Form from the server's schema (core/admin_forms.py); a host's form, its submit handled here */
+  var I = window.Drishti.elements.inputs;
+  function formOf(host, submit) { return host ? I.formOf(host, submit ? { onSubmit: submit } : {}) : null; }
+  function fields(F) {                                 // what was filled in: words trimmed, blanks left out, ticks as true or false
+    var o = {}, v = F.getValue();
+    Object.keys(v).forEach(function (k) {
+      if (typeof v[k] === 'boolean') { o[k] = v[k]; } else if (v[k] !== undefined && v[k] !== null && String(v[k]).trim()) { o[k] = String(v[k]).trim(); }
     });
     return o;
   }
@@ -54,8 +57,8 @@
   function clear(node) { while (node.firstChild) { node.removeChild(node.firstChild); } }
 
   // ---- threads and moderation -------------------------------------------------------------------------------------------------
-  var form = $('[data-acol-search]'), table = $('[data-acol-threads]'), body = table.querySelector('tbody'), more = $('[data-acol-more]');
-  var pane = $('[data-acol-comments]'), clist = $('[data-acol-clist]'), only = $('[data-acol-hidden-only]'), shown = null, next = null;
+  var form = formOf($('[data-acol-search]'), function () { search(false); }), table = $('[data-acol-threads]'), body = table.querySelector('tbody'), more = $('[data-acol-more]');
+  var pane = $('[data-acol-comments]'), clist = $('[data-acol-clist]'), only = (formOf($('[data-acol-comments] [data-di-form]')), $('[data-acol-hidden-only]')), shown = null, next = null;
 
   function threadRow(t) {
     var tr = el('tr'); tr.setAttribute('data-thread', t.id);
@@ -112,15 +115,14 @@
     });
   }
 
-  function hideForm(li, cid) {                       // an inline reason box, as the Discussion tab has
-    var f = el('form', 'acol-reason'), i = el('input', 'studio-in'), ok = el('button', 'btn-pill btn-sm-pill', 'Hide'), no = btn('Cancel', 'cancel');
-    i.setAttribute('aria-label', 'Why this comment is hidden'); i.placeholder = 'Reason (shown to readers)'; i.maxLength = 400; ok.type = 'submit';
-    f.appendChild(i); f.appendChild(ok); f.appendChild(no); li.appendChild(f); i.focus();
-    f.addEventListener('submit', function (e) {
-      e.preventDefault();
-      if (!i.value.trim()) { say('Say why the comment is hidden.', true); i.focus(); return; }
-      api('POST', '/api/comment/' + encodeURIComponent(cid) + '/hide', { reason: i.value.trim() }).then(function (r) { done(r, 'Comment hidden.'); });
-    });
+  function hideForm(li, cid) {                       // an inline reason box, as the Discussion tab has: a Form with Hide and Cancel
+    var box = el('div', 'acol-reason');
+    li.appendChild(box);
+    var F = new I.Form(box, { schema: { type: 'object', required: ['reason'], properties: { reason: { type: 'string', title: 'Why this comment is hidden', maxLength: 400,
+      placeholder: 'Reason (shown to readers)' } } }, submitLabel: 'Hide', resetButton: false, doneText: '', layout: 'columns',
+      onSubmit: function (v) { return api('POST', '/api/comment/' + encodeURIComponent(cid) + '/hide', { reason: String(v.reason).trim() }).then(function (r) { done(r, 'Comment hidden.'); }); } });
+    F.form.querySelector('.di-form-actions').appendChild(btn('Cancel', 'cancel'));
+    F.form.querySelector('input').focus();
   }
   function done(r, ok) {
     if (!r.ok) { say(problem(r), true); return; }
@@ -133,7 +135,7 @@
     var act = b.getAttribute('data-act'), cid = b.getAttribute('data-cid'), tid = b.getAttribute('data-tid');
     if (act === 'open') { openComments(b.getAttribute('data-kind'), b.getAttribute('data-eid'), tid); }
     else if (act === 'hide') { hideForm(b.closest('li'), cid); }
-    else if (act === 'cancel') { var f = b.closest('form'); f.parentNode.removeChild(f); }
+    else if (act === 'cancel') { var f = b.closest('.acol-reason'); f.parentNode.removeChild(f); }
     else if (act === 'unhide') { api('POST', '/api/comment/' + encodeURIComponent(cid) + '/unhide').then(function (r) { done(r, 'Comment shown again.'); }); }
     else if (act === 'lock' || act === 'unlock') {
       api('POST', '/api/thread/' + encodeURIComponent(tid) + '/state', { state: act === 'lock' ? 'locked' : 'open' }).then(function (r) {
@@ -153,12 +155,11 @@
       });
     }
   });
-  form.addEventListener('submit', function (e) { e.preventDefault(); search(false); });
   more.addEventListener('click', function () { search(true); });
   only.addEventListener('change', drawComments);
 
   // ---- legal holds (compliance) ----------------------------------------------------------------------------------------------
-  var holdTable = $('[data-acol-holds]'), holdForm = $('[data-acol-hold-form]');
+  var holdTable = $('[data-acol-holds]'), holdForm = null;
   function covers(h) {
     return h.scope === 'entity' ? 'entity ' + h.kind + ' ' + h.entityId : h.scope === 'kind' ? 'every ' + h.kind : h.scope === 'user' ? 'user ' + h.username
       : h.scope === 'thread' ? 'thread ' + h.threadId : 'everything';
@@ -180,25 +181,20 @@
       if (!tb.children.length) { var tr2 = el('tr'); var td = cell(tr2, 'No holds.'); td.colSpan = 7; tb.appendChild(tr2); }
     });
   }
-  if (holdForm) {
-    var scope = $('[data-acol-scope]');
-    var sync = function () { holdForm.querySelectorAll('[data-acol-for]').forEach(function (l) { l.hidden = l.getAttribute('data-acol-for').split(' ').indexOf(scope.value) < 0; }); };
-    scope.addEventListener('change', sync); sync();
-    $('[data-acol-active-holds]').addEventListener('change', holds);
-    holdForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var o = fields(holdForm);
-      if (!o.reason) { say('Say why the hold is placed.', true); holdForm.elements.reason.focus(); return; }
-      api('POST', '/admin/collab/api/holds', o).then(function (r) {
-        if (r.ok) { say('Hold ' + r.j.id + ' placed.'); holdForm.elements.reason.value = ''; } else { say(problem(r), true); }
+  if ($('[data-acol-hold-form]')) {                 // the scope's own fields show through the schema's conditions
+    holdForm = formOf($('[data-acol-hold-form]'), function () {
+      return api('POST', '/admin/collab/api/holds', fields(holdForm)).then(function (r) {
+        if (r.ok) { say('Hold ' + r.j.id + ' placed.'); holdForm.setField('reason', undefined); } else { say(problem(r), true); }
         holds();
       });
     });
+    formOf($('[data-acol-holds]').closest('section').querySelector('.acol-check[data-di-form]'));
+    $('[data-acol-active-holds]').addEventListener('change', holds);
     holds();
   }
 
   // ---- compliance export: start, poll, download once -------------------------------------------------------------------------
-  var expForm = $('[data-acol-export-form]'), expOut = $('[data-acol-export]'), timer = null;
+  var expHost = $('[data-acol-export-form]'), expForm = null, expOut = $('[data-acol-export]'), timer = null;
   function exportView(j) {
     clear(expOut);
     var c = j.counts || {};
@@ -216,19 +212,19 @@
       if (r.j.state === 'queued' || r.j.state === 'running') { timer = setTimeout(function () { poll(id); }, 1000); }
     });
   }
-  if (expForm) {
-    expForm.addEventListener('submit', function (e) {
-      e.preventDefault(); clearTimeout(timer);
-      api('POST', '/admin/collab/api/exports', fields(expForm)).then(function (r) {
+  if (expHost) {
+    expForm = formOf(expHost, function () {
+      clearTimeout(timer);
+      return api('POST', '/admin/collab/api/exports', fields(expForm)).then(function (r) {
         if (!r.ok) { say(problem(r), true); return; }
         say('Export started.'); exportView(r.j); poll(r.j.id);
       });
     });
-    var vf = $('[data-acol-verify-form]'), vo = $('[data-acol-verify]'), vp = $('[data-acol-problems]');
-    vf.addEventListener('submit', function (e) {
-      e.preventDefault(); vo.textContent = 'Verifying…'; clear(vp);
-      var t = vf.elements.thread.value.trim();
-      api('GET', '/admin/collab/api/verify' + (t ? '?thread=' + encodeURIComponent(t) : '')).then(function (r) {
+    var vo = $('[data-acol-verify]'), vp = $('[data-acol-problems]');
+    var vf = formOf($('[data-acol-verify-form]'), function () {
+      vo.textContent = 'Verifying…'; clear(vp);
+      var t = fields(vf).thread || '';
+      return api('GET', '/admin/collab/api/verify' + (t ? '?thread=' + encodeURIComponent(t) : '')).then(function (r) {
         if (!r.ok) { vo.textContent = ''; say(problem(r), true); return; }
         var j = r.j;
         if (j.thread) { vo.textContent = j.ok ? 'Thread ' + j.thread + ': chain intact (' + j.steps + ' steps).' : 'Thread ' + j.thread + ': BROKEN. ' + (j.problem || ''); vo.classList.toggle('t-bad', !j.ok); return; }

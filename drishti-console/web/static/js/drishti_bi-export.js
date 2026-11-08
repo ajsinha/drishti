@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Export and subscribe on a BI report page (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 15). The controls sit in the report bar (report.html); drishti_bi-report.js says when the report is
+/* Export and subscribe on a BI report page (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 15). The controls sit in the report bar (report.html); drishti_bi-report.js says when the report is
    ready (drishti:report-ready) and keeps `drishtiBi.reportView`: the report, the page shown and the state of the screen (slicers, selections, drill path,
    carried values, dates). A download is a GET of /dist/bi/<report>.<format> with that state in the address; the server makes the file as the signed-in
    reader (their rows, their masks) and the browser saves it. Subscribe opens the form with the same target and state. No data passes through this file. */
@@ -29,15 +29,9 @@
 
   function fillScope() {
     const rv = B.reportView;
-    const keep = scope.value;
-    while (scope.options.length > 1) { scope.remove(1); }
-    rv.visuals().forEach((v) => {
-      const o = document.createElement('option');
-      o.value = v.id;
-      o.textContent = 'visual: ' + (v.title || v.id);
-      scope.appendChild(o);
-    });
-    scope.value = Array.prototype.some.call(scope.options, (o) => o.value === keep) ? keep : '';
+    const keep = scope.value, pick = scope.component;                  // drishti-inputs' Select: this page, then each visual
+    pick.setOptions(pick.options.slice(0, 1).concat(rv.visuals().map((v) => ({ value: v.id, label: 'visual: ' + (v.title || v.id) }))), '');
+    if (keep && pick.options.some((o) => o.value === keep)) { pick.setValue(keep); }
   }
 
   /** The address query of the screen's state; `dropped` is set when the state was too long to carry, so the file or the subscription starts without the filters. */

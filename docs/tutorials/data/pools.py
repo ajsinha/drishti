@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""How many connections must a database accept? (tutorial 17, OPERATIONS.md section 16: "Sizing the database connection pools").
+"""How many connections must a database accept? (tutorial 17, OPERATIONS_GUIDE.md section 16: "Sizing the database connection pools").
 
     max_connections >= (the pool sizes of every connector that points at the database + the identity pool + loaders + your own clients) x server instances
 

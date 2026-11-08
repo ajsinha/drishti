@@ -20,22 +20,22 @@ EEE, PFE, EPE, EEPE, EAD), the explorer screen by screen, scopes from the bank t
 the pre-deal what-if, exposure as a kind, who sees what, the command line, the API and the settings (Part I); the data contract: every
 input column, formula, answer, error code, the official results, retention, the stored profiles against computed exposure and the decisions
 (Part II); how the engine holds a date's netting-set path matrices in memory and on local disk, its sizes and what is still open (Part
-III). The hands-on walk-through is [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md) (the test data, from the bank to a
+III). The hands-on walk-through is [tutorial 3](../tutorials/03-exposure-from-the-bank-to-a-trade.md) (the test data, from the bank to a
 trade). In the console, **F1** on the explorer (or its **?**) opens this guide.
 
 Each measure has exactly two documents, the guide and one tutorial, and two help entries: the exposure data contract is Part II of this
 guide. Where the original proposal said otherwise, the code wins and the difference is stated (**Implementation:**).
-VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
+VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 2, Part A.
 
 For the proposed counterparty credit risk cube on this engine (allocated exposure, the GLEIF group roll-up, limits by tenor with
 headroom, CVA, SA-CCR, SIMM, wrong-way risk, pre-deal pricing on paths, every data contract), see the design:
-[CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md).
+[CCR_CUBE_LENS.md](../architecture/LENSES.md#7-ccr-cube-lens).
 
 Every number below that is not a hand-made example is the engine's on the demo lake that `drishti.py lake demo` builds by default
 (`--exposure demo`): the run `XR-2026-09-30-01` (business date 2026-09-30, 200 paths, 24 grid dates of which 13 primary) generated for
 every netting set of 23 of the 24 counterparties (74 netting sets, 8,022 live trades), on the data's own dates (`--as-of data`).
 The committed run of eight netting sets (523 trades) is a subset with the same figures; the netting-set and CP-ALDERSHOT figures are also those of
-`drishti-compute/src/test/resources/ccr/reference.json`, which `ExposureParityTest` checks the Java engine against (to 1e-6 USD on the
+`drishti-compute-banking/src/test/resources/ccr/reference.json`, which `ExposureParityTest` checks the Java engine against (to 1e-6 USD on the
 heap). [Section 23](#23-test-data-and-generators) says how the data is made.
 
 ## Contents
@@ -203,7 +203,7 @@ How to read it:
   below the sum of the quantiles. That is why Drishti sums path matrices, never stored PFEs.
 
 **The bank and its legal entities** (the demo lake on the data's own date, `--as-of data`: 74 netting sets with paths of 76, 8,022
-live trades; `drishti.py exposure show BANK`, `tree`; tutorial 26 steps 1 and 2):
+live trades; `drishti.py exposure show BANK`, `tree`; tutorial 3, steps 1 and 2):
 
 | Scope | Peak PFE 95% | EPE | Note |
 |---|---|---|---|
@@ -235,8 +235,8 @@ is small. Its stored credit limit LIM-ALDERSHOT is 7,980,000,000, so the limit u
 | the netting-set and counterparty pages | their figures under `EXPOSURE_ENGINE` link here |
 | `EXP EXP-ALDERSHOT-FRA <GO>`, `/v/exposure-profile/EXP-ALDERSHOT-FRA` | a stored-profile id: the same netting set, with a notice |
 
-The page is `drishti-console/web/templates/terminal/exposure.html`, filled by `web/static/js/drishti_exposure-explorer.js` from the console's
-same-origin `/api/exposure/...`, which asks the server's `/api/v1/exposure` as you (so your entitlements apply as on every screen). The
+The page is `drishti-console/plugins/banking/templates/terminal/exposure.html`, filled by `drishti-console/plugins/banking/static/js/drishti_exposure-explorer.js` from the console's
+same-origin `/api/exposure/...`, which asks the server's `/api/v1/risk/exposure` as you (so your entitlements apply as on every screen). The
 computed kind `exposure-result` stays an ordinary kind too (`/v/exposure-result/<scope>`, [section 8](#8-exposure-as-a-kind)).
 
 ### 3.2 The screen
@@ -250,11 +250,13 @@ From top to bottom:
 - **The breadcrumb** with **Back**: Bank › legal entity › counterparty › netting set › trade. Every click on the tree, the board, a
   netting set or a trade moves the whole screen to the new scope in place, with no page load; Back returns to the scope before.
 - **The tree** (left): the bank, the legal entities, their counterparties (largest peak PFE first), the netting sets and, under the
-  open netting set, its trades with the largest EE contribution; each row shows its peak PFE. A netting set the run has no paths for is
-  marked and opens the no-paths state ([section 13](#13-troubleshooting)).
+  open netting set, its trades with the largest EE contribution (asked when the set opens); each row shows its peak PFE, the server's
+  figure for that node (peak PFE does not add up: a parent's is never its children's sum). A netting set the run has no paths for is
+  marked and opens the no-paths state ([section 13](#13-troubleshooting)). On a touch screen the + and − are a finger's size.
 - **The tiles** (the headline): **Peak PFE** at the chosen q (with its tenor and date), **EPE** (first year, time-weighted), **EEPE**
   (running max of EE), **EAD (IMM, info)** (α 1.4 × EEPE), and either **Limit used** (a counterparty with a stored credit limit: peak PFE
-  at the limit's confidence over the limit, coloured by use) or **Collateral effect** (EE at the peak tenor against the
+  at the limit's confidence over the limit, in the tone of the limit's status as the server says it: within, near from
+  `drishti.risk.limit-near`, breach over 100%) or **Collateral effect** (EE at the peak tenor against the
   uncollateralised EE: "−65%" when collateral lowers it by 65%, "+452%" when posted collateral raises it, as on NS-ALDERSHOT-LDN, where
   the bank has posted 111.1m after haircut). A trade's tiles are different: **Peak PFE alone** (the trade as if it had no netting set), **EE contribution**
   (its share of its netting set's EE at the set's peak date), **Netting benefit** (alone minus contribution) and **Desk**.
@@ -271,14 +273,16 @@ From top to bottom:
 | Netting set | **Collateral**, **Trades**, **Pre-deal**, By tenor, Captures |
 | Trade | **In its netting set**, By tenor (alone), Captures |
 
-- **How this number was built** (folded): the run, the inputs' versions, the method, the view, the flags, the collateral model; buttons
-  **Download the profile (CSV)** and **Capture exposure**.
+- **Explain**: every figure tile (peak PFE, EPE, EEPE, EAD) is explained by the one Explain
+  ([USER_GUIDE.md, "Explain: one for every number"](USER_GUIDE.md#explain-one-for-every-number)): hover for the preview, click (or
+  **Explain ›**, key **E**) for the drawer: **Formula** (the definition with the scope's figures: the quantile and paths, the averaging
+  horizon, α × EEPE), **Inputs & lineage** (the run, the model and seed, the calibration, the grid, the method, the contributions, the
+  flags and warnings, the tier, the view and the inputs' versions), the checks; **Why it moved** and **Workbook** are marked *Under
+  construction* for exposure. Beside it, **Download the profile (CSV)**, **JSONL** and **Capture exposure**.
 
 ![EXP BANK: the command line, the scope tree, the bank's tiles and profile, the counterparty board](img/exp/01-bank-board.jpg)
 
 ![A netting set's profile with the path fan (5–95% and 25–75% of the 200 paths)](img/exp/02-netting-set-fan.jpg)
-
-![How this number was built, opened on CP-ALDERSHOT](img/exp/07-provenance.jpg)
 
 On a phone the panels stack: the command line, the tree, then the tiles and the chart:
 
@@ -287,8 +291,9 @@ On a phone the panels stack: the command line, the tree, then the tiles and the 
 ### 3.3 The tabs
 
 - **Counterparties** (the board): one row per counterparty: a small EE profile, peak PFE, EPE, the stored **limit** and **used**
-  (the computed peak PFE at the limit's confidence over the limit), the number of netting sets; 25 rows at a time, largest first; a row
-  opens the counterparty. The limit is the `credit-limit` record read as stored (`drishti.ccr.exposure.kinds.limit`); LIM stays parked,
+  (the computed peak PFE at the limit's confidence over the limit, its bar and chip in the tone of the server's status), the number of
+  netting sets; 25 rows at a time, largest first; a row
+  opens the counterparty. The limit is the [`credit-limit`](../contracts/samples/counterparty-risk.md#credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)) record read as stored (`drishti.ccr.exposure.kinds.limit`); LIM stays parked,
   see [section 28](#28-open-items) on its low utilisation.
 - **Legal entities** (bank): per legal entity its EE profile, peak PFE, EPE, netting sets and share of the bank's peak.
 - **Netting sets** (counterparty or ad-hoc): per set its CSA, EE profile, EPE, **peak PFE alone** and **PFE contribution** (the shares
@@ -299,7 +304,9 @@ On a phone the panels stack: the command line, the tree, then the tiles and the 
   the dates that keep today's collateral (no look-back point after today).
 - **Trades** (netting set): every trade, 25 a page, by EE contribution at the set's peak date (read from the lake on request): product,
   desk, EE contribution, share, **peak PFE alone**; a row opens the trade's exposure, its id opens `TRD`.
-- **Pre-deal** (netting set and counterparty): the pre-deal what-if form, [section 7](#7-pre-deal-what-if); on a counterparty it first asks which of its netting sets the new trade goes into.
+- **Pre-deal check ›** (a button under the tabs, at a counterparty and at a netting set): opens **Counterparties → Pre-deal check** at
+  that counterparty or netting set, [section 7](#7-pre-deal-what-if). The explorer has no pre-deal form of its own: the check is one
+  screen, and an old link to the explorer's Pre-deal tab (`/exposure?scope=…&tab=predeal`) opens it.
 - **By tenor**: the profile as a table (EE, ENE, EEE, PFE at q, PFE 99%, EE uncollateralised per tenor), with the CSV link and the CLI and
   API equivalents.
 - **Captures**: capture now with a note, the scope's captures (id, date, captured, by, peak PFE, EPE, note), **Compare with now**,
@@ -307,7 +314,7 @@ On a phone the panels stack: the command line, the tree, then the tiles and the 
 
 ![NS-ALDERSHOT-LDN's Collateral tab: the CSA's terms, posted collateral and its effect at the peak tenor](img/exp/03-collateral.jpg)
 
-![Pre-deal on NS-ALDERSHOT-LDN: an unwind by the exact paths method, the incremental PFE by tenor](img/exp/05-predeal.jpg)
+![Counterparties → Pre-deal check: the unwind of a booked trade into NS-ALDERSHOT-LDN by the exact paths method, the verdict, the limit and its buckets, the overlay and the incremental PFE by tenor](img/exp/05-predeal.jpg)
 
 ![A capture of CP-ALDERSHOT compared with now](img/exp/06-capture-compare.jpg)
 
@@ -399,12 +406,12 @@ them) and the provenance; never paths. Ids are `XCAP-<yyyymmdd>-<n>`, kept per o
 
 | Where | How |
 |---|---|
-| Explorer | the **Captures** tab: a note, **Capture exposure**; or **Capture exposure** under *How this number was built* |
+| Explorer | the **Captures** tab: a note, **Capture exposure**; or **Capture exposure** beside **Explain ›** |
 | CLI | `drishti.py exposure capture CPTY:CP-ALDERSHOT --note 'before the unwind'`; `captures [--scope]`; `compare XCAP-20260930-1 now` |
-| API | `POST /api/v1/exposure/captures {scope, note, q, collateral}` (a token needs `risk:write`); `GET /captures?scope=`, `GET /captures/{id}`, `GET /captures/{id}/csv`, `GET /captures/{id}/jsonl` |
+| API | `POST /api/v1/risk/exposure/captures {scope, note, q, collateral}` (a token needs `risk:write`); `GET /captures?scope=`, `GET /captures/{id}`, `GET /captures/{id}/csv`, `GET /captures/{id}/jsonl` |
 
 **Compare** two captures, or a capture with **now** (the scope computed again): peak PFE, EPE, EEPE, peak EE and CE side by side with
-the change, PFE per tenor, and the trades added and removed. `GET /api/v1/exposure/compare?a=<id>&b=<id|now>`. A capture's CSV is the `#
+the change, PFE per tenor, and the trades added and removed. `GET /api/v1/risk/exposure/compare?a=<id>&b=<id|now>`. A capture's CSV is the `#
 field: value` lines and then the profile.
 
 ## 7. Pre-deal what-if
@@ -413,16 +420,13 @@ field: value` lines and then the profile.
 
 | Method | How | Where it runs | Flag |
 |---|---|---|---|
-| **`paths`** (exact) | the candidate's values on every path of **the same run** are added to its netting set's V; the set's collateral and exposure are computed again, then the scope's figures; incremental = with − without, per figure and per primary date | the **Python exposure engine** (`drishti_compute.exposure.whatif`, reactive connector `exposure-whatif`, compute pool `exposure`) | none (`exact`) |
+| **`paths`** (exact) | the candidate's values on every path of **the same run** are added to its netting set's V; the set's collateral and exposure are computed again, then the scope's figures; incremental = with − without, per figure and per primary date | the Java engine (`ExposureWhatIfMath` with `ExposureMath`, the same code as every exposure figure) | none (`exact`) |
 | **`addon`** (conservative proxy) | the candidate as a netting set of its own, no netting, no collateral: PFE add-on `max(MTM, 0) + z_q · SF · d · |δ| · sqrt(min(t, M))`, EE add-on with `1/sqrt(2π)` in place of z_q, with SA-CCR's supervisory factor SF | the Java engine | `proxy` |
 
-**The `paths` method needs compute on.** The Python engine runs in Drishti's compute pool: start the server with
-`DRISHTI_COMPUTE_ENABLED=true` (the pool `exposure` in `config/compute/compute.yaml`, standard library only, up to
-`DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers, 2 GB each). Without it `method: paths` answers `503 DRS-5446` ("the exact what-if … runs in
-the Python exposure engine … which is not running on this server; ask method addon for the conservative proxy"); `addon` always works.
+**Both methods run in the server's exposure engine**, wherever exposure runs: no compute pool, no worker, no setting of their own.
 
 **The candidate.** A candidate's paths are one of:
-- `{copyOf: <trade>, factor}`: a booked trade's paths on the run, scaled (`factor: -1` is its unwind) — what the explorer and
+- `{copyOf: <trade>, factor}`: a booked trade's paths on the run, scaled (`factor: -1` is its unwind) — what the pre-deal check (`LIKE`) and
   `--like` use;
 - `{runId, mtm}`: G lists of P numbers (or one list of G × P, grid-date-major);
 - `{runId, arrow}`: base64 Arrow IPC with `GRID_INDEX` and `MTM` as a fixed-size list of P.
@@ -431,47 +435,65 @@ Paths of another run or another length are refused (`400 DRS-5442`). A candidate
 collateral with it); without, it is a netting set of its own, uncollateralised. For `addon` give `assetClass`, `notional`,
 `maturityDate`, `mtm` and `delta`.
 
-**In the explorer** (a netting set's **Pre-deal** tab): *Candidate: like trade* (one of the set's trades), *Factor* (−1: its unwind),
-*Method* (`paths (exact, the same run)` or `addon (conservative proxy)`), *Figures of* (its counterparty, the credit limit's scope, or this
-netting set), **Run what-if**. The chip says **exact** or **proxy** and the time; the answer: peak PFE before and after, the incremental
-(red when it adds), EPE before and after, the limit headroom after (when q is the limit's confidence) and a per-tenor table of EE and
-PFE before and after with the incremental PFE.
+**On the screen: Counterparties → Pre-deal check** (`PREDEAL <GO>`, the menu Counterparties, or **Pre-deal check ›** in the explorer
+at a counterparty or a netting set; `/predeal`). One screen for the question, built on the Drishti Elements libraries; every number on it
+is the server's pre-deal check ([section 18.9](#189-the-pre-deal-check)), the page only places them.
 
-**On a counterparty** (its **Pre-deal** tab): the same pre-deal what-if, with one field more, *Into the netting set*: the
-counterparty's netting sets, the largest by peak PFE first (picked by default); the candidates are that set's trades, and changing the
-set lists its trades. *Figures of* is **this counterparty** (the credit limit's scope, the default) or the netting set picked. The
-answer has the same layout as the netting set's tab: before, after, the incremental, the limit headroom and the table by tenor.
+- **The trade** (a form, on the right): *Counterparty* (those you see, the largest peak PFE first, each with its limit use), *Into the
+  netting set* (the counterparty's; left empty, the server takes the template's or the only one), *The trade is* **like a booked trade
+  (exact)** or **described (proxy, only refers)**; like a trade: *Like the trade* (the netting set's trades, the largest EE contribution
+  first), the *Side* (the template's, or the other side: reverse); described: *Asset class* and *Maturity*; then the *Notional* (money:
+  `250m`, `1.5bn`, `400k`; blank copies the template as it is) and the *MtM today*. **Check** asks the server.
+- **The verdict**: the decision (**approve**, **refer**, **decline**) with its lamp, the limit's status (**within**, **near the limit**
+  from `drishti.risk.limit-near` of it, 80% by default, or **over the limit**), the reason and every other reason; the tiles: the new trade, the limit
+  use before → after with its status, the headroom after (and before), the incremental figure the limit is set on, EPE before → after,
+  the EAD (IMM, α × EEPE) before → after (the exact method only), SA-CCR's incremental EAD (under construction, 2.9.11.k); the table of
+  the limit and each tenor bucket: limit, before, with the trade, increment, use before and after, headroom and status.
+- **Explain ›** (or a tile, or **E**): the one Explain of the check (kind `predeal`): the formula with its values (use = with ÷ limit,
+  headroom = limit − with, each bucket, the near rule, EAD = α × EEPE, the decision rule), the inputs (the command, the netting set and how
+  it was chosen, the method, the template) and the checks (the reasons). A figure of a table explains itself in the table's own pane.
+- **The what-if**: the profile overlay (PFE with the trade over PFE before, EE with and before, EEPE, the limit line when the limit is on
+  PFE), the incremental PFE per tenor as bars, the figures current and with the trade (peak PFE, EPE, EEPE, peak EE, CE, EAD) and the
+  table by tenor. Under the verdict the same check as a command line: `drishti.py exposure predeal "PREDEAL …"`.
 
-![Pre-deal on CP-ALDERSHOT: the netting set picked, a booked trade's unwind by the exact paths method, the counterparty's figures before and after](img/exp/09-predeal-counterparty.jpg)
+A typed command checks at once: `PREDEAL CP-ALDERSHOT LIKE MX-30001587 REVERSE IN NS-ALDERSHOT-LDN <GO>` opens the screen with that check
+made and the form filled from it. On a phone the screen stacks: the verdict first, then the trade, the charts and the tables (a wide
+table scrolls inside its card). With the banking module off the screen, its word and its script are gone.
 
-`--method addon`, or `--candidates new-swap.json`. **API**: `POST /api/v1/exposure/what-if`, [section 11](#11-the-api).
+![Pre-deal check opened from CP-ALDERSHOT in the explorer: the form at the counterparty, its netting sets and the trades to copy](img/exp/09-predeal-counterparty.jpg)
 
-**How the exact method gets its inputs**: the Java engine serves them as the asking person through the computed kind `exposure-result`
-with `detail=whatif` (the scope's E and N matrices, G_primary × P, the grid, the horizon, the candidate sets' ids) and `detail=set` (a
-netting set's V, G × P, E, N, CSA terms, holdings); the candidates go into the person's private sandbox, the connector is asked as them,
-and the sandbox is deleted after. The engine is deterministic (no random numbers) and reproduces the Java maths
-(`drishti_compute.exposure.measures`, tested against the worked example and the test data). Details: [section 19](#19-what-drishti-answers), 19.5.
+The what-if alone, without a limit or a decision, is the API's and the command line's (`drishti.py exposure whatif --like <trade>
+--factor -1 --set <netting set>`, `--method addon`, or `--candidates new-swap.json`). **API**: `POST /api/v1/risk/exposure/what-if`, [section 11](#11-the-api).
+
+**How the exact method computes**: the engine reads the scope and each netting set a candidate joins as the asking person (their
+entitlements apply; a set must be one the scope covers whole), adds each candidate's paths to its set's value V path by path, computes
+the set's collateral and exposure again with `ExposureMath` (the CSA's terms, today's holdings, the look-back points, the asked
+collateral model), and replaces the set's E and N in the scope's: `E_scope − E_set + E'_set` on every path. A candidate of its own adds
+`max(M, 0)`. The current exposure moves the same way, and the horizon is the longest remaining life, at most a year. Deterministic (no
+random numbers), nothing stored. Each candidate is also measured alone (`peakPfeAlone`, uncollateralised) and added alone
+(`incrementalPeakPfe`). Details: [section 19](#19-what-drishti-answers), 19.5.
+
+**The pre-deal check** (`PREDEAL <counterparty> LIKE <trade> <notional>`) puts the what-if to the counterparty's credit limit and
+answers **approve**, **refer** or **decline**, with the method and the template shown; a proxy only refers, never approves:
+[section 18.9](#189-the-pre-deal-check).
 
 ## 8. Exposure as a kind
 
 | Kind | Command | Class | What |
 |---|---|---|---|
 | `exposure-result` | `EXP <scope>` | computed (reactive connector `exposure-engine`, Java `ExposureResultEngine`) | a scope's figures, profile, netting sets, flags, provenance |
-| `exposure-whatif` | `XWIF <scope>` | computed (reactive connector `exposure-whatif`, Python, pool `exposure`) | a scope before and after the candidates in the person's sandbox, exact |
-| `simulation-run` | `XRUN` | input | the run's identity and grid |
-| `exposure-path` | `XPATH` | input (Delta connector `exposure-store`) | every trade's MtM on every path at every grid date |
+| [`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)) | `XRUN` | input | the run's identity and grid |
+| [`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)) | `XPATH` | input (Delta connector `exposure-store`) | every trade's MtM on every path at every grid date |
 
 The id of a computed answer is the scope text with parameters after `~`: `CPTY:CP-ALDERSHOT~q=0.99`. `exposure-result` takes `q`,
-`collateral` (`lagged`, `current`, `none`), `run` (empty: the newest complete run), and, for the Python engine, `detail` (`none`, `whatif`,
-`set`) and `sets`. `exposure-whatif` takes `sandbox`, `q`, `collateral` and `sets`; its result has `BEFORE_`, `AFTER_` and `CHANGE_` of
-`EPE`, `EEPE`, `PEAK_PFE`, `PEAK_EE`, `CE`, a `profile` table and an `items` table. Both kinds' contracts are generated pages in
-`docs/contracts/` (`exposure-result.contract.yaml`, `exposure-whatif.contract.yaml` in the pack).
+`collateral` (`lagged`, `current`, `none`) and `run` (empty: the newest complete run). Its contract is a generated page in
+`docs/contracts/` (`exposure-result.contract.yaml` in the pack). The pre-deal what-if is not a kind: it is the engine's
+`POST /api/v1/risk/exposure/what-if` ([section 7](#7-pre-deal-what-if)).
 
 Because they are kinds, the usual tools work: `/v/exposure-result/NSET:NS-ALDERSHOT-FRA`, Sutra pages (the netting-set and counterparty
 pages read the engine's figures under `EXPOSURE_ENGINE`: EPE and peak PFE 95% in the strip, the profile panel, a "how it was computed"
 panel), Calc (`exposure_profile_stats.py`, `cva_from_ee.py`, `collateral_mpor_mc.py`, `concentration_hhi.py`, the core pack's
-`group_exposure.py`), BI over the published official results. Large `detail=whatif` answers pass through the connector cache: see
-[section 28](#28-open-items).
+`group_exposure.py`), BI over the published official results.
 
 ## 9. Who sees what: entitlements and audit
 
@@ -495,7 +517,7 @@ touches (`403`). The `counterparty` kind's `NAME` mask shows the id in labels. T
 
 ## 10. The command line
 
-`drishti.py exposure <command>` (`tools/expcli.py`) asks `/api/v1/exposure` as the token's user (`--server`, `--token` or the
+`drishti.py exposure <command>` (`tools/expcli.py`) asks `/api/v1/risk/exposure` as the token's user (`--server`, `--token` or the
 environment, as every `drishti.py` group). Exit codes: 0, 1 (the server said no), 2 (usage). Every scope command takes `--date
 YYYY-MM-DD` (default the newest with paths), `--q Q` (default 0.95), `--collateral lagged|current|none` and `--json`.
 
@@ -515,11 +537,11 @@ YYYY-MM-DD` (default the newest with paths), `--q Q` (default 0.95), `--collater
 | `reload` | drop the loaded dates (administrators): the next request maps the hot file again or reads the lake; `?date=` one date only | `drishti.py exposure reload [--date D]` |
 | `whatif <scope>` | a pre-deal what-if: `--like TRADE` (`--factor`, default 1; −1 its unwind), `--set NETTING_SET` (default a set of its own), or `--candidates FILE.json`; `--method paths|addon` (default `paths`) | `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA` |
 
-Real output of each on the test data: [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md). Tests: `tools/test_expcli.py`.
+Real output of each on the test data: [tutorial 3](../tutorials/03-exposure-from-the-bank-to-a-trade.md). Tests: `tools/test_expcli.py`.
 
 ## 11. The API
 
-All under `/api/v1/exposure`. Every `GET` takes `asOf` (the business date; default the newest with paths), `q` (default
+All under `/api/v1/risk/exposure`. Every `GET` takes `asOf` (the business date; default the newest with paths), `q` (default
 `limit-confidence`, 0.95), `collateral` (`lagged`, `current`, `none`); `/scope` also `run` and `strict`. Answers are camelCase (`epe`,
 `peakPfe`, `profile[].pfe99`); the computed kind spells the same fields in UPPER_SNAKE.
 
@@ -529,9 +551,11 @@ All under `/api/v1/exposure`. Every `GET` takes `asOf` (the business date; defau
 | `GET /scopes/{scope}` | as above | the path form for a simple scope (`/scopes/NSET:NS-ALDERSHOT-FRA`) |
 | `GET /scope/profile` | `scope`, `dates` (`primary` or `all`), `format=csv` or `format=jsonl` | the profile only, for charts; CSV `tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll` |
 | `GET /scope/distribution` | `scope`, `date` (a primary date or tenor; default the peak), `bins` (`histogram-bins`, 42), **`bands`** (`true`: also the path fan, the 5, 25, 50, 75 and 95% quantiles of the paths' exposure at every primary date) | `histogram {edges, counts}`, `quantiles`, `mean`, `zeroShare`, `bands` |
-| `GET /scope/contributions` | `scope`, `by` (`child`, `netting-set`, `counterparty`, `legal-entity`, `trade`, `asset`), `figure` (`EE`, `EPE`, `PFE`), `date` (EE), **`alone`** (`true`, by trade: each trade's peak PFE alone, uncollateralised, too), **`profile`** (`true`, by trade: each trade's EE contribution at every primary date) | rows `{key, scope, label, kind, value, pct, incremental}` (with `alone`: `peakPfeAlone`; with `profile`: `profile[]`), `total`, `date`, `parts`, `truncated` |
+| `GET /scope/contributions` | `scope`, `by` (`child`, `netting-set`, `counterparty`, [`legal-entity`](../contracts/samples/core.md#legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)), `trade`, `asset`), `figure` (`EE`, `EPE`, `PFE`), `date` (EE), **`alone`** (`true`, by trade: each trade's peak PFE alone, uncollateralised, too), **`profile`** (`true`, by trade: each trade's EE contribution at every primary date) | rows `{key, scope, label, kind, value, pct, incremental}` (with `alone`: `peakPfeAlone`; with `profile`: `profile[]`), `total`, `date`, `parts`, `truncated` |
 | `GET /tree` | `q` | the bank, legal entities, groups, counterparties (with their stored limit and use) and netting sets with EPE and peak PFE; sets without paths `noPaths` |
-| `POST /what-if` | body `{scope, method: paths|addon, q, collateral, candidates: [{tradeId, label, nettingSet, paths: {copyOf, factor} | {runId, mtm} | {runId, arrow}, assetClass, notional, maturityDate, mtm, delta}]}` | `{base, with, incremental: {epe, peakPfe, profile[]}, method, flags, items, note}` ([section 7](#7-pre-deal-what-if)) |
+| `POST /what-if` | body `{scope, method: paths|addon, q, collateral, candidates: [{tradeId, label, nettingSet, paths: {copyOf, factor} | {runId, mtm} | {runId, arrow}, assetClass, notional, maturityDate, mtm, delta}]}` | `{base, with, incremental: {epe, peakPfe, profile[]}, method, flags, items, note}` ([section 7](#7-pre-deal-what-if)); a `copyOf` of a trade you do not see trade by trade `403` |
+| `POST /predeal` | body `{command: "PREDEAL <counterparty> LIKE <trade> <notional> …"}` or the same as fields; `asOf` | `{checkId, command, decision: approve|refer|decline, reason, reasons, method, template, nettingSet, limit {…, buckets}, exposure {base, with, incremental}, saCcr, flags}` ([section 18.9](#189-the-pre-deal-check)) |
+| `GET /predeal/grammar` | | the command's usage, words, asset classes, examples and decisions |
 | `POST /captures` | `{scope, note, q, collateral}` | the capture |
 | `GET /captures`, `GET /captures/{id}`, `GET /captures/{id}/csv`, `/jsonl` | `scope` | your captures, one, its CSV or JSON Lines (a grid date a line) |
 | `GET /compare` | `a`, `b` (an id or `now`) | both, the change, PFE per tenor, trades added and removed |
@@ -541,20 +565,15 @@ All under `/api/v1/exposure`. Every `GET` takes `asOf` (the business date; defau
 | `POST /official` | `asOf` | take the official capture now (administrators) |
 | `POST /reload` | | drop the loaded dates (administrators) |
 
-The computed kind `exposure-result` takes **`detail`** (`none`, `whatif`: the scope's exposure matrices for the Python engine, `set`: a
-netting set's value matrix and CSA terms) with `sets` (the netting sets a candidate may join; empty: every set the scope covers whole, at
-most 50); see [section 19](#19-what-drishti-answers), 19.5. Codes: [section 21](#21-validation-errors-and-data-quality). The full
-endpoint list of Drishti is [API_GUIDE.md](API_GUIDE.md).
+Codes: [section 21](#21-validation-errors-and-data-quality). The full endpoint list of Drishti is [API_REFERENCE.md](API_REFERENCE.md).
 
 ## 12. Settings
 
-Every setting is under `drishti.ccr.exposure` in the engine's own file, `config/engines/exposure.yaml` (its switch `drishti.engines.exposure.enabled`; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) (and [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticcrexposure--the-exposure-engine)).
+Every setting is under `drishti.ccr.exposure` in the engine's own file, `config/engines/exposure.yaml` (its switch `drishti.engines.exposure.enabled`; [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)) (and [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticcrexposure--the-exposure-engine)).
 
 Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.ccr.exposure`](../admin/CONFIGURATION.md#drishticcrexposure) (also at Help → Configuration in the console).
 
-Also: the compute pool **`exposure`** in `config/compute/compute.yaml` (Python, `drishti_compute.exposure.whatif:ExposureWhatIfEngine`,
-system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CPU-seconds, 60 s timeout), active only with
-`DRISHTI_COMPUTE_ENABLED=true`; and the token rules: `POST /api/v1/exposure/what-if` is `read`, `POST /captures` `risk:write`, `POST
+Also the token rules: `POST /api/v1/risk/exposure/what-if` and `POST /api/v1/risk/exposure/predeal` are `read`, `POST /captures` `risk:write`, `POST
 /reload` and `POST /official` never a token's.
 
 ## 13. Troubleshooting
@@ -563,7 +582,7 @@ system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CP
 |---|---|---|
 | "no exposure paths for the netting set NS-… on <date>" (`404 DRS-1001`; the kind's `STATUS: no-paths`) | the reference data knows the set or counterparty, the day's run does not cover it (CP-SUMMIT's and CP-NORTHPLAINS's three sets in the default demo lake; 68 of 76 with `--exposure committed`) | expected for those sets; in production, check the simulator's coverage: `drishti.py exposure status` counts `setsWithoutPaths` |
 | `404 DRS-1001` "no run for the date" | no complete `simulation-run` on `asOf` | another date (`--date`), or load the run; the load signal reloads it |
-| `501`/`503 DRS-5446` on a what-if | `method: paths` and the Python engine is not running | start with `DRISHTI_COMPUTE_ENABLED=true` (pool `exposure`); or `--method addon` |
+| `400 DRS-5440` "the netting set NS-… is not one the scope … covers whole" on a what-if | a candidate's `nettingSet` is outside the scope, or only part of it is in the scope | ask on the counterparty or the netting set, or leave `nettingSet` out (a netting set of its own) |
 | `400 DRS-5442` | candidate paths of another run, or another number of paths | candidates from the same `RUN_ID`, P paths each |
 | `400 DRS-5440` | a bad scope word (VaR's `DIV:`, `NODE:`, `POS:`, `PORT:`, `BASKET:`, `CAPTURE:`) or parameter (`q`, `collateral`, `date` not a primary date, `by`, `figure`, `run`) | [section 4](#4-scopes) |
 | `409 DRS-5441`, or the flag `stale-run` | the date's run is not one run (two batch ids, a duplicate row, a trade in two sets, a bad grid) | fix the upstream run; until then the date before answers with a warning (`strict=true` refuses) |
@@ -590,10 +609,9 @@ any confidence, peaks, contributions, incremental figures before dealing) for an
 and [WWR.md](../contracts/WWR.md) read too. Sections marked **Implementation** are checked against the code and the committed test data.
 
 **Sources of truth checked (1.2):** `tools/packgen/ccr/` (`paths.py`, `ccrmath.py`, `make_ccr_data.py`); `drishti-compute`
-(`com.ash.drishti.compute.ccr`: `ExposureGrid`, `CsaTerms`, `ExposureMath`, `ExposureBook`, `ExposureHotFile`, `ExposureScopes`,
-`ExposureCalc`; the Python `drishti_compute.exposure`: `measures`, `whatif`); `drishti-server` (`com.ash.drishti.server.exposure`,
-`ExposureWhatIfPaths`, `ExposureWhatIfInputs`); `drishti.ccr.exposure` in `config/engines/exposure.yaml`; the pool `exposure` in
-`config/compute/compute.yaml`; the counterparty-risk pack's `pack.yaml` (`exposure-store`, `exposure-engine`, `exposure-whatif`);
+(`com.ash.drishti.banking.compute.ccr`: `ExposureGrid`, `CsaTerms`, `ExposureMath`, `ExposureBook`, `ExposureHotFile`, `ExposureScopes`,
+`ExposureCalc`, `ExposureWhatIfMath`); `drishti-banking` (`com.ash.drishti.banking.exposure`, `ExposureWhatIf`, `ExposureWhatIfPaths`);
+`drishti.ccr.exposure` in `config/engines/exposure.yaml`; the counterparty-risk pack's `pack.yaml` (`exposure-store`, `exposure-engine`);
 `data/testdata/counterparty-risk/{simulation-run,exposure-path}`.
 
 ## 14. The contract at a glance
@@ -606,23 +624,23 @@ averages EPE and effective EPE (EEPE), and potential future exposure (PFE) at a 
 netting set, a counterparty, a connected group, a legal entity or any ad-hoc scope, and for a scope plus candidate trades (pre-deal).
 
 **Commands.** `EXP NSET:NS-ALDERSHOT-FRA <GO>` (as typed; the spaced `EXP NSET NS-ALDERSHOT-FRA <GO>` too), `EXP CPTY:CP-ALDERSHOT <GO>`,
-`EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, `EXP TRD:<trade> <GO>`; the API `/api/v1/exposure`; the netting-set and counterparty
+`EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, `EXP TRD:<trade> <GO>`; the API `/api/v1/risk/exposure`; the netting-set and counterparty
 pages show the engine's figures as they open. **Implementation:** `EXP` is the computed kind `exposure-result`; its main screen is the
-exposure explorer ([section 3](#3-the-explorer-screen-by-screen)); `XWIF <scope>` is the exact what-if (`exposure-whatif`).
+exposure explorer ([section 3](#3-the-explorer-screen-by-screen)), whose Pre-deal tab asks the engine's what-if.
 
 **Not stored:** the kind `exposure-profile` (`EXP-*` records with `EPE`, `EEPE`, `PFE_PEAK`, `BUCKETS[]`), and
 the profile figures on `netting-set` ([NSET.md](../contracts/NSET.md) section 14). Its ids open the computed page (§22).
 
 | Part | Status |
 |---|---|
-| `simulation-run` (one row per simulation run and date: the grid, the paths, the seed, the model) | BUILT |
-| `exposure-path` (one row per trade × grid date: a vector of MtM over the paths) | BUILT |
+| [`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)) (one row per simulation run and date: the grid, the paths, the seed, the model) | BUILT |
+| [`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)) (one row per trade × grid date: a vector of MtM over the paths) | BUILT |
 | Netting per path, collateral per path with the margin period of risk, EE, ENE, EPE, EEE, EEPE, PFE, peaks, contributions | BUILT |
 | Tiered memory: netting-set path matrices in memory-mapped per-date files, trade paths read only for drills and what-ifs | BUILT (one node; sharding PLANNED) |
 | Incremental exposure before dealing: the conservative proxy (`addon`) | BUILT |
-| Incremental exposure before dealing: exact with candidate paths of the same run (`paths`, the Python engine) | BUILT |
+| Incremental exposure before dealing: exact with candidate paths of the same run (`paths`, the Java engine) | BUILT |
 | Computed kind `exposure-result`, reactive connector `exposure-engine` (Java) | BUILT |
-| Reactive connector `exposure-whatif` (Python, kind `exposure-whatif` XWIF, pool `exposure`), the exposure explorer, the CLI's exposure commands (`drishti.py exposure`) | BUILT |
+| The exposure explorer, the CLI's exposure commands (`drishti.py exposure`) | BUILT |
 | The benchmark at a large bank's size | BUILT at a workstation's size, extrapolated ([section 27.4](#274-the-benchmark-measured-and-extrapolated)) |
 | Official end-of-day results `exposure-official`, `exposure-official-cpty` | BUILT |
 | No stored `exposure-profile`, and no exposure figures on the netting set and counterparty | BUILT (§22) |
@@ -647,7 +665,7 @@ internal model), and traders (what a new trade does to a counterparty's PFE befo
 
 **Methodology.** Monte Carlo exposure simulation post-processing as in Basel CRE53 (internal models method: EE, effective EE, EEPE,
 alpha 1.4) and the industry's PFE practice for limits. Drishti does **not** simulate markets or price trades: the paths are inputs
-(the contracts' README.md section 3). QLRisk may later produce them ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)).
+(the contracts' README.md section 3). QLRisk may later produce them ([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md)).
 
 ## 15. Inputs from upstream engines
 
@@ -663,11 +681,11 @@ ${DRISHTI_DELTA_ROOT}/risk/
 
 | Kind | Key | Grain | Read by | Cadence | Due |
 |---|---|---|---|---|---|
-| `simulation-run` | `RUN_ID` | run × date | EXP, CVA, LIM, GRP, WWR | daily | before the paths (to be agreed) |
-| `exposure-path` | `PATH_ROW_ID` | trade × grid date × run | EXP, CVA, LIM, GRP, WWR | daily | **to be agreed** (open question 1); a large bank's run often lands overnight, 04:00–07:00 local |
+| [`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)) | `RUN_ID` | run × date | EXP, CVA, LIM, GRP, WWR | daily | before the paths (to be agreed) |
+| [`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)) | `PATH_ROW_ID` | trade × grid date × run | EXP, CVA, LIM, GRP, WWR | daily | **to be agreed** (open question 1); a large bank's run often lands overnight, 04:00–07:00 local |
 
-Beside them the engine reads, for the date (E0 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)):
-`trade-valuation` (each netting set's members, a live status naming the set, and their MtM today: the market-risk pack's kind, which
+Beside them the engine reads, for the date (E0 of [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)):
+[`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)) (each netting set's members, a live status naming the set, and their MtM today: the market-risk pack's kind, which
 VaR reads too), `netting-set` (the set's terms and links: counterparty, legal entity, CSA, collateral balance; no figure), `csa` (the
 terms), `collateral-balance` (the holdings, after haircut), `credit-limit` (the counterparty's approved limit) and the counterparty and
 group masters. Each of their data-load signals reloads the date (the connector's triggers; `drishti.ccr.exposure.kinds.*` names them).
@@ -677,27 +695,7 @@ group masters. Each of their data-load signals reloads the date (the connector's
 **Grain:** one row per run and business date. **Row count:** 1 per date (a second, *stressed* calibration run is open question 4).
 The paths of `exposure-path` are ordered by this row exactly as the P&L vectors are ordered by the scenario set (VAR_GUIDE.md section 15.3).
 
-| Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
-|---|---|---|---|---|---|---|---|
-| `RUN_ID` | id | `id` STRING | required | R | | the run; stamped on every answer | `XR-2026-09-30-01` |
-| `BUSINESS_DATE` | date | `business_date` DATE | required | R | | the close the run starts from (t₀) | `2026-09-30` |
-| `MARKET_DATA_DATE` | date | doc | required | R | | the market data the run calibrated to (normally the business date) | `2026-09-30` |
-| `MODEL` | text | doc | required | – | | the scenario model | `Hull-White 1F rates, GBM FX and equity, Schwartz 1F commodity` |
-| `MODEL_VERSION` | text | doc | required | – | | | `xsim-7.3.1` |
-| `CALIBRATION` | text | STRING | required | R | | `RISK_NEUTRAL` (CVA, pricing) or `REAL_WORLD` (PFE, limits); `STRESSED` for a stressed calibration | `RISK_NEUTRAL` |
-| `PATHS` | integer | DOUBLE | required | R | | P, the length of every `MTM` vector | `5000` |
-| `SEED` | text | doc | required | – | | the generator's seed; with `MODEL_VERSION`, market data and trade versions the run is reproducible upstream | `0x5eed-20260930` |
-| `ANTITHETIC` | boolean | doc | optional | – | | paths 2k and 2k+1 are antithetic pairs | `false` |
-| `GRID_DATES` | date list | doc | required | R | | the G grid dates, strictly increasing, all after `BUSINESS_DATE`; index *k* of every row's `GRID_INDEX` | `["2026-10-01", "2026-10-07", …]` |
-| `GRID_ROLE` | text list | doc | required | R | | per grid date: `PRIMARY` (exposure is reported) or `LOOKBACK` (only for collateral) | `["LOOKBACK", "PRIMARY", …]` |
-| `LOOKBACK_OF` | integer list | doc | required | R | | per grid date: for a `LOOKBACK` point, the index of the `PRIMARY` point it serves; −1 for a primary point | `[1, -1, …]` |
-| `LOOKBACK_DAYS` | integer | doc | required | R | business days | the distance of every look-back point before its primary point (the run's MPOR) | `10` |
-| `VALUE_BASIS` | text | doc | required | R | | `FUTURE` (each value in USD of its grid date; Drishti discounts for CVA) or `DISCOUNTED` (in today's USD by the run's numeraire) | `FUTURE` |
-| `CURRENCY` | ccy | doc | required | R | | must be `USD` | `USD` |
-| `PRECISION` | text | doc | required | R | | `float32` or `float64`: the `MTM` vectors' type (§17) | `float32` |
-| `CREDIT_PATHS` | boolean | doc | optional | R | | the run also wrote `credit-path` rows (WWR.md) | `true` |
-| `TRADES`, `ROWS` | integer | doc | required | R | | rows written, for completeness | `998412`, `41302877` |
-| `BATCH_ID`, `COMPUTED_AT` | id, timestamp | STRING, doc | required | – | | | `B-2026-09-30-01` |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`simulation-run.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/simulation-run.contract.yaml), published as [XRUN: `simulation-run`](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run); a real record of the test data with every field explained is its [example](../contracts/samples/counterparty-risk.md#simulation-run).
 
 **The grid.** Recommended (not required): daily to 2 weeks, weekly to 3 months, monthly to 1 year, quarterly to 5 years, semi-annual to
 10 years, annual to 30 years (about 50 primary dates), each with one look-back date `LOOKBACK_DAYS` before it, shared where two coincide.
@@ -725,24 +723,7 @@ The lake is partitioned by `business_date` only (`RUN_ID` is a column); the demo
 reads `list<float>` too (each value widened exactly to float64) and the lake writer writes float32 vector columns (`vector32`). In the lake the paths are served by the counterparty-risk pack's Delta connector `exposure-store` from the risk lake's domain
 (`<root>/risk/simulation-run/`, `<root>/risk/exposure-path/`, layout `vectors: [MTM]`).
 
-| Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
-|---|---|---|---|---|---|---|---|
-| `PATH_ROW_ID` | id | `id` STRING | required | – | | `<RUN_ID>~<TRADE_ID>~<GRID_INDEX>` | `XR-2026-09-30-01~CLY-4003028~7` |
-| `BUSINESS_DATE` | date | `business_date` DATE | required | R | | partition | `2026-09-30` |
-| `RUN_ID` | id | STRING (partition `run_id`) | required | R | | the `simulation-run` | `XR-2026-09-30-01` |
-| `TRADE_ID` | id | STRING | required | R | | the booking system's id, text | `CLY-4003028` |
-| `SOURCE_SYSTEM` | text | STRING | required | R | | | `CALYPSO` |
-| `TRADE_VERSION` | text | doc | optional | – | | the trade version the simulator priced | `5` |
-| `NETTING_SET` | id | STRING | required | R | | denormalised from `netting-set-member` (checked, NSET.md section 10); empty: standalone | `NS-ALDERSHOT-FRA` |
-| `COUNTERPARTY` | id | STRING | required | R | | denormalised | `CP-ALDERSHOT` |
-| `LEGAL_ENTITY` | id | STRING | required | R | | the trade's booking legal entity | `LE-FRA` |
-| `GRID_INDEX` | integer | DOUBLE | required | R | | *k*, index into `GRID_DATES` | `7` |
-| `GRID_DATE` | date | STRING | required | – | | `GRID_DATES[k]`, for people and checks | `2026-12-31` |
-| `MTM` | vector | `list<float>` (or `list<double>`) | required | R | USD | the trade's MtM on each path at the grid date, bank's side, an asset positive, length P, path order of the run | `[1203455.5, -88213.0, …]` (5,000) |
-| `CASHFLOW` | vector | `list<float>` | optional | R | USD | net cash flow the trade pays the bank between the previous grid date and this one, per path (positive received); for settlement risk and collateral spikes (open question 6) | `[0, 0, 25000.0, …]` |
-| `STATUS` | text | STRING | required | R | | `ok`, `proxied` (an approximate model), `failed` (`MTM` null) | `ok` |
-| `PRICER` | text | doc | optional | – | | | `xsim-hw1f-swap` |
-| `BATCH_ID` | id | STRING | required | R | | the run's batch; equal to the `simulation-run`'s | `B-2026-09-30-01` |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`exposure-path.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/exposure-path.contract.yaml), published as [XPATH: `exposure-path`](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path); a real record of the test data with every field explained is its [example](../contracts/samples/counterparty-risk.md#exposure-path).
 
 **The vector** (the contracts' README.md section 8, with one stated difference):
 
@@ -774,12 +755,12 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 
 | Kind | Key | Read for |
 |---|---|---|
-| `netting-set`, `netting-set-member`, `csa` (NSET.md) | `NETTING_SET`, `CSA` | membership (checks), margined or not, thresholds, MTA, IA, rounding, MPOR, IM |
+| [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), `netting-set-member`, `csa` (NSET.md) | `NETTING_SET`, `CSA` | membership (checks), margined or not, thresholds, MTA, IA, rounding, MPOR, IM |
 | `collateral-holding` (COLL.md) | `NETTING_SET` | today's collateral (the `current` collateral model, independent amounts, IM held) |
 | `valuation` ([TVAL.md](../contracts/TVAL.md)) | `TRADE_ID` | t₀ exposure (today's MtM) and the check that path means start near it |
 | `trade` | `TRADE_ID` | maturity (sparse rows), status |
 | `counterparty`, `counterparty-group` | | `CPTY:` and `GROUP:` scopes (GRP.md) |
-| `ir-curve` (market-data) | `CRV-USD-…` | discount factors when `VALUE_BASIS` is `FUTURE` and a discounted figure is asked (CVA.md) |
+| [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) (market-data) | `CRV-USD-…` | discount factors when `VALUE_BASIS` is `FUTURE` and a discounted figure is asked (CVA.md) |
 
 ## 17. Conventions specific to exposure
 
@@ -856,7 +837,7 @@ Unmargined sets: C = IA held (or 0).
 
 - A primary date whose look-back date would fall on or before the business date (1W and 2W on a 10-day margin period) has no look-back
   point: its collateral is today's collateral held, as nothing called later settles within the margin period. (E0 of
-  [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)) that is the balance's holdings **after haircut** (`POSITIONS[].VALUE`,
+  [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)) that is the balance's holdings **after haircut** (`POSITIONS[].VALUE`,
   held positive, posted negative; a balance without positions gives its `NET`, also after haircut in the test data).
 - Rounding is applied to the change from today's collateral (`CsaTerms.called`); only the held side is shortened by the counterparty's
   MTA, as above (the posted side is not: conservative).
@@ -893,7 +874,7 @@ remaining maturity in the scope, capped at 1 year. Sums and means in float64.
 longest remaining maturity of the scope's trades (their `MATURITY_DATE`, else their last grid date), capped at 1 year; T = 0 gives EPE =
 EEPE = 0. The peaks are over the primary dates only (t₀ is CE), the earliest date on a tie. CE uses each set's value today, the sum of its
 live member trades' MtM, less today's collateral (after haircut) and IM. (E0 of
-[COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)) the members and their MtM are read from `trade-valuation` (a live
+[DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)) the members and their MtM are read from `trade-valuation` (a live
 status, the set in `NETTING_SET`; a member past its maturity date is in no figure and flags the set `PAST_MATURITY`), not the set's
 stored `TRADES[].MTM`; a date without trade valuations reads the stored members. Implemented in
 `ExposureMath` (Java) and `ccrmath.py` (Python), compared on the test data by `ExposureParityTest`.
@@ -932,36 +913,116 @@ counterparties; a counterparty: its netting sets; a netting set: its trades; oth
 | `paths` (exact) | the candidate's paths on **the same run** (same `RUN_ID`, same P, same path order) come with the request or from the upstream what-if service | the candidate's `MTM_c(p,k)` is added to its netting set's V, collateral and E recomputed, then the scope's figures; incremental = with − without, per figure and per primary date |
 | `addon` (conservative proxy) | no candidate paths | the candidate is treated as its own netting set (no netting benefit, no collateral): `E_c(k) = max(MTM_c,0) + z_q · SF · d · δ · sqrt(min(t_k, M))` added to the PFE profile, with SA-CCR's supervisory factor SF, adjusted notional d, delta δ (SACCR.md section 6) and z_0.95 = 1.645; flagged `proxy` |
 
-The `paths` method runs in the Python engine (§19.5) on the netting sets the candidate touches (2 MB per set matrix), well inside
+The `paths` method runs in the Java engine (§19.5) on the netting sets the candidate touches (2 MB per set matrix), well inside
 interactive time.
 
-**Implementation:** `POST /api/v1/exposure/what-if` with `method: addon` answers in Java (`ExposureWhatIf`): each candidate's PFE add-on
+**Implementation:** `POST /api/v1/risk/exposure/what-if` with `method: addon` answers in Java (`ExposureWhatIf`): each candidate's PFE add-on
 is `max(MTM, 0) + z_q · SF · d · |δ| · sqrt(min(t_k, M))` and its EE add-on `max(MTM, 0) + SF · d · |δ| · sqrt(min(t_k, M)) / sqrt(2π)` (the
 mean positive part of a normal of that spread), added to the scope's profile; SF by asset class (rates 0.5%, FX 4%, credit 0.54%, equity
 32%, commodity 18%), d the notional (rates: times the supervisory duration), z the normal quantile; flagged `proxy`. `method: paths` is
-answered by the Python exposure engine (part 2, below); candidate paths of another run are refused with `400 DRS-5442`.
+answered by the same engine (below); candidate paths of another run are refused with `400 DRS-5442`.
 
-**Implementation:** `method: paths` (the default of the CLI and the explorer) is asked by `ExposureWhatIfPaths` as the person:
-the candidates go into a private sandbox, the reactive connector `exposure-whatif` computes the kind `exposure-whatif` from the scope's
-`exposure-result` with `detail=whatif` and the touched netting sets' with `detail=set` (§19.5), and the sandbox is deleted after. A
-candidate's paths are `{copyOf, factor}` (a booked trade's paths on the run, scaled), `{runId, mtm}` (G × P numbers, grid-date-major) or
-`{runId, arrow}` (base64 Arrow IPC); a candidate without `nettingSet` is a netting set of its own, uncollateralised. When the Python
-engine is not running (compute off, the pool `exposure` absent) the answer is `503 DRS-5446`; its own errors are `400`. The answer:
-`base`, `with`, `incremental {epe, peakPfe, profile[]}` (per primary date `eeBase`, `ee`, `pfeBase`, `pfe`, `incrementalPfe`), `items`
-(each candidate's peak PFE alone and its incremental peak PFE added alone), `method`, `flags`.
+**Implementation:** `method: paths` (the default of the CLI and the explorer) is `ExposureWhatIfPaths` in the server, computed by
+`ExposureWhatIfMath` in `drishti-compute` (§19.5): it reads the scope and each netting set a candidate joins as the person, so their
+entitlements apply. A candidate's paths are `{copyOf, factor}` (a booked trade's paths on the run, scaled), `{runId, mtm}` (G × P
+numbers, grid-date-major) or `{runId, arrow}` (base64 Arrow IPC); a candidate without `nettingSet` is a netting set of its own,
+uncollateralised; a `nettingSet` the scope does not cover whole is `400 DRS-5440`. The answer: `base`, `with`,
+`incremental {epe, eepe, peakPfe, peakEe, ce, profile[]}` (per primary date `eeBase`, `ee`, `pfeBase`, `pfe`, `incrementalEe`,
+`incrementalPfe`), `items` (each candidate's peak PFE alone and its incremental peak PFE added alone), `method`, `flags` (`exact`),
+`engine`.
 
 ### 18.8 Where it runs
 
 | Work | Where | Why |
 |---|---|---|
-| Building V and E matrices per netting set at date load | Java (`drishti-compute`, planned `com.ash.drishti.compute.ccr.ExposureStore`), streaming the sorted `exposure-path` table, fanned out across the cluster's nodes by netting-set ranges | billions of float additions; SIMD loops; no copy to Python |
+| Building V and E matrices per netting set at date load | Java (`drishti-compute`, planned `com.ash.drishti.banking.compute.ccr.ExposureStore`), streaming the sorted `exposure-path` table, fanned out across the cluster's nodes by netting-set ranges | billions of float additions; SIMD loops; no copy to Python |
 | Statistics of a scope (sum of matrices, means, quantiles) | Java | per request: sum of the scope's set matrices (P × G), then a sort of P values per date |
-| What-if with candidate paths, other collateral models, stressed runs, custom quantile methods, path analytics | Python engine on the compute pool (`risk` pool), Arrow in and out | heavy or rarely used; the scope's few matrices are shipped, never the date |
+| What-if with candidate paths, other collateral models | Java, the same engine | the scope's and the joined sets' matrices are in memory already; one implementation of the maths |
+| Stressed runs, custom quantile methods, path analytics | PLANNED | not built |
 
-**Implementation:** everything in Java on one node: the maths in `drishti-compute` (`com.ash.drishti.compute.ccr`: `ExposureMath`,
-`ExposureBook`, `ExposureCalc`, `ExposureScopes`, `ExposureHotFile`), the service in `drishti-server` (`com.ash.drishti.server.exposure`).
-Other collateral models (`collateral=current|none`) are computed in Java from the value matrices. The exact what-if runs in the
-Python engine (`drishti_compute.exposure`, the compute pool `exposure`, part 2). Fan-out across nodes is PLANNED.
+**Implementation:** everything in Java on one node: the maths in `drishti-compute-banking` (`com.ash.drishti.banking.compute.ccr`: `ExposureMath`,
+`ExposureBook`, `ExposureCalc`, `ExposureScopes`, `ExposureHotFile`), the service in `drishti-banking` (`com.ash.drishti.banking.exposure`).
+Other collateral models (`collateral=current|none`) are computed in Java from the value matrices. The exact what-if runs in the same
+engine (`ExposureWhatIfMath`, §19.5). Fan-out across nodes is PLANNED.
+
+### 18.9 The pre-deal check
+
+*Does this new trade fit the counterparty's credit limit?* The pre-deal check is the exposure engine's answer to that question: one
+request, the what-if of section 18.7 computed with the trade added, the counterparty's stored credit limit applied, and a decision.
+It is a service of the counterparty-risk domain (`ExposurePreDeal`, `ExposurePreDealCommand` and `ExposurePreDealController` in
+`com.ash.drishti.banking.exposure`); every number in it is the server's.
+
+**The command** (Drishti's grammar: upper-case words, any order after the counterparty):
+
+```
+PREDEAL <counterparty> LIKE <trade> [<notional>] [REVERSE] [IN <netting set>]
+PREDEAL <counterparty> <RATES|FX|CREDIT|EQUITY|COMMODITY> <notional> <maturity> [MTM <amount>] [REVERSE] [IN <netting set>]
+```
+
+| Word | Meaning |
+|---|---|
+| `<counterparty>` | its id: `CP-ALDERSHOT`, `CPTY:CP-ALDERSHOT` or `CPTY CP-ALDERSHOT` |
+| `LIKE <trade>` | the **template**: a booked trade you see trade by trade whose paths on the date's run are copied, scaled to the notional; the exact method `paths` |
+| `<notional>` | `250M`, `1.5BN`, `400K`, `250,000,000`; with `LIKE` the copy's scale is notional ÷ the template's notional (left out: the template as it is) |
+| `REVERSE` | the other side of the template (the copy's paths times −1 × the scale) |
+| `IN <netting set>` | the netting set the trade goes into (one of the counterparty's that you see whole); left out: the template's own when it is the counterparty's, else the counterparty's only one |
+| `<asset class> <notional> <maturity>` | without a template: the trade described (a maturity date or a tenor such as `5Y`, `18M`); the conservative proxy `addon` |
+| `MTM <amount>` | the trade's MtM today (default: the copy's, or 0) |
+
+The same request as fields: `{"command": "PREDEAL CP-ALDERSHOT LIKE 1000001 250M"}`, or `{"counterparty", "like"` (or `"template":
+{"copyOf"}`), `"notional"`, `"side": "same"|"reverse"`, `"nettingSet"`, `"assetClass"` (also as the trades name it: *Interest Rate*,
+*Foreign Exchange* …), `"maturity"`, `"mtm"}`. Words that are not the grammar's are refused in words (`400 DRS-5440`), with the usage.
+
+**The limit.** The counterparty's `credit-limit` record of the date (`LIMIT`, `MEASURE`, `BUCKETS`). A measure on PFE (`PFE 95 peak`,
+`peak PFE`) is held against the peak PFE at its confidence (95 from the text; else `limit-confidence`); `EEPE`, `EPE` and `EE peak`
+against those figures. Each tenor bucket (`0-1Y`, `1-3Y`, `3-5Y`, `5-10Y`, `10Y+`; `3M-1Y` and the like) is held against its own limit:
+the profile's peak among the primary dates in the bucket, before and after.
+
+**Within, near or over.** The limit and each bucket say `within`, `near` (from `drishti.risk.limit-near` of its limit, 0.8 by default, the banking module's one limit rule shared with VaR limits and the
+sensitivity ladder: still within,
+said in amber, and the approve reason says which: *near the limit (80.0% or more of it: the 0-1Y bucket at 90.0% of its limit)*) or
+`breach` (over 100%). Near never changes the decision; it is the warning before the limit.
+
+**The decision** (in this order):
+
+| Decision | When |
+|---|---|
+| `refer` | anything less than exact data, each reason said: the **proxy** (`addon`: *a proxy answer only refers, never approves*), no credit limit on record, a limit set on a measure the engine does not compute (or the method does not give), netting sets of the counterparty you do not see (credit, who sees them all, decides), the date's run stale (`stale-run`), the counterparty with several netting sets and none named or implied (the trade shown in one of its own), no exposure for the counterparty on the date (a new counterparty, or one the run does not cover) |
+| `decline` | exact data, and the limit or a tenor bucket over its limit after the trade |
+| `approve` | exact data, the limit and every bucket within their limits after the trade |
+
+A proxy never approves and never declines: it refers. A counterparty you see none of is refused (`403`), as a template you do not see
+trade by trade (`403`); a template not on the date's run is `404 DRS-1001`; a netting set not the counterparty's `400 DRS-5440`.
+
+**The answer**: `checkId` (`PDC-…`), `command` (as Drishti writes it back), `decision`, `reason` and `reasons`, `method` (`id`: `paths`
+or `addon`, `exact`, `name`, `text`: how it was computed), `template` (the trade copied: id, product, asset class, notional, maturity,
+counterparty, netting set, MtM, the `factor`, `side`, the candidate's notional and MtM; or the trade described), `nettingSet` (`id`,
+`how`: named, the template's, the counterparty's only, its own; `sets`), `limit` (`id`, `measure`, `confidence`, `limit`, `before`,
+`after`, `increment`, `useBefore`, `useAfter`, `headroomBefore`, `headroomAfter`, `near`, `status` (`within`, `near`, `breach`),
+`buckets[]` with `bucket`, `limit`, `before`, `after`, `increment`, `useBefore`, `useAfter`, `headroomAfter`, `status`), `exposure`
+(`base`, `with`, `incremental` with the profile, as section 18.7; with the exact method also `ead`, the IMM EAD α × EEPE, in each, and
+`alpha`), `saCcr` (SA-CCR's incremental EAD:
+**under construction**, release 2.9.11.k), `flags`, `businessDate`, `runId`, `confidence`, `engine`.
+
+**Entitlements and audit.** The check is computed as the person asking: the counterparty's netting sets they see (others left out and
+the answer refers), a template only of a trade they see trade by trade; nothing per person is kept between requests (two people asking
+at the same time get their own answers). Every check is audited (`ccr-predeal`: the person, the counterparty scope, the check id, the
+decision, the method, the command and the limit use), the what-if inside it is not audited twice.
+
+**Explain.** The one Explain explains a check (kind `predeal`, measures `decision`, `headroom`, `increment`, `ead`; arguments the
+`command` as the check wrote it back, or its fields, and `date`): it makes the same check again as the person asks, so the same numbers,
+and does not audit it a second time (`ExposurePreDealExplainer`).
+
+**Where**: the screen **Counterparties → Pre-deal check** (`PREDEAL <GO>`, `/predeal`, [section 7](#7-pre-deal-what-if));
+`POST /api/v1/risk/exposure/predeal` and `GET /api/v1/risk/exposure/predeal/grammar` (section 11); `drishti.py exposure predeal
+"PREDEAL CP-ALDERSHOT LIKE 1000001 250M"`; the Trading landing's new-trade check (its exposure half is this check). SA-CCR's incremental EAD and the other limits a trade touches (soft and hard
+limits, warnings, the maximum size: [LIM.md section 6.4](../contracts/LIM.md#64-pre-deal-check)) come with release 2.9.11.k.
+
+**Tests**: `ExposurePreDealApiTest` (the what-if equal to the full recompute with the trade booked, figure by figure and date by date;
+approve, decline on the limit and on a bucket, refer on a proxy, no limit, a measure not computed and no exposure; two people at once
+with their own entitlements; the grammar; the audit; the EAD and the Explain, not audited again), `ExposurePreDealLimitTest` (within,
+near and breach on the limit and on a bucket, the headroom, the EAD), and the screen's `tests/test_predeal_browser.py` (each verdict,
+a proxy, the form, Explain, a phone, the banking module off).
 
 ## 19. What Drishti answers
 
@@ -990,7 +1051,7 @@ Standard tenor labels in `PROFILE`: the primary grid dates, labelled by the near
 in aggregate only; `PROVENANCE` in UPPER_SNAKE (the run, the inputs' versions, the intake, `TIER`). An id of the stored-profile form
 (`EXP-ALDERSHOT-FRA`) answers `NSET:NS-ALDERSHOT-FRA` with a `NOTE` saying so. The result's rule: `required: [SCOPE, STATUS, PROFILE]`.
 
-### 19.2 The API (`/api/v1/exposure`)
+### 19.2 The API (`/api/v1/risk/exposure`)
 
 | Method and path | Parameters | Answer |
 |---|---|---|
@@ -1002,13 +1063,14 @@ in aggregate only; `PROVENANCE` in UPPER_SNAKE (the run, the inputs' versions, t
 | `POST /captures`, `GET /captures[/{id}[/csv]]`, `GET /compare` | as VaR | captures of exposure answers (the profile and, optionally, the scope's E matrix summary, never the trade paths) |
 | `GET /status`, `POST /reload` | | runs loaded, hot files, sizes |
 
-**Implementation:** the paths are under `/api/v1/exposure`; every `GET` takes `asOf`, `q`, `collateral` and (`/scope`) `run` and
+**Implementation:** the paths are under `/api/v1/risk/exposure`; every `GET` takes `asOf`, `q`, `collateral` and (`/scope`) `run` and
 `strict`. Also `GET /scopes/{scope}` (the path form), `GET /scope/profile?format=csv`, `GET /tree` (groups, counterparties and netting
 sets with their EPE and peak PFE; sets without paths marked `noPaths`), `GET /retention` (§27.3), `GET /official?asOf=` and `POST
 /official` (administrators), `POST /reload` (administrators). Answers are camelCase (`epe`, `peakPfe`, `profile[].pfe99` ...); the computed
 kind spells the same fields in UPPER_SNAKE. **Part 2** added `distribution?bands=true` (the path fan: the 5, 25, 50, 75 and 95%
 quantiles at every primary date), `contributions?alone=true` (by trade: each trade's peak PFE alone) and `&profile=true` (by trade: its EE
-contribution at every primary date), the answer's `ancestors`, the counterparty's stored `limit` (`kinds.limit`), the netting set's
+contribution at every primary date), the answer's `ancestors`, the counterparty's stored `limit` (`kinds.limit`; with `use`, its `status` within, near or breach and `near`, the setting
+`drishti.risk.limit-near`), the netting set's
 `collateral` (with `atPeak`), a trade's attributes, the tree's EE lines, tenors, bank and legal-entity nodes, and `POST /what-if` with
 `method: paths`. The full table is [section 11](#11-the-api). `contributions` rows: `{key, scope, label, kind, value, pct, incremental}`, with `total`,
 `date`, `parts`, `truncated`. Captures are ids `XCAP-<yyyymmdd>-<n>`, kept per owner in the content store (`exposure/captures/`); a
@@ -1044,7 +1106,7 @@ reads:
   - { kind: collateral-holding, as: holdings, all: true }
 engine:
   type: java
-  entry: com.ash.drishti.compute.ccr.ExposureEngine
+  entry: com.ash.drishti.banking.compute.ccr.ExposureEngine
   version: "1.0"
 triggers:
   - { on: data-version, kinds: [simulation-run, exposure-path, netting-set-member, csa, collateral-holding], affects: all }
@@ -1055,84 +1117,41 @@ limits: { timeout: 60s, wait: 50ms, max-inflight-per-user: 4, max-scope-netting-
 
 **Implementation:** the connector `exposure-engine` is in the counterparty-risk pack's `pack.yaml` (written by
 `tools/packgen/banking/ccr_kinds.py`), as VaR's `var-engine` is in the market-risk pack's: `engine: { type: java, class:
-com.ash.drishti.server.exposure.ExposureResultEngine }`, `params` `q`, `collateral`, `run` as above, `result: { required: [SCOPE, STATUS,
+com.ash.drishti.banking.exposure.ExposureResultEngine }`, `params` `q`, `collateral`, `run` as above, `result: { required: [SCOPE, STATUS,
 PROFILE], types: { EPE: number, PEAK_PFE: number } }`, `triggers` on the data versions of `simulation-run`, `exposure-path`,
 `netting-set`, `csa`, `collateral-balance`, `coalesce` 1 s / 10 s, `cache` 1,000 for 1 h, `limits` 60 s / 5 s / 4 per user; enabled by
 `DRISHTI_EXPOSURE_ENABLED`. The scope limit is the engine's setting `max-scope-netting-sets`. No `reads:`: the engine reads its store.
 
-### 19.5 The Python engine (what-if and analytics)
+### 19.5 The exact what-if in the Java engine
 
-The proposal; the **implementation** below:
+The pre-deal what-if is not a kind: it is the engine's `POST /api/v1/risk/exposure/what-if` (section 11), both methods in the server's
+exposure engine, the exact one (`paths`) by the same maths as every exposure figure:
 
-```yaml
-# config/connectors/exposure-whatif.yaml                        (in the pack's pack.yaml)
-plugin: reactive
-mode: reactive
-kinds:
-  exposure-whatif:
-    params:
-      sandbox: { type: sandbox-ref, required: true }               # the candidate trades and their paths
-      q:       { type: decimal, default: 0.95, min: 0.5, max: 0.9999 }
-      method:  { type: enum, options: [paths, addon], default: paths }
-reads:
-  - { kind: exposure-result, as: base, id: "{id}" }
-engine:
-  type: python
-  entry: drishti_ccr.exposure:ExposureWhatIfEngine
-  pool: risk
-  version: "1.0"
-limits: { timeout: 30s, wait: 100ms, max-inflight-per-user: 2 }
-requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
+```java
+// drishti-compute: com.ash.drishti.banking.compute.ccr.ExposureWhatIfMath
+ExposureWhatIfMath.Result r = ExposureWhatIfMath.of(
+        new Scope(e, n, ce, lifeYears),        // the scope as booked: E and N (G_primary x P), CE, the longest remaining life
+        sets,                                  // each netting set a candidate joins: V (G x P), its E and N in the scope, CSA, MtM today, CE
+        candidates,                            // id, label, netting set ("" = its own), MTM (G x P), MtM today, life
+        grid, paths, times, q, model, rule, scope);
+// r.before(), r.after(): ExposureMath.Stats (EE, ENE, EEE, PFE, EPE, EEPE, the peaks, CE); r.items(): alone and added alone
 ```
 
-The engine interface (worker SDK, [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) section 8), as proposed in a package `compute/drishti-ccr`:
+For each netting set a candidate joins: `V' = V + Σ MTM_c` on every path at every grid date; the set's collateral and exposure again by
+`ExposureMath.exposure` (section 18.3: the CSA's terms, today's holdings, the look-back points, the asked collateral model); the
+scope's `E' = E − E_set + E'_set` and `N' = N − N_set + N'_set` path by path; its current exposure `CE − CE_set + CE'_set`, with the
+set's MtM today plus the candidates'. A candidate without a netting set adds `max(MTM_c, 0)` and `min(MTM_c, 0)` (uncollateralised) and
+`max(MTM0_c, 0)` to the current exposure. The horizon is `min(1 year, the longest remaining life)`, the candidates' included. Then
+`ExposureMath.statistics` before and after; incremental = after − before for every figure and every primary date. Each candidate alone:
+its peak PFE uncollateralised (`peakPfeAlone`) and the scope's peak PFE change with only it added (`incrementalPeakPfe`).
 
-```python
-# compute/drishti-ccr/src/drishti_ccr/exposure.py               (drishti_compute/exposure/whatif.py)
-from drishti_compute import Engine, Request, Inputs, Progress, Result
-
-class ExposureWhatIfEngine(Engine):
-    kinds = ("exposure-whatif",)
-
-    def compute(self, req: Request, inputs: Inputs, progress: Progress) -> Result:
-        grid = inputs.arrow("grid")          # GRID_INDEX int32, T float64, ROLE string, LOOKBACK_OF int32
-        sets = inputs.arrow("set_paths")     # NETTING_SET string, GRID_INDEX int32, V fixed_size_list<float32>[P]  (the touched sets only)
-        csa = inputs.arrow("csa")            # NETTING_SET, TH_THEM, TH_US, MTA_THEM, MTA_US, IA, ROUNDING, MPOR_DAYS, IM_HELD (USD, float64)
-        cand = inputs.arrow("candidates")    # TRADE_ID, NETTING_SET, GRID_INDEX, MTM fixed_size_list<float32>[P]
-        ...                                  # V' = V + candidates; C, E per section 18.3; statistics per section 18.4
-        return Result(rows=[{"EPE": ..., "PEAK_PFE": ..., "INCREMENTAL_PEAK_PFE": ...}],
-                      tables={"profile": profile_table})   # TENOR, DATE, T, EE, ENE, EEE, PFE, EE_BASE, PFE_BASE
-```
-
-Deterministic (no random numbers); a missing candidate path or a different P is `ComputeError("the candidate's paths are not of run
-XR-…: 2,000 paths, the run has 5,000")`.
-
-**Implementation:** the connector `exposure-whatif` is in the counterparty-risk pack's `pack.yaml` (written by
-`tools/packgen/banking/ccr_kinds.py`), enabled by `DRISHTI_EXPOSURE_ENABLED`: kind `exposure-whatif` (mnemonic `XWIF`), `params`
-`sandbox` (sandbox-ref), `q`, `collateral`, `sets`; `result: { required: [BEFORE_PEAK_PFE, AFTER_PEAK_PFE] }`; `reads` the base
-`exposure-result` at `{id}~collateral=…~detail=whatif~q=…~sets=…` and the sets `{inputs.base.WHATIF_SETS}` (at most 50) with
-`detail=set`; `engine: { type: python, entry: drishti_compute.exposure.whatif:ExposureWhatIfEngine, pool: exposure }`; `triggers` on
-the data versions of `simulation-run`, `exposure-path`, `netting-set`, `csa`, `collateral-balance`; `coalesce` 1 s / 10 s; `cache` 200
-for 1 h; `limits` 60 s / 250 ms / 2 per user. The pool `exposure` (`config/compute/compute.yaml`): Python, the system environment
-(standard library only), 0 to `DRISHTI_COMPUTE_EXPOSURE_WORKERS` (4) workers, 2 GB, 300 CPU-seconds, 60 s; it runs only with
-`DRISHTI_COMPUTE_ENABLED=true`. The package is `drishti-compute/src/main/python/drishti_compute/exposure/` (shipped in the worker SDK):
-`measures.py` (the measures by `ExposureMath`'s rules: lagged collateral, E, N, EE, ENE, EEE, PFE by the rank rule, EPE and EEPE over the
-horizon) and `whatif.py`.
-
-Its inputs, read as the viewer from the Java engine (`ExposureWhatIfInputs`):
-
-| Read | From | Fields |
-|---|---|---|
-| `base` (one row) | `exposure-result` with `detail=whatif` | `E_SCOPE`, `N_SCOPE` (G_primary × P, row-major), `TIMES`, `PRIMARY`, `LOOKBACK_FOR`, `TENORS`, `DATES`, `RULE`, `CE_SCOPE`, `LIFE_YEARS`, `WHATIF_SETS` / `WHATIF_SET_IDS` (the sets named in `sets`, else every set the scope covers whole, at most 50), `PATHS`, `RUN_ID`, `CONFIDENCE`, the scope's ids |
-| `sets` (a row per set) | `exposure-result` with `detail=set` on `NSET:<id>` | `NETTING_SET`, `V` (G × P), `E_SET`, `N_SET`, the CSA's terms in USD, `HELD_TODAY`, `IM_HELD`, `V0`, `CE_SET` |
-| `sandbox` | the person's private sandbox | `TRADE_ID`, `LABEL`, `NETTING_SET` (empty: its own), `MTM` (G × P), `MTM0`, `LIFE_YEARS`, `RUN_ID` |
-
-The scope's exposure becomes `E_scope − E_set + E'_set` path by path for every set a candidate joins. The result: one row (`SCOPE`,
-`CANONICAL`, `BUSINESS_DATE`, `RUN_ID`, `CONFIDENCE`, `COLLATERAL_MODEL`, `METHOD`, `ITEMS`, `BEFORE_`, `AFTER_` and `CHANGE_` of `EPE`,
-`EEPE`, `PEAK_PFE`, `PEAK_EE`, `CE`, `BEFORE_PEAK_PFE_TENOR`, `AFTER_PEAK_PFE_TENOR`, `FLAGS`) and the tables `profile` (`TENOR`, `DATE`,
-`T`, `EE_BASE`, `EE`, `ENE_BASE`, `ENE`, `PFE_BASE`, `PFE`, `INCREMENTAL_EE`, `INCREMENTAL_PFE`) and `items`. Its contract is
-`exposure-whatif.contract.yaml` (computed). Tests: `drishti-compute/src/test/python/test_exposure_engine.py` (the worked example of
-§2.1 and the test data against the Java figures).
+**Implementation:** `ExposureWhatIfPaths` (`drishti-banking`, `com.ash.drishti.banking.exposure`) turns the request's candidates into
+paths (`copyOf` reads the booked trade's paths on the run from the lake; `mtm` or `arrow` as sent; another run or length `400
+DRS-5442`), reads the scope and each joined netting set as the person (`NSET:<id>`: their entitlements apply; a set the scope does not
+cover whole `400 DRS-5440`; at most 50 sets), computes with `ExposureWhatIfMath` and audits the ask (`ccr-whatif`). Deterministic, nothing
+stored, no compute pool. Tests: `ExposureWhatIfMathTest` (the worked example of §2.1, and reference answers on a book of four netting
+sets under the three collateral models and both rank rules, `drishti-compute-banking/src/test/resources/ccr/whatif-parity.json`, given to the
+cent) and `ExposureApiTest` (an unwind of a whole netting set, a copy of its own, a set outside the scope).
 
 ## 20. Official end-of-day results
 
@@ -1211,8 +1230,7 @@ trade in two netting sets; the date before answers with a warning and the flag `
 `DRS-5442` (400, what-if candidate paths of another run), `DRS-5443` (503, the scope sums more netting sets than an interactive answer
 may: the official capture computes it), `DRS-5444` (422, a row rejected at load: another vector length, NaN or infinity, a grid index or
 date outside the grid; counted and listed in the provenance, never padded), `DRS-5445` (503, the date's matrices over the memory
-budget), `DRS-5446` (503 since part 2: the what-if `paths` method's Python exposure engine is not running or not answering; it was 501
-before the engine existed; the engine's own errors are 400), `DRS-1001` (404, no run for the date, or no paths
+budget), `DRS-1001` (404, no run for the date, or no paths
 for the netting set or counterparty), `DRS-1003` (502, unreadable input). **Implementation checks:** sparse rows are checked to maturity plus 14
 calendar days (the engine has no calendar; the generator writes rows to maturity plus 10 business days); the t₀ check lists trades whose
 paths' mean at the first grid date departs from their MtM today by more than `t0-tolerance` of it or 5% of the notional (the test data's
@@ -1251,7 +1269,7 @@ input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
   (LIM and CVA are parked); the stored CVA, the SA-CCR figures, a credit limit's stored used amount and utilisation and the
   counterparty's stored net MtM show *Under construction* in their place until their engines are built
   ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)); the walks of the live demo do not move exposure figures.
-- **Computed attributes** ([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 13): beside the stored figures the netting-set page
+- **Computed attributes** ([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes) section 13): beside the stored figures the netting-set page
   shows the totals derived from the trade valuations (derived kind `nset-mtm`: net MtM, live trades, gross positive and negative,
   netting benefit, net-to-gross, uncollateralised CE, MtM by product group, the live-status trades past their maturity date) with the
   difference to the stored net MtM; the counterparty page the same from `cpty-mtm` (its CE uncollateralised per set first). The engine's CE
@@ -1274,7 +1292,7 @@ input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
   `concentration_hhi.py` and the core pack's `group_exposure.py` each counterparty's `PEAK_PFE`. The count of snippets is unchanged.
 - Redirects: `EXP EXP-ALDERSHOT-FRA` and the API's or the computed kind's id `EXP-ALDERSHOT-FRA` answer `NSET:NS-ALDERSHOT-FRA`
   (`ExposureService.scopeText`); the console's `/v/exposure-profile/EXP-ALDERSHOT-FRA` redirects to
-  `/v/exposure-result/NSET:NS-ALDERSHOT-FRA?from=EXP-ALDERSHOT-FRA` (`routes/exposure_routes.py`).
+  `/v/exposure-result/NSET:NS-ALDERSHOT-FRA?from=EXP-ALDERSHOT-FRA` (`drishti-console/plugins/banking/routes/exposure_routes.py`).
 - Guard: `tools/contracts.policy.yaml` lists `exposure-profile` under `retired:`, the netting set's and counterparty's figures
   under `removed:`, and `engine-columns.exposure` (`EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`, `PEAK_PFE`, `PEAK_EE`, `EAD_IMM`, `PFE_95`,
   `PFE_99`, `EXPOSURE_ENGINE`, `EXPOSURE_PROFILE`); `tools/test_contracts.py` fails the build when one returns.
@@ -1454,13 +1472,12 @@ largest value). `lake demo` moves the run id, the rows' ids and the grid dates w
 
 | Piece | Where | What |
 |---|---|---|
-| the maths | `drishti-compute`, `com.ash.drishti.compute.ccr` | `ExposureGrid` (the grid, roles, look-back map, Δt), `CsaTerms` (thresholds, MTA, IA, rounding, called collateral), `ExposureMath` (E, N, EE, ENE, EEE, PFE, EPE, EEPE, contributions), `ExposureBook` (a date's netting sets and trades), `ExposureHotFile` (`DRSHEXP1`), `ExposureScopes` (the scope words), `ExposureCalc`; the benchmark `ExposureTierBenchmark` (drishti-server tests, §27.4) |
-| the service | `drishti-server`, `com.ash.drishti.server.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` + `ExposureWhatIfInputs` (the exact method through the Python engine), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
-| the Python engine | `drishti-compute/src/main/python/drishti_compute/exposure/` | `measures.py` (the measures by the Java engine's rules), `whatif.py` (`ExposureWhatIfEngine`, kind `exposure-whatif`); tests `drishti-compute/src/test/python/test_exposure_engine.py` |
-| the console | `drishti-console` | `routes/exposure_routes.py` (`EXP` and `/exposure`, stored-profile ids), `web/templates/terminal/exposure.html`, `web/static/js/drishti_exposure-explorer.js`, `drishti_exposure-charts.js` (plain SVG), `web/static/css/drishti_exposure.css`; tests `tests/test_exposure_routes.py`, `tests/test_exposure_explorer_browser.py` (the explorer in a browser) |
+| the maths | `drishti-compute-banking`, `com.ash.drishti.banking.compute.ccr` | `ExposureGrid` (the grid, roles, look-back map, Δt), `CsaTerms` (thresholds, MTA, IA, rounding, called collateral), `ExposureMath` (E, N, EE, ENE, EEE, PFE, EPE, EEPE, contributions), `ExposureBook` (a date's netting sets and trades), `ExposureHotFile` (`DRSHEXP1`), `ExposureScopes` (the scope words), `ExposureCalc`; the benchmark `ExposureTierBenchmark` (drishti-server tests, §27.4) |
+| the service | `drishti-banking`, `com.ash.drishti.banking.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` + `ExposureWhatIfInputs` (the exact method through the Python engine), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
+| the console | `drishti-console` | `drishti-console/plugins/banking/routes/exposure_routes.py` (`EXP` and `/exposure`, stored-profile ids), `drishti-console/plugins/banking/templates/terminal/exposure.html`, `drishti-console/plugins/banking/static/js/drishti_exposure-explorer.js`, drishti-risk's grid and chart presets (Drishti Elements, `static/elements/drishti-risk/`), `drishti-console/plugins/banking/static/css/drishti_exposure.css`; tests `tests/test_exposure_routes.py`, `tests/test_exposure_explorer_browser.py` (the explorer in a browser) |
 | the CLI | `tools/expcli.py` (`drishti.py exposure`) | tests `tools/test_expcli.py` |
 | test data | `tools/packgen/ccr/` | `paths.py`, `ccrmath.py` (the reference maths in Python), `make_ccr_data.py` (`--check`, `--full`, `--reconcile`), `test_ccr_data.py` |
-| the pack | `config/packs/counterparty-risk/pack.yaml` (written by `tools/packgen/banking/ccr_kinds.py`) | kinds `simulation-run`, `exposure-path`, `exposure-result`, `exposure-whatif`; connectors `exposure-store` (Delta), `exposure-engine` and `exposure-whatif` (reactive) |
+| the pack | `config/packs/banking/counterparty-risk/pack.yaml` (written by `tools/packgen/banking/ccr_kinds.py`) | kinds `simulation-run`, `exposure-path`, `exposure-result`; connectors `exposure-store` (Delta) and `exposure-engine` (reactive) |
 
 Everything runs on one node; sharding across Drishti\*net is planned ([section 26](#26-one-date-in-memory-and-the-hot-file),
 26.2 "Sharding").
@@ -1578,7 +1595,7 @@ The product owner decided 7 years for VaR's input vectors. 7 years is about 1,76
 | statistics per set and counterparty (EE, ENE, EEE, PFE 95/99 per primary date), float64 | 0.22 GB | 0.4 TB | **every date, 7 years** |
 | trade EE contributions per primary date, float32 | 1,000,000 × 50 × 4 = 0.2 GB | 0.35 TB | **every date, 7 years** (audit of who drove the exposure) |
 | official end-of-day captures (counterparty profiles) | about 0.05 GB | 0.1 TB | 7 years |
-| `simulation-run` rows | KB | MB | 7 years (reproducibility) |
+| [`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)) rows | KB | MB | 7 years (reproducibility) |
 
 At P = 2,000 and G = 50 every number above is a fifth. Under the proposal the standing storage is about 130 TB at full size (64 + 50 + 17 TB of paths and matrices, under 1 TB of statistics,
 contributions and captures) (instead of
@@ -1588,7 +1605,7 @@ contributions and captures) (instead of
 (`trade-paths-days` 20, `trade-paths-month-end-years` 1, `set-matrices-years` 1, `set-matrices-month-end-years` 7, `statistics-years` 7,
 `trade-contributions-years` 7; a month-end is the last weekday of its month). Drishti applies them to what it keeps: a hot file within
 its window is never trimmed by `disk-dates` (but is by the disk cap `max-disk-gb`); official records and trade contributions beyond theirs are removed after each capture. The
-trade paths are the lake owner's: `GET /api/v1/exposure/retention` lists each date held and whether its paths are beyond their window.
+trade paths are the lake owner's: `GET /api/v1/risk/exposure/retention` lists each date held and whether its paths are beyond their window.
 
 <a id="274-the-benchmark-measured-and-extrapolated-291"></a>
 ### 27.4 The benchmark: measured and extrapolated
@@ -1606,10 +1623,9 @@ command, every figure and what limits a large bank: [BENCHMARK.md section 6](../
 | **Loading a large bank on one node** | open (§27.4): the load keeps every set's value matrix in float64 on the heap until the date is built (80 GB at P = 2,000, G = 50; 400 GB at P = 5,000, G = 100), so a large bank needs the sharding below or a set-at-a-time load (§26.3's design); the memory budget refuses a date over it (`DRS-5445`) |
 | **Contributions by trade at a large bank's size** | open (§27.4): the trade-path read streams the date's whole `exposure-path` table, minutes at 0.4 to 2 TB; pruning by `NETTING_SET` (planned, §26.2) makes it a set's 0.4 to 2 GB. Its trades' paths are held in float64 (4 GB for 1,000 trades at P = 5,000, G = 100) |
 | **Scopes of many sets at P = 5,000** | open (§27.4): a scope's matrices are summed on one thread; a group of 200 sets is about 0.3 s at P = 5,000, G = 100 (target 150 ms). Summing in parallel, or a `STAT` section of per-set statistics, would meet it |
-| **Sharding across Drishti\*net** | planned: counterparties in contiguous ranges aligned to groups, two replicas, a group across nodes summed by the coordinator (§26.2); today it is one node. The full design (key `COUNTERPARTY`, `NETTING_SET`; partial path matrices; quantiles after the combine; the migration) is [CLUSTER_DEPLOYMENT.md section 6](../architecture/CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned), plan row CD10 |
+| **Sharding across Drishti\*net** | planned: counterparties in contiguous ranges aligned to groups, two replicas, a group across nodes summed by the coordinator (§26.2); today it is one node. The full design (key `COUNTERPARTY`, `NETTING_SET`; partial path matrices; quantiles after the combine; the migration) is [CLUSTER_GUIDE.md section 6](../architecture/ARCHITECTURE.md#3211-exposure-sharding-design-not-built), plan row CD10 |
 | **The restricted (wall-crossed) list** | not built (§9): access is by counterparty, group or legal entity at `trades`, `aggregate` or `none` |
 | **Stored credit limits read very low utilisation** | the `credit-limit` records (read as stored, `kinds.limit`) were sized on stored profiles, 3 to 30 times the computed peaks on the large sets (§22.2: median computed / stored 0.08), so the board's *used* reads 0.1% to a few percent. Limits (LIM) are parked; resizing them on the computed PFE comes with the LIM engine |
-| **Large `detail=whatif` answers in the connector cache** | `exposure-result` with `detail=whatif` or `set` carries G × P matrices (a set of 24 dates × 200 paths is small; at P = 5,000 and G = 100 a set's V is 4 MB as JSON numbers and more), and the reactive connector caches answers (1,000 for 1 h). Excluding detail answers from the cache, or passing the matrices as Arrow, is open |
 | Several runs on one date (`STRESSED`, `EAD_IMM_STRESSED`) | not built (§24.1, question 4) |
 | Path cash flows (`CASHFLOW`) | optional, not read (§24.1, question 6) |
 | `upstreamRef` candidates (an upstream what-if service) | not built (§24.1, question 8) |
@@ -1619,9 +1635,7 @@ command, every figure and what limits a large bank: [BENCHMARK.md section 6](../
 
 ## 29. Exposure data: every dataset the engine reads
 
-Every dataset the exposure engine reads, what it is for, whether it is required, where its sample lives, and one real record from the shipped sample
-data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The field-by-field rules of each kind are its
-**data contract** ([docs/contracts/packs/](../contracts/packs/README.md)); how files are named, dated and loaded is
+Every dataset the exposure engine reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
@@ -1647,415 +1661,62 @@ The kinds are the engine's `drishti.ccr.exposure.kinds.*` settings (`config/engi
 One row per simulation run and business date: the grid dates (with their look-back dates), the number of paths, the model and the
 seed. The paths of `exposure-path` are ordered by this row exactly as the P&L vectors are ordered by VaR's scenario set.
 
-- **Data contract:** [`simulation-run`](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) (XRUN), key `RUN_ID`; 24 fields, 24 required.
-- **Sample:** `data/testdata/counterparty-risk/simulation-run/simulation-run.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "RUN_ID": "XR-2026-09-30-01",
-  "BUSINESS_DATE": "2026-09-30",
-  "MARKET_DATA_DATE": "2026-09-30",
-  "MODEL": "One correlated Brownian factor per asset class (rates, FX, credit, equity, commodity) and a walk of each trade's own; values amortise to zero at maturity (tool…",
-  "MODEL_VERSION": "drishti-testgen-ccr-1.0",
-  "CALIBRATION": "REAL_WORLD",
-  "PATHS": 200,
-  "SEED": "ccr|XR-2026-09-30-01",
-  "ANTITHETIC": false,
-  "GRID_DATES": [
-    "2026-10-07",
-    "2026-10-14",
-    "2026-10-16",
-    "2026-10-30",
-    /* … 16 more … */,
-    "2033-09-16",
-    "2033-09-30",
-    "2036-09-16",
-    "2036-09-30"
-  ],
-  "GRID_ROLE": [
-    "PRIMARY",
-    "PRIMARY",
-    "LOOKBACK",
-    "PRIMARY",
-    /* … 16 more … */,
-    "LOOKBACK",
-    "PRIMARY",
-    "LOOKBACK",
-    "PRIMARY"
-  ],
-  "LOOKBACK_OF": [
-    -1,
-    -1,
-    3,
-    -1,
-    /* … 16 more … */,
-    21,
-    -1,
-    23,
-    -1
-  ],
-  "GRID_TENORS": [
-    "1W",
-    "2W",
-    null,
-    "1M",
-    /* … 16 more … */,
-    null,
-    "7Y",
-    null,
-    "10Y"
-  ],
-  "LOOKBACK_DAYS": 10,
-  "VALUE_BASIS": "FUTURE",
-  "CURRENCY": "USD",
-  "PRECISION": "float64",
-  "CREDIT_PATHS": false,
-  "NETTING_SETS": 8,
-  "TRADES": 523,
-  "ROWS": 7540,
-  "BATCH_ID": "XB-2026-09-30-01",
-  "COMPUTED_AT": "2026-09-30T23:40:00Z",
-  "STATUS": "complete"
-}
-```
+- **Data contract:** [`simulation-run`](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) (XRUN), key `RUN_ID`; 24 fields, 24 required; the file [`simulation-run.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/simulation-run.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#simulation-run) (files `data/testdata/counterparty-risk/simulation-run/simulation-run.*.jsonl.gz`).
 
 ### 29.3 `exposure-path`: every trade's MtM on every path
 
 The large input: one row per trade, grid date and run, `MTM` holding the trade's value on each path. Drishti sums a netting set's
 trades per path and date; an absent row after maturity means the trade is worth 0 there.
 
-- **Data contract:** [`exposure-path`](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) (XPATH), key `PATH_ROW_ID`; 21 fields, 20 required.
-- **Sample:** `data/testdata/counterparty-risk/exposure-path/exposure-path.tar` → `exposure-path/2026-09-30/cob.part-001.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "PATH_ROW_ID": "XR-2026-09-30-01~CLY-3000280~0",
-  "BUSINESS_DATE": "2026-09-30",
-  "RUN_ID": "XR-2026-09-30-01",
-  "TRADE_ID": "CLY-3000280",
-  "SOURCE_SYSTEM": "CALYPSO",
-  "NETTING_SET": "NS-ALDERSHOT-FRA",
-  "COUNTERPARTY": "CP-ALDERSHOT",
-  "LEGAL_ENTITY": "LE-FRA",
-  "DESK": "DESK-SFT",
-  "TT_BOOK": "BOOK-SFT-1",
-  "LIMIT_LETTER": "LL-0001",
-  "ASSET_CLASS": "Securities financing",
-  "PRODUCT": "Tri-party repo",
-  "NOTIONAL": 260700000.0,
-  "MATURITY_DATE": "2027-02-15",
-  "GRID_INDEX": 0,
-  "GRID_DATE": "2026-10-07",
-  "MTM": [
-    -523841,
-    -1015981,
-    -712385,
-    -991918,
-    /* … 192 more … */,
-    -789507,
-    -534603,
-    -638599,
-    -552661
-  ],
-  "STATUS": "ok",
-  "PRICER": "testgen-factor-walk",
-  "BATCH_ID": "XB-2026-09-30-01"
-}
-```
+- **Data contract:** [`exposure-path`](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) (XPATH), key `PATH_ROW_ID`; 21 fields, 20 required; the file [`exposure-path.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/exposure-path.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#exposure-path) (files `data/testdata/counterparty-risk/exposure-path/exposure-path.tar`).
 
 ### 29.4 `netting-set`: the netting sets and their trades
 
 Each netting set with its counterparty, legal entity, agreement and CSA, and its trades: the engine sums the trades' paths of one set
 before flooring at zero.
 
-- **Data contract:** [`netting-set`](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (NSET), key `NETTING_SET_ID`; 19 fields, 18 required.
-- **Sample:** `data/testdata/counterparty-risk/netting-set/netting-set.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "NETTING_SET_ID": "NS-ALDERSHOT-FRA",
-  "TRADE_COUNT": 35,
-  "NET_MTM": -22673015.35,
-  "COLLATERAL": -15251373,
-  "LIMIT": 7000000.0,
-  "CVA": -46,
-  "TRADES": [
-    {
-      "TRADE_ID": "CLY-4000583",
-      "STATUS": "LIVE",
-      "PRODUCT": "Tri-party repo",
-      "ASSET_CLASS": "Securities financing",
-      "CURRENCY": "EUR",
-      "BOOK": "BOOK-SFT-3",
-      "NOTIONAL": 645808000.0,
-      "MATURITY": "2026-10-15",
-      "MATURITY_BUCKET": "0-1Y",
-      "MTM": -14229099.25
-    },
-    {
-      "TRADE_ID": "CLY-4004249",
-      "STATUS": "LIVE",
-      "PRODUCT": "Reverse repo",
-      "ASSET_CLASS": "Securities financing",
-      "CURRENCY": "EUR",
-      "BOOK": "BOOK-SFT-1",
-      "NOTIONAL": 671692000.0,
-      "MATURITY": "2026-10-07",
-      "MATURITY_BUCKET": "0-1Y",
-      "MTM": 13871720.6
-    },
-    /* … 33 more … */
-  ],
-  "BY_ASSET": [
-    {
-      "ASSET": "Securities financing",
-      "MTM": -22673015
-    }
-  ],
-  "COUNTERPARTY": "CP-ALDERSHOT",
-  "AGREEMENT": "AGR-ALDERSHOT-ISDA",
-  "CSA": "CSA-ALDERSHOT-FRA",
-  "CREDIT_LIMIT": "LIM-ALDERSHOT",
-  "CVA_RESULT": "CVA-ALDERSHOT-FRA",
-  "SACCR": "SACCR-ALDERSHOT-FRA",
-  "SIMM": "SIMM-ALDERSHOT",
-  "COLLATERAL_BALANCE": "COLL-ALDERSHOT-FRA",
-  "LEGAL_ENTITY": "LE-FRA",
-  "NETTING_ENFORCEABLE": true,
-  "TRADE_IDS": [
-    "CLY-3000280",
-    "CLY-3000286",
-    "CLY-3000289",
-    "CLY-4000284",
-    /* … 27 more … */,
-    "CLY-4004280",
-    "CLY-4004557",
-    "CLY-4004583",
-    "CLY-4004588"
-  ]
-}
-```
+- **Data contract:** [`netting-set`](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (NSET), key `NETTING_SET_ID`; 19 fields, 18 required; the file [`netting-set.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#netting-set) (files `data/testdata/counterparty-risk/netting-set/netting-set.*.jsonl.gz`).
 
 ### 29.5 `csa`: the collateral terms
 
 A credit support annex's terms: thresholds, minimum transfer amount, independent amount, rounding and the margin period of risk the
 collateral on each path is computed with. A netting set without a CSA is unmargined.
 
-- **Data contract:** [`csa`](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (CSA), key `CSA_ID`; 18 fields, 18 required.
-- **Sample:** `data/testdata/counterparty-risk/csa/csa.2026-07-08.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "CSA_ID": "CSA-ALDERSHOT-FRA",
-  "MARGIN_TYPE": "VM",
-  "CSA_CURRENCY": "USD",
-  "THRESHOLD_US": 10000000.0,
-  "THRESHOLD_THEM": 10000000.0,
-  "MTA": 500000,
-  "MTA_US": 500000,
-  "MTA_THEM": 500000,
-  "INDEPENDENT_AMOUNT": 0,
-  "FREQUENCY": "Daily",
-  "MARGIN_FREQUENCY_DAYS": 1,
-  "MPOR_DAYS": 10,
-  "ELIGIBLE": [
-    {
-      "ASSET": "USD, EUR, GBP cash",
-      "HAIRCUT": 0.0
-    },
-    {
-      "ASSET": "G7 government bonds < 1Y",
-      "HAIRCUT": 0.005
-    },
-    /* … 2 more … */
-  ],
-  "AGREEMENT": "AGR-ALDERSHOT-ISDA",
-  "COUNTERPARTY": "CP-ALDERSHOT",
-  "LEGAL_ENTITY": "LE-FRA",
-  "NETTING_SETS": [
-    "NS-ALDERSHOT-FRA"
-  ],
-  "COLLATERAL_BALANCES": [
-    "COLL-ALDERSHOT-FRA"
-  ]
-}
-```
+- **Data contract:** [`csa`](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (CSA), key `CSA_ID`; 18 fields, 18 required; the file [`csa.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/csa.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#csa) (files `data/testdata/counterparty-risk/csa/csa.*.jsonl.gz`).
 
 ### 29.6 `collateral-balance`: today's collateral
 
 The collateral account of a netting set today: what is held and posted. Read by the `current` collateral model and for independent
 amounts and initial margin held.
 
-- **Data contract:** [`collateral-balance`](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance) (COLL), key `BALANCE_ID`; 8 fields, 8 required.
-- **Sample:** `data/testdata/counterparty-risk/collateral-balance/collateral-balance.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "BALANCE_ID": "COLL-ALDERSHOT-FRA",
-  "HELD": 0,
-  "POSTED": 15251373,
-  "NET": -15251373,
-  "AS_OF": "2026-09-30",
-  "POSITIONS": [
-    {
-      "ASSET": "Solaris Energy Corp. 2031",
-      "DIRECTION": "Posted",
-      "MARKET_VALUE": 5109338,
-      "HAIRCUT": 0.005,
-      "VALUE": 5083791
-    },
-    {
-      "ASSET": "United States Treasury 2036",
-      "DIRECTION": "Posted",
-      "MARKET_VALUE": 5109338,
-      "HAIRCUT": 0.005,
-      "VALUE": 5083791
-    },
-    /* … 1 more … */
-  ],
-  "CSA": "CSA-ALDERSHOT-FRA",
-  "NETTING_SET": "NS-ALDERSHOT-FRA"
-}
-```
+- **Data contract:** [`collateral-balance`](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance) (COLL), key `BALANCE_ID`; 8 fields, 8 required; the file [`collateral-balance.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/collateral-balance.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#collateral-balance) (files `data/testdata/counterparty-risk/collateral-balance/collateral-balance.*.jsonl.gz`).
 
 ### 29.7 `counterparty`: the counterparties
 
 The core pack's counterparties: the `CPTY:` scope adds the exposures of a counterparty's netting sets per path; the name and rating
 label the explorer.
 
-- **Data contract:** [`counterparty`](../contracts/packs/core.md#cpty-counterparty-counterparty) (CPTY), key `COUNTERPARTY_ID`; 19 fields, 17 required.
-- **Sample:** `data/testdata/core/counterparty/counterparty.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "COUNTERPARTY_ID": "CP-ALDERSHOT",
-  "NAME": "Aldershot Pension Trust",
-  "LEI": "549300H5KZ2QJHEAMB55",
-  "RATING": "AA-",
-  "SECTOR": "Pensions",
-  "COUNTRY": "GB",
-  "TYPE": "Pension fund",
-  "COUNTRY_OF_RISK": "GB",
-  "UEN": "UEN0100037",
-  "ECONOMY": "ECON-GBR",
-  "NEWS_ID": "NEWS-Aldershot_Pension_Trust",
-  "NET_MTM": 520405666.42,
-  "NETTING_SETS": [
-    {
-      "ID": "NS-ALDERSHOT-FRA",
-      "AGREEMENT": "AGR-ALDERSHOT-ISDA",
-      "TRADES": 35,
-      "NET_MTM": -22673015.35
-    },
-    {
-      "ID": "NS-ALDERSHOT-LDN",
-      "AGREEMENT": "AGR-ALDERSHOT-ISDA",
-      "TRADES": 159,
-      "NET_MTM": -139050654.04
-    },
-    /* … 2 more … */
-  ],
-  "KYC": {
-    "STATUS": "Approved",
-    "RISK_RATING": "Standard",
-    "LAST_REVIEW": "2026-02-11",
-    "EMIR_CLASSIFICATION": "FC",
-    "PD_1Y": 0.0004
-  },
-  "GROUP": "GRP-ALDERSHOT",
-  "CREDIT_LIMIT": "LIM-ALDERSHOT",
-  "HIERARCHY": {
-    "NODES": [
-      {
-        "ID": "GRP-ALDERSHOT",
-        "LABEL": "Aldershot Pension Trust",
-        "TYPE": "Group (ultimate parent)"
-      },
-      {
-        "ID": "CP-ALDERSHOT",
-        "LABEL": "Aldershot Pension Trust",
-        "TYPE": "Counterparty"
-      },
-      /* … 9 more … */
-    ],
-    "EDGES": [
-      {
-        "FROM": "GRP-ALDERSHOT",
-        "TO": "CP-ALDERSHOT",
-        "LABEL": "parent of"
-      },
-      {
-        "FROM": "CP-ALDERSHOT",
-        "TO": "AGR-ALDERSHOT-ISDA",
-        "LABEL": "signed"
-      },
-      /* … 12 more … */
-    ]
-  },
-  "LEGAL_ENTITY": "LE-NY"
-}
-```
+- **Data contract:** [`counterparty`](../contracts/packs/core.md#cpty-counterparty-counterparty) (CPTY), key `COUNTERPARTY_ID`; 19 fields, 17 required; the file [`counterparty.contract.yaml`](../../config/packs/core/core/contracts/counterparty.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/core.md#counterparty) (files `data/testdata/core/counterparty/counterparty.*.jsonl.gz`).
 
 ### 29.8 `counterparty-group`: connected groups
 
 A group of connected counterparties (a parent and its subsidiaries): the `GROUP:` scope.
 
-- **Data contract:** [`counterparty-group`](../contracts/packs/core.md#grp-counterparty-group-counterparty-group) (GRP), key `GROUP_ID`; 5 fields, 5 required.
-- **Sample:** `data/testdata/core/counterparty-group/counterparty-group.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "GROUP_ID": "GRP-ALDERSHOT",
-  "NAME": "Aldershot Pension Trust",
-  "LIMIT": 7980000000.0,
-  "UTILISATION": 0.6673,
-  "MEMBERS": [
-    {
-      "ID": "CP-ALDERSHOT",
-      "NAME": "Aldershot Pension Trust",
-      "RATING": "AA-"
-    }
-  ]
-}
-```
+- **Data contract:** [`counterparty-group`](../contracts/packs/core.md#grp-counterparty-group-counterparty-group) (GRP), key `GROUP_ID`; 5 fields, 5 required; the file [`counterparty-group.contract.yaml`](../../config/packs/core/core/contracts/counterparty-group.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/core.md#counterparty-group) (files `data/testdata/core/counterparty-group/counterparty-group.*.jsonl.gz`).
 
 ### 29.9 `risk-hierarchy`: the trees
 
 The market-risk pack's trees, shared with VaR: a legal-entity or desk scope of exposure is a node of one of them.
 
-- **Data contract:** [`risk-hierarchy`](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (HIER), key `NODE_ID`; 11 fields, 8 required.
-- **Sample:** `data/testdata/market-risk/risk-hierarchy/risk-hierarchy.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "NODE_ID": "LEGAL~BANK",
-  "HIERARCHY": "LEGAL",
-  "LEVEL": "bank",
-  "PARENT_ID": null,
-  "NAME": "Drishti Bank",
-  "REF": null,
-  "CHILDREN": [
-    "LEGAL~LE-NY",
-    "LEGAL~LE-LDN",
-    "LEGAL~LE-FRA",
-    "LEGAL~LE-TKY"
-  ],
-  "BOOKS": [
-    "BOOK-COMM-1",
-    "BOOK-COMM-2",
-    "BOOK-COMM-3",
-    "BOOK-CREDIT-1",
-    /* … 22 more … */,
-    "BOOK-SFT-3",
-    "BOOK-STRUCT-1",
-    "BOOK-STRUCT-2",
-    "BOOK-STRUCT-3"
-  ],
-  "BUSINESS_DATE": "2026-09-30",
-  "VALID_FROM": "2026-01-02",
-  "VALID_TO": null
-}
-```
+- **Data contract:** [`risk-hierarchy`](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (HIER), key `NODE_ID`; 11 fields, 8 required; the file [`risk-hierarchy.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-hierarchy) (files `data/testdata/market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz`).
 <!-- guide-data:end -->
 
 ---

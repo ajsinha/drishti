@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The workspace's tabs (Items · Runs · Members, ?tab=) and the Runs tab (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7): the list with its filters, rows that change as
+/* The workspace's tabs (Items · Runs · Members, ?tab=) and the Runs tab (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7): the list with its filters, rows that change as
    the runs do (the live channel's biruns subscription, no polling), and the drawer of one run with every action its `can` allows (open, cancel, re-run on the same or the newest
    data, export, share, promote, keep longer, delete the result, schedule, confirm or discard). Keyboard: the tabs take the arrow keys (drishti_bi-lib.js), the rows
    ↑ ↓ and Enter, the drawer Esc. Uses drishtiBi.runs (drishti_bi-runs.js) for the words. */
@@ -213,9 +213,10 @@
   }
   q('[data-run-drawer-close]').addEventListener('click', closeDrawer);
   // the focus can leave the open drawer for nowhere (a button it was on became disabled while it works): Esc on the bare page still closes it
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !e.defaultPrevented && !drawer.hidden && (e.target === document.body || e.target === document.documentElement)) { e.preventDefault(); closeDrawer(); }
-  });
+  window.Drishti.keys.register({ id: 'bi.runs.drawer.close', keys: ['Escape'], scope: 'dialog', area: 'bi-run-drawer', description: "Close the run's drawer",
+    open: () => !drawer.hidden, when: (e) => e.target === document.body || e.target === document.documentElement, run: () => { closeDrawer(); } });
+  window.Drishti.keys.describe({ id: 'bi.runs.walk', keys: ['ArrowUp', 'ArrowDown'], scope: 'panel', area: 'bi-runs', group: 'Runs',
+    description: 'In Runs: the previous or next run; Enter opens it' });
   drawer.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { e.preventDefault(); closeDrawer(); return; }
     if (e.key === 'Tab') {                                               // the focus stays in the drawer while it is open
@@ -232,7 +233,7 @@
     b.addEventListener('click', (e) => fn(e.currentTarget));
     return b;
   }
-  // "Run again" (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.3): a labelled choice of how, and the button that does it. Changing the choice does nothing on its own. While the new
+  // "Run again" (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.3): a labelled choice of how, and the button that does it. Changing the choice does nothing on its own. While the new
   // run goes, the drawer shows that run with the button busy (a spinner and "Running…"); when it ends the button is itself again.
   let rerunning = null;
   // the "Run again as" choice per run: the drawer is drawn again whenever its run's record or an event arrives, and a choice made just before
@@ -241,9 +242,7 @@
   function runAgain(r, busy) {
     const enc = encodeURIComponent(r.id), id = 'runAgainAs-' + String(r.id).replace(/[^A-Za-z0-9_-]/g, '');
     const asof = R.asOfShort(r);
-    const sel = h('select', { class: 'studio-select', id, 'data-run-again-as': '' },
-      h('option', { value: 'same', text: 'Same as before' + (asof ? ' (as of ' + asof + ')' : '') }), h('option', { value: 'latest', text: 'With the latest data' }));
-    if (againAs[r.id]) { sel.value = againAs[r.id]; }
+    const sel = B.select({ id, 'data-run-again-as': '', 'aria-label': 'Run again as' }, [['same', 'Same as before' + (asof ? ' (as of ' + asof + ')' : '')], ['latest', 'With the latest data']], againAs[r.id]);   // drishti-inputs' Select
     sel.addEventListener('change', () => { againAs[r.id] = sel.value; });
     const go = h('button', { type: 'button', class: 'btn-pill btn-accent bi-run-again-go', 'data-run-act': 'rerun' });
     const label = (on) => {
@@ -263,7 +262,7 @@
         const got = byId[nr.id] = Object.assign({}, byId[nr.id] || {}, nr);
         const from = nr.reuse && nr.reuse.of ? byId[nr.reuse.of] : null;
         const reused = nr.state === 'reused' || !!nr.reuse;
-        // answered inside the inline wait and computed anew (the real server's 200 {run, answer}): the server keeps no row of it (BI_DESIGN.md 6)
+        // answered inside the inline wait and computed anew (the real server's 200 {run, answer}): the server keeps no row of it (ARCHITECTURE.md §28 6)
         const atOnce = !reused && g.answer !== undefined;
         const text = atOnce ? 'Done at once: asked again ' + (data === 'same' ? 'as before' : 'with the latest data') + (nr.actual && nr.actual.rowsOut != null ? ', ' + R.count(nr.actual.rowsOut) + (nr.actual.rowsOut === 1 ? ' row' : ' rows') : '') + '.'
           : reused ?'Done at once: reused the answer from ' + (from && from.finishedAt ? when(from.finishedAt) : nr.reuse && nr.reuse.of ? nr.reuse.of : 'an earlier run') + '.'
@@ -287,8 +286,7 @@
       h('label', { for: id, text: 'Run again as' }), h('div', { class: 'bi-run-again-row' }, sel, go));
   }
   function menu(label, attrs, items) {
-    const sel = h('select', Object.assign({ class: 'studio-select', 'aria-label': label }, attrs || {}), h('option', { value: '', text: label + ' ▾' }), items.map((i) => h('option', { value: i[0], text: i[1] })));
-    return sel;
+    return B.select(Object.assign({ 'aria-label': label }, attrs || {}), [['', label + ' ▾']].concat(items), '');     // drishti-inputs' Select: a pick acts, then it says the label again
   }
   // what the last action said stays in the drawer (a redraw replaces the button it was said beside) until another run is opened
   let note = null;
@@ -439,9 +437,8 @@
       x.addEventListener('click', () => { picked.splice(picked.indexOf(who), 1); li.remove(); });
       chips.appendChild(li);
     };
-    const input = h('input', { name: 'to', class: 'studio-in', autocomplete: 'off', placeholder: 'a name, or role:risk-team', role: 'combobox', 'aria-autocomplete': 'list', 'aria-expanded': 'false', 'aria-controls': 'runSharePick', 'aria-describedby': 'runShareHint' });
-    const pick = h('ul', { id: 'runSharePick', class: 'shr-list bi-run-pick', role: 'listbox', hidden: true, 'aria-label': 'People and roles' });
-    const f = inlineForm(anchor, 'Share this run', [h('span', { class: 'bi-run-picker' }, h('label', {}, 'With ', input), pick), chips,
+    const input = h('input', { name: 'to', class: 'studio-in', autocomplete: 'off', placeholder: 'a name, or role:risk-team', 'aria-describedby': 'runShareHint' });
+    const f = inlineForm(anchor, 'Share this run', [h('span', { class: 'bi-run-picker' }, h('label', {}, 'With ', input)), chips,
       h('small', { id: 'runShareHint', class: 'text-muted-d', text: 'Each person gets what their own rights allow: the same result, your result re-masked for them, or the question recomputed as them. The server decides and says which.' })], 'Share', (form, b) => {
       input.value.split(',').map((x) => x.trim()).filter(Boolean).forEach(addChip);
       input.value = '';
@@ -455,18 +452,18 @@
         return B.api('GET', '/runs/' + encodeURIComponent(r.id)).then(refresh);
       }).catch(failed(b)));
     });
-    if (window.Drishti.People) { window.Drishti.People.attach(input, pick, { minQuery: 1, onPick: (e) => addChip(e.type === 'role' ? 'role:' + e.name : e.name), taken: () => { const t = {}; picked.forEach((p) => { t[p.indexOf('role:') === 0 ? 'role:' + p.slice(5) : 'user:' + p] = true; }); return t; } }); }
-    input.addEventListener('keydown', (e) => { if (e.key === ',' || (e.key === 'Enter' && input.value.trim() && pick.hidden)) { e.preventDefault(); addChip(input.value.replace(/,$/, '').trim()); input.value = ''; } });
+    const people = window.Drishti.People ? window.Drishti.People.attach(input, { minQuery: 1, onPick: (e) => addChip(e.type === 'role' ? 'role:' + e.name : e.name), taken: () => { const t = {}; picked.forEach((p) => { t[p.indexOf('role:') === 0 ? 'role:' + p.slice(5) : 'user:' + p] = true; }); return t; } }) : null;
+    input.addEventListener('keydown', (e) => { if (e.key === ',' || (e.key === 'Enter' && input.value.trim() && !(people && people.isOpen()))) { e.preventDefault(); addChip(input.value.replace(/,$/, '').trim()); input.value = ''; } });
     f.setAttribute('data-run-share-form', '');
   }
   function scheduleForm(r, anchor, sc) {
     // friendly presets that write the SubscriptionSchedule grammar (daily, weekdays, business-days, weekly <day>, monthly last [business]); "Written out" takes it as text
     const p = R.parseSchedule(sc ? sc.schedule : 'business-days 07:30');
-    const kind = h('select', { name: 'kind', class: 'studio-select', 'aria-label': 'How often' }, R.PRESETS.map((x) => h('option', { value: x[0], text: x[1], selected: x[0] === p.kind })));
-    const day = h('select', { name: 'day', class: 'studio-select', 'aria-label': 'Day of the week' }, R.DAYS.map((x) => h('option', { value: x[0], text: x[1], selected: x[0] === (p.day || 'mon') })));
+    const kind = B.select({ name: 'kind', 'aria-label': 'How often' }, R.PRESETS.map((x) => [x[0], x[1]]), R.PRESETS.some((x) => x[0] === p.kind) ? p.kind : undefined);      // drishti-inputs' Select each
+    const day = B.select({ name: 'day', 'aria-label': 'Day of the week' }, R.DAYS.map((x) => [x[0], x[1]]), p.day || 'mon');
     const time = h('input', { name: 'time', type: 'time', class: 'studio-in', value: p.time || '07:30', 'aria-label': 'Time (the server\'s zone)', required: true });
     const text = h('input', { name: 'text', class: 'studio-in', value: p.kind === 'custom' ? p.text : '', autocomplete: 'off', placeholder: 'monthly last 18:00 business', 'aria-label': 'The schedule, written out' });
-    const data = h('select', { name: 'data', class: 'studio-select' }, h('option', { value: 'latest', text: 'the newest data', selected: !sc || sc.data !== 'same' }), h('option', { value: 'same', text: 'the same dates', selected: !!sc && sc.data === 'same' }));
+    const data = B.select({ name: 'data', 'aria-label': 'On' }, [['latest', 'the newest data'], ['same', 'the same dates']], sc && sc.data === 'same' ? 'same' : 'latest');
     const preview = h('code', { 'data-run-sched-preview': '' });
     const sync = () => {
       const k = kind.value;
@@ -491,7 +488,7 @@
     sync();
     f.setAttribute('data-run-sched-form', '');
   }
-  // Promote (BI_DESIGN › BI runs, 9.4 as built): POST /runs/{id}/promote {name, title?, to: dataset|report} makes a draft dataset over a snapshot of the result (and a draft
+  // Promote (ARCHITECTURE §28 › BI runs, 9.4 as built): POST /runs/{id}/promote {name, title?, to: dataset|report} makes a draft dataset over a snapshot of the result (and a draft
   // report on it with `to: report`) in the runner's personal workspace. The items it made are remembered here so "Promoted to" links them after a redraw.
   const promoted = {};
   function promotedLinks(r) {
@@ -503,7 +500,7 @@
   }
   function promote(r, anchor) {
     const name = B.slug(R.titleOf(r) || 'run') || 'run';
-    const to = h('select', { name: 'to', class: 'studio-select', 'aria-label': 'Promote to' }, h('option', { value: 'dataset', text: 'a dataset snapshot' }), h('option', { value: 'report', text: 'a report on it (and its dataset)' }));
+    const to = B.select({ name: 'to', 'aria-label': 'Promote to' }, [['dataset', 'a dataset snapshot'], ['report', 'a report on it (and its dataset)']]);
     inlineForm(anchor, 'Promote this result', [
       h('label', {}, 'Name ', h('input', { name: 'name', class: 'studio-in', required: true, value: name, autocomplete: 'off', pattern: '[A-Za-z0-9_.-]+', title: 'letters, digits, dot, dash or underscore' })),
       h('label', {}, 'Title ', h('input', { name: 'title', class: 'studio-in', value: R.titleOf(r), autocomplete: 'off', maxlength: '200', placeholder: 'Left empty: the run\'s title and dates' })),

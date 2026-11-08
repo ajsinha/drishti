@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of Admin → Packs → Deploy archive, history and roll back, and the pack row (docs/guides/OPERATIONALISING.md, PACK_DEVELOPER_GUIDE.md),
+"""The pictures of Admin → Packs → Deploy archive, history and roll back, and the pack row (docs/guides/OPERATIONS_GUIDE.md, BUILD_GUIDE.md),
 written to docs/guides/img/deploy/.
 
 The setup is its own: a scratch server and console (the ports of DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT, 18971 / 17971 when you
@@ -34,6 +34,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from shotlib import CONSOLE_PORT, PACKS, ROOT, SERVER_PORT, Ctx, java_cmd, listening, out_dir, register  # noqa: E402
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 
 shot = register("deploy")
 QUICKSTART = ["core", "market-data", "trading", "market-risk", "counterparty-risk", "world-economy", "news-and-markets"]
@@ -73,11 +76,11 @@ def start_servers(work: Path) -> list:
             sys.exit(f":{port} already answers: stop it, or pass --base to use it as it is")
     jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-server -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
     packs = work / "packs"
     packs.mkdir()
     for name in QUICKSTART:
-        (packs / name).symlink_to(ROOT / "config" / "packs" / name)
+        (packs / name).symlink_to(pack_dir(name))
     prod, dr = work / "lake-prod", work / "lake-dr"
     write_lake(prod, {"2026-10-02": {"ticket": 3}, "2026-10-05": {"ticket": 4, "agent": 2}})
     write_lake(dr, {"2026-10-04": {"ticket": 5, "agent": 2}, "2026-10-05": {"ticket": 6, "agent": 2}})

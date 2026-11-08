@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of the alerts section of docs/guides/BI_GUIDE.md, the BI tutorial chapter on alerts, BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23 and the API guide from the
+"""Makes the pictures and the captured output of the alerts section of docs/guides/REPORTS_GUIDE.md, the BI tutorial chapter on alerts, REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23 and the API guide from the
 real stack (not a test: run it by hand).
 
     DRISHTI_BI_REPORT_SERVER_PORT=18951 DRISHTI_BI_REPORT_CONSOLE_PORT=17951 \
@@ -69,10 +69,10 @@ def main(out: Path, captures: Path) -> None:
                 page.locator('[data-visual="mtm"] [data-act="alert-me"]').click()
                 page.wait_for_url("**/alerts/new**")
                 page.fill('input[name="name"]', "MTM floor")
-                page.select_option('select[name="op"]', "below")
+                page.select_option('[name="op"]', "below")
                 page.fill('input[name="value"]', "-300000")
                 page.fill('input[name="hysteresis"]', "25000")
-                page.select_option('select[name="trigger_mode"]', "after-load")
+                page.select_option('[name="trigger_mode"]', "after-load")
                 page.check('input[name="d_email"]')
                 page.click("[data-check-now]")
                 page.wait_for_function("() => document.querySelector('[data-check-out]').textContent.includes('Right now')")
@@ -84,12 +84,12 @@ def main(out: Path, captures: Path) -> None:
                 # a change alert on a dataset measure
                 page.goto(CONSOLE_URL + "/alerts/new?source=dataset&dataset=file:dataset:trades-basic&measure=Trades&title=Trade+count")
                 page.fill('input[name="name"]', "Trade count moves")
-                page.select_option('select[name="condition_type"]', "change")
-                page.select_option('select[name="change_op"]', "moves")
+                page.select_option('[name="condition_type"]', "change")
+                page.select_option('[name="change_op"]', "moves")
                 page.fill('input[name="change_value"]', "10")
-                page.select_option('select[name="change_mode"]', "pct")
-                page.select_option('select[name="against"]', "previous-run")
-                page.select_option('select[name="trigger_mode"]', "after-load")
+                page.select_option('[name="change_mode"]', "pct")
+                page.select_option('[name="against"]', "previous-run")
+                page.select_option('[name="trigger_mode"]', "after-load")
                 page.click("[data-alert-form] button[type=submit]")
                 page.wait_for_url("**/alerts?msg=**")
 
@@ -103,7 +103,7 @@ def main(out: Path, captures: Path) -> None:
                 page.wait_for_url("**/alerts/new?source=field**")
                 got["field_form_url"] = page.url.replace(CONSOLE_URL, "")
                 page.fill('input[name="name"]', "MTM of BBG-1008000")
-                page.select_option('select[name="op"]', "below")
+                page.select_option('[name="op"]', "below")
                 page.fill('input[name="value"]', "-500000")
                 page.click("[data-alert-form] button[type=submit]")
                 page.wait_for_url("**/alerts?msg=**")
@@ -128,14 +128,14 @@ def main(out: Path, captures: Path) -> None:
 
                 # the server's own words
                 roles = ["risk"]
-                got["api_alert"] = bi_report_stack.api("GET", "/me/measure-alerts/MTM%20floor", "rita", roles)[1]
+                got["api_alert"] = bi_report_stack.api("GET", "/alerts/rules/MTM%20floor", "rita", roles)[1]
                 got["api_inbox"] = bi_report_stack.api("GET", "/me/inbox?type=alert", "rita", roles)[1]
-                got["api_preview"] = bi_report_stack.api("POST", "/me/measure-alerts/preview", "rita", roles, {
+                got["api_preview"] = bi_report_stack.api("POST", "/alerts/rules/preview", "rita", roles, {
                     "source": {"type": "visual", "report": REPORT, "page": "overview", "visual": "mtm"}, "condition": {"type": "threshold", "op": "below", "value": -300000},
                     "trigger": {"mode": "after-load"}})[1]
-                got["api_refused"] = bi_report_stack.api("PUT", "/me/measure-alerts/Bad", "rita", roles, {
+                got["api_refused"] = bi_report_stack.api("PUT", "/alerts/rules/Bad", "rita", roles, {
                     "source": {"type": "visual", "report": REPORT, "visual": "mtm"}, "condition": {"type": "threshold", "op": "over", "value": 1}, "trigger": {"mode": "schedule"}})
-                got["api_boards"] = bi_report_stack.admin("GET", "/admin/measure-alerts/boards")[1]
+                got["api_boards"] = bi_report_stack.admin("GET", "/admin/alerts")[1]
                 got["board_validate"] = bi_report_stack.api("POST", "/bi/boards/validate", "wes", ["bi-writer"], {"yaml": (
                     "board: wall\nnotifications: { email: a@b.c }\nnotify: { channels: [inbox, email], cooldown: 2h, trigger: live }\npages:\n  - id: p1\n    tiles:\n"
                     "      - { id: a, report: trades-overview, visual: mtm, at: { x: 0, y: 0, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 }, notify: true } }\n"
@@ -161,9 +161,9 @@ def main(out: Path, captures: Path) -> None:
                 ann.locator('[data-visual="mtm"] [data-act="alert-me"]').click()
                 ann.wait_for_url("**/alerts/new**")
                 ann.fill('input[name="name"]', "MTM floor")
-                ann.select_option('select[name="op"]', "below")
+                ann.select_option('[name="op"]', "below")
                 ann.fill('input[name="value"]', "-300000")
-                ann.select_option('select[name="trigger_mode"]', "after-load")
+                ann.select_option('[name="trigger_mode"]', "after-load")
                 ann.click("[data-check-now]")
                 ann.wait_for_function("() => document.querySelector('[data-check-out]').textContent.length > 12")
                 got["masked_check_text"] = ann.inner_text("[data-check-out]")
@@ -173,7 +173,7 @@ def main(out: Path, captures: Path) -> None:
                 time.sleep(2)
                 ann.goto(CONSOLE_URL + "/alerts/measure/MTM%20floor")
                 ann.locator("[data-history]").screenshot(path=str(out / "alert-history-masked.png"))
-                got["masked_history"] = bi_report_stack.api("GET", "/me/measure-alerts/MTM%20floor", "ann", ["analyst"])[1].get("history")
+                got["masked_history"] = bi_report_stack.api("GET", "/alerts/rules/MTM%20floor", "ann", ["analyst"])[1].get("history")
                 ann.context.close()
 
                 # a phone

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 4 (docs/guides/BI_GUIDE.md), the console's routes: the item page carries the history, review, impact and lineage sections and their script, the
+"""Rupaka phase 4 (docs/guides/REPORTS_GUIDE.md), the console's routes: the item page carries the history, review, impact and lineage sections and their script, the
 Environments page and its rail entry, the same-origin JSON that reaches the server's history, diff, review, lineage, impact and bundle endpoints (and its refusals
 come back with their code), and an inbox row of a BI notice opens the item."""
 import pytest
@@ -50,7 +50,7 @@ def test_environments_page_is_in_the_rail_and_has_the_export_and_import_forms(bi
     r = client.get("/bi/environments")
     assert r.status_code == 200 and 'data-bi-page="environments"' in r.text
     assert "data-export" in r.text and "data-import" in r.text and "Dry run" in r.text and "/static/js/drishti_bi-env.js" in r.text
-    assert 'href="/bi/environments"' in client.get("/bi").text
+    assert 'href="/bi/environments"' in client.get("/bi/catalogue").text
     none, _ = make(powers=())
     assert none.get("/bi/environments").status_code == 403
 

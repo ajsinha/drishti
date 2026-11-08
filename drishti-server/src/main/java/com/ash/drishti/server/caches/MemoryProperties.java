@@ -19,7 +19,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The one cache budget (RESOURCES_AND_SCALE.md section 5.2, D3, 2.9.7; PO-2), {@code drishti.memory.*}.
+ * The one cache budget (CLUSTER_GUIDE.md section 5.2, D3, 2.9.7; PO-2), {@code drishti.memory.*}.
  *
  * @param cacheShare the share of {@code -Xmx} every cache together may take (0.5)
  * @param weights each pool's weight ({@code connector.idmaps} 20, {@code connector.columns} 20, {@code connector.documents} 6,

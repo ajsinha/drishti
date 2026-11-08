@@ -31,7 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Virtual tables as pivot sources (VIRTUAL_TABLES.md section 10, V5; PIVOT_GUIDE.md "Virtual tables"): the source
+ * Virtual tables as pivot sources (docs/architecture/ARCHITECTURE.md section 10, V5; PIVOT_GUIDE.md "Virtual tables"): the source
  * {@code table:<domain>.<name>} is the table read for the person on the view's business date ({@link TablesService#read}: the source as
  * they may see it, then the table's rules, masks and hidden columns) and staged in the pivot engine's own executor, in memory. A masked
  * column is left out (never a dimension, an input or a filter), as the Data view's tables are. Every table over one kind opened in one

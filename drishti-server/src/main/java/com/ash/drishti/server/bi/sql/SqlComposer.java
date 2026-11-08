@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A composite Drishti SQL statement (docs/architecture/BI_DESIGN.md section 3.4): {@code WITH} queries, {@code UNION}, subqueries in {@code FROM} and
+ * A composite Drishti SQL statement (docs/architecture/ARCHITECTURE.md §28 section 3.4): {@code WITH} queries, {@code UNION}, subqueries in {@code FROM} and
  * windows over the answer. Every {@code SELECT} that reads the model's tables is a <em>leaf</em>, bound to one model query ({@link SqlBinder}) and answered as
  * the reader (secured and masked); the rest is relational work over those answers (join, union, project, filter, window, sort, limit), printed here as
  * SQL over the leaves' answers and run on the Java tier in an in-memory DuckDB that can read nothing else. So a composite statement can never see more than its

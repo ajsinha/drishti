@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of the <drishti-report> chapters (docs/guides/BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 5, BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14, BI_GUIDE.md, BI_TUTORIAL.md
-chapter 22, CLIENT_RENDERER.md) from the real stack (not a test: run it by hand).
+"""Makes the pictures and the captured output of the <drishti-report> chapters (docs/guides/REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 5, REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14, REPORTS_GUIDE.md, BI_TUTORIAL.md
+chapter 22, EMBED_GUIDE.md) from the real stack (not a test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/embed_report_shots.py <pictures dir> <captures.json>
 
@@ -91,7 +91,7 @@ def shoot(out: Path, captures: Path) -> None:
         got["phone_order"] = phone.evaluate("[...document.querySelector('#rep').shadowRoot.querySelectorAll('.bi-vis')].map(v => v.dataset.visual)")
         phone.context.close()
 
-        body = (T.ROOT / "config/bi/reports/live-trading-desk.report.yaml").read_text()
+        body = (T.ROOT / "config/bi/reports/banking/live-trading-desk.report.yaml").read_text()
         body = (body.split("layouts:")[0] + "pages:" + body.split("\npages:", 1)[1]).replace("report: live-trading-desk", "report: phone-shots")
         status, made = S.api("POST", "/bi/workspaces/me/items", "wes", ["live-writer"], {"kind": "report", "title": "Live trading desk (phone)", "description": "", "body": body})
         assert status in (200, 201), made

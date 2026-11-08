@@ -286,14 +286,14 @@ final class DeltaTarget implements TableTarget {
         out.put("business_date", Literal.ofDate((int) date.toEpochDay()));
         for (int i = 1; i < partitionColumns.size(); i++) {
             String v = i - 1 < values.length ? values[i - 1] : null;
-            out.put(partitionColumns.get(i), v == null ? Literal.ofNull(StringType.STRING) : Literal.ofString(v));
+            out.put(partitionColumns.get(i), v == null || v.isEmpty() ? Literal.ofNull(StringType.STRING) : Literal.ofString(v));   // empty is null, as in Spark
         }
         return out;
     }
 
     @Override
     public FileOut newFile(LocalDate date, String[] partitionValues, String name) throws IOException {
-        String dir = context(date, partitionValues).getTargetDirectory().replaceAll("/+$", "");
+        String dir = LakeWriter.targetDirectory(context(date, partitionValues)).replaceAll("/+$", "");
         String file = dir + "/" + name;
         ParquetDataWriter w = new ParquetDataWriter(io, file, fileSchema, options, 0, new Object[0], null);
         return new ParquetOut(w, fileSchema, sources, date, false, file, partitionValues, x -> {

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 4 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.4, docs/guides/BI_GUIDE.md): on an item's page, the history of saved states with the side-by-side diff and
+/* Rupaka phase 4 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.4, docs/guides/REPORTS_GUIDE.md): on an item's page, the history of saved states with the side-by-side diff and
    restore, the review panel (request, diff, Check, impact, data preview, decisions), lineage, impact ("what breaks if I remove ..."), and the "publish anyway" a
    bi-admin gets after a refusal. drishti_bi.js announces the item it has drawn with the event bi:item and a refused action with bi:refused. Text only, never markup. */
 (function () {
@@ -65,18 +65,19 @@
       if (mine !== seq) { return; }                                   // the item was drawn again since: a newer answer is on its way
       sec.hidden = false;
       var tb = q('[data-history] tbody'), from = q('[data-diff-from]'), to = q('[data-diff-to]');
-      clear(tb); clear(from); clear(to);
+      clear(tb);
+      var states = [];                                                 // what Compare and with offer (drishti-inputs' Select each)
       d.revisions.forEach(function (r, k) {
         var ref = 'r' + r.seq, label = 'saved state ' + r.seq + (r.draft ? ' (the draft)' : '');
-        from.appendChild(h('option', { value: ref, text: label })); to.appendChild(h('option', { value: ref, text: label }));
+        states.push({ value: ref, label: label });
         var acts = [button('Compare with draft', function () { show(ref, 'draft'); }, 'btn-ghost')];
         if (d.canRestore && !r.draft) { acts.push(button('Restore as draft', function () { restore(r.seq); }, 'btn-ghost')); }
         tb.appendChild(h('tr', { 'data-seq': r.seq },
           h('th', { scope: 'row', text: '#' + r.seq + (r.draft ? ' (draft)' : '') }), h('td', { text: stamp(r.createdAt) }), h('td', { text: r.author }), h('td', { text: r.message || r.origin }),
           h('td', { text: r.publishedVersion ? 'published v' + r.publishedVersion : '' }), h('td', {}, acts)));
       });
-      [['published', 'the published version'], ['draft', 'the draft']].forEach(function (p) { from.appendChild(h('option', { value: p[0], text: p[1] })); to.appendChild(h('option', { value: p[0], text: p[1] })); });
-      from.value = d.revisions.length > 1 ? 'r' + d.revisions[1].seq : 'published'; to.value = 'draft';
+      states.push({ value: 'published', label: 'the published version' }, { value: 'draft', label: 'the draft' });
+      from.component.setOptions(states, d.revisions.length > 1 ? 'r' + d.revisions[1].seq : 'published'); to.component.setOptions(states, 'draft');
       var ev = q('[data-events]'); clear(ev);
       d.events.forEach(function (e) { ev.appendChild(h('li', { text: stamp(e.at) + ' · ' + e.actor + ' · ' + e.action + (e.note ? ': ' + e.note : '') })); });
       q('[data-events-wrap]').hidden = !d.events.length;
@@ -172,7 +173,7 @@
       }
       body.appendChild(h('h3', { text: 'Data preview' }));
       body.appendChild(previewTable(r.preview));
-      body.appendChild(h('p', { class: 'text-muted-d', text: 'Write your comment in the note box above, then Approve and publish or Reject. The author cannot approve their own request.' }));
+      body.appendChild(h('p', { class: 'text-muted-d', text: 'Decide in the Approvals queue (Decide in Approvals, above): approve, or reject with a reason. The author cannot approve their own request.' }));
     }).catch(function (e) { if (mine !== seq) { return; } sec.hidden = true; if (e.status !== 403 && e.status !== 404) { fail(e); } });
   }
 
@@ -292,16 +293,23 @@
     box.hidden = !w.length;
     if (w.length) { box.appendChild(h('h2', { text: 'Heads up' })); box.appendChild(h('ul', {}, w.map(function (x) { return h('li', { 'data-warning': /^Not migrated/.test(x) ? 'migration' : '', text: x }); }))); }
   }
+  /** An approval goes through the one Approvals queue (the BI item is its kind bi); publishing stays the item's own. */
+  function send(sub, note, extra) {
+    if (sub !== 'approve') { return B.api('POST', path() + '/' + sub, Object.assign({ note: note }, extra)); }
+    return fetch('/approvals/api/item/bi/' + encodeURIComponent(item.id).replace(/%3A/g, ':') + '/approve', { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ comment: note, params: extra }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j.detail || ('HTTP ' + r.status)); e.code = j.code; throw e; } return j; }); });
+  }
   /** Publishes the dataset and rewrites the reports that use its renamed fields and measures to the new names, in one step. */
   function publishRenamed(sub) {
     var note = q('.bi-note');
-    B.api('POST', path() + '/' + sub, { note: note ? note.value : '', applyRenames: true }).then(function (n) {
+    send(sub, note ? note.value : '', { applyRenames: true }).then(function (n) {
       say('Published, and the reports that used the old names now use the new ones.'); document.dispatchEvent(new CustomEvent('drishti:bi-reload', { detail: n }));
     }).catch(fail);
   }
   function force(sub) {
     var note = q('.bi-note');
-    B.api('POST', path() + '/' + sub, { note: note ? note.value : '', force: true }).then(function (n) {
+    send(sub, note ? note.value : '', { force: true }).then(function (n) {
       say('Published over the warning (forced).'); document.dispatchEvent(new CustomEvent('drishti:bi-reload', { detail: n }));
     }).catch(fail);
   }

@@ -128,10 +128,10 @@
       areasEl.appendChild(bar);
       var designed = cols.slice();
       function have() { return cols.slice(0, k).reduce(function (a, b) { return a + b; }, 0); }
-      var resizer = function (o) {                                         // drishti_resize.js loads at the page's end: this script may run first
+      var resizer = function (o) {                                         // drishti-core may load after this script on a page of its own
         if (window.Drishti.resize) { window.Drishti.resize.handle(bar, o); } else { document.addEventListener('DOMContentLoaded', function () { window.Drishti.resize.handle(bar, o); if (!split.resizable) { bar.removeAttribute('tabindex'); } }); }
       };
-      resizer(split.resizable ? {                   // the shared resize handle (drishti_resize.js)
+      resizer(split.resizable ? {                   // the shared resize handle (drishti-core)
         axis: 'x',
         start: function () { return areasEl.getBoundingClientRect(); },
         move: function (box, dx, dy, ev) { nudge(k, (ev.clientX - box.left) / box.width * 12 - have()); },
@@ -237,9 +237,29 @@
       if (!h || h.querySelector('.sg-handle')) { return; }
       var handle = document.createElement('span');
       handle.className = 'sg-handle'; handle.textContent = '⋮⋮'; handle.title = 'Drag to move ' + title;
-      handle.setAttribute('draggable', 'true'); handle.setAttribute('data-sg-handle', '');
-      handle.addEventListener('dragstart', function (e) { dragged = p; e.dataTransfer.setData('text/x-sg-panel', p.getAttribute('data-panel')); e.dataTransfer.effectAllowed = 'move'; });
-      handle.addEventListener('dragend', function () { dragged = null; });
+      handle.setAttribute('data-sg-handle', '');
+      handle.addEventListener('pointerdown', function (e) {                // drishti-core's tracked pointer: dragged onto a panel (before it) or an area's free space
+        if (e.pointerType === 'mouse' && e.button !== 0) { return; }
+        e.preventDefault();
+        var over = null;
+        function mark(x, cls) { if (over) { over.el.classList.remove(over.cls); } over = x ? { el: x, cls: cls } : null; if (x) { x.classList.add(cls); } }
+        window.Drishti.elements.core.trackPointer(e, {
+          start: function () { dragged = p; p.classList.add('sg-dragging'); },
+          move: function (ev) {
+            var t = document.elementFromPoint(ev.clientX, ev.clientY), q = t && t.closest('[data-sg-cells] > .pnl[data-panel]'), c = t && t.closest('[data-sg-cells]');
+            if (q && q !== p && root.contains(q)) { mark(q, 'sg-over'); } else if (c && root.contains(c)) { mark(c, 'sg-over-area'); } else { mark(null); }
+          },
+          end: function (ev, committed) {
+            p.classList.remove('sg-dragging');
+            var target = over;
+            mark(null);
+            dragged = null;
+            if (!committed || !target) { return; }
+            if (target.cls === 'sg-over') { target.el.parentNode.insertBefore(p, target.el); } else { target.el.appendChild(p); }
+            record();
+          }
+        }, { capture: handle });
+      });
       handle.tabIndex = 0; handle.setAttribute('role', 'button');
       handle.setAttribute('aria-label', 'Move ' + title + ': arrow up or down within its area, left or right to another area');
       handle.addEventListener('keydown', function (e) {                    // the keyboard's way to move a panel
@@ -251,17 +271,6 @@
         e.preventDefault(); handle.focus(); record();
       });
       h.insertBefore(handle, h.firstChild);
-      // captured: a table's own drag handling (its columns) must not swallow a panel being moved
-      p.addEventListener('dragover', function (e) { if (dragged && dragged !== p) { e.preventDefault(); e.stopPropagation(); p.classList.add('sg-over'); } }, true);
-      p.addEventListener('dragleave', function () { p.classList.remove('sg-over'); });
-      p.addEventListener('drop', function (e) {
-        p.classList.remove('sg-over');
-        if (!dragged || dragged === p) { return; }
-        e.preventDefault(); e.stopPropagation();
-        p.parentNode.insertBefore(dragged, p);
-        dragged = null;
-        record();
-      }, true);
       var grip = document.createElement('span');
       grip.className = 'sg-grip'; grip.tabIndex = 0; grip.setAttribute('role', 'slider'); grip.setAttribute('data-sg-grip', '');
       grip.setAttribute('aria-label', 'Width of ' + title + ' in columns of 12'); grip.setAttribute('aria-valuemin', '2'); grip.setAttribute('aria-valuemax', '12');
@@ -273,24 +282,11 @@
       });
       grip.addEventListener('pointerdown', function (e) {
         e.preventDefault(); e.stopPropagation();
-        grip.setPointerCapture(e.pointerId);
         var cells = p.parentNode.getBoundingClientRect(), left = p.getBoundingClientRect().left;
-        function move(ev) { to(Math.round((ev.clientX - left) / (cells.width / 12))); }
-        function up() { grip.removeEventListener('pointermove', move); grip.removeEventListener('pointerup', up); record(); }
-        grip.addEventListener('pointermove', move); grip.addEventListener('pointerup', up);
+        window.Drishti.elements.core.trackPointer(e, { move: function (ev) { to(Math.round((ev.clientX - left) / (cells.width / 12))); }, end: function () { record(); } },
+          { threshold: 0, capture: grip });
       });
       p.appendChild(grip);
-    });
-    root.querySelectorAll('[data-sg-cells]').forEach(function (c) {         // a drop on an area's free space: the end of that area
-      c.addEventListener('dragover', function (e) { if (dragged) { e.preventDefault(); c.classList.add('sg-over-area'); } });
-      c.addEventListener('dragleave', function () { c.classList.remove('sg-over-area'); });
-      c.addEventListener('drop', function (e) {
-        c.classList.remove('sg-over-area');
-        if (!dragged) { return; }
-        e.preventDefault();
-        c.appendChild(dragged);
-        record();
-      });
     });
   }
 

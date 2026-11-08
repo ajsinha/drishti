@@ -44,7 +44,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * A model query answered by the table layer (BI_FOUNDATION_2911E.md section 3.5): the model's tables read for the as-of date as the reader
+ * A model query answered by the table layer (docs/architecture/ARCHITECTURE.md §28 section 3.5): the model's tables read for the as-of date as the reader
  * may see them (each table's rules for the reader's roles, its masks for a reader without the raw power, the model's own rules), joined
  * many-to-one from each measure's fact along the active relationships, filtered, grouped by the asked fields, and each measure compiled
  * by <b>part A's one compiler</b> ({@link Compiler}: aggregates to the engine's functions, measures of measures as shapes) and evaluated

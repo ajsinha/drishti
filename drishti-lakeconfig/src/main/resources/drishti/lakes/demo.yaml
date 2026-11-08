@@ -17,7 +17,9 @@
 # partitioned by business_date first, always; partition-by names only what comes after it. A table's entry is the truth: an administrator
 # edits it here, never in a connector file or on a command line (a --partition-by that disagrees is refused, naming both). Like every lake
 # it has its own folder, <data>/delta/demo (DRISHTI_DELTA_ROOT, when a site sets it, names the root instead); a demo lake built in the older
-# layout, directly in <data>/delta, is moved into it once, safely, at start (drishti.py lake relocate demo; docs/admin/OPERATIONS.md).
+# layout, directly in <data>/delta, is moved into it once, safely, at start (drishti.py lake relocate demo; docs/guides/OPERATIONS_GUIDE.md).
+# The file holds an entry for every table a shipped pack's connector reads from the demo lake (a test checks it; LakesCli pack-tables
+# adds a missing one), so the server never writes it; a table only a site's own connector reads is added at the end, every line kept.
 lake: demo
 format: delta
 root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
@@ -123,6 +125,14 @@ tables:
     vectors: [SCENARIO_PV]
     id: SCENARIO_PV_ID
     date: BUSINESS_DATE
+    partition-by: [SCENARIO_SET_ID, GRAIN]
+    sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID]
+    compression: zstd
+    vector-compression: zstd
+    file-size-mb: 256
+    row-group-mb: 16
+    time-travel: 30d
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d, checkpoint: true}
   risk.fx-scenario:
     promote: [CURRENCY, RATE, SCENARIO_SET_ID]
     id: FX_SCENARIO_ID
@@ -166,24 +176,27 @@ tables:
     file-rows: 250000
     row-group-rows: 1000
     id: TRADE_ID
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_calypso:
     kind: trade
-    partition-by: [PRODUCT_TYPE]
+    partition-by: [PRODUCT_GROUP]
     promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
       TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID, NOTIONAL, INDEX_NAME]
     sort-by: [id]
     file-rows: 250000
     row-group-rows: 1000
     id: TRADE_ID
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_murex:
     kind: trade
-    partition-by: [PRODUCT_TYPE]
+    partition-by: [PRODUCT_GROUP]
     promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
       TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID, NOTIONAL, INDEX_NAME]
     sort-by: [id]
     file-rows: 250000
     row-group-rows: 1000
     id: TRADE_ID
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   us-equities.us-company:
     promote: [TICKER, NAME, LEI_LEGAL_NAME, CIK, LEI, EXCHANGE, INDEX_TEXT, SECTOR, SIC, SIC_DESCRIPTION, STATE_OF_INCORPORATION, REVENUE]
     id: TICKER
@@ -213,3 +226,40 @@ tables:
   civic.election: null
   civic.region: null
   civic.social-indicator: null
+  climate.climate-profile: {}
+  climate.financed-emissions: {}
+  climate.climate-scenario: {}
+  climate.climate-stress: {}
+  climate.physical-asset: {}
+  climate.taxonomy-alignment: {}
+  genomics.gene: {}
+  genomics.variant: {}
+  genomics.protein: {}
+  genomics.pathway: {}
+  genomics.sample: {}
+  genomics.sequencing-run: {}
+  genomics.expression-study: {}
+  genomics.clinical-trial: {}
+  liquidity.lcr: {}
+  liquidity.nsfr: {}
+  liquidity.maturity-ladder: {}
+  liquidity.hqla-holding: {}
+  liquidity.funding-source: {}
+  liquidity.liquidity-stress: {}
+  liquidity.intraday-liquidity: {}
+  oprisk.loss-event: {}
+  oprisk.risk-control: {}
+  oprisk.key-risk-indicator: {}
+  oprisk.issue: {}
+  oprisk.oprisk-scenario: {}
+  oprisk.third-party: {}
+  oprisk.cyber-incident: {}
+  oprisk.oprisk-capital: {}
+  retail.customer: {}
+  retail.deposit-account: {}
+  retail.mortgage: {}
+  retail.card-account: {}
+  retail.personal-loan: {}
+  retail.branch: {}
+  retail.collections-case: {}
+  retail.retail-portfolio: {}

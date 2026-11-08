@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Compute workers' REST face (docs/architecture/PYTHON_COMPUTE.md section 15). Administrators: {@code GET /api/v1/admin/compute} (Admin →
+ * Compute workers' REST face (docs/guides/NOTEBOOK_GUIDE.md section 15). Administrators: {@code GET /api/v1/admin/compute} (Admin →
  * Compute: the switch, pools, workers, queues, environments, approval requests), approve, reject and revoke (four eyes: never the person
  * who asked; a reason always), build a pool's approved environment, test a pool with the sample engine, cancel a running request. Other
  * Drishti*net members: a pool's load and a fan-out chunk run here on behalf of its viewer (one hop: forwarded calls only).
@@ -92,26 +92,6 @@ public class ComputeController {
         m.put("approvalRoles", compute.settings().approvalRoles());
         m.put("me", p.user());
         return m;
-    }
-
-    @PostMapping("/admin/compute/requests/{id}/approve")
-    public ApprovalRequest approve(@PathVariable String id, @RequestBody Decision body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        requireApprover(p);
-        try {
-            return compute.approvals().approve(id, p.user(), body == null ? null : body.reason());
-        } catch (ComputeException e) {
-            throw notFoundOr(e);
-        }
-    }
-
-    @PostMapping("/admin/compute/requests/{id}/reject")
-    public ApprovalRequest reject(@PathVariable String id, @RequestBody Decision body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        requireApprover(p);
-        try {
-            return compute.approvals().reject(id, p.user(), body == null ? null : body.reason());
-        } catch (ComputeException e) {
-            throw notFoundOr(e);
-        }
     }
 
     @PostMapping("/admin/compute/requests/{id}/revoke")

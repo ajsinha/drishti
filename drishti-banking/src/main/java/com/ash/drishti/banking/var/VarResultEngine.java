@@ -1,0 +1,213 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.banking.var;
+
+import com.ash.drishti.api.compute.ComputeEngine;
+import com.ash.drishti.api.compute.EngineException;
+import com.ash.drishti.api.compute.EngineInputs;
+import com.ash.drishti.api.compute.EngineManifest;
+import com.ash.drishti.api.compute.EngineProgress;
+import com.ash.drishti.api.compute.EngineRequest;
+import com.ash.drishti.api.compute.EngineResult;
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.server.security.Principal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+
+/**
+ * The computed kind {@code var-result} (VAR_GUIDE.md section 8, as built in 2.8.0): a scope's VaR answered by the server's VaR engine through
+ * the market-risk pack's reactive connector {@code var-engine} ({@code plugin: reactive}, {@code engine.type: java}), so VaR opens as an
+ * ordinary kind: {@code VRES DESK:RATES <GO>}, {@code /v/var-result/DESK:RATES}, the entities API, the CLI, search and the AI tools, with
+ * the same entitlements as the explorer (the answer is computed as the viewer: their nodes, their masks, their audit entry).
+ *
+ * <p>The id is the scope text ({@code DESK:RATES}, {@code BANK - DESK:CREDIT}); a {@code ~} inside a node id is written {@code %7E}
+ * ({@code NODE:MGMT%7EDESK-RATES}), as every computed id writes it. The parameter {@code ccy} (2.9.4; default USD) asks it in a reporting
+ * currency ({@code VRES DESK:RATES~ccy=EUR}); {@code CURRENCY} says which. The parameters {@code horizon} ({@code 1d}, {@code 10d}), {@code method}
+ * ({@code sqrt10}, {@code sum}) and {@code confidence}, {@code es-confidence} (2.9.7) read it through a lens ({@code VRES BANK~horizon=10d~method=sum});
+ * {@code HORIZON} and {@code METHOD} say which. The record: the headline in UPPER_SNAKE ({@code SCOPE},
+ * {@code CANONICAL}, {@code SCOPE_KIND}, {@code LABEL}, {@code NODE}, {@code BUSINESS_DATE}, {@code VAR}, {@code ES}, {@code CONFIDENCE},
+ * {@code ES_CONFIDENCE}, {@code K}, {@code ES_COUNT}, {@code SCENARIOS}, {@code LIMIT}, {@code LIMIT_USE}, {@code SUM_STANDALONE},
+ * {@code DIVERSIFICATION}, {@code BACKTEST}), the default parts ({@code CHILDREN}), the 25 worst scenarios ({@code WORST}), the scope's
+ * vector ({@code PNL}, unrounded) and {@code PROVENANCE}; the tables {@code children} and {@code worst} for panels.
+ *
+ * <p>Made by the reactive plugin with no arguments, so it finds the engine through {@link #install}: the server installs it when the
+ * VaR engine starts (as {@link VarPositions} is).
+ */
+public final class VarResultEngine implements ComputeEngine {
+
+    public static final String KIND = "var-result";
+    private static final AtomicReference<VarViews> INSTALLED = new AtomicReference<>();
+
+    static void install(VarViews views) {
+        INSTALLED.set(views);
+    }
+
+    @Override
+    public EngineManifest manifest() {
+        return new EngineManifest("var-engine", VarViews.ENGINE_VERSION, List.of(KIND));
+    }
+
+    @Override
+    public EngineResult compute(EngineRequest req, EngineInputs inputs, EngineProgress progress) throws Exception {
+        VarViews views = INSTALLED.get();
+        if (views == null) {
+            throw new EngineException("the VaR engine is not running on this server (config/engines/var.yaml, Admin → Engines)");
+        }
+        String scope = req.id().trim();
+        if (scope.isEmpty()) {
+            throw new EngineException("give a scope as the id: BANK, DESK:RATES, POS:<id>, PORT:<id>, BANK - DESK:CREDIT");
+        }
+        Principal p = new Principal(req.viewer().user(), req.viewer().roles());
+        LocalDate date = req.asOf() == null ? null : req.asOf().businessDate();
+        Object asked = req.params().get("ccy");
+        String ccy = asked == null || String.valueOf(asked).isBlank() ? null : String.valueOf(asked);
+        Map<String, Object> head;
+        Map<String, Object> parts;
+        Map<String, Object> path;
+        VarService.Scoped s;
+        com.ash.drishti.banking.compute.var.VarLens lens;
+        try {
+            lens = lens(views.service().props(), req.params());
+        } catch (IllegalArgumentException e) {
+            throw new EngineException(e.getMessage());
+        }
+        try {
+            head = views.headline(p, scope, date, ccy, lens);
+            parts = views.contributions(p, scope, date, "child", null, ccy, lens);
+            path = views.path(p, scope, date, 0, 1, ccy, lens);
+            s = views.service().scoped(p, scope, date, ccy, lens);
+        } catch (DrishtiException e) {
+            throw new EngineException(e.getMessage());
+        }
+        progress.fraction(1, 1);
+        Map<String, Object> row = new LinkedHashMap<>();
+        for (String f : List.of("scope", "canonical", "kind", "label", "node", "businessDate", "currency", "var", "es", "confidence", "esConfidence", "k",
+                "esCount", "scenarios", "horizon", "method", "set", "limit", "limitUse", "sumStandalone", "diversification", "backtest")) {
+            row.put(f.equals("kind") ? "SCOPE_KIND" : snake(f), upper(head.get(f)));
+        }
+        List<Map<String, Object>> children = new ArrayList<>();
+        if (parts.get("rows") instanceof List<?> rows) {
+            for (Object r : rows) {
+                if (r instanceof Map<?, ?> m) {
+                    Map<String, Object> c = new LinkedHashMap<>();
+                    for (String f : List.of("key", "scope", "label", "kind", "standaloneVar", "componentVar", "componentEs", "incrementalVar", "pct")) {
+                        c.put(snake(f), m.get(f));
+                    }
+                    children.add(c);
+                }
+            }
+        }
+        row.put("CHILDREN", children);
+        row.put("CHILDREN_TOTAL", parts.get("total"));                  // the sums are over all of them; CHILDREN the largest max-parts
+        row.put("CHILDREN_TRUNCATED", Boolean.TRUE.equals(parts.get("truncated")));
+        row.put("CHILDREN_NOTE", Boolean.TRUE.equals(parts.get("truncated"))
+                ? VarCaptures.shownLine(parts.get("shown"), parts.get("total"), parts.get("by")) : null);
+        List<Map<String, Object>> worst = new ArrayList<>();
+        if (path.get("worst") instanceof List<?> ws) {
+            for (Object w : ws) {
+                worst.add(upper(w) instanceof Map<?, ?> m ? cast(m) : Map.of());
+            }
+        }
+        row.put("WORST", worst);
+        List<Double> pnl = new ArrayList<>(s.vector().length);
+        for (double v : s.vector()) {
+            pnl.add(v);
+        }
+        row.put("PNL", pnl);
+        if (head.get("parametric") instanceof Map<?, ?> pm && !Boolean.FALSE.equals(req.params().get("parametric"))) {
+            // VRES 1.3: the parametric cross-check's optional fields (docs/guides/VAR_GUIDE.md section 7)
+            row.put("PARAMETRIC_VAR", pm.get("var"));
+            row.put("PARAMETRIC_ES", pm.get("es"));
+            row.put("PARAMETRIC_MU", pm.get("mu"));
+            row.put("PARAMETRIC_SIGMA", pm.get("sigma"));
+            row.put("PARAMETRIC_Z", pm.get("z"));
+            row.put("PARAMETRIC_N", pm.get("n"));
+            row.put("PARAMETRIC_WEIGHTING", pm.get("weighting"));
+            row.put("PARAMETRIC_LAMBDA", pm.get("lambda"));
+            row.put("PARAMETRIC_HORIZON_RULE", pm.get("horizonRule"));
+            row.put("PARAMETRIC_SKEW", pm.get("skew"));
+            row.put("PARAMETRIC_EXCESS_KURTOSIS", pm.get("excessKurtosis"));
+            row.put("FAT_TAIL_GAP", pm.get("gap"));
+            row.put("FAT_TAIL_GAP_PCT", pm.get("gapPct"));
+            row.put("FAT_TAIL_ES_GAP", pm.get("esGap"));
+            row.put("PARAMETRIC_OFFICIAL", false);
+        }
+        row.put("PROVENANCE", upper(head.get("provenance")));
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("engine", "var-engine");
+        meta.put("tier", VarViews.tier(s));
+        return new EngineResult(List.of(row), Map.of("children", children, "worst", worst), meta);
+    }
+
+    /**
+     * The lens of a request (2.9.7): its {@code horizon}, {@code method} ({@code default}: the setting), {@code confidence},
+     * {@code es-confidence} and {@code set} ({@code normal} or {@code stressed}, VAR_GUIDE.md section 18.8); null when it asks for the
+     * default.
+     */
+    static com.ash.drishti.banking.compute.var.VarLens lens(VarProperties props, Map<String, Object> params) {
+        Object h = params.get("horizon");
+        Object m = params.get("method");
+        Object c = params.get("confidence");
+        Object e = params.get("es-confidence");
+        Object set = params.get("set");
+        String method = m == null || "default".equalsIgnoreCase(String.valueOf(m)) || String.valueOf(m).isBlank() ? null : String.valueOf(m);
+        String horizon = h == null || String.valueOf(h).isBlank() ? null : String.valueOf(h);
+        if (method != null && (horizon == null || com.ash.drishti.banking.compute.var.VarLens.parseHorizon(horizon) == 1)) {
+            horizon = "10d";                                          // a 10-day method names the 10-day horizon
+        }
+        com.ash.drishti.banking.compute.var.VarLens l = props.lens(horizon, method, c == null ? null : Double.valueOf(String.valueOf(c)),
+                e == null ? null : Double.valueOf(String.valueOf(e)), set == null ? null : String.valueOf(set));
+        return l.equals(props.defaultLens()) ? null : l;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> cast(Map<?, ?> m) {
+        return (Map<String, Object>) m;
+    }
+
+    /** camelCase to UPPER_SNAKE: {@code sumStandalone} is {@code SUM_STANDALONE}, {@code kupiecPValue} {@code KUPIEC_P_VALUE}. */
+    static String snake(String camel) {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < camel.length(); i++) {
+            char c = camel.charAt(i);
+            if (Character.isUpperCase(c) && i > 0) {
+                b.append('_');
+            }
+            b.append(Character.toUpperCase(c));
+        }
+        return b.toString().toUpperCase(Locale.ROOT);
+    }
+
+    /** A map's keys (and its nested maps' and lists' of maps) in UPPER_SNAKE; other values as they are. */
+    static Object upper(Object v) {
+        if (v instanceof Map<?, ?> m) {
+            Map<String, Object> out = new LinkedHashMap<>();
+            m.forEach((k, x) -> out.put(snake(String.valueOf(k)), upper(x)));
+            return out;
+        }
+        if (v instanceof List<?> l) {
+            List<Object> out = new ArrayList<>(l.size());
+            l.forEach(x -> out.add(upper(x)));
+            return out;
+        }
+        return v;
+    }
+}

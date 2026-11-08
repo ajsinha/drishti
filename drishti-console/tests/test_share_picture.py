@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The share dialog's "Include a picture" option and the shared view's picture (COLLABORATION.md, step 10): the option exists only where the server
+"""The share dialog's "Include a picture" option and the shared view's picture (ARCHITECTURE.md §31, step 10): the option exists only where the server
 says a picture may be offered for the kind, the preview and the picture are passed through as PNGs (never cached), the server's refusal is told in
 words, and the banner of a share that carries one shows it."""
 import sys

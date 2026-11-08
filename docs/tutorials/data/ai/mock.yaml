@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 15: the MOCK provider. It has no network, no key and no model behind it: it answers from the rules below, the first rule whose regular expression is
+# Tutorial 10: the MOCK provider. It has no network, no key and no model behind it: it answers from the rules below, the first rule whose regular expression is
 # found in the last message wins. That makes the AI features of BI repeatable (and safe to try), and lets you see exactly what Drishti does with an answer.
 # Copy it to config/ai/mock.yaml (the server and the console read the same folder) and switch the layer on: DRISHTI_AI_ENABLED=true DRISHTI_AI_DEFAULT_MODEL=mock/m
 type: mock

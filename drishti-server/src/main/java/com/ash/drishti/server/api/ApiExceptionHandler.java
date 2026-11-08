@@ -72,7 +72,7 @@ public class ApiExceptionHandler {
     }
 
     /**
-     * A model query refused (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5.7): the first problem's code, {@code path} and {@code fix}, and every problem of the
+     * A model query refused (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 5.7): the first problem's code, {@code path} and {@code fix}, and every problem of the
      * step that failed. A masked field ({@code DRS-9161}) also names {@code DRS-9021}, the engine's code for the same refusal.
      */
     @ExceptionHandler(com.ash.drishti.server.bi.mq.MqException.class)
@@ -88,7 +88,7 @@ public class ApiExceptionHandler {
         return p;
     }
 
-    /** A BI run refusal (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 16): its extra properties (estimate, confirmToken, run hint) and {@code Retry-After}. */
+    /** A BI run refusal (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 16): its extra properties (estimate, confirmToken, run hint) and {@code Retry-After}. */
     @ExceptionHandler(com.ash.drishti.server.bi.runs.RunProblem.class)
     org.springframework.http.ResponseEntity<ProblemDetail> run(com.ash.drishti.server.bi.runs.RunProblem e) {
         ProblemDetail p = drishti(e);
@@ -111,7 +111,7 @@ public class ApiExceptionHandler {
     }
 
     /**
-     * New work asked to wait because the server is very busy (docs/admin/OPERATIONS.md, "Busy protection"): {@code 503}, its
+     * New work asked to wait because the server is very busy (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): {@code 503}, its
      * {@code DRS-95xx} code, {@code Retry-After}, and the calm words ({@code title}, {@code because}) the console and drishti.py show.
      */
     @ExceptionHandler(com.ash.drishti.server.admission.BusyRefusal.class)
@@ -128,7 +128,7 @@ public class ApiExceptionHandler {
                 .header(org.springframework.http.HttpHeaders.CACHE_CONTROL, "no-store").body(p);
     }
 
-    /** A command an administrator turned off (Admin → Commands): {@code 403 DRS-1016} with the command and since when, nothing else. */
+    /** A command an administrator turned off (Admin → Functions): {@code 403 DRS-1016} with the command and since when, nothing else. */
     @ExceptionHandler(com.ash.drishti.server.security.CommandOffException.class)
     ProblemDetail commandOff(com.ash.drishti.server.security.CommandOffException e) {
         ProblemDetail p = drishti(e);
@@ -136,7 +136,7 @@ public class ApiExceptionHandler {
         return p;
     }
 
-    /** A compute engine that runs nowhere (COMPUTE_ENGINES.md section 5.1): {@code 404 DRS-1020} naming the engine. */
+    /** A compute engine that runs nowhere (ADMIN_GUIDE.md section 5.1): {@code 404 DRS-1020} naming the engine. */
     @ExceptionHandler(com.ash.drishti.server.engines.EngineOffException.class)
     ProblemDetail engineOff(com.ash.drishti.server.engines.EngineOffException e) {
         ProblemDetail p = drishti(e);

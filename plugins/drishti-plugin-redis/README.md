@@ -60,7 +60,7 @@ settings:
 auth: Redis ACL user and password (${ENV} or file:, overriding the uri's); TLS with a rediss:// uri and the shared tls.* settings, including a client certificate.
 licence: Lettuce (MIT) and zstd-jni (BSD-2-Clause), bundled; zstd-jni carries its native library inside the jar.
 windows: Works on Windows as a plain network client (the native zstd library is inside the jar, no .exe); the server is yours to run, and tools/load-redis.sh needs bash.
-doc: docs/connectors/REDIS_CONNECTOR.md
+doc: plugins/drishti-plugin-redis/README.md
 ---
 # The redis connector
 
@@ -113,7 +113,7 @@ key (`--ttl-days`). It never writes; `tools/load-redis.sh` (`RedisLoader`) does.
 | `columns-cache-mb` | int | `1024` | Memory for days' column sets |
 | `reverse-index` | boolean | `true` | Build the reverse index |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10).
 <!-- settings:end -->
 
 ## Data structure
@@ -154,7 +154,335 @@ settings:
 
 Ready-made files for the six banking domains: `config/connectors.examples/redis/`. Load data with
 `tools/load-redis.sh redis://localhost:6379` (add `--trades N --days D`, `--ttl-days N`, `--merge` to add to a day, `--publish` to
-announce changes to open views).
+announce changes to open views; [Loading](#loading) has every option).
+
+## Why this layout
+
+Redis answers a key lookup in well under a millisecond, but it keeps everything in RAM, cannot filter values on the server, and
+has no secondary indexes. The layout answers each:
+
+- **A key per entity per day,** compressed about 7.4 times with a zstd dictionary trained on the kind's own documents (about
+  0.8 KB a trade instead of 6.3 KB of JSON). Adding a day writes only that day's keys, a day expires on its own, a read is one `GET`.
+- **The entity's days** (a small sorted set) answer "the latest day on or before D" with `ZREVRANGEBYSCORE … LIMIT 0 1`, which an
+  `effective` kind needs. The hash tag on the id puts an entity's days and documents in one slot, so its candidate days are one
+  `MGET`, also on Redis Cluster.
+- **The day's column hash** lets searches, pick lists, derived kinds, impact and reverse lookups read a day's few narrow fields with
+  one `HMGET` per field, never a million keys: nineteen fields of a million trades are 2,000 chunks totalling about 16 MB (16 bytes
+  a trade per searchable field). Its own hash tag keeps it and its staging copy in one slot, so a loader publishes it with one `RENAME`.
+- **Generations** make replacing a day atomic for readers. A load writes the day under a generation of its own (the load's id),
+  which no reader looks at, then switches the day with one script that sets the day's generation in `{<domain>:<kind>:days}:gens`
+  and adds it to `<domain>:<kind>:days` (the two share a slot). A reader sees the whole old day or the whole new one. The replaced
+  generation expires `--keep-replaced-seconds` (120) later, so a reader that has not yet seen the switch still reads a whole day.
+  A day with no generation recorded uses the keys without a suffix.
+- **The meta's version** (when the loader wrote the columns) lets the connector keep a day's columns in memory and check with one
+  `HGET` whether they changed.
+
+While a load runs it also keeps `{<domain>:<kind>:<day>}:cols:<g>:staging` (its copy of the columns),
+`{<domain>:<kind>:<day>}:cols:loading:<load>` (the ids it wrote documents for: its journal), `<domain>:loading` (the days loads
+started and have not finished) and `<domain>:loader:<load>` (present while the load runs, a 90-second expiry it renews).
+
+One trade on one day, generation `9c41e07a2b5d13f0`:
+
+```
+{trading:trade:days}:gens              HASH   20260929 → 5e0a…, 20260930 → 9c41e07a2b5d13f0
+trading:trade:{MX-20000001}            ZSET   20260929 → 20260929, 20260930 → 20260930
+trading:trade:{MX-20000001}:20260930.9c41e07a2b5d13f0
+                                       STRING 0x03 <4-byte dictionary id> <zstd frame>          about 820 bytes
+{trading:trade:20260930}:cols:9c41e07a2b5d13f0
+                                       HASH
+  meta                 "version 1790857967807\nrows 1000000\nchunk-rows 10000\nchunks 100\ntext TRADE_ID\n…\nnumber QUANTITY\n…"
+  #id:0 … #id:99       the ids, sorted, 10,000 per chunk
+  QUANTITY:0 … QUANTITY:99    10,000 doubles per chunk
+  PORTFOLIO:0 … PORTFOLIO:99  10,000 texts per chunk (the chunk's distinct portfolios, then an index per row)
+```
+
+### Compression
+
+Measured on 20,000 generated trade documents (6,318 bytes of JSON on average):
+
+| Codec | Bytes a document | Smaller by | Time a document |
+|---|---|---|---|
+| Deflate level 6 | 1,910 | 3.3 times | 77 µs |
+| zstd level 3 | 1,991 | 3.2 times | 13 µs |
+| **zstd level 3, 112 KB dictionary** (the default) | **823** | **7.7 times** | **9 µs** |
+| zstd level 6, 112 KB dictionary | 780 | 8.1 times | 34 µs |
+
+A single document holds little repetition; what trades share (field names, products, books, curves, counterparties) is in the
+dictionary, trained on 2,000 documents of the kind in about 0.24 s. The dictionary is stored once (`<domain>:dict:<id>`, no TTL:
+documents name it) and its id in `<domain>:<kind>:dict`, so later loads reuse it; `--retrain` trains a new one (older documents keep
+naming the old, which stays). The connector keeps at most 256 dictionaries in memory.
+
+Column chunks are a type byte and a zstd frame: `D` the count, then the doubles' bytes transposed (every value's first byte, then
+every second byte …; NaN for null); `T` the count, a dictionary of the chunk's distinct values and each row's index plus one as a
+varint (0 for null); `P` the count, then each value's length plus one as a varint (0 for null) and its UTF-8 bytes.
+
+### Which fields are columns
+
+The pack declares the fields to promote on the connector that stores the kind, as for Delta Lake (how to choose them:
+[the delta connector](../drishti-plugin-delta/README.md)); a connector file flattens it to `layout.<kind>.columns`. A file replaces
+the pack's template wholesale, so it repeats the promoted layout the pack declared. The loader takes the values from each line's
+`columns` object. The layout's `sort-by`, `file-rows` and `row-group-rows` concern files and do not apply to Redis.
+
+## Loading
+
+`tools/load-redis.sh` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated
+book, through `RedisLoader` (in the plugin):
+
+```bash
+tools/load-redis.sh redis://localhost:6379                                  # the samples: 1,791 documents x 10 days
+tools/load-redis.sh redis://localhost:6379 --trades 1000000 --days 2       # and a book of a million trades, streamed
+tools/load-redis.sh redis://localhost:6379 --merge                         # add to the days instead of replacing them
+tools/load-redis.sh redis://localhost:6379 --ttl-days 7                    # every key expires 7 days after it is written
+tools/load-redis.sh rediss://loader:secret@redis.internal:6380 --cluster   # TLS, credentials, Redis Cluster
+```
+
+```
+redis: trading:trade: trained a 114,688-byte zstd dictionary on 2,000 documents
+redis: trading:trade 2026-09-30: 1,000,000 rows, 19 columns in 2,000 chunks of 15,809,834 bytes
+redis: loaded 1,000,000 rows into redis://localhost:26479 in 81 s; documents 6,021 MB as JSON, 811 MB stored (7.4 times smaller)
+```
+
+- **Input:** loader rows, one JSON line per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`.
+  `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write tars of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders;
+  `RedisLoader -` reads standard input (one kind on one date). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and
+  `.jsonl.gz` in it, in name order.
+- **Business dates come from outside the row** ([the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
+  a tar's folder names the date; a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-`) is one kind on one date: `--as-of`, else
+  its `.ready` file's `business-date:`, else the date in its name, else the business today. Rows whose own `date` differs are loaded
+  under the file's date and counted. A plain file of two kinds is refused (send a tar), and so is `--as-of` with a tar. A row dated
+  after tomorrow in the business zone (`--future-days`, `--zone`) is not loaded and the load ends with an error.
+- **Streaming:** worker threads (`--threads`) parse and compress each line and pipeline its commands over one Lettuce connection:
+  `SADD` of the id to the day's journal, then `SET` of the document (`EX` with `--ttl-days`) and `ZADD` of the day to the entity's
+  days. At most `--in-flight` lines are unanswered at once. A kind's dictionary is trained on its first `--dict-samples` documents
+  unless Redis already has one (a kind with fewer than 64 documents uses plain zstd).
+- **Columns** are gathered per kind and day (about 230 MB of loader heap per million trades with nineteen fields; the script gives
+  the loader 6 GB) and written when the input ends: sorted by id, cut into chunks of `--chunk-rows`, written to the staging hash and
+  renamed over the generation's hash.
+- **Replace (the default):** each day the stream reaches holds exactly the stream's entities. Once every day's columns are in, each
+  day is switched to the load's generation in one script and announced on `<domain>:changes`; entities the stream lacks lose the day
+  from their days. Until the replaced generation expires the day is held twice. When the stream lacks more than `--max-drop-share`
+  (0.5) of a day's entities, the load ends with an error before switching anything and deletes what it wrote, unless `--force-drop`.
+- **`--merge`** writes into the day's current generation in place; the day's columns keep every row the load did not write. A day
+  can be loaded in parts, and loading the same lines twice changes nothing. Merged documents are visible at once, searches see them
+  when the load ends; a one-trade correction to a day of a million trades takes about 3.5 s (rewriting the day's columns).
+  `--merge` with `--replace` is refused. Never run two loads of the same day at once: the last switch wins.
+- **A load that dies leaves nothing half visible.** The first time a load reaches a domain it removes what dead loads left (those
+  whose loader key expired): a replacing load's whole unswitched generation, or a merging load's documents the day's columns do not
+  list. The journal costs one `SADD` per document and, until the columns are written, about 60 MB per million trades.
+- **`--publish`** announces every written entity on `<domain>:changes` so open views refresh at once (meant for intraday
+  `--merge --publish`); a bulk load announces only its days.
+- **Credentials:** in the URI (`redis://user:secret@host:6379`) or `DRISHTI_REDIS_USER` and `DRISHTI_REDIS_PASSWORD`; `rediss://`
+  for TLS. The loader uses the JVM's trust: for a private CA run it with `-Djavax.net.ssl.trustStore=...`.
+
+| Option | Default | Meaning |
+|---|---|---|
+| `--cluster` | off | Redis Cluster |
+| `--ttl-days N` | no expiry | every key expires N days after it is written; the kinds' days keep N days back from the load's newest business date |
+| `--replace` / `--merge` | replace | each day holds exactly the stream's entities, switched atomically / add to each day in place |
+| `--keep-replaced-seconds N` | `120` | how long a replaced generation stays readable (0: deleted at once) |
+| `--as-of yyyy-MM-dd` | the file's name, else the business today | a plain file's business date (refused for a tar) |
+| `--future-days N`, `--zone Z` | `1`, `DRISHTI_BUSINESS_ZONE` else `America/New_York` | how far after today a business date may be, in which zone |
+| `--max-drop-share F`, `--force-drop` | `0.5`, off | the largest share of a kind's days, or of a day's entities, one run may drop; drop more anyway |
+| `--codec`, `--level N` | `zstd-dict`, `3` | `zstd-dict`, `zstd`, `deflate` or `none`; the compression level |
+| `--chunk-rows N`, `--in-flight N`, `--threads N` | `10000`, `2000`, cores less two | values per column chunk; lines unanswered; worker threads |
+| `--publish` | off | announce every written entity on `<domain>:changes` |
+| `--retrain`, `--dict-samples N`, `--dict-kb N` | off, `2000`, `112` | train new dictionaries; documents to train on; dictionary size |
+
+**Your own writer** (a Kafka consumer, a batch job) writes the same keys: the document (compressed or plain JSON), the `ZADD` to the
+entity's days, the day's column hash (encoding in `ColumnCodec` and `DayColumns`, callable from Java), the `ZADD` to the kind's days
+and the `SADD` to the domain's kinds. Writing into the current generation merges; to replace atomically, write a new generation and
+switch it as `RedisLoader` does (`HSET {<domain>:<kind>:days}:gens yyyyMMdd <g>` with the `ZADD`, in one script). A writer that does
+not maintain the column hash still serves documents; searches over that day then read documents.
+
+**Redis must not evict:** keep `maxmemory-policy noeviction` (the default), so a full instance refuses writes and the loader stops
+with the error instead of Redis silently dropping trades.
+
+## How the connector reads
+
+- **Catalogue,** every `refresh-seconds` and whenever a loader announces a day: the kinds, each kind's days and generations,
+  `<domain>:updated` (the views' freshness) and, only when the newest day's `meta` version changed, its `#id:*` chunks for
+  type-ahead (a million ids are 100 chunks of about 90 KB, one `HMGET`). An `effective` kind's ids are the union of its days. No
+  document is read. The newest day's columns are then loaded in the background.
+- **One entity:** a `snapshot` kind is read on its newest day on or before the date asked (within `lookback-days`) with one `GET`
+  in the day's generation; no document means the entity is gone that day and the router asks the next store (after one `HGET` on
+  the day's generation, in case the day was switched). An `effective` kind (or one whose days are not known yet): the entity's
+  latest days (`ZREVRANGEBYSCORE … LIMIT 0 8`), then their documents in one `MGET`; the newest found wins.
+- **A day's columns:** `HGET … meta`; if the generation and version are those in memory, they answer; otherwise one `HMGET` per
+  column, all sent at once (twenty commands, 16 MB, one round trip), each decoded on its own virtual thread. At most `heavy-reads`
+  days are read at once; column sets are kept within `columns-cache-mb`. A day the column hash does not hold answers "not held" and
+  the router asks the next store; a declared field the day lacks makes the search read documents, and Health says so.
+- **Reverse lookups** come from the day's promoted text columns. A kind without promoted fields is answered from documents (256 at
+  a time, pipelined, at most `max-load-rows`); `reverse-index: false` turns reverse lookups off.
+- **Derived kinds and impact** work from the column set as on Delta Lake.
+- **Live updates** (`live: true`): the connector subscribes to `<domain>:changes`. `trade TAB MX-20000017 TAB 20260930` re-reads an
+  open entity and pushes the changed cells; `trade TAB * TAB 20260930` refreshes the catalogue. Every message sets the connector's
+  `lastUpdate` (for `stale-after`). Pub/sub is fire-and-forget: a server that was down catches up on days and ids at the next refresh.
+- **History** (`TRD MX-20000017 30`, [history queries](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)):
+  `ZRANGEBYSCORE` on the entity's days, then every day's document in one `MGET`. Dates Redis does not hold come from the next
+  connector of the kind.
+
+## Retention, sizing and Redis with a lake
+
+**Retention is a TTL on every key.** With `--ttl-days N` documents get `SET … EX`, the entity's days and the day's column hash
+`EXPIRE`; the entity's and kind's days also lose days more than N days before the load's newest business date (never the newest
+date held). When that would take more than `--max-drop-share` of a kind's days the load fails, unless `--force-drop`. No job runs.
+An expired day answers "not held" and the router asks the next store. TTLs count calendar days: to keep five business days over
+weekends and holidays, use `--ttl-days 8`. Dictionaries have no TTL.
+
+**Memory,** measured with Redis 8.2 and a million trades a day: documents about 1.0 GB, the day's column hash 16 MB, the entities'
+days about 0.1 GB once: **about 1.05 GB per business day kept** (plain JSON would be about 7 GB, zstd without a dictionary 2.2 GB).
+
+| Days kept | Memory (million trades a day) | With one replica |
+|---|---|---|
+| 1 business day | about 1.1 GB | 2.2 GB |
+| 5 | about 5.3 GB | 10.6 GB |
+| 20 (a month) | about 21 GB | 42 GB |
+| 250 (a year) | about 260 GB | 520 GB |
+
+Add Redis's fragmentation (`mem_fragmentation_ratio`, 1.1 to 1.3) and, with RDB or AOF, the copy-on-write of the background save:
+keep `maxmemory` at about 70 % of RAM with persistence, 85 % without.
+
+**Redis Cluster:** `cluster: true` (or several URIs) on the connector, `--cluster` on the loader. Lettuce discovers the topology
+from the seeds and refreshes it every minute and on every redirect. An entity's days and documents share a slot, a kind's days and
+generations share a slot (the switch script runs on one node), a day's column hash is one key on one node, and `PUBLISH` reaches
+every node's subscribers. Three primaries of 16 GB hold about 30 business days of a million trades a day; add a replica per primary.
+
+**Recent days in Redis, history in a lake.** Seven years in memory is about 1.8 TB of RAM for days rarely opened. Configure a Delta
+Lake (or Iceberg) connector for the same kind with the same layout, Redis first in the route: a read, a search, a pick list, a
+derived kind and impact take the first connector that holds the business day (recent days from Redis, older from the lake);
+type-ahead merges both; live views tick from Redis. Load each day into both from the same JSON lines, or the lake at end of day and
+Redis intraday.
+
+```yaml
+# config/connectors/trading-history.yaml: every business day for seven years, behind config/connectors/trade-endur.yaml (Redis)
+plugin: delta
+kinds: [trade]
+settings:
+  root: s3a://risk-lake/banking
+  domain: trading
+  lookback-days: 10
+  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,CURRENCY,QUANTITY,COUNTERPARTY,PORTFOLIO
+```
+
+**Memory in the Drishti server:** type-ahead ids about 150 MB per million, a day's column set (19 fields) about 220 MB within
+`columns-cache-mb`, dictionaries about 112 KB each (at most 256). Documents are not cached. Give the server at least 4 GB of heap
+per million entities a day, 8 GB to keep several days' columns.
+
+**Limits:** only promoted fields are fast (searches on other fields read at most 20,000 documents, `partial`); `effective` kinds are
+read as documents, not columns; a replacing day becomes visible only at the end of its load; an intraday writer should load in
+`--merge` batches (each rewrites the day's columns, about 3 s per million trades); the loader's heap grows with the days in one
+input (load a long history a day per run); a dictionary is per kind, so a kind whose shape changes a lot compresses less until
+`--retrain`.
+
+## Measured results
+
+A developer workstation (24 cores), one Redis 8.2 in Docker (`maxmemory 11gb`, no persistence), 1,000,000 trades a day over two
+business days plus the banking samples (3,018,045 keys, `used_memory` 2.06 GB), a Drishti server with `-Xmx8g`, times over HTTP:
+
+| Question | Time |
+|---|---|
+| load the samples (17,910 documents) / 1,000,000 / 2,000,000 trade-days | 4 s / 81 s / 97 s |
+| a one-trade intraday correction with `--merge --publish` | 3.5 s |
+| server start, with a million ids and the newest day's columns ready | 9.6 s |
+| type-ahead, first / again | 93 ms / 26 ms |
+| open a trade (view), first / again | 81 ms / 33 ms |
+| a trade's document, today / a past day (p50 of 200; p99 12.6 / 9.7 ms) | 5.5 ms / 4.1 ms |
+| a search on one number column (2,041 matches of 1,000,000), first / again | 144 ms / 81 ms |
+| a search on a currency and a number (13,523 matches), first / again | 257 ms / 201 ms |
+| a search on one portfolio (70,649 matches), first / again | 244 ms / 130 ms |
+| pick list, first / again | 116 ms / 89 ms |
+| desk P&L / impact of a netting set (143,842 trades) | 14 ms / 248 ms |
+| a search on another business day, first after a restart / again | 305 ms / 112 ms |
+| server heap in use | 0.97 GB after start, 1.46 GB after the measurements |
+
+Every search was exact (`partial: false`, `scanned: 1000000`).
+
+**Why Lettuce:** against the same instance, `GET` from 64 threads ran at 228,000 a second (p99 0.59 ms) on one multiplexed Lettuce
+connection from virtual threads, against 144,000 (p99 0.94 ms) for a pool of 64 Jedis connections. Jedis pipelines write faster
+from one thread, but the loader is bound by its input. Lettuce also gives Redis Cluster, TLS and pub/sub with one API.
+
+The scaling curve from 10,000 to 50,000 trades a day, side by side with the other stores, is in
+[BENCHMARK.md, section 9](../../docs/admin/BENCHMARK.md#9-the-stores-compared-10000-to-50000-trades-a-day).
+
+## Security: TLS and credentials
+
+The address decides TLS: **`rediss://`** (two s) is TLS, `redis://` plain text; for a cluster every seed URI is `rediss://`. With
+no `tls.*` the server certificate is checked against the JVM's authorities and the host name; the shared `tls.*` settings
+([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [the keys](../../docs/admin/CONFIGURATION.md#shared-tls)) add a private CA, a client
+certificate for a server running `tls-auth-clients yes`, protocols and cipher suites. `user` and `password` are the Redis ACL user
+and its password (`${ENV}` or `file:`). `tls.*` against a `redis://` URI, or a missing or unreadable file, is a start-up error, not a
+silent downgrade. A Lettuce option in the URI (`rediss://host:6380?verifyPeer=CA`) still works but logs a deprecation warning
+naming `tls.verify-hostname`.
+
+```yaml
+# config/connectors/redis-tls.yaml (also in config/connectors.examples/other/): mutual TLS, private CA
+plugin: redis
+kinds: [trade]
+description: Trades in Redis over mutual TLS
+settings:
+  domain: trading
+  uri: rediss://redis.example.com:6380
+  user: drishti
+  password: ${DRISHTI_REDIS_PASSWORD}
+  tls:
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key
+```
+
+The server side, as in the integration test (`RedisTlsTest`, `redis:8.2`). Its certificate must name the host Drishti connects to
+(`subjectAltName` `DNS:redis.example.com`); with `tls-auth-clients no` the client-certificate lines are not needed:
+
+```
+redis-server --port 0 --tls-port 6380 \
+  --tls-cert-file /tls/server.pem --tls-key-file /tls/server.key --tls-ca-cert-file /tls/ca.pem --tls-auth-clients yes
+```
+
+Check it from the command line; `Verify return code: 0 (ok)` and `PONG` leave only Drishti's side:
+
+```
+openssl s_client -connect redis.example.com:6380 -CAfile /etc/drishti/tls/ca.pem \
+  -cert /etc/drishti/tls/client.pem -key /etc/drishti/tls/client.key -verify_return_error < /dev/null
+redis-cli --tls --cacert /etc/drishti/tls/ca.pem --cert /etc/drishti/tls/client.pem --key /etc/drishti/tls/client.key \
+  -h redis.example.com -p 6380 --user drishti --askpass ping
+```
+
+Health names a client certificate with less than 30 days left:
+`UP (TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))`.
+
+For production, use an ACL user with only the commands the connector needs (`GET`, `MGET`, `HGET`, `HMGET`, `HGETALL`, `SMEMBERS`,
+`ZRANGE`, `ZREVRANGEBYSCORE`, `PING`, `SUBSCRIBE`) and a separate one for the loader (which also needs `EVAL` for the day switch).
+
+## Connection pool
+
+Lettuce multiplexes: one connection carries any number of commands from any number of virtual threads, so a quiet connector holds
+**one** connection. The pool opens another only when every open connection has `pool-pipeline-depth` commands in flight, up to
+`pool-size` (default `drishti.db.pool.size`); each command goes to the least busy connection, and connections beyond `pool-min-idle`
+idle for `pool-idle-timeout` are closed. A command in flight longer than `pool-leak-threshold` is logged as slow. `timeout-ms` is the
+command timeout; `pool-max-lifetime`, `pool-connection-timeout` and `statement-timeout` do not apply. The pub/sub connection of
+`live: true` is one long-lived subscription, not pooled. Admin shows open, in use, idle and the longest command in flight
+([connection pools](../../docs/guides/DATA_GUIDE.md#914-connection-pools)).
+
+## Production checklist
+
+1. Declare `layout.<kind>.columns` for every large kind; load lines whose `columns` carry those fields.
+2. Size Redis for the days you keep (about 1.05 GB per million trades per day, plus replicas and 30 % headroom), set `maxmemory`
+   and keep `maxmemory-policy noeviction`.
+3. Choose the days Redis keeps and load with `--ttl-days`.
+4. Put a Delta Lake (or Iceberg) connector behind it for the full history, with the same layout.
+5. Use `rediss://` and separate ACL users for the connector and the loader ([Security](#security-tls-and-credentials)).
+6. For live views, load intraday in small `--merge --publish` batches; load each full book without `--merge`.
+7. Give the server at least 4 GB of heap per million entities a day.
+8. Check Admin → Health, then measure on your data (`elapsedMs`, `scanned` and `partial` of a search).
+
+A quick start from nothing (use a free host port if a Redis of yours already listens on 6379):
+
+```bash
+docker run -d --name redis -m 2g -p 6379:6379 redis:8 --maxmemory 1gb
+tools/load-redis.sh redis://localhost:6379                         # the samples, 10 business days
+tools/load-redis.sh redis://localhost:6379 --trades 10000          # and 10,000 trades a day for 3 days
+cp config/connectors.examples/redis/*.yaml config/connectors/      # the banking domains on Redis
+```
 
 ## Troubleshooting
 
@@ -166,11 +494,26 @@ announce changes to open views).
 - A new day is not served: its load has not finished (columns are written at the end).
 - Open views do not tick: the writer does not `--publish`, or `live: false`.
 - Loader `OOM command not allowed when used memory > 'maxmemory'`: Redis is full; shorter `--ttl-days`, more memory or shards.
+- `DOWN: lost the connection to Redis at redis://… (reconnecting)` or `DOWN: reads fail: …`: Redis went away or rejects commands;
+  the connection reconnects by itself, reads fail at once while `DOWN`, and a `PING` every `recheck-ms` brings it back `UP`.
+- Loader `replacing the day would remove N of its M entities …`: a part of a day loaded without `--merge`, or a truncated input;
+  `--merge` to add to the day, `--force-drop` if the day really shrank.
+- `UP (not laid out as the pack declares: trade (12 of 19 columns) …)`: the day was loaded without some declared fields; load lines
+  whose `columns` carry every declared path. Searches say `partial: true` when a field they read is not promoted.
+- A trade is in type-ahead but does not open on a date: its key for that day expired or was never loaded
+  (`ZRANGE trading:trade:{ID} 0 -1`, `HGET {trading:trade:days}:gens yyyyMMdd`); with a lake behind, older days come from there.
+- Loader `OutOfMemoryError`: too many days in one input; load fewer days per run, or more `-Xmx`.
+- The plugin is listed as installed but not configured: a connector without `uri`; it stays idle.
+- TLS: `SSLHandshakeException … certificate_required`: the server wants a client certificate (`tls.cert-file`, `tls.key-file`);
+  `PKIX path building failed`: the issuing CA is not in `tls.ca-file`; `No subject alternative names matching …`: connect by a name
+  the certificate carries; health `DOWN` with `Connection refused`: the port speaks plain text or nothing (with `--port 0` only the
+  `tls-port` listens). File errors read as in [DATA_GUIDE.md section 10.8](../../docs/guides/DATA_GUIDE.md#108-start-up-checks-and-their-messages).
 
-Every health text is in the full document, section *Diagnosing*.
+`GET /api/v1/admin/health` shows the catalogue (`kinds`, `datesIndexed`, `ids`, `columnSets`, `columnSetsMb`, `dictionaries`,
+`liveViews`). Useful Redis commands: `INFO memory`, `MEMORY USAGE <key>`, `HGETALL {trading:trade:days}:gens`,
+`HGET {trading:trade:20260930}:cols:<g> meta`, `ZRANGE trading:trade:days 0 -1`, `SUBSCRIBE trading:changes`.
 
 ## See also
 
-- [The full Redis connector document](../../docs/connectors/REDIS_CONNECTOR.md): key layout, compression, loading, live updates, sizing.
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

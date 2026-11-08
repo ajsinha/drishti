@@ -17,7 +17,7 @@
 
 # Data contracts of the core pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/core/guides/core.md](../../../config/packs/core/guides/core.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/core/core/guides/core.md](../../../config/packs/core/core/guides/core.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -38,7 +38,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 
 |  |  |
 |---|---|
-| Contract | [counterparty.contract.yaml](../../../config/packs/core/contracts/counterparty.contract.yaml) · version 1.0 |
+| Contract | [counterparty.contract.yaml](../../../config/packs/core/core/contracts/counterparty.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | counterparty-master |
@@ -49,7 +49,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/counterparty/` |
 | Test data | data/testdata/core/counterparty |
-| Worked example | [core/counterparty](../samples/core/counterparty.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/counterparty](../samples/core.md#counterparty) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -157,7 +157,7 @@ Economic group of related counterparties (obligor group).
 
 |  |  |
 |---|---|
-| Contract | [counterparty-group.contract.yaml](../../../config/packs/core/contracts/counterparty-group.contract.yaml) · version 1.0 |
+| Contract | [counterparty-group.contract.yaml](../../../config/packs/core/core/contracts/counterparty-group.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | counterparty-master |
@@ -168,7 +168,7 @@ Economic group of related counterparties (obligor group).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/counterparty-group/` |
 | Test data | data/testdata/core/counterparty-group |
-| Worked example | [core/counterparty-group](../samples/core/counterparty-group.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/counterparty-group](../samples/core.md#counterparty-group) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -176,7 +176,7 @@ Economic group of related counterparties (obligor group).
 |---|---|---|---|---|---|---|
 | `GROUP_ID` | id | required |  | The record's id (the business key) | `GRP-ALDERSHOT` (pattern `^GRP-`) |  |
 | `NAME` | text | required |  | The group's name: its ultimate parent's name. | `Aldershot Pension Trust` |  |
-| `LIMIT` | amount | required | USD | The group's own approved credit limit (decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | `337000000.0` |  |
+| `LIMIT` | amount | required | USD | The group's own approved credit limit (DATA_ARCHITECTURE.md section 12: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | `337000000.0` |  |
 | `UTILISATION` | rate | required | fraction | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). | `0.6671` |  |
 | `MEMBERS` | record list | required |  | The counterparties in the group: one object per member. |  |  |
 
@@ -213,7 +213,7 @@ Issuer of bonds and reference entity for CDS.
 
 |  |  |
 |---|---|
-| Contract | [issuer.contract.yaml](../../../config/packs/core/contracts/issuer.contract.yaml) · version 1.0 |
+| Contract | [issuer.contract.yaml](../../../config/packs/core/core/contracts/issuer.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | counterparty-master |
@@ -224,7 +224,7 @@ Issuer of bonds and reference entity for CDS.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/issuer/` |
 | Test data | data/testdata/core/issuer |
-| Worked example | [core/issuer](../samples/core/issuer.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/issuer](../samples/core.md#issuer) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -275,7 +275,7 @@ A clearing house with its default fund and margin model.
 
 |  |  |
 |---|---|
-| Contract | [ccp.contract.yaml](../../../config/packs/core/contracts/ccp.contract.yaml) · version 1.0 |
+| Contract | [ccp.contract.yaml](../../../config/packs/core/core/contracts/ccp.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | clearing-system |
@@ -286,7 +286,7 @@ A clearing house with its default fund and margin model.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/ccp/` |
 | Test data | data/testdata/core/ccp |
-| Worked example | [core/ccp](../samples/core/ccp.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/ccp](../samples/core.md#ccp) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -330,7 +330,7 @@ The bank's own booking entity.
 
 |  |  |
 |---|---|
-| Contract | [legal-entity.contract.yaml](../../../config/packs/core/contracts/legal-entity.contract.yaml) · version 1.0 |
+| Contract | [legal-entity.contract.yaml](../../../config/packs/core/core/contracts/legal-entity.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | entity-master |
@@ -341,7 +341,7 @@ The bank's own booking entity.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/legal-entity/` |
 | Test data | data/testdata/core/legal-entity |
-| Worked example | [core/legal-entity](../samples/core/legal-entity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/legal-entity](../samples/core.md#legal-entity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -406,7 +406,7 @@ A trading book: owner desk, trades and risk.
 
 |  |  |
 |---|---|
-| Contract | [book.contract.yaml](../../../config/packs/core/contracts/book.contract.yaml) · version 1.0 |
+| Contract | [book.contract.yaml](../../../config/packs/core/core/contracts/book.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | org-master |
@@ -417,7 +417,7 @@ A trading book: owner desk, trades and risk.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/book/` |
 | Test data | data/testdata/core/book |
-| Worked example | [core/book](../samples/core/book.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/book](../samples/core.md#book) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -484,7 +484,7 @@ A trading desk: books, limits and risk results.
 
 |  |  |
 |---|---|
-| Contract | [desk.contract.yaml](../../../config/packs/core/contracts/desk.contract.yaml) · version 1.0 |
+| Contract | [desk.contract.yaml](../../../config/packs/core/core/contracts/desk.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | org-master |
@@ -495,7 +495,7 @@ A trading desk: books, limits and risk results.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/desk/` |
 | Test data | data/testdata/core/desk |
-| Worked example | [core/desk](../samples/core/desk.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/desk](../samples/core.md#desk) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -560,7 +560,7 @@ A trader and their books.
 
 |  |  |
 |---|---|
-| Contract | [trader.contract.yaml](../../../config/packs/core/contracts/trader.contract.yaml) · version 1.0 |
+| Contract | [trader.contract.yaml](../../../config/packs/core/core/contracts/trader.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | org-master |
@@ -571,7 +571,7 @@ A trader and their books.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/trader/` |
 | Test data | data/testdata/core/trader |
-| Worked example | [core/trader](../samples/core/trader.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/trader](../samples/core.md#trader) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -617,7 +617,7 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 
 |  |  |
 |---|---|
-| Contract | [calendar.contract.yaml](../../../config/packs/core/contracts/calendar.contract.yaml) · version 1.0 |
+| Contract | [calendar.contract.yaml](../../../config/packs/core/core/contracts/calendar.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | reference-master |
@@ -628,7 +628,7 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/calendar/` |
 | Test data | data/testdata/core/calendar |
-| Worked example | [core/calendar](../samples/core/calendar.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/calendar](../samples/core.md#calendar) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -677,7 +677,7 @@ An account at a CCP holding cleared trades and margin.
 
 |  |  |
 |---|---|
-| Contract | [clearing-account.contract.yaml](../../../config/packs/core/contracts/clearing-account.contract.yaml) · version 1.0 |
+| Contract | [clearing-account.contract.yaml](../../../config/packs/core/core/contracts/clearing-account.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | clearing-system |
@@ -688,7 +688,7 @@ An account at a CCP holding cleared trades and margin.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/clearing-account/` |
 | Test data | data/testdata/core/clearing-account |
-| Worked example | [core/clearing-account](../samples/core/clearing-account.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/clearing-account](../samples/core.md#clearing-account) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

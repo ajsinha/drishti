@@ -1,0 +1,39 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Migrated from config/bi/models/counterparty-exposure.model.yaml by drishti.py tables migrate (docs/architecture/ARCHITECTURE.md §28 section 4).
+rachana: 3
+model: counterparty-exposure
+version: 1.0.0
+title: Counterparty exposure
+description: "Expected and potential future exposure (peak), computed by the exposure engine (the official end-of-day results), by counterparty, sector and country. No trades and no row rule: it answers \"how much could we lose to this counterparty\" on its own, and joins to other datasets (desk P&L, for one) through the counterparty."
+sample: true
+endorsement: promoted
+tags: [sample, counterparty-risk, multi-dataset]
+tables:
+  netting_sets:   { table: banking.counterparty_exposure_netting_sets, role: fact }
+  set_exposure:   { table: banking.counterparty_exposure_official_netting_sets, role: fact }
+  cpty_exposure:  { table: banking.counterparty_exposure_official_counterparties, role: fact }
+  counterparties: { table: banking.counterparty_exposure_counterparties, role: dimension }
+relationships:
+  - { from: netting_sets.COUNTERPARTY, to: counterparties.id }
+  - { from: set_exposure.COUNTERPARTY, to: counterparties.id }
+  - { from: cpty_exposure.COUNTERPARTY, to: counterparties.id }
+measures:
+  Exposure (EE peak):  { expr: sum(set_exposure.PEAK_EE), format: amount0, description: "The netting sets' computed peak expected exposure (the exposure engine's official end-of-day result, latest version), summed over the netting sets of the visual's row: a reporting sum of the sets' peaks, not the peak of the counterparty's expected exposure." }
+  Exposure (PFE peak): { expr: sum(cpty_exposure.PEAK_PFE_95), format: amount0, description: "The counterparty's computed peak 95% PFE: the exposure engine's counterparty row (all its netting sets netted path by path), never a sum of its sets' PFEs. By counterparty it is that counterparty's own figure; over several counterparties (a sector, the total) it is a reporting sum of their PFEs, not the PFE of the group." }
+  Netting sets:        { expr: count(netting_sets) }
+  Collateral:          { expr: sum(netting_sets.COLLATERAL), format: signed0 }
+hierarchies:
+  Counterparty: [counterparties.SECTOR, counterparties.NAME]

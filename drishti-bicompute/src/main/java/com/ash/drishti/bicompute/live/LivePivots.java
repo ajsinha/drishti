@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /**
- * Live pivots (PIVOT_ENGINE.md section 10, item 5; phase P3): a pivot view kept current. The host tells the engine when a source's data moved
+ * Live pivots (ARCHITECTURE.md section 26.7, item 5; phase P3): a pivot view kept current. The host tells the engine when a source's data moved
  * ({@link #signal}: a data load for a business date, a live table's update); every live view on that source and date is computed again
  * through the one {@link PivotCore} (the partial-state cache keeps every set whose date and data version did not move, so only the touched
  * dates' sets, or a refreshed rollup's states, are read again), the new answer compared with the last one cell by cell, and only the

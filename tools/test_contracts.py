@@ -89,6 +89,14 @@ class MiniPack:
         self.tmp.cleanup()
 
 
+def java_source(cls: str) -> Path:
+    """The source file of a Java class in whichever module holds it (drishti-banking, drishti-compute-banking, ...: the domain modules
+    moved the risk engines and publishers out of drishti-server and drishti-compute); a path that does not exist when no module has it."""
+    rel = Path("src", "main", "java", *cls.split(".")).with_suffix(".java")
+    found = sorted(p / rel for p in C.ROOT.iterdir() if p.is_dir() and (p / rel).is_file())
+    return found[0] if found else C.ROOT / rel
+
+
 def field(contract: dict, name: str, path: str = "") -> dict:
     fields = contract["fields"] if not path else contract["nested"][path]
     return next(f for f in fields if f["name"] == name)
@@ -134,7 +142,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
         cls.testdata = yaml.safe_load((C.TESTDATA / "testdata.yaml").read_text(encoding="utf-8"))
 
     def docs_of(self, pack: str, kind: str) -> list[dict]:
-        samples, tdocs, _ = C.read_documents(C.PACKS / pack, kind, C.TESTDATA)
+        samples, tdocs, _ = C.read_documents(C.PP.pack_dir(pack, C.PACKS), kind, C.TESTDATA)
         return samples + tdocs
 
     @staticmethod
@@ -158,10 +166,10 @@ class TheRetiredStoredVersions(unittest.TestCase):
                 self.assertNotIn(kind, m.get("kinds") or [], f"{pack} declares the retired kind {kind}")
                 self.assertNotIn(kind, m.get("routes") or {}, f"{pack} routes the retired kind {kind}")
                 self.assertNotIn(kind, {(v or {}).get("kind") for v in (m.get("mnemonics") or {}).values()}, f"{pack}: a mnemonic of {kind}")
-                self.assertFalse((C.PACKS / pack / "samples" / f"{kind}.jsonl").exists(), f"{pack} samples of {kind}")
-                self.assertFalse((C.PACKS / pack / "contracts" / f"{kind}.contract.yaml").exists(), f"{pack} contract of {kind}")
-                self.assertFalse((C.PACKS / pack / "tests" / kind).exists(), f"{pack} Sutra tests of {kind}")
-                sutras = [f for f in (C.PACKS / pack).rglob("*.sutra.yaml") if f"kind: {kind}," in f.read_text(encoding="utf-8")]
+                self.assertFalse((C.PP.pack_dir(pack, C.PACKS) / "samples" / f"{kind}.jsonl").exists(), f"{pack} samples of {kind}")
+                self.assertFalse((C.PP.pack_dir(pack, C.PACKS) / "contracts" / f"{kind}.contract.yaml").exists(), f"{pack} contract of {kind}")
+                self.assertFalse((C.PP.pack_dir(pack, C.PACKS) / "tests" / kind).exists(), f"{pack} Sutra tests of {kind}")
+                sutras = [f for f in (C.PP.pack_dir(pack, C.PACKS)).rglob("*.sutra.yaml") if f"kind: {kind}," in f.read_text(encoding="utf-8")]
                 self.assertEqual(sutras, [], f"{pack}: a Sutra of {kind}")
             self.assertNotIn(kind, {d.get("kind") for d in self.testdata["datasets"]}, f"test data of {kind}")
             self.assertFalse(any((C.TESTDATA / p / kind).exists() for p in self.manifests), f"a test-data folder of {kind}")
@@ -222,10 +230,9 @@ class TheRetiredStoredVersions(unittest.TestCase):
         texts.append(("application.yaml", json.dumps(((server.get("drishti") or {}).get("sources") or {}).get("connectors") or {})))
         for where, text in texts:
             self.assertNotIn("risk-results", text, f"{where}: a connector reads risk-results (published results are never an engine's input)")
-        self.assertIn("risk-results", (C.ROOT / "drishti-server" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "server" / "var"
-                                       / "VarPublisher.java").read_text(encoding="utf-8").replace('"risk-results"', "risk-results"))
-        self.assertIn("risk-results", (C.ROOT / "drishti-server" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "server" / "exposure"
-                                       / "ExposurePublisher.java").read_text(encoding="utf-8").replace('"risk-results"', "risk-results"))
+        self.assertIn("risk-results", java_source("com.ash.drishti.banking.var.VarPublisher").read_text(encoding="utf-8").replace('"risk-results"', "risk-results"))
+        self.assertIn("risk-results", java_source("com.ash.drishti.banking.exposure.ExposurePublisher").read_text(encoding="utf-8")
+                      .replace('"risk-results"', "risk-results"))
 
     def test_the_stored_exposure_profile_does_not_return(self):
         """EXPOSURE_GUIDE.md section 22: exposure-profile is retired; no netting set or counterparty (nor any input or fundamental kind) carries an
@@ -261,7 +268,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
                 if conn.get("plugin") != "derived":
                     self.assertNotIn(kind, conn.get("kinds") or [], f"{pack}: {name} serves the retired stored {kind}")
                     self.assertNotIn(kind, ((conn.get("settings") or {}).get("layout") or {}), f"{pack}: {name} lays out {kind}")
-            self.assertFalse(any((C.PACKS / pack / "samples").glob(f"{kind}.jsonl*")), f"{pack} samples of {kind}")
+            self.assertFalse(any((C.PP.pack_dir(pack, C.PACKS) / "samples").glob(f"{kind}.jsonl*")), f"{pack} samples of {kind}")
             self.assertNotIn(kind, {d.get("kind") for d in self.testdata["datasets"]}, f"test data of {kind}")
             self.assertFalse(any((C.TESTDATA / p / kind).exists() for p in self.manifests), f"a test-data folder of {kind}")
             self.assertNotIn(kind, (snap.PACKS.get(pack) or {}).get("keys", {}), f"the public-data generator of {pack} writes {kind}")
@@ -276,7 +283,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
         self.assertEqual(by_kind["correlation-matrix"]["class"], "fundamental")
         md = self.manifests["market-data"]
         engine = md["connectors"]["correlation-engine"]["engine"]["class"]
-        self.assertTrue((C.ROOT / "drishti-compute" / "src" / "main" / "java" / Path(*engine.split("."))).with_suffix(".java").is_file(), engine)
+        self.assertTrue(java_source(engine).is_file(), engine)
         for d in self.docs_of("market-data", "correlation-matrix"):
             self.assertTrue(d.get("EQUITY_IDS") or d.get("FX_IDS"), d.get("MATRIX_ID"))
         self.assertEqual(self.pol["removed"]["us-company"]["figures"], ["NET_MARGIN", "REVENUE_GROWTH", "FINANCIALS[].NET_MARGIN"])
@@ -291,10 +298,10 @@ class TheRetiredStoredVersions(unittest.TestCase):
         self.assertIn("BOOKS[].VAR", self.pol["engine-columns"]["var"])
         self.assertEqual((by_kind["equity-beta"]["class"], by_kind["equity-beta"]["storage"]["plugin"]), ("computed", "reactive"))
         beta = md["connectors"]["equity-analytics"]["engine"]["class"]
-        self.assertTrue((C.ROOT / "drishti-compute" / "src" / "main" / "java" / Path(*beta.split("."))).with_suffix(".java").is_file(), beta)
+        self.assertTrue(java_source(beta).is_file(), beta)
 
     def test_every_file_starts_with_the_licence(self):
-        for f in sorted(C.PACKS.glob("*/contracts/*.contract.yaml")):
+        for f in C._contract_files(C.PACKS):
             self.assertIn("PROPRIETARY AND CONFIDENTIAL", f.read_text(encoding="utf-8")[:800], f)
 
 

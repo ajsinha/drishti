@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 #
-# The in-memory lake for news (docs/guides/IN_MEMORY_LAKE_GUIDE.md): copy this block into application.local.yaml (in the server's working
+# The in-memory lake for news (docs/guides/DATA_LAKE_GUIDE.md): copy this block into application.local.yaml (in the server's working
 # folder) together with config/connectors.examples/memory/news-store.yaml as config/connectors/news-store.yaml and the store's lake file
 # config/lakes.examples/memory/news.yaml as config/lakes/news.yaml (root: mem://news, its cap and contract; docs/guides/DATA_LAKE_GUIDE.md
 # section 6), and restart. The store holds at most max-mb of memory off the heap; the start scripts add the stores' caps to
@@ -40,11 +40,11 @@ drishti:
           warm-up: 2
         - name: news-topic
           store: news
-          source: { file: config/packs/news-and-markets/samples/news-topic.jsonl }
+          source: { file: config/packs/economy/news-and-markets/samples/news-topic.jsonl }
           key: [TOPIC_ID]
           warm-up: 3
         - name: listed-company
           store: news
-          source: { file: config/packs/news-and-markets/samples/listed-company.jsonl }
+          source: { file: config/packs/economy/news-and-markets/samples/listed-company.jsonl }
           key: [COMPANY_ID]
           warm-up: 4

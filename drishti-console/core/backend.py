@@ -62,7 +62,7 @@ def _error(r: httpx.Response, text: str) -> "BackendError":
 def peer_problem(status: int, content_type: str, text: str) -> bool:
     """A 502/503 that is the server's own answer about another node of its cluster (``DRS-5050`` to ``DRS-5059``: a peer that holds the data
     is down, a node the role may not reach; or, from a server of 2.6.5 or older, ``DRS-1003`` naming a peer, ``net:<node> failed reading ...``):
-    the server answered, so it is not counted against it and the console does not move away from it (CLUSTER_DEPLOYMENT.md 11.1). A time-out about
+    the server answered, so it is not counted against it and the console does not move away from it (CLUSTER_GUIDE.md 11.1). A time-out about
     another node (``DRS-1014``, 504) is never counted either: only 502/503 are. A 502/503 from a proxy, or a server's own failure, still
     counts (SOAK-02: the console set healthy servers aside 43 times on histories a dying peer could not answer)."""
     if status not in (502, 503) or "json" not in (content_type or ""):
@@ -134,7 +134,7 @@ class BackendClient:
         headers = dict(ident.headers()) if ident is not None else {}
         headers.update(asof.headers())
         headers.update(collab.headers())
-        headers.update(edition.headers())                  # the person's lens, if they opened one (EDITIONS.md › The design as built, section 8)
+        headers.update(edition.headers())                  # the person's lens, if they opened one (LENSES.md › The design)
         headers.update(kw.pop("headers", {}))
         raw = kw.pop("raw", False)
         with_headers = kw.pop("with_headers", False)
@@ -353,30 +353,34 @@ class BackendClient:
     async def command(self, text: str, ident=None) -> dict:
         return await self._send("POST", "/command", ident, json={"text": text})
 
-    async def var(self, method: str, path: str, ident, /, body=None, raw: bool = False, accept: str = "", **params) -> Any:
-        """The VaR engine (/api/v1/var, docs/guides/VAR_GUIDE.md section 11), as the user. The first answer of a business date
-        loads its vectors into the server's memory: it may take longer than a page read, so this waits up to a minute. ``accept``
-        (with ``raw``) asks for another format: the Arrow stream of a P&L path or a contribution table (2.9.7). The first three are
-        positional only: the lens's ``method`` (2.9.7) is one of the engine's parameters."""
-        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 60.0}
+    async def engine(self, method: str, path: str, ident, /, body=None, raw: bool = False, accept: str = "", timeout: float = 60.0,
+                     **params) -> Any:
+        """A compute engine's API, as the user (docs/architecture/DOMAIN_MODULES.md section 5, C7: the core client names no engine; a
+        module's typed calls are its own, over this one). ``path`` starts after /api/v1 (``/risk/var/scope``); a list value is sent as a
+        repeated parameter. The first answer of a business date loads the engine's inputs into the server's memory, so this waits up to
+        ``timeout`` seconds (a minute). ``raw`` returns the bytes and headers (an export); ``accept`` (with ``raw``) asks for another format
+        (the Arrow stream)."""
+        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "", [])}, "timeout": timeout}
         if body is not None:
             kw["json"] = body
         if raw:
             kw.update(raw=True, with_headers=True)
         if accept:
             kw["headers"] = {"Accept": accept}
-        return await self._send(method, "/var" + path, ident, **kw)
+        return await self._send(method, path, ident, **kw)
 
-    async def frtb(self, method: str, path: str, ident, /, **params) -> Any:
-        """Position sensitivities and FRTB-SA (/api/v1/frtb, /api/v1/sensitivities, /api/v1/risk-factors; docs/guides/FRTB_SA_GUIDE.md section
-        9), as the user. ``path`` starts at /api/v1 (``/frtb/sa``); a list value is sent as a repeated parameter (``override``). The first
-        answer of a date reads its sensitivities: it may take longer than a page read, so this waits up to a minute."""
-        return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
+    async def modules(self, ident) -> dict:
+        """What the person may see (docs/architecture/ACCESS_MODEL.md section 2): the modules loaded and not (with why), the lenses open to
+        them and the functions they may not use (``GET /api/v1/modules``, as the person; core/modules.py reads it)."""
+        return await self._send("GET", "/modules", ident, timeout=10.0)
 
-    async def simm(self, method: str, path: str, ident, /, **params) -> Any:
-        """ISDA SIMM (/api/v1/simm; docs/guides/SIMM_GUIDE.md section 9), as the user. ``path`` starts at /api/v1 (``/simm``); a list value is
-        sent as a repeated parameter (``override``). The netting-set list computes every netting set of the date: this waits up to a minute."""
-        return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
+    async def explain_number(self, method: str, path: str, ident, body=None, **params) -> Any:
+        """One Explain for every number (/api/v1/explain, docs/architecture/SHARED_SCREENS.md section 3), as the user. ``path`` starts after
+        /api/v1/explain (``""`` or ``/kinds``). Why it moved reads two business dates: this waits up to two minutes."""
+        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 120.0}
+        if body is not None:
+            kw["json"] = body
+        return await self._send(method, "/explain" + path, ident, **kw)
 
     async def pivot(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
         """The pivot engine (/api/v1/pivot, docs/guides/PIVOT_GUIDE.md), as the user. ``path`` starts after /api/v1/pivot (``/query``);
@@ -388,16 +392,6 @@ class BackendClient:
         if raw:
             kw.update(raw=True, with_headers=True)
         return await self._send(method, "/pivot" + path, ident, **kw)
-
-    async def exposure(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
-        """The exposure engine (/api/v1/exposure, docs/guides/EXPOSURE_GUIDE.md section 11), as the user. The first answer of a business
-        date loads its paths (or maps its hot file): it may take longer than a page read, so this waits up to a minute."""
-        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 60.0}
-        if body is not None:
-            kw["json"] = body
-        if raw:
-            kw.update(raw=True, with_headers=True)
-        return await self._send(method, "/exposure" + path, ident, **kw)
 
     async def sources(self, ident=None) -> dict:
         return await self._get("/sources", ident)
@@ -468,15 +462,6 @@ class BackendClient:
         """Saves a Sutra; with review on, the answer is {"proposal": {...}} and the Sutra is not live yet."""
         return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/yaml"},
                                 params={"note": note} if note else None)
-
-    async def proposals(self, ident=None, status: str = "", name: str = "") -> dict:
-        return await self._get("/sutras/proposals", ident, **{k: v for k, v in {"status": status, "name": name}.items() if v})
-
-    async def proposal(self, id_: str, ident=None) -> dict:
-        return await self._get(f"/sutras/proposals/{id_}", ident)
-
-    async def decide(self, id_: str, action: str, ident=None, comment: str = "") -> dict:
-        return await self._send("POST", f"/sutras/proposals/{id_}/{action}", ident, json={"comment": comment})
 
     async def impact(self, kind: str, id_: str, ident=None) -> dict:
         where, q = entity_path(kind, id_)
@@ -672,39 +657,60 @@ class BackendClient:
     async def admin_delete_subscription(self, owner: str, name: str, ident) -> None:
         return await self._send("DELETE", f"/admin/subscriptions/{quote(owner)}/{quote(name)}", ident)
 
-    # -- alerts on measures, fields and board tiles -------------------------------------------------------------
-    async def measure_alerts(self, ident) -> list:
-        return await self._get("/me/measure-alerts", ident)
+    # -- the one alert engine: rules, the alerts raised, administrators -------------------------------------------------------------
+    async def alert_rules(self, ident) -> list:
+        return await self._get("/alerts/rules", ident)
 
-    async def measure_alert(self, name: str, ident) -> dict:
-        return await self._get(f"/me/measure-alerts/{quote(name)}", ident)
+    async def alert_rule(self, name: str, ident) -> dict:
+        return await self._get(f"/alerts/rules/{quote(name)}", ident)
 
-    async def save_measure_alert(self, name: str, body: dict, ident) -> dict:
-        return await self._send("PUT", f"/me/measure-alerts/{quote(name)}", ident, json=body)
+    async def save_alert_rule(self, name: str, body: dict, ident) -> dict:
+        return await self._send("PUT", f"/alerts/rules/{quote(name)}", ident, json=body)
 
-    async def delete_measure_alert(self, name: str, ident) -> None:
-        return await self._send("DELETE", f"/me/measure-alerts/{quote(name)}", ident)
+    async def delete_alert_rule(self, name: str, ident) -> None:
+        return await self._send("DELETE", f"/alerts/rules/{quote(name)}", ident)
 
-    async def check_measure_alert(self, name: str, ident) -> dict:
-        return await self._send("POST", f"/me/measure-alerts/{quote(name)}/check", ident, timeout=120.0)
+    async def check_alert_rule(self, name: str, ident) -> dict:
+        return await self._send("POST", f"/alerts/rules/{quote(name)}/check", ident, timeout=120.0)
 
-    async def pause_measure_alert(self, name: str, resume: bool, ident) -> dict:
-        return await self._send("POST", f"/me/measure-alerts/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+    async def pause_alert_rule(self, name: str, resume: bool, ident) -> dict:
+        return await self._send("POST", f"/alerts/rules/{quote(name)}/{'resume' if resume else 'pause'}", ident)
 
-    async def preview_measure_alert(self, body: dict, ident) -> dict:
-        return await self._send("POST", "/me/measure-alerts/preview", ident, json=body, timeout=120.0)
+    async def preview_alert_rule(self, body: dict, ident) -> dict:
+        return await self._send("POST", "/alerts/rules/preview", ident, json=body, timeout=120.0)
 
-    async def all_measure_alerts(self, ident) -> list:
-        return await self._get("/admin/measure-alerts", ident)
+    # -- the one Approvals queue -------------------------------------------------------------------------------
+    async def approvals_list(self, ident, box: str = "inbox", group: str = "", kind: str = "") -> dict:
+        q = {"box": box, "limit": "300", **({"group": group} if group else {}), **({"kind": kind} if kind else {})}
+        return await self._send("GET", "/approvals?" + "&".join(f"{k}={quote(v)}" for k, v in q.items()), ident)
 
-    async def board_alerts(self, ident) -> list:
-        return await self._get("/admin/measure-alerts/boards", ident)
+    async def approvals_count(self, ident) -> dict:
+        return await self._send("GET", "/approvals/count", ident)
 
-    async def admin_pause_measure_alert(self, owner: str, name: str, resume: bool, ident) -> dict:
-        return await self._send("POST", f"/admin/measure-alerts/{quote(owner)}/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+    async def approvals_item(self, kind: str, id_: str, ident) -> dict:
+        return await self._send("GET", f"/approvals/{quote(kind)}/{quote(id_, safe=':@~+')}", ident)
 
-    async def admin_delete_measure_alert(self, owner: str, name: str, ident) -> None:
-        return await self._send("DELETE", f"/admin/measure-alerts/{quote(owner)}/{quote(name)}", ident)
+    async def approvals_act(self, kind: str, id_: str, action: str, body: dict, ident):
+        """approve, reject, withdraw, or questions (ask)."""
+        return await self._send("POST", f"/approvals/{quote(kind)}/{quote(id_, safe=':@~+')}/{action}", ident, json=body)
+
+    async def admin_alerts(self, ident) -> dict:
+        """``{rules, boards, platform}``: everyone's rules, the board tiles that notify, the platform alerts (administrators)."""
+        return await self._get("/admin/alerts", ident)
+
+    async def raised_alerts(self, ident, stage: str = "open") -> list:
+        """The alerts raised for the person (and, for an administrator, the platform's), newest first."""
+        return await self._send("GET", f"/alerts?stage={quote(stage)}", ident)
+
+    async def act_on_alert(self, action: str, body: dict, ident) -> dict:
+        """acknowledge, resolve, snooze or assign one raised alert: ``{id, note, for, to}``."""
+        return await self._send("POST", f"/alerts/{action}", ident, json=body)
+
+    async def admin_pause_alert_rule(self, owner: str, name: str, resume: bool, ident) -> dict:
+        return await self._send("POST", f"/admin/alerts/rules/{quote(owner)}/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+
+    async def admin_delete_alert_rule(self, owner: str, name: str, ident) -> None:
+        return await self._send("DELETE", f"/admin/alerts/rules/{quote(owner)}/{quote(name)}", ident)
 
     # -- monitors and alerts ----------------------------------------------------------------------
     async def mine(self, method: str, path: str, ident, body=None, **params):
@@ -775,7 +781,7 @@ class BackendClient:
                 self._servers.failed(base, f"stream broke ({type(e).__name__})")
             raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
 
-    # -- Rupaka phase 1: the BI shell and catalogue (docs/architecture/BI_DESIGN.md) ---------------------------------------------
+    # -- Rupaka phase 1: the BI shell and catalogue (docs/architecture/ARCHITECTURE.md §28) ---------------------------------------------
     async def bi(self, method: str, path: str, ident, body: dict | None = None, wait: float | None = None, **params):
         """``/api/v1/bi/...`` as the signed-in user: the server decides what they may see and do, every time. ``wait`` (seconds) replaces
         the console's own wait for a call that may run longer (a query: the server lets one run ``drishti.bi.query.timeout``, 30 s)."""
@@ -789,7 +795,7 @@ class BackendClient:
         return await self._send(method, "/bi" + path, ident, **kw)
 
     async def bi_async(self, method: str, path: str, ident, body: dict | None, prefer: str, wait: float | None = None, **params):
-        """A BI question asked as a run (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): ``Prefer: respond-async, wait=N`` is passed on and the answer comes back as
+        """A BI question asked as a run (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): ``Prefer: respond-async, wait=N`` is passed on and the answer comes back as
         ``(status, body)``: 200 the answer (done within the wait), 202 the run that goes on. A refusal (409 DRS-9082, 409 DRS-9089) raises."""
         kw: dict = {"with_status": True, "headers": {"Prefer": prefer}}
         if wait:
@@ -861,7 +867,7 @@ class BackendClient:
         return await self._send("POST", "/auth/oidc", service, json={"idToken": id_token, "nonce": nonce})
 
     async def embed_sign_in(self, id_token: str, nonce: str, origin: str, refreshed: bool, service) -> dict:
-        """The renderer's sign-in window (CLIENT_RENDERER.md 10.1): the server verifies the single sign-on's ID token and makes that user's
+        """The renderer's sign-in window (EMBED_GUIDE.md 10.1): the server verifies the single sign-on's ID token and makes that user's
         embed token for the host application that registered ``origin`` (RFC 8693 form), audited with the origin."""
         return await self._send("POST", "/embed/sign-in-window", service, json={"idToken": id_token, "nonce": nonce, "origin": origin, "refreshed": refreshed})
 

@@ -35,6 +35,7 @@ actual call with the difference explained. Variation margin is computed here; in
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -201,7 +202,7 @@ its CSAs → the day's calls.
 | `EXPECTED_IM_WE_CALL`, `EXPECTED_IM_THEY_CALL`, `ACTUAL_IM_WE_CALL`, `ACTUAL_IM_THEY_CALL` | amount | USD | |
 | `MATCHED`, `DIFFERENCES`, `NOT_CALLED`, `UNEXPECTED`, `DIRECTION_MISMATCH`, `DISPUTED` | integer | | counts |
 | `BY_CSA` | record list | | `CSA`, `NETTING_SETS`, `EXPOSURE`, `IA`, `BALANCE`, `THRESHOLD`, `MTA`, `CSA_AMOUNT`, `DELTA`, `DELIVERY`, `RETURN`, `EXPECTED`, `DIRECTION`, `IM_REQUIRED`, `IM_HELD`, `IM_EXPECTED`, `ACTUAL_CALLS` (ids), `ACTUAL`, `STATUS`, `DIFFERENCE`, `CAUSE` |
-| `PROVENANCE` | record | | NSET's, plus the valuation date used and the SIMM run |
+| `PROVENANCE` | record | | NSET's (`INPUTS[]`: `KIND`, `DATA_VERSION`, `BATCH_ID`; `UNVALUED`, `UNMAPPED`, `STANDALONE`, `PARTIAL`, `HIDDEN`), plus the valuation date used (`VALUATION_DATE`) and the SIMM run (`SIMM_RUN`) |
 
 The `margin-call` page (`MC <call id>`) shows its call with the `BY_CSA` row of its CSA.
 
@@ -344,6 +345,40 @@ call 1,800,000** (rounded up: 1,800,000).
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+
+## 17. JSON examples
+
+Case A of [section 15](#15-a-worked-example) and its IM call, on the demo's Aldershot New York CSA (`CSA-ALDERSHOT-NY`); the CSA terms are
+the worked example's (thresholds 2,000,000, MTA 500,000, rounding 100,000). Each line is one record.
+
+**margin-call: the day's two calls.** The VM call the bank issued (rounded by the counterparty to 1,450,000 and agreed) and the IM call:
+
+```json
+{"CALL_ID":"MC-ALDERSHOT-NY-1","BUSINESS_DATE":"2026-09-30","CALL_DATE":"2026-09-30","VALUATION_DATE":"2026-09-29","CSA":"CSA-ALDERSHOT-NY","NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","MARGIN_TYPE":"VM","DIRECTION":"WE_CALL","CALL_TYPE":"DELIVERY","AMOUNT":1450000,"CURRENCY":"USD","AGREED_AMOUNT":1450000,"DISPUTE_AMOUNT":0,"STATUS":"AGREED","SETTLEMENT_DATE":"2026-10-01","EVENTS":[{"AT":"2026-09-30T09:12:00Z","EVENT":"ISSUED","BY":"collateral-ops"},{"AT":"2026-09-30T11:40:00Z","EVENT":"AGREED","BY":"CP-ALDERSHOT"}],"BATCH_ID":"B-2026-09-30-01"}
+{"CALL_ID":"MC-ALDERSHOT-NY-2","BUSINESS_DATE":"2026-09-30","CALL_DATE":"2026-09-30","VALUATION_DATE":"2026-09-29","CSA":"CSA-ALDERSHOT-NY","NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","MARGIN_TYPE":"IM","DIRECTION":"WE_CALL","CALL_TYPE":"DELIVERY","AMOUNT":1800000,"CURRENCY":"USD","STATUS":"ISSUED","EVENTS":[{"AT":"2026-09-30T09:15:00Z","EVENT":"ISSUED","BY":"collateral-ops"}],"BATCH_ID":"B-2026-09-30-01"}
+```
+
+**A disputed call** (the counterparty values the exposure at 11,800,000, not 12,430,000; the dispute amount is the part not agreed):
+
+```json
+{"CALL_ID":"MC-ALDERSHOT-NY-3","BUSINESS_DATE":"2026-09-30","CALL_DATE":"2026-09-30","VALUATION_DATE":"2026-09-29","CSA":"CSA-ALDERSHOT-NY","NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","MARGIN_TYPE":"VM","DIRECTION":"WE_CALL","CALL_TYPE":"DELIVERY","AMOUNT":1500000,"CURRENCY":"USD","AGREED_AMOUNT":800000,"DISPUTE_AMOUNT":700000,"COUNTERPARTY_EXPOSURE":11800000,"STATUS":"PARTIALLY_AGREED","EVENTS":[{"AT":"2026-09-30T09:12:00Z","EVENT":"ISSUED","BY":"collateral-ops"},{"AT":"2026-09-30T13:05:00Z","EVENT":"PARTIALLY_AGREED","BY":"CP-ALDERSHOT"}],"BATCH_ID":"B-2026-09-30-01"}
+```
+
+**margin-expected: the answer for `CSA:CSA-ALDERSHOT-NY`** with the first two calls (the computed kind's record; `GET /api/v1/margin/scope` answers the same fields in camelCase): VM expected 1,500,000
+against 1,450,000 actual, inside the 100,000 tolerance; IM expected 1,800,000 (SIMM IM 60,000,000 less the 50,000,000 IM threshold, less
+8,200,000 held):
+
+```json
+{"SCOPE":"CSA:CSA-ALDERSHOT-NY","CANONICAL":"CSA:CSA-ALDERSHOT-NY","SCOPE_KIND":"csa","LABEL":"Aldershot, New York CSA","BUSINESS_DATE":"2026-09-30","VALUATION_DATE":"2026-09-29","CSAS":1,"EXPECTED_WE_CALL":1500000.0,"EXPECTED_THEY_CALL":0.0,"ACTUAL_WE_CALL":1450000.0,"ACTUAL_THEY_CALL":0.0,"EXPECTED_IM_WE_CALL":1800000.0,"EXPECTED_IM_THEY_CALL":0.0,"ACTUAL_IM_WE_CALL":1800000.0,"ACTUAL_IM_THEY_CALL":0.0,"MATCHED":2,"DIFFERENCES":0,"NOT_CALLED":0,"UNEXPECTED":0,"DIRECTION_MISMATCH":0,"DISPUTED":0,"BY_CSA":[{"CSA":"CSA-ALDERSHOT-NY","NETTING_SETS":["NS-ALDERSHOT-NY"],"EXPOSURE":12430000.0,"IA":0.0,"BALANCE":9000000.0,"THRESHOLD":2000000.0,"MTA":500000.0,"CSA_AMOUNT":10430000.0,"DELTA":1430000.0,"DELIVERY":1500000.0,"RETURN":0.0,"EXPECTED":1500000.0,"DIRECTION":"WE_CALL","IM_REQUIRED":10000000.0,"IM_HELD":8200000.0,"IM_EXPECTED":1800000.0,"ACTUAL_CALLS":["MC-ALDERSHOT-NY-1","MC-ALDERSHOT-NY-2"],"ACTUAL":1450000.0,"STATUS":"MATCH","DIFFERENCE":-50000.0,"CAUSE":null}],"PROVENANCE":{"INPUTS":[{"KIND":"margin-call","DATA_VERSION":96,"BATCH_ID":"B-2026-09-30-01"},{"KIND":"csa","DATA_VERSION":41,"BATCH_ID":"B-2026-09-30-01"},{"KIND":"valuation","DATA_VERSION":233,"BATCH_ID":"B-2026-09-29-01"}],"UNVALUED":0,"UNMAPPED":0,"STANDALONE":0,"PARTIAL":0,"HIDDEN":0,"VALUATION_DATE":"2026-09-29","SIMM_RUN":"SIMM-2026-09-29-01"}}
+```
+
+`THRESHOLD` and `MTA` in `BY_CSA` are the transferor's for the expected direction (the counterparty's here).
+
+**margin-official: a desk row** (the shared columns of [README.md section 11](README.md), the figures of section 9.3):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"DESK:DESK-RATES","NODE_NAME":"Rates","PARENT_ID":"DIV:DIV-MARKETS","LEVEL":"desk","CAPTURE_ID":"CAP-MC-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"margin-call\":{\"version\":96,\"batches\":[\"B-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","EXPECTED_WE_CALL":1500000.0,"EXPECTED_THEY_CALL":0.0,"ACTUAL_WE_CALL":1450000.0,"ACTUAL_THEY_CALL":0.0,"EXPECTED_IM_WE_CALL":1800000.0,"EXPECTED_IM_THEY_CALL":0.0,"ACTUAL_IM_WE_CALL":1800000.0,"ACTUAL_IM_THEY_CALL":0.0,"CSAS":1,"MATCHED":2,"DIFFERENCES":0,"NOT_CALLED":0,"UNEXPECTED":0,"DIRECTION_MISMATCH":0,"DISPUTED":0}
+```
 
 ---
 

@@ -52,12 +52,15 @@ final class LocalWriteFileIO implements FileIO {
         this.reads = new NativeFileIO(S3Settings.from(Map.of()), conf);
     }
 
+    /** The operating-system path of a path or {@code file:} URI, read as the reads read it ({@code LocalStorage#path}): Kernel's
+     *  paths are unencoded, so a Hive-escaped partition folder ({@code PRODUCT_GROUP=100%25}, Spark's name) is written literally;
+     *  only a {@code file://} URI (java.nio's) is decoded ({@link LocalPaths#decodeUri}). */
     static Path local(String path) {
         if (!LocalPaths.isLocal(path)) {
             throw new UnsupportedOperationException("the lake writer writes local tables only, not " + path
                     + " (use --engine deltalake for object storage)");
         }
-        return Path.of(LocalPaths.toLocal(path, LocalPaths.WINDOWS));
+        return Path.of(LocalPaths.toLocal(LocalPaths.decodeUri(path), LocalPaths.WINDOWS));
     }
 
     @Override

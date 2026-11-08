@@ -18,7 +18,7 @@
     python3 tools/under_construction.py --check    fail on a stale document, or a location the registry names that does not exist
 
 A location exists when: a Sutra of the kind binds each listed bind (strip or column) and has each listed panel id (the packs' Sutras); a
-menu item id is in drishti-console/config/menus.yaml; a help slug is a repository document's slug (docs/<path>.md -> docs-<path>); a
+menu item id is in drishti-console/config/sitemap.yaml; a help slug is a repository document's slug (docs/<path>.md -> docs-<path>); a
 contract's file (and its #anchor, as GitHub makes it) exists.
 """
 from __future__ import annotations
@@ -31,6 +31,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
 REGISTRY = ROOT / "config" / "under-construction.yaml"
 DOC = ROOT / "docs" / "admin" / "UNDER_CONSTRUCTION.md"
 
@@ -55,7 +58,7 @@ The data stays where it is; only what is displayed changes. **One mechanism:** t
 document (strip items and kv or table columns by their bind, panels by their id), so the console, the phone display, pivots and the client
 renderer read the same answer (the figure's tone is `uc`, drawn as the chip); the console reads the same file for its menu items and help
 pages. A new item that depends on unbuilt work is registered in the same change
-([PACK_DEVELOPER_GUIDE.md, Unbuilt work](../guides/PACK_DEVELOPER_GUIDE.md#unbuilt-work-the-under-construction-registry)).
+([BUILD_GUIDE.md, Unbuilt work](../guides/BUILD_GUIDE.md#unbuilt-work-the-under-construction-registry)).
 
 Settings: `drishti.under-construction.file` (server, `DRISHTI_UNDER_CONSTRUCTION_FILE`, default `./config/under-construction.yaml`, else the
 file beside the packs folder) and `under_construction.file` (console, default `../config/under-construction.yaml`).
@@ -93,7 +96,7 @@ def _slug(text: str) -> str:
 
 def _sutras_of(kind: str) -> list[str]:
     texts = []
-    for f in (ROOT / "config" / "packs").glob("*/sutras/**/*.sutra.yaml"):
+    for f in (f for d in pack_dirs().values() for f in d.glob("sutras/**/*.sutra.yaml")):
         t = f.read_text(encoding="utf-8")
         if re.search(r"match:\s*\{\s*kind:\s*" + re.escape(kind) + r"\s*[,}]", t):
             texts.append(t)
@@ -102,7 +105,7 @@ def _sutras_of(kind: str) -> list[str]:
 
 def problems(items: list[dict]) -> list[str]:
     out: list[str] = []
-    menus = (ROOT / "drishti-console" / "config" / "menus.yaml").read_text(encoding="utf-8")
+    menus = (ROOT / "drishti-console" / "config" / "sitemap.yaml").read_text(encoding="utf-8")
     ids = set(re.findall(r"\bid:\s*([\w.-]+)", menus))
     seen = set()
     for i in items:
@@ -127,7 +130,7 @@ def problems(items: list[dict]) -> list[str]:
                     out.append(f"{iid}: no {s.get('kind')} Sutra has a panel {p}")
         for m in i.get("menus") or []:
             if m not in ids:
-                out.append(f"{iid}: no menu item {m} in menus.yaml")
+                out.append(f"{iid}: no menu item {m} in sitemap.yaml")
         for h in i.get("help") or []:
             if not h.startswith("docs-") or not any(_doc_slug(p) == h for p in (ROOT / "docs").rglob("*.md")):
                 out.append(f"{iid}: no help page {h}")

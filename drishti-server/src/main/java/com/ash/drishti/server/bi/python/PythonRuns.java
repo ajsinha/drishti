@@ -49,7 +49,7 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * The one Python runtime for code people write (docs/architecture/PYTHON_COMPUTE.md section 19): every Python item, Python-driven table and
+ * The one Python runtime for code people write (docs/guides/NOTEBOOK_GUIDE.md section 19): every Python item, Python-driven table and
  * model, python visual, Notebook cell, step-by-step run and profile runs here, on the server's compute pool {@code python}. The inputs are read
  * on the server as the person running it (their row rules and masks) before they reach this class; it hands them to the pool's
  * {@code drishti_compute.items} engine, checks what comes back and audits every run. The console runs no Python.

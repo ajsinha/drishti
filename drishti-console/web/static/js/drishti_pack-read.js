@@ -200,7 +200,7 @@
     return firstChar(file).then(function (c) {
       if (c === '[') { return readJsonArray(file, opts, progress, stop); }
       if (file.size > opts.maxJsonBytes) {
-        return Promise.reject(new Error('is ' + (file.size / MB).toFixed(1) + ' MB, too big to read as one JSON document; a large file is a JSON array or JSON Lines (.jsonl)'));
+        return Promise.reject(new Error('is ' + window.Drishti.elements.core.formatBytes(file.size) + ', too big to read as one JSON document; a large file is a JSON array or JSON Lines (.jsonl)'));
       }
       return file.text().then(function (text) {
         progress(file.size, 0);

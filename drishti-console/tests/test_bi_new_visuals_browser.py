@@ -33,6 +33,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import card_value, clean, open_report, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
+from select_helpers import has_option
 
 DATASET = "nv-demo-trade"          # the dataset the model nv-demo reads (2.2: a dataset and a model)
 TABLE = "file:table:bi.nv_demo_trade"   # the table it is (tables migrate)
@@ -248,10 +249,10 @@ def test_totals_of_measures_that_do_not_add_up_are_the_engines(stack, browser):
     assert abs(float(texts["MTM per notional"].replace(",", "").replace("+", "").replace("\u2212", "-")) - ratio) < 0.01
     assert abs(float(texts["Avg MTM"].replace(",", "").replace("+", "").replace("\u2212", "-")) - overall_avg) < 1
     assert "–" not in grand.inner_text()
-    foot = page.locator('[data-visual="table"] tfoot tr[data-total-row]')
+    foot = page.locator('[data-visual="table"] [data-total-row]')                                    # the engine's totals under the grid
     expect(foot).to_have_count(1)
-    assert foot.locator('td[data-measure="Largest notional"]').inner_text().replace(",", "") == f"{largest:.0f}"
-    assert foot.locator('td[data-measure="Trades"]').inner_text().replace(",", "") == str(len(data))
+    assert foot.locator('[data-measure="Largest notional"] b').inner_text().replace(",", "") == f"{largest:.0f}"
+    assert foot.locator('[data-measure="Trades"] b').inner_text().replace(",", "") == str(len(data))
     clean(page)
     page.context.close()
 
@@ -280,17 +281,17 @@ def test_the_dataset_page_shows_the_refresh_schedule_and_the_state(stack, browse
 def test_the_designer_offers_the_new_visuals_and_marks_the_time_measure(stack, browser):
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-dataset] option[value='mq:" + MODEL + "']", state="attached")
+    page.wait_for_function(has_option("[data-new-dataset]", "mq:" + MODEL))
     page.select_option("[data-new-dataset]", "mq:" + MODEL)
     page.fill("[data-new-title]", "New visuals draft")
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     for t in ("map", "funnel", "histogram", "box", "bubble"):
-        expect(page.locator(f'.bi-vtype[data-type="{t}"]')).to_have_count(1)
+        expect(page.locator(f'[data-types] [data-type="{t}"]')).to_have_count(1)
     badge = page.locator('[data-field="MTM ytd"] [data-time]')
     expect(badge).to_have_count(1)
     assert badge.inner_text() == "ytd"
-    page.click('.bi-vtype[data-type="map"]')                                                       # a new visual of that type, with its wells
+    page.click('[data-types] [data-type="map"]')                                                       # a new visual of that type, with its wells
     page.wait_for_selector('[data-well="location"]')
     for w in ("location", "latitude", "longitude", "values"):
         expect(page.locator(f'[data-well="{w}"]')).to_have_count(1)
@@ -321,7 +322,7 @@ def test_a_phone_reads_the_new_visuals_in_one_column_without_sideways_scroll(sta
     for vis in ("world", "points", "steps", "spread", "boxes", "bubbles"):
         box = page.locator(f'[data-visual="{vis}"]').bounding_box()
         assert 150 <= box["height"] <= 400 and box["width"] <= 390, (vis, box)
-    for sel in ("[data-reset]:not([hidden])", "[data-pages] a", '[data-visual="matrix"] .bi-twist', '[data-visual="table"] .bi-sorthead'):
+    for sel in ("[data-reset]:not([hidden])", "[data-pages] a", '[data-visual="matrix"] .bi-twist', '[data-visual="table"] .dg-hcell.dg-leaf'):
         for el in page.locator(sel).all():
             if el.is_visible():
                 assert el.bounding_box()["height"] >= 43, (sel, el.bounding_box())

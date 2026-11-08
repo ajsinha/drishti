@@ -16,7 +16,7 @@ kind `stress-result`. The scenario definitions (SCN, `stress-scenario`) stay **f
 machine can apply them. Everything here is a **proposal**; each change will be recorded in
 [section 16](#16-open-questions-and-the-change-table).
 
-**Sources read (2026-10-25):** `config/packs/market-risk/contracts/{stress-result,stress-scenario}.contract.yaml`, the samples
+**Sources read (2026-10-25):** `config/packs/banking/market-risk/contracts/{stress-result,stress-scenario}.contract.yaml`, the samples
 `stress-result.jsonl` (80) and `stress-scenario.jsonl` (8), `data/testdata/market-risk/{stress-result,stress-scenario}/` (snapshot of
 2026-07-08, every later file empty), `tools/packgen/banking/data_results.py` (`SCENARIOS`, `market_results`), the Calc snippets
 `stress_from_sensitivities.py` and `stress_heatmap.py`.
@@ -39,6 +39,7 @@ machine can apply them. Everything here is a **proposal**; each change will be r
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -123,6 +124,7 @@ The kind stays **fundamental** (SCN). Its current fields stay (`SCENARIO_ID`, `N
 
 | Field | Type | Req. | Meaning | Example |
 |---|---|---|---|---|
+| `SCENARIO_ID`, `NAME`, `TYPE`, `SEVERITY`, `HORIZON`, `SHOCKS[].FACTOR` | id, text | kept as today | the current fields: the id, the name, `Historical` or `Hypothetical`, `Mild`, `Moderate` or `Severe`, the horizon in words, and each shock's label | `SCN-COVID2020`, `COVID-19 March 2020`, `Historical`, `Severe`, `10 days`, `Equities` |
 | `VERSION` | integer | required (new) | +1 on every change of the shocks; `scenario-pnl` rows name the version they applied | `3` |
 | `IN_PROGRAMME` | boolean | optional | the upstream engine revalues it (full revaluation rows expected) | `true` |
 | `STRESS_CADENCE` | text | optional | `daily`, `weekly`, `monthly` | `daily` |
@@ -304,10 +306,17 @@ Kind `stress-pnl`, id `<canonical scope>~scenario=<id>` (and `~method=…`). Pro
 | `CHILDREN` | record list | `KEY`, `SCOPE`, `LABEL`, `PNL` |
 | `BY_FACTOR` | record list | (sensitivity) `RISK_CLASS`, `QUALIFIER`, `TENOR`, `MEASURE`, `SHOCK`, `PNL` (top 50) |
 | `TRADES`, `MISSING`, `FAILED`, `ON_FALLBACK` | integer | |
-| `PROVENANCE` | record | VaR's plus `scenarioPnl` batches, `sensitivities` batches, the scenario's version and hash |
+| `PROVENANCE` | record | VaR's plus `SCENARIO_PNL_BATCH_IDS`, `SENSITIVITY_BATCH_IDS`, `SCENARIO_VERSION` and `SCENARIO_HASH` (SHA-256 of the definition) |
 
-Kind `stress-matrix`, id `<scope>~scenarios=programme`: `SCENARIOS[]`, `ROWS[]` (`KEY`, `LABEL`, `CELLS[]`), `WORST_SCENARIO`,
-`WORST_PNL`, `BREACHES[]`.
+Kind `stress-matrix`, id `<scope>~scenarios=programme`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `SCOPE`, `CANONICAL`, `BUSINESS_DATE`, `METHOD` | text, date | as `stress-pnl` |
+| `SCENARIOS` | text list | the columns: scenario ids in order |
+| `ROWS` | record list | per child: `KEY`, `LABEL`, `CELLS` (the P&L per scenario, in the order of `SCENARIOS`, USD) |
+| `WORST_SCENARIO`, `WORST_PNL` | id, amount | the scope's worst scenario and its P&L |
+| `BREACHES` | record list | the cells at `warning` or `breach`: `KEY`, `SCENARIO_ID`, `PNL`, `LIMIT_ID`, `LIMIT`, `LIMIT_USE`, `LIMIT_STATUS` |
 
 ### 9.3 Reactive connectors (proposed)
 
@@ -465,9 +474,9 @@ The old id is `STR-<scenario suffix>-<desk suffix>`; the desk suffix is the last
 
 | Item | Removed |
 |---|---|
-| Kind `stress-result` | `config/packs/market-risk/pack.yaml` kind, route, layout, form, id pattern `^STR-`, `graph.fields` entries; the mnemonic `STR` opens the computed page |
+| Kind `stress-result` | `config/packs/banking/market-risk/pack.yaml` kind, route, layout, form, id pattern `^STR-`, `graph.fields` entries; the mnemonic `STR` opens the computed page |
 | Data | `samples/stress-result.jsonl`, `data/testdata/market-risk/stress-result/`, its `testdata.yaml` entries |
-| Sutra | `config/packs/market-risk/sutras/market-risk/stress-result.v1.sutra.yaml` (the SCN Sutra stays, linking to the computed page) |
+| Sutra | `config/packs/banking/market-risk/sutras/market-risk/stress-result.v1.sutra.yaml` (the SCN Sutra stays, linking to the computed page) |
 | Calc snippets | `stress_from_sensitivities.py`, `stress_heatmap.py` (replaced by the matrix and the factor breakdown) |
 | Generator | the stress part of `market_results` |
 | Contract | `stress-result.contract.yaml` (contracts for `scenario-pnl`, `risk-limit` and the computed kinds replace it; `stress-scenario`'s contract gains the fields of §3.3) |
@@ -531,6 +540,60 @@ defined scenarios ({SCN-X: 810,000, …}), and its net sensitivities (for any ot
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version (PLANNED): `scenario-pnl`, structured shocks on `stress-scenario`, user scenarios, `risk-limit`, full and sensitivity methods, the published `stress-official` table, the retirement of `stress-result` |
+
+## 17. JSON examples
+
+Each line is one record (wrapped here only by the code block's width). The scenario `SCN-COVID2020` is the demo data's
+(`data/testdata/market-risk/stress-scenario/`), its shocks translated as §3.3 proposes; the rest is the worked example of
+[section 15](#15-a-worked-example) (book `BOOK-X`, scenario `SCN-X`, T1 = `MX-20000601`, T2 = `MX-20000602`). `scenario-pnl` and
+`risk-limit` are **draft** inputs (no source delivers them yet).
+
+**stress-scenario: a demo scenario with its structured shocks, and the example's `SCN-X`.**
+
+```json
+{"SCENARIO_ID":"SCN-COVID2020","NAME":"COVID-19 March 2020","TYPE":"Historical","SEVERITY":"Severe","HORIZON":"10 days","VERSION":1,"IN_PROGRAMME":true,"STRESS_CADENCE":"daily","OWNER":"market-risk","APPROVED_BY":"Risk Committee","APPROVED_ON":"2026-03-02","SHOCKS":[{"FACTOR":"Equities","RISK_CLASS":"EQ","FACTOR_TYPE":"SPOT","MEASURE":"delta","QUALIFIER":"*","SHOCK_TYPE":"RELATIVE","SHOCK":-0.34},{"FACTOR":"Credit spreads (IG)","RISK_CLASS":"CSR_NS","FACTOR_TYPE":"SPREAD","QUALIFIER":"IG","SHOCK_TYPE":"ABSOLUTE","UNIT":"bp","SHOCK":135},{"FACTOR":"USD rates","RISK_CLASS":"GIRR","FACTOR_TYPE":"CURVE","QUALIFIER":"USD","SHOCK_TYPE":"ABSOLUTE","UNIT":"bp","SHOCK":-120},{"FACTOR":"Oil","RISK_CLASS":"COMM","FACTOR_TYPE":"PRICE","QUALIFIER":"OIL","SHOCK_TYPE":"RELATIVE","SHOCK":-0.65},{"FACTOR":"Equity vol","RISK_CLASS":"EQ","MEASURE":"vega","QUALIFIER":"*","SHOCK_TYPE":"ABSOLUTE","UNIT":"vol-pt","SHOCK":45}]}
+{"SCENARIO_ID":"SCN-X","NAME":"Rates up, equities down","TYPE":"Hypothetical","SEVERITY":"Moderate","HORIZON":"1 day","VERSION":3,"IN_PROGRAMME":true,"STRESS_CADENCE":"daily","SHOCKS":[{"FACTOR":"USD rates","RISK_CLASS":"GIRR","FACTOR_TYPE":"CURVE","QUALIFIER":"USD","SHOCK_TYPE":"ABSOLUTE","UNIT":"bp","SHOCK":100},{"FACTOR":"Equities","RISK_CLASS":"EQ","FACTOR_TYPE":"SPOT","QUALIFIER":"*","SHOCK_TYPE":"RELATIVE","SHOCK":-0.2},{"FACTOR":"Equity vol","RISK_CLASS":"EQ","MEASURE":"vega","QUALIFIER":"*","SHOCK_TYPE":"ABSOLUTE","UNIT":"vol-pt","SHOCK":10}]}
+```
+
+A tenor-dependent shock (the demo's `2Y rates` 0.25 and `10Y rates` 1.00) is one element:
+`{"FACTOR":"Curve steepener","RISK_CLASS":"GIRR","FACTOR_TYPE":"CURVE","QUALIFIER":"*","SHOCK_TYPE":"ABSOLUTE","UNIT":"bp","TENORS":[{"TENOR":"2Y","SHOCK":25},{"TENOR":"10Y","SHOCK":100}]}`.
+
+**scenario-pnl (draft): the full revaluation of T1 and T2 under `SCN-X`, and a failed row.**
+
+```json
+{"SCENARIO_PNL_KEY":"MX-20000601~SCN-X","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000601","SCENARIO_ID":"SCN-X","SCENARIO_VERSION":3,"PNL":985000.0,"BASE_MTM":1000000.0,"STATUS":"ok","BATCH_ID":"B-STR-2026-09-30-01","MODEL_VERSION":"3.1.42","COMPUTED_AT":"2026-09-30T23:40:00Z","RESTATEMENT":0}
+{"SCENARIO_PNL_KEY":"MX-20000602~SCN-X","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000602","SCENARIO_ID":"SCN-X","SCENARIO_VERSION":3,"PNL":-210000.0,"BASE_MTM":200000.0,"STATUS":"ok","BATCH_ID":"B-STR-2026-09-30-01","MODEL_VERSION":"3.1.42","COMPUTED_AT":"2026-09-30T23:40:00Z","RESTATEMENT":0}
+{"SCENARIO_PNL_KEY":"MX-20000209~SCN-COVID2020","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000209","SCENARIO_ID":"SCN-COVID2020","SCENARIO_VERSION":1,"PNL":null,"STATUS":"failed","BATCH_ID":"B-STR-2026-09-30-01","COMPUTED_AT":"2026-09-30T23:40:00Z"}
+```
+
+**risk-limit (draft): the example's book limit and a desk limit for any scenario** (the demo's commodity limit, made positive):
+
+```json
+{"LIMIT_ID":"LIM-STR-BOOK-X-ANY","MEASURE":"STR","SCOPE":"BOOK:BOOK-X","SCENARIO_ID":"","LIMIT":500000,"WARNING_AT":0.8,"APPROVED_BY":"Risk Committee","VALID_FROM":"2026-01-02","VALID_TO":null}
+{"LIMIT_ID":"LIM-STR-DESK-COMM-ANY","MEASURE":"STR","SCOPE":"DESK:DESK-COMM","SCENARIO_ID":"","LIMIT":75700000,"WARNING_AT":0.8,"APPROVED_BY":"Risk Committee","VALID_FROM":"2026-01-02","VALID_TO":null}
+```
+
+**stress-pnl: the book under `SCN-X` with `method=both`, then under the user scenario of the example** (sensitivity only, a breach):
+
+```json
+{"SCOPE":"BOOK:BOOK-X","CANONICAL":"BOOK:BOOK-X","BUSINESS_DATE":"2026-09-30","SCENARIO_ID":"SCN-X","SCENARIO_NAME":"Rates up, equities down","SCENARIO_VERSION":3,"METHOD":"both","PNL":775000.0,"PNL_FULL":775000.0,"PNL_SENSITIVITY":810000.0,"APPROXIMATION":35000.0,"LIMIT":500000.0,"LIMIT_USE":0.0,"LIMIT_STATUS":"ok","LIMIT_ID":"LIM-STR-BOOK-X-ANY","CHILDREN":[{"KEY":"MX-20000601","SCOPE":"TRD:MX-20000601","LABEL":"MX-20000601","PNL":985000.0},{"KEY":"MX-20000602","SCOPE":"TRD:MX-20000602","LABEL":"MX-20000602","PNL":-210000.0}],"BY_FACTOR":[{"RISK_CLASS":"GIRR","QUALIFIER":"USD","TENOR":"10Y","MEASURE":"delta","SHOCK":100,"PNL":990000.0},{"RISK_CLASS":"EQ","QUALIFIER":"ACME","TENOR":null,"MEASURE":"delta","SHOCK":-0.2,"PNL":-200000.0},{"RISK_CLASS":"EQ","QUALIFIER":"ACME","TENOR":"1Y","MEASURE":"vega","SHOCK":10,"PNL":20000.0}],"TRADES":2,"MISSING":0,"FAILED":0,"ON_FALLBACK":0,"PROVENANCE":{"SCENARIO_PNL_BATCH_IDS":["B-STR-2026-09-30-01"],"SENSITIVITY_BATCH_IDS":["B-SENS-2026-09-30-01"],"SCENARIO_VERSION":3,"SCENARIO_HASH":"<sha-256 of the definition>"}}
+{"SCOPE":"BOOK:BOOK-X","CANONICAL":"BOOK:BOOK-X","BUSINESS_DATE":"2026-09-30","SCENARIO_ID":"USCN:asha/rates-down","SCENARIO_NAME":"rates-down","SCENARIO_VERSION":1,"METHOD":"sensitivity","PNL":-1010000.0,"LIMIT":500000.0,"LIMIT_USE":2.02,"LIMIT_STATUS":"breach","LIMIT_ID":"LIM-STR-BOOK-X-ANY","CHILDREN":[{"KEY":"MX-20000601","SCOPE":"TRD:MX-20000601","LABEL":"MX-20000601","PNL":-1010000.0},{"KEY":"MX-20000602","SCOPE":"TRD:MX-20000602","LABEL":"MX-20000602","PNL":0.0}],"BY_FACTOR":[{"RISK_CLASS":"GIRR","QUALIFIER":"USD","TENOR":"10Y","MEASURE":"delta","SHOCK":-100,"PNL":-1010000.0}],"TRADES":2,"MISSING":0,"FAILED":0,"ON_FALLBACK":0,"PROVENANCE":{"SENSITIVITY_BATCH_IDS":["B-SENS-2026-09-30-01"],"SCENARIO_VERSION":1,"SCENARIO_HASH":"<sha-256 of the definition>"}}
+```
+
+A factor's `PNL` in `BY_FACTOR` includes its gamma term (GIRR: 1,000,000 − 10,000; ACME delta: −600,000 + 400,000).
+
+**stress-matrix: the rates desk over two programme scenarios**, one child per book (figures illustrative):
+
+```json
+{"SCOPE":"DESK:DESK-RATES","CANONICAL":"DESK:DESK-RATES","BUSINESS_DATE":"2026-09-30","METHOD":"full","SCENARIOS":["SCN-COVID2020","SCN-X"],"ROWS":[{"KEY":"BOOK-RATES-1","LABEL":"BOOK-RATES-1","CELLS":[-2140000.0,3615000.0]},{"KEY":"BOOK-X","LABEL":"BOOK-X","CELLS":[-1286000.0,775000.0]}],"WORST_SCENARIO":"SCN-COVID2020","WORST_PNL":-3426000.0,"BREACHES":[{"KEY":"BOOK-X","SCENARIO_ID":"SCN-COVID2020","PNL":-1286000.0,"LIMIT_ID":"LIM-STR-BOOK-X-ANY","LIMIT":500000.0,"LIMIT_USE":2.572,"LIMIT_STATUS":"breach"}]}
+```
+
+**stress-official: the book's row for `SCN-X`** (the shared columns are
+[README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)'s):
+
+```json
+{"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"BOOK:BOOK-X","NODE_NAME":"BOOK-X","PARENT_ID":"DESK:DESK-RATES","LEVEL":"book","CAPTURE_ID":"CAP-STR-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"scenario-pnl\":{\"version\":21,\"batches\":[\"B-STR-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","SCENARIO_ID":"SCN-X","SCENARIO_VERSION":3,"SCENARIO_NAME":"Rates up, equities down","METHOD":"full","PNL":775000.0,"PNL_SENSITIVITY":810000.0,"LIMIT":500000.0,"LIMIT_USE":0.0,"LIMIT_STATUS":"ok","TRADE_COUNT":2,"MISSING_TRADES":0}
+```
 
 ---
 

@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {#
-  Admin → BI → Runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 17.2): the engine's gate now, what runs and waits, the result store, how honest the estimates are and
+  Admin → BI → Runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 17.2): the engine's gate now, what runs and waits, the result store, how honest the estimates are and
   how often the inline wait was enough. A shell: drishti_bi-runs-admin.js draws it from GET /api/v1/bi/admin/runs. State, sizes and nodes only, never a value.
 #}
 {% extends "base.html" %}
@@ -30,7 +30,7 @@
     slow the people reading dashboards. This page shows the gate, the queue, the result store and how honest the estimates were. It shows state, sizes and nodes, never a
     value. <a href="/admin/bi">BI settings</a> · <a href="/admin/bi/usage">BI usage</a></p>
   <form class="bi-runs-filters bi-runs-admin-filters" data-admin-filters aria-label="Which server">
-    <label>Node<select name="node" class="studio-select" data-admin-node><option value="">all</option></select></label>
+    <label>Node<drishti-select native name="node" class="studio-select" data-admin-node label="Node"><option value="">all</option></drishti-select></label>
   </form>
   <p class="adm-msg" data-admin-msg role="status" aria-live="polite"></p>
   <dl class="bi-run-facts bi-runs-admin-facts" data-admin-facts></dl>

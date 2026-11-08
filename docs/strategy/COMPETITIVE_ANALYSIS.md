@@ -253,7 +253,7 @@ Each entry: what it is, its strengths (claimed), where Drishti wins, where it lo
   differentiation (from an Adaptiv Analytics sheet of uncertain provenance, treat as **not verified**).
 - **Where Drishti wins.** Exposure for any scope typed as text, with netting and collateral on each path and an exact pre-deal what-if,
   explained down to the trade; the counterparty cube is designed to beat Adaptiv's pivots on non-additive totals
-  ([CCR cube lens](../lenses/CCR_CUBE_LENS.md)); open lake; footprint.
+  ([CCR cube lens](../architecture/LENSES.md#7-ccr-cube-lens)); open lake; footprint.
 - **Where Drishti loses.** Simulation (Drishti reads paths, it does not generate them); limits workflow (planned); SA-CCR and XVA
   (planned); FIS's client base.
 - **Position.** **Coexist** today (Drishti reads the simulator's paths); **replace** the aggregation and limit-monitoring screens after
@@ -388,7 +388,7 @@ These do not come from building features; each needs its own plan.
 | **Model validation** | second-line validation must sign off any number that feeds capital or limits | the playground workbooks, data contracts and the official record help a validator | a validation pack per metric: method documents, independent test results, the ISDA unit tests for SIMM and SA-CCR when built, benchmark against a vendor on the bank's data |
 | **Reference client** | the first question of every bank | none | one pilot in a market-risk department, converted into a named reference or an anonymous case with figures |
 | **SOC 2 / ISO 27001** | vendor onboarding at any regulated firm | none (the controls exist in the product: audit, entitlements, masks, CSP, no CDN; the organisation is not certified) | a company with controls and an audit; until then, on-premises deployment keeps data inside the bank, which shortens but does not skip vendor review |
-| **Support** | 24x7 for anything feeding official numbers | one author | a support partner or team; documented runbooks exist ([runbooks](../admin/runbooks/source-down.md)) |
+| **Support** | 24x7 for anything feeding official numbers | one author | a support partner or team; documented runbooks exist ([runbooks](../guides/OPERATIONS_GUIDE.md#201-source-down-or-slow)) |
 | **Scale proof on a cluster** | tier-1 banks hold millions of positions and need high availability | 1M on one server measured; 200K on three nodes measured | the cluster at 1M and then 2.3M positions measured on the bank's hardware, with failover |
 | **Regulator acceptance** | internal models and reports are reviewed by supervisors | none | a client's model approval or report filing that uses Drishti's figures |
 | **Vendor viability** | a bank buys for ten years | single author, proprietary licence | a company, escrow of source, or a partnership with an established vendor (5.3) |
@@ -440,7 +440,7 @@ logistics, genomics, climate risk, liquidity risk and operational risk. This sec
 #### 4.3.1 BI: Power BI, Tableau, Qlik, Looker, Superset, Metabase
 
 - **What they do best.** Visual authoring for analysts, very large ecosystems, connectors to everything, certifications, SaaS at a
-  per-user price. Power BI is the reference our users know ([BI_DESIGN](../architecture/BI_DESIGN.md), section 11, maps every Power BI
+  per-user price. Power BI is the reference our users know ([ARCHITECTURE](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer), section 11, maps every Power BI
   capability to a Drishti component). Looker's semantic model (LookML) and its Gemini conversational analytics; Superset and
   Metabase as open-source options.
 - **Drishti's angle.** BI on the same governed data as the terminal, drilling from a chart into the record with its links and history;
@@ -509,7 +509,7 @@ logistics, genomics, climate risk, liquidity risk and operational risk. This sec
   November 2024 and by late 2025 a family of agents (Spotter 3, SpotterViz, SpotterModel, SpotterCode) and industry agents including
   financial services. Tableau Pulse is included in some Tableau plans (sources conflict on which). Looker's conversational analytics
   uses Gemini over LookML, up to 5,000 rows a query.
-- **Drishti's angle.** AI off by default; any of seventeen provider types including on-premises models ([AI](../admin/AI.md)); masks
+- **Drishti's angle.** AI off by default; any of seventeen provider types including on-premises models ([AI](../guides/AI_GUIDE.md)); masks
   applied to prompts; numbers come from the engine, never from the model; a deterministic plain-words parser that needs no AI at all.
 - **Gap.** Polish and breadth: their assistants are agents with planning; Drishti's AI answers single questions, with no memory of the
   last and no streaming (BI guide, "not built"). **Position.** Lead with control and determinism for regulated users; do not race on
@@ -623,10 +623,10 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 
 - [README](../../README.md); [IMPLEMENTATION_PLAN](../architecture/IMPLEMENTATION_PLAN.md) (release table and themed releases);
   [VAR_GUIDE](../guides/VAR_GUIDE.md); [EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md);
-  [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [BI_GUIDE](../guides/BI_GUIDE.md);
-  [BI_DESIGN](../architecture/BI_DESIGN.md) (gap check against Power BI); [EDITIONS](../admin/EDITIONS.md);
-  [MOBILE_DISPLAY](../architecture/MOBILE_DISPLAY.md); [RESOURCES_AND_SCALE](../architecture/RESOURCES_AND_SCALE.md);
-  [BENCHMARK](../admin/BENCHMARK.md); [AI](../admin/AI.md); [lenses](../lenses/README.md); [connectors](../connectors/CONNECTORS.md).
+  [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [REPORTS_GUIDE](../guides/REPORTS_GUIDE.md);
+  [ARCHITECTURE](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) (gap check against Power BI); [EDITIONS](../guides/ADMIN_GUIDE.md#12-what-a-lens-is);
+  [MOBILE_DISPLAY](../guides/BUILD_GUIDE.md#32-designing-for-phones); [RESOURCES_AND_SCALE](../guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk);
+  [BENCHMARK](../admin/BENCHMARK.md); [AI](../guides/AI_GUIDE.md); [lenses](../architecture/LENSES.md); [connectors](../guides/DATA_GUIDE.md#8-connectors).
 
 **Risk aggregation cubes**
 

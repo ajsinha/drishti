@@ -27,7 +27,7 @@ backend:
   timeout_seconds: 15  # per call to the server; longer than the server's own read limit (drishti.sources.fetch-timeout, 10 s), so its answer comes through
   pool_size: 64  # pooled HTTP connections to the server (per server, when there are several)
   check_seconds: ${DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS:5}   # how often the console asks each server if it is there (0 = never); pages show a banner and recover when it returns
-  # Several servers of one Drishti*net cluster (docs/admin/OPERATIONS.md, "The console and several servers"): one is enough, the console learns the
+  # Several servers of one Drishti*net cluster (docs/guides/OPERATIONS_GUIDE.md, "The console and several servers"): one is enough, the console learns the
   # rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not.
   urls: ${DRISHTI_BACKEND_URLS:}             # e.g. https://drishti-a:8480,https://drishti-b:8480
   discover: ${DRISHTI_BACKEND_DISCOVER:true} # pull the cluster's member list from the server in use, and keep it (<console data dir>/net/servers.json)
@@ -35,7 +35,7 @@ backend:
   check_every: 5s                            # how often each listed server's health is looked at
   fail_after: 2                              # failed requests (or health checks) in a row before a server is set aside
   data_dir: ${DRISHTI_CONSOLE_DATA_DIR:}     # what the console keeps between runs (net/servers.json); blank: <data dir>/console
-ai:                                  # LLM provider layer (docs/admin/AI.md): OFF by default; no file is read and no model is called while off
+ai:                                  # LLM provider layer (docs/guides/AI_GUIDE.md): OFF by default; no file is read and no model is called while off
   enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the console's own LLM provider layer
   dir: ${DRISHTI_AI_DIR:./config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
   default_model: ${DRISHTI_AI_DEFAULT_MODEL:} # provider/model, or a model name only one provider has
@@ -44,13 +44,13 @@ ai:                                  # LLM provider layer (docs/admin/AI.md): OF
   # the console's AI policy, as the server's drishti.ai.policy: mask_redacted, audit, per-user and cost limits, mask_patterns, per-feature
   # roles
   policy: {mask_redacted: true, audit: true, per_user_per_minute: 0, per_user_per_day: 0, cost_per_user_per_day: 0, mask_patterns: [], features: {}}
-mcp:                                 # MCP client (docs/admin/AI.md): OFF by default
+mcp:                                 # MCP client (docs/guides/AI_GUIDE.md): OFF by default
   enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the console's MCP client
   dir: ${DRISHTI_MCP_DIR:./config/mcp}  # the folder of MCP server files (one YAML per server)
   server_roles: {}                   # server -> roles allowed
   tool_roles: {}                     # "server/tool" -> roles allowed
   server_features: {}                # server -> features allowed
-retry:                               # what failed is tried again by itself (docs/admin/OPERATIONS.md, "Retries"): the console's AI providers and MCP servers
+retry:                               # what failed is tried again by itself (docs/guides/OPERATIONS_GUIDE.md, "Retries"): the console's AI providers and MCP servers
   enabled: ${DRISHTI_RETRY_ENABLED:true}  # retry what failed (the console's AI providers and MCP servers); false turns the retries off
   initial: ${DRISHTI_RETRY_INITIAL:5s}      # wait before the first retry
   factor: 2.0                        # each further wait is this many times the one before
@@ -78,7 +78,7 @@ ui:
   # The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): Customize on every entity page and Describe under Build -> New screen. A
   # user's changes are their own Design, never the pack's Sutra. Off: pages and the screen designer are exactly as before.
   designer: ${DRISHTI_UI_DESIGNER:false}
-  # The phone display (docs/architecture/MOBILE_DISPLAY.md): each panel of a page goes to a phone as must (shown in full, first), glance
+  # The phone display (docs/guides/BUILD_GUIDE.md): each panel of a page goes to a phone as must (shown in full, first), glance
   # (a compact form: five rows, a sparkline), more (loaded when tapped, under More on this page) or desk (named under On desktop). The
   # browser says what it is (the drishti-device cookie from the screen width, or an X-Drishti-Device header); a desktop is unchanged.
   phone:
@@ -93,7 +93,7 @@ ui:
     DRS-1002: "No source serves the kind '{kind}'. Check the kind (the command line completes the kinds that exist), or ask an administrator to connect a source for it."
     DRS-1003: The source behind it failed. Try again in a moment; if it keeps failing an administrator can read the server log.
     DRS-1004: The source took too long to answer. Try again in a moment; a first read of an earlier date can be slow.
-    DRS-1016: An administrator turned this command off (Admin -> Commands). Ask an administrator if you need it.
+    DRS-1016: An administrator turned this command off (Admin -> Functions). Ask an administrator if you need it.
     DRS-1017: This edition does not include that pack (its packs are allow-only). An administrator changes the edition or the site's edition settings.
     DRS-4023: This edition does not offer that command. Type FUNC to see the commands you can use.
     DRS-1007: That source keeps no earlier versions. Clear the 'as known at' time to read what it holds now.
@@ -138,7 +138,7 @@ ui:
     - { slug: commodity-future, title: Commodity future, cmd: TRD CFT-77120, sutra: listed-future v1 }
     - { slug: netting-set, title: Netting set, cmd: NSET NS-NORTH-01, sutra: netting-set v1 }
   # Home, signed in: "Did you know", the fact of the day, beside the headline. Each pack declares its facts in
-  # config/packs/<pack>/config/facts.yaml (docs/guides/PACK_DEVELOPER_GUIDE.md, "Facts for Home"); they are computed from the server's
+  # config/packs/<domain>/<pack>/config/facts.yaml (docs/guides/BUILD_GUIDE.md, "Facts for Home"); they are computed from the server's
   # answers on the business date, as the user, and kept cache_seconds per user, date and set of packs. A fact taking longer than
   # timeout_seconds is left out. enabled false: no tile.
   facts:
@@ -146,7 +146,7 @@ ui:
     cache_seconds: 21600  # how long the facts of one user, business date and set of packs are kept
     timeout_seconds: 90  # a fact taking longer is left out
   # The quick cards under the Home headline, signed in: each opens its command; one naming a pack shows only while that pack is on.
-  placeholder: ""             # the command line's placeholder; blank: config/menus.yaml's (an edition's menus.placeholder presets it)
+  placeholder: ""             # the command line's placeholder; blank: config/sitemap.yaml's (an edition's menus.placeholder presets it)
   logo: ""                   # a logo image (a URL under /static/, or a data: URL) instead of the eye mark, in the top bar and on public pages; blank: the eye
   favicon: ""                # the browser icon (a URL); blank: /favicon.ico (the eye)
   apple_touch_icon: ""       # the home-screen icon (a URL); blank: the eye's
@@ -157,7 +157,7 @@ ui:
     - { title: Exposure, cmd: EXP BANK, pack: counterparty-risk, icon: shield-shaded }
     - { title: Funds and ETFs, cmd: FUND SPY, pack: funds, icon: pie-chart }
     - { title: Data map, cmd: DATAMAP, icon: diagram-3 }
-# Embedded views for other web applications (docs/architecture/CLIENT_RENDERER.md). OFF by default: with enabled false nothing under
+# Embedded views for other web applications (docs/guides/EMBED_GUIDE.md). OFF by default: with enabled false nothing under
 # /embed/ is served and no middleware behaves differently. Host applications are registered at the SERVER (Admin API
 # /api/v1/admin/embed/apps; drishti.embed.* there), which makes the tokens and checks every call; the console only serves the
 # embed routes and learns the registered origins (CORS) from the server, cached origins_ttl_seconds. Embedded calls always mask.
@@ -174,7 +174,7 @@ embed:
   recheck_seconds: 60              # an open stream asks the server this often whether its token still passes (user, app, scopes)
   token_grace_seconds: 30          # after a token expires, how long the stream waits for a fresh one before gone DRS-8001
   compress_min_bytes: 512          # payloads smaller than this are sent uncompressed (br if the browser accepts it and brotli is installed, else gzip)
-  # The renderer's optional sign-in window (auth: 'popup', CLIENT_RENDERER.md 10.1): a registered host page WITHOUT a backend signs its user in
+  # The renderer's optional sign-in window (auth: 'popup', EMBED_GUIDE.md 10.1): a registered host page WITHOUT a backend signs its user in
   # through single sign-on (auth.oidc, PKCE) in a window opened on a click; the server makes the embed token (drishti.embed.sign-in-window).
   sign_in:
     enabled: ${DRISHTI_EMBED_SIGN_IN:true}       # needs auth.oidc.enabled; off: the window answers DRS-8003 and pages keep the token exchange
@@ -210,7 +210,7 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
   # monitors; a view open in several tabs counts once). Each holds one stream to the server from the backend pool
   # (backend.pool_size). Beyond it a view says it is not live, and why, instead of silently not ticking.
   max_subscriptions: ${DRISHTI_LIVE_MAX_SUBSCRIPTIONS:32}
-  # The relay (docs/architecture/CLUSTER_DEPLOYMENT.md section 9.4, PO-11): a call on a live channel that reaches another worker or another
+  # The relay (docs/guides/CLUSTER_GUIDE.md section 9.4, PO-11): a call on a live channel that reaches another worker or another
   # console is passed to the one holding the channel, signed with DRISHTI_CONSOLE_RELAY_KEY. Across hosts every console needs the same key.
   relay:
     across_hosts: ${DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS:false}  # true: consoles on several hosts behind one load balancer pass live-channel calls to each other, so the load balancer needs no stickiness
@@ -221,13 +221,12 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
     window_seconds: 30  # a relay message is accepted this long after it was signed (allow for the hosts' clock difference); each only once
 under_construction:          # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): menu items and help pages that depend on unbuilt work
   file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:../config/under-construction.yaml}   # the same file the server reads; absent: nothing registered
-editions:                    # editions and lenses (docs/admin/EDITIONS.md): the console learns the server's from its about answer
-  dir: ${DRISHTI_EDITIONS_DIR:../config/editions}   # the same folder the server reads (config/editions/<name>.yaml, features.yaml)
-lens:                        # the lens (EDITIONS.md › The design as built, section 8): "Open Drishti Risk" for one person on a full instance (the server's drishti.lenses)
+lens:                        # the lens (LENSES.md › The design): "Open Drishti Risk" for one person on a full instance (the server's drishti.lenses)
+  dir: ${DRISHTI_LENS_DIR:../config/lenses}   # the lens files the server reads: config/lenses/<module>/<lens>.yaml, features.yaml
   roles: {}                  # hook for role-based access later ({role: {link: true, start: risk}}): read, not wired
 # A site's overrides of the instance's edition, key by key, as in the edition file (they win over it), e.g.
 # edition: { commands: { also-allow: [FRTB] }, menus: { views: [terminal, search, functions, var, exposure] } }
-features:                    # the console's own switches (EDITIONS.md › The design as built, section 5.6); an edition presets them (config/editions/features.yaml)
+features:                    # the console's own switches (LENSES.md › The design); an edition presets them (config/lenses/features.yaml)
   build: true                # Build: new screens, new packs, designs, reviews and changes (/build, /review)
   forms: true                # query by form (FORM, /forms)
   datamap: true              # the data map (DATAMAP, /datamap)
@@ -260,7 +259,7 @@ builder:                     # Build workbench, New (/build/new); docs/guides/RA
   pack_draft_concurrency: 4  # Sutras drafted at once against the server
   tools_dir: ../tools        # the repository's tools/ folder (packbundle.py makes the bundle); relative to drishti-console/
   studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
-lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a large JSON file into a Delta lake (docs/guides/TOOLS.md)
+lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a large JSON file into a Delta lake (docs/guides/CLI_REFERENCE.md)
   roots: ${DRISHTI_LAKE_ROOTS:}   # the lake roots this console may write, comma-separated (the Delta connectors' root); empty: <data dir>/delta, as the server
   max_upload_mb: 4096        # largest file uploaded (streamed to the console's temporary folder, never held in memory)
   scan_docs: 20000           # documents read to suggest the id, date and classifiers (the build reads them all)
@@ -293,7 +292,7 @@ packs:
   dir: ${DRISHTI_PACKS_DIR:../config/packs}   # the same packs directory the server uses (one variable sets both)
   installed_dir: ${DRISHTI_PACKS_INSTALLED:}   # packs installed from the registry or by Deploy archive (the server's drishti.packs.installed-dir); blank: <data dir>/packs/installed
   extra_dirs: ${DRISHTI_PACKS_EXTRA_DIRS:}   # further pack folders, comma-separated (examples/packs: the retired example packs), as on the server
-  enabled: ${DRISHTI_PACKS:default}   # used only when the server cannot be asked which packs are enabled; default: config/editions/default-packs.yaml
+  enabled: ${DRISHTI_PACKS:default}   # used only when the server cannot be asked which packs are enabled; default: config/packs/default-packs.yaml
   deploy_max_mb: 50          # largest pack archive Admin → Packs → Deploy archive takes (the server's drishti.packs.deploy.max-archive-mb refuses the same way, 413)
 static:                      # the console's own static files (/static/...), served compressed
   compress: true             # answer a request that accepts br or gzip with the compressed file (Brotli when the brotli package is installed); false: bytes as they are
@@ -309,7 +308,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
   board:
     rotate_seconds: ${DRISHTI_BI_BOARD_ROTATE_SECONDS:30}     # a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600
   # The Notebook (docs/guides/USER_GUIDE.md › The Notebook). Every Python run (python visuals and measures, Notebook cells, the Transform editor's steps) is the
-  # server's, on its compute pool python (config/compute/compute.yaml; docs/architecture/PYTHON_COMPUTE.md section 19): the console runs no Python of anyone's.
+  # server's, on its compute pool python (config/compute/compute.yaml; docs/guides/NOTEBOOK_GUIDE.md section 19): the console runs no Python of anyone's.
   notebook:
     max_rows: ${DRISHTI_BI_NOTEBOOK_MAX_ROWS:10000}            # most rows of an extract (the reader's rows, cut here); 10 to 100000
     max_fields: 60                                              # most columns of an extract
@@ -320,7 +319,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     cell_max_chars: 65536                                       # longest Python cell
     max_cells: 60                                               # most cells in a notebook
     max_extracts: 6                                             # most further extracts in a notebook (extract("name") in a cell), besides the first
-  # (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
+  # (docs/guides/REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
   transform:
     preview_rows: ${DRISHTI_BI_TRANSFORM_PREVIEW_ROWS:1000}     # rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000
     timeout_seconds: 20                                         # the step-by-step run's time limit (also capped by drishti.bi.report.python-max-seconds)

@@ -87,7 +87,7 @@ public class HealthController {
         this.nativeLibraries = n;
     }
 
-    /** Busy protection (OPERATIONS.md, "Busy protection"): its card on Health; absent in a test that makes the controller itself. */
+    /** Busy protection (OPERATIONS_GUIDE.md, "Busy protection"): its card on Health; absent in a test that makes the controller itself. */
     private com.ash.drishti.server.admission.AdmissionGate busy;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
@@ -95,7 +95,7 @@ public class HealthController {
         this.busy = g;
     }
 
-    /** The in-memory lake (IN_MEMORY_LAKE.md section 12): its stores, pinned tables and host checks on Health; absent in such a test. */
+    /** The in-memory lake (docs/architecture/DATA_ARCHITECTURE.md section 12): its stores, pinned tables and host checks on Health; absent in such a test. */
     private com.ash.drishti.memlake.MemoryLake memoryLake;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
@@ -103,7 +103,7 @@ public class HealthController {
         this.memoryLake = m;
     }
 
-    /** The platform alerts (OPERATIONS.md section 13.6): the open ones on Health; absent in a test that makes the controller itself. */
+    /** The platform alerts (OPERATIONS_GUIDE.md section 13.6): the open ones on Health; absent in a test that makes the controller itself. */
     private com.ash.drishti.server.metrics.PlatformAlerts alerts;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
@@ -121,6 +121,14 @@ public class HealthController {
     private final ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource;
     private final com.ash.drishti.identity.IdentityProperties identity;
     private final com.ash.drishti.server.security.MaskCoverage masks;
+
+    /** The modules' engines' figures (a module's beans); none in a test that makes the controller itself. */
+    private java.util.List<HealthFigures> moduleFigures = java.util.List.of();
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void moduleFigures(java.util.List<HealthFigures> figures) {
+        this.moduleFigures = java.util.List.copyOf(figures);
+    }
 
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
             TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
@@ -239,8 +247,9 @@ public class HealthController {
         out.put("tmp", com.ash.drishti.common.TempFiles.info());
         out.put("externalLib", com.ash.drishti.common.ExternalLib.info());
         out.put("sources", sources);
-        // 2.9.5: a hierarchy the VaR or exposure engine skipped (its level column not in the source): "var LL" to why (DRS-5211, a warning)
-        out.put("hierarchiesSkipped", com.ash.drishti.server.var.Hierarchies.skipped());
+        for (HealthFigures f : moduleFigures) {                     // the modules' engines' figures (DOMAIN_MODULES.md J4)
+            out.put(f.key(), f.value());
+        }
         Map<String, Object> identityPool = PoolReport.identity(identityDataSource.getIfAvailable(), identity.sqlite()).map(com.ash.drishti.api.pool.PoolStats::toMap).orElse(null);
         out.put("identityPool", identityPool);                        // the identity database's pool (SQLite: embedded, exempt)
         if (PoolReport.needsAttention(identityPool)) {

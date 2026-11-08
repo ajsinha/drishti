@@ -17,7 +17,7 @@
 
 # Data contracts of the us-equities pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/us-equities/guides/us-equities.md](../../../config/packs/us-equities/guides/us-equities.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/capitalmarkets/us-equities/guides/us-equities.md](../../../config/packs/capitalmarkets/us-equities/guides/us-equities.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -35,10 +35,10 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 
 |  |  |
 |---|---|
-| Contract | [us-company.contract.yaml](../../../config/packs/us-equities/contracts/us-company.contract.yaml) · version 1.0 |
+| Contract | [us-company.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/us-company.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py) |
+| Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
 | Grain | One row per us company, keyed by TICKER. |
 | Key | `TICKER` |
 | Id pattern | — |
@@ -47,7 +47,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/us-company/` |
 | Columns | `TICKER`, `NAME`, `LEI_LEGAL_NAME`, `CIK`, `LEI`, `EXCHANGE`, `INDEX_TEXT`, `SECTOR`, `SIC`, `SIC_DESCRIPTION`, `STATE_OF_INCORPORATION`, `REVENUE` |
 | Test data | data/testdata/us-equities/us-company |
-| Worked example | [us-equities/us-company](../samples/us-equities/us-company.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [us-equities/us-company](../samples/us-equities.md#us-company) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -175,7 +175,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 **To review (4)**
 
 - required inferred from 100% coverage in 506 documents (3 samples and 503 test-data documents (data/testdata/us-equities/us-company/us-company.2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: LEI_STATUS, LEI_SOURCE, CURRENCY, INDEXES[].INDEX, INDEXES[].NAME, FACTS[].LABEL: confirm they are closed lists.
 - no unit stated for the amounts REVENUE, NET_INCOME, EPS_DILUTED, FINANCIALS[].REVENUE, FINANCIALS[].NET_INCOME, FINANCIALS[].EPS_DILUTED (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
@@ -185,10 +185,10 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 
 |  |  |
 |---|---|
-| Contract | [index-membership.contract.yaml](../../../config/packs/us-equities/contracts/index-membership.contract.yaml) · version 1.1 |
+| Contract | [index-membership.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/index-membership.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: SEC EDGAR (with the tracking ETFs' Form N-PORT), Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py) |
+| Source | public data: SEC EDGAR (with the tracking ETFs' Form N-PORT), Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
 | Grain | One row per index members, keyed by INDEX. |
 | Key | `INDEX` |
 | Id pattern | — |
@@ -197,7 +197,7 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/index-membership/` |
 | Columns | `INDEX`, `NAME`, `MEMBERS` |
 | Test data | data/testdata/us-equities/index-membership |
-| Worked example | [us-equities/index-membership](../samples/us-equities/index-membership.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [us-equities/index-membership](../samples/us-equities.md#index-membership) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -249,7 +249,7 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 **To review (3)**
 
 - required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/index-membership.2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ROWS[].SECTOR: confirm they are closed lists.
 
 ## SIC: SIC sector (`sic-sector`)
@@ -258,7 +258,7 @@ A sector by its SIC code, computed from the companies when asked: its companies 
 
 |  |  |
 |---|---|
-| Contract | [sic-sector.contract.yaml](../../../config/packs/us-equities/contracts/sic-sector.contract.yaml) · version 1.0 |
+| Contract | [sic-sector.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/sic-sector.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector us-equities-groupings over the kind us-company |
@@ -323,10 +323,10 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 
 |  |  |
 |---|---|
-| Contract | [filing-feed.contract.yaml](../../../config/packs/us-equities/contracts/filing-feed.contract.yaml) · version 1.0 |
+| Contract | [filing-feed.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/filing-feed.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py) |
+| Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
 | Grain | One row per edgar filings browser, keyed by FEED. |
 | Key | `FEED` |
 | Id pattern | — |
@@ -335,7 +335,7 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/filing-feed/` |
 | Columns | `FEED`, `NAME`, `FILINGS` |
 | Test data | data/testdata/us-equities/filing-feed |
-| Worked example | [us-equities/filing-feed](../samples/us-equities/filing-feed.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [us-equities/filing-feed](../samples/us-equities.md#filing-feed) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -390,7 +390,7 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 **To review (5)**
 
 - required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/filing-feed/filing-feed.2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ROWS[].FORM, ROWS[].DESCRIPTION: confirm they are closed lists.
 - number types decided by the field's name: BY[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts BY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -401,10 +401,10 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 
 |  |  |
 |---|---|
-| Contract | [filing.contract.yaml](../../../config/packs/us-equities/contracts/filing.contract.yaml) · version 1.1 |
+| Contract | [filing.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/filing.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py) |
+| Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
 | Grain | One row per sec filing, keyed by ACCESSION. |
 | Key | `ACCESSION` |
 | Id pattern | `^[0-9]{10}-[0-9]{2}-[0-9]{6}$` |
@@ -413,7 +413,7 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/filing/` |
 | Columns | `ACCESSION`, `COMPANY`, `COMPANY_NAME`, `FORM`, `FILED`, `REPORT_DATE` |
 | Test data | data/testdata/us-equities/filing |
-| Worked example | [us-equities/filing](../samples/us-equities/filing.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [us-equities/filing](../samples/us-equities.md#filing) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -456,7 +456,7 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 **To review (2)**
 
 - required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/filing/filing.2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.
 
 ## FACT: Financial fact (`financial-fact`)
 
@@ -464,10 +464,10 @@ One financial concept of one company (revenue, net income, assets...) over up to
 
 |  |  |
 |---|---|
-| Contract | [financial-fact.contract.yaml](../../../config/packs/us-equities/contracts/financial-fact.contract.yaml) · version 1.0 |
+| Contract | [financial-fact.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/financial-fact.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py) |
+| Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
 | Grain | One row per financial fact, keyed by FACT_ID. |
 | Key | `FACT_ID` |
 | Id pattern | — |
@@ -476,7 +476,7 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/financial-fact/` |
 | Columns | `FACT_ID`, `COMPANY`, `COMPANY_NAME`, `CONCEPT`, `LABEL`, `LATEST`, `LATEST_YEAR` |
 | Test data | data/testdata/us-equities/financial-fact |
-| Worked example | [us-equities/financial-fact](../samples/us-equities/financial-fact.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [us-equities/financial-fact](../samples/us-equities.md#financial-fact) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -522,7 +522,7 @@ One financial concept of one company (revenue, net income, assets...) over up to
 **To review (4)**
 
 - required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/financial-fact/financial-fact.2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: CONCEPT, LABEL: confirm they are closed lists.
 - no unit stated for the amounts LATEST, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
@@ -532,7 +532,7 @@ A company's quote and a year of daily prices, read live by the us-equities-price
 
 |  |  |
 |---|---|
-| Contract | [price-history.contract.yaml](../../../config/packs/us-equities/contracts/price-history.contract.yaml) · version 1.0 |
+| Contract | [price-history.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/price-history.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Yahoo Finance (us-equities-prices connector, yfinance plugin) |

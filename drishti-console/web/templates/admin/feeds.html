@@ -1,0 +1,92 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin → Data loads → Feeds (docs/guides/EXTERNAL_DATA.md section 6), from GET /api/v1/admin/feeds as `st`: the feed files and the run
+   ledger as the server read them; this template only places them. Both tables are console tables (drishti-grid, Drishti Elements: sort,
+   filter, pages, keyboard); Run now is drishti_admin-feeds.js. #}
+{% extends "base.html" %}
+{% block title %}Feeds · Data loads · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% set PILL = {'ok': 'st-ok', 'failed': 'st-bad', 'refused': 'st-bad', 'partial': 'st-warn', 'locked': 'st-warn'} %}
+<div class="adm ib" data-feeds>
+  {% with tab='loads' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">Data loads</h1>
+  {% with sub='feeds' %}{% include "admin/_loads_tabs.html" %}{% endwith %}
+  <p class="text-muted-d ib-intro">The data feeds pull external data (GLEIF, the SEC, the World Bank, the IMF, central banks, news) every day and load
+    it into their lakes. They run from cron, systemd or Task Scheduler (<span class="mono">drishti.py feed schedule</span>) or from here; every run,
+    whoever started it, is a line of the ledger <span class="mono">{{ st.ledger or 'data/datafeeds/ledger.jsonl' }}</span>. A failed run opens an alert
+    (<span class="mono">data-feed-failed</span>). See the <a href="/help/external-data">External data feeds guide</a>.</p>
+  <p class="ib-said" data-feeds-said role="status" aria-live="polite"></p>
+{% if error %}
+  <p class="adm-warn" role="alert" data-feeds-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    The server did not give the feeds: {{ error.detail or error }}.</p>
+{% else %}
+  <section class="ib-sec" aria-labelledby="fd-h">
+    <h2 class="ib-h2" id="fd-h">Feeds</h2>
+    {% if not st.feeds %}<p class="text-muted-d" data-feeds-none>No feed files in <span class="mono">{{ st.config }}</span>.</p>{% else %}
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-feeds-table>
+      <caption class="visually-hidden">Every data feed: its lake, schedule, last run and last success</caption>
+      <thead><tr><th scope="col">Feed</th><th scope="col">Lake</th><th scope="col">Schedule</th><th scope="col">Last run</th><th scope="col">Status</th><th scope="col">Last success</th><th scope="col">Business date</th>
+        <th scope="col" class="num">Rows</th><th scope="col" class="num">Seconds</th><th scope="col" class="num">Failures</th><th scope="col">Licence</th><th scope="col"><span class="visually-hidden">Run now</span></th></tr></thead>
+      <tbody>
+      {% for f in st.feeds %}
+        <tr data-feed="{{ f.feed }}" data-status="{{ f.lastStatus or 'never' }}">
+          <td><span class="mono">{{ f.feed }}</span>{% if not f.enabled %} <span class="st" title="enabled: false in its feed file: left out of --all and the schedule">off</span>{% endif %}
+            <div class="text-muted-d">{{ f.title }}</div>{% if f.problem %}<div class="ib-warn">{{ f.problem }}</div>{% endif %}</td>
+          <td class="mono">{{ f.lake }}<div class="text-muted-d">{{ f.load }}</div></td>
+          <td class="mono">{{ f.schedule }}</td>
+          <td class="mono">{{ (f.lastRun or 'never')[:19] }}{% if f.lastTrigger %}<div class="text-muted-d">{{ f.lastTrigger }}</div>{% endif %}</td>
+          <td>{% if f.running %}<span class="st st-warn">running</span>{% elif f.lastStatus %}<span class="st {{ PILL.get(f.lastStatus, '') }}">{{ f.lastStatus }}</span>{% else %}<span class="text-muted-d">-</span>{% endif %}
+            {% if f.lastError %}<div class="ib-warn" data-feed-error>{{ f.lastError }}</div>{% endif %}</td>
+          <td class="mono">{{ (f.lastSuccess or 'never')[:19] }}</td>
+          <td class="mono">{{ f.businessDate or '-' }}</td>
+          <td class="num mono">{{ '{:,}'.format(f.rows) if f.rows is not none else '-' }}</td>
+          <td class="num mono">{{ f.seconds if f.seconds is not none else '-' }}</td>
+          <td class="num mono">{{ f.failuresSinceSuccess or 0 }}</td>
+          <td>{% if f.licenceUrl %}<a href="{{ f.licenceUrl }}" rel="noopener noreferrer" target="_blank">{{ f.licence }}</a>{% else %}{{ f.licence }}{% endif %}
+            {% if f.internalOnly %}<div><span class="st st-warn">internal only</span></div>{% endif %}</td>
+          <td><button type="button" class="btn-pill ib-btn" data-feed-run="{{ f.feed }}"{% if f.running %} disabled{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Run now</button></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% endif %}
+  </section>
+  <section class="ib-sec" aria-labelledby="fd-runs-h">
+    <h2 class="ib-h2" id="fd-runs-h">Latest runs</h2>
+    {% if not st.runs %}<p class="text-muted-d">No run yet: the ledger is empty.</p>{% else %}
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-feeds-runs>
+      <caption class="visually-hidden">The latest runs of the ledger, newest first</caption>
+      <thead><tr><th scope="col">At</th><th scope="col">Feed</th><th scope="col">Status</th><th scope="col">Exit</th><th scope="col">Business date</th><th scope="col" class="num">Rows</th><th scope="col">Load</th><th scope="col" class="num">Seconds</th><th scope="col">By</th><th scope="col">Error</th></tr></thead>
+      <tbody>
+      {% for r in st.runs %}
+        <tr data-run="{{ r.run }}"><td class="mono">{{ (r.at or '')[:19] }}</td><td class="mono">{{ r.feed }}</td>
+          <td><span class="st {{ PILL.get(r.status, '') }}">{{ r.status }}</span></td><td class="mono">{{ r.exit }}</td><td class="mono">{{ r.businessDate }}</td>
+          <td class="num mono">{{ '{:,}'.format(r.rows) if r.rows is not none else '-' }}</td><td class="mono">{{ (r.load or {}).route or '-' }}</td>
+          <td class="num mono">{{ r.seconds }}</td><td>{{ r.trigger }}</td><td class="ib-warn">{{ r.error or '' }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% endif %}
+  </section>
+{% endif %}
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-feeds.js?v={{ ASSET_V }}"></script>{% endblock %}

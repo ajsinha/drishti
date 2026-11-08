@@ -14,6 +14,7 @@
 
 """Calc, the console side: the panel on a view (offered by a pack, allowed by a role), its routes, the runtime folder,
 and the security headers that let only its worker compile WebAssembly."""
+import html
 import re
 from pathlib import Path
 
@@ -54,7 +55,7 @@ def _deny(client, backend):
 def test_a_view_of_a_kind_whose_pack_enables_calc_has_the_panel_and_its_key(client, calc_on):
     html = client.get("/v/trade/IRS-48213").text
     assert 'id="calcDrawer"' in html and "data-calc-open" in html and "<b>Alt+C</b> Calc" in html
-    assert "/static/vendor/codemirror/mode/python/python.js" in html and "/static/js/drishti_calc.js" in html
+    assert "/static/elements/drishti-inputs/drishti_inputs.js" in html and "/static/js/drishti_calc.js" in html   # the code editor (Python on first use)
     assert 'data-worker="/static/js/drishti_calc-worker.js' in html and 'data-module="/static/calc/drishti.py' in html
 
 
@@ -145,7 +146,7 @@ def test_calc_is_a_labs_switch_off_as_shipped_and_never_publishes():
     root = CONSOLE.parent
     server = (root / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")
     assert "enabled: ${DRISHTI_LABS_CALC:false}" in server
-    assert "console: [labs.calc]" in (root / "config/editions/features.yaml").read_text(encoding="utf-8")
+    assert "console: [labs.calc]" in (root / "config/lenses/features.yaml").read_text(encoding="utf-8")
     routes = (CONSOLE / "routes/calc_routes.py").read_text(encoding="utf-8")
     assert not re.search(r"publish|promote|/workspaces|/items|share", routes, re.I)
     for f in ("web/static/js/drishti_calc.js", "web/static/js/drishti_calc-worker.js", "web/static/calc/drishti.py", "web/static/calc/drishti_bi.py"):
@@ -253,7 +254,7 @@ def test_the_backend_client_sends_a_field_path_and_reads_columns_with_a_longer_w
 
 
 def test_administrators_give_a_role_calc_in_admin_roles(client, backend):
-    page = client.get("/admin/roles").text
-    assert 'name="calc"' in page and "Use Calc" in page
+    page = html.unescape(client.get("/admin/roles").text)      # the role form is drishti-inputs' Form from the server's schema
+    assert '"name":"calc"' in page and "Use Calc" in page and '"calc":false' in page
     client.post("/admin/api/roles/quant", json={"kinds": ["*"], "calc": True})
     assert ("admin", "PUT", "/role-definitions/quant", {"kinds": ["*"], "calc": True}) in backend.calls

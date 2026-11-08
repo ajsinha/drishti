@@ -58,17 +58,29 @@ const script = (url) => memo('script:' + url, () => new Promise((resolve, reject
   document.head.appendChild(s);
 }));
 
-// the console's own scripts, in order: the table engine before the grid it draws nested rows with (served from the allow-list in routes/embed_routes.py)
-export const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'multiselect', 'controls'];
+// the console's own scripts, in order: Drishti Elements' drishti-core, drishti-grid (every table's sort, filter and pages; tree rows draw nested
+// pivots with it), drishti-chart (the panel charts), drishti-graph (a graph panel) and drishti-tree (a table with children), the table engine (served from the allow-list in routes/embed_routes.py), and
+// drishti-inputs (the controls' multi-select and dates; its rules are adopted by the host's document too: a picker's list floats in its body)
+export const ENHANCERS = ['elements-core', 'elements-grid', 'elements-chart', 'elements-graph', 'elements-tree', 'pivot-engine', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'elements-inputs', 'controls'];
+// a picker's list floats in the host page's body, outside the element: drishti-inputs' rules are adopted by the host's document as a
+// constructed sheet, as the element adopts its own (a <link> to the console would be refused by a host CSP with style-src 'self')
+const inputsSheet = (server) => memo('isheet:' + server, async () => {
+  const text = await (await fetch(server + API + '/elements/drishti-inputs/drishti_inputs.css')).text();
+  const s = new CSSStyleSheet();
+  s.replaceSync(text);
+  document.adoptedStyleSheets = document.adoptedStyleSheets.concat([s]);
+});
 export const chartLibs = (server) => memo('charts:' + server, async () => {
+  await inputsSheet(server);
   await script(server + API + '/echarts.js');
   quietDispose();
   for (const n of ENHANCERS) { await script(server + API + '/js/' + n + '.js'); }
 });
 
 /** What <drishti-report> draws with: ECharts, then the console's report code (window.drishtiBi), in order. */
-export const REPORT_LIBS = ['geomap'].concat(['lib', 'phone', 'visuals', 'visuals-format', 'grids', 'matrix', 'multiples', 'frame', 'live'].map((n) => 'bi-' + n));
+export const REPORT_LIBS = ['elements-core', 'elements-grid', 'elements-inputs', 'geomap'].concat(['lib', 'phone', 'visuals', 'visuals-format', 'grids', 'matrix', 'multiples', 'frame', 'live'].map((n) => 'bi-' + n));
 export const reportLibs = (server) => memo('rlibs:' + server, async () => {
+  await inputsSheet(server);
   await script(server + API + '/echarts.js');
   quietDispose();
   for (const n of REPORT_LIBS) { await script(server + API + '/js/' + n + '.js'); }

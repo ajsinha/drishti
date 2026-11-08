@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * One column of a virtual table (BI_FOUNDATION_2911E.md sections 3.1 and 3.2): a Rachana path ({@code $.MTM}, {@code @.INDEX.NAME},
+ * One column of a virtual table (docs/architecture/ARCHITECTURE.md §28 sections 3.1 and 3.2): a Rachana path ({@code $.MTM}, {@code @.INDEX.NAME},
  * {@code ^.LEG_ID}), a row-scope expression over the source (never over another column), or a Python column. Exactly one of the three.
  *
  * @param name the column's name
@@ -30,7 +30,7 @@ import java.util.Set;
  * @param type {@code string}, {@code integer}, {@code decimal}, {@code boolean}, {@code date}, {@code timestamp}, or null (read as given)
  * @param role {@code key}, {@code dimension}, {@code measure}, {@code attribute}, or null
  * @param meaning what the value means (a glossary term), or null
- * @param references the table and column a value points at ({@code bi.trading_risk_desks.id}), or null
+ * @param references the table and column a value points at ({@code banking.trading_risk_desks.id}), or null
  * @param unit the unit or currency, or null
  * @param additive whether sums of it mean something (null: decided by its type)
  * @param aggregate the aggregate a consumer uses by default ({@code sum}), or null

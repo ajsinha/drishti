@@ -52,6 +52,9 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files)
 import ccrmath as M  # noqa: E402
 import paths as PT  # noqa: E402
@@ -69,7 +72,7 @@ MAX_TRADES = 10_000                       # the local limit: never more trades i
 DEMO_TRADES = 9_500                       # the demo run (lake demo): whole counterparties, smallest first, within this many trades
 PART_BYTES = 1_200_000                    # compressed bytes per file, about
 QS = [0.95, 0.99]
-REFERENCE = ROOT / "drishti-compute" / "src" / "test" / "resources" / "ccr" / "reference.json"
+REFERENCE = ROOT / "drishti-compute-banking" / "src" / "test" / "resources" / "ccr" / "reference.json"
 SYSTEMS = (("CLY-", "CALYPSO"), ("MX-", "MUREX"))
 
 
@@ -302,7 +305,7 @@ def update_manifest(testdata: Path, entries: list[dict]) -> None:
     path.write_text("\n".join(head) + "\n" + yaml.safe_dump(m, sort_keys=False, width=140), encoding="utf-8")
 
 
-SAMPLES = ROOT / "config" / "packs" / PACK / "samples"
+SAMPLES = pack_dir(PACK) / "samples"
 
 
 def samples(docs: dict[str, list[dict]]) -> dict[Path, str]:
@@ -313,7 +316,7 @@ def samples(docs: dict[str, list[dict]]) -> dict[Path, str]:
 
 
 def write_side_files(docs: dict[str, list[dict]], ref: dict) -> None:
-    """The parity reference of drishti-compute's test and the pack's samples, beside the committed test data."""
+    """The parity reference of drishti-compute-banking's test and the pack's samples, beside the committed test data."""
     REFERENCE.parent.mkdir(parents=True, exist_ok=True)
     REFERENCE.write_text(reference_text(ref), encoding="utf-8")
     for f, t in samples(docs).items():

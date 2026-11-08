@@ -24,7 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The tables a pack's kinds give (BI_FOUNDATION_2911E.md section 3.6): never migrated, regenerated whenever the packs change, as BI's
+ * The tables a pack's kinds give (docs/architecture/ARCHITECTURE.md §28 section 3.6): never migrated, regenerated whenever the packs change, as BI's
  * pack-generated datasets {@code pack.<pack>.<kind>} were. One table {@code <pack>.<kind>} per kind (one row per entity and business date),
  * and one table per list a pack names ({@code tables: { arrays: { trade: [LEGS] } }} in {@code pack.yaml}) with that list as its grain
  * ({@code trading.trade_legs}). Read-only: an edit is refused; a table over it narrows it. The server describes each kind (its connector's

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The picture of the us-equities pack's guide (config/packs/us-equities/guides/us-equities.md), written to its guides/images/.
+"""The picture of the us-equities pack's guide (config/packs/capitalmarkets/us-equities/guides/us-equities.md), written to its guides/images/.
 
 The pack is off by default, so this script starts its own scratch server and console with it on (18742/18743 unless
 DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT say otherwise), takes the picture and stops them (build the server first):
@@ -36,13 +36,13 @@ ROOT = Path(__file__).resolve().parents[3]
 PACKS = "core,world-economy,news-and-markets,us-equities"
 SERVER_PORT = int(os.environ.get("DRISHTI_SHOTS_SERVER_PORT", 18742))
 CONSOLE_PORT = int(os.environ.get("DRISHTI_SHOTS_CONSOLE_PORT", 18743))
-OUT = ROOT / "config" / "packs" / "us-equities" / "guides" / "images"
+OUT = ROOT / "config" / "packs" / "capitalmarkets" / "us-equities" / "guides" / "images"
 
 
 def start_servers(work: Path) -> list:
     jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-server -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
     if not (work / "config").exists():
         (work / "config").symlink_to(ROOT / "config")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"

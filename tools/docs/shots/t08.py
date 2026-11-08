@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 8, Share and collaborate (docs/tutorials/08-share-and-collaborate.md), written to docs/tutorials/img/t08/.
+"""Pictures of tutorial 1, Part D, Share and collaborate (docs/tutorials/01-first-15-minutes.md), written to docs/tutorials/img/t08/.
 
 You (the development administrator) share a filtered view of the swap MX-20000001 with Vera (a viewer), write in its discussion and mention her; Vera
 answers. Two people, one browser at a time: each sign-in clears the other's session."""
@@ -45,7 +45,7 @@ def share(c: Ctx):
     c.save("00-users.jpg")
     login(c, height=1700)
     filtered_view(c, height=1700, path=f"{TRADE}?asOf={PIN}")
-    done(c, lambda: c.page.locator("#p-event-list [data-ctl='when'] .ctl-preset").select_option(label="Next 90 days"))
+    done(c, lambda: (c.page.locator("#p-event-list [data-ctl='when'] .di-range-btn").click(), c.page.locator(".di-range-pop .di-preset", has_text="Next 90 days").click(), c.page.locator(".di-range-pop [data-act=apply]").click()))
     c.page.locator("#p-event-list [data-ctl='legs'] summary").click()
     done(c, lambda: c.page.locator("#p-event-list [data-ctl='legs'] input[value='2']").uncheck())
     c.page.keyboard.press("Escape")
@@ -57,7 +57,7 @@ def share(c: Ctx):
     c.page.keyboard.press("Alt+s")
     c.page.locator("[data-share-dialog]:not([hidden])").wait_for()
     c.page.locator("[data-shr-to]").fill("ver")
-    c.page.locator(".shr-list [role=option]").first.wait_for()
+    c.page.locator(".di-combo-pop [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
     c.page.locator("[data-shr-note]").fill("Vera, these are leg 1's events for the next 90 days. Can you check the next settlement before 16:00?")
     c.page.wait_for_timeout(600)
@@ -98,12 +98,12 @@ def write(c: Ctx):
     c.page.locator("#aboutDrawer:not([hidden])").wait_for()
     c.until("document.activeElement && document.activeElement.id === 'discBody'", 30)
     c.page.keyboard.type("@ver")
-    c.page.locator("#discOpts [role=option]").first.wait_for()
+    c.page.locator(".di-combo-pop [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
     c.page.keyboard.type(" who booked this? the ticket says {")
-    c.page.locator("#discOpts [role=option]").first.wait_for()
+    c.page.locator(".di-combo-pop [role=option]").first.wait_for()
     c.page.keyboard.type("trader")
-    c.page.locator("#discOpts [role=option]").first.wait_for()
+    c.page.locator(".di-combo-pop [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
     c.page.keyboard.type(". Can you confirm with the desk?")
     c.page.wait_for_timeout(500)

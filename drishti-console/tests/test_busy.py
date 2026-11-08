@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Busy protection in the console (docs/admin/OPERATIONS.md, "Busy protection"; mock-up A). The server decides; the console passes its busy
+"""Busy protection in the console (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"; mock-up A). The server decides; the console passes its busy
 refusal on unchanged (503, Retry-After, the calm words) to the page that asked, which counts down in place: the sign-in form, a VaR or
 exposure panel, Export data's Download card. Admin -> Health draws the "Busy protection" card and sends the operator's override."""
 from __future__ import annotations
@@ -21,6 +21,7 @@ from fastapi.testclient import TestClient
 
 from core.backend import BackendError
 from tests.test_sessions import FORM, _app
+import engine_fakes  # noqa: E402
 
 
 def _busy(code="DRS-9503", title="The download did not start", work="download", wait="30"):
@@ -46,7 +47,7 @@ def test_the_json_routes_pass_a_busy_refusal_on_with_its_retry_after_and_words()
 def test_a_var_panel_gets_the_busy_refusal_with_retry_after(client, backend, monkeypatch):
     async def var(*a, **k):
         raise _busy("DRS-9502", "2026-10-01 cannot be opened just yet", "load", "20")
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     r = client.get("/api/var/scope", params={"scope": "DESK:DESK-COMM", "asOf": "2026-10-01"})
     assert r.status_code == 503 and r.headers["retry-after"] == "20" and r.json()["busy"] is True and r.json()["code"] == "DRS-9502"
 

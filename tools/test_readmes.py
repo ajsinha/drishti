@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The README standard (PACK_DEVELOPER_GUIDE.md Part IV and CONNECTOR_DEVELOPER_GUIDE.md, "The README standard"): every pack, every
+"""The README standard (BUILD_GUIDE.md Part IV and DEVELOPER_GUIDE.md, "The README standard"): every pack, every
 connector type (plugin or built-in) and every folder of connector templates has a README.md with a valid front matter and the
 fixed sections, none empty; a pack's README describes every kind it owns under Data structures and is what its generator writes;
 a connector README's generated blocks match the settings catalogue and the template files. Packs, plugins and template folders
@@ -44,7 +44,7 @@ R = _load("drishti_pack_readme", ROOT / "tools" / "packgen" / "common" / "readme
 PACKS_CLI = _load("drishti_pack_readme_cli", ROOT / "tools" / "packgen" / "readme.py")
 CONN = _load("drishti_connector_readmes", ROOT / "tools" / "connector_readmes.py")
 
-PACKS = sorted(d for d in (ROOT / "config" / "packs").iterdir() if (d / "pack.yaml").is_file())
+PACKS = list(R.PP.pack_dirs().values())
 TYPES = CONN.type_readmes()
 TEMPLATES = CONN.template_readmes()
 
@@ -98,7 +98,7 @@ def test_the_validator_catches_what_the_standard_forbids(tmp_path):
 
 
 def test_a_pack_readme_data_structure_table_names_fields_types_and_nested_lists():
-    text = (ROOT / "config" / "packs" / "trading" / "README.md").read_text(encoding="utf-8")
+    text = (ROOT / "config" / "packs" / "banking" / "trading" / "README.md").read_text(encoding="utf-8")
     meta, body = R.split(text)
     assert meta["pack"] == "trading" and "trade" in meta["kinds"] and meta["commands"]["TRD"] == "trade"
     data = R.sections(body)["Data structures"]

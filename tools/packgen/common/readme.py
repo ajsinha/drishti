@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The README standard for packs and connectors (docs/guides/PACK_DEVELOPER_GUIDE.md and
-docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md, "The README standard").
+"""The README standard for packs and connectors (docs/guides/BUILD_GUIDE.md and
+docs/guides/DEVELOPER_GUIDE.md, "The README standard").
 
-Every pack (``config/packs/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
+Every pack (``config/packs/<domain>/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
 ``docs/connectors/types/<type>/README.md``) and every folder of connector templates (``config/connectors.examples/<x>/README.md``)
 has a README: the licence comment, a YAML front matter (for AI and the console), then fixed ``## `` sections.
 
@@ -34,12 +34,17 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from collections import OrderedDict
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core import pack_paths as PP  # noqa: E402  (the one rule for where a pack's folder is)
+
 PACKGEN = ROOT / "tools" / "packgen"
 
 PACK_KEYS = ["pack", "version", "summary", "kinds", "commands", "depends-on", "sources", "refresh"]
@@ -147,8 +152,18 @@ def problems_connector(path: Path) -> list[str]:
 
 # -- pack READMEs ----------------------------------------------------------------------------------------------------------
 
-# A pack whose public-data refresh script is not named after it (tools/publicdata/<pack with underscores>.py).
-PUBLICDATA = {"market-data": "official_market_data.py"}
+def pack_feeds(pack: str) -> list[dict]:
+    """The data feeds (config/feeds/*.yaml, docs/guides/EXTERNAL_DATA.md) that load a pack's kinds: [{feed, lake, internal, kinds,
+    snapshot}]."""
+    out = []
+    for f in sorted((ROOT / "config" / "feeds").glob("*.yaml")):
+        doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        if any((d or {}).get("pack") == pack for d in (doc.get("datasets") or {}).values()):
+            lic = doc.get("licence") or {}
+            kinds = [d.get("kind") for d in (doc.get("datasets") or {}).values() if (d or {}).get("pack") == pack]
+            out.append({"feed": doc.get("feed"), "lake": doc.get("lake"), "internal": bool(lic.get("internal-only")), "kinds": kinds,
+                        "snapshot": bool(doc.get("snapshot"))})
+    return out
 
 
 def find_intro(pack: str) -> Path | None:
@@ -351,12 +366,17 @@ def _first_sentence(text: str) -> str:
     return (m.group(1) if m else text)[:240]
 
 
+def _packs_root(pack_dir: Path) -> Path:
+    """The packs root a pack's folder is in: config/packs for a shipped pack (in its domain folder), else the folder holding it."""
+    return PP.REPO_PACKS if Path(pack_dir).resolve().is_relative_to(PP.REPO_PACKS) else Path(pack_dir).parent
+
+
 def _ancestors(packs_dir: Path, manifest: dict, seen: set | None = None) -> list[dict]:
     """The manifests of the packs a pack extends or requires, farthest first (read from the disk beside it)."""
     seen = set() if seen is None else seen
     out = []
     for name in (manifest.get("extends") or []) + (manifest.get("requires") or []):
-        f = packs_dir / name / "pack.yaml"
+        f = PP.pack_dir(name, packs_dir) / "pack.yaml"
         if name in seen or not f.is_file():
             continue
         seen.add(name)
@@ -374,6 +394,8 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     intro = intro or find_intro(name)
     imeta, ibody = split(intro.read_text(encoding="utf-8")) if intro and intro.is_file() else ({}, "")
     imeta = imeta or {}
+    # an intro (tools/packgen/<gen>/readme/) is three folders below the repository, a pack's README four (config/packs/<domain>/<pack>)
+    ibody = ibody.replace("](../../../", "](../../../../")
     isec = sections(ibody)
     generator = generator or imeta.get("generator") or f"tools/packgen/readme.py {name}"
     kinds = list(m.get("kinds") or [])
@@ -381,7 +403,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     code_of = {v.get("kind"): code for code, v in mnemonics.items()}
     graph = m.get("graph") or {}
     links = {}
-    for parent in _ancestors(pack_dir.parent, m):        # the graph fields of the packs it builds on, then its own
+    for parent in _ancestors(_packs_root(pack_dir), m):        # the graph fields of the packs it builds on, then its own
         links.update({f: v for f, v in ((parent.get("graph") or {}).get("fields") or {}).items() if isinstance(v, dict)})
     links.update({f: v for f, v in (graph.get("fields") or {}).items() if isinstance(v, dict)})
     patterns: dict[str, list[str]] = {}
@@ -397,8 +419,8 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     connectors = m.get("connectors") or {}
     routes = m.get("routes") or {}
     notes = imeta.get("fields") or {}
-    publicdata = ROOT / "tools" / "publicdata" / (PUBLICDATA.get(name) or name.replace("-", "_") + ".py")
-    refresh = imeta.get("refresh") or (str(publicdata.relative_to(ROOT)) if publicdata.is_file() else generator)
+    feeds = pack_feeds(name)
+    refresh = imeta.get("refresh") or ("tools/drishti.py feed run " + feeds[0]["feed"] if feeds else generator)
     packs = [p for p in (m.get("extends") or []) + (m.get("requires") or []) if p]
     own = set(connectors)
     settings = _env(yaml.safe_dump(connectors))
@@ -530,14 +552,14 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     guide_files = [g.get("file") for g in (yaml.safe_load(F.text("config/help.yaml") or "{}") or {}).get("guides") or [] if g.get("file")]
     if F.glob("contracts/*.contract.yaml"):
         where = f"[{guide_files[0]}]({guide_files[0]})" if guide_files else "the pack's guide"
-        out += [f"Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and "
-                f"its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, {where}: *Data contracts* and "
+        out += [f"Every kind's links to its data contract and its example and where its data comes from (an external source and "
+                f"the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, {where}: *Data contracts* and "
                 "*Data retrieval*.", ""]
     ext = [s for s in sources if (s.get("name") or "").strip() and not str(s.get("licence", "")).startswith("Proprietary")]
     if ext:
         out += ["External data: " + "; ".join(f"{s['name']}" + (" (**internal only**)" if s.get("internal-only") else "") for s in ext) +
-                ". Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, "
-                "[docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).", ""]
+                ". Each source's URL, licence and data feed are on the External data help page, "
+                "[docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).", ""]
     # -- enabling
     out += ["## Enabling and dependencies", ""]
     if isec.get("Enabling and dependencies"):
@@ -561,10 +583,14 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     out += ["## Refreshing the data", ""]
     if isec.get("Refreshing the data"):
         out += [isec["Refreshing the data"], ""]
-    if publicdata.is_file():
-        out += [f"`python3 {publicdata.relative_to(ROOT)} status` lists the external sources, their licences and when each was last refreshed "
-                "(offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and "
-                "checks. The External data help page (docs/guides/EXTERNAL_DATA.md) has worked examples for Linux and Windows.", ""]
+    for fd in feeds:
+        kinds = ", ".join(f"`{k}`" for k in fd["kinds"])
+        out += [f"The data feed `{fd['feed']}` (config/feeds/{fd['feed']}.yaml) pulls {kinds}: `python3 tools/drishti.py feed run {fd['feed']}` "
+                f"fetches them daily into `data/datafeeds/{fd['feed']}/<date>/` and loads them into the lake `{fd['lake']}`"
+                + (" (internal use only)" if fd["internal"] else "") + "; `--dry-run` says what it would fetch, changing nothing; "
+                + ("`--snapshot` refreshes the committed snapshot in data/testdata instead; " if fd["snapshot"] else "")
+                + "`feed status` shows the last runs. The External data feeds guide (docs/guides/EXTERNAL_DATA.md) has the schedule entries "
+                "for Linux and Windows.", ""]
     out += [f"The pack's files are written by `{generator}`; its `--check` fails when the committed files differ from what it would write.", ""]
     # -- see also
     out += ["## See also", ""]
@@ -573,6 +599,6 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
         out.append(f"- [{g.get('title')}]({g.get('file')}): {g.get('summary', '')}".rstrip(": "))
     if isec.get("See also"):
         out.append(isec["See also"])
-    out += ["- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) "
+    out += ["- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) "
             "(the README standard).", ""]
     return "\n".join(out).rstrip() + "\n"

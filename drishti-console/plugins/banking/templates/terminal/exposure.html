@@ -1,0 +1,76 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The exposure explorer (EXPOSURE_GUIDE.md section 3; the approved combined mock-up): the command line with the switches and the run;
+   the breadcrumb with Back; the scope tree (bank, legal entities, counterparties, netting sets, the open set's trades) with each node's
+   peak PFE; the headline tiles (each explained by the one Explain, drishti-insight); the profile chart (drishti-risk on drishti-chart); tabs (their tables drishti-grid, terminal layout) that change with the scope's level; at a counterparty or a netting set, Pre-deal check › opens Counterparties → Pre-deal check. A shell: drishti_exposure-explorer.js fills every
+   panel from /api/exposure/... and moves the whole screen to a scope in place. #}
+{% extends "base.html" %}
+{% block title %}Exposure · {{ scope }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}exposure{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_exposure.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text='EXP ' ~ scope ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'exposure') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
+{{ back(request) }}
+<div class="xx" data-exposure data-scope="{{ scope }}" data-capture="{{ capture }}" data-user="{{ user }}">
+  <div class="xx-cmdline" aria-live="polite">
+    <span class="xx-cmd mono" data-xx-cmd>EXP {{ scope }}</span>
+    <span class="xx-seg" role="group" aria-label="PFE confidence">
+      <button type="button" class="xx-segb" data-xx-q="0.95" aria-pressed="true">q 95%</button>
+      <button type="button" class="xx-segb" data-xx-q="0.99" aria-pressed="false">q 99%</button>
+    </span>
+    <span class="xx-seg" role="group" aria-label="Collateral">
+      <button type="button" class="xx-segb" data-xx-coll="lagged" aria-pressed="true">collateralised</button>
+      <button type="button" class="xx-segb" data-xx-coll="none" aria-pressed="false">uncollateralised</button>
+    </span>
+    <span class="xx-chip" data-xx-official title="The official end-of-day capture of the business date">official …</span>
+    <span class="xx-meta mono" data-xx-meta>run … · … paths · … tenors · …</span>
+    <span class="xx-timing mono" data-xx-timing></span>
+    <a class="xx-help" href="/help/context/exposure" title="Help: the exposure guide (F1)" aria-label="Help: the exposure guide" data-xx-help><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if KNOWLEDGE.exposure %}<a class="xx-help xx-what" href="/help/{{ KNOWLEDGE.exposure }}" title="What does this mean? Counterparty credit risk explained: EE, PFE, EPE, netting and collateral" data-what-link><i class="bi bi-lightbulb" aria-hidden="true"></i> What does this mean?</a>{% endif %}
+  </div>
+  <p class="xx-notice" data-xx-notice role="status" hidden></p>
+  <nav class="xx-crumb" aria-label="Scope path" data-xx-crumb></nav>
+  <div class="xx-layout">
+    <aside class="xx-panel xx-tree-panel" aria-label="Scopes"{{ part(PP, 'tree') }}>
+      <div data-resize="panel" data-resize-key="exposure.scopes" data-resize-var="--xx-side" data-resize-min="220" data-resize-max="800" aria-label="Resize the Scope panel"></div>
+      <div class="xx-ph"><h2>Scope</h2><span class="xx-fresh" data-xx-fresh="tree">peak PFE</span></div>
+      <div class="xx-tree" data-xx-tree></div>
+    </aside>
+    <section class="xx-main">
+      <div class="xx-nopaths" data-xx-nopaths role="status" hidden></div>
+      <div class="xx-tiles" data-xx-tiles aria-live="polite"{{ part(PP, 'tiles') }}></div>
+      <div class="xx-panel xx-chartbox"{{ part(PP, 'chart') }}>
+        <div class="xx-ph"><h2>Profile</h2><span class="xx-fresh" data-xx-fresh="chart"></span></div>
+        <div class="xx-chart" data-xx-chart></div>
+        <p class="xx-note" data-xx-fan-legend hidden{{ part(PP, 'fan') }}>A netting set's simulated paths: the 5%, 25%, 75% and 95% lines around EE.</p>
+      </div>
+      <div class="xx-panel"{{ part(PP, 'tabs') }}>
+        <div class="xx-tabs" role="tablist" data-xx-tabs></div>
+        <div class="xx-pb" data-xx-pane></div>
+      </div>
+      <div class="xx-actions" data-xx-actions>
+        <button type="button" class="btn btn-sm xx-btn" data-xx-explain data-explain-primary aria-keyshortcuts="E" title="Explain the peak PFE: the formula with its values, the inputs and lineage (E); every tile has its own">Explain ›</button>
+        <a class="btn btn-sm xx-btn" data-xx-csv href="#">Download the profile (CSV)</a> <a class="btn btn-sm xx-btn" data-xx-jsonl href="#" title="A grid date a line">JSONL</a>
+        <button type="button" class="btn btn-sm xx-btn" data-xx-capture-side>Capture exposure</button>
+        <a class="btn btn-sm xx-btn" data-xx-predeal href="/predeal" hidden title="Counterparties → Pre-deal check: does a new trade fit this counterparty's credit limit?">Pre-deal check ›</a></div>
+    </section>
+  </div>
+  {{ foot(PP, request.url | string) }}
+</div>
+{% endblock %}
+{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="/static/elements/drishti-tree/drishti_tree.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_exposure-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}

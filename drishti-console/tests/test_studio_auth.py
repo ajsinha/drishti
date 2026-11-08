@@ -13,6 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Sutra Studio pages and the sign-in flow."""
+import html
 import sys
 from pathlib import Path
 
@@ -29,7 +30,7 @@ from core.config import Settings, load_settings  # noqa: E402
 def test_studio_page_and_preview(client):
     r = client.post("/studio", data={"sutra": "irs-vanilla@3", "sutra_given": "1"})
     assert r.status_code == 200 and "data-workbench" in r.text and "sutra: irs-vanilla" in r.text            # followed into the workbench
-    assert "codemirror.js" in r.text and "drishti_cm-yaml.js" in r.text
+    assert "codemirror.js" in r.text and "drishti_designer.js" in r.text and "drishti_cm-yaml.js" not in r.text   # the YAML mode is drishti-inputs'
     ok = client.post("/studio/preview", json={"yaml": "sutra: x", "kind": "trade", "id": "IRS-48213"})
     assert ok.status_code == 200 and 'id="p-cashflows"' in ok.text and "Sutra irs-vanilla v3 + inference" in ok.text
     bad = client.post("/studio/preview", json={"yaml": "BROKEN", "kind": "trade", "id": "IRS-48213"})
@@ -77,7 +78,7 @@ def test_sign_in_goes_through_the_server(backend):
     c = TestClient(app)
     assert c.get("/t", follow_redirects=False).headers["location"].startswith("/login")
     assert c.get("/admin/users", follow_redirects=False).status_code == 303
-    assert c.get("/api/suggest").status_code == 401
+    assert c.get("/api/search?in=command").status_code == 401
     assert c.get("/").status_code == 200
     bad = c.post("/login", content="user=drishti-dev-admin&password=nope&next=/t", headers=FORM)
     assert bad.status_code == 401 and "wrong password" in bad.text
@@ -109,7 +110,8 @@ def test_the_sign_in_form_sends_a_signed_in_visitor_on_and_is_never_cached(backe
 def test_admin_pages_and_actions(client, backend):
     page = client.get("/admin/users")
     assert page.status_code == 200 and "drishti-dev-admin" in page.text and "default password" in page.text
-    assert 'name="mustChangePassword">' in page.text  # not pre-ticked unless configured
+    form = html.unescape(page.text)                   # the user form is drishti-inputs' Form from the server's schema (core/admin_forms.py)
+    assert '"name":"mustChangePassword"' in form and '"mustChangePassword":false' in form  # offered, not pre-ticked unless configured
     assert "user-seeded" in client.get("/admin/audit").text
     created = client.post("/admin/api/users", json={"username": "tina", "roles": ["trader"], "password": "trader-pass-1"})
     assert created.status_code == 201
@@ -151,9 +153,9 @@ def test_non_admins_do_not_see_admin_pages(backend):
 
 def test_the_workbench_yaml_tab_is_a_yaml_editor(client):
     page = client.post("/studio", data={"sutra": "", "sutra_given": "1"}).text            # followed: a blank new Sutra in the workbench
-    for marker in ("data-field-help", 'data-tab="summary"', 'data-tab="yaml"', "drishti_studio-yaml.js", "drishti_studio-assist.js", "data-yaml-src"):
+    for marker in ("data-field-help", 'data-tab="summary"', 'data-tab="yaml"', "drishti_designer.js", "drishti_yamltab.js", "data-yaml-src"):
         assert marker in page
-    for gone in ("data-md=", 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js", "data-studio "):
+    for gone in ("data-md=", 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js", "data-studio ", "drishti_studio-yaml.js", "drishti_studio-assist.js"):
         assert gone not in page
     assert "rachana: 1\nsutra: my-layout\nversion: 1" in page and "```" not in page  # the new-Sutra skeleton is YAML
     assert client.get("/static/js/cm-sutra-md.js").status_code == 404 and client.get("/static/js/md-editor.js").status_code == 404
@@ -266,9 +268,6 @@ def test_a_non_author_designs_freely_but_cannot_save_or_propose(client, backend,
         return {"save": False, "review": True, "approve": False}
     monkeypatch.setattr(backend, "studio_settings", settings)
 
-    async def proposals(ident=None, status="", name=""):            # with review on, Studio counts pending proposals
-        return {"proposals": []}
-    monkeypatch.setattr(backend, "proposals", proposals, raising=False)
     d = client.post("/build/designs", json={"name": "Open", "kind": "trade", "empty": True}).json()
     page = client.get(f"/build/d/{d['id']}")
     assert page.status_code == 200 and "data-workbench" in page.text and '"canSave": false' in page.text

@@ -57,7 +57,7 @@ reporting and legal teams to decide. Drishti computes the figures, lays them out
 | Report or figure | Who needs it | Drishti | Section |
 |---|---|---|---|
 | Trading VaR by risk type, period end, average, high, low (annual report) | every listed Canadian bank; §217.212 in the US | **Built** (the pilot `annual-report-var`); rows by risk type **Built — needs the bank's data** (a risk-type hierarchy or the planned risk-type mapping) | [3.2](#32-annual-report-trading-var-by-risk-type-canada-mda) |
-| Backtesting: exceptions, zone, multiplier, chart | US subpart F, OSFI internal models, Pillar 3 MR2, §217.212 | **Built — needs the bank's data** (`desk-pnl`); the pilot `var-backtesting-chart` | [3.3](#33-backtesting-chart-and-exceptions-both-countries) |
+| Backtesting: exceptions, zone, multiplier, chart | US subpart F, OSFI internal models, Pillar 3 MR2, §217.212 | **Built — needs the bank's data** ([`desk-pnl`](../contracts/samples/market-risk.md#desk-pnl)); the pilot `var-backtesting-chart` | [3.3](#33-backtesting-chart-and-exceptions-both-countries) |
 | VaR and stressed VaR, 1-day and 10-day, latest, 60-day and 12-week averages | US subpart F, FFIEC 102 | **Built** | [3.7](#37-us-market-risk-capital-217204), [3.8](#38-ffiec-102-market-risk-regulatory-report-us) |
 | Market risk capital (VaR term + stressed VaR term + add-ons) and its RWA | US subpart F, FFIEC 102, FR Y-9C | **Not built (designed)**: needs the planned capital inputs | [4.7](#47-capital) |
 | FFIEC 102 and §217.212 report definitions | US filers | **Not built (designed)**: every figure but the add-ons is built | [3.8](#38-ffiec-102-market-risk-regulatory-report-us), [3.9](#39-217212-market-risk-disclosures-us) |
@@ -202,7 +202,7 @@ APL, HPL, RTPL the actual, hypothetical and risk-theoretical P&L ([4.6](#46-back
 
 **Who:** every listed Canadian bank (and a US bank's §217.212 table, [3.9](#39-217212-market-risk-disclosures-us)). **Frequency:**
 annual, with quarterly updates to shareholders; fiscal year end October 31 for the D-SIBs. **Deadline:** with the annual report.
-**Drishti:** `config/reports/annual-report-var.yaml` (type `var-table`); `VAR REPORT annual-report-var FY2026 <GO>`. **Output:** xlsx,
+**Drishti:** `config/reports/banking/annual-report-var.yaml` (type `var-table`); `VAR REPORT annual-report-var FY2026 <GO>`. **Output:** xlsx,
 csv, PDF; the table in thousands. **Status: Built**; rows by risk type **Built — needs the bank's data**.
 
 | Item | Identifier | Definition and formula | Inputs (contract) | Demo | Status |
@@ -220,7 +220,7 @@ csv, PDF; the table in thousands. **Status: Built**; rows by risk type **Built �
 
 **Who:** a US filer under subpart F (quarterly count); an OSFI internal-model bank (bank-wide and desk); every bank for its own model
 governance. **Frequency:** daily figures, counted quarterly over the last 250 business days. **Drishti:**
-`config/reports/var-backtesting-chart.yaml` (type `backtesting-chart`); `VAR BANK BACKTEST <GO>`. **Output:** xlsx, csv, PDF (chart, zone,
+`config/reports/banking/var-backtesting-chart.yaml` (type `backtesting-chart`); `VAR BANK BACKTEST <GO>`. **Output:** xlsx, csv, PDF (chart, zone,
 exceptions). **Status: Built — needs the bank's data.**
 
 | Item | Identifier | Definition and formula | Inputs (contract) | Demo | Status |
@@ -408,7 +408,7 @@ desk P&L has no row of it either (a holiday); a period that starts before the fi
 
 **Demo:** `drishti.py var stats BANK --period FY2026` answers **228** official records, period end **112,041,646** (2026-09-30), average
 **151,812,526**, high **167,372,692** (2026-01-13), low **87,874,268** (2025-12-10); avg60 **166,450,508**. The same on a page:
-`VAR BANK STATS FY2026 <GO>`; the API: `GET /api/v1/var/statistics?scope=BANK&period=FY2026&measure=var` (`periodEnd`, `average`,
+`VAR BANK STATS FY2026 <GO>`; the API: `GET /api/v1/risk/var/statistics?scope=BANK&period=FY2026&measure=var` (`periodEnd`, `average`,
 `high`, `low`, `records`, `missing`, `average60`, `stressedAverage`, `preview`).
 
 **A demo server's synthetic history.** The demo lake holds three business dates of vectors (2026-09-28 to 2026-09-30); a server
@@ -478,11 +478,11 @@ The US table ships as `drishti.regulatory.backtesting.multipliers`; a Canadian b
 multiplier the supervisor imposes above the table's is an input (planned capital inputs, `MULTIPLIER_OVERRIDE`): the capital uses the
 larger.
 
-**Demo** (`drishti.py var backtest BANK`, `VAR BANK BACKTEST <GO>`, `GET /api/v1/var/backtesting?scope=BANK`): the bank over the 250
+**Demo** (`drishti.py var backtest BANK`, `VAR BANK BACKTEST <GO>`, `GET /api/v1/risk/var/backtesting?scope=BANK`): the bank over the 250
 business days 2025-10-01 to 2026-09-30: **3** exceptions against APL and **3** against HPL at 99% (2025-12-29, 2026-01-07, 2026-01-13);
 8 and 10 at 97.5% (expected 6.25); **green**, multiplier **3.00**. The inflation and money-market desks have 6 each at 99%: **amber**, 3.50.
 
-**Its playground.** The backtest is a tab of the playground frame ([VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md)): the node's
+**Its playground.** The backtest is a tab of the playground frame ([VAR_PLAYGROUND.md](VAR_GUIDE.md)): the node's
 250 tested days as data, each exception a formula (`=IF(P&L < −VaR, 1, 0)`), the counts as `COUNTIF`, the zone and the multiplier a
 lookup into the configured table, and a check cell against the engine's answer.
 
@@ -579,11 +579,11 @@ freezes the result with each figure's lineage and records the sign-off; people w
 
 ### 6.1 Report definitions
 
-One YAML file per report in `drishti.regulatory.reports-dir` (`config/reports/`), read when asked; a wrong field is refused naming the
+One YAML file per report in `drishti.regulatory.reports-dir` (`config/reports/banking/`), read when asked; a wrong field is refused naming the
 file and the field. The shipped pilot:
 
 ```yaml
-# config/reports/annual-report-var.yaml
+# config/reports/banking/annual-report-var.yaml
 report: annual-report-var                     # the file's name
 title: Trading VaR by risk type (annual report)
 type: var-table                               # rows of official nodes; or backtesting-chart (with node:)
@@ -636,7 +636,7 @@ tolerance; every trade reached by the risk-type mapping.
 
 ### 6.3 Runs, freezing and lineage
 
-A run (`POST /api/v1/var/reports/{report}/runs?period=FY2026`, `drishti.py var report run annual-report-var FY2026`, or *Generate*)
+A run (`POST /api/v1/risk/var/reports/{report}/runs?period=FY2026`, `drishti.py var report run annual-report-var FY2026`, or *Generate*)
 reads the period statistics of every row's node and of the prior period, fills every cell, computes diversification, runs the checks,
 pre-fills the narrative's facts (the average, the period end, the largest movement, the exceptions and their dates) and **freezes** the
 result in the content store (`var/reports/<report>/<period>/run-v<n>.json`) with the definition's file and digest and the code version.
@@ -645,7 +645,9 @@ capture, the data versions it was computed from, the period. A failed check bloc
 
 ### 6.4 Sign-off
 
-Steps in the definition's order (`POST …/runs/{period}/signoff`, `drishti.py var report sign`): **one person signs one step** of a run
+Steps in the definition's order, each signed in the one Approvals queue (`POST /api/v1/approvals/var-report/{report}:{period}:v{n}/approve`,
+`drishti.py approvals approve var-report ...`; the run is due `drishti.approvals.due-days.var-report` days after its period ends and is pinned
+on top as the date nears): **one person signs one step** of a run
 (four eyes); a failed check blocks every approval; a check that needs a note needs the maker's comment; the narrative is the maker's,
 edited before the maker signs; the checker or the approver may **send the run back** to the maker with a comment, which clears the steps.
 The record (`signoff-v<n>.json`) keeps every action: who, when, the comment.
@@ -850,5 +852,5 @@ Opened and read on 2026-10-30 unless noted.
 - Federal Reserve, [press release of 19 March 2026](https://www.federalreserve.gov/newsevents/pressreleases/bcreg20260319a.htm), [fact sheet](https://www.federalreserve.gov/newsevents/pressreleases/files/fact-sheet-20260319.pdf); Federal Register [2026-05959, 91 FR 14952](https://www.federalregister.gov/documents/2026/03/27/2026-05959/regulatory-capital-rule-category-i-and-ii-banking-organizations-banking-organizations-with); [OCC bulletin 2026-9](https://www.occ.gov/news-issuances/bulletins/2026/bulletin-2026-9.html). No final rule found.
 - Volcker 2019 amendments: [OCC bulletin 2019-56](https://www.occ.gov/news-issuances/bulletins/2019/bulletin-2019-56.html), [SEC release 2019-207](https://www.sec.gov/newsroom/press-releases/2019-207), [Federal Register 2019-22695](https://www.federalregister.gov/documents/2019/11/14/2019-22695/prohibitions-and-restrictions-on-proprietary-trading-and-certain-interests-in-and-relationships-with).
 
-**Drishti:** [VAR_GUIDE.md](VAR_GUIDE.md), [the market-risk contracts](../contracts/packs/market-risk.md), `config/reports/`,
+**Drishti:** [VAR_GUIDE.md](VAR_GUIDE.md), [the market-risk contracts](../contracts/packs/market-risk.md), `config/reports/banking/`,
 [FRTB.md](../contracts/FRTB.md), [PNL.md](../contracts/PNL.md), [STR.md](../contracts/STR.md).

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Python in a report (docs/guides/BI_GUIDE.md), in Chromium over the real server and console (tests/bi_report_stack.py on ports 18955 and 17955, security on, a small
+"""Python in a report (docs/guides/REPORTS_GUIDE.md), in Chromium over the real server and console (tests/bi_report_stack.py on ports 18955 and 17955, security on, a small
 file lake: two business days of 60 trades). The shipped sample report "Desk P&L risk (Python)" runs a Python measure (the standard deviation of one-day P&L per desk) and a
 Python histogram on the server's compute pool python (the strict sandbox); a 2.2 report that asks for the browser runs them there too with the same figures; the report page keeps the
 strict policy (no WebAssembly, no violation) and the designer offers the python visual. Every figure is computed here from the same trades.
@@ -37,7 +37,7 @@ from bi_report_helpers import clean, open_report, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, ROOT, trade  # noqa: E402
 
 DAY = "2026-10-08"
-SAMPLE = ROOT / "config/bi/reports/python-desk-risk.report.yaml"
+SAMPLE = ROOT / "config/bi/reports/banking/python-desk-risk.report.yaml"
 
 
 def variant(run: str) -> str:
@@ -51,7 +51,7 @@ class Stack(bi_report_stack.ReportStack):
     def prepare(self, work):
         python = work / "config/bi/python"
         python.mkdir(parents=True, exist_ok=True)
-        for f in (ROOT / "config/bi/python").glob("*.python.yaml"):
+        for f in (ROOT / "config/bi/python").glob("*/*.python.yaml"):
             (python / f.name).write_text(f.read_text(encoding="utf-8"))
         reports = work / "config/bi/reports"
         reports.joinpath("python-desk-risk.report.yaml").write_text(SAMPLE.read_text(encoding="utf-8"))
@@ -120,7 +120,7 @@ def check_figures(page, target):
 
 
 def test_the_sample_runs_on_the_server_sandboxed(stack, browser):
-    page = sign_in(browser, "rita", "/bi")
+    page = sign_in(browser, "rita", "/bi/catalogue")
     open_report(page, "file:report:py-server")
     settled(page)
     check_figures(page, "server")
@@ -129,7 +129,7 @@ def test_the_sample_runs_on_the_server_sandboxed(stack, browser):
 
 
 def test_the_sample_as_shipped_asks_the_server_first(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     page.goto(f"{CONSOLE_URL}/bi/r/file:report:python-desk-risk")
     page.wait_for_selector("[data-ready=yes]", timeout=30000)
     settled(page)
@@ -139,8 +139,8 @@ def test_the_sample_as_shipped_asks_the_server_first(stack, browser):
 
 
 def test_a_report_that_asks_for_the_browser_runs_on_the_console_under_the_strict_policy(stack, browser):
-    """2.3.0 (BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 6): `run: browser` of a 2.2 report is read as `server` and runs on the server's compute pool; the page loads no WebAssembly."""
-    page = sign_in(browser, "rita", "/bi")
+    """2.3.0 (REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 6): `run: browser` of a 2.2 report is read as `server` and runs on the server's compute pool; the page loads no WebAssembly."""
+    page = sign_in(browser, "rita", "/bi/catalogue")
     wasm = []
     page.on("request", lambda r: wasm.append(r.url) if r.url.endswith(".wasm") or "pyodide" in r.url else None)
     open_report(page, "file:report:py-browser")
@@ -154,7 +154,7 @@ def test_a_report_that_asks_for_the_browser_runs_on_the_console_under_the_strict
 
 
 def test_the_designer_offers_the_python_visual(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     cat = page.request.get(f"{CONSOLE_URL}/bi/api/reports/catalogue").json()
     assert cat["visuals"]["python"]["group"] == "python" and "python" not in cat["reserved"]
     page.close()

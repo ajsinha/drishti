@@ -279,7 +279,7 @@ def pack_manifest(plan: Plan, kinds_dir_note: str = "") -> dict:
         if k.template in ("file", "delta"):
             by_conn.setdefault(k.connector or f"{p['name']}-store", []).append(k)
     if by_conn:
-        # the pack NAMES its connectors (docs/connectors/CONNECTOR_FILES.md); the connection settings are the pack's template:
+        # the pack NAMES its connectors (docs/guides/DATA_GUIDE.md section 9); the connection settings are the pack's template:
         # the server writes the site's connector file from it once, and the file is the site's afterwards
         m["connectors"], m["routes"], m["connector-templates"], ing = sorted(by_conn), {}, {}, {}
         for name, ks in sorted(by_conn.items()):
@@ -295,7 +295,7 @@ def pack_manifest(plan: Plan, kinds_dir_note: str = "") -> dict:
             m["ingest"] = ing
     derived = [k for k in plan.kinds if k.template == "derived" and k.derived]
     if derived:
-        # one derived connector builds every page-per-value kind from the documents of the kind it groups (CONNECTOR_FILES.md)
+        # one derived connector builds every page-per-value kind from the documents of the kind it groups (docs/guides/DATA_GUIDE.md section 9)
         name = f"{p['name']}-pages"[:60]
         m.setdefault("connectors", [])
         m.setdefault("routes", {})

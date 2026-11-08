@@ -112,7 +112,7 @@ def build_manifest(pack: pathlib.Path, tool_versions: dict, required_server: str
         "generator": {"tool": "drishti.py pack bundle", **tool_versions},
         "data": {"ingest": meta.get("ingest") or {},
                  "connectors": sorted(conns.keys()) if isinstance(conns, dict) else sorted(str(c) for c in (conns or [])),
-                 "note": "the bundle carries the pack only; data (Delta lake, files root) is deployed separately, see OPERATIONALISING.md"},
+                 "note": "the bundle carries the pack only; data (Delta lake, files root) is deployed separately, see OPERATIONS_GUIDE.md"},
         "files": files,
     }
 

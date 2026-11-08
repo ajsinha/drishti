@@ -34,8 +34,14 @@ public class SecurityConfiguration {
         return new TokenVerifier(secret, props.clockSkew().toSeconds());
     }
 
+    /** What a personal API token may call: the core's declarations with those of every module that is on ({@link ModuleTokenScopes}). */
     @Bean
-    public FilterRegistrationBean<TokenFilter> tokenFilter(SecurityProperties props, TokenVerifier verifier,
+    public TokenScopes tokenScopes(SecurityProperties props, org.springframework.core.env.Environment env) {
+        return new TokenScopes(ModuleTokenScopes.merged(props, env));
+    }
+
+    @Bean
+    public FilterRegistrationBean<TokenFilter> tokenFilter(SecurityProperties props, TokenScopes tokenScopes, TokenVerifier verifier,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.ApiTokenStore> tokens,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.UserService> users,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.AuditLog> audit,
@@ -48,7 +54,7 @@ public class SecurityConfiguration {
         // a signed token stands for an account that must still exist and be enabled (the console's own service identity is exempt)
         java.util.function.Predicate<Principal> account = p -> !registeredOnly || p.roles().contains(Entitlements.SERVICE)
                 || users.getObject().find(p.user()).filter(com.ash.drishti.identity.User::enabled).isPresent();
-        FilterRegistrationBean<TokenFilter> r = new FilterRegistrationBean<>(new TokenFilter(props, verifier, apiTokens, account, audit.getObject())
+        FilterRegistrationBean<TokenFilter> r = new FilterRegistrationBean<>(new TokenFilter(tokenScopes.props(), verifier, apiTokens, account, audit.getObject())
                 .withEmbed(embed.getIfAvailable()));
         r.addUrlPatterns("/api/*");
         r.setOrder(1);

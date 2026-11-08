@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Functions, FUNC (docs/admin/USER_MANAGEMENT.md): the command directory for everyone (a user sees only the commands that are on, no switches; an
+"""Functions, FUNC (docs/guides/ADMIN_GUIDE.md): the command directory for everyone (a user sees only the commands that are on, no switches; an
 administrator sees the matrix: commands × Everyone (no role columns until per-role access is built), off commands, the batch sent with its reason, the history and impact
 passed through); the reserved word FUNC; /admin/commands redirecting; and the "not active" page a command an administrator turned off
 answers with, by its page or the typed command; links and panels that read it say so."""
@@ -110,7 +110,7 @@ def test_the_reserved_word_func_opens_the_page_filtered(client, typed, where):
 
 
 def test_func_in_the_type_ahead_offers_the_page(client):
-    s = client.get("/api/suggest", params={"q": "FUNC expo"}).json()
+    s = client.get("/api/search", params={"in": "command", "q": "FUNC expo"}).json()["items"]
     assert s[0]["mnemonic"] == "FUNC" and s[0]["href"] == "/func?q=expo" and s[0]["complete"] == "FUNC expo"
 
 
@@ -172,6 +172,8 @@ def test_links_and_panels_that_read_a_command_turned_off_say_not_active():
 
     from conftest import CONSOLE
     env = Environment(loader=FileSystemLoader(str(CONSOLE / "web" / "templates")))
+    from core import half_up
+    half_up.install(env)
     env.globals.update(drs_message=lambda *a: "", drs_advice=lambda *a: "")
     macros = env.get_template("_macros/panels.html").module
     cell = str(macros.cell_text({"text": "FRTB-RATES-1", "tone": "inactive", "link": None}))

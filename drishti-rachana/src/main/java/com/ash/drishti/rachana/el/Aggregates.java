@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
- * The functions Rachana's table holds from {@link FunctionProvider}s (ONE_GRAMMAR.md parts 1 and 2): found once, by
+ * The functions Rachana's table holds from {@link FunctionProvider}s (docs/architecture/ARCHITECTURE.md parts 1 and 2): found once, by
  * {@link ServiceLoader}, when the table is built. Rachana implements no aggregate: these names are the ones it asks a provider for,
  * so that an expression using one compiles whether or not the provider is on the class path; without it, evaluating one is refused
  * with the reason ({@code DRS-2102}), never computed another way.
@@ -34,7 +34,7 @@ final class Aggregates {
             "variance", "stddev", "variance_pop", "stddev_pop", "sum_once", "count_once", "avg_once", "measure", "cell");
 
     /**
-     * The functions of a model's measures the engine computes over an answer, never over a list (BI_FOUNDATION_2911E.md 2.5, runs E):
+     * The functions of a model's measures the engine computes over an answer, never over a list (docs/architecture/ARCHITECTURE.md §28 2.5, runs E):
      * the filter context ({@code calc}, {@code share_of}, {@code parent_of}, {@code as_of}, {@code avg_by}, {@code avg_over}), time
      * intelligence, windows, balances, conversion and lookup. Rachana parses and checks them; the engine's compiler lowers them.
      */
@@ -139,6 +139,6 @@ final class Aggregates {
 
     private static ElException refused(String name) {
         return Args.error(name, "an aggregate (and a figure of another engine) comes only from the pivot engine (drishti-bicompute), "
-                + "which is not on the class path here; Rachana computes no aggregate itself (ONE_GRAMMAR.md)");
+                + "which is not on the class path here; Rachana computes no aggregate itself (docs/architecture/ARCHITECTURE.md)");
     }
 }

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The lens menus (docs/lenses/README.md, mock-up menus/A): each edition's own subject menus in the top bar, named by its menus.top in
+"""The lens menus (docs/architecture/LENSES.md section 1.4.4, mock-up docs/lenses/mockups/menus/A): each edition's own subject menus in the top bar, named by its menus.top in
 order; a full Drishti keeps Views, Engines, BI, Build, Admin and Help (the Engines menu in place of the old VaR and Exposure menus,
 2.9.11.a); an item shows only when the edition keeps its command."""
 from __future__ import annotations
@@ -72,7 +72,7 @@ def test_the_risk_edition_draws_one_engines_menu_in_place_of_var_and_exposure(ba
         assert c in cmds, c
     assert 'href="/go?q=SWIN%20BANK%20%3CGO%3E"' in eng and 'href="/smat"' in eng and 'href="/var"' in eng
     assert 'data-fill="EXP CPTY"' in eng and 'href="/t?cmd=EXP%20CPTY"' in eng
-    assert "XWIF" not in cmds                                     # one place: Counterparties → Pre-deal check (2.9.11.c)
+    assert "XWIF" not in cmds and "PREDEAL" not in cmds          # one place: Counterparties → Pre-deal check
 
 
 def test_an_item_for_a_page_this_build_lacks_is_not_drawn(backend, monkeypatch):
@@ -113,7 +113,7 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     page = alice.get("/t").text
     assert _commands(_panel(page, "Blotter")) == ["TRD", "CTRD", "PTRD", "LTRD"]
     assert _commands(_panel(page, "Risk")) == ["VAR", "VLIM", "TVAL", "PNLV", "DPNL", "PNL", "SENS"]
-    assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "XWIF", "EXP", "CCUBE"]   # CCUBE: the Pivot's preset ccr, under construction
+    assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "PREDEAL", "EXP", "CCUBE"]   # PREDEAL: Counterparties → Pre-deal check   # CCUBE: the Pivot's preset ccr, under construction
 
 
 def test_the_trading_lens_has_one_markets_menu_and_no_bi_or_admin_menu(backend, monkeypatch):
@@ -152,11 +152,11 @@ def test_admin_by_command_is_for_administrators_only(backend, monkeypatch):
 def test_every_subject_item_runs_a_command_its_edition_shows():
     """Every subject menu an edition names exists, and each of its items' commands is one the edition allows or a word it keeps (else
     the item would never show): the menus never hold what the command line does not."""
-    spec = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+    spec = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
     menus = {m["id"]: m for m in spec["menus"]}
     from core.edition import Edition
     for name in ("risk", "trading", "market", "world"):
-        ed = Edition(name, yaml.safe_load((ROOT / "config" / "editions" / f"{name}.yaml").read_text(encoding="utf-8")))
+        ed = Edition(name, yaml.safe_load(next((ROOT / "config" / "lenses").glob(f"*/{name}.yaml")).read_text(encoding="utf-8")))
         top = ed.menu("top")
         assert top and top[0] == "views", name
         for mid in top:

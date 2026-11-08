@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave D (BI_DESIGN.md section 12.2, 2.6.0), console lane, in Chromium over the real server and console (tests/bi_report_stack.py, security on, the small
+"""Wave D (ARCHITECTURE.md §28 section 12.2, 2.6.0), console lane, in Chromium over the real server and console (tests/bi_report_stack.py, security on, the small
 lake of trade valuations, plus a model with two field parameters written in the stack's BI folder):
 
 * field parameters in the Studio's wells: Build offers the model's field parameters (a parameter of fields in the axis well, one of measures in the values
@@ -35,6 +35,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import chart, clean, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
+import select_helpers  # noqa: E402
 
 DAY = "2026-10-08"
 STATE = {}
@@ -52,13 +53,13 @@ def shoot(page, selector, name, max_height=760):
         else:
             page.screenshot(path=os.path.join(SHOTS, name + ".jpg"), quality=86, clip={"x": bb["x"], "y": bb["y"], "width": bb["width"], "height": max_height})
 
-# a model over the sample's valuations with a field parameter of fields and one of measures (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21)
+# a model over the sample's valuations with a field parameter of fields and one of measures (docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21)
 MODEL = """rachana: 3
 model: fp-desk
 version: 1.0.0
 title: Desk with field parameters
 tables:
-  trade: { table: bi.trades_basic_trade, role: fact }
+  trade: { table: banking.trades_basic_trade, role: fact }
 measures:
   MTM:      { expr: "sum(trade.MTM)" }
   NOTIONAL: { expr: "sum(trade.NOTIONAL)" }
@@ -129,7 +130,7 @@ def designed(page):
 
 
 def deselect(page):
-    page.click("[data-design-root] [data-title]")
+    page.click("[data-studio] [data-title]")
     page.keyboard.press("Escape")
     page.wait_for_function("() => window.drishtiBi.design.selected === null")
 
@@ -151,12 +152,12 @@ def test_the_studio_wells_offer_field_parameters_and_the_slicer_switches_the_cha
                      "By the reader's choice")
     open_designer(page, rid)
     deselect(page)
-    page.click('.bi-vtype[data-type="column"]')
+    page.click('[data-types] [data-type="column"]')
     page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'column'; }")
     page.click("[data-ptab='build']")
     # the axis well offers the field parameter of fields only; the values well the one of measures only
-    axis_params = page.eval_on_selector_all('[data-add="axis"] optgroup[data-field-params] option', "os => os.map(o => o.value)")
-    value_params = page.eval_on_selector_all('[data-add="values"] optgroup[data-field-params] option', "os => os.map(o => o.value)")
+    axis_params = [v for v in select_helpers.values(page, '[data-add="axis"]') if v.startswith("param.")]
+    value_params = [v for v in select_helpers.values(page, '[data-add="values"]') if v.startswith("param.")]
     assert axis_params == ["param.breakdown"] and value_params == ["param.metric"], (axis_params, value_params)
     page.select_option('[data-add="axis"]', "param.breakdown")
     page.select_option('[data-add="values"]', "param.metric")
@@ -169,7 +170,7 @@ def test_the_studio_wells_offer_field_parameters_and_the_slicer_switches_the_cha
     vid = v["id"]
     assert drawn(page, vid) == sums("desk", "mtm"), "the canvas draws the default choice: MTM by desk"
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved", timeout=20000)
+    expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     # the viewer (the author's own draft): the parameter slicer switches the field and the measure the chart draws
     page.goto(CONSOLE_URL + "/bi/r/" + rid)
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
@@ -255,7 +256,7 @@ def test_the_statement_designer_sets_the_paper_and_previews_page_by_page(stack, 
     assert box["width"] > box["height"], "a landscape sheet"
     shoot(page, '[data-view="paper"]', "statement-designer", 900)
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved", timeout=20000)
+    expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     saved = fetch(page, "GET", "/bi/api/items/" + rid)
     assert "layout: statement" in saved["body"]["body"] and "orientation: landscape" in saved["body"]["body"], saved["body"]["body"]
     clean(page)
@@ -285,7 +286,8 @@ def test_the_paper_tab_is_readable_at_1400_px_and_pages_with_page_down(stack, br
     expect(area).to_have_attribute("data-st-at", "2")
     page.keyboard.press("PageUp")
     expect(area).to_have_attribute("data-st-at", "1")
-    page.fill("[data-st-date]", "9999-12-31")
+    page.fill("[data-st-date] + .di-upgraded input", "9999-12-31")                     # drishti-inputs' date picker
+    page.press("[data-st-date] + .di-upgraded input", "Enter")
     page.click("[data-st-preview]")
     expect(page.locator("[data-st-where]")).to_contain_text("No data is held", timeout=60000)
     assert "No data is held" in area.get_attribute("data-st-hint")

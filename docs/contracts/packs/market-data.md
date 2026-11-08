@@ -17,7 +17,7 @@
 
 # Data contracts of the market-data pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/market-data/guides/market-data.md](../../../config/packs/market-data/guides/market-data.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/banking/market-data/guides/market-data.md](../../../config/packs/banking/market-data/guides/market-data.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -50,7 +50,7 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 
 |  |  |
 |---|---|
-| Contract | [ir-curve.contract.yaml](../../../config/packs/market-data/contracts/ir-curve.contract.yaml) · version 1.0 |
+| Contract | [ir-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/ir-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -61,7 +61,7 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/ir-curve/` |
 | Test data | data/testdata/market-data/ir-curve |
-| Worked example | [market-data/ir-curve](../samples/market-data/ir-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/ir-curve](../samples/market-data.md#ir-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -135,7 +135,7 @@ General-collateral or specials repo rates by term.
 
 |  |  |
 |---|---|
-| Contract | [repo-curve.contract.yaml](../../../config/packs/market-data/contracts/repo-curve.contract.yaml) · version 1.0 |
+| Contract | [repo-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/repo-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -146,7 +146,7 @@ General-collateral or specials repo rates by term.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/repo-curve/` |
 | Test data | data/testdata/market-data/repo-curve |
-| Worked example | [market-data/repo-curve](../samples/market-data/repo-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/repo-curve](../samples/market-data.md#repo-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -193,7 +193,7 @@ Spot rate for a currency pair with bid/ask.
 
 |  |  |
 |---|---|
-| Contract | [fx-spot.contract.yaml](../../../config/packs/market-data/contracts/fx-spot.contract.yaml) · version 1.0 |
+| Contract | [fx-spot.contract.yaml](../../../config/packs/banking/market-data/contracts/fx-spot.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -204,7 +204,7 @@ Spot rate for a currency pair with bid/ask.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/fx-spot/` |
 | Test data | data/testdata/market-data/fx-spot |
-| Worked example | [market-data/fx-spot](../samples/market-data/fx-spot.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/fx-spot](../samples/market-data.md#fx-spot) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -271,7 +271,7 @@ Forward points by tenor for a pair.
 
 |  |  |
 |---|---|
-| Contract | [fx-forward-curve.contract.yaml](../../../config/packs/market-data/contracts/fx-forward-curve.contract.yaml) · version 1.0 |
+| Contract | [fx-forward-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/fx-forward-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -282,7 +282,7 @@ Forward points by tenor for a pair.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/fx-forward-curve/` |
 | Test data | data/testdata/market-data/fx-forward-curve |
-| Worked example | [market-data/fx-forward-curve](../samples/market-data/fx-forward-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/fx-forward-curve](../samples/market-data.md#fx-forward-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -330,7 +330,7 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 
 |  |  |
 |---|---|
-| Contract | [fx-vol-surface.contract.yaml](../../../config/packs/market-data/contracts/fx-vol-surface.contract.yaml) · version 1.0 |
+| Contract | [fx-vol-surface.contract.yaml](../../../config/packs/banking/market-data/contracts/fx-vol-surface.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -341,7 +341,7 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/fx-vol-surface/` |
 | Test data | data/testdata/market-data/fx-vol-surface |
-| Worked example | [market-data/fx-vol-surface](../samples/market-data/fx-vol-surface.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/fx-vol-surface](../samples/market-data.md#fx-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -397,7 +397,7 @@ Normal (bp) swaption vols by expiry × tenor.
 
 |  |  |
 |---|---|
-| Contract | [ir-vol-cube.contract.yaml](../../../config/packs/market-data/contracts/ir-vol-cube.contract.yaml) · version 1.0 |
+| Contract | [ir-vol-cube.contract.yaml](../../../config/packs/banking/market-data/contracts/ir-vol-cube.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -408,7 +408,7 @@ Normal (bp) swaption vols by expiry × tenor.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/ir-vol-cube/` |
 | Test data | data/testdata/market-data/ir-vol-cube |
-| Worked example | [market-data/ir-vol-cube](../samples/market-data/ir-vol-cube.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/ir-vol-cube](../samples/market-data.md#ir-vol-cube) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -457,7 +457,7 @@ Cap vols by maturity and strike.
 
 |  |  |
 |---|---|
-| Contract | [cap-vol-surface.contract.yaml](../../../config/packs/market-data/contracts/cap-vol-surface.contract.yaml) · version 1.0 |
+| Contract | [cap-vol-surface.contract.yaml](../../../config/packs/banking/market-data/contracts/cap-vol-surface.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -468,7 +468,7 @@ Cap vols by maturity and strike.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/cap-vol-surface/` |
 | Test data | data/testdata/market-data/cap-vol-surface |
-| Worked example | [market-data/cap-vol-surface](../samples/market-data/cap-vol-surface.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/cap-vol-surface](../samples/market-data.md#cap-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -516,7 +516,7 @@ A listed stock: price, dividends, sector and identifiers.
 
 |  |  |
 |---|---|
-| Contract | [equity.contract.yaml](../../../config/packs/market-data/contracts/equity.contract.yaml) · version 1.0 |
+| Contract | [equity.contract.yaml](../../../config/packs/banking/market-data/contracts/equity.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -527,7 +527,7 @@ A listed stock: price, dividends, sector and identifiers.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/equity/` |
 | Test data | data/testdata/market-data/equity |
-| Worked example | [market-data/equity](../samples/market-data/equity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/equity](../samples/market-data.md#equity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -609,7 +609,7 @@ Index level with its largest constituents.
 
 |  |  |
 |---|---|
-| Contract | [equity-index.contract.yaml](../../../config/packs/market-data/contracts/equity-index.contract.yaml) · version 1.0 |
+| Contract | [equity-index.contract.yaml](../../../config/packs/banking/market-data/contracts/equity-index.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -620,7 +620,7 @@ Index level with its largest constituents.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/equity-index/` |
 | Test data | data/testdata/market-data/equity-index |
-| Worked example | [market-data/equity-index](../samples/market-data/equity-index.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/equity-index](../samples/market-data.md#equity-index) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -684,7 +684,7 @@ Expected dividends by year (implied from dividend futures and forwards).
 
 |  |  |
 |---|---|
-| Contract | [dividend-curve.contract.yaml](../../../config/packs/market-data/contracts/dividend-curve.contract.yaml) · version 1.0 |
+| Contract | [dividend-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/dividend-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -695,7 +695,7 @@ Expected dividends by year (implied from dividend futures and forwards).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/dividend-curve/` |
 | Test data | data/testdata/market-data/dividend-curve |
-| Worked example | [market-data/dividend-curve](../samples/market-data/dividend-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/dividend-curve](../samples/market-data.md#dividend-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -745,7 +745,7 @@ Implied vols by expiry and moneyness.
 
 |  |  |
 |---|---|
-| Contract | [equity-vol-surface.contract.yaml](../../../config/packs/market-data/contracts/equity-vol-surface.contract.yaml) · version 1.0 |
+| Contract | [equity-vol-surface.contract.yaml](../../../config/packs/banking/market-data/contracts/equity-vol-surface.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -756,7 +756,7 @@ Implied vols by expiry and moneyness.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/equity-vol-surface/` |
 | Test data | data/testdata/market-data/equity-vol-surface |
-| Worked example | [market-data/equity-vol-surface](../samples/market-data/equity-vol-surface.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/equity-vol-surface](../samples/market-data.md#equity-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -806,7 +806,7 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 
 |  |  |
 |---|---|
-| Contract | [credit-curve.contract.yaml](../../../config/packs/market-data/contracts/credit-curve.contract.yaml) · version 1.0 |
+| Contract | [credit-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/credit-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -817,7 +817,7 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/credit-curve/` |
 | Test data | data/testdata/market-data/credit-curve |
-| Worked example | [market-data/credit-curve](../samples/market-data/credit-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/credit-curve](../samples/market-data.md#credit-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -874,7 +874,7 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 
 |  |  |
 |---|---|
-| Contract | [inflation-index.contract.yaml](../../../config/packs/market-data/contracts/inflation-index.contract.yaml) · version 1.0 |
+| Contract | [inflation-index.contract.yaml](../../../config/packs/banking/market-data/contracts/inflation-index.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -885,7 +885,7 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/inflation-index/` |
 | Test data | data/testdata/market-data/inflation-index |
-| Worked example | [market-data/inflation-index](../samples/market-data/inflation-index.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/inflation-index](../samples/market-data.md#inflation-index) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -935,7 +935,7 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 
 |  |  |
 |---|---|
-| Contract | [inflation-curve.contract.yaml](../../../config/packs/market-data/contracts/inflation-curve.contract.yaml) · version 1.0 |
+| Contract | [inflation-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/inflation-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -946,7 +946,7 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/inflation-curve/` |
 | Test data | data/testdata/market-data/inflation-curve |
-| Worked example | [market-data/inflation-curve](../samples/market-data/inflation-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/inflation-curve](../samples/market-data.md#inflation-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1002,7 +1002,7 @@ A traded commodity with its benchmark, unit and venue.
 
 |  |  |
 |---|---|
-| Contract | [commodity.contract.yaml](../../../config/packs/market-data/contracts/commodity.contract.yaml) · version 1.0 |
+| Contract | [commodity.contract.yaml](../../../config/packs/banking/market-data/contracts/commodity.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1013,7 +1013,7 @@ A traded commodity with its benchmark, unit and venue.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/commodity/` |
 | Test data | data/testdata/market-data/commodity |
-| Worked example | [market-data/commodity](../samples/market-data/commodity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/commodity](../samples/market-data.md#commodity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1089,7 +1089,7 @@ Futures settlement prices by delivery month.
 
 |  |  |
 |---|---|
-| Contract | [commodity-curve.contract.yaml](../../../config/packs/market-data/contracts/commodity-curve.contract.yaml) · version 1.0 |
+| Contract | [commodity-curve.contract.yaml](../../../config/packs/banking/market-data/contracts/commodity-curve.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1100,7 +1100,7 @@ Futures settlement prices by delivery month.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/commodity-curve/` |
 | Test data | data/testdata/market-data/commodity-curve |
-| Worked example | [market-data/commodity-curve](../samples/market-data/commodity-curve.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/commodity-curve](../samples/market-data.md#commodity-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1154,7 +1154,7 @@ Implied vols by delivery month and moneyness.
 
 |  |  |
 |---|---|
-| Contract | [commodity-vol-surface.contract.yaml](../../../config/packs/market-data/contracts/commodity-vol-surface.contract.yaml) · version 1.0 |
+| Contract | [commodity-vol-surface.contract.yaml](../../../config/packs/banking/market-data/contracts/commodity-vol-surface.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1165,7 +1165,7 @@ Implied vols by delivery month and moneyness.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/commodity-vol-surface/` |
 | Test data | data/testdata/market-data/commodity-vol-surface |
-| Worked example | [market-data/commodity-vol-surface](../samples/market-data/commodity-vol-surface.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/commodity-vol-surface](../samples/market-data.md#commodity-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1210,7 +1210,7 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 
 |  |  |
 |---|---|
-| Contract | [rate-fixing.contract.yaml](../../../config/packs/market-data/contracts/rate-fixing.contract.yaml) · version 1.0 |
+| Contract | [rate-fixing.contract.yaml](../../../config/packs/banking/market-data/contracts/rate-fixing.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1221,7 +1221,7 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/rate-fixing/` |
 | Test data | data/testdata/market-data/rate-fixing |
-| Worked example | [market-data/rate-fixing](../samples/market-data/rate-fixing.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/rate-fixing](../samples/market-data.md#rate-fixing) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1273,7 +1273,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 |  |  |
 |---|---|
-| Contract | [bond.contract.yaml](../../../config/packs/market-data/contracts/bond.contract.yaml) · version 1.0 |
+| Contract | [bond.contract.yaml](../../../config/packs/banking/market-data/contracts/bond.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1284,7 +1284,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/bond/` |
 | Test data | data/testdata/market-data/bond |
-| Worked example | [market-data/bond](../samples/market-data/bond.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/bond](../samples/market-data.md#bond) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1365,7 +1365,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 
 |  |  |
 |---|---|
-| Contract | [correlation-matrix.contract.yaml](../../../config/packs/market-data/contracts/correlation-matrix.contract.yaml) · version 1.0 |
+| Contract | [correlation-matrix.contract.yaml](../../../config/packs/banking/market-data/contracts/correlation-matrix.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | md-hub |
@@ -1376,7 +1376,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `market-store` (plugin `delta`), table `<root>/market/correlation-matrix/` |
 | Test data | data/testdata/market-data/correlation-matrix |
-| Worked example | [market-data/correlation-matrix](../samples/market-data/correlation-matrix.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-data/correlation-matrix](../samples/market-data.md#correlation-matrix) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1414,10 +1414,10 @@ The pairwise correlations of a correlation set's factors, computed when asked fr
 
 |  |  |
 |---|---|
-| Contract | [correlation-result.contract.yaml](../../../config/packs/market-data/contracts/correlation-result.contract.yaml) · version 1.0 |
+| Contract | [correlation-result.contract.yaml](../../../config/packs/banking/market-data/contracts/correlation-result.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
-| Source | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.compute.reactive.analytics.CorrelationEngine) |
+| Source | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.banking.compute.analytics.CorrelationEngine) |
 | Grain | One answer per question (the correlation set asked for, its window and estimator, and the business date), computed when asked. |
 | Key | — |
 | Id pattern | — |
@@ -1476,10 +1476,10 @@ An equity's beta, alpha, correlation and R squared against its index (EQUITY_IND
 
 |  |  |
 |---|---|
-| Contract | [equity-beta.contract.yaml](../../../config/packs/market-data/contracts/equity-beta.contract.yaml) · version 1.0 |
+| Contract | [equity-beta.contract.yaml](../../../config/packs/banking/market-data/contracts/equity-beta.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
-| Source | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.compute.reactive.analytics.BetaEngine) |
+| Source | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.banking.compute.analytics.BetaEngine) |
 | Grain | One answer per question (the equity asked for, its window and the business date), computed when asked. |
 | Key | — |
 | Id pattern | — |

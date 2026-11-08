@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The one Python runtime (docs/architecture/PYTHON_COMPUTE.md section 19): ``drishti_compute.items`` in a real worker of the strict sandbox (a
+"""The one Python runtime (docs/guides/NOTEBOOK_GUIDE.md section 19): ``drishti_compute.items`` in a real worker of the strict sandbox (a
 network namespace, Landlock per request), driven over its protocol as the server's pool drives it. Every interface answers; a failure of the
 author's code is an answer with its own traceback; the sandbox refuses the network, files outside the request's folder (also from C++ code), other
 packages and processes; a limit stops a request alone. Linux with Landlock only (the strict sandbox's platform); elsewhere the tests skip."""
@@ -120,6 +120,18 @@ def test_a_visual_returns_an_option_without_formatters_and_vega_lite_loads_nothi
     assert a["kind"] == "echarts" and a["option"]["title"]["text"] == "3" and "formatter" not in a["option"]["tooltip"]
     v, _ = w.item("visual", "def render(table, params):\n    return {'mark': 'bar', 'data': {'url': 'http://example.org/x.json'}}\n", output="vega-lite")
     assert v["ok"] is False and v["kind"] == "sandbox" and "URL" in v["error"]
+
+
+def test_a_visual_returns_a_drishti_chart_spec_with_its_rows_inline(w):
+    a, _ = w.item("visual", "def render(table, params):\n    rows = table.groupby('desk', as_index=False)['pnl1d'].sum().to_dict('records')\n"
+                  "    return {'kind': 'bar', 'data': {'rows': rows}, 'x': {'field': 'desk'}, 'y': {'field': 'pnl1d'}, 'tooltip': {'formatter': 'x'}}\n",
+                  output="drishti-chart")
+    assert a["ok"] and a["kind"] == "drishti-chart" and a["spec"]["kind"] == "bar" and a["spec"]["data"]["rows"] == [{"desk": "A", "pnl1d": 3.0}, {"desk": "B", "pnl1d": 5.0}]
+    assert "formatter" not in a["spec"]["tooltip"]
+    no_kind, _ = w.item("visual", "def render(table, params):\n    return {'data': {'rows': []}}\n", output="drishti-chart")
+    assert no_kind["ok"] is False and "names its kind" in no_kind["error"]
+    src, _ = w.item("visual", "def render(table, params):\n    return {'kind': 'bar', 'data': {'source': '/api/x'}}\n", output="drishti-chart")
+    assert src["ok"] is False and src["kind"] == "sandbox" and "data.rows" in src["error"]
 
 
 def test_a_column_and_a_cell(w):

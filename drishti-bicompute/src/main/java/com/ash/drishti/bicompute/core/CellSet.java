@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A declarative set of cell keys (PIVOT_ENGINE.md section 4.3): the cells made by grouping the view's rows by {@code grouping}, restricted to
+ * A declarative set of cell keys (ARCHITECTURE.md section 26.2): the cells made by grouping the view's rows by {@code grouping}, restricted to
  * one parent ({@code at}: the node being expanded, every key carries these coordinates), less the members of {@code exclude} (the Others of
  * a top N), each key carrying {@code marks} (the Others coordinate). A provider decides how to evaluate it: the tabular provider compiles
  * sets that share a restriction into one {@code GROUP BY GROUPING SETS} query; a set-based provider maps each key to its members.

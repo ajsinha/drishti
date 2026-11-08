@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Reports bound to a model (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 3, 4.1 and 9.4), in the report designer and the report page. A report whose YAML
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* Reports bound to a model (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, sections 3, 4.1 and 9.4), in the report designer and the report page. A report whose YAML
    says `model: <name>@<major>` or `model: dataset:<name>` reads that model only: the Fields pane is the model as the person sees it (/models/{id}/describe,
    with the field properties, the perspective and the report's own measures), a filter's value picker asks the model, the header of the Fields pane says
    which model it is (an implicit model offers Make it a model), and each visual's Query panel shows the model query the server ran for it.
@@ -32,7 +33,7 @@
 
   const withModel = (yaml) => (/^model:/m.test(yaml) ? yaml : /^dataset:\s*""\s*$/m.test(yaml) ? yaml.replace(/^dataset:\s*""\s*$/m, 'model: ' + S.ref) : yaml.replace(/^(report:.*)$/m, '$1\nmodel: ' + S.ref));
   /** The report's own measures (`measures:`): read from its YAML by the console (the server's report reader does not keep them yet) and written back. */
-  /** And its perspective (`perspective:`, BI_DESIGN.md 3.1): the Fields pane shows only that perspective's fields. */
+  /** And its perspective (`perspective:`, ARCHITECTURE.md §28 3.1): the Fields pane shows only that perspective's fields. */
   const extrasOf = (yaml) => (/^(measures|perspective):/m.test(yaml || '') ? B.layer.post('report-measures', { yaml }).then((r) => ({ measures: r.measures || {}, perspective: r.perspective || '' }))
     .catch(() => ({ measures: {}, perspective: '' })) : Promise.resolve({ measures: {}, perspective: '' }));
   const localOf = (yaml) => extrasOf(yaml).then((x) => { S.perspective = x.perspective; return x.measures; });
@@ -66,7 +67,7 @@
     });
   }
   /**
-   * A reader who may view the report but not read its model (BI_DESIGN.md 5.3, the consumer envelope): the model's description is not theirs to see, so the
+   * A reader who may view the report but not read its model (ARCHITECTURE.md §28 5.3, the consumer envelope): the model's description is not theirs to see, so the
    * report's own envelope (`GET /reports/{id}/envelope`: the fields, measures and filters its visuals can ask) stands in for it, and every visual asks the
    * server's report query, which answers only inside the envelope (as the reader: their rules and masks).
    */
@@ -195,13 +196,13 @@
     }
   }
 
-  /** The perspective the report reads (BI_DESIGN.md 8.1): the Fields pane shows only its fields and measures; the report keeps it (`perspective:`). */
+  /** The perspective the report reads (ARCHITECTURE.md §28 8.1): the Fields pane shows only its fields and measures; the report keeps it (`perspective:`). */
   function perspectivePicker(head, f) {
     const names = Object.keys(f.perspectives || {});
     D.perspective = (D.model && D.model.perspective) || S.perspective || '';
     if (!names.length) { return Promise.resolve(); }
-    const pick = h('select', { class: 'studio-select', 'data-perspective-pick': '', 'aria-label': 'Perspective', disabled: D.readOnly },
-      h('option', { value: '', text: 'every field' }), names.map((n) => h('option', { value: n, text: f.perspectives[n].title || n, selected: n === D.perspective })));
+    const pick = B.select({ 'data-perspective-pick': '', 'aria-label': 'Perspective' }, [['', 'every field']].concat(names.map((n) => [n, f.perspectives[n].title || n])),      // drishti-inputs' Select
+      names.indexOf(D.perspective) >= 0 ? D.perspective : '', { disabled: !!D.readOnly });
     pick.addEventListener('change', () => {
       D.perspective = pick.value;
       D.change('Perspective', (r) => { if (pick.value) { r.perspective = pick.value; } else { delete r.perspective; } });
@@ -225,14 +226,19 @@
     withLocal(D.model);
     D.idx = S.idx; D.dataset = S.fields;
     if (D.readOnly || !B.exprEditor) { return; }
-    const name = h('input', { class: 'studio-in', 'data-lm-name': '', placeholder: 'MTM per trade', 'aria-label': 'Name of the report measure' });
     const expr = h('input', { class: 'studio-in mono', 'data-lm-expr': '', placeholder: "measure('MTM') / count(trade)" });
+    const fields = h('div', { class: 'bi-fform' });
     const add = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-lm-add': '', text: 'Add to this report' });
     const box = h('details', { class: 'bi-md-localm', 'data-local-measure': '' }, h('summary', {}, B.icon('calculator'), ' New measure for this report'),
       h('p', { class: 'text-muted-d bi-small-note', text: 'Over the model\'s measures and fields, for this report only. A measure every report needs belongs in the model: use Move to the model on it later.' }),
-      h('label', { class: 'bi-frow' }, h('span', { text: 'Name' }), name), h('div', { class: 'bi-frow' }, h('span', { text: 'Formula' }), expr), add);
+      fields, add);
     const search = pane.querySelector('[data-fields-search]');
     pane.insertBefore(box, search);
+    // the name and the formula: a drishti-inputs Form; the formula's widget holds the ExpressionEditor (a one-line Rachana code editor)
+    const form = new window.Drishti.elements.inputs.Form(fields, { embedded: true, label: 'New measure for this report', schema: { type: 'object', properties: {
+      name: { type: 'string', title: 'Name', placeholder: 'MTM per trade', hook: 'data-lm-name' },
+      formula: { type: 'string', title: 'Formula', widget: 'lm-formula' } } },
+    widgets: { 'lm-formula': (w) => { const holder = h('div', { class: 'bi-lm-formula' }, expr); expr.id = w.id; return { el: holder, input: expr }; } } });
     const fieldsOf = () => ((S.fields && S.fields.tables) || []).flatMap((t) => t.columns.filter((c) => !c.hidden).map((c) => ({ name: t.name + '.' + c.name, type: c.type, meaning: c.meaning, format: c.format, description: c.description })));
     B.exprEditor(expr, {
       scope: 'aggregate', label: 'Formula of the report measure', fields: fieldsOf, measures: () => ((S.fields && S.fields.measures) || []).map((m) => ({ name: m.name, description: m.description || m.expr || '' })),
@@ -240,14 +246,14 @@
       tryIt: (text) => B.mq.ask({ mq: 1, model: S.ref, define: { 'Try it': text }, select: { fields: [], measures: ['Try it'] } }).then((a) => ({ columns: a.columns, rows: a.rows, caption: 'As you, over the whole model' + (a.meta.asOf ? ', as of ' + a.meta.asOf : '') }))
     });
     add.addEventListener('click', () => {
-      const n = name.value.trim(), x = expr.value.trim();
+      const n = String(form.getField('name') || '').trim(), x = expr.value.trim();
       if (!n || !x) { B.near(add, 'Give the measure a name and a formula.', true); return; }
       if ((S.fields.measures || []).some((m) => m.name === n)) { B.near(add, 'There is already a measure called ' + n + ' (a report measure cannot shadow one of the model).', true); return; }
       D.change('Add report measure ' + n, (r) => { r.measures = Object.assign({}, r.measures || {}, { [n]: { expr: x } }); });
       withLocal(D.model);
       D.idx = S.idx; D.dataset = S.fields;
       if (D.drawFields) { D.drawFields(); }
-      name.value = ''; expr.value = '';
+      form.setField('name', undefined); expr.value = '';
       B.near(add, 'Added ' + n + ': drag it from Measures onto a visual.', false);
     });
     D.on('model', () => { withLocal(D.model); if (D.idx !== S.idx) { D.idx = S.idx; D.dataset = S.fields; if (D.drawFields) { D.drawFields(); } } });

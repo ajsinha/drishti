@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of docs/tutorials/10-first-bi-report.md (chapters 18 and 19), BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23, BI_GUIDE.md and BI_GUIDE.md from the real stack (not a
+"""Makes the pictures and the captured output of docs/tutorials/08-reports-and-dashboards.md (chapters 18 and 19), REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23, REPORTS_GUIDE.md and REPORTS_GUIDE.md from the real stack (not a
 test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/bi_live_shots.py <pictures dir> <captures.json>
@@ -36,11 +36,11 @@ from bi_live_stack import BOARD, CONSOLE_URL, EXPOSURE, PASSWORD, REPORT
 def sign_in(browser, user="rita", **ctx):
     context = browser.new_context(**{"viewport": {"width": 1600, "height": 900}, **ctx})
     page = context.new_page()
-    page.goto(CONSOLE_URL + "/login?next=/bi")
+    page.goto(CONSOLE_URL + "/login?next=/bi/catalogue")
     page.fill("#lu", user)
     page.fill("#lp", PASSWORD)
     page.click("button[type=submit]")
-    page.wait_for_url("**/bi")
+    page.wait_for_url("**/bi/catalogue")
     return page
 
 

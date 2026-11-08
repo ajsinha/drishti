@@ -48,10 +48,10 @@ def _pages(views: list[str] | None = None) -> list[str]:
     pages = ["/", "/t", *(f"/v/{v}" for v in views), "/v/trade/NOPE-404", "/v/nosuchkind/X",
              "/s?q=TRD%20where%20mtm%20%3E%201m%20order%20by%20mtm%20desc%20limit%2020",
              f"/compare/{first}?a=2026-09-29&b=2026-09-30", f"/impact/{first}", "/history", "/m", "/alerts", "/w",
-             "/build", "/build/pack/new", "/build/reviews", "/reports", "/forms", "/servers", "/account", *(f"/admin/{a}" for a in ADMIN),
+             "/build", "/build/pack/new", "/approvals", "/reports", "/forms", "/servers", "/account", *(f"/admin/{a}" for a in ADMIN),
              "/help", "/help/search?q=pivot", "/about", "/help/competitive-analysis",
              # the newer pages: data loads (all, and one pack's), collaboration admin, the inbox, a share nobody may open, the landing page's way back
-             "/bi", "/bi/catalogue", "/bi/workspaces", "/bi/w/me", "/bi/datasets", "/bi/designer", "/bi/notebook", "/admin/bi",
+             "/bi/catalogue", "/bi/workspaces", "/bi/w/me", "/bi/datasets", "/bi/designer", "/bi/notebook", "/admin/bi",
              # Rupaka phase 3: the report viewer (a page and a drill-through page), the designer on a draft (their shells: no data behind the stand-in server)
              "/bi/r/file:report:trades-overview", "/bi/r/file:report:counterparty-risk/counterparty", "/bi/design/bi-draft",
              # Rupaka phase 5: a live report (and its Perspective pages) and a board, in kiosk too (their shells: no data behind the stand-in server)
@@ -61,7 +61,8 @@ def _pages(views: list[str] | None = None) -> list[str]:
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
     # an engine off as shipped (config/engines/<engine>.yaml, e.g. the in-memory lake) takes its Help pages away (404): not read here
     off = set()
-    for e in yaml.safe_load((CONSOLE / "config" / "engines.yaml").read_text()).get("engines", []):
+    from core import engines as engine_catalogue
+    for e in engine_catalogue.entries():                      # the core's and every module's
         f = CONSOLE.parent / "config" / "engines" / str(e.get("file", ""))
         if f.is_file() and re.search(r"enabled:\s*\$\{[A-Z_]+:false\}", f.read_text()):
             off.update(e.get("help") or [])

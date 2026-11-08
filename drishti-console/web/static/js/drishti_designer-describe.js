@@ -50,10 +50,9 @@
       chip.setAttribute('data-token', t.role);
       chip.appendChild(el('span', null, t.text));
       if (t.choices && t.choices.length) {
-        var s = el('select'); s.setAttribute('aria-label', 'Fix: ' + t.text);
-        s.appendChild(el('option', null, 'fix…'));
-        t.choices.forEach(function (c) { var o = el('option', null, c); o.value = c; s.appendChild(o); });
-        s.addEventListener('change', function () { if (s.value !== 'fix…') { replaceClause(t.clause, choiceFor(t, s.value)); build(); } });
+        var s = el('drishti-select');                                  // drishti-inputs' Select: fix… then the choices
+        s.options = { label: 'Fix: ' + t.text, options: [{ value: '', label: 'fix…' }].concat(t.choices) };
+        s.addEventListener('drishti:change', function () { if (s.value) { replaceClause(t.clause, choiceFor(t, s.value)); build(); } });
         chip.appendChild(s);
       } else if (t.role !== 'error') {
         var edit = el('button', 'dz-mini', '✎'); edit.type = 'button'; edit.setAttribute('aria-label', 'Change: ' + t.text);

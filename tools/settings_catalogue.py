@@ -22,7 +22,7 @@ environment variable, applies to, meaning, restart or live, since):
 * the connector settings catalogue (``plugin-settings.yaml``) and the shared ``tls.*`` and ``proxy.*`` specs of drishti-api;
 * the commented files under ``config/`` (the content store, BI runs, write-back, compute, Drishti*net, the UI kit, the editions,
   the AI provider and MCP server files);
-* the files that are content rather than settings (``pack.yaml``, ``menus.yaml``, ``help.yaml``, ...), from their schemas in
+* the files that are content rather than settings (``pack.yaml``, ``sitemap.yaml``, ``help.yaml``, ...), from their schemas in
   ``tools/settings_schemas.yaml``, checked against the keys the shipped files really use;
 * the environment variable index: every ``${NAME:default}`` of every source and every variable the code reads.
 
@@ -43,6 +43,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import manifests  # noqa: E402  (the one rule for where a pack's folder is)
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings_sources as S  # noqa: E402
 
@@ -53,7 +56,8 @@ TLS = ROOT / "drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti"
 PROXY = ROOT / "drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "proxy" / "ProxySettings.java"
 BEGIN = "<!-- generated: settings begin (tools/settings_catalogue.py writes everything down to the end marker; edit the sources, not this) -->"
 END = "<!-- generated: settings end -->"
-COLUMNS = ("Key", "Type", "Default", "Env var", "Applies to", "Meaning", "Restart or live", "Since")
+COLUMNS = ("Key", "Type", "Default", "Env var", "Applies to", "Meaning", "Restart or live", "Since", "Tier")
+TIERS = ("everyday", "admin", "expert")
 
 
 @dataclass
@@ -71,6 +75,7 @@ class Row:
     since: str
     secret: bool = False
     line: int = 0
+    tier: str = ""
 
 
 # ---- the areas -----------------------------------------------------------------------------------------------------------------
@@ -92,8 +97,13 @@ AREAS = [
          "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. "
          "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
          "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
-         "([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#21-compute-engines-on-or-off)). "
+         "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). "
          "The old switch names are listed last: they still work, with a warning at start (`DRS-1024`)."),
+    Area("modules", "Modules: `config/modules/*.yaml`",
+         "One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of "
+         "its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), "
+         "[OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module "
+         "is on when installed, licensed and enabled; a change takes effect at the next start."),
     Area("console", "The console: `application.yaml`",
          "`drishti-console/config/application.yaml`. Override a key in `config/application.local.yaml`, with the variable named, with "
          "`DRISHTI_CONSOLE__SECTION__KEY` or a `--section.key=value` argument."),
@@ -103,36 +113,41 @@ AREAS = [
          "(`tools/settings_schemas.yaml`), checked against what the shipped files use."),
     Area("connectors", "Connectors: every plugin's settings",
          "A connector's settings go under `settings:` in its file, `config/connectors/<name>.yaml` "
-         "([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)); the same catalogue builds the form in Admin → Connectors. A changed "
+         "([DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)); the same catalogue builds the form in Admin → Connectors. A changed "
          "file restarts that connector only. Every plugin takes the common settings; a plugin marked TLS or proxy also takes the shared "
          "`tls.*` or `proxy.*` settings."),
     Area("packs", "Packs: `pack.yaml`",
-         "`config/packs/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded "
-         "while the server runs ([Live reload](../guides/PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Guide: "
-         "[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#packyaml-key-by-key)."),
-    Area("editions", "Editions: `config/editions/`",
-         "An edition file (`config/editions/<name>.yaml`), the feature presets (`features.yaml`) and the default packs "
-         "(`default-packs.yaml`), read by the server (`Editions.java`) and the console (`core/edition.py`). The site's own configuration "
+         "`config/packs/<domain>/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded "
+         "while the server runs ([Live reload](../guides/BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Guide: "
+         "[BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#4-packyaml-key-by-key)."),
+    Area("editions", "Lenses: `config/lenses/`",
+         "A lens file (`config/lenses/<module>/<lens>.yaml`, an edition when it is the instance's), the feature presets (`features.yaml`) and "
+         "the default packs (`config/packs/default-packs.yaml`, by module), read by the server (`Editions.java`) and the console "
+         "(`core/edition.py`). The site's own configuration "
          "wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console "
-         "([EDITIONS.md](EDITIONS.md))."),
+         "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is))."),
     Area("store", "The content store: `config/store/store.yaml`",
          "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),
     Area("runs", "BI runs: `config/runs/runs.yaml`",
-         "Every BI question as a bounded, visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)); `drishti.bi.runs.file` names the file. "
+         "Every BI question as a bounded, visible job ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)); `drishti.bi.runs.file` names the file. "
          "Ready-made variants: `config/runs.examples/`."),
     Area("edit", "Write-back: `config/edit/`",
-         "Write-back's four files ([WRITE_BACK.md](../guides/WRITE_BACK.md): the administrator's guide and, in its section 16, "
+         "Write-back's four files ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md): the administrator's guide and, in its section 16, "
          "the design); `drishti.edit.file` names `edit.yaml`, the others sit beside it."),
     Area("compute", "Compute workers: `config/compute/compute.yaml`",
-         "The supervisor, the Python pools and their environments ([OPERATIONS.md](OPERATIONS.md#19-compute-workers))."),
+         "The supervisor, the Python pools and their environments ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#15-compute-workers))."),
     Area("net", "Drishti*net: `config/net/`",
-         "The cluster folder (`drishti.net.dir`), watched while the server runs ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)); the shipped examples are in "
+         "The cluster folder (`drishti.net.dir`), watched while the server runs ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)); the shipped examples are in "
          "`config/net.examples/`."),
     Area("alerts", "Platform alert rules: `config/alerts/platform-alerts.yaml`",
-         "The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATIONS.md#136-platform-metrics-and-alerts)); "
+         "The rules each server evaluates against its own metrics ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules)); "
          "`drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own."),
-    Area("reports", "Report definitions: `config/reports/`",
+    Area("feeds", "Data feeds: `config/feeds/<feed>.yaml`",
+         "One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys "
+         "(environment variables only) ([EXTERNAL_DATA.md section 7](../guides/EXTERNAL_DATA.md#7-the-feed-file-every-key)); read by "
+         "`drishti.py feed` at every run. The keys below are those of the annotated `gleif.yaml`; `keys:` names API keys as `${ENV}`."),
+    Area("reports", "Report definitions: `config/reports/banking/`",
          "One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs "
          "and sign-off chain ([VAR_GUIDE.md section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off))."),
     Area("simm", "SIMM parameter files: `drishti.simm.parameters-dir`",
@@ -148,8 +163,8 @@ AREAS = [
     Area("ai", "AI providers and MCP servers: `config/ai/`, `config/mcp/`",
          "One YAML per provider in `config/ai/` and per MCP server in `config/mcp/`, for the server (`drishti.ai.dir`, `drishti.mcp.dir`) "
          "and the console (`ai.dir`, `mcp.dir`); the folders are looked at every few seconds, so a changed file needs no restart. Every key "
-         "a shipped example (`*.yaml.example`) uses ([AI.md › Model providers](AI.md#1-model-providers), "
-         "[AI.md › The MCP client](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy))."),
+         "a shipped example (`*.yaml.example`) uses ([AI_GUIDE.md › Model providers](../guides/AI_GUIDE.md#1-model-providers), "
+         "[AI_GUIDE.md › The MCP client](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy))."),
 ]
 AREA_IDS = {a.id for a in AREAS}
 
@@ -327,13 +342,13 @@ def schema_gaps(spec: dict, files: list[Path]) -> list[str]:
 # ---- every row ----------------------------------------------------------------------------------------------------------------
 
 def editions_files() -> list[Path]:
-    d = ROOT / "config" / "editions"
-    return [p for p in sorted(d.glob("*.yaml")) if p.name not in ("features.yaml", "default-packs.yaml")]
+    d = ROOT / "config" / "lenses"
+    return sorted(d.glob("*/*.yaml"))                                  # each lens in its module's folder
 
 
 def feature_rows() -> list[Row]:
     """features.yaml: one row per feature, its meaning what it presets (and its comment, if any)."""
-    f = ROOT / "config" / "editions" / "features.yaml"
+    f = ROOT / "config" / "lenses" / "features.yaml"
     comments = {e.key: e.comment for e in S.read_commented_yaml(f)}
     rows = []
     for name, spec in (yaml.safe_load(f.read_text(encoding="utf-8")).get("features") or {}).items():
@@ -370,19 +385,25 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     import yaml
     rows: list[Row] = []
     problems: list[str] = []
-    catalogue = yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []
+    catalogue = []                                         # each module's engines (its jar's META-INF/drishti/engines.yaml) first, then the core's
+    for module_jar in sorted(ROOT.glob("drishti-*/src/main/resources/META-INF/drishti/engines.yaml")):
+        for e in yaml.safe_load(module_jar.read_text(encoding="utf-8")).get("engines") or []:
+            catalogue.append({**e, "_jar": module_jar.parents[2] / "engines"})
+    catalogue += yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []
     files = {e["file"] for e in catalogue}
     on_disk = {p.name for p in ENGINES_DIR.glob("*.yaml")}
     for name in sorted(on_disk - files):
         problems.append(f"config/engines/{name}: no engine of the catalogue (drishti-server/src/main/resources/engines/catalogue.yaml) names it")
-    for lake in sorted((ROOT / "config" / "lakes").glob("*.yaml")):                  # the shipped lake files and their jar copies (Lakes)
-        jar = ROOT / "drishti-lakeconfig/src/main/resources/drishti/lakes" / lake.name
+    lakes = ROOT / "config" / "lakes"                                               # the shipped lake files and their jar copies (Lakes):
+    for lake in sorted([*lakes.glob("*.yaml"), *lakes.glob("*/*.yaml")]):            # a domain folder's in its module's jar
+        module = "drishti-lakeconfig" if lake.parent == lakes else f"drishti-{lake.parent.name}"
+        jar = ROOT / module / "src/main/resources/drishti/lakes" / lake.name
         if not jar.is_file() or lake.read_bytes() != jar.read_bytes():
-            problems.append(f"config/lakes/{lake.name} differs from its jar copy drishti-lakeconfig/src/main/resources/drishti/lakes/{lake.name}")
+            problems.append(f"{lake.relative_to(ROOT)} differs from its jar copy {jar.relative_to(ROOT)}")
     app_keys = _flat_keys(yaml.safe_load((ROOT / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")))
     for e in catalogue:
         f = ENGINES_DIR / e["file"]
-        jar = ENGINES_JAR / e["file"]
+        jar = e.get("_jar", ENGINES_JAR) / e["file"]
         if not f.is_file() or not jar.is_file():
             problems.append(f"the engine {e['id']} has no file config/engines/{e['file']} (and its jar copy)")
             continue
@@ -412,10 +433,10 @@ def all_rows() -> tuple[list[Row], list[str]]:
     problems += p
     rows += yaml_rows("console", [ROOT / "drishti-console/config/application.yaml"], "console", "restart", collapse=COLLAPSE["console"])
     rows += connector_rows()
-    rows += yaml_rows("editions", editions_files(), "an edition (server and console)", "restart", "An edition file: `config/editions/<name>.yaml`",
+    rows += yaml_rows("editions", editions_files(), "an edition (server and console)", "restart", "A lens file: `config/lenses/<module>/<lens>.yaml`",
                       collapse=COLLAPSE["editions"])
     rows += feature_rows()
-    rows += yaml_rows("editions", [ROOT / "config/editions/default-packs.yaml"], "server and console", "restart",
+    rows += yaml_rows("editions", [ROOT / "config/packs/default-packs.yaml"], "server and console", "restart",
                       "The default packs: `default-packs.yaml`")
     rows += yaml_rows("store", [ROOT / "config/store/store.yaml"], "every node (the same everywhere)", "restart", "")
     rows += yaml_rows("runs", [ROOT / "config/runs/runs.yaml"], "server", "restart", None)
@@ -428,6 +449,8 @@ def all_rows() -> tuple[list[Row], list[str]]:
     rows += yaml_rows("net", sorted((ROOT / "config/net.examples/peers").glob("*.yaml")), "each member", "live", "`peers/<name>.yaml`")
     rows += yaml_rows("alerts", [ROOT / "config/alerts/platform-alerts.yaml"], "server", "live", None, named={"rules": "<rule>"})
     rows += yaml_rows("dataload", [ROOT / "config/dataload.yaml"], "server (the inbox's owner)", "live", None)
+    rows += yaml_rows("feeds", [ROOT / "config/feeds/gleif.yaml"], "drishti.py feed (each run)", "live", "A feed file: `config/feeds/<feed>.yaml`",
+                      named={"datasets": "<dataset>"})
     rows += yaml_rows("ui-kit", [ROOT / "config/ui-kit/brand.yaml"], "server", "restart", None, named={"themes": "<theme>"})
     rows += yaml_rows("ai", sorted((ROOT / "config/ai").glob("*.yaml.example")), "server and console", "live", "A provider file: `config/ai/<name>.yaml`",
                       named={"deployments": "<model>"})
@@ -470,7 +493,7 @@ def placeholder_env(defaults: dict | None = None) -> dict[str, str]:
     """Every ``${NAME...}`` of the packs' manifests and the server's profile files, with the first file that has it; ``defaults``
     collects each one's default (None: the placeholder has none)."""
     out: dict[str, str] = {}
-    files = sorted((ROOT / "config" / "packs").glob("*/pack.yaml")) + sorted((ROOT / "drishti-server/src/main/resources").glob("application-*.yaml"))
+    files = manifests() + sorted((ROOT / "drishti-server/src/main/resources").glob("application-*.yaml"))
     for f in files:
         for line in f.read_text(encoding="utf-8").splitlines():
             if line.lstrip().startswith("#"):
@@ -555,7 +578,7 @@ def default_cell(r: Row) -> str:
 def row_cells(r: Row) -> list[str]:
     return [_code(r.key), _text(r.type), default_cell(r), ", ".join(_code(e) for e in r.env) or "",
             _text(r.applies) if "`" not in r.applies else r.applies, _text(r.meaning) + (" (secret)" if r.secret and "secret" not in r.meaning.lower() else ""),
-            r.change, r.since or ""]
+            r.change, r.since or "", r.tier]
 
 
 def _table(rows: list[Row]) -> list[str]:
@@ -574,6 +597,10 @@ def render(rows: list[Row], env: list[dict]) -> str:
            "files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is "
            "out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in "
            "effect for an administrator.", "",
+           f"Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): " + ", ".join(
+               f"**{t}** {sum(1 for r in rows if r.tier == t):,}" for t in TIERS) + ". *Everyday* is what a business lead changes (the lenses, "
+           "the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is "
+           "performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.", "",
            "| Area | Settings |", "|---|---|"]
     out += [f"| [{a.title}](#{_slug(a.title)}) | {counts[a.id]:,} |" for a in AREAS]
     out += ["| [Environment variable index](#environment-variable-index) | " + f"{len(env)} |", "",
@@ -631,8 +658,42 @@ def problems(rows: list[Row], env_problems: list[str], schema_problems: list[str
     return out
 
 
+# ---- tiers ----------------------------------------------------------------------------------------------------------------------
+
+def assign_tiers(rows: list[Row]) -> list[str]:
+    """Each row's tier from settings_schemas.yaml ``tiers`` (the one home): everyday by area:key, expert by pattern in the areas
+    expert-in names, else the area's own. Problems: an area with no tier, an everyday key or expert pattern that matches nothing."""
+    import fnmatch
+    spec = schemas().get("tiers") or {}
+    everyday = {str(k) for k in spec.get("everyday") or []}
+    expert = [str(p).lower() for p in spec.get("expert") or []]
+    expert_in = {str(a) for a in spec.get("expert-in") or []}
+    by_area = {str(k): str(v) for k, v in (spec.get("areas") or {}).items()}
+    used_keys: set[str] = set()
+    used_patterns: set[str] = set()
+    out = []
+    for r in rows:
+        k = f"{r.area}:{r.key}"
+        hit = next((p for p in expert if r.area in expert_in and fnmatch.fnmatchcase(r.key.lower(), p)), None)
+        if r.area in expert_in:
+            used_patterns |= {p for p in expert if fnmatch.fnmatchcase(r.key.lower(), p)}
+        if k in everyday:
+            r.tier = "everyday"
+            used_keys.add(k)
+        elif hit:
+            r.tier = "expert"
+        else:
+            r.tier = by_area.get(r.area, "")
+        if r.tier not in TIERS:
+            out.append(f"{r.file}: `{r.key}` has no tier: give the area {r.area} one under tiers.areas in tools/settings_schemas.yaml")
+    out += [f"tools/settings_schemas.yaml tiers.everyday: {k} is no setting" for k in sorted(everyday - used_keys)]
+    out += [f"tools/settings_schemas.yaml tiers.expert: {p} matches no setting" for p in expert if p not in used_patterns]
+    return out
+
+
 def build() -> tuple[str, list[str]]:
     rows, schema_problems = all_rows()
+    schema_problems = schema_problems + assign_tiers(rows)
     env, env_problems = env_index(rows)
     return render(rows, env), problems(rows, env_problems, schema_problems)
 

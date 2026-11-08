@@ -23,6 +23,8 @@ from markupsafe import Markup
 
 from core import under_construction
 from core.backend import BackendError, drs_message
+from core.search import help_pages
+from core.edition import by_module
 from routes.common import ident, library, render
 
 router = APIRouter(include_in_schema=False)
@@ -34,19 +36,21 @@ def _edition(request):
 
 
 def shown(edition, guide, aliases: dict | None = None) -> bool:
-    """Whether the edition (or the person's lens) keeps a guide (EDITIONS.md › The design as built, section 5.8): its section listed (help.categories,
+    """Whether the edition (or the person's lens) keeps a guide (LENSES.md › The design): its section listed (help.categories,
     a section's id or an old name in help.yaml's aliases:), a Knowledge page or pack guide about one of its packs (help.knowledge for Knowledge
-    pages, packs.enabled for pack guides), and an unlisted document only when the edition does not refuse them (help.unlisted-slugs: refuse).
-    Without an edition: every guide."""
+    pages, packs.enabled for pack guides), a page with ``lenses:`` (help.yaml) only in one of those lenses, and an unlisted document only
+    when the edition does not refuse them (help.unlisted-slugs: refuse). Without an edition: every guide."""
     if not edition.active:
         return True
     cats = edition.help_categories()
     if cats is not None and guide.category not in {(aliases or {}).get(c, c) for c in cats}:
         return False
+    if guide.lenses and edition.name not in guide.lenses:
+        return False
     if not guide.listed and edition.refuse_unlisted:
         return False
     if guide.packs:
-        wanted = edition.knowledge_packs() if guide.category == "knowledge" else edition._get("packs.enabled")
+        wanted = edition.knowledge_packs() if guide.category == "knowledge" else by_module(edition._get("packs.enabled"))
         if isinstance(wanted, list) and not set(guide.packs) & {str(p) for p in wanted}:
             return False
     return True
@@ -67,7 +71,22 @@ def visible(request, guide) -> bool:
     (help.yaml; ``roles: [admin]`` for an internal page such as the competitive analysis) and its engine runs in the cluster (help.yaml
     ``engine:``). Help is documentation, not data: a running engine's pages are open to anyone who can open Help, whatever the Engines
     menu's ``opens:`` say. A guide they may not see is not listed, not found by search and not reached by its address (404)."""
-    return guide.permits(_me(request)) and shown(_edition(request), guide, _aliases(request)) and _engine_on(guide)
+    return guide.permits(_me(request)) and shown(_edition(request), guide, _aliases(request)) and _engine_on(guide) and _module_on(guide)
+
+
+def _module_on(guide) -> bool:
+    """A guide of a domain module that is off for the person is not shown (ACCESS_MODEL.md: Help too): its module is its engine's
+    (help.yaml ``engine:``, the module's plugin.yaml ``engines:``), else its own (help.yaml ``domain:``), else its Help section's
+    (sitemap.yaml ``help-sections[].domain``, a module's section: the module)."""
+    from core import modules
+    module = modules.module_of_engine(guide.engine) if guide.engine else None
+    return not modules.tag_hidden(module or guide.domain or _section_domains().get(str(guide.category or ""), ""))
+
+
+def _section_domains() -> dict[str, str]:
+    """Each Help section's domain module (sitemap.yaml ``help-sections``: ``domain:``; core when not said)."""
+    from core import menus
+    return {str(c.get("id")): str(c.get("domain") or "") for c in menus.help_sections(Path(__file__).resolve().parent.parent)}
 
 
 def _engine_on(guide) -> bool:
@@ -98,9 +117,11 @@ def _section_open(request, section: dict) -> bool:
 def sections_for(request, lib) -> list:
     """The sections this person sees, each with only the guides they see (``guides``, ``groups``) and the count of them; a section with
     none left is not drawn (Risk measures while no engine of it runs, for anyone but an administrator)."""
+    from core import modules
     out = []
+    domains = _section_domains()
     for c in lib.categories:
-        if not _section_open(request, c):
+        if not _section_open(request, c) or modules.tag_hidden(domains.get(str(c.get("id") or ""), "")):
             continue
         groups = [{**grp, "guides": [g for g in grp["guides"] if visible(request, g)]} for grp in c["groups"]]
         guides = [g for grp in groups for g in grp["guides"]]
@@ -184,15 +205,15 @@ async def help_search(request: Request, q: str = "", section: str = ""):
     sec = lib.section(section) if section else None
     if sec is not None and not _section_open(request, sec):
         sec = None
-    hits = [h for h in lib.search(q, section=sec["id"] if sec else "") if visible(request, h["guide"])]
+    hits = await help_pages(request, q, section=sec["id"] if sec else "")                    # the one search (core/search.py)
     return render(request, "help/search.html", q=q, hits=hits, section=sec, screen="help")
 
 
 @router.get("/help/configuration")
 async def help_configuration(request: Request, q: str = "", area: str = ""):
-    """Help → Configuration: docs/admin/CONFIGURATION.md, searchable by key, environment variable or words, filtered by area; an
-    administrator also sees the values in effect on the server and in this console, and where each came from (core/settings_page.py)."""
-    from core.settings_page import areas, console_effective, searchable, server_effective
+    """Help → Configuration: docs/admin/CONFIGURATION.md, searchable by key, environment variable or words, filtered by area (core/settings_page.py).
+    The values in effect, and changes to them, are Admin → Configuration's (routes/config_editor_routes.py)."""
+    from core.settings_page import areas, searchable
 
     lib = await library(request)
     g = lib.guides.get("configuration")
@@ -200,19 +221,10 @@ async def help_configuration(request: Request, q: str = "", area: str = ""):
         return await help_guide(request, "configuration")
     page = lib.render("configuration")
     me = ident(request)
-    admin = bool(me is not None and me.is_admin)
-    server = console = None
-    server_error = None
-    if admin:
-        try:
-            server = server_effective(await request.app.state.backend.admin("GET", "/settings", me))
-        except BackendError as e:
-            server, server_error = {}, drs_message(e.code, e.detail, " ")
-        console = console_effective(request.app.state.settings, ROOT / "drishti-console" / "config")
-    body, matched, total = searchable(page["html"], q, area, server, console)
+    body, matched, total = searchable(page["html"], q, area)
     category = _siblings(request, lib, g)
     return render(request, "help/configuration.html", guide=g, page={**page, "html": body}, category=category, q=q, area=area,
-                  areas=areas(page["html"]), matched=matched, total=total, admin=admin, server_error=server_error, screen="help")
+                  areas=areas(page["html"]), matched=matched, total=total, admin=bool(me is not None and me.is_admin), screen="help")
 
 
 @router.get("/what")
@@ -231,7 +243,7 @@ async def what(request: Request, q: str = ""):
     slug = lib.by_file.get(folder / entry.page) if entry else None
     if entry and slug:
         return RedirectResponse(f"/help/{slug}#{entry.anchor}", status_code=303)
-    hits = [h for h in lib.search(words) if h["guide"].category == CATEGORY and visible(request, h["guide"])]
+    hits = await help_pages(request, words, category=CATEGORY)
     return render(request, "help/search.html", q=words, hits=hits, knowledge=home or "", screen="help")
 
 
@@ -313,7 +325,7 @@ async def help_guide(request: Request, slug: str):
     uc = under_construction.of(request)                              # docs/admin/UNDER_CONSTRUCTION.md: a hidden page is not reached either
     if slug not in lib.guides or not visible(request, lib.guides[slug]) or uc.help_hidden(slug):   # a guide the edition or the person's roles hide is not reached by its address either
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
-                      hits=[h for h in lib.search(slug.replace("-", " ")) if visible(request, h["guide"])], missing=slug, screen="help")
+                      hits=await help_pages(request, slug.replace("-", " ")), missing=slug, screen="help")
     g = lib.guides[slug]
     page = lib.render(slug)
     if uc.help_marked(slug):

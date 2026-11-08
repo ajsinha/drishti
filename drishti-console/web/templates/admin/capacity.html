@@ -20,9 +20,9 @@
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-{# Admin -> Capacity (RESOURCES_AND_SCALE.md 9.7; mock-ups docs/architecture/mockups/capacity/, options B and A): today against the plan,
+{# Admin -> Capacity (CLUSTER_GUIDE.md 9.7; mock-ups docs/architecture/mockups/capacity/, options B and A): today against the plan,
    and the planner behind "Edit the plan". drishti_capacity.js evaluates capacity/planner.yaml's expressions; drishti_capacity-page.js draws. Phone tiers
-   (MOBILE_DISPLAY.md): data-tier must, glance, more (folded on a phone), desk (a note on a phone). #}
+   (docs/guides/BUILD_GUIDE.md): data-tier must, glance, more (folded on a phone), desk (a note on a phone). #}
 <div class="adm cap" data-capacity data-help="{{ help_url }}">
   <h1>Capacity</h1>
   {% with tab='capacity' %}{% include "admin/_nav.html" %}{% endwith %}
@@ -58,9 +58,7 @@
       <details class="cap-card cap-fold" data-tier="more" open>
         <summary><h3>Plan for growth <span>the trades grow; the plan recomputes</span></h3></summary>
         <div class="cap-growth-controls cap-desk-only">
-          <label class="cap-slider">Intraday updated a day <input type="range" min="0" max="100" step="1" data-cap-grow="intraday" aria-label="Share of the trades updated intraday a day, per cent"><output data-cap-grow-out="intraday"></output></label>
-          <label class="cap-slider">Dates in memory <input type="range" min="1" max="60" step="1" data-cap-grow="HotDates" aria-label="Dates in memory"><output data-cap-grow-out="HotDates"></output></label>
-          <label class="cap-slider">Concurrent users <input type="range" min="1" max="1000" step="1" data-cap-grow="Users" aria-label="Concurrent users"><output data-cap-grow-out="Users"></output></label>
+          {{ admin_form('capacity_growth') }}
         </div>
         <div class="cap-seg" role="radiogroup" aria-label="Growth of the trades" data-cap-factors>
           <button type="button" role="radio" aria-checked="false" data-factor="1">×1</button>
@@ -82,7 +80,7 @@
         <h3>Inputs <span>yellow = changed from the defaults; the results follow as you type</span></h3>
         <div class="cap-input-bar"><button type="button" class="btn-pill btn-ghost" data-cap-reset><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Reset to defaults</button>
           <button type="button" class="btn-pill btn-ghost" data-cap-use-live title="Put this server's measured figures (positions, trades, dates in memory, users, requests a second, Java) into the inputs"><i class="bi bi-speedometer2" aria-hidden="true"></i> Use this server's figures</button></div>
-        <form data-cap-inputs autocomplete="off"></form>
+        <div data-cap-inputs></div>{# drishti-inputs' Form from the planner's inputs (drishti_capacity-page.js) #}
       </div>
       <div class="cap-results">
         <div class="cap-card" data-tier="glance">
@@ -115,11 +113,8 @@
     <form method="dialog">
       <h3 id="cap-dlg-title">Download the working (.xlsx)</h3>
       <p class="cap-note">The same formula workbook as <code>docs/architecture/Drishti-Sizing-Planner.xlsx</code>: every result is a live Excel formula over the <b>Inputs</b> and <b>Coefficients</b> sheets, so change a number in Excel and the heap, RAM, disk and cores follow. Tabs: Inputs, Results (with the calibration check), Coefficients, Explain.</p>
-      <fieldset><legend>Which inputs?</legend>
-        <label class="cap-opt"><input type="radio" name="inputs" value="plan" checked><span><b>What is on the screen</b><br><span class="cap-muted" data-cap-dlg-plan>The inputs as set here.</span></span></label>
-        <label class="cap-opt"><input type="radio" name="inputs" value="live"><span><b>This server's live figures</b><br><span class="cap-muted">The measured positions, trades, dates in memory, users, requests a second and Java in the Inputs (the plan beside them), and the measured heap, RSS, disk and load listed under them, with their time.</span></span></label>
-        <label class="cap-opt"><input type="radio" name="inputs" value="both"><span><b>Both, side by side</b><br><span class="cap-muted">The plan's inputs drive Results; a <i>Live</i> column beside them holds the measured figures, stamped with their time: type them into the yellow cells to see the gap.</span></span></label>
-      </fieldset>
+      {{ admin_form('capacity_download') }}
+      <p class="cap-muted" data-cap-dlg-plan>The inputs as set here.</p>
       <p class="cap-note">Recorded in the audit log as <code>capacity-workbook-downloaded</code>. Administrators only.</p>
       <div class="cap-dlg-row"><button type="submit" class="btn-pill btn-ghost" value="cancel">Cancel</button><button type="submit" class="btn-pill cap-primary" value="go" data-cap-dlg-go>Download</button></div>
     </form>

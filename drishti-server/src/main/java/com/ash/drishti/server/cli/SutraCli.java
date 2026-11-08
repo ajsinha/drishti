@@ -49,7 +49,7 @@ import java.util.stream.Stream;
 /**
  * The headless Sutra tool, {@code java -jar drishti-server-*-exec.jar sutra lint|test|shape|design|preview <path>}: the same
  * services the Build workbench uses (the Sutra checker, {@link SampleChecker}, the shape extractor, auto-design and the view
- * pipeline) without a web server. Exit codes: 0 ok, 1 problems found, 2 usage. See docs/guides/SUTRA_DEVELOPER_GUIDE.md#testing.
+ * pipeline) without a web server. Exit codes: 0 ok, 1 problems found, 2 usage. See docs/guides/BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check.
  */
 public final class SutraCli {
 
@@ -308,7 +308,7 @@ public final class SutraCli {
             Path expectDir = sampleDir(u, sutra);
             List<Doc> docs = samplesOf(u, sutra, a.samples());
             if (docs.isEmpty()) {
-                cases.add(Case.skip(u.stem(), "samples", "no samples: add config/packs/<pack>/tests/" + sutra.name() + "/" + SutraCases.FILE));
+                cases.add(Case.skip(u.stem(), "samples", "no samples: add config/packs/<domain>/<pack>/tests/" + sutra.name() + "/" + SutraCases.FILE));
                 out.println("skip " + u.file() + " (no samples)");
                 continue;
             }
@@ -594,7 +594,7 @@ public final class SutraCli {
                 try (Stream<Path> walk = Files.walk(p)) {
                     for (Path f : walk.filter(x -> x.getFileName().toString().endsWith(".sutra.yaml"))
                             .filter(x -> !p.relativize(x).startsWith("tests"))
-                            .filter(x -> !root || p.relativize(x).getNameCount() < 2 || !p.relativize(x).getName(1).toString().equals("tests"))
+                            .filter(x -> !root || !inPackTests(p.relativize(x)))
                             .sorted().toList()) {
                         found.add(unit(f));
                     }
@@ -611,7 +611,7 @@ public final class SutraCli {
 
     /**
      * The shared panel blocks the Sutras being checked may use: those of the {@code sutras} folder each path is in (or holds), so
-     * {@code sutra test config/packs/trading} and a single file of it both see {@code sutras/common/*.block.yaml}.
+     * {@code sutra test config/packs/banking/trading} and a single file of it both see {@code sutras/common/*.block.yaml}.
      */
     private void loadBlocks(List<Path> paths) {
         java.util.Set<Path> dirs = new java.util.LinkedHashSet<>();
@@ -645,7 +645,7 @@ public final class SutraCli {
 
     /**
      * The Drishti UI kit folder: {@code drishti.ui-kit.dir} or {@code DRISHTI_UI_KIT_DIR} when set, else {@code ./config/ui-kit}, else the
-     * {@code config/ui-kit} (or {@code ui-kit}) beside an ancestor of a path being checked ({@code config/packs/trading} finds
+     * {@code config/ui-kit} (or {@code ui-kit}) beside an ancestor of a path being checked ({@code config/packs/banking/trading} finds
      * {@code config/ui-kit}); null when there is none.
      */
     static Path uiKit(java.util.Collection<Path> dirs) {
@@ -678,12 +678,26 @@ public final class SutraCli {
         if (!Files.isDirectory(dir)) {
             return List.of();
         }
-        try (Stream<Path> s = Files.list(dir)) {
-            return s.filter(p -> Files.isRegularFile(p.resolve("pack.yaml")) && Files.isDirectory(p.resolve("sutras")))
-                    .map(p -> p.resolve("sutras")).sorted().toList();
-        } catch (IOException e) {
-            return List.of();
+        List<Path> out = new ArrayList<>();
+        for (Path d : com.ash.drishti.api.PackFolders.roots(dir)) {           // the packs root and its domain folders
+            try (Stream<Path> s = Files.list(d)) {
+                s.filter(p -> Files.isRegularFile(p.resolve("pack.yaml")) && Files.isDirectory(p.resolve("sutras")))
+                        .map(p -> p.resolve("sutras")).forEach(out::add);
+            } catch (IOException e) {
+                // an unreadable folder has no packs
+            }
         }
+        return out.stream().sorted().toList();
+    }
+
+    /** Whether a file under a packs root is in a pack's {@code tests} folder ({@code <pack>/tests/...} or {@code <domain>/<pack>/tests/...}). */
+    private static boolean inPackTests(Path rel) {
+        for (int i = 1; i <= 2 && i < rel.getNameCount() - 1; i++) {
+            if (rel.getName(i).toString().equals("tests")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean hasBlocks(Path dir) {

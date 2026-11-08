@@ -19,7 +19,7 @@
     drishti.py pivot functions test wret.yaml --sample rows.csv [--group DESK]
     drishti.py pivot functions save wret.yaml --sample rows.csv
     drishti.py pivot functions submit asha/wret@1 [--note "..."]
-    drishti.py pivot functions approve asha/wret@1 --reason "reviewed" [--scope group:rates]
+    drishti.py approvals approve function asha:wret@1 --comment "reviewed" [--param scope=group:rates]   (the one Approvals queue)
     drishti.py pivot functions revoke asha/wret@1 --reason "..."
     drishti.py pivot explain --source trade --rows DESK --values "sum(NOTIONAL)" --cell DESK=RATES --other-cell DESK=FX --by CURRENCY
     drishti.py pivot explain --view asha/desk-risk --cell DESK=EMEA --from 2026-09-30 --to 2026-10-30 --by BOOK
@@ -122,8 +122,7 @@ def register(ps, srv, ctx: dict, view_args, body) -> None:
             return 0
         owner, rest = _ref(a.ref)
         path = f"/api/v1/pivot/functions/{owner}/{rest}/{c}"
-        payload = {"submit": {"note": a.note or ""}, "approve": {"scope": a.scope, "reason": a.reason or ""},
-                   "revoke": {"reason": a.reason or ""}}[c]
+        payload = {"submit": {"note": a.note or ""}, "revoke": {"reason": a.reason or ""}}[c]
         res = api.json("POST", path, payload)
         say_json(res) if a.json else print(f"{res['ref']}: {res['status']}")
         return 0
@@ -131,20 +130,23 @@ def register(ps, srv, ctx: dict, view_args, body) -> None:
     def explain(a, extra=None) -> int:
         api = Api.from_args(a)
         b = body(a)
-        b.update({"from": _coords(a.cell), "by": a.by})
+        b.update({"kind": "pivot", "measure": "cell", "part": "why", "from": _coords(a.cell), "by": a.by})
         if a.other_cell:
             b["to"] = _coords(a.other_cell)
         if a.from_date:
             b["fromDate"] = a.from_date
         if a.to_date:
             b["toDate"] = a.to_date
-        for k in ("measure", "order", "price", "quantity"):
+        if a.measure:
+            b["value"] = a.measure                                # the value of the view to explain (its label)
+        for k in ("order", "price", "quantity"):
             if getattr(a, k):
                 b[k] = getattr(a, k)
-        res = api.json("POST", "/api/v1/pivot/explain", b)
+        out = api.json("POST", "/api/v1/explain", b)              # the one Explain, kind pivot (API_REFERENCE.md, "Explain")
         if a.json:
-            say_json(res)
+            say_json(out)
             return 0
+        res = (out.get("why") or {}).get("answer") or {}
         print(res["words"])
         print(f"  {res['method']}")
         for s in res["steps"]:
@@ -183,7 +185,7 @@ def register(ps, srv, ctx: dict, view_args, body) -> None:
             print(f"  {k:<40} {d.get('status') or ', '.join(f'{m} {v:+,.2f}' for m, v in d['delta'].items() if v)}")
         return 0
 
-    fn = ps.add_parser("functions", help="custom aggregation functions: list, test (the harness and the playground), save, submit, approve, revoke",
+    fn = ps.add_parser("functions", help="custom aggregation functions: list, test (the harness and the playground), save, submit, revoke (approve: approvals)",
                        parents=[srv])
     fs = fn.add_subparsers(dest="fn_sub", required=True)
     fl = fs.add_parser("list", help="your functions and those approved for you", parents=[srv])
@@ -196,13 +198,12 @@ def register(ps, srv, ctx: dict, view_args, body) -> None:
         if name == "test":
             p.add_argument("--group", help="a column of the sample to try the function in a little pivot by")
         p.set_defaults(func=functions, fn_cmd=name)
-    for name, hlp in (("submit", "ask for a version to be shared"), ("approve", "approve a version (an approver who is not its author)"),
+    for name, hlp in (("submit", "ask for a version to be shared (an approver approves it in `approvals`)"),
                       ("revoke", "withdraw a version: views using it say so in its cells")):
         p = fs.add_parser(name, help=hlp, parents=[srv])
         p.add_argument("ref", help="owner/name@version")
         p.add_argument("--reason")
         p.add_argument("--note")
-        p.add_argument("--scope", default="everyone", help="everyone or group:<name>")
         p.set_defaults(func=functions, fn_cmd=name)
 
     ex = ps.add_parser("explain", help="the difference between two cells, or a cell on two dates, in steps that add up", parents=[srv])

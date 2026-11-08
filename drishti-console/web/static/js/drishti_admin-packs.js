@@ -63,25 +63,27 @@
   // ---------------------------------------------------------------------------------------------------------------- deploy
   var dep = root.querySelector('[data-deploy]');
   if (dep) {
-    var file = dep.querySelector('[data-file]'), up = dep.querySelector('[data-upload]'), msg = dep.querySelector('[data-dep-msg]');
+    var I = window.Drishti.elements.inputs, FF = I.formOf(dep.querySelector('[data-field-of=file]')), SF = I.formOf(dep.querySelector('[data-signature-fields]'));
+    var up = dep.querySelector('[data-upload]'), msg = dep.querySelector('[data-dep-msg]');
+    function fileIn() { return dep.querySelector('[data-file]'); }                      // the archive: drishti-inputs' Form (core/admin_forms.py)
     var out = dep.querySelector('[data-result]'), drop = dep.querySelector('[data-drop]');
     var maxMb = parseFloat(dep.getAttribute('data-max-mb')) || 50;
-    function chosen() { return file.files && file.files[0]; }
-    file.addEventListener('change', function () { up.disabled = !chosen(); out.hidden = true; say(msg, ''); });
+    function chosen() { var f = fileIn(); return f && f.files && f.files[0]; }
+    FF.on('change', function () { up.disabled = !chosen(); out.hidden = true; say(msg, ''); });
     ['dragenter', 'dragover'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('dep-over'); }); });
     ['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('dep-over'); }); });
     drop.addEventListener('drop', function (e) {
       var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
       if (!f) { return; }
-      try { var dt = new DataTransfer(); dt.items.add(f); file.files = dt.files; } catch (x) { /* an old browser: choose it with the button */ }
-      file.dispatchEvent(new Event('change'));
+      try { var dt = new DataTransfer(); dt.items.add(f); fileIn().files = dt.files; } catch (x) { /* an old browser: choose it with the button */ }
+      fileIn().dispatchEvent(new Event('change'));
     });
     up.addEventListener('click', function () {
       var f = chosen();
       if (!f) { return; }
-      if (f.size > maxMb * 1048576) { say(msg, f.name + ' is ' + (f.size / 1048576).toFixed(1) + ' MB; the limit is ' + maxMb + ' MB.', true); return; }
+      if (f.size > maxMb * 1048576) { say(msg, f.name + ' is ' + window.Drishti.elements.core.formatBytes(f.size) + '; the limit is ' + maxMb + ' MB.', true); return; }
       var headers = { 'Content-Type': 'application/octet-stream', 'X-Drishti-Filename': f.name.replace(/[^\x20-\x7e]/g, '_') };
-      var pub = dep.querySelector('[data-publisher]').value.trim(), sig = dep.querySelector('[data-signature]').value.trim();
+      var pub = String(SF.getField('publisher') || '').trim(), sig = String(SF.getField('signature') || '').trim();
       if (sig) { headers['X-Drishti-Signature'] = sig; headers['X-Drishti-Publisher'] = pub; }
       up.disabled = true;
       say(msg, 'Uploading and checking ' + f.name + '…');
@@ -105,8 +107,8 @@
       }).then(function (f) {
         var dt = new DataTransfer();
         dt.items.add(f);
-        file.files = dt.files;
-        file.dispatchEvent(new Event('change'));
+        fileIn().files = dt.files;
+        fileIn().dispatchEvent(new Event('change'));
         up.click();
       }).catch(function (e) { say(msg, e.message, true); });
     }
@@ -164,24 +166,25 @@
         });
         if (rep.bi.problem) { out.appendChild(el('p', { class: 't-warn', text: rep.bi.problem })); }
       }
-      var ack = null;
-      if (breaking) {
-        ack = el('input', { type: 'checkbox', id: 'depAck', 'data-ack': true });
-        out.appendChild(el('p', {}, [el('label', { class: 'chk', for: 'depAck' }, [ack, 'I have read the ' + breaking + ' breaking change(s) and want to deploy anyway'])]));
+      var ack = null, acked = function () { return !!(ack && ack.getField('ack') === true); };
+      if (breaking) {                                                                     // a box to tick: drishti-inputs' Form
+        var box = out.appendChild(el('div', { class: 'dep-ack' }));
+        ack = new I.Form(box, { embedded: true, label: 'Breaking changes', schema: { type: 'object', properties: { ack: { type: 'boolean', hook: 'ack',
+          title: 'I have read the ' + breaking + ' breaking change(s) and want to deploy anyway' } } }, value: { ack: false } });
       }
       var go = el('button', { type: 'button', class: 'btn-pill btn-accent', 'data-deploy-go': true, text: 'Deploy ' + rep.pack + ' ' + rep.version, disabled: !!breaking });
       var no = el('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-deploy-discard': true, text: 'Discard' });
-      if (ack) { ack.addEventListener('change', function () { go.disabled = !ack.checked; }); }
+      if (ack) { ack.on('change', function () { go.disabled = !acked(); }); }
       out.appendChild(el('div', { class: 'adm-dlg-actions dep-actions' }, [no, go]));
       no.addEventListener('click', function () {
-        call('DELETE', '/admin/api/packs/deploy/' + q(rep.uploadId)).then(function () { out.hidden = true; say(msg, 'Discarded. Nothing was changed.'); file.value = ''; up.disabled = true; });
+        call('DELETE', '/admin/api/packs/deploy/' + q(rep.uploadId)).then(function () { out.hidden = true; say(msg, 'Discarded. Nothing was changed.'); FF.setValue({ file: '' }); up.disabled = true; });
       });
       go.addEventListener('click', function () {
         ask('Deploy ' + rep.pack + ' ' + rep.version + '?', 'Deploy ' + rep.pack + ' ' + rep.version + '? It takes effect now, with no restart. If the pack cannot be used, the old files are put back.', 'Deploy').then(function (yes) {
           if (!yes) { return; }
           go.disabled = no.disabled = true;
           say(msg, 'Deploying ' + rep.pack + ' ' + rep.version + '…');
-          call('POST', '/admin/api/packs/deploy/' + q(rep.uploadId), { acceptBreaking: !!(ack && ack.checked) }).then(function (r) {
+          call('POST', '/admin/api/packs/deploy/' + q(rep.uploadId), { acceptBreaking: acked() }).then(function (r) {
             if (!r.ok) { say(msg, why(r), true); go.disabled = no.disabled = false; return; }
             afterChange(msg, r.body);
           });

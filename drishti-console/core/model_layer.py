@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The model layer on the console's side (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 1 to 3 and 9): what the designers need that is pure shape, no
+"""The model layer on the console's side (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, sections 1 to 3 and 9): what the designers need that is pure shape, no
 access. A dataset's YAML read into the facts the pages show (grain, keys, meanings, time mode); a model kept as one JSON document and written as YAML in
 the spec's order (one line per dataset, relationship and measure, so a review reads well); relationships suggested from the packs' entity references;
 the right default measure for a column (aggregation, format, additivity and currency from the dataset); the implicit model of a dataset, as a document
@@ -36,7 +36,7 @@ TOP_ORDER = ("rachana", "expressions", "model", "version", "id", "title", "descr
              "implicit-from", "tables", "datasets", "relationships", "measures", "fields", "hierarchies", "perspectives", "security", "contract", "rollups", "tests", "golden", "ai", "calc-groups",
              "parameters", "calendars", "fx", "layout")
 DATASET_ORDER = ("rachana", "expressions", "dataset", "version", "id", "title", "description", "owner", "tags", "endorsement", "extends", "source", "columns", "where", "grain",
-                 "derive", "group", "time", "refresh", "security", "tests", "ai", "rollups", "layout")          # BI_DESIGN.md 3.1: the derivation keys in the order they apply
+                 "derive", "group", "time", "refresh", "security", "tests", "ai", "rollups", "layout")          # ARCHITECTURE.md §28 3.1: the derivation keys in the order they apply
 
 
 class LayerError(ValueError):
@@ -289,7 +289,7 @@ ENTRY_KEYS = ("datasets", "measures", "hierarchies", "columns", "derive", "field
 
 
 def to_yaml_keeping(original: str, doc: dict, order=TOP_ORDER) -> str:
-    """``doc`` written over the YAML it was read from (``original``), keeping its comments, key order and untouched lines (BI_DESIGN.md 8.2);
+    """``doc`` written over the YAML it was read from (``original``), keeping its comments, key order and untouched lines (ARCHITECTURE.md §28 8.2);
     without an original it is :func:`to_yaml`."""
     if not isinstance(doc, dict) or not doc:
         raise LayerError("the document is empty")
@@ -306,7 +306,7 @@ FIELD_PROPS = ("display", "description", "format", "folder", "hidden", "sort-by"
 def fields_shape(described: dict, ref: str, model_doc: dict | None = None) -> dict:
     """A model's description (``/models/{id}/describe``) in the shape every Fields pane reads (the dataset summary: tables with columns, measures,
     hierarchies, perspectives), plus what the pane's header says about the model (implicit or not). Each field and measure carries the properties the
-    model gives it (BI_DESIGN.md 8.1: display name, description, format, folder, hidden, sort-by, data category, default summarisation): a consumer
+    model gives it (ARCHITECTURE.md §28 8.1: display name, description, format, folder, hidden, sort-by, data category, default summarisation): a consumer
     inherits them and never re-declares them. ``model_doc`` (the model's YAML, read when the server's description does not carry them yet) fills the gaps;
     hiding there is presentation only: what a reader may not see the server leaves out of ``describe`` (``hidden-for``)."""
     props = (model_doc or {}).get("fields") if isinstance((model_doc or {}).get("fields"), dict) else {}

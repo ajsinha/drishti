@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
 /**
- * One row of the member table, as gossip carries it (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 5).
+ * One row of the member table, as gossip carries it (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 5).
  *
  * @param nodeId stable id, generated once and kept in {@code <data dir>/net/node-id}
  * @param url the advertised address peers call
@@ -35,7 +35,7 @@ import java.util.List;
  * @param gossipPort the port of the member's own gossip connector (2.6.7), on the host of {@code url}; 0 when it has none (an older
  *     node, or {@code gossip-port: off}): gossip then goes to {@code url}. A member that does not know the field drops it, so a peer may
  *     hear of a member without it for a while; gossip goes to {@code url} until it hears the member itself again
- * @param switchesHash the hash of the member's switches ledger (Admin → Commands, 2.8.0); a peer whose own hash differs pulls the
+ * @param switchesHash the hash of the member's switches ledger (Admin → Functions, 2.8.0); a peer whose own hash differs pulls the
  *     member's switches and merges them. Blank from a member that has none (an older node), which is never pulled from
  */
 @JsonIgnoreProperties(ignoreUnknown = true)

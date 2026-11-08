@@ -98,9 +98,25 @@ public final class FileAccess implements AutoCloseable {
                 || com.ash.drishti.lakeio.StorageProviders.supports(path);
     }
 
-    /** {@code path} with the first matching {@code relocate} folder replaced (both in one form: {@link Relocation}). */
+    /**
+     * {@code path} with the first matching {@code relocate} folder replaced (both in one form: {@link Relocation}), in the form
+     * storage opens <em>literally</em>. Iceberg's file paths are opaque strings, never percent-decoded (the Apache library's
+     * {@code HadoopFileIO} and {@code S3FileIO} and pyiceberg's {@code PyArrowFileIO} take them as they are): a partition folder
+     * such as {@code g=a%2Fb} or {@code g=100%25}, as those writers name a value {@code a/b} or {@code 100%}, is that folder on disk.
+     */
     public String resolve(String path) {
-        return relocate.apply(path);
+        return literal(relocate.apply(path));
+    }
+
+    /**
+     * A local {@code file:} URI holding a {@code %} as the plain path it names, so local storage (which decodes a percent-encoded
+     * {@code file:} URI, the form {@code java.nio} writes) opens the folder the path spells; anything else as it is.
+     */
+    static String literal(String path) {
+        if (path != null && path.indexOf('%') >= 0 && path.regionMatches(true, 0, "file:", 0, 5)) {
+            return LocalPaths.toLocal(path, false);
+        }
+        return path;
     }
 
     /** The {@code relocate} pairs this reads through (none when not set). */
@@ -118,7 +134,7 @@ public final class FileAccess implements AutoCloseable {
             return s3();
         }
         if (com.ash.drishti.lakeio.StorageProviders.supports(path)) {
-            return com.ash.drishti.lakeio.StorageProviders.storage(path);    // mem://, a warehouse in memory (IN_MEMORY_LAKE.md section 7)
+            return com.ash.drishti.lakeio.StorageProviders.storage(path);    // mem://, a warehouse in memory (docs/architecture/DATA_ARCHITECTURE.md section 7)
         }
         throw new UnsupportedOperationException("drishti-iceberg reads local disk, S3 (s3://, s3a://) and memory (mem://), not " + scheme
                 + "://; set the connector's engine: library for this table");

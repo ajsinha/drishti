@@ -24,7 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The consumers of datasets and models in the migration (BI_FOUNDATION_2911E.md section 4.1, "Input"): reports, boards, alerts and
+ * The consumers of datasets and models in the migration (docs/architecture/ARCHITECTURE.md §28 section 4.1, "Input"): reports, boards, alerts and
  * notebooks. Only what names a dataset or holds an expression changes; comments, key order and layout are kept (the file is rewritten line
  * by line, never re-serialised):
  *

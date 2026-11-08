@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * One cache budget for the heap (RESOURCES_AND_SCALE.md section 5.2, D3, 2.9.7; decision PO-2): a share of {@code -Xmx}
+ * One cache budget for the heap (CLUSTER_GUIDE.md section 5.2, D3, 2.9.7; decision PO-2): a share of {@code -Xmx}
  * ({@code drishti.memory.cache-share}, 0.5) divided into weighted pools. Every Caffeine cache weighed in bytes that joins a pool gets its
  * pool's share as its maximum (split evenly between the pool's members, or by their own limits when those are smaller), set at start and
  * again on a change; when the heap after a collection passes {@code squeeze-at} (0.85 of {@code -Xmx}) the pools with the highest
@@ -173,7 +173,7 @@ public final class MemoryBudget {
     }
 
     /**
-     * An off-heap pool (IN_MEMORY_LAKE.md section 6): memory outside the heap with its own hard cap (the in-memory lake's stores). It is not
+     * An off-heap pool (docs/architecture/DATA_ARCHITECTURE.md section 6): memory outside the heap with its own hard cap (the in-memory lake's stores). It is not
      * a share of -Xmx and never squeezed; it is shown beside the heap pools so Capacity, the sizing planner and Health see its cap and use.
      */
     public record OffHeap(String name, java.util.function.LongSupplier used, java.util.function.LongSupplier cap) {}

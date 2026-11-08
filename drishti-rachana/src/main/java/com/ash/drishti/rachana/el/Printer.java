@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A Rachana tree as text, in the one spelling (BI_FOUNDATION_2911E.md Q4): {@code &&}, {@code ||}, {@code !}, {@code c ? a : b},
+ * A Rachana tree as text, in the one spelling (docs/architecture/ARCHITECTURE.md §28 Q4): {@code &&}, {@code ||}, {@code !}, {@code c ? a : b},
  * {@code true}, {@code false}, {@code null}, named arguments {@code name = value}, lists {@code [a, b]}, {@code in} and {@code not in}.
  * Parentheses only where the grammar needs them, so printing then parsing gives the same tree. Used by the migration of part B to write
  * the expressions it rewrites, and by the tests that read the shipped DEL expressions as Rachana.

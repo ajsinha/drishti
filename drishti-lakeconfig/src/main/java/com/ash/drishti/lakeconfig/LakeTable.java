@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * One table of a lake as its lake file describes it (docs/architecture/LAKE_CONFIG.md section 3), the lake's {@code defaults:} already
+ * One table of a lake as its lake file describes it (docs/architecture/DATA_ARCHITECTURE.md section 3), the lake's {@code defaults:} already
  * applied. Every table is partitioned by {@code business_date} first, always: {@link #partitionBy()} names only what comes after it.
  *
  * @param domain      the domain ({@code trading} of {@code trading.trade})
@@ -66,6 +66,12 @@ public record LakeTable(String domain, String table, String kind, String path, S
         layout = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(layout));
         maintenance = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(maintenance));
         properties = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(properties));
+    }
+
+    /** This table with its id field {@code id} (a table created by its first load takes its kind's key: DATA_LAKE_GUIDE.md section 5.6). */
+    public LakeTable withId(String id) {
+        return new LakeTable(domain, table, kind, path, format, partitionBy, promote, vectors, flatten, id, date, latestBy, loadMode, sortBy, layout,
+                retention, maintenance, timeTravel, properties);
     }
 
     /** {@code <domain>.<table>}, the table's name in its lake file. */

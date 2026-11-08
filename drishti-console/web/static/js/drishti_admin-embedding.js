@@ -13,10 +13,12 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin → Embedding. The list is server-rendered; this registers an application (New application dialog), shows a client secret once
    (after create and after rotate), enables, disables and deletes, filters the rows, and adds two keys: "n" opens the new-application
    dialog and "/" focuses the filter. Every call is same-origin JSON to /admin/embedding/api/...; the page is reloaded after a change,
-   so the table is always what the server holds. The secret is only ever in the dialog: not in the URL, storage or the page source. */
+   so the table is always what the server holds. The secret is only ever in the dialog: not in the URL, storage or the page source.
+   Every field is drishti-inputs' Form from the server's schema (core/admin_forms.py). */
 (function () {
   'use strict';
   var root = document.querySelector('[data-embedding]');
@@ -31,13 +33,15 @@
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); });
   }
   function problem(b, fallback) { return (b.code ? b.code + ' ' : '') + (b.detail || fallback); }
+  var I = window.Drishti.elements.inputs;
+  function formIn(sel) { return I.formOf($(sel + ' [data-di-form]') || $(sel + '[data-di-form]')); }
   function lines(s) { return s.split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean); }
   function csv(s) { return s.split(',').map(function (x) { return x.trim(); }).filter(Boolean); }
 
   // ---- the filter ---------------------------------------------------------------------------------------------------------
-  var filter = $('[data-filter]'), none = $('[data-filter-none]');
-  filter.addEventListener('input', function () {
-    var q = filter.value.trim().toLowerCase(), shown = 0;
+  var filterForm = formIn('.emb-filter'), filter = $('[data-filter]'), none = $('[data-filter-none]');
+  filterForm.on('change', function () {
+    var q = String(filterForm.getField('q') || '').trim().toLowerCase(), shown = 0;
     Array.prototype.forEach.call(root.querySelectorAll('[data-apps] tbody tr[data-app]'), function (tr) {
       var hit = !q || tr.textContent.toLowerCase().indexOf(q) >= 0;
       tr.hidden = !hit; if (hit) { shown++; }
@@ -46,44 +50,39 @@
   });
 
   // ---- the secret, once ---------------------------------------------------------------------------------------------------
-  var secretDlg = $('[data-secret-dialog]'), secretIn = $('[data-secret-value]');
+  var secretDlg = $('[data-secret-dialog]'), secretForm = formIn('[data-secret-dialog]');
   function showSecret(app, secret, note) {
     root.querySelector('[data-secret-app]').textContent = app;
-    secretIn.value = secret;
+    secretForm.setField('secret', secret);
     $('[data-secret-note]').textContent = note || '';
     show(secretDlg);
-    secretIn.focus(); secretIn.select();
+    $('[data-secret-value]').focus(); $('[data-secret-value]').select();
   }
-  function closeSecret() { secretIn.value = ''; hide(secretDlg); location.reload(); }
+  function closeSecret() { secretForm.setField('secret', ''); hide(secretDlg); location.reload(); }
   $('[data-secret-done]').addEventListener('click', closeSecret);
   secretDlg.addEventListener('cancel', function (e) { e.preventDefault(); closeSecret(); });      // Esc ends the same way: forget it, reload
   $('[data-secret-copy]').addEventListener('click', function () {
-    secretIn.focus(); secretIn.select();
+    $('[data-secret-value]').focus(); $('[data-secret-value]').select();
     var done = function () { $('[data-secret-note]').textContent = 'Copied.'; };
-    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(secretIn.value).then(done, function () { document.execCommand('copy'); done(); }); }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText($('[data-secret-value]').value).then(done, function () { document.execCommand('copy'); done(); }); }
     else { document.execCommand('copy'); done(); }
   });
 
   // ---- New application ----------------------------------------------------------------------------------------------------
-  var newDlg = $('[data-new-dialog]'), form = $('[data-new-form]'), newMsg = $('[data-new-msg]'), idEdited = false;
-  var jwksField = $('[data-jwks-field]');
-  function openNew() { form.reset(); idEdited = false; jwksField.hidden = true; say(newMsg, ''); show(newDlg); form.elements.name.focus(); }
+  var newDlg = $('[data-new-dialog]'), form = formIn('[data-new-form]'), newMsg = $('[data-new-msg]'), idEdited = false;
+  function openNew() { form.reset(); idEdited = false; say(newMsg, ''); show(newDlg); form.form.querySelector('[name=name]').focus(); }   // the JWK set shows only with a key (the schema's condition)
   $('[data-new]').addEventListener('click', openNew);
-  form.elements.id.addEventListener('input', function () { idEdited = true; });
-  form.elements.name.addEventListener('input', function () {
-    if (!idEdited) { form.elements.id.value = form.elements.name.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^[^a-z]+|-+$/g, '').slice(0, 32); }
-  });
-  Array.prototype.forEach.call(form.elements.auth, function (r) {
-    r.addEventListener('change', function () { jwksField.hidden = form.elements.auth.value === 'secret'; });
+  form.on('change', function (e) {                    // the id follows the name until it is typed in
+    if (e.path === 'id') { idEdited = true; }
+    if (e.path === 'name' && !idEdited) { form.setField('id', String(e.value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^[^a-z]+|-+$/g, '').slice(0, 32) || undefined); }
   });
   $('[data-create]').addEventListener('click', function () {
-    var auth = form.elements.auth.value;
-    var scopes = Array.prototype.map.call(form.querySelectorAll('input[name=scope]:checked'), function (c) { return c.value; });
-    var body = { id: form.elements.id.value.trim(), name: form.elements.name.value.trim(), contact: form.elements.contact.value.trim(),
-                 origins: lines(form.elements.origins.value), kinds: csv(form.elements.kinds.value), scopes: scopes, secret: auth !== 'key' };
-    if (auth !== 'secret') { body.jwks = form.elements.jwks.value.trim(); }
+    if (!form.validate().ok) { say(newMsg, 'Check the fields marked above.', true); return; }
+    var v = form.getValue(), auth = v.auth || 'secret', text = function (x) { return String(x || '').trim(); };
+    var body = { id: text(v.id), name: text(v.name), contact: text(v.contact), origins: lines(text(v.origins)), kinds: csv(text(v.kinds)), scopes: v.scope || [], secret: auth !== 'key' };
+    if (auth !== 'secret') { body.jwks = text(v.jwks); }
     ['callsPerMinute', 'userCallsPerMinute', 'tokenSeconds'].forEach(function (k) {
-      var n = parseInt(form.elements[k].value, 10); if (!isNaN(n)) { body[k] = n; }
+      if (typeof v[k] === 'number' && !isNaN(v[k])) { body[k] = v[k]; }
     });
     say(newMsg, 'Registering...');
     send('POST', '', body).then(function (res) {
@@ -95,7 +94,7 @@
   });
 
   // ---- rotate, enable / disable, delete ------------------------------------------------------------------------------------
-  var rotDlg = $('[data-rotate-dialog]'), delDlg = $('[data-delete-dialog]'), current = null;
+  var rotDlg = $('[data-rotate-dialog]'), rotForm = formIn('[data-rotate-dialog]'), delDlg = $('[data-delete-dialog]'), current = null;
   function rowOf(el) { return el.closest('tr[data-app]'); }
   function nameOf(tr) { return tr.querySelector('.emb-name b').textContent; }
   root.addEventListener('click', function (e) {
@@ -113,7 +112,7 @@
     }
   });
   $('[data-rotate-go]').addEventListener('click', function () {
-    var grace = parseInt($('[data-rotate-grace]').value, 10);
+    var g = rotForm.getField('grace'), grace = typeof g === 'number' ? g : NaN;
     send('POST', '/' + encodeURIComponent(current) + '/rotate', isNaN(grace) ? {} : { graceSeconds: grace }).then(function (res) {
       if (!res.ok) { say($('[data-rotate-msg]'), problem(res.body, 'could not rotate'), true); return; }
       hide(rotDlg);
@@ -127,10 +126,9 @@
   });
 
   // ---- keys: "n" new, "/" filter (not while typing or in a dialog) -------------------------------------------------------------
-  document.addEventListener('keydown', function (e) {
-    var t = e.target, typing = t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
-    if (typing || e.ctrlKey || e.metaKey || e.altKey || root.querySelector('dialog[open]')) { return; }
-    if (e.key === '/') { e.preventDefault(); filter.focus(); }
-    if (e.key === 'n') { e.preventDefault(); openNew(); }
-  });
+  function noDialog() { return !root.querySelector('dialog[open]'); }
+  window.Drishti.keys.register({ id: 'embedding.filter', keys: ['/'], scope: 'screen', area: 'admin-embedding', group: 'Embedding', description: 'Focus the filter',
+    when: noDialog, run: function () { filter.focus(); } });
+  window.Drishti.keys.register({ id: 'embedding.new', keys: ['N'], scope: 'screen', area: 'admin-embedding', group: 'Embedding', description: 'A new application',
+    when: noDialog, run: function () { openNew(); } });
 })();

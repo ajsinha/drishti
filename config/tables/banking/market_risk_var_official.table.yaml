@@ -1,0 +1,45 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Migrated from config/bi/datasets/market-risk-var-official.dataset.yaml by drishti.py tables migrate (docs/architecture/ARCHITECTURE.md §28 section 4).
+rachana: 3
+table: banking.market_risk_var_official
+was: market-risk-var-official
+version: 1.0.0
+title: VaR official results (every version)
+description: "The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, one row per node, business date and result version (a restated date adds a version), as published to risk-results/var-official."
+sample: true
+endorsement: promoted
+tags: [sample, market-risk, var]
+from: { kind: var-official, connector: var-results }
+columns:
+  HIERARCHY:       { path: "$.HIERARCHY", type: string }
+  NODE_ID:         { path: "$.NODE_ID", type: string, references: risk-hierarchy }
+  NODE_NAME:       { path: "$.NODE_NAME", type: string }
+  PARENT_ID:       { path: "$.PARENT_ID", type: string, references: risk-hierarchy }
+  LEVEL:           { path: "$.LEVEL", type: string }
+  CAPTURE_ID:      { path: "$.CAPTURE_ID", type: string }
+  RESULT_VERSION:  { path: "$.RESULT_VERSION", type: integer }
+  VAR:             { path: "$.VAR", type: decimal, additive: false, format: amount0 }
+  ES:              { path: "$.ES", type: decimal, additive: false, format: amount0 }
+  LIMIT:           { path: "$.LIMIT", type: decimal, additive: false, format: amount0 }
+  LIMIT_USE:       { path: "$.LIMIT_USE", type: decimal, additive: false, format: pct }
+  DIVERSIFICATION: { path: "$.DIVERSIFICATION", type: decimal, additive: false, format: amount0 }
+  HYPO_PNL:        { path: "$.HYPO_PNL", type: decimal, additive: false, format: signed0 }
+  EXCEPTIONS_250:  { path: "$.EXCEPTIONS_250", type: integer, additive: false }
+  TRAFFIC_LIGHT:   { path: "$.TRAFFIC_LIGHT", type: string }
+  CONFIDENCE:      { path: "$.CONFIDENCE", type: decimal, additive: false, format: pct }
+  ES_CONFIDENCE:   { path: "$.ES_CONFIDENCE", type: decimal, additive: false, format: pct }
+refresh: { on-load: true }
+materialize: on-load

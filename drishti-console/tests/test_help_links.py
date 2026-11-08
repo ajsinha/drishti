@@ -81,7 +81,7 @@ def test_headings_get_the_same_anchors_as_on_github():
 def test_a_double_hyphen_anchor_from_a_repository_document_works_in_the_app(client):
     assert 'id="delta--delta-lake"' in client.get("/help/configuration").text          # the heading "`delta` — Delta Lake"
     linked = 0
-    for slug in ("windows", "delta-connector"):
+    for slug in ("operations", "delta-connector"):
         page = client.get(f"/help/{slug}")
         if page.status_code != 200:
             continue

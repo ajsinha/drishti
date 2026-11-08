@@ -138,6 +138,7 @@
   var wrap = el('div', { 'class': 'dz-wrap' });
   grid.parentNode.insertBefore(wrap, grid);
   wrap.appendChild(grid); wrap.appendChild(side);
+  var hub = new window.Drishti.elements.designer.DragHub();         // the parts, the kit's cards: one pointer drag (drishti-designer)
   var drop = el('div', { 'class': 'dz-drop', 'data-dz-drop': '', tabindex: '-1', text: 'Drop here, or pick from the list on the right' });
   (view.querySelector('.vmain') || grid).appendChild(drop);
 
@@ -147,14 +148,13 @@
 
   function columnsBox(part, sec) {
     var t = part.table, box = el('div', { 'class': 'dz-cols', role: 'group', 'aria-label': 'Columns' });
-    var chosen = t.chosen.slice();
-    t.fields.forEach(function (f) {
-      var cb = el('input', { type: 'checkbox', value: f });
-      cb.checked = chosen.indexOf(f) >= 0;
-      box.appendChild(el('label', {}, [cb, ' ' + f.replace(/_/g, ' ').toLowerCase()]));
-    });
+    var chosen = t.chosen.slice(), host = el('div', { 'class': 'dz-cols-form' });
+    box.appendChild(host);                                       // drishti-inputs' Form: the columns a row of checkboxes
+    var form = new window.Drishti.elements.inputs.Form(host, { embedded: true, label: 'Columns', schema: { type: 'object', properties: { columns: { type: 'array', title: 'Columns', widget: 'checkboxes',
+      items: { type: 'string', 'enum': t.fields.slice(), enumLabels: t.fields.map(function (f) { return f.replace(/_/g, ' ').toLowerCase(); }) } } } },
+      value: { columns: t.fields.filter(function (f) { return chosen.indexOf(f) >= 0; }) } });
     box.appendChild(el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-cols-apply': '', text: 'Show these columns', on: { click: function () {
-      var picked = [].slice.call(box.querySelectorAll('input:checked')).map(function (i) { return i.value; });
+      var picked = (form.getField('columns') || []).slice();
       var order = chosen.filter(function (f) { return picked.indexOf(f) >= 0; }).concat(picked.filter(function (f) { return chosen.indexOf(f) < 0; }));
       step({ op: 'columns', panel: t.id, fields: order }).catch(function () {});
     } } }));
@@ -163,8 +163,8 @@
 
   function tools(part, sec, first) {
     var n = state.parts.length;
-    var handle = el('span', { 'class': 'dz-handle', draggable: 'true', title: 'Drag to move', 'aria-hidden': 'true', text: '⋮⋮' });
-    handle.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/x-dz-part', String(part.index)); e.dataTransfer.effectAllowed = 'move'; });
+    var handle = el('span', { 'class': 'dz-handle', title: 'Drag to move', 'aria-hidden': 'true', text: '⋮⋮' });
+    hub.draggable(handle, { payload: function () { return { part: part.index }; }, label: function () { return part.title; } });      // drishti-designer's one drag
     var row = el('div', { 'class': 'dz-tools', 'data-dz-part': String(part.index) }, [
       handle,
       el('strong', { text: part.title }),
@@ -188,15 +188,12 @@
     if (sec.hasAttribute('data-dz-dnd')) { return; }                      // a panel kept across a step: its drop target is set already
     sec.setAttribute('data-dz-dnd', '');
     function here() { var t = sec.querySelector('.dz-tools'); return t ? +t.getAttribute('data-dz-part') : -1; }
-    sec.addEventListener('dragover', function (e) { if (e.dataTransfer.types.indexOf('text/x-dz-part') >= 0 || e.dataTransfer.types.indexOf('text/x-dz-kit') >= 0) { e.preventDefault(); sec.classList.add('dz-over'); } });
-    sec.addEventListener('dragleave', function () { sec.classList.remove('dz-over'); });
-    sec.addEventListener('drop', function (e) {
-      sec.classList.remove('dz-over');
-      e.stopPropagation();                                                // a panel inside a panel: the drop is the inner one's, once
-      var from = e.dataTransfer.getData('text/x-dz-part'), kit = e.dataTransfer.getData('text/x-dz-kit');
-      if (from !== '') { e.preventDefault(); if (+from !== here()) { step({ op: 'move', index: +from, to: here() }).catch(function () {}); } }
-      else if (kit) { e.preventDefault(); addPart(JSON.parse(kit), here()); }
-    });
+    hub.target({ el: sec, over: function () { sec.classList.add('dz-over'); }, leave: function () { sec.classList.remove('dz-over'); },      // a panel inside a panel: the innermost takes it
+      drop: function (x, y, d) {
+        sec.classList.remove('dz-over');
+        if (d.part !== undefined) { if (d.part !== here()) { step({ op: 'move', index: d.part, to: here() }).catch(function () {}); } }
+        else if (d.kit) { addPart(d.kit, here()); }
+      } });
   }
 
   /* layout handles on a grid screen (layout: in the Sutra): narrower / wider, and the area it sits in */
@@ -210,16 +207,17 @@
     if (state.areas && state.areas.length) {
       var s = select('Area of ' + part.title, state.areas.map(function (a) { return [a, a.replace(/-/g, ' ')]; }), 'data-dz-area');
       s.value = part.area && state.areas.indexOf(part.area) >= 0 ? part.area : state.areas[0];
-      s.addEventListener('change', function () { step({ op: 'area', index: part.index, value: s.value }).catch(function () {}); });
+      s.addEventListener('drishti:change', function () { step({ op: 'area', index: part.index, value: s.value }).catch(function () {}); });
       box.appendChild(s);
     }
     return box;
   }
 
+  /** drishti-inputs' Select (<drishti-select>) from [value, label] pairs; its value and drishti:change as on any page. */
   function select(label, options, attr) {
-    var s = el('select', { 'class': 'dz-pill', 'aria-label': label });
+    var s = el('drishti-select', { 'class': 'dz-select' });
     s.setAttribute(attr, '');
-    options.forEach(function (o) { s.appendChild(el('option', { value: o[0], text: o[1] })); });
+    s.options = { label: label, options: options.map(function (o) { return { value: o[0], label: o[1] }; }) };
     return s;
   }
 
@@ -242,10 +240,9 @@
       function fillShows() {                                              // the row's details, the records linked from it, a panel of the page
         var t = state.tables.filter(function (x) { return 't:' + x.id === from.value; })[0];
         shows = t && t.shows && t.shows.length ? t.shows : [{ label: 'the row’s details', spec: { how: 'row' } }];
-        what.innerHTML = '';
-        shows.forEach(function (c, i) { what.appendChild(el('option', { value: String(i), text: c.label, 'data-how': c.spec.how })); });
+        what.component.setOptions(shows.map(function (c, i) { return { value: String(i), label: c.label }; }), '0');
       }
-      from.addEventListener('change', fillShows);
+      from.addEventListener('drishti:change', fillShows);
       if (set) { from.value = 't:' + set.id; where.value = set.place || 'expand-row'; }
       fillShows();
       side.appendChild(el('div', { 'class': 'dz-sentence' }, ['a row in ', from, ' show ', what, ' in ', where]));
@@ -271,10 +268,11 @@
     function rfill() {
       var p = state.parts.filter(function (x) { return String(x.index) === rpart.value; })[0] || {};
       var v = String(p.refresh || 0);
-      if (!rsecs.querySelector('option[value="' + v + '"]')) { rsecs.appendChild(el('option', { value: v, text: v + ' seconds' })); }
-      rsecs.value = v;
+      var every = rsecs.component;
+      if (!every.options.some(function (o) { return o.value === v; })) { every.setOptions(every.options.concat([{ value: v, label: v + ' seconds' }])); }
+      every.setValue(v);
     }
-    rpart.addEventListener('change', rfill); rfill();
+    rpart.addEventListener('drishti:change', rfill); rfill();
     side.appendChild(el('div', { 'class': 'dz-sentence' }, ['Refresh ', rpart, ' every ', rsecs]));
     side.appendChild(el('div', { 'class': 'dz-row' }, [
       el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-refresh-apply': '', text: 'Set', on: { click: function () {
@@ -289,9 +287,9 @@
       list.innerHTML = '';
       if (!items.length) { list.appendChild(el('p', { 'class': 'dz-note', text: 'Nothing matches: try other words.' })); }
       items.forEach(function (k) {
-        var card = el('button', { type: 'button', 'class': 'dz-card' + (k.fit ? ' dz-fits' : ''), draggable: 'true', 'data-dz-add': k.ref, title: k.summary }, [
+        var card = el('button', { type: 'button', 'class': 'dz-card' + (k.fit ? ' dz-fits' : ''), 'data-dz-add': k.ref, title: k.summary }, [
           el('strong', { text: k.title }), el('span', { text: ' · ' + k.summary })]);
-        card.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/x-dz-kit', JSON.stringify(k)); });
+        hub.draggable(card, { payload: function () { return { kit: k }; }, label: function () { return k.title; } });
         card.addEventListener('click', function () { addPart(k); });
         list.appendChild(card);
       });
@@ -332,14 +330,11 @@
     side.appendChild(foot);
   }
 
-  drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('dz-over'); });
-  drop.addEventListener('dragleave', function () { drop.classList.remove('dz-over'); });
-  drop.addEventListener('drop', function (e) {
-    e.preventDefault(); drop.classList.remove('dz-over');
-    var kit = e.dataTransfer.getData('text/x-dz-kit'), from = e.dataTransfer.getData('text/x-dz-part');
-    if (kit) { e.stopPropagation(); addPart(JSON.parse(kit)); }
-    else if (from !== '') { step({ op: 'move', index: +from, to: state.parts.length - 1 }).catch(function () {}); }
-  });
+  hub.target({ el: drop, over: function () { drop.classList.add('dz-over'); }, leave: function () { drop.classList.remove('dz-over'); },
+    drop: function (x, y, d) {
+      drop.classList.remove('dz-over');
+      if (d.kit) { addPart(d.kit); } else if (d.part !== undefined) { step({ op: 'move', index: d.part, to: state.parts.length - 1 }).catch(function () {}); }
+    } });
 
   function load() {
     return api('GET', '/designer/state/' + encodeURIComponent(draft) + '?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)).then(function (s) {

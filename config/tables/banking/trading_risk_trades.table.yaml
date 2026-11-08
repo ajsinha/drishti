@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Migrated from config/bi/datasets/trading-risk-trades.dataset.yaml by drishti.py tables migrate (docs/architecture/ARCHITECTURE.md §28 section 4).
+rachana: 3
+table: banking.trading_risk_trades
+was: trading-risk-trades
+version: 1.0.0
+title: "Trading and counterparty risk: trades"
+description: The trades table of the model trading-risk.
+sample: true
+endorsement: promoted
+tags: [sample, trading, counterparty-risk, cross-pack]
+from: { kind: trade-valuation, connector: risk-store }
+keys: [VALUATION_ID]
+columns:
+  VALUATION_ID:  { path: "$.VALUATION_ID", type: string, role: key, key: true }
+  TRADE_ID:      { path: "$.TRADE_ID", type: string }
+  SOURCE_SYSTEM: { path: "$.SOURCE_SYSTEM", type: string }
+  DESK:          { path: "$.DESK", type: string }
+  PORTFOLIO:     { path: "$.PORTFOLIO", type: string }
+  COUNTERPARTY:  { path: "$.COUNTERPARTY", type: string, masked: true }
+  NETTING_SET:   { path: "$.NETTING_SET", type: string }
+  PRODUCT_TYPE:  { path: "$.PRODUCT_TYPE", type: string }
+  PRODUCT_GROUP: { path: "$.PRODUCT_GROUP", type: string }
+  CURRENCY:      { path: "$.CURRENCY", type: string }
+  TRADE_STATUS:  { path: "$.TRADE_STATUS", type: string }
+  NOTIONAL:      { path: "$.NOTIONAL", type: decimal, format: amount0 }
+  MTM:           { path: "$.MTM", type: decimal, format: signed0 }
+  PNL_1D:        { path: "$.PNL_1D", type: decimal, format: signed0 }
+  DV01:          { path: "$.DV01", type: decimal, format: signed0 }
+  TRADE_DATE:    { path: "$.TRADE_DATE", type: date }
+  MATURITY_DATE: { path: "$.MATURITY_DATE", type: date }
+rules:
+  - { role: desk-head, where: "$.DESK in user.desks" }
+  - { role: [risk, analyst, admin], where: "true" }
+refresh: { on-load: true }
+materialize: on-load

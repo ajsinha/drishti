@@ -14,12 +14,14 @@
 
 # config/engines/var.yaml: the VaR engine, with regulatory VaR (docs/guides/VAR_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
 # file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
-# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+# (docs/guides/ADMIN_GUIDE.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
 drishti:
   engines:
     var:
       enabled: ${DRISHTI_VAR_ENABLED:true}   # run the VaR engine on this node: /api/v1/var, VAR, SMAT, PLAY VAR, regulatory VaR (live)
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  risk:
+    limit-near: 0.8                  # one rule for every limit the banking module holds a figure to (VaR limits, the pre-deal check's credit limit and buckets, sensitivity limits): near from this share, a breach over 100%
   var:                               # the VaR engine (docs/guides/VAR_GUIDE.md): VaR of any set of trades from the stored P&L vectors
     confidence: ${DRISHTI_VAR_CONFIDENCE:0.99}          # VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1))
     es-confidence: ${DRISHTI_VAR_ES_CONFIDENCE:0.975}   # expected shortfall's
@@ -78,7 +80,7 @@ drishti:
       export-choices: [100, 500, 1000, 10000, 0]   # the export's drop-down: positions as their own columns (0: All); the rest in Rest of scope
       export-default: 500            # the choice selected first
       export-max-cells: ${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}   # the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words
-    explain:                         # why VaR moved (VAR EXPLAIN, GET /api/v1/var/explain, the VaR page's Why it moved tab; docs/guides/VAR_GUIDE.md section 3.11): the change between two dates in causes that add up exactly; a GET read, never stored
+    explain:                         # why VaR moved (VAR EXPLAIN, GET /api/v1/explain?kind=var, the Explain drawer's Why it moved tab; docs/guides/VAR_GUIDE.md section 3.11): the change between two dates in causes that add up exactly; a GET read, never stored
       enabled: ${DRISHTI_VAR_EXPLAIN_ENABLED:true}   # the tab, the command, the API and the workbook
       order: [restatement, hierarchy, trades-out, window, market, trades-in]   # the causes in sequence, each a full VaR state; restatement and trades-out before market, trades-in after, window next to market
       window-lines: two              # two (oldest scenario dropped, newest added) or one (one window-roll line)
@@ -106,7 +108,7 @@ drishti:
     # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
     # hierarchies:                   # VAR_GUIDE.md section 15.14: wins over a loaded pack's hierarchies: block (the market-risk pack's:
     #   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }   # MGMT, LEGAL from the rows; LL from columns)
-    sharding:                        # VaR sharding (docs/architecture/VAR_SHARDING.md): on only with the market-risk pack's sharding: block or enabled: true
+    sharding:                        # VaR sharding (docs/architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): on only with the market-risk pack's sharding: block or enabled: true
       release-after-seconds: 900     # a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released
     tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
@@ -144,7 +146,7 @@ drishti:
     fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:10-31}   # the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31
     pnl-kind: desk-pnl               # the kind with each desk's actual and hypothetical P&L per business date (the backtest's input)
     average-days: 60                 # the business days of the VaR average the capital formula takes
-    reports-dir: ${DRISHTI_REPORTS_DIR:./config/reports}   # the report definitions, one YAML per report (docs/guides/VAR_GUIDE.md section 18.14)
+    reports-dir: ${DRISHTI_REPORTS_DIR:./config/reports/banking}   # the report definitions, one YAML per report (docs/guides/VAR_GUIDE.md section 18.14)
     synthetic-history: ${DRISHTI_SYNTHETIC_HISTORY:false}  # a demo server may seed synthetic official records before its oldest one; never on a bank's server
     backtesting:                     # the regulatory backtest of the official VaR against the desk P&L (VAR_GUIDE.md section 18.11)
       window: 250                    # the business days counted

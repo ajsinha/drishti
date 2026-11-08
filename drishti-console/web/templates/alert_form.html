@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# An alert on a number: new, or an existing one with its history (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20). #}
+{# An alert on a number: new, or an existing one with its history (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20). #}
 {% extends "base.html" %}
 {% block title %}{{ 'Alert ' ~ alert.name if alert else 'New alert' }} · {{ PRODUCT }}{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
@@ -32,101 +32,12 @@
     <span class="text-muted-d">{{ alert.label }} · {{ alert.describe }}</span> <a class="lnk" href="{{ alert.link }}">Open it</a></p>{% endif %}
   <section class="pnl"><header class="pnl-h"><h3>{{ 'Change it' if editing else 'What to watch, and when to tell you' }}</h3></header><div class="pnl-b">
     <form class="alert-form al-form" method="post" action="{{ '/alerts/measure/' ~ (alert.name | urlencode) if editing else '/alerts/new' }}" data-alert-form>
-      <label>Name<input name="name" class="studio-in" value="{{ f.name or '' }}" required maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9 ._\-]*" aria-describedby="alert-name-rule"{% if editing %} readonly{% endif %}><small id="alert-name-rule" class="text-muted-d" data-name-rule>Letters, digits, spaces, dots, dashes and underscores; start with a letter or digit; up to 64 characters.</small></label>
-      <label class="wide">Title (optional)<input name="title" class="studio-in" value="{{ f.title or '' }}" maxlength="200" placeholder="defaults to the name; the message starts with it"></label>
-      <label>Severity<select name="severity" class="studio-select">{% for s in ['info', 'warn', 'critical'] %}<option{% if f.severity == s %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
-
-      <fieldset class="al-src wide2"><legend>Watch</legend>
-        <label>A<select name="source_type" class="studio-select" data-pick="source">
-          <option value="visual"{% if f.source_type == 'visual' %} selected{% endif %}>visual of a BI report</option>
-          <option value="model"{% if f.source_type == 'model' %} selected{% endif %}>measure of a model</option>
-          <option value="dataset"{% if f.source_type == 'dataset' %} selected{% endif %}>measure of a version 1 dataset</option>
-          <option value="field"{% if f.source_type == 'field' %} selected{% endif %}>field of a Sutra entity</option></select></label>
-        <div class="al-grp" data-group="source" data-when="visual">
-          <label>Report<input name="report" class="studio-in mono" value="{{ f.report or '' }}" placeholder="file:report:daily-risk"></label>
-          <label>Page<input name="page" class="studio-in mono" value="{{ f.page or '' }}"></label>
-          <label>Visual<input name="visual" class="studio-in mono" value="{{ f.visual or '' }}"></label>
-          <p class="text-muted-d wide" data-visual-titles aria-live="polite"></p>
-          <label>Which column to watch<input name="measure" class="studio-in mono" value="{{ f.measure or '' }}" placeholder="blank: the first number" data-visual-column></label>
-          <label>A visual with several rows has several cells. Watch<select name="reduce" class="studio-select" data-reduce>{% for r, w in [('', 'one cell'), ('first', 'the first row'), ('sum', 'the sum of all rows'), ('max', 'the largest row'), ('min', 'the smallest row'), ('avg', 'the average of the rows'), ('count', 'the number of rows'), ('last', 'the last row')] %}<option value="{{ r }}"{% if f.reduce == r %} selected{% endif %}>{{ w }}</option>{% endfor %}</select></label>
-          <p class="text-muted-d wide" data-visual-cells aria-live="polite"></p>
-          <input type="hidden" name="state" value="{{ f.state or '' }}">
-          {% if f.state %}<p class="text-muted-d wide">With the filters you had set on the screen (slicers, selections, drill path) when you pressed <b>Alert me</b>.</p>{% endif %}
-        </div>
-        <div class="al-grp" data-group="source" data-when="model">
-          <label>Model<select name="model_ref" class="studio-select" data-al-model data-value="{{ f.model_ref or '' }}"><option value="">(loading the models)</option></select></label>
-          <label>Measure<select name="model_measure" class="studio-select" data-al-measure><option value="">(choose a model first)</option></select></label>
-          <fieldset class="al-filters wide" data-al-filters-box><legend>Only rows where (optional)</legend>
-            <div data-al-filters></div>
-            <p><button type="button" class="btn-pill btn-ghost" data-al-addfilter>Add a filter</button></p></fieldset>
-          <label>If it answers with several rows, watch<select name="model_reduce" class="studio-select" data-model-reduce>{% for r, w in [('', 'one cell'), ('first', 'the first row'), ('sum', 'the sum of all rows'), ('max', 'the largest row'), ('min', 'the smallest row'), ('avg', 'the average of the rows'), ('last', 'the last row')] %}<option value="{{ r }}"{% if f.model_reduce == r %} selected{% endif %}>{{ w }}</option>{% endfor %}</select></label>
-          <input type="hidden" name="model_query" value="{{ f.model_query or '' }}">
-          <p class="text-muted-d wide" data-al-model-note>The number is the model's measure read as you, with your row rules and masks.</p>
-        </div>
-        <div class="al-grp" data-group="source" data-when="dataset">
-          <label>Dataset<input name="dataset" class="studio-in mono" value="{{ f.dataset or '' }}" placeholder="file:dataset:trading"></label>
-          <label>Measure<input name="ds_measure" class="studio-in mono" value="{{ f.ds_measure or '' }}"></label>
-          <label class="wide">Only rows where (one per line: <code>field op values</code>, e.g. <code>desk eq FX, Rates</code>)<textarea name="filters" class="studio-in mono" rows="2">{{ f.filters or '' }}</textarea></label>
-        </div>
-        <div class="al-grp" data-group="source" data-when="field">
-          <label>Kind<input name="kind" class="studio-in mono" value="{{ f.kind or '' }}" placeholder="trade"></label>
-          <label>Id<input name="id" class="studio-in mono" value="{{ f.id or '' }}" placeholder="MX-20000001"></label>
-          <label>Field or expression<input name="field" class="studio-in mono" value="{{ f.field or '' }}" placeholder="mtm"></label>
-        </div>
-      </fieldset>
-
-      <fieldset class="al-cond wide2"><legend>Tell me when</legend>
-        <label>It<select name="condition_type" class="studio-select" data-pick="cond">
-          <option value="threshold"{% if f.condition_type == 'threshold' %} selected{% endif %}>crosses a limit</option>
-          <option value="change"{% if f.condition_type == 'change' %} selected{% endif %}>changes by too much</option>
-          <option value="nodata"{% if f.condition_type == 'nodata' %} selected{% endif %}>has no data by a time</option></select></label>
-        <div class="al-grp" data-group="cond" data-when="threshold">
-          <label>The number is<select name="op" class="studio-select" data-pick="range">{% for o, w in [('above', 'above'), ('below', 'below'), ('between', 'between'), ('outside', 'outside')] %}<option value="{{ o }}"{% if f.op == o %} selected{% endif %}>{{ w }}</option>{% endfor %}</select></label>
-          <label>Limit (the low edge for between and outside)<input name="value" class="studio-in mono" value="{{ f.value }}" inputmode="decimal"></label>
-          <label data-range-high>High edge<input name="high" class="studio-in mono" value="{{ f.high }}" inputmode="decimal"></label>
-        </div>
-        <div class="al-grp" data-group="cond" data-when="change">
-          <label>It<select name="change_op" class="studio-select">{% for o in ['moves', 'rises', 'falls'] %}<option{% if f.change_op == o %} selected{% endif %}>{{ o }}</option>{% endfor %}</select></label>
-          <label>By at least<input name="change_value" class="studio-in mono" value="{{ f.change_value }}" inputmode="decimal"></label>
-          <label>Counted in<select name="change_mode" class="studio-select"><option value="pct"{% if f.change_mode == 'pct' %} selected{% endif %}>percent</option><option value="abs"{% if f.change_mode == 'abs' %} selected{% endif %}>the number itself</option></select></label>
-          <label>Against<select name="against" class="studio-select"><option value="previous-run"{% if f.against == 'previous-run' %} selected{% endif %}>the previous look</option><option value="previous-day"{% if f.against == 'previous-day' %} selected{% endif %}>the previous business day</option></select></label>
-        </div>
-        <div class="al-grp" data-group="cond" data-when="nodata">
-          <label>Today's data has not arrived by<input name="by" class="studio-in mono" value="{{ f.by }}" placeholder="09:00" inputmode="numeric"></label>
-          <p class="text-muted-d wide">On a business day, from that time (in the business-date zone) until the source shows data for today's business date.</p>
-        </div>
-        <label>Hysteresis (how far back inside the limit before it re-arms)<input name="hysteresis" class="studio-in mono" value="{{ f.hysteresis }}" inputmode="decimal"></label>
-        <label>Cooldown (no second alert within)<input name="cooldown" class="studio-in mono" value="{{ f.cooldown or '' }}" placeholder="30m (the server's default)"></label>
-      </fieldset>
-
-      <fieldset class="al-when wide2"><legend>Look</legend>
-        <label>When<select name="trigger_mode" class="studio-select" data-pick="trigger">
-          <option value="schedule"{% if f.trigger_mode == 'schedule' %} selected{% endif %}>on a schedule</option>
-          <option value="after-load"{% if f.trigger_mode == 'after-load' %} selected{% endif %}>after a data load</option>
-          <option value="live"{% if f.trigger_mode == 'live' %} selected{% endif %}>when it changes (a live source)</option></select></label>
-        <div class="al-grp" data-group="trigger" data-when="schedule">
-          <label>Schedule<input name="schedule" class="studio-in mono" value="{{ f.schedule or '' }}" list="alSched"></label>
-          <datalist id="alSched">{% for w in schedules %}<option value="{{ w }}">{% endfor %}</datalist>
-        </div>
-        <div class="al-grp" data-group="trigger" data-when="after-load">
-          <label>Only loads of kind (blank: any)<input name="load_kind" class="studio-in mono" value="{{ f.load_kind or '' }}" placeholder="TRD"></label>
-        </div>
-        <div class="al-grp" data-group="trigger" data-when="live">
-          <label>Quiet for (before looking)<input name="debounce" class="studio-in mono" value="{{ f.debounce or '' }}" placeholder="10s"></label>
-        </div>
-      </fieldset>
-
-      <fieldset class="al-to wide2"><legend>Tell me by</legend>
-        <label class="al-check"><input type="checkbox" name="d_inbox" {% if f.d_inbox %}checked{% endif %}> my inbox and the bell</label>
-        <label class="al-check"><input type="checkbox" name="d_email" {% if f.d_email %}checked{% endif %}> email (to the address on my account)</label>
-        <label class="al-check"><input type="checkbox" name="d_bridge" {% if f.d_bridge %}checked{% endif %}> the chat bridges that list alerts (a post that names the alert, with no number)</label>
-        {% for w in (opts.webhooks or []) %}<label class="al-check"><input type="checkbox" name="w_{{ w }}" data-webhook {% if w in (f.webhooks or []) %}checked{% endif %}> the webhook <b>{{ w }}</b> (a signed post that names the alert, with no number)</label>
-        {% endfor %}
-        {% if opts.sms %}<label class="al-check"><input type="checkbox" name="d_sms" {% if f.d_sms %}checked{% endif %}> a text message to my mobile number (the alert's title and a link; no number)</label>
-        <label class="al-phone">My mobile number<input name="phone" class="studio-in" type="tel" autocomplete="tel" maxlength="24" placeholder="{{ opts.phone or '+44 20 7946 0000' }}"></label>
-        {% if opts.phone %}<span class="text-muted-d">On file for you: {{ opts.phone }}</span>{% endif %}{% endif %}
-        <label class="al-check"><input type="checkbox" name="enabled" {% if f.enabled %}checked{% endif %}> Active</label>
-      </fieldset>
+      <p class="text-muted-d wide2" data-name-rule>Name: Letters, digits, spaces, dots, dashes and underscores; start with a letter or digit; up to 64 characters.</p>
+      {{ form_host or '' }}{# drishti-inputs' Form from the server's schema (core/alert_form.py), embedded: every control named as before #}
+      <p class="text-muted-d wide2" data-visual-titles aria-live="polite"></p>
+      <p class="text-muted-d wide2" data-visual-cells aria-live="polite"></p>
+      <input type="hidden" name="state" value="{{ f.state or '' }}">
+      <input type="hidden" name="model_query" value="{{ f.model_query or '' }}">
 
       <div class="al-actions wide2">
         <button type="submit" class="btn-pill btn-accent dist-act">{{ 'Save changes' if editing else 'Save alert' }}</button>

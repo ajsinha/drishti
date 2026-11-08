@@ -414,7 +414,7 @@ def submit_for_review(c: Ctx):
 def review_evidence(c: Ctx):
     ship_design(c, "review")
     pid = submit(c)
-    c.page.goto(f"{c.base}/build/reviews/{pid}")
+    c.page.goto(f"{c.base}/approvals/sutra/{pid}")
     c.page.locator("[data-evidence]").wait_for()
     c.page.locator("[data-evidence]").scroll_into_view_if_needed()
     c.save("42-review-evidence.jpg", "[data-evidence]")
@@ -424,8 +424,8 @@ def review_evidence(c: Ctx):
 def live_status(c: Ctx):
     id_ = ship_design(c, "live")
     pid = submit(c)
-    c.page.goto(f"{c.base}/build/reviews/{pid}")
-    c.page.get_by_role("button", name="Approve and publish").click()
+    c.page.goto(f"{c.base}/approvals/sutra/{pid}")
+    c.page.get_by_role("button", name="Approve", exact=True).click()
     c.page.wait_for_timeout(800)
     c.page.goto(f"{c.base}/build")
     c.page.locator(f"[data-design='{id_}']").wait_for()
@@ -513,7 +513,7 @@ def sutra_describe(c: Ctx):
 
 
 
-# ---- forms (docs/guides/WRITE_BACK.md; tests/test_record_forms_browser.py makes the same pictures) --------------------------
+# ---- forms (docs/guides/APPROVALS_GUIDE.md; tests/test_record_forms_browser.py makes the same pictures) --------------------------
 
 @shot("form-beside.jpg")
 def form_beside(c: Ctx):

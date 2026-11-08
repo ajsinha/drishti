@@ -14,90 +14,62 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The people picker (COLLABORATION.md, Console design): a type-ahead over the server's directory (GET /api/directory), the one the share
-   dialog uses (and, later, `@` in a comment). It is an ARIA combobox: the input keeps the focus, the list is a listbox whose active
-   option is named by aria-activedescendant; arrow keys move, Enter picks, Escape closes the list (and only the list: the dialog stays).
-   Drishti.People.attach(input, list, {kind, minQuery, onPick, taken}) returns {close()}. No library. */
+/* The people picker (ARCHITECTURE.md §31, Console design): drishti-inputs' Combobox over the server's directory (GET /api/directory), the one
+   the share dialog uses, on a field of the page (suggestions only: the field's text stays the page's, so typed names still work). Each
+   suggestion shows the name, the user id or "role", and the desk or the role's size; someone who cannot open the view says so. The arrows
+   move, Enter or Tab picks, Escape closes the list (and only the list: a dialog stays). The search waits for typing to pause, needs
+   minQuery characters, and drops a late answer.
+   Drishti.People.attach(input, {kind, minQuery, onPick, taken}) returns {close(), isOpen()}. */
 (function () {
   'use strict';
   var DELAY_MS = 150;
-
-  function el(tag, cls, text) {
-    var n = document.createElement(tag);
-    if (cls) { n.className = cls; }
-    if (text != null) { n.textContent = text; }
-    return n;
-  }
 
   function label(e) {
     if (e.type === 'role') { return { main: e.name, sub: 'role', extra: (e.size || 0) + ' ' + ((e.size || 0) === 1 ? 'person' : 'people') }; }
     return { main: e.displayName || e.name, sub: e.name, extra: e.desk || '' };
   }
+  function span(cls, text) { var s = document.createElement('span'); s.className = cls; s.textContent = text; return s; }
 
-  function attach(input, list, opts) {
+  function attach(input, opts) {
     opts = opts || {};
-    var items = [], active = -1, timer = null, serial = 0;
-    var min = opts.minQuery || 2;
-
-    function close() {
-      list.hidden = true; list.textContent = ''; items = []; active = -1;
-      input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant');
-    }
-    function mark(i) {
-      active = i;
-      Array.prototype.forEach.call(list.children, function (li, n) {
-        var on = n === i;
-        li.setAttribute('aria-selected', on ? 'true' : 'false');
-        li.classList.toggle('on', on);
-        if (on) { input.setAttribute('aria-activedescendant', li.id); li.scrollIntoView({ block: 'nearest' }); }
-      });
-      if (i < 0) { input.removeAttribute('aria-activedescendant'); }
-    }
-    function pick(i) {
-      var e = items[i];
+    var I = window.Drishti.elements && window.Drishti.elements.inputs;
+    if (!input || !I) { return { close: function () {}, isOpen: function () { return false; } }; }
+    var found = {};                                      // this field's last answer: an option's value to its directory entry
+    var host = document.createElement('span');
+    host.className = 'ppl-pick';
+    var cb = new I.Combobox(host, {
+      input: input, suggest: true, minChars: opts.minQuery || 2, debounceMs: DELAY_MS, label: input.getAttribute('aria-label') || 'People and roles',
+      source: function (q, signal) {
+        var url = '/api/directory?q=' + encodeURIComponent(q) + (opts.kind ? '&kind=' + encodeURIComponent(opts.kind) : '');
+        return fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: signal })
+          .then(function (r) { return r.json().catch(function () { return []; }); })
+          .then(function (list) {
+            var taken = opts.taken ? opts.taken() : {};
+            found = {};
+            return (Array.isArray(list) ? list : []).filter(function (e) { return !taken[e.type + ':' + e.name]; }).map(function (e) {
+              var key = e.type + ':' + e.name, l = label(e);
+              found[key] = e;
+              return { value: key, label: l.main, detail: l.sub };
+            });
+          });
+      },
+      renderOption: function (it, el) {
+        var e = found[it.value] || {}, l = label(e);
+        el.classList.add('shr-opt');
+        el.appendChild(span('shr-opt-main', l.main));
+        el.appendChild(span('shr-opt-sub mono', l.sub));
+        if (l.extra) { el.appendChild(span('shr-opt-extra', l.extra)); }
+        if (e.reach === false) { el.appendChild(span('shr-opt-no', 'cannot open this view')); }
+      }
+    });
+    cb.on('change', function (ev) {
+      var e = ev.option ? found[ev.option.value] : null;
+      cb.value = null;
       if (!e) { return; }
       input.value = '';
-      close();
       if (opts.onPick) { opts.onPick(e); }
-    }
-    function show(found) {
-      var taken = opts.taken ? opts.taken() : {};
-      items = found.filter(function (e) { return !taken[e.type + ':' + e.name]; });
-      list.textContent = '';
-      if (!items.length) { list.hidden = true; input.setAttribute('aria-expanded', 'false'); return; }
-      items.forEach(function (e, n) {
-        var l = label(e), li = el('li', 'shr-opt');
-        li.id = list.id + '-' + n; li.setAttribute('role', 'option'); li.setAttribute('aria-selected', 'false');
-        li.appendChild(el('span', 'shr-opt-main', l.main));
-        li.appendChild(el('span', 'shr-opt-sub mono', l.sub));
-        if (l.extra) { li.appendChild(el('span', 'shr-opt-extra', l.extra)); }
-        if (e.reach === false) { li.appendChild(el('span', 'shr-opt-no', 'cannot open this view')); }
-        li.addEventListener('mousedown', function (ev) { ev.preventDefault(); pick(n); });
-        list.appendChild(li);
-      });
-      list.hidden = false; input.setAttribute('aria-expanded', 'true'); mark(0);
-    }
-    function search() {
-      var q = input.value.trim();
-      if (q.length < min) { close(); return; }
-      var mine = ++serial;
-      var url = '/api/directory?q=' + encodeURIComponent(q) + (opts.kind ? '&kind=' + encodeURIComponent(opts.kind) : '');
-      fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then(function (r) { return r.json().catch(function () { return []; }); })
-        .then(function (found) { if (mine === serial && Array.isArray(found)) { show(found); } })
-        .catch(function () { /* the picker is a convenience: typing a name still works when the directory cannot be reached */ });
-    }
-
-    input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(search, DELAY_MS); });
-    input.addEventListener('keydown', function (e) {
-      var open = !list.hidden && items.length;
-      if (e.key === 'ArrowDown') { if (open) { e.preventDefault(); mark((active + 1) % items.length); } }
-      else if (e.key === 'ArrowUp') { if (open) { e.preventDefault(); mark((active - 1 + items.length) % items.length); } }
-      else if (e.key === 'Enter' && open && active >= 0 && !e.ctrlKey && !e.metaKey) { e.preventDefault(); pick(active); }
-      else if (e.key === 'Escape' && open) { e.preventDefault(); e.stopPropagation(); close(); }
-      else if (e.key === 'Tab' && open && active >= 0 && input.value.trim()) { pick(active); }
     });
-    input.addEventListener('blur', function () { setTimeout(close, 120); });
-    return { close: close };
+    return { close: function () { cb.close(); }, isOpen: function () { return cb.isOpen(); } };
   }
 
   window.Drishti.People = { attach: attach };

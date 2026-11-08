@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Python items on the server's compute pool (docs/guides/BI_GUIDE.md › Python in BI; docs/architecture/PYTHON_COMPUTE.md section 19): the one
+"""Python items on the server's compute pool (docs/guides/REPORTS_GUIDE.md › Python in BI; docs/guides/NOTEBOOK_GUIDE.md section 19): the one
 Python runtime for code people write. The pool ``python`` loads :class:`ItemsEngine`; the server sends it a Python item (its manifest, with
 the source) and the rows the person running it may see, already read on the server as that person (row rules and masks applied), and gets
 back a number per group, a column, a chart, a table, a Notebook cell's answer, a step-by-step run or a profile. Nothing here decides access.
@@ -24,7 +24,8 @@ The interfaces an item implements (its manifest's ``interface``; the function is
     measure     compute   one group's rows (or compute_groups:      one number per group
                           every group at once)
     column      derive    the declared input columns of every row   one value per row
-    visual      render    the visual's columns                      an ECharts option or a Vega-Lite specification (a dict), SVG or PNG
+    visual      render    the visual's columns                      a drishti-chart spec (preferred), an ECharts option or a Vega-Lite
+                                                                        specification (a dict), SVG or PNG
     cell        -         ``df``, ``params``, ``extract(name)``     what it printed and its ``result`` (a Notebook cell)
 
 A minimal Transform::
@@ -388,7 +389,7 @@ def _transform(req: dict, frames: list, ns: dict, out_dir: str) -> dict:
     return {"kind": "transform", "columns": columns, "rows": int(table.num_rows), "head": head}
 
 
-# ---- profiling and the step-by-step run (wave C, 2.4.0: docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17; docs/architecture/BI_DESIGN.md section 11.1, items P1 and P3) -------------------------
+# ---- profiling and the step-by-step run (wave C, 2.4.0: docs/guides/REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17; docs/architecture/ARCHITECTURE.md §28 section 11.1, items P1 and P3) -------------------------
 
 HEAD_ROWS = 20
 _STEP = re.compile(r"^\s*#\s*step:\s*(.*?)\s*$")
@@ -651,7 +652,7 @@ def _steps(req: dict, frames: list, names: list[str], ns: dict) -> dict:
 
 
 def _column(req: dict, df, fn, params) -> dict:
-    """The ``column`` interface (BI_DESIGN.md 3.5, plan node ``PyColumn``): ``derive(frame, params)`` gets the declared input columns of the dataset (masked as
+    """The ``column`` interface (ARCHITECTURE.md §28 3.5, plan node ``PyColumn``): ``derive(frame, params)`` gets the declared input columns of the dataset (masked as
     the reader sees them) and returns one value per row, vectorised: a pandas Series, a numpy array or a list of the frame's length."""
     inputs = req["inputs"] or [c for c in df.columns if c != "id"]
     missing = [c for c in inputs if c not in df.columns]
@@ -818,6 +819,13 @@ def _run(req: dict, files: dict, scratch: str) -> dict:
     shown = df[[c for c in df.columns if c != "id"]] if "id" in df.columns else df
     result = fn(shown.copy(), dict(params))
     if isinstance(result, dict):
+        if req["output"] == "drishti-chart":
+            spec = json.loads(json.dumps(result, default=_plain, allow_nan=False))
+            if not isinstance(spec.get("kind"), str) or not spec["kind"]:
+                raise TypeError("a drishti-chart spec names its kind (bar, line, scatter, pie, heatmap, ...): {'kind': 'bar', 'data': {'rows': [...]}, 'x': ..., 'y': ...}")
+            if isinstance(spec.get("data"), dict) and "source" in spec["data"]:
+                raise Denied("a drishti-chart spec from Python carries its rows in data.rows: it loads nothing from an address (data.source)")
+            return {"kind": "drishti-chart", "spec": _clean(spec)}
         if req["output"] == "vega-lite":
             spec = json.loads(json.dumps(result, default=_plain, allow_nan=False))
             bad = _vega_forbidden(spec)
@@ -825,7 +833,7 @@ def _run(req: dict, files: dict, scratch: str) -> dict:
                 raise Denied(f"a Vega-Lite specification may not load anything from a URL or name a loader ({bad}): put the data in data.values")
             return {"kind": "vega-lite", "spec": spec}
         if req["output"] != "echarts":
-            raise TypeError(f"the manifest says output: {req['output']} but the function returned a dict (an ECharts option or a Vega-Lite specification)")
+            raise TypeError(f"the manifest says output: {req['output']} but the function returned a dict (a drishti-chart spec, an ECharts option or a Vega-Lite specification)")
         return {"kind": "echarts", "option": _clean(json.loads(json.dumps(result, default=_plain, allow_nan=False)))}
     if isinstance(result, str) and result.lstrip().startswith("<svg"):
         low = result.lower()
@@ -834,7 +842,7 @@ def _run(req: dict, files: dict, scratch: str) -> dict:
         return {"kind": "svg", "svg": result}
     if isinstance(result, (bytes, bytearray)) and bytes(result[:8]) == b"\x89PNG\r\n\x1a\n":
         return {"kind": "png", "png": base64.b64encode(bytes(result)).decode("ascii")}
-    raise TypeError("a visual returns an ECharts option or a Vega-Lite specification (dict), SVG text or PNG bytes, not " + type(result).__name__)
+    raise TypeError("a visual returns a drishti-chart spec, an ECharts option or a Vega-Lite specification (dict), SVG text or PNG bytes, not " + type(result).__name__)
 
 
 def _request(params: dict) -> dict:

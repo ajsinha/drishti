@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI runs in a real browser (Chromium; docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 19.6), against the stand-in server of bi_runs_backend.py with synthetic data:
+"""BI runs in a real browser (Chromium; docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 19.6), against the stand-in server of bi_runs_backend.py with synthetic data:
 a visual answered in time draws with no card; a heavy one asks to confirm with its estimate and basis, Run in background shows the run card with progress,
 and the card turns into the chart when the run finishes; the bell counts the finished run on another page and its notice opens the report with ?run=,
 drawn from the stored result; a slicer redraws a covered visual at once and offers Run in background for one that would need a run; the Runs tab lists the
@@ -282,7 +282,7 @@ def test_share_with_the_picker_shows_each_mode_unshare_and_the_recipients_view(c
     page = open_drawer(ctx, stack, run["id"])
     page.click('[data-run-act="share"]')
     page.fill("[data-run-share-form] input[name='to']", "car")
-    page.wait_for_selector("#runSharePick:not([hidden]) [role=option]", timeout=5000)
+    page.wait_for_selector(".di-combo-pop [role=option]", timeout=5000)
     page.keyboard.press("Enter")                                                   # the picker's choice becomes a chip
     page.wait_for_selector('[data-run-share-chip="carol"]')
     page.fill("[data-run-share-form] input[name='to']", "bob, eve")
@@ -313,8 +313,8 @@ def test_a_schedule_is_made_from_a_preset_edited_paused_and_removed(ctx, stack):
     page = open_drawer(ctx, stack, run["id"])
     page.click('[data-run-act="schedule"]')
     form = "[data-run-sched-form]"
-    page.select_option(form + " select[name=kind]", "weekly")
-    page.select_option(form + " select[name=day]", "wed")
+    page.select_option(form + " [name=kind]", "weekly")
+    page.select_option(form + " [name=day]", "wed")
     page.fill(form + " input[name=time]", "09:15")
     assert page.inner_text("[data-run-sched-preview]") == "weekly wed 09:15"
     page.click(form + " [type=submit]")
@@ -323,8 +323,8 @@ def test_a_schedule_is_made_from_a_preset_edited_paused_and_removed(ctx, stack):
     assert "weekly wed 09:15 on the newest data" in words and "next 2026-10-22 09:15" in words
     assert backend.schedules and list(backend.schedules.values())[-1]["schedule"] == "weekly wed 09:15"
     page.click("[data-run-sched-edit]")
-    assert page.input_value(form + " select[name=kind]") == "weekly"                  # the form opens on the schedule it changes
-    page.select_option(form + " select[name=kind]", "monthly-business")
+    assert page.input_value(form + " [name=kind]") == "weekly"                  # the form opens on the schedule it changes
+    page.select_option(form + " [name=kind]", "monthly-business")
     page.fill(form + " input[name=time]", "18:00")
     page.click(form + " [type=submit]")
     page.wait_for_function("document.querySelector('[data-run-schedule]').innerText.includes('monthly last 18:00 business')", timeout=10000)

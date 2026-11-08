@@ -16,7 +16,7 @@
 
   A screen mock-up (pivot/A.html), self-contained: system fonts, everything inline, nothing from a CDN.
   Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/IMPLEMENTATION_PLAN.md (2.9.11.a, the pivot engine;
-  the design: docs/architecture/PIVOT_ENGINE.md).
+  the design: docs/architecture/ARCHITECTURE.md#26-the-pivot-engine).
 -->
 <html lang="en">
 <head>
@@ -286,7 +286,7 @@ tr.new td{border-left:0} tr.new td.l{box-shadow:inset 3px 0 0 var(--ok)} tr.gone
 <div class="note" style="margin-top:4px">Shown as <span class="mono">wavg_return · asha @4</span> wherever it is used; never an official measure.</div></div>
 </div></div>
 <div class="why"><div class="card"><h3>How it feels</h3><ul><li>Excel's PivotTable, field for field: drag, nest, expand, double-click for rows.</li><li>Everything Excel gets wrong is visibly right: VaR per cell, ≈ marked, diversification, Others computed.</li><li>One key for every action; the popover answers "where does this number come from" in place.</li></ul></div><div class="card"><h3>Why recommended</h3><ul><li>Nothing new to learn for anyone who has used Excel; adoption first.</li><li>The beyond-Excel parts sit where Excel's equivalents would be, so they are found.</li><li>B's command line is always in the bar, and C's compare is the Compare picker.</li></ul></div><div class="card"><h3>Trade-offs</h3><ul><li>The right rail takes 330 px; it folds away with <span class="k">F</span>.</li><li>Explain and what-if open as panels, not side by side (B shows them always).</li><li>On a phone: the grid's top left and the chart; the field list is desk only.</li></ul></div></div>
-<footer>Mock-up. Design, not built (docs/architecture/PIVOT_ENGINE.md). Names, numbers, versions and nodes are illustrative. A ≈ figure states its error; a holistic figure is computed from its own members, never from other cells; masks and row rules are applied before anything is grouped.</footer>
+<footer>Mock-up. Design, not built (docs/architecture/ARCHITECTURE.md#26-the-pivot-engine). Names, numbers, versions and nodes are illustrative. A ≈ figure states its error; a holistic figure is computed from its own members, never from other cells; masks and row rules are applied before anything is grouped.</footer>
 </div>
 </body>
 </html>

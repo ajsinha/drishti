@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Compiles a visual query to one parameterised SELECT (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 7). Names come from the dataset, quoted; values are bound; the
+ * Compiles a visual query to one parameterised SELECT (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 7). Names come from the dataset, quoted; values are bound; the
  * reader's row rules are added as predicates the query cannot remove; masked columns are replaced by the mask and never grouped on. Two steps:
  * {@link #plan} resolves and checks everything against the model (and is what the layer router looks at), {@link #compile} writes the SQL.
  *
@@ -60,7 +60,7 @@ public final class SqlCompiler {
         Source of(String table, LocalDate from, LocalDate to);
     }
 
-    /** How deep filter-context sub-queries may nest (docs/architecture/BI_DESIGN.md section 3.3.5, rule 2). */
+    /** How deep filter-context sub-queries may nest (docs/architecture/ARCHITECTURE.md §28 section 3.3.5, rule 2). */
     public static final int MAX_CONTEXT_DEPTH = 3;
 
     /** One output column. */
@@ -242,7 +242,7 @@ public final class SqlCompiler {
             denied = rules.isEmpty();
         }
         if (ds.security().perTable()) {
-            // a data model: each table's rules bind to that table; a dimension's rules reach the facts that reference it (docs/architecture/BI_DESIGN.md 2.6)
+            // a data model: each table's rules bind to that table; a dimension's rules reach the facts that reference it (docs/architecture/ARCHITECTURE.md §28 2.6)
             tables.addAll(TableRules.reached(ds, tables, reader));
             TableRules.Bound bound = TableRules.bind(ds, tables, reader);
             rules = new ArrayList<>(bound.rules());

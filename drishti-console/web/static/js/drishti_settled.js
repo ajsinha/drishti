@@ -22,8 +22,8 @@
  *
  * resolves once the page is ready to be read:
  *   - the document loaded and its fonts in;
- *   - every panel chart and map drawn (an ECharts instance on every .chart and .xchart that is not .pnl-empty, in the page and in any
- *     open shadow root) and, unless options.animations is false, its animation finished;
+ *   - every panel chart and map drawn (drishti-chart's PanelCharts.state of every .chart and .xchart that is not .pnl-empty, in the page
+ *     and in any open shadow root) and, unless options.animations is false, its animation finished;
  *   - nothing marked aria-busy in the view or a render host (a control's query, a panel being fetched or swapped in);
  *   - the Discussion's badges placed when the Discussion is on;
  *   - under automation, no fetch of the page's own still unanswered;
@@ -64,9 +64,11 @@
     if (document.readyState !== 'complete') { why.push('document ' + document.readyState); }
     var undrawn = 0, moving = 0;
     scopes().forEach(function (s) {
+      var C = window.Drishti.elements && window.Drishti.elements.chart;      // the charts' library answers for its drawings
       s.querySelectorAll(CHARTS).forEach(function (el) {
-        var c = window.echarts && window.echarts.getInstanceByDom(el);
-        if (!c) { undrawn += 1; } else if (animations !== false && !c.isDisposed() && !c.getZr().animation.isFinished()) { moving += 1; }
+        // without the library on the page (a renderer's module draws in a shadow root), a drawing in the box is a drawn chart
+        var st = C ? C.PanelCharts.state(el) : (el.querySelector('svg, canvas') ? 'drawn' : 'none');
+        if (st === 'none') { undrawn += 1; } else if (animations !== false && st === 'animating') { moving += 1; }
       });
       if (s !== document && s.querySelector('[aria-busy="true"]')) { why.push('render host busy'); }
     });
@@ -90,7 +92,7 @@
   function settled(options) {
     var o = options || {}, quiet = o.quiet == null ? 50 : o.quiet, timeout = o.timeout == null ? 30000 : o.timeout;
     var began = Date.now(), last = Date.now();
-    // a change inside a chart's box is the chart drawing or animating: its own state is asked of ECharts above, not timed here
+    // a change inside a chart's box is the chart drawing or animating: its own state is asked of drishti-chart above, not timed here
     var mo = new MutationObserver(function (list) {
       for (var i = 0; i < list.length; i += 1) {
         var t = list[i].target, el = t.nodeType === 1 ? t : t.parentElement;

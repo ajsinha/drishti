@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Excel-style column filters (BI_DESIGN.md 8.1). Every column heading of a table, matrix (tree rows) or pivot grows a funnel
+/* Excel-style column filters (ARCHITECTURE.md §28 8.1). Every column heading of a table, matrix (tree rows) or pivot grows a funnel
    button; its menu sorts, lists the column's distinct values with counts (search, Select all, Blanks) or filters by a
    condition for the column's detected type (numbers, dates, text). Filters combine across columns (AND). "Above / below average"
    compares with the server's average of the column (the pivot engine's avg, POST /api/pivot/inline): this file computes no figure.
@@ -29,21 +29,19 @@
   var MASK = '•••', LIST_MAX = 500;
 
   // ---- values and types ----------------------------------------------------------------------------------------
-  var MULT = { k: 1e3, m: 1e6, mm: 1e6, bn: 1e9, b: 1e9, tn: 1e12 };
-  /** A cell as a sortable value: {n} for a number (1.5m, 250k, -30,205,543, 12%) or a date, else {s} (lower-case text). */
-  function value(text) {
-    var t = text.replace(/[−–]/g, '-').replace(/,/g, '').replace(/\s/g, '');
-    var m = t.match(/^([+-]?)(\d+(?:\.\d+)?)(k|m|mm|bn|b|tn)?(%|bp)?$/i);
-    if (m) { var n = parseFloat(m[2]) * (m[3] ? MULT[m[3].toLowerCase()] : 1); return { n: m[1] === '-' ? -n : n }; }
-    if (/^\d{4}-\d{2}-\d{2}/.test(t) && !isNaN(Date.parse(t.slice(0, 10)))) { return { n: Date.parse(t.slice(0, 10)) }; }
-    return { s: text.toLowerCase() };
+  /* A cell as a sortable value, {n} for a number (1.5m, 250k, -30,205,543, 12%) or a date, else {s} (lower-case text), and their order:
+     drishti-core's textSortKey and compareTextKeys, as the tables sort (drishti-grid's console tables). */
+  var keys = null;                                      // drishti-core's, from the page (or given by a host that imports the libraries)
+  function sortKeys() {
+    if (!keys) {
+      var c = window.Drishti.elements && window.Drishti.elements.core;
+      if (!c) { throw new Error('drishti_colfilter.js reads cells with drishti-core: load it first'); }
+      keys = { value: c.textSortKey, compare: c.compareTextKeys };
+    }
+    return keys;
   }
-  function compare(a, b) {
-    if (a.n != null && b.n != null) { return a.n - b.n; }
-    if (a.n != null) { return -1; }
-    if (b.n != null) { return 1; }
-    return a.s < b.s ? -1 : a.s > b.s ? 1 : 0;
-  }
+  function value(text) { return sortKeys().value(text); }
+  function compare(a, b) { return sortKeys().compare(a, b); }
   var ISO = /^\d{4}-\d{2}-\d{2}/;
   function norm(text) { return String(text == null ? '' : text).replace(/\s+/g, ' ').trim(); }
   /** 'blank', 'mask', 'date', 'num' or 'text' for one cell's text. */
@@ -78,7 +76,7 @@
   function opInfo(type, op) { var l = OPS[type] || OPS.text; for (var i = 0; i < l.length; i++) { if (l[i][0] === op) { return l[i]; } } return null; }
   function num(s) { return s == null ? NaN : (function (v) { return v.n == null ? NaN : v.n; })(value(norm(s))); }
 
-  /* "Above / below average": the average is the server's (ONE_GRAMMAR.md section 5: the browser computes no figure). The column's
+  /* "Above / below average": the average is the server's (docs/architecture/ARCHITECTURE.md section 5: the browser computes no figure). The column's
      numbers go to the pivot engine (POST /api/pivot/inline, avg(V)); its answer is kept per list of numbers (the last AVG_KEEP lists), so
      a redraw asks nothing. Until it answers no row is hidden; refused, no row matches and the reason is kept (api.averageProblem). */
   var AVG = {}, AVG_ORDER = [], AVG_KEEP = 50;
@@ -227,6 +225,8 @@
   }
   api.value = value; api.compare = compare; api.kindOf = kindOf; api.detect = detect; api.test = test; api.context = context; api.matches = matches;
   api.summarise = summarise; api.encode = encode; api.decode = decode; api.OPS = OPS;
+  /** A host that imports the libraries as modules (the client renderer) gives drishti-core's textSortKey and compareTextKeys. */
+  api.useSortKeys = function (v, c) { keys = { value: v, compare: c }; };
 
   // ---- the URL: ?f.<panel>.<column>=... (the console only) and the optional per-user memory --------------------------
   var PREFIX = 'f.';
@@ -407,15 +407,15 @@
         menu.appendChild(bar);
       }
       // a condition
-      var cw = el('div', 'cf-cond'), sel = el('select', 'cf-op'), none = el('option', null, '(no condition)');
-      sel.setAttribute('aria-label', 'Filter by condition'); none.value = ''; sel.appendChild(none);
-      OPS[type].forEach(function (p) { var op = el('option', null, p[1].charAt(0).toUpperCase() + p[1].slice(1)); op.value = p[0]; sel.appendChild(op); });
+      var cw = el('div', 'cf-cond'), sel = el('drishti-select', 'cf-op');      // drishti-inputs' Select (its list floats in the body: a .di-pop)
+      sel.options = { label: 'Filter by condition', search: false, options: [{ value: '', label: '(no condition)' }]
+        .concat(OPS[type].map(function (p) { return { value: p[0], label: p[1].charAt(0).toUpperCase() + p[1].slice(1) }; })) };
       var ia = el('input', 'cf-a'), ib = el('input', 'cf-b'), err = el('div', 'cf-err');
       err.setAttribute('role', 'alert');
       function showArgs() {
         var p = opInfo(type, sel.value), n = p ? p[2] : 0, top = sel.value === 'top' || sel.value === 'bot';
         ia.hidden = n < 1; ib.hidden = n < 2;
-        ia.type = top ? 'number' : type === 'date' ? 'date' : 'text'; ib.type = type === 'date' ? 'date' : 'text';
+        if (!ia.diPicker) { ia.type = top ? 'number' : type === 'date' ? 'date' : 'text'; ib.type = type === 'date' ? 'date' : 'text'; }
         ia.setAttribute('aria-label', top ? 'How many items' : n === 2 ? 'From' : 'Value'); ib.setAttribute('aria-label', 'To');
         ia.placeholder = type === 'number' && !top ? 'e.g. 1m' : ''; ib.placeholder = ia.placeholder;
         if (top && !ia.value) { ia.value = '10'; }
@@ -423,7 +423,9 @@
       if (current && current.c) { sel.value = current.c.op; ia.value = current.c.a || ''; ib.value = current.c.b || ''; }
       cw.appendChild(sel); cw.appendChild(ia); cw.appendChild(ib); menu.appendChild(cw); menu.appendChild(err);
       showArgs();
-      sel.addEventListener('change', function () { showArgs(); err.textContent = ''; if (sel.value && !ia.hidden) { ia.focus(); } });
+      var DI = window.Drishti && window.Drishti.elements && window.Drishti.elements.inputs;
+      if (type === 'date' && DI) { DI.upgradeDateInput(ia, { label: 'From', placeholder: 'T-1, ME or 6 Nov 2026' }); DI.upgradeDateInput(ib, { label: 'To', placeholder: 'T-1, ME or 6 Nov 2026' }); }   // drishti-inputs' date pickers
+      sel.addEventListener('drishti:change', function () { showArgs(); err.textContent = ''; if (sel.value && !ia.hidden) { ia.focus(); } });
 
       // the checklist
       var q = el('input', 'cf-q'), list = el('div', 'cf-list'), items = [], typed = false;
@@ -531,7 +533,7 @@
       var doc = menu.ownerDocument;
       function away(e) {
         var t = e.composedPath ? e.composedPath()[0] : e.target;
-        if (!t || menu.contains(t) || (t.closest && t.closest('.cf-btn'))) { return; }
+        if (!t || menu.contains(t) || (t.closest && (t.closest('.cf-btn') || t.closest('.di-pop')))) { return; }   // a date picker's calendar floats in the body
         closeMenu(false);
       }
       function onResize() { closeMenu(false); }
@@ -548,7 +550,7 @@
           if (refocus && b.isConnected) { b.focus(); }
         }
       };
-      (o.sort ? menu.querySelector('.cf-act') : sel).focus();
+      if (o.sort) { menu.querySelector('.cf-act').focus(); } else { sel.component.focus(); }
     }
     return self;
   };

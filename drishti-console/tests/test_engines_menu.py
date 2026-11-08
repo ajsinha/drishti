@@ -12,9 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Engines menu (2.9.11.a, mock-up engines-menu/A; config/menus.yaml, core/menus.py) and the help hub's engine rule, without a
+"""The Engines menu (2.9.11.a, mock-up engines-menu/A; config/sitemap.yaml, core/menus.py) and the help hub's engine rule, without a
 browser: one top menu in place of the VaR and Exposure menus, a column per running engine with its command word, drawn only for a role
-that opens an engine (opens: in menus.yaml; administrators open all); the search box past search-over engines; Admin -> Engines and the
+that opens an engine (opens: in sitemap.yaml; administrators open all); the search box past search-over engines; Admin -> Engines and the
 engines not running for administrators only; the same rule refuses an engine's command words in words and drops them from the
 type-ahead; Help shows every running engine's pages to anyone who can open Help (signed out too) and leaves out an engine that runs
 nowhere (an administrator sees those greyed). The browser side: test_engines_menu_browser.py and test_help_hub_browser.py."""
@@ -29,7 +29,7 @@ from core import engines
 from core.auth import Identity
 from test_edition import RISK_ABOUT, _app, _client
 
-CATALOGUE = yaml.safe_load((CONSOLE / "config" / "engines.yaml").read_text(encoding="utf-8"))["engines"]
+CATALOGUE = engines.entries()
 ROLES = {"alice": ("*",), "mira": ("market-risk",), "cole": ("credit-risk",), "bea": ("bi-analyst",)}
 
 
@@ -54,7 +54,7 @@ def _about(off: set[str]) -> list[dict]:
 
 
 def test_the_menus_file_has_one_engines_menu_and_no_var_or_exposure_menu():
-    spec = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+    spec = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
     ids = [m["id"] for m in spec["menus"]]
     assert ids[:2] == ["views", "engines"] and "var" not in ids and "exposure" not in ids
     eng = next(m for m in spec["menus"] if m["id"] == "engines")
@@ -67,15 +67,16 @@ def test_the_menus_file_has_one_engines_menu_and_no_var_or_exposure_menu():
 
 
 def test_the_pre_deal_check_and_fx_volatility_have_one_menu_item_each():
-    """Lean (2.9.11.c): Pre-deal check (XWIF) only under Counterparties, FX volatility (FXV) only under Volatility."""
-    spec = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+    """Lean (2.9.11.c): Pre-deal check (PREDEAL, the server's pre-deal service since 2.9.11.g) only under Counterparties, FX volatility
+    (FXV) only under Volatility."""
+    spec = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
     where: dict[str, list[str]] = {}
     for m in spec["menus"]:
         for col in m.get("columns") or []:
             for it in col.get("items") or []:
                 if it.get("cmd"):
                     where.setdefault(it["cmd"], []).append(m["id"])
-    assert where["XWIF"] == ["counterparties"] and where["FXV"] == ["volatility"]
+    assert where["PREDEAL"] == ["counterparties"] and where["FXV"] == ["volatility"] and "XWIF" not in where
 
 
 def test_an_administrator_sees_every_running_engine_with_its_word_and_admin_engines(backend, monkeypatch):
@@ -140,7 +141,7 @@ def test_an_engines_commands_follow_the_same_rule_as_its_menu_column(backend, mo
     app = _app(backend, monkeypatch)
     _people(app, monkeypatch)
     mira = _client(app, "mira")                                                         # market risk: VaR, FRTB-SA, SIMM; not Exposure
-    for typed in ("EXP CPTY:CP-ALDERSHOT", "XWIF", "exp bank"):
+    for typed in ("EXP CPTY:CP-ALDERSHOT", "PLAY EXP", "exp bank"):
         r = mira.get("/go", params={"q": typed + " <GO>"}, follow_redirects=False)
         assert r.status_code == 303 and "Exposure is not opened for your role; ask an administrator." in unquote(r.headers["location"]), typed
     bea = _client(app, "bea")
@@ -150,8 +151,8 @@ def test_an_engines_commands_follow_the_same_rule_as_its_menu_column(backend, mo
         assert f"{title} is not opened for your role" in unquote(r.headers.get("location", "")), typed
     r = mira.get("/go", params={"q": "VAR BANK <GO>"}, follow_redirects=False)
     assert "not opened for your role" not in unquote(r.headers.get("location", ""))
-    assert bea.get("/api/suggest", params={"q": "VAR B"}).json() == [] and bea.get("/api/suggest", params={"q": "PLAY"}).json() == []
-    assert mira.get("/api/suggest", params={"q": "PLAY"}).json()                        # her VaR Playground is offered
+    assert bea.get("/api/search", params={"in": "command", "q": "VAR B"}).json()["items"] == [] and bea.get("/api/search", params={"in": "command", "q": "PLAY"}).json()["items"] == []
+    assert mira.get("/api/search", params={"in": "command", "q": "PLAY"}).json()["items"]                        # her VaR Playground is offered
     admin = _client(app)
     r = admin.get("/go", params={"q": "EXP BANK <GO>"}, follow_redirects=False)
     assert "not opened for your role" not in unquote(r.headers.get("location", ""))
@@ -187,10 +188,10 @@ def test_the_search_box_shows_past_search_over_engines(backend, monkeypatch, tmp
     from core import menus
 
     engines.reset()
-    spec = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+    spec = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
     next(m for m in spec["menus"] if m["id"] == "engines")["search-over"] = 2
     (tmp_path / "config").mkdir()
-    (tmp_path / "config" / "menus.yaml").write_text(yaml.safe_dump(spec), encoding="utf-8")
+    (tmp_path / "config" / "sitemap.yaml").write_text(yaml.safe_dump(spec), encoding="utf-8")
     monkeypatch.setattr(menus, "_console_dir", lambda request: tmp_path)
     app = _app(backend, monkeypatch)
     page = _client(app).get("/t").text

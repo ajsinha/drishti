@@ -29,6 +29,8 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_gov_stack  # noqa: E402
 from bi_gov_stack import CONSOLE_URL, PASSWORD  # noqa: E402
+from bi_report_helpers import code_text, type_code  # noqa: E402
+from select_helpers import has_option
 
 
 @pytest.fixture(scope="module")
@@ -64,11 +66,11 @@ def sign_in(browser, user, **ctx):
     page = context.new_page()
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
-    page.goto(CONSOLE_URL + "/login?next=/bi")
+    page.goto(CONSOLE_URL + "/login?next=/bi/catalogue")
     page.fill("#lu", user)
     page.fill("#lp", PASSWORD)
     page.click("button[type=submit]")
-    page.wait_for_url("**/bi")
+    page.wait_for_url("**/bi/catalogue")
     page.errors = errors
     return page
 
@@ -89,8 +91,8 @@ def edit_body(page, change, message):
     expect(rows.first).to_be_visible(timeout=15000)                      # the history has loaded (the item's first cut at least): count it then,
     before = rows.count()                                                 # not while it is still drawing (counted early, a save went unnoticed)
     page.get_by_role("button", name="Edit", exact=True).click()
-    box = page.locator("[data-edit] textarea[name=body]")
-    box.fill(change(box.input_value()))
+    body = "[data-edit] textarea[name=body]"                              # drishti-inputs' CodeEditor: typed into as a person does
+    type_code(page, body, change(code_text(page, body)))
     page.fill("[data-edit] input[name=message]", message)
     page.click("[data-edit] button[type=submit]")
     expect(page.locator("[data-edit]")).to_be_hidden(timeout=30000)        # this save went through (the message may still be the last save's)
@@ -141,9 +143,12 @@ def test_a_steward_reviews_with_the_diff_check_and_preview_and_approves(stack, b
     expect(review).to_contain_text("Check passed")
     expect(review.locator("table.bi-grid tbody tr").first).to_be_visible()              # a data preview, with the reviewer's own rules
     assert review.locator("table.bi-grid tbody tr").count() >= 3
-    sue.fill(".bi-note", "looks right")
-    sue.get_by_role("button", name="Approve and publish").click()
-    expect(sue.locator("[data-msg]")).to_contain_text("Approved and published")
+    sue.get_by_role("link", name="Decide in Approvals").click()                       # decided in the one Approvals queue
+    sue.locator("[data-ap-item]:not([hidden])").wait_for()
+    sue.fill("[data-ap-comment]", "looks right")
+    sue.get_by_role("button", name="Approve", exact=True).click()
+    expect(sue.locator("[data-ap-said]")).to_have_text("Approved.")
+    open_item(sue, stack.ids["positions"])
     expect(sue.locator("[data-badges]")).to_contain_text("published")
     expect(sue.locator("[data-sec-review]")).to_be_hidden()
     # the author is told through the inbox; bob may not approve his own request (four-eyes)
@@ -154,7 +159,7 @@ def test_a_steward_reviews_with_the_diff_check_and_preview_and_approves(stack, b
     bi_gov_stack.call("POST", f"/bi/items/{bob_item['id']}/propose", "bob", ["bi-reviewer"], {})
     bob = sign_in(browser, "bob")
     open_item(bob, bob_item["id"])
-    expect(bob.get_by_role("button", name="Approve and publish")).to_have_count(0)
+    expect(bob.get_by_role("link", name="Decide in Approvals")).to_have_count(0)
     expect(bob.get_by_role("button", name="Withdraw proposal")).to_be_visible()
     for p in (ann, sue, bob):
         clean(p)
@@ -165,7 +170,7 @@ def test_the_certified_badge_shows_in_the_catalogue_and_search(stack, browser):
     cat.goto(CONSOLE_URL + "/bi/catalogue?kind=all")                                   # the All tab: every kind (the catalogue is split by kind)
     expect(cat.locator(".bi-card")).to_have_count(5)                                    # the two tables, the two models and the report
     expect(cat.locator(".bi-card").first.locator(".bi-certified")).to_be_visible()      # certified items are pinned first
-    cat.select_option("select[name=endorsement]", "certified")
+    cat.select_option("[name=endorsement]", "certified")
     cards = cat.locator(".bi-card")
     expect(cards).to_have_count(2)
     expect(cards.first.locator(".bi-certified")).to_contain_text("certified")
@@ -209,7 +214,7 @@ def test_a_model_change_that_breaks_its_contract_needs_a_new_major_version(stack
 def test_a_bundle_is_exported_and_imported_with_a_dry_run_first(stack, browser, tmp_path):
     ann = sign_in(browser, "ann")
     ann.goto(CONSOLE_URL + "/bi/environments")
-    expect(ann.locator("[data-ws-select] option")).not_to_have_count(0)
+    ann.wait_for_function(has_option("[data-ws-select]"))
     ann.select_option("[data-ws-select]", "rates-desk")
     with ann.expect_download() as d:
         ann.click("[data-export] button[type=submit]")

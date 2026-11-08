@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build › Tables & models in Chromium (docs/architecture/EDITORS.md sections 1 to 4), over a real server and console from the worker's pool
+"""Build › Tables & models in Chromium (docs/architecture/SHARED_SCREENS.md sections 1 to 4), over a real server and console from the worker's pool
 (security on, the default packs and their demo data, a tables folder of the file's own): a click on every button of the shell, the table editor, the
 model editor, the Python-driven table editor and the + New steps, each checked for what it does; the live YAML and the visual side follow each
 other; the theme and the phone layout; keyboard access; no page error and no policy violation.
@@ -60,6 +60,19 @@ hierarchies:
   Product: [p.PRODUCT]
 """
 VIOLATIONS = "window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));"
+
+
+def fx(pg, sel, text):
+    """A formula field (drishti-inputs' one-line Rachana code editor; the element holds the value) given new text, as a paste."""
+    wait(pg, f"!!(document.querySelector({sel!r}) || {{}}).drishtiCode && !!document.querySelector({sel!r}).drishtiCode.cm")
+    pg.evaluate("""([s, t]) => { const cm = document.querySelector(s).drishtiCode.cm; cm.focus();
+      cm.replaceRange(t, { line: 0, ch: 0 }, { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }, 'paste'); }""", [sel, text])
+
+
+def fill_yaml(pg, text):
+    """Types the whole YAML anew, as a person does (the editor is drishti-inputs' CodeEditor: CodeMirror's +input origin)."""
+    pg.wait_for_selector("[data-yaml] .CodeMirror")
+    pg.evaluate("t => { const cm = document.querySelector('[data-yaml] .CodeMirror').CodeMirror; cm.focus(); cm.replaceRange(t, {line: 0, ch: 0}, {line: cm.lineCount(), ch: 0}, '+input'); }", text)
 
 
 @pytest.fixture(scope="module")
@@ -112,7 +125,54 @@ def open_object(pg, name):
 
 
 def yaml(pg):
-    return pg.eval_on_selector("[data-yaml]", "e => e.value")
+    return pg.evaluate("window.Drishti.editors.yamlText()")
+
+
+# ---- an editor's row grids (drishti-grid with cell editing: E.rowGrid) -------------------------------------------------------------
+
+
+def gcell(pg, key, rid, c):
+    """Focuses a cell of an editor's row grid by its row id and column number and starts editing it, as Enter on it does (a checkbox
+    turns at once). The grid draws only the rows in view, so the row is found in its model, not in the page."""
+    wait(pg, f"!!(document.querySelector(\"[data-rowgrid='{key}']\") || {{}}).grid")
+    pg.evaluate("""([k, id, c]) => { const g = document.querySelector(`[data-rowgrid='${k}']`).grid;
+      for (let r = 0; r < g.model.rowCount(); r++) { if (g.model.idAt(r) === id) { g.focusCell(r, c); g.startEditing(r, c); return; } }
+      throw new Error('no row ' + id + ' in ' + k); }""", [key, str(rid), c])
+
+
+def row_js(key, rid):
+    """A JavaScript test: the row grid holds a row of that id (in its model: drawn or not)."""
+    return (f"(() => {{ const b = document.querySelector(\"[data-rowgrid='{key}']\"); if (!b || !b.grid) {{ return false; }} const m = b.grid.model;"
+            f" for (let r = 0; r < m.rowCount(); r++) {{ if (m.idAt(r) === {str(rid)!r}) {{ return true; }} }} return false; }})()")
+
+
+OPEN = ("!!document.querySelector('.dg-editor') && document.querySelector('.dg-editor').style.visibility !== 'hidden'"
+        " && (document.querySelector('.dg-editor').contains(document.activeElement) || !!document.activeElement.closest('.di-select-pop'))")      # the cell editor over its cell, with the focus
+
+
+def gselect(pg, key, rid, c, label):
+    gcell(pg, key, rid, c)
+    wait(pg, OPEN)
+    pg.locator(".di-select-pop").get_by_role("option", name=label, exact=True).click()   # drishti-inputs' Select: picking saves
+    wait(pg, "!document.querySelector('.dg-editor')")
+
+
+def gtext(pg, key, rid, c, text):
+    gcell(pg, key, rid, c)
+    wait(pg, OPEN)
+    pg.fill(".dg-editor input", text)
+    pg.keyboard.press("Enter")
+
+
+def gcode(pg, key, rid, c, text):
+    """A formula cell (drishti-inputs' one-line code editor over the cell) given new text, as a paste, then Enter."""
+    gcell(pg, key, rid, c)
+    wait(pg, "!!document.querySelector('.dg-editor-code .CodeMirror')")
+    wait(pg, OPEN)          # over its cell and focused, as gtext and gselect wait: Enter in an editor without the focus goes nowhere
+    pg.evaluate("""t => { const cm = document.querySelector('.dg-editor-code .CodeMirror').CodeMirror; cm.focus();
+      cm.replaceRange(t, { line: 0, ch: 0 }, { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }, 'paste'); }""", text)
+    pg.keyboard.press("Enter")
+    wait(pg, "!document.querySelector('.dg-editor')")
 
 
 # ---- the shell --------------------------------------------------------------------------------------------------------------------
@@ -177,7 +237,7 @@ def test_copy_as_a_draft_save_propose_and_history(pg):
     assert pg.is_disabled("[data-act=propose]")
     pg.click("[data-act=save]")
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-save-go]')")
-    wait(pg, "document.querySelector('[data-save-ws]').options.length > 1")
+    wait(pg, "document.querySelector('[data-save-ws]').component.options.length > 1")
     pg.select_option("[data-save-ws]", label="Editors Desk")
     pg.fill("[data-save-msg]", "a copy to change")
     pg.click("[data-save-go]")
@@ -226,55 +286,62 @@ def test_new_table_steps_land_in_the_editor_and_both_sides_follow_each_other(pg)
     assert f"[data-col-row='{dropped}']" and pg.locator(f"[data-col-row='{dropped}']").count() == 0
     assert "table: mine.trade_view" in yaml(pg)
     # a visual edit shows in the YAML with its line highlighted
-    pg.click("[data-add-computed]")
-    pg.fill("[data-col-from='NEW_COLUMN']", "$.QUANTITY / 1000")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('$.QUANTITY / 1000')")
-    settle(pg)
-    assert not pg.is_hidden("[data-yaml-hl]")
-    pg.fill("[data-col-name='NEW_COLUMN']", "MTM_K")
-    pg.press("[data-col-name='NEW_COLUMN']", "Tab")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('MTM_K:')")
-    settle(pg)
-    pg.select_option("[data-col-type='MTM_K']", "integer")
-    wait(pg, "/MTM_K:.*integer/.test(document.querySelector('[data-yaml]').value)")
-    pg.check("[data-col-key='MTM_K']")
-    wait(pg, "/(keys: \\[[^\\]]*MTM_K|MTM_K:.*key: true)/.test(document.querySelector('[data-yaml]').value)")
-    pg.uncheck("[data-col-key='MTM_K']")
-    settle(pg)
-    # a source column added from the checklist, then shown off again
-    avail = pg.get_attribute("[data-col-add] >> nth=0", "data-col-add")
-    pg.click(f"[data-col-add='{avail}']")
-    wait(pg, f"!!document.querySelector(\"[data-col-row='{avail}']\")")
-    pg.click(f"[data-col-show='{avail}']")
-    wait(pg, f"!document.querySelector(\"[data-col-row='{avail}']\")")
-    # the filter, with type-ahead from the function catalogue
-    pg.click("[data-path=filter]")
-    pg.keyboard.type("abs")
-    wait(pg, "!!document.querySelector('.ed-fx:not([hidden]) li')")
+    pg.click("[data-add-computed]")                                            # its formula cell opens for typing
+    wait(pg, "!!document.querySelector('.dg-editor-code .CodeMirror')")
+    wait(pg, OPEN)                                                             # over its cell and focused, though its row was out of view
     pg.keyboard.press("Escape")
-    pg.fill("[data-path=filter]", "$.QUANTITY != null")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('filter:')")
+    gcode(pg, "columns", "chosen:NEW_COLUMN", 2, "$.QUANTITY / 1000")
+    wait(pg, "window.Drishti.editors.yamlText().includes('$.QUANTITY / 1000')")
+    settle(pg)
+    assert pg.locator("[data-yaml] .di-code[data-hl]").count() == 1            # the line being edited is marked in the YAML
+    gtext(pg, "columns", "chosen:NEW_COLUMN", 1, "MTM_K")
+    wait(pg, "window.Drishti.editors.yamlText().includes('MTM_K:')")
+    settle(pg)
+    gselect(pg, "columns", "chosen:MTM_K", 3, "integer")
+    wait(pg, "/MTM_K:[\\s\\S]{0,120}integer/.test(window.Drishti.editors.yamlText())")
+    gcell(pg, "columns", "chosen:MTM_K", 4)                                    # a checkbox cell turns at once
+    wait(pg, "/(keys: \\[[^\\]]*MTM_K|MTM_K:[\\s\\S]{0,160}key: true)/.test(window.Drishti.editors.yamlText())")
+    gcell(pg, "columns", "chosen:MTM_K", 4)
+    settle(pg)
+    # a source column added from the checklist (the grid's Show cell), then shown off again
+    avail = pg.evaluate("""() => { const g = document.querySelector("[data-rowgrid='columns']").grid;
+      for (let r = 0; r < g.model.rowCount(); r++) { const id = g.model.idAt(r); if (id.startsWith('available:')) { return id.slice(10); } } return null; }""")
+    assert avail, "the source offers a column not chosen yet"
+    gcell(pg, "columns", f"available:{avail}", 0)
+    wait(pg, row_js("columns", f"chosen:{avail}"))
+    settle(pg)
+    gcell(pg, "columns", f"chosen:{avail}", 0)
+    wait(pg, row_js("columns", f"available:{avail}"))
+    settle(pg)
+    # the filter, with type-ahead from the function catalogue
+    fx(pg, "[data-path=filter]", "")
+    pg.keyboard.type("abs")
+    wait(pg, "[...document.querySelectorAll('.di-complete-pop .di-option-label')].some(e => e.getClientRects().length && e.textContent === 'abs')")
+    pg.keyboard.press("Escape")
+    fx(pg, "[data-path=filter]", "$.QUANTITY != null")
+    wait(pg, "window.Drishti.editors.yamlText().includes('filter:')")
     pg.select_option("[data-materialize]", "on-load")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('materialize: on-load')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('materialize: on-load')")
     settle(pg)
     # a YAML edit shows in the visual side; a broken line is marked and the visual view waits
     text = yaml(pg).replace("title: My trades", "title: Our trades")
-    pg.fill("[data-yaml]", text)
+    fill_yaml(pg, text)
     wait(pg, "document.querySelector('[data-path=title]').value === 'Our trades'")
-    pg.fill("[data-yaml]", text + "columns: [\n")
+    fill_yaml(pg, text + "columns: [\n")
     wait(pg, "/not valid/.test(document.querySelector('[data-yaml-state]').textContent)")
-    assert pg.locator("[data-gutter] .ed-g-error").count() >= 1
-    pg.click("[data-goto-line] >> nth=0")
+    wait(pg, "document.querySelectorAll('[data-yaml] .di-problem.di-lint-error').length >= 1")       # the problem listed under the editor (its gutter sign may be out of view: CodeMirror draws the lines in view)
+    pg.click("[data-yaml] .di-problem button >> nth=0")                                   # a problem leads to its line (the code editor's list)
     pg.click("[data-mode=visual]")
     assert "waits until the YAML reads" in pg.inner_text("[data-msg]")
-    pg.fill("[data-yaml]", text)
+    fill_yaml(pg, text)
     wait(pg, "/live/.test(document.querySelector('[data-yaml-state]').textContent) && !/not valid/.test(document.querySelector('[data-yaml-state]').textContent)")
     settle(pg)
-    # the source picker
-    pg.select_option("[data-source-pick]", "table:trading.trade_summary")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('table: trading.trade_summary')")
-    pg.select_option("[data-source-pick]", "kind:trade")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('kind: trade')")
+    # the source picker (the base row's Source cell: a select of the kinds and tables)
+    gselect(pg, "sources", "base", 0, "trading.trade_summary")
+    wait(pg, "window.Drishti.editors.yamlText().includes('table: trading.trade_summary')")
+    settle(pg)
+    gselect(pg, "sources", "base", 0, "trade")
+    wait(pg, "window.Drishti.editors.yamlText().includes('kind: trade')")
     settle(pg)
 
 
@@ -285,9 +352,9 @@ def test_text_toggle_and_a_join_with_its_cost(pg):
     wait(pg, "!!document.querySelector('[data-statement]')")
     assert pg.input_value("[data-statement]").startswith("table mine.trade_join from trade")
     st = pg.input_value("[data-statement]").rstrip() + "\nwhere $.QUANTITY > 0\n"
-    pg.fill("[data-statement]", st)
+    fx(pg, "[data-statement]", st)
     wait(pg, "/reads/.test(document.querySelector('[data-statement-state]').textContent)")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('filter:')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('filter:')")
     pg.click("[data-table-view=grid]")
     wait(pg, "!!document.querySelector('[data-columns]')")
     settle(pg)
@@ -295,11 +362,11 @@ def test_text_toggle_and_a_join_with_its_cost(pg):
     pg.click("[data-add-lookup]")
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-lookup-go]')")
     pg.select_option("[data-lookup-table]", "trading.trade_products")
-    pg.fill("[data-lookup-on]", "$.productType")
+    fx(pg, "[data-lookup-on]", "$.productType")
     pg.check("[data-lookup-col='NAME']")
     pg.click("[data-lookup-go]")
     wait(pg, "!!document.querySelector(\"[data-lookup='trading.trade_products']\")")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('related(trading.trade_products.NAME')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('related(trading.trade_products.NAME')")
     settle(pg)
     wait(pg, "!!document.querySelector('[data-cost]')")
     pg.click("[data-remove-lookup='trading.trade_products']")
@@ -321,7 +388,7 @@ def test_model_tabs_measure_card_and_access(pg):
     settle(pg)
     pg.click("[data-tab=overview]")
     pg.fill("[data-question=about] [data-path=model]", "brief-copy")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('model: brief-copy')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('model: brief-copy')")
     pg.fill("[data-question=about] [data-path=title]", "A copy")
     pg.fill("[data-question=about] [data-path=description]", "Trades in brief, copied")
     settle(pg)
@@ -332,18 +399,19 @@ def test_model_tabs_measure_card_and_access(pg):
     pg.click("[data-add-table]")
     wait(pg, "document.querySelectorAll('[data-model-table]').length === 3")
     last = pg.get_attribute("[data-model-table] >> nth=2", "data-model-table")
-    pg.select_option(f"[data-model-role='{last}']", "dimension")
+    gselect(pg, "tables", last, 2, "dimension")                               # the Role cell: a select in drishti-grid's editor
+    wait(pg, f"/{last}:[\\s\\S]*role: dimension/.test(window.Drishti.editors.yamlText())")
     pg.click("[data-add-rel]")
-    wait(pg, "document.querySelectorAll('[data-rel-active]').length === 2")
-    pg.uncheck("[data-rel-active='1']")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('active: false')")
+    wait(pg, "document.querySelectorAll('[data-rel]').length === 2")
+    gcell(pg, "relationships", "1", 2)                                       # Active: a checkbox cell turns at once
+    wait(pg, "window.Drishti.editors.yamlText().includes('active: false')")
     pg.click("[data-remove-rel] >> nth=1")
     pg.click("[data-remove-alias] >> nth=2")
     wait(pg, "document.querySelectorAll('[data-model-table]').length === 2")
     pg.click("[data-tab=fields]")
-    wait(pg, "document.querySelectorAll('[data-panel=fields] tbody tr').length >= 4")
+    wait(pg, "document.querySelectorAll('[data-panel=fields] [data-field]').length >= 4")
     pg.click("[data-tab=measures]")
-    wait(pg, "document.querySelector(\"[data-adds-up='MTM']\").textContent.startsWith('yes')")
+    wait(pg, "!!document.querySelector(\"[data-adds-up='MTM']\") && document.querySelector(\"[data-adds-up='MTM']\").textContent.startsWith('yes')")
     assert "per total" in pg.inner_text("[data-adds-up='Avg MTM']")
     pg.click("[data-measure-card='MTM']")
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-card]')")
@@ -351,25 +419,31 @@ def test_model_tabs_measure_card_and_access(pg):
     pg.click("[data-dialog-close]")
     pg.fill("[data-new-measure-name]", "Rows")
     pg.click("[data-add-measure]")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('Rows:')")
-    pg.fill("[data-path='measures.Rows.expr']", "count(t)")
-    pg.fill("[data-path='measures.Rows.format']", "#,##0")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('#,##0')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('Rows:')")
+    gcode(pg, "measures", "Rows", 1, "count(t)")                             # the formula cell: a one-line Rachana code editor
+    wait(pg, "window.Drishti.editors.yamlText().includes('count(t)')")
+    gtext(pg, "measures", "Rows", 2, "#,##0")
+    wait(pg, "window.Drishti.editors.yamlText().includes('#,##0')")
     pg.click("[data-remove-measure] >> nth=2")
     wait(pg, "!document.querySelector(\"[data-measure='Rows']\")")
     pg.click("[data-tab=hierarchies]")
     pg.fill("[data-new-hierarchy-name]", "By product")
     pg.click("[data-add-hierarchy]")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('By product')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('By product')")
+    gcode(pg, "hierarchies", "By product", 1, "p.PRODUCT, p.NAME")
+    wait(pg, "window.Drishti.editors.yamlText().includes('p.NAME')")
     pg.click("[data-remove-hierarchy] >> nth=1")
     pg.click("[data-tab=rules]")
     pg.click("[data-add-rule]")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('user.desks')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('user.desks')")
+    rule = pg.evaluate("document.querySelector(\"[data-rowgrid='rules']\").grid.model.idAt(0)")
+    gcode(pg, "rules", rule, 2, "t.PRODUCT in user.desks")
+    wait(pg, "window.Drishti.editors.yamlText().includes('t.PRODUCT in user.desks')")
     pg.click("[data-remove-rule]")
-    wait(pg, "!document.querySelector('[data-yaml]').value.includes('user.desks')")
+    wait(pg, "!window.Drishti.editors.yamlText().includes('user.desks')")
     pg.click("[data-tab=masks]")
     pg.check("[data-mask='t.MTM']")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('masked')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('masked')")
     pg.uncheck("[data-mask='t.MTM']")
     pg.click("[data-tab=access]")
     wait(pg, "document.querySelectorAll('[data-access-role]').length > 0")
@@ -436,17 +510,17 @@ def test_python_table_template_notebook_contract_and_the_sample_run(pg):
     settle(pg)
     pg.fill("[data-contract-new]", "EXTRA")
     pg.click("[data-contract-add]")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('EXTRA')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('EXTRA')")
     pg.select_option("[data-contract-type='EXTRA']", "integer")
     pg.check("[data-contract-key='EXTRA']")
     pg.check("[data-contract-notnull='EXTRA']")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('not-null')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('not-null')")
     pg.click("[data-contract-remove='EXTRA']")
     pg.select_option("[data-py-runs]", "on-load")
     pg.fill("[data-py-pool]", "default")
     pg.fill("[data-py-timeout]", "120")
     pg.fill("[data-py-memory]", "1024")
-    wait(pg, "document.querySelector('[data-yaml]').value.includes('on-load')")
+    wait(pg, "window.Drishti.editors.yamlText().includes('on-load')")
     settle(pg)
     assert "Press Sample run" in pg.inner_text("[data-sample-run]")
     # the sample run: the input read as this person, the code run on the pool, the rows checked against the contract (which names columns it does not return)
@@ -470,8 +544,8 @@ def test_light_theme_phone_layout_and_keyboard(pg):
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
     wait(pg, "document.querySelector('[data-title]').textContent === 'trading.trade_summary'")
     settle(pg)
-    bg = pg.evaluate("getComputedStyle(document.querySelector('.ed-head')).backgroundColor")
-    ink = pg.evaluate("getComputedStyle(document.querySelector('.ed-head')).color")
+    bg = pg.evaluate("getComputedStyle(document.querySelector('.dd-head')).backgroundColor")
+    ink = pg.evaluate("getComputedStyle(document.querySelector('.dd-head')).color")
     assert bg != ink
     # keyboard: Ctrl+Enter validates; + New opens its menu, Escape closes it
     pg.focus("[data-act=new]")

@@ -30,6 +30,7 @@ pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it
 
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "drishti-server" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "server"
+BANKING = ROOT / "drishti-banking" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "banking"   # the banking module's (DOMAIN_MODULES.md)
 CONSOLE = ROOT / "drishti-console"
 
 
@@ -46,15 +47,15 @@ class Server(unittest.TestCase):
             "dist/StatementController.java": 'format.equals("jsonl")',
             "dist/SubscriptionService.java": '"html", "pdf", "xlsx", "jsonl"',
             "reports/ReportService.java": 'format.equals("jsonl")',
-            "exposure/ExposureController.java": '"/captures/{id}/jsonl"',
-            "var/VarController.java": '"/captures/{id}/jsonl"',
+            "banking:exposure/ExposureController.java": '"/captures/{id}/jsonl"',
+            "banking:var/VarController.java": '"/captures/{id}/jsonl"',
             "net/ViewForwardFilter.java": 'Set.of("csv", "jsonl", "compare")'}
 
     def test_every_server_export_offers_jsonl(self):
         for rel, proof in self.WANT.items():
             with self.subTest(rel):
-                self.assertIn(proof, text(SERVER / rel))
-        self.assertIn('"jsonl".equalsIgnoreCase(format)', text(SERVER / "exposure/ExposureController.java"))      # the profile's format=
+                self.assertIn(proof, text(BANKING / rel[8:] if rel.startswith("banking:") else SERVER / rel))
+        self.assertIn('"jsonl".equalsIgnoreCase(format)', text(BANKING / "exposure/ExposureController.java"))      # the profile's format=
         self.assertIn('"jsonl".equalsIgnoreCase(format)', text(SERVER / "bi/runs/RunsController.java"))           # a stored result
 
     def test_the_compliance_export_is_jsonl(self):
@@ -67,7 +68,7 @@ class Server(unittest.TestCase):
 class Console(unittest.TestCase):
     def test_every_csv_download_route_has_a_jsonl_twin(self):
         routes = []
-        for f in sorted((CONSOLE / "routes").glob("*.py")):
+        for f in sorted(list((CONSOLE / "routes").glob("*.py")) + list((CONSOLE / "plugins").glob("*/routes/*.py"))):   # the core's and each module's
             routes += re.findall(r'@router\.(?:get|post)\("([^"]+)"\)', text(f))
         csv = [r for r in routes if r.endswith(".csv")]
         self.assertGreaterEqual(len(csv), 4)
@@ -76,8 +77,8 @@ class Console(unittest.TestCase):
                 self.assertIn(r[:-4] + ".jsonl", routes, f"{r} has no .jsonl twin")
         self.assertIn("/export/search.{fmt}", routes)                         # one route for both
         self.assertIn('FORMATS = ("pdf", "png", "xlsx", "csv", "jsonl")', text(CONSOLE / "routes" / "dist_routes.py"))
-        self.assertIn('"/csv", "/jsonl"', text(CONSOLE / "routes" / "var_routes.py"))
-        self.assertIn('("/csv", "/jsonl")', text(CONSOLE / "routes" / "exposure_routes.py"))
+        self.assertIn('"/csv", "/jsonl"', text(CONSOLE / "plugins" / "banking" / "routes" / "var_routes.py"))
+        self.assertIn('("/csv", "/jsonl")', text(CONSOLE / "plugins" / "banking" / "routes" / "exposure_routes.py"))
         self.assertIn("def to_jsonl(", text(CONSOLE / "core" / "export.py"))
 
     #: every UI menu or button that offers CSV or Excel: the file and what proves JSON Lines is offered beside it
@@ -92,10 +93,10 @@ class Console(unittest.TestCase):
           "web/templates/terminal/history.html": 'data-hx-export="jsonl"',
           "web/templates/terminal/search.html": "/export/search.jsonl",
           "web/templates/terminal/form.html": "/export/search.jsonl",
-          "web/static/js/drishti_exposure-explorer.js": 'format: "jsonl"',
-          "web/templates/terminal/exposure.html": "data-xx-jsonl",
-          "web/static/js/drishti_var-explorer.js": '"/jsonl"',
-          "web/templates/terminal/var.html": "data-vx-jsonl-path",
+          "plugins/banking/static/js/drishti_exposure-explorer.js": 'format: "jsonl"',
+          "plugins/banking/templates/terminal/exposure.html": "data-xx-jsonl",
+          "plugins/banking/static/js/drishti_var-explorer.js": '"/jsonl"',
+          "plugins/banking/templates/terminal/var.html": "data-vx-jsonl-path",
           "web/templates/subscribe.html": 'value="jsonl"',
           "web/templates/reports.html": 'value="jsonl"'}
 

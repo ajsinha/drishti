@@ -12,9 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Editions and lenses, the console side (docs/admin/EDITIONS.md).
+"""Editions and lenses, the console side (docs/guides/ADMIN_GUIDE.md).
 
-An *edition* is one setting on the servers (``drishti.edition``) naming ``config/editions/<name>.yaml``; the console learns the name from
+An *edition* is one setting on the servers (``drishti.edition``) naming ``config/lenses/<module>/<lens>.yaml``; the console learns the name from
 the server's about answer (:meth:`Editions.learn`), reads the same file and puts its presets as a layer under the site's own configuration
 (:meth:`core.config.Settings.layer`), so the site still wins key by key. A *lens* is the same file opened by one person on a full instance
 ("Open Drishti Risk"): kept in that person's settings (``lens``), it changes only what they see, never what they may read. A lens hides;
@@ -35,6 +35,7 @@ from typing import Any
 import yaml
 
 from core import engines as _engines
+from core import modules as _modules
 
 LOG = logging.getLogger("drishti.console.edition")
 LENS_HEADER = "X-Drishti-Lens"                       # the server's EditionContext.HEADER: the person's lens, on every backend call
@@ -49,17 +50,18 @@ WORD_PATHS = {"BI": ("/bi",), "FORM": ("/forms", "/form/"), "FUNC": ("/func",), 
               "VAR": ("/var", "/api/var/", "/admin/scopes"), "EXP": ("/exposure", "/api/exposure/"), "SMAT": ("/smat", "/api/smat/"),
               "PLAY": ("/play", "/api/play/"), "PIVOT": ("/pivot", "/api/pivot/")}
 FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "datamap": ("/datamap",), "data": ("/data", "/api/data/"), "workspaces": ("/w",),
-                 "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/", "/studio"), "calc": ("/calc",),
+                 "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/", "/studio", "/elements"), "calc": ("/calc",),
                  "reports": ("/reports",), "lakes": ("/admin/lakes", "/admin/api/lakes"),
                  "collaboration": ("/admin/collab",)}
 # (Admin -> AI and Admin -> Embedding stay reachable with their feature off, as before: they are where it is switched on; an edition
 # hides them through admin.pages.)
 # Admin pages by id (the edition's admin.pages); the path prefix each owns
 ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
-               "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out")
+               "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out",
+               "configuration")
 
 
-# The landings' page (EDITIONS.md › The design as built, section 7): each edition names its own (home.template, home.titles); a file that names none keeps
+# The landings' page (LENSES.md › The design): each edition names its own (home.template, home.titles); a file that names none keeps
 # Drishti Risk's, as before 2.9.7. Only templates under home/ named *_landing.html are taken.
 _LANDING_TEMPLATE = re.compile(r"home/[a-z0-9_]+_landing\.html")
 DEFAULT_LANDING_TEMPLATE = "home/risk_landing.html"
@@ -87,7 +89,7 @@ def _kinds_word(kind: str) -> str:
 
 def hidden_hint(edition, kind: str = "") -> str:
     """What to do about ``DRS-4023`` (a view refused because the edition or the person's lens hides its kind), naming the lens plainly
-    (CLIENT_RENDERER.md 10; plan 2.9.7 row 2a): never "check the kind and id", which sends a person hunting for a typo that is not there."""
+    (EMBED_GUIDE.md 10; plan 2.9.7 row 2a): never "check the kind and id", which sends a person hunting for a typo that is not there."""
     what = _kinds_word(kind)
     if edition is not None and getattr(edition, "active", False) and getattr(edition, "lens", False):
         return f"You are inside the {edition.title} lens, which does not include {what}: leave the lens (Views → Leave) or choose an entity it shows."
@@ -160,7 +162,9 @@ class Edition:
         return {str(c).strip().upper() for c in allow if str(c).strip()}
 
     def command_shown(self, code: str | None) -> bool:
-        if code and _engines.word_hidden(code):                  # a word of a compute engine that runs nowhere (COMPUTE_ENGINES.md 5.2)
+        if code and _engines.word_hidden(code):                  # a word of a compute engine that runs nowhere (ADMIN_GUIDE.md 5.2)
+            return False
+        if code and _modules.word_refusal(code) is not None:     # its module is off, or the function is off or not the person's (ACCESS_MODEL.md)
             return False
         allow = self.commands() if self.active else set()
         return not allow or not code or code.strip().upper() in allow
@@ -170,11 +174,15 @@ class Edition:
         command (EXP is both: the word decides)."""
         if _engines.typed_engine(text) is not None:               # PLAY FRTB with FRTB-SA running nowhere
             return False
+        if _modules.typed_refusal(text) is not None:              # PLAY VAR with banking off; VRES switched off or not granted
+            return False
         head = str(text or "").split()[0].upper() if str(text or "").split() else ""
         return self.word_on(head) if head in WORDS else self.command_shown(head)
 
     def word_on(self, word: str) -> bool:
         if _engines.word_hidden(word):                           # the engine runs on no server of the cluster: gone, whatever the edition
+            return False
+        if _modules.word_refusal(word) is not None:              # its module is off, or the function is off for the person: gone too
             return False
         if not self.active:
             return True
@@ -204,8 +212,24 @@ class Edition:
 
     @property
     def home_cards(self) -> list | None:
-        cards = self._get("home.cards") if self.active else None
-        return cards if isinstance(cards, list) else None
+        """Home's quick cards: the lens's (the registry's lens carries them, ``cards:``; the server says them per person), else a site's
+        ``edition: {home: {cards: ...}}`` override."""
+        if not self.active:
+            return None
+        cards = self._get("home.cards")
+        if isinstance(cards, list):
+            return cards
+        return _modules.lens_cards(self.name)
+
+    @property
+    def home_chips(self) -> list:
+        """Home's chips: the lens's (the registry's lens carries them, ``chips:``), else a site's ``edition: {home: {chips: ...}}``."""
+        if not self.active:
+            return []
+        chips = self._get("home.chips")
+        if isinstance(chips, list):
+            return chips
+        return _modules.lens_chips(self.name) or []
 
     def landings(self) -> list[str]:
         out = self._get("home.landings") if self.active else None
@@ -231,8 +255,8 @@ class Edition:
         return {x: named.get(x) or DEFAULT_LANDING_TITLES.get(x) or x.replace("-", " ").capitalize() for x in self.landings()}
 
     def landing_by_role(self, key: str = "home.landing-by-role") -> dict[str, str]:
-        """``home.landing-by-role`` ({role: landing}): read, wired to role-based access later (EDITIONS.md). The same shape under
-        another key: Drishti Trading's ``trading.landing-by-role``, for the person's trading role (EDITIONS.md › The design as built, section 14)."""
+        """``home.landing-by-role`` ({role: landing}): read, wired to role-based access later (LENSES.md). The same shape under
+        another key: Drishti Trading's ``trading.landing-by-role``, for the person's trading role (LENSES.md › The design)."""
         m = self._get(key) if self.active else None
         return {str(k): str(v) for k, v in m.items()} if isinstance(m, dict) else {}
 
@@ -288,13 +312,26 @@ class Edition:
 Edition.NONE = Edition()
 
 
+def by_module(packs) -> list[str]:
+    """A pack list by module (``{core: [core], banking: [trading, ...]}``, in order) or plain, flattened; each pack once."""
+    groups = packs.values() if isinstance(packs, dict) else [packs or []]
+    out: list[str] = []
+    for g in groups:
+        for p in g or []:
+            if str(p) not in out:
+                out.append(str(p))
+    return out
+
+
 class Editions:
     """The console's editions: the instance's (learned from the server) and the lenses the site offers (``drishti.lenses`` on the server,
     learned the same way). One per console process; :meth:`for_request` says which one a request is seen through."""
 
     def __init__(self, settings, console_dir: Path, on_change=None):
-        d = Path(str(settings.get("editions.dir", "../config/editions") or "../config/editions"))
+        d = Path(str(settings.get("lens.dir", "../config/lenses") or "../config/lenses"))   # config/lenses/<module>/<lens>.yaml
         self.dir = d if d.is_absolute() else (console_dir / d).resolve()
+        p = Path(str(settings.get("packs.dir", "../config/packs") or "../config/packs"))
+        self.packs_dir = p if p.is_absolute() else (console_dir / p).resolve()
         self.settings = settings
         self.instance: Edition = Edition.NONE
         self.lenses: dict[str, Edition] = {}
@@ -302,16 +339,17 @@ class Editions:
         self._server_brand: dict = {}
         self.engines = _engines.new_state()                      # what runs, learned from this app's server as the edition is: its own,
                                                                  # never another app's of the same process (core/engines.py State)
+        self.modules = _modules.new_state()                      # the modules loaded on the server, the same way (core/modules.py State)
 
     def default_packs(self) -> list[str]:
-        """The one default pack list (config/editions/default-packs.yaml), as the server reads it from its jar."""
+        """The one default pack list (config/packs/default-packs.yaml, by module), as the server reads it from its jar."""
         try:
-            return [str(p) for p in (yaml.safe_load((self.dir / "default-packs.yaml").read_text(encoding="utf-8")) or {}).get("packs") or []]
+            return by_module((yaml.safe_load((self.packs_dir / "default-packs.yaml").read_text(encoding="utf-8")) or {}).get("packs"))
         except (OSError, yaml.YAMLError):
             return []
 
     def mapping(self) -> dict[str, list[str]]:
-        """Which console settings each feature presets (config/editions/features.yaml, its ``console`` keys)."""
+        """Which console settings each feature presets (config/lenses/features.yaml, its ``console`` keys)."""
         try:
             raw = (yaml.safe_load((self.dir / "features.yaml").read_text(encoding="utf-8")) or {}).get("features") or {}
         except (OSError, yaml.YAMLError):
@@ -322,7 +360,10 @@ class Editions:
         """The edition file; the instance's own gets the site's ``edition:`` overrides (application.local.yaml, environment)."""
         if not name or not name.replace("-", "").isalnum() or name != name.lower():
             return Edition.NONE
-        f = self.dir / f"{name}.yaml"
+        f = self.dir / f"{name}.yaml"                        # a lens of no module, else in its module's folder (config/lenses/<module>/)
+        if not f.is_file():
+            f = next((d / f"{name}.yaml" for d in sorted(self.dir.iterdir()) if d.is_dir() and (d / f"{name}.yaml").is_file()), f) \
+                if self.dir.is_dir() else f
         try:
             spec = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         except (OSError, yaml.YAMLError) as e:
@@ -340,7 +381,8 @@ class Editions:
         name = str((about.get("edition") or {}).get("name") or "")
         lenses = [str(n) for n in about.get("lenses") or []] if not name else []
         brand = {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
-        engines_changed = _engines.learn(about.get("engines"), self.engines)   # the engines running in the cluster (COMPUTE_ENGINES.md 5.2)
+        engines_changed = _engines.learn(about.get("engines"), self.engines)   # the engines running in the cluster (ADMIN_GUIDE.md 5.2)
+        engines_changed = _modules.learn(about.get("modules"), self.modules) or engines_changed   # the modules loaded (ACCESS_MODEL.md)
         changed = name != self.instance.name or sorted(lenses) != sorted(self.lenses) or brand != self._server_brand
         if not changed:
             if engines_changed and self.on_change is not None:

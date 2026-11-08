@@ -8,8 +8,8 @@
 
 *Contract version 2.0 · 2026-11-02 · **Status:** design, not built. The sensitivity inputs are the shared ones of [FRTB.md](FRTB.md)
 (contracts `planned`, demo data generated); the engine, its screens and its playground are the design to build · Method:
-[SENSITIVITIES_AND_FRTB_SA.md section 8](../architecture/SENSITIVITIES_AND_FRTB_SA.md#8-isda-simm) · Fields and worked records:
-[FRTB_DATA_STRUCTURES.md](FRTB_DATA_STRUCTURES.md) · Shared rules: [README.md](README.md)*
+[SENSITIVITIES_AND_FRTB_SA.md section 8](../guides/SIMM_GUIDE.md#5-the-method) · Fields and worked records:
+[FRTB_DATA_STRUCTURES.md](FRTB.md) · Shared rules: [README.md](README.md)*
 
 This is the data contract of Drishti's **ISDA SIMM** engine: the Standard Initial Margin Model of the International Swaps and Derivatives
 Association, computed per **netting set**, per **regime** and per the **SIMM version** the netting set's CSA names, from the same position
@@ -39,6 +39,7 @@ a bank holding the licence loads its own file for each version it uses; the vers
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
 16. [Open questions and decisions](#16-open-questions-and-decisions)
+17. [JSON examples](#17-json-examples)
 
 ## 1. Summary
 
@@ -93,12 +94,14 @@ ${DRISHTI_DELTA_ROOT}/risk/
 └── crif-external/          the counterparty's or a custodian's CRIF and IM, for the comparison                 (draft, optional)
 ```
 
-No separate SIMM sensitivity table: SIMM reads the same records as FRTB-SA. **What SIMM reads from SENS:** the elements with measures
+No separate SIMM sensitivity table: SIMM reads the same records as FRTB-SA (contracts
+[`position-sensitivity.contract.yaml`](../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml) and
+[`risk-factor.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml)). **What SIMM reads from SENS:** the elements with measures
 `DV01`, `IE01`, `CS01`, `DELTA`, `VEGA` (with `IMPLIED_VOL`) and `BASE_CORR`; not `CURVATURE_UP`, `CURVATURE_DOWN` or `GAMMA` (SIMM's
 curvature is computed from the vegas). A bank whose systems already produce CRIF loads it into SENS by the mapping of
-[FRTB_DATA_STRUCTURES.md section 11.1](FRTB_DATA_STRUCTURES.md#111-from-isda-crif-rows).
+[FRTB_DATA_STRUCTURES.md section 11.1](FRTB.md#271-from-isda-crif-rows).
 
-**Units, as delivered** ([design section 2.3](../architecture/SENSITIVITIES_AND_FRTB_SA.md#23-from-the-delivered-conventions-to-the-regulatory-sensitivities)):
+**Units, as delivered** ([design section 2.3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)):
 
 ```
 SIMM delta                         DV01, IE01, CS01 per bp and DELTA per 1 %, as delivered (SIMM's own units)
@@ -115,7 +118,7 @@ left out.
 
 Drishti maps its records to CRIF terms to compute, to export a netting set's CRIF for a counterparty or vendor, and to compare with the
 counterparty's CRIF. The reverse mapping (CRIF to SENS, for loading) is in
-[FRTB_DATA_STRUCTURES.md section 11.1](FRTB_DATA_STRUCTURES.md#111-from-isda-crif-rows).
+[FRTB_DATA_STRUCTURES.md section 11.1](FRTB.md#271-from-isda-crif-rows).
 
 | ISDA CRIF field | From | Rule |
 |---|---|---|
@@ -163,9 +166,19 @@ The factor per product, the fixed amount and the product-class multipliers are t
 ### 3.4 crif-external (draft, optional)
 
 The counterparty's (or a custodian's or reconciliation service's) CRIF and IM per netting set, as received, for the comparison of
-section 9.4: the CRIF fields of section 3.2, plus `NETTING_SET`, `SOURCE` (`COUNTERPARTY`, `CUSTODIAN`, `VENDOR`), `DIRECTION`
-(`COLLECT`, `POST`, from the bank's view), `ROW_TYPE` (`HEADER` with `IM_TOTAL` and the IM per risk class, or `CRIF`). Never an input to
-the margin: Drishti compares, it does not compute from it.
+section 9.4. Never an input to the margin: Drishti compares, it does not compute from it. One `HEADER` row per netting set, direction and
+source, and its `CRIF` rows (the CRIF fields of section 3.2):
+
+| Field | Type | Presence | Meaning | Example |
+|---|---|---|---|---|
+| `NETTING_SET` | id | required | the netting set compared | `NS-ALDERSHOT-NY` |
+| `BUSINESS_DATE` | date | required | the date the figures are for; the partition | `2026-09-30` |
+| `ROW_TYPE` | text | required | `HEADER` (the IM) or `CRIF` (one sensitivity line) | `HEADER` |
+| `SOURCE` | text | required | `COUNTERPARTY`, `CUSTODIAN`, `VENDOR` | `COUNTERPARTY` |
+| `DIRECTION` | text | optional | `COLLECT` (default) or `POST`, from the bank's view | `COLLECT` |
+| `IM_TOTAL` | amount | conditional: on `HEADER` | the other side's IM, in the calculation currency | `431000` |
+| `IM_INTERESTRATE`, `IM_CREDITQ`, `IM_CREDITNONQ`, `IM_EQUITY`, `IM_COMMODITY`, `IM_FX` | amount | optional, on `HEADER` | the other side's IM per risk class | `362000` |
+| `TradeID`, `RiskType`, `Qualifier`, `Bucket`, `Label1`, `Label2`, `Amount`, `AmountCurrency`, `AmountUSD`, `ProductClass` | | conditional: on `CRIF` | as ISDA CRIF (section 3.2) | `Risk_IRCurve` |
 
 ### 3.5 Delivery and completeness
 
@@ -185,6 +198,20 @@ uncleared trade of a netting set under SIMM has sensitivities; a netting set wit
 | `risk-factor` (RFAC) | `RISK_FACTOR` | `SIMM_RISK_CLASS`, `SIMM_BUCKET`, `SIMM_LABEL1`, `SIMM_LABEL2`, `QUALIFIER` |
 | The SIMM parameter file of the version | `version`, SHA-256 | section 6.1 |
 
+**The CSA's SIMM terms (draft).** Read from the `csa` record when present; not in the `csa` contract yet (open question 1):
+
+| Field | Type | Presence | Meaning | Example |
+|---|---|---|---|---|
+| `CSA_ID` | id | required | the CSA | `CSA-ALDERSHOT-NY` |
+| `SIMM_VERSION` | text | optional | the version the CSA names; empty: the server's default | `2.8+2512` |
+| `IM_COLLECT_REGIMES`, `IM_POST_REGIMES` | text list | optional | the regimes of each direction; empty: `NONE` | `["CFTC", "USPR"]` |
+| `IM_CALCULATION_CURRENCY` | text | optional | the calculation currency; else `CSA_CURRENCY`, else USD | `USD` |
+| `IM_MODEL` | text | optional | `SIMM` (default) or `SCHEDULE` (schedule IM: refused here) | `SIMM` |
+| `IM_FIXED_ADDON` | amount | optional | the fixed add-on, in the calculation currency | `0` |
+| `IM_PRODUCT_MULTIPLIERS` | record | optional | product class → multiplier ≥ 1 | `{"Equity": 1.2}` |
+| `IM_ADDON_FACTORS` | record | optional | product (as `simm-addon.PRODUCT`) → notional factor | `{"Variance swap": 0.05}` |
+| `IM_DISPUTE_TOLERANCE` | amount | optional | the difference with the counterparty's call accepted without dispute | `25000` |
+
 ## 5. Conventions specific to SIMM
 
 | Convention | Rule |
@@ -197,8 +224,8 @@ uncleared trade of a netting set under SIMM has sensitivities; a netting set wit
 
 ## 6. The computation
 
-[Design section 8](../architecture/SENSITIVITIES_AND_FRTB_SA.md#8-isda-simm), checked against the methodology in
-[design section 18](../architecture/SENSITIVITIES_AND_FRTB_SA.md#18-checked-against-the-rules). Paragraph numbers are those of SIMM
+[Design section 8](../guides/SIMM_GUIDE.md#5-the-method), checked against the methodology in
+[design section 18](../guides/FRTB_SA_GUIDE.md#16-tests-and-the-rules-they-were-checked-against). Paragraph numbers are those of SIMM
 2.8+2512.
 
 ### 6.1 Parameters: one licensed file per version
@@ -315,17 +342,21 @@ One record per netting set (or scope), regime and business date:
 
 | Field | Meaning |
 |---|---|
-| `SCOPE`, `NETTING_SET`, `COUNTERPARTY`, `CSA`, `BUSINESS_DATE`, `ANALYTIC` | what was computed; true when the scope is not a netting set |
+| `SCOPE`, `NETTING_SET`, `COUNTERPARTY`, `CSA`, `BUSINESS_DATE` | what was computed |
+| `KIND`, `ANALYTIC` | `netting set`, `analytic, not a margin` or `EXAMPLE` (the hand-built examples); `ANALYTIC` true when the scope is not a netting set |
 | `SIMM_VERSION`, `PARAMETER_SHA256` | the licensed file used |
+| `CALCULATION_CURRENCY` | the CSA's (USD by default); every amount of the record is in it |
 | `IM_COLLECT`, `IM_POST`, `COLLECT_REGIME`, `POST_REGIME` | the margins and the binding regimes |
 | `SIMM_COLLECT`, `ADDON_COLLECT`, `SIMM_POST`, `ADDON_POST` | SIMM and the add-ons, each direction |
 | `BY_PRODUCT_CLASS[]` | `PRODUCT_CLASS`, `COLLECT`, `POST` |
-| `BY_RISK_CLASS[]` | `PRODUCT_CLASS`, `RISK_CLASS`, `DELTA`, `VEGA`, `CURVATURE`, `BASE_CORR`, `TOTAL` |
-| `BUCKETS[]`, `FACTORS[]` | per bucket K_b, S_b (capped); per factor s_k, RW, CR (or VCR), WS, the gradient |
-| `CALCULATION_CURRENCY`, `IM_COLLECT_CCY`, `IM_POST_CCY` | in the CSA's currency |
-| `TRADES`, `TRADES_SCHEDULE_IM`, `TRADES_CLEARED`, `MISSING_TRADES` | counts |
-| `SWITCHES`, `OVERRIDES[]`, `REGULATORY` | as FRTB-SA |
-| `PROVENANCE` | the batches and table versions, the dictionary version, the parameter file's version and SHA-256, the CSA's terms used |
+| `BY_RISK_CLASS[]` | `PRODUCT_CLASS`, `RISK_CLASS`, `DELTA`, `VEGA`, `CURVATURE`, `BASE_CORR`, `TOTAL` (collect), `POST_TOTAL` |
+| `TRADES`, `MISSING_TRADES` | the sensitivity records read; the netting set's trades without sensitivities |
+| `SWITCHES`, `OVERRIDES`, `REGULATORY` | as FRTB-SA: the switches the engine has (`concentration`, `hvr`, each `on` or `off`), the typed overrides (parameter → value), true only for a netting set on the defaults |
+| `notRegulatory`, `label`, `refused` | the reason a figure is not the regulatory one (only then); the label of an analytic or example scope (only then); the count of elements left out by the method |
+| `PROVENANCE` | labelled lines for the screen (the batches, the dictionary version, the parameter file's version and SHA-256, the CSA's terms used, what was left out) |
+
+The buckets and factors (per bucket K_b, S_b capped; per factor s_k, RW, CR, WS) are the answer of `GET /api/v1/risk/simm/explain`, not
+part of this record.
 
 ### 9.2 Contributions and incremental margin
 
@@ -334,12 +365,12 @@ incremental IM of a candidate trade, `IM(set + trade) − IM(set)`, computed in 
 
 ### 9.3 The playground (`PLAY SIMM`)
 
-One netting set, or a few side by side ([design section 12.2](../architecture/SENSITIVITIES_AND_FRTB_SA.md#122-simm-playground-play-simm)).
+One netting set, or a few side by side ([design section 12.2](../guides/SIMM_GUIDE.md#8-the-simm-playground-play-simm)).
 Tabs: Main (SIMM per product class and the total against the engine, with check cells), Config (the licensed parameters of the version
 and the Choices of section 6.9), Data (the sensitivities), WS (with the concentration factors), Buckets, Classes (ψ), Curvature (SF(t),
 θ, λ), Add-ons, Explain, Provenance. **The template ships with formulas and empty parameter cells**; the bank's export fills them from
 its licensed file and is never a shared template. Every run is a recipe with the same structure as FRTB-SA's
-([FRTB_DATA_STRUCTURES.md section 9.3](FRTB_DATA_STRUCTURES.md#93-playground-recipe)), the netting set and the SIMM version in place of the
+([FRTB_DATA_STRUCTURES.md section 9.3](FRTB.md#253-playground-recipe)), the netting set and the SIMM version in place of the
 filer and regime, replayable to the cent.
 
 ### 9.4 Margin against the counterparty's call
@@ -402,7 +433,7 @@ figure, labelled *stored, not computed*, until the bank's sensitivities cover th
 ## 15. A worked example
 
 **Toy parameters, not ISDA's.** Cases 6 and 11 of the design
-([design section 13.1](../architecture/SENSITIVITIES_AND_FRTB_SA.md#131-hand-built-cases)) and one netting set end to end.
+([design section 13.1](../guides/FRTB_SA_GUIDE.md#10-the-hand-built-cases)) and one netting set end to end.
 
 **Case 6.** One currency, WS = 50 · (−1,000) and 60 · 400 per bp, ρ = 0.8, CR = 1:
 `K = sqrt(50,000² + 24,000² − 2 · 0.8 · 50,000 · 24,000) = 34,000`. Two risk classes of one product class, IM 50,000 and 30,000,
@@ -436,7 +467,7 @@ Delta_IR = 382,700.58 and **SIMM = 450,195.27**: the concentration adds 23,588.8
 
 ## 16. Open questions and decisions
 
-**Decided** ([design section 16](../architecture/SENSITIVITIES_AND_FRTB_SA.md#16-decisions)): SIMM's numbers shipped empty, the bank's
+**Decided** ([design section 16](../guides/FRTB_SA_GUIDE.md#15-decisions-and-the-screens-chosen)): SIMM's numbers shipped empty, the bank's
 licensed file by version recorded on every figure (11); credit indices one qualifier, look-through later (5); rates vega in lognormal
 points by default, normal declared per source (3); the screens: the netting-set list with the counterparty comparison as a second tab (1).
 
@@ -451,6 +482,55 @@ points by default, normal declared per source (3); the screens: the netting-set 
 | 5 | SIMM-only vertices (`2w`, `1m`): delivered as their own factors (no FRTB vertex) or not at all | [FRTB.md section 16](FRTB.md#16-open-questions-and-decisions) |
 | 6 | Schedule IM for the netting sets that use it: here, or with the margin call ([MC.md](MC.md)) | section 3.5 |
 | 7 | The comparison sources (`crif-external`): which counterparties, custodians or vendors, in which format | section 3.4 |
+
+## 17. JSON examples
+
+The netting set of [section 15](#15-a-worked-example) (product class RatesFX, toy parameters `TOY-1`, not ISDA's), placed on the demo's
+Aldershot New York netting set. Each line is one record.
+
+**position-sensitivity: the netting set's three trades** (trade grain, so each trade lies in exactly one netting set; the elements SIMM
+reads):
+
+```json
+{"SENSITIVITY_ID":"SENS-MX-20000501-B-SENS-2026-09-30-01","GRAIN":"TRADE","TRADE_ID":"MX-20000501","SOURCE_SYSTEM":"MUREX","BUSINESS_DATE":"2026-09-30","BATCH_ID":"B-SENS-2026-09-30-01","RUN_KIND":"FULL","COMPUTED_AT":"2026-09-30T06:10:00Z","RESTATEMENT":0,"STATUS":"ok","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"IRS_FIXFLOAT","TRADE_STATUS":"NEW","MATURITY_DATE":"2036-09-30","CURRENCY":"USD","SENSITIVITIES":[{"RISK_FACTOR":"IR/CURVE/USD/SOFR/5Y","MEASURE":"DV01","VALUE":10000.0,"CURRENCY":"USD","RISK_CLASS":"GIRR","TENOR":"5Y","SIMM_BUCKET":"1"},{"RISK_FACTOR":"IR/CURVE/USD/SOFR/10Y","MEASURE":"DV01","VALUE":-6000.0,"CURRENCY":"USD","RISK_CLASS":"GIRR","TENOR":"10Y","SIMM_BUCKET":"1"}]}
+{"SENSITIVITY_ID":"SENS-MX-20000502-B-SENS-2026-09-30-01","GRAIN":"TRADE","TRADE_ID":"MX-20000502","SOURCE_SYSTEM":"MUREX","BUSINESS_DATE":"2026-09-30","BATCH_ID":"B-SENS-2026-09-30-01","RUN_KIND":"FULL","COMPUTED_AT":"2026-09-30T06:10:00Z","RESTATEMENT":0,"STATUS":"ok","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-2","PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"IRS_FIXFLOAT","TRADE_STATUS":"NEW","MATURITY_DATE":"2028-09-30","CURRENCY":"EUR","SENSITIVITIES":[{"RISK_FACTOR":"IR/CURVE/EUR/ESTR/2Y","MEASURE":"DV01","VALUE":4000.0,"CURRENCY":"USD","RISK_CLASS":"GIRR","TENOR":"2Y","SIMM_BUCKET":"1"}]}
+{"SENSITIVITY_ID":"SENS-MX-20000503-B-SENS-2026-09-30-01","GRAIN":"TRADE","TRADE_ID":"MX-20000503","SOURCE_SYSTEM":"MUREX","BUSINESS_DATE":"2026-09-30","BATCH_ID":"B-SENS-2026-09-30-01","RUN_KIND":"FULL","COMPUTED_AT":"2026-09-30T06:10:00Z","RESTATEMENT":0,"STATUS":"ok","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-FX","TT_BOOK":"BOOK-FX-1","PRODUCT_GROUP":"FX","PRODUCT_TYPE":"FX_FORWARD","TRADE_STATUS":"NEW","MATURITY_DATE":"2027-03-31","CURRENCY":"EUR","SENSITIVITIES":[{"RISK_FACTOR":"FX/SPOT/EUR","MEASURE":"DELTA","VALUE":20000.0,"CURRENCY":"USD","RISK_CLASS":"FX","TENOR":null,"SIMM_BUCKET":"1"}]}
+```
+
+**risk-factor: the SIMM attributes of the FX factor** (the rates factors are FRTB.md's, section 26):
+
+```json
+{"RISK_FACTOR":"FX/SPOT/EUR","FACTOR_TYPE":"SPOT","RISK_CLASS":"FX","QUALIFIER":"EUR","FRTB_BUCKET":"EUR","SIMM_RISK_CLASS":"FX","SIMM_BUCKET":"1","LIQUIDITY_HORIZON":10,"MODELLABLE":true,"MARKET_DATA_REF":"FX-EURUSD","SOURCE_NAMES":["MX:FX:SPOT-EUR","FX.SPOT.EUR"],"VALID_FROM":"2026-01-02","BUSINESS_DATE":"2026-09-30","SOURCE":"factor-master"}
+```
+
+**The CSA's SIMM terms (draft)**, as fields of the `csa` record (only the SIMM terms shown):
+
+```json
+{"CSA_ID":"CSA-ALDERSHOT-NY","SIMM_VERSION":"TOY-1","IM_COLLECT_REGIMES":["CFTC","USPR"],"IM_POST_REGIMES":["CFTC","USPR"],"IM_CALCULATION_CURRENCY":"USD","IM_MODEL":"SIMM","IM_FIXED_ADDON":0,"IM_PRODUCT_MULTIPLIERS":{},"IM_ADDON_FACTORS":{},"IM_DISPUTE_TOLERANCE":25000}
+```
+
+**simm-addon (draft): a notional add-on line**, a variance swap in another netting set whose CSA sets a factor for it:
+
+```json
+{"ADDON_ID":"ADD-MX-20000311-B-ADD-2026-09-30-01","TRADE_ID":"MX-20000311","BUSINESS_DATE":"2026-09-30","BATCH_ID":"B-ADD-2026-09-30-01","PRODUCT":"Variance swap","NOTIONAL":25000000,"CURRENCY":"USD"}
+```
+
+**crif-external (draft): the counterparty's figure** (a header and one of its CRIF lines):
+
+```json
+{"NETTING_SET":"NS-ALDERSHOT-NY","BUSINESS_DATE":"2026-09-30","ROW_TYPE":"HEADER","SOURCE":"COUNTERPARTY","DIRECTION":"COLLECT","IM_TOTAL":431000,"IM_INTERESTRATE":362000,"IM_FX":160000}
+{"NETTING_SET":"NS-ALDERSHOT-NY","BUSINESS_DATE":"2026-09-30","ROW_TYPE":"CRIF","SOURCE":"COUNTERPARTY","DIRECTION":"COLLECT","TradeID":"MX-20000501","ProductClass":"RatesFX","RiskType":"Risk_IRCurve","Qualifier":"USD","Bucket":"1","Label1":"5y","Label2":"OIS","Amount":10150,"AmountCurrency":"USD","AmountUSD":10150}
+```
+
+**simm-result: the answer for the netting set** (`GET /api/v1/risk/simm?nettingSet=NS-ALDERSHOT-NY`; delta only, so collect equals
+post; `PROVENANCE`, labelled lines for the screen, left out here):
+
+```json
+{"SCOPE":"NS-ALDERSHOT-NY","KIND":"netting set","ANALYTIC":false,"NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","CSA":"CSA-ALDERSHOT-NY","BUSINESS_DATE":"2026-09-30","SIMM_VERSION":"TOY-1","PARAMETER_SHA256":"<sha-256 of the file>","CALCULATION_CURRENCY":"USD","IM_COLLECT":426606.46,"IM_POST":426606.46,"COLLECT_REGIME":"CFTC","POST_REGIME":"CFTC","SIMM_COLLECT":426606.46,"ADDON_COLLECT":0.0,"SIMM_POST":426606.46,"ADDON_POST":0.0,"BY_PRODUCT_CLASS":[{"PRODUCT_CLASS":"RatesFX","COLLECT":426606.46,"POST":426606.46}],"BY_RISK_CLASS":[{"PRODUCT_CLASS":"RatesFX","RISK_CLASS":"InterestRate","DELTA":357483.43,"VEGA":0.0,"CURVATURE":0.0,"BASE_CORR":0.0,"TOTAL":357483.43,"POST_TOTAL":357483.43},{"PRODUCT_CLASS":"RatesFX","RISK_CLASS":"FX","DELTA":160000.0,"VEGA":0.0,"CURVATURE":0.0,"BASE_CORR":0.0,"TOTAL":160000.0,"POST_TOTAL":160000.0}],"TRADES":3,"MISSING_TRADES":0,"SWITCHES":{"concentration":"on","hvr":"on"},"OVERRIDES":{},"REGULATORY":true,"refused":0}
+```
+
+With the counterparty's header above, the comparison of section 9.4 shows 431,000 against 426,606.46: a difference of 4,393.54, inside
+the CSA's 25,000 tolerance.
 
 ---
 

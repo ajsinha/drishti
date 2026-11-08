@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Step 1 of docs/architecture/CLUSTER_DEPLOYMENT.md, Appendix C section 4: the three buckets of the lake, made safe. Safe to run again: each setting is put
+# Step 1 of docs/guides/CLUSTER_GUIDE.md, Appendix C section 4: the three buckets of the lake, made safe. Safe to run again: each setting is put
 # whole (the same call gives the same state), and a bucket that exists is kept.
 USAGE="setup-buckets.sh [--dry-run] [--env FILE]
 

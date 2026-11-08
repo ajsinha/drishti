@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Editions and lenses in the console (docs/admin/EDITIONS.md): with the server's edition learned from its about answer the console
-follows config/editions/risk.yaml on every surface (menus, footer, the command line's words and placeholder, Home and its landings, help,
+"""Editions and lenses in the console (docs/guides/ADMIN_GUIDE.md sections 12 to 19; docs/architecture/LENSES.md section 10): with the server's edition learned from its about answer the console
+follows config/lenses/banking/risk.yaml on every surface (menus, footer, the command line's words and placeholder, Home and its landings, help,
 Admin, branding); without one it is exactly the full product; a lens does the same for one person only, kept in their settings."""
 from __future__ import annotations
 
@@ -29,9 +29,9 @@ from core.config import load_settings
 
 # today's top bar (the full product): every item the menus drew before editions, by link
 TODAY = ["/t", "/s", "/forms", "/func", "/datamap", "/reports", "/w", "/m", "/alerts", "/build/new", "/build/pack/new", "/build",
-         "/build/reviews", "/review/changes", "/what", "/help/tutorials", "/help/pack-developer-guide", "/admin/users", "/admin/roles",
+         "/approvals", "/what", "/help/tutorials", "/help/build-guide", "/admin/users", "/admin/roles",
          "/admin/audit", "/admin/packs", "/admin/connectors", "/admin/artifacts", "/admin/loads", "/admin/lakes", "/admin/collab",
-         "/admin/embedding", "/admin/net", "/admin/health", "/admin/caches", "/help", "/help/install-and-run", "/about"]
+         "/admin/embedding", "/admin/net", "/admin/health", "/admin/caches", "/help", "/help/operations#2-install-and-run-on-one-machine", "/about"]
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
 
 
@@ -103,7 +103,7 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     t = c.get("/t").text
     links = _menu_links(t)
     assert "/var" in links and "/exposure" in links and "/func" in links and "/datamap" in links
-    for hidden in ("/forms", "/build/new", "/build/reviews", "/help/tutorials", "/admin/collab", "/admin/embedding"):
+    for hidden in ("/forms", "/build/new", "/help/tutorials", "/admin/collab", "/admin/embedding"):
         assert hidden not in links, hidden
     assert "Drishti Risk" in t and "VAR BANK, VAR DESK RATES" in t                     # branding and the placeholder
     # words and features switched off: pages answer 404, typed words are refused
@@ -115,7 +115,7 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     assert r.status_code == 303 and "DRS-4023" in r.headers["location"]
     r = c.get("/go", params={"q": "RUPAKA <GO>"}, follow_redirects=False)
     assert "DRS-4023" in r.headers["location"]
-    assert not [s for s in c.get("/api/suggest", params={"q": "FORM"}).json() if s.get("mnemonic") == "FORM"]
+    assert not [s for s in c.get("/api/search", params={"in": "command", "q": "FORM"}).json()["items"] if s.get("mnemonic") == "FORM"]
     assert app.state.editions.instance.word_on("SMAT") and c.get("/smat").status_code == 200        # the scenario matrix is Risk's (2.9.7)
     r = c.get("/go", params={"q": "SMAT DESK RATES 30 <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/smat?id=DESK%3ARATES&days=30"
@@ -125,12 +125,12 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     assert 'href="/admin/users"' in tabs and 'href="/admin/ai"' not in tabs and 'href="/admin/compute"' not in tabs
     # help: the BI and Build categories hidden, and a guide that is not listed is not reached by its address
     centre = help_pages(c)
-    assert 'href="/help/install-and-run"' in centre and 'href="/help/knowledge-market-risk"' in centre
-    assert 'href="/help/bi-guide"' not in centre and 'href="/help/pack-developer-guide"' not in centre
-    assert 'href="/help/knowledge-economies"' not in centre                           # a Knowledge page of a pack the edition leaves out
-    for slug in ("bi-guide", "pack-developer-guide", "knowledge-economies"):
+    assert 'href="/help/operations"' in centre and 'href="/help/knowledge-risk"' in centre
+    assert 'href="/help/bi-guide"' not in centre and 'href="/help/build-guide"' not in centre
+    assert 'href="/help/knowledge-world"' not in centre                           # a Knowledge page of a pack the edition leaves out
+    for slug in ("bi-guide", "build-guide", "knowledge-world"):
         assert c.get(f"/help/{slug}").status_code == 404, slug
-    assert c.get("/help/install-and-run").status_code == 200
+    assert c.get("/help/operations").status_code == 200
     from core.guides import Library
     from routes.common import packs as _packs  # noqa: F401
     lib = Library(CONSOLE, CONSOLE / "config" / "help.yaml", app.state.docs_dir, [])
@@ -186,14 +186,14 @@ def test_a_lens_focuses_one_person_and_leaves_everyone_else_alone(backend, monke
         return []
 
     monkeypatch.setattr(backend, "suggest", suggest, raising=False)
-    alice.get("/api/suggest", params={"q": "VRE"})
+    alice.get("/api/search", params={"in": "command", "q": "VRE"})
     assert sent == {"X-Drishti-Lens": "risk"}                                           # the server filters her commands and BI too
     # bob, at the same time, sees the full product
     other = bob.get("/t").text
     assert "/forms" in _menu_links(other) and "/lens/risk" in _menu_links(other) and 'data-product="Drishti"' in other
     assert bob.get("/admin/ai").status_code == 200
     sent.clear()
-    bob.get("/api/suggest", params={"q": "VRE"})
+    bob.get("/api/search", params={"in": "command", "q": "VRE"})
     assert sent == {}
     # leaving it: the full product again
     alice.post("/lens/leave")
@@ -248,9 +248,9 @@ def test_the_world_edition_follows_its_file_on_every_surface(backend, monkeypatc
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
     # help: the packs' Knowledge pages, the BI category kept, Build hidden; the risk Knowledge pages are not part of World
     centre = help_pages(c)
-    for slug in ("knowledge-economies", "knowledge-companies-funds-and-etfs", "knowledge-entities-and-ownership", "bi-guide", "external-data"):
+    for slug in ("knowledge-world", "knowledge-data", "bi-guide", "external-data"):
         assert f'href="/help/{slug}"' in centre, slug
-    for slug in ("knowledge-market-risk", "knowledge-counterparty-credit-risk", "pack-developer-guide"):
+    for slug in ("knowledge-risk", "build-guide"):
         assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
 
 
@@ -364,7 +364,7 @@ MARKET_ABOUT = {"product": "Drishti Market", "tagline": "Curves, surfaces and fi
 
 @pytest.fixture
 def market():
-    from core import market_landing
+    from plugins.banking import market_landing
     from market_fake import MarketBackend
     market_landing.forget()
     yield MarketBackend()
@@ -388,9 +388,9 @@ def test_the_market_edition_follows_its_file_on_every_surface(market, monkeypatc
         r = c.get("/go", params={"q": typed}, follow_redirects=False)
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
     centre = help_pages(c)
-    for slug in ("knowledge-market-data", "knowledge-data-and-contracts", "user-guide", "data-samples"):
+    for slug in ("knowledge-data", "user-guide", "data-samples"):
         assert f'href="/help/{slug}"' in centre, slug
-    for slug in ("knowledge-market-risk", "knowledge-economies", "knowledge-counterparty-credit-risk", "pack-developer-guide"):
+    for slug in ("knowledge-risk", "knowledge-world", "build-guide"):
         assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
 
 
@@ -513,7 +513,7 @@ def test_inside_a_lens_the_sutra_is_named_without_a_design_link(backend, monkeyp
         assert "irs-vanilla v3" in inside and "data-prov-source" in inside, lens                    # still named; the source link stays
 
 
-# ---- Drishti Trading (EDITIONS.md › The design as built, section 14): its surfaces, its three landings, "my" scoping (mapped, a trader record, View as, the role's
+# ---- Drishti Trading (LENSES.md › The design): its surfaces, its three landings, "my" scoping (mapped, a trader record, View as, the role's
 # landing) that never widens access, the combined check, and the gating of its routes; four lenses --------------------------------------
 
 TRADING_ABOUT = {"product": "Drishti Trading", "tagline": "Your books, your P&L and your limits, and whether the next trade fits",
@@ -522,7 +522,7 @@ TRADING_ABOUT = {"product": "Drishti Trading", "tagline": "Your books, your P&L 
 
 @pytest.fixture
 def trading():
-    from core import trading_landing
+    from plugins.banking import trading_landing
     from trading_fake import TradingBackend
     trading_landing.forget()
     yield TradingBackend()
@@ -556,16 +556,16 @@ def test_the_trading_edition_follows_its_file_on_every_surface(trading, monkeypa
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
     ed = app.state.editions.instance
     for shown in ("TRD", "CTRD", "PTRD", "LTRD", "ITRD", "BOOK", "DESK", "TRDR", "POS", "VLIM", "VRES", "TVAL", "PNLV", "HIER", "PORT",
-                  "CPTY", "GRP", "NSET", "NSMTM", "CPMTM", "LIM", "XWIF", "EXP", "CRV", "FX", "FXV", "EQ", "EQX", "CMD", "CMDC", "BND", "CDS"):
+                  "CPTY", "GRP", "NSET", "NSMTM", "CPMTM", "LIM", "EXP", "CRV", "FX", "FXV", "EQ", "EQX", "CMD", "CMDC", "BND", "CDS"):
         assert ed.command_shown(shown), shown
     for hidden in ("FRTB", "SACCR", "CVA", "SIMM", "SCN", "STR", "SSPNL", "COLL", "MC", "ECON", "XRUN", "SPV", "PSUM", "PSTRIP", "PBOOK"):
         assert not ed.command_shown(hidden), hidden
     assert ed.word_on("VAR") and ed.word_on("EXP") and ed.word_on("BI") and not ed.word_on("DATAMAP")
     assert ed.word_on("SMAT") and c.get("/smat").status_code == 200                      # the scenario matrix is Trading's too (2.9.7)
     centre = help_pages(c)
-    for slug in ("knowledge-trades-and-products", "knowledge-market-risk", "knowledge-counterparty-credit-risk", "user-guide"):
+    for slug in ("knowledge-risk", "knowledge-data", "user-guide"):
         assert f'href="/help/{slug}"' in centre, slug
-    for slug in ("knowledge-economies", "pack-developer-guide"):
+    for slug in ("knowledge-world", "build-guide"):
         assert f'href="/help/{slug}"' not in centre and c.get(f"/help/{slug}").status_code == 404, slug
 
 

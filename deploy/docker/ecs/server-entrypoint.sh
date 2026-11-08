@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Drishti server on ECS (docs/architecture/CLUSTER_DEPLOYMENT.md › Appendix B. Drishti on AWS: ECS, EFS and S3, section 5.2). Before Java starts:
+# The Drishti server on ECS (docs/guides/CLUSTER_GUIDE.md › Appendix B. Drishti on AWS: ECS, EFS and S3, section 5.2). Before Java starts:
 #   1. every writable path must be a writable EFS (NFS) mount; the root file system is read-only
 #   2. one task per node (task.lock)
 #   3. the node's real IPv4 address (the task's network interface), never loopback or the wildcard
@@ -37,7 +37,7 @@ lock="$D/data/net/task.lock"
 if [ -f "$lock" ] && [ "$(cat "$lock")" != "$me" ] && [ -n "$(find "$lock" -mmin -1)" ]; then
   fail "another task ($(cat "$lock")) is running on this node's folders"
 fi
-echo "$me" > "$lock"          # touched every gossip interval by the server once CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, step A1 lands; until then by start only
+echo "$me" > "$lock"          # touched every gossip interval by the server once CLUSTER_GUIDE.md › Drishti on AWS: ECS, EFS and S3, step A1 lands; until then by start only
 
 ip="${DRISHTI_NODE_IP:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
 case "$ip" in ''|127.*|0.0.0.0|::1|localhost) fail "no real IPv4 address for this task (found '$ip'); set DRISHTI_NODE_IP" ;; esac
@@ -65,22 +65,22 @@ EOF
 fi
 
 # -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it); on 21 ZGC is generational only with
-# -XX:+ZGenerational (the default from 23, the only mode from 24, where the flag is obsolete): 2.9.7, RESOURCES_AND_SCALE.md 5.5 (PO-8)
+# -XX:+ZGenerational (the default from 23, the only mode from 24, where the flag is obsolete): 2.9.7, CLUSTER_GUIDE.md 5.5 (PO-8)
 v=$(java -XX:-UsePerfData -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p')
 if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- -XX:+ZGenerational; fi
 # -XX:-UsePerfData: no hsperfdata file in /tmp (the root is read-only); crash files and heap dumps go to EFS
-# native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, the JDK's per-thread temporary
+# native memory (CLUSTER_GUIDE.md, Resident memory): two glibc malloc arenas, direct buffers capped, the JDK's per-thread temporary
 # direct buffers cached up to 256 KB only, freed native memory given back, native memory tracked (jcmd <pid> VM.native_memory summary).
-# Diagnostics of a long run (OPERATIONS.md): heap dump on OutOfMemoryError in data/dumps, a rotated GC log (5 x 20 MB) in data/logs;
+# Diagnostics of a long run (OPERATIONS_GUIDE.md): heap dump on OutOfMemoryError in data/dumps, a rotated GC log (5 x 20 MB) in data/logs;
 # the JVM does not start when the GC log's folder is missing, so both are made first
 export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
 # the hot files kept across restarts on the node's disk (PO-10, 2.9.7): bounded by max-disk-gb and the free-space guard
 export DRISHTI_VAR_KEEP_HOT_FILES="${DRISHTI_VAR_KEEP_HOT_FILES:-true}" DRISHTI_EXPOSURE_KEEP_HOT_FILES="${DRISHTI_EXPOSURE_KEEP_HOT_FILES:-true}"
 mkdir -p "$D/data/logs" "$D/data/dumps"
-# the stop hook (CD2, CLUSTER_DEPLOYMENT.md section 4.6): on ECS's SIGTERM the node drains first (forwarded work and VaR shards handed over,
+# the stop hook (CD2, CLUSTER_GUIDE.md section 4.6): on ECS's SIGTERM the node drains first (forwarded work and VaR shards handed over,
 # at most DRISHTI_DRAIN_WAIT, 90 s, inside the task's stopTimeout of 120 s), then Java gets the signal and shuts down gracefully. The
 # drain needs DRISHTI_DRAIN_TOKEN (a personal API token with node:drain, from Secrets Manager); the rolling runner drains before the stop
-# direct memory (IN_MEMORY_LAKE.md section 3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
+# direct memory (docs/architecture/DATA_ARCHITECTURE.md section 3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
 # exchange, BI answers as Arrow, Arrow Flight when its engine is on) live there. The image has no Python, so the task definition sets the
 # figures tools/lake/memory_caps.py prints (--stores-only, --arrow-only): DRISHTI_LAKE_MEMORY_MB and DRISHTI_ARROW_MB (default 512, the
 # exchange's budget; with Flight on, memory_caps.py adds its memory.total-mb). The limit becomes 256 MB plus both (the later flag wins), and

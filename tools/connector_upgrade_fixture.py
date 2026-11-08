@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The connector files an older release's server generated, as the fixture of the upgrade drill stage (ConnectorUpgradeTest,
-docs/connectors/CONNECTOR_FILES.md "Upgrades"): each connector template of the demo packs at a git revision rendered the way that
+docs/guides/DATA_GUIDE.md section 9 "Upgrades"): each connector template of the demo packs at a git revision rendered the way that
 server wrote it (its header, the template's fields in the server's order, settings flattened to dotted keys, lists as comma text) with
 the marker it kept in <data>/connectors/generated/, plus deliberately edited files:
 
@@ -21,7 +21,7 @@ the marker it kept in <data>/connectors/generated/, plus deliberately edited fil
   met: it must gain ccy (and every other key the template has) and keep its edit, its reads' id listed as a conflict;
 * risk-store with an administrator's own refresh-seconds: kept, everything else the template gained added.
 
-    python3 tools/connector_upgrade_fixture.py --rev 0bcfb7322 --out drishti-server/src/test/resources/connector-upgrade/2.9.4
+    python3 tools/connector_upgrade_fixture.py --rev 0bcfb7322 --out drishti-banking/src/test/resources/connector-upgrade/2.9.4
 
 Writes <out>/connectors/*.yaml, <out>/generated/*.properties and <out>/edits.json (the edited keys per connector). Deterministic.
 """
@@ -38,6 +38,9 @@ import sys
 import yaml
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 PACKS = ("core", "market-data", "trading", "counterparty-risk", "market-risk")
 COMPUTE_KEYS = ("reads", "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental")
 HEADER = "# Generated at first start from the connector template of pack '{pack}'. Edit it freely: it is never overwritten.\n"
@@ -100,11 +103,20 @@ def marker(text: str, t: dict, rev: str) -> str:
     return f"file={etag(text)}\ntemplate={rev}-{etag(yaml.safe_dump(t, sort_keys=True))}\nkinds={','.join(names)}\n"
 
 
+def _manifest_at(rev: str, pack: str) -> str:
+    """A pack's pack.yaml at a revision: in its domain folder (config/packs/<domain>/<pack>), or at config/packs/<domain>/<pack> in a revision
+    from before the packs moved into domain folders (git history, not a second layout)."""
+    try:
+        return show(rev, f"{pack_dir(pack).relative_to(ROOT).as_posix()}/pack.yaml")
+    except subprocess.CalledProcessError:
+        return show(rev, f"config/packs/{pack}/pack.yaml")
+
+
 def templates(rev: str) -> dict:
     """{connector: (pack, template)} of the demo packs at the revision; a later pack's template of the same name wins (more specific)."""
     out = {}
     for p in PACKS:
-        m = yaml.safe_load(show(rev, f"config/packs/{p}/pack.yaml")) or {}
+        m = yaml.safe_load(_manifest_at(rev, p)) or {}
         for name, t in (m.get("connectors") or {}).items():
             if isinstance(t, dict) and t.get("plugin"):
                 out[name] = (p, t)

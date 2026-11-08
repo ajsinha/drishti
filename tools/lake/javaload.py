@@ -14,9 +14,9 @@
 
 """``lake build --engine java``: the whole build done by the parallel lake loader (drishti-lakeload, ``com.ash.drishti.lakeload.LakeLoad``
 in the server's exec jar) instead of Python staging plus a Java writer: JSON Lines read, parsed, sorted and written as Parquet by many
-threads, one commit per business date, Delta or Iceberg, memory bounded by ``memory.budget-mb`` (docs/architecture/PARALLEL_LOADER.md).
+threads, one commit per business date, Delta or Iceberg, memory bounded by ``memory.budget-mb`` (docs/architecture/DATA_ARCHITECTURE.md).
 
-The run's options become the loader's configuration (a JSON file in the run's staging folder; docs/guides/TOOLS.md section 4.13 lists
+The run's options become the loader's configuration (a JSON file in the run's staging folder; docs/guides/CLI_REFERENCE.md section 4.13 lists
 its keys); ``--loader-set KEY=VALUE`` adds any key (``memory.budget-mb=4096``, ``memory.spill-dir=/mnt/ebs/spill``,
 ``parallel.writers=16``, ``target.layout.sort-by=[LEGAL_ENTITY,DESK,id]``). This build holds the lake's lock and writes the run log and
 summary as usual; the loader's summary (the same keys, plus throughput and memory) is merged into it.
@@ -150,8 +150,12 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         target = {"lake": p["lake_name"], "kind": p["kind"]}
         if getattr(a, "_mode_given", False) and target_mode:
             target["mode"] = target_mode                    # --mode or a .ready file's mode:, over the entry's (the table's default)
-        for k in ("promote", "vectors", "flatten", "partition-by", "latest-by", "id"):
+        for k in ("promote", "vectors", "flatten", "partition-by", "latest-by"):
             src.pop(k, None)
+        if not p.get("key") or p["key"] == "id":
+            src.pop("id", None)                         # the lake file's id: (else the pack's key, which the loader reads itself)
+        # else --key, or the lake entry's id: (lake_layout took it): the loader checks it agrees with the entry, and an entry without
+        # id: (a lake made by its first load before it took the kind's key) loads with it instead of rejecting every row
     else:                                          # a folder (--lake DIR, or --lake-root): the table's path, its layout given here
         target = {"format": "iceberg" if iceberg else "delta", "path": path, "domain": p["domain"], "kind": p["kind"]}
         if target_mode:

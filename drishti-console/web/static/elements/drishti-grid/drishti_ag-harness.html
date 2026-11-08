@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  drishti-grid's AG Grid-style adapter harness: a grid configured purely with AG Grid Enterprise-shaped options (no AG Grid anywhere),
+  synthetic data, no server. ?mode=pivot (the default: row groups, pivot columns, sum and a non-additive VaR, totals, sideBar),
+  ?mode=server (an AG-shaped serverSideDatasource in the page), ?mode=tree (treeData with getDataPath). The browser test
+  (tests/test_elements_grid_browser.py) drives it. Nothing inline: it runs under a strict CSP.
+-->
+<html lang="en" data-theme="terminal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>drishti-grid · AG Grid-style adapter harness</title>
+<link rel="stylesheet" href="../../css/drishti_tokens.css">
+<link rel="stylesheet" href="drishti_grid.css">
+<link rel="stylesheet" href="drishti_harness.css">
+</head>
+<body>
+<header class="hx-top"><b class="hx-brand">drishti-grid · from AG Grid-shaped options</b><span id="hx-log" class="hx-log" aria-live="off"></span></header>
+<main id="hx-stage" class="hx-stage"></main>
+<script src="../drishti-core/drishti_core.js"></script>
+<script src="../drishti-inputs/drishti_inputs.js"></script>
+<script src="drishti_grid.js"></script>
+<script src="drishti_ag-harness.js"></script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# FRTB standardised approach, sensitivities-based method: the parameters the engine reads (docs/guides/FRTB_SA_GUIDE.md section 4,
+# docs/guides/FRTB_SA_GUIDE.md section 5). Source: Basel Committee on Banking Supervision, the consolidated Basel
+# Framework chapter MAR21 (version effective 1 January 2023). Each block names its paragraph. Values are the Basel text's; a
+# jurisdiction's rule (OSFI CAR chapter 9, the EU CRR3, the US proposal) may differ: a bank's copy names its regime in `regime`, its
+# `version` and `effective`, and is checked by the engine at start (a missing or out-of-range value refuses the file). A changed file is a
+# new version, never an edit of the one in force; every answer carries the file's SHA-256.
+
+regime: BCBS-MAR21
+version: '2023-01-01.1'
+effective-from: '2023-01-01'
+source: https://www.bis.org/basel_framework/chapter/MAR/21.htm
+
+scenarios:                           # MAR21.6: applied to every rho and gamma below; for curvature to the squared correlation (MAR21.100-101)
+  high: {multiplier: 1.25, cap: 1.0}                          # min(1.25 * rho, 1)
+  low: {multiplier: 2.0, minus: 1.0, floor-multiplier: 0.75}  # max(2 * rho - 1, 0.75 * rho)
+
+GIRR:
+  delta:
+    tenors: [0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30]            # MAR21.8(1)
+    risk-weights: [0.017, 0.017, 0.016, 0.013, 0.012, 0.011, 0.011, 0.011, 0.011, 0.011]   # MAR21.42
+    inflation-risk-weight: 0.016                                # MAR21.43
+    cross-currency-basis-risk-weight: 0.016                     # MAR21.43
+    use-specified-divisor: true                                 # MAR21.44: at the bank's discretion
+    specified-currencies: [EUR, USD, GBP, AUD, JPY, SEK, CAD]   # MAR21.44, and the reporting currency
+    specified-divisor: 1.4142135623730951                       # applied to the vertex risk weights of MAR21.42
+    within-bucket:                                              # MAR21.46-49
+      theta: 0.03                                               # max(exp(-theta * |Tk - Tl| / min(Tk, Tl)), floor)
+      floor: 0.40
+      published-table:                                          # MAR21.46's table (the formula rounded to 0.1%), rows and columns the tenors
+        - [1.000, 0.970, 0.914, 0.811, 0.719, 0.566, 0.400, 0.400, 0.400, 0.400]
+        - [0.970, 1.000, 0.970, 0.914, 0.861, 0.763, 0.566, 0.419, 0.400, 0.400]
+        - [0.914, 0.970, 1.000, 0.970, 0.942, 0.887, 0.763, 0.657, 0.566, 0.419]
+        - [0.811, 0.914, 0.970, 1.000, 0.985, 0.956, 0.887, 0.823, 0.763, 0.657]
+        - [0.719, 0.861, 0.942, 0.985, 1.000, 0.980, 0.932, 0.887, 0.844, 0.763]
+        - [0.566, 0.763, 0.887, 0.956, 0.980, 1.000, 0.970, 0.942, 0.914, 0.861]
+        - [0.400, 0.566, 0.763, 0.887, 0.932, 0.970, 1.000, 0.985, 0.970, 0.942]
+        - [0.400, 0.419, 0.657, 0.823, 0.887, 0.942, 0.985, 1.000, 0.990, 0.970]
+        - [0.400, 0.400, 0.566, 0.763, 0.844, 0.914, 0.970, 0.990, 1.000, 0.985]
+        - [0.400, 0.400, 0.419, 0.657, 0.763, 0.861, 0.942, 0.970, 0.985, 1.000]
+      different-curve: 0.999                                    # MAR21.47: times the tenor correlation
+      inflation-to-curve: 0.40                                  # MAR21.48
+      basis-to-anything: 0.0                                    # MAR21.49
+    across-buckets: 0.50                                        # MAR21.50 (gamma)
+  vega:
+    risk-weight: 1.0                                            # MAR21.92: min(55% * sqrt(LH / 10), 100%), LH 60
+    alpha: 0.01                                                 # MAR21.93: exp(-alpha * |Tk - Tl| / min(Tk, Tl)), option and underlying maturity
+  curvature:                                                    # MAR21.8, MAR21.99: one factor per currency, every curve shifted together
+    shock: 0.017                                                # the highest delta risk weight of the bucket (the 0.25-year weight)
+
+CSR_NS:
+  delta:
+    tenors: [0.5, 1, 3, 5, 10]                                  # MAR21.8(2)
+    risk-weights: {1: 0.005, 2: 0.010, 3: 0.050, 4: 0.030, 5: 0.030, 6: 0.020, 7: 0.015, 8: 0.025, 9: 0.020, 10: 0.040,
+                   11: 0.120, 12: 0.070, 13: 0.085, 14: 0.055, 15: 0.050, 16: 0.120, 17: 0.015, 18: 0.050}   # MAR21.53
+    other-sector-bucket: 16                                     # MAR21.56: absolute weighted sensitivities, no correlation
+    index-buckets: [17, 18]
+    within-bucket:                                              # MAR21.54-55: the product of the three
+      different-name: 0.35
+      different-name-index-buckets: 0.80
+      different-tenor: 0.65
+      different-basis: 0.999                                    # bond curve against CDS curve
+    across-buckets:                                             # MAR21.57: gamma = gamma_rating * gamma_sector
+      rating-different: 0.5                                     # between buckets 1-8 (IG) and 9-15 (HY and not rated)
+      sector:                                                   # MAR21.57's table by sector: buckets 1/9, 2/10, ... 7/15, 8, 16, 17, 18
+        sectors: ['1', '2', '3', '4', '5', '6', '7', '8', '16', '17', '18']
+        table:
+          - [1.00, 0.75, 0.10, 0.20, 0.25, 0.20, 0.15, 0.10, 0.00, 0.45, 0.45]
+          - [0.75, 1.00, 0.05, 0.15, 0.20, 0.15, 0.10, 0.10, 0.00, 0.45, 0.45]
+          - [0.10, 0.05, 1.00, 0.05, 0.15, 0.20, 0.05, 0.20, 0.00, 0.45, 0.45]
+          - [0.20, 0.15, 0.05, 1.00, 0.20, 0.25, 0.05, 0.05, 0.00, 0.45, 0.45]
+          - [0.25, 0.20, 0.15, 0.20, 1.00, 0.25, 0.05, 0.15, 0.00, 0.45, 0.45]
+          - [0.20, 0.15, 0.20, 0.25, 0.25, 1.00, 0.05, 0.20, 0.00, 0.45, 0.45]
+          - [0.15, 0.10, 0.05, 0.05, 0.05, 0.05, 1.00, 0.05, 0.00, 0.45, 0.45]
+          - [0.10, 0.10, 0.20, 0.05, 0.15, 0.20, 0.05, 1.00, 0.00, 0.45, 0.45]
+          - [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00, 0.00, 0.00]
+          - [0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.00, 1.00, 0.75]
+          - [0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.00, 0.75, 1.00]
+  vega:
+    risk-weight: 1.0                                            # MAR21.92, LH 120
+    alpha: 0.01                                                 # MAR21.94
+  curvature: {}                                                 # MAR21.9, MAR21.99: one factor per issuer, shocked by the bucket's risk weight
+
+EQ:
+  delta:
+    spot-risk-weights: {1: 0.55, 2: 0.60, 3: 0.45, 4: 0.55, 5: 0.30, 6: 0.35, 7: 0.40, 8: 0.50, 9: 0.70, 10: 0.50, 11: 0.70, 12: 0.15,
+                        13: 0.25}                               # MAR21.77
+    repo-risk-weights: {1: 0.0055, 2: 0.0060, 3: 0.0045, 4: 0.0055, 5: 0.0030, 6: 0.0035, 7: 0.0040, 8: 0.0050, 9: 0.0070, 10: 0.0050,
+                        11: 0.0070, 12: 0.0015, 13: 0.0025}
+    other-sector-bucket: 11                                     # MAR21.79
+    within-bucket:                                              # MAR21.78: between names, by bucket; spot to repo of one name 99.9%
+      different-name: {1: 0.15, 2: 0.15, 3: 0.15, 4: 0.15, 5: 0.25, 6: 0.25, 7: 0.25, 8: 0.25, 9: 0.075, 10: 0.125, 12: 0.80, 13: 0.80}
+      spot-repo: 0.999
+    across-buckets:                                             # MAR21.80
+      default: 0.15                                             # buckets 1 to 10
+      with-other-sector: 0.0                                    # bucket 11
+      index-to-index: 0.75                                      # buckets 12 and 13
+      index-to-name: 0.45                                       # 12 or 13 with 1 to 10
+  vega:
+    risk-weights: {1: 0.7778, 2: 0.7778, 3: 0.7778, 4: 0.7778, 5: 0.7778, 6: 0.7778, 7: 0.7778, 8: 0.7778, 9: 1.0, 10: 1.0, 11: 1.0,
+                   12: 0.7778, 13: 0.7778}                      # MAR21.92: LH 20 (buckets 1-8, 12, 13), LH 60 (9-11)
+    alpha: 0.01
+  curvature: {}                                                 # MAR21.12, MAR21.98: each spot (no repo), a relative shift equal to its delta risk weight
+
+COMM:
+  delta:
+    tenors: [0, 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30]          # MAR21.8(4)
+    risk-weights: {1: 0.30, 2: 0.35, 3: 0.60, 4: 0.80, 5: 0.40, 6: 0.45, 7: 0.20, 8: 0.35, 9: 0.25, 10: 0.35, 11: 0.50}   # MAR21.82
+    other-sector-bucket: 11
+    within-bucket:                                              # MAR21.83: rho_commodity * rho_tenor * rho_basis
+      commodity: {1: 0.55, 2: 0.95, 3: 0.40, 4: 0.80, 5: 0.60, 6: 0.65, 7: 0.55, 8: 0.45, 9: 0.15, 10: 0.40, 11: 0.15}
+      different-tenor: 0.99
+      different-location: 0.999
+    across-buckets: {default: 0.20, with-other-sector: 0.0}     # MAR21.85
+  vega:
+    risk-weight: 1.0                                            # MAR21.92, LH 120
+    alpha: 0.01
+  curvature: {}                                                 # MAR21.13, MAR21.99: the whole curve of the commodity, the bucket's risk weight
+
+FX:
+  delta:
+    risk-weight: 0.15                                           # MAR21.87
+    specified-pairs: []                                         # MAR21.88: the pairs (with the reporting currency) whose weight the bank divides
+    specified-divisor: 1.4142135623730951                       # by sqrt(2); a bank lists its pairs here, none in this copy
+    across-buckets: 0.60                                        # MAR21.89
+  vega:
+    risk-weight: 1.0                                            # MAR21.92, LH 40
+    alpha: 0.01
+  curvature:
+    divisor: 1.5                                                # MAR21.98: CVR+ and CVR- of FX options not referencing the reporting currency

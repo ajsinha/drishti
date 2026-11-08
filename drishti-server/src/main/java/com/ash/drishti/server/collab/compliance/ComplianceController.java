@@ -49,7 +49,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Administration and compliance (COLLABORATION.md, API): searching shares and threads ({@code admin} or {@code compliance}), legal
+ * Administration and compliance (ARCHITECTURE.md §31, API): searching shares and threads ({@code admin} or {@code compliance}), legal
  * holds, the export job, chain verification ({@code compliance}), and retention and permanent removal ({@code admin}). Hiding and
  * locking are in the thread controller. Every failure is a problem+json with a {@code DRS-} code.
  */

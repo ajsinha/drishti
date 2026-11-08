@@ -26,7 +26,7 @@ files:
 - reference-store.yaml
 - risk-store.yaml
 - trading-store.yaml
-doc: docs/connectors/REDIS_CONNECTOR.md
+doc: plugins/drishti-plugin-redis/README.md
 ---
 # Redis connector templates
 
@@ -97,5 +97,5 @@ other two off. Over TLS, see `config/connectors.examples/other/redis-tls.yaml`.
 
 ## See also
 
-- [The Redis connector](../../../docs/connectors/REDIS_CONNECTOR.md) and the [redis connector README](../../../plugins/drishti-plugin-redis/README.md).
-- [Connector files](../../../docs/connectors/CONNECTOR_FILES.md) (copying examples, the trade union note) and [Demo data](../../../docs/connectors/DEMO_DATA.md).
+- [The Redis connector](../../../plugins/drishti-plugin-redis/README.md) and the [redis connector README](../../../plugins/drishti-plugin-redis/README.md).
+- [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (copying examples, the trade union note) and [Demo data](../../../docs/guides/DATA_GUIDE.md#11-the-demo-data).

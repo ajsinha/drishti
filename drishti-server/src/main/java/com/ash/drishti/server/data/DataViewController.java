@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The Data view, {@code DATA <GO>} (docs/guides/DATA_GUIDE.md "The Data view", docs/guides/API_GUIDE.md): the datasets the caller may
+ * The Data view, {@code DATA <GO>} (docs/guides/DATA_GUIDE.md "The Data view", docs/guides/API_REFERENCE.md): the datasets the caller may
  * open, one dataset's facts, a selection's row count, and the selected rows of a day as JSON Lines, gzip-compressed, streamed and never
  * held whole. Download only, never a viewer. The caller's entitlements decide the datasets ({@link Entitlements#mayOpen}: role, pack on,
  * command on) and the edition or lens the commands shown; a masked column is left out (and may not be filtered on); a dataset marked
@@ -177,7 +177,7 @@ public class DataViewController {
         if (gate != null) {                                            // busy protection: a new download may wait (nothing written yet)
             gate.admit(com.ash.drishti.server.admission.Work.DOWNLOAD, p.user(), "Download " + kind + (day == null ? "" : " " + day));
         }
-        // data held in memory only (IN_MEMORY_LAKE.md section 8): a user's download is the one way out, streamed from memory with no
+        // data held in memory only (docs/architecture/DATA_ARCHITECTURE.md section 8): a user's download is the one way out, streamed from memory with no
         // temporary file, audited; its audit line keeps the selection's shape, never its values
         boolean memoryOnly = com.ash.drishti.memlake.Retention.current().memoryOnly(kind);
         com.ash.drishti.memlake.Retention.current().require(com.ash.drishti.memlake.Retention.Sink.DOWNLOAD, List.of(kind), "This download");

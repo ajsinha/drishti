@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The one migration tool's skeleton (BI_FOUNDATION_2911E.md section 4): datasets into tables, models into layer models, every expression
+ * The one migration tool's skeleton (docs/architecture/ARCHITECTURE.md §28 section 4): datasets into tables, models into layer models, every expression
  * through the translator and the layer's rewrites, the dry run's diff, {@code --check}, the audit, idempotence. The shipped samples with
  * DEL's real translator: drishti-server's {@code DelTablesTranslatorTest}.
  */

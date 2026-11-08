@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Every compute engine of this node and its state (docs/architecture/COMPUTE_ENGINES.md sections 5 to 8): the engines the beans register
+ * Every compute engine of this node and its state (docs/guides/ADMIN_GUIDE.md sections 5 to 8): the engines the beans register
  * ({@link ComputeEngine}), each matched to its catalogue entry; started at start in the order of their needs (one whose need is off is
  * {@code blocked}, DRS-1022, and nothing else fails); turned on and off live with the dependencies enforced (DRS-1021), an off draining the
  * requests in flight (up to {@code drishti.engines.drain}) before it releases what it holds; the change written to the engine's file, kept in
@@ -240,6 +240,16 @@ public final class EngineRegistry implements AutoCloseable {
 
     public String reason(String id) {
         return reasons.getOrDefault(id, "");
+    }
+
+    /**
+     * Says why an engine this build lists is not installed here: its module is off (docs/architecture/ACCESS_MODEL.md), so its code was not
+     * loaded. Shown on Admin -> Engines and in the API's 404.
+     */
+    public void notInstalledBecause(String id, String why) {
+        if (states.get(id) == State.NOT_INSTALLED && why != null && !why.isBlank()) {
+            reasons.put(id, why);
+        }
     }
 
     public String restartNeeded(String id) {

@@ -28,21 +28,12 @@
     on this server and console and where it came from: <a href="/help/configuration"><i class="bi bi-sliders" aria-hidden="true"></i> Configuration</a>.</p>
   <div data-health-body>{% include "admin/_health_body.html" %}</div>
   {% if h.get('busy') %}
-  {# busy protection's operator override: outside the refreshing body, so what is typed is kept (OPERATIONS.md "Busy protection") #}
+  {# busy protection's operator override: outside the refreshing body, so what is typed is kept (OPERATIONS_GUIDE.md "Busy protection") #}
   <section class="pnl busy-override" aria-label="Busy protection: operator override" data-busy-override>
     <div class="pnl-b">
       <b>Operator override</b> <span class="text-muted-d">for an emergency only; recorded in the audit log</span>
-      <div class="busy-modes" role="radiogroup" aria-label="Override">
-        <label><input type="radio" name="busy-mode" value="automatic" checked> Automatic</label>
-        <label><input type="radio" name="busy-mode" value="open"> Let everything through</label>
-        <label><input type="radio" name="busy-mode" value="hold"> Hold all new heavy work</label>
-      </div>
-      <div class="busy-row"><label for="busy-reason">Reason</label>
-        <input id="busy-reason" type="text" class="cmd-input" maxlength="300" placeholder='required, e.g. "month-end sign-off, CRO approved"' data-busy-reason></div>
-      <div class="busy-row"><label for="busy-minutes">Ends after</label>
-        <select id="busy-minutes" class="cmd-input" data-busy-minutes>
-          {% for m in [15, 30, 60, 120, 240] %}{% if m <= h.busy.override.maxMinutes %}<option value="{{ m }}"{{ ' selected' if m == 30 }}>{{ m }} minutes</option>{% endif %}{% endfor %}
-        </select>
+      {{ admin_form('busy_override', max_minutes=h.busy.override.maxMinutes) }}
+      <div class="busy-row">
         <button type="button" class="btn-pill btn-accent" data-busy-apply>Apply</button>
         <span class="text-muted-d" role="status" data-busy-said></span></div>
       <p class="text-muted-d busy-note">"Let everything through" turns the waits off (the server can then run out of memory); "Hold all new heavy work" is for a

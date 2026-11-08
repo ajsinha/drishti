@@ -40,7 +40,7 @@ import java.util.Map;
  */
 public final class PackLoader {
 
-    /** Command words the console owns: no pack may define a mnemonic with one of these names, in any case (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 4). */
+    /** Command words the console owns: no pack may define a mnemonic with one of these names, in any case (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 4). */
     public static final java.util.Set<String> RESERVED_WORDS = new java.util.TreeSet<>(java.util.Set.of("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "ADMIN"));
 
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
@@ -62,7 +62,7 @@ public final class PackLoader {
      * loads after it). A missing pack or a cycle stops the server with a clear message.
      */
     public List<Pack> load(Path dir, List<String> enabled) {
-        return load(List.of(dir), enabled);
+        return load(com.ash.drishti.api.PackFolders.roots(dir), enabled);   // the folder and its domain folders
     }
 
     /**
@@ -92,14 +92,14 @@ public final class PackLoader {
     public static List<Path> dirs(String packsDir, String installedDir, String extraDirs) {
         List<Path> out = new ArrayList<>();
         if (installedDir != null && !installedDir.isBlank() && Files.isDirectory(Path.of(installedDir))) {
-            out.add(Path.of(installedDir).toAbsolutePath().normalize());
+            out.addAll(com.ash.drishti.api.PackFolders.roots(Path.of(installedDir).toAbsolutePath().normalize()));
         }
-        out.add(Path.of(packsDir).toAbsolutePath().normalize());
+        out.addAll(com.ash.drishti.api.PackFolders.roots(Path.of(packsDir).toAbsolutePath().normalize()));   // the packs folder and its domain folders
         if (extraDirs != null) {
             for (String e : extraDirs.split(",")) {
                 Path x = e.isBlank() ? null : Path.of(e.trim()).toAbsolutePath().normalize();
                 if (x != null && Files.isDirectory(x) && !out.contains(x)) {
-                    out.add(x);
+                    out.addAll(com.ash.drishti.api.PackFolders.roots(x));
                 }
             }
         }
@@ -108,6 +108,7 @@ public final class PackLoader {
 
     /** Reads one pack from the first folder that has it; throws {@link IllegalStateException} when none does or the manifest is wrong. */
     public Pack readOne(List<Path> dirs, String name) {
+        com.ash.drishti.api.PackFolders.requireOne(dirs, name);            // two domain folders of one root: refused, naming both
         Path dir = dirs.stream().filter(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml"))).findFirst()
                 .orElse(dirs.get(dirs.size() - 1));
         return read(dir, name, null);
@@ -116,7 +117,7 @@ public final class PackLoader {
     /** The names of the pack folders (those holding a {@code pack.yaml}) in the folders, the first folder winning a name. */
     public static List<String> folders(List<Path> dirs) {
         java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>();
-        for (Path d : dirs) {
+        for (Path d : dirs.stream().flatMap(x -> com.ash.drishti.api.PackFolders.roots(x).stream()).distinct().toList()) {
             if (!Files.isDirectory(d)) {
                 continue;
             }
@@ -138,6 +139,7 @@ public final class PackLoader {
         }
         path.addLast(name);
         String requiredBy = path.size() > 1 ? path.toArray(new String[0])[path.size() - 2] : null;
+        com.ash.drishti.api.PackFolders.requireOne(dirs, name);            // two domain folders of one root: the server does not start
         Path dir = dirs.stream().filter(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml"))).findFirst()
                 .orElse(dirs.get(dirs.size() - 1));
         Pack p = read(dir, name, requiredBy);
@@ -306,7 +308,7 @@ public final class PackLoader {
                 if (c.get("enabled") != null) {
                     props.put(base + ".enabled", c.get("enabled"));
                 }
-                List<String> ck = ConnectorFiles.kindNames(c.get("kinds"));       // a reactive connector's kinds are a mapping (REACTIVE_CONNECTOR.md)
+                List<String> ck = ConnectorFiles.kindNames(c.get("kinds"));       // a reactive connector's kinds are a mapping (docs/connectors/types/reactive/README.md)
                 for (int i = 0; i < ck.size(); i++) {
                     props.put(base + ".kinds[" + i + "]", ck.get(i));
                 }

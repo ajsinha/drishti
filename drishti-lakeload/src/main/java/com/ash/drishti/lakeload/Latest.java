@@ -21,7 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The duplicate-record rule both loaders share ({@code tools/lake/stage.py}'s {@code instant_micros} and {@code winner}; TOOLS.md section
+ * The duplicate-record rule both loaders share ({@code tools/lake/stage.py}'s {@code instant_micros} and {@code winner}; CLI_REFERENCE.md section
  * 4.13): when one id appears more than once on one business date in one load, the record with the latest {@code latest-by} timestamp
  * ({@code COMPUTED_AT} by default) is kept; without one (or on a tie) the last one read, in the input order (files sorted by path, then
  * line order). A record with a timestamp beats one without. The others are dropped and counted; the load never fails for them.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Shared pieces of the VaR pictures (the guide docs/guides/VAR_GUIDE.md, module var; tutorial 25, module t25): a scratch server and
+"""Shared pieces of the VaR pictures (the guide docs/guides/VAR_GUIDE.md, module var; tutorial 2, Part A, module t25): a scratch server and
 console over the market-risk pack's committed VaR test data (9,572 trades of 2026-09-30, 131 hierarchy nodes: 88 MGMT and LEGAL, 43 limit letters, 28 portfolios), built into
 a scratch lake exactly as drishti-console/tests/test_var_explorer_browser.py builds it (`drishti.py lake demo --only` the four VaR
 kinds), the demo connector off, offline. The engine is waited for (the bank's VaR answers) before the first picture."""
@@ -77,3 +77,14 @@ def tab(c: Ctx, name: str) -> None:
     c.page.locator(f'.vx-tab[data-tab="{name}"]').click()
     c.until("document.querySelector('[data-var]').dataset.tabPainted === %r" % name, 60)
     c.page.wait_for_timeout(600)
+
+
+def choose(c: Ctx, sel: str, value: str, keep_open: bool = False) -> None:
+    """Picks value in a <drishti-select> (drishti-inputs' Select) as a person does: opens it and clicks the option; keep_open leaves the
+    list open for the picture instead."""
+    c.page.locator(sel + " .di-select-control").click()
+    c.page.wait_for_selector(".di-select-pop [role=listbox]")
+    if keep_open:
+        return
+    i = c.page.evaluate("([s, v]) => document.querySelector(s).component.matches.findIndex((o) => String(o.value) === v)", [sel, str(value)])
+    c.page.locator(".di-select-pop [role=option][data-i='%d']" % i).click()

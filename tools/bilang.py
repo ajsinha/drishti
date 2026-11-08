@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The BI languages on the command line (docs/guides/CLI_GUIDE.md "bi expr, bi migrate, bi sql"): Rachana, BI's expression language, and Drishti SQL
+"""The BI languages on the command line (docs/guides/CLI_REFERENCE.md "bi expr, bi migrate, bi sql"): Rachana, BI's expression language, and Drishti SQL
 over REST, as the token's user. Loaded by drishti.py; every command talks to the Java server, which owns the one parser of each language. Datasets,
 models and expressions in BI's old forms are migrated by `drishti.py tables migrate`.
 
@@ -53,7 +53,7 @@ def register(bi, srv, ctx) -> None:
                       epilog="examples:\n  drishti.py bi migrate --boards config/bi/boards --write   # 2.3 boards to reports with board pages (2.4.0)\n"
                              "  drishti.py bi migrate --boards --dry-run                  # the server's stored boards")
     m.add_argument("files", nargs="*", metavar="FILE", help="board files or folders (searched for *.board.yaml); none: the stored boards")
-    m.add_argument("--boards", action="store_true", required=True, help="convert 2.3 boards to reports whose pages have layout: board (docs/guides/BI_GUIDE.md)")
+    m.add_argument("--boards", action="store_true", required=True, help="convert 2.3 boards to reports whose pages have layout: board (docs/guides/REPORTS_GUIDE.md)")
     m.add_argument("--write", action="store_true", help="FILEs: write the converted files")
     m.add_argument("--dry-run", action="store_true", help="stored boards: change nothing, show what would change")
     m.add_argument("--keep-old", action="store_true", help="keep the board files")
@@ -70,7 +70,7 @@ def register(bi, srv, ctx) -> None:
     s.add_argument("--model", required=True, help="the model (name@major) or dataset:<name>")
     s.add_argument("--explain", action="store_true", help="the plan instead of the answer")
     s.add_argument("--format", choices=["table", "json", "csv", "jsonl"], default="table")
-    s.add_argument("--async", dest="as_run", action="store_true", help="ask it as a run (BI_DESIGN.md): the answer if done within --wait, else the run's id")
+    s.add_argument("--async", dest="as_run", action="store_true", help="ask it as a run (ARCHITECTURE.md §28): the answer if done within --wait, else the run's id")
     s.add_argument("--wait", default="2s", help="with --async: how long to wait inline (default 2s; 0 returns the run at once)")
     s.add_argument("--yes", action="store_true", help="with --async: accept the confirmation of a large run in advance (DRS-9082)")
     s.set_defaults(func=lambda a, extra: sql(a, ctx))

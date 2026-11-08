@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/feeds/funds.yaml: the US funds and ETFs feed (docs/guides/EXTERNAL_DATA.md; every key in its section "The feed file").
+#   python3 tools/drishti.py feed run funds                   pull, write data/datafeeds/funds/<date>/, load into capitalmarket
+#   python3 tools/drishti.py feed run funds --snapshot        refresh the committed pack and data/testdata/funds instead
+#   python3 tools/drishti.py feed run funds -- --scope FUNDS:300,HOLDINGS:1000      arguments after -- go to the source
+# Its N-PORT download cache also gives the us-equities feed its index members (SPY, DIA, QQQ, IWM): it runs first.
+feed: funds
+title: US funds and ETFs from SEC Form N-PORT and N-CEN
+description: >-
+  The largest US mutual funds and ETFs: their holdings (Form N-PORT), census data (Form N-CEN), fees and risk/return summaries, the
+  funds holding each listed company, and the funds tracking each index.
+class: funds.FundsFeed                 # tools/feeds/sources/funds.py
+source:
+  provider: SEC (Form N-PORT, Form N-CEN, risk/return summaries), Nasdaq Trader, GLEIF
+  url: https://www.sec.gov/dera/data
+  pause: 0.13
+  retries: 3
+  cache-hours: 20                      # the quarterly data sets are large; a resumed run reuses them
+lake: capitalmarket
+load: java
+schedule: {at: "06:15", days: daily}
+licence:
+  name: Public domain (U.S. Government work); GLEIF CC0
+  url: https://www.sec.gov/privacy#dissemination
+  redistribution: allowed
+  internal-only: false
+  attribution: "Source: U.S. Securities and Exchange Commission (Form N-PORT, Form N-CEN)"
+  notes: SEC fair access policy (a descriptive User-Agent with a contact, at most 10 requests a second)
+datasets:
+  fund:        {pack: funds, kind: fund, key: TICKER, description: "a fund or ETF: fact sheet, fees, holdings summary"}
+  fund-holder: {pack: funds, kind: fund-holder, key: TICKER, description: "a listed company and the funds holding it"}
+  index-funds: {pack: funds, kind: index-funds, key: INDEX, description: "an index and the funds tracking it"}
+options:
+  args: []
+snapshot:
+  note: refreshes config/packs/capitalmarkets/funds (samples) and data/testdata/funds

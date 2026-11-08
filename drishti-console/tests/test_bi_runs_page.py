@@ -12,12 +12,13 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI runs, console lane R1c, R3c and R5c (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 7, 14.1 and 17.2): the workspace's three tabs and the Runs tab's hooks,
+"""BI runs, console lane R1c, R3c and R5c (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 7, 14.1 and 17.2): the workspace's three tabs and the Runs tab's hooks,
 the rail's Runs link with its count, BI RUNS <GO>, the runs paths passed on to the server (and nothing else), the event stream relayed, a run's export
 passed through, /bi/run/<id> opening where the run's result is drawn, the bi-run notice in the inbox, and Admin → BI → Runs for bi-admins only."""
 import re
 
 import pytest
+from pathlib import Path
 from fastapi.testclient import TestClient
 
 from bi_runs_backend import REPORT_ID, RunsBackend
@@ -56,9 +57,10 @@ def test_the_workspace_has_three_tabs_and_the_runs_panel(bi):
 
 def test_the_rail_links_to_my_runs_with_a_count_and_g_r_is_listed(bi):
     client, _ = bi
-    r = client.get("/bi")
+    r = client.get("/bi/catalogue")
     assert 'href="/bi/w/me?tab=runs"' in r.text and "data-runs-count" in r.text
-    assert "<kbd>g</kbd> <kbd>r</kbd>" in r.text
+    js = (Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "drishti_bi.js").read_text()
+    assert "id: 'bi.go.' +" in js and "'/bi/w/me?tab=runs', 'your runs'" in js          # g r: the keymap lists it (? on the page)
 
 
 @pytest.mark.parametrize("typed", ["BI RUNS <GO>", "bi runs", "Rupaka runs"])

@@ -31,7 +31,7 @@ from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and he
 from wb_live import _stack
 
 ROOT = Path(__file__).resolve().parents[2]
-SAMPLE = ROOT / "config" / "packs" / "core" / "samples" / "issuer.jsonl"
+SAMPLE = ROOT / "config" / "packs" / "core" / "core" / "samples" / "issuer.jsonl"
 VALUES = [{"measure": "count()", "as": "Rows"}, {"measure": "count(BONDS.COUPON)", "as": "Coupons"}]
 
 
@@ -59,7 +59,7 @@ def pivot(browser, base, rows):
     pg.evaluate("""(rows) => window.Drishti.PivotScreen.run((v) => { v.rows = rows; v.columns = ['EQUITY'];
         v.values = %s; v.expanded = []; })""" % json.dumps(VALUES), rows)
     wait(pg, "(() => { const a = window.Drishti.PivotScreen.answer(); return a && a.view && JSON.stringify(a.view.rows) === %r"
-             " && document.querySelectorAll('[data-pv-grid] td[data-cell]').length > 0; })()" % json.dumps(rows, separators=(",", ":")), 120)
+             " && document.querySelectorAll('[data-pv-grid] .dg-cell[data-cell]').length > 0; })()" % json.dumps(rows, separators=(",", ":")), 120)
     settled(pg)
     return pg
 
@@ -73,11 +73,11 @@ def test_one_row_level_draws_no_plus_and_the_grand_total_is_right_per_column(sta
     rows = nodes(pg)
     assert len(rows) == len({i["ISSUER_ID"] for i in issuers()})
     assert all(r["expandable"] is False for r in rows), "a member on the last level has nothing under it"
-    assert pg.locator("[data-pv-grid] button.pv-tg").count() == 0, "no + (nor −) on a leaf"
-    # → on a leaf asks nothing of the server
+    assert pg.locator("[data-pv-grid] .dg-row[aria-expanded]").count() == 0, "no + (nor −) on a leaf"
+    # → on a leaf asks nothing of the server (no answer is asked again)
     asked = []
-    pg.on("request", lambda r: asked.append(r.url) if "/expand" in r.url else None)
-    pg.locator("[data-pv-grid] td[data-cell]").first.click()
+    pg.on("request", lambda r: asked.append(r.url) if "/expand" in r.url or "/api/pivot/query" in r.url else None)
+    pg.locator("[data-pv-grid] .dg-cell[data-cell]").first.click()
     pg.keyboard.press("ArrowRight")
     settled(pg)
     assert asked == []
@@ -104,16 +104,16 @@ def test_with_a_next_level_the_plus_opens_the_member(stack, browser):
     pg = pivot(browser, str(stack), ["ISSUER_ID", "BONDS.ISIN"])
     rows = nodes(pg)
     assert rows and all(r["expandable"] is True for r in rows)
-    plus = pg.locator('[data-pv-grid] button.pv-tg[aria-expanded="false"]')
+    plus = pg.locator('[data-pv-grid] .dg-row[aria-expanded="false"]')
     assert plus.count() == len(rows)
     first = rows[0]
-    plus.first.click()
+    plus.first.locator(".dg-tw").click()
     wait(pg, "window.Drishti.PivotScreen.answer().rows.some((r) => r.path.length === 2 && r.path[0][1] === %s)" % json.dumps(first["value"]), 120)
     settled(pg)
     kids = pg.evaluate("window.Drishti.PivotScreen.answer().rows.filter((r) => r.kind === 'node' && r.path.length === 2)")
     bonds = [b["ISIN"] for i in issuers() if i["ISSUER_ID"] == first["value"] for b in i.get("BONDS") or []]
     assert sorted(k["value"] for k in kids) == sorted(bonds)
     assert all(k["expandable"] is False for k in kids), "the last level's members are leaves"
-    assert pg.locator('[data-pv-grid] button.pv-tg[aria-expanded="true"]').count() == 1
+    assert pg.locator('[data-pv-grid] .dg-row:not(.dg-k-total)[aria-expanded="true"]').count() == 1   # one member open (its total line closes it too)
     assert pg.errors == []
     pg.close()

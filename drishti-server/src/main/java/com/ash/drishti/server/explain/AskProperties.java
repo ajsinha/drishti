@@ -21,10 +21,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * {@code drishti.explain.ask.*}: Ask about this page (docs/guides/RACHANA_REFERENCE.md, Optional: Ask). Off by default; when
- * off no network call is ever attempted. Ask runs on the AI layer: its model is a provider file's logical model (docs/admin/AI.md).
+ * off no network call is ever attempted. Ask runs on the AI layer: its model is a provider file's logical model (docs/guides/AI_GUIDE.md).
  *
  * @param enabled the global switch
- * @param model the logical model Ask uses: a provider/model of the AI layer (docs/admin/AI.md)
+ * @param model the logical model Ask uses: a provider/model of the AI layer (docs/guides/AI_GUIDE.md)
  * @param packs the packs where Ask is on; empty means none
  * @param values {@code labels-only} (default) or {@code shown}: whether rendered values go into the prompt
  * @param maxQuestionChars longest question accepted

@@ -30,7 +30,7 @@
   .\tools\windows\start-server.ps1 -Stop
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\windows\start-server.ps1 -DemoLakes
-  The offline demo of docs\qa\windows-custom-data.md: what the IntelliJ run configuration
+  The offline demo of docs\DEPLOYMENT_AND_QA_GUIDE.md section 11: what the IntelliJ run configuration
   'Drishti server (demo lakes)' sets (the ten packs of the demo lakes: the seven of the server's default, us-equities, gleif and funds; samples off, offline mode, sign-in on with the
   drishti-dev-admin account, a 4 GB heap), without IntelliJ.
 #>
@@ -131,9 +131,9 @@ if ($Iceberg) {
 # unpack their native libraries there, and the server removes stale copies at start; java.io.tmpdir only moves on the command line
 $tmpDir = if ($env:DRISHTI_TMP_DIR) { $env:DRISHTI_TMP_DIR } elseif ($env:DRISHTI_DATA_DIR) { Join-Path $env:DRISHTI_DATA_DIR 'tmp\server' } else { Join-Path $root 'data\tmp\server' }
 New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
-# native memory (PERFORMANCE.md, Resident memory): direct buffers capped, the JDK's per-thread temporary direct buffers cached up to
+# native memory (CLUSTER_GUIDE.md, Resident memory): direct buffers capped, the JDK's per-thread temporary direct buffers cached up to
 # 256 KB only, freed native memory given back, native memory tracked (MALLOC_ARENA_MAX is glibc's: not here). Diagnostics of a long run
-# (OPERATIONS.md): a heap dump on OutOfMemoryError in data\dumps and a rotated GC log (5 x 20 MB) in data\logs. The GC log's path is
+# (OPERATIONS_GUIDE.md): a heap dump on OutOfMemoryError in data\dumps and a rotated GC log (5 x 20 MB) in data\logs. The GC log's path is
 # relative to the working folder (the repository): -Xlog reads a colon as a separator, so a drive letter cannot appear in it; the
 # JVM does not start when the folder is missing, so both are made first.
 $logs = Join-Path $root 'data\logs'
@@ -143,7 +143,7 @@ $javaArgs = @("-Djava.io.tmpdir=$tmpDir", "-Xmx$Heap", '-XX:MaxDirectMemorySize=
     '-Djdk.nio.maxCachedBufferSize=262144', '-XX:NativeMemoryTracking=summary', '-XX:+HeapDumpOnOutOfMemoryError', "-XX:HeapDumpPath=$dumps",
     '-Xlog:gc*:file=data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m', '-jar', $Jar)
 if ($major -ge 25) { $javaArgs = @('-XX:+UseCompactObjectHeaders') + $javaArgs }
-# direct memory (IN_MEMORY_LAKE.md section 3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
+# direct memory (docs/architecture/DATA_ARCHITECTURE.md section 3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
 # exchange, BI answers as Arrow, Arrow Flight when its engine is on) live there, so the limit is 256 MB plus both, from the one place that
 # sizes them (tools\lake\memory_caps.py; DRISHTI_LAKE_MEMORY_MB and DRISHTI_ARROW_MB, when set, are used as they are); the later flag
 # wins, and Arrow's own cap (-Ddrishti.arrow.max-bytes) is set to its share. Admin -> Health turns red when short.

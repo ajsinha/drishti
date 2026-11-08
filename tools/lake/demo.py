@@ -76,6 +76,10 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import lakeconfig  # noqa: E402  (where the lakes are: config/lakes/<lake>.yaml)
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir, pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
+
 DEFAULT_ROOT = lakeconfig.DEMO_ROOT_REF   # config/lakes/demo.yaml: the demo lake's own folder
 DEFAULT_SERVER = "http://localhost:18480"
 SIGNAL_TIMEOUT = 30.0                        # seconds a data-load signal waits for its answer
@@ -133,8 +137,8 @@ class Packs:
         self.dir = packs_dir
         sys.path.insert(0, str(ROOT / "tools"))
         import packlake                               # a lake-form template read with the pack's lake: entries
-        self.specs = {p.name: packlake.view(yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8")))
-                      for p in sorted(packs_dir.iterdir()) if (p / "pack.yaml").is_file()}
+        self.specs = {name: packlake.view(yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8")))
+                      for name, p in pack_dirs(packs_dir).items()}
 
     def connector(self, pack: str, name: str) -> dict:
         return self.specs[pack]["connectors"][name]
@@ -514,7 +518,7 @@ class DemoLake:
                             other += 1                        # counted only: the file's date is the row's (the rules, section 1)
                         fh.write(json.dumps(doc, separators=(",", ":"), ensure_ascii=False) + "\n")
                         rows += 1
-        argv = ["--from", str(folder), "--pack", str(self.packs.dir / ds["pack"]), "--kind", ds["kind"], "--connector", ds["connector"],
+        argv = ["--from", str(folder), "--pack", str(pack_dir(ds["pack"], self.packs.dir)), "--kind", ds["kind"], "--connector", ds["connector"],
                 "--key", ds["key"], "--mode", REPLACE, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine,
                 "-q", "--no-stamp"]
         code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
@@ -550,7 +554,7 @@ class DemoLake:
             with stage.open("w", encoding="utf-8") as fh:
                 for line in state.values():
                     fh.write(self.names.rewrite_line(line if "snapshot" in ds else self.redate(line)) + "\n")   # the configured names
-            argv = ["--from", str(stage), "--pack", str(self.packs.dir / pack), "--kind", kind, "--connector", connector, "--key", key,
+            argv = ["--from", str(stage), "--pack", str(pack_dir(pack, self.packs.dir)), "--kind", kind, "--connector", connector, "--key", key,
                     "--mode", REPLACE, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
             code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
             if code:
@@ -681,7 +685,7 @@ class DemoLake:
               "     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480\n"
               "     (these two commands run with sign-in off on both; the run configurations turn it on, with the same secrets on both:\n"
               "     the server's DRISHTI_SECURITY_ENABLED and DRISHTI_TOKEN_SECRET, the console's DRISHTI_AUTH_ENABLED, DRISHTI_TOKEN_SECRET,\n"
-              "     DRISHTI_SESSION_SECRET; docs/guides/GETTING_STARTED.md)\n"
+              "     DRISHTI_SESSION_SECRET; docs/guides/OPERATIONS_GUIDE.md)\n"
               "  3. Open (console port 17480 by default):\n"
               "     /v/trade/1000001             an ENDUR ComSwap (legs side by side, cash flows and resets)\n"
               "     /v/trade/CLY-3000157         a CALYPSO government bond;   /v/trade/MX-20000001   a MUREX swap\n"
@@ -719,7 +723,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--keep-other-dates", action="store_true", help="add the dated tables' dates to the lake, keeping the dates already "
                    "there (each date written is replaced): the VaR data's three dates are 2026-09-28 to 2026-09-30, `--as-of 2026-09-25 "
                    "--keep-other-dates` adds them again as 2026-09-23 to 2026-09-25, the scenario window moved with them (the scenario matrix, "
-                   "tutorial 25 step 16); an undated table is rebuilt as always")
+                   "tutorial 2, step 16); an undated table is rebuilt as always")
     p.add_argument("--dry-run", action="store_true", help="print the names mapping it would apply and build nothing")
     p.add_argument("-q", "--quiet", action="store_true", help="only the summary")
     return p

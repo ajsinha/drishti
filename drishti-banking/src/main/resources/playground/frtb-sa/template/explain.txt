@@ -1,0 +1,240 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The Explain tab of the FRTB-SA Playground workbook, one entry a row: a line "## <title>" then its text (lines starting with "#" are
+# dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
+# PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
+# entries name the tab and the column, never a cell. The design is docs/guides/FRTB_SA_GUIDE.md (sections 4 to 7, 12.1,
+# 13.1 for the worked numbers, 16 for the decisions). The entries come in three parts: the idea in plain words, the steps with one worked
+# number each, and every term of every tab.
+## In plain words: what this workbook answers
+FRTB-SA answers one question: "how much capital must the bank set aside for the market risk of this trading book, by the regulator's own standard formula?" It does not simulate past days, as VaR does. It starts from the book's sensitivities (how much each position gains or loses when one market factor, such as the 10-year US dollar rate or the price of an equity index, moves by a small standard step), multiplies each by a risk weight the regulator sets (how far that factor could plausibly move in a stress), and then adds the weighted figures up with the regulator's correlations, so that hedges offset only as far as the rules allow. On top of that come two smaller charges: the default risk charge, for the loss if an issuer of a bond or the name behind a credit default swap defaults outright, and the residual risk add-on, for exotic risks no sensitivity captures. Every one of those steps is a plain Excel formula here, so any figure can be followed back to its inputs, an input can be changed and the result watched, and every result is compared with Drishti's engine to the cent (Main, Checks).
+## In plain words: why a bank must hold it
+Banks that trade must hold capital, money of their own that can absorb losses, against the risk of their trading positions. The Basel Committee's market-risk standard (the Fundamental Review of the Trading Book, FRTB, in the consolidated Basel Framework chapters MAR21 to MAR23 for the standardised approach) says how much. Every trading desk must compute the standardised approach, whether or not it also has an approved internal model: it is the capital of desks without a model, the fallback when a model loses its approval, and the reference supervisors compare the models with. National supervisors write the standard into their own rules; Drishti follows the Basel text first and then OSFI's Capital Adequacy Requirements chapter 9 (the Canadian rule), each as its own parameter file. The figure is reported to the supervisor, so a bank must be able to show how every number was made; this workbook is that showing.
+## In plain words: how to read the tabs
+Main is the summary: the scope, the date, the regime and its parameter file, then the charges per risk class, per measure (delta, vega, curvature) and per correlation scenario (low, medium, high), the binding scenario, the default risk charge, the residual risk add-on and the total, each beside the engine's figure with a check. Config holds the parameters actually used, each with its Basel paragraph: risk weights, correlations, the scenario formulas, the curvature and default-risk rules. Data holds the scope's sensitivities exactly as the source systems delivered them, and the exchange rates. WS turns each delivered sensitivity into the regulatory sensitivity and its weighted sensitivity. Buckets aggregates the weighted sensitivities inside each bucket. Classes aggregates the buckets of each risk class, once per scenario. Curvature works the curvature risk of each curve or underlying. DRC works the default risk charge obligor by obligor. RRAO lists the instruments with residual risk. Explain (this tab) says what every step and every term means. Provenance records where every input came from. Read Main first; when a figure surprises you, follow it back through Classes, Buckets and WS to Data.
+## In plain words: signs and units
+A sensitivity has a sign: a DV01 of −1,000 means the position loses 1,000 when the rate rises by one basis point (0.01 %), and gains about 1,000 when it falls. Weighted sensitivities keep that sign, so a long and a short of the same factor cancel. Every charge, by contrast, is a positive amount of capital: the square roots and the maxima of the method turn signed exposures into a size of risk. All money is in the reporting currency unless a column says otherwise; each sensitivity is converted at the business date's exchange rate before anything is added. Percentages in Config are written as fractions (1.1 % is 0.011).
+## In plain words: the regime and its parameters
+The regime is the rulebook the figures follow: BCBS MAR21 to MAR23 (the Basel text) is the reference, and OSFI CAR chapter 9 follows as its own parameter file where it differs. Every risk weight and correlation comes from the parameter file named on Main, never from a number typed into a formula: change a value in Config and every figure that uses it recalculates. The engine refuses a parameter file with a missing or out-of-range value, and an official capture always names the parameter version it used.
+## 1. From the delivered sensitivity to the regulatory sensitivity
+In plain words: source systems report a sensitivity per small step (per basis point, per 1 % move, per volatility point); the Basel rule defines it per whole unit of the factor, so each delivered figure is rescaled. Rates, spreads and inflation: s_k = DV01 × 10,000 (also CS01 and IE01), because one basis point is 1/10,000. Spots and prices: s_k = DELTA × 100, because the delivered DELTA is per 1 % move. Vega: s_k = VEGA × 100 × implied volatility (the vega risk sensitivity of MAR21.25). Worked number (the design's hand-built case 1): a USD swap with DV01 at 5 years of −1,000 has s = −1,000 × 10,000 = −10,000,000; at 10 years, DV01 −500 gives s = −5,000,000. Each figure is then converted to the reporting currency at the date's exchange rate (WS, the s column).
+## 2. Net the sensitivities of each factor
+In plain words: before anything else, every position's sensitivity to the same factor is added up, because sensitivities to one factor simply add: a long and a short of the same 5-year rate cancel exactly. s_k (netted) = the sum over the positions of the scope of their s_k (WS, Netted s, a SUMIFS over Data). Nothing after this step adds up across positions or scopes: the square roots make the charge of two desks together smaller than, or equal to, the sum of their charges.
+## 3. The weighted sensitivity
+In plain words: a sensitivity says how much the book moves for one unit of the factor; the risk weight says how far that factor could move in a stress. Their product is the stressed loss or gain from that factor alone. WS_k = RW_k × s_k (MAR21.4(3)). Worked number: the 5-year USD rate's risk weight is 1.1 %, divided by √2 because USD is a specified currency (MAR21.44): RW = 0.777817 %. WS = 0.00777817 × −10,000,000 = −77,781.75; for the 10-year point, −38,890.87 (WS, the WS column).
+## 4. The correlation between two factors of a bucket
+In plain words: two factors in the same bucket (two points of the same US dollar curve) usually move together, but not perfectly; the correlation ρ says how closely, from 0 (unrelated) to 1 (in lockstep). For rate tenors the rule is ρ = max(exp(−θ × |T_k − T_l| / min(T_k, T_l)), 40 %) with θ = 3 % (MAR21.46). Worked number: between 5 and 10 years, MAR21.46's published table gives ρ = 0.970 (the default, Config's girr-correlation switch on table); the exact formula behind it, max(exp(−0.03 × 5 / 5), 0.40), gives 0.970446 (the switch on exact) (Buckets, the ρ matrix of USD).
+## 5. The bucket charge K_b
+In plain words: inside one bucket, add up the stressed figures as if they were risks that partly move together: each one counts fully against itself, and each pair counts in proportion to its correlation. Positions that move together add up; offsetting ones cancel to the extent they are correlated. K_b = √max(0, Σ_k WS_k² + Σ_k Σ_{l≠k} ρ_kl × WS_k × WS_l) (MAR21.4(4)). Worked number: K_USD = √(77,781.75² + 38,890.87² + 2 × 0.970 × 77,781.75 × 38,890.87) = 115,892.19 in the medium scenario (115,903.82 with the exact formula) (Buckets, K_b). S_b, the bucket's plain net, is Σ WS_k = −116,672.62.
+## 6. The three correlation scenarios
+In plain words: correlations are uncertain, and a wrong correlation can make a book look safer than it is. So the rules compute every charge three times: with the prescribed correlations (medium), with correlations pushed up (high) and with correlations pushed down (low), and keep the worst. High: min(1.25 × ρ, 1). Low: max(2 × ρ − 1, 0.75 × ρ). Both apply to every ρ and every γ (MAR21.6). Worked number: for the USD bucket above, ρ low = 0.940 gives K = 115,106.47 (0.940891 and 115,129.89 with the exact formula); ρ high = 1 gives K = 116,672.62, simply |WS₁| + |WS₂|, because two factors in perfect lockstep add up exactly. A book that is all one way is hurt most by high correlations; a hedged book by low ones (Classes, the scenario columns).
+## 7. Across buckets: the charge of a risk class
+In plain words: the buckets of a class (the currencies of interest-rate risk, for example) are added together the same way, now with the cross-bucket correlation γ applied to each bucket's net S_b. Δ = √(Σ_b K_b² + Σ_b Σ_{c≠b} γ_bc × S_b × S_c) (MAR21.4(5)). Worked number (case 2): add a EUR 2-year DV01 of +800, so s = 8,000,000, RW = 1.3 % / √2 and WS = K_EUR = S_EUR = 73,539.11; γ = 50 % (low 37.5 %, high 62.5 %). The EUR position gains when the USD ones lose, so it is a partial hedge, and the low scenario, which trusts the hedge least, binds: Δ_GIRR = 110,555.42 low, 101,286.72 medium, 91,079.64 high (110,579.79 and 101,300.03 with the exact formula) (Classes, Delta).
+## 8. When the hedges are larger than the buckets: the alternative specification
+In plain words: with strong hedges across buckets the number under the square root of step 7 can turn negative, which has no meaning. The rule then caps each bucket's net at its own charge, S_b = max(min(Σ_k WS_k, K_b), −K_b), and takes the root again (MAR21.4(5)(b)). This limits how much one bucket may offset another to that bucket's own risk. Buckets shows, per class and scenario, whether the alternative applied (the design's case 7 is a book where it does).
+## 9. Vega
+In plain words: options also lose or gain when the market's implied volatility changes. Vega charges follow steps 3 to 7 with volatility factors (an underlying at an option expiry of 0.5, 1, 3, 5 or 10 years). The risk weight depends on how long the factor takes to hedge (its liquidity horizon LH): RW = min(55 % × √(LH / 10), 100 %) (MAR21.92), so 100 % for rates, credit, commodities, FX and small-cap and other-sector equity, and 77.78 % for large-cap and index equity. Within a bucket, ρ = min(ρ_underlying × exp(−1 % × |T_k − T_l| / min(T_k, T_l)), 1) (MAR21.94; for GIRR the same form on the underlying maturities in place of ρ_underlying, MAR21.93). Worked number (illustrative): a large-cap equity option with VEGA 2,000 per volatility point at an implied volatility of 20 % has s = 2,000 × 100 × 0.20 = 40,000 and WS = 0.7778 × 40,000 = 31,112.
+## 10. Curvature of one factor
+In plain words: a sensitivity is a straight-line estimate; options bend. Curvature is the extra loss, beyond the straight line, when the factor moves by the full stress in either direction. The source revalues the curve or underlying shocked up and down by the bucket's risk weight (CURVATURE_UP and CURVATURE_DOWN, delta included); the straight-line part, RW × s_k, is taken out: CVR+ = −(UP − RW × s_k) and CVR− = −(DOWN + RW × s_k) (MAR21.5). Worked number (case 3): an equity index in bucket 12, RW 15 %, DELTA 10,000 per 1 %, so RW × s = 0.15 × 1,000,000 = 150,000; UP = 120,000 and DOWN = −180,000 give CVR+ = −(120,000 − 150,000) = 30,000 and CVR− = −(−180,000 + 150,000) = 30,000: the option loses 30,000 more than its delta says, whichever way the index moves (Curvature, CVR+ and CVR−).
+## 11. Curvature of a bucket and of a class
+In plain words: curvature risks are added up like delta, with three differences. Only losses count fully on their own (a factor whose curvature is a gain, a negative CVR, is not charged by itself); the correlations are the delta correlations squared (MAR21.100), the scenario then applied to the squared value; and two gains never offset each other (ψ is 0 when both are negative). K_b+ = √max(0, Σ_k max(CVR_k+, 0)² + Σ_k Σ_{l≠k} ρ_kl² × CVR_k+ × CVR_l+ × ψ), K_b− the same with CVR−, and K_b is the larger of the two; S_b is the sum of the CVRs of the side chosen. Across buckets, Curvature = √max(0, Σ_b K_b² + Σ_b Σ_{c≠b} γ_bc² × S_b × S_c × ψ(S_b, S_c)). Worked number: case 3 has one factor, so K_b = 30,000 and the class's curvature charge is 30,000 in every scenario. The FX curvature charges of options that do not reference the reporting currency are divided by 1.5 (MAR21.98): on by default, a setting in Config.
+## 12. The sensitivities-based method total and the binding scenario
+In plain words: for each of the three scenarios, add up the delta, vega and curvature charges of every risk class; the capital is the largest of the three totals (MAR21.6 to MAR21.7), and Main names the scenario that bound. SBM(s) = Σ_classes (Delta(s) + Vega(s) + Curvature(s)); SBM = max(SBM(low), SBM(medium), SBM(high)). Worked number: cases 2 and 3 together, with MAR21.46's published table (the default): GIRR delta 110,555.42 low, 101,286.72 medium, 91,079.64 high; the index's own delta charge 0.15 × 1,000,000 = 150,000 and its curvature 30,000 in every scenario; SBM(low) = 290,555.42, SBM(medium) = 281,286.72, SBM(high) = 271,079.64; the low scenario binds and SBM = 290,555.42 (Main, SBM). Without the index's delta charge the low total is 140,555.42; with the exact correlation formula (the girr-correlation switch) 140,579.79.
+## 13. Default risk: jump-to-default of each position
+In plain words: sensitivities cover small moves; a default is a jump. The jump-to-default (JTD) of a position is what it would lose (a long) or gain (a short) if the obligor defaulted today: the share of the notional lost (LGD) plus the profit or loss already booked. JTD = LGD × notional + P&L, where P&L = market value − notional and the notional is negative for a short (MAR22.10 to MAR22.13); longs keep the positive part, shorts the negative. It is then scaled by maturity, min(max(M, 0.25), 1) years (MAR22.15 to MAR22.18). Worked number (case 4): a senior BBB bond, notional 10,000,000, market value 9,800,000, two years: JTD = 0.75 × 10,000,000 − 200,000 = 7,300,000, × 1; a bought CDS on the same obligor, notional −4,000,000, P&L +50,000, six months: (0.75 × −4,000,000 + 50,000) × 0.5 = −1,475,000 (DRC, Gross JTD and Scaled JTD).
+## 14. Default risk: netting, the hedge ratio and the bucket charge
+In plain words: a short on the same obligor protects a long, if it is no more senior; across obligors, shorts protect only partly. Longs and shorts of one obligor net when the short is of the same or lower seniority (MAR22.19 to MAR22.21). In each bucket (corporates, sovereigns, local governments; MAR22.22) the hedge benefit ratio HBR = Σ net long / (Σ net long + Σ |net short|) (MAR22.23) limits the credit given to shorts: DRC_b = max(Σ RW × net long − HBR × Σ RW × |net short|, 0) (MAR22.25), RW by credit quality (MAR22.24). Buckets do not offset each other (MAR22.26). Worked number: net long 7,300,000 − 1,475,000 = 5,825,000 (BBB, RW 6 %); a second obligor, BB (RW 15 %), net short −2,000,000; HBR = 5,825,000 / 7,825,000 = 0.744409; DRC = max(0.06 × 5,825,000 − 0.744409 × 0.15 × 2,000,000, 0) = 126,177.32 (DRC, DRC_b).
+## 15. The residual risk add-on
+In plain words: some risks are in no sensitivity: the weather, a barrier that can jump, the correlation inside a basket. For those the rule is blunt: a fixed share of the gross notional. RRAO = Σ gross notional × 1.0 % for instruments with an exotic underlying + Σ gross notional × 0.1 % for instruments with other residual risks (MAR23.8). Worked number (case 5): an FX barrier option of gross notional 50,000,000 (other residual risk) adds 50,000; a weather derivative of 10,000,000 (exotic) adds 100,000; RRAO = 150,000 (RRAO tab).
+## 16. The total
+In plain words: the capital is the three parts added: FRTB-SA = SBM + DRC + RRAO. Worked number: with cases 2, 3, 4 and 5 in one book (the hand-built cases' workbook), 290,555.42 + 126,177.32 + 150,000 = 566,732.73 to the cent (the parts unrounded; Main, FRTB-SA total); without the index's own delta charge 416,732.73; with the exact correlation formula 416,757.11. Nothing offsets across the three parts.
+## 17. Contributions
+In plain words: how much of the charge each position or desk is responsible for; the shares add up to the charge exactly. Within the binding scenario the charge grows in proportion when every weighted sensitivity is scaled together, so a position's contribution is Σ_k WS_k(position) × ∂SBM / ∂WS_k (the Euler allocation), adding up to the SBM charge. DRC contributions follow each obligor's share of its bucket's charge; RRAO is already a sum per instrument. A negative contribution marks a hedge. A desk's own charge, computed alone, is usually larger than its contribution: the difference is diversification.
+## 18. The checks
+In plain words: each result stands beside the engine's own figure with a check, and the parts are checked to add up to the whole. The band at the top of Main says ALL CHECKS PASS when the sheet equals the engine to the cent and the contributions add up. Change an input and the engine checks turn red (the engine answered the original question) while the add-up checks stay green: that is expected, and it is how you explore "what if".
+## Term (Main): Scope
+What the capital is computed for: a desk, a legal entity, a portfolio, a hierarchy node or an ad-hoc set of positions. The positions' sensitivities are netted per factor across the scope (step 2) and the formula is applied once; so the charge of a scope is never the sum of the charges of its parts.
+## Term (Main): Business date
+The date of the positions, their sensitivities and the exchange rates. One full sensitivity run per source system and date is used; an intraday batch replaces a position's record whole.
+## Term (Main): Regime
+The rulebook the figures follow: BCBS MAR21 to MAR23 (the Basel Committee's text, the reference) or a jurisdiction's version of it, such as OSFI CAR chapter 9 in Canada. Each regime is its own parameter file; a filer is configured with its regime.
+## Term (Main): Parameter file, version and checksum
+The configuration file the risk weights, correlations and rules were read from, its version and a checksum of its content. A changed file is a new version, never an edit of the one in force, so any figure can be reproduced with the parameters it used.
+## Term (Main): Reporting currency
+The currency every charge is reported in. Each sensitivity is converted into it at the business date's exchange rate (Data, FX) before any netting. For interest-rate risk the reporting currency is also treated as a specified currency (its risk weights divided by √2, MAR21.44).
+## Term (Main): Risk class
+One of the families of market risk the rules treat separately (MAR21.1): GIRR (general interest-rate risk, including inflation and cross-currency basis), CSR non-securitisation (credit spreads of bonds and CDS), CSR securitisation (not in this workbook), Equity, Commodity and FX. Each class has its own factors, buckets, risk weights and correlations, and its own delta, vega and curvature charges.
+## Term (Main): Measure (delta, vega, curvature)
+The three kinds of sensitivity-based charge. Delta: the risk of the factor's level moving (a rate, a spread, a price). Vega: the risk of implied volatility moving (options only). Curvature: the extra risk of options, beyond delta, when the factor makes a large move (step 10). Each is computed per risk class and per scenario.
+## Term (Main): Correlation scenario (low, medium, high)
+The three versions of every correlation the rules require (MAR21.6): medium is the prescribed value ρ; high is min(1.25 × ρ, 1); low is max(2 × ρ − 1, 0.75 × ρ). The same transformation applies to the cross-bucket γ. The whole method is run three times and the largest total kept (step 6).
+## Term (Main): Binding scenario
+The scenario whose total is the largest and so sets the capital (step 12), named on every screen. A book of one-way positions is usually bound by high correlations; a hedged book by low ones.
+## Term (Main): SBM (sensitivities-based method)
+The capital for delta, vega and curvature risk: for each scenario the sum over every risk class of its delta, vega and curvature charges, then the largest of the three scenarios (MAR21.4 to MAR21.7). The largest part of FRTB-SA for most books.
+## Term (Main): Delta charge
+The charge of a risk class for the risk of its factors' levels: steps 1 to 8 applied to the delta sensitivities, in one scenario. Written Δ_class(s).
+## Term (Main): Vega charge
+The charge of a risk class for the risk of implied volatilities: the same aggregation applied to the vega risk sensitivities with the vega risk weights and correlations (step 9).
+## Term (Main): Curvature charge
+The charge of a risk class for the extra loss of options in large moves (steps 10 and 11). Zero for a class with no options. Where a source could not revalue for curvature and sent gamma instead, the figure is labelled an estimate (see Curvature estimate from gamma).
+## Term (Main): DRC (default risk charge)
+The capital for the jump-to-default risk of bonds, CDS and equity positions, non-securitisations (MAR22): the sum of the bucket charges of steps 13 and 14. It covers what spread sensitivities cannot: an issuer defaulting outright.
+## Term (Main): RRAO (residual risk add-on)
+The capital for risks the sensitivities do not capture (MAR23): a fixed percentage of the gross notional of instruments with exotic underlyings (1.0 %) or other residual risks (0.1 %), step 15.
+## Term (Main): FRTB-SA total
+SBM + DRC + RRAO: the capital requirement of the standardised approach for the scope (step 16).
+## Term (Main): Engine, Check, Checks, CHECK FAILED, ALL CHECKS PASS
+Engine is the figure Drishti's FRTB engine reported for the same scope, date and parameters, typed in so the workbook can be compared with it; the workbook never uses it in its own calculation. Each check compares a computed figure with the engine's (equal to the cent) or confirms that parts add up to a whole. ALL CHECKS PASS means every one holds. After you change an input, the comparisons with the engine fail by design; the add-up checks must still pass.
+## Term (Main): Contribution
+A position's or desk's share of the charge by the Euler allocation (step 17); the shares add up to the charge of the binding scenario exactly. Negative for a hedge.
+## Term (Main): Diversification
+The sum of the charges of the parts (each desk computed alone) minus the charge of the whole. It is the capital saved because risks offset across the parts; usually positive, it can be negative when the parts are bound by different scenarios.
+## Term (Main): Positions, sensitivities, proxied, refused
+How many positions and sensitivity elements the scope holds, how many were valued with a proxy (a missing curve or surface replaced by a similar one; counted and shown beside every sum) and how many were refused on load (a factor not in the dictionary, a value that is not finite, a currency without an exchange rate). A refused element is never counted as zero; it is left out and counted.
+## Term (Main): Curvature estimate from gamma
+A label on any curvature figure built, for a source that cannot revalue under the curvature shock, from its delivered GAMMA instead of from the two revaluations. By a second-order expansion, the curvature beyond delta for a shock h is about ½ × gamma × h², the same up and down, so CVR ≈ −½ × gamma × h². It is exact for a parabola and an approximation for anything else (barriers, digitals), so every screen and export that shows it says "estimate".
+## Term (Config): Risk factor
+A single market quantity the book's value depends on, named by the factor dictionary's standard: a point of an interest-rate curve (IR/CURVE/USD/SOFR/10Y), a credit spread point, an FX rate, an equity price or repo rate, a commodity forward, an implied volatility. The rules' sensitivities are always to one factor (MAR21.8).
+## Term (Config): Qualifier
+What a factor is "of": the currency for interest rates and FX, the issuer or index for credit, the underlying for equity and commodity. Two factors of the same qualifier are, for example, two tenors of one issuer's curve; correlations within a bucket depend on whether the qualifiers are the same (ρ_name).
+## Term (Config): Bucket
+A group of factors that are similar enough to be offset against each other with high correlations: for GIRR and FX, one currency (MAR21.39, MAR21.86); for CSR non-securitisation, one of 18 sector and credit-quality groups (MAR21.51); for equity, one of 13 by size, economy and sector (MAR21.72); for commodity, one of 11 commodity groups (MAR21.82). Each factor falls in exactly one bucket; the factor dictionary says which.
+## Term (Config): Tenor (vertex)
+A standard point in time of a curve where sensitivities are reported: for GIRR 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20 and 30 years; for credit 0.5, 1, 3, 5 and 10; for commodity 0 to 30 years (MAR21.8). A cash flow between two vertices is split onto both.
+## Term (Config): Option maturity
+For vega factors, the expiry of the option: 0.5, 1, 3, 5 or 10 years (MAR21.8). For interest-rate volatilities also the residual maturity of the underlying swap.
+## Term (Config): Risk weight (RW)
+The stress move of a factor, set by the regulator: the fraction by which the factor's value is assumed to move in a stress over its liquidity horizon. For rates, 1.7 % at the short end down to 1.1 % (MAR21.42); for credit, 0.5 % to 12 % by bucket (MAR21.53); for equity spot, 15 % to 70 % (MAR21.77); for commodity, 20 % to 80 % (MAR21.82); for FX, 15 % (MAR21.87). A higher weight means more capital for the same sensitivity.
+## Term (Config): Specified currencies and the √2 divisor
+For GIRR the risk weights of EUR, USD, GBP, AUD, JPY, SEK, CAD and the bank's reporting currency may be divided by √2 (MAR21.44), because their rates are deep and liquid. For FX the same divisor applies to the specified currency pairs (MAR21.88), listed in the bank's parameter file.
+## Term (Config): Inflation and cross-currency basis risk weights
+GIRR's inflation factor (one per currency) and cross-currency basis factor (one per currency against USD or EUR) each carry a 1.6 % risk weight (MAR21.43). Inflation correlates 40 % with the rate curve; a basis factor 0 % with anything.
+## Term (Config): Intra-bucket correlation ρ
+How closely two factors of the same bucket move together, between 0 and 1. GIRR: max(exp(−θ × |T_k − T_l| / min(T_k, T_l)), 40 %) between tenors of a curve, × 99.9 % between curves (MAR21.46 to MAR21.49). CSR: ρ_name × ρ_tenor × ρ_basis (MAR21.55). Equity: by bucket group, 99.9 % between a name's spot and its repo (MAR21.78). Commodity: ρ_commodity × ρ_tenor × ρ_basis (MAR21.83). Used in step 5.
+## Term (Config): θ (theta, the GIRR tenor decay)
+The speed at which the correlation between two rate tenors falls with their distance: 3 % (MAR21.46). With θ = 3 %, the 5-year and 10-year points correlate at 0.97; the floor is 40 %.
+## Term (Config): ρ_name, ρ_tenor, ρ_basis (credit)
+The three parts of a credit correlation (MAR21.55): 35 % between different issuers (100 % for the same), 65 % between different tenors (100 % for the same), 99.9 % between the bond curve and the CDS curve of one issuer. Their product is ρ.
+## Term (Config): ρ_commodity, ρ_tenor, ρ_basis (commodity)
+The three parts of a commodity correlation (MAR21.83): between two commodities of the bucket, a value per bucket from 15 % to 95 %; between tenors 99 %; between delivery locations 99.9 %.
+## Term (Config): Other-sector bucket
+CSR bucket 16 and equity bucket 11 hold the names that fit no sector. Their weighted sensitivities are not correlated but added in absolute value (MAR21.56, MAR21.79), so nothing in them offsets, and their correlation with every other bucket is 0.
+## Term (Config): Cross-bucket correlation γ
+How closely two buckets of a class move together, applied to the buckets' nets S_b (step 7). GIRR 50 % (MAR21.50); CSR γ_rating × γ_sector (MAR21.57); equity 15 %, 75 % between the index buckets, 45 % index to name, 0 % with bucket 11 (MAR21.80); commodity 20 %, 0 % with bucket 11 (MAR21.85); FX 60 % (MAR21.89).
+## Term (Config): γ_rating and γ_sector (credit)
+The two parts of the CSR cross-bucket correlation (MAR21.57): γ_rating is 100 % between two investment-grade or two high-yield buckets and 50 % between one of each; γ_sector is read from the rule's sector table for the two buckets' sectors.
+## Term (Config): Scenario formulas
+High: min(1.25 × ρ, 1). Low: max(2 × ρ − 1, 0.75 × ρ). Medium: ρ unchanged (MAR21.6). Applied to every ρ and γ of delta and vega and, for curvature, to the squared correlations (MAR21.100 to MAR21.101). Kept in Config so they can be read, never typed into a formula.
+## Term (Config): Liquidity horizon (LH)
+How long, in business days, the rules assume it takes to exit or hedge a factor in a stress: 10, 20, 40, 60 or 120 (MAR33.12). Vega risk weights grow with it (step 9).
+## Term (Config): Vega risk weight
+min(55 % × √(LH / 10), 100 %) (MAR21.92): 100 % for GIRR (LH 60), credit and commodity (LH 120) and FX (LH 40); 77.78 % for large-cap equity (LH 20) and 100 % for small-cap and other equity.
+## Term (Config): α (alpha, the option-maturity decay)
+The speed at which the vega correlation between two option maturities falls: 1 % in exp(−α × |T_k − T_l| / min(T_k, T_l)) (MAR21.94).
+## Term (Config): Curvature shock
+The size of the up and down revaluation for curvature: for FX and equity a relative shift equal to the factor's delta risk weight (MAR21.98); for GIRR, CSR and commodity a parallel shift of the whole curve by the highest risk weight of the bucket (MAR21.99). Delivered as SHOCK_SIZE on each curvature element; a shock that differs from the bucket's risk weight is a warning on load.
+## Term (Config): Curvature correlations (squared)
+Curvature uses the delta correlations ρ and γ squared (MAR21.100 to MAR21.101), the scenario then applied to the squared value (high min(1.25 × ρ², 1), low max(2 × ρ² − 1, 0.75 × ρ²)). Squaring makes them smaller, so curvature risks offset less.
+## Term (Config): FX curvature divisor (1.5)
+The curvature charges (CVR+ and CVR−) of FX options that do not reference the reporting currency may be divided by 1.5 (MAR21.98); every FX instrument only with the supervisor's approval. On by default for those options; a setting turns it off. When off, the FX curvature on Main is the undivided figure.
+## Term (Config): LGD (loss given default)
+The share of the notional assumed lost in a default (MAR22.12): 75 % for senior debt, 100 % for non-senior debt and equity, 25 % for covered bonds, 100 % for an instrument whose value does not depend on recovery.
+## Term (Config): Maturity floor and cap
+The JTD is scaled by the position's maturity in years, floored at 0.25 (three months) and capped at 1 (MAR22.15 to MAR22.18). Cash equity uses 0.25 or 1, chosen by the bank, nothing between (MAR22.16).
+## Term (Config): DRC risk weights by credit quality
+The default risk weight of each obligor (MAR22.24): AAA 0.5 %, AA 2 %, A 3 %, BBB 6 %, BB 15 %, B 30 %, CCC 50 %, unrated 15 %, defaulted 100 %.
+## Term (Config): DRC buckets
+The groups within which defaults can be hedged against each other (MAR22.22): corporates, sovereigns, and local governments and municipalities. No hedge benefit crosses buckets (MAR22.26).
+## Term (Config): RRAO weights
+1.0 % of gross notional for instruments with an exotic underlying (longevity, weather, natural disasters, future realised volatility; MAR23.2) and 0.1 % for instruments with other residual risks (gap, correlation and behavioural risk; MAR23.3), MAR23.8.
+## Term (Config): RRAO product-type mapping and exclusions
+Which product types bear which residual risk, mapped from each trade's PRODUCT_TYPE (a type absent from the mapping is out of scope). A back-to-back trade and its exact third-party match are excluded; an instrument listed or eligible for central clearing is excluded from the other-residual-risk part only, and stays in when its underlying is exotic (MAR23.7), flagged on the trade.
+## Term (Data): Position
+The position as the pack's position rules derive it, so it joins the VaR vectors. A source that sends by trade has its trades' sensitivities summed into the position.
+## Term (Data): Source system and batch
+Which front-office or risk system computed the sensitivity, and the batch (run) it came in. Drishti does not reprice: the sensitivities are the bank's own systems', computed in the same run as the scenario values that feed VaR.
+## Term (Data): Sensitivity
+How much a position's value changes when one risk factor moves by a small standard step, everything else held fixed. Delivered per step as below and rescaled to the rule's per-unit definition in step 1 (MAR21.8 to MAR21.26).
+## Term (Data): DV01, CS01, IE01
+The change in value for +1 basis point (0.01 %) of an interest rate (DV01), a credit spread (CS01) or an inflation rate (IE01): V(r + 1 bp) − V(r). Negative when the position loses as the rate rises.
+## Term (Data): DELTA
+For an FX rate, an equity price or a commodity price, the change in value for a +1 % relative move: V(1.01 × x) − V(x); for an equity repo rate, per +1 bp.
+## Term (Data): VEGA and implied volatility
+VEGA is the change in value for +1 volatility point (+0.01) of the option's implied volatility: V(σ + 0.01) − V(σ). The implied volatility is the volatility the option is priced at, as a fraction (0.28 for 28 %). The vega risk sensitivity is their product × 100 (MAR21.25). Interest-rate volatilities are lognormal by default; a source sending normal volatilities in basis points declares it and is converted on load.
+## Term (Data): CURVATURE_UP, CURVATURE_DOWN and the shock size
+The change in value when the whole curve or underlying is shocked up and down by the curvature shock, delta included: V(x + shock) − V(x) and V(x − shock) − V(x). SHOCK_SIZE is the shock applied, in basis points for rates and spreads or as a fraction for spots and prices.
+## Term (Data): GAMMA
+The rate of change of delta: how much the delta itself changes as the factor moves. Sent only by a source that cannot revalue for curvature; Drishti then estimates curvature from it and labels the result an estimate.
+## Term (Data): Value and currency
+The delivered number and the currency it is in. Converted to the reporting currency at the date's exchange rate (Data, FX) before netting.
+## Term (Data): Status and proxy reason
+ok, proxied (valued with a proxy: the missing curve or surface and the proxy used are named) or failed (no sensitivities). Proxied records are counted and shown beside every sum.
+## Term (Data): FX
+The exchange rate of every currency on the business date, in reporting-currency units per unit. Used once, to convert each sensitivity before it is netted.
+## Term (WS): Netted s
+The sum of the scope's regulatory sensitivities to one factor (steps 1 and 2): a SUMIFS over Data, then the conversion of step 1.
+## Term (WS): Conversion factor
+The multiplier from the delivered convention to the rule's per-unit sensitivity: 10,000 for DV01, CS01 and IE01; 100 for DELTA; 100 × implied volatility for VEGA.
+## Term (WS): WS (weighted sensitivity)
+RW × netted s (MAR21.4(2)): the stressed gain or loss from that factor alone, with its sign. The building block of every SBM charge.
+## Term (Buckets): ρ matrix
+The correlation of every pair of factors of the bucket in the scenario of the column, built by formulas from the factors' tenors, names and curves (the intra-bucket rules in Config), with 1 on the diagonal.
+## Term (Buckets): Sum of squares and cross terms
+The two parts under the square root of K_b: Σ WS_k² (each factor against itself) and Σ ρ_kl × WS_k × WS_l over every pair (how the factors offset or reinforce each other). Built with SUMPRODUCT and MMULT so a reader can check each.
+## Term (Buckets): K_b (bucket charge)
+√max(0, sum of squares + cross terms): the risk of the bucket after the offsets inside it (step 5, MAR21.4(4)). Always zero or positive.
+## Term (Buckets): S_b (bucket net)
+Σ_k WS_k, the bucket's plain signed sum, used across buckets (step 7). Capped at ±K_b when the alternative specification applies.
+## Term (Buckets): Alternative specification
+Applied when the number under the root of the class's charge is negative: each S_b is replaced by max(min(S_b, K_b), −K_b) (MAR21.4(5)(b)). Shown per class and scenario as applied or not.
+## Term (Classes): γ matrix
+The cross-bucket correlation of every pair of the class's buckets in the scenario of the column, from the γ rules in Config.
+## Term (Classes): Delta, Vega, Curvature per scenario
+The class's three charges in each of the three scenarios, the inputs of the SBM total (step 12). The scenario columns are built with MIN and MAX on the medium correlations so the transformation can be read.
+## Term (Classes): SBM(low), SBM(medium), SBM(high)
+The sum over every class and measure in one scenario. The largest is the SBM capital; Main marks it.
+## Term (Curvature): Curve or underlying
+Curvature is computed per whole curve or underlying (a currency's rate curves, an issuer's spread curves, an equity, a commodity, a currency), not per tenor: the shock moves every tenor together.
+## Term (Curvature): Up, Down, Delta part
+Up and Down are CURVATURE_UP and CURVATURE_DOWN summed over the scope. The delta part is RW × s, the straight-line move the delta alone predicts for the shock: for GIRR, Σ DV01 over the curve's tenors × SHOCK_SIZE in basis points; for a spot, DELTA × 100 × SHOCK_SIZE.
+## Term (Curvature): CVR+ and CVR−
+The curvature risk of the up and the down shock: CVR+ = −(Up − delta part), CVR− = −(Down + delta part) (MAR21.5). Positive means the position loses more than delta says. The bucket's charge is computed with each and the larger is kept.
+## Term (Curvature): K_b+ and K_b−, the side chosen
+The bucket's curvature charge on the up side and on the down side (step 11); K_b is the larger. The bucket's net S_b is the sum of the CVRs of the side chosen; when both sides give the same K_b, the side with the larger sum of CVRs is chosen.
+## Term (Curvature): ψ (psi)
+0 when both of two curvature figures are negative, 1 otherwise: two curvature gains never offset each other, so a book cannot reduce its curvature charge by holding two option gains.
+## Term (DRC): Obligor
+The issuer or reference entity whose default would cause the loss: the bond's issuer, the CDS's reference name, the equity's company.
+## Term (DRC): Seniority
+The rank of the claim in a default: covered, senior, non-senior (subordinated) or equity. It sets the LGD and whether a short may offset a long (only a short of the same or lower seniority).
+## Term (DRC): Notional, market value and P&L
+The notional is the amount the instrument pays at par (negative for a short, including bought protection); the market value is its value today; P&L = market value − notional, the gain or loss already booked, added so it is not counted twice.
+## Term (DRC): JTD (jump-to-default)
+LGD × notional + P&L (MAR22.10 to MAR22.13): the loss of a long (positive) or gain of a short (negative) if the obligor defaulted now. Gross JTD long keeps the positive values, gross JTD short the negative.
+## Term (DRC): Scaled JTD
+The JTD × the maturity factor min(max(M, 0.25), 1): a short-dated hedge protects only for part of the year (MAR22.15 to MAR22.18).
+## Term (DRC): Net JTD long and short
+Per obligor, the scaled longs and shorts offset under the seniority rule (MAR22.19 to MAR22.21); the result is a net long or a net short.
+## Term (DRC): Credit quality
+The obligor's rating band (AAA to CCC, unrated, defaulted), which sets its default risk weight.
+## Term (DRC): HBR (hedge benefit ratio)
+Σ net long / (Σ net long + Σ |net short|) in the bucket, unweighted (MAR22.23): the share of the shorts' weighted JTD that is credited against the longs. A bucket of only longs has HBR = 1 and no credit to give; the ratio stops a bucket of low-quality shorts from cancelling high-quality longs entirely.
+## Term (DRC): DRC_b (bucket charge)
+max(Σ RW × net long − HBR × Σ RW × |net short|, 0) (MAR22.25). Never negative; the DRC is their sum.
+## Term (RRAO): Instrument, class and gross notional
+Each instrument with residual risk, whether it is exotic (1.0 %) or other (0.1 %), and its gross notional (the notional without netting against anything). The add-on is notional × weight; RRAO is the sum.
+## Term (Provenance)
+Where every input came from (dataset, table version, batch and source system of the sensitivities, the business date), the parameter file with its version and checksum, the counts of refused and proxied sensitivities, who made the workbook and when, and which engine version answered. Use it to reproduce or audit any figure.

@@ -27,15 +27,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * The commands' and packs' switches (Admin → Commands, docs/admin/USER_MANAGEMENT.md): the ledger (the identity database) gives the access checks
+ * The commands' and packs' switches (Admin → Functions, docs/guides/ADMIN_GUIDE.md): the ledger (the identity database) gives the access checks
  * which commands are off, names its changes after the Drishti*net node, is spread by gossip, and every change tells open consoles.
  */
 @Configuration(proxyBeanMethods = false)
 public class SwitchesConfiguration {
 
     @Bean
-    public CommandSwitches commandSwitches(SwitchLedger ledger, Mnemonics mnemonics, PackAccess access) {
-        CommandSwitches c = new CommandSwitches(ledger, mnemonics);
+    public CommandSwitches commandSwitches(SwitchLedger ledger, Mnemonics mnemonics, PackAccess access,
+            com.ash.drishti.registry.AccessRegistry registry) {
+        // the mnemonic switches fold into the access registry (ACCESS_MODEL.md, functions): the ledger keeps the administrator's switch
+        // (the system of record, gossiped across the cluster); the registry decides a function on with its module
+        registry.functionSwitches(word -> ledger.find(SwitchLedger.COMMAND, word).map(SwitchLedger.Entry::on).orElse(null));
+        CommandSwitches c = new CommandSwitches(ledger, mnemonics, registry);
         access.commands(c);
         return c;
     }

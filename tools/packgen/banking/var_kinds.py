@@ -18,7 +18,7 @@ tools/packgen/var/make_var_data.py into data/testdata/market-risk/ and served by
 as a list<double> column (``vectors:``). Positions are Drishti's: derived from the trades by the pack's rules when a date loads and
 served from the engine by the var-positions connector. No kind stores a VaR figure: the pages show the engine's, computed when opened.
 The computed kind var-result (VAR_GUIDE.md section 8) is served by the reactive connector var-engine, the server's Java engine, read as the
-viewer; the pre-deal what-if is the same engine's (POST /api/v1/var/what-if), not a kind. The published official end-of-day results
+viewer; the pre-deal what-if is the same engine's (POST /api/v1/risk/var/what-if), not a kind. The published official end-of-day results
 (risk-results/var-official, written by the server's VarPublisher) are the read-only kind var-official of the Delta connector var-results,
 for BI and other readers only: no engine reads it (tools/test_contracts.py).
 
@@ -55,7 +55,7 @@ KINDS = {
     "desk-pnl": ("DPNL", "Desk P&L: actual and hypothetical (daily)", "^DPNL-", "DESK_PNL_ID"),
     # the long-history P&L of today's portfolio per hierarchy node, for the stress window selection (VAR_GUIDE.md section 18.9)
     "pnl-history": ("PNLH", "Long-history P&L of a hierarchy node (stress window selection)", "^PNLH-", "HISTORY_ID"),
-    # 2.9.11: the positions' sensitivities to the standard risk factors and the factor dictionary (SENSITIVITIES_AND_FRTB_SA.md sections 2
+    # 2.9.11: the positions' sensitivities to the standard risk factors and the factor dictionary (docs/guides/FRTB_SA_GUIDE.md sections 2
     # and 3), read by the server's FRTB-SA engine; a factor's id is its standard name (IR/CURVE/USD/SOFR/10Y)
     "position-sensitivity": ("SENS", "Position sensitivities (delta, vega, curvature by risk factor)", "^SENS-", "SENSITIVITY_ID"),
     "risk-factor": ("RFAC", "Risk factor (the factor dictionary: FRTB and SIMM mapping, source names)", "^(IR|INF|CR|FX|EQ|CM|VOL)/",
@@ -64,7 +64,7 @@ KINDS = {
     "var-result": ("VRES", "VaR of a scope (computed)", None, None),
     # the published official results: one row per node, business date and result version (id <NODE_ID>@<date>#v<n>); no pattern
     "var-official": ("VOFF", "VaR official results (published)", None, None),
-    # 2.9.7: the bank's stress P&L per scenario, the desks' results added (COMPUTED_ATTRIBUTES.md section 8.2, Q4); its id is the
+    # 2.9.7: the bank's stress P&L per scenario, the desks' results added (DATA_ARCHITECTURE.md section 12, Q4); its id is the
     # scenario's own (SCN-...), so no pattern claims it
     "stress-scenario-pnl": ("SSPNL", "Stress P&L of a scenario across desks (derived from the stress results)", None, "SCENARIO_ID"),
 }
@@ -84,7 +84,7 @@ _LENS = {"horizon": {"type": "enum", "options": ["1d", "10d"], "default": "1d"},
          "es-confidence": {"type": "decimal", "min": 0.5, "max": 0.9999}}
 #: the connectors besides risk-store: the positions the server derives, from the VaR engine's memory; the computed kinds
 CONNECTORS = {
-    # the bank's stress P&L per scenario (COMPUTED_ATTRIBUTES.md section 8.2, Q4): the desks' stored results added (additive), each desk's
+    # the bank's stress P&L per scenario (DATA_ARCHITECTURE.md section 12, Q4): the desks' stored results added (additive), each desk's
     # limit use and breach against its positive limit (F5); built once per business date and data version, shared by every reader
     "mr-derived": {
         "plugin": "derived", "enabled": "${DRISHTI_MR_DERIVED_ENABLED:true}",
@@ -126,7 +126,7 @@ CONNECTORS = {
                        "as the viewer: VRES <scope> <GO>",
         "kinds": {"var-result": {"compute": "var-result", "params": {**_CCY, **_LENS},
                                  "result": {"required": ["VAR", "ES", "PNL"], "types": {"VAR": "number", "ES": "number"}}}},
-        "engine": {"type": "java", "class": "com.ash.drishti.server.var.VarResultEngine", "version": "1.0"},
+        "engine": {"type": "java", "class": "com.ash.drishti.banking.var.VarResultEngine", "version": "1.0"},
         "triggers": [{"on": "data-version", "kinds": _INPUTS, "affects": "all"}],
         "coalesce": {"quiet": "250ms", "max-wait": "2s"},
         "cache": {"results": 2000, "ttl": "1h"},

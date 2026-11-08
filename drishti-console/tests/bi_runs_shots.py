@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of BI runs for docs/guides/BI_GUIDE.md, from the stand-in server of bi_runs_backend.py (synthetic data only):
+"""The pictures of BI runs for docs/guides/REPORTS_GUIDE.md, from the stand-in server of bi_runs_backend.py (synthetic data only):
 the Runs tab in a Terminal theme, the run card on a report while its run runs, the drawer of a finished run in the light theme, its sharing and schedule
 in the Terminal theme, and the rollup suggestions of Admin → BI → Runs.
 
@@ -79,8 +79,8 @@ def main() -> None:
             page.wait_for_selector("[data-run-drawer]:not([hidden]) [data-run-share='carol']", timeout=15000)
             page.evaluate("document.documentElement.setAttribute('data-theme', 'terminal')")
             page.click("[data-run-sched-edit]")
-            page.select_option("[data-run-sched-form] select[name=kind]", "weekly")
-            page.select_option("[data-run-sched-form] select[name=day]", "mon")
+            page.select_option("[data-run-sched-form] [name=kind]", "weekly")
+            page.select_option("[data-run-sched-form] [name=day]", "mon")
             page.fill("[data-run-sched-form] input[name=time]", "08:00")
             page.evaluate("document.querySelector('[data-run-drawer]').scrollTop = 10000")
             page.wait_for_timeout(800)

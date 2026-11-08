@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 18, Several datasets in one report (docs/tutorials/18-several-datasets-in-one-report.md), written to docs/tutorials/img/t18/.
+"""Pictures of tutorial 8, Part B, Several datasets in one report (docs/tutorials/08-reports-and-dashboards.md), written to docs/tutorials/img/t18/.
 
 One model with two facts: the trade and netting-set pack datasets and their grains, the model built in the model designer (suggested relationships, measures
 from columns, a measure over two facts in the expression editor, a row rule and the safeguard), a report with MTM and exposure in one visual, the refusal
@@ -54,7 +54,7 @@ def ensure(c: Ctx):
 
 def make(c: Ctx, kind: str, title: str, file: str) -> str:
     made = bi(c, "POST", f"/workspaces/{STATE['ws']}/items", {"kind": kind, "title": title, "body": (DATA / file).read_text(), "audienceRoles": AUDIENCE})
-    bi(c, "POST", f"/items/{made['id']}/publish", {"note": "tutorial 18"})
+    bi(c, "POST", f"/items/{made['id']}/publish", {"note": "tutorial 8, Part B"})
     return made["id"]
 
 
@@ -147,12 +147,12 @@ def designer(c: Ctx):
     elem_shot(c, "06-measures.jpg", ".bi-md-measures", pad=8)
     p.click("[data-nf] summary")
     p.fill("[data-nf-name]", "MTM per exposure")
-    ed = p.locator("[data-nf-expr]")
+    ed = p.locator("[data-nf] .CodeMirror")                      # the formula: drishti-inputs' one-line CodeEditor and its completion
     ed.click()
-    ed.type("MT")
-    p.click('[data-xe-opt="MTM"]')
-    ed.type(" / Exp")
-    p.click('[data-xe-opt="Exposure (EE peak)"]')
+    p.keyboard.type("MT")
+    p.locator(".di-complete-pop .di-option-label", has_text="MTM").first.click()
+    p.keyboard.type(" / Exp")
+    p.locator(".di-complete-pop .di-option-label", has_text="Exposure (EE peak)").first.click()
     p.wait_for_timeout(1200)
     element_shot(c, "07-ratio-measure.jpg", "[data-nf]")
     p.click("[data-nf-add]")
@@ -203,8 +203,8 @@ def report(c: Ctx):
     open_report(c, STATE["report"], height=1000)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("10-report.jpg")
-    c.page.locator('[data-visual="sector"] summary.ms-sum').click()
-    c.page.locator('[data-visual="sector"] .ms-pop label', has_text="Banking").first.click()
+    c.page.locator('[data-visual="sector"] .di-ms-control').click()
+    c.page.locator('.di-ms-pop .di-option', has_text="Banking").first.click()
     c.page.wait_for_timeout(600)
     c.page.keyboard.press("Escape")
     c.page.locator("h1").first.click()

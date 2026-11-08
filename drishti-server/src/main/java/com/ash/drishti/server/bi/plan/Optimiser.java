@@ -30,7 +30,7 @@ import java.util.TreeSet;
 import java.util.function.BiFunction;
 
 /**
- * Stage 6 (docs/architecture/BI_DESIGN.md section 4.2): rule-based and answer-preserving. In order: <b>predicate pushdown</b> (each of the query's row filters
+ * Stage 6 (docs/architecture/ARCHITECTURE.md §28 section 4.2): rule-based and answer-preserving. In order: <b>predicate pushdown</b> (each of the query's row filters
  * into the scan of its dataset), <b>top-N</b> (a {@code top} filter as its own grouped sub-plan feeding the scan), <b>projection pruning</b> (each scan reads
  * the columns the plan uses, plus its row rules' and joins' columns), <b>rollup matching</b> (an aggregate a rollup covers: fields, filters and the row rules'
  * columns in its {@code by}, every measure's components stored). No rule touches a scan's security: a property test checks that the rules, masks and denials

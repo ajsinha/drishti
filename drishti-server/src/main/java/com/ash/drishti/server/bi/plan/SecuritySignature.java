@@ -32,7 +32,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * A reader's <em>effective</em> security on a model, as one opaque id (docs/architecture/BI_DESIGN.md section 5.4): for every dataset alias, the row
+ * A reader's <em>effective</em> security on a model, as one opaque id (docs/architecture/ARCHITECTURE.md §28 section 5.4): for every dataset alias, the row
  * predicates that apply to them with {@code user.*} resolved to values, the masked and hidden columns, and the tables over kinds they may not open. Two readers
  * with the same desks, rules and masks get the same signature and share result caches and standing-query evaluations; the signature never reveals a predicate
  * (it is a hash; meta and audit carry only the id). Pure.
@@ -86,7 +86,7 @@ public final class SecuritySignature {
     }
 
     /**
-     * The <b>row part</b> of the signature (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.3): everything that decides which rows a reader sees, and nothing about
+     * The <b>row part</b> of the signature (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.3): everything that decides which rows a reader sees, and nothing about
      * masks. Two readers with an equal row part read the same rows of every alias: their rule predicates, denied layers, hidden columns and denied kinds are
      * the same (and, for a model of personal answers, they are the same reader). Readable text, compared and never shown.
      */

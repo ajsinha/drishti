@@ -33,7 +33,7 @@ import java.util.Map;
 
 /**
  * A virtual table of the table layer ({@code config/tables/<domain>/<name>.table.yaml}, {@code rachana: 3}; TABLES_GUIDE.md) as the
- * definition BI's compiler plans over (BI_FOUNDATION_2911E.md section 3.1 read backwards, step 5: BI reads the layer). The table is read by
+ * definition BI's compiler plans over (docs/architecture/ARCHITECTURE.md §28 section 3.1 read backwards, step 5: BI reads the layer). The table is read by
  * the layer's own reader ({@link TableYaml}) and checked there; this class only says it in BI's terms: {@code from:} as BI's source (a table
  * over a table as {@code extends}), the grain's lists as {@code each}, paths relative to the grain, {@code keep: { latest }} as one row per
  * key, rules and masks as BI's security, {@code materialize: { live }} as BI's live mode. Expressions stay Rachana: a column of the source

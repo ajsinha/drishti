@@ -65,7 +65,7 @@ def test_build_a_form_from_the_samples_reorder_and_edit_it(live_console, page):
 
     # a card's settings write the YAML: type, label, operators, default, required
     card = page.locator("[data-form-list] li").nth(3)                                                  # weightKg
-    card.locator("select").select_option("number")
+    card.locator("drishti-select").select_option("number")
     card.locator("input[aria-label='weightKg label']").fill("Weight (kg)")
     card.locator("input[aria-label='weightKg default']").fill("1000")
     card.get_by_text("Required").click()
@@ -78,7 +78,7 @@ def test_build_a_form_from_the_samples_reorder_and_edit_it(live_console, page):
     # the preview shows the form as people will see it
     page.locator("[data-form-preview] label", has_text="Weight (kg)").wait_for(timeout=10000)
     assert page.locator("[data-form-preview] .qf-field").count() == 4
-    assert page.locator("[data-form-preview] select").count() >= 1
+    assert page.locator("[data-form-preview] drishti-select").count() >= 1
     assert "The form reads without problems." in page.locator("[data-form-problems]").inner_text()
 
     # typed YAML rebuilds the cards; a mistake is listed with its code

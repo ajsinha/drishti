@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Share with a note in a real browser, against a real server with sign-in on (COLLABORATION.md, build step 3): an author shares a trade
+"""Share with a note in a real browser, against a real server with sign-in on (ARCHITECTURE.md §31, build step 3): an author shares a trade
 view, pinned to a past date, with a colleague by keyboard alone; the colleague's bell shows the notice and opening it lands on the pinned date
 with the note and the masked field still masked; a recipient whose role no longer opens the kind gets the clean no-access page; the dialog
 is a full-screen sheet on a phone and gives the focus back.
@@ -75,7 +75,7 @@ def share_by_keyboard(ann, who_prefix, note):
     dlg.wait_for()
     assert ann.evaluate("document.activeElement.id") == "shrTo"            # the focus starts on the people field
     ann.keyboard.type(who_prefix)
-    ann.locator("#shrList [role=option]").first.wait_for()
+    ann.locator(".di-combo-pop [role=option]").first.wait_for()          # drishti-inputs' combobox list
     ann.keyboard.press("Enter")                                           # picks the highlighted person
     ann.locator("[data-shr-chips] .shr-chip").first.wait_for()
     ann.keyboard.press("Tab")

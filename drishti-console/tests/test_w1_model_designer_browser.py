@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave W1 of the model layer in Chromium (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 9), over the real server and console on scratch ports 18918 and
+"""Wave W1 of the model layer in Chromium (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 9), over the real server and console on scratch ports 18918 and
 17918 (security on, the trading and core packs, a small file lake of trades and desks): a pack-generated dataset is listed and browsable (grain,
 keys, meanings, time mode); a new model takes it and the desks, the pack reference is suggested and accepted in one click; a measure gets its default
 from the column; a role restricted on trades but not on desks raises the safeguard beside the Security tab and is resolved with one click; the model is
@@ -37,7 +37,6 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 from bi_stack import FORBIDDEN, listening, wait  # noqa: E402
 from scratch_ports import worker_ports  # noqa: E402
-from dnd import drag  # noqa: E402
 from java_launch import java_cmd
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -147,7 +146,7 @@ class Stack:
             jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
             java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
             if not jars or not Path(java).exists():
-                raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+                raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
             work = self.tmp / "server"
             from bi_samples import copy_samples
             copy_samples(work / "config" / "bi", ["trades-basic"])         # the shipped sample: the model trades-basic and the dataset it reads
@@ -273,8 +272,8 @@ def test_a_report_straight_from_a_dataset_reads_its_implicit_model_in_the_design
     expect(page.locator('[data-model-header="implicit"]')).to_contain_text("Implicit model of Trade", timeout=30000)
     expect(page.locator("[data-make-model]")).to_be_visible()
     expect(page.locator('[data-field="desk.NAME"]')).to_be_visible()                  # the pack dimension came along, one hop
-    drag(page, '[data-field="Sum of MTM"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
-    drag(page, '[data-field="desk.NAME"]', ".bi-dvis")
+    page.drag_and_drop('[data-field="Sum of MTM"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
+    page.drag_and_drop('[data-field="desk.NAME"]', ".bi-dvis")
     expect(page.locator(".bi-dvis").first).to_contain_text("3 rows", timeout=15000)
     page.click("[data-save]")
     expect(page.locator(".bi-near").first).to_contain_text("Saved", timeout=15000)

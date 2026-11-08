@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The load itself (DATA_LAKE_GUIDE.md): the parallel lake loader, {@code com.ash.drishti.lakeload.LakeLoad}, started as a child
  * Java process of the server with its own heap ({@code loader-heap}), at a lower priority ({@code nice}) and the server's temp folder, on a
- * load file this class writes (the loader's own keys: TOOLS.md section 4.13). A large or malformed file can never take the server's heap;
+ * load file this class writes (the loader's own keys: CLI_REFERENCE.md section 4.13). A large or malformed file can never take the server's heap;
  * the loader's exit code says what happened (0 loaded, 2 loaded with rejects, 1 failed, 3 the table locked); a load past
  * {@code load-timeout} is stopped. There is no second loader: everything that reads or writes data is the loader's.
  */
@@ -141,8 +141,7 @@ public final class LoaderProcess implements LoadRunner {
             if (com.ash.drishti.lakeconfig.Lakes.SHIPPED.contains(r.lake())) {
                 return;                                     // a shipped lake (demo) read from the jar: its entries are the truth
             }
-            List<com.ash.drishti.lakeconfig.LakeTable> tables = r.newDomain() != null ? List.of()
-                    : List.of(com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).toTable(r.kind()));
+            List<com.ash.drishti.lakeconfig.LakeTable> tables = r.newDomain() != null ? List.of() : List.of(packEntry(r));
             if (com.ash.drishti.lakeconfig.LakeFiles.create(dir, r.lake(), tables, "the data inbox for the pack " + r.pack() + "'s " + r.kind())) {
                 LOG.info("lake {} did not exist: {} was created (its tables under <data>/delta/{}/), with the pack {}'s recommended entry for {}; "
                         + "point the pack's connectors at it (lake: {}) and restart to read it", r.lake(), file, r.lake(), r.pack(), r.kind(), r.lake());
@@ -150,14 +149,26 @@ public final class LoaderProcess implements LoadRunner {
             }
         }
         com.ash.drishti.lakeconfig.Lake lake = com.ash.drishti.lakeconfig.Lakes.readFile(file, System::getenv);
-        if (lake.tables().values().stream().anyMatch(x -> x.kind().equals(r.kind()))) {
+        com.ash.drishti.lakeconfig.LakeTable entry = packEntry(r);
+        // the table's entry already there; or, with no connector naming one table, any table of the kind (the lake file is the truth)
+        if (lake.tables().containsKey(entry.name())
+                || (r.connector() == null && lake.tables().values().stream().anyMatch(x -> x.kind().equals(r.kind())))) {
             return;
         }
-        com.ash.drishti.lakeconfig.LakeTable entry = com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).toTable(r.kind());
         if (com.ash.drishti.lakeconfig.LakeFiles.addTable(file, entry)) {
             LOG.info("lake {} had no table for {}: the pack {}'s recommended entry {} was copied into {}; edit it there from now on", r.lake(),
                     r.kind(), r.pack(), entry.name(), file);
         }
+    }
+
+    /**
+     * The pack's recommended entry for the route's table (its connector's, else the kind's), its {@code id:} the {@code .ready} file's or
+     * rule's {@code key:}, else the kind's key (the pack's ingest key, else its data contract's): a table created by its first load takes
+     * the key, so its rows are never all rejected for want of an id.
+     */
+    static com.ash.drishti.lakeconfig.LakeTable packEntry(Routes.Route r) throws IOException {
+        com.ash.drishti.lakeconfig.LakeTable t = com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).toTable(r.kind());
+        return r.key() != null ? t.withId(r.key()) : t;
     }
 
     /** The batch id of a load: its files' names and sizes, so the same file dropped again is the same batch. */

@@ -36,7 +36,7 @@ does what readers cannot, on a schedule, for local lakes and lakes in object sto
     ... --signal URL        tell that server about each changed table (the data-load signal lake build sends)
     uv run ... maintain.py --history [--limit 50] [--json]     the last runs, from Admin -> Lakes and from here
 
---config defaults to <data>/lakes/lake-maintenance.yaml, the file Admin -> Lakes writes (docs/admin/OPERATIONS.md). Only
+--config defaults to <data>/lakes/lake-maintenance.yaml, the file Admin -> Lakes writes (docs/guides/OPERATIONS_GUIDE.md). Only
 tables lake build built are maintained (its build record, tools/lake/ownership.py); each run takes the lake's lock exclusively (builds hold it shared), so it never
 overlaps a build, and is kept in the history (<data>/lakes/maintenance-history.jsonl).
 
@@ -462,13 +462,14 @@ def relayout(uri: str, lay: Layout, dates: str | None = None, force: bool = Fals
         if dry_run:
             continue
         day = date.fromisoformat(iso)
-        snapshot = DeltaTable(uri, version=version).to_pyarrow_dataset(file_pruning_predicate=[("business_date", "=", iso)])
-        ids = sorted(set(snapshot.to_table(columns=["id"]).column("id").to_pylist()))
+        import deltaread                                # every reader feature honoured (DATA_LAKE_GUIDE.md section 14)
+        snapshot = deltaread.read(uri, version=version, date=iso, columns=["id", "doc"])
+        ids = sorted(set(snapshot.column("id").to_pylist()))
         step = lay.file_rows if lay.sort_by == "id" else max(1, len(ids))
         for k in range(0, max(1, len(ids)), step):
             part = ids[k:k + step]
             where = (pc.field("id") >= part[0]) & (pc.field("id") <= part[-1]) if part and lay.sort_by == "id" else None
-            t = snapshot.to_table(columns=["id", "doc"], filter=where)
+            t = snapshot if where is None else snapshot.filter(where)
             rows = [(i, d, promote(json.loads(d), lay)) for i, d in zip(t.column("id").to_pylist(), t.column("doc").to_pylist())]
             done["files"] += write_partition(uri, day, rows, lay, "overwrite-partition" if k == 0 else "append", promoted=True)
             done["rows"] += len(rows)

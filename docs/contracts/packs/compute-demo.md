@@ -17,7 +17,7 @@
 
 # Data contracts of the compute-demo pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/compute-demo/guides/compute-demo.md](../../../config/packs/compute-demo/guides/compute-demo.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/core/compute-demo/guides/compute-demo.md](../../../config/packs/core/compute-demo/guides/compute-demo.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -32,7 +32,7 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 
 |  |  |
 |---|---|
-| Contract | [path-book.contract.yaml](../../../config/packs/compute-demo/contracts/path-book.contract.yaml) · version 1.0 |
+| Contract | [path-book.contract.yaml](../../../config/packs/core/compute-demo/contracts/path-book.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | synthetic |
@@ -43,8 +43,8 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-book/` |
 | Columns | `BOOK_ID`, `NAME`, `DESK`, `STRIP_COUNT` |
-| Test data | config/packs/compute-demo/samples |
-| Worked example | [compute-demo/path-book](../samples/compute-demo/path-book.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/core/compute-demo/samples |
+| Worked example | [compute-demo/path-book](../samples/compute-demo.md#path-book) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -73,7 +73,7 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 - required inferred from 100% coverage in 3 documents (3 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key BOOK_ID is the field holding the sample catalogue's id (BOOK-CREDIT): confirm it is the business key.
 - source 'synthetic' is the test data's _meta.source (synthetic): name the production system that delivers it.
-- the pack also names 'Synthetic P&L strips (a seeded random walk, config/packs/compute-demo/tools/make_samples.py)' for this kind (path-book, path-strip): state when each source applies.
+- the pack also names 'Synthetic P&L strips (a seeded random walk, config/packs/core/compute-demo/tools/make_samples.py)' for this kind (path-book, path-strip): state when each source applies.
 
 ## PSTRIP: P&L strip (`path-strip`)
 
@@ -81,7 +81,7 @@ A synthetic P&L strip of the compute-demo pack: one path vector in a path book, 
 
 |  |  |
 |---|---|
-| Contract | [path-strip.contract.yaml](../../../config/packs/compute-demo/contracts/path-strip.contract.yaml) · version 1.0 |
+| Contract | [path-strip.contract.yaml](../../../config/packs/core/compute-demo/contracts/path-strip.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | synthetic |
@@ -92,8 +92,8 @@ A synthetic P&L strip of the compute-demo pack: one path vector in a path book, 
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-strip/` |
 | Columns | `STRIP_ID`, `BOOK_ID`, `INSTRUMENT`, `DAYS` |
-| Test data | config/packs/compute-demo/samples |
-| Worked example | [compute-demo/path-strip](../samples/compute-demo/path-strip.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/core/compute-demo/samples |
+| Worked example | [compute-demo/path-strip](../samples/compute-demo.md#path-strip) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -122,7 +122,7 @@ A synthetic P&L strip of the compute-demo pack: one path vector in a path book, 
 - required inferred from 100% coverage in 120 documents (120 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key STRIP_ID is the field holding the sample catalogue's id (STRIP-RATES-001): confirm it is the business key.
 - source 'synthetic' is the test data's _meta.source (synthetic): name the production system that delivers it.
-- the pack also names 'Synthetic P&L strips (a seeded random walk, config/packs/compute-demo/tools/make_samples.py)' for this kind (path-book, path-strip): state when each source applies.
+- the pack also names 'Synthetic P&L strips (a seeded random walk, config/packs/core/compute-demo/tools/make_samples.py)' for this kind (path-book, path-strip): state when each source applies.
 
 ## PSUM: Book path (Python) (`path-sum`)
 
@@ -130,7 +130,7 @@ Book path (Python) (the path-sum kind of the compute-demo pack)
 
 |  |  |
 |---|---|
-| Contract | [path-sum.contract.yaml](../../../config/packs/compute-demo/contracts/path-sum.contract.yaml) · version 1.0 |
+| Contract | [path-sum.contract.yaml](../../../config/packs/core/compute-demo/contracts/path-sum.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the reactive connector path-sum-python (python engine) |
@@ -166,7 +166,7 @@ Book path (Java) (the path-sum-java kind of the compute-demo pack)
 
 |  |  |
 |---|---|
-| Contract | [path-sum-java.contract.yaml](../../../config/packs/compute-demo/contracts/path-sum-java.contract.yaml) · version 1.0 |
+| Contract | [path-sum-java.contract.yaml](../../../config/packs/core/compute-demo/contracts/path-sum-java.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the reactive connector path-sum-java (java engine) |

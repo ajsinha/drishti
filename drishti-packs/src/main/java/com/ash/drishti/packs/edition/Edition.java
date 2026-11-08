@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The edition a server runs (docs/admin/EDITIONS.md): a named bundle of settings, {@code config/editions/<name>.yaml}, that turns
+ * The edition a server runs (docs/guides/ADMIN_GUIDE.md): a named bundle of settings, {@code config/lenses/<module>/<lens>.yaml}, that turns
  * Drishti into a focused product. {@link #NONE} (no {@code drishti.edition}) is the full Drishti: every test here answers "allowed", so
  * a server without an edition behaves exactly as before editions existed.
  *
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * @param allowOnly  true when Admin → Packs, Deploy and the registry may not load any other pack
  * @param commands   the commands (mnemonics, upper case) people may type and see; empty: all
  * @param words      the reserved and console words ({@code BI}, {@code RUPAKA}, {@code FORM}, {@code FUNC}, {@code WHAT}, {@code DATAMAP}, {@code DATA},
- *                   {@code VAR}, {@code EXP}) switched on or off; a word not named is on
+ *                   and a module's words such as {@code VAR}, {@code EXP}) switched on or off; a word not named is on
  * @param features   the feature presets ({@code bi: on}, {@code calc: off}); read by each side's own mapping
  * @param adminPages the Admin pages shown (ids); empty: all
  * @param datasets   the BI datasets offered (names, or prefixes ending in {@code *}); empty: all
@@ -46,8 +46,11 @@ import java.util.stream.Collectors;
 public record Edition(String name, String title, List<String> packs, boolean allowOnly, Set<String> commands, Map<String, Boolean> words,
         Map<String, String> features, List<String> adminPages, List<String> datasets, List<String> models, Map<String, String> branding) {
 
-    /** The reserved words and console words an edition may switch (EDITIONS.md › The design as built, section 3). */
-    public static final List<String> WORDS = List.of("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "VAR", "EXP");
+    /**
+     * The core's reserved words and console words an edition may switch (LENSES.md › The design). A domain module
+     * declares its own words in its manifest (banking: {@code VAR}, {@code EXP}); an edition switches those the same way.
+     */
+    public static final List<String> WORDS = List.of("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA");
 
     /** The full Drishti: no edition. */
     public static final Edition NONE = new Edition("", "", List.of(), false, Set.of(), Map.of(), Map.of(), List.of(), List.of(), List.of(), Map.of());

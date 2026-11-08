@@ -20273,67 +20273,67 @@ datasets:
   files:
   - risk-factor.2026-09-30.jsonl.gz
   bytes: 21745
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: economic-forecast
   connector: macro-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: economy
   connector: macro-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: election
   connector: civic-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: fiscal-position
   connector: macro-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: jurisdiction
   connector: civic-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: labour-market
   connector: macro-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: macro-indicator
   connector: macro-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: office-holder
   connector: civic-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: party
   connector: civic-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: region
   connector: civic-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: region-economy
   connector: macro-store
-- samples: config/packs/world-economy/samples
+- samples: config/packs/economy/world-economy/samples
   pack: world-economy
   kind: social-indicator
   connector: civic-store
-- samples: config/packs/news-and-markets/samples
+- samples: config/packs/economy/news-and-markets/samples
   pack: news-and-markets
   kind: listed-company
   connector: news-store
-- samples: config/packs/news-and-markets/samples
+- samples: config/packs/economy/news-and-markets/samples
   pack: news-and-markets
   kind: news-topic
   connector: news-store
-- samples: config/packs/compute-demo/samples
+- samples: config/packs/core/compute-demo/samples
   pack: compute-demo
   kind: path-book
   connector: compute-demo-store
-- samples: config/packs/compute-demo/samples
+- samples: config/packs/core/compute-demo/samples
   pack: compute-demo
   kind: path-strip
   connector: compute-demo-store
@@ -20368,7 +20368,7 @@ datasets:
   key: TICKER
   snapshot: true
   captured: '2026-10-24'
-  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
   documents: 586
   files:
   - us-company.2026-10-24.jsonl.gz
@@ -20380,7 +20380,7 @@ datasets:
   key: INDEX
   snapshot: true
   captured: '2026-10-24'
-  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
   documents: 6
   files:
   - index-membership.2026-10-24.jsonl.gz
@@ -20392,7 +20392,7 @@ datasets:
   key: FEED
   snapshot: true
   captured: '2026-10-24'
-  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
   documents: 6
   files:
   - filing-feed.2026-10-24.jsonl.gz
@@ -20404,7 +20404,7 @@ datasets:
   key: ACCESSION
   snapshot: true
   captured: '2026-10-24'
-  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
   documents: 11691
   files:
   - filing.2026-10-24.jsonl.gz
@@ -20416,7 +20416,7 @@ datasets:
   key: FACT_ID
   snapshot: true
   captured: '2026-10-24'
-  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
   documents: 4026
   files:
   - financial-fact.2026-10-24.jsonl.gz
@@ -20428,7 +20428,7 @@ datasets:
   key: LEI
   snapshot: true
   captured: '2026-10-25'
-  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
+  source: GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif)
   documents: 9937
   files:
   - lei-entity.2026-10-25.jsonl.gz
@@ -20440,7 +20440,7 @@ datasets:
   key: RELATIONSHIP_ID
   snapshot: true
   captured: '2026-10-25'
-  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
+  source: GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif)
   documents: 9347
   files:
   - lei-relationship.2026-10-25.jsonl.gz
@@ -20452,7 +20452,7 @@ datasets:
   key: IDENTIFIER
   snapshot: true
   captured: '2026-10-25'
-  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
+  source: GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif)
   documents: 3381
   files:
   - lei-mapping.2026-10-25.jsonl.gz
@@ -20464,7 +20464,7 @@ datasets:
   key: TICKER
   snapshot: true
   captured: '2026-10-26'
-  source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
+  source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)
   documents: 200
   files:
   - fund.tar
@@ -20476,7 +20476,7 @@ datasets:
   key: TICKER
   snapshot: true
   captured: '2026-10-26'
-  source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
+  source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)
   documents: 586
   files:
   - fund-holder.2026-10-26.jsonl.gz
@@ -20488,7 +20488,7 @@ datasets:
   key: INDEX
   snapshot: true
   captured: '2026-10-26'
-  source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
+  source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)
   documents: 3
   files:
   - index-funds.2026-10-26.jsonl.gz

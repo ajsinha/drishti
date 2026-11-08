@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 /**
- * Cluster partial aggregation (PIVOT_ENGINE.md sections 9.3 and 20, {@code MergeOrderTest}): a view computed on two or three nodes (each
+ * Cluster partial aggregation (ARCHITECTURE.md sections 26.6 and 26.13, {@code MergeOrderTest}): a view computed on two or three nodes (each
  * evaluating its row shard, its partial states sent as JSON and merged in node order) equals the view on one node: counts, members and
  * sketch registers exactly, sums and the other mergeable states to the last digits; the same digits on every run and whichever node is late
  * (hedged); a share with no answer refuses the view in words, never a figure from the other nodes alone. The gather combines in share order

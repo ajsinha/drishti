@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 14, Python and Analyse (docs/tutorials/14-python-and-analyse.md), written to docs/tutorials/img/t14/.
+"""Pictures of tutorial 9, Python and Analyse (docs/tutorials/09-notebook-and-python.md), written to docs/tutorials/img/t14/.
 
 A Python measure and a Python visual in a report (the shipped ones, then one of your own); then Analyse on a model (2.2): an extract, a slice, a SQL cell in Drishti
 SQL on the server, a Python cell that draws a chart, a saved notebook, the promotion of a cell to a visual and of a slice to a report draft; the Python dataset
@@ -169,11 +169,11 @@ def vega_visuals(c: Ctx):
     quiet_inbox(c)
     c.page.set_viewport_size({"width": 1280, "height": 900})
     c.page.goto(f"{c.base}/bi/r/{PY_REPORT}/vega")
-    c.page.wait_for_selector('[data-visual="mtm-by-desk"] .bi-vega[data-ready="1"] canvas', timeout=90000)
+    c.page.wait_for_selector('[data-visual="mtm-by-desk"] [data-chart-from="vega-lite"][data-ready="1"] canvas', timeout=90000)
     c.page.wait_for_timeout(800)
     elem_shot(c, "16-vega-lite.jpg", '[data-visual="mtm-by-desk"]', pad=8)
     c.page.goto(f"{c.base}/bi/r/{PY_REPORT}/risk")
-    c.page.wait_for_selector('[data-visual="strip"] .bi-vega[data-ready="1"] canvas', timeout=120000)
+    c.page.wait_for_selector('[data-visual="strip"] [data-chart-from="vega-lite"][data-ready="1"] canvas', timeout=120000)
     c.page.wait_for_timeout(800)
     elem_shot(c, "17-python-vega.jpg", '[data-visual="strip"]', pad=8)
 

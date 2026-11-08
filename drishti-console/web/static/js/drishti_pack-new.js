@@ -224,7 +224,7 @@
   function loadPlan(after) {
     clearTimeout(planTimer);
     var host = $('[data-kinds]'), seq = ++planSeq;
-    var focus = document.activeElement && document.activeElement.getAttribute ? document.activeElement.getAttribute('data-focus') : null;
+    var at = document.activeElement && document.activeElement.closest ? document.activeElement.closest('[data-focus]') : null, focus = at ? at.getAttribute('data-focus') : null;
     var typing = document.activeElement && /^(input|textarea)$/i.test(document.activeElement.tagName) ? { el: document.activeElement, value: document.activeElement.value } : null;
     S.busy = true; nextB.disabled = true;
     say('Planning…');
@@ -244,7 +244,7 @@
   function drawPlan(host, focus, after) {
     deferred = null;
     K.render(host, S, change, assignFile);
-    if (focus) { var f = host.querySelector('[data-focus="' + focus.replace(/"/g, '') + '"]'); if (f) { f.focus(); } }
+    if (focus) { var f = host.querySelector('[data-focus="' + focus.replace(/"/g, '') + '"]'); if (f) { if (f.component) { f.component.focus(); } else { f.focus(); } } }   // a Select: its control
     if (after) { after(); }
   }
   $('[data-kinds]').addEventListener('focusout', function () {
@@ -406,7 +406,7 @@
       } else {
         host.appendChild(el('p', { class: 'text-muted-d', text: 'Deploying needs an administrator. Send them the bundle and its checksum; they use Admin → Packs → Deploy archive.' }));
       }
-      host.appendChild(el('p', { class: 'text-muted-d' }, ['The full guide, with the command line twin (', el('code', { text: 'drishti.py pack make --schema' }), '): ', el('a', { class: 'lnk', href: '/help/schema-to-pack', text: 'Schema to pack' }), '.']));
+      host.appendChild(el('p', { class: 'text-muted-d' }, ['The full guide, with the command line twin (', el('code', { text: 'drishti.py pack make --schema' }), '): ', el('a', { class: 'lnk', href: '/help/build-guide#8-a-pack-from-a-json-schema-build--new-pack', text: 'Schema to pack' }), '.']));
     });
   }
 

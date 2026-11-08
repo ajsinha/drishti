@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The Controls tab: the Sutra's `controls:` edited visually, two ways (BI_DESIGN.md 8.1, RACHANA_REFERENCE.md "The Controls tab").
+/* The Controls tab: the Sutra's `controls:` edited visually, two ways (ARCHITECTURE.md §28 8.1, RACHANA_REFERENCE.md "The Controls tab").
  *
  *   cards     a card per control: id, kind, label, options (a list, an expression over the record such as $.legs[*].id, or a lookup kind), default,
  *             placement (strip, header of a panel, side), remember, required; a cascading control names its parent, a number range or a slider its bounds (a slider also its step and whether it has two handles).
@@ -55,7 +55,8 @@
     var $ = function (s) { return pane.querySelector(s); };
     var list = $('[data-ctl-list]'), src = $('[data-ctl-src]'), probBox = $('[data-ctl-problems]'), prev = $('[data-ctl-preview]'), statusEl = $('[data-ctl-status]');
     var base = '/build/designs/' + encodeURIComponent(store.state.id);
-    var items = [], saveT = 0, applying = false, dragFrom = -1, mine = 0, runtime = null, previewToken = 0, loaded = false;
+    var items = [], saveT = 0, applying = false, mine = 0, runtime = null, previewToken = 0, loaded = false;
+    window.Drishti.elements.designer.sortableList(list, { row: '.wbf-card', dragClass: 'wbf-drag', overClass: 'wbf-over', onMove: function (from, to) { reorder(from, to); } });   // a card dragged to another place (drishti-designer)
 
     // ---- the model and its YAML ---------------------------------------------------------------------------------------------------
     function q(v) { return JSON.stringify(v); }
@@ -105,9 +106,9 @@
       return i;
     }
     function select(c, key, values, blank) {
-      var s = WB.el('select', 'wbf-in', null, { 'aria-label': (c.id || 'control') + ' ' + key });
-      if (blank !== undefined) { s.appendChild(WB.el('option', null, blank, { value: '' })); }
-      values.forEach(function (v) { var o = WB.el('option', null, v, { value: v }); if (v === c[key]) { o.selected = true; } s.appendChild(o); });
+      var s = WB.el('drishti-select', 'wbf-pick');                     // drishti-inputs' Select: its control carries the field's name
+      s.options = { label: (c.id || 'control') + ' ' + key, value: values.indexOf(c[key]) >= 0 ? c[key] : undefined,
+        options: (blank !== undefined ? [{ value: '', label: blank }] : []).concat(values.map(function (v) { return { value: v, label: v }; })) };
       return s;
     }
     function check(c, key, text) {
@@ -116,7 +117,7 @@
       l.appendChild(k); l.appendChild(WB.el('span', null, text)); return l;
     }
     function card(c, i) {
-      var li = WB.el('li', 'wbf-card', null, { tabindex: '0', draggable: 'true', 'data-i': String(i), 'aria-label': (c.label || c.id || 'new control') + ', ' + (c.kind || 'dropdown') + ', control ' + (i + 1) + ' of ' + items.length });
+      var li = WB.el('li', 'wbf-card', null, { tabindex: '0', 'data-i': String(i), 'aria-label': (c.label || c.id || 'new control') + ', ' + (c.kind || 'dropdown') + ', control ' + (i + 1) + ' of ' + items.length });
       var head = WB.el('div', 'wbf-head');
       head.appendChild(WB.el('span', 'wbf-grip', '⠿', { 'aria-hidden': 'true', title: 'Drag to reorder' }));
       head.appendChild(WB.el('code', 'mono wbf-path', 'ctl.' + (c.id || '?')));
@@ -128,7 +129,7 @@
       var body = WB.el('div', 'wbf-body');
       body.appendChild(labelled('Id', field(c, 'id', 'text', { pattern: '[A-Za-z][A-Za-z0-9_]*', maxlength: '32' })));
       var kind = select(c, 'kind', KINDS);
-      kind.addEventListener('change', function () { c.kind = kind.value; if (!LISTED[c.kind]) { delete c.options; } if (c.kind !== 'cascading') { delete c.parent; } changed(true, i); });
+      kind.addEventListener('drishti:change', function () { c.kind = kind.value; if (!LISTED[c.kind]) { delete c.options; } if (c.kind !== 'cascading') { delete c.parent; } changed(true, i); });
       body.appendChild(labelled('Kind', kind));
       body.appendChild(labelled('Label', field(c, 'label')));
       if (LISTED[c.kind || 'dropdown']) {
@@ -139,19 +140,19 @@
       }
       if (c.kind === 'cascading') {
         var par = select(c, 'parent', items.slice(0, i).map(function (x) { return x.id; }).filter(Boolean), '(choose)');
-        par.addEventListener('change', function () { if (par.value) { c.parent = par.value; } else { delete c.parent; } changed(false); });
+        par.addEventListener('drishti:change', function () { if (par.value) { c.parent = par.value; } else { delete c.parent; } changed(false); });
         body.appendChild(labelled('Parent', par));
       }
       if (c.kind === 'number-range' || c.kind === 'slider') { body.appendChild(labelled('Min', field(c, 'min'))); body.appendChild(labelled('Max', field(c, 'max'))); }
       if (c.kind === 'slider') { body.appendChild(labelled('Step', field(c, 'step'))); }
       body.appendChild(labelled('Default', field(c, 'default')));
       var place = select(c, 'placement', PLACES);
-      place.addEventListener('change', function () { c.placement = place.value; if (c.placement !== 'header') { delete c.panel; } if (c.placement === 'strip') { delete c.placement; } changed(true, i); });
+      place.addEventListener('drishti:change', function () { c.placement = place.value; if (c.placement !== 'header') { delete c.panel; } if (c.placement === 'strip') { delete c.placement; } changed(true, i); });
       if (!c.placement) { place.value = 'strip'; }
       body.appendChild(labelled('Placement', place));
       if (c.placement === 'header') {
         var pn = select(c, 'panel', panelIds(), '(choose a panel)');
-        pn.addEventListener('change', function () { if (pn.value) { c.panel = pn.value; } else { delete c.panel; } changed(false); });
+        pn.addEventListener('drishti:change', function () { if (pn.value) { c.panel = pn.value; } else { delete c.panel; } changed(false); });
         body.appendChild(labelled('Panel', pn));
       }
       var flags = WB.el('div', 'wbf-flags');
@@ -165,10 +166,6 @@
         li.querySelectorAll('[aria-label]').forEach(function (e) { var a = e.getAttribute('aria-label'); if (a.indexOf(was + ' ') === 0 || a.indexOf(' ' + was) > 0) { e.setAttribute('aria-label', a.split(was).join(now)); } });
         shown.textContent = 'ctl.' + (c.id || '?'); was = now;
       });
-      li.addEventListener('dragstart', function (e) { dragFrom = i; li.classList.add('wbf-drag'); if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', c.id || ''); } });
-      li.addEventListener('dragend', function () { dragFrom = -1; li.classList.remove('wbf-drag'); });
-      li.addEventListener('dragover', function (e) { if (dragFrom >= 0) { e.preventDefault(); } });
-      li.addEventListener('drop', function (e) { e.preventDefault(); if (dragFrom >= 0 && dragFrom !== i) { reorder(dragFrom, i); } dragFrom = -1; });
       li.addEventListener('keydown', function (e) {
         if (e.target !== li) { return; }
         if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); move(i, -1); } else if (e.altKey && e.key === 'ArrowDown') { e.preventDefault(); move(i, 1); }

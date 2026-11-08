@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* The Python-driven table editor (docs/architecture/EDITORS.md section 4: option A as the editor, B the Notebook, C the templates; all end
+/* The Python-driven table editor (docs/architecture/SHARED_SCREENS.md section 4: option A as the editor, B the Notebook, C the templates; all end
    in A). The build function beside its output contract (the columns, types, keys and rules it must return); its inputs (tables read as
    the person may see them); when it runs (on demand and cached per business date, or on each load of an input); its compute pool and
    limits. Sample run reads the inputs as the person may see them and runs the code on the server's compute pool (POST python/run), and the rows
@@ -76,9 +76,9 @@
     var rows = Object.keys(cols).map(function (n) {
       var c = cols[n], p = 'columns.' + n;
       return h('tr', { 'data-path': p, 'data-contract-col': n }, h('td', { text: n }),
-        h('td', {}, h('select', { class: 'ed-in ed-narrow', 'data-contract-type': n, 'aria-label': 'Type of ' + n,
+        h('td', {}, E.pick({ class: 'ed-pick ed-narrow', 'data-contract-type': n, 'aria-label': 'Type of ' + n,
           on: { change: function (e) { var v = e.target.value; ctx.change(function (d) { d.columns[n].type = v; }, p + '.type'); } } },
-          TYPES.map(function (t) { return h('option', { value: t, selected: (c.type || 'string') === t, text: t }); }))),
+          TYPES, TYPES.indexOf(c.type || 'string') >= 0 ? c.type || 'string' : undefined)),
         h('td', {}, h('input', { type: 'checkbox', checked: !!c.key, 'data-contract-key': n, 'aria-label': n + ' is a key',
           on: { change: function (e) { var on = e.target.checked; ctx.change(function (d) { if (on) { d.columns[n].key = true; } else { delete d.columns[n].key; } }, p); } } })),
         h('td', {}, h('input', { type: 'checkbox', checked: !!notNull[n], 'data-contract-notnull': n, 'aria-label': n + ' is never empty',
@@ -113,7 +113,7 @@
         h('td', {}, h('button', { type: 'button', class: 'ed-linkbtn', 'data-edit': '', 'data-input-remove': a, 'aria-label': 'Remove the input ' + a,
           on: { click: function () { ctx.change(function (d) { var x = Object.assign({}, d.from.inputs || {}); delete x[a]; setInputs(ctx, d, x); }, 'from.inputs'); ctx.redraw(); } } }, 'Remove')));
     });
-    var pick = h('select', { class: 'ed-in', 'data-input-pick': '', 'aria-label': 'A table to read' }, src.map(function (x) { return h('option', { value: x.table, text: x.table }); }));
+    var pick = E.pick({ class: 'ed-pick', 'data-input-pick': '', 'aria-label': 'A table to read' }, src.map(function (x) { return x.table; }));
     return h('section', { class: 'ed-card' }, h('h3', { text: 'Inputs' }),
       h('div', { class: 'ed-scroll' }, h('table', { class: 'ed-grid-t', 'data-inputs': '' }, h('thead', {}, h('tr', {}, ['Alias', 'Table', ''].map(function (x) { return h('th', { scope: 'col', text: x }); }))), h('tbody', {}, rows))),
       h('p', {}, pick, ' ', h('button', { type: 'button', class: 'ed-btn', 'data-edit': '', 'data-input-add': '', on: { click: function () {
@@ -127,8 +127,8 @@
   function runs(ctx, params, f) {
     var h = ctx.h;
     function param(key, value) { ctx.change(function (d) { d.from = d.from || {}; d.from.params = Object.assign({}, d.from.params || {}); d.from.params[key] = value; }, 'from.params.' + key); }
-    var when = h('select', { class: 'ed-in', 'data-py-runs': '', 'aria-label': 'When it runs', on: { change: function (e) { param('runs', e.target.value); } } },
-      [['on-demand', 'on demand, kept per business date'], ['on-load', 'on each load of an input']].map(function (o) { return h('option', { value: o[0], selected: (params.runs || 'on-demand') === o[0], text: o[1] }); }));
+    var when = E.pick({ class: 'ed-pick', 'data-py-runs': '', 'aria-label': 'When it runs', on: { change: function (e) { param('runs', e.target.value); } } },
+      [{ value: 'on-demand', label: 'on demand, kept per business date' }, { value: 'on-load', label: 'on each load of an input' }], params.runs === 'on-load' ? 'on-load' : 'on-demand');
     var pool = h('input', { class: 'ed-in ed-narrow', value: params.pool || 'default', 'data-py-pool': '', 'aria-label': 'Compute pool', on: { change: function (e) { param('pool', e.target.value.trim() || 'default'); } } });
     var timeout = h('input', { class: 'ed-in ed-narrow', type: 'number', min: '1', max: '3600', value: String(f.timeout || 60), 'data-py-timeout': '', 'aria-label': 'Time limit in seconds',
       on: { change: function (e) { f.timeout = parseInt(e.target.value, 10) || 60; ctx.markDirty(); } } });

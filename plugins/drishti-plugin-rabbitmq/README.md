@@ -47,7 +47,7 @@ settings:
 auth: User and password in the amqp(s):// URI (as ${ENV} references), TLS and mutual TLS on amqps:// (tls.*), or the client certificate as the log-in (auth-mechanism external).
 licence: RabbitMQ Java client 5.36.0 (amqp-client, Apache-2.0 / MPL-2.0 / GPL-2.0) and RocksDB (rocksdbjni, Apache-2.0/GPL-2.0) for the state store, bundled.
 windows: Works on Windows (pure Java client); the state store's RocksDB library is unpacked from its jar into the server's temp folder (no .exe). The broker runs elsewhere; the Docker tests skip where Docker is not reachable.
-doc: docs/connectors/RABBITMQ_CONNECTOR.md
+doc: plugins/drishti-plugin-rabbitmq/README.md
 ---
 # The rabbitmq connector
 
@@ -62,6 +62,31 @@ acknowledgement and `prefetch` (100). Each delivery is written to the **state st
 the memory cache and type-ahead, pushed to open views, and then acknowledged; one the store could not keep is returned
 (`basicNack`, requeue) and delivered again. All queues of a connector share the channel, so deliveries are applied one at a time.
 Undated, no reverse lookups. Consumers of one queue share its messages: give each Drishti server its own queue.
+
+A queue delivers a message once and keeps nothing after it is acknowledged, so the connector keeps the latest document of every
+entity itself and acknowledges a message only once the store has kept it (by default synced to disk): neither a crash nor a power loss
+loses an acknowledged message. The plugin (`RabbitMqSourcePlugin`: connection, queues, consumers, health) sits on
+`MessageStateSource` (module `drishti-messaging`: parsing, the state store, the memory cache, type-ahead and live fan-out), shared with
+[the activemq connector](../drishti-plugin-activemq/README.md).
+
+| Use it for | Prefer another connector for |
+|---|---|
+| a system that already publishes changes to a RabbitMQ exchange (margin calls, orders, limit changes) | history by business date: a queue has none ([pair it with a lake](#history-rabbitmq-with-a-lake)) |
+| live views that update within a moment of the change | a stream to replay from the beginning ([kafka](../drishti-plugin-kafka/README.md) keeps the log) |
+| tens or hundreds of thousands of entities, each changing now and then | reverse lookups (*Linked entities*, impact with F8) |
+| a feed that should reach Drishti while Drishti is down (messages wait in the queue) | a store other systems also query: the state lives only on Drishti's local disk |
+
+```
+ collateral system        publish     exchange "collateral"   bind margin.#    queue drishti.margin-calls (durable)
+ margin.call.new  ───────────────────▶  (topic)  ──────────────────────────▶  │ deliver (prefetch 100)
+                                                                              ▼
+                       margin-mq: parse → state store (RocksDB) → memory cache → type-ahead → open views → basicAck
+```
+
+Each delivery is handled in order on the channel's consumer thread: the body read as UTF-8, the id from the `id` header else
+`message_id`, the message applied, then `basicAck(deliveryTag, multiple = false)`. With `declare: true` each queue is declared
+**durable, not exclusive, not auto-delete, without arguments**; the connector never declares exchanges. A message the connector cannot
+use is counted as `rejected` and **acknowledged all the same** (dropped, not requeued or dead-lettered), since it could never be read.
 
 ## Settings
 
@@ -82,16 +107,22 @@ Undated, no reverse lookups. Consumers of one queue share its messages: give eac
 | `state.max-gb` | string | `10` | This connector's disk budget (decimal values accepted); what happens past it is `state.when-full` |
 | `state.reset-at` | string | `never` | Clock time (HH:mm) to clear the state store each day, or never |
 | `state.zone` | string | `America/New_York` | Time zone of state.reset-at |
-| `state.durability` | one of none, wal, sync | `sync` | `sync` (write-ahead log synced on every write: no acknowledged message lost on a crash or a power loss), `wal` (not synced: survives a crash of the process, a power loss can lose the last moments), `none` (no log: a crash can lose up to the 32 MB memtable) (RABBITMQ_CONNECTOR.md section 6.1) |
-| `state.when-full` | one of evict-oldest, warn | `evict-oldest` | `evict-oldest`: past the budget, remove the entities written longest ago until under 90% of it, then compact (logged, counted in `evicted`); `warn`: remove nothing, say so in health (RABBITMQ_CONNECTOR.md section 6.3) |
+| `state.durability` | one of none, wal, sync | `sync` | `sync` (write-ahead log synced on every write: no acknowledged message lost on a crash or a power loss), `wal` (not synced: survives a crash of the process, a power loss can lose the last moments), `none` (no log: a crash can lose up to the 32 MB memtable) (plugins/drishti-plugin-rabbitmq/README.md › Durability and disk budget) |
+| `state.when-full` | one of evict-oldest, warn | `evict-oldest` | `evict-oldest`: past the budget, remove the entities written longest ago until under 90% of it, then compact (logged, counted in `evicted`); `warn`: remove nothing, say so in health (plugins/drishti-plugin-rabbitmq/README.md › Durability and disk budget) |
 | `state.check-seconds` | int | `60` | How often the store's size is checked against the budget |
 | `declare` | boolean | `true` | Declare each queue durable (no arguments) and bind it; `false` uses existing queues and ignores `bind.*` |
 | `prefetch` | int | `100` | Unacknowledged messages in flight per consumer (`basicQos`) |
 | `heartbeat-seconds` | int | `20` | The requested AMQP heartbeat |
 | `recovery-interval-ms` | int | `2000` | The automatic recovery's wait between reconnection attempts |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10).
 <!-- settings:end -->
+
+The site-wide summary is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#rabbitmq-tls). Running the plugin as itself
+(`drishti.sources.plugins.rabbitmq`) is off in the shipped `application.yaml` (`DRISHTI_RABBITMQ_ENABLED=false`); use named
+connectors. Setting keys are written as they are, with any characters (`kind.desk_orders`). Give the connector `kinds:`: without it
+(and with no `kind` and an empty store) it serves *every* kind and is asked for every entity until the first message arrives.
+An unknown `state.durability` or `state.when-full` value stops the connector at start (`failedToStart`), so a typo never evicts.
 
 ## Data structure
 
@@ -115,6 +146,20 @@ header) and header `deleted` (`true` deletes). Routing key, exchange, content ty
 - **Rejected** (counted, acknowledged, dropped): not JSON, no kind, no id, or an empty body on a queue without a kind.
 - **Stored:** the document under `<kind>/<id>`; provenance `live: true`, no business date.
 
+| Message | Becomes |
+|---|---|
+| a JSON body on a queue with a kind, with an id (header, `message_id` or body field) | that kind's latest document: stored, pushed to open views |
+| a JSON envelope `{kind, id, doc}` on a queue without a kind | the envelope's entity; each kind seen joins the connector's kinds |
+| header `deleted: true` (any case), with an empty or JSON body | a delete (the id must still be found) |
+| an envelope with `"doc": null` or no `doc`; an empty body with an `id` header on a queue with a kind | a delete |
+| a body that is not JSON, no kind, no id, or an empty body on a queue without a kind | rejected |
+
+A delete removes the entity from the state store, the memory cache and type-ahead, and is pushed to open views: the view keeps its
+last document, greyed, under a banner saying when the entity was deleted
+([DATA_ARCHITECTURE.md, Deleted entities](../../docs/architecture/DATA_ARCHITECTURE.md#deleted-entities)); a later message repaints
+it. Every message, rejected or not, counts in `received` and moves `lastUpdate` (used by `stale-after`). A delete with a header:
+`queue drishti.trades, headers {"id": "Q-9", "deleted": "true"}, body empty`.
+
 ## Examples
 
 ```yaml
@@ -133,22 +178,281 @@ settings:
 ```
 
 Ready-made files in `config/connectors.examples/other/`: `orders-queue.yaml` (`amqps://`, PKCS12 truststore) and
-`rabbitmq-external.yaml` (the certificate is the log-in). There is no loader: producers publish messages.
+`rabbitmq-external.yaml` (the certificate is the log-in). There is no loader: producers publish messages. A connector file is applied
+within seconds without a restart, and edited in any editor, in **Admin → Connectors** or with `drishti.py connector apply`
+([../../docs/guides/DATA_GUIDE.md section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)); a pack may suggest the same as a template in its `pack.yaml`, which
+the server writes to `config/connectors/<name>.yaml` at the first start.
+
+Queues owned by the platform team, one queue of envelopes, the store on a dedicated disk:
+
+```yaml
+# config/connectors/margin-mq.yaml
+plugin: rabbitmq
+kinds: [margin-call]
+settings:
+  uri: ${RABBIT_URI}                         # amqps://drishti:…@rabbit.bank.example:5671/collateral
+  queues: drishti.margin-calls,drishti.collateral-events
+  declare: false                             # the queues exist; bind.* is ignored
+  kind.drishti.margin-calls: margin-call
+  id-field.drishti.margin-calls: CALL_ID
+  # drishti.collateral-events has no kind: its messages are envelopes {kind, id, doc}
+  cache-mb: '256'
+  state.root: /var/lib/drishti/state         # the store goes to /var/lib/drishti/state/margin-mq
+  state.max-gb: '20'
+  state.durability: sync
+```
+
+| `declare` | At start and after each automatic recovery |
+|---|---|
+| `true` (default) | each queue declared durable with no arguments and bound per `bind.<queue>`; topology recovery repeats both after a reconnect |
+| `false` | the queues must exist; `bind.<queue>` is ignored; the connector only consumes |
+
+Use `declare: false` when the queue needs arguments (quorum type, message TTL, dead-letter exchange, length limit): declaring it with
+different arguments fails with `PRECONDITION_FAILED - inequivalent arg`. **One queue per Drishti server:** consumers of a queue share
+its messages round robin, so bind one queue per server to the same `topic` or `fanout` exchange.
+
+### Try it
+
+```bash
+docker run -d --name rabbit -p 5672:5672 -p 15672:15672 rabbitmq:management
+curl -u guest:guest -X PUT -H 'content-type: application/json' \
+  http://localhost:15672/api/exchanges/%2f/collateral -d '{"type":"topic","durable":true}'
+DRISHTI_MARGIN_MQ=true java -jar drishti-server/target/drishti-server-*-exec.jar     # declares and binds the queue
+curl -u guest:guest -H 'content-type: application/json' -X POST \
+  http://localhost:15672/api/exchanges/%2f/collateral/publish \
+  -d '{"routing_key":"margin.call.new","properties":{"headers":{"id":"MC-ALDERSHOT-FRA-2"}},"payload_encoding":"string",
+       "payload":"{\"CALL_ID\":\"MC-ALDERSHOT-FRA-2\",\"AMOUNT\":250000.0,\"STATUS\":\"Issued\",\"NETTING_SET\":\"NS-ALDERSHOT-FRA\"}"}'
+```
+
+The publish answers `{"routed":true}` when the binding matched. `MC MC-ALDERSHOT-FRA-2 <GO>` shows provenance `margin-mq`, live;
+publish again with `"STATUS":"Agreed"` and the view updates. On the default exchange publish to `amq.default` with the queue name as
+routing key.
+
+## The state store
+
+A RocksDB database in `state.dir` (default `<state.root>/<source-name>`, `./data/state/<connector>`), one key per entity
+(`<kind>/<id>`), the latest document as JSON bytes, LZ4, level compaction (only the latest value of each key is kept), a 32 MB
+memtable and a write-ahead log per `state.durability` capped at 64 MB. It is opened **persistent**: the newest generation folder
+(`gen-<millis>-<n>`) is reopened at start, older ones deleted. Each connector has its own store, log and budget. The store's size
+follows **the number of live entities times their compressed size**, not the number of messages. `stateMb` is the table files plus the
+memtables not yet flushed.
+
+| Event | Result |
+|---|---|
+| Drishti stopped and started again | the store is reopened and iterated once to rebuild the id set and type-ahead; reads answer at once |
+| messages published while Drishti was down | they wait in the queue (durable queue, persistent messages) and arrive on reconnect |
+| the broker restarted | durable queues and persistent messages survive; transient messages (`delivery_mode` 1) are lost by the broker |
+| the Drishti process killed | `sync` or `wal`: nothing acknowledged is lost (the log is replayed); `none`: up to the 32 MB memtable |
+| a power loss or kernel crash | `sync`: nothing acknowledged is lost; `wal`: the last moments not yet written; `none`: up to the memtable |
+| the state folder deleted (server stopped) | every entity forgotten; only new messages rebuild the state |
+
+A crash between the write and the acknowledgement redelivers the message (harmless: the same document is written again).
+`state.reset-at: "06:00"` (in `state.zone`, daylight saving honoured) clears the store daily by swapping in an empty generation, for
+state that should start empty each day; the id set, type-ahead and memory cache are not cleared until the next restart. **Purge**
+(Admin → Caches) drops the memory cache only: the store is the only copy of what the queues delivered, so back it up (stop the server,
+copy the folder) or rely on the producers to resend, and protect `state.root` as you would the source data.
+
+## Durability and disk budget
+
+`basicAck` is sent only after the write returns, so `state.durability` decides what an **acknowledged** message survives:
+
+| `state.durability` | How a write is kept | Survives a process crash | Survives a power loss | Cost |
+|---|---|---|---|---|
+| `sync` (default) | write-ahead log synced (`fsync`) before the write returns | yes | yes | one disk sync per message |
+| `wal` | write-ahead log, not synced | yes | no: the last moments can be lost | close to `none` |
+| `none` | the 32 MB memtable only until flushed | no | no | the fastest |
+
+All queues of a connector are applied one message at a time, so with `sync` its rate is about one message per disk sync (general
+figures: thousands a second on an SSD with power-loss protection, hundreds on a desktop SSD, tens on a spinning disk); a larger
+`prefetch` does not raise it. Use `wal` when the rate matters more than the last moments before a power loss, or split a heavy feed
+over several connectors, each with its own store.
+
+**When the store cannot keep a message** (disk full, an I/O error) the connector waits a second and sends
+`basicNack(deliveryTag, false, requeue = true)`; health is `DOWN: <reason> (messages are not acknowledged and come again)` until a
+message is kept again, and it carries on by itself once the disk is freed. Up to `prefetch` later messages may be kept before the
+requeued one, so an entity may briefly hold an older document (use `prefetch: 1` where that matters). A quorum queue counts deliveries
+and dead-letters (or drops) a message past its delivery limit (20 by default on RabbitMQ 4): raise it with a `delivery-limit` policy if
+disk outages may be long.
+
+**The budget, per connector.** Every `state.check-seconds` the store's size is compared with `state.max-gb` (budgets add up across
+connectors on one disk):
+
+| `state.when-full` | Past the budget |
+|---|---|
+| `evict-oldest` (default) | the entities **written longest ago** are removed until under 90% of the budget, then the store is compacted; logged at WARN (`margin-mq: state store over its budget (20500 MB of 20480 MB): evicted the 41250 entities written longest ago (now 18300 MB)`), counted in `evicted`; health `UP (state store over its budget: X of Y GB; the oldest entities are being evicted)` |
+| `warn` | nothing removed; health `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)`; a full disk then makes writes fail |
+
+Entities found in the store at start count as older than anything written in this run (among themselves in key order). An evicted
+entity leaves the store, the cache and type-ahead, but open views are not told (it was not deleted at its source); its next message
+brings it back. Sizes are in GB of 1,024³ bytes; `budgetMb` is the budget in MB.
+
+**Sizing:** the entities held times their compressed size (200,000 margin calls of 4 KB is about 0.8 GB before compression), with a
+margin so `evict-oldest` only touches genuinely stale entities; plus up to 64 MB of log and room for compaction (briefly up to the
+store's size again). Plan about twice `state.max-gb` of disk per connector.
+
+## Reads, live updates and scale
+
+| Read | Supported | How |
+|---|---|---|
+| one entity (`MC MC-CORAL-FRA-2 <GO>`) | yes | memory cache (Caffeine, `cache-mb`; an entry weighs twice its JSON size plus 64 bytes), else one RocksDB get and a parse; never received is "not held" |
+| type-ahead | yes | in memory, prefix then substring then title, subtitle `<kind> · <source-name>`; new ids and deletes folded in every 4,096 |
+| a picked business date | no (undated) | dated connectors are asked first |
+| reverse lookups | no | other connectors answer |
+| searches (`MC where …`), pick lists, derived kinds | through the engine | members listed from type-ahead and read one by one |
+| live push | yes | each applied message pushed to the entity's subscribers on the consumer thread, before the acknowledgement |
+
+Provenance carries `live: true` and a `generation` from a counter that increases with every document built, monotonic within one run.
+The connector does not declare `pushes(ref)`: it ticks only entities it holds itself. A view of a picked date is a static snapshot.
+
+- **Memory:** recent documents bounded by `cache-mb`; the id set, weight map, type-ahead entry and last-written time per entity are
+  unbounded (an estimate of about half a kilobyte each): several hundred MB of heap per million entities beyond `cache-mb`.
+- **Start time** grows with the number of entities (the store is iterated once).
+- **Throughput:** one consumer thread per connector, no batching, no parallelism across its queues; split a heavy feed over several
+  connectors by kind or queue.
+- **A million entities a day** belongs in a dated store ([delta](../drishti-plugin-delta/README.md),
+  [jdbc](../drishti-plugin-jdbc/README.md), [aerospike](../drishti-plugin-aerospike/README.md)); a queue is a fine carrier for a
+  million *changes* a day of a few thousand entities.
+
+### History: RabbitMQ with a lake
+
+| The user asks for | Order tried | Who answers |
+|---|---|---|
+| Live | `margin-mq` (live) → `collateral-store` (the route, dated) → others | RabbitMQ, if it has received the entity; else the lake's newest date |
+| a picked date | `collateral-store` (dated first) → … → `margin-mq` | the lake, for that date |
+| a date the lake does not hold | as above | `margin-mq`'s current document, with the banner *No data held for <date>: the current data of margin-mq, a source that keeps no dates* |
+
+The counterparty-risk pack routes `margin-call` to `collateral-store` (Delta Lake); adding `margin-mq` needs no route change. Each
+evening's lake load carries the day's final state; the queue carries the day's changes, and `state.reset-at` can clear it each morning.
+
+## Failure and recovery
+
+| Health | When |
+|---|---|
+| `DOWN: not started` | before the first connection attempt finished (an unreachable host holds this for the client's connection timeout) |
+| `DOWN: <Exception>: <message> (retrying)` | the first connection, or declaring, binding or consuming at start, failed; retried after 1 s doubling to 30 s |
+| `UP` | connected and consuming every queue (an empty `queues` is `UP` and consumes nothing) |
+| `DOWN: connection lost (recovering)` | the client's automatic recovery is reconnecting |
+| `DOWN: consumer cancelled on <queue>` | the broker cancelled the consumer (the queue was deleted); stays until the server restarts |
+| `DOWN: <reason> (messages are not acknowledged and come again)` | the state store failed to keep a message |
+| `UP (state store over its budget: …)` | past `state.max-gb` (see [the budget](#durability-and-disk-budget)) |
+
+After the first connection the client's automatic and topology recovery reconnects every `recovery-interval-ms`, redeclares the
+queues and bindings it declared and restarts the consumers; a dead connection is noticed by the heartbeat. While the broker is away,
+reads answer from the cache and the store and views stop ticking; unacknowledged messages are redelivered after reconnection. With
+`stale-after`, Admin → Health shows the connector amber when nothing arrived for that long.
+
+`GET /api/v1/admin/health` and Admin → Caches show `{"entities": 1840, "memoryEntries": 1840, "stateMb": 6.4, "durability": "sync",
+"budgetMb": 20480, "evicted": 0, "received": 22571, "rejected": 3}`: ids known, documents in memory, store size, durability, budget,
+entities evicted this run, messages received, and messages skipped and acknowledged (messages the store failed to keep are requeued,
+not counted).
+
+## Security
+
+- **Credentials** are in the URI (`amqp://<user>:<password>@<host>:<port>/<vhost>`, special characters URL-encoded, `%2f` the default
+  vhost); keep the whole URI in the environment (`uri: ${RABBIT_URI}`). Health and `/api/v1/sources` never show settings.
+- **Permissions** on the vhost: *configure* on the queues (only with `declare: true`), *write* on the queues and *read* on the exchange
+  (to bind), *read* on the queues (to consume). With `declare: false`, read on the queues is enough.
+
+### TLS and certificate log-in
+
+An `amqps://` URI (port 5671) connects over TLS with the shared settings ([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#101-the-settings); keys
+in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls)): `tls.ca-file` or `tls.truststore` for a private CA,
+`tls.cert-file` + `tls.key-file` (PKCS#8, PKCS#1, SEC1 or encrypted with `tls.key-password`) or `tls.keystore` (+ `tls.key-alias`)
+for mutual TLS, hostname verification on by default, `tls.protocols`, `tls.cipher-suites`. The TLS context is built at start (a wrong
+file, password or key fails with the file and the reason) and reused for every reconnection; with no `tls.*` an `amqps://` URI trusts the
+JVM's authorities. `tls.enabled: true` with an `amqp://` URI is refused (`tls.enabled is true but uri is not amqps:// (the TLS port is
+5671)`). Within 30 days of a certificate's expiry health says `UP (TLS certificate CN=drishti (tls.cert-file) expires in 12 days
+(2026-10-22))`.
+
+With `auth-mechanism: external` the connector logs in with its client certificate (SASL EXTERNAL) and the URI carries no credentials:
+
+```yaml
+settings:
+  uri: amqps://rabbit.bank.example:5671/collateral
+  auth-mechanism: external
+  tls.ca-file: /etc/drishti/tls/ca.pem
+  tls.cert-file: /etc/drishti/tls/client.pem
+  tls.key-file: /etc/drishti/tls/client.key
+```
+
+It is refused at start without an `amqps://` URI or a client certificate. The broker needs the `rabbitmq_auth_mechanism_ssl` plugin
+and a user named like the certificate:
+
+```
+# /etc/rabbitmq/rabbitmq.conf
+listeners.ssl.default = 5671
+ssl_options.cacertfile = /etc/rabbitmq/certs/ca.pem
+ssl_options.certfile   = /etc/rabbitmq/certs/server.pem
+ssl_options.keyfile    = /etc/rabbitmq/certs/server.key
+ssl_options.verify = verify_peer
+ssl_options.fail_if_no_peer_cert = true
+auth_mechanisms.1 = PLAIN
+auth_mechanisms.2 = EXTERNAL
+ssl_cert_login_from = common_name            # the user is the certificate's CN
+
+$ rabbitmqctl add_user drishti "$(openssl rand -hex 16)"          # the password is never used with EXTERNAL
+$ rabbitmqctl set_permissions -p collateral drishti "" "" ".*"
+```
+
+Verify with `openssl s_client -connect rabbit.bank.example:5671 -servername rabbit.bank.example -CAfile ca.pem -cert client.pem -key
+client-pkcs8.key -verify_hostname rabbit.bank.example -verify_return_error </dev/null` (`Verification: OK`), and
+`rabbitmq-diagnostics listeners` on the broker (the `amqp/ssl` listener on 5671).
+
+### Common errors and fixes
+
+| Health or log text | Cause | Fix |
+|---|---|---|
+| `tls.enabled is true but uri is not amqps://` | TLS wanted, URI is `amqp://` | `amqps://host:5671/vhost` |
+| `SSLHandshakeException: PKIX path building failed` | the broker's certificate is not trusted | `tls.ca-file` / `tls.truststore` with its CA |
+| `SSLHandshakeException: No subject alternative DNS name matching … found` | the name in the URI is not in the certificate | re-issue with the name as a SAN, or `tls.verify-hostname: false` |
+| `Received fatal alert: certificate_required` / `bad_certificate` | the broker demands a client certificate | `tls.cert-file` + `tls.key-file`, or `tls.keystore` |
+| `AuthenticationFailureException: ACCESS_REFUSED` | wrong user or password; with EXTERNAL no user named like the CN, or the plugin not enabled | check the URI; `rabbitmqctl list_users`; enable `rabbitmq_auth_mechanism_ssl` |
+| `Connection reset` / `Remote host terminated the handshake` | TLS to the plain port, or the reverse | `amqps://` with 5671; `amqp://` with 5672 |
+| `auth-mechanism 'x' is not plain or external` | a typo | `plain` or `external` |
+| start-up messages naming a file | a file or a password is wrong | [DATA_GUIDE.md section 10, start-up checks](../../docs/guides/DATA_GUIDE.md#108-start-up-checks-and-their-messages) |
 
 ## Troubleshooting
 
-- `DOWN: ConnectException: Connection refused (retrying)`: the broker is not listening there; fix `uri`.
-- `DOWN: AuthenticationFailureException: ACCESS_REFUSED … (retrying)`: wrong user or password (URL-encoded in the URI).
-- `DOWN: IOException: … (retrying)` with `PRECONDITION_FAILED - inequivalent arg` in the broker log: the queue exists with other
-  arguments (quorum, TTL, DLX); set `declare: false`.
-- `DOWN: connection lost (recovering)`: automatic recovery is reconnecting every `recovery-interval-ms`.
-- `DOWN: consumer cancelled on <queue>`: the queue was deleted; recreate it and restart the server.
-- `UP` but nothing arrives: the queue is not bound to the producer's exchange, or another consumer takes the messages.
+Admin → Health shows the connector's `health`, `reads` and `cache`; the RabbitMQ management UI shows the connection
+`drishti-<source-name>`, its channel, and a consumer `drishti-<source-name>-<queue>` on each queue.
 
-Every health text is in the full document, sections *Failure and recovery* and *Diagnosing*.
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| `DOWN: ConnectException: Connection refused (retrying)` | the broker is not listening there | start it, or fix `uri`; it retries by itself |
+| `DOWN: not started` for a minute | the host is unreachable and the client waits for its connection timeout | check routing and firewalls to 5672 (5671 for TLS) |
+| `DOWN: AuthenticationFailureException: ACCESS_REFUSED … (retrying)` | wrong user or password | fix the URI's credentials (URL-encoded) |
+| `DOWN: IOException: … (retrying)`; broker log `NOT_FOUND - no exchange 'collateral'` | `bind.<queue>` names a missing exchange | create the exchange, or fix `bind.<queue>` |
+| `DOWN: IOException: … (retrying)`; broker log `PRECONDITION_FAILED - inequivalent arg` | the queue exists with other arguments (quorum, TTL, DLX) | `declare: false` |
+| `DOWN: IOException: … (retrying)`; broker log `access to vhost … refused` | the user lacks permissions | grant them ([Security](#security)) |
+| `DOWN: IllegalArgumentException: Wrong scheme in AMQP URI: …` | not `amqp://` or `amqps://` | fix `uri` |
+| `DOWN: connection lost (recovering)` that does not clear | the broker is down or the network path broken | bring it back; recovery is automatic |
+| `DOWN: consumer cancelled on <queue>` | the queue was deleted | recreate it (or let `declare: true` do it), then restart the server |
+| `UP`, nothing arrives | the queue is not bound to the producer's exchange, or another consumer takes the messages | `bind.<queue>`; one queue per server |
+| `rejected` grows | not JSON, or no id (`id` header, `message_id`, `id-field.<queue>`), or envelopes without `kind` | check `kind.<queue>` and `id-field.<queue>` against a real message |
+| a deleted entity still in type-ahead | the delete's id spelled differently, or cleared by `state.reset-at` (type-ahead keeps ids until restart) | send the delete with the exact id; restart |
+| an old entity reads "not held"; `evicted` grows | `state.max-gb` reached with `evict-oldest` | raise `state.max-gb` (and the disk), or `state.when-full: warn`; republish |
+| `DOWN: … (messages are not acknowledged and come again)` | the store cannot write: disk full or I/O error | free the disk (`df -h` on `state.root`); mind a quorum queue's delivery limit |
+| messages arrive slowly, the disk busy, the ready count grows | `sync` waits for a disk sync per message | a faster disk; `wal`; or split the feed |
+| an old entity will not go away | the store keeps it until a delete | send `deleted: true`, `state.reset-at`, or clear the folder with the server stopped |
+| the view does not tick, but reads work | a picked date, or another live connector holds the entity first | open it Live; check `provenance.source` |
+| the server takes long to start | many entities in the store | a lower `state.max-gb`, or clear daily for intraday state |
+
+## Checklist for production
+
+1. Each Drishti server its **own durable queue**, bound to the producers' exchange.
+2. Producers publish **persistent** messages (`delivery_mode` 2), JSON bodies, the id in an `id` header or a known field; deletes as
+   `deleted: true`.
+3. `declare: true` with `bind.<queue>`, or `declare: false` for queues with arguments owned by the platform team.
+4. `kinds:` on the connector, `kind.<queue>` / `id-field.<queue>` for every queue of plain documents.
+5. `state.root` on **local SSD**, backed up; `state.max-gb` sized with a margin and about twice that of disk per connector;
+   `evict-oldest` or `warn`; `state.reset-at` for intraday state.
+6. `state.durability: sync` unless the feed outruns the disk and producers resend state; memory for `cache-mb` plus the id structures.
+7. The URI in the environment; `amqps://` with the broker's CA.
+8. `stale-after` set to the longest normal quiet period; history in a dated store for the same kinds.
+9. Admin → Health: `UP`, `received` growing, `rejected` flat, `stateMb` under `budgetMb`, `evicted` flat; alert on a health ending
+   `(messages are not acknowledged and come again)`.
 
 ## See also
 
-- [The full RabbitMQ connector document](../../docs/connectors/RABBITMQ_CONNECTOR.md): the state store, durability, disk budget, TLS, settings.
-- [The ActiveMQ connector](../../docs/connectors/ACTIVEMQ_CONNECTOR.md) (the same state store) and [TLS](../../docs/connectors/TLS.md).
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [the connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+- [The activemq connector](../drishti-plugin-activemq/README.md) (the same state store) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [the connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one).

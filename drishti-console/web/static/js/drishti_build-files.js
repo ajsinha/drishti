@@ -23,7 +23,7 @@
   function ext(name) { var m = /\.([^./]+)$/.exec(name.toLowerCase()); return m ? m[1] : ''; }
 
   window.Drishti.Files = {
-    mb: function (n) { return n >= MB ? (n / MB).toFixed(1) + ' MB' : n >= 1024 ? Math.round(n / 1024) + ' KB' : n + ' bytes'; },
+    mb: function (n) { return window.Drishti.elements.core.formatBytes(n); },                       // drishti-core's sizes
 
     /** Entries {name, file} from a FileList; `ignored` counts what was not .json or .jsonl. */
     pick: function (fileList) {

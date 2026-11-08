@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Wave C (2.4.0) acceptance in Chromium over the real server and console (tests/bi_report_stack.py on ports 18961 and 17961, security on, a small file lake:
-and prep-store, a file lake of two business days of 60 synthetic trades in the trading pack's names). docs/architecture/BI_DESIGN.md section 12.2, Wave C, accepted when:
+and prep-store, a file lake of two business days of 60 synthetic trades in the trading pack's names). docs/architecture/ARCHITECTURE.md §28 section 12.2, Wave C, accepted when:
 
 (a) **a Transform reading a connector is built step by step with a preview at each step and no YAML typing**: in /bi/transform an author adds the pack kind
     trade read straight through trading-store, then steps from the snippets (filter, group and total) by filling forms; after every step the preview shows
@@ -40,6 +40,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import clean, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, ROOT  # noqa: E402
+from select_helpers import has_option
 
 DAY = "2026-10-08"
 BOOKS = ["BOOK-FX-1", "BOOK-FI-1", "BOOK-EQ-1"]
@@ -248,7 +249,7 @@ def test_a_failing_step_says_where_and_keeps_the_steps_before(stack, browser):
     n = ran(page, 0)
     page.click("[data-open-code]")
     page.fill("[data-code-label]", "A typo")
-    page.fill("[data-code]", 'df = df[df["NO_SUCH_COLUMN"] > 0]')
+    page.locator("[data-code]").evaluate("(e, t) => { e.value = t; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }", 'df = df[df["NO_SUCH_COLUMN"] > 0]')   # the code area is drishti-inputs' code editor: typed through its text area
     page.click("[data-code-add]")
     ran(page, n)
     expect(page.locator("[data-step='1']")).to_have_class(re.compile("tx-failed"))
@@ -260,7 +261,7 @@ def test_a_failing_step_says_where_and_keeps_the_steps_before(stack, browser):
 
 def test_the_notebook_profiles_the_extract_with_the_editors_panel(stack, browser):
     page = sign_in(browser, "ann", "/bi/notebook")                                             # no raw power: PRICE is masked for her
-    page.wait_for_function("() => [...document.querySelectorAll('[data-dataset] option')].some(o => o.value === 'mq:prep-model@1')", timeout=30000)
+    page.wait_for_function(has_option("[data-dataset]", "mq:prep-model@1"), timeout=30000)
     page.select_option("[data-dataset]", "mq:prep-model@1")
     page.wait_for_selector("[data-fields] input[name=f]")
     page.check("[data-fields] input[value='trades.PRICE']")                                   # a masked field is not ticked for her: tick it

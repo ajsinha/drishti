@@ -24,6 +24,7 @@ import pytest
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
 from bi_runs_backend import RunsBackend, serve  # noqa: E402
+from select_helpers import labels
 
 THEMES = ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue")
 SHOTS = os.environ.get("DRISHTI_SHOTS")
@@ -76,11 +77,11 @@ def test_run_again_of_a_failed_run_follows_the_new_run_with_a_busy_button(browse
     try:
         group = page.locator("[data-run-drawer] [data-run-again]")
         assert "Run again as" in group.inner_text()
-        assert page.eval_on_selector("[data-run-again-as]", "s => [...s.options].map(o => o.text)") == ["Same as before (as of 2026-10-16)", "With the latest data"]
+        assert labels(page, "[data-run-again-as]") == ["Same as before (as of 2026-10-16)", "With the latest data"]
         assert page.eval_on_selector("[data-run-again-as]", "s => document.querySelector('label[for=\"' + s.id + '\"]') !== null")
         go = page.locator('[data-run-drawer] [data-run-act="rerun"]')
         assert go.inner_text().strip() == "Run again" and "btn-accent" in go.get_attribute("class")
-        sizes = page.evaluate("[...document.querySelectorAll('[data-run-again] select, [data-run-again] button')].map(e => Math.round(e.getBoundingClientRect().height))")
+        sizes = page.evaluate("[...document.querySelectorAll('[data-run-again] .di-select-control, [data-run-again] .bi-run-again-go')].map(e => Math.round(e.getBoundingClientRect().height))")
         assert abs(sizes[0] - sizes[1]) <= 1, sizes                       # one control group: one height
         before = len([x for x in backend.asked if x[0].endswith("/rerun")])
         page.select_option("[data-run-again-as]", "latest")              # choosing does nothing on its own

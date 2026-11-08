@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """A real scratch stack for the streaming BI browser tests and the documentation pictures (Rupaka phase 5): the built server jar (security on, the trading and
-counterparty-risk packs, the demo source ticking every 200 ms) on :18995, the console on :17995 with sign-in, and the shipped live content of ``config/bi``: the
-datasets ``live-trading`` and ``live-exposure``, the reports ``live-trading-desk`` and ``live-exposure`` and the board ``desk-wall``. The live tables follow the
+counterparty-risk packs, the demo source ticking every 200 ms) on :18995, the console on :17995 with sign-in, and the shipped live content: the
+models ``live-trading`` and ``live-exposure`` (``config/tables/bi``, with their tables), the reports ``live-trading-desk`` and ``live-exposure`` and the board ``desk-wall``. The live tables follow the
 trades and netting sets the demo ticker moves (750 trades; never millions). Everything lives in a scratch directory; ports in use are never touched (the stack
 refuses to start).
 
@@ -48,14 +48,15 @@ REPORT = "file:report:live-trading-desk"
 EXPOSURE = "file:report:live-exposure"
 BOARD = "file:report:desk-wall"                     # 2.4.0: the board is a report with board pages
 # the demo source serves the market-risk pack's trade valuations, one a line (765 since 2.3.0); the live table holds all of them
-_VALUATIONS = [json.loads(line) for line in (ROOT / "config" / "packs" / "market-risk" / "samples" / "trade-valuation.jsonl").open(encoding="utf-8") if line.strip()]
+_VALUATIONS = [json.loads(line) for line in (ROOT / "config" / "packs" / "banking" / "market-risk" / "samples" / "trade-valuation.jsonl").open(encoding="utf-8") if line.strip()]
 TRADES = len(_VALUATIONS)
 TRADE_IDS = {v["TRADE_ID"] for v in _VALUATIONS}          # ids are text with no assumed prefix (2.3.0): ENDUR's are digits
 # The shipped Desk wall warns when the net MTM is negative; the 2.3.0 valuations sum to a positive net MTM, so this stack's copy also warns on the
 # losses tile from the first loss (the sample warns below -1.5 bn): a tile the data always trips, to see the colours, the words and the shadow
 LOSSES_ALERT = ("alert: { on: Losses, warn: { op: lt, value: -1500000000 }, crit: { op: lt, value: -2500000000 } }",
                 "alert: { on: Losses, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000000000 } }")
-LIVE_FILES = {"datasets": ["live-trading", "live-exposure"], "reports": ["live-trading-desk", "live-exposure", "desk-wall"]}
+LIVE_FILES = {"reports": ["live-trading-desk", "live-exposure", "desk-wall"]}
+LIVE_MODELS = ["live-trading", "live-exposure"]          # the table layer's models and their tables (config/tables/bi), as the reports read them
 ROLES = {"live-risk": (["bi"], True), "live-analyst": (["bi"], False), "live-writer": (["bi", "bi-author"], True), "live-none": ([], False)}
 USERS = {"rita": "live-risk", "ann": "live-analyst", "wes": "live-writer", "nobi": "live-none"}
 
@@ -110,14 +111,17 @@ class LiveStack:
         jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
-            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
         work = self.tmp / "server"
+        from bi_samples import shipped
         for kind, names in LIVE_FILES.items():
             folder = work / "config" / "bi" / kind
             folder.mkdir(parents=True)
             for name in names:
-                suffix = {"datasets": "dataset", "reports": "report", "boards": "board"}[kind]
-                shutil.copy(ROOT / "config" / "bi" / kind / f"{name}.{suffix}.yaml", folder)
+                suffix = {"reports": "report", "boards": "board"}[kind]
+                shutil.copy(shipped(kind, f"{name}.{suffix}.yaml"), folder)
+        from bi_samples import copy_samples
+        copy_samples(work / "config" / "bi", LIVE_MODELS)        # the models (the datasets of before the table layer are gone)
         wall = work / "config" / "bi" / "reports" / "desk-wall.report.yaml"
         text = wall.read_text(encoding="utf-8")
         assert LOSSES_ALERT[0] in text, "the shipped Desk wall's losses alert changed: update LOSSES_ALERT"

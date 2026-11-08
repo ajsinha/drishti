@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* The semantic model editor (docs/architecture/EDITORS.md section 3: option A as the editor, B as the Overview, C for a measure's details
+/* The semantic model editor (docs/architecture/SHARED_SCREENS.md section 3: option A as the editor, B as the Overview, C for a measure's details
    and the Access tab). Tabs with counts: Overview (the four questions), Tables (with their relationships), Fields, Measures, Hierarchies,
    Row rules, Masks, Access (roles against rows, columns and editing). A measure's ? opens its card: the formula, a plain explanation, a
    worked test value and where it is used. "Adds up?" is the engine's answer (the server's), never the author's. */
@@ -61,28 +61,30 @@
     ({ overview: overview, tables: tables, fields: fieldsTab, measures: measures, hierarchies: hierarchies, rules: rules, masks: masks, access: access })[tab](ctx, panel, doc);
   }
 
-  function input(ctx, value, path, label, set, formula) {
-    var el = ctx.h('input', { class: 'ed-in', value: value || '', 'data-path': path, 'aria-label': label,
-      on: { input: function (e) { var v = e.target.value; ctx.change(function (d) { set(d, v); }, path); }, focus: function () { ctx.focus(path); } } });
-    if (formula) { E.formula(el, ctx.names); }
-    return el;
-  }
   function addButton(ctx, label, attr, fn) {
     var a = { type: 'button', class: 'ed-btn', 'data-edit': '' };
     a[attr] = '';
     a.on = { click: fn };
     return ctx.h('p', {}, ctx.h('button', a, label));
   }
-  function remove(ctx, label, attr, fn) {
-    var a = { type: 'button', class: 'ed-linkbtn', 'data-edit': '', 'aria-label': label };
-    a[attr] = '';
+  function remove(ctx, label, attr, value, fn) {
+    var a = { type: 'button', class: 'ed-linkbtn', 'data-edit': '', 'aria-label': label, disabled: !!ctx.S.readOnly };
+    a[attr] = value;
     a.on = { click: fn };
     return ctx.h('button', a, 'Remove');
   }
-  function grid(ctx, heads, rows, key) {
-    var h = ctx.h;
-    return h('div', { class: 'ed-scroll' }, h('table', { class: 'ed-grid-t', 'data-resize': 'columns', 'data-resize-key': 'editors.model-' + key },
-      h('thead', {}, h('tr', {}, heads.map(function (x) { return h('th', { scope: 'col', text: x }); }))), h('tbody', {}, rows)));
+  /** A select's options from a list, the values the rows hold now kept when they are not among them ({@code note} after their words). */
+  function choices(list, held, note) {
+    var out = list.map(function (x) { return typeof x === 'object' ? x : { value: x, label: x }; });
+    held.forEach(function (cur) {
+      if (cur !== undefined && cur !== null && cur !== '' && !out.some(function (x) { return x.value === cur; })) { out.push({ value: cur, label: String(cur) + (note || '') }); }
+    });
+    return out;
+  }
+  function addsUp(f) { return f && f.word ? (f.word === 'yes' ? 'yes ✓' : f.word === 'ratio' ? 'ratio · per total' : 'no · per total') : ''; }
+  /** A read-only grid of rows (fields, the access matrix): drishti-grid without editing. */
+  function grid(ctx, key, label, cols, rows, rowData) {
+    return E.rowGrid(ctx, key, { label: label, rows: rows, rowData: rowData, columns: cols.map(function (c) { return { field: c[0], header: c[1], width: c[2] || 180 }; }) });
   }
 
   /* ---- Overview: the four questions -------------------------------------------------------------------------------------------- */
@@ -92,9 +94,11 @@
     var sec = doc.security || {};
     panel.appendChild(h('div', { class: 'ed-four' },
       h('section', { class: 'ed-card', 'data-question': 'about' }, h('h3', { text: 'What is it about?' }),
-        h('label', { class: 'ed-field' }, h('span', { text: 'Name' }), input(ctx, doc.model, 'model', 'Name', function (d, v) { d.model = v.trim(); })),
-        h('label', { class: 'ed-field' }, h('span', { text: 'Title' }), input(ctx, doc.title, 'title', 'Title', function (d, v) { if (v.trim()) { d.title = v; } else { delete d.title; } })),
-        h('label', { class: 'ed-field' }, h('span', { text: 'In words' }), input(ctx, doc.description, 'description', 'Description', function (d, v) { if (v.trim()) { d.description = v; } else { delete d.description; } }))),
+        E.liveForm(ctx, 'ed-about', 'What is it about?', {
+          model: { type: 'string', title: 'Name', hook: { 'data-path': 'model' } }, title: { type: 'string', title: 'Title', hook: { 'data-path': 'title' } },
+          description: { type: 'string', title: 'In words', hook: { 'data-path': 'description', 'aria-label': 'Description' } } },
+        { model: doc.model, title: doc.title, description: doc.description },
+        function (d, path, v) { if (path === 'model') { d.model = (v || '').trim(); } else if ((v || '').trim()) { d[path] = v; } else { delete d[path]; } })),
       h('section', { class: 'ed-card', 'data-question': 'by' }, h('h3', { text: 'What do people look at it by?' }),
         h('p', { text: dims.length ? dims.join(', ') + (Object.keys(doc.hierarchies || {}).length ? '; hierarchies: ' + Object.keys(doc.hierarchies).join(', ') : '') : 'the fact table\'s own columns (add dimension tables in Tables)' })),
       h('section', { class: 'ed-card', 'data-question': 'numbers' }, h('h3', { text: 'What numbers does it give?' }),
@@ -112,18 +116,21 @@
   function tables(ctx, panel, doc) {
     var h = ctx.h, src = ctx.sources().tables || [];
     var rows = Object.keys(doc.tables || {}).map(function (a) {
-      var u = doc.tables[a], p = 'tables.' + a;
-      var sel = h('select', { class: 'ed-in', 'data-path': p + '.table', 'data-model-table': a, 'aria-label': 'Table of ' + a,
-        on: { change: function (e) { var v = e.target.value; ctx.change(function (d) { d.tables[a].table = v; }, p + '.table'); } } },
-        src.map(function (x) { return h('option', { value: x.table, selected: String(u.table).replace(/@.*$/, '') === x.table, text: x.table + (x.connector ? ' · ' + x.connector : '') }); }));
-      if (!src.some(function (x) { return x.table === String(u.table).replace(/@.*$/, ''); })) { sel.appendChild(h('option', { value: u.table, selected: true, text: u.table + ' (not found)' })); }
-      var role = h('select', { class: 'ed-in ed-narrow', 'data-path': p + '.role', 'data-model-role': a, 'aria-label': 'Role of ' + a,
-        on: { change: function (e) { var v = e.target.value; ctx.change(function (d) { d.tables[a].role = v; }, p + '.role'); } } },
-        ['fact', 'dimension'].map(function (r) { return h('option', { value: r, selected: (u.role || 'fact') === r, text: r }); }));
-      return h('tr', { 'data-path': p }, h('td', { text: a }), h('td', {}, sel), h('td', {}, role),
-        h('td', {}, remove(ctx, 'Remove ' + a, 'data-remove-alias', function () { ctx.change(function (d) { delete d.tables[a]; }, 'tables'); ctx.redraw(); })));
+      var u = doc.tables[a] || {};
+      var bare = String(u.table || '').replace(/@.*$/, '');
+      return { alias: a, table: src.some(function (x) { return x.table === bare; }) ? bare : u.table, role: u.role || 'fact' };
     });
-    panel.appendChild(grid(ctx, ['Alias', 'Table', 'Role', ''], rows, 'tables'));
+    var known = src.map(function (x) { return { value: x.table, label: x.table + (x.connector ? ' · ' + x.connector : '') }; });
+    panel.appendChild(E.rowGrid(ctx, 'tables', { label: 'The model\'s tables', rows: rows, id: function (r) { return r.alias; },
+      rowData: function (r) { return { path: 'tables.' + r.alias, modelTable: r.alias }; },
+      columns: [
+        { field: 'alias', header: 'Alias', width: 120 },
+        { field: 'table', header: 'Table', width: 260, options: choices(known, rows.map(function (r) { return r.table; }), ' (not found)'),
+          set: function (d, r, v) { d.tables[r.alias].table = v; } },
+        { field: 'role', header: 'Role', width: 120, options: ['fact', 'dimension'], set: function (d, r, v) { d.tables[r.alias].role = v; } },
+        { field: 'remove', header: '', width: 90, render: function (r) {
+          return remove(ctx, 'Remove ' + r.alias, 'data-remove-alias', r.alias, function () { ctx.change(function (d) { delete d.tables[r.alias]; }, 'tables'); ctx.redraw(); });
+        } }] }));
     panel.appendChild(addButton(ctx, '+ Table', 'data-add-table', function () {
       var first = src[0];
       if (!first) { E.say('No table to add: make one first.', true); return; }
@@ -134,21 +141,19 @@
     }));
     panel.appendChild(h('h3', { text: 'Relationships (from the many side)' }));
     var all = fields(ctx, doc).map(function (f) { return f.name; });
-    var rels = (doc.relationships || []).map(function (r, i) {
-      var p = 'relationships[' + i + ']';
-      function end(key) {
-        var s = h('select', { class: 'ed-in', 'data-path': p + '.' + key, 'data-rel': key + '-' + i, 'aria-label': key + ' of relationship ' + (i + 1),
-          on: { change: function (e) { var v = e.target.value; ctx.change(function (d) { d.relationships[i][key] = v; }, p + '.' + key); } } },
-          all.map(function (f) { return h('option', { value: f, selected: r[key] === f, text: f }); }));
-        if (all.indexOf(r[key]) < 0) { s.appendChild(h('option', { value: r[key] || '', selected: true, text: r[key] || '' })); }
-        return s;
-      }
-      return h('tr', { 'data-path': p }, h('td', {}, end('from')), h('td', {}, end('to')),
-        h('td', {}, h('input', { type: 'checkbox', checked: r.active !== false, 'data-rel-active': i, 'aria-label': 'Relationship ' + (i + 1) + ' is active',
-          on: { change: function (e) { var on = e.target.checked; ctx.change(function (d) { if (on) { delete d.relationships[i].active; } else { d.relationships[i].active = false; } }, p); } } })),
-        h('td', {}, remove(ctx, 'Remove relationship ' + (i + 1), 'data-remove-rel', function () { ctx.change(function (d) { d.relationships.splice(i, 1); if (!d.relationships.length) { delete d.relationships; } }, 'relationships'); ctx.redraw(); })));
-    });
-    panel.appendChild(grid(ctx, ['From', 'To', 'Active', ''], rels, 'relationships'));
+    var rels = (doc.relationships || []).map(function (r, i) { return { i: i, from: r.from || '', to: r.to || '', active: r.active !== false }; });
+    var ends = choices(all, rels.map(function (r) { return r.from; }).concat(rels.map(function (r) { return r.to; })));
+    panel.appendChild(E.rowGrid(ctx, 'relationships', { label: 'Relationships', rows: rels, id: function (r) { return r.i; },
+      rowData: function (r) { return { path: 'relationships[' + r.i + ']', rel: r.i }; },
+      columns: [
+        { field: 'from', header: 'From', width: 220, options: ends, set: function (d, r, v) { d.relationships[r.i].from = v; } },
+        { field: 'to', header: 'To', width: 220, options: ends, set: function (d, r, v) { d.relationships[r.i].to = v; } },
+        { field: 'active', header: 'Active', width: 80, type: 'boolean', set: function (d, r, v) { if (v) { delete d.relationships[r.i].active; } else { d.relationships[r.i].active = false; } } },
+        { field: 'remove', header: '', width: 90, render: function (r) {
+          return remove(ctx, 'Remove relationship ' + (r.i + 1), 'data-remove-rel', String(r.i), function () {
+            ctx.change(function (d) { d.relationships.splice(r.i, 1); if (!d.relationships.length) { delete d.relationships; } }, 'relationships'); ctx.redraw();
+          });
+        } }] }));
     panel.appendChild(addButton(ctx, '+ Relationship', 'data-add-rel', function () {
       ctx.change(function (d) { d.relationships = d.relationships || []; d.relationships.push({ from: all[0] || '', to: all[1] || all[0] || '' }); }, 'relationships');
       ctx.redraw();
@@ -161,28 +166,33 @@
   function fieldsTab(ctx, panel, doc) {
     var h = ctx.h;
     var used = JSON.stringify(doc.measures || {}) + JSON.stringify(doc.hierarchies || {}) + JSON.stringify(doc.security || {});
-    var rows = fields(ctx, doc).map(function (f) {
-      return h('tr', {}, h('td', { text: f.name }), h('td', { text: f.type }), h('td', { text: used.indexOf(f.name) >= 0 ? 'used' : '' }));
-    });
+    var rows = fields(ctx, doc).map(function (f) { return { name: f.name, type: f.type, used: used.indexOf(f.name) >= 0 ? 'used' : '' }; });
     panel.appendChild(h('p', { class: 'ed-small', text: 'Every column of the model\'s tables, as alias.COLUMN: what formulas, hierarchies and rules name. A column is added or renamed in its table.' }));
-    panel.appendChild(grid(ctx, ['Field', 'Type', 'In this model'], rows, 'fields'));
+    panel.appendChild(grid(ctx, 'fields', 'Fields', [['name', 'Field', 240], ['type', 'Type', 120], ['used', 'In this model', 120]], rows, function (r) { return { field: r.name }; }));
   }
 
   /* ---- Measures ----------------------------------------------------------------------------------------------------------------- */
   function measures(ctx, panel, doc) {
     var h = ctx.h;
     var rows = Object.keys(doc.measures || {}).map(function (m) {
-      var x = doc.measures[m] || {}, p = 'measures.' + m;
-      var f = (ctx.S.measureFacts || []).filter(function (y) { return y.name === m; })[0] || {};
-      return h('tr', { 'data-path': p, 'data-measure': m },
-        h('td', { text: m }),
-        h('td', {}, x.python ? h('span', { class: 'ed-small', 'data-python-measure': m, text: 'Python: ' + (typeof x.python === 'string' ? x.python : JSON.stringify(x.python)) + ' (edit it in the YAML)' }) : input(ctx, x.expr, p + '.expr', 'Formula of ' + m, function (d, v) { d.measures[m].expr = v; }, true)),
-        h('td', {}, input(ctx, x.format, p + '.format', 'Format of ' + m, function (d, v) { if (v.trim()) { d.measures[m].format = v; } else { delete d.measures[m].format; } })),
-        h('td', { 'data-adds-up': m, title: f.why || '', text: f.word ? (f.word === 'yes' ? 'yes ✓' : f.word === 'ratio' ? 'ratio · per total' : 'no · per total') : '' }),
-        h('td', {}, h('button', { type: 'button', class: 'ed-linkbtn', 'data-always': '', 'data-measure-card': m, 'aria-label': 'About ' + m, on: { click: function () { card(ctx, m); } } }, '?'),
-          ' ', remove(ctx, 'Remove ' + m, 'data-remove-measure', function () { ctx.change(function (d) { delete d.measures[m]; }, 'measures'); ctx.redraw(); })));
+      var x = doc.measures[m] || {};
+      return { name: m, expr: x.python ? 'Python: ' + (typeof x.python === 'string' ? x.python : JSON.stringify(x.python)) + ' (edit it in the YAML)' : x.expr || '', python: !!x.python, format: x.format || '' };
     });
-    panel.appendChild(grid(ctx, ['Name', 'Formula (Rachana)', 'Format', 'Adds up?', ''], rows, 'measures'));
+    function fact(m) { return (ctx.S.measureFacts || []).filter(function (y) { return y.name === m; })[0]; }
+    panel.appendChild(E.rowGrid(ctx, 'measures', { label: 'Measures', rows: rows, id: function (r) { return r.name; },
+      rowData: function (r) { return { path: 'measures.' + r.name, measure: r.name, pythonMeasure: r.python ? r.name : null }; },
+      columns: [
+        { field: 'name', header: 'Name', width: 140 },
+        { field: 'expr', header: 'Formula (Rachana)', width: 300, editor: 'code', editable: function (r) { return !r.python; }, set: function (d, r, v) { d.measures[r.name].expr = v || ''; } },
+        { field: 'format', header: 'Format', width: 110, set: function (d, r, v) { if (String(v || '').trim()) { d.measures[r.name].format = v; } else { delete d.measures[r.name].format; } } },
+        { field: 'addsUp', header: 'Adds up?', width: 130, render: function (r) {           // the engine's answer, read as the row is drawn (refresh draws it again)
+          var f = fact(r.name) || {};
+          return h('span', { 'data-adds-up': r.name, title: f.why || '', text: addsUp(f) });
+        } },
+        { field: 'actions', header: '', width: 120, render: function (r) {
+          return h('span', {}, h('button', { type: 'button', class: 'ed-linkbtn', 'data-always': '', 'data-measure-card': r.name, 'aria-label': 'About ' + r.name, on: { click: function () { card(ctx, r.name); } } }, '?'),
+            ' ', remove(ctx, 'Remove ' + r.name, 'data-remove-measure', r.name, function () { ctx.change(function (d) { delete d.measures[r.name]; }, 'measures'); ctx.redraw(); }));
+        } }] }));
     var name = h('input', { class: 'ed-in ed-narrow', 'data-new-measure-name': '', placeholder: 'Gross MTM', 'aria-label': 'Name of the new measure' });
     panel.appendChild(h('p', {}, name, ' ', h('button', { type: 'button', class: 'ed-btn', 'data-edit': '', 'data-add-measure': '', on: { click: function () {
       var n = name.value.trim();
@@ -207,13 +217,16 @@
   /* ---- Hierarchies -------------------------------------------------------------------------------------------------------------- */
   function hierarchies(ctx, panel, doc) {
     var h = ctx.h;
-    var rows = Object.keys(doc.hierarchies || {}).map(function (n) {
-      var p = 'hierarchies.' + n;
-      return h('tr', { 'data-path': p }, h('td', { text: n }),
-        h('td', {}, input(ctx, (doc.hierarchies[n] || []).join(', '), p, 'Levels of ' + n, function (d, v) { d.hierarchies[n] = v.split(',').map(function (s) { return s.trim(); }).filter(Boolean); }, true)),
-        h('td', {}, remove(ctx, 'Remove ' + n, 'data-remove-hierarchy', function () { ctx.change(function (d) { delete d.hierarchies[n]; }, 'hierarchies'); ctx.redraw(); })));
-    });
-    panel.appendChild(grid(ctx, ['Hierarchy', 'Levels, top first (alias.COLUMN, comma separated)', ''], rows, 'hierarchies'));
+    var rows = Object.keys(doc.hierarchies || {}).map(function (n) { return { name: n, levels: (doc.hierarchies[n] || []).join(', ') }; });
+    panel.appendChild(E.rowGrid(ctx, 'hierarchies', { label: 'Hierarchies', rows: rows, id: function (r) { return r.name; },
+      rowData: function (r) { return { path: 'hierarchies.' + r.name, hierarchy: r.name }; },
+      columns: [
+        { field: 'name', header: 'Hierarchy', width: 160 },
+        { field: 'levels', header: 'Levels, top first (alias.COLUMN, comma separated)', width: 380, editor: 'code',
+          set: function (d, r, v) { d.hierarchies[r.name] = String(v || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); } },
+        { field: 'remove', header: '', width: 90, render: function (r) {
+          return remove(ctx, 'Remove ' + r.name, 'data-remove-hierarchy', r.name, function () { ctx.change(function (d) { delete d.hierarchies[r.name]; }, 'hierarchies'); ctx.redraw(); });
+        } }] }));
     var name = h('input', { class: 'ed-in ed-narrow', 'data-new-hierarchy-name': '', placeholder: 'Desk and book', 'aria-label': 'Name of the new hierarchy' });
     panel.appendChild(h('p', {}, name, ' ', h('button', { type: 'button', class: 'ed-btn', 'data-edit': '', 'data-add-hierarchy': '', on: { click: function () {
       var n = name.value.trim();
@@ -230,21 +243,21 @@
     var rowsBy = (doc.security || {}).rows || {};
     var rows = [];
     Object.keys(rowsBy).forEach(function (a) {
-      (rowsBy[a] || []).forEach(function (r, i) {
-        var p = 'security.rows.' + a + '[' + i + ']';
-        var role = h('select', { class: 'ed-in ed-narrow', 'data-path': p + '.role', 'data-rule-role': a + i, 'aria-label': 'Role of rule ' + (i + 1) + ' on ' + a,
-          on: { change: function (e) { var v = e.target.value; ctx.change(function (d) { d.security.rows[a][i].role = v; }, p + '.role'); } } },
-          roles.map(function (x) { return h('option', { value: x, selected: String(r.role) === x, text: x }); }));
-        if (roles.indexOf(String(r.role)) < 0) { role.appendChild(h('option', { value: r.role, selected: true, text: String(r.role) })); }
-        rows.push(h('tr', { 'data-path': p }, h('td', { text: a }), h('td', {}, role),
-          h('td', {}, input(ctx, r.where, p + '.where', 'Rows of rule ' + (i + 1) + ' on ' + a, function (d, v) { d.security.rows[a][i].where = v; }, true)),
-          h('td', {}, remove(ctx, 'Remove rule ' + (i + 1) + ' on ' + a, 'data-remove-rule', function () {
-            ctx.change(function (d) { d.security.rows[a].splice(i, 1); if (!d.security.rows[a].length) { delete d.security.rows[a]; } }, 'security'); ctx.redraw();
-          }))));
-      });
+      (rowsBy[a] || []).forEach(function (r, i) { rows.push({ alias: a, i: i, role: r.role === undefined || r.role === null ? '' : String(r.role), where: r.where || '' }); });
     });
+    var offered = choices(roles, rows.map(function (r) { return r.role; }));
     panel.appendChild(h('p', { class: 'ed-small', text: 'A model\'s rules only narrow what the tables\' own rules allow. A role no rule names sees no rows of that table.' }));
-    panel.appendChild(grid(ctx, ['Table (alias)', 'Role', 'Sees the rows where (Rachana)', ''], rows, 'rules'));
+    panel.appendChild(E.rowGrid(ctx, 'rules', { label: 'Row rules', rows: rows, id: function (r) { return r.alias + '|' + r.i; },
+      rowData: function (r) { return { path: 'security.rows.' + r.alias + '[' + r.i + ']', rule: r.alias + r.i }; },
+      columns: [
+        { field: 'alias', header: 'Table (alias)', width: 130 },
+        { field: 'role', header: 'Role', width: 140, options: offered, set: function (d, r, v) { d.security.rows[r.alias][r.i].role = v; } },
+        { field: 'where', header: 'Sees the rows where (Rachana)', width: 340, editor: 'code', set: function (d, r, v) { d.security.rows[r.alias][r.i].where = v || ''; } },
+        { field: 'remove', header: '', width: 90, render: function (r) {
+          return remove(ctx, 'Remove rule ' + (r.i + 1) + ' on ' + r.alias, 'data-remove-rule', r.alias + r.i, function () {
+            ctx.change(function (d) { d.security.rows[r.alias].splice(r.i, 1); if (!d.security.rows[r.alias].length) { delete d.security.rows[r.alias]; } }, 'security'); ctx.redraw();
+          });
+        } }] }));
     panel.appendChild(addButton(ctx, '+ Row rule', 'data-add-rule', function () {
       var a = Object.keys(ctx.S.doc.tables || {})[0];
       if (!a) { E.say('Add a table first.', true); return; }
@@ -259,19 +272,16 @@
   /* ---- Masks -------------------------------------------------------------------------------------------------------------------- */
   function masks(ctx, panel, doc) {
     var h = ctx.h, masked = ((doc.security || {}).masked || []);
-    var list = h('div', { class: 'ed-picks', 'data-masks': '' });
-    fields(ctx, doc).forEach(function (f) {
-      list.appendChild(h('label', {}, h('input', { type: 'checkbox', checked: masked.indexOf(f.name) >= 0, 'data-mask': f.name, 'aria-label': 'Mask ' + f.name,
-        on: { change: function (e) {
-          var on = e.target.checked;
-          ctx.change(function (d) {
-            d.security = d.security || {};
-            var m = (d.security.masked || []).filter(function (x) { return x !== f.name; });
-            if (on) { m.push(f.name); }
-            if (m.length) { d.security.masked = m; } else { delete d.security.masked; if (!Object.keys(d.security).length) { delete d.security; } }
-          }, 'security.masked');
-        } } }), ' ' + f.name));
+    var names = fields(ctx, doc).map(function (f) { return f.name; });
+    var list = E.liveForm(ctx, 'ed-picks', 'Masked columns', {             // drishti-inputs' Form: a row of checkboxes, each with its data-mask hook
+      masked: { type: 'array', title: 'Masked columns', widget: 'checkboxes', optionHook: 'mask', items: { type: 'string', 'enum': names } } },
+    { masked: masked.filter(function (x) { return names.indexOf(x) >= 0; }) },
+    function (d, path, v) {
+      d.security = d.security || {};
+      var keep = (d.security.masked || []).filter(function (x) { return names.indexOf(x) < 0; }), m = keep.concat(v || []);   // a mask of a column not listed here stays
+      if (m.length) { d.security.masked = m; } else { delete d.security.masked; if (!Object.keys(d.security).length) { delete d.security; } }
     });
+    list.setAttribute('data-masks', '');
     panel.appendChild(h('p', { class: 'ed-small', text: 'A masked column shows ••• to every reader without the raw power, and cannot filter, sort or group.' }));
     panel.appendChild(list);
   }
@@ -283,9 +293,8 @@
     panel.appendChild(host);
     ctx.api('POST', 'access', { yaml: ctx.S.yaml, original: ctx.S.original }).then(function (r) {
       E.clear(host);
-      host.appendChild(grid(ctx, ['Role', 'Rows', 'Columns', 'May edit'], (r.roles || []).map(function (x) {
-        return h('tr', { 'data-access-role': x.role }, h('td', { text: x.role }), h('td', { text: x.rows }), h('td', { text: x.columns }), h('td', { text: x.edit ? 'yes' : 'no' }));
-      }), 'access'));
+      host.appendChild(grid(ctx, 'access', 'Who sees what', [['role', 'Role', 140], ['rows', 'Rows', 260], ['columns', 'Columns', 260], ['edit', 'May edit', 90]],
+        (r.roles || []).map(function (x) { return { role: x.role, rows: x.rows, columns: x.columns, edit: x.edit ? 'yes' : 'no' }; }), function (x) { return { accessRole: x.role }; }));
     }).catch(function (e) { E.clear(host).appendChild(h('p', { class: 'ed-bad', text: e.message })); })
       .then(function () { host.setAttribute('aria-busy', 'false'); });
   }
@@ -293,10 +302,8 @@
   /* ---- after a check or a preview ------------------------------------------------------------------------------------------------- */
   function refresh(ctx, host) {
     if (!host) { return; }
-    (ctx.S.measureFacts || []).forEach(function (f) {
-      var cell = host.querySelector('[data-adds-up="' + f.name.replace(/"/g, '') + '"]');
-      if (cell) { cell.textContent = f.word === 'yes' ? 'yes ✓' : f.word === 'ratio' ? 'ratio · per total' : 'no · per total'; cell.title = f.why || ''; }
-    });
+    var ms = host.querySelector('[data-rowgrid="measures"]');
+    if (ms && ms.grid) { ms.grid.refresh(); }                           // the "adds up?" cells read the engine's answer as they are drawn
     var cost = host.querySelector('[data-model-cost]');
     var pv = ctx.S.preview;
     if (cost && pv) {

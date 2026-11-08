@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One live channel: everything live one caller needs on ONE connection (docs/architecture/CLIENT_RENDERER.md, build step 4).
+"""One live channel: everything live one caller needs on ONE connection (docs/guides/EMBED_GUIDE.md, build step 4).
 
 Extracted from the console's ``/api/channel`` so the embed stream (``/embed/v1/channel``) runs the very same logic. The class
 knows no cookies, requests or session: the identity it runs as, the callable that turns an upstream event into what the
@@ -124,19 +124,19 @@ class ChannelSession:
         """The upstream stream of one subscription and whether it is a view (its events are rendered); ``(None, False)`` for an unknown one."""
         if sub.startswith(("view:", "vm:")) and "/" in sub:
             # view:kind/id?ctl.leg=L2: the stream is built with the reader's controls. vm: is the same stream for a page the client-side
-            # renderer draws (CLIENT_RENDERER.md 16): its panel patches stay panels (JSON), with no HTML; view: gets the console's HTML
+            # renderer draws (EMBED_GUIDE.md 16): its panel patches stay panels (JSON), with no HTML; view: gets the console's HTML
             base, ctl = controls.split_subscription(sub)
             kind, _, id_ = base.partition(":")[2].partition("/")
             more = {"controls": ctl} if ctl else {}
             return self.backend.stream(kind, id_, self.me, opened=responses, **more), ("vm" if sub.startswith("vm:") else True)
         if sub == "alerts":
-            return self.backend.sse("/me/alerts/stream", self.me, opened=responses), False
+            return self.backend.sse("/alerts/stream", self.me, opened=responses), False
         if sub.startswith("bilive:"):                        # Rupaka phase 5: a report's live tables changed (tick), how they are doing (status); no data
             return self.backend.sse(f"/bi/reports/{quote(sub[7:], safe='')}/live", self.me, opened=responses), False
         if sub.startswith("mq:") and len(sub) > 3:              # wave B: a standing query's pushed answers (answer) and its state (status)
             node = holder(sub[3:])                            # the node that holds it (sq-<node>-<hex>): the stream goes to its server when usable
             return self.backend.sse(f"/bi/mq/stream?ids={quote(sub[3:], safe='')}", self.me, opened=responses, **({"node": node} if node else {})), False
-        if sub == "biruns":                                   # BI runs (BI_DESIGN.md 3.5): the person's runs as they change (hello, run, status); no data
+        if sub == "biruns":                                   # BI runs (ARCHITECTURE.md §28 3.5): the person's runs as they change (hello, run, status); no data
             return self.backend.sse("/bi/runs/events", self.me, opened=responses), False
         if sub.startswith("monitor:"):
             return self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False
@@ -169,7 +169,7 @@ class ChannelSession:
             return True
 
     async def _pump(self, sub: str) -> None:
-        """Pumps one subscription. With several servers (CLUSTER_DEPLOYMENT.md 11.1) an upstream that breaks or ends because its server stopped is
+        """Pumps one subscription. With several servers (CLUSTER_GUIDE.md 11.1) an upstream that breaks or ends because its server stopped is
         opened again on the next server (the pool has set the stopped one aside by then), up to RESUME_TRIES times in a row, so an open page
         keeps ticking through a failover; without a pool, or after that, the browser is told the stream is gone."""
         responses = self.opened.setdefault(sub, [])

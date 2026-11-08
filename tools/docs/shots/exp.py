@@ -22,7 +22,7 @@ The pictures, in the guide's order: the bank with the counterparty board, a nett
 a trade in its netting set, the pre-deal what-if, a capture compared with now, the provenance, and the explorer on a phone."""
 from __future__ import annotations
 
-from _exp import open_exp, painted, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
+from _exp import open_exp, painted, predeal_check, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
 from shotlib import Ctx, register
 
 shot = register("exp")
@@ -70,14 +70,7 @@ def trade(c: Ctx):
 
 @shot("05-predeal.jpg")
 def predeal(c: Ctx):
-    open_exp(c, "/exposure?scope=" + SET)
-    painted(c, SET)
-    tab(c, "predeal")
-    c.page.locator("[data-xx-factor]").fill("-1")
-    c.page.locator("[data-xx-whatif]").click()
-    c.until("document.querySelector('[data-exposure]').dataset.whatif !== undefined", 120)
-    c.page.wait_for_timeout(600)
-    c.save("05-predeal.jpg", locator=".xx-main")
+    predeal_check(c, "PREDEAL CP-ALDERSHOT LIKE MX-30001587 REVERSE IN NS-ALDERSHOT-LDN", "05-predeal.jpg")
 
 
 @shot("06-capture-compare.jpg")
@@ -96,15 +89,6 @@ def capture(c: Ctx):
     c.save("06-capture-compare.jpg", locator=".xx-main")
 
 
-@shot("07-provenance.jpg")
-def provenance(c: Ctx):
-    open_exp(c, "/exposure?scope=CPTY:CP-ALDERSHOT")
-    painted(c, "CPTY:CP-ALDERSHOT")
-    c.page.locator("[data-xx-prov-box] summary").click()
-    c.page.wait_for_timeout(400)
-    c.save("07-provenance.jpg", locator="[data-xx-prov-box]")
-
-
 @shot("08-phone.jpg")
 def phone(c: Ctx):
     open_exp(c, "/exposure?scope=BANK", 390, 844)
@@ -115,12 +99,9 @@ def phone(c: Ctx):
 
 @shot("09-predeal-counterparty.jpg")
 def predeal_counterparty(c: Ctx):
-    open_exp(c, "/exposure?scope=CPTY:CP-ALDERSHOT")
+    open_exp(c, "/exposure?scope=CPTY:CP-ALDERSHOT")              # Pre-deal check › on the counterparty: the form at it
     painted(c, "CPTY:CP-ALDERSHOT")
-    tab(c, "predeal")
-    c.until("document.querySelectorAll('[data-xx-predeal-set] option').length > 0 && document.querySelectorAll('[data-xx-candidate] option').length > 0")
-    c.page.locator("[data-xx-factor]").fill("-1")
-    c.page.locator("[data-xx-whatif]").click()
-    c.until("document.querySelector('[data-exposure]').dataset.whatif !== undefined", 120)
+    c.page.locator("[data-xx-predeal]").click()
+    c.until("document.querySelector('[data-predeal]') && +(document.querySelector('[data-predeal]').dataset.trades || 0) > 0", 120)
     c.page.wait_for_timeout(600)
-    c.save("09-predeal-counterparty.jpg", locator=".xx-main")
+    c.save("09-predeal-counterparty.jpg")

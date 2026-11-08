@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Administrators: everyone's alerts on numbers, and the board tiles that notify (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20). #}
+{# Administrators: everyone's alerts on numbers, and the board tiles that notify (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20). #}
 {% extends "base.html" %}
 {% block title %}All alerts · {{ PRODUCT }}{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
@@ -48,6 +48,14 @@
         <td>{% set e = (b.history or [None])[0] %}{% if e %}<span class="mono text-muted-d">{{ when_local(e.at) }}</span> <b>{{ e.action }}</b>{% if e.user %} · {{ e.user }}{% endif %}<div class="cmp-path">{{ e.message }}</div>{% else %}—{% endif %}</td></tr>
       {% endfor %}</tbody></table></div>
     {% else %}<p class="text-muted-d">No published board has a tile with <code>notify</code>. Add <code>notify: true</code> to a tile's <code>alert</code> in the board's YAML.</p>{% endif %}
+  </div></section>
+  <section class="pnl" data-platform-alerts><header class="pnl-h"><h3>Platform alerts</h3><span class="pnl-code">{{ (platform.open or []) | length }} open</span></header><div class="pnl-b">
+    {% if not platform.enabled %}<p class="text-muted-d">The platform alert rules are off on this server (<span class="mono">drishti.metrics.alerts.enabled</span>).</p>
+    {% else %}<p class="text-muted-d">The rules of <span class="mono">{{ platform.file }}</span>, read against this server's own meters{% if platform.member %} ({{ platform.member }}){% endif %}.
+      Acknowledge, snooze or assign an open one on <a class="lnk" href="/alerts">Alerts</a>.</p>
+    {% if platform.open %}<ul class="alert-log" data-platform-open>{% for a in platform.open %}<li class="sev-{{ a.severity }}"><span class="mono">{{ when_local(a.openedAt) }}</span>
+      <span class="st st-{{ {'critical': 'bad', 'warn': 'warn'}.get(a.severity, 'ok') }}">{{ a.severity }}</span> <b>{{ a.rule }}</b> {{ a.summary }}</li>{% endfor %}</ul>
+    {% else %}<p class="text-muted-d">None open.</p>{% endif %}{% endif %}
   </div></section>
 </div>
 {% endblock %}

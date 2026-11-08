@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the report designer's core - the draft being edited (the report model the server parses and writes), its undo
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* Rupaka phase 3 (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 9): the report designer's core - the draft being edited (the report model the server parses and writes), its undo
    history, the page tabs, the YAML tab (the same draft as text; an edit in either appears in the other), Check, and Save. The canvas, the Fields pane and the
    Visualizations and Filters panes are in drishti_bi-design-canvas.js and drishti_bi-design-panes.js and talk to this through window.drishtiBi.design (events: 'model',
    'select', 'page', 'preview'). The draft is a report item of a workspace you may edit; a shipped report opens read-only and can be saved as a copy.
@@ -41,7 +42,7 @@
       if ((me.powers || []).indexOf('bi-author') < 0) {
         const note = h('p', { class: 'bi-warn', role: 'alert', 'data-need-author': '' }, h('strong', { text: 'You need the bi-author power to design. ' }), 'Your roles give you ' + ((me.powers || []).join(', ') || 'no BI power') + '. Ask an administrator to add bi-author to one of your roles (Admin, BI settings). You can still open published reports from the ', h('a', { href: '/bi/catalogue', text: 'catalogue' }), '.');
         q('[data-design-start]').before(note);
-        B.qa('form button[type=submit], form input, form select', q('[data-design-start]')).forEach((el) => { el.disabled = true; });
+        B.qa('form button[type=submit], form input, form drishti-select', q('[data-design-start]')).forEach((el) => { el.disabled = true; });
         B.qa('[data-sample-copy]', q('[data-design-start]')).forEach((el) => { el.disabled = true; });
       }
     }).catch(() => {});
@@ -95,7 +96,7 @@
       const name = B.slug(title) || 'my-report';
       const body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\n' + B.sourceLine(ref) + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
       const go = q('[data-new] [type=submit]');
-      const also = Array.prototype.filter.call(q('[data-new-also]').selectedOptions, (o) => o.value !== ref).map((o) => o.value.replace(/^file:dataset:/, ''));
+      const also = (q('[data-new-also]').value || []).filter((v) => v !== ref).map((v) => String(v).replace(/^file:dataset:/, ''));
       B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id) + (also.length ? '?also=' + encodeURIComponent(also.join(',')) : ''); }).catch((err) => B.near(go, err.message, true)));
     });
     return;
@@ -120,7 +121,8 @@
   D.dirty = false;
   D.readOnly = false;
   D.problems = [];
-  const undo = [], redo = [];
+  const hist = new window.Drishti.elements.designer.SnapshotHistory({ get: () => D.model, limit: 100,       // the undo history: drishti-designer's (snapshots of the draft)
+    set: (m, how) => { D.model = m; if (how === 'refused') { return; } D.dirty = true; afterChange(how); say(how === 'undo' ? 'Undone.' : 'Redone.'); } });
   const listeners = {};
   D.on = (ev, fn) => { (listeners[ev] = listeners[ev] || []).push(fn); };
   D.emit = (ev, arg) => { (listeners[ev] || []).forEach((fn) => fn(arg)); };
@@ -133,12 +135,7 @@
   /** Changes the draft: `fn` edits D.model; the change is one step of the undo history, and everything redraws. */
   D.change = function (label, fn) {
     if (D.readOnly) { say('This is read-only: save a copy to change it, or withdraw the proposal.', true); return false; }
-    const before = JSON.stringify(D.model);
-    fn(D.model);
-    if (before === JSON.stringify(D.model)) { return false; }
-    undo.push(before);
-    if (undo.length > 100) { undo.shift(); }
-    redo.length = 0;
+    if (!hist.change(label, (m) => { fn(m); })) { return false; }
     D.dirty = true;
     afterChange(label);
     return true;
@@ -155,22 +152,8 @@
     ((model && model.pages) || []).forEach((p) => (p.visuals || []).forEach((v) => { if (!v.wells) { v.wells = {}; } }));
     return model;
   };
-  D.undo = function () {
-    if (!undo.length) { return; }
-    redo.push(JSON.stringify(D.model));
-    D.model = JSON.parse(undo.pop());
-    D.dirty = true;
-    afterChange('undo');
-    say('Undone.');
-  };
-  D.redo = function () {
-    if (!redo.length) { return; }
-    undo.push(JSON.stringify(D.model));
-    D.model = JSON.parse(redo.pop());
-    D.dirty = true;
-    afterChange('redo');
-    say('Redone.');
-  };
+  D.undo = function () { hist.undo(); };
+  D.redo = function () { hist.redo(); };
   D.select = function (id) { D.selected = id; D.emit('select', id); };
   D.setPage = function (id) { D.pageId = id; D.selected = null; D.emit('page', id); D.emit('select', null); renderTabs(); };
 
@@ -206,14 +189,11 @@
   };
 
   /** Moves others down so nothing overlaps `moved` (and, in turn, each other). */
+  /** What `moved` overlaps goes down below it, and so on (drishti-designer's settle, as the canvas does it). */
   D.settle = function (page, moved) {
-    const hit = (a, b) => a.at.x < b.at.x + b.at.w && b.at.x < a.at.x + a.at.w && a.at.y < b.at.y + b.at.h && b.at.y < a.at.y + a.at.h;
-    const queue = [moved];
-    let guard = 0;
-    while (queue.length && guard++ < 500) {
-      const a = queue.shift();
-      page.visuals.filter((b) => b !== a && hit(a, b)).sort((p, r) => p.at.y - r.at.y).forEach((b) => { b.at.y = a.at.y + a.at.h; queue.push(b); });
-    }
+    const items = page.visuals.map((v) => ({ id: v.id, x: v.at.x, y: v.at.y, w: v.at.w, h: v.at.h, v }));
+    window.Drishti.elements.designer.settle(items, items.find((i) => i.v === moved));
+    items.forEach((i) => { i.v.at.y = i.y; });
   };
 
   D.firstFreeY = (page) => page.visuals.reduce((m, v) => Math.max(m, v.at.y + v.at.h), 0);
@@ -260,10 +240,11 @@
 
   // ---- wiring: the modules --------------------------------------------------------------------------------------------
   function updateButtons() {
-    q('[data-undo]').disabled = !undo.length;
-    q('[data-redo]').disabled = !redo.length;
+    q('[data-undo]').disabled = !hist.canUndo();
+    q('[data-redo]').disabled = !hist.canRedo();
     q('[data-save]').disabled = D.readOnly;
-    q('[data-state]').textContent = D.readOnly ? (D.item && D.item.status === 'proposed' ? 'Read-only (proposed)' : 'Read-only') : D.dirty ? 'Unsaved changes' : 'Saved';
+    const words = D.readOnly ? (D.item && D.item.status === 'proposed' ? 'Read-only (proposed)' : 'Read-only') : D.dirty ? 'Unsaved changes' : 'Saved';
+    if (B.studio && B.studio.state) { B.studio.state(words, D.item && D.item.status); }        // the status beside the name in the Studio's header
   }
 
   // ---- page tabs -----------------------------------------------------------------------------------------------------
@@ -309,7 +290,8 @@
 
   // ---- the YAML tab --------------------------------------------------------------------------------------------------
   let editor = null, ignoreChange = false, yamlTimer = null, textTimer = null, yamlStale = false;
-  const ta = q('[data-yaml]');
+  const ta = q('[data-yaml]');                        // where the code editor is drawn
+  let pendingText = '';
   /** Whether the tab's text is behind the draft (a change's text still on its way): the YAML view says so (data-yaml-current yes/no), so a reader waits for it. */
   function stale(on) {
     yamlStale = on;
@@ -319,10 +301,11 @@
 
   function setYamlText(text) {
     ignoreChange = true;
-    if (editor) { editor.setValue(text); } else { ta.value = text; }
+    if (editor) { editor.setValue(text); } else { pendingText = text; }
     ignoreChange = false;
   }
-  D.yamlText = () => (editor ? editor.getValue() : ta.value);
+  D.yamlText = () => (editor ? editor.getValue() : pendingText);
+  D.yamlEditor = () => editor;
 
   // yamlRev counts the draft's changes; yamlShown is the change the tab's text was written from. Two writes may cross (a change made while the
   // previous one's text is on its way): an older answer never replaces a newer one, and the tab stays stale until the newest change's text is in,
@@ -365,9 +348,8 @@
   function onYamlApply(r, text) {
     if (!B.same(r.report, D.model)) {
       const before = JSON.stringify(D.model);
-      undo.push(before);
-      redo.length = 0;
       D.model = D.normalize(r.report);
+      hist.record('Edit the YAML', before, JSON.stringify(D.model));
       D.dirty = true;
       stale(false);
       yamlShown = yamlRev;                                          // the text typed is the draft now: an older answer on its way is dropped
@@ -412,31 +394,22 @@
     });
   }
 
-  /** What the cursor is in, for the suggestions strip: type names after `type:`, fields and measures inside wells, keys elsewhere. */
+  /** What completes the cursor's place in the YAML tab (drishti-inputs' completion): type names after `type:`, fields and measures inside wells, keys elsewhere. */
   const KEYS = ['report', 'title', 'description', 'dataset', 'theme', 'dates', 'filters', 'bookmarks', 'layouts', 'pages', 'id', 'at', 'wells', 'sort', 'limit', 'hierarchy', 'drillthrough', 'format', 'text', 'alt', 'interacts', 'action', 'visuals'];
-  function suggest() {
-    const strip = B.clear(q('[data-suggest]'));
-    if (!editor || !D.idx) { return; }
-    const cur = editor.getCursor(), line = editor.getLine(cur.line).slice(0, cur.ch);
+  function suggest(c) {
+    if (!D.idx) { return []; }
+    const line = c.line.slice(0, c.ch);
     const m = /([A-Za-z0-9_.' -]*)$/.exec(line);
     const word = m ? m[1].replace(/^[ '-]+/, '') : '';
-    let pool = [];
+    let pool = [], kind = 'keyword';
     if (/type:\s*[\w-]*$/.test(line)) { pool = Object.keys(D.catalogue.visuals); } else if (/op:\s*[\w-]*$/.test(line)) { pool = ['in', 'not-in', 'eq', 'ne', 'lt', 'le', 'gt', 'ge', 'between', 'contains', 'starts-with', 'is-null', 'not-null', 'top']; }
     else if (/mode:\s*[\w-]*$/.test(line)) { pool = D.catalogue.slicerModes; } else if (/hierarchy:\s*[\w ]*$/.test(line)) { pool = Object.keys(D.idx.hierarchies); }
     else if (/(page|navigate):\s*[\w-]*$/.test(line)) { pool = D.model.pages.map((p) => p.id); }
-    else if (/(axis|legend|values|columns|rows|secondary|x|y|size|details|target|field|by)\s*:\s*[[{]?[^\]}]*$/.test(line) || /^\s*-\s/.test(line)) { pool = Object.keys(D.idx.columns).concat(Object.keys(D.idx.measures)); }
+    else if (/(axis|legend|values|columns|rows|secondary|x|y|size|details|target|field|by)\s*:\s*[[{]?[^\]}]*$/.test(line) || /^\s*-\s/.test(line)) { pool = Object.keys(D.idx.columns).concat(Object.keys(D.idx.measures)); kind = 'field'; }
     else { pool = KEYS; }
     const w = word.toLowerCase();
-    pool.filter((x) => !w || x.toLowerCase().indexOf(w) >= 0).slice(0, 14).forEach((x) => {
-      const b = h('button', { type: 'button', class: 'bi-suggest', text: x });
-      b.addEventListener('mousedown', (e) => e.preventDefault());
-      b.addEventListener('click', () => {
-        const from = { line: cur.line, ch: cur.ch - word.length };
-        editor.replaceRange(/\s/.test(x) || /[,:[\]{}#]/.test(x) ? JSON.stringify(x) : x, from, cur);
-        editor.focus();
-      });
-      strip.appendChild(b);
-    });
+    return pool.filter((x) => !w || x.toLowerCase().indexOf(w) >= 0).slice(0, 30)
+      .map((x) => ({ name: x, kind, insert: /\s/.test(x) || /[,:[\]{}#]/.test(x) ? JSON.stringify(x) : x, from: c.ch - word.length, to: c.ch }));
   }
 
   let tabNow = 'canvas';
@@ -470,7 +443,7 @@
       if (tab) { tab.setAttribute('aria-selected', t === name ? 'true' : 'false'); }
     });
     if (name !== 'paper') { D.emit('paper', 'hide'); }
-    if (name === 'yaml') { D.flushYaml().then(() => { if (editor) { editor.refresh(); editor.focus(); } else { ta.focus(); } suggest(); }); } else if (name === 'phone' || name === 'tablet' || name === 'paper') { D.emit(name, 'show'); } else { D.emit('model', 'show'); }
+    if (name === 'yaml') { D.flushYaml().then(() => { if (editor) { editor.refresh(); editor.focus(); } }); } else if (name === 'phone' || name === 'tablet' || name === 'paper') { D.emit(name, 'show'); } else { D.emit('model', 'show'); }
   }
 
   // ---- Check, Save ---------------------------------------------------------------------------------------------------
@@ -481,11 +454,8 @@
     head.hidden = run.hidden = sum.hidden = !tests.length;
     if (!tests.length || !itemId) { return; }
     const sel = q('[data-tests-role]');
-    if (!sel.options.length) {
-      B.api('GET', '/me').then((me) => {
-        sel.appendChild(h('option', { value: '', text: 'yourself' }));
-        (me.roles || []).forEach((r) => sel.appendChild(h('option', { value: r, text: r })));
-      }).catch(() => {});
+    if (!sel.component.options.length) {                                // drishti-inputs' Select: yourself, then each of your roles
+      B.api('GET', '/me').then((me) => sel.component.setOptions([{ value: '', label: 'yourself' }].concat(me.roles || []))).catch(() => {});
     }
     q('[data-tests-again]').onclick = () => D.flushYaml().then(runTests);
     sum.textContent = 'Running ' + tests.length + ' test' + (tests.length === 1 ? '' : 's') + '...';
@@ -538,14 +508,18 @@
   function publishNow() {
     const btn = q('[data-publish]');
     if (D.item && D.item.personal && !D.item.shipped) { B.near(btn, 'This report is in your private workspace, which cannot publish. Move it to a shared workspace (Move on its item page), then publish it there.', true); return Promise.resolve(); }
+    const done = (review) => (it) => {
+      D.item = it;
+      say(review ? 'Proposed for review. Open the item page to follow it; this draft is now frozen until it is approved or withdrawn.' : 'Published.');
+      window.setTimeout(() => { window.location.href = '/bi/i/' + B.id2path(itemId); }, 900);
+    };
     const go = () => {
       const review = D.item && D.item.workspaceReviewRequired;
-      const verb = review ? 'propose' : 'publish';
-      return B.api('POST', '/items/' + B.id2path(itemId) + '/' + verb, {}).then((it) => {
-        D.item = it;
-        say(review ? 'Proposed for review. Open the item page to follow it; this draft is now frozen until it is approved or withdrawn.' : 'Published.');
-        window.setTimeout(() => { window.location.href = '/bi/i/' + B.id2path(itemId); }, 900);
-      }).catch((e) => { B.near(btn, e.message, true); });
+      if (review && B.studio && B.studio.shell) {                    // four eyes: the kit's Propose for review asks a note for the reviewer, then files it
+        B.studio.shell.propose(D.item.title || 'the report', (note) => B.api('POST', '/items/' + B.id2path(itemId) + '/propose', { note: note }).then(done(true)));
+        return Promise.resolve();
+      }
+      return B.api('POST', '/items/' + B.id2path(itemId) + '/' + (review ? 'propose' : 'publish'), {}).then(done(review)).catch((e) => { B.near(btn, e.message, true); });
     };
     if (D.dirty) {
       return B.confirm(btn, 'There are unsaved changes. Save them first, then ' + ((D.item && D.item.workspaceReviewRequired) ? 'propose' : 'publish') + '?', 'Save and continue')
@@ -586,23 +560,33 @@
     q('[data-tab="tablet"]').addEventListener('click', () => showTab('tablet'));
     q('[data-tab="yaml"]').addEventListener('click', () => showTab('yaml'));
     if (q('[data-tab="paper"]')) { q('[data-tab="paper"]').addEventListener('click', () => showTab('paper')); }       // a statement page's paper and preview (2.6.0)
-    q('[data-preview]').addEventListener('change', (e) => { D.preview = e.target.checked; D.emit('preview', D.preview); });
+    q('[data-preview]').addEventListener('click', (e) => { D.preview = e.currentTarget.getAttribute('aria-pressed') === 'true'; D.emit('preview', D.preview); });     // the Studio's toggle
     D.preview = true;
-    document.addEventListener('keydown', (e) => {
-      const k = e.key.toLowerCase();
-      if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); save(); return; }
-      // Escape deselects the visual (outside a field, a dialog or the YAML editor), so the next field added starts a visual of its own
-      if (e.key === 'Escape' && D.selected && !e.target.closest('input,textarea,select,.CodeMirror,dialog,[role=dialog]')) { D.select(null); D.say('Nothing selected: a field added now starts a new visual.'); return; }           // saves from anywhere, the YAML editor too, and never opens the browser's own Save dialog
-      if ((e.ctrlKey || e.metaKey) && !e.target.closest('input,textarea,select,.CodeMirror')) {
-        if (k === 'z' && !e.shiftKey) { e.preventDefault(); D.undo(); } else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); D.redo(); }
-      }
-    });
+    // the designer's keys (the one keymap, drishti_keys.js); the visuals' own keys are their widgets', described so ? lists them
+    const K = window.Drishti.keys;
+    const outside = (e) => !e.target.closest('input,textarea,select,.CodeMirror');
+    // saves from anywhere, the YAML editor too, and never opens the browser's own Save dialog
+    K.register({ id: 'bi.design.save', keys: ['Ctrl+S', 'Meta+S'], scope: 'screen', area: 'bi-design', group: 'Designer', description: 'Save the draft',
+      typing: true, run: () => { save(); } });
+    // Escape deselects the visual (outside a field, a dialog or the YAML editor), so the next field added starts a visual of its own
+    K.register({ id: 'bi.design.deselect', keys: ['Escape'], scope: 'screen', area: 'bi-design', group: 'Designer', description: 'Deselect the visual',
+      keepDefault: true, when: (e) => !!D.selected && !e.target.closest('input,textarea,select,.CodeMirror,dialog,[role=dialog]'),
+      run: () => { D.select(null); D.say('Nothing selected: a field added now starts a new visual.'); } });
+    K.register({ id: 'bi.design.undo', keys: ['Ctrl+Z', 'Meta+Z'], scope: 'screen', area: 'bi-design', group: 'Designer', description: 'Undo',
+      when: outside, run: () => { D.undo(); } });
+    K.register({ id: 'bi.design.redo', keys: ['Ctrl+Y', 'Meta+Y', 'Ctrl+Shift+Z', 'Shift+Meta+Z', 'Ctrl+Shift+Y', 'Shift+Meta+Y'], scope: 'screen', area: 'bi-design',
+      group: 'Designer', description: 'Redo', when: outside, run: () => { D.redo(); } });
+    K.describe({ id: 'bi.design.walk', keys: ['Tab'], scope: 'panel', area: 'bi-design-canvas', group: 'Designer', description: 'Walk the panes and the visuals' });
+    K.describe({ id: 'bi.design.move', keys: ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'], scope: 'panel', area: 'bi-design-canvas', group: 'Designer',
+      description: 'On a visual: move it one cell; with Shift resize it' });
+    K.describe({ id: 'bi.design.delete', keys: ['Delete', 'Ctrl+D'], scope: 'panel', area: 'bi-design-canvas', group: 'Designer', description: 'On a visual: delete it; duplicate it' });
+    K.describe({ id: 'bi.design.format', keys: ['Enter'], scope: 'panel', area: 'bi-design-canvas', group: 'Designer', description: 'On a visual: go to its title in Format' });
     window.addEventListener('beforeunload', (e) => { if (D.dirty) { e.preventDefault(); e.returnValue = ''; } });
-    if (window.CodeMirror) {
-      editor = window.CodeMirror.fromTextArea(ta, { mode: 'rachana-yaml', lineNumbers: true, lineWrapping: true, indentUnit: 2, tabSize: 2, viewportMargin: Infinity, extraKeys: { Tab: (cm) => cm.replaceSelection('  ') } });
-      editor.on('change', onYamlEdit);
-      editor.on('cursorActivity', suggest);
-    } else { ta.addEventListener('input', onYamlEdit); }
+    {                                                  // the YAML tab: drishti-inputs' code editor in YAML mode, completing from the report's catalogue
+      editor = new window.Drishti.elements.inputs.CodeEditor(ta, { mode: 'yaml', label: 'Report YAML', lineWrapping: true, height: 560, complete: suggest, value: pendingText,
+        completeAfter: (before) => /(type|op|mode|hierarchy|page|navigate):\s$/.test(before) });
+      editor.on('change', () => { if (!ignoreChange) { onYamlEdit(); } });
+    }
   }
 
   /** A report draft that names no dataset has nothing to draw: ask for one (the datasets the person may read) and write `dataset:` into the draft. */
@@ -610,8 +594,7 @@
     if (/^(dataset|model):\s*\S/m.test(item.body || '')) { return Promise.resolve(); }      // a report on a model (drishti_bi-design-model.js) reads the model
     if (/^\s*layout:\s*board\b/m.test(item.body || '')) { return Promise.resolve(); }      // a board of tiles (R7) needs none; its own visuals do (add a model then)
     return B.api('GET', '/datasets').then((r) => new Promise((resolve) => {
-      const sel = h('select', { class: 'studio-select', 'data-pick-dataset': '', 'aria-label': 'Dataset for this report' }, h('option', { value: '', text: 'Choose a dataset' }));
-      (r.datasets || []).filter((d) => d.valid).forEach((d) => sel.appendChild(h('option', { value: d.id.replace(/^file:dataset:/, ''), text: d.title })));
+      const sel = B.select({ 'data-pick-dataset': '', 'aria-label': 'Dataset for this report' }, [['', 'Choose a dataset']].concat((r.datasets || []).filter((d) => d.valid).map((d) => [d.id.replace(/^file:dataset:/, ''), d.title])));
       const go = h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-pick-dataset-go': '', text: 'Use this dataset' });
       const box = h('section', { class: 'bi-form', 'data-choose-dataset': '', role: 'group', 'aria-label': 'Choose a dataset' },
         h('h2', { text: 'Choose a dataset' }), h('p', { class: 'text-muted-d', text: 'This report does not name a dataset yet, so there is nothing to draw. Choose the one it reads; you can change it later in the YAML tab.' }), sel, go);
@@ -638,12 +621,12 @@
     const viewAs = q('[data-view-as]');
     const viewHref = () => '/bi/r/' + B.id2path(itemId) + (viewAs.value === 'published' ? '?as=published' : '');
     q('[data-view-link]').href = viewHref();
-    if (item.publishedVersion > 0 || item.shipped) { viewAs.querySelector('option[value=published]').disabled = false; }
+    if (item.publishedVersion > 0 || item.shipped) { viewAs.component.setOptions(viewAs.component.options.map((o) => Object.assign({}, o, { disabled: false }))); }      // a Select (the shell's choice)
     viewAs.hidden = false;
     viewAs.addEventListener('change', () => { q('[data-view-link]').href = viewHref(); });
     q('[data-save-copy]').hidden = !D.readOnly;
     q('[data-dmain]').classList.toggle('bi-ro', D.readOnly);                       // the palette, the fields and the visuals' delete look switched off, as they are
-    q('[data-publish-label]').textContent = item.workspaceReviewRequired ? 'Propose' : 'Publish';
+    if (B.studio && B.studio.shell) { B.studio.shell.setLabel('propose', item.workspaceReviewRequired ? 'Propose' : 'Publish'); }
     q('[data-publish]').hidden = D.readOnly || !(item.can && (item.can.publish || item.can.propose || (item.personal && item.can.edit)));       // a private workspace shows Publish too: pressing it explains what to do
     const ro = q('[data-readonly]');
     if (D.readOnly) {
@@ -686,7 +669,7 @@
       const bad = (r.problems || []).filter((p) => p.level === 'error');
       if (bad.length) { say(bad.length + ' problem' + (bad.length === 1 ? '' : 's') + ' in the draft; see Check.', true); }
       if (D.pickedDataset) { D.dirty = true; updateButtons(); }
-      if (B.studio && B.studio.attach) {                              // BI Studio (2.4.0): this item joins the open tabs; the dock shows its problems and the selected visual's query
+      if (B.studio && B.studio.attach) {                              // BI Studio: this item joins the open items; the dock shows its problems and the selected visual's query
         B.studio.attach(D.item);
         dockProblems(D.item.body);
         const qh = B.studio.queryHost();

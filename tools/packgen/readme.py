@@ -19,7 +19,7 @@ tools/packgen/us_equities/make.py); this script writes the README of a pack with
 text: pack.yaml, the samples, the Sutras and config/about.yaml, plus the hand-written intro
 (tools/packgen/<generator>/readme/<pack>.intro.md or tools/packgen/intros/<pack>.intro.md).
 
-    python3 tools/packgen/readme.py news-and-markets          write config/packs/news-and-markets/README.md
+    python3 tools/packgen/readme.py news-and-markets          write config/packs/economy/news-and-markets/README.md
     python3 tools/packgen/readme.py --all --check             fail when a pack's README is missing, stale or breaks the standard
     python3 tools/packgen/readme.py my-pack --packs DIR       a pack in another folder (its intro is looked up the same way)
 """
@@ -56,12 +56,12 @@ def main(argv: list[str]) -> int:
     p.add_argument("--check", action="store_true")
     p.add_argument("--packs", dest="packs_dir", type=Path, default=ROOT / "config" / "packs")
     a = p.parse_args(argv)
-    names = sorted(d.name for d in a.packs_dir.iterdir() if (d / "pack.yaml").is_file()) if a.all else a.packs
+    names = list(R.PP.pack_dirs(a.packs_dir)) if a.all else a.packs
     if not names:
         p.error("name a pack, or --all")
     bad = []
     for name in names:
-        d = a.packs_dir / name
+        d = R.PP.pack_dir(name, a.packs_dir)
         if a.check:
             bad += [f"{name}: {x}" for x in check(d)]
             continue

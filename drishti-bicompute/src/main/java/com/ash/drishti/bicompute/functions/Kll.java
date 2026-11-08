@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * A KLL quantile sketch (Karnin, Lang and Liberty, 2016; PIVOT_ENGINE.md section 9.5), written in the module: Apache DataSketches (decision 2)
+ * A KLL quantile sketch (Karnin, Lang and Liberty, 2016; ARCHITECTURE.md section 26.6), written in the module: Apache DataSketches (decision 2)
  * is not resolvable offline in this build (only the 2017 {@code com.yahoo.datasketches} 0.9.0, which has no KLL), so the same algorithm is
  * here, about 300 lines, with the same parameter {@code k} and the same stated error (a normalised rank error of about 1.65% at k = 200,
  * DataSketches' published figure, measured by {@code SketchErrorTest} on seeded data).

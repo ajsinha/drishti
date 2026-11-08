@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Compiles cell sets to SQL (PIVOT_ENGINE.md section 6.2): every set that shares a restriction shape (the same restricted dimensions, the
+ * Compiles cell sets to SQL (ARCHITECTURE.md section 26.4): every set that shares a restriction shape (the same restricted dimensions, the
  * same exclusions and marks) goes into one statement, its groupings as {@code GROUP BY GROUPING SETS (...)} and its parents' coordinates as
  * one condition, so the cells, every subtotal level and the grand total come from one scan. The statement computes each function's
  * <em>state</em> (sums and counts, Welford's parts, a holistic figure of the set's own rows), never figures merged from other sets.

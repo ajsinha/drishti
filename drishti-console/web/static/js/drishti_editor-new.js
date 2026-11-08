@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* + New (docs/architecture/EDITORS.md section 1, option B): guided steps in plain language that land in the three-pane editor.
+/* + New (docs/architecture/SHARED_SCREENS.md section 1, option B): guided steps in plain language that land in the three-pane editor.
    A table: its name, its source (a kind or another table), the columns suggested from a sample of the source (the server's), check and
    open. A model: the four questions of its Overview (what it is about, what people look at it by, what numbers it gives, who may see what).
    A Python-driven table: its name and where to start (a template, a notebook, or empty). Built with DOM calls only. */
@@ -70,16 +70,15 @@
         });
       } else if (st.at === 1) {
         var src = ctx.sources();
-        var sel = h('select', { class: 'ed-in', 'data-new-source': '', 'aria-label': 'Where its rows come from' }, h('option', { value: '', text: 'Choose…' }));
-        var kinds = h('optgroup', { label: 'Kinds (any connector)' });
-        (src.kinds || []).forEach(function (k) { kinds.appendChild(h('option', { value: 'kind:' + k.kind, selected: st.source === 'kind:' + k.kind, text: k.kind + ' · ' + (k.connector || '') + (k.title ? ' · ' + k.title : '') })); });
-        var tables = h('optgroup', { label: 'Tables (a table over a table)' });
-        (src.tables || []).forEach(function (x) { tables.appendChild(h('option', { value: 'table:' + x.table, selected: st.source === 'table:' + x.table, text: x.table })); });
-        sel.appendChild(kinds); sel.appendChild(tables);
+        var choices = [{ value: '', label: 'Choose…' }]
+          .concat((src.kinds || []).map(function (k) { return { value: 'kind:' + k.kind, label: k.kind + ' · ' + (k.connector || '') + (k.title ? ' · ' + k.title : ''), group: 'Kinds (any connector)' }; }))
+          .concat((src.tables || []).map(function (x) { return { value: 'table:' + x.table, label: x.table, group: 'Tables (a table over a table)' }; }));
+        var sel = E.pick({ class: 'ed-pick', 'data-new-source': '', 'aria-label': 'Where its rows come from' }, choices,
+          choices.some(function (c) { return c.value === st.source; }) ? st.source : '');
         host.appendChild(h('div', { class: 'ed-form' }, h('label', {}, 'Where do its rows come from? ', sel),
           h('small', { text: 'Several tables may read one source, each with its own columns; dates follow the source.' })));
         nav(host, function () { st.at = 0; draw(); }, function () {
-          st.source = sel.value;
+          st.source = sel.value || '';
           if (!st.source) { E.say('Choose a source.', true); return; }
           E.say('Reading a sample of the source on the server…');
           if (st.source.indexOf('kind:') === 0) {
@@ -132,12 +131,12 @@
         var n = h('input', { class: 'ed-in', 'data-new-name': '', value: st.name, placeholder: 'risk-by-desk', 'aria-label': 'Name' });
         var t = h('input', { class: 'ed-in', 'data-new-title': '', value: st.title, placeholder: 'Risk by desk', 'aria-label': 'Title' });
         var d = h('textarea', { class: 'ed-in', rows: '2', 'data-new-about': '', 'aria-label': 'What it is about', placeholder: 'MTM and limits of every desk' }); d.value = st.description;
-        var f = h('select', { class: 'ed-in', 'data-new-fact': '', 'aria-label': 'The table of the things counted (the fact)' }, h('option', { value: '', text: 'Choose…' }),
-          tables.map(function (x) { return h('option', { value: x.table, selected: st.fact === x.table, text: x.table }); }));
+        var f = E.pick({ class: 'ed-pick', 'data-new-fact': '', 'aria-label': 'The table of the things counted (the fact)' },
+          [{ value: '', label: 'Choose…' }].concat(tables.map(function (x) { return x.table; })), tables.some(function (x) { return x.table === st.fact; }) ? st.fact : '');
         host.appendChild(h('div', { class: 'ed-form' }, h('label', {}, 'Name ', n), h('label', {}, 'Title ', t), h('label', {}, 'What is it about? ', d),
           h('label', {}, 'Which table holds the things it counts? ', f)));
         nav(host, null, function () {
-          st.name = n.value.trim(); st.title = t.value.trim(); st.description = d.value.trim(); st.fact = f.value;
+          st.name = n.value.trim(); st.title = t.value.trim(); st.description = d.value.trim(); st.fact = f.value || '';
           if (!nameOk(st.name, true)) { E.say('A model is named in lower case with hyphens (risk-by-desk).', true); return; }
           if (!st.fact) { E.say('Choose the table it counts.', true); return; }
           E.say(''); st.at = 1; draw();
@@ -166,7 +165,7 @@
         nav(host, function () { st.at = 1; draw(); }, function () { st.at = 3; draw(); });
       } else {
         var roles = ctx.sources().roles || [];
-        var role = h('select', { class: 'ed-in', 'data-new-role': '', 'aria-label': 'Role' }, h('option', { value: '', text: 'Everyone sees every row' }), roles.map(function (r) { return h('option', { value: r, text: r }); }));
+        var role = E.pick({ class: 'ed-pick', 'data-new-role': '', 'aria-label': 'Role' }, [{ value: '', label: 'Everyone sees every row' }].concat(roles), '');
         var where = h('input', { class: 'ed-in', 'data-new-where': '', placeholder: alias(st.fact) + '.DESK in user.desks', 'aria-label': 'Which rows the role sees (Rachana)' });
         E.formula(where, function () { return []; });
         host.appendChild(h('div', { class: 'ed-form' }, h('p', { text: 'The tables\' own rules always apply. You may narrow what a role sees in this model (more in the Row rules, Masks and Access tabs).' }),

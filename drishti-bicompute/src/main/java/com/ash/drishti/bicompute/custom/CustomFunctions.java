@@ -44,7 +44,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Custom aggregation functions (PIVOT_ENGINE.md section 8): defined in one of four languages, proven by the harness, saved as versions,
+ * Custom aggregation functions (ARCHITECTURE.md section 26.5): defined in one of four languages, proven by the harness, saved as versions,
  * private to their author until someone else approves them, audited at every step, labelled on every figure, never in an official run.
  *
  * <p>A view uses one as {@code fn:owner/name@version(FIELD, FIELD)}: the fields are bound by position to the function's declared inputs.
@@ -392,6 +392,29 @@ public final class CustomFunctions {
             out.add(m);
         }
         return out;
+    }
+
+    /**
+     * The versions waiting for approval, and those decided, that the caller takes part in: every one when they may approve (an approver or
+     * an administrator), else their own. For the Approvals queue.
+     */
+    public List<FunctionDef> reviewable(Viewer v) {
+        boolean decides = access.approver(v) || access.admin(v);
+        List<FunctionDef> out = new ArrayList<>();
+        for (FunctionDef latest : store.latest()) {
+            for (FunctionDef d : store.versions(latest.owner(), latest.name())) {
+                if (!"private".equals(d.status()) && (decides || d.owner().equals(v.user()))) {
+                    out.add(d);
+                }
+            }
+        }
+        return out;
+    }
+
+    /** May the caller approve this version: an approver who is not its author (a Java plug-in: an administrator). */
+    public boolean mayApprove(Viewer v, FunctionDef d) {
+        boolean may = d.language() == Language.JAVA ? access.admin(v) : access.approver(v) || access.admin(v);
+        return may && "submitted".equals(d.status()) && !(settings.requireApproval() && d.owner().equals(v.user()));
     }
 
     /** One version as the caller may see it (code included: approvers review it; readers see what computes their figures). */

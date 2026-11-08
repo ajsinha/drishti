@@ -35,7 +35,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.scheduling.support.CronExpression;
 
 /**
- * The server's wiring of the in-memory lake (docs/architecture/IN_MEMORY_LAKE.md; the lake itself is the plain-Java module
+ * The server's wiring of the in-memory lake (docs/architecture/DATA_ARCHITECTURE.md; the lake itself is the plain-Java module
  * {@code drishti-memlake}): {@code drishti.lake.memory.*} bound onto {@link MemoryLakeSettings}, the stores and replenish jobs, the guard
  * that keeps memory-only data off every disk, the cron parser, and the joins to the memory budget (an off-heap pool) and busy protection.
  * The stores are defined when the bean is made, before the connectors read them; the warm-up starts when the server is ready.
@@ -47,7 +47,7 @@ public class MemoryLakeConfiguration {
     @Bean
     public MemoryLakeSettings memoryLakeSettings(Environment env) {
         MemoryLakeSettings bound = Binder.get(env).bind("drishti.lake.memory", MemoryLakeSettings.class).orElseGet(MemoryLakeSettings::none);
-        // the stores are lakes (config/lakes/<store>.yaml, root: mem://<store>, IN_MEMORY_LAKE_GUIDE.md); the engine file keeps the switch,
+        // the stores are lakes (config/lakes/<store>.yaml, root: mem://<store>, docs/guides/DATA_LAKE_GUIDE.md); the engine file keeps the switch,
         // the replenish jobs and the compaction policy (the engine's work, not the lake's description)
         return bound.withLakeStores(com.ash.drishti.lakeconfig.Lakes.current(),
                 m -> org.slf4j.LoggerFactory.getLogger(MemoryLakeConfiguration.class).warn(m));
@@ -58,7 +58,7 @@ public class MemoryLakeConfiguration {
             ObjectProvider<com.ash.drishti.server.net.NetService> net,
             ObjectProvider<com.ash.drishti.server.admission.RequestsInFlight> inFlight,
             ObjectProvider<com.ash.drishti.server.engines.EngineSwitches> switches) {
-        // off (config/engines/memory-lake.yaml, COMPUTE_ENGINES.md): no store, no table, no job; on needs a restart (the direct-memory limit)
+        // off (config/engines/memory-lake.yaml, ADMIN_GUIDE.md): no store, no table, no job; on needs a restart (the direct-memory limit)
         com.ash.drishti.server.engines.EngineSwitches sw = switches.getIfAvailable();
         MemoryLakeSettings props = sw == null || sw.of("memory-lake").on() ? configured : MemoryLakeSettings.none();
         Set<String> owned = ownedHere(net.getIfAvailable());
@@ -72,7 +72,7 @@ public class MemoryLakeConfiguration {
     }
 
     /**
-     * The in-memory lake as a compute engine (docs/architecture/COMPUTE_ENGINES.md): off live releases its stores; on needs a restart (the
+     * The in-memory lake as a compute engine (docs/guides/ADMIN_GUIDE.md): off live releases its stores; on needs a restart (the
      * launchers add the stores' caps to the direct-memory limit at start), so Admin, Engines writes the file and says "restart needed".
      */
     @Bean

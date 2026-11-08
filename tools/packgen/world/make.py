@@ -16,7 +16,7 @@ markets, fiscal positions, country groups, regional economies) and the politics-
 jurisdictions, parties, office holders, elections, regions, social and governance indicators) in one pack. A core counterparty's
 `economy` field (its country of risk) opens the country's economy here.
 
-    python3 tools/packgen/world/make.py            write config/packs/world-economy
+    python3 tools/packgen/world/make.py            write config/packs/economy/world-economy
     python3 tools/packgen/world/make.py --check    fail if the pack differs from what would be written
     python3 tools/realdata/realdata.py all         refresh the data, then write the pack
 """
@@ -60,7 +60,7 @@ def _upper(e: PB.PackSpec) -> PB.PackSpec:
 def spec() -> PB.PackSpec:
     e, p = _upper(ECO.spec()), _upper(POL.spec())
     return dataclasses.replace(
-        e, name="world-economy", code="WRLD", title="World economy", generator="tools/packgen/world/make.py",
+        e, name="world-economy", domain="economy", code="WRLD", title="World economy", generator="tools/packgen/world/make.py",
         description=e.description.rstrip(".") + "; and governments and societies: government type, office holders, elections, parties with seats, "
                     "and social and governance indicators (CIA World Factbook, World Bank, UNDP).",
         domains={**e.domains, **p.domains}, examples=e.examples + p.examples, columns={**e.columns, **p.columns},

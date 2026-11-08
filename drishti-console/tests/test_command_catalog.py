@@ -21,6 +21,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from core.pack_paths import manifests
+
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -35,7 +37,7 @@ def test_the_catalog_is_current():
 
 def test_every_mnemonic_is_in_the_catalog_with_what_it_does():
     text = catalog.OUT.read_text(encoding="utf-8")
-    for path in ROOT.glob("config/packs/*/pack.yaml"):
+    for path in manifests():
         for code in (yaml.safe_load(path.read_text(encoding="utf-8")).get("mnemonics") or {}):
             row = next((ln for ln in text.splitlines() if ln.startswith(f"| `{code}` |")), None)
             assert row, f"{code} is not in the command catalog"

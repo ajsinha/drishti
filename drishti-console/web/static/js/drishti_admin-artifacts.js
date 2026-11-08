@@ -62,11 +62,8 @@
     none.hidden = shown > 0 || rows.length === 0;
   }
   [q, fKind, fState, fOrigin].forEach(function (c) { c.addEventListener('input', filter); c.addEventListener('change', filter); });
-  document.addEventListener('keydown', function (e) {
-    var t = e.target, typing = t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
-    if (typing || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('dialog[open]')) { return; }
-    if (e.key === '/') { e.preventDefault(); pick('installed'); q.focus(); }
-  });
+  window.Drishti.keys.register({ id: 'artifacts.filter', keys: ['/'], scope: 'screen', area: 'admin-artifacts', group: 'Artifacts', description: 'Find an installed artifact',
+    when: function () { return !document.querySelector('dialog[open]'); }, run: function () { pick('installed'); q.focus(); } });
 
   // ---- Enable ----------------------------------------------------------------------------------------------------------------------
   root.addEventListener('click', function (e) {
@@ -116,7 +113,8 @@
 
   // ---- a BI file: check it, see the impact, place it ----------------------------------------------------------------------------------
   var card = root.querySelector('[data-bi-install]'), file = card.querySelector('[data-bi-file]'), out = card.querySelector('[data-bi-result]');
-  var place = card.querySelector('[data-bi-place]'), repRow = card.querySelector('[data-bi-replace-row]'), rep = card.querySelector('[data-bi-replace]');
+  var place = card.querySelector('[data-bi-place]'), BF = window.Drishti.elements.inputs.formOf(card.querySelector('[data-bi-fields]'));   // the file and Replace (core/admin_forms.py)
+  function replacing() { return BF.getField('replace') === true; }
   var picked = null;
   function send(path, f, ok) {
     return fetch('/admin/artifacts/api/' + path, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: f })
@@ -128,7 +126,8 @@
     return ul;
   }
   file.addEventListener('change', function () {
-    out.textContent = ''; place.hidden = true; repRow.hidden = true; rep.checked = false; picked = file.files[0] || null;
+    out.textContent = ''; place.hidden = true; picked = file.files[0] || null;
+    BF.setField('replace', false); BF.setField('exists', false);                // Replace shows only when a file of that name is there
     if (!picked) { return; }
     send('bi/check?file=' + encodeURIComponent(picked.name), picked).then(function (res) {
       if (!res.ok) { out.appendChild(A.el('p', 't-bad', A.words(res.body))); return; }
@@ -138,22 +137,22 @@
       if (b.warnings.length) { out.appendChild(lines('t-warn', b.warnings)); }
       if (b.exists) {
         out.appendChild(A.el('p', '', 'A ' + b.subtype + ' named ' + b.name + ' is already there. Replacing it affects: ' + b.replacesImpact + '.'));
-        repRow.hidden = false;
+        BF.setField('exists', true);
       }
       place.hidden = !b.valid;
       place.disabled = b.exists;
     });
   });
-  rep.addEventListener('change', function () { place.disabled = !rep.checked; });
+  BF.on('change', function (e) { if (e.path === 'replace') { place.disabled = !replacing(); } });
   place.addEventListener('click', function () {
     if (!picked) { return; }
-    var name = picked.name.split('.')[0], replacing = rep.checked;
+    var name = picked.name.split('.')[0], replace = replacing();
     function go(confirmName) {
-      send('bi?file=' + encodeURIComponent(picked.name) + '&replace=' + (replacing ? 'true' : 'false') + '&confirm=' + encodeURIComponent(confirmName || ''), picked).then(function (res) {
+      send('bi?file=' + encodeURIComponent(picked.name) + '&replace=' + (replace ? 'true' : 'false') + '&confirm=' + encodeURIComponent(confirmName || ''), picked).then(function (res) {
         if (res.ok) { A.done('Placed ' + picked.name + (res.body.note ? ': ' + res.body.note.replace(/^placed /, '') : '') + '.' + ((res.body.also || []).length ? ' ' + res.body.also.join('; ') + '.' : '')); } else { say(A.words(res.body), true); }
       });
     }
-    if (!replacing) { go(''); return; }
+    if (!replace) { go(''); return; }
     A.typed({ title: 'Replace ' + name + '?', name: name, ok: 'Replace it', text: 'The file that is there is archived first, then this one is placed.' }).then(function (typed) { if (typed) { go(typed); } });
   });
 })();

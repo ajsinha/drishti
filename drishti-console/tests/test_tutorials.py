@@ -14,7 +14,7 @@
 
 """The hands-on tutorials (docs/tutorials/): every picture exists, every relative link and anchor resolves, and each tutorial has the parts a new reader needs.
 
-The pictures themselves are made by tools/docs/screenshots.py (guides t01 to t19); test_guide_images.py already fails for a picture no document shows or
+The pictures themselves are made by tools/docs/screenshots.py (one script per picture folder, tools/docs/shots/tNN.py); test_guide_images.py already fails for a picture no document shows or
 one the script cannot make. This file checks the tutorials as documents."""
 import re
 import subprocess
@@ -42,15 +42,16 @@ def slug(heading: str) -> str:
 
 def anchors(path: Path) -> set:
     text = re.sub(r"```.*?```", "", path.read_text(), flags=re.S)
-    return {slug(h) for h in HEADING.findall(text)}
+    explicit = set(re.findall(r'<a\s+(?:id|name)="([^"]+)"', text))      # a page's own anchors (the sample pages' one per kind)
+    return {slug(h) for h in HEADING.findall(text)} | explicit
 
 
 TRACKS = ["Start", "Risk engines", "BI and analysis", "Data in and out", "Build", "Operate"]
 
 
 def test_the_written_tutorials_are_the_ones_kept_and_the_index_names_every_one_once_in_a_track():
-    # A tutorial's number is its name: 22 was merged into 6 (part B) and 39 to 42 were never written (the tutorial tracks, 2026-11-04).
-    numbers = [n for n in range(1, 39) if n != 22] + [43, 44, 45]
+    # Twenty-two tutorials, one per major feature, numbered in track order (the docs rewrite, 2026-11-08).
+    numbers = list(range(1, 23))
     assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in numbers]
     index = (TUTORIALS / "README.md").read_text()
     rows = re.findall(r"^\|\s*(\d{1,2})\s*\|", index, re.M)
@@ -124,15 +125,16 @@ def test_no_tutorial_leaks_the_authors_scratch_folders_or_a_token(doc):
 
 
 def test_the_pictures_of_the_later_tutorials_are_made_by_the_script_and_shown_at_a_phone_width_where_it_matters():
-    """Tutorials 10 to 19: every picture is listed by the picture script (guides t10 to t19), and the ones about reports, embedding and governance show a phone."""
+    """The pictures in the folders t10 to t19, whichever tutorial shows them, are listed by the picture script (guides t10 to t19), and the
+    tutorials about reports and embedding show a phone."""
     listed = []
     for guide in (f"t{n}" for n in range(10, 20)):
         listed += subprocess.run([sys.executable, str(ROOT / "tools" / "docs" / "screenshots.py"), "--list", "--guide", guide], capture_output=True, text=True, cwd=ROOT).stdout.split()
-    for doc in sorted(TUTORIALS.glob("1[0-9]-*.md")):
+    for doc in WRITTEN:
         for rel in IMAGE.findall(doc.read_text()):
             if rel.startswith("img/t1"):
                 assert Path(rel).name in listed, f"{doc.name}: {rel} is not made by tools/docs/screenshots.py"
-    for name in ("10-first-bi-report.md", "13-govern-bi.md", "16-embed-drishti.md"):
+    for name in ("08-reports-and-dashboards.md", "20-embed-drishti.md"):
         assert re.search(r"phone|390 px", (TUTORIALS / name).read_text()), name
 
 

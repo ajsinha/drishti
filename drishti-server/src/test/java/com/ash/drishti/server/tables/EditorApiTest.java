@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * The editors' API (EDITORS.md sections 1 to 4) on a real server over the demo source: checks as typed with problems at their lines, the
+ * The editors' API (docs/architecture/SHARED_SCREENS.md sections 1 to 4) on a real server over the demo source: checks as typed with problems at their lines, the
  * visual side's document written back as the layer's YAML, the Text toggle's statement, a preview read as the person (totals by the pivot
  * engine), a model's measures with the engine's "adds up?", the Access matrix, saving and proposing with four eyes, the per-person view, and
  * the Python table's text work. Users: ann writes (bi-author), bob writes and approves, cat reads (bi), dan has no BI.
@@ -246,9 +246,9 @@ class EditorApiTest {
         JsonNode opened = ann(get("/api/v1/tables/editor/object").param("kind", "table").param("item", item), null);
         assertThat(opened.path("yaml").asText()).isEqualTo(yaml);
         assertThat(ann(post("/api/v1/tables/editor/propose"), Map.of("item", item, "note", "please")).path("status").asText()).isEqualTo("proposed");
-        assertThat(call("ann", "writer", post("/api/v1/bi/items/" + item + "/approve"), Map.of()).getResponse().getStatus()).isEqualTo(403);
-        JsonNode approved = ok("bob", "signoff", post("/api/v1/bi/items/" + item + "/approve"), Map.of("note", "fine"));
-        assertThat(approved.path("status").asText()).isEqualTo("published");
+        assertThat(call("ann", "writer", post("/api/v1/approvals/bi/" + item + "/approve"), Map.of()).getResponse().getStatus()).isEqualTo(403);
+        JsonNode approved = ok("bob", "signoff", post("/api/v1/approvals/bi/" + item + "/approve"), Map.of("comment", "fine"));
+        assertThat(approved.path("status").asText()).isEqualTo("approved");
         JsonNode history = ann(get("/api/v1/tables/editor/history").param("item", item), null);
         assertThat(history.path("versions").size()).isPositive();
         // a reader may look, not save
@@ -263,7 +263,7 @@ class EditorApiTest {
         String yaml = TABLE.replace("mine.trade_view", "mine.broken_view").replace("$.mtm / 1000", "$.mtm / 'x'");
         String item = ann(post("/api/v1/tables/editor/save"), Map.of("kind", "table", "yaml", yaml, "workspace", ws)).path("item").asText();
         ann(post("/api/v1/tables/editor/propose"), Map.of("item", item));
-        MvcResult r = call("bob", "signoff", post("/api/v1/bi/items/" + item + "/approve"), Map.of());
+        MvcResult r = call("bob", "signoff", post("/api/v1/approvals/bi/" + item + "/approve"), Map.of());
         assertThat(r.getResponse().getStatus()).isEqualTo(422);
         assertThat(r.getResponse().getContentAsString()).contains("cannot be published");
     }
@@ -276,6 +276,18 @@ class EditorApiTest {
         assertThat(mine.path("yamlOpen").asBoolean()).isFalse();
         assertThat(ok("cat", "reader", get("/api/v1/tables/editor/prefs"), null).path("mode").asText()).isEqualTo("both");
         assertThat(call("ann", "writer", put("/api/v1/tables/editor/prefs"), Map.of("mode", "diagram")).getResponse().getStatus()).isEqualTo(422);
+    }
+
+    @Test
+    void theDesignerLayoutIsRememberedPerPersonWithTheRestOfTheView() throws Exception {
+        assertThat(ann(get("/api/v1/tables/editor/prefs"), null).path("layout").asText()).isEqualTo("studio");
+        ann(put("/api/v1/tables/editor/prefs"), Map.of("layout", "terminal"));
+        ann(put("/api/v1/tables/editor/prefs"), Map.of("mode", "visual"));                     // another setting keeps the layout
+        JsonNode mine = ann(get("/api/v1/tables/editor/prefs"), null);
+        assertThat(mine.path("layout").asText()).isEqualTo("terminal");
+        assertThat(mine.path("mode").asText()).isEqualTo("visual");
+        assertThat(ok("cat", "reader", get("/api/v1/tables/editor/prefs"), null).path("layout").asText()).isEqualTo("studio");
+        assertThat(call("ann", "writer", put("/api/v1/tables/editor/prefs"), Map.of("layout", "dashboard")).getResponse().getStatus()).isEqualTo(422);
     }
 
     @Test

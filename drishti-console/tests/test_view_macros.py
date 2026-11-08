@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The view parts as macros (CLIENT_RENDERER.md › Drishti Elements: the design, step 5): the full page and the embed payload are rendered by the same templates,
+"""The view parts as macros (EMBED_GUIDE.md › Drishti Elements: the design, step 5): the full page and the embed payload are rendered by the same templates,
 so a panel's HTML is the same in both (the embed drops only the console-only help link and CSV download)."""
 import re
 
@@ -96,6 +96,8 @@ def test_how_this_view_was_built_links_its_sutra_to_the_designer_and_its_source_
     """The provenance panel: the Sutra that drew the page opens in the designer, the connector it was read from opens on its page."""
     from jinja2 import Environment, FileSystemLoader
     env = Environment(loader=FileSystemLoader(str(CONSOLE / "web" / "templates")), extensions=["jinja2.ext.do"])
+    from core import half_up
+    half_up.install(env)
     env.globals["design_on"] = lambda: True                 # the full product: Build and Studio on (the app sets it per request)
     t = env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}')
     fields = [{"label": "Layout", "text": "Sutra endur-comswap v2 + inference"}, {"label": "Fingerprint", "text": "a1b2"},

@@ -36,11 +36,11 @@ def test_the_cards_and_their_calls_are_the_persons(backend, monkeypatch):
     page = c.get("/pivot?source=trade").text
     assert "drishti_pivot-functions.js" in page
     for marker in ('data-pf-open="explain"', 'data-pf-open="whatif"', 'data-pf-open="functions"', 'data-pf-card="explain"',
-                   "data-pf-waterfall", "data-pf-by", "data-pf-exclude", "data-pf-change", "data-pf-code", "data-pf-sample", "data-pf-check",
+                   "data-pf-explain", "data-pf-by", "data-pf-exclude", "data-pf-change", "data-pf-code", "data-pf-sample", "data-pf-check",
                    "data-pf-save"):
         assert marker in page, marker
-    assert c.post("/api/pivot/explain", json={"view": {"source": "trade"}, "by": "DESK"}).status_code == 200
-    assert sent[-1][:4] == ("POST", "/explain", "alice", {"view": {"source": "trade"}, "by": "DESK"})
+    assert "data-pf-waterfall" not in page                                    # Why asks the one Explain (drishti-insight)
+    assert c.post("/api/pivot/explain", json={"view": {"source": "trade"}, "by": "DESK"}).status_code == 404
     assert c.post("/api/pivot/whatif", json={"view": {}, "whatIf": {"exclude": {"BOOK": ["B-17"]}}}).status_code == 200
     assert sent[-1][1] == "/whatif"
     assert c.get("/api/pivot/functions").status_code == 200 and sent[-1][:2] == ("GET", "/functions")
@@ -48,7 +48,6 @@ def test_the_cards_and_their_calls_are_the_persons(backend, monkeypatch):
     assert c.post("/api/pivot/functions/test", json={"name": "wret"}).status_code == 200 and sent[-1][1] == "/functions/test"
     c.get("/api/pivot/functions/asha/wret", params={"version": "2"})
     assert sent[-1][1] == "/functions/asha/wret" and sent[-1][4] == {"version": "2"}
-    no = c.post("/api/pivot/functions/asha/wret@1/approve", json={"reason": "mine", "scope": "everyone"})
-    assert no.status_code == 403 and no.json()["code"] == "DRS-5712"
+    assert c.post("/api/pivot/functions/asha/wret@1/approve", json={"reason": "mine", "scope": "everyone"}).status_code == 404   # in Approvals now
     assert c.post("/api/pivot/functions/asha/wret@1/revoke", json={"reason": "x"}).status_code == 200
     assert c.post("/api/pivot/functions/asha/wret@1/delete", json={}).status_code == 404

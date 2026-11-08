@@ -38,10 +38,10 @@ WATCH = """window.__csp = []; document.addEventListener('securitypolicyviolation
 #: What the page shows, as text: the tiles, the path's ranked table, the series and tail charts (each bar's height and class), the contributions.
 SNAPSHOT = """() => ({
   tiles: [...document.querySelectorAll('.vx-tile .v')].map(e => e.textContent),
-  path: [...document.querySelectorAll('[data-vx-pathtable] tbody tr')].map(tr => tr.textContent),
-  series: [...document.querySelectorAll('[data-vx-series] *')].filter(e => e.getAttribute && (e.getAttribute('height') || e.style.height)).map(e => (e.getAttribute('class') || '') + ':' + (e.getAttribute('height') || e.style.height)),
-  tail: [...document.querySelectorAll('[data-vx-tail] *')].filter(e => e.getAttribute && (e.getAttribute('height') || e.style.height)).map(e => (e.getAttribute('class') || '') + ':' + (e.getAttribute('height') || e.style.height)),
-  contrib: [...document.querySelectorAll('[data-vx-ctable] tbody tr')].map(tr => tr.textContent)
+  path: (() => { const g = ((document.querySelector('[data-vx-pathtable] drishti-grid') || {}).grid || null); if (!g) return []; const m = g.model, n = m.shownColumns().length, out = []; for (let r = 0; r < m.rowCount(); r++) { const t = []; for (let c = 0; c < n; c++) t.push(m.cellText(r, c)); out.push(t.join(' ')); } return out; })(),
+  series: JSON.stringify(((document.querySelector('[data-vx-series] drishti-chart') || {}).chart || {}).built ? document.querySelector('[data-vx-series] drishti-chart').chart.built.option.series[0].data : null),
+  tail: JSON.stringify(((document.querySelector('[data-vx-tail] drishti-chart') || {}).chart || {}).built ? document.querySelector('[data-vx-tail] drishti-chart').chart.built.option.series[0].data : null),
+  contrib: (() => { const g = ((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null); if (!g) return []; const m = g.model, n = m.shownColumns().length, out = []; for (let r = 0; r < m.rowCount(); r++) { const t = []; for (let c = 0; c < n; c++) t.push(m.cellText(r, c)); out.push(t.join(' ')); } return out; })()
 })"""
 
 WIDE = """() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1"""
@@ -70,12 +70,11 @@ def open_page(browser, base, query, block_arrow=False, size=None):  # noqa: F811
 
 def contributions(pg, by):
     pg.locator('.vx-tab[data-tab="contrib"]').click()
-    pg.wait_for_function("() => document.querySelectorAll('[data-vx-ctable] tbody tr').length > 1 && !/computing/.test(document.querySelector('[data-vx-ctable] tbody').textContent)")
+    pg.wait_for_function("() => (((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null) ? ((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null).model.rowCount() : 0) > 1")
     if by != "child":
-        first = pg.locator("[data-vx-ctable] tbody tr").first.text_content()
+        first = pg.evaluate("(() => { const g = ((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null); if (!g) return []; const m = g.model, n = m.shownColumns().length, out = []; for (let r = 0; r < m.rowCount(); r++) { const t = []; for (let c = 0; c < n; c++) t.push(m.cellText(r, c)); out.push(t.join(' ')); } return out; })()[0]")
         pg.locator(f'.vx-segb[data-by="{by}"]').click()
-        pg.wait_for_function("(f) => document.querySelector('[data-vx-ctable] tbody tr') && document.querySelector('[data-vx-ctable] tbody tr').textContent !== f "
-                             "&& !/computing/.test(document.querySelector('[data-vx-ctable] tbody').textContent)", arg=first)
+        pg.wait_for_function("(f) => (((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null) ? ((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null).model.rowCount() : 0) > 0 && (() => { const g = ((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null); if (!g) return []; const m = g.model, n = m.shownColumns().length, out = []; for (let r = 0; r < m.rowCount(); r++) { const t = []; for (let c = 0; c < n; c++) t.push(m.cellText(r, c)); out.push(t.join(' ')); } return out; })()[0] !== f", arg=first)
 
 
 def test_the_explorer_draws_the_same_from_arrow_and_from_json(stack, browser):  # noqa: F811
@@ -137,7 +136,7 @@ def test_without_arrow_js_the_page_asks_json_and_works(stack, browser):  # noqa:
     pg = open_page(browser, str(stack), "", block_arrow=True)
     assert pg.evaluate("window.Drishti.table.available()") is False
     contributions(pg, "trade")
-    assert pg.locator("[data-vx-pathtable] tbody tr").count() > 10
+    assert pg.evaluate("(((document.querySelector('[data-vx-pathtable] drishti-grid') || {}).grid || null) ? ((document.querySelector('[data-vx-pathtable] drishti-grid') || {}).grid || null).model.rowCount() : 0)") > 10
     assert all("arrow" not in a for _, a in pg.accepts), pg.accepts
     assert pg.errors == [], pg.errors
     pg.context.close()

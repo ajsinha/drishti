@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The Notebook (docs/guides/USER_GUIDE.md › The Notebook): the page. It opens a model as the reader's masked extract (POST /bi/notebook/extract), keeps the
    notebook, and saves or promotes through the BI item API. The SQL and Python cells are in drishti_bi-notebook-cells.js; slicing is the Pivot's.
    Text only, never markup. */
@@ -46,13 +47,25 @@
       });
   };
 
-  /** A table of columns and rows (text only), cut to `max` rows. */
+  /** A table of columns and rows as the cell answered them, cut to `max` rows, drawn by drishti-grid (Drishti Elements: sortable, the
+      first column pinned; it sums nothing), as tall as its rows up to 15 before it scrolls. */
   X.table = function (host, columns, rows, max) {
     clear(host);
+    var E = window.Drishti && window.Drishti.elements;
+    if (!E || !(E.grid || E.load)) { host.appendChild(h('p', { class: 'text-muted-d', text: 'The table needs the Elements grid (drishti-grid), which this page did not load.' })); return; }
+    if (!E.grid) { E.load('drishti-grid').then(function () { X.table(host, columns, rows, max); }); return; }
     var shown = rows.slice(0, max || MAX_SHOWN);
-    host.appendChild(h('table', { class: 'tbl bi-tbl', 'data-plain': '' },
-      h('thead', {}, h('tr', {}, columns.map(function (c) { return h('th', { scope: 'col', text: String(c) }); }))),
-      h('tbody', {}, shown.map(function (r) { return h('tr', {}, r.map(function (v) { return h('td', { class: typeof v === 'number' ? 'num' : '', text: v == null ? '' : String(v) }); })); }))));
+    var cols = columns.map(function (c, i) {
+      var num = shown.some(function (r) { return typeof r[i] === 'number'; });
+      return { id: 'c' + i, field: 'c' + i, header: String(c), type: num ? 'number' : 'text', pinned: i === 0 ? 'left' : null, enableRowGroup: false, enablePivot: false,
+        enableValue: false, format: function (v) { return v == null ? '' : String(v); } };
+    });
+    var data = shown.map(function (r, k) { var o = { __k: String(k) }; r.forEach(function (v, i) { o['c' + i] = v; }); return o; });
+    var box = h('div', { class: 'bi-nb-grid', 'data-grid': '' });
+    box.style.height = (Math.min(Math.max(data.length, 1), 15) + 2) * 28 + 6 + 'px';
+    host.appendChild(box);
+    new E.grid.Grid(box, { columns: cols, rows: data, getRowId: function (r) { return r.__k; }, layout: 'wells', density: 'compact', chrome: false,
+      checkboxes: false, rowSelection: 'none', clientAggregation: false, label: 'The cell\u2019s result' });
     if (rows.length > shown.length) { host.appendChild(h('p', { class: 'text-muted-d', text: 'Showing the first ' + shown.length + ' of ' + rows.length + ' rows.' })); }
   };
 
@@ -156,7 +169,7 @@
     return Promise.resolve();
   };
   /** The title of the open dataset in words (the model's), not its id. */
-  X.datasetTitle = function () { return (X.model && X.model.title) || (dsSel.selectedOptions[0] && dsSel.selectedOptions[0].textContent) || X.spec.dataset || 'data'; };
+  X.datasetTitle = function () { var o = dsSel.component.getOption(); return (X.model && X.model.title) || (o && o.value && o.label) || X.spec.dataset || 'data'; };
   /** A SQL cell (`extra`: {sql}) as a visual in a new report draft, or added to the report chosen above (its draft is saved with the new visual). */
   X.promoteReport = function (extra, label, anchor) {
     if (!X.spec || !X.ex) { X.tell(anchor, 'Open an extract first.', true); return Promise.resolve(); }
@@ -180,8 +193,8 @@
     var mine = list.filter(function (w) { return !w.shipped && (w.personal || ['contributor', 'member', 'owner', 'admin'].indexOf(w.role) >= 0); }).slice(0, 8);
     return Promise.all(mine.map(function (w) { return B.api('GET', '/workspaces/' + B.id2path(w.personal ? 'me' : w.id) + '/items').catch(function () { return []; }); }));
   }).then(function (lists) {
-    [].concat.apply([], lists.map(function (l) { return Array.isArray(l) ? l : (l.items || []); })).filter(function (it) { return it.kind === 'report'; })
-      .forEach(function (it) { targetSel.appendChild(h('option', { value: it.id, text: 'the report: ' + it.title })); });
+    var reports = [].concat.apply([], lists.map(function (l) { return Array.isArray(l) ? l : (l.items || []); })).filter(function (it) { return it.kind === 'report'; });
+    targetSel.component.setOptions(targetSel.component.options.concat(reports.map(function (it) { return { value: it.id, label: 'the report: ' + it.title }; })));      // drishti-inputs' Select
   }).catch(function () {});
   function link(it) { var a = q('[data-saved]', root); a.href = '/bi/i/' + B.id2path(it.id); a.hidden = false; }
   X.link = link;
@@ -216,7 +229,8 @@
     q('input[name=title]', root).value = nb.title || '';
     X.extras = (nb.extracts || []).map(function (e) { return { name: e.name, dataset: e.dataset, fields: e.fields }; });
     document.dispatchEvent(new CustomEvent('drishti:bx-extras'));
-    if (!Array.prototype.some.call(dsSel.options, function (o) { return o.value === nb.dataset; })) { dsSel.appendChild(h('option', { value: nb.dataset, text: nb.dataset })); }
+    var dsPick = dsSel.component;                                                                   // drishti-inputs' Select
+    if (!dsPick.options.some(function (o) { return o.value === nb.dataset; })) { dsPick.setOptions(dsPick.options.concat([{ value: nb.dataset, label: nb.dataset }])); }
     dsSel.value = nb.dataset;                                                                       // the Dataset select and its fields show what the notebook was saved with
     return loadModel(nb.dataset, nb.fields).catch(function () {}).then(function () { return X.open({ dataset: nb.dataset, fields: nb.fields }); });
   };
@@ -224,7 +238,7 @@
   var notebookSel = q('[data-notebooks]', root);
   function loadNotebooks() {
     return B.api('GET', '/catalogue?kind=notebook').then(function (d) {
-      (d.items || []).forEach(function (it) { notebookSel.appendChild(h('option', { value: it.id, text: it.title })); });
+      notebookSel.component.setOptions(notebookSel.component.options.concat((d.items || []).map(function (it) { return { value: it.id, label: it.title }; })));
     }).catch(function () {});
   }
   function openNotebook(id) {
@@ -232,7 +246,7 @@
       return X.post('/bi/notebook/check', { yaml: it.body || '' }).then(function (c) {
         if (!c.valid) { throw new Error(c.problems.map(function (p) { return p.code + ' ' + p.message; }).join('; ')); }
         X.item = it;
-        if (!Array.prototype.some.call(notebookSel.options, function (o) { return o.value === it.id; })) { notebookSel.appendChild(h('option', { value: it.id, text: it.title })); }   // a draft is not in the catalogue
+        if (!notebookSel.component.options.some(function (o) { return o.value === it.id; })) { notebookSel.component.setOptions(notebookSel.component.options.concat([{ value: it.id, label: it.title }])); }   // a draft is not in the catalogue
         notebookSel.value = it.id;
         return X.restore(c.notebook).then(function (r) {
           q('input[name=title]', root).value = it.title; link(it);                                   // the item's title is the notebook's name

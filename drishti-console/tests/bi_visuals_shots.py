@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of the wave 3 BI chapter (docs/tutorials/10-first-bi-report.md chapter 23, BI_GUIDE.md, BI_GUIDE.md) from the real stack (not a test: run it by hand).
+"""Makes the pictures and the captured output of the wave 3 BI chapter (docs/tutorials/08-reports-and-dashboards.md chapter 23, REPORTS_GUIDE.md, REPORTS_GUIDE.md) from the real stack (not a test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/bi_visuals_shots.py <pictures dir> <captures.json>
 
@@ -33,6 +33,7 @@ import bi_report_stack  # noqa: E402
 from bi_report_helpers import open_report, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, api  # noqa: E402
 from test_bi_new_visuals_browser import DATASET, DATASET_YAML, REPORT, REPORT_YAML, Stack  # noqa: E402
+from select_helpers import has_option
 
 
 def main(out: Path, captures: Path) -> None:
@@ -70,12 +71,12 @@ def main(out: Path, captures: Path) -> None:
 
                 dz = sign_in(browser, "wes")
                 dz.goto(CONSOLE_URL + "/bi/designer")
-                dz.wait_for_selector("[data-new-dataset] option[value='file:dataset:" + DATASET + "']", state="attached")
+                dz.wait_for_function(has_option("[data-new-dataset]", "file:dataset:" + DATASET))
                 dz.select_option("[data-new-dataset]", "file:dataset:" + DATASET)
                 dz.fill("[data-new-title]", "New visuals draft")
                 dz.click("[data-new] button[type=submit]")
                 dz.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
-                dz.click('.bi-vtype[data-type="map"]')
+                dz.click('[data-types] [data-type="map"]')
                 dz.wait_for_selector('[data-well="location"]')
                 dz.wait_for_timeout(500)
                 dz.locator("[data-fields-tree]").screenshot(path=str(out / "designer-fields.png"))

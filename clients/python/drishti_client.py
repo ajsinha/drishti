@@ -49,7 +49,7 @@ class DrishtiError(Exception):
 
 def _entity(kind: str, id_: str) -> tuple[str, dict]:
     """``kind/id`` for a path, and its query: an id a path cannot carry (with ``/`` or ``\\``, or ``.``, ``..``, ``~``)
-    goes in the query as ``id`` with ``~`` in its place, as every ``{kind}/{id}`` endpoint accepts (API_GUIDE)."""
+    goes in the query as ``id`` with ``~`` in its place, as every ``{kind}/{id}`` endpoint accepts (API_REFERENCE)."""
     k = urllib.parse.quote(kind, safe="")
     if "/" in id_ or "\\" in id_ or id_ in (".", "..", "~"):
         return f"{k}/~", {"id": id_}

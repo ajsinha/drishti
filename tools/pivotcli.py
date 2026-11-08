@@ -15,8 +15,8 @@
 """`drishti.py pivot ...`: the pivot engine from the command line (docs/guides/PIVOT_GUIDE.md; the API: /api/v1/pivot), as the token's user
 sees it: a view's answer (pivot run), its scan estimate (pivot estimate), an export (pivot export), the sources and a source's fields (pivot
 sources, pivot fields) and saved views (pivot views, pivot save); custom functions, explain and what-if are tools/pivotfncli.py's;
-the MR cube's lens on source var is pivot mr headline|cell|versions|explain|ladder|heat|whatif (docs/guides/MR_CUBE_GUIDE.md,
-/api/v1/pivot/mr). Every figure is the server's. Exit codes: 0, 1 (the server said no),
+the MR cube's lens on source var is pivot mr headline|cell|versions|explain|ladder|heat|whatif (docs/guides/PIVOT_GUIDE.md section 29,
+/api/v1/risk/mr). Every figure is the server's. Exit codes: 0, 1 (the server said no),
 2 (usage)."""
 from __future__ import annotations
 
@@ -281,20 +281,23 @@ def register(groups, srv, ctx: dict) -> None:
                 if not a.copy:
                     raise SystemExit("pivot mr whatif: name a booked trade to copy (--copy MX-1) and its --factor")
                 b["items"] = [{"copyOf": a.copy, "factor": a.factor}]
-            res = api.json("POST", "/api/v1/pivot/mr/" + {"headline": "headline", "cell": "detail", "whatif": "what-if"}[w], b)
+            res = api.json("POST", "/api/v1/risk/mr/" + {"headline": "headline", "cell": "detail", "whatif": "what-if"}[w], b)
         elif w == "versions":
-            res = api.json("GET", "/api/v1/pivot/mr/versions")
+            res = api.json("GET", "/api/v1/risk/mr/versions")
         else:
             q = {"scope": a.scope or "BANK"}
-            if w == "explain":
+            if w == "explain":                           # a cell's move: the one Explain of its VaR (kind var), Why it moved
                 q.update({k: v for k, v in (("from", a.from_), ("to", a.to)) if v})
-                path = "/api/v1/pivot/mr/explain?"
+                q.update(kind="var", part="why")
+                path = "/api/v1/explain?"
             else:
                 q.update({k: v for k, v in (("grid", a.grid), ("asOf", a.date)) if v})
                 if w == "heat":
                     q["by"] = a.by or "QUALIFIER,TENOR"
-                path = "/api/v1/pivot/mr/sensitivities?"
+                path = "/api/v1/risk/mr/sensitivities?"
             res = api.json("GET", path + urllib.parse.urlencode(q))
+            if w == "explain":
+                res = (res.get("why") or {}).get("answer", {})
         if a.json or w in ("versions", "ladder", "heat", "explain"):
             say_json(res)
         elif w == "headline":

@@ -64,27 +64,17 @@ document.addEventListener('click', function (e) {
       window.location.assign(url);
     });
   }
+  // The page's own date fields and long checkbox lists are drishti-inputs' pickers (upgraded in place: the field keeps its name and
+  // value, so forms submit as before); the as-of date is a business-date picker keyed by the server's holidays (data-holidays), from the
+  // oldest kept date to the current business date, with T-1 and month-end: a weekend or holiday is refused in words, naming the
+  // business day before it. A picked date shows that day's data as a static snapshot.
+  var I = window.Drishti.elements && window.Drishti.elements.inputs;
   var asof = document.querySelector('form[data-asof]');
-  var box = asof ? asof.querySelector('input[type="date"]') : null;
+  var box = asof ? asof.querySelector('#asofDate') : null;
+  if (box && !box.max) { var now = new Date(); box.max = box.getAttribute('data-current') || now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0'); }
+  if (I) { I.upgradeFields(document, { offClass: 'qf-dep-off' }); }
   if (asof && box) {
-    var holidays = (box.getAttribute('data-holidays') || '').split(',');
-    var now = new Date();
-    var today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-    if (!box.max || box.max > today) { box.max = box.getAttribute('data-current') || today; }   // never a day after today: the picker greys it out
-    box.addEventListener('change', function () {
-      if (!box.value) { return; }
-      if (box.max && box.value > box.max) {                                  // typed past the end: said, and nothing is asked
-        box.setCustomValidity('Pick ' + box.max + ' or earlier: there is no data after today.');
-        box.reportValidity();
-        return;
-      }
-      box.setCustomValidity('');
-      var d = new Date(box.value + 'T12:00:00Z').getUTCDay();
-      if (d === 0 || d === 6 || holidays.indexOf(box.value) >= 0) {
-        box.title = box.value + ' is not a business day: showing the business day before it';
-      }
-      asof.submit();
-    });
+    box.addEventListener('change', function () { if (box.value) { asof.submit(); } });
     // Known at (a picked date only): what the date looked like at that time; a restatement shows as a difference.
     var known = asof.querySelector('[data-asof-known]');
     if (known) { known.addEventListener('change', function () { asof.submit(); }); }
@@ -116,15 +106,13 @@ document.addEventListener('click', function (e) {
   });
 
   // F1: help for the screen you are on.
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'F1') {
-      if (e.defaultPrevented) { return; }                  // About this page took it (a view: the drawer opens)
-      e.preventDefault();
+  // A view's About this page takes F1 first (drishti_about.js); a screen may register its own F1 (Capacity's section of the guide).
+  window.Drishti.keys.register({ id: 'help.context', keys: ['F1', 'Alt+Shift+1'], scope: 'global', group: 'Help', description: 'Help for the screen you are on',
+    typing: true, run: function () {
       var go = function () { window.location.href = '/help/context/' + encodeURIComponent(document.body.getAttribute('data-screen') || 'landing'); };
       var held = window.Drishti.beforeLeave ? window.Drishti.beforeLeave() : null;      // a page with an edit waiting sends it first (UX-22)
       if (held && held.then) { held.then(go, go); } else { go(); }
-    }
-  });
+    } });
 
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-theme-choice]');
@@ -139,13 +127,11 @@ document.addEventListener('click', function (e) {
 (function () {
   'use strict';
   if (window.parent === window || !document.body.classList.contains('embed')) { return; }
-  document.addEventListener('keydown', function (e) {
-    if (!e.altKey || e.ctrlKey || e.metaKey) { return; }
-    var m = /^Digit([0-4])$/.exec(e.code || '') || /^([0-4])$/.exec(e.key || '');
-    if (!m) { return; }
-    e.preventDefault();
-    try { window.parent.postMessage({ type: 'drishti:key', n: +m[1] }, location.origin); } catch (err) { /* not ours */ }
-  }, true);
+  window.Drishti.keys.register({ id: 'workspace.pane.handup', keys: ['Alt+0', 'Alt+1', 'Alt+2', 'Alt+3', 'Alt+4'], scope: 'screen', area: 'workspace-pane',
+    group: 'Workspace', description: 'Move to pane 1 to 4 (0: the workspace bar), also from inside a pane', typing: true, capture: true,
+    run: function (e, chord) {
+      try { window.parent.postMessage({ type: 'drishti:key', n: +chord.slice(-1) }, location.origin); } catch (err) { /* not ours */ }
+    } });
 })();
 
 /* Server colours (ADR-016): set from data attributes, since the content security policy allows no inline styles. */
@@ -156,17 +142,23 @@ document.addEventListener('click', function (e) {
   });
 })();
 
-/* Build → Govern → Reviews shows how many proposals wait; asked when the menu opens, once (not on every page load). */
+/* The Approvals count (SHARED_SCREENS.md section 2): the items waiting for the signed-in person, on the top bar and in the menu entry; asked
+   once a page, after the page has drawn. */
 (function () {
   'use strict';
-  var asked = false;
-  document.addEventListener('show.bs.dropdown', function (e) {
-    var menu = e.target && e.target.closest ? e.target.closest('.tbar-menu') : null;
-    var badge = menu && menu.querySelector('[data-review-count]');
-    if (!badge || asked) { return; }
-    asked = true;
-    fetch('/build/review-count', { headers: { Accept: 'application/json' } }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
-      if (j && j.pending > 0) { badge.textContent = String(j.pending); badge.hidden = false; badge.setAttribute('aria-label', j.pending + ' waiting'); }
-    }).catch(function () { asked = false; });
-  });
+  var top = document.querySelector('[data-approvals-top]');
+  if (!top) { return; }
+  var show = function (j) {
+    if (!j || !(j.inbox > 0)) { return; }
+    var n = String(j.inbox), soon = j.dueSoon > 0 ? ', ' + j.dueSoon + ' due soon' : '';
+    top.textContent = n; top.hidden = false;
+    var tool = top.closest('[data-approvals-tool]');
+    if (tool) { tool.setAttribute('aria-label', n + ' approvals waiting for you' + soon); tool.classList.toggle('due', j.dueSoon > 0); }
+    document.querySelectorAll('[data-approvals-count]').forEach(function (b) { b.textContent = n; b.hidden = false; b.setAttribute('aria-label', n + ' waiting'); });
+  };
+  var ask = function () {
+    fetch('/approvals/api/count', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; }).then(show).catch(function () { /* the count is a hint: no count, no badge */ });
+  };
+  if (document.readyState === 'complete') { setTimeout(ask, 300); } else { window.addEventListener('load', function () { setTimeout(ask, 300); }); }
 })();

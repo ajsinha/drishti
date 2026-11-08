@@ -62,6 +62,9 @@ if not os.environ.get("DRISHTI_CONSOLE_TMP_DIR"):
 
 from harness_plugin import pytest_collection_modifyitems, pytest_configure  # noqa: E402,F401 - the hooks: distribution by test (TEST_HARNESS.md)
 from worker_fixtures import browsers, pack_views, render_site  # noqa: E402,F401 - the per-worker fixtures (TEST_HARNESS.md)
+import select_helpers  # noqa: E402
+
+select_helpers.install_playwright_shim()          # select_option and input_value on drishti-inputs' <drishti-select> (select_helpers.py)
 from core.app import create_app  # noqa: E402
 from core.backend import BackendError  # noqa: E402
 from core.config import load_settings  # noqa: E402
@@ -179,9 +182,6 @@ class FakeBackend:
 
     async def studio_settings(self, ident=None):
         return {"save": False}
-
-    async def proposals(self, ident=None, status="", name=""):
-        return {"enabled": False, "proposals": []}
 
     builder_allowed = True
     shaped = []                                   # the samples each builder_shape call was sent
@@ -599,7 +599,6 @@ class FakeBackend:
 
     enabled_packs = ["finance", "logistics"]
     monitors = {}
-    rules = {}
 
     async def mine(self, method, path, ident, body=None, **params):
         from urllib.parse import unquote
@@ -624,26 +623,12 @@ class FakeBackend:
                 except BackendError as err:
                     rows.append({"ref": e, "error": err.code})
             return rows
-        if parts[0] == "alerts":
-            if parts[-1] == "rules" and method == "GET":
-                return list(self.rules.values())
-            if len(parts) == 3 and method == "PUT":
-                if body.get("when", "").endswith("<"):
-                    raise BackendError(422, "DRS-2101", "alert expression: unexpected end")
-                self.rules[parts[2]] = {"name": parts[2], "ref": {"kind": body["kind"], "id": body["id"]},
-                                        "when": body["when"], "severity": body.get("severity", "warn")}
-                return self.rules[parts[2]]
-            if len(parts) == 3 and method == "DELETE":
-                self.rules.pop(parts[2], None)
-                return None
-            return [{"seq": 1, "at": "2026-09-30T12:00:05Z", "user": "ash", "rule": "Deep", "kind": "trade",
-                     "id": "IRS-48213", "severity": "warn", "message": "IRS-48213: MTM -412,580", "generation": 1}]
         raise BackendError(404, "DRS-1001", path)
 
     async def sse(self, path, ident=None, opened=None):
         yield "hello", "{}"
         if path.endswith("/alerts/stream"):
-            yield "alert", json.dumps({"seq": 2, "kind": "trade", "id": "IRS-48213", "severity": "critical", "message": "x"})
+            yield "notice", json.dumps({"seq": 2, "type": "alert", "kind": "alert", "id": "/alerts/measure/Deep", "title": "Deep — holds (trade/IRS-48213 · $.mtm < 0)"})
         else:
             yield "row", json.dumps({"kind": "trade", "id": "IRS-48213", "patches": [], "p99Ms": 3})
 
@@ -742,6 +727,16 @@ class FakeBackend:
         return {"current": "2026-09-30", "selected": "2026-09-30" if sel == "live" else ("2026-09-25" if sel == "2026-09-26" else sel),
                 "live": sel == "live", "previous": "2026-09-29", "earliest": "2021-09-30", "calendar": "USNY", "zone": "America/New_York",
                 "holidays": ["2026-10-12", "2026-11-11", "2026-11-26"]}
+
+    async def modules(self, ident=None):
+        """``GET /api/v1/modules`` as a server with every module on answers it: the shipped lenses (the core's and the banking module's
+        ``META-INF/drishti/lenses.yaml``), each with its modules, functions and Home cards; nothing off."""
+        import yaml
+        lenses = []
+        for f in ("drishti-server/src/main/resources/META-INF/drishti/lenses.yaml", "drishti-banking/src/main/resources/META-INF/drishti/lenses.yaml"):
+            lenses += (yaml.safe_load((CONSOLE.parent / f).read_text(encoding="utf-8")) or {}).get("lenses") or []
+        return {"modules": [{"id": m, "title": m, "domain": m} for m in ("core", "banking", "economy", "capitalmarkets")], "off": [],
+                "lenses": lenses, "functions": {"off": []}}
 
     async def about(self, ident=None):
         return {"product": "Drishti", "version": "1.2.0", "built": "2026-09-30T12:00:00Z", "java": "21.0.12 (Ubuntu)",
@@ -857,19 +852,22 @@ class FakeBackend:
     def _alert_words(b):
         c, s = b.get("condition", {}), b.get("source", {})
         label = {"visual": f"{s.get('report')} · {s.get('visual')}", "dataset": f"{s.get('dataset')} · {s.get('measure')}", "field": f"{s.get('kind')}/{s.get('id')} · {s.get('field')}"}.get(s.get("type"), "")
-        say = {"threshold": f"{c.get('op')} {c.get('value'):g}" if "value" in c else "", "change": f"{c.get('op')} by {c.get('value')}", "nodata": f"no data by {c.get('by')}"}.get(c.get("type"), "")
+        say = {"threshold": f"{c.get('op')} {c.get('value'):g}" if "value" in c else "", "change": f"{c.get('op')} by {c.get('value')}", "nodata": f"no data by {c.get('by')}",
+               "rule": f"holds: {s.get('field')}"}.get(c.get("type"), "")
         link = {"visual": f"/bi/r/{s.get('report')}/{s.get('page')}", "dataset": f"/bi/i/{s.get('dataset')}", "field": f"/v/{s.get('kind')}/{s.get('id')}"}.get(s.get("type"), "/")
         return label, say, link
 
-    async def measure_alerts(self, ident):
+    async def alert_rules(self, ident):
         return [a for a in self.alerts_kept.values() if a["owner"] == ident.user]
 
-    async def measure_alert(self, name, ident):
+    async def alert_rule(self, name, ident):
         if name not in self.alerts_kept:
             raise BackendError(404, "DRS-1001", f"no alert '{name}'")
         return self.alerts_kept[name]
 
-    async def save_measure_alert(self, name, body, ident):
+    async def save_alert_rule(self, name, body, ident):
+        if body.get("condition", {}).get("type") == "rule" and str(body.get("source", {}).get("field", "")).endswith("<"):
+            raise BackendError(422, "DRS-2101", "field: unexpected end of the expression")
         if body.get("condition", {}).get("op") == "under":
             raise BackendError(422, "DRS-9062", "condition.op is above, below, between or outside")
         if body.get("condition", {}).get("type") == "threshold" and "value" not in body.get("condition", {}):
@@ -882,41 +880,124 @@ class FakeBackend:
                                   "state": {}, "history": old.get("history", [])}
         return self.alerts_kept[name]
 
-    async def delete_measure_alert(self, name, ident):
+    async def delete_alert_rule(self, name, ident):
         self.alerts_kept.pop(name, None)
 
-    async def check_measure_alert(self, name, ident):
+    async def check_alert_rule(self, name, ident):
         a = self.alerts_kept[name]
         a["state"] = {ident.user: {"active": True}}
         a["history"].insert(0, {"id": 7, "at": "2026-10-11T15:00:00Z", "user": ident.user, "action": "fired", "severity": "warn", "message": f"{a['title']}: now 1,200 ({a['describe']})",
                                  "delivered": {"inbox": "ok", "email": "off", "bridge": "off"}})
         return a
 
-    async def pause_measure_alert(self, name, resume, ident):
+    async def pause_alert_rule(self, name, resume, ident):
         self.alerts_kept[name]["enabled"] = resume
         return self.alerts_kept[name]
 
-    async def preview_measure_alert(self, body, ident):
+    async def preview_alert_rule(self, body, ident):
         if body["source"].get("measure") == "secret":
             return {"status": "masked", "value": None, "asOf": None, "note": "secret", "condition": "above 1", "live": False}
         return {"status": "ok", "value": 1234.5, "asOf": "2026-10-09", "note": "", "condition": "above 1000", "holds": True, "live": True}
 
-    async def all_measure_alerts(self, ident):
+    async def admin_alerts(self, ident):
+        """The one alert engine's overview: everyone's rules, the board tiles that notify, the platform alerts (administrators)."""
         if not getattr(ident, "is_admin", True):
             raise BackendError(403, "DRS-5002", "administrators only")
-        return list(self.alerts_kept.values())
+        boards = [{"name": "t1", "owner": "ash", "title": "Desk wall · Net exposure", "severity": "critical", "board": {"board": "desk-wall", "page": "p1", "tile": "t1"},
+                   "describe": "reaches crit", "delivery": {"inbox": True, "email": True, "bridge": False}, "trigger": {"mode": "live", "debounce": "10s"}, "activeFor": 2,
+                   "link": "/bi/b/desk-wall", "history": [{"at": "2026-10-11T15:00:00Z", "user": "bob", "action": "fired", "message": "Desk wall · Net exposure — is now red"}]}]
+        platform = {"enabled": True, "member": "node-a", "file": "config/alerts/platform-alerts.yaml",
+                    "open": [{"rule": "disk-free-near-guard", "severity": "warn", "summary": "free disk is 1.8 times the guard", "openedAt": "2026-10-11T14:00:00Z"}]}
+        return {"rules": list(self.alerts_kept.values()), "boards": boards, "platform": platform}
 
-    async def board_alerts(self, ident):
-        if not getattr(ident, "is_admin", True):
-            raise BackendError(403, "DRS-5002", "administrators only")
-        return [{"name": "t1", "owner": "ash", "title": "Desk wall · Net exposure", "severity": "critical", "board": {"board": "desk-wall", "page": "p1", "tile": "t1"},
-                 "describe": "reaches crit", "delivery": {"inbox": True, "email": True, "bridge": False}, "trigger": {"mode": "live", "debounce": "10s"}, "activeFor": 2,
-                 "link": "/bi/b/desk-wall", "history": [{"at": "2026-10-11T15:00:00Z", "user": "bob", "action": "fired", "message": "Desk wall · Net exposure — is now red"}]}]
+    #: the alerts raised, by id: what /api/v1/alerts answers (the person's own, and the platform's for an administrator)
+    raised_kept = {}
 
-    async def admin_pause_measure_alert(self, owner, name, resume, ident):
+    async def raised_alerts(self, ident, stage="open"):
+        mine = [c for c in self.raised_kept.values() if c["owner"] == ident.user or c["source"] == "platform" and getattr(ident, "is_admin", False)]
+        return [c for c in mine if stage == "all" or c["stage"] != "resolved"]
+
+    async def act_on_alert(self, action, body, ident):
+        c = self.raised_kept.get(body.get("id"))
+        if c is None or c["owner"] != ident.user and not (c["source"] == "platform" and getattr(ident, "is_admin", False)):
+            raise BackendError(404, "DRS-1001", "no alert " + str(body.get("id")))
+        if action == "acknowledge":
+            c.update(stage="acknowledged", ackBy=ident.user, assignee=c.get("assignee") or ident.user)
+        elif action == "resolve":
+            c.update(stage="resolved", resolvedBy=ident.user, resolvedAt="2026-10-11T16:00:00Z", how="by hand", note=body.get("note") or "")
+        elif action == "snooze":
+            if body.get("for") not in ("1h", "4h", "1d", "0"):
+                raise BackendError(400, "DRS-5001", "snooze for a time such as 15m, 1h or 1d")
+            c["snoozedUntil"] = None if body.get("for") == "0" else "2026-10-11T17:00:00Z"
+        elif action == "assign":
+            if c["source"] != "platform":
+                raise BackendError(400, "DRS-5001", "assign is for the platform alerts")
+            c["assignee"] = body.get("to")
+        return c
+
+    #: the Approvals queue: items by (kind, id), questions by the same key
+    approvals_kept = {}
+    approval_questions = {}
+
+    @staticmethod
+    def _sees(it, ident):
+        """The maker ("@me": whoever asks) and the approvers ("*": anyone but the maker) see an item."""
+        return it["maker"] in (ident.user, "@me") or ident.user in it.get("approvers", []) or "*" in it.get("approvers", [])
+
+    def _approval_item(self, it, ident):
+        mine = it["maker"] in (ident.user, "@me")
+        decides = ident.user in it.get("approvers", []) or "*" in it.get("approvers", [])
+        return dict(it, maker=ident.user if mine else it["maker"], mine=mine, mayDecide=it["status"] == "pending" and not mine and decides,
+                    mayWithdraw=mine and it["status"] == "pending")
+
+    async def approvals_list(self, ident, box="inbox", group="", kind=""):
+        items = [self._approval_item(i, ident) for i in self.approvals_kept.values() if self._sees(i, ident)]
+        inbox = [i for i in items if i["status"] == "pending" and i["mayDecide"]]
+        pick = {"inbox": inbox, "sent": [i for i in items if i["mine"]], "done": [i for i in items if i["status"] != "pending"], "all": items}[box]
+        pick = [i for i in pick if (not group or i["group"] == group) and (not kind or i["kind"] == kind)]
+        entries = [{"item": i, "label": i["kind"].title(), "group": i["group"], "dueSoon": bool(i.get("due")), "questions": len(self.approval_questions.get((i["kind"], i["id"]), []))}
+                   for i in pick]
+        entries.sort(key=lambda e: (not e["dueSoon"], e["item"].get("due") or "", "" if e["dueSoon"] else ""), reverse=False)
+        return {"items": entries, "inbox": len(inbox), "dueSoon": len([i for i in inbox if i.get("due")]), "unavailable": [],
+                "kinds": [{"kind": k, "label": k.title(), "group": g, "enabled": True} for k, g in (("sutra", "screens"), ("change", "data"), ("bi", "data"),
+                                                                                                     ("var-report", "risk"), ("compute", "access"))]}
+
+    async def approvals_count(self, ident):
+        d = await self.approvals_list(ident)
+        return {"inbox": d["inbox"], "dueSoon": d["dueSoon"]}
+
+    async def approvals_item(self, kind, id_, ident):
+        it = self.approvals_kept.get((kind, id_))
+        if it is None or not self._sees(it, ident):
+            raise BackendError(404, "DRS-2005", f"no {kind} {id_} for you")
+        i = self._approval_item(it, ident)
+        actions = (["approve", "reject"] if i["mayDecide"] else []) + (["withdraw"] if i["mayWithdraw"] else []) + ["ask"]
+        return {"detail": {"item": i, "diff": {"format": "lines", "rows": [{"op": "changed", "left": "title: Before", "right": "title: After"}]},
+                           "effect": ["Every view drawn from it changes at once"], "rules": ["An approver decides; never the person who proposed it (four eyes)"],
+                           "facts": {"version": 2}},
+                "label": kind.title(), "group": it["group"], "dueSoon": bool(it.get("due")), "questions": self.approval_questions.get((kind, id_), []), "actions": actions}
+
+    async def approvals_act(self, kind, id_, action, body, ident):
+        it = self.approvals_kept.get((kind, id_))
+        if it is None:
+            raise BackendError(404, "DRS-2005", f"no {kind} {id_}")
+        if action == "questions":
+            q = self.approval_questions.setdefault((kind, id_), [])
+            q.append({"at": "2026-11-07T10:00:00Z", "by": ident.user, "text": body.get("text", "")})
+            return q
+        i = self._approval_item(it, ident)
+        if action in ("approve", "reject") and not i["mayDecide"]:
+            raise BackendError(403, "DRS-2007", "four eyes: " + ident.user + " may not decide it")
+        if action == "reject" and not (body.get("comment") or "").strip():
+            raise BackendError(400, "DRS-5001", "say why it is rejected")
+        it["status"] = {"approve": "approved", "reject": "rejected", "withdraw": "withdrawn"}[action]
+        it["decidedBy"] = ident.user
+        return self._approval_item(it, ident)
+
+    async def admin_pause_alert_rule(self, owner, name, resume, ident):
         self.alerts_kept[name]["enabled"] = resume
 
-    async def admin_delete_measure_alert(self, owner, name, ident):
+    async def admin_delete_alert_rule(self, owner, name, ident):
         self.alerts_kept.pop(name, None)
 
     notes_kept = []
@@ -1052,7 +1133,7 @@ class FakeBackend:
                 "markdown": "# The trading pack\n\n## What it is\n\nTrades.\n\n## Data structures\n\n### `trade`\n\n"
                             "| Field | Type | Example | Description |\n|---|---|---|---|\n| `TRADE_ID` | string | `MX-1` | The document's id |\n\n"
                             "Nested structures:\n\n| Path | Fields |\n|---|---|\n| `LEGS[].CASH_FLOWS[]` | `FLOW_ID` (string) |\n\n"
-                            "<script>alert(1)</script>\n\n[Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) [web](https://example.com) [bad](javascript:alert(1))\n"}
+                            "<script>alert(1)</script>\n\n[Packs](../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) [web](https://example.com) [bad](javascript:alert(1))\n"}
 
     async def pack_overview(self, name, ident=None):
         if name.upper() not in ("MKT", "MARKET-DATA"):
@@ -1122,7 +1203,7 @@ def forget_backend_answers(app) -> None:
     for name in ("designer_aliases", "designer_migrated"):
         if getattr(st, name, None) is not None:
             getattr(st, name).clear()
-    from core import market_landing, trading_landing
+    from plugins.banking import market_landing, trading_landing
     trading_landing.forget()
     market_landing.forget()
 
@@ -1163,6 +1244,9 @@ def open_studio(client, url, **params):
     q = dict(parse_qsl(parts.query, keep_blank_values=True))
     q.update(params)
     asked = client.get(parts.path, params=q, follow_redirects=False)
+    if asked.status_code == 302 and asked.headers.get("location") == "/build" and not q:
+        # a bare /studio is the Build home now (2.9.11.e); the start it confirmed (a scratch design) is the same POST as before
+        return client.post(parts.path, data={}, follow_redirects=False)
     if asked.status_code == 302:                       # a Design of yours, or another page: nothing is created by asking
         return asked
     assert asked.status_code == 200 and "data-start-form" in asked.text, (url, asked.status_code)
@@ -1172,7 +1256,7 @@ def open_studio(client, url, **params):
     return client.post("/studio", data=form, follow_redirects=False)
 
 
-# The phone display (MOBILE_DISPLAY.md): below 640 px the console draws the phone page and static/js/drishti_phone.js reloads a page drawn for
+# The phone display (docs/guides/BUILD_GUIDE.md): below 640 px the console draws the phone page and static/js/drishti_phone.js reloads a page drawn for
 # another device. A browser test that is not about the phone display reads the whole page at any width, as a person who chose *Show
 # everything* does (the drishti-phone-all cookie, set before the first navigation, so no reload happens under the test); the phone
 # display's own tests keep it.

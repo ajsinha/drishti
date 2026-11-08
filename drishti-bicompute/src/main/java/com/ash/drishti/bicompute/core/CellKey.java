@@ -25,7 +25,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * A cell's coordinates (PIVOT_ENGINE.md section 4.3): dimension id to value; a dimension absent is "all" (a total along it). It names a cell
+ * A cell's coordinates (ARCHITECTURE.md section 26.2): dimension id to value; a dimension absent is "all" (a total along it). It names a cell
  * without listing its members, so a billion-row table and a set of positions are addressed the same way. Ordered by dimension id, so two
  * keys of the same coordinates are equal however they were made, and keys sort in one fixed order (the merge order).
  *

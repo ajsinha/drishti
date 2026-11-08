@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""`drishti.py lake memory status|jobs|refill`: the in-memory lake over REST (administrators; docs/guides/IN_MEMORY_LAKE_GUIDE.md).
+"""`drishti.py lake memory status|jobs|refill`: the in-memory lake over REST (administrators; docs/guides/DATA_LAKE_GUIDE.md).
 
     status   every memory store (cap, use, contract, refusals) and table (state, bytes, rows, version, refills, evictions, ratio), health
     jobs     the replenish jobs' runs, newest first (rows, bytes, version, time taken, why a run failed or was refused); --table NAME

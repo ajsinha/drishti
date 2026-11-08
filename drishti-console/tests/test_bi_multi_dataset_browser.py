@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI over several facts (2.2: docs/guides/BI_GUIDE.md, docs/guides/BI_GUIDE.md, docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 2), in Chromium over the real server and console
+"""BI over several facts (2.2: docs/guides/REPORTS_GUIDE.md, docs/guides/REPORTS_GUIDE.md, docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 2), in Chromium over the real server and console
 (tests/bi_report_stack.py on ports 18944 and 17944, security on, a small Delta lake: trades, counterparties and netting sets across three packs). The sample
 "Desk P&L vs counterparty exposure" is answered three ways that must agree with an independent join of two model queries: the model trading-risk (two facts,
 each aggregated alone and joined on the counterparty), the Python dataset desk-pnl-vs-exposure-py-result (a Transform over two model queries) and an Analyse
@@ -34,23 +34,23 @@ pytest.importorskip("pyarrow")
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_report_stack  # noqa: E402
-from bi_report_helpers import card_value, chart, clean, click_mark, open_report, settled, sign_in  # noqa: E402
+from bi_report_helpers import card_value, chart, clean, click_mark, grid_rows, open_report, pick_in_dropdown_slicer, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, ROOT, api  # noqa: E402
 
 REPORT = "file:report:pnl-vs-exposure"
 MODEL = "trading-risk@1"
 PY_MODEL = "desk-pnl-vs-exposure-py@1"
-PY_DATASET = "file:table:bi.desk_pnl_vs_exposure_py_result"   # the table the Python Transform makes (the table layer's, shipped in config/tables)
+PY_DATASET = "file:table:banking.desk_pnl_vs_exposure_py_result"   # the table the Python Transform makes (the table layer's, shipped in config/tables)
 
 
 class Stack(bi_report_stack.ReportStack):
     def prepare(self, work):
-        from bi_samples import copy_samples
+        from bi_samples import copy_samples, shipped
         copy_samples(work / "config/bi", ["trading-risk", "counterparty-exposure", "desk-pnl-vs-exposure-py"])   # the models, their datasets, the Transform
         for folder, suffix, name in (("reports", "report", "pnl-vs-exposure"), ("notebooks", "notebook", "pnl-vs-exposure-pandas")):
             target = work / "config/bi" / folder
             target.mkdir(parents=True, exist_ok=True)
-            (target / f"{name}.{suffix}.yaml").write_text((ROOT / "config/bi" / folder / f"{name}.{suffix}.yaml").read_text(encoding="utf-8"), encoding="utf-8")
+            (target / f"{name}.{suffix}.yaml").write_text(shipped(folder, f"{name}.{suffix}.yaml").read_text(encoding="utf-8"), encoding="utf-8")
         # the server runs Python on its compute pool python, in the interpreter that runs this test (it carries the pinned libraries)
         self.server_args += ["--DRISHTI_COMPUTE_ENABLED=true", f"--DRISHTI_PYTHON={sys.executable}", f"--drishti.compute.file={ROOT}/config/compute/compute.yaml"]
 
@@ -145,14 +145,13 @@ def test_the_sample_report_answers_as_the_model_and_its_slicer_filters_every_vis
     total = ask(*RISK, MODEL, {"measures": ["P&L 1d", "Exposure (EE peak)"]})["rows"][0]
     assert card_value(page, "pnl") == int(total[0]) and card_value(page, "ee") == int(round(total[1]))
     sector = "Banking"
-    page.click('[data-visual="sector"] summary')
-    page.check(f'[data-visual="sector"] [data-slicer-value="{sector}"]')
+    pick_in_dropdown_slicer(page, "sector", sector)                       # the dropdown slicer: drishti-inputs' MultiSelect
     settled(page)
     want = ask(*RISK, MODEL, {"measures": ["P&L 1d", "Exposure (EE peak)"]}, where=[{"field": "counterparties.SECTOR", "op": "in", "values": [sector]}])["rows"][0]
     assert card_value(page, "pnl") == int(want[0]) and card_value(page, "ee") == int(round(want[1]))       # one choice reached both facts, through the counterparty
     assert round(sum(chart(page, "exposure-by-sector")["series"][0]["values"])) == int(round(want[1]))
-    rows = page.locator('[data-visual="table"] tbody tr')
-    assert rows.count() > 0 and all(r.inner_text().split("\t")[1] == sector for r in rows.all())
+    rows = grid_rows(page, "table")
+    assert rows and all(row[1] == sector for row in rows)
     expect(page.locator('[data-chip="slicer"]')).to_contain_text(sector)
     clean(page)
 
@@ -214,7 +213,7 @@ def test_the_notebook_opens_two_extracts_and_its_join_cell_runs_on_the_compute_p
     page.locator('[data-cells=python] [data-run]').first.click()                                             # the join cell runs on the server's compute pool
     expect(page.locator('[data-cells=python] [data-engine=python]').first).to_be_visible(timeout=120000)
     assert page.locator('[data-cells=python] [data-target=server]').count() >= 1
-    expect(page.locator('[data-cells=python] [data-result] table').first).to_be_visible()
+    expect(page.locator('[data-cells=python] [data-result] [role=grid]').first).to_be_visible()                # the result: drishti-grid
     assert page.locator('[data-promote="transform"]').count() == 1 and page.locator('[data-promote="transform"]').is_enabled()   # a cell that joins extracts can become a Transform
     clean(page)
     page.close()

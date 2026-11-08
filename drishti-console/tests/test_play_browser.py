@@ -30,6 +30,8 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
+from select_helpers import choose, options, value  # <drishti-select>: drishti-inputs' Select
+import engine_fakes  # noqa: E402
 
 N, SHOWN, TOTAL = 509, 500, 560
 
@@ -99,6 +101,8 @@ GRID = _grid()
 class PlayBackend(FakeBackend):
     asked: list = []
 
+    engine = engine_fakes.method
+
     async def var(self, verb, path, ident, /, body=None, raw=False, accept="", **params):
         PlayBackend.asked.append((path, dict(params)))
         if path == "/playground":
@@ -158,26 +162,26 @@ def test_the_grid_is_windowed_and_a_cell_explains_itself(browser, play_console):
             assert words in text, words
         # a click on another position's cell moves the bar and the explanation
         row = page.locator("[data-pg-canvas] .pg-sel").first.get_attribute("data-r")
-        page.locator(f'[data-pg-canvas] .pg-c[data-r="{row}"][data-c="3"]').first.dispatch_event("click")
+        page.locator(f'[data-pg-canvas] .pg-c[data-r="{row}"][data-c="3"]').first.click()      # drishti-grid: a cell's click focuses it
         assert "POS-10002" in page.locator("[data-pg-explain] h3").first.inner_text()
         assert "P&L(s) = PV(s) × FX(s) − PV(base) × FX(base)" in page.locator("[data-pg-explain]").inner_text()
         assert "$H$4+" in page.locator("[data-pg-formula]").inner_text()
-        page.locator("[data-pg-scroll]").press("ArrowRight")
+        page.locator("[data-pg-grid] .dg-scroll").press("ArrowRight")
         assert "POS-10003" in page.locator("[data-pg-explain] h3").first.inner_text()
         # scrolling far: the header rows stay, other cells are drawn
-        page.locator("[data-pg-scroll]").evaluate("e => { e.scrollTop = e.scrollHeight; e.scrollLeft = e.scrollWidth; e.dispatchEvent(new Event('scroll')); }")
+        page.locator("[data-pg-grid] .dg-scroll").evaluate("e => { e.scrollTop = e.scrollHeight; e.scrollLeft = e.scrollWidth; e.dispatchEvent(new Event('scroll')); }")
         page.wait_for_timeout(200)
         assert page.locator('[data-pg-canvas] .pg-ft[data-r="0"]').count() > 0
         assert "Rest of scope" in page.locator("[data-pg-canvas]").inner_text() or "Portfolio" in page.locator("[data-pg-canvas]").inner_text()
         # the export: five choices, the default 500, the estimate stated before the download
-        opts = page.locator("[data-pg-count] option")
-        assert opts.count() == 5 and page.locator("[data-pg-count]").input_value() == "500"
+        opts = options(page, "[data-pg-count]")
+        assert len(opts) == 5 and value(page, "[data-pg-count]") == "500"
         est = page.locator("[data-pg-estimate]").inner_text()
         assert "Workbook of 500 positions" in est and "Rest of scope" in est and "12 MB" in est and "Excel" in est and "Google Sheets" in est
-        page.locator("[data-pg-count]").select_option("all")
+        choose(page, "[data-pg-count]", "all")
         assert "Workbook of 560 positions" in page.locator("[data-pg-estimate]").inner_text()
         # a picker asks again, the lens in the address
-        page.locator("[data-pg-horizon]").select_option("10d-sum")
+        choose(page, "[data-pg-horizon]", "10d-sum")
         page.wait_for_function("() => location.search.indexOf('m=sum') > 0")
         assert PlayBackend.asked[-1][1].get("method") == "sum" or any(p.get("method") == "sum" for _, p in PlayBackend.asked[-3:])
         width = page.evaluate("() => document.documentElement.scrollWidth - document.documentElement.clientWidth")

@@ -12,8 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The top bar's menus, the footer and the command line's placeholder, as data (config/menus.yaml; docs/admin/EDITIONS.md › The design as built,
-section 5.4): each item's ``requires:`` and the edition's (or the person's lens's) ``menus:`` lists decide what one request shows.
+"""The sitemap (config/sitemap.yaml, 2.9.11.e): the top bar's menus, the Admin pages' tab strip, the BI rail, Help's sections, the footer
+and the command line's placeholder, as data (docs/guides/ADMIN_GUIDE.md › The design): each item's ``requires:`` and
+the edition's (or the person's lens's) ``menus:`` lists decide what one request shows; nothing is kept per person.
 Read again when the file changes. The lens items ("Open Drishti Risk", "Leave Drishti Risk") are added here, from the lenses the server
 offers. The Engines menu (``engines: true``) has a column per compute engine, drawn for the engines running in the cluster that the person's
 role opens (``opens:``); :func:`engine_refused` applies the same rule to the engine's command words (type-ahead and command line)."""
@@ -24,7 +25,7 @@ from urllib.parse import quote
 
 import yaml
 
-from core import engines, under_construction
+from core import engines, modules, under_construction
 from core.edition import Edition
 from core.edition_gate import feature_on
 
@@ -32,7 +33,7 @@ _cache: dict[str, tuple[int, dict]] = {}
 
 
 def _spec(console_dir: Path) -> dict:
-    f = console_dir / "config" / "menus.yaml"
+    f = console_dir / "config" / "sitemap.yaml"
     try:
         stamp = f.stat().st_mtime_ns
     except OSError:
@@ -71,9 +72,16 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
         return edition.typed_shown(value)
     if kind == "route":
         return _has_route(request, value)
-    if kind == "engine":                                         # requires: engine:frtb-sa (COMPUTE_ENGINES.md 5.2)
+    if kind == "engine":                                         # requires: engine:frtb-sa (ADMIN_GUIDE.md 5.2)
         return engines.engine_available(value)
+    if kind == "module":                                         # requires: module:banking (ACCESS_MODEL.md: on for this person)
+        return modules.module_on(value)
     return True
+
+
+def holds(request, need: str, ctx: dict) -> bool:
+    """Whether one sitemap requirement word holds for this request (the Build home's object types use the same words)."""
+    return _holds(request, _edition(request), need, ctx)
 
 
 def _has_route(request, path: str) -> bool:
@@ -116,7 +124,7 @@ def _menu_order(edition: Edition, menus: list) -> list:
     not drawn; without one, every menu of the file in its order except the subject menus (``subject: true``), which only a ``top`` draws."""
     top = edition.menu("top")
     if top is None:
-        return [m for m in menus if not m.get("subject")]
+        return [m for m in menus if not m.get("subject") and not m.get("personal")]
     by_id = {str(m.get("id") or ""): m for m in menus}
     return [by_id[i] for i in top if i in by_id]
 
@@ -163,7 +171,7 @@ def _lens_desc(lens) -> str:
 
 
 def _engines_menu(request) -> dict:
-    """The Engines menu's entry of config/menus.yaml (``engines: true``), or {}."""
+    """The Engines menu's entry of config/sitemap.yaml (``engines: true``), or {}."""
     return next((m for m in _spec(_console_dir(request)).get("menus") or [] if m.get("engines")), {})
 
 
@@ -226,15 +234,25 @@ def _engine_columns(request, edition: Edition, menu: dict, ctx: dict, fill: dict
         eid = str(col.get("engine") or "")
         if not eid or not engines.engine_available(eid) or not _person_opens(request, list(col.get("opens") or [])):
             continue
-        items = _items(request, edition, "engines", col, ctx, fill)
+        items = _items(request, edition, "engines", col, ctx, fill, menu)
         if items:
             out.append((_text(col.get("title"), fill) or engines.title(eid), items, str(col.get("word") or ""), eid))
     return out
 
 
-def _items(request, edition: Edition, mid: str, col: dict, ctx: dict, fill: dict) -> list:
+def _domain_hidden(*tagged: dict) -> bool:
+    """The innermost ``domain:`` tag of an item, its column and its menu (core when none says), and whether that module is off."""
+    for t in tagged:
+        if isinstance(t, dict) and t.get("domain"):
+            return modules.tag_hidden(str(t["domain"]))
+    return False
+
+
+def _items(request, edition: Edition, mid: str, col: dict, ctx: dict, fill: dict, menu: dict | None = None) -> list:
     items = []
     for it in col.get("items") or []:
+        if _domain_hidden(it, col, menu or {}):                    # a domain module that is off: its entries are not drawn
+            continue
         if not all(_holds(request, edition, str(n), ctx) for n in it.get("requires") or []):
             continue
         if not edition.menu_shown(mid, str(it.get("id") or "")) or engines.menu_hidden(str(it.get("id") or "")):
@@ -290,8 +308,10 @@ def top_bar(request, ctx: dict) -> list:
                 out.append((_text(menu.get("label"), fill), menu.get("icon"), columns))
             continue
         columns = []
+        if _domain_hidden(menu):                                # a menu of a domain module that is off
+            continue
         for col in _columns(menu, every):                       # an item of a gathered column is filtered as the gathering menu's
-            items = _items(request, edition, mid, col, ctx, fill)
+            items = _items(request, edition, mid, col, ctx, fill, menu)
             if mid == "views" and col is (menu.get("columns") or [None])[-1]:
                 for link in lens_links(request):                # the lenses: one link each, in Views (and on Home)
                     items.append((link["href"], "box-arrow-left" if link["leave"] else "eye", link["label"],
@@ -305,7 +325,7 @@ def top_bar(request, ctx: dict) -> list:
 
 
 def lens_menu(request, menus: list, product: str = "") -> dict | None:
-    """The lens menus' phone form (LX1 option C, docs/lenses/README.md): on a phone the edition's (or lens's) subject menus fold into one
+    """The lens menus' phone form (LX1 option C, docs/architecture/LENSES.md): on a phone the edition's (or lens's) subject menus fold into one
     menu named after the lens, a column per subject, so the bar keeps a few finger-sized buttons; on a wider screen the subject menus
     stand in the bar as before (static/css/drishti_phone.css switches them at 640 px). ``menus`` is :func:`top_bar`'s answer; None without
     subject menus. ``{"label", "subjects": [labels], "columns": [(title, items)]}``."""
@@ -325,15 +345,86 @@ def lens_menu(request, menus: list, product: str = "") -> dict | None:
 
 
 def footer(request) -> list[dict]:
+    """The footer's links: each names an item of the menus (``item:``), drawn with that item's address and icon and its own shorter label."""
     edition = _edition(request)
-    return [i for i in _spec(_console_dir(request)).get("footer") or [] if edition.menu_shown("footer", str(i.get("id") or ""))]
+    spec = _spec(_console_dir(request))
+    every = item_index(spec)
+    out = []
+    for f in spec.get("footer") or []:
+        it = every.get(str(f.get("item") or ""))
+        if it is not None and edition.menu_shown("footer", str(f.get("id") or "")):
+            out.append({"id": f.get("id"), "href": _href(it), "icon": it.get("icon"), "label": f.get("label") or it.get("label")})
+    return out
+
+
+# ---- the sitemap's other surfaces: the Admin strip, the BI rail, Help's sections ------------------------------------------------------
+
+def item_index(spec: dict) -> dict[str, dict]:
+    """Every item of every menu by its id (the guard holds the ids unique)."""
+    return {str(it.get("id")): it for m in spec.get("menus") or [] for c in m.get("columns") or [] for it in c.get("items") or [] if it.get("id")}
+
+
+def _strip(request, ctx: dict, menu_id: str, rail_only: bool) -> list[dict]:
+    """A menu drawn as a strip (the Admin tabs, the BI rail): its items in order, then its ``also:`` items, each as the top bar would
+    filter it (requires, the edition's lists, the under-construction registry, engines off). ``[{id, tab, href, icon, label, desc}]``."""
+    spec = _spec(_console_dir(request))
+    menu = next((m for m in spec.get("menus") or [] if m.get("id") == menu_id), None)
+    if menu is None:
+        return []
+    edition = _edition(request)
+    g = request.app.state.templates.env.globals
+    fill = {"product": ctx.get("PRODUCT") or g.get("PRODUCT", ""), "tutorials": g.get("TUTORIALS_WORD", "")}
+    every = item_index(spec)
+    own = [it for c in menu.get("columns") or [] for it in c.get("items") or [] if not (rail_only and it.get("rail") is False)]
+    out = []
+    for it in own + [every[i] for i in menu.get("also") or [] if i in every]:
+        drawn = _items(request, edition, menu_id, {"items": [it]}, ctx, fill)
+        if drawn:
+            href, icon, label, desc, match, _cmd = drawn[0]
+            out.append({"id": str(it.get("id")), "tab": str(it.get("tab") or it.get("id")), "href": href, "icon": icon, "label": label,
+                        "desc": desc, "match": match or ""})
+    return out
+
+
+def admin_tabs(request, ctx: dict) -> list[dict]:
+    """The tab strip of every Admin page: the Admin menu's items, then its ``also:`` (BI settings, My account)."""
+    return _strip(request, ctx, "admin", rail_only=False)
+
+
+def bi_rail(request, ctx: dict) -> list[dict]:
+    """The BI rail: the BI menu's items but those with ``rail: false``, then its ``also:`` (the Pivot, the Build home)."""
+    return _strip(request, ctx, "bi", rail_only=True)
+
+
+def help_sections(console_dir: Path) -> list[dict]:
+    """Help's sections in order (``help-sections:``): ``{id, name, icon, blurb, roles, domain}``."""
+    from core import modules
+    return modules.help_heads([dict(s) for s in _spec(console_dir).get("help-sections") or [] if isinstance(s, dict) and s.get("id")])
+
+
+def spec_of(console_dir: Path) -> dict:
+    """The sitemap as read (for the guard and the Build home)."""
+    return _spec(console_dir)
 
 
 def placeholder(request) -> str:
     edition = _edition(request)
     if edition.lens and edition.placeholder:
-        return edition.placeholder
-    return str(request.app.state.settings.get("ui.placeholder") or _spec(_console_dir(request)).get("placeholder") or "")
+        text = edition.placeholder
+    else:
+        text = str(request.app.state.settings.get("ui.placeholder") or _spec(_console_dir(request)).get("placeholder") or "")
+    return shown_examples(text, edition.typed_shown)
+
+
+def shown_examples(text: str, shown) -> str:
+    """The command line's placeholder with only the examples this person may type (``TRD MX-1, ECON CAN …  then <GO>`` with banking
+    off: ``ECON CAN …  then <GO>``); none left: blank."""
+    head, dots, tail = text.partition("…")
+    items = [x.strip() for x in head.split(",") if x.strip()]
+    kept = [x for x in items if shown(x)]
+    if len(kept) == len(items):
+        return text
+    return (", ".join(kept) + " " + dots + tail) if kept else ""
 
 
 def _console_dir(request) -> Path:

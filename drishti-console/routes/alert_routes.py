@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Alerts on numbers (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20, phase 7 part 2): a person watches a BI visual, a dataset measure or a field of a Sutra entity and is told, in the
+"""The one alert engine's rules (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20, phase 7 part 2): a person watches a BI visual, a dataset measure or a field of a Sutra entity (a value, or a Rachana-EL rule that holds) and is told, in the
 inbox (and by email or a chat bridge if they ask), when it crosses a limit, moves too far or does not arrive. The server evaluates every alert as its owner
 (their masks, their row rules) and keeps the state and the history; this module is the form, the edit page with the history, the actions and the
-administrators' overview. The list of a person's alerts is on ``/alerts`` (monitor_routes), together with the older rules on one Sutra entity."""
+administrators' overview. The alerts raised for a person and their rules are on ``/alerts`` (monitor_routes)."""
 from __future__ import annotations
 
 import json
@@ -25,6 +25,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
+from core.alert_form import alert_form_host
 from core.backend import BackendError, drs_message
 from core.csrf import json_body
 from routes.common import ident, render
@@ -93,6 +94,8 @@ def body_from(f: dict) -> dict:
             cond["value"] = v
     elif ctype == "nodata":
         cond = {"type": "nodata", "by": f.get("by", "").strip()}
+    elif ctype == "rule":                                             # a field source whose field is a Rachana-EL predicate
+        cond = {"type": "rule"}
     else:
         cond = {"type": "threshold", "op": f.get("op", "above")}
         if (v := _num(f.get("value", ""))) is not None:
@@ -110,7 +113,7 @@ def body_from(f: dict) -> dict:
     body = {"title": f.get("title", "").strip(), "severity": f.get("severity", "warn"), "source": source, "condition": cond, "trigger": trigger,
             "delivery": {"inbox": f.get("d_inbox") == "on", "email": f.get("d_email") == "on", "bridge": f.get("d_bridge") == "on",
                          "webhooks": sorted(k[2:] for k, v in f.items() if k.startswith("w_") and v == "on"), "sms": f.get("d_sms") == "on"},
-            "enabled": f.get("enabled", "on") == "on"}
+            "enabled": f.get("enabled") == "on"}                      # a checkbox: an unchecked one is not sent, so a missing field is off
     if (h := _num(f.get("hysteresis", ""))) is not None:
         body["hysteresis"] = h
     if f.get("cooldown", "").strip():
@@ -164,8 +167,10 @@ def decorate(alerts: list[dict], user: str = "") -> list[dict]:
 
 async def _page(request: Request, f: dict, *, alert: dict | None = None, error: str = "", status_code: int = 200, msg: str = ""):
     from routes.dist_routes import _options
-    return render(request, "alert_form.html", status_code=status_code, f=f, alert=alert, error=error, msg=msg, schedules=SCHEDULES, screen="alerts", opts=await _options(request),
-                  standing=standing(alert, getattr(request.state.identity, "user", "")) if alert else "")
+    opts = await _options(request)
+    form = alert_form_host(f, schedules=SCHEDULES, opts=opts, editing=alert is not None)     # drishti-inputs' Form, embedded in the page's POST form
+    return render(request, "alert_form.html", status_code=status_code, f=f, alert=alert, error=error, msg=msg, schedules=SCHEDULES, screen="alerts", opts=opts,
+                  form_host=form, standing=standing(alert, getattr(request.state.identity, "user", "")) if alert else "")
 
 
 # -- the form ---------------------------------------------------------------------------------------------------------
@@ -199,7 +204,7 @@ async def create_alert(request: Request):
     try:
         if f.get("phone", "").strip():                               # the person's own number for texts
             await request.app.state.backend.set_phone(f["phone"].strip(), ident(request))
-        await request.app.state.backend.save_measure_alert(name, body_from(f), ident(request))
+        await request.app.state.backend.save_alert_rule(name, body_from(f), ident(request))
     except BackendError as e:
         return await _page(request, f, error=drs_message(e.code, e.detail, " "), status_code=e.page_status)
     return RedirectResponse(f"/alerts?msg={quote('Alert saved: ' + name)}", status_code=303)
@@ -208,7 +213,7 @@ async def create_alert(request: Request):
 @router.get("/alerts/measure/{name}")
 async def edit_alert(request: Request, name: str, msg: str = ""):
     try:
-        a = await request.app.state.backend.measure_alert(name, ident(request))
+        a = await request.app.state.backend.alert_rule(name, ident(request))
     except BackendError as e:
         return render(request, "alert_form.html", status_code=e.page_status, f={}, alert=None, error=drs_message(e.code, e.detail, " "), msg="", schedules=SCHEDULES, opts={},
                       screen="alerts", standing="")
@@ -223,10 +228,10 @@ async def update_alert(request: Request, name: str):
     try:
         if f.get("phone", "").strip():
             await backend.set_phone(f["phone"].strip(), ident(request))
-        await backend.save_measure_alert(name, body_from(f), ident(request))
+        await backend.save_alert_rule(name, body_from(f), ident(request))
     except BackendError as e:
         try:
-            current = await backend.measure_alert(name, ident(request))
+            current = await backend.alert_rule(name, ident(request))
         except BackendError:
             current = None
         return await _page(request, f, alert=current, error=drs_message(e.code, e.detail, " "), status_code=e.page_status)
@@ -238,7 +243,7 @@ async def preview_alert(request: Request):
     """What the alert would read for the signed-in person right now (the form's *Check now*): a number, its date and whether it would fire. Saves nothing."""
     body = await json_body(request)
     try:
-        return await request.app.state.backend.preview_measure_alert(body_from({k: str(v) if not isinstance(v, str) else v for k, v in body.items()}), ident(request))
+        return await request.app.state.backend.preview_alert_rule(body_from({k: str(v) if not isinstance(v, str) else v for k, v in body.items()}), ident(request))
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
 
@@ -250,13 +255,13 @@ async def alert_action(request: Request, name: str, action: str):
     backend, me = request.app.state.backend, ident(request)
     try:
         if action == "delete":
-            await backend.delete_measure_alert(name, me)
+            await backend.delete_alert_rule(name, me)
             return RedirectResponse(f"/alerts?msg={quote('Deleted ' + name)}", status_code=303)
         if action in ("pause", "resume"):
-            await backend.pause_measure_alert(name, action == "resume", me)
+            await backend.pause_alert_rule(name, action == "resume", me)
             return RedirectResponse(f"/alerts?msg={quote(('Resumed ' if action == 'resume' else 'Paused ') + name)}", status_code=303)
         if action == "check":
-            a = await backend.check_measure_alert(name, me)
+            a = await backend.check_alert_rule(name, me)
             last = _last(a)
             text = f"{name}: looked now. " + (f"{last['action'].capitalize()}: {last['message']}" if last else "Nothing to report.")
             return RedirectResponse(f"/alerts?msg={quote(text)}", status_code=303)
@@ -271,13 +276,14 @@ async def alert_action(request: Request, name: str, action: str):
 async def all_alerts(request: Request, msg: str = ""):
     backend, me = request.app.state.backend, ident(request)
     try:
-        items = await backend.all_measure_alerts(me)
-        boards = await backend.board_alerts(me)
+        everything = await backend.admin_alerts(me)
     except BackendError as e:
-        return render(request, "alerts_all.html", status_code=e.page_status if e.status == 403 else 200, items=[], boards=[], msg="", screen="alerts",
+        return render(request, "alerts_all.html", status_code=e.page_status if e.status == 403 else 200, items=[], boards=[], platform={}, msg="", screen="alerts",
                       error="Only administrators see everyone's alerts." if e.status == 403 else drs_message(e.code, e.detail, " "))
+    items = list(everything.get("rules") or [])
     items.sort(key=lambda a: (a.get("owner", "").lower(), a.get("name", "").lower()))
-    return render(request, "alerts_all.html", items=decorate(items), boards=boards, msg=msg, error="", screen="alerts")
+    return render(request, "alerts_all.html", items=decorate(items), boards=everything.get("boards") or [], platform=everything.get("platform") or {}, msg=msg,
+                  error="", screen="alerts")
 
 
 @router.post("/alerts/all/{owner}/{name}/{action}")
@@ -285,9 +291,9 @@ async def admin_alert_action(request: Request, owner: str, name: str, action: st
     backend, me = request.app.state.backend, ident(request)
     try:
         if action == "delete":
-            await backend.admin_delete_measure_alert(owner, name, me)
+            await backend.admin_delete_alert_rule(owner, name, me)
         elif action in ("pause", "resume"):
-            await backend.admin_pause_measure_alert(owner, name, action == "resume", me)
+            await backend.admin_pause_alert_rule(owner, name, action == "resume", me)
         else:
             return Response("unknown action\n", status_code=404, media_type="text/plain; charset=utf-8")
     except BackendError as e:

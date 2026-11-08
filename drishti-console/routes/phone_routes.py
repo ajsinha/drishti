@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The phone display's routes (docs/architecture/MOBILE_DISPLAY.md section 6, core/phone.py): the plan an entity page is drawn with on a
+"""The phone display's routes (docs/guides/BUILD_GUIDE.md section 6, core/phone.py): the plan an entity page is drawn with on a
 phone or tablet, and one panel of the page on its own (a *More on this page* row tapped, a *Show all*, or a live tick of a compact panel),
 bound as the viewer with the page's state (its controls, its Sutra, its date)."""
 from __future__ import annotations

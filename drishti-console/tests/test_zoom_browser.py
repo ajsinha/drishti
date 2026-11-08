@@ -253,7 +253,7 @@ SIZE_JS = """(() => { const t = document.querySelector('#p-cashflows table.tbl')
   const rows = [...t.tBodies[0].rows].filter(r => !r.hidden);
   const last = t.closest('.tbl-wrap').getBoundingClientRect().bottom, room = b.getBoundingClientRect().bottom - parseFloat(getComputedStyle(b).paddingBottom);
   return { rows: rows.length, first: rows[0].cells[0].textContent, scroll: b.scrollHeight > b.clientHeight + 1,
-           gap: room - last, rowH: rows[0].offsetHeight, opt: document.querySelector('#p-cashflows .tbl-pg-size').selectedOptions[0].textContent,
+           gap: room - last, rowH: rows[0].offsetHeight, opt: document.querySelector('#p-cashflows .tbl-pg-size').component.getOption().label,
            saved: localStorage.getItem(window.Drishti.key('drishti.tableRows')) }; })()"""
 
 
@@ -332,7 +332,7 @@ def test_phone_zoomed_table_fits_without_scrolling(browser, url):
         pg.wait_for_selector("#p-cashflows .pnl-zoom-btn")
         pg.evaluate("document.getElementById('p-cashflows').scrollIntoView()")
         pg.locator("#p-cashflows .pnl-zoom-btn").tap()
-        pg.wait_for_function("document.querySelector('#p-cashflows .tbl-pg-size').selectedOptions[0].textContent.startsWith('Fit')")
+        pg.wait_for_function("document.querySelector('#p-cashflows .tbl-pg-size').component.getOption().label.startsWith('Fit')")
         settle(pg)
         z = sizes(pg)
         assert z["rows"] > 5 and not z["scroll"] and z["opt"].startswith("Fit ("), z

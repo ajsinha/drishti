@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The query engine's front door (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 7): takes a visual query against a dataset, for a reader, and answers it from the smallest layer
+ * The query engine's front door (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 7): takes a visual query against a dataset, for a reader, and answers it from the smallest layer
  * that can. In order: admission (server and per-user concurrency), the result cache, the plan (names checked against the model, joins chosen, row
  * rules attached), the layer (a rollup that covers the query, else the columns layer, else a direct push down or a live snapshot), the compiled
  * parameterised SQL on the engine, the row and byte limits, and the cache. Every refusal carries a DRS-90xx code.
@@ -94,7 +94,7 @@ public final class QueryService implements AutoCloseable {
     private volatile Events events = Events.NONE;
 
     /**
-     * What the engine tells the metrics (wave B, docs/architecture/BI_DESIGN.md section 6.8): a query's time and rows by model and layer, the wait for a
+     * What the engine tells the metrics (wave B, docs/architecture/ARCHITECTURE.md §28 section 6.8): a query's time and rows by model and layer, the wait for a
      * place, a refusal by code, a source fragment's time by connector, a layer rebuild's time.
      */
     public interface Events {
@@ -212,7 +212,7 @@ public final class QueryService implements AutoCloseable {
     }
 
     /**
-     * What a question would read, from metadata only (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1): its tables' dates and rows, the rollup the optimiser
+     * What a question would read, from metadata only (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1): its tables' dates and rows, the rollup the optimiser
      * would choose, the data versions. Builds nothing, opens no data file and takes no admission place.
      */
     public Footprints.Footprint footprint(Loaded ds, QueryRequest q, Caller who) {
@@ -244,7 +244,7 @@ public final class QueryService implements AutoCloseable {
         return layers;
     }
 
-    /** The live tables of the server (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12). */
+    /** The live tables of the server (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 12). */
     public LiveTables live() {
         return liveTables;
     }
@@ -297,7 +297,7 @@ public final class QueryService implements AutoCloseable {
     }
 
     /**
-     * The aggregation the pivot engine asks over a model's rows (PIVOT_ENGINE.md section 12): {@code detail} is a query of shape rows (no
+     * The aggregation the pivot engine asks over a model's rows (ARCHITECTURE.md section 26.9): {@code detail} is a query of shape rows (no
      * measures) whose SQL, compiled as the reader (row rules, masks, joins, layers, dates) but not run, becomes the FROM item of the
      * statement {@code outer} writes (one grouping-sets statement of the engine's function states). The statement runs here, in the
      * engine that holds the model's layers, so no row leaves it; the answer is the statement's columns.
@@ -596,7 +596,7 @@ public final class QueryService implements AutoCloseable {
             return direct(ds, q, plan, reader, who, explain);
         }
         if (staged.isEmpty() && !explain) {
-            preEstimate(ds, q, who, d, plan);                                   // the cost budget from metadata, before any layer is built (BI_DESIGN › BI runs, 2.3)
+            preEstimate(ds, q, who, d, plan);                                   // the cost budget from metadata, before any layer is built (ARCHITECTURE §28 › BI runs, 2.3)
         }
         List<String> warnings = new ArrayList<>();
         Map<String, Layers.Layer> cols = new LinkedHashMap<>();
@@ -723,7 +723,7 @@ public final class QueryService implements AutoCloseable {
     private record Framed(SqlCompiler.Compiled compiled, AnalyticEngine.Answer answer) {}
 
     /**
-     * A composed or derived dataset's query (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10): the one table is the join of the sources' answers (staged in the engine) or the
+     * A composed or derived dataset's query (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.10): the one table is the join of the sources' answers (staged in the engine) or the
      * Transform's result file, and the dataset's own measures, row rules and masks run over it like over any table. The sources were asked as the reader, so what
      * the reader may not see never reaches this table.
      */
@@ -1066,7 +1066,7 @@ public final class QueryService implements AutoCloseable {
      * @param only the tables to rebuild, or null for every cached table of the dataset
      */
     /**
-     * {@link #refresh} as background work (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 10.1): in the {@code BACKGROUND} class and through admission, under
+     * {@link #refresh} as background work (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 10.1): in the {@code BACKGROUND} class and through admission, under
      * its cap ({@code drishti.bi.exec.background-share}), so a scheduled or after-load refresh never holds the places interactive questions need.
      * It waits for a place as long as background work may run ({@code drishti.bi.exec.background}).
      */

@@ -1,0 +1,198 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The VaR explorer (VAR_GUIDE.md section 3; the approved mock-up var-drilldown): the scope tree with VaR, ES and limit use; the
+   breadcrumb; six tiles; tabs for the P&L path, the VaR/ES history, the contributions, the captures and the scope in other currencies
+   (loaded only when opened). Every figure is explained by the one Explain (SHARED_SCREENS.md section 3, drishti-insight): hover a tile
+   for the preview, click it (or Explain ›, E) for the drawer, Formula · Inputs & lineage · Why it moved · Workbook. The layout (2.9.11.b, the approved mock-up
+   docs/lenses/mockups/var-layout/A.html): the hierarchy tree on the left; the baskets in two searchable drop-downs in the toolbar
+   (System baskets: the bank's portfolios; My baskets: saved, mine and shared with me; keys B and M; drishti_var-layout.js), "+ New basket" opens
+   the basket's sheet (collapsed on load). The header strip's Reporting currency (the product owner's mock-up A, 2.9.4) moves
+   every panel to that currency; the choice stays for the session and goes into the page's link (ccy=EUR). Beside it (2.9.7, the
+   approved mock-up var-horizon-picker) the Horizon (1-day, 10-day √10, 10-day sum), the VaR confidence and the ES confidence: each
+   redraws every panel, goes into the link (h=10d&m=sum&q=0.99&esq=0.975) and is kept in the person's settings (varView); the method
+   strip under the tiles names the horizon, the method and the confidence. A shell: drishti_var-explorer.js
+   fills every panel from /api/var/... and moves the whole screen to a scope in place, panel by panel, each saying when it is computing. #}
+{% extends "base.html" %}
+{% block title %}VaR · {{ scope }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}var{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-parametric.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-basket.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-layout.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'var') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
+{{ back(request) }}
+<div class="vx" data-var data-tab="{{ tab or 'path' }}" data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-admin="{{ 'true' if admin else '' }}" data-ccy="{{ ccy }}"
+     data-h="{{ lens.h if lens else '' }}" data-m="{{ lens.m if lens else '' }}" data-q="{{ lens.q if lens else '' }}" data-esq="{{ lens.esq if lens else '' }}"
+     data-set="{{ lens.set if lens and lens.set else '' }}" data-pm="{{ '1' if parametric_mode else '' }}">
+  <div class="vx-status" aria-live="polite">
+    <span class="vx-cmd mono" data-vx-cmd>VAR {{ scope | replace(':', ' ') }}</span>
+    <span>Business date <b class="mono" data-vx-date>…</b></span>
+    <span>Scenario set <b class="mono" data-vx-set>…</b></span>
+    <span>Data <b class="mono" data-vx-version>…</b></span>
+    <span class="vx-intraday" data-vx-intraday role="status" hidden></span>
+    <span class="vx-timing mono" data-vx-timing></span>
+    <a class="vx-help" href="/help/context/var" title="Help: the VaR guide (F1)" aria-label="Help: the VaR guide" data-vx-help><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if KNOWLEDGE.var %}<a class="vx-help vx-what" href="/help/{{ KNOWLEDGE.var }}" title="What does this mean? Market risk explained: VaR, ES and how the data connects" data-what-link><i class="bi bi-lightbulb" aria-hidden="true"></i> What does this mean?</a>{% endif %}
+    <label class="vx-ccy" title="Every figure of this page in this currency, each trade converted with the scenario FX (crosses through USD); the choice stays for this session">
+      <span>Reporting currency</span>
+      <drishti-select class="vx-select vx-ccy-select" data-vx-ccy label="Reporting currency">
+        <option value="{{ ccy or 'USD' }}">{{ ccy or 'USD' }}</option>
+      </drishti-select>
+    </label>
+    <label class="vx-ccy vx-lens" title="Normal: the date's own scenarios. Stressed: today's positions revalued under the moves of a 12-month stress period (the date's stress scenario set), in USD; every panel follows">
+      <span>Scenarios</span>
+      <drishti-select class="vx-select vx-ccy-select" data-vx-scenarios label="Normal or stressed VaR">
+        <option value="">Normal</option>
+        <option value="stressed"{% if lens and lens.set == 'stressed' %} selected{% endif %}>Stressed</option>
+      </drishti-select>
+    </label>
+    <label class="vx-ccy vx-lens" title="The horizon: 1 day, or 10 days from the same 1-day scenarios (the 1-day figures × √10, or each scenario the sum of 10 consecutive days); every panel follows">
+      <span>Horizon</span>
+      <drishti-select class="vx-select vx-ccy-select" data-vx-horizon label="Horizon">
+        <option value="1d">1-day</option>
+        <option value="10d:sqrt10">10-day (√10)</option>
+        <option value="10d:sum">10-day (sum)</option>
+      </drishti-select>
+    </label>
+    <label class="vx-ccy vx-lens" title="VaR's confidence: another rank of the same sorted scenarios (99%: the 6th worst of 509; 95%: the 26th)">
+      <span>Confidence</span>
+      <drishti-select class="vx-select vx-ccy-select" data-vx-conf label="VaR confidence">
+        <option value="{{ lens.q if lens and lens.q else '' }}">{{ ((lens.q | float * 100) | round(1) | string).replace('.0', '') ~ '%' if lens and lens.q else 'default' }}</option>
+      </drishti-select>
+    </label>
+    <label class="vx-ccy vx-lens vx-lens-es" title="Expected shortfall's confidence: the mean of the worst scenarios beyond it (97.5%: the 13 worst of 509)">
+      <span>ES</span>
+      <drishti-select class="vx-select vx-ccy-select" data-vx-esconf label="ES confidence">
+        <option value="{{ lens.esq if lens and lens.esq else '' }}">{{ ((lens.esq | float * 100) | round(1) | string).replace('.0', '') ~ '%' if lens and lens.esq else 'default' }}</option>
+      </drishti-select>
+    </label>
+  </div>
+  <div class="vx-bar" role="group" aria-label="Baskets, Explain and what-if">
+    {% for key, word, label, why in [('system', 'B', 'System baskets', "The baskets the system provides: the bank's portfolios, from the market-risk pack's portfolio feed."),
+                                    ('mine', 'M', 'My baskets', 'The baskets you saved, and those shared with you.')] %}
+    <div class="vx-pick" data-vx-pick="{{ key }}">
+      <button type="button" class="vx-pick-btn" id="vxPick-{{ key }}" data-vx-pick-btn aria-haspopup="listbox" aria-expanded="false" aria-controls="vxPop-{{ key }}" aria-keyshortcuts="{{ word }}" title="{{ label }} ({{ word }})">
+        <span class="k">{{ label }}</span><b data-vx-pick-cur>choose…</b><span class="car" aria-hidden="true">▾</span></button>
+      <div class="vx-drop" id="vxPop-{{ key }}" data-vx-pick-pop hidden>
+        <div class="vx-pick-search"><i class="bi bi-search" aria-hidden="true"></i>
+          <input type="text" class="vx-pick-q" data-vx-pick-q role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="vxList-{{ key }}" aria-label="Search {{ label | lower }} by name or description" placeholder="Type to search…" autocomplete="off" spellcheck="false">
+          <span class="vx-pick-n" data-vx-pick-n aria-live="polite"></span></div>
+        <ul class="vx-opts" role="listbox" id="vxList-{{ key }}" aria-label="{{ label }}" data-vx-baskets-{{ key }}></ul>
+        <p class="vx-pick-why">{{ why }} Type to search by name or description · ↑↓ choose · Enter open · Esc close</p>
+        {% if key == 'mine' %}<button type="button" class="vx-link vx-pick-new" data-vx-basket-new{{ part(PP, 'basket') }}>+ New basket</button>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    <button type="button" class="vx-link vx-newb" data-vx-basket-open{{ part(PP, 'basket') }} title="Construct your basket: the sheet (Alt+B)" aria-keyshortcuts="Alt+B">+ New basket <span class="tool-count" data-basket-count hidden>0</span></button>
+    <span class="vx-keys" aria-hidden="true"><b>B</b> system <b>M</b> mine <b>E</b> explain</span>
+    <a class="vx-link vx-backtest" data-vx-backtest href="/var/backtesting?scope={{ (scope or 'BANK')|urlencode }}" title="This scope's backtest: its VaR against the P&amp;L of the last 250 business days, the exceptions and the zone (VAR &lt;scope&gt; BACKTEST)">Backtest ›</a>
+    {% if mr_cube %}<a class="vx-link vx-cube" data-vx-cube href="/pivot?preset=mr&amp;text={{ (scope or 'BANK')|urlencode }}" title="This scope in the MR cube: the Pivot's market-risk preset, by desk and risk class with the right totals (MCUBE &lt;scope&gt;)">MR cube ›</a>{% endif %}
+    <button type="button" class="vx-how" data-vx-whatif{{ part(PP, 'whatif') }} title="Pre-deal what-if: add a copy of a booked trade, scaled, to this scope's basket">What-if…</button>
+    <button type="button" class="vx-how" data-vx-explain data-explain-primary aria-keyshortcuts="E" title="Explain the VaR: the formula with its values, the inputs and lineage, why it moved, the workbook (E)">Explain ›</button>
+  </div>
+  <p class="vx-notice" data-vx-notice role="status" hidden></p>
+  <ul class="vx-notices" data-vx-notices role="status" hidden></ul>
+  <div class="vx-basket" data-vx-basket hidden></div>
+  <div class="vx-layout" data-resize-mode="{{ 'parametric' if parametric_mode else 'historical' }}">{# widths remembered per mode (drishti-core's resize) #}
+    <aside class="vx-panel vx-tree-panel" aria-label="Scopes"{{ part(PP, 'tree') }}>
+      <div data-resize="panel" data-resize-key="var.scopes" data-resize-var="--vx-side" data-resize-min="240" data-resize-max="900" aria-label="Resize the Scopes panel"></div>
+      <div class="vx-ph"><h2>Scopes</h2>
+        <drishti-select class="vx-select" data-vx-hierarchy label="Hierarchy"><option value="{{ hierarchy or 'MGMT' }}">{{ hierarchy or 'MGMT' }}</option></drishti-select>
+        <span class="vx-fresh" data-vx-fresh="tree">loading…</span></div>
+      <div class="vx-tree" data-vx-tree aria-label="Scope tree"></div>
+    </aside>
+
+    <section class="vx-main">
+      <nav class="vx-crumb" aria-label="Scope path" data-vx-crumb></nav>
+      <div class="vx-tiles" data-vx-tiles aria-live="polite"{{ part(PP, 'tiles') }}></div>
+      {# parametric VaR (docs/guides/VAR_GUIDE.md, VAR_GUIDE.md section 3.12): a toggle on the explorer (PVAR opens it with the
+         toggle on); on, the three tiles, the tree's Parametric and Gap columns and the normal curve over the P&L histogram (N), each
+         figure's ? from the server's describe lines #}
+      <div class="vp-bar" data-vp-bar>
+        <label class="vp-toggle" title="Parametric VaR beside historical: a cross-check from the same scenario P&amp;L vector, never the official VaR (the PVAR command opens the explorer with it on)"><input type="checkbox" data-vp-on{{ ' checked' if parametric_mode }}> Parametric</label>
+        {% if parametric_mode %}
+        <span class="vp-badge" title="Parametric VaR is a cross-check computed from the same scenario P&amp;L vector: never the official VaR">cross-check, not official</span>
+        <label class="vp-toggle" title="Normal curve on the histogram (key N)"><input type="checkbox" data-vp-curve checked> Normal curve <kbd>N</kbd></label>
+        <a class="vp-link" data-vp-play href="#" title="Every parametric figure worked in a grid and a workbook of formulas: the VaR Playground's Parametric tab">Worked in the playground</a>
+        {% endif %}
+      </div>
+      {% if parametric_mode %}
+      <p class="vx-notice" data-vp-off role="status" hidden></p>
+      <div class="vx-tiles vp-tiles" data-vp-tiles aria-live="polite"></div>
+      {% endif %}
+      <p class="vx-method" data-vx-method aria-live="polite"{{ part(PP, 'method') }}></p>
+      <div class="vx-panel">
+        <div class="vx-tabs" role="tablist" data-vx-tabs>
+          <button class="vx-tab" role="tab" data-tab="path" aria-selected="true">P&amp;L path <span data-vx-n>(509 scenarios)</span></button>
+          <button class="vx-tab" role="tab" data-tab="hist" aria-selected="false"{{ part(PP, 'hist') }}>VaR / ES history</button>
+          <button class="vx-tab" role="tab" data-tab="contrib" aria-selected="false"{{ part(PP, 'contrib') }}>Contributions</button>
+          <button class="vx-tab" role="tab" data-tab="captures" aria-selected="false"{{ part(PP, 'captures') }}>Captured results</button>
+          <button class="vx-tab" role="tab" data-tab="ccy" aria-selected="false"{{ part(PP, 'ccy') }}>In other currencies</button>
+          <span class="vx-fresh vx-tab-fresh" data-vx-fresh="main"></span>
+        </div>
+        <div class="vx-pb" data-pane="path">
+          <div class="vx-charts">
+            <div class="vx-cbox"{{ part(PP, 'path-dist') }}><h3>Distribution of scenario P&amp;L, losses beyond VaR in red</h3><div class="vx-chart" data-vx-histo></div>
+              <div class="vx-legend"><span><i class="lg-var"></i><span data-vx-var-legend>VaR</span></span><span><i class="lg-es"></i><span data-vx-es-legend>ES</span></span><span><i class="lg-tail"></i>tail scenarios</span></div></div>
+            <div class="vx-cbox"{{ part(PP, 'path-tail') }}><h3>Worst 25 scenarios, sorted</h3><div class="vx-chart" data-vx-tail></div></div>
+          </div>
+          <div class="vx-cbox vx-gap"{{ part(PP, 'path-series') }}><h3 data-vx-series-title>P&amp;L by scenario date</h3><div class="vx-chart" data-vx-series></div></div>
+          <div class="vx-drill" data-vx-drill hidden></div>
+          <div class="vx-tablebox vx-grid" data-vx-pathtable aria-label="Scenarios by rank"{{ part(PP, 'path-table') }}></div>
+          <p class="vx-note"><span data-vx-path-note>The highlighted rank is the VaR scenario.</span> <button type="button" class="vx-link" data-vx-more>Next page</button> · <a class="vx-link" data-vx-csv-path href="#">Download the path (CSV)</a> · <a class="vx-link" data-vx-jsonl-path href="#" title="A scenario a line, the CSV's column names">JSONL</a></p>
+        </div>
+        <div class="vx-pb" data-pane="hist" hidden>
+          <div class="vx-hist2">
+            <div class="vx-cbox"><h3>VaR, ES and the day's hypothetical P&amp;L; one currency axis, losses below zero</h3><div class="vx-chart" data-vx-hline></div>
+              <div class="vx-legend"><span><i class="lg-var"></i>−VaR</span><span><i class="lg-es"></i>−ES</span><span><i class="lg-pnl"></i>hypothetical P&amp;L</span><span><i class="lg-exc"></i>backtest exception</span></div>
+              <p class="vx-note" data-vx-hist-note></p></div>
+            <div class="vx-tablebox vx-tall vx-grid" data-vx-histtable aria-label="VaR, ES and P&amp;L by date"></div>
+          </div>
+        </div>
+        <div class="vx-pb" data-pane="contrib" hidden>
+          <div class="vx-contrib-bar">
+            <span class="vx-seg" role="group" aria-label="Contributions by">
+              <button type="button" class="vx-segb" data-by="child" aria-pressed="true">Children</button>
+              <button type="button" class="vx-segb" data-by="position" aria-pressed="false">By position</button>
+              <button type="button" class="vx-segb" data-by="trade" aria-pressed="false">By trade</button>
+            </span>
+          </div>
+          <p class="vx-note vx-shown" data-vx-ctable-shown hidden></p>
+          <div class="vx-grid" data-vx-ctable aria-label="Contributions"></div>
+          <p class="vx-ctotal mono" data-vx-ctotal hidden></p>
+          <p class="vx-note" data-vx-ctable-note>Component VaR adds up to the scope's VaR (Euler, on the VaR scenario's neighbourhood). Incremental VaR = the scope's VaR minus its VaR without the row. Click a row to drill in; + basket adds it to your basket.</p>
+        </div>
+        <div class="vx-pb" data-pane="captures" hidden>
+          <div class="vx-contrib-bar"><input class="vx-input" data-vx-cap-note placeholder="A note for the capture (optional)" aria-label="Capture note">
+            <button type="button" class="btn btn-sm vx-btn primary" data-vx-capture>Capture VaR</button>
+            <span class="vx-note" data-vx-cap-msg aria-live="polite"></span></div>
+          <div class="vx-grid" data-vx-captable aria-label="Captured results"></div>
+          <p class="vx-note" data-vx-cap-more hidden></p>
+          <div class="vx-compare" data-vx-compare hidden></div>
+        </div>
+        <div class="vx-pb" data-pane="ccy" hidden>
+          <p class="vx-note" data-vx-ccy-note>The same scope in each reporting currency: computed from its PVs summed per trade currency, converted with that currency's scenario FX.</p>
+          <div class="vx-grid vx-ccytable" data-vx-ccytable aria-label="The scope in other currencies"></div>
+          <p class="vx-note">Click a currency to show the whole page in it.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+  {{ foot(PP, request.url | string) }}
+</div>
+{% endblock %}
+{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="/static/elements/drishti-tree/drishti_tree.js?v={{ ASSET_V }}"></script><script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_table.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-basket-sheet.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-layout.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-parametric.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-explorer.js?v={{ ASSET_V }}"></script>{% if smat_on() %}<script src="/static/js/drishti_smat-link.js?v={{ ASSET_V }}"></script>{% endif %}{% if play_on() %}<script src="/static/js/drishti_play-link.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

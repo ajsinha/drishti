@@ -14,13 +14,13 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The palette: the 22 panel kinds of Rachana with an icon and one line each (what the panel shows and what it needs). A kind is
- * dragged onto the canvas (the pointer drag of drishti_drag.js) or chosen from the "Add panel..." menu / the Add button on a row: all three
- * give AddPanel at the chosen place. The list is the language's, not a pack's; the kinds the server's schema knows are checked
- * against it when the schema arrives (a kind the schema has and this list lacks is still offered, with no icon text).
+/* The palette: the 22 panel kinds of Rachana with an icon and one line each (what the panel shows and what it needs), drawn by
+ * drishti-designer's Palette (by family, a search; the arrows move, a click or Enter adds). A kind is dragged onto the canvas (through
+ * the page's DragHub, WB.drag.hub) or chosen from the "Add panel..." menu: all give AddPanel at the chosen place. The list is the
+ * language's, not a pack's.
  *
  *   WB.palette.kinds                      [{kind, icon, text, family}]
- *   WB.palette.render(listEl, onAdd)      fills the list; each row has an Add button for the keyboard
+ *   WB.palette.render(box, onAdd)         the kit's Palette in the box (answered)
  *   WB.palette.items()                    the kinds as menu items */
 (function () {
   'use strict';
@@ -51,28 +51,11 @@
   ];
   var list = KINDS.map(function (k) { return { kind: k[0], icon: k[1], text: k[2], family: k[3] }; });
 
-  function article(w) { return /^[aeiou]/.test(w) ? 'an' : 'a'; }
-  function render(box, onAdd, filterEl) {
-    box.textContent = '';
-    if (filterEl) {
-      filterEl.addEventListener('input', function () {
-        var q = filterEl.value.trim().toLowerCase();
-        Array.prototype.forEach.call(box.children, function (li) { li.hidden = !!q && (li.getAttribute('data-kind') + ' ' + li.getAttribute('data-text')).toLowerCase().indexOf(q) < 0; });
-      });
-    }
-    list.forEach(function (k) {
-      var li = WB.el('li', 'wb-kind', null, { 'data-kind': k.kind, 'data-text': k.text + ' ' + k.family });
-      var i = WB.el('i', 'bi bi-' + k.icon, null, { 'aria-hidden': 'true' });
-      var t = WB.el('span', 'wb-kind-t');
-      t.appendChild(WB.el('b', 'mono', k.kind));
-      t.setAttribute('title', k.text);
-      var b = WB.el('button', 'btn-pill btn-ghost wb-kind-add', 'Add', { type: 'button', 'aria-label': 'Add ' + article(k.kind) + ' ' + k.kind + ' panel', title: 'Add ' + article(k.kind) + ' ' + k.kind + ' panel after the selected one' });
-      b.addEventListener('click', function () { onAdd(k.kind); });
-      li.appendChild(i); li.appendChild(t); li.appendChild(b);
-      li.title = k.text + ' · drag onto the canvas to add it there';
-      WB.drag.attach(li, { payload: function () { return { type: 'kind', kind: k.kind }; }, label: function () { return '+ ' + k.kind; } });
-      box.appendChild(li);
-    });
+  function render(box, onAdd) {
+    var pal = new window.Drishti.elements.designer.Palette(box, { hub: WB.drag.hub, label: 'Panel kinds', placeholder: 'Filter the ' + list.length + ' kinds',
+      entries: list.map(function (k) { return { id: k.kind, label: k.kind, detail: k.text, category: k.family, icon: 'bi bi-' + k.icon, payload: { type: 'kind', kind: k.kind } }; }) });
+    pal.on('add', function (e) { onAdd(e.entry.id); });
+    return pal;
   }
   function items() { return list.map(function (k) { return { label: k.kind, detail: k.text, badge: k.family, value: k.kind, icon: k.icon }; }); }
 

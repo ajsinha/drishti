@@ -17,8 +17,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import re
-from urllib.parse import quote
 
 from fastapi import APIRouter, Query, Request
 
@@ -37,141 +35,18 @@ def _problem(e: BackendError) -> JSONResponse:
     return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
 
 
-async def what_suggestions(request: Request, words: str) -> list:
-    """``WHAT``'s dropdown: the Knowledge home, then the glossary's terms that start with the words (each opens its entry), and for
-    words that are no term a search of the Knowledge pages."""
-    from core.knowledge import HOME
-    from routes.common import library
+@router.get("/search")
+async def search(request: Request, q: str = "", where: str = Query("all", alias="in"), limit: int | None = None):
+    """The one search (core/search.py): ``in=command`` the command line's type-ahead (without a limit the server's own,
+    drishti.commands.suggest-limit, 25), ``in=help`` Help's pages, ``in=all`` the global search box: entities, commands, screens, Help pages
+    and things you can build, grouped, best first, only what this person may see."""
+    from core import search as finder
 
-    lib = await library(request)
-    folder = (request.app.state.docs_dir / "knowledge").resolve()
-    out = [] if words else [{"mnemonic": "WHAT", "title": "Knowledge: what the words of your data mean",
-                             "subtitle": "WHAT <GO> opens the Knowledge home; WHAT <term> its glossary entry (WHAT PFE, WHAT netting set)",
-                             "complete": "WHAT ", "href": f"/help/{lib.by_file.get(folder / HOME, '')}", "type": "what"}]
-    for e in request.app.state.glossary.starting(words):
-        slug = lib.by_file.get(folder / e.page)
-        if slug:
-            out.append({"mnemonic": "WHAT", "title": e.term + (f" ({e.name})" if e.name else ""), "subtitle": f"{e.title} · {e.meaning}",
-                        "complete": f"WHAT {e.term}", "href": f"/help/{slug}#{e.anchor}", "type": "what"})
-    if words and not out:
-        out.append({"mnemonic": "WHAT", "title": f"Search the Knowledge pages for {words}", "subtitle": "No term of the glossary is called that",
-                    "complete": f"WHAT {words}", "href": f"/what?q={quote(words)}", "type": "what"})
-    return out
-
-
-async def form_suggestions(request: Request, pack: str | None, kind: str | None, spaced: bool) -> list:
-    """Type-ahead for ``FORM <pack> <kind>``: only packs the person may open, and only kinds they may open in that pack."""
-    from routes.common import packs
-    me = ident(request)
-    if kind is None and not (pack and spaced):          # still typing the pack's name
-        want = (pack or "").lower()
-        return [{"mnemonic": "FORM", "title": p["title"], "subtitle": f"search {p['name']} with a form", "complete": f"FORM {p['name']} ",
-                 "href": f"/form/{p['name']}", "type": "form"}
-                for p in await packs(request) if p.get("active", True) and p.get("kinds") and (not want or want in p["name"].lower() or want in p["title"].lower())]
+    if where not in finder.WHERE:
+        return JSONResponse({"code": "DRS-4004", "detail": f"in is one of {', '.join(finder.WHERE)}"}, status_code=400)
     try:
-        info = await request.app.state.backend.form(pack or "", "", me)
-    except BackendError:
-        return []
-    want = (kind or "").lower()
-    return [{"mnemonic": "FORM", "title": k["label"], "subtitle": f"{info['title']} · {k['kind']}", "complete": f"FORM {info['pack']} {k['kind']}",
-             "href": f"/form/{info['pack']}?kind={k['kind']}", "type": "form"}
-            for k in info["kinds"] if not want or want in k["kind"].lower() or want in k["label"].lower()]
-
-
-RUPAKA = "RUPAKA"
-BI_ENTRIES = (("", "BI home", "Recent, favourites, certified, shared with me", "/bi"), ("WORKSPACE", "My workspace", "Your drafts and the workspaces you belong to", "/bi/w/me"),
-              ("CATALOGUE", "Catalogue", "Every published report and board you may open", "/bi/catalogue"))
-
-
-async def rupaka_suggestions(request: Request, word: str, rest: str | None) -> list:
-    """Type-ahead for the reserved word ``BI`` (alias ``RUPAKA``): its three pages, then published reports whose id or title matches, only for people who hold the bi power."""
-    me = ident(request)
-    if not request.app.state.bi_on or not (await request.app.state.bi_me.get(request.app.state.backend, me)).get("enabled"):
-        return []
-    want = (rest or "").strip().lower()
-    kw = (word or RUPAKA).upper()                # echo the keyword as typed: BI or its alias RUPAKA
-    out = [{"mnemonic": kw, "title": title, "subtitle": sub, "complete": f"{kw} {key}".strip(), "href": href, "type": "bi"}
-           for key, title, sub, href in BI_ENTRIES if rest is None or not want or key.lower().startswith(want)]
-    if rest is not None and want:
-        try:
-            found = (await request.app.state.backend.bi("GET", "/catalogue", me, q=want, limit=8)).get("items") or []
-        except BackendError:
-            found = []
-        out += [{"mnemonic": kw, "title": i["title"], "subtitle": f"{i['kind']} · {i['workspaceName']} · {i['owner']}", "complete": f"{kw} {i['title']}",
-                 "href": f"/bi/i/{i['id']}", "type": "bi"} for i in found]
-    return out
-
-
-@router.get("/suggest")
-async def suggest(request: Request, q: str = "", limit: int | None = None):
-    """The command line's dropdown; without a limit the server's own (drishti.commands.suggest-limit, 25) applies. The commands of an
-    engine the person's role does not open are left out (core/menus.py, the Engines menu's rule)."""
-    from core import menus
-
-    if menus.engine_refused(request, q):
-        return []
-    return menus.suggestions_opened(request, await _suggest(request, q, limit))
-
-
-async def _suggest(request: Request, q: str, limit: int | None):
-    ed = getattr(request.state, "edition", None) or request.app.state.editions.instance     # the words an edition (or lens) keeps
-    bi = re.match(r"(?is)^\s*(bi|rupaka)(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if bi and ed.word_on(bi.group(1)):                                                     # the reserved word RUPAKA: the BI pages and the reports you may open
-        return await rupaka_suggestions(request, bi.group(1), bi.group(2))
-    keyword = []
-    if re.match(r"(?i)^\s*(b|bi|r|ru|rup|rupa|rupak)\s*$", q.replace("<GO>", "")) and ed.word_on("BI" if q.strip().lower().startswith("b") else RUPAKA) \
-            and await rupaka_suggestions(request, "", None):    # the first letters of it: offer the keyword
-        kw = "BI" if q.strip().lower().startswith("b") else RUPAKA
-        keyword = [{"mnemonic": kw, "title": "BI: business intelligence (Rupaka)", "subtitle": f"{kw} <GO> opens the BI home; {kw} CATALOGUE, {kw} WORKSPACE, {kw} <report>",
-                    "complete": f"{kw} ", "href": "/bi", "type": "bi"}]
-    func = re.match(r"(?is)^\s*func(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if func and ed.word_on("FUNC"):                                                   # the reserved word FUNC: the command directory, filtered by what follows
-        words = (func.group(1) or "").strip()
-        return [{"mnemonic": "FUNC", "title": "Functions: every command you can use" + (f", matching {words}" if words else ""),
-                 "subtitle": "FUNC <GO> opens the list; FUNC <words> opens it filtered (a command, a word of what it does, a pack)",
-                 "complete": f"FUNC {words}".strip(), "href": "/func" + (f"?q={quote(words)}" if words else ""), "type": "func"}]
-    dmap = re.match(r"(?is)^\s*datamap(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if dmap and ed.word_on("DATAMAP"):                                                   # the reserved word DATAMAP: the data map, focused on what follows
-        words = (dmap.group(1) or "").strip()
-        return [{"mnemonic": "DATAMAP", "title": "Data map: every kind of data, how it joins, how much there is" + (f", at {words}" if words else ""),
-                 "subtitle": "DATAMAP <GO> opens the map; DATAMAP <domain or kind> opens it focused (DATAMAP trade, DATAMAP counterparty)",
-                 "complete": f"DATAMAP {words}".strip(), "href": "/datamap" + (f"?q={quote(words)}" if words else ""), "type": "datamap"}]
-    dview = re.match(r"(?is)^\s*(?:export|data)(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if dview and ed.word_on("EXPORT"):                                                   # the reserved word EXPORT (DATA, its older alias): Export data, on the dataset that follows
-        words = (dview.group(1) or "").strip()
-        return [{"mnemonic": "EXPORT", "title": "Export data: every dataset, its dates; choose columns and filters, download a day" + (f", of {words}" if words else ""),
-                 "subtitle": "EXPORT <GO> lists the datasets; EXPORT <dataset> [date] opens one (EXPORT trade-valuation 2026-09-30); download only, as .jsonl.gz; DATA works too",
-                 "complete": f"EXPORT {words}".strip(), "href": "/data" + (f"?q={quote(words)}" if words else ""), "type": "data"}]
-    smat = re.match(r"(?is)^\s*smat(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if smat and ed.word_on("SMAT"):                                                   # SMAT <id> [N]: the scenario matrix (smat_routes.py)
-        from routes.smat_routes import smat_command
-        words = (smat.group(1) or "").strip()
-        return [{"mnemonic": "SMAT", "title": "Scenario matrix: scenario P&L by scenario day across the last N business dates" + (f", of {words}" if words else ""),
-                 "subtitle": "SMAT <trade, position or VaR scope> [N] <GO> (SMAT DESK:RATES 20, SMAT POS <position>, SMAT TRD <trade> 30)",
-                 "complete": f"SMAT {words}".strip(), "href": smat_command(["SMAT"] + words.split()) or "/smat", "type": "smat"}]
-    play = re.match(r"(?is)^\s*play(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if play and ed.word_on("PLAY") and ed.word_on("VAR"):                          # PLAY VAR <scope|ids>: the VaR Playground (play_routes.py)
-        from routes.play_routes import play_command
-        words = (play.group(1) or "").strip()
-        if not words.upper().startswith("VAR"):
-            words = ("VAR " + words).strip()
-        me = getattr(request.state, "identity", None)
-        return [{"mnemonic": "PLAY", "title": "VaR Playground: every VaR figure worked in a grid and an Excel workbook of real formulas"
-                 + (f", of {words[4:]}" if words[4:] else ""),
-                 "subtitle": "PLAY VAR <scope or ids> <GO> (PLAY VAR DESK RATES, PLAY VAR BANK 10D SUM, PLAY VAR POS-10442 T-1001)",
-                 "complete": f"PLAY {words}".strip(), "href": play_command(["PLAY"] + words.split(), (me.user if me else "") or "") or "/play",
-                 "type": "play"}]
-    what = re.match(r"(?is)^\s*what(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if what and ed.word_on("WHAT"):                                                   # the reserved word WHAT: the Knowledge pages, then the glossary's terms
-        return await what_suggestions(request, (what.group(1) or "").strip())
-    typed = re.match(r"(?i)^\s*form(?:\s+(\S*))?(?:\s+(\S*))?\s*$", q.replace("<GO>", ""))
-    if typed and ed.word_on("FORM"):                           # the reserved word FORM: packs you may open, then their kinds
-        return await form_suggestions(request, typed.group(1), typed.group(2), q.endswith(" "))
-    if re.match(r"(?i)^\s*var\s+\S", q) and ed.word_on("VAR"):          # 2.9.7: a VAR command's horizons and confidences once a scope is typed
-        from routes.var_routes import var_suggestions
-        keyword = var_suggestions(q) + keyword
-    try:
-        return keyword + await request.app.state.backend.suggest(q, ident(request), limit)
+        return JSONResponse(await finder.search(request, q, where, limit if limit is None else max(1, min(limit, 100))),
+                            headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return _problem(e)
 
@@ -286,7 +161,7 @@ async def view(request: Request, kind: str, id_: str):
 
 def view_problem(request: Request, e: BackendError, kind: str) -> JSONResponse:
     """A refused view for the renderer: with ``DRS-4023`` (the edition or the person's lens hides the kind) the fix names the lens plainly,
-    and ``lens`` says which one the person is inside (CLIENT_RENDERER.md 10)."""
+    and ``lens`` says which one the person is inside (EMBED_GUIDE.md 10)."""
     if e.code != "DRS-4023":
         return _problem(e)
     from core.edition import hidden_hint, lens_of
@@ -323,7 +198,7 @@ def _view_event(request: Request, event: str, data: str, embed: bool = False) ->
 @router.get("/stream/{kind}/{id_:path}")
 async def stream(request: Request, kind: str, id_: str):
     """Relays one view's live stream (kept for API clients; pages use /api/channel). ``?raw=1`` relays the server's own events unchanged
-    (the whole ViewModel, then frames whose panel patches are panels, not HTML): what the client-side renderer applies (CLIENT_RENDERER.md 10)."""
+    (the whole ViewModel, then frames whose panel patches are panels, not HTML): what the client-side renderer applies (EMBED_GUIDE.md 10)."""
     backend = request.app.state.backend
     raw = request.query_params.get("raw") == "1"
 

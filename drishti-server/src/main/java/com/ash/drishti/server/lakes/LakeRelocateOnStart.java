@@ -26,7 +26,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
  * The one-time move of a demo lake built in the older layout ({@code <data>/delta/<domain>/<table>}) into its own folder
- * {@code <data>/delta/demo/} (docs/admin/OPERATIONS.md, "The lakes' folders"), before any connector opens a table: {@link LakeRelocate},
+ * {@code <data>/delta/demo/} (docs/guides/OPERATIONS_GUIDE.md, "The lakes' folders"), before any connector opens a table: {@link LakeRelocate},
  * safe by construction (only the lake's known folders, by a rename, every table measured before and after, moved back on any error, never a
  * delete, recorded once). {@code drishti.lakes.relocate-on-start: false} leaves it to {@code drishti.py lake relocate demo}. A refusal is
  * logged with its reason and the server starts as it is. Once the demo lake is in its own folder, the connector files that still read it
@@ -85,8 +85,10 @@ public final class LakeRelocateOnStart implements EnvironmentPostProcessor, Orde
         String dir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
         try {
             com.ash.drishti.lakeconfig.LakeFiles.Migration m = com.ash.drishti.lakeconfig.LakeFiles.adoptDemo(Path.of(dir), lakes.folder() == null
-                    ? Path.of(Lakes.DEFAULT_DIR) : lakes.folder(), true);
+                    ? Path.of(Lakes.DEFAULT_DIR) : lakes.folder(), true, com.ash.drishti.packs.TemplateStamp::keepPristine);   // a never-edited file stays so
             m.notes().forEach(n -> LOG.log(System.Logger.Level.INFO, "connector " + n + " (the file before: <name>.yaml.before-lake-<time>.bak)"));
+            m.lakeFiles().keySet().forEach(f -> LOG.log(System.Logger.Level.INFO, "lake file " + f + ": the tables those connectors read that it "
+                    + "lacked were added at the end of its tables (every other line kept as it was)"));
         } catch (java.io.IOException | RuntimeException e) {
             LOG.log(System.Logger.Level.WARNING, "the connector files that read the demo lake by its old root were not moved to lake: demo ("
                     + e.getMessage() + "); they read " + o.from() + " until they are");
@@ -98,7 +100,7 @@ public final class LakeRelocateOnStart implements EnvironmentPostProcessor, Orde
             case "moved" -> LOG.log(System.Logger.Level.INFO, "lake " + o.lake() + ": the one-time move into its own folder is done: " + o.message());
             case "nothing", "done-before" -> LOG.log(System.Logger.Level.DEBUG, "lake " + o.lake() + ": " + o.message());
             default -> LOG.log(System.Logger.Level.WARNING, "lake " + o.lake() + ": the one-time move into its own folder " + o.state() + ": " + o.message()
-                    + " (the demo connectors read " + o.to() + "; docs/admin/OPERATIONS.md)");
+                    + " (the demo connectors read " + o.to() + "; docs/guides/OPERATIONS_GUIDE.md)");
         }
     }
 }

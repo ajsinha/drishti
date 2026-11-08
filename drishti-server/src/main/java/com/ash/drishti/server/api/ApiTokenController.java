@@ -55,9 +55,9 @@ public class ApiTokenController {
     private final SecurityProperties props;
     private final TokenScopes scopes;
 
-    public ApiTokenController(ApiTokenStore tokens, Entitlements entitlements, UserService users, SecurityProperties props) {
+    public ApiTokenController(ApiTokenStore tokens, Entitlements entitlements, UserService users, SecurityProperties props, TokenScopes scopes) {
         this.props = props;
-        this.scopes = new TokenScopes(props);
+        this.scopes = scopes;
         this.tokens = tokens;
         this.entitlements = entitlements;
         this.users = users;
@@ -85,7 +85,7 @@ public class ApiTokenController {
 
     @GetMapping("/api/v1/me/tokens/scopes")
     public ScopeChoices scopeChoices() {
-        return new ScopeChoices(props.tokenScopes().entrySet().stream().sorted(java.util.Map.Entry.comparingByKey())
+        return new ScopeChoices(scopes.all().entrySet().stream().sorted(java.util.Map.Entry.comparingByKey())
                 .map(e -> new ScopeInfo(e.getKey(), e.getValue().description())).toList(), props.tokenWriteMaxDays());
     }
 
@@ -100,7 +100,7 @@ public class ApiTokenController {
                 .map(String::trim).distinct().toList();
         for (String s : chosen) {
             if (!scopes.known(s)) {
-                throw new DrishtiException(ErrorCode.BAD_REQUEST, "unknown scope '" + s + "'; choose from read" + props.tokenScopes().keySet().stream().sorted().map(k -> ", " + k).reduce("", String::concat));
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "unknown scope '" + s + "'; choose from read" + scopes.all().keySet().stream().sorted().map(k -> ", " + k).reduce("", String::concat));
             }
         }
         List<String> write = chosen.stream().filter(s -> !TokenScopes.READ.equals(s)).toList();

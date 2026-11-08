@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * 2.9.11.e's one parity proof (docs/architecture/BI_FOUNDATION_2911E.md sections 5.2 and 5.3): every answer the code gives now equals the
+ * 2.9.11.e's one parity proof (docs/architecture/ARCHITECTURE.md §28 sections 5.2 and 5.3): every answer the code gives now equals the
  * fixture {@link BiFoundationRecorder} recorded before anything moved, every person's rows and masks included; floating point within 1e-9
  * relative, everything else exactly. A difference fails naming the file, the person, the case and both values. Until the fixtures are
  * recorded and committed (the release's first heavy step) the test is skipped and says so.

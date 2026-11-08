@@ -43,7 +43,8 @@ public class BiConfiguration {
 
     @Bean(initMethod = "start", destroyMethod = "close")
     public BiFolder biFolder(BiProperties props, org.springframework.core.env.Environment env) {
-        return new BiFolder(props.dir(), env.getProperty("drishti.tables.root", "./config/tables"), props.folderRefresh(), props.watch());
+        return new BiFolder(props.dir(), env.getProperty("drishti.tables.root", "./config/tables"), props.folderRefresh(), props.watch())
+                .withDomains(com.ash.drishti.server.modules.DomainFolders.on(env));
     }
 
     @Bean

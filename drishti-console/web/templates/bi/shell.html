@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The BI page shell (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 5): the shared top bar and sign-in, then its own layout: a left rail and a wide canvas. No F-key footer.
+{# The BI page shell (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 5): the shared top bar and sign-in, then its own layout: a left rail and a wide canvas. No F-key footer.
    Pages fill `bi_main`; everything dynamic is drawn by static/js/drishti_bi.js from the same-origin JSON (/bi/api/...). #}
 {% extends "base.html" %}
 {% block title %}{% block bi_title %}BI{% endblock %} · {{ PRODUCT }}{% endblock %}
@@ -24,26 +24,15 @@
 {# F1 opens the guide of the page: the designers, the Notebook and Transforms have their own (config/help.yaml, contextual). #}
 {% block screen %}{% if bi_page in ('designer', 'theme-designer', 'notebook', 'transform') %}bi-{{ bi_page }}{% else %}{{ screen | default('bi') }}{% endif %}{% endblock %}
 {% block content %}
-{% macro rail_link(href, icon, label, key, soon='') -%}
-  <a href="{{ href }}" class="bi-rail-link{% if soon %} bi-rail-soon{% endif %}"{% if bi_page == key %} aria-current="page"{% endif %}>
-    <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span>{{ label }}</span>{% if soon %}<small class="bi-soon">{{ soon }}</small>{% endif %}</a>
-{%- endmacro %}
+{# The rail is the sitemap's BI menu (config/sitemap.yaml: its items, then its also:); an item marks itself current by its id without
+   the bi- prefix (bi_page); My runs carries the count of the person's runs queued or running. #}
 <div class="bi-shell">
   <nav class="bi-rail" aria-label="Business intelligence">
-    {{ rail_link('/bi', 'house', 'Home', 'home') }}
-    {{ rail_link('/bi/catalogue', 'collection', 'Catalogue', 'catalogue') }}
-    <a href="/bi/w/me" class="bi-rail-link"{% if bi_page == 'workspace' and workspace == 'me' %} aria-current="page"{% endif %}><i class="bi bi-person-workspace" aria-hidden="true"></i><span>My workspace</span></a>
-    <a href="/bi/w/me?tab=runs" class="bi-rail-link" data-rail-runs><i class="bi bi-activity" aria-hidden="true"></i><span>Runs</span><small class="bi-runs-count" data-runs-count title="Your runs queued or running" hidden></small></a>
-    {{ rail_link('/bi/workspaces', 'diagram-3', 'Workspaces', 'workspaces') }}
-    {{ rail_link('/bi/models', 'boxes', 'Models', 'models') }}
-    {{ rail_link('/build/tables', 'table', 'Tables & models', 'tables') }}
-    {{ rail_link('/bi/datasets', 'hdd-stack', 'Datasets', 'datasets') }}
-    {{ rail_link('/bi/designer', 'bounding-box', 'Designer', 'designer') }}
-    {{ rail_link('/bi/environments', 'arrow-left-right', 'Environments', 'environments') }}
-    {{ rail_link('/pivot', 'grid-3x3', 'Pivot', 'pivot') }}
-    {{ rail_link('/bi/notebook', 'journal-code', 'Notebook', 'notebook') }}
-    {{ rail_link('/bi/transform', 'funnel', 'Transforms', 'transform') }}
-    <button type="button" class="bi-rail-link bi-rail-keys" data-bi-keys aria-label="Keyboard shortcuts (?)"><i class="bi bi-keyboard" aria-hidden="true"></i><span>Keys <kbd>?</kbd></span></button>
+    {% for r in bi_rail(request, {'me': me, 'bi_me': bi_me, 'pack_switcher': pack_switcher, 'PRODUCT': PRODUCT}) %}
+    {% set key = {'bi-workspace': 'workspace', 'tables-models': 'tables', 'build-home': 'build'}.get(r.id, r.id[3:] if r.id.startswith('bi-') else r.id) %}
+    <a href="{{ r.href }}" class="bi-rail-link" data-rail="{{ r.id }}" title="{{ r.desc }}"{% if r.id == 'bi-runs' %} data-rail-runs{% endif %}{% if bi_page == key and (key != 'workspace' or workspace == 'me') %} aria-current="page"{% endif %}><i class="bi bi-{{ r.icon }}" aria-hidden="true"></i><span>{{ r.label }}</span>{% if r.id == 'bi-runs' %}<small class="bi-runs-count" data-runs-count title="Your runs queued or running" hidden></small>{% endif %}</a>
+    {% endfor %}
+    <button type="button" class="bi-rail-link bi-rail-keys" data-keys-open aria-label="Keys on this screen (?)"><i class="bi bi-keyboard" aria-hidden="true"></i><span>Keys <kbd>?</kbd></span></button>
   </nav>
   <section class="bi-canvas" id="biCanvas" data-bi-page="{{ bi_page }}" data-workspace="{{ workspace | default('') }}" data-item="{{ item | default('') }}"
            data-user="{{ me.user if me else '' }}"
@@ -52,19 +41,5 @@
     {% block bi_main %}{% endblock %}
   </section>
 </div>
-<dialog class="bi-keys" id="biKeys" aria-labelledby="biKeysH">
-  <h2 id="biKeysH">Keys in BI</h2>
-  <dl>
-    <dt><kbd>/</kbd></dt><dd>Search the catalogue</dd>
-    <dt><kbd>g</kbd> <kbd>h</kbd></dt><dd>Home</dd>
-    <dt><kbd>g</kbd> <kbd>c</kbd></dt><dd>Catalogue</dd>
-    <dt><kbd>g</kbd> <kbd>w</kbd></dt><dd>My workspace</dd>
-    <dt><kbd>g</kbd> <kbd>r</kbd></dt><dd>My runs</dd>
-    {% block bi_keys %}{% endblock %}
-    <dt><kbd>?</kbd></dt><dd>This list</dd>
-    <dt><kbd>Esc</kbd></dt><dd>Close this list</dd>
-  </dl>
-  <form method="dialog"><button class="btn-pill btn-accent" autofocus>Close</button></form>
-</dialog>
 {% endblock %}
 {% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script>{% endblock %}

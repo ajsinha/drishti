@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 
 /**
- * Busy protection's gate (docs/admin/OPERATIONS.md, "Busy protection"): the heap after a collection, the load slots, the open dates' heap,
+ * Busy protection's gate (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): the heap after a collection, the load slots, the open dates' heap,
  * the request handlers and the disk driven to their levels; every refusal a {@code DRS-95xx} with {@code Retry-After}; a crowd gets one
  * decision; the operator's override with a reason, audited, ending by itself.
  */

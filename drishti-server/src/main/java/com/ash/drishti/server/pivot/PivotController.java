@@ -52,7 +52,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The pivot engine's API, {@code /api/v1/pivot} (PIVOT_GUIDE.md, API_GUIDE.md "Pivot"): sources and their catalogues, a view's answer, the
+ * The pivot engine's API, {@code /api/v1/pivot} (PIVOT_GUIDE.md, API_REFERENCE.md "Pivot"): sources and their catalogues, a view's answer, the
  * scan estimate, a node opened lazily, two dates compared, a cell by reference, a cell's member rows, provenance, saved and shared views,
  * and exports (xlsx with outline and formulas only where a measure adds up, CSV, Arrow, the definition as YAML). Every figure comes from the
  * {@code drishti-bicompute} engine; entitlements and masks apply before aggregation (the providers read only what the person may see). Every
@@ -232,7 +232,7 @@ public class PivotController {
     }
 
     /**
-     * The document paths people typed on a source, most used first, with how each becomes a column read (PIVOT_ENGINE.md section 6.7):
+     * The document paths people typed on a source, most used first, with how each becomes a column read (ARCHITECTURE.md section 26.4):
      * an administrator's suggestions to promote a path in the connector's layout or to add it to a BI dataset.
      */
     @GetMapping("/paths")

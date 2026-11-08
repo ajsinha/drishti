@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The engine catalogue (docs/architecture/COMPUTE_ENGINES.md section 2): every compute engine of the product, what it needs and uses, and
+# The engine catalogue (docs/guides/ADMIN_GUIDE.md section 2): every compute engine of the product, what it needs and uses, and
 # everything it brings to the screen. Part of the product: the server reads it from its jar (engines/catalogue.yaml), the console its copy
 # (drishti-console/config/engines.yaml, the same bytes: a test checks it). A site's config/engines/<id>.yaml holds only the switch and the
 # engine's settings. An engine still to be built is listed with installed: false: the switch framework knows it, Admin -> Engines shows it
@@ -22,178 +22,12 @@
 # switch names, still accepted: DRS-1024), shipped (the switch as shipped), installed, live-on (false: turning it on needs a restart),
 # prefixes (the settings it owns), needs (hard, on the same node: refused without them, DRS-1021), uses (soft: its parts that read the other
 # are hidden), api (server path prefixes: 404 DRS-1020 when it runs nowhere), console (console path prefixes; "=/path" is that path only),
-# words (command words; "PLAY VAR" is two), menus (item ids of drishti-console/config/menus.yaml), help (help.yaml slugs), landings, tiles
+# words (command words; "PLAY VAR" is two), menus (item ids of drishti-console/config/sitemap.yaml), help (help.yaml slugs), landings, tiles
 # (Home quick cards by title), lenses, bi (BI dataset id prefixes), cli (drishti.py commands), playgrounds, connectors (its own), kinds
 # (computed here), inputs (engine-input kinds it reads: not read ahead on a node where no running engine reads them), ai-tools.
+# The banking module's engines (VaR, exposure, sensitivities, FRTB-SA, SIMM, the MR cube) are in its jar's
+# META-INF/drishti/engines.yaml (the same shape; the console's copy: its plugin's engines.yaml): a module's entries come first.
 engines:
-  - id: var
-    title: VaR
-    about: "VaR, ES, stressed VaR, the what-if, why it moved, regulatory VaR (backtesting, report runs, sign-off)"
-    file: var.yaml
-    switch: drishti.engines.var.enabled
-    env: DRISHTI_VAR_ENABLED
-    aliases: [drishti.var.enabled]
-    shipped: true
-    installed: true
-    live-on: true
-    prefixes: [drishti.var, drishti.regulatory]
-    needs: []
-    uses: []
-    api: [/api/v1/var]
-    console: [/var, /api/var/, /smat, /api/smat/, "=/play", /api/play/, /admin/scopes]
-    words: [VAR, "VAR EXPLAIN", PVAR, SMAT, "PLAY VAR", SWIN]
-    menus: [var-explorer, var-parametric, smat, play-var, play-pvar, backtesting, stress-window]
-    help: [docs-guides-var-guide, docs-tutorials-25-var-from-the-bank-to-a-trade, docs-tutorials-43-parametric-var-beside-historical, docs-guides-regulatory-var-reporting]
-    landings: []
-    tiles: [VaR of the bank, VaR of the rates desk]
-    lenses: []
-    bi: [bi.market_risk_var_]
-    cli: [var, play var]
-    playgrounds: [var, pvar]
-    connectors: [var-engine, var-positions, var-pv-stream]
-    kinds: [var-result]
-    inputs: [pnl-vector, scenario-pv]
-    ai-tools: []
-  - id: exposure
-    title: Exposure
-    about: "EE, ENE, PFE, EPE, EEPE, the exposure what-if and its playground"
-    file: exposure.yaml
-    switch: drishti.engines.exposure.enabled
-    env: DRISHTI_EXPOSURE_ENABLED
-    aliases: [drishti.ccr.exposure.enabled]
-    shipped: true
-    installed: true
-    live-on: true
-    prefixes: [drishti.ccr.exposure]
-    needs: []
-    uses: []
-    api: [/api/v1/exposure]
-    console: [/exposure, /api/exposure/]
-    words: [EXP, "PLAY EXP", XWIF]
-    menus: [exp-explorer, exp-cpty, exp-nset, xwif]
-    help: [docs-guides-exposure-guide]
-    landings: []
-    tiles: []
-    lenses: []
-    bi: [counterparty-exposure-, live-exposure]
-    cli: [exposure]
-    playgrounds: [exposure]
-    connectors: [exposure-engine]
-    kinds: [exposure-result]
-    inputs: [exposure-path, simulation-run]
-    ai-tools: []
-  - id: sensitivities
-    title: Sensitivities
-    about: "Position sensitivities and the factor dictionary: load, checks, sums by bucket"
-    file: sensitivities.yaml
-    switch: drishti.engines.sensitivities.enabled
-    env: DRISHTI_SENSITIVITIES_ENABLED
-    aliases: []
-    shipped: true
-    installed: true
-    live-on: true
-    prefixes: [drishti.sensitivities]
-    needs: []
-    uses: []
-    api: [/api/v1/sensitivities, /api/v1/risk-factors]
-    console: [/api/frtb/sensitivities, /api/frtb/risk-factors]
-    words: []
-    menus: []
-    help: []
-    landings: []
-    tiles: []
-    lenses: []
-    bi: []
-    cli: [sens]
-    playgrounds: []
-    connectors: []
-    kinds: []
-    inputs: [position-sensitivity]
-    ai-tools: []
-  - id: frtb-sa
-    title: FRTB-SA
-    about: "FRTB-SA: the sensitivities-based method, DRC, RRAO and its playground"
-    file: frtb-sa.yaml
-    switch: drishti.engines.frtb-sa.enabled
-    env: DRISHTI_FRTB_ENABLED
-    aliases: [drishti.frtb.enabled]
-    shipped: true
-    installed: true
-    live-on: true
-    prefixes: [drishti.frtb]
-    needs: [var, sensitivities]
-    uses: []
-    api: [/api/v1/frtb]
-    console: [/frtb, /play/frtb, /api/frtb/]
-    words: [FRSA, "PLAY FRTB"]
-    menus: [frsa, play-frtb]
-    help: [docs-guides-frtb-sa-guide, docs-tutorials-30-frtb-sa-from-the-cases-to-a-desk]
-    landings: []
-    tiles: []
-    lenses: []
-    bi: [market-risk-frtb-]
-    cli: [frtb, play frtb]
-    playgrounds: [frtb]
-    connectors: []
-    kinds: []
-    inputs: [default-risk, residual-risk]
-    ai-tools: []
-  - id: simm
-    title: SIMM
-    about: "ISDA SIMM initial margin per netting set and regime, collect and post, and its playground"
-    file: simm.yaml
-    switch: drishti.engines.simm.enabled
-    env: DRISHTI_SIMM_ENABLED
-    aliases: [drishti.simm.enabled]
-    shipped: true
-    installed: true
-    live-on: true
-    prefixes: [drishti.simm]
-    needs: [sensitivities]
-    uses: [exposure]
-    api: [/api/v1/simm]
-    console: [/simm, /play/simm, /api/simm]
-    words: [SIMM, "PLAY SIMM"]
-    menus: [simm, play-simm]
-    help: [docs-guides-simm-guide, docs-tutorials-32-simm-from-the-examples-to-a-netting-set]
-    landings: []
-    tiles: []
-    lenses: []
-    bi: []
-    cli: [simm, play simm]
-    playgrounds: [simm]
-    connectors: []
-    kinds: []
-    inputs: [simm-addon, crif-external]
-    ai-tools: []
-  - id: mr-cube
-    title: MR cube
-    about: "The market-risk cube on the pivot engine: VaR by hierarchy and risk class, components, ladders, heat map, what-if, explain the move"
-    file: mr-cube.yaml
-    switch: drishti.engines.mr-cube.enabled
-    env: DRISHTI_MR_CUBE_ENABLED
-    aliases: []
-    shipped: true
-    installed: true
-    live-on: true
-    prefixes: [drishti.cube.mr]
-    needs: [var, pivot]
-    uses: [sensitivities, frtb-sa]
-    api: [/api/v1/pivot/mr]
-    console: [/mcube, /api/pivot/mr/]
-    words: [MCUBE]
-    menus: [mcube]
-    help: [docs-guides-mr-cube-guide, docs-tutorials-38-the-mr-cube-on-the-pivot-engine]
-    landings: [mr-cube]
-    tiles: []
-    lenses: [mr-cube]
-    bi: []
-    cli: [pivot mr]
-    playgrounds: []
-    connectors: []
-    kinds: []
-    inputs: []
-    ai-tools: []
   - id: memory-lake
     title: In-memory lake
     about: "Delta tables held in memory only, with their replenish jobs"
@@ -211,7 +45,7 @@ engines:
     console: [/admin/api/lakes/memory]
     words: []
     menus: []
-    help: [in-memory-lake-guide]
+    help: []                      # its guide is a section of the Data lake guide and its tutorial a part of the lake tutorial, never hidden with it
     landings: []
     tiles: []
     lenses: []
@@ -267,7 +101,7 @@ engines:
     console: [/pivot, /api/pivot/]
     words: [PIVOT]
     menus: [pivot]
-    help: [docs-guides-pivot-guide, docs-tutorials-33-the-pivot-engine, docs-tutorials-37-custom-functions-and-explain]
+    help: [docs-guides-pivot-guide, docs-tutorials-07-pivot-cubes-and-explain]
     landings: []
     tiles: []
     lenses: []
@@ -308,7 +142,7 @@ engines:
     ai-tools: []
   - id: openblas
     title: "Linear algebra: OpenBLAS"
-    about: "The bundled OpenBLAS (native) for many-scope VaR sums, off as shipped; off: the pure-Java kernels, the same figures (OPERATIONS.md section 2.1)"
+    about: "The bundled OpenBLAS (native) for many-scope VaR sums, off as shipped; off: the pure-Java kernels, the same figures (OPERATIONS_GUIDE.md section 2.1)"
     file: openblas.yaml
     switch: drishti.engines.openblas.enabled
     env: DRISHTI_OPENBLAS_ENABLED

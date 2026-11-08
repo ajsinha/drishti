@@ -16,7 +16,7 @@
 package com.ash.drishti.compute.vector;
 
 /**
- * Rows that sum a whole set at once rather than run by run (VAR_SHARDING.md): a date sharded across Drishti*net members, whose rows
+ * Rows that sum a whole set at once rather than run by run (DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a date sharded across Drishti*net members, whose rows
  * are partly on other servers, gives each shard's part of the set to one owner and adds the partial sums. {@link ParallelSums} hands such
  * a store the whole set; every other store is summed run by run as before.
  */

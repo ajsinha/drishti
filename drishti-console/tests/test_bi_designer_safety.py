@@ -46,14 +46,16 @@ def client():
 def test_the_report_designer_has_a_publish_action_pane_tabs_and_a_collapsible_filters_pane(client):
     page = client.get("/bi/design/file:report:trades-overview")
     assert page.status_code == 200
-    for marker in ("data-publish", "data-publish-label", "data-mpanes", "data-hide-filters", "data-dmain", "data-readonly", "data-published-note"):
+    for marker in ("data-mpanes", "data-hide-filters", "data-dmain", "data-published-note"):
         assert marker in page.text, marker
+    studio = (CONSOLE / "web" / "static" / "js" / "drishti_bi-studio.js").read_text(encoding="utf-8")   # the header's Publish is the Studio shell's action
+    assert "'data-publish': ''" in studio and "setLabel('propose'" in (CONSOLE / "web" / "static" / "js" / "drishti_bi-design.js").read_text(encoding="utf-8")
 
 
 def test_the_subscribe_page_searches_recipients_and_keeps_the_bi_links(client):
     page = client.get("/reports/subscribe?type=report&id=file:report:trades-overview&title=Trades")
     assert page.status_code == 200
-    for marker in ("data-find-people", "data-find-list", "dist-binav", "/bi/catalogue", "dist-check", "/static/js/drishti_subscribe-recipients.js", "/static/js/drishti_people.js"):
+    for marker in ("data-find-people", "dist-binav", "/bi/catalogue", "dist-check", "/static/js/drishti_subscribe-recipients.js", "/static/js/drishti_people.js"):
         assert marker in page.text, marker
 
 

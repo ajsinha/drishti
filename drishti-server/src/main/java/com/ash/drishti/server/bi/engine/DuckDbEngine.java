@@ -41,7 +41,7 @@ import org.duckdb.DuckDBConnection;
  * The embedded analytic engine: one in-process DuckDB (no extra server), a connection per query duplicated from the root so queries run side by
  * side, each with a watchdog that cancels it at the time limit. Memory and threads are settings ({@link QueryProperties}). Extensions are never
  * downloaded at run time: the JDBC jar links {@code parquet}, {@code json}, {@code core_functions} and {@code icu}, which is all the layers need;
- * Parquet and Delta data files are read directly (docs/architecture/BI_DESIGN.md section 4).
+ * Parquet and Delta data files are read directly (docs/architecture/ARCHITECTURE.md §28 section 4).
  */
 public final class DuckDbEngine implements AnalyticEngine {
 
@@ -78,7 +78,7 @@ public final class DuckDbEngine implements AnalyticEngine {
                 try (Statement s = root.createStatement()) {
                     s.execute("SET memory_limit = '" + props.memoryLimit().replace("'", "") + "'");
                     s.execute("SET threads = " + props.threads());
-                    // a server holding memory-only data (IN_MEMORY_LAKE.md section 8) never lets DuckDB spill: a query that needs more than
+                    // a server holding memory-only data (docs/architecture/DATA_ARCHITECTURE.md section 8) never lets DuckDB spill: a query that needs more than
                     // memory-limit fails with the engine's out-of-memory words instead of writing rows to a temporary file
                     boolean memoryOnly = com.ash.drishti.memlake.store.MemoryStores.totalCapBytes() > 0;
                     s.execute("SET temp_directory = '" + (memoryOnly ? "" : tmp.toString().replace("'", "''")) + "'");

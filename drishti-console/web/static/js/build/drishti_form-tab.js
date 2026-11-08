@@ -42,7 +42,8 @@
     var list = $('[data-form-list]'), src = $('[data-form-src]'), palBox = $('[data-form-palette]'), probBox = $('[data-form-problems]'),
       prev = $('[data-form-preview]'), statusEl = $('[data-form-status]');
     var base = '/build/designs/' + encodeURIComponent(store.state.id);
-    var fields = [], palette = [], starter = [], inforce = '', previewT = 0, saveT = 0, token = 0, loaded = false, applying = false, dragFrom = -1;
+    var fields = [], palette = [], starter = [], inforce = '', previewT = 0, saveT = 0, token = 0, loaded = false, applying = false;
+    window.Drishti.elements.designer.sortableList(list, { row: '.wbf-card', dragClass: 'wbf-drag', overClass: 'wbf-over', onMove: function (from, to) { reorder(from, to); } });   // a card dragged to another place (drishti-designer)
 
     prev.addEventListener('submit', function (e) { e.preventDefault(); });
 
@@ -84,7 +85,7 @@
       l.appendChild(c); l.appendChild(WB.el('span', null, text)); return l;
     }
     function card(f, i) {
-      var li = WB.el('li', 'wbf-card', null, { tabindex: '0', draggable: 'true', 'data-i': String(i), 'aria-label': (f.label || f.path) + ', ' + f.type + ', field ' + (i + 1) + ' of ' + fields.length });
+      var li = WB.el('li', 'wbf-card', null, { tabindex: '0', 'data-i': String(i), 'aria-label': (f.label || f.path) + ', ' + f.type + ', field ' + (i + 1) + ' of ' + fields.length });
       var head = WB.el('div', 'wbf-head');
       head.appendChild(WB.el('span', 'wbf-grip', '⠿', { 'aria-hidden': 'true', title: 'Drag to reorder' }));
       head.appendChild(WB.el('code', 'mono wbf-path', f.path));
@@ -97,9 +98,9 @@
       li.appendChild(head);
       var body = WB.el('div', 'wbf-body');
       body.appendChild(labelled('Label', input(f, 'label')));
-      var type = WB.el('select', 'wbf-in', null, { 'aria-label': f.path + ' type' });
-      Object.keys(TYPES).forEach(function (t) { var o = WB.el('option', null, t, { value: t }); if (t === f.type) { o.selected = true; } type.appendChild(o); });
-      type.addEventListener('change', function () { f.type = type.value; cleanOps(f); if (f.type !== 'enum') { delete f.values; } changed(true); });
+      var type = WB.el('drishti-select', 'wbf-pick');                    // drishti-inputs' Select
+      type.options = { label: f.path + ' type', options: Object.keys(TYPES), value: TYPES[f.type] !== undefined ? f.type : undefined };
+      type.addEventListener('drishti:change', function () { f.type = type.value; cleanOps(f); if (f.type !== 'enum') { delete f.values; } changed(true); });
       body.appendChild(labelled('Type', type));
       body.appendChild(labelled('Group', input(f, 'group')));
       body.appendChild(labelled('Default', input(f, 'default')));
@@ -122,11 +123,7 @@
       flags.appendChild(check(f, 'required', 'Required')); flags.appendChild(check(f, 'hidden', 'Hidden'));
       body.appendChild(flags);
       li.appendChild(body);
-      // drag (pointer) and Alt+Up / Alt+Down (keyboard)
-      li.addEventListener('dragstart', function (e) { dragFrom = i; li.classList.add('wbf-drag'); if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', f.path); } });
-      li.addEventListener('dragend', function () { dragFrom = -1; li.classList.remove('wbf-drag'); });
-      li.addEventListener('dragover', function (e) { if (dragFrom >= 0) { e.preventDefault(); } });
-      li.addEventListener('drop', function (e) { e.preventDefault(); if (dragFrom >= 0 && dragFrom !== i) { reorder(dragFrom, i); } dragFrom = -1; });
+      // Alt+Up / Alt+Down (keyboard); a drag is the list's (sortableList above)
       li.addEventListener('keydown', function (e) {
         if (e.target !== li) { return; }
         if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); move(i, -1, true); }
@@ -171,8 +168,9 @@
         box.appendChild(lab);
         var id = 'wbfp-' + f.path.replace(/[^A-Za-z0-9]/g, '-'); lab.setAttribute('for', id);
         if ((f.operators || []).length > 1) {
-          var sel = WB.el('select', 'qf-op', null, { 'aria-label': f.label + ': how to compare' });
-          f.operators.forEach(function (o) { sel.appendChild(WB.el('option', null, OPS[o] || o, { value: o })); }); row.appendChild(sel);
+          var sel = WB.el('drishti-select', 'qf-op');                     // the preview's operator: drishti-inputs' Select
+          sel.options = { label: f.label + ': how to compare', options: f.operators.map(function (o) { return { value: o, label: OPS[o] || o }; }) };
+          row.appendChild(sel);
         }
         var v;
         if (f.type === 'enum' || f.type === 'bool') {

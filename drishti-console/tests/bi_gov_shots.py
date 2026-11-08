@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of docs/guides/BI_GUIDE.md, BI_GUIDE.md and BI_TUTORIAL.md (chapter 17) from the real stack (not a test: run it by hand).
+"""Makes the pictures and the captured output of docs/guides/REPORTS_GUIDE.md, REPORTS_GUIDE.md and BI_TUTORIAL.md (chapter 17) from the real stack (not a test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/bi_gov_shots.py <pictures dir> <captures.json>
 
@@ -27,16 +27,17 @@ from playwright.sync_api import sync_playwright
 
 import bi_gov_stack
 from bi_gov_stack import CONSOLE_URL, PASSWORD, call
+from select_helpers import has_option
 
 
 def sign_in(browser, user, **ctx):
     context = browser.new_context(**{"viewport": {"width": 1600, "height": 1000}, "accept_downloads": True, **ctx})
     page = context.new_page()
-    page.goto(CONSOLE_URL + "/login?next=/bi")
+    page.goto(CONSOLE_URL + "/login?next=/bi/catalogue")
     page.fill("#lu", user)
     page.fill("#lp", PASSWORD)
     page.click("button[type=submit]")
-    page.wait_for_url("**/bi")
+    page.wait_for_url("**/bi/catalogue")
     return page
 
 
@@ -102,9 +103,11 @@ def main(out: Path, captures: Path) -> None:
                 sue.wait_for_timeout(500)
                 shot(sue, "[data-sec-review]", out / "review.png")
                 got["review"] = call("GET", f"/bi/items/{ids['positions']}/review", "sue", sue_roles)[1]
-                sue.fill(".bi-note", "looks right")
-                sue.get_by_role("button", name="Approve and publish").click()
-                sue.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Approved')")
+                sue.goto(CONSOLE_URL + "/approvals/bi/" + ids["positions"])                 # decided in the one Approvals queue
+                sue.wait_for_selector("[data-ap-item]:not([hidden])")
+                sue.fill("[data-ap-comment]", "looks right")
+                sue.get_by_role("button", name="Approve", exact=True).click()
+                sue.wait_for_function("() => document.querySelector('[data-ap-said]').textContent.includes('Approved')")
                 sue.wait_for_timeout(500)
                 got["inbox_ann"] = call("GET", "/me/inbox?limit=5", "ann", ann_roles)[1]
                 got["inbox_sue_before"] = None
@@ -149,7 +152,7 @@ def main(out: Path, captures: Path) -> None:
 
                 # ---- environments --------------------------------------------------------------------------------------------------------
                 ann.goto(CONSOLE_URL + "/bi/environments")
-                ann.wait_for_selector("[data-ws-select] option", state="attached")
+                ann.wait_for_function(has_option("[data-ws-select]"))
                 ann.select_option("[data-ws-select]", "rates-desk")
                 with ann.expect_download() as d:
                     ann.click("[data-export] button[type=submit]")

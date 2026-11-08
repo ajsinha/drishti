@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * The outbound HTTP proxy every connector shares (docs/connectors/TLS.md): the effective proxy of a connector, from its own block,
+ * The outbound HTTP proxy every connector shares (docs/guides/DATA_GUIDE.md section 10): the effective proxy of a connector, from its own block,
  * the site default or the environment ({@link com.ash.drishti.api.proxy.ProxySettings}), and the hosts that go direct
  * ({@link com.ash.drishti.api.proxy.NoProxy}).
  */

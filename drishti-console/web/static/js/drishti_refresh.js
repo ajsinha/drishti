@@ -105,13 +105,11 @@
         b.addEventListener('click', function () { toggle(id); });
         box.appendChild(b);
       }
-      var pick = el('select', 'fresh-pick');
-      pick.setAttribute('data-refresh-every', ''); pick.setAttribute('aria-label', 'Refresh ' + (sec.querySelector('.pnl-h h3') || {}).textContent + ' every');
-      CHOICES.filter(function (c) { return c > p.floor; }).concat([p.floor]).sort(function (a, b) { return a - b; }).forEach(function (c) {
-        var o = el('option', null, 'every ' + every(c)); o.value = String(c); pick.appendChild(o);
-      });
-      pick.value = String(interval(p));
-      pick.addEventListener('change', function () { p.chosen = +pick.value; p.next = now() + interval(p) * 1000; remember(); paint(); });
+      var pick = el('drishti-select', 'fresh-pick'), choices = CHOICES.filter(function (c) { return c > p.floor; }).concat([p.floor]).sort(function (a, b) { return a - b; });
+      pick.setAttribute('data-refresh-every', '');                      // drishti-inputs' Select
+      pick.options = { label: 'Refresh ' + (sec.querySelector('.pnl-h h3') || {}).textContent + ' every', search: false, value: String(interval(p)),
+        options: choices.map(function (c) { return { value: String(c), label: 'every ' + every(c) }; }) };
+      pick.addEventListener('drishti:change', function () { p.chosen = +pick.value; p.next = now() + interval(p) * 1000; remember(); paint(); });
       box.appendChild(pick);
     }
     head.insertBefore(box, head.querySelector(':scope > .pnl-code'));

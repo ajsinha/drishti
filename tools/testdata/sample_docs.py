@@ -14,7 +14,8 @@
 
 """The data samples: one page per data type, a real record fully explained, for whoever writes the production query that must emit it.
 
-    python3 tools/testdata/sample_docs.py              write docs/contracts/samples/<domain>/<kind>.md and docs/contracts/samples/README.md
+    python3 tools/testdata/sample_docs.py              write docs/contracts/samples/<domain>.md (one page per domain, a section per data
+                                                       type, anchored by the type's folder name) and docs/contracts/samples/README.md
     python3 tools/testdata/sample_docs.py --check      fail when a page differs from what would be written (or a page is left over)
     python3 tools/testdata/sample_docs.py audit        every contract against ALL its committed test data: fields missing from the
                                                        contract, contract fields no row has, required fields absent, types that differ
@@ -22,7 +23,7 @@
 Each page is generated from two sources only: the committed test data (data/testdata/<domain>/<kind>/: its dated files and tars
 (tools/lake/feedfiles.py), every row of every file,
 read and never written; the pack's samples for the kinds without test data) and the kind's data contract
-(config/packs/<pack>/contracts/<kind>.contract.yaml: every field's meaning, unit, presence and values). A meaning missing on a page is
+(config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml: every field's meaning, unit, presence and values). A meaning missing on a page is
 fixed in the contract, never here. The page shows the most complete real record (the one with the most non-empty fields) pretty-printed,
 long arrays folded; a kind whose rows come in sub-types of a different shape or meaning (a trade's product type, a P&L or PV form, a curve
 type) shows the most complete record of each sub-type. Then every field of the samples (nested ones as LEGS[].CASH_FLOWS[].AMOUNT), the
@@ -94,9 +95,9 @@ SUBTYPES = {
 
 #: rows beyond the committed test data that show a form the test data does not hold (the pack's samples), by folder
 EXTRA_SOURCES = {
-    "market-risk/pnl-vector": ["config/packs/market-risk/samples/pnl-vector.jsonl"],
-    "market-risk/scenario-pv": ["config/packs/market-risk/samples/scenario-pv.jsonl",
-                                "config/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl"],
+    "market-risk/pnl-vector": ["config/packs/banking/market-risk/samples/pnl-vector.jsonl"],
+    "market-risk/scenario-pv": ["config/packs/banking/market-risk/samples/scenario-pv.jsonl",
+                                "config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl"],
 }
 
 #: what a folded array holds, by field name
@@ -111,10 +112,10 @@ FOLD_WHAT = {
 }
 
 #: guide sections and tutorials of a kind: (document under docs/, the heading's start); anchors are computed from the heading
-_VAR = [("guides/VAR_GUIDE.md", "15.13 "), ("tutorials/25-var-from-the-bank-to-a-trade.md", "# ")]
-_EXP = [("guides/EXPOSURE_GUIDE.md", "16. "), ("tutorials/26-exposure-from-the-bank-to-a-trade.md", "# ")]
-_TRD = [("guides/PACK_DEVELOPER_GUIDE.md", "Trading"), ("knowledge/trades-and-products.md", "# "),
-        ("tutorials/24-correct-a-trade-and-approve-it.md", "# ")]
+_VAR = [("guides/VAR_GUIDE.md", "15.13 "), ("tutorials/02-var-from-the-bank-to-a-trade.md", "# ")]
+_EXP = [("guides/EXPOSURE_GUIDE.md", "16. "), ("tutorials/03-exposure-from-the-bank-to-a-trade.md", "# ")]
+_TRD = [("guides/BUILD_GUIDE.md", "Trading"), ("knowledge/risk.md", "3. Trades"),
+        ("tutorials/11-correct-and-approve.md", "# ")]
 LINKS = {
     "trade": _TRD,
     "pnl-vector": [("guides/VAR_GUIDE.md", "15.2 "), ("guides/VAR_GUIDE.md", "8.4 ")] + _VAR,
@@ -132,21 +133,23 @@ LINKS = {
     "cva": _EXP, "sa-ccr": _EXP, "simm": _EXP,
     "trade-valuation": [("contracts/TVAL.md", "# ")] + _EXP,
     "frtb-sensitivity": [("contracts/FRTB.md", "# ")], "pnl-explain": [("contracts/PNL.md", "# ")], "stress-result": [("contracts/STR.md", "# ")],
-    "fund": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
-    "fund-holder": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
-    "position-sensitivity": [("architecture/SENSITIVITIES_AND_FRTB_SA.md", "2. "), ("lenses/MR_CUBE_LENS.md", "7.9 ")],
-    "risk-factor": [("architecture/SENSITIVITIES_AND_FRTB_SA.md", "3. "), ("lenses/MR_CUBE_LENS.md", "7.10 ")],
-    "index-funds": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
+    "fund": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/13-world-data.md", "# ")],
+    "fund-holder": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/13-world-data.md", "# ")],
+    "position-sensitivity": [("contracts/FRTB.md", "20. "), ("guides/FRTB_SA_GUIDE.md", "# ")],
+    "risk-factor": [("contracts/FRTB.md", "21. "), ("guides/FRTB_SA_GUIDE.md", "# ")],
+    "index-funds": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/13-world-data.md", "# ")],
 }
 PACK_LINKS = {
-    "core": [("knowledge/entities-and-ownership.md", "# "), ("knowledge/counterparty-credit-risk.md", "# ")],
-    "market-data": [("knowledge/market-data.md", "# ")],
-    "gleif": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/entities-and-ownership.md", "# "), ("tutorials/27-groupings-and-analytics.md", "# ")],
-    "us-equities": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/companies-funds-and-etfs.md", "# "), ("tutorials/27-groupings-and-analytics.md", "# ")],
+    "core": [("knowledge/data.md", "2. Entities"), ("knowledge/risk.md", "2. Counterparty")],
+    "market-data": [("knowledge/data.md", "1. Market data")],
+    "gleif": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/data.md", "2. Entities"), ("tutorials/06-groupings-and-analytics.md", "# ")],
+    "us-equities": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/world.md", "1. Companies"), ("tutorials/06-groupings-and-analytics.md", "# ")],
     "news-and-markets": [("guides/EXTERNAL_DATA.md", "# ")],
-    "world-economy": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/economies.md", "# ")],
-    "market-risk": [("knowledge/market-risk.md", "# ")],
-    "counterparty-risk": [("knowledge/counterparty-credit-risk.md", "# ")],
+    "world-economy": [("guides/EXTERNAL_DATA.md", "# "), ("knowledge/world.md", "2. Economies")],
+    "market-risk": [("knowledge/risk.md", "1. Market risk")],
+    "counterparty-risk": [("knowledge/risk.md", "2. Counterparty")],
+    **{p: [("guides/PUBLIC_SECTOR_GUIDE.md", "# "), ("guides/EXTERNAL_DATA.md", "# ")]
+       for p in ("world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events")},
 }
 
 #: the index's groups, in order: (title, who, the members as folder or pack/kind)
@@ -170,7 +173,9 @@ GROUPS = [
     ("Demonstration only", "Demo", None),                    # compute-demo
     ("Planned inputs (demo data generated, not loaded)", "You will produce this", None),   # planned contracts with generated data
 ]
-PUBLIC = ("gleif", "us-equities", "funds", "news-and-markets", "world-economy")
+PUBLIC = ("gleif", "us-equities", "funds", "news-and-markets", "world-economy",
+          # the public-sector module's packs, filled daily by their feeds (docs/guides/PUBLIC_SECTOR_GUIDE.md)
+          "world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events")
 
 #: what each produced kind is needed for (VAR_GUIDE.md section 15, EXPOSURE_GUIDE.md sections 15 and 16)
 NEEDED = {
@@ -372,7 +377,7 @@ def manifest() -> dict:
 
 
 def _sample_files(pack: str, kind: str) -> list[Path]:
-    d = PACKS / pack / "samples"
+    d = C.PP.pack_dir(pack, PACKS) / "samples"
     return sorted(d.glob(f"{kind}.jsonl")) + sorted(d.glob(f"{kind}.part-*.jsonl"))
 
 
@@ -797,12 +802,12 @@ def _intro(page: dict, c: dict, s: Scan) -> str:
 def _links(page: dict, c: dict) -> list[str]:
     anchor = C._anchor(c) if c else ""
     out = [f"- Data contract: [{c.get('mnemonic', '')} in the {page['pack']} pack's contracts](../../packs/{page['pack']}.md#{anchor}) "
-           f"(`config/packs/{page['pack']}/contracts/{page['kind']}.contract.yaml`, the source of every meaning on this page)."]
+           f"(`{C._repo_rel(C.PP.pack_dir(page['pack'], PACKS))}/contracts/{page['kind']}.contract.yaml`, the source of every meaning on this page)."]
     for doc, start in LINKS.get(page["kind"], []) + PACK_LINKS.get(page["pack"], []):
         title, a = _heading(doc, start)
         title = re.sub(r"\s*\([^)]*\d\.\d+\.\d+[^)]*\)", "", title)
         out.append(f"- [{title}](../../../{doc}{'#' + a if a else ''})")
-    out.append("- [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and "
+    out.append("- [The test data and the demo lakes](../../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and "
                "the [index of every data sample](../README.md).")
     return list(OrderedDict.fromkeys(out))
 
@@ -841,6 +846,41 @@ def _checklist(page: dict, c: dict, s: Scan, key: str) -> list[str]:
     return out
 
 
+def _leaf(page: dict) -> str:
+    """The data type's anchor on its domain's page: its test-data folder's last part (counterparty, endur, pnl-vector)."""
+    return page["name"].split("/", 1)[1]
+
+
+def domain_of(page: dict) -> str:
+    return page["name"].split("/", 1)[0]
+
+
+def page_link(page: dict) -> str:
+    """Where a data type's sample is, relative to docs/contracts/samples/."""
+    return f"{domain_of(page)}.md#{_leaf(page)}"
+
+
+def render_domain(domain: str, members: list[dict], scans: dict) -> str:
+    """One page per domain: a section per data type (each kind's text of render() one heading level down, anchored by its folder name)."""
+    out = [C.R.licence_comment(), f"<!-- Generated by {GENERATOR} from the test data and the data contracts. Edit the contracts or the tool, "
+           "not this file. -->", "", f"# Data samples: {domain}", "",
+           f"Every data type of `{domain}` as a real record of the committed test data, every field explained from its data contract, the "
+           "fields only other rows have and a checklist for the production query. The [index](README.md) lists every domain.", ""]
+    out += [f"- [{m['kind']}" + (f" {_leaf(m).upper()}" if m["kind"] == "trade" else "") + f"](#{_leaf(m)})" for m in members] + [""]
+    for m in members:
+        body = render(m, scans[m["name"]]).split("\n")
+        start = next(i for i, l in enumerate(body) if l.startswith("# "))
+        lines, fence = [f'<a id="{_leaf(m)}"></a>', ""], False
+        for l in body[start:]:
+            if l.startswith("```"):
+                fence = not fence
+            lines.append("#" + l if not fence and re.match(r"^#+ ", l) else l)
+        text = "\n".join(lines)
+        text = text.replace("](../../../", "](../../").replace("](../../packs/", "](../packs/").replace("](../README.md)", "](README.md)")
+        out += [text.rstrip(), ""]
+    return "\n".join(out).rstrip() + "\n"
+
+
 def render(page: dict, s: Scan) -> str:
     c = contract(page["pack"], page["kind"])
     cf = contract_fields(c)
@@ -849,7 +889,7 @@ def render(page: dict, s: Scan) -> str:
     mn = c.get("mnemonic", "")
     title = (f"{page['name'].split('/')[1].upper()} trades: trade ({mn})" if page["kind"] == "trade"
              else f"{c.get('title') or page['kind']}: {page['kind']} ({mn})")
-    out = [C.R.licence_comment(), f"<!-- Generated by {GENERATOR} from the test data and config/packs/{page['pack']}/contracts/"
+    out = [C.R.licence_comment(), f"<!-- Generated by {GENERATOR} from the test data and {C._repo_rel(C.PP.pack_dir(page['pack'], PACKS))}/contracts/"
            f"{page['kind']}.contract.yaml. Edit the contract or the tool, not this file. -->", "", f"# {title}", "",
            no_release(_intro(page, c, s)) + " " + _cadence(page, s), ""]
     lay = _layout(page["pack"], ds.get("connector") or (c.get("storage") or {}).get("connector"), page["kind"])
@@ -878,7 +918,7 @@ def render(page: dict, s: Scan) -> str:
         out += _table(["Sub-type", "Recognised by", "Rows", "Sample from", "Section"],
                       [[f"**{k}**", _recognise(page["name"], subs[k]["doc"]), f"{subs[k]['rows']:,}",
                         "test data" if subs[k]["source"].startswith("data/") else f"`{subs[k]['source']}`",
-                        f"[{k}](#{github_slug(k)})"] for k in labels])
+                        f"[{k}](#{github_slug(_leaf(page) + ': ' + k)})"] for k in labels])
         common = [p for p in sample_paths[labels[0]] if all(p in sample_paths[k] for k in labels)]
         out += ["## Fields every sub-type has", "", f"The example is from the **{labels[0]}** record.", ""]
         out += field_table(s, common, cf, subs[labels[0]]["doc"])
@@ -888,7 +928,7 @@ def render(page: dict, s: Scan) -> str:
                 "Below each record, the fields it has beyond the shared table.", ""]
         for i, k in enumerate(labels):
             doc = subs[k]["doc"]
-            out += [f"### {k}", "", f"{subs[k]['rows']:,} rows; recognised by {_recognise(page['name'], doc)}"
+            out += [f"### {_leaf(page)}: {k}", "", f"{subs[k]['rows']:,} rows; recognised by {_recognise(page['name'], doc)}"
                     + ("" if subs[k]["source"].startswith("data/") else f"; the record is from `{subs[k]['source']}`") + ".", "",
                     "```json", json.dumps(fold(doc, keep_objects=KEEP_OBJECTS if i == 0 else 1), indent=2, ensure_ascii=False), "```", ""]
             own = [p for p in sample_paths[k] if p not in common]
@@ -948,13 +988,13 @@ def _group_of(page: dict) -> int:
 def render_index(all_pages: list[dict], scans: dict) -> str:
     out = [C.R.licence_comment(), f"<!-- Generated by {GENERATOR} from the test data and the contracts. Edit those or the tool, not this file. -->", "",
            "# Data samples, field by field", "",
-           "One page per data type: a real record of the committed test data, pretty-printed, and every field of it explained from the "
+           "One page per domain, a section per data type: a real record of the committed test data, pretty-printed, and every field of it explained from the "
            "type's data contract, so a production query or ETL job can emit exactly this JSON Lines shape. Each page gives the file layout "
            "(path, key and date fields, promoted and vector columns, snapshot or changes), one fully explained record of each sub-type, the "
            "fields only other rows have, and a checklist for the query author. The meanings come from the contracts "
            "([packs/README.md](../packs/README.md)); the pages are generated by `tools/testdata/sample_docs.py` and checked by "
            "`tools/test_sample_docs.py`, so they follow the data and the contracts.", "",
-           f"{len(all_pages)} pages: what a bank produces, grouped as it produces them; then the kinds Drishti computes, which you never "
+           f"{len(all_pages)} data types: what a bank produces, grouped as it produces them; then the kinds Drishti computes, which you never "
            "send. *Needed for* says which kinds VaR and exposure cannot work without.", ""]
     for i, (title, who, _) in enumerate(GROUPS):
         rows = []
@@ -964,7 +1004,7 @@ def render_index(all_pages: list[dict], scans: dict) -> str:
             pattern = (f"`{p['name']}/`, " + ("a snapshot, then daily changes" if ds.get("days") else "one full file set per date"
                                                if ds.get("dated-by") else "one snapshot") if ds else "none: the pack's samples")
             desc = no_release(" ".join((c.get("description") or c.get("title") or "").split()))
-            rows.append([f"[`{p['kind']}`" + (f" {p['name'].split('/')[1].upper()}" if p["kind"] == "trade" else "") + f"]({p['name']}.md)",
+            rows.append([f"[`{p['kind']}`" + (f" {p['name'].split('/')[1].upper()}" if p["kind"] == "trade" else "") + f"]({page_link(p)})",
                          f"`{c.get('mnemonic', '')}`", pattern, f"{scans[p['name']].rows:,}", NEEDED.get(p["kind"], "—"), desc])
         if not rows:
             continue
@@ -989,7 +1029,8 @@ def build(scans: dict[str, Scan] | None = None) -> dict[Path, str]:
     """Every page and the index, in memory."""
     all_pages = pages()
     scans = scans or scan_all(all_pages)
-    files = {OUT / f"{p['name']}.md": render(p, scans[p["name"]]) for p in all_pages}
+    domains = list(OrderedDict.fromkeys(domain_of(p) for p in all_pages))
+    files = {OUT / f"{d}.md": render_domain(d, [p for p in all_pages if domain_of(p) == d], scans) for d in domains}
     files[OUT / "README.md"] = render_index(all_pages, scans)
     return files
 
@@ -1029,6 +1070,9 @@ def main(argv=None) -> int:
     for f in sorted(OUT.rglob("*.md")):
         if f not in files:
             f.unlink()
+    for d in sorted((d for d in OUT.rglob("*") if d.is_dir()), reverse=True):
+        if not any(d.iterdir()):
+            d.rmdir()
     print(f"{len(files)} pages under {OUT.relative_to(ROOT)}")
     return 0
 

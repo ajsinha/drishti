@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""<drishti-report> in Chromium (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 18; Rupaka phase 7), against a HOST application on another origin with a strict
+"""<drishti-report> in Chromium (docs/guides/EMBED_GUIDE.md › Drishti Elements: the design, section 18; Rupaka phase 7), against a HOST application on another origin with a strict
 Content-Security-Policy (tools/elements-demo, report.html), the real server (embedding on, security on, the demo source ticking every 200 ms) and the real console
 (tests/bi_live_stack.py): the host's report card draws with the live cards ticking, the trader column reads the mask for a user who holds the raw power in the
 console, a click on a bar filters the other visuals and tells the host, the host's filters property sets them, the application's `kinds` decide which reports
@@ -144,7 +144,7 @@ def ready(page, sel="#rep", timeout=60000):
     page.wait_for_function("(s) => !document.querySelector(s).shadowRoot.querySelector('.bi-vis-busy')", arg=sel, timeout=timeout)
 
 
-def console_page(browser, user, path="/bi", **ctx):
+def console_page(browser, user, path="/bi/catalogue", **ctx):
     context = browser.new_context(**{"viewport": {"width": 1400, "height": 900}, **ctx})
     page = context.new_page()
     page.errors = []
@@ -183,7 +183,7 @@ def test_a_host_page_under_a_strict_policy_draws_the_report_live_and_masked(stac
     page.click('[data-login="author"]')
     page.wait_for_function("(n) => window.__events.filter(e => e.name === 'loaded' && e.id === 'rep').length > n", arg=before, timeout=60000)
     ready(page)
-    cells = rep.locator('[data-visual="movers"] tbody tr td:nth-child(3)').all_inner_texts()
+    cells = rep.locator('[data-visual="movers"] .dg-row .dg-cell:nth-child(3)').all_inner_texts()
     assert cells and set(cells) == {"•••"}, cells
     masked = events(page, "masked")
     assert masked and any("trader" in c.lower() for c in masked[-1]["detail"]["columns"])          # trade.TRADER_ID (2.3.0 names)
@@ -193,7 +193,7 @@ def test_a_host_page_under_a_strict_policy_draws_the_report_live_and_masked(stac
     expect(rep.locator("[data-live-state]")).to_have_attribute("data-live-state", "live")
     # the page tabs work in the element; a 2.1 Perspective grid is Drishti's own grid of the server's rows (2.3.0), so no WebAssembly under the host's policy
     rep.locator('[data-page="grid"]').click()
-    expect(rep.locator('[data-type="perspective-grid"] table tbody tr').first).to_be_visible(timeout=20000)
+    expect(rep.locator('[data-type="perspective-grid"] .dg-row').first).to_be_visible(timeout=20000)
     assert any(e["detail"]["page"] == "grid" for e in events(page, "page-changed"))
     page.evaluate("document.getElementById('rep').selectPage('desk')")
     expect(rep.locator('[data-visual="trades"]')).to_be_visible()
@@ -206,8 +206,8 @@ def test_a_host_page_under_a_strict_policy_draws_the_report_live_and_masked(stac
 def test_the_same_user_in_the_console_sees_the_trader_the_element_masks(stack, browser):
     page = console_page(browser, "rita", f"/bi/r/{S.REPORT}")
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
-    page.wait_for_selector('[data-visual="movers"] tbody tr')
-    cells = page.locator('[data-visual="movers"] tbody tr td:nth-child(3)').all_inner_texts()
+    page.wait_for_selector('[data-visual="movers"] .dg-row')
+    cells = page.locator('[data-visual="movers"] .dg-row .dg-cell:nth-child(3)').all_inner_texts()
     assert cells and "•••" not in cells, "the console shows a user with the raw power the real traders"
     page.context.close()
 
@@ -267,10 +267,10 @@ def test_the_applications_kinds_decide_which_reports_open(stack, browser):
 def test_the_report_at_390_pixels_uses_its_phone_layout_in_the_element_and_in_the_console(stack, browser):
     wide = host_page(browser)
     ready(wide)
-    assert wide.locator("#rep [data-grid]").get_attribute("data-phone") == "auto"
+    assert wide.locator("#rep .bi-rgrid[data-grid]").get_attribute("data-phone") == "auto"
     assert wide.locator("#rep [data-visual]").count() == 10
     wide.set_viewport_size({"width": 390, "height": 844})                                           # the element's width follows: it swaps to the phone layout by itself
-    wide.wait_for_function("() => document.querySelector('#rep').shadowRoot.querySelector('[data-grid]').getAttribute('data-phone') === 'layout'", timeout=20000)
+    wide.wait_for_function("() => document.querySelector('#rep').shadowRoot.querySelector('.bi-rgrid[data-grid]').getAttribute('data-phone') === 'layout'", timeout=20000)
     ready(wide)
     assert wide.evaluate("[...document.querySelector('#rep').shadowRoot.querySelectorAll('.bi-vis')].map(v => v.dataset.visual)") == PHONE_ORDER
     height = wide.evaluate("document.querySelector('#rep').shadowRoot.querySelector('[data-visual=\"by-desk\"]').getBoundingClientRect().height")
@@ -289,7 +289,7 @@ def test_the_report_at_390_pixels_uses_its_phone_layout_in_the_element_and_in_th
 
 
 def test_the_designers_phone_tab_arranges_a_page_with_a_390_pixel_preview(stack, browser):
-    body = (ROOT / "config/bi/reports/live-trading-desk.report.yaml").read_text()
+    body = (ROOT / "config/bi/reports/banking/live-trading-desk.report.yaml").read_text()
     body = body.split("layouts:")[0] + "pages:" + body.split("\npages:", 1)[1]                      # the shipped report without its phone layout: a draft to arrange
     body = body.replace("report: live-trading-desk", "report: phone-draft")
     status, made = S.api("POST", "/bi/workspaces/me/items", "wes", ["live-writer"], {"kind": "report", "title": "Phone draft", "description": "", "body": body})
@@ -320,7 +320,7 @@ def test_the_designers_phone_tab_arranges_a_page_with_a_390_pixel_preview(stack,
     text = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
     assert "phone:" in text and "hide: [rolling, losses, latest]" in text.replace("  ", " ") or "hide:" in text
     page.click("[data-save]")
-    page.wait_for_function("() => document.querySelector('[data-state]').textContent === 'Saved'", timeout=20000)
+    page.wait_for_function("() => document.querySelector('[data-status]').textContent === 'Saved'", timeout=20000)
     # back to automatic removes the entry
     page.click('[data-tab="phone"]')
     page.click("[data-phone-reset]")

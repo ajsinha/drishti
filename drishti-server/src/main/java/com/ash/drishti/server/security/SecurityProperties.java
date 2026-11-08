@@ -69,6 +69,12 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
         }
     }
 
+    /** The same settings with other token declarations: the core's with every module's that is on ({@link ModuleTokenScopes}). */
+    public SecurityProperties withTokens(List<String> readPosts, Map<String, TokenScope> scopes) {
+        return new SecurityProperties(enabled, secret, clockSkew, roles, redact, readPosts, scopes, tokenNever, tokenWriteMaxDays, maskCopies,
+                maskCopiesMinLength, maskCopiesMaxNodes, maskCopiesMaxValues);
+    }
+
     /** Whether a personal API token may POST to the path: it is on the {@code token-read-posts} allow-list. */
     public boolean tokenMayPost(String path) {
         var matcher = new org.springframework.util.AntPathMatcher();
@@ -86,7 +92,7 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param collaborate may share, comment and mention; true unless set to false
      * @param compliance may place legal holds, export the collaboration record and read any share; false unless set
      * @param bi business-intelligence powers (Rupaka): any of {@code bi}, {@code bi-author}, {@code bi-steward}, {@code bi-admin}; an administrator holds all
-     * @param edit may submit changes through write-back (WRITE_BACK.md › The design and its reasons, section 12); false unless set
+     * @param edit may submit changes through write-back (APPROVALS_GUIDE.md › The design and its reasons, section 12); false unless set
      */
     public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance,
             List<String> bi, Boolean edit) {

@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Java and Python API references (IMPLEMENTATION_PLAN row 2g; docs/guides/TOOLS.md › API references).
+"""The Java and Python API references (IMPLEMENTATION_PLAN row 2g; docs/guides/CLI_REFERENCE.md › API references).
 
 What is documented is in ``tools/api_docs.yaml``. Nothing this tool writes is committed: the references are built, checked and served.
 

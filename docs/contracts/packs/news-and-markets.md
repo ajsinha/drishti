@@ -17,7 +17,7 @@
 
 # Data contracts of the news-and-markets pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/news-and-markets/guides/news-and-markets.md](../../../config/packs/news-and-markets/guides/news-and-markets.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/economy/news-and-markets/guides/news-and-markets.md](../../../config/packs/economy/news-and-markets/guides/news-and-markets.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -32,7 +32,7 @@ A topic and the news about it: headlines (newest first) with their publishers an
 
 |  |  |
 |---|---|
-| Contract | [news-topic.contract.yaml](../../../config/packs/news-and-markets/contracts/news-topic.contract.yaml) · version 1.0 |
+| Contract | [news-topic.contract.yaml](../../../config/packs/economy/news-and-markets/contracts/news-topic.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | reference |
@@ -42,8 +42,8 @@ A topic and the news about it: headlines (newest first) with their publishers an
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `news-store` (plugin `delta`), table `<root>/news/news-topic/` |
-| Test data | config/packs/news-and-markets/samples |
-| Worked example | [news-and-markets/news-topic](../samples/news-and-markets/news-topic.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/news-and-markets/samples |
+| Worked example | [news-and-markets/news-topic](../samples/news-and-markets.md#news-topic) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -77,7 +77,7 @@ A topic and the news about it: headlines (newest first) with their publishers an
 - key TOPIC_ID is the field holding the sample catalogue's id (TOPIC-FED): confirm it is the business key.
 - source 'reference' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Hand-written reference data (topics and listed companies)' for this kind (news-topic, listed-company): state when each source applies.
-- a snapshot refreshed when tools/publicdata/news_and_markets.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the news-and-markets data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: CATEGORY: confirm they are closed lists.
 
 ## NEWS: Headlines (`news`)
@@ -86,7 +86,7 @@ The headlines for one name, as the news connector computed them: newest first, f
 
 |  |  |
 |---|---|
-| Contract | [news.contract.yaml](../../../config/packs/news-and-markets/contracts/news.contract.yaml) · version 1.0 |
+| Contract | [news.contract.yaml](../../../config/packs/economy/news-and-markets/contracts/news.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Google News (news connector) |
@@ -97,7 +97,7 @@ The headlines for one name, as the news connector computed them: newest first, f
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Storage | connector `news` (plugin `news`) |
 | Test data | data/testdata/news-and-markets/news |
-| Worked example | [news-and-markets/news](../samples/news-and-markets/news.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [news-and-markets/news](../samples/news-and-markets.md#news) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -185,7 +185,7 @@ A listed company: its live quote and price history (yfinance connector) and its 
 
 |  |  |
 |---|---|
-| Contract | [listed-company.contract.yaml](../../../config/packs/news-and-markets/contracts/listed-company.contract.yaml) · version 1.0 |
+| Contract | [listed-company.contract.yaml](../../../config/packs/economy/news-and-markets/contracts/listed-company.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | reference |
@@ -195,8 +195,8 @@ A listed company: its live quote and price history (yfinance connector) and its 
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `news-store` (plugin `delta`), table `<root>/news/listed-company/` |
-| Test data | config/packs/news-and-markets/samples |
-| Worked example | [news-and-markets/listed-company](../samples/news-and-markets/listed-company.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/news-and-markets/samples |
+| Worked example | [news-and-markets/listed-company](../samples/news-and-markets.md#listed-company) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -234,7 +234,7 @@ A listed company: its live quote and price history (yfinance connector) and its 
 - key COMPANY_ID is the field holding the sample catalogue's id (CO-AAPL): confirm it is the business key.
 - source 'reference' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Hand-written reference data (topics and listed companies)' for this kind (news-topic, listed-company): state when each source applies.
-- a snapshot refreshed when tools/publicdata/news_and_markets.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the news-and-markets data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: EXCHANGE: confirm they are closed lists.
 
 ## QUOTE: Quote and price history (`quote`)
@@ -243,7 +243,7 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 
 |  |  |
 |---|---|
-| Contract | [quote.contract.yaml](../../../config/packs/news-and-markets/contracts/quote.contract.yaml) · version 1.0 |
+| Contract | [quote.contract.yaml](../../../config/packs/economy/news-and-markets/contracts/quote.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Yahoo Finance (yfinance connector) |
@@ -254,7 +254,7 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Storage | connector `yfinance` (plugin `yfinance`) |
 | Test data | data/testdata/news-and-markets/quote |
-| Worked example | [news-and-markets/quote](../samples/news-and-markets/quote.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [news-and-markets/quote](../samples/news-and-markets.md#quote) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

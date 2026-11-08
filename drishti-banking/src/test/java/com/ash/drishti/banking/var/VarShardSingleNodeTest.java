@@ -1,0 +1,220 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.banking.var;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.ash.drishti.compute.shard.ShardMap;
+import com.ash.drishti.banking.compute.var.VarBook;
+import com.ash.drishti.compute.vector.OrdinalSet;
+import com.ash.drishti.compute.vector.ShardedVectors;
+import com.ash.drishti.server.PinnedBusinessDate;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
+import java.util.SplittableRandom;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+/**
+ * VaR sharding on one server (Drishti*net off, DATA_ARCHITECTURE.md section 13): the server is the only member, so it owns every shard; the date
+ * is cut into one shard per legal entity and desk, each built from its own rows into its own hot file (with its {@code RANG} section), and
+ * the date put together from them has the trades, positions and nodes of the whole date read by the same server, every node's aggregate to
+ * the bit, every set's vector equal, and every row read from the shards' files. With no {@code sharding:} block nothing changes: the other VaR
+ * tests run with sharding off.
+ */
+@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
+        "drishti.sources.connectors-dir=target/var-shard-single/connectors",
+        "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
+        "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
+        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.risk-hierarchy=risk-lake",
+        "drishti.sources.routes.portfolio=risk-lake", "drishti.sources.routes.var-limit=risk-lake", "drishti.sources.routes.scenario-pv=risk-lake",
+        "drishti.sources.routes.fx-scenario=risk-lake", "drishti.sources.routes.fx-spot=risk-lake",
+        "drishti.var.positions.rules[0].name=securities", "drishti.var.positions.rules[0].groups[0]=Fixed income",
+        "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
+        "drishti.var.hierarchies.LL.title=Limit letters", "drishti.var.hierarchies.LL.levels=LIMIT_LETTER > DESK",
+        "drishti.var.hierarchies.LL.word=LL", "drishti.var.hierarchies.LL.limits=var-limit",
+        "drishti.var.official.on-start=false", "drishti.var.official.root=target/var-shard-single/official",
+        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.var.currencies[0]=USD",
+        "drishti.var.sharding.enabled=true", "drishti.var.sharding.target-shard-mb=0.0003", "drishti.var.sharding.stable-seconds=0",
+        "drishti.var.sharding.release-after-seconds=0",
+        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+@Import(PinnedBusinessDate.class)
+class VarShardSingleNodeTest {
+
+    static final Path BASE = Path.of("target", "var-shard-single").toAbsolutePath();
+    static final Path LAKE = BASE.resolve("lake");
+    static final LocalDate DAY = VarHierarchyFixture.DAY;
+
+    static {
+        try {
+            if (Files.exists(BASE)) {
+                try (Stream<Path> s = Files.walk(BASE)) {
+                    for (Path p : s.sorted(Comparator.reverseOrder()).toList()) {
+                        Files.delete(p);
+                    }
+                }
+            }
+            VarHierarchyFixture.write(LAKE);
+            VarPvFixture.write(LAKE, DAY);
+            Path conn = Files.createDirectories(BASE.resolve("connectors"));
+            Files.writeString(conn.resolve("risk-lake.yaml"), VarShardClusterTest.riskLake("delta", LAKE, BASE));
+        } catch (Exception e) {
+            throw new IllegalStateException("the lake cannot be written: " + e, e);
+        }
+    }
+
+    @Autowired VarService svc;
+    @Autowired com.ash.drishti.server.node.NodeReadiness readiness;
+    @Autowired com.ash.drishti.server.node.NodeDrain drain;
+
+    /**
+     * Readiness that means ready (CD1) and the drain before a stop (CD2) on a sharded server: readiness opens the newest date itself and is
+     * DOWN until it is open; a shard this member owns that is not ready keeps it DOWN, naming the shard, until the rebalancing round has
+     * built it again; drained, it is OUT_OF_SERVICE, and the only owner of its shards is never safe to stop (nobody takes them over).
+     */
+    @Test
+    void readinessWaitsForTheNewestDateAndOwnedShardsAndTheDrainMakesItOutOfService() throws Exception {
+        svc.reload(DAY);
+        org.springframework.boot.actuate.health.Status first = readiness.status();
+        if (first != org.springframework.boot.actuate.health.Status.UP) {
+            assertThat(first).isEqualTo(org.springframework.boot.actuate.health.Status.DOWN);
+            assertThat(String.valueOf(readiness.waiting())).contains("the newest business date " + DAY);
+        }
+        awaitUp();
+        assertThat(svc.open(DAY)).as("opened by the readiness check").isTrue();
+
+        VarShards shards = svc.shards();
+        svc.reload(DAY);                                                // nothing here reads its books now
+        VarShardBooks.Key k = shards.books().keys().stream().filter(x -> x.ccy().equals(VarDate.USD)).findFirst().orElseThrow();
+        shards.books().release(k, false);
+        shards.wire((d, b) -> false, () -> java.util.Set.of(DAY));     // the date in use (open on a member) without opening it here
+        try {
+            assertThat(String.valueOf(readiness.waiting().get("var-shards"))).contains("S" + k.index() + " of " + DAY);
+            assertThat(readiness.status()).isEqualTo(org.springframework.boot.actuate.health.Status.DOWN);
+            long until = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(20);
+            do {                                                        // owned and not held: built again (a tick the scheduler holds skips)
+                shards.tick();
+            } while (readiness.waiting().get("var-shards") != null && System.nanoTime() < until && sleep(50));
+            assertThat(readiness.waiting().get("var-shards")).isNull();
+        } finally {
+            svc.shards(shards);                                         // wired to the service's own dates again
+        }
+        awaitUp();
+
+        try {
+            java.util.Map<String, Object> s = drain.drain(true);
+            assertThat(readiness.status()).isEqualTo(org.springframework.boot.actuate.health.Status.OUT_OF_SERVICE);
+            assertThat(shards.draining()).isTrue();
+            assertThat(s.get("safeToStop")).as("the only owner: its shards have nowhere to go").isEqualTo(false);
+            assertThat(String.valueOf(s.get("parts"))).contains("var-shards").contains("still held");
+            assertThat(readiness.waiting()).as("a drained member owns no shard").isEmpty();
+        } finally {
+            drain.drain(false);
+        }
+        assertThat(shards.draining()).isFalse();
+        awaitUp();
+    }
+
+    private void awaitUp() throws InterruptedException {
+        long end = System.currentTimeMillis() + 60_000;
+        while (readiness.status() != org.springframework.boot.actuate.health.Status.UP && System.currentTimeMillis() < end) {
+            Thread.sleep(50);
+        }
+        assertThat(readiness.waiting()).isEmpty();
+        assertThat(readiness.status()).isEqualTo(org.springframework.boot.actuate.health.Status.UP);
+    }
+
+    @Test
+    void theDatePutTogetherFromItsShardsIsTheWholeDate() {
+        VarShards shards = svc.shards();
+        assertThat(shards.on()).isTrue();
+        ShardMap map = shards.map(DAY);
+        assertThat(map.size()).as("LE-A/DESK-X and LE-B/DESK-Y").isEqualTo(2);
+        assertThat(shards.owners(map.shard(0))).containsExactly("local");
+        VarDate sharded = svc.date(DAY);
+        VarBook a = sharded.book();
+        assertThat(a.sharded()).isTrue();
+        assertThat(a.tier()).isEqualTo("sharded");
+        assertThat(((ShardedVectors) a.store()).parts()).allMatch(ShardedVectors.Part::held);
+        VarBook w = svc.loader().load(DAY).book();
+        try {
+            assertThat(a.tradeCount()).isEqualTo(w.tradeCount());
+            for (int o = 0; o < w.tradeCount(); o++) {
+                assertThat(a.tradeId(o)).isEqualTo(w.tradeId(o));
+                assertThat(a.positionOf(o)).isEqualTo(w.positionOf(o));
+            }
+            assertThat(a.nodes().keySet()).containsExactlyElementsOf(w.nodes().keySet());
+            for (VarBook.Node n : w.nodes().values()) {
+                assertThat(a.node(n.id()).members()).isEqualTo(n.members());
+                assertThat(a.aggregate(n.id())).as(n.id()).containsExactly(w.aggregate(n.id()));
+            }
+            SplittableRandom r = new SplittableRandom(3);
+            for (int k = 0; k < 40; k++) {
+                OrdinalSet.Builder b = new OrdinalSet.Builder();
+                for (int i = 0; i < 1 + r.nextInt(w.tradeCount()); i++) {
+                    b.add(r.nextInt(w.tradeCount()));
+                }
+                OrdinalSet s = b.build();
+                double[] x = a.vector(s, svc.sums());
+                double[] y = w.vector(s, svc.sums());
+                for (int j = 0; j < y.length; j++) {
+                    assertThat(Math.abs(x[j] - y[j])).as("scenario " + j).isLessThan(0.005);
+                }
+            }
+            assertThat(a.splitPositions()).isEqualTo(w.splitPositions());
+            assertThat(sharded.intake().rejected()).isEqualTo(svc.loader().load(DAY).intake().rejected());
+        } finally {
+            svc.loader().tier().retire(w, false);
+        }
+        List<java.util.Map<String, Object>> held = svc.shards().books().describe();
+        assertThat(held).hasSize(2).allMatch(m -> "ready".equals(m.get("state")) && String.valueOf(m.get("hotFile")).contains("-shard-"));
+        assertThat(shards.describe(DAY).get("map")).isNotNull();
+    }
+
+    /**
+     * A shard book whose date nobody has open, outside the lake's newest dates and unused for {@code release-after}, is released for age
+     * (2.9.7, soak audit H9); before, two owners kept each other's dates for ever. Its hot file stays for the next open to map again.
+     */
+    @Test
+    void aBookOfADateNobodyOpensIsReleasedForAge() {
+        VarShards shards = svc.shards();
+        svc.date(DAY);
+        assertThat(shards.books().keys()).isNotEmpty();
+        assertThat(shards.releaseIdle(java.util.Set.of(DAY), java.util.Set.of())).as("open: kept").isZero();
+        assertThat(shards.releaseIdle(java.util.Set.of(), java.util.Set.of(DAY))).as("among the newest: kept").isZero();
+        svc.reload(DAY);
+        assertThat(shards.releaseIdle(java.util.Set.of(), java.util.Set.of())).isEqualTo(2);
+        assertThat(shards.books().keys()).isEmpty();
+        assertThat(svc.date(DAY).book().sharded()).as("opened again from the shards' files").isTrue();
+    }
+
+    private static boolean sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+}

@@ -27,7 +27,7 @@ import java.util.Set;
  * More list functions (FUNCTION_CATALOGUE.md section 6), MATLAB's and Octave's that are not aggregates: {@code fillmissing},
  * {@code interp1}, {@code polyval}, {@code trapz}, {@code cumtrapz}, and the set functions {@code union}, {@code intersect},
  * {@code difference} (MATLAB's setdiff) and {@code is_member} (MATLAB's ismember). The statistics over a list (running and moving forms,
- * {@code zscore}, {@code isoutlier}, {@code polyfit} …) are the pivot engine's, registered into Rachana (ONE_GRAMMAR.md part 2).
+ * {@code zscore}, {@code isoutlier}, {@code polyfit} …) are the pivot engine's, registered into Rachana (docs/architecture/ARCHITECTURE.md part 2).
  *
  * <p>An element that is not a number (empty, or text that is no number) is <b>missing</b>; a masked element makes the result masked. The
  * set functions compare as {@code ==} does (numbers by value, {@code 1} and {@code 1.0} equal; text exactly) and give their result in

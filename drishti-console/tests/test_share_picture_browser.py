@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The share dialog's "Include a picture" in a real browser, against a real server with snapshots switched on (COLLABORATION.md, step 10): the option
+"""The share dialog's "Include a picture" in a real browser, against a real server with snapshots switched on (ARCHITECTURE.md §31, step 10): the option
 and its preview appear, the preview is the server's PNG, a share sent with it shows the recipient a picture on the shared view's banner; with
 nothing ticked no picture travels.
 
@@ -36,7 +36,7 @@ def open_dialog(ann, base):
     ann.keyboard.press("Alt+s")
     ann.locator("[data-share-dialog]:not([hidden])").wait_for()
     ann.keyboard.type("rav")
-    ann.locator("#shrList [role=option]").first.wait_for()
+    ann.locator(".di-combo-pop [role=option]").first.wait_for()          # drishti-inputs' combobox list
     ann.keyboard.press("Enter")
     ann.locator("[data-shr-chips] .shr-chip").first.wait_for()
 

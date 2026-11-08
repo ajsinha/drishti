@@ -12,9 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Excel-style column filters (static/js/drishti_colfilter.js, BI_DESIGN.md 8.1) in a real browser (Chromium): the logic (value types and
+"""Excel-style column filters (static/js/drishti_colfilter.js, ARCHITECTURE.md §28 8.1) in a real browser (Chromium): the logic (value types and
 conditions, run in the page), the menu for every filter type, filters that combine, the footer and the live region, filters that survive
-a live patch, the address round trip, keyboard only, a phone (390 px, touch), masked values, tree rows and pivots. The console runs
+a live patch, the address round trip, keyboard only, a phone (390 px, touch), masked values, pivots, and that a tree table is
+drishti-tree's (no funnels; its filter survives a live patch). The console runs
 in-process against a stand-in server whose view carries tables built for the purpose; skipped when Playwright's Chromium is missing."""
 import asyncio
 import json
@@ -180,10 +181,15 @@ def menu_for(page, name, panel="tbl"):
 def condition(page, name, label, a=None, b=None, panel="tbl"):
     m = menu_for(page, name, panel)
     m.locator(".cf-op").select_option(label=label)
-    if a is not None:
-        m.locator(".cf-a").fill(a)
-    if b is not None:
-        m.locator(".cf-b").fill(b)
+    for cls, v in ((".cf-a", a), (".cf-b", b)):
+        if v is None:
+            continue
+        if m.locator(cls).get_attribute("type") == "hidden":                     # a date: drishti-inputs' date picker, typed into as a person does
+            field = m.locator(cls + " + .di-upgraded .di-field")
+            field.fill(v)
+            field.press("Tab")                                                      # leaving the field takes the date
+        else:
+            m.locator(cls).fill(v)
     m.get_by_role("button", name="OK").click()
     page.wait_for_selector(".cf-menu", state="detached")
 
@@ -292,7 +298,7 @@ def test_every_header_has_a_funnel_that_opens_a_menu_with_counts_select_all_and_
     assert items.all_inner_texts() == ["Credit\n3", "Equity\n2", "FX\n3", "Rates\n4"]
     assert m.locator(".cf-all").inner_text().strip() == "(Select all)"
     assert [x.strip() for x in m.locator(".cf-sort .cf-act").all_inner_texts()] == ["Sort A→Z", "Sort Z→A"]
-    assert [o.strip() for o in m.locator(".cf-op option").all_inner_texts()][:3] == ["(no condition)", "Equals", "Does not equal"]
+    assert m.locator(".cf-op").evaluate("e => e.component.options.map((o) => o.label)")[:3] == ["(no condition)", "Equals", "Does not equal"]
 
 
 def test_a_checklist_filter_hides_rows_and_the_funnel_shows_what_it_does(page):
@@ -356,7 +362,7 @@ def test_number_conditions_in_the_menu(page):
 
 def test_date_conditions_in_the_menu(page):
     m = menu_for(page, "Booked")
-    assert [o.strip() for o in m.locator(".cf-op option").all_inner_texts()][1:4] == ["Today", "Yesterday", "This week"]
+    assert m.locator(".cf-op").evaluate("e => e.component.options.map((o) => o.label)")[1:4] == ["Today", "Yesterday", "This week"]
     m.get_by_role("button", name="Cancel").click()
     assert [x.strip() for x in menu_for(page, "Booked").locator(".cf-sort .cf-act").all_inner_texts()] == ["Sort oldest→newest", "Sort newest→oldest"]
     page.keyboard.press("Escape")
@@ -370,7 +376,7 @@ def test_date_conditions_in_the_menu(page):
     assert ids(page) == ["T06", "T07", "T10"]
     m = menu_for(page, "Booked")
     m.locator(".cf-op").select_option(label="Between")
-    assert m.locator(".cf-a").get_attribute("type") == "date" and m.locator(".cf-b").is_visible()
+    assert m.locator(".cf-a + .di-upgraded .di-field").is_visible() and m.locator(".cf-b + .di-upgraded .di-field").is_visible()   # two date pickers
     m.get_by_role("button", name="Cancel").click()
 
 
@@ -636,31 +642,38 @@ def test_the_funnel_is_shown_on_hover_and_focus_for_a_mouse_and_a_heading_click_
 
 # ---- tree rows and pivots -------------------------------------------------------------------------------------------------
 
-def test_tree_rows_keep_a_parent_when_any_child_matches_and_open_it(page):
-    assert page.locator("#p-org .tbl-tree .cf-btn").count() == 2
-    condition(page, "Size", "Less than", "10", panel="org")
-    shown = col(page, "Name", "org")
-    assert shown == ["Group", "Desk B", "Book 3", "Loose"]                              # Book 3 and Loose match; Group and Desk B stay as its ancestors, open
-    assert page.locator("#p-org .tr-count").inner_text() == "2 of 7 rows (filtered)"
-    assert page.locator("#p-org .tbl-tree .tr-tog").first.get_attribute("aria-expanded") == "true"
-    condition(page, "Size", "Equals", "30", panel="org")
-    assert col(page, "Name", "org") == ["Group", "Desk A", "Book 1"]
-    page.fill("#p-org .tr-q", "book")
-    assert col(page, "Name", "org") == ["Group", "Desk A", "Book 1"]
-    page.fill("#p-org .tr-q", "loose")
-    assert col(page, "Name", "org") == []
-    page.locator("#p-org .tbl-clear").click()
-    assert col(page, "Name", "org")[0] == "Group" and page.locator("#p-org .tr-count").inner_text() == ""
-    assert page.locator("#p-org .tbl-tree .cf-on").count() == 0
+TREE_ROWS = """() => Array.from(document.querySelectorAll('#p-org .dt-tp .dg-row')).sort((a, b) => +a.getAttribute('aria-rowindex') - +b.getAttribute('aria-rowindex'))
+  .map((r) => r.querySelector('.dg-cell[aria-colindex="1"]').textContent.replace(/[+\u2212]/g, '').trim())"""
 
 
-def test_tree_filters_are_in_the_address_and_survive_a_live_patch(page, backend):
-    tick(page, ["Book 1", "Book 3"], "Name", "org")
-    assert col(page, "Name", "org") == ["Group", "Desk A", "Book 1", "Desk B", "Book 3"]
-    assert "f.org.Name=in" in page.evaluate("location.search")
+def tree_rows(page, n):
+    page.wait_for_function(f"() => ({TREE_ROWS})().length === {n}", timeout=5000)
+    return page.evaluate(TREE_ROWS)
+
+
+def test_tree_rows_are_drishti_tree_whose_filter_keeps_the_ancestors_and_survives_a_live_patch(page, backend):
+    """A table with children is drawn by drishti-tree (its tree grid: the grid's own column menus, not the funnels); its filter keeps
+    the ancestors of a match, and a live patch that draws the panel again keeps the filter."""
+    assert page.locator("#p-org .tbl-tree .cf-btn").count() == 0 and page.locator("#p-org .dt-tp").count() == 1
+    page.fill("#p-org .dt-tp-q", "book 1")
+    assert tree_rows(page, 3) == ["Group", "Desk A", "Book 1"]                           # the match and its ancestors, open
     push(page, backend, tree())
-    page.wait_for_function("document.querySelector('#p-org .tbl-tree .cf-on')", timeout=5000)
-    assert col(page, "Name", "org") == ["Group", "Desk A", "Book 1", "Desk B", "Book 3"]
+    page.wait_for_function("document.querySelector('#p-org .dt-tp-q') && document.querySelector('#p-org .dt-tp-q').value === 'book 1'", timeout=5000)
+    assert tree_rows(page, 3) == ["Group", "Desk A", "Book 1"]
+    assert "tf.org=book+1" in page.evaluate("location.search")                            # the filter is in the address
+    page.fill("#p-org .dt-tp-q", "")
+    assert tree_rows(page, 7)[0] == "Group"
+    assert "tf.org" not in page.evaluate("location.search")
+
+
+def test_a_tree_filter_in_the_address_shows_the_same_rows(browser, url):
+    """A reload or a shared link with ?tf.<panel>=<words> draws the tree filtered (its box holding the words)."""
+    ctx = browser.new_context(viewport={"width": 1280, "height": 900}, bypass_csp=True)
+    pg = ctx.new_page()
+    pg.goto(url + VIEW + "?tf.org=book+2", wait_until="load")
+    assert tree_rows(pg, 3) == ["Group", "Desk A", "Book 2"]
+    assert pg.input_value("#p-org .dt-tp-q") == "book 2"
+    ctx.close()
 
 
 def test_a_pivot_has_column_filters_on_its_rows_and_values(page):

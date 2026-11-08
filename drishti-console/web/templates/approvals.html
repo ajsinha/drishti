@@ -1,0 +1,96 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The one Approvals queue (SHARED_SCREENS.md section 2; the approved mock-up e2-approvals, option A with B's due-soon items pinned): the inbox
+   on the left (due soon first, then the newest), the filters (Data · Screens · Risk · Access; Mine sent; Done), the chosen item on the right
+   with what changes, its effect if approved, the rules, the questions, and Approve · Reject · Withdraw · Ask a question.
+   A shell: drishti-insight's Approvals queue fills it from /approvals/api/... #}
+{% extends "base.html" %}
+{% block title %}Approvals · {{ PRODUCT }}{% endblock %}
+{% block screen %}approvals{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_approvals.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="ap-page" data-approvals data-box="{{ box }}" data-group="{{ group }}" data-kind="{{ kind }}" data-item-kind="{{ item_kind }}" data-item-id="{{ item_id }}"
+     data-user="{{ me.user if me else '' }}">
+  <div class="ap-head">
+    <h1 class="ap-title">Approvals</h1>
+    <a class="ap-help" href="/help/context/approvals" title="Help: the Approvals queue" aria-label="Help: the Approvals queue"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    <p class="ap-meta" data-ap-meta aria-live="polite">loading…</p>
+  </div>
+  <nav class="ap-filters" aria-label="Which items">
+    <span class="ap-chips" role="group" aria-label="Box">
+      <button type="button" class="ap-chip" data-ap-box="inbox">Waiting for me <span class="ap-n" data-ap-inbox></span></button>
+      <button type="button" class="ap-chip" data-ap-box="sent">Mine sent</button>
+      <button type="button" class="ap-chip" data-ap-box="done">Done</button>
+      <button type="button" class="ap-chip" data-ap-box="all">All</button>
+    </span>
+    <span class="ap-chips" role="group" aria-label="Area">
+      <button type="button" class="ap-chip" data-ap-group="">All areas</button>
+      <button type="button" class="ap-chip" data-ap-group="data">Data</button>
+      <button type="button" class="ap-chip" data-ap-group="screens">Screens</button>
+      <button type="button" class="ap-chip" data-ap-group="risk">Risk</button>
+      <button type="button" class="ap-chip" data-ap-group="access">Access</button>
+    </span>
+    <label class="ap-kind">Kind <drishti-select data-ap-kind label="Kind"><option value="">Every kind</option></drishti-select></label>
+    <button type="button" class="ap-chip" data-ap-refresh title="Read the queue again">Refresh</button>
+  </nav>
+  <div class="ap-main">
+    <section class="ap-list" aria-labelledby="apListTitle">
+      <h2 id="apListTitle" class="visually-hidden">Items</h2>
+      <div data-ap-soon class="ap-soon" hidden><h3 class="ap-sub">Due soon</h3><ul class="ap-items" data-ap-soon-items></ul></div>
+      <ul class="ap-items" data-ap-items aria-label="Items, newest first"></ul>
+      <p class="text-muted-d" data-ap-none hidden>Nothing here.</p>
+      <p class="adm-warn" data-ap-unavailable hidden role="status"></p>
+    </section>
+    <section class="ap-detail" aria-labelledby="apItemTitle" data-ap-detail>
+      <p class="text-muted-d" data-ap-pick>Choose an item to see what changes, its effect and the rules.</p>
+      <div data-ap-item hidden>
+        <div class="ap-item-head">
+          <h2 id="apItemTitle" class="ap-item-title" data-ap-item-title></h2>
+          <span class="ap-status" data-ap-item-status></span>
+          <a class="lnk" data-ap-item-link href="#">Open where it lives</a>
+        </div>
+        <p class="ap-facts" data-ap-item-facts></p>
+        <div class="ap-actions" role="toolbar" aria-label="Decide">
+          <label for="apComment" class="visually-hidden">Comment or reason</label>
+          <input id="apComment" class="ap-comment" type="text" maxlength="500" placeholder="Comment, or why it is rejected" data-ap-comment>
+          <span data-ap-params></span>
+          <button type="button" class="ap-btn primary" data-ap-act="approve" hidden>Approve</button>
+          <button type="button" class="ap-btn danger" data-ap-act="reject" hidden>Reject…</button>
+          <button type="button" class="ap-btn" data-ap-act="withdraw" hidden>Withdraw</button>
+          <span class="ap-said" data-ap-said role="status" aria-live="polite"></span>
+        </div>
+        <h3 class="ap-sub">What changes</h3>
+        <div class="ap-diff" data-ap-diff></div>
+        <h3 class="ap-sub">Effect if approved</h3>
+        <ul class="ap-lines" data-ap-effect></ul>
+        <h3 class="ap-sub">Rules</h3>
+        <ul class="ap-lines" data-ap-rules></ul>
+        <details class="ap-more" data-ap-more><summary>More facts (checks, evidence, history)</summary><dl class="ap-dl" data-ap-more-list></dl></details>
+        <h3 class="ap-sub">Questions</h3>
+        <ol class="ap-thread" data-ap-thread></ol>
+        <form class="ap-ask" data-ap-ask>
+          <label for="apQuestion" class="visually-hidden">Ask a question</label>
+          <textarea id="apQuestion" rows="2" maxlength="2000" placeholder="Ask the maker a question (or answer one)" data-ap-question></textarea>
+          <button type="submit" class="ap-btn" data-ap-ask-btn>Ask a question</button>
+        </form>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}
+{# the queue is drishti-insight's (startApprovals, loaded on every page by base.html): it starts here because the page holds [data-approvals] #}

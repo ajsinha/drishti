@@ -115,8 +115,7 @@
       if (!tsec || !author || !info.hasTests) { return; }                                          // a dataset that declares no tests has nothing to run
       tsec.hidden = false;
       const sel = q('[data-tests-role]'), run = q('[data-tests-run]'), sum = q('[data-tests-sum]');
-      sel.appendChild(h('option', { value: '', text: 'yourself' }));
-      (m.roles || []).forEach((r) => sel.appendChild(h('option', { value: r, text: r })));
+      sel.component.setOptions([{ value: '', label: 'yourself' }].concat(m.roles || []));             // drishti-inputs' Select: yourself, then each role
       run.addEventListener('click', () => {
         run.disabled = true; sum.textContent = 'Running…';
         const tb = B.clear(q('[data-tests-table] tbody'));

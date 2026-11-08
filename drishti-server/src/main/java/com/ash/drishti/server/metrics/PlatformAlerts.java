@@ -43,11 +43,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The platform alerts (OPERATIONS.md section 13.6, RESOURCES_AND_SCALE.md 8.5): the rules of {@code drishti.metrics.alerts.file} evaluated
+ * The platform alerts (OPERATIONS_GUIDE.md section 13.6, CLUSTER_GUIDE.md 8.5): the rules of {@code drishti.metrics.alerts.file} evaluated
  * against this server's own meters every {@code sample-interval}, without Prometheus. A series that breaks its rule for the rule's
  * {@code for} opens an alert (logged, counted in {@code drishti.alerts.open}, and told to the {@code notify-roles} in their inbox); it closes
  * when the series is back within the threshold or gone. The file is read again when it changes. Each member of a cluster evaluates its own
- * meters, and its alerts name it.
+ * meters, and its alerts name it. This is the alert engine's platform source: the engine ({@code AlertService}) lists these alerts with every
+ * other alert and acknowledges, snoozes and assigns them; a snoozed series opens without telling anyone. {@code GET /api/v1/admin/alerts}
+ * shows the rules, the open and the recent ones beside everyone's alerts.
  */
 public final class PlatformAlerts {
 
@@ -153,7 +155,9 @@ public final class PlatformAlerts {
             s.open = new Alert(rule.name(), tags, rule.severity(), line(rule, tags, value), value, rule.threshold(), member, now, null);
             LOG.warn("platform alert {} ({}) opened on {}: {}", rule.name(), rule.severity(), member, s.open.summary());
             try {
-                onOpen.accept(s.open);
+                if (!quiet.test(s.open)) {                                // snoozed in the alert engine: open, listed, but nobody is told
+                    onOpen.accept(s.open);
+                }
             } catch (RuntimeException e) {
                 LOG.warn("platform alert {}: could not tell the administrators: {}", rule.name(), e.getMessage());
             }
@@ -315,6 +319,25 @@ public final class PlatformAlerts {
             }
             series.keySet().removeIf(k -> !names.contains(k.substring(0, k.indexOf('|'))));
         }
+    }
+
+    private volatile java.util.function.Predicate<Alert> quiet = a -> false;
+
+    /** The alert engine's snooze: an alert that opens while its series is snoozed tells nobody (set once at start-up). */
+    public void quiet(java.util.function.Predicate<Alert> q) {
+        this.quiet = q;
+    }
+
+    /** The series an alert belongs to (its rule and tags): what a snooze holds across re-openings. */
+    public static String key(Alert a) {
+        return a.rule() + "|" + new TreeMap<>(a.tags());
+    }
+
+    /** The open alerts and the recent closed ones, for the alert engine's one list (acknowledge, snooze, assign). */
+    public synchronized List<Alert> openAndRecent() {
+        List<Alert> out = new ArrayList<>(open());
+        out.addAll(recent);
+        return out;
     }
 
     /** The open alerts, most severe first. */

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Checks of the Vega-Lite specification a {@code vega-lite} visual holds in {@code format.spec} (BI_GUIDE.md "Vega-Lite visuals"). The page draws it with the
+ * Checks of the Vega-Lite specification a {@code vega-lite} visual holds in {@code format.spec} (REPORTS_GUIDE.md "Vega-Lite visuals"). The page draws it with the
  * expression interpreter, under the strict content security policy, with a loader that refuses every URL; these checks say so at design time, before a
  * reader meets the refusal: no {@code url} or {@code loader}, a size limit, and a warning for a field the specification names that no well supplies.
  */
@@ -71,7 +71,7 @@ final class VegaSpecs {
 
     /**
      * The names the rows carry in the page: a field is the text after the table's dot (the table is put back, with an underscore, when two fields share a
-     * name), a measure keeps its name. {@code drishti_bi-vega.js} {@code V.records} builds the same keys.
+     * name), a measure keeps its name. {@code drishti_bi-grids.js} {@code V.records} builds the same keys.
      */
     static Set<String> keys(Report.Visual v, Dataset ds) {
         List<String> names = new ArrayList<>();

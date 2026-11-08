@@ -58,7 +58,7 @@ class ImperfectDataTest {
 
     static List<Sutra> allSutras() throws Exception {
         List<Sutra> out = new ArrayList<>();
-        try (Stream<Path> packs = Files.list(Path.of("..", "config", "packs"))) {
+        try (Stream<Path> packs = com.ash.drishti.api.PackFolders.list(Path.of("..", "config", "packs")).stream()) {
             for (Path pack : packs.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList()) {
                 try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
                         null, null, null, null, null, null, null, null), new ElCompiler())) {
@@ -118,15 +118,15 @@ class ImperfectDataTest {
         assertThat(empties).isPositive();
     }
 
-    /** The deep-documents Sutra (PACK_DEVELOPER_GUIDE.md, Sutras over deep documents), over a real, deeply nested trade from the trading pack: every panel has data. */
+    /** The deep-documents Sutra (BUILD_GUIDE.md section 6, Sutras over deep documents), over a real, deeply nested trade from the trading pack: every panel has data. */
     @Test
     void theNestedDocumentsTutorialWorksOnARealTrade() throws Exception {
-        String guide = Files.readString(Path.of("../docs/guides/PACK_DEVELOPER_GUIDE.md"));
-        guide = guide.substring(guide.indexOf("#### Sutras over deep documents"));    // the deep-documents section (was NESTED_DOCUMENTS.md)
+        String guide = Files.readString(Path.of("../docs/guides/BUILD_GUIDE.md"));
+        guide = guide.substring(guide.indexOf("## 6. Sutras over deep documents"));    // the deep-documents section (was NESTED_DOCUMENTS.md)
         var m = java.util.regex.Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$").matcher(guide);
         assertThat(m.find()).isTrue();
-        Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "PACK_DEVELOPER_GUIDE.md", "docs");
-        DataNode trade = codec.read(com.ash.drishti.common.PackSamples.document(Path.of("../config/packs/trading/samples"), "trade", "MX-20000001").orElseThrow());
+        Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "BUILD_GUIDE.md", "docs");
+        DataNode trade = codec.read(com.ash.drishti.common.PackSamples.document(Path.of("../config/packs/banking/trading/samples"), "trade", "MX-20000001").orElseThrow());
         ViewModel vm = pipeline.preview(Optional.of(s), new EntityDocument(EntityRef.of("trade", "MX-20000001"), trade,
                 new Provenance("test", 1, Instant.now(), false)));
         assertThat(vm.panels()).allSatisfy(p -> assertThat(p.empty()).as(p.id()).isFalse());

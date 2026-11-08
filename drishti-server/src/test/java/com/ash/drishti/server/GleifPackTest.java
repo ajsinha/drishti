@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 class GleifPackTest extends PublicPacksOnLakes {
 
-    static final Path PACK = Path.of("../config/packs/gleif");
+    static final Path PACK = Path.of("../config/packs/core/gleif");
     static final String JPM = "8I5DZWZKVSZI1NUHU748";
     static final String APPLE = "HWUPKR0MPOU8FGXBT394";
 
@@ -97,6 +97,24 @@ class GleifPackTest extends PublicPacksOnLakes {
         assertThat(panel(v.path("panels"), "children").path("data").path("rows").size()).isGreaterThanOrEqualTo(5);
         assertThat(field(panel(v.path("panels"), "identifiers"), "BICs").path("text").asText()).isNotBlank();
         assertThat(v.toString()).doesNotContain("\"child\"");                         // a child opens on a click, not before
+    }
+
+    @Test
+    void anEntitysParentsChainIsATreeFromTheUltimateParentDownToTheEntity() throws Exception {
+        String bank = "03D0JEWFDFUS0SEEKG89";                                           // TD Bank, N.A.: three parents above it
+        JsonNode rows = panel(view("lei-entity", bank).path("panels"), "parents").path("data").path("rows");
+        assertThat(rows.size()).isEqualTo(1);                                           // the ultimate parent at the top
+        JsonNode r = rows.get(0);
+        assertThat(r.path("cells").get(1).path("text").asText()).isEqualTo("Ultimate parent");
+        for (int level = 3; level > 0; level--) {                                        // each parent over the one below it
+            assertThat(r.path("cells").get(2).path("text").asText()).isEqualTo(String.valueOf(level));
+            assertThat(r.path("children").size()).isEqualTo(1);
+            r = r.path("children").get(0);
+        }
+        assertThat(r.path("cells").get(3).path("text").asText()).isEqualTo(bank);       // the entity itself at the foot, highlighted
+        assertThat(r.path("cells").get(1).path("text").asText()).isEqualTo("This entity");
+        assertThat(r.path("highlight").asBoolean()).isTrue();
+        assertThat(r.path("children").size()).isZero();
     }
 
     @Test

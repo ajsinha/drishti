@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up g4 of Drishti Elements (2.9.11.e): the gallery, the live documentation of every component, two options in one page.
+  Self-contained: system fonts, everything inline, nothing from a CDN. Dark by default; the toggle (or #light) gives light; #B opens
+  option B. The design: docs/architecture/ELEMENTS.md. Figures invented.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drishti Elements · g4 · the gallery (options A, B)</title>
+<script>if(location.hash.indexOf('light')>=0)document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0b1220; --bg2:#0f1829; --panel:#131e33; --panel2:#18253f; --line:#24324f; --line2:#1c2943;
+  --ink:#e6ebf4; --muted:#93a0b8; --faint:#7d89a1; --amber:#e8a33a; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --bad:#ff6b6b; --s1:#6aa8ff; --s2:#e8a33a; --s3:#5fd39a; --s4:#c58cff;
+  --ok-t:rgba(95,211,154,.14); --bad-t:rgba(255,107,107,.15); --code:#0a101c;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f6f4ef; --bg2:#eeeae2; --panel:#ffffff; --panel2:#faf8f4; --line:#ddd6c9; --line2:#ebe6dc;
+  --ink:#172440; --muted:#55607a; --faint:#69728a; --amber:#985b0a; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --bad:#c42b2b; --s1:#1f5fc4; --s2:#b8700c; --s3:#1b8a57; --s4:#7a45c2;
+  --ok-t:rgba(27,120,76,.10); --bad-t:rgba(196,43,43,.09); --code:#f3f0ea;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px}
+button,select,input{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--line);background:var(--bg2);position:sticky;top:0;z-index:40}
+.brand{font-weight:700;letter-spacing:.14em;color:var(--amber)} .brand small{letter-spacing:.02em;color:var(--muted);font-weight:500;margin-left:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:6px 12px;cursor:pointer;color:var(--muted);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--amber-t);color:var(--amber);font-weight:600}
+.sp{flex:1}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:7px;padding:4px 10px;cursor:pointer;color:var(--muted);white-space:nowrap}
+.ghost:hover{color:var(--ink);border-color:var(--faint)}
+.ghost.on{background:var(--amber-t);border-color:var(--amber);color:var(--amber)}
+.intro{padding:10px 16px 0;color:var(--muted);max-width:180ch;line-height:1.45}
+.intro b{color:var(--ink)}
+.stage{padding:10px 16px 16px}
+.badge{font-size:10.5px;padding:1px 7px;border-radius:10px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.badge.ok{color:var(--ok);border-color:var(--ok);background:var(--ok-t)}
+.badge.srv{color:var(--link);border-color:var(--link)}
+.badge.lic{color:var(--amber);border-color:var(--amber);background:var(--amber-t)}
+.ver{font-family:var(--mono);font-size:11px;color:var(--faint)}
+/* the shell */
+.shell{display:grid;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);min-height:760px}
+.A{grid-template-columns:250px minmax(0,1fr) 300px}
+.B{grid-template-columns:250px minmax(0,1fr)}
+.nav{border-right:1px solid var(--line);background:var(--panel2);overflow:auto;max-height:820px}
+.nav .q{margin:10px;width:calc(100% - 20px);padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:var(--panel)}
+.nav .lib{padding:10px 12px 4px;display:flex;align-items:center;gap:6px;font-weight:700;font-size:12px}
+.nav .lib .n{font-family:var(--mono);color:var(--faint);font-weight:400;font-size:10.5px;margin-left:auto}
+.nav .lib .dot{width:7px;height:7px;border-radius:50%}
+.nav .it{padding:4px 12px 4px 26px;color:var(--muted);cursor:pointer;display:flex;gap:6px;align-items:center}
+.nav .it:hover{color:var(--ink);background:var(--amber-t)}
+.nav .it.on{color:var(--amber);background:var(--amber-t);border-left:3px solid var(--amber);padding-left:23px}
+.nav .it .tag{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint)}
+.main{min-width:0;display:flex;flex-direction:column}
+.hero{padding:14px 18px 10px;border-bottom:1px solid var(--line)}
+.hero h1{margin:0 0 4px;font-size:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hero h1 code{font-family:var(--mono);font-size:14px;color:var(--amber);font-weight:500}
+.hero p{margin:0;color:var(--muted);line-height:1.5;max-width:110ch}
+.tabs{display:flex;gap:2px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.tabs span{padding:8px 12px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+.tabs span.on{color:var(--amber);border-bottom-color:var(--amber)}
+.demo{padding:16px 18px;border-bottom:1px solid var(--line);background:var(--bg2);min-height:300px}
+.demo .frame{border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden}
+.code{position:relative;border-top:1px solid var(--line)}
+.code .ct{display:flex;gap:2px;padding:0 10px;background:var(--panel2);border-bottom:1px solid var(--line)}
+.code .ct span{padding:6px 10px;color:var(--muted);cursor:pointer;font-size:12px;border-bottom:2px solid transparent}
+.code .ct span.on{color:var(--amber);border-bottom-color:var(--amber)}
+.code .ct .copy{margin-left:auto;align-self:center}
+.code pre{margin:0;padding:12px 16px;background:var(--code);font-family:var(--mono);font-size:12px;line-height:1.55;overflow:auto;max-height:280px}
+.code .k{color:var(--link)} .code .s{color:var(--ok)} .code .n{color:var(--amber)} .code .c{color:var(--faint)} .code .t{color:var(--s4)}
+.opts{border-left:1px solid var(--line);background:var(--panel2);overflow:auto;max-height:820px}
+.opts h3{margin:0;padding:12px 14px 6px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.opt{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--line2)}
+.opt label{font-family:var(--mono);font-size:12px}
+.opt .d{grid-column:1/-1;color:var(--faint);font-size:11.5px;line-height:1.4}
+.opt select,.opt input[type=text]{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 6px;max-width:150px}
+.sw{position:relative;width:34px;height:18px;border-radius:9px;background:var(--line);cursor:pointer;border:0}
+.sw::after{content:'';position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--muted);transition:left .12s}
+.sw.on{background:var(--amber)} .sw.on::after{left:18px;background:#fff}
+.events{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 14px;max-height:150px;overflow:auto}
+.events div{padding:2px 0;border-bottom:1px dashed var(--line2)}
+.events b{color:var(--amber);font-weight:500}
+/* demo components */
+table.g{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums}
+.g th,.g td{padding:0 10px;height:28px;border-bottom:1px solid var(--line2);white-space:nowrap;background:var(--panel)}
+.g.compact th,.g.compact td{height:23px;font-size:12px;padding:0 8px}
+.g.terminal{font-family:var(--mono);font-size:12px} .g.terminal th,.g.terminal td{height:21px;padding:0 6px}
+.g th{background:var(--panel2);color:var(--muted);font-weight:600;font-size:12px;cursor:pointer;text-align:left;position:sticky;top:0}
+.g td.n,.g th.n{text-align:right}
+.g td.neg{color:var(--neg)}
+.g .pin{position:sticky;left:0;z-index:1;border-right:1px solid var(--line)}
+.g tr:hover td{background-image:linear-gradient(var(--amber-t),var(--amber-t))}
+.g tr.tot td{font-weight:700;border-top:1px solid var(--faint);background:var(--panel2)}
+.ms{position:relative;display:inline-block;min-width:280px}
+.ms .box{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);cursor:pointer;min-height:34px}
+.ms .chip{padding:1px 8px;border-radius:10px;background:var(--amber-t);color:var(--amber);font-size:12px}
+.ms .dd{position:absolute;top:calc(100% + 4px);left:0;right:0;border:1px solid var(--line);border-radius:8px;background:var(--panel2);box-shadow:0 10px 30px rgba(0,0,0,.35);padding:6px;z-index:5}
+.ms .dd input{width:100%;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel);margin-bottom:6px}
+.ms .dd label{display:flex;gap:8px;padding:3px 4px;cursor:pointer;border-radius:4px}
+.ms .dd label:hover{background:var(--amber-t)}
+.ms .dd .c{margin-left:auto;color:var(--faint);font-size:11px}
+.fmt{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fmt div{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel)}
+.fmt .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:4px}
+.fmt .l{color:var(--faint);font-family:var(--mono);font-size:11px}
+.ph{padding:30px;text-align:center;color:var(--muted);line-height:1.6}
+.ph a{color:var(--link)}
+/* B: cards of examples */
+.ex{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px 18px}
+.ex .card{border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden;display:flex;flex-direction:column}
+.ex .card .h{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.ex .card .h b{font-weight:600}
+.ex .card .h .ghost{margin-left:auto;padding:2px 8px;font-size:12px}
+.ex .card .b{padding:10px;min-height:150px}
+.ex .card .f{padding:6px 10px;border-top:1px solid var(--line);color:var(--faint);font-size:11.5px}
+.api{padding:14px 18px}
+.api table{width:100%;border-collapse:collapse;font-size:12px}
+.api th,.api td{padding:6px 8px;border-bottom:1px solid var(--line2);text-align:left;vertical-align:top}
+.api th{color:var(--muted);background:var(--panel2)}
+.api code{font-family:var(--mono);color:var(--amber)}
+.api .ty{font-family:var(--mono);color:var(--s4)}
+.api .gen{color:var(--faint);font-size:11.5px;margin-top:8px}
+.status{display:flex;gap:16px;padding:6px 12px;border-top:1px solid var(--line);color:var(--faint);font-size:11.5px;background:var(--panel2);margin-top:auto;flex-wrap:wrap}
+.status b{color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:80;padding:8px 14px;border-radius:8px;background:var(--panel2);border:1px solid var(--amber);display:none}
+.legend2{padding:6px 16px 18px;color:var(--faint);font-size:12px;line-height:1.6}
+body.compact .hero{padding:8px 14px} body.terminal{font-family:var(--mono);font-size:12px}
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="brand">DRISHTI<small>Elements · g4 · the gallery</small></span>
+  <div class="seg" id="opts"><button data-o="A" class="on">A · Playground (three panes)</button><button data-o="B">B · Documentation page</button></div>
+  <span class="sp"></span>
+  <button class="ghost" id="dense">Density: comfortable</button>
+  <button class="ghost" id="theme">Light / dark</button>
+</div>
+<div class="intro" id="intro"></div>
+<div class="stage" id="stage"></div>
+<div class="legend2"><b>Try:</b> pick a component on the left (search filters the list) · change an option: the live component and its code follow · the code tabs show the same thing as a web component, plain JavaScript, a Sutra panel and the AG Grid adapter (grid only) · Copy copies the snippet · the event log shows what the component emits. Each library's badge says whether it works without a Drishti server.</div>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+'use strict';
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function money(v){var a=Math.abs(v),s=v<0?'−':'';if(a>=1e9)return s+(a/1e9).toFixed(2)+'bn';if(a>=1e6)return s+(a/1e6).toFixed(2)+'m';if(a>=1e3)return s+(a/1e3).toFixed(0)+'k';return s+a.toFixed(0);}
+var LIBS=[
+ {id:'core',name:'drishti-core',v:'1.0.0',col:'var(--faint)',badge:['ok','no server needed'],items:[['format','Formats','fn'],['theme','Theme tokens','css'],['api','API client','fn'],['events','Events','fn'],['a11y','Accessibility','fn'],['resize','Resize','el'],['keys','Keymap','fn'],['dialog','Dialogs','el']]},
+ {id:'inputs',name:'drishti-inputs',v:'1.0.0',col:'var(--s3)',badge:['ok','no server needed'],items:[['multiselect','Multi-select','el'],['datepicker','Date and range picker','el'],['people','People picker','el'],['form','Form','el'],['filterbar','Filter bar','el'],['code','Code editor','el'],['formula','Formula input','el']]},
+ {id:'grid',name:'drishti-grid',v:'1.0.0',col:'var(--s1)',badge:['ok','no server needed'],items:[['grid','Grid','el'],['pivot','Pivot','el'],['tree','Tree data','el'],['colfilter','Column filter','el'],['export','Export (CSV, Excel)','fn'],['aggrid','AG Grid adapter','fn']]},
+ {id:'chart',name:'drishti-chart',v:'1.0.0',col:'var(--s4)',badge:['ok','no server needed'],items:[['chart','Chart','el'],['map','Map','el'],['spark','Sparkline','el']]},
+ {id:'data',name:'drishti-data',v:'1.0.0',col:'var(--s2)',badge:['ok','no server needed'],items:[['source','Data source','fn'],['arrow','Arrow table','fn'],['live','Live updates','fn']]},
+ {id:'insight',name:'drishti-insight',v:'1.0.0',col:'var(--link)',badge:['srv','needs a Drishti server'],items:[['explain','Explain','el'],['search','Search','el'],['approvals','Approvals','el'],['workbook','Workbook export','fn']]},
+ {id:'renderer',name:'drishti-renderer',v:'2.0.0',col:'var(--link)',badge:['srv','needs a Drishti server'],items:[['screen','Screen (ViewModel)','el'],['view','<drishti-view>','el']]},
+ {id:'risk',name:'drishti-risk',v:'1.0.0',col:'var(--amber)',badge:['lic','banking module licence'],items:[['dist','P&L distribution','el'],['backtest','Backtest','el'],['exposure','Exposure profile','el'],['varpanel','VaR explorer panel','el']]}];
+var DESC={
+ grid:['<drishti-grid>','A professional data grid: virtual scrolling to millions of rows, pinning, sorting, filtering, grouping, tree data, editing, copy, ranges, CSV and Excel export, keyboard and screen readers. Client-side for local data, server-side for large data.'],
+ chart:['<drishti-chart>','One engine-neutral chart spec, drawn by ECharts: line, bar, area, scatter, heatmap, waterfall and more, with the theme, shared formats, click → Explain, export and a data-table alternative.'],
+ multiselect:['<drishti-multiselect>','A multi-select with type-ahead, Select all, counts per option and a compact summary ("3 selected: ABS, REPO, +1"). Keyboard first; announced by screen readers.'],
+ format:['Drishti.format','The one place numbers, money, percentages, dates and durations are formatted: compact (1.23m), full, accounting, by locale and currency, with the same rounding as the server.'],
+ explain:['<drishti-explain>','How any figure was made: its scope, its steps, what drives it, what moved it. The same answer for a grid cell, a chart mark, a report figure and the API. Needs a Drishti server.'],
+ pivot:['<drishti-grid pivot>','The grid in pivot mode: wells, totals and subtotals, collapsible pivot result columns, server-side pivot, non-additive measures totalled by the server. See mock-up g1.'],
+ map:['<drishti-chart kind="map">','World, countries and their first-level regions from vendored Natural Earth data, loaded per country. See mock-up g3.'],
+ aggrid:['Drishti.agGrid(el, gridOptions)','Takes AG Grid Enterprise\'s pivot and row-grouping option shapes (pivotMode, rowGroup, pivot, aggFunc, the server-side row model\'s requests) and builds a drishti-grid. Written from AG Grid\'s public documentation only.'],
+ dist:['<drishti-risk-chart kind="pnl-distribution">','Scenario P&L histogram with VaR and ES lines and the tail marked. Licensed with the banking module. See mock-up g2.']};
+var S={opt:'A',lib:'grid',item:'grid',codeTab:'el',docTab:'demo',q:'',dens:0,ev:[],
+  grid:{density:'comfortable',pin:true,totals:true,sort:'mtm',theme:'auto',select:'range'},
+  chart:{kind:'bar',labels:false,legend:'bottom',explain:true},
+  ms:{options:'desks',summary:true,open:true,sel:{Rates:1,Credit:1,FX:0,Equities:1,Commodities:0}},
+  fmt:{style:'compact',locale:'en-US',ccy:'USD',dp:2}};
+var ROWS=[['Rates','Govt Bonds',15.29e6,3.20e6],['Rates','Swaps',6.91e6,2.18e6],['Credit','IG Corp',5.70e6,0.84e6],['Credit','HY Corp',-0.21e6,1.14e6],['FX','G10 Spot',2.49e6,1.13e6],['Equities','Cash EQ',-3.42e6,1.92e6],['Equities','Index Options',8.11e6,2.66e6],['Commodities','Energy',1.06e6,0.97e6]];
+function log(e){S.ev.unshift(e);S.ev=S.ev.slice(0,8);var el=document.getElementById('evlog');if(el)el.innerHTML=evHTML();}
+function evHTML(){return S.ev.length?S.ev.map(function(e){return '<div>'+e+'</div>';}).join(''):'<div style="border:0">Interact with the component: its events appear here.</div>';}
+function toast(t){var el=document.getElementById('toast');el.textContent=t;el.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(function(){el.style.display='none';},1800);}
+/* ---------- live demos ---------- */
+function demoGrid(){var o=S.grid,rows=ROWS.slice().sort(function(a,b){return o.sort==='book'?a[1].localeCompare(b[1]):o.sort==='var'?b[3]-a[3]:b[2]-a[2];});
+  var h='<div class="frame" style="max-height:300px;overflow:auto"><table class="g '+(o.density!=='comfortable'?o.density:'')+'"><thead><tr><th class="'+(o.pin?'pin':'')+'" data-gs="book">Desk · Book'+(o.sort==='book'?' ▲':'')+'</th><th class="n" data-gs="mtm">MTM'+(o.sort==='mtm'?' ▼':'')+'</th><th class="n" data-gs="var">VaR 99% ◆'+(o.sort==='var'?' ▼':'')+'</th><th class="n">Δ 1d</th><th>Trader</th></tr></thead><tbody>';
+  rows.forEach(function(r,i){h+='<tr data-row="'+i+'"><td class="'+(o.pin?'pin':'')+'">'+r[0]+' · '+r[1]+'</td><td class="n'+(r[2]<0?' neg':'')+'">'+money(r[2])+'</td><td class="n">'+money(r[3])+'</td><td class="n'+(i%3?'':' neg')+'">'+(i%3?'+':'−')+(1.2+i*0.7).toFixed(1)+'%</td><td>'+['A. Rao','M. Chen','J. Smith','L. Duval'][i%4]+'</td></tr>';});
+  if(o.totals)h+='<tr class="tot"><td class="'+(o.pin?'pin':'')+'">Total</td><td class="n">'+money(ROWS.reduce(function(a,r){return a+r[2];},0))+'</td><td class="n" title="the server\'s figure, not the sum">9.42m ◆</td><td></td><td></td></tr>';
+  return h+'</tbody></table></div>';}
+function demoChart(){var o=S.chart,W=640,H=230,L=80,vals=[9.82,7.66,6.41,4.05,3.12,2.48],labs=['Rates','Equities','Credit','EM Macro','FX','Commodities'],h='<div class="frame"><svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">';
+  if(o.kind==='bar'){vals.forEach(function(v,i){var y=14+i*34,w=(W-L-60)*v/10;h+='<text x="'+(L-8)+'" y="'+(y+15)+'" text-anchor="end" fill="var(--muted)" font-size="11">'+labs[i]+'</text><rect data-mk="'+labs[i]+'" x="'+L+'" y="'+y+'" width="'+w+'" height="22" rx="3" fill="var(--s1)" style="cursor:pointer"/>'+(o.labels?'<text x="'+(L+w+6)+'" y="'+(y+15)+'" fill="var(--ink)" font-size="11">'+v.toFixed(2)+'m</text>':'');});}
+  else{var pts=[];for(var i=0;i<40;i++)pts.push([L+i*(W-L-20)/39,H-30-(Math.sin(i/5)*40+60+i*1.5)]);h+='<path d="M'+pts.map(function(p){return p.join(',');}).join('L')+'" fill="none" stroke="var(--s1)" stroke-width="2"/>'+pts.filter(function(p,i){return i%8===0;}).map(function(p,i){return '<circle data-mk="day '+(i*8)+'" cx="'+p[0]+'" cy="'+p[1]+'" r="4" fill="var(--s1)" style="cursor:pointer"/>';}).join('');h+='<line x1="'+L+'" x2="'+(W-20)+'" y1="'+(H-30)+'" y2="'+(H-30)+'" stroke="var(--line)"/>';}
+  h+='</svg>'+(o.legend!=='none'?'<div style="padding:4px 10px 8px;font-size:11.5px;color:var(--muted)"><span style="display:inline-block;width:10px;height:10px;background:var(--s1);border-radius:2px;margin-right:5px"></span>VaR 99% 1d, 2026-11-06</div>':'')+'</div>';return h;}
+function demoMs(){var o=S.ms,opts=Object.keys(o.sel),sel=opts.filter(function(k){return o.sel[k];}),cnt={Rates:12,Credit:9,FX:6,Equities:11,Commodities:4};
+  var txt=sel.length===0?'<span style="color:var(--faint)">All desks</span>':o.summary?'<span>'+sel.length+' selected: '+sel.slice(0,2).join(', ')+(sel.length>2?', +'+(sel.length-2):'')+'</span>':sel.map(function(s){return '<span class="chip">'+s+'</span>';}).join('');
+  return '<div style="padding:10px 0 170px"><div class="ms"><div class="box" data-msbox>'+txt+'<span style="margin-left:auto;color:var(--faint)">▾</span></div>'+(o.open?'<div class="dd"><input placeholder="Type to filter" aria-label="Filter"><label><input type="checkbox" data-msall'+(sel.length===opts.length?' checked':'')+'> <b>Select all</b></label>'+opts.map(function(k){return '<label><input type="checkbox" data-ms="'+k+'"'+(o.sel[k]?' checked':'')+'> '+k+'<span class="c">'+cnt[k]+'</span></label>';}).join('')+'</div>':'')+'</div></div>';}
+function demoFmt(){var o=S.fmt,v=-30205543.218,f=function(x){if(o.style==='compact')return money(x);var s=new Intl.NumberFormat(o.locale,o.style==='currency'?{style:'currency',currency:o.ccy,maximumFractionDigits:o.dp}:{maximumFractionDigits:o.dp,minimumFractionDigits:o.dp}).format(o.style==='accounting'?Math.abs(x):x);return o.style==='accounting'&&x<0?'('+s+')':s;};
+  return '<div class="fmt"><div><div class="l">format(-30205543.218)</div><div class="v" style="color:var(--neg)">'+esc(f(v))+'</div></div><div><div class="l">format(1234.5)</div><div class="v">'+esc(f(1234.5))+'</div></div><div><div class="l">format(0.0425, "pct")</div><div class="v">'+(new Intl.NumberFormat(o.locale,{style:'percent',maximumFractionDigits:o.dp}).format(0.0425))+'</div></div><div><div class="l">date("2026-11-06")</div><div class="v">'+new Intl.DateTimeFormat(o.locale,{day:'2-digit',month:'short',year:'numeric'}).format(new Date(2026,10,6))+'</div></div><div><div class="l">duration(38412)</div><div class="v">38.4 s</div></div><div><div class="l">ago("…T07:10Z")</div><div class="v">3 min ago</div></div></div>';}
+function demoFor(id){
+  if(id==='grid')return demoGrid();if(id==='chart')return demoChart();if(id==='multiselect')return demoMs();if(id==='format')return demoFmt();
+  var link={pivot:'g1-pivot-grid.html',aggrid:'g1-pivot-grid.html#B',map:'g3-maps.html',spark:'g2-charts.html',dist:'g2-charts.html',backtest:'g2-charts.html',exposure:'g2-charts.html',explain:'g1-pivot-grid.html'}[id];
+  return '<div class="frame ph">The live demo of <b>'+esc(itemName(id))+'</b> runs here in the gallery.'+(link?'<br>In these mock-ups it is drawn in <a href="'+link+'">'+link.replace(/#.*/,'')+'</a>.':'')+'</div>';}
+function itemName(id){var n=id;LIBS.forEach(function(l){l.items.forEach(function(it){if(it[0]===id)n=it[1];});});return n;}
+/* ---------- the code, from the same options ---------- */
+function hl(s){return esc(s).replace(/(&lt;\/?)([a-z-]+)/g,'$1<span class="t">$2</span>').replace(/\b(import|from|const|new|await|function|return)\b/g,'<span class="k">$1</span>').replace(/(&quot;[^&]*&quot;|'[^']*')/g,'<span class="s">$1</span>').replace(/\b(true|false|\d+)\b/g,'<span class="n">$1</span>').replace(/(\/\/[^\n]*)/g,'<span class="c">$1</span>');}
+function codeFor(id,tab){var g=S.grid,c=S.chart,m=S.ms,f=S.fmt;
+  if(id==='grid'){
+    if(tab==='el')return '<script type="module" src="/vendor/drishti-elements/grid/1.0.0/drishti-grid.js"><\/script>\n\n<drishti-grid id="desks" density="'+g.density+'"'+(g.pin?' pin-left="book"':'')+(g.totals?' totals="bottom"':'')+' sort="'+g.sort+':desc" selection="'+g.select+'"></drishti-grid>';
+    if(tab==='js')return "import { Grid } from '/vendor/drishti-elements/grid/1.0.0/drishti-grid.js';\n\nconst grid = new Grid(document.getElementById('desks'), {\n  columns: [\n    { field: 'book', header: 'Desk · Book'"+(g.pin?", pin: 'left'":"")+" },\n    { field: 'mtm', header: 'MTM', format: 'money', aggregate: 'sum' },\n    { field: 'var99', header: 'VaR 99%', format: 'money', aggregate: 'server' }, // not additive\n  ],\n  rows: data,                       // or source: Drishti.data.source(url) for server-side rows\n  density: '"+g.density+"',\n  sort: [{ field: '"+g.sort+"', dir: 'desc' }],\n  totals: "+(g.totals?"'bottom'":"false")+",\n  selection: '"+g.select+"',\n});\ngrid.on('cell-click', e => console.log(e.row, e.field));";
+    if(tab==='sutra')return "panels:\n  - id: desks\n    kind: table\n    source: var/desks\n    columns: [book, mtm, var99]\n    density: "+g.density+"\n    pin: { left: [book] }\n    totals: "+(g.totals?"bottom":"none")+"\n    sort: "+g.sort+" desc";
+    return "// The AG Grid adapter: AG Grid Enterprise option shapes in, a drishti-grid out\nimport { agGrid } from '/vendor/drishti-elements/grid/1.0.0/drishti-grid-ag.js';\n\nagGrid(document.getElementById('desks'), {\n  columnDefs: [\n    { field: 'desk', rowGroup: true, hide: true },\n    { field: 'region', pivot: true },\n    { field: 'mtm', aggFunc: 'sum' },\n    { field: 'var99', aggFunc: 'drishti:server' },\n  ],\n  pivotMode: true,\n  rowModelType: 'serverSide',\n  serverSideDatasource: Drishti.data.agDatasource('/api/v1/pivot'),\n  grandTotalRow: '"+(g.totals?'bottom':'')+"',\n});";}
+  if(id==='chart'){if(tab==='el')return '<drishti-chart kind="'+c.kind+'" source="var?by=desk" x="desk" y="var99" legend="'+c.legend+'"'+(c.labels?' labels':'')+(c.explain?' explain':'')+'></drishti-chart>';
+    if(tab==='sutra')return "  - id: var-by-desk\n    kind: chart\n    chart: { kind: "+c.kind+", x: desk, y: var99, legend: "+c.legend+(c.labels?", labels: true":"")+" }";
+    return "import { Chart } from '/vendor/drishti-elements/chart/1.0.0/drishti-chart.js';\n\nnew Chart(el, {\n  kind: '"+c.kind+"',\n  data: { rows },\n  x: { field: 'desk' },\n  y: { field: 'var99', format: 'money' },\n  legend: '"+c.legend+"',\n  labels: "+c.labels+",\n  onClick: "+(c.explain?"'explain'":"null")+",\n});";}
+  if(id==='multiselect'){if(tab==='el')return '<drishti-multiselect name="desk" summary="'+(m.summary?'compact':'chips')+'" search>\n'+Object.keys(m.sel).map(function(k){return '  <option'+(m.sel[k]?' selected':'')+'>'+k+'</option>';}).join('\n')+'\n</drishti-multiselect>';
+    return "import { MultiSelect } from '/vendor/drishti-elements/inputs/1.0.0/drishti-inputs.js';\n\nconst ms = new MultiSelect(el, { options, summary: '"+(m.summary?'compact':'chips')+"', search: true });\nms.on('change', e => console.log(e.values));";}
+  if(id==='format')return "import { format } from '/vendor/drishti-elements/core/1.0.0/drishti-core.js';\n\nformat(-30205543.218, { style: '"+f.style+"', locale: '"+f.locale+"', currency: '"+f.ccy+"', digits: "+f.dp+" });\n// the same rounding as the server: half-even, Python's repr for floats";
+  return "import { "+itemName(id).replace(/[^A-Za-z]/g,'')+" } from '/vendor/drishti-elements/"+S.lib+"/1.0.0/drishti-"+S.lib+".js';";}
+/* ---------- options panel (generated from the component's typed options) ---------- */
+function optRow(name,ctl,d){return '<div class="opt"><label>'+name+'</label>'+ctl+'<div class="d">'+d+'</div></div>';}
+function sel(path,vals,cur){return '<select data-opt="'+path+'">'+vals.map(function(v){return '<option'+(v===cur?' selected':'')+'>'+v+'</option>';}).join('')+'</select>';}
+function sw(path,on){return '<button class="sw'+(on?' on':'')+'" data-sw="'+path+'" aria-pressed="'+on+'"></button>';}
+function optsFor(id){var g=S.grid,c=S.chart,m=S.ms,f=S.fmt;
+  if(id==='grid')return optRow('density',sel('grid.density',['comfortable','compact','terminal'],g.density),'Row height and type: comfortable, compact, terminal (monospace).')+optRow('pin-left',sw('grid.pin',g.pin),'Keep the first column in view while scrolling across.')+optRow('totals',sw('grid.totals',g.totals),'A total row; non-additive columns take the server\'s figure (◆).')+optRow('sort',sel('grid.sort',['mtm','var','book'],g.sort),'The initial sort; a header click changes it.')+optRow('selection',sel('grid.select',['range','row','cell','none'],g.select),'Cell ranges with the status bar\'s sum, rows with checkboxes, single cells, or none.')+optRow('theme',sel('grid.theme',['auto','light','dark'],g.theme),'Follows the page by default (prefers-color-scheme and the theme tokens).');
+  if(id==='chart')return optRow('kind',sel('chart.kind',['bar','line'],c.kind),'Any registered kind: bar, line, area, scatter, heatmap, waterfall, map…')+optRow('labels',sw('chart.labels',c.labels),'Value labels on the marks.')+optRow('legend',sel('chart.legend',['bottom','right','none'],c.legend),'Where the legend goes.')+optRow('explain',sw('chart.explain',c.explain),'A click on a mark opens Explain (with drishti-insight and a server).');
+  if(id==='multiselect')return optRow('summary',sw('ms.summary',m.summary),'Compact summary ("3 selected: …") or chips.')+optRow('open',sw('ms.open',m.open),'Show the list (for the demo).');
+  if(id==='format')return optRow('style',sel('fmt.style',['compact','plain','currency','accounting'],f.style),'Compact (1.23m), plain, currency or accounting (negatives in brackets).')+optRow('locale',sel('fmt.locale',['en-US','en-GB','de-DE','fr-CA','ja-JP','en-IN'],f.locale),'Any BCP 47 locale.')+optRow('currency',sel('fmt.ccy',['USD','EUR','GBP','CAD','JPY','INR'],f.ccy),'ISO 4217.')+optRow('digits',sel('fmt.dp',['0','1','2','3'],String(f.dp)),'Fraction digits.');
+  return '<div class="opt"><div class="d">Options are generated from the component\'s typed JSDoc, the same source as its API reference.</div></div>';}
+function apiFor(id){var rows=id==='grid'?[['columns','ColumnDef[]','—','The columns: field, header, format, pin, width, aggregate (sum, avg, min, max, count, server), editable, filter.'],['rows','object[] | ArrowTable','—','Local rows; or source for server-side rows.'],['source','DataSource','—','drishti-data source: rows asked by window, group, pivot, sort and filter.'],['density',"'comfortable' | 'compact' | 'terminal'","'comfortable'",'Row height and type.'],['pivot','PivotConfig','null','rows, columns, values, filters, totals; see the pivot guide.'],['selection',"'range' | 'row' | 'cell' | 'none'","'range'",'What a click and a drag select.'],['totals',"'top' | 'bottom' | false",'false','A total row.']]:[['…','…','…','Generated from the component\'s JSDoc.']];
+  return '<div class="api"><table><thead><tr><th>Option</th><th>Type</th><th>Default</th><th>What it does</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td><code>'+esc(r[0])+'</code></td><td class="ty">'+esc(r[1])+'</td><td class="ty">'+esc(r[2])+'</td><td>'+esc(r[3])+'</td></tr>';}).join('')+'</tbody></table>'+
+    (id==='grid'?'<table style="margin-top:12px"><thead><tr><th>Event</th><th>Detail</th><th>When</th></tr></thead><tbody><tr><td><code>cell-click</code></td><td class="ty">{row, field, value}</td><td>a cell is clicked</td></tr><tr><td><code>range-change</code></td><td class="ty">{cells, sum, count}</td><td>the selected range changes</td></tr><tr><td><code>sort-change</code></td><td class="ty">{sort}</td><td>a header click or sortBy()</td></tr><tr><td><code>explain</code></td><td class="ty">{cell}</td><td>E, F2 or the context menu</td></tr></tbody></table>':'')+
+    '<div class="gen">Generated by tools/elements/api_ref.py from the typed JSDoc of drishti-'+S.lib+' '+libOf(S.lib).v+' (the build fails when a public option, event or method has no description: --check).</div></div>';}
+function libOf(id){return LIBS.filter(function(l){return l.id===id;})[0];}
+function navHTML(){var h='<input class="q" placeholder="Find a component" data-q value="'+esc(S.q)+'">';
+  LIBS.forEach(function(l){var its=l.items.filter(function(it){return !S.q||it[1].toLowerCase().indexOf(S.q.toLowerCase())>=0||l.name.indexOf(S.q.toLowerCase())>=0;});if(!its.length)return;
+    h+='<div class="lib"><span class="dot" style="background:'+l.col+'"></span>'+l.name+'<span class="n">'+l.v+'</span></div>'+its.map(function(it){return '<div class="it'+(S.item===it[0]?' on':'')+'" data-item="'+l.id+':'+it[0]+'">'+esc(it[1])+'<span class="tag">'+(it[2]==='el'?'&lt;/&gt;':it[2])+'</span></div>';}).join('');});
+  return h;}
+function heroHTML(){var l=libOf(S.lib),d=DESC[S.item]||[itemName(S.item),'A component of '+l.name+'.'];
+  return '<div class="hero"><h1>'+esc(itemName(S.item))+' <code>'+esc(d[0])+'</code><span class="badge '+l.badge[0]+'">'+l.badge[1]+'</span><span class="ver">'+l.name+' '+l.v+'</span></h1><p>'+esc(d[1])+'</p></div>';}
+function codeBlock(){var tabs=S.item==='grid'?[['el','Web component'],['js','JavaScript'],['sutra','Sutra'],['ag','AG Grid adapter']]:[['el','Web component'],['js','JavaScript'],['sutra','Sutra']];if(!tabs.some(function(t){return t[0]===S.codeTab;}))S.codeTab='el';
+  return '<div class="code"><div class="ct">'+tabs.map(function(t){return '<span class="'+(S.codeTab===t[0]?'on':'')+'" data-ct="'+t[0]+'">'+t[1]+'</span>';}).join('')+'<button class="ghost copy" data-copy>Copy</button></div><pre>'+hl(codeFor(S.item,S.codeTab))+'</pre></div>';}
+var INTRO={A:'<b>A · Playground.</b> Three panes: every component of the eight libraries on the left, the live component with its code (web component, JavaScript, Sutra and, for the grid, the AG Grid adapter) in the middle, and its options and event log on the right. Change an option and both the component and the code follow. Recommended: it is where a developer learns a component in a minute.',
+ B:'<b>B · Documentation page.</b> The same list on the left; each component is a page with tabs (Examples, API, Accessibility, Changelog): runnable example cards with "Open in playground", the API reference generated from typed JSDoc, the keyboard and screen-reader contract, and the library\'s changelog. Best as the published reference.'};
+function render(){
+  document.getElementById('intro').innerHTML=INTRO[S.opt];var st=document.getElementById('stage'),l=libOf(S.lib);
+  var status='<div class="status"><span><b>'+l.name+' '+l.v+'</b></span><span>'+l.items.length+' components</span><span>ES modules, no build step · '+({core:'14',inputs:'38',grid:'61',chart:'34',data:'19',insight:'27',renderer:'71',risk:'22'}[l.id])+' KB gzip</span><span>tests: 412 passed</span><span>a11y: axe 0 violations</span><span style="margin-left:auto">vendored, no CDN · drishti_ prefix</span></div>';
+  if(S.opt==='A'){
+    st.innerHTML='<div class="shell A"><div class="nav">'+navHTML()+'</div><div class="main">'+heroHTML()+'<div class="demo">'+demoFor(S.item)+'</div>'+codeBlock()+status+'</div><div class="opts"><h3>Options</h3>'+optsFor(S.item)+'<h3>Events</h3><div class="events" id="evlog">'+evHTML()+'</div><h3>Docs</h3><div class="opt"><div class="d">Guide · Tutorial · API reference · Theming · Accessibility · Migrating from AG Grid · Changelog</div></div></div></div>';
+  }else{
+    var tabs=[['demo','Examples'],['api','API'],['a11y','Accessibility'],['log','Changelog']],body='';
+    if(S.docTab==='demo'){var ex=S.item==='grid'?[['Local rows, sorted and pinned',demoGrid()],['Totals with a non-additive column','<div class="ph" style="padding:12px">The total row takes the server\'s VaR (◆), never a sum. <a href="g1-pivot-grid.html">See g1</a></div>'],['Server-side rows, a million of them','<div class="ph" style="padding:12px">source: Drishti.data.source(\'/api/v1/rows\') · virtual scrolling · 1,000,000 rows · 60 fps</div>'],['From AG Grid options','<pre style="margin:0;font-family:var(--mono);font-size:11px;white-space:pre-wrap">'+hl(codeFor('grid','ag'))+'</pre>']]:[['Basic',demoFor(S.item)],['With options','<div class="ph">Another example of '+esc(itemName(S.item))+'.</div>']];
+      body='<div class="ex">'+ex.map(function(e){return '<div class="card"><div class="h"><b>'+esc(e[0])+'</b><button class="ghost" data-open>Open in playground</button></div><div class="b">'+e[1]+'</div><div class="f">runs in the browser · no server needed</div></div>';}).join('')+'</div>';}
+    else if(S.docTab==='api')body=apiFor(S.item);
+    else if(S.docTab==='a11y')body='<div class="api"><table><thead><tr><th>Key</th><th>Does</th></tr></thead><tbody>'+[['↑ ↓ ← →','move the cell'],['Shift + arrows','extend the range'],['Home / End, Ctrl+Home / Ctrl+End','row start and end, first and last cell'],['Enter','expand a group; edit a cell'],['E or F2','Explain the cell'],['Ctrl+C','copy the range as text'],['Shift+F10','the context menu']].map(function(r){return '<tr><td><code>'+r[0]+'</code></td><td>'+r[1]+'</td></tr>';}).join('')+'</tbody></table><div class="gen">role="grid" or "treegrid", aria-rowcount and aria-colcount for virtual rows, aria-level and aria-expanded on groups, aria-sort on headers, live announcements of sort and filter changes; WCAG 2.2 AA contrast in both themes; checked by axe in the gallery\'s tests.</div></div>';
+    else body='<div class="api"><table><thead><tr><th>Version</th><th>Date</th><th>Changes</th></tr></thead><tbody><tr><td><code>1.0.0</code></td><td>2.9.11.e</td><td>First release: the grid, the pivot, tree data, ranges, export, the AG Grid adapter.</td></tr></tbody></table><div class="gen">Semantic versions per library; a released version\'s folder never changes (integrity record); breaking changes only in a new major, announced one release ahead.</div></div>';
+    st.innerHTML='<div class="shell B"><div class="nav">'+navHTML()+'</div><div class="main">'+heroHTML()+'<div class="tabs">'+tabs.map(function(t){return '<span class="'+(S.docTab===t[0]?'on':'')+'" data-dt="'+t[0]+'">'+t[1]+'</span>';}).join('')+'</div>'+body+(S.docTab==='demo'?codeBlock():'')+status+'</div></div>';
+  }
+}
+/* ---------- events ---------- */
+document.getElementById('opts').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;S.opt=b.dataset.o;[].forEach.call(this.children,function(x){x.classList.toggle('on',x===b);});render();});
+document.getElementById('theme').onclick=function(){document.documentElement.classList.toggle('light');};
+var DL=['comfortable','compact','terminal'];document.getElementById('dense').onclick=function(){S.dens=(S.dens+1)%3;document.body.classList.remove('compact','terminal');if(S.dens)document.body.classList.add(DL[S.dens]);this.textContent='Density: '+DL[S.dens];S.grid.density=DL[S.dens];render();};
+var st=document.getElementById('stage');
+function setPath(p,v){var a=p.split('.');S[a[0]][a[1]]=v;}
+st.addEventListener('click',function(e){var t=e.target,g;
+  if((g=t.closest('[data-item]'))){var p=g.dataset.item.split(':');S.lib=p[0];S.item=p[1];S.ev=[];render();return;}
+  if((g=t.closest('[data-ct]'))){S.codeTab=g.dataset.ct;render();return;}
+  if((g=t.closest('[data-dt]'))){S.docTab=g.dataset.dt;render();return;}
+  if(t.hasAttribute('data-copy')){try{navigator.clipboard.writeText(codeFor(S.item,S.codeTab));}catch(x){}toast('Copied');return;}
+  if(t.hasAttribute('data-open')){S.opt='A';[].forEach.call(document.getElementById('opts').children,function(x){x.classList.toggle('on',x.dataset.o==='A');});render();return;}
+  if((g=t.closest('[data-sw]'))){var a=g.dataset.sw.split('.');S[a[0]][a[1]]=!S[a[0]][a[1]];log('<b>option</b> '+g.dataset.sw.split('.')[1]+' = '+S[a[0]][a[1]]);render();return;}
+  if((g=t.closest('[data-gs]'))){S.grid.sort=g.dataset.gs;log('<b>sort-change</b> {field: "'+S.grid.sort+'"}');render();return;}
+  if((g=t.closest('tr[data-row] td'))){log('<b>cell-click</b> {row: '+g.parentNode.dataset.row+', value: "'+g.textContent+'"}');return;}
+  if((g=t.closest('[data-mk]'))){log('<b>mark-click</b> {name: "'+g.dataset.mk+'"} → explain');toast('Explain opens (drishti-insight, with a server)');return;}
+  if(t.hasAttribute('data-msbox')||t.closest('[data-msbox]')){S.ms.open=!S.ms.open;render();return;}
+  if(t.dataset.ms){S.ms.sel[t.dataset.ms]=t.checked?1:0;log('<b>change</b> {values: ['+Object.keys(S.ms.sel).filter(function(k){return S.ms.sel[k];}).map(function(k){return '"'+k+'"';}).join(', ')+']}');render();return;}
+  if(t.hasAttribute('data-msall')){var on=t.checked;Object.keys(S.ms.sel).forEach(function(k){S.ms.sel[k]=on?1:0;});log('<b>change</b> select all = '+on);render();return;}
+});
+st.addEventListener('change',function(e){var t=e.target;if(t.dataset.opt){var v=t.value;if(t.dataset.opt==='fmt.dp')v=+v;setPath(t.dataset.opt,v);log('<b>option</b> '+t.dataset.opt.split('.')[1]+' = "'+v+'"');render();}});
+st.addEventListener('input',function(e){if(e.target.dataset.q!==undefined){S.q=e.target.value;render();var q=st.querySelector('[data-q]');q.focus();q.setSelectionRange(q.value.length,q.value.length);}});
+var h0=(location.hash.match(/[AB]/)||[])[0];if(h0){S.opt=h0;[].forEach.call(document.getElementById('opts').children,function(x){x.classList.toggle('on',x.dataset.o===h0);});}
+render();
+})();
+</script>
+</body>
+</html>

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 5, Build a pack from your data (docs/tutorials/05-build-a-pack.md), written to docs/tutorials/img/t05/.
+"""Pictures of tutorial 19, Part A, Build a pack from your data (docs/tutorials/19-build-a-pack-and-a-screen.md), written to docs/tutorials/img/t05/.
 
 Build -> New pack takes the tutorial's schema and its folder of quotes (docs/tutorials/data), makes the pack `desk-quotes`, hands it to
 Admin -> Packs, which checks it and deploys it."""
@@ -118,7 +118,7 @@ def s5(c: Ctx):
 
 
 def tutorial_4_connector(c: Ctx):
-    """What tutorial 4 left behind: the site's desk-quotes connector on the tutorial's quotes folder. Without it the deployed pack's
+    """What tutorial 15 left behind: the site's desk-quotes connector on the tutorial's quotes folder. Without it the deployed pack's
     connector template is written instead (on the server's empty files root) and the quote cannot be opened."""
     text = (ROOT / "docs" / "tutorials" / "data" / "connectors" / "desk-quotes.yaml").read_text(encoding="utf-8")
     call(c, "PUT", "/admin/connectors/api/desk-quotes",

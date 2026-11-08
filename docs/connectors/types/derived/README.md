@@ -50,7 +50,7 @@ settings:
 auth: None; it reads its members through the server's own routing, with the reader's rights.
 licence: Part of the Drishti engine (drishti-engine); no client library.
 windows: Works the same on Windows (pure Java); store disk writes its pages under the data folder.
-doc: docs/guides/PACK_DEVELOPER_GUIDE.md
+doc: docs/guides/BUILD_GUIDE.md
 ---
 # The derived connector
 
@@ -109,7 +109,7 @@ These turn the gleif, us-equities and world-economy packs' groupings (LEIG, LEIC
 ([GROUPINGS_ANALYTICS_GUIDE.md](../../../guides/GROUPINGS_ANALYTICS_GUIDE.md) Part III); on a page the order is the aggregates, the rows,
 the tree, the `then` fields, the sorts, then `unlisted`.
 
-Every connector also takes `kinds`, `enabled` and the common settings (docs/connectors/CONNECTOR_FILES.md).
+Every connector also takes `kinds`, `enabled` and the common settings (docs/guides/DATA_GUIDE.md section 9).
 
 ## Data structure
 
@@ -130,7 +130,7 @@ A derived page, for the group key `CP-MERIDIAN-RE` of `counterparty-trades` (the
 
 ## Examples
 
-The trading pack's connector (`config/packs/trading/pack.yaml`, shortened):
+The trading pack's connector (`config/packs/banking/trading/pack.yaml`, shortened):
 
 ```yaml
 connectors:
@@ -177,6 +177,6 @@ A smaller one is the help-desk example's `agent-load` (`where: $.STATUS != 'Clos
 
 ## See also
 
-- [Derived kinds in the pack modelling guide](../../../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds): keys, fields, links, dates, cost, storage.
-- [Connector files](../../CONNECTOR_FILES.md) and [Connectors and routes](../../CONNECTORS.md).
-- [The connector developer's guide](../../CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [Derived kinds in the pack modelling guide](../../../guides/BUILD_GUIDE.md#53-derived-kinds-entities-computed-from-other-kinds): keys, fields, links, dates, cost, storage.
+- [Connector files](../../../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [Connectors and routes](../../../guides/DATA_GUIDE.md#8-connectors).
+- [The connector developer's guide](../../../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

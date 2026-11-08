@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 14, step 12: the Python item the Transform editor wrote for ENDUR trades, cleaned (each step after its # step: comment).
+# Tutorial 9, step 12: the Python item the Transform editor wrote for ENDUR trades, cleaned (each step after its # step: comment).
 rachana: 1
 python: endur-trades-cleaned
 title: ENDUR trades, cleaned

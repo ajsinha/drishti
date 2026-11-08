@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin → Lakes → Maintain: pick tables (all, by domain, one by one), dry run or maintain now with progress per table and cancel, settings per
    table, schedules (a day-and-time picker that writes the cron text, or after every build) and the history. Everything goes through
    /admin/api/lakes/maintain/... (routes/lake_maint_routes.py); the engine is tools/lake/maintain.py, the same as `drishti.py lake maintain`. */
@@ -23,6 +24,11 @@
   var API = '/admin/api/lakes/maintain';
   var $ = function (sel) { return box.querySelector(sel); };
   var $$ = function (sel) { return Array.prototype.slice.call(box.querySelectorAll(sel)); };
+  /* the domain choice, the settings and the new schedule are drishti-inputs' Forms from the server's schemas (core/admin_forms.py); the
+     tables are picked by drishti-grid's row selection on the table (data-select: a box per row, Select all in its heading) */
+  var I = window.Drishti.elements.inputs;
+  var pickF = I.formOf($('.mt-picks')), setF = I.formOf($('.mt-settings')), schedF = I.formOf($('.mt-schedule'));
+  var table = document.querySelector('[data-lake-tables]');
   var msg = $('[data-mt-msg]');
   var state = { overview: null, run: null, timer: null, dirty: {}, cronEdited: false };
   var DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -43,14 +49,15 @@
       });
     });
   }
-  function fmt(n) { return n === null || n === undefined ? '–' : Number(n).toLocaleString(); }
-  function mb(n) { return n === null || n === undefined ? '–' : (Number(n) < 1 ? (Number(n) * 1024).toFixed(1) + ' KB' : Number(n).toFixed(2) + ' MB'); }
+  var F = window.Drishti.elements.core;                                         // counts and sizes by drishti-core
+  function fmt(n) { return F.formatNumber(n, { maxDecimals: 3, empty: '–' }); }
+  function mb(n) { return n === null || n === undefined ? '–' : F.formatBytes(Number(n) * 1048576, { decimals: 2 }); }
 
   // the selection ------------------------------------------------------------------------------------------------
-  function picks() { return $$('[data-mt-pick]'); }
+  function picker() { return table && table.__tblSelection; }                  // drishti-grid's (drishti_doc-select.js), made when the table is enhanced
   function selection() {
-    var out = {};
-    picks().forEach(function (c) { if (c.checked) { (out[c.getAttribute('data-root')] = out[c.getAttribute('data-root')] || []).push(c.value); } });
+    var out = {}, p = picker();
+    (p ? p.rows() : []).forEach(function (r) { var root = r.getAttribute('data-root'); (out[root] = out[root] || []).push(r.getAttribute('data-lake-table')); });
     return out;
   }
   function count(sel) { return Object.keys(sel).reduce(function (n, r) { return n + sel[r].length; }, 0); }
@@ -64,9 +71,6 @@
     $('[data-mt-count]').textContent = n ? n + ' table' + (n === 1 ? '' : 's') + ' selected' : 'No table selected';
     ['[data-mt-dry]', '[data-mt-run]', '[data-mt-save]'].forEach(function (s) { $(s).disabled = !n || (running && s !== '[data-mt-save]'); });
     $('[data-mt-add]').disabled = !n || Object.keys(sel).length !== 1;
-    var all = picks();
-    $('[data-mt-all]').checked = all.length > 0 && all.every(function (c) { return c.checked; });
-    $('[data-mt-all]').indeterminate = n > 0 && n < all.length;
     if (n === 1) { fillSettings(settingsOf(Object.keys(sel)[0], sel[Object.keys(sel)[0]][0])); }
     clearTimeout(cliTimer);
     cliTimer = setTimeout(function () {
@@ -74,16 +78,12 @@
       api('POST', API + '/command', { tables: sel }).then(function (j) { $('[data-mt-cli]').textContent = j.command; }).catch(function () {});
     }, 150);
   }
-  box.addEventListener('change', function (ev) { if (ev.target.matches('[data-mt-pick]')) { selectionChanged(); } });
-  $('[data-mt-all]').addEventListener('change', function (ev) {
-    picks().forEach(function (c) { c.checked = ev.target.checked; });
-    selectionChanged();
-  });
-  $('[data-mt-domain]').addEventListener('change', function (ev) {
-    var d = ev.target.value;
-    if (!d) { return; }
-    picks().forEach(function (c) { c.checked = c.getAttribute('data-domain') === d; });
-    selectionChanged();
+  box.addEventListener('drishti:rows-selected', selectionChanged);
+  pickF.on('change', function (ev) {                                             // a domain picks its tables, and only those
+    var d = ev.value, p = picker();
+    if (ev.path !== 'domain' || !d || !p || !table) { return; }
+    p.set(Array.prototype.slice.call(table.querySelectorAll('tbody tr[data-select-id]')).filter(function (r) { return r.getAttribute('data-domain') === d; })
+      .map(function (r) { return r.getAttribute('data-select-id'); }));
   });
   $('[data-mt-copy]').addEventListener('click', function () {
     var text = $('[data-mt-cli]').textContent;
@@ -173,24 +173,22 @@
   function fillSettings(s) {
     if (!s) { return; }
     state.dirty = {};
-    $('[data-mt-set="keep-business-days"]').value = s['keep-business-days'] === null ? '' : s['keep-business-days'];
-    $('[data-mt-set="target-file-mb"]').value = s['target-file-mb'];
-    $('[data-mt-set="vacuum-hours"]').value = s['vacuum-hours'] === null ? '' : s['vacuum-hours'];
-    $('[data-mt-set="checkpoint"]').checked = !!s.checkpoint;
+    ['keep-business-days', 'target-file-mb', 'vacuum-hours'].forEach(function (k) { setF.setField(k, s[k] === null || s[k] === undefined ? undefined : s[k]); });
+    setF.setField('checkpoint', !!s.checkpoint);
     vacuumWarn();
   }
+  function blank(v) { return v === undefined || v === null || v === '' || (typeof v === 'number' && isNaN(v)); }
   function vacuumWarn() {
-    var v = $('[data-mt-set="vacuum-hours"]').value, safe = (state.overview || {}).vacuumSafeHours || 168;
-    $('[data-mt-vacuum-warn]').hidden = v === '' || Number(v) >= safe;
+    var v = setF.getField('vacuum-hours'), safe = (state.overview || {}).vacuumSafeHours || 168;
+    $('[data-mt-vacuum-warn]').hidden = blank(v) || Number(v) >= safe;
   }
-  $$('[data-mt-set]').forEach(function (i) {
-    i.addEventListener(i.type === 'checkbox' ? 'change' : 'input', function () { state.dirty[i.getAttribute('data-mt-set')] = true; vacuumWarn(); });
-  });
+  setF.on('change', function (ev) { state.dirty[ev.path] = true; vacuumWarn(); });
   $('[data-mt-save]').addEventListener('click', function () {
+    if (!setF.validate().ok) { say('Check the settings marked above.', true); return; }
     var settings = {};
     Object.keys(state.dirty).forEach(function (k) {
-      var i = $('[data-mt-set="' + k + '"]');
-      settings[k] = i.type === 'checkbox' ? i.checked : i.value;
+      var v = setF.getField(k);
+      settings[k] = k === 'checkpoint' ? !!v : blank(v) ? '' : String(v);
     });
     if (!Object.keys(settings).length) { say('Change a setting first.'); return; }
     api('PUT', API + '/settings', { tables: selection(), settings: settings }).then(function (j) {
@@ -201,9 +199,9 @@
   });
 
   // schedules ----------------------------------------------------------------------------------------------------
-  function pickedDays() { return $$('[data-mt-day]').filter(function (c) { return c.checked; }).map(function (c) { return c.value; }); }
+  function pickedDays() { return (schedF.getField('days') || []).slice(); }
   function cronFromPicker() {
-    var at = ($('[data-mt-at]').value || '02:30').split(':'), days = pickedDays().map(function (d) { return DAYS.indexOf(d); }).sort();
+    var at = String(schedF.getField('at') || '02:30').split(':'), days = pickedDays().map(function (d) { return DAYS.indexOf(d); }).sort();
     return Number(at[1]) + ' ' + Number(at[0]) + ' * * ' + (days.length === 7 ? '*' : days.join(','));
   }
   function friendly(cron) {
@@ -222,24 +220,23 @@
   }
   function pickerChanged() {
     state.cronEdited = false;
-    $('[data-mt-cron]').value = cronFromPicker();
-    $('[data-mt-friendly]').textContent = pickedDays().length ? friendly($('[data-mt-cron]').value) : 'Pick at least one day.';
+    schedF.setField('cron', cronFromPicker());
+    $('[data-mt-friendly]').textContent = pickedDays().length ? friendly(schedF.getField('cron')) : 'Pick at least one day.';
   }
-  $$('[data-mt-day]').forEach(function (c) { c.addEventListener('change', pickerChanged); });
-  $('[data-mt-at]').addEventListener('input', pickerChanged);
-  $('[data-mt-cron]').addEventListener('input', function () { state.cronEdited = true; $('[data-mt-friendly]').textContent = friendly($('[data-mt-cron]').value); });
-  $$('[data-mt-mode]').forEach(function (r) {
-    r.addEventListener('change', function () { $('[data-mt-timepick]').hidden = r.value === 'after-build' && r.checked; });
+  schedF.on('change', function (ev) {                 // the days and time write the cron text; the cron text typed in is kept as it is
+    if (ev.path === 'days' || ev.path === 'at') { pickerChanged(); }
+    else if (ev.path === 'cron') { state.cronEdited = true; $('[data-mt-friendly]').textContent = friendly(String(ev.value || '')); }
+    else if (ev.path === 'mode') { $('[data-mt-friendly]').hidden = ev.value === 'after-build'; }
   });
   $('[data-mt-add]').addEventListener('click', function () {
-    var name = $('[data-mt-sname]').value.trim();
+    var name = String(schedF.getField('name') || '').trim();
     if (!name) { say('Name the schedule first.', true); $('[data-mt-sname]').focus(); return; }
-    var after = $$('[data-mt-mode]').some(function (r) { return r.checked && r.value === 'after-build'; });
+    var after = schedF.getField('mode') === 'after-build';
     var body = { name: name, tables: selection() };
-    if (after) { body.afterBuild = true; } else if (state.cronEdited) { body.cron = $('[data-mt-cron]').value; } else { body.days = pickedDays(); body.at = $('[data-mt-at]').value; }
+    if (after) { body.afterBuild = true; } else if (state.cronEdited) { body.cron = schedF.getField('cron'); } else { body.days = pickedDays(); body.at = schedF.getField('at') || '02:30'; }
     api('POST', API + '/schedules', body).then(function (s) {
       say('Schedule ' + s.name + ' created: ' + s.friendly + '.');
-      $('[data-mt-sname]').value = '';
+      schedF.setField('name', undefined);
       refresh();
     }).catch(function (e) { say(e.message, true); });
   });
@@ -300,7 +297,7 @@
     });
   }
   function settingsText(s) {
-    return (s['keep-business-days'] === null ? 'keep all dates' : Number(s['keep-business-days']).toLocaleString() + ' business days') + ' · ' + s['target-file-mb'] + ' MB files · ' +
+    return (s['keep-business-days'] === null ? 'keep all dates' : fmt(s['keep-business-days']) + ' business days') + ' · ' + s['target-file-mb'] + ' MB files · ' +
       (s.checkpoint ? 'checkpoint' : 'no checkpoint') + ' · ' + (s['vacuum-hours'] === null ? 'no vacuum' : 'vacuum ' + s['vacuum-hours'] + ' h');
   }
   function refresh() {

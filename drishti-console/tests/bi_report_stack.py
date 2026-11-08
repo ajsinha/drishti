@@ -179,15 +179,15 @@ class ReportStack:
         jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
-            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
         work = self.tmp / "server"
-        from bi_samples import copy_samples
+        from bi_samples import copy_samples, shipped
         (work / "config" / "bi" / "datasets").mkdir(parents=True)
         copy_samples(work / "config" / "bi", ["trades-basic"] if not self.delta_root else ["trades-basic", "trading-risk", "trading-cashflows"])   # each model and its datasets
         reports = work / "config" / "bi" / "reports"
         reports.mkdir(parents=True)
         for name in ["trades-overview"] if not self.delta_root else ["trades-overview", "counterparty-risk", "cashflow-ladder"]:
-            shutil.copy(ROOT / "config" / "bi" / "reports" / f"{name}.report.yaml", reports)
+            shutil.copy(shipped("reports", f"{name}.report.yaml"), reports)
         shutil.copytree(ROOT / "config" / "bi" / "themes", work / "config" / "bi" / "themes")          # the shipped themes (2.4.0): Corporate and Print
         self.prepare(work)
         from bi_samples import migrate_folder

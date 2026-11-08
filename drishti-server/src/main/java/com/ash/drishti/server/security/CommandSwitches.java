@@ -20,7 +20,7 @@ import com.ash.drishti.identity.SwitchLedger;
 import java.util.Optional;
 
 /**
- * The commands administrators turned off (Admin → Commands, docs/admin/USER_MANAGEMENT.md), read from the switches ledger. A command is its
+ * The commands administrators turned off (Admin → Functions, docs/guides/ADMIN_GUIDE.md), read from the switches ledger. A command is its
  * mnemonic ({@code FRTB}), which names one kind ({@code frtb-sensitivity}); when the command is off its kind is not active anywhere:
  * {@link PackAccess#kindAllowed} is false for everyone, so every surface that asks {@link Entitlements#mayOpen} leaves it out, and
  * {@link Entitlements#requireOpen} answers {@code 403 DRS-1016}. Kinds no mnemonic names are never off. Lock-free: two map lookups.
@@ -30,9 +30,17 @@ public final class CommandSwitches {
     private final SwitchLedger ledger;
     private final Mnemonics mnemonics;
 
+    private final com.ash.drishti.registry.AccessRegistry registry;
+
     public CommandSwitches(SwitchLedger ledger, Mnemonics mnemonics) {
+        this(ledger, mnemonics, null);
+    }
+
+    /** With the access registry, which decides a command (a function) on: its module on and its switch not off. */
+    public CommandSwitches(SwitchLedger ledger, Mnemonics mnemonics, com.ash.drishti.registry.AccessRegistry registry) {
         this.ledger = ledger;
         this.mnemonics = mnemonics;
+        this.registry = registry;
     }
 
     /** The command of the kind (its mnemonic), or null when none names it. */
@@ -48,12 +56,15 @@ public final class CommandSwitches {
 
     /** False when the kind's command is turned off. */
     public boolean active(String kind) {
-        return off(kind).isEmpty();
+        return registry != null ? commandOn(commandOf(kind)) : off(kind).isEmpty();
     }
 
     /** False when the command (a mnemonic, any case) is turned off. */
     public boolean commandOn(String code) {
-        return code == null || ledger.on(SwitchLedger.COMMAND, code.toUpperCase(java.util.Locale.ROOT));
+        if (code == null) {
+            return true;
+        }
+        return registry != null ? registry.functionOn(code) : ledger.on(SwitchLedger.COMMAND, code.toUpperCase(java.util.Locale.ROOT));
     }
 
     /** The refusal for a kind whose command is off ({@code 403 DRS-1016}), naming the command and the day it was turned off. */

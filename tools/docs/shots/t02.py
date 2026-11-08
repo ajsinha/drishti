@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 2, Look up anything (docs/tutorials/02-look-up-anything.md), written to docs/tutorials/img/t02/."""
+"""Pictures of tutorial 1, Part B, Look up anything (docs/tutorials/01-first-15-minutes.md), written to docs/tutorials/img/t02/."""
 from __future__ import annotations
 
 from _tut import OUT, SERVER_ENV, command, go, lake_days, login, page_shot  # noqa: F401
@@ -64,7 +64,7 @@ def links(c: Ctx):
     login(c)
     go(c, "/v/trade/MX-20000001", wait="[data-panel]", settle=2000)
     c.save("06-links.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 240})
-    c.page.fill("#asofDate", LAST)                         # the netting set on the demo lakes' last business day (the tutorial's date)
+    c.page.fill("#asofDate + .di-upgraded input", LAST)                         # the netting set on the demo lakes' last business day (the tutorial's date)
     c.page.keyboard.press("Enter")
     c.page.wait_for_load_state()
     c.page.locator("[data-panel]").first.wait_for(timeout=30000)
@@ -77,7 +77,7 @@ def links(c: Ctx):
 def past_date(c: Ctx):
     login(c)
     go(c, f"/v/trade/{AMENDED}", wait="[data-panel]", settle=1500)
-    c.page.fill("#asofDate", PAST)
+    c.page.fill("#asofDate + .di-upgraded input", PAST)
     c.page.keyboard.press("Enter")
     c.page.wait_for_load_state()
     c.page.locator("[data-panel]").first.wait_for(timeout=30000)
@@ -94,7 +94,7 @@ def past_date(c: Ctx):
 def compare(c: Ctx):
     login(c)
     go(c, f"/v/trade/{AMENDED}", wait="[data-panel]", settle=1000)
-    c.page.fill("#asofDate", LAST)
+    c.page.fill("#asofDate + .di-upgraded input", LAST)
     c.page.keyboard.press("Enter")
     c.page.wait_for_load_state()
     c.page.locator("[data-panel]").first.wait_for(timeout=30000)

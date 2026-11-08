@@ -98,6 +98,88 @@ def prepare(form: dict, params: Iterable[tuple[str, str]]) -> dict:
     return {"groups": groups, "submitted": submitted}
 
 
+OPS = {"equals": "equals", "contains": "contains", "starts": "starts with", "regex": "matches regex", "=": "=", ">": ">", "<": "<", ">=": "≥", "<=": "≤",
+       "between": "between", "on": "on", "relative": "relative", "before": "before", "after": "after", "in": "is one of", "is": "is"}
+BIG = 300                  # an enum longer than this is found by typing (the console asks /form/<pack>/values), not one checkbox each
+SMALL = 3                  # an enum this short stays a row of checkboxes; a longer one is a multi-select
+
+
+def form_schema(view: dict, presets: list[str], pack: str = "", kind: str = "") -> dict:
+    """The form as drishti-inputs draws it (its Form, live inside the page's GET form): a fieldset per group and per field, each control
+    named as the address names it (``op.<path>``, ``v.<path>``, ``v2.<path>``, ``cs.<path>``), so the form submits exactly the address
+    it always did. Returns ``{"schema", "value"}``; the value is what the address (or a field's default) holds."""
+    groups: dict = {}
+    value: dict = {}
+    keys: dict[str, str] = {}
+    any_indexed = any(f.get("indexed") for g in view["groups"] for f in g["fields"])
+    for gi, g in enumerate(view["groups"]):
+        for fi, f in enumerate(g["fields"]):
+            keys[f["path"]] = f"g{gi}.f{fi}"
+    for gi, g in enumerate(view["groups"]):
+        gkey, props, gval = f"g{gi}", {}, {}
+        for fi, f in enumerate(g["fields"]):
+            fkey, p, t = f"f{fi}", f["path"], f["type"]
+            ops = f.get("operators") or ["equals"]
+            sub: dict = {}
+            val: dict = {}
+            if len(ops) > 1:
+                sub["op"] = {"type": "string", "title": "Compare", "enum": ops, "enumLabels": [OPS.get(o, o) for o in ops], "widget": "select", "allowEmpty": False,
+                             "name": "op." + p, "hook": {"data-qf-op": "", "aria-label": f["label"] + ": how to compare"}}
+            else:
+                sub["op"] = {"type": "string", "title": "Compare", "widget": "qf-constant", "noLabel": True, "name": "op." + p}
+            val["op"] = f.get("op") or ops[0]
+            held = [h for h in f.get("held") or [] if h != ""]
+            between = {"field": "op", "equals": "between"}
+            if t == "text":
+                sub["v"] = {"type": "string", "title": "Value", "name": "v." + p, "hook": {"data-qf-v": "", "spellcheck": "false"}}
+                sub["cs"] = {"type": "boolean", "title": "Match case", "name": "cs." + p, "nameValue": "1"}
+                val["v"], val["cs"] = (held[0] if held else None), bool(f.get("cs"))
+            elif t in ("number", "amount"):
+                ph = "250k, 1.5m, 2bn" if t == "amount" else None
+                sub["v"] = {"type": "string", "title": "Value", "name": "v." + p, "placeholder": ph, "hook": {"data-qf-v": "", "inputmode": "decimal"}}
+                sub["v2"] = {"type": "string", "title": "and", "name": "v2." + p, "placeholder": ph, "when": between, "hook": {"data-qf-v2": "", "inputmode": "decimal"}}
+                val["v"], val["v2"] = (held[0] if held else None), (f.get("held2") or None)
+            elif t == "date":
+                rel = {"field": "op", "equals": "relative"}
+                sub["v"] = {"type": "date", "title": "Date", "name": "v." + p, "when": {"not": rel}, "hook": {"data-qf-v": ""}}
+                sub["vrel"] = {"type": "string", "title": "Range", "name": "v." + p, "widget": "combobox", "when": rel, "placeholder": "last 5 business days",
+                               "options": {"source": presets, "allowFree": True, "minChars": 0}, "hook": {"data-qf-vrel": ""}}
+                sub["v2"] = {"type": "date", "title": "and", "name": "v2." + p, "when": between, "hook": {"data-qf-v2": ""}}
+                relative = (f.get("op") == "relative")
+                val["v"] = None if relative else (held[0] if held else None)
+                val["vrel"] = (held[0] if held else None) if relative else None
+                val["v2"] = f.get("held2") or None
+            elif t == "enum" and not f.get("depends") and len(f.get("values") or []) > BIG:
+                sub["v"] = {"type": "array", "title": "Values", "items": {"type": "string"}, "widget": "qf-big", "name": "v." + p,
+                            "options": {"url": f"/form/{pack}/values?kind={kind}&path={p}", "count": len(f["values"])}}
+                val["v"] = held
+            elif t == "enum":
+                values = [str(v) for v in f.get("values") or []]
+                sub["v"] = {"type": "array", "title": "Values", "items": {"type": "string", "enum": values}, "name": "v." + p,
+                            "widget": "multiselect" if len(values) > SMALL else "checkboxes", "optionHook": "qf-value"}
+                if f.get("depends") and f["depends"] in keys:
+                    sub["v"]["dependsOn"] = "/" + keys[f["depends"]] + ".v"
+                    sub["v"]["parents"] = {str(k): [str(x) for x in v] for k, v in (f.get("parents") or {}).items()}
+                val["v"] = [h for h in held if h in values]
+            elif t == "id":
+                sub["v"] = {"type": "string", "title": "Ids", "name": "v." + p, "format": "textarea", "options": {"rows": 2},
+                            "placeholder": "one or many: paste a list (spaces, commas or lines); MX-2* is any id starting MX-2", "hook": {"data-qf-v": "", "spellcheck": "false"}}
+                val["v"] = "\n".join(held) or None
+            elif t == "bool":
+                sub["v"] = {"type": "string", "title": "Value", "enum": ["any", "true", "false"], "enumLabels": ["Any", "Yes", "No"], "widget": "radio", "name": "v." + p}
+                val["v"] = held[0] if held else "any"
+            else:
+                continue
+            slow = "slower: not indexed (the documents are read to answer this)" if any_indexed and not f.get("indexed") else ""
+            props[fkey] = {"type": "object", "title": f["label"], "description": " · ".join(x for x in (f.get("help"), slow) if x) or None, "properties": sub,
+                           "order": [k for k in ("op", "v", "vrel", "v2", "cs") if k in sub], "required": ["v"] if f.get("required") else [],
+                           "hook": {"data-field": p, "data-type": t, "class": "qf-field qf-t-" + t}}
+            gval[fkey] = {k: v for k, v in val.items() if v is not None}
+        groups[gkey] = {"type": "object", "title": g["name"] or "Criteria", "properties": props, "hook": {"class": "qf-group"}}
+        value[gkey] = gval
+    return {"schema": {"type": "object", "properties": groups}, "value": value}
+
+
 _SYMBOL = {"equals": "=", "contains": "contains", "starts": "starts", "regex": "matches", "between": "between", "relative": "", "in": "in", "is": "="}
 
 
@@ -117,3 +199,12 @@ def summary(view: dict, shown: int = 3) -> str:
     if len(parts) > shown:
         return " \u00b7 ".join(parts[:shown] + [f"+{len(parts) - shown} more"])
     return " \u00b7 ".join(parts)
+
+
+def form_host(view: dict, presets: list[str], pack: str = "", kind: str = ""):
+    """The host the page puts where the criteria go: the one server-drawn form (``core/form_kit.host``: ``data-di-form`` with the schema
+    and value of ``form_schema``), embedded in the page's GET form; drishti_form.js finds it with ``formOf`` and adds its widgets."""
+    from core import form_kit
+    qf = form_schema(view, presets, pack, kind)
+    return form_kit.host(qf["schema"], qf["value"], attrs={"class": "qf-fields-host", "data-qf-fields": ""}, layout="columns",
+                         label="Search criteria")

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The table layer's stored definitions over BI's item store (BI_FOUNDATION_2911E.md Q16): items of the kinds {@code table} and
+ * The table layer's stored definitions over BI's item store (docs/architecture/ARCHITECTURE.md §28 Q16): items of the kinds {@code table} and
  * {@code model} in {@code drishti_bi_item}, governed as BI's items are (workspaces, review, versions; no schema change). The catalogue reads
  * the published version of each in the layer's form; a draft is its author's until it is published. BI's models share the kind
  * {@code model} until the first-start migration ({@link StoredTablesMigration}) rewrites them, so a text in BI's form is not listed.

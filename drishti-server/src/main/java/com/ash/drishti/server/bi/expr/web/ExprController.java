@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Rachana, BI's expression language, over HTTP (docs/guides/API_GUIDE.md "Expressions", docs/guides/RACHANA_REFERENCE.md): the function catalogue the expression
+ * Rachana, BI's expression language, over HTTP (docs/guides/API_REFERENCE.md "Expressions", docs/guides/RACHANA_REFERENCE.md): the function catalogue the expression
  * editor completes from ({@code GET /bi/expr/functions}), checking one expression in its scope against a model as the caller sees it
  * ({@code POST /bi/expr/validate}: problems with code, fix and position, the type, what it uses). Nothing here reads data or stores anything;
  * a text in an older syntax is migrated by {@code drishti.py tables migrate}.
@@ -56,7 +56,7 @@ public class ExprController {
     public Map<String, Object> functions(@RequestParam(required = false) String scope, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
         Scope s = Scope.of(scope);
-        Signatures cat = Signatures.get();                                       // Rachana's one catalogue (BI_FOUNDATION_2911E.md 2.5)
+        Signatures cat = Signatures.get();                                       // Rachana's one catalogue (docs/architecture/ARCHITECTURE.md §28 2.5)
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("language", "Rachana");
         m.put("version", 3);

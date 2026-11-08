@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 3 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 8 and 9), the console's routes for reports: the viewer, the designer, its start page and the Model view are
+"""Rupaka phase 3 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 8 and 9), the console's routes for reports: the viewer, the designer, its start page and the Model view are
 shells drawn by drishti_bi-report.js and bi-design*.js; ``BI <report> <GO>`` opens the viewer; the same-origin JSON reaches the server's report paths under the
 caller's identity and nothing else does; no page carries a script, handler or style of its own (the strict CSP of the BI pages)."""
 import re
@@ -33,7 +33,7 @@ def test_the_viewer_is_a_shell_with_the_toolbar_and_the_scripts_in_order():
         assert hook in r.text, hook
     scripts = re.findall(r"/static/js/drishti_([a-z-]+)\.js", r.text)
     assert scripts.index("bi-lib") < scripts.index("bi-visuals") < scripts.index("bi-grids") < scripts.index("bi-frame") < scripts.index("bi-report")
-    assert "multiselect" in scripts and "/static/vendor/echarts/echarts.min.js" in r.text and "drishti_bi-report.css" in r.text
+    assert "/static/elements/drishti-inputs/drishti_inputs.js" in r.text and "/static/vendor/echarts/echarts.min.js" in r.text and "drishti_bi-report.css" in r.text
 
 
 def test_the_viewer_takes_a_page_after_the_id():
@@ -48,10 +48,14 @@ def test_the_designer_start_and_one_draft_and_the_model_view_are_real_pages():
     assert start.status_code == 200 and "data-new" in start.text and "data-drafts" in start.text and "Not built yet" not in start.text
     d = client.get("/bi/design/bi-77")
     assert d.status_code == 200 and 'data-item="bi-77"' in d.text
-    for hook in ("data-canvas-grid", "data-fields-tree", "data-types", "data-build", "data-format", "data-filters", "data-yaml", "data-undo", "data-redo", "data-check", "data-save", "data-preview"):
+    for hook in ("data-canvas-grid", "data-fields-tree", "data-types", "data-build", "data-format", "data-filters", "data-yaml"):
         assert hook in d.text, hook
+    studio = (WEB / "static" / "js" / "drishti_bi-studio.js").read_text(encoding="utf-8")   # the header actions are the Studio shell actions
+    for hook in ("data-undo", "data-redo", "data-check", "data-save", "data-preview"):
+        assert "'" + hook + "': ''" in studio, hook
     scripts = re.findall(r"/static/js/drishti_([a-z-]+)\.js", d.text)
-    assert scripts.index("bi-design") < scripts.index("bi-design-canvas") < scripts.index("bi-design-panes") and "cm-yaml" in scripts
+    assert scripts.index("bi-design") < scripts.index("bi-design-canvas") < scripts.index("bi-design-panes") and "cm-yaml" not in scripts
+    assert "/static/elements/drishti-designer/drishti_designer.js" in d.text           # the canvas, the undo history and the YAML editor are the designer kit's
 
 
 def test_the_designer_is_in_the_rail_without_a_phase_label():

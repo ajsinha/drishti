@@ -30,7 +30,7 @@ import com.tngtech.archunit.lang.ArchRule;
 import java.util.Map;
 
 /**
- * One grammar, one engine (docs/architecture/ONE_GRAMMAR.md section 5), as rules over the compiled classes:
+ * One grammar, one engine (docs/architecture/ARCHITECTURE.md section 5), as rules over the compiled classes:
  *
  * <ul>
  *   <li>every aggregate over values is the pivot engine's: no class outside {@code drishti-bicompute} implements its aggregation SPI
@@ -54,9 +54,9 @@ class OneGrammarRulesTest {
     static final Map<String, String> EXPRESSION_PARSER_EXCEPTIONS = Map.of(
             "com.ash.drishti.server.bi.expr.DelParser", "the migration tool's reader of DEL (drishti.py tables migrate and the stored items' "
                     + "migration at start): it reads the old texts it rewrites into Rachana, never evaluates them; deleted with the migration tool in "
-                    + "2.9.14 (BI_FOUNDATION_2911E.md Q24)",
-            "com.ash.drishti.compute.var.ScopeExpr", "the VaR scope selector (VAR_GUIDE.md 5.2): moves in its own change with VaR's "
-                    + "exact-equality regression check (BI_FOUNDATION_2911E.md Q20)");
+                    + "2.9.14 (docs/architecture/ARCHITECTURE.md §28 Q24)",
+            "com.ash.drishti.banking.compute.var.ScopeExpr", "the VaR scope selector (VAR_GUIDE.md 5.2): moves in its own change with VaR's "
+                    + "exact-equality regression check (docs/architecture/ARCHITECTURE.md §28 Q20)");
 
     /** A class that reads an expression language: a parser or lexer of expressions or formulas, or an expression type with a static parse. */
     static final DescribedPredicate<JavaClass> PARSES_EXPRESSIONS = DescribedPredicate.describe("parse an expression language", c -> {
@@ -77,7 +77,7 @@ class OneGrammarRulesTest {
     static final ArchRule onlyTheEngineImplementsAnAggregate = noClasses()
             .that().resideOutsideOfPackage("com.ash.drishti.bicompute..")
             .should().implement(AggFunction.class)
-            .because("every aggregate over values is the pivot engine's (ONE_GRAMMAR.md section 5): use its SPI through PivotCore, a "
+            .because("every aggregate over values is the pivot engine's (docs/architecture/ARCHITECTURE.md section 5): use its SPI through PivotCore, a "
                     + "provider's nativeFunction made by the engine, or Rachana's aggregates, which the engine registers");
 
     @ArchTest
@@ -85,19 +85,19 @@ class OneGrammarRulesTest {
             .that().resideOutsideOfPackage("com.ash.drishti.bicompute..")
             .should().implement(FunctionProvider.class)
             .orShould().implement(FunctionProvider.Grouping.class)
-            .because("Rachana's aggregates, grouping, measure and cell come from the pivot engine only (ONE_GRAMMAR.md parts 1 to 3)");
+            .because("Rachana's aggregates, grouping, measure and cell come from the pivot engine only (docs/architecture/ARCHITECTURE.md parts 1 to 3)");
 
     @ArchTest
     static final ArchRule rachanaNeverDependsOnTheEngine = noClasses()
             .that().resideInAPackage("com.ash.drishti.rachana..")
             .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.bicompute..")
-            .because("the engine depends on Rachana for paths and expressions, never the reverse (ONE_GRAMMAR.md section 2)");
+            .because("the engine depends on Rachana for paths and expressions, never the reverse (docs/architecture/ARCHITECTURE.md section 2)");
 
     @ArchTest
     static final ArchRule onlyRachanaParsesExpressions = classes()
             .that(PARSES_EXPRESSIONS).and(DescribedPredicate.not(LISTED_EXCEPTION))
             .should().resideInAPackage("com.ash.drishti.rachana..")
             .allowEmptyShould(true)
-            .because("Rachana is the one expression language (ONE_GRAMMAR.md section 5); the migration's DEL reader and the VaR scope "
+            .because("Rachana is the one expression language (docs/architecture/ARCHITECTURE.md section 5); the migration's DEL reader and the VaR scope "
                     + "selector are the listed, temporary exceptions");
 }

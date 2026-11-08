@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin → Compute. The page is server-rendered; this carries the administrator's decisions: approve, reject or revoke an approval
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* Admin → Compute. The page is server-rendered; this carries the administrator's decisions: revoke an approval (approve and reject: Approvals)
    request (a dialog asks for the reason, which goes into the audit log; the server refuses the person who asked), build a pool's
    approved environment, test a pool with the sample engine, cancel a running request. Every call is same-origin JSON to
    /admin/compute/api/...; the page reloads after a change, so it always shows what the server holds. */
@@ -32,11 +33,9 @@
   }
   function problem(b, fallback) { return (b.code ? b.code + ' ' : '') + (b.detail || fallback); }
 
-  // ---- approve, reject, revoke --------------------------------------------------------------------------------------------
-  var dlg = $('[data-decide-dialog]'), reason = $('[data-decide-reason]'), dmsg = $('[data-decide-msg]'), go = $('[data-decide-go]');
+  // ---- revoke (a request is approved or rejected in the one Approvals queue) ----------------------------------------------
+  var dlg = $('[data-decide-dialog]'), RF = window.Drishti.elements.inputs.formOf(dlg.querySelector('[data-field-of=reason]')), reason = { get value() { return String(RF.getField('reason') || ''); }, focus: function () { RF.focusField('reason'); } }, dmsg = $('[data-decide-msg]'), go = $('[data-decide-go]');
   var HELP = {
-    approve: 'Its items become approved for every connector and pool that names them. Environments are built by Build (or at once with compute.build: on-approval).',
-    reject: 'The connector or pool stays off; the same set of requirements stays rejected until it changes.',
     revoke: 'New requests are refused at once; running ones finish. Connectors that need these items stop.'
   };
   var current = null;
@@ -49,7 +48,7 @@
       $('[data-decide-id]').textContent = current.id;
       $('[data-decide-help]').textContent = HELP[current.verb];
       go.textContent = label;
-      reason.value = '';
+      RF.setValue({ reason: '' });
       say(dmsg, '');
       show(dlg);
       reason.focus();

@@ -16,7 +16,7 @@
 package com.ash.drishti.server.node;
 
 /**
- * A part of this node that hands its work over before a stop (CD2, CLUSTER_DEPLOYMENT.md section 4.6): Drishti*net's forwarding, the VaR
+ * A part of this node that hands its work over before a stop (CD2, CLUSTER_GUIDE.md section 4.6): Drishti*net's forwarding, the VaR
  * shards (exposure's once it is sharded, CD10). {@link NodeDrain} drains every part at once and calls the node safe to stop when each is.
  */
 public interface Drainable {

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Every Sutra of every shipped pack bound on its own sample by a real server: the ViewModels the render parity suites draw
-(test_render_parity_browser.py; CLIENT_RENDERER.md section 14).
+(test_render_parity_browser.py; EMBED_GUIDE.md section 14).
 
 ``drawable()`` lists, at collection, every pack Sutra that has a sample document (one test each). ``bind(server)`` asks a real server
 for each one's ViewModel (POST /api/v1/studio/preview). The ``pack_views`` fixture (conftest.py) binds them once per test run for every
@@ -25,13 +25,15 @@ import json
 import re
 from pathlib import Path
 
+from core.pack_paths import pack_dir, pack_dirs
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def pack_sutras() -> list[tuple[str, Path]]:
     out = []
-    for f in sorted((ROOT / "config" / "packs").glob("*/sutras/**/*.sutra.yaml")):
-        out.append((f.relative_to(ROOT / "config" / "packs").parts[0], f))
+    for name, d in pack_dirs().items():
+        out += [(name, f) for f in sorted(d.glob("sutras/**/*.sutra.yaml"))]
     for f in sorted((ROOT / "docs" / "guides" / "examples").glob("*.sutra.yaml")):
         out.append(("examples", f))
     return out
@@ -41,7 +43,7 @@ def sample(pack: str, sutra: Path, kind: str, text: str) -> tuple[str, dict] | N
     if pack == "examples":
         doc = sutra.with_name(sutra.name.replace(".sutra.yaml", ".json"))
         return ("SAMPLE", json.loads(doc.read_text(encoding="utf-8"))) if doc.exists() else None
-    samples = ROOT / "config" / "packs" / pack / "samples" / f"{kind}.jsonl"
+    samples = pack_dir(pack) / "samples" / f"{kind}.jsonl"
     if not samples.exists():
         return None
     m = re.search(r'"/v/[^/]+/([^"]+)"', text)
@@ -73,7 +75,7 @@ def drawable() -> tuple[str, ...]:
         if pack == "examples":
             ok = f.with_name(f.name.replace(".sutra.yaml", ".json")).exists()
         else:
-            s = ROOT / "config" / "packs" / pack / "samples" / f"{_kind(f.read_text(encoding='utf-8'))}.jsonl"
+            s = pack_dir(pack) / "samples" / f"{_kind(f.read_text(encoding='utf-8'))}.jsonl"
             ok = s.exists() and s.stat().st_size > 0
         if ok:
             out.append(str(f.relative_to(ROOT)))

@@ -101,40 +101,34 @@
   function api(user, action, body) { return post('/admin/api/users/' + encodeURIComponent(user) + '/' + action, body); }
   function done(res, text) { if (res.ok) { say(msg, text); setTimeout(function () { location.reload(); }, 500); } else { say(msg, Drishti.drsMessage(res.body), true); } }
 
+  var F = window.Drishti.elements.inputs.formOf(root.querySelector('[data-user-fields]'));   // the server's schema (core/admin_forms.py)
+  var start = JSON.parse(JSON.stringify(F.values)), hasPacks = !!F.schema.properties.packs;
+
   function open(user) {
     editing = user;
-    form.reset();
     say(dmsg, '');
     root.querySelector('[data-title]').textContent = user ? 'Edit ' + user.username : 'New user';
-    form.elements.username.value = user ? user.username : '';
-    form.elements.username.readOnly = !!user;
-    form.querySelectorAll('[data-pw]').forEach(function (el) { el.hidden = !!user; });
-    form.elements.password.required = !user;
-    if (user) {
-      form.elements.displayName.value = user.displayName || '';
-      form.elements.desk.value = user.desk || '';
-      form.elements.email.value = user.email || '';
-      form.elements.enabled.checked = !!user.enabled;
-      form.querySelectorAll('[name="roles"]').forEach(function (c) { c.checked = user.roles.indexOf(c.value) >= 0; });
-      form.querySelectorAll('[name="packs"]').forEach(function (c) { c.checked = !user.packs || user.packs.indexOf(c.value) >= 0; });
-    }
+    F.schema.properties.username.readOnly = !!user;
+    F.schema.required = user ? ['username'] : ['username', 'password'];    // a new user needs a first password
+    F.setValue(user ? { username: user.username, displayName: user.displayName || '', desk: user.desk || '', email: user.email || '', enabled: !!user.enabled,
+      roles: (user.roles || []).slice(), packs: (start.packs || []).filter(function (p) { return !user.packs || user.packs.indexOf(p) >= 0; }), editing: true } : start);
     dlg.showModal();
-    (user ? form.elements.displayName : form.elements.username).focus();
+    F.focusField(user ? 'displayName' : 'username');
   }
 
   root.querySelector('[data-new]').addEventListener('click', function () { open(null); });
   root.querySelector('[data-cancel]').addEventListener('click', function () { dlg.close(); });
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    var f = form.elements, roles = [];
-    form.querySelectorAll('[name="roles"]:checked').forEach(function (c) { roles.push(c.value); });
-    var body = { displayName: f.displayName.value, desk: f.desk.value, email: f.email.value, roles: roles, enabled: f.enabled.checked };
-    var packs = [].map.call(form.querySelectorAll('[name="packs"]:checked'), function (c) { return c.value; });
-    if (form.querySelector('[name="packs"]')) { body.packs = packs; }
+    if (!F.validate().ok) { return; }
+    var v = function (k) { return F.getField(k); };
+    var body = { displayName: v('displayName') || '', desk: v('desk') || '', email: v('email') || '', roles: (v('roles') || []).slice(), enabled: v('enabled') === true };
+    if (hasPacks) { body.packs = (v('packs') || []).slice(); }
+    var name = String(v('username') || '').trim();
     var call = editing ? api(editing.username, 'update', body)
-      : post('/admin/api/users', Object.assign(body, { username: f.username.value.trim(), password: f.password.value, mustChangePassword: f.mustChangePassword.checked }));
+      : post('/admin/api/users', Object.assign(body, { username: name, password: v('password') || '', mustChangePassword: v('mustChangePassword') === true }));
     call.then(function (res) {
-      if (res.ok) { dlg.close(); done(res, editing ? 'Saved ' + editing.username + '.' : 'Created ' + f.username.value + '.'); }
+      if (res.ok) { dlg.close(); done(res, editing ? 'Saved ' + editing.username + '.' : 'Created ' + name + '.'); }
       else { say(dmsg, Drishti.drsMessage(res.body), true); }
     });
   });
@@ -193,9 +187,9 @@
     var bd = e.target.closest('[data-purge-date]');
     if (bd) {
       var name = bd.getAttribute('data-purge-date');
-      var input = root.querySelector('[data-purge-date-for="' + name + '"]');
-      if (!input || !input.value) { status.textContent = 'Choose the business date to purge from ' + name + ' first.'; if (input) { input.focus(); } return; }
-      purge(bd, name, input.value);
+      var DF = window.Drishti.elements.inputs.formOf(root.querySelector('[data-purge-date-for="' + name + '"]')), day = DF && DF.getField('date');
+      if (!day) { status.textContent = 'Choose the business date to purge from ' + name + ' first.'; if (DF) { DF.focusField('date'); } return; }
+      purge(bd, name, day);
       return;
     }
     var dl = e.target.closest('[data-cache-dates]');

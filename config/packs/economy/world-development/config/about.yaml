@@ -1,0 +1,96 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this page: what the world-development pack's kinds and fields mean (the README, the contracts and the About card read it).
+about: 1
+vocabulary:
+  provenance: { term: Provenance, means: "Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY." }
+  source: { term: Source, means: "The organisation whose published data the record holds." }
+  dataset: { term: Dataset, means: "The named dataset and its vintage (the release the numbers come from)." }
+  retrieved: { term: Retrieved, means: "The business date of the feed's pull that wrote the record." }
+  licence: { term: Licence, means: "The terms under which the source allows reuse, as recorded in the feed's YAML." }
+  attribution: { term: Attribution, means: "The credit line to repeat when the data is shown or republished." }
+  url: { term: Address, means: "The source's page for this record." }
+  internal: { term: Internal only, means: "True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)." }
+kinds:
+  development-profile:
+    title: Development profile
+    about: ${$.COUNTRY_NAME} (${$.REGION}, ${$.INCOME_GROUP}) has ${$.INDICATOR_COUNT} World Development Indicators, the latest from ${$.DATA_YEAR}.
+    guide: world-development
+    glossary:
+      PROFILE_ID: { term: Profile id, means: "WDI- and the country's ISO 3166 alpha-3 code." }
+      NAME: { term: Name, means: "The economy's name as the World Bank writes it." }
+      ISO3: { term: ISO alpha-3, means: "The country's ISO 3166-1 alpha-3 code, the key the map shades by." }
+      ISO2: { term: ISO alpha-2, means: "The country's ISO 3166-1 alpha-2 code (the World Bank's own id)." }
+      COUNTRY_NAME: { term: Country, means: "The economy's name as the World Bank writes it." }
+      REGION: { term: Region, means: "The World Bank region the economy belongs to (East Asia & Pacific, Sub-Saharan Africa ...)." }
+      INCOME_GROUP: { term: Income group, means: "The World Bank income group by GNI per head (Low, Lower middle, Upper middle, High income)." }
+      CAPITAL: { term: Capital, means: "The capital city as the World Bank lists it." }
+      POPULATION: { term: Population, means: "Total population, mid-year (SP.POP.TOTL), the latest year with a value.", unit: persons }
+      GDP_PER_CAPITA: { term: GDP per head, means: "GDP divided by mid-year population, current US dollars (NY.GDP.PCAP.CD), the latest year.", unit: USD }
+      GDP_GROWTH: { term: GDP growth, means: "Annual growth of GDP at constant prices (NY.GDP.MKTP.KD.ZG), the latest year.", unit: "% a year" }
+      INFLATION: { term: Inflation, means: "Consumer price inflation (FP.CPI.TOTL.ZG), the latest year.", unit: "% a year" }
+      UNEMPLOYMENT: { term: Unemployment, means: "Unemployed share of the labour force, ILO modelled estimate (SL.UEM.TOTL.ZS), the latest year.", unit: "% of labour force" }
+      LIFE_EXPECTANCY: { term: Life expectancy, means: "Life expectancy at birth (SP.DYN.LE00.IN), the latest year.", unit: years }
+      POVERTY_HEADCOUNT: { term: Poverty headcount, means: "Share living below the World Bank's international poverty line (SI.POV.DDAY), the latest survey year.", unit: "% of population" }
+      ELECTRICITY_ACCESS: { term: Electricity access, means: "Share of the population with access to electricity (EG.ELC.ACCS.ZS), the latest year.", unit: "% of population" }
+      INTERNET_USERS: { term: Internet users, means: "Share of the population using the internet (IT.NET.USER.ZS), the latest year.", unit: "% of population" }
+      CENTRAL_GOVERNMENT_DEBT: { term: Central government debt, means: "Central government debt, total (GC.DOD.TOTL.GD.ZS), the latest year; empty for most economies that do not report it.", unit: "% of GDP" }
+      INDICATORS: { term: Indicators, means: "Every indicator the feed pulled for the economy, one row each: INDICATOR, UNIT, LATEST, YEAR, CODE and WDI_SERIES." }
+      INDICATORS.INDICATOR: { term: Indicator, means: "The indicator's name as the World Bank publishes it." }
+      INDICATORS.UNIT: { term: Unit, means: "What the value measures (the feed's YAML names it)." }
+      INDICATORS.LATEST: { term: Latest, means: "The latest published value, in the unit shown." }
+      INDICATORS.YEAR: { term: Year, means: "The calendar year of the latest value." }
+      INDICATORS.CODE: { term: World Bank code, means: "The indicator's code in the World Bank API (SP.POP.TOTL)." }
+      INDICATORS.WDI_SERIES: { term: Series, means: "The development-series page with the history (WDIS-<ISO3>-<code>)." }
+      DATA_YEAR: { term: Data year, means: "The most recent year any indicator of the economy has a value for." }
+      INDICATOR_COUNT: { term: Indicators, means: "How many indicators have at least one value for the economy." }
+      PROVENANCE: { use: provenance }
+      PROVENANCE.SOURCE: { use: source }
+      PROVENANCE.DATASET: { use: dataset }
+      PROVENANCE.RETRIEVED_AT: { use: retrieved }
+      PROVENANCE.LICENCE: { use: licence }
+      PROVENANCE.ATTRIBUTION: { use: attribution }
+      PROVENANCE.URL: { use: url }
+      PROVENANCE.INTERNAL_ONLY: { use: internal }
+  development-series:
+    title: Development indicator series
+    about: ${$.INDICATOR} for ${$.COUNTRY_NAME} was ${fmt($.LATEST, 'amount2')} (${$.UNIT}) in ${$.LATEST_YEAR}.
+    guide: world-development
+    glossary:
+      SERIES_ID: { term: Series id, means: "WDIS-, the country's ISO alpha-3 code and the indicator's code with its dots as underscores." }
+      NAME: { term: Name, means: "The country and the indicator, as one name." }
+      WDI_PROFILE: { term: Profile, means: "The country's development-profile page (WDI-<ISO3>)." }
+      ISO3: { term: ISO alpha-3, means: "The country's ISO 3166-1 alpha-3 code." }
+      COUNTRY_NAME: { term: Country, means: "The economy's name as the World Bank writes it." }
+      INDICATOR_CODE: { term: World Bank code, means: "The indicator's code in the World Bank API." }
+      INDICATOR: { term: Indicator, means: "The indicator's name as the World Bank publishes it." }
+      UNIT: { term: Unit, means: "What the value measures (the feed's YAML names it)." }
+      DEFINITION: { term: Definition, means: "The World Bank's source note for the indicator, cut at 600 characters." }
+      LATEST: { term: Latest, means: "The latest published value, in the unit shown." }
+      LATEST_YEAR: { term: Latest year, means: "The calendar year of the latest value." }
+      PREVIOUS: { term: Previous, means: "The value of the year before the latest one with a value; empty for a one-year series." }
+      PREVIOUS_YEAR: { term: Previous year, means: "The year of the previous value." }
+      CHANGE: { term: Change, means: "The latest value less the previous one, in the unit shown." }
+      HISTORY: { term: History, means: "The value by year, oldest first, over the feed's window (YEAR, VALUE)." }
+      HISTORY.YEAR: { term: Year, means: "The calendar year of the value." }
+      HISTORY.VALUE: { term: Value, means: "The published value for that year, in the unit shown." }
+      PROVENANCE: { use: provenance }
+      PROVENANCE.SOURCE: { use: source }
+      PROVENANCE.DATASET: { use: dataset }
+      PROVENANCE.RETRIEVED_AT: { use: retrieved }
+      PROVENANCE.LICENCE: { use: licence }
+      PROVENANCE.ATTRIBUTION: { use: attribution }
+      PROVENANCE.URL: { use: url }
+      PROVENANCE.INTERNAL_ONLY: { use: internal }

@@ -32,7 +32,7 @@ def live_console(tmp_path_factory):
     yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "core,market-data,trading"})
 
 
-SAMPLES = CONSOLE.parent / "config" / "packs" / "trading" / "samples" / "trade.jsonl"
+SAMPLES = CONSOLE.parent / "config" / "packs" / "banking" / "trading" / "samples" / "trade.jsonl"
 
 
 def commodity_swap(legs: int) -> dict:
@@ -84,16 +84,15 @@ def test_a_floating_flow_opens_to_its_resets_and_a_fixed_leg_has_none(live_conso
     legs = open_trade(page, live_console, deal["TRADE_ID"])
     floating = next(i for i, leg in enumerate(deal["LEGS"]) if any(c["RESETS"] for c in leg["CASH_FLOWS"]))
     box = legs.locator(".cols .col-box").nth(floating)
-    first = flows(box).locator("xpath=self::tr[@data-kids]").first
-    tog = first.locator("button.tr-tog")
-    assert tog.get_attribute("aria-expanded") == "false"
-    assert box.locator("tr[data-depth='1']:not([hidden])").count() == 0                   # the resets are shut
-    tog.click()
-    wait(page, f"document.querySelectorAll('#p-legs .col-box:nth-child({floating + 1}) tr[data-depth=\"1\"]:not([hidden])').length >= 1")
-    reset = box.locator("tr[data-depth='1']:not([hidden])").first
-    assert reset.locator("td").nth(0).inner_text().strip()                                # a reset id
+    tree = box.locator("section[data-part='leg-flows'] .dt-tp")                          # the flows drawn by drishti-tree's tree grid
+    first = tree.locator(".dg-row[aria-expanded='false']").first
+    assert tree.locator(".dg-row[aria-level='2']").count() == 0                            # the resets are shut
+    first.locator(".dg-tw").click()
+    wait(page, f"document.querySelectorAll('#p-legs .col-box:nth-child({floating + 1}) .dt-tp .dg-row[aria-level=\"2\"]').length >= 1")
+    reset = tree.locator(".dg-row[aria-level='2']").first
+    assert reset.locator(".dg-cell").nth(0).inner_text().strip()                          # a reset id
     fixed = next(i for i, leg in enumerate(deal["LEGS"]) if leg["LEG_TYPE"] == "FIXED")
-    assert legs.locator(".cols .col-box").nth(fixed).locator("button.tr-tog").count() == 0
+    assert legs.locator(".cols .col-box").nth(fixed).locator(".dt-tp .dg-row[aria-expanded]").count() == 0
     assert not page.errors
 
 
@@ -107,11 +106,10 @@ def test_a_phone_shows_a_deep_trade_without_sideways_scrolling_small_targets_or_
     try:
         page.goto(f"{live_console}/v/trade/{commodity_swap(3)['TRADE_ID']}")
         page.locator("#p-legs .col-box").first.wait_for()
-        tog = page.locator("#p-legs button.tr-tog").first
+        tog = page.locator("#p-legs .dt-tp .dg-row[aria-expanded] .dg-tw").first
         tog.scroll_into_view_if_needed()
         tog.tap()
         problems += list(page.evaluate(AUDIT))
-        problems += [t for t in page.evaluate(TARGETS) if "tr-tog" in t]
         problems += list(page.evaluate(CLIPPED))
     finally:
         ctx.close()

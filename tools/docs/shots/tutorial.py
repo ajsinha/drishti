@@ -93,8 +93,7 @@ def project1(c: Ctx):
     c.save("p1-03-first-draft.jpg")
     row = c.page.locator(".wb-field-row", has_text="mtm").first
     row.scroll_into_view_if_needed()
-    row.click()
-    c.page.keyboard.press("Enter")
+    row.click()                                                                   # a click shows the field's detail (Enter would too)
     c.page.wait_for_timeout(500)
     c.save("p1-04-shape.jpg", ".wb-left")
     c.page.locator("[data-autodesign]").click()
@@ -213,15 +212,15 @@ def project1(c: Ctx):
 
     # the approver
     login(c, "ravi")
-    c.page.goto(c.base + "/build/reviews")
+    c.page.goto(c.base + "/approvals?kind=sutra")
     c.page.wait_for_timeout(1000)
     c.save("p1-16-reviews.jpg")
-    c.page.goto(f"{c.base}/build/reviews/{pid}")
+    c.page.goto(f"{c.base}/approvals/sutra/{pid}")
     c.page.locator("[data-evidence]").wait_for()
     c.page.wait_for_timeout(600)
     c.page.locator("[data-evidence]").scroll_into_view_if_needed()
     c.save("p1-17-evidence.jpg", "[data-evidence]")
-    c.page.get_by_role("button", name="Approve and publish").click()
+    c.page.get_by_role("button", name="Approve", exact=True).click()
     c.page.wait_for_timeout(1500)
     c.save("p1-18-approved.jpg")
 
@@ -257,7 +256,7 @@ def drag_field(c: Ctx, text: str, panel_id: str, where: str = "middle"):
     """Drags the shape field whose row holds `text` onto a panel: its middle binds it, its bottom rim asks for suggestions."""
     c.page.locator("[data-filter]").fill(text)
     c.page.wait_for_timeout(500)
-    row = c.page.locator('[data-tree] li[aria-level="1"] > .bs-row', has=c.page.locator(".bs-name", has_text=re.compile(rf"^{re.escape(text)}$"))).first
+    row = c.page.locator('[data-tree] [role=row][aria-level="1"]', has=c.page.locator(".dt-oname", has_text=re.compile(rf"^{re.escape(text)}$"))).first
     row.scroll_into_view_if_needed()
     s0, t = c.box(row), c.box(c.panel(panel_id))
     y = t["y"] + t["height"] / 2 if where == "middle" else t["y"] + t["height"] - 6
@@ -480,8 +479,8 @@ def project2(c: Ctx):
     c.page.wait_for_timeout(600)
     c.save("p2-20-proposed.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 190})
     login(c, "ravi")
-    c.page.goto(f"{c.base}/build/reviews/{pid}")
-    c.page.get_by_role("button", name="Approve and publish").click()
+    c.page.goto(f"{c.base}/approvals/sutra/{pid}")
+    c.page.get_by_role("button", name="Approve", exact=True).click()
     c.page.wait_for_timeout(1500)
     login(c, "asha")
     c.page.goto(f"{c.base}/build/d/{design}")
@@ -522,9 +521,9 @@ def submit_and_id(c: Ctx, note: str) -> str:
 
 def approve(c: Ctx, who: str, pid: str, password: str = PASSWORD):
     login(c, who, password)
-    c.page.goto(f"{c.base}/build/reviews/{pid}")
+    c.page.goto(f"{c.base}/approvals/sutra/{pid}")
     c.page.locator("[data-evidence]").wait_for()
-    c.page.get_by_role("button", name="Approve and publish").click()
+    c.page.get_by_role("button", name="Approve", exact=True).click()
     c.page.wait_for_timeout(1500)
 
 

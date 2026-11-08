@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C acceptance (BI_DESIGN.md section 12.2, 2.4.0): a Power BI author builds the parity task list (docs/architecture/BI_DESIGN.md section 11.1, gaps 6 to 8 and 13) in BI
+"""Wave C acceptance (ARCHITECTURE.md §28 section 12.2, 2.4.0): a Power BI author builds the parity task list (docs/architecture/ARCHITECTURE.md §28 section 11.1, gaps 6 to 8 and 13) in BI
 Studio, in Chromium over the real server and console (tests/bi_report_stack.py, security on, the small lake of trade valuations), and never opens the YAML tab:
 
 * a P&L matrix by desk and portfolio across currencies, with subtotals at every level, opening at the first level, a colour scale on MTM and icons on
@@ -37,6 +37,8 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import CHART, card_value, clean, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
+import select_helpers  # noqa: E402
+from select_helpers import has_option
 
 DAY = "2026-10-08"
 STATE = {}
@@ -98,7 +100,7 @@ def designed(page):
 
 def deselect(page):
     """Nothing selected (Escape, with the focus off any field): the next type chosen in Visualizations adds a visual, and Format shows the page and the report."""
-    page.click("[data-design-root] [data-title]")
+    page.click("[data-studio] [data-title]")
     page.keyboard.press("Escape")
     page.wait_for_function("() => window.drishtiBi.design.selected === null")
 
@@ -107,7 +109,7 @@ def add(page, vtype):
     """A new visual of a type from the Visualizations pane, then its Build tab."""
     deselect(page)
     before = len(model(page)["pages"])
-    page.click(f'.bi-vtype[data-type="{vtype}"]')
+    page.click(f'[data-types] [data-type="{vtype}"]')
     page.wait_for_function("(t) => { const v = window.drishtiBi.design.sel(); return v && v.type === t; }", arg=vtype)
     assert len(model(page)["pages"]) == before
     page.click("[data-ptab='build']")
@@ -121,15 +123,15 @@ def fill(page, sel, value):
 def test_a_power_bi_author_builds_the_desk_pack_without_yaml(stack, browser):
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-dataset] option[value='mq:trades-basic@1']", state="attached")
+    page.wait_for_function(has_option("[data-new-dataset]", "mq:trades-basic@1"))
     page.select_option("[data-new-dataset]", "mq:trades-basic@1")
     page.fill("[data-new-title]", "Desk pack")
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     STATE["report"] = page.url.rsplit("/", 1)[1]
     # BI Studio: the item is open in the tabs and listed in the Explorer
-    expect(page.locator(f'[data-studio-tab="{STATE["report"]}"]')).to_have_count(1)
-    expect(page.locator(f'[data-studio-item="{STATE["report"]}"]')).to_have_count(1)
+    expect(page.locator(f'[data-dd-doc="{STATE["report"]}"]')).to_have_count(1)
+    expect(page.locator(f'[data-object="{STATE["report"]}"]')).to_have_count(1)
 
     # 1. the P&L matrix: desk and portfolio down, currency across, MTM and Notional; subtotals at every level, opening at the first level
     add(page, "matrix")
@@ -183,7 +185,7 @@ def test_a_power_bi_author_builds_the_desk_pack_without_yaml(stack, browser):
     # 4. the report's theme: the shipped Corporate one
     deselect(page)
     page.click("[data-ptab='format']")
-    page.wait_for_selector("[data-report-theme] option[value='corporate']", state="attached")
+    page.wait_for_function(select_helpers.has_option("[data-report-theme]", "corporate"))
     page.select_option("[data-report-theme]", "corporate")
     page.wait_for_function("() => window.drishtiBi.design.theme && window.drishtiBi.design.theme.name === 'corporate'")
     assert model(page)["theme"] == {"use": "corporate"}
@@ -203,10 +205,10 @@ def test_a_power_bi_author_builds_the_desk_pack_without_yaml(stack, browser):
     STATE["second"] = second
 
     # the server's Check in the Studio's Problems: no error; then Save. The YAML tab was never opened.
-    page.click('[data-dock-tab="problems"]')
-    page.wait_for_function("() => { const p = document.querySelector('[data-dock-pane=\"problems\"]'); return p && /no problems|0 errors/i.test(p.textContent); }", timeout=20000)
+    page.click('[data-dd-dock-tab="problems"]')
+    page.wait_for_function("() => { const p = document.querySelector('[data-dd-dock-pane=\"problems\"]'); return p && /no problems|0 errors/i.test(p.textContent); }", timeout=20000)
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved", timeout=20000)
+    expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     assert page.evaluate("document.querySelector('[data-tab=\"yaml\"]').getAttribute('aria-selected')") == "false"
     clean(page)
 
@@ -271,20 +273,32 @@ def test_a_theme_is_made_published_and_offered_to_reports(stack, browser):
     page.wait_for_selector("[data-theme-root][data-ready=yes]", timeout=30000)
     fill(page, "[data-theme-key]", "desk-blue")
     fill(page, "[data-theme-title]", "Desk blue")
-    page.locator('[data-theme-colour="0"]').evaluate("(el) => { el.value = '#0b3d91'; el.dispatchEvent(new Event('change')); }")
-    page.click("[data-theme-add-colour]")
+    page.locator('[data-theme-palette-list] .di-repeat-item[data-index="0"] input[data-theme-colour]').evaluate("(el) => { el.value = '#0b3d91'; el.dispatchEvent(new Event('change')); }")
+    page.click("[data-theme-palette-list] > button[data-act=add]")                 # the series colours are the theme Form's repeatable rows
     page.click('[data-theme-family="matrix"] > summary')
     page.check('[data-theme-family="matrix"] [data-format-row-banding]')
     expect(page.locator("[data-theme-valid]")).to_have_text("The theme is valid.", timeout=15000)
     expect(page.locator('[data-theme-preview] [data-theme-sample="column"] .bi-chart')).to_have_count(1)
+    # the theme's YAML is the Studio shell's YAML panel (the kit's YamlPane), both ways: the visual side's edits are in it; an edit of the
+    # YAML, read after a pause, shows in the form; a line that does not read keeps the theme as it was
+    yaml_text = "() => document.querySelector('[data-theme-yaml] .CodeMirror').CodeMirror.getValue()"
+    page.wait_for_function(f"() => ({yaml_text})().includes('theme: desk-blue') && ({yaml_text})().includes('title: Desk blue')")
+    edit = """([a, b]) => { const cm = document.querySelector('[data-theme-yaml] .CodeMirror').CodeMirror, t = cm.getValue();
+      cm.replaceRange(t.replace(a, b), { line: 0, ch: 0 }, { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }, 'paste'); }"""
+    page.evaluate(edit, ["title: Desk blue", "title: Desk navy"])
+    page.wait_for_function("() => document.querySelector('[data-theme-title] input, input[data-theme-title]').value === 'Desk navy'", timeout=15000)
+    page.evaluate(edit, ["title: Desk navy", "title: [Desk navy"])
+    expect(page.locator("[data-theme-yaml][data-dd-problem]")).to_have_count(1, timeout=15000)
+    page.evaluate(edit, ["title: [Desk navy", "title: Desk blue"])
+    page.wait_for_function("() => document.querySelector('[data-theme-title] input, input[data-theme-title]').value === 'Desk blue'", timeout=15000)
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved", timeout=20000)
+    expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     page.click("[data-publish]")
-    expect(page.locator("[data-theme-root] .bi-near").filter(has_text="Published: reports that name desk-blue")).to_have_count(1, timeout=20000)
+    expect(page.locator(".bi-studio .bi-near").filter(has_text="Published: reports that name desk-blue")).to_have_count(1, timeout=20000)
     # the report designer's theme picker offers it
     page.goto(f"{CONSOLE_URL}/bi/design/{STATE['report']}")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     deselect(page)
     page.click("[data-ptab='format']")
-    page.wait_for_selector("[data-report-theme] option[value='desk-blue']", state="attached", timeout=15000)
+    page.wait_for_function(select_helpers.has_option("[data-report-theme]", "desk-blue"), timeout=15000)
     clean(page)

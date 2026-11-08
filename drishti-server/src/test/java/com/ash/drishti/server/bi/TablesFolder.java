@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * A test's BI folder moved onto the table layer the way an installation is (BI_FOUNDATION_2911E.md section 4.3): {@code tables migrate} over
+ * A test's BI folder moved onto the table layer the way an installation is (docs/architecture/ARCHITECTURE.md §28 section 4.3): {@code tables migrate} over
  * the folder's {@code datasets/} and {@code models/}, the tables and models written under {@code <folder>/tables} (the server's
  * {@code drishti.tables.root} in the test), the reports that named a dataset rebound in place, the old files moved aside.
  */

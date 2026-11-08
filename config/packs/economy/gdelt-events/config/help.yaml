@@ -1,0 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+guides:
+  - { slug: gdelt-events-pack, category: packs, title: "The gdelt-events pack", kind: guide, icon: activity, file: guides/gdelt-events.md, summary: "What the world's news reported about each country yesterday from the GDELT Project's daily event files (free with a citation), filled daily by the gdelt-events feed into newslake: events, tone, conflict share, CAMEO categories, the world map by tone, the top stories. Type GDELT GDELT-USA." }

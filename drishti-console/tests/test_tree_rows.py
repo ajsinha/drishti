@@ -14,15 +14,12 @@
 
 """Expandable rows (RACHANA_REFERENCE.md, Tree rows): a table or ladder with ``children:`` and a pivot by a list of fields. The markup
 the server sends (toggles with aria-expanded, rows hidden below ``expand``), the CSV export of a tree, and the behaviour in a
-real browser: a group toggles, the filter keeps the ancestors of a match. The browser test drives headless Chromium directly
-(the one Playwright installs, or CHROME_BIN) and is skipped cleanly without one."""
-import glob
+real browser: the table drawn by drishti-tree (the tree grid on drishti-grid's tree data: a row toggles, the filter keeps the
+ancestors of a match, every cell the server's text, tone and link; the org chart of the same rows, a chain opening as it; the
+server's table kept hidden), the nested pivot by drishti-grid. The browser tests run in Playwright's Chromium
+(the grid draws on animation frames) and are skipped cleanly without it."""
 import json
-import os
 import re
-import shutil
-import subprocess
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -44,6 +41,11 @@ ORG = {"columns": ["Name", "Size"], "numeric": [False, True], "search": True, "e
        "rows": [_row("Group", "999", _row("Desk A", "999", _row("Book 1", "30"), _row("Book 2", "20")), _row("Desk B", "999")),
                 _row("Loose", "5")],
        "total": {"cells": [_c("Total"), _c("1,054")], "highlight": False}}
+
+CHAIN = {"columns": ["Entity", "Relationship"], "numeric": [False, False], "search": False, "expand": 99,
+         "rows": [{"cells": [{"text": "Top Co", "link": {"kind": "org", "id": "TOP"}}, _c("Ultimate parent")], "highlight": False, "children": [
+             {"cells": [_c("Middle Co"), {"text": "Direct parent", "tone": "neg"}], "highlight": False, "children": [
+                 {"cells": [_c("This Co"), _c("")], "highlight": True, "children": []}]}]}]}
 
 
 def _pivot_row(path, values, total, group):
@@ -103,76 +105,112 @@ def test_the_csv_of_a_tree_lists_every_row_and_of_a_nested_pivot_a_column_per_le
 
 # ---- in a browser --------------------------------------------------------------------------------------------------
 
-def _chrome():
-    candidates = [os.environ.get("CHROME_BIN", "")] + sorted(glob.glob(os.path.expanduser("~/.cache/ms-playwright/chromium-*/chrome-linux*/chrome")))
-    candidates += [shutil.which(n) or "" for n in ("chromium", "chromium-browser", "google-chrome")]
-    return next((c for c in candidates if c and os.access(c, os.X_OK)), None)
+ORIGIN = "http://tree.test"
 
 
-def _run(chrome, tmp_path, body, script):
-    page = tmp_path / "page.html"
-    scripts = "".join(f'<script src="{(STATIC / js).as_uri()}"></script>' for js in ("drishti_pivot-grid.js", "drishti_tree-rows.js"))
-    page.write_text(f'<!doctype html><html><body>{body}{scripts}<script>var out = {{}};{script}'
-                    'document.body.insertAdjacentHTML("beforeend", "<pre id=result>" + JSON.stringify(out) + "</pre>");</script></body></html>')
-    # Chromium puts its process-singleton socket in a throwaway profile under TMPDIR; a socket path longer than the system's limit (108
-    # bytes) makes it abort at start ("Socket path too long") and print nothing, which is how these tests failed in a full run whose TMPDIR
-    # was a long scratch folder. A long TMPDIR is replaced by /tmp for Chromium alone (the profile is removed when it exits); 120 s for a
-    # loaded machine.
-    env = dict(os.environ)
-    if len(tempfile.gettempdir()) > 60:
-        env["TMPDIR"] = "/tmp"
-    done = subprocess.run([chrome, "--headless", "--no-sandbox", "--disable-gpu", "--allow-file-access-from-files",
-                           "--virtual-time-budget=3000", "--dump-dom", page.as_uri()], capture_output=True, text=True, timeout=120, env=env)
-    m = re.search(r'<pre id="result">(.*?)</pre>', done.stdout, re.S)
-    assert m, done.stderr[-500:]
-    return json.loads(m.group(1).replace("&quot;", '"').replace("&amp;", "&"))
+def _drive(browsers, body_html, steps, ready=".dt-tp"):
+    """Opens a page holding the panel, drishti-core, drishti-inputs (drishti-grid and drishti-tree need it), drishti-grid and drishti-tree and the tree rows (Playwright: the grid draws on
+    animation frames, which a real page runs), then runs ``steps(page)``; no error may reach the page."""
+    elements = STATIC.parent / "elements"
+    files = {"/core.js": elements / "drishti-core" / "drishti_core.js", "/inputs.js": elements / "drishti-inputs" / "drishti_inputs.js",
+             "/grid.js": elements / "drishti-grid" / "drishti_grid.js",
+             "/tree.js": elements / "drishti-tree" / "drishti_tree.js", "/rows.js": STATIC / "drishti_tree-rows.js",
+             "/grid.css": elements / "drishti-grid" / "drishti_grid.css", "/tree.css": elements / "drishti-tree" / "drishti_tree.css"}
+    html = ('<!doctype html><html><head><link rel="stylesheet" href="/grid.css"><link rel="stylesheet" href="/tree.css"></head><body>'
+            + body_html + "".join(f'<script src="{k}"></script>' for k in files if k.endswith(".js")) + "</body></html>")
+
+    async def route(r):
+        path = r.request.url[len(ORIGIN):].split("?")[0]
+        if path == "/page.html":
+            return await r.fulfill(status=200, body=html, headers={"content-type": "text/html; charset=utf-8"})
+        if path in files:
+            return await r.fulfill(status=200, body=files[path].read_bytes(), headers={"content-type": "text/css" if path.endswith(".css") else "application/javascript"})
+        return await r.fulfill(status=404, body="")
+
+    async def go():
+        async with browsers.page(1200, 900, route=route) as pg:
+            await pg.goto(ORIGIN + "/page.html")
+            await pg.wait_for_selector(ready)
+            await steps(pg)
+            assert pg.errors == [], pg.errors
+    browsers.run(go(), timeout=90)
 
 
-def test_in_a_browser_a_table_row_expands_collapses_and_the_filter_keeps_its_ancestors(client, tmp_path):
-    chrome = _chrome()
-    if not chrome:
-        pytest.skip("needs Chromium (playwright install chromium, or CHROME_BIN)")
-    got = _run(chrome, tmp_path, _render(client, "table", ORG), """
-      var t = document.querySelector('table.tbl-tree');
-      function shown() { return Array.from(t.tBodies[0].rows).filter(function (r) { return !r.hidden; }).map(function (r) { return r.cells[0].textContent.replace(/[▸▾]/g, '').trim(); }); }
-      function btn(name) { return Array.from(t.querySelectorAll('.tr-tog')).filter(function (b) { return b.getAttribute('aria-label').indexOf(name) >= 0; })[0]; }
-      out.start = shown();
-      btn('Desk A').click();
-      out.opened = shown(); out.openedState = btn('Desk A').getAttribute('aria-expanded');
-      btn('Group').click();
-      out.closed = shown(); out.closedState = btn('Group').getAttribute('aria-expanded');
-      btn('Group').click();
-      var q = document.querySelector('input.tr-q'); q.value = 'book 2'; q.dispatchEvent(new Event('input'));
-      out.filtered = shown();
-      q.value = ''; q.dispatchEvent(new Event('input'));
-      out.cleared = shown();
-    """)
-    assert got["start"] == ["Group", "Desk A", "Desk B", "Loose"]
-    assert got["opened"] == ["Group", "Desk A", "Book 1", "Book 2", "Desk B", "Loose"] and got["openedState"] == "true"
-    assert got["closed"] == ["Group", "Loose"] and got["closedState"] == "false"
-    assert got["filtered"] == ["Group", "Desk A", "Book 2"]                        # the match and its ancestors
-    assert got["cleared"] == ["Group", "Desk A", "Book 1", "Book 2", "Desk B", "Loose"]
+SHOWN = """() => Array.from(document.querySelectorAll('.dt-tp .dg-row')).sort((a, b) => +a.getAttribute('aria-rowindex') - +b.getAttribute('aria-rowindex'))
+  .map((r) => r.querySelector('.dg-cell[aria-colindex="1"]').textContent.replace(/[+−]/g, '').trim())"""
 
 
-def test_in_a_browser_a_pivot_group_toggles_with_the_pivot_grid(client, tmp_path):
-    """The nested pivot panel is drawn by the one pivot grid (drishti_pivot-grid.js, the Pivot screen's) from the engine's figures."""
-    chrome = _chrome()
-    if not chrome:
-        pytest.skip("needs Chromium (playwright install chromium, or CHROME_BIN)")
-    got = _run(chrome, tmp_path, _render(client, "pivot", NEST), """
-      var host = document.querySelector('.pv-tree-host');
-      function heads() { return Array.from(host.querySelectorAll('tbody th.pv-rowhead .pv-lab')).map(function (t) { return t.textContent.trim(); }); }
-      function togs() { return Array.from(host.querySelectorAll('[data-pv-toggle]')).map(function (b) { return b.getAttribute('aria-expanded') + ':' + b.getAttribute('aria-label'); }); }
-      out.grid = !!host.querySelector('table.pv-table'); out.start = heads(); out.startTogs = togs();
-      host.querySelector('[data-pv-toggle]').click();
-      out.opened = heads(); out.openedTogs = togs();
-      host.querySelector('[data-pv-toggle]').click();
-      out.closed = heads();
-      out.cells = Array.from(host.querySelectorAll('tbody tr:first-child td.pv-c')).map(function (t) { return t.textContent; });
-    """)
-    assert got["grid"] is True
-    assert got["start"] == ["Rates", "FX", "Total"]                                # expand: 1, every group closed
-    assert got["startTogs"] == ["false:Expand Rates", "false:Expand FX"]
-    assert "B1" in got["opened"] and "B2" in got["opened"] and got["openedTogs"][0].startswith("true:Collapse Rates")
-    assert got["closed"] == got["start"]
-    assert got["cells"][:2] == ["161", "-40"]                                      # a group row shows its subtotals
+async def _until(pg, n):
+    await pg.wait_for_function(f"() => ({SHOWN})().length === {n}", timeout=5000)
+    return await pg.evaluate(SHOWN)
+
+
+async def _twisty(pg, name):
+    await pg.locator(".dt-tp .dg-row", has_text=name).first.locator(".dg-tw:not(.dg-tw-none)").click()
+
+
+def test_in_a_browser_drishti_tree_draws_the_table_its_rows_toggle_and_the_filter_keeps_their_ancestors(client, browsers):
+    async def steps(pg):
+        assert await _until(pg, 4) == ["Group", "Desk A", "Desk B", "Loose"]                  # expand: 2, as the server sent it
+        src = await pg.evaluate("() => { const t = document.querySelector('table.tbl-tree'); return [t.closest('.tbl-wrap').hidden, t.hasAttribute('data-tree-ready')]; }")
+        assert src == [True, True]                                                            # the server's table stays, hidden (print, no scripts)
+        assert await pg.get_attribute(".dt-tp", "data-mode") == "grid"                       # two top rows: the grid
+        sizes = await pg.evaluate("() => Array.from(document.querySelectorAll('.dt-tp .dg-row')).sort((a, b) => +a.getAttribute('aria-rowindex') - +b.getAttribute('aria-rowindex')).map((r) => r.querySelector('.dg-cell[aria-colindex=\"2\"]').textContent.trim())")
+        assert sizes == ["999", "999", "999", "5"]                                            # the server's text
+        foot = await pg.text_content(".dt-tp-foot")
+        assert "Total" in foot and "1,054" in foot
+        await _twisty(pg, "Desk A")
+        assert await _until(pg, 6) == ["Group", "Desk A", "Book 1", "Book 2", "Desk B", "Loose"]
+        await _twisty(pg, "Group")
+        assert await _until(pg, 2) == ["Group", "Loose"]
+        await _twisty(pg, "Group")
+        await pg.fill(".dt-tp-q", "book 2")
+        assert await _until(pg, 3) == ["Group", "Desk A", "Book 2"]                            # the match and its ancestors
+        assert (await pg.text_content(".dt-tp-bar .dt-lbl")).startswith("1 of 6")
+        await pg.fill(".dt-tp-q", "")
+        assert await _until(pg, 6) == ["Group", "Desk A", "Book 1", "Book 2", "Desk B", "Loose"]
+        await pg.click(".dt-tp [data-mode='org']")
+        assert await pg.get_attribute(".dt-tp", "data-mode") == "org"
+        org = await pg.evaluate("() => Array.from(document.querySelectorAll('.dt-tp svg .dt-box')).map((b) => b.getAttribute('aria-label'))")
+        assert len(org) == 6 and any(x.startswith("Book 2") for x in org)                     # the same rows, open as in the grid
+        await pg.click(".dt-tp [data-mode='grid']")
+        assert await _until(pg, 6) == ["Group", "Desk A", "Book 1", "Book 2", "Desk B", "Loose"]
+    _drive(browsers, _render(client, "table", ORG), steps)
+
+
+def test_in_a_browser_a_chain_opens_as_the_org_chart_with_the_servers_links_and_tones(client, browsers):
+    async def steps(pg):
+        await pg.wait_for_selector(".dt-tp svg .dt-box")
+        assert await pg.get_attribute(".dt-tp", "data-mode") == "org"                        # one chain: the org chart
+        assert await pg.locator(".dt-tp-q").count() == 0                                      # search: false, no filter box
+        boxes = sorted(await pg.evaluate("() => Array.from(document.querySelectorAll('.dt-tp svg .dt-box')).map((b) => b.getAttribute('aria-label'))"))
+        assert boxes[0].startswith("Middle Co") and "Direct parent" in boxes[0] and boxes[1].startswith("This Co") and boxes[2].startswith("Top Co")
+        await pg.click(".dt-tp [data-mode='grid']")
+        assert await _until(pg, 3) == ["Top Co", "Middle Co", "This Co"]
+        assert await pg.get_attribute(".dt-tp .dg-row a.lnk", "href") == "/v/org/TOP"         # the server's link, tone and highlighted row
+        assert await pg.locator(".dt-tp .dg-cell.t-neg").count() == 1
+        assert await pg.locator(".dt-tp .dg-row.dt-tp-hl").count() == 1
+    _drive(browsers, _render(client, "table", CHAIN), steps)
+
+
+def test_in_a_browser_a_pivot_group_toggles_with_the_grid(client, browsers):
+    """The nested pivot panel is drawn by drishti-grid (the Pivot screen's grid) from the engine's figures, shown as the server's text."""
+    heads = "() => Array.from(document.querySelectorAll('.pv-tree-host .dg-row [role=rowheader] .dg-text')).map((t) => t.textContent.trim())"
+
+    async def until(pg, ok):
+        await pg.wait_for_function(f"() => {{ const h = ({heads})(); return {ok}; }}", timeout=5000)
+        return await pg.evaluate(heads)
+
+    async def steps(pg):
+        assert await pg.locator(".pv-tree-host .dg[data-chrome='none'] [role=treegrid], .pv-tree-host .dg[data-chrome='none'] [role=grid]").count() >= 1
+        assert await until(pg, "h.length === 3") == ["Rates", "FX", "Total"]                # expand: 1, every group closed
+        togs = "() => Array.from(document.querySelectorAll('.pv-tree-host .dg-row[aria-expanded]')).map((r) => r.getAttribute('aria-expanded') + ':' + r.querySelector('[role=rowheader] .dg-text').textContent.trim())"
+        assert await pg.evaluate(togs) == ["false:Rates", "false:FX"]
+        await pg.locator(".pv-tree-host .dg-row[aria-expanded] .dg-tw").first.click()
+        opened = await until(pg, "h.indexOf('B1') >= 0")
+        assert "B2" in opened and (await pg.evaluate(togs))[0] == "true:Rates"
+        await pg.locator(".pv-tree-host .dg-row[aria-expanded] .dg-tw").first.click()
+        assert await until(pg, "h.length === 3") == ["Rates", "FX", "Total"]
+        cells = await pg.evaluate("() => Array.from(document.querySelectorAll('.pv-tree-host .dg-row')[0].querySelectorAll('.dg-cell[data-cell] .dg-text')).map((t) => t.textContent)")
+        assert cells[:2] == ["161", "-40"]                                                  # a group row shows its subtotals, the server's text
+    _drive(browsers, _render(client, "pivot", NEST), steps, ready=".pv-tree-host .dg-row")

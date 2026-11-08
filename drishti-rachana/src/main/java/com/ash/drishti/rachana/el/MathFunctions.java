@@ -59,7 +59,7 @@ final class MathFunctions {
         t.fn("clamp", 3, 3, (a, c) -> clamp(a));
         t.fn("least", 1, 64, (a, c) -> pick("least", a, true));
         t.fn("greatest", 1, 64, (a, c) -> pick("greatest", a, false));
-        // min/max over one list are the pivot engine's aggregates (ONE_GRAMMAR.md part 2); with several arguments they are the
+        // min/max over one list are the pivot engine's aggregates (docs/architecture/ARCHITECTURE.md part 2); with several arguments they are the
         // old spelling of least/greatest, read for compatibility with the results they always gave
         t.fn("min", 1, 8, (a, c) -> lenient(a, true, c));
         t.fn("max", 1, 8, (a, c) -> lenient(a, false, c));

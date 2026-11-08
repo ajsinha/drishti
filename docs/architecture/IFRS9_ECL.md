@@ -17,7 +17,7 @@
 
 Status: design, not built. Requested by the product owner on 2026-11-02 ("put IFRS 9 expected credit loss on the roadmap; design
 first"); proposed for release 2.9.20, placement to confirm ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#2920-ifrs-9-expected-credit-loss-proposed)).
-It follows the engine pattern of [SENSITIVITIES_AND_FRTB_SA.md](SENSITIVITIES_AND_FRTB_SA.md): the method with its formulas, the data
+It follows the engine pattern of [SENSITIVITIES_AND_FRTB_SA.md](../guides/FRTB_SA_GUIDE.md): the method with its formulas, the data
 contracts, the API, command line and screens, the playground with its critique-and-reproduce switches, hand-built cases, parameters as
 configuration and the decisions.
 
@@ -204,7 +204,7 @@ ECL) is offered for critique; the playground shows the difference (case 6).
 ## 8. Management overlays
 
 An overlay (post-model adjustment) is a Drishti-owned record, `ecl-overlay`, entered through a write-back form and **approved with four
-eyes** ([WRITE_BACK.md section 10](../guides/WRITE_BACK.md#10-approval); `owned` target, `approvals: two`), never typed into a figure:
+eyes** ([APPROVALS_GUIDE.md section 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue); `owned` target, `approvals: two`), never typed into a figure:
 
 | Field | Meaning |
 |---|---|
@@ -245,7 +245,7 @@ the coverage ratio (allowance ÷ gross carrying amount) for each; the stage-2 sh
 credit risk grade and stage.
 
 **Cluster.** Facilities are sharded by facility id; each owner computes its shard's facility ECLs and partial sums per requested cut; the
-coordinator adds the partials in shard order (the same equality rule as the VaR sums, [VAR_SHARDING.md](VAR_SHARDING.md)).
+coordinator adds the partials in shard order (the same equality rule as the VaR sums, [DATA_ARCHITECTURE.md section 13](DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)).
 
 ## 11. Why the provision moved
 
@@ -282,7 +282,7 @@ remeasurement, FX, closing, by stage) is a regrouping of the same steps.
 The contracts follow the [contract rules](../contracts/README.md) (types, dates and as-of, restatements, delivery, rejects, entitlements)
 and are written as YAML files of a new pack `credit-risk` when it is built, each with its generated reference page. All data is JSON Lines
 (`data/testdata/credit-risk/<kind>/*.jsonl.gz` for the demo, loaded into Delta or Iceberg, read by the lake connector). Keys are
-UPPER_SNAKE. A loan book may be a memory-only source ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)) when a bank's contract forbids storing it.
+UPPER_SNAKE. A loan book may be a memory-only source ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)) when a bank's contract forbids storing it.
 
 ### 12.1 `credit-facility` (one record per facility and business date)
 
@@ -408,7 +408,7 @@ ledger posting and the IFRS 7 notes; the ledger posting itself stays with the ba
 ## 15. The playground and its workbook
 
 Every calculation ships with its playground and an Excel workbook of live formulas equal to the engine to the cent
-([VAR_PLAYGROUND.md section 13](VAR_PLAYGROUND.md#13-the-playground-family-and-the-rule)). `PLAY ECL` opens the VaR Playground's frame
+([VAR_PLAYGROUND.md section 13](../guides/VAR_GUIDE.md#314-the-playground-frame-every-metrics-playground)). `PLAY ECL` opens the VaR Playground's frame
 (the grid, the tall explanation panel, the formula bar, the export) on up to a configurable number of facilities (default 50) or one
 segment summarised.
 
@@ -430,7 +430,7 @@ segment summarised.
 
 ### 15.2 Critique and reproduce: the method choices as switches
 
-As [SENSITIVITIES_AND_FRTB_SA.md section 12.1a](SENSITIVITIES_AND_FRTB_SA.md#121a-critique-and-reproduce-the-method-choices-as-switches):
+As [SENSITIVITIES_AND_FRTB_SA.md section 12.1a](../guides/FRTB_SA_GUIDE.md#81-critique-the-choices-panel):
 every choice is a named switch on the *Choices* panel and on the Config tab, the alternative computed side by side with the difference
 explained per facility and step.
 

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A data model (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2): datasets in a star under aliases, relationships, measures, hierarchies, model security (only
+ * A data model (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 2): datasets in a star under aliases, relationships, measures, hierarchies, model security (only
  * tighter than the datasets'), a contract with semver and stable ids, and a lifecycle. It never copies data. Produced by {@link ModelDefParser}, made for a
  * consumer of one dataset by {@link ImplicitModels}, (the version-1 compatibility reader was removed in 2.2). Immutable.
  *
@@ -63,7 +63,7 @@ public record ModelDef(String name, String version, String id, String title, Str
     }
 
     /**
-     * Wave B's model keys (docs/architecture/BI_DESIGN.md sections 3.3.5 and 12.2): calculation groups (templates applied to any selected measure, with
+     * Wave B's model keys (docs/architecture/ARCHITECTURE.md §28 sections 3.3.5 and 12.2): calculation groups (templates applied to any selected measure, with
      * {@code SELECTED} the measure), parameters ({@code param.name} in expressions, what-if numbers or a field chosen by the consumer), the model's calendar
      * (holidays and the fiscal year) and the FX rates {@code fx} and {@code convert} read.
      */
@@ -113,7 +113,7 @@ public record ModelDef(String name, String version, String id, String title, Str
     public record FxDef(String rates, String from, String to, String rate, String date, String base) {}
 
     /**
-     * What a model says about its fields and measures beyond their computation (docs/architecture/BI_DESIGN.md sections 2.2 and 5.1): display properties
+     * What a model says about its fields and measures beyond their computation (docs/architecture/ARCHITECTURE.md §28 sections 2.2 and 5.1): display properties
      * every consumer inherits ({@code fields:} and the measures' own keys), perspectives (named subsets for a team or task: a view, not a security boundary),
      * and object-level security ({@code security.hidden-for}: a field or measure that does not exist for some roles).
      */

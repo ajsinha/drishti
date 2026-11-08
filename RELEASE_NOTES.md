@@ -13,6 +13,259 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.g — release notes
+
+*Released 2026-11-08.* **Industries as modules, opened through lenses; the public sector, the first new domain, filled every day by
+drishti-feeds; the pre-deal check as a service of the exposure engine; every screen drawn with Drishti Elements, eleven libraries you can
+also use in your own applications; the documentation rewritten, one guide and one tutorial for each major feature, Help grouped by
+domain and lens.** This release carries the work planned as 2.9.11.e, f, g and h, shipped as one tag.
+
+**VaR check against 2.9.11.d:** every figure bit-for-bit equal at the 509 and 250 windows (128,876,809 and 94,258,074
+numbers; 56,298,935 and 54,984,456 text fields); memory no higher than 2.9.11.d.
+
+## What changes for risk users
+
+- **One limit rule, the server's.** Every limit the banking module holds a figure to says **within**, **near** or **breach** in the
+  answer itself: VaR scopes and nodes, the official record, the VaR what-if, the pre-deal check's credit limit and tenor buckets, and the
+  sensitivity ladder. Near starts at 80% of the limit (`drishti.risk.limit-near`). Every limit bar, tile, pill and heat-map cell takes its
+  colour from that status (within green, near amber, breach red): the VaR explorer's own amber at 75% and red at 90% and the exposure
+  explorer's amber over 90% are gone, and a use of exactly 100% is near, no longer a breach.
+- **The pre-deal check** (`PREDEAL`, Counterparties → Pre-deal check): copy a booked trade (`PREDEAL CP-ALDERSHOT LIKE 1000001 250M`) or
+  describe one (`PREDEAL CP-ALDERSHOT EQUITY 768495000 2031-10-20 MTM 9227785`); the exposure engine adds it to its netting set path by
+  path and answers **approve**, **refer** or **decline** with the reasons, the limit and each tenor bucket before and after, the headroom,
+  and EPE and EAD before and after. A proxy answer, no limit on record, a stale run or netting sets you cannot see only ever refer. Every
+  check is audited and has its Explain ([EXPOSURE_GUIDE.md section 18.9](docs/guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check)). The
+  Trading landing's new-trade check asks the same service. SA-CCR's incremental EAD is shown as under construction.
+- **One Explain for every number**: hover a figure for a preview, click it (or press **E**) for a drawer with *Formula*, *Inputs &
+  lineage*, *Why it moved* and *Workbook*, and *Open as a page* to print. It replaces the VaR page's *How calculated* drawer and *Why it
+  moved* tab, the parametric figures' pop-ups, the MR cube's *Explain the move* tables and the exposure page's *How this number was built*
+  box (the table under "Removed" below).
+- **The MR cube's stressed VaR and SBM land on the same cells every time**: a view gets them for its first 100 and 60 cells in the
+  grid's order (row by row as shown, each row's columns left to right), whatever was asked before or at the same time; before, a view
+  asked after others could show them on more cells. A row's diversification of either is shown only when all its cells have the figure
+  ([PIVOT_GUIDE.md section 29.2](docs/guides/PIVOT_GUIDE.md#292-the-measures)).
+- **The FRTB-SA screen shows each class's Total again**, the server's figure.
+
+## What changes for readers
+
+- **22 tutorials, one per feature**, numbered in the order you would take them ([the index](docs/tutorials/README.md)): the first 15
+  minutes; VaR, exposure, FRTB-SA, SIMM and groupings; pivot and cubes, reports and dashboards, the Notebook, AI, corrections and
+  approvals; a day of bank data, world data, the public sector, connecting your data, loading your own lake, data out; tables, a pack and
+  a screen, embedding; production and a cluster of three. Tutorials that covered parts of one feature are now parts of one tutorial;
+  every step still shows the screen, the command line and the YAML.
+- **The combined guides**: [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md) (install, run, deploy, troubleshoot, the runbooks),
+  [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) (several servers, AWS, sizing, tuning), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) (people,
+  roles, lenses, switches), [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [REPORTS_GUIDE](docs/guides/REPORTS_GUIDE.md),
+  [NOTEBOOK_GUIDE](docs/guides/NOTEBOOK_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md),
+  [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md), [API_REFERENCE](docs/guides/API_REFERENCE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md)
+  and [AI_GUIDE](docs/guides/AI_GUIDE.md); connectors, connector files, TLS and the demo data are sections of
+  [DATA_GUIDE](docs/guides/DATA_GUIDE.md); the MR cube is a section of the [Pivot guide](docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset).
+  The Knowledge pages are four: the glossary and the [risk](docs/knowledge/risk.md), [data](docs/knowledge/data.md) and
+  [world](docs/knowledge/world.md) primers. Design notes moved out of the user guides into the architecture documents.
+- **Help by domain and lens**: each Help page belongs to a domain module; while a module is off for you, its pages are not listed,
+  searched or opened (banking's risk pages, capital markets' funds pages, the economy's public-sector pages), and a page may name the
+  lenses that show it.
+- **Old addresses still work**: every retired Help address (`/help/<old page>`, an old tutorial number, an old guide) opens the page and
+  the section that took its subject over; links in bookmarks and other documents keep working.
+- Pictures of steps that changed are retaken after the release's screenshot run; a step waiting for its picture says so.
+
+## New
+
+- **Delta protocol compliance, tested both ways against delta-rs** ([DATA_LAKE_GUIDE.md section
+  14](docs/guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)): partition folders named as Spark names them and `add.path` encoded
+  once, whatever the value holds; tables Databricks writes with deletion vectors, column mapping (`name` or `id`) or v2 checkpoints are
+  read completely by the server and, through Delta Kernel, by the Python tools. Not verified yet: v2 checkpoints with sidecar files,
+  and writing into an existing external table that uses such features (Drishti writes its own plain tables).
+- **A Deployment and QA guide, with a PDF** ([DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md)): install and verify the server
+  and the console on Windows, Linux and macOS step by step, with what you should see and a picture at every check, a QA checklist per
+  operating system, a cluster of three end to end and the offline rehearsal with your own trade files. Developers start from the new
+  [developer quickstart](docs/QUICKSTART_DEVELOPERS.md); the cluster guide has a PDF too.
+- **Domain modules and the access registry** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md),
+  [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md), [OPERATIONS.md section 22](docs/guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). The
+  core knows no industry: **banking**, **capital markets** and **economy** are modules, each on when installed, licensed and enabled
+  (`config/modules/<module>.yaml`, `GET/POST /api/v1/admin/modules`, audited). A module that is off loads no engine, job, pack or API, and
+  its pages, menus, commands, type-ahead, Help pages and Build items are gone for everyone; a function an administrator turned off is gone
+  for everyone too. Without an installed licence every module is on (the development licence), so an existing installation changes nothing.
+  Each person's modules, lenses and the functions they may not use are answered by `GET /api/v1/modules`.
+- **Lenses** ([LENSES.md](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is)): Risk, Trading, Market, CRO and the two cubes (banking), World and **Public sector**
+  (economy), CIO and Oversight (core), each with its modules, functions, Home cards and chips.
+- **The public sector**, the first new domain, in the economy module with its own lens ([PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md),
+  [tutorial 46](docs/tutorials/14-public-sector-data.md)): six packs and ten functions: World Bank development indicators (`WDI`, `WDIS`,
+  with the world map by GDP per head), central banks from FRED and the Bank of Canada (`CBANK`, `CBSER`), Statistics Canada (`NSTAT`),
+  the OECD (`OECD`, `OECDS`), the press releases of the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, the US Federal Register and the
+  Canada Gazette (`PRESS`, `PREL`) and GDELT's world events by country and tone (`GDELT`). The free news is in the World lens too.
+- **drishti-feeds: external data into the lakes, every day** ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md)). One feed file per source
+  (`config/feeds/<feed>.yaml`: the datasets, the pack and table each loads, the target lake, the daily schedule, the licence with its
+  internal-only flag, API keys as environment names only); incremental pulls that resume; one polite User-Agent naming Drishti; JSON Lines
+  per dataset and business date under `data/datafeeds/<feed>/` with a manifest of rows and SHA-256; a run ledger; three load routes (the
+  Java loader, the Python loader, the data inbox). `drishti.py feed list|run|status|schedule` (`feed schedule --cron | --systemd |
+  --windows` prints the daily entries); **Admin → Data loads → Feeds** shows every feed's last run and runs one now, and a failed run
+  raises the alert `data-feed-failed`. Thirteen feeds ship: the six public-sector feeds, GLEIF, US equities, funds (the index members now
+  include the Russell 2000 from IWM's holdings), market data, and for internal use only the IMF forecasts (world-economy), Yahoo prices
+  (off as shipped) and market headlines. FRED needs `DRISHTI_FRED_API_KEY`; the Bank of England, OSFI and the Canada Gazette are internal
+  only, and their releases say so.
+- **Drishti Elements** ([ELEMENTS.md](docs/architecture/ELEMENTS.md), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md)): the console's
+  JavaScript and CSS as eleven libraries under one release train (Elements 1.0.0): drishti-core, -inputs, -grid (with an AG Grid-style
+  adapter), -chart (with maps from the world to every country's first-level regions), -data, -tree, -graph, -insight, -designer,
+  -renderer 2.0.0, and -risk, licensed with the banking module. **Every screen of the console is drawn with them**; the gallery at
+  `/elements` shows every component live.
+- **The designer kit** (drishti-designer): the layout canvas, palette, inspector, outline, the YAML pane kept in step with the model, and
+  the designer shell (Visual / YAML / Both, versions, validate, preview, history, impact, propose for review). The Sutra designer, the BI
+  report designer, the theme designer and the table and model editors are built from it, and each editor remembers your layout.
+- **Elements in your own application, never from a CDN** ([ELEMENTS_IN_YOUR_APP.md](docs/guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)): two files
+  for one page (`drishti.py elements pack --libs core,grid,chart`), a release archive with SHA-384 integrity hashes and npm tarballs for
+  your own registry (`drishti.py elements dist`), a WebJar for your own Maven repository (`./mvnw -P elements -pl drishti-elements
+  package`), or the Drishti server you run. Nothing is published anywhere public, and the same sources make the same bytes. drishti-risk
+  is left out unless asked for with `--include-domain banking`.
+- **The pickers and fields have a new look**, the same on every page: the as-of date in the top bar is a business-date picker (type
+  `T-1`, `ME` or `6 Nov 2026`, or open the calendar with the server's holidays named; a weekend or holiday is refused in words); every
+  date field is the same picker and still sends `2026-11-06`, so links and scripts are unchanged; long lists are a multi-select with
+  chips and a search field; the people pickers are a combobox; the forms have their label above each field, problems in words, numbers
+  read loosely (1.5m, 250k); on a phone every control is at least 44 px high.
+- **One Approvals queue** (Views → Approvals, `/approvals`, `/api/v1/approvals`): every four-eyes decision in one place: Sutras, record
+  edits, BI items, compute packages, functions, stress windows, report sign-offs and settings.
+- **One alert engine** (`/api/v1/alerts`): rules on one entity and on measures are one kind of rule, with one stream.
+- **One search** (Alt+K, `GET /api/search?in=command|help|all`) over entities, commands, screens, Help pages and the things you can build,
+  and **one keymap**: `?` lists the keys of the screen you are on.
+- **One Build home** (`/build`): everything people build in one rail (*Data*, *Screens*, *Analysis*, *Work*), what each item uses and what
+  uses it, *For you* (recent, favourites, certified, shared with me), *+ New* for every kind.
+- **Admin → Configuration** (`/admin/configuration`): every setting in three tiers (everyday, admin, expert), searchable, with its value
+  in effect and where it came from; secrets never shown. A change is a proposal a second administrator approves; an approved key is written
+  to the server's or the console's `application.local.yaml` and read at the next start.
+- **A Python visual can return a drishti-chart spec** (`output: drishti-chart`), drawn as it is, every chart kind the library has.
+
+## Upgrade
+
+Follow these steps when upgrading an installation of 2.9.11.d. The runnable jar is now built from `drishti-app`
+(`./mvnw -q package -DskipTests -pl drishti-app -am`) and keeps its name and folder: `drishti-server/target/drishti-server-2.9.11.g-exec.jar`.
+
+1. **Editions are lenses.** `config/editions/` is gone: a lens file is `config/lenses/<module>/<lens>.yaml` (risk, trading and market
+   under `banking/`, world under `economy/`), the feature presets `config/lenses/features.yaml`. Move a site's own edition file to
+   `config/lenses/<module>/`. The folder's setting is `drishti.lens-dir` (`DRISHTI_LENS_DIR`, was `DRISHTI_EDITIONS_DIR`).
+   `drishti.edition` and `drishti.lenses` are unchanged; Help's old *editions* address opens the lenses guide
+   ([LENSES.md section 14](docs/guides/ADMIN_GUIDE.md#122-where-a-lens-is-defined)).
+2. **Packs live in domain folders**: `config/packs/<domain>/<pack>` (`core/`, `banking/`, `capitalmarkets/`, `economy/`). A site's own
+   pack folder directly under `config/packs` keeps working where it is; `drishti.packs.dir` is unchanged. Links in a site's documents to
+   `config/packs/<pack>/...` need the domain folder. A pack's `pack.yaml` names its `domain:`; a pack loads only while a module of its
+   domain is on.
+3. **The banking API is under `/api/v1/risk/…`**: `/api/v1/var`, `/exposure`, `/frtb`, `/simm`, `/sensitivities`, `/risk-factors` and
+   `/pivot/mr` are now `/api/v1/risk/var`, `/risk/exposure`, `/risk/frtb`, `/risk/simm`, `/risk/sensitivities`, `/risk/risk-factors` and
+   `/risk/mr`. **The old paths answer for this release** (with `Deprecation: true` and a `Link` to the new path) and are removed in the
+   next: move scripts and tools now. Connector files that name the moved engine classes keep working for this release.
+4. **The banking module's other files moved into banking folders**: lake files `config/lakes/banking/{var,ccr}-official.yaml`, report
+   definitions `config/reports/banking/`, `config/bi/reports/banking/`, `config/bi/python/banking/`, `config/bi/notebooks/banking/` and
+   `config/tables/banking/`. **The banking tables are named `banking.<name>`** (were `bi.<name>`): a site's model or report naming
+   `bi.trading_risk_trades` or another moved table needs the new name.
+5. **Settings renamed or removed:**
+
+   | Before | Now |
+   |---|---|
+   | `trading.near-limit` (console) | `drishti.risk.limit-near` (server, `config/engines/var.yaml`, 0.8), one rule for every limit |
+   | `DRISHTI_EDITIONS_DIR` | `DRISHTI_LENS_DIR` (`drishti.lens-dir`) |
+   | `drishti.alerts.measure.*` (`DRISHTI_ALERTS_MEASURE_*`) | `drishti.alerts.*` (`DRISHTI_ALERTS_*`); remove `drishti.alerts.keep` |
+   | `DRISHTI_SEC_USER_AGENT`, `DRISHTI_GLEIF_USER_AGENT` | `DRISHTI_FEEDS_USER_AGENT` |
+   | `DRISHTI_COMPUTE_EXPOSURE_WORKERS` | removed (the exposure what-if is computed in Java) |
+   | `DRISHTI_LIVE_FETCH` | removed |
+   | the VaR page's `varExplainView` | removed (the Explain drawer's *Why it moved*) |
+
+   New: `drishti.modules.dir`, `drishti.modules.<module>.enabled`, `drishti.modules.watch-seconds`, `drishti.access.dir`,
+   `drishti.feeds.config`, `drishti.feeds.root`, `drishti.feeds.python`, `drishti.feeds.sample-seconds`, `DRISHTI_FRED_API_KEY`
+   ([CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
+6. **The feeds replace the public-data scripts.** `tools/publicdata/` and its per-pack `.sh` and `.ps1` scripts are gone: run
+   `drishti.py feed run <feed>` (or `tools/feeds/feed.sh`, `tools/windows/feed.ps1`) and install the daily entries `feed schedule` prints.
+   **The feeds' data root is `data/datafeeds/`**: each feed's state, downloads and output under `data/datafeeds/<feed>/`, the run ledger
+   `data/datafeeds/ledger.jsonl`, and the sources' downloads moved from `<data>/publicdata/` to `<data>/datafeeds/sources/` (delete the
+   old folder after the first run). Refreshing a pack's committed demo snapshot is `feed run <feed> --snapshot`.
+7. **The lake files**: a new lake, **`referencelake`** (`config/lakes/referencelake.yaml`, `data/delta/referencelake/`, shipped empty),
+   holds GLEIF's legal entities; `worldlake` and `newslake` now ship with the tables their feeds load. Nothing shipped points at them until
+   you run a feed. **The demo lake has a new layout** (scenario PVs partitioned by `SCENARIO_SET_ID, GRAIN`; Calypso's and Murex's trades by
+   `PRODUCT_GROUP`): an existing demo lake keeps its old layout and refuses a load into a changed table, naming both layouts, until it is
+   rebuilt with `drishti.py lake demo`. VaR figures are the same on either layout. The shipped lake files are never rewritten at start,
+   and a generated connector file nobody edited keeps following its pack's template.
+8. **Drishti Elements**: the 1.x npm package `@drishti/elements` is no longer built. Pages that embed the 1.x elements from the console are
+   unaffected (`/embed/v1/elements/1.4.5/` and the renderer 1.2.0 files serve the same bytes); new work takes the per-library packages.
+   Every form of the libraries is a file you keep inside your organisation: there is no CDN to point at.
+9. **Vega-Lite visuals are translated, Vega is retired.** A report's `vega-lite` visual and a Python visual's `output: vega-lite` are drawn by
+   drishti-chart. Marks, encodings, aggregate, bin, sort, stack, scales, layers, filter and calculate transforms translate; facets,
+   `repeat` and `concat`, `params` and selections, projections, other transforms, `text` marks and `resolve` are refused in words naming
+   what to use instead. Check a report with such a visual after upgrading ([BI_GUIDE.md](docs/guides/REPORTS_GUIDE.md#96-vega-lite-visuals)).
+10. **The menus are one sitemap**: `drishti-console/config/menus.yaml` is now `drishti-console/config/sitemap.yaml`, which also draws the
+    Admin tabs, the BI rail, Help's sections and the footer. A site that changed `menus.yaml`, or a Help section's name or icon in
+    `help.yaml`, moves its change to `sitemap.yaml`.
+11. **Tokens**: the banking module's `risk:write` scope is offered only while the module is on; the new core scope `compute:write` keeps
+    what-if sandboxes and cancels your own computations; the new scope `approve` decides in the Approvals queue.
+12. **The Python exposure engine is retired**: the compute pool `exposure`, the counterparty-risk pack's reactive connector
+    `exposure-whatif` with its kind and the command `XWIF` are gone; the exact what-if (`POST /api/v1/risk/exposure/what-if`) answers the
+    same request field by field from Java. A never-edited `exposure-whatif.yaml` connector file is removed at start (kept as
+    `.retired-<time>.bak`).
+13. **Reload the Delta tables the parallel loader wrote since 2026-11-07 21:27 whose partition values hold a space or a special
+    character** (`lake build --engine java`, the data inbox's large loads; for example trades partitioned by `PRODUCT_GROUP` with
+    `Fixed income`). Those loads wrote the folder `PRODUCT_GROUP=Fixed income` but the log's `add.path` as `Fixed%2520income` (encoded
+    twice): Spark, Databricks and delta-rs could never read them, and the corrected reader no longer finds them either. Load the same
+    files again (mode replace). Tables of plain values (letters, digits, `_`, `-`), tables loaded before then or by the other engines
+    need nothing. Lakes now follow the Delta protocol's path rules exactly
+    ([DATA_LAKE_GUIDE.md section 14](docs/guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
+14. **Iceberg connectors with `engine: library` whose `root` holds a space, a `%` or non-ASCII letters**: the library engine kept that
+    lake in a folder spelled the way `java.nio` encodes it (`my%20lake` beside `my lake`). It now uses the folder the root names. Move
+    the tables from the encoded folder into the named one (or set `root` to the encoded folder's name), then restart. Nothing else
+    changes for Iceberg users: tables written by other engines with special partition values, which failed with *no such file*, now
+    read. Lakes follow the Iceberg spec ([DATA_LAKE_GUIDE.md section 15](docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance)).
+
+### Removed endpoints and screens
+
+| Removed | Use instead |
+|---|---|
+| `POST /api/v1/sutras/proposals/{id}/approve\|reject\|withdraw` | `POST /api/v1/approvals/sutra/{id}/approve\|reject\|withdraw` with `{comment, params}` |
+| `POST /api/v1/changes/{id}/approve\|reject\|withdraw` | kind `change` (`note` or `reason` is now `comment`) |
+| `POST /api/v1/bi/items/{id}/approve\|reject` | kind `bi` (`force` and `applyRenames` in `params`) |
+| `POST /api/v1/admin/compute/requests/{id}/approve\|reject` | kind `compute` |
+| `POST /api/v1/pivot/functions/{owner}/{ref}/approve` | kind `function`, id `owner:name@version` |
+| `POST /api/v1/var/stress-window/proposals/{id}/decision` | kind `stress-window` |
+| `POST /api/v1/var/reports/{report}/runs/{period}/signoff` | kind `var-report`, id `report:period:vN`; the maker's text is `POST …/runs/{period}/narrative` |
+| `drishti.py design approve\|reject`, `change approve\|reject\|withdraw`, `pivot functions approve`, `var stress-window --decide`, `var report sign` | `drishti.py approvals list\|show\|approve\|reject\|withdraw\|ask` |
+| `/api/v1/me/alerts`, `/api/v1/me/alerts/rules/**`, `/api/v1/me/measure-alerts/**`, `/api/v1/admin/measure-alerts/**` | `/api/v1/alerts`, `/api/v1/alerts/rules/**`, `/api/v1/admin/alerts`; the stream `/api/v1/alerts/stream` (an alert is a `notice` event of type `alert`) |
+| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix`, `GET /api/v1/pivot/mr/explain` (deprecated, answer this release with the 2.9.11.d body, `Deprecation: true` and a `Link` to the successor) | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`; the engine's answer is `why.answer`) |
+| `POST /api/v1/pivot/explain` (deprecated, answers this release) | `POST /api/v1/explain` with `kind: pivot, measure: cell` |
+| the console's `GET /api/suggest` | `GET /api/search?in=command&q=…` (the same suggestions in `items`) |
+| the console's `POST /api/exposure/what-if` and the exposure explorer's Pre-deal tab | the pre-deal check (`/predeal`); the tab's address opens it |
+| The VaR page's *How calculated* (`H`, `&how=1`) and *Why it moved* tab (`&tab=why`) | **Explain ›** (`E`); `VAR EXPLAIN <scope> [from] [to]` |
+| *My designs* and Studio's start page; BI Studio's home (`/bi`) | the Build home (`/build`); `/studio` and `/bi` redirect there |
+| `/build/reviews`, `/review/changes` | `/approvals` (they redirect) |
+
+The old pages redirect, and a saved link with `how=1` or `tab=why` opens the VaR page as before. `GET /api/v1/var/explain.xlsx`
+(the drawer's Workbook) and the server's `GET /api/v1/command/suggest` are unchanged.
+
+### Renamed (plain words for jargon)
+
+| Before | Now |
+|---|---|
+| Build → My designs (`/build`) | Build → **Build home** (`/build`; the designs are its first list, *My drafts*) |
+| BI menu column *Rupaka: business intelligence* | *Business intelligence* |
+| BI rail *Runs*, *Designer*, *Environments*, *Transforms* | *My runs*, *Report designer*, *Promotion (test to live)*, *Data prep* |
+| Build → Learn *Sutra developer guide*, *Rachana reference* | *Screen developer guide*, *Screen language reference* |
+| Admin *Tokens*, *Access*, *Ad-hoc scopes*, *Artifacts*, *Edits*, *Compute*, *Net*, *Embedding* | *API tokens*, *Who looked at what*, *Saved VaR baskets*, *Installed items*, *Record edits*, *Python workers*, *Cluster*, *Embedded views* |
+| Engines → VaR *MR cube*; Counterparties *CCR cube* | *Market-risk cube*; *Counterparty-risk cube* |
+| Admin *Commands* | the *Functions* page (`/func`) in the Admin tabs |
+| Help → Configuration's values in effect | **Admin → Configuration**; Help → Configuration is the reference only |
+
+## Quality, measured
+
+Measured from the repository (`python3 tools/docs/code_volume.py --compare v2.9.11.d`, the guard tests' allow-lists, and the release
+drills' logs).
+
+| Measure | 2.9.11.d | 2.9.11.g |
+|---|---|---|
+| The console's screen code (JavaScript, CSS, HTML outside the libraries) | 81,053 lines | 79,764 lines, with every new screen of the release: 19,007 lines deleted, 18,069 written |
+| Drishti Elements, the libraries' sources | none | 41,295 lines in 11 libraries (186 ES modules) |
+| Parallel implementations folded into one | | 18: search, keymap, Approvals, alert engine, Explain, Build home, sitemap, chart engine (Vega retired), grid, tree, graph, form, select, designer kit, the exposure what-if (Python retired), the limit rule, the pre-deal check, the public-data scripts (into drishti-feeds); and editions into lenses |
+| Designer-kit guard: designers and editors not on the kit | | 0 (19 files when the guard was made) |
+| Form-pane guard: hand-made forms | | 0 (2 when the guard was made) |
+| Admin forms guard: raw controls in Admin templates | | 0 (97 in 21 templates when the guard was made) |
+| Native-select guard: `<select>`s not on drishti-inputs | | 0 (157 in 72 files at the most) |
+| Elements migration guard: files still formatting numbers or drawing charts themselves | | 28 files (35 when the guard was made) |
+| Browser tests: files, and the time of the lane | 167 files, 8,308 s of test time; the lane took 3,222 s on 4 workers | 185 files; the lane took about 4,600 s in the final drills |
+| A full release drill, end to end | 82 min | about 105 to 115 min (2.9.11.j, the optimisation release, targets under 60 min) |
+
 # Drishti 2.9.11.d — release notes
 
 *Released 2026-11-07.* **BI on the table layer with its editors; one analysis path, Pivot → Report, and the Notebook; one Python runtime
@@ -406,11 +659,11 @@ server; busy protection.**
   collect and post, compared with the counterparty's call; **`PLAY SIMM`** with its workbook. The bank loads its licensed ISDA parameter
   file; Drishti ships none of ISDA's numbers.
 - **Position sensitivities and the risk-factor dictionary** as data kinds, with their data contracts ([FRTB](docs/contracts/FRTB.md),
-  [FRTB data structures](docs/contracts/FRTB_DATA_STRUCTURES.md), [SIMM](docs/contracts/SIMM.md)).
-- **The in-memory lake** ([IN_MEMORY_LAKE_GUIDE](docs/guides/IN_MEMORY_LAKE_GUIDE.md), tutorial 31): Delta tables held only in the
+  [FRTB data structures](docs/contracts/FRTB.md), [SIMM](docs/contracts/SIMM.md)).
+- **The in-memory lake** ([IN_MEMORY_LAKE_GUIDE](docs/guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake), tutorial 31): Delta tables held only in the
   server's memory for feeds that by contract may never touch a disk, under a hard cap, refilled by server jobs, compacted automatically;
   nothing of them reaches a disk (proved by a marker scan), downloads allowed and audited. News first.
-- **Compute engines switched on or off per server** (Admin → Engines, [OPERATIONS section 21](docs/admin/OPERATIONS.md)): each engine
+- **Compute engines switched on or off per server** (Admin → Engines, [OPERATIONS section 21](docs/guides/OPERATIONS_GUIDE.md)): each engine
   has its own file under `config/engines/`; an engine that is off disappears everywhere (commands, menus, Help, pages, playgrounds, API),
   dependencies are checked, and in a cluster a request goes to a node that runs the engine. Existing settings keep working.
 - **Busy protection** (Admin → Health): new heavy work (sign-in, a new date, a download, a BI run, a bulk load) waits politely when the
@@ -436,7 +689,7 @@ by the stores' caps (the start scripts do it). `lake demo` now builds 89 tables 
 *Released 2026-11-01.* **Admin → Capacity; the cluster's VaR under load; three VaR dates in the demo; the competitive analysis; the next releases'
 groundwork.**
 
-- **Admin → Capacity** ([OPERATIONS section 12.4](docs/admin/OPERATIONS.md), [RESOURCES_AND_SCALE section 9.7](docs/architecture/RESOURCES_AND_SCALE.md)):
+- **Admin → Capacity** ([OPERATIONS section 12.4](docs/guides/OPERATIONS_GUIDE.md), [RESOURCES_AND_SCALE section 9.7](docs/guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk)):
   this server today against the plan (heap, RAM, disk and cores with their headroom, what breaks first and its fix, growth to three
   times the trades); **Edit the plan** for the planner itself (every input, every result with its Why?, each setting with its exact
   YAML key, environment variable and argument, every JVM argument and the command line, with Copy); **Download the working (.xlsx)**,
@@ -479,7 +732,7 @@ groundwork.**
   refused for room remembered for five minutes so a crowd of requests makes one load; a date in use (read in the last two minutes)
   is never closed for room. **Pinned dates** (month-, quarter-, year- and
   fiscal-year-ends on the New York and Toronto calendars, the stress window, named dates), off by default.
-- **The phone display** ([MOBILE_DISPLAY](docs/architecture/MOBILE_DISPLAY.md)): every panel has a phone tier (must, glance, more,
+- **The phone display** ([MOBILE_DISPLAY](docs/guides/BUILD_GUIDE.md#32-designing-for-phones)): every panel has a phone tier (must, glance, more,
   desk); a phone gets the must and glance panels, a tablet everything but the desk panels, a desktop is unchanged; *Show everything*
   and *Why these panels*; the tiers set in the grammar (`phone:`), by the site and by the edition. The lens menus fold into one menu on a
   phone.
@@ -487,7 +740,7 @@ groundwork.**
   with an `s3://` root; Python tool scripts (`deploy/aws/s3-tables/`, `deploy/aws/delta-s3/`) that create, check and remove the
   buckets and policies. Live runs pending an AWS sandbox account.
 - **Sizing a single node: the planner workbook** ([Drishti-Sizing-Planner.xlsx](docs/architecture/Drishti-Sizing-Planner.xlsx),
-  [RESOURCES_AND_SCALE section 9.7](docs/architecture/RESOURCES_AND_SCALE.md)): type the expected positions, trades, intraday updates,
+  [RESOURCES_AND_SCALE section 9.7](docs/guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk)): type the expected positions, trades, intraday updates,
   dates in memory and users; every result is a live formula: the heap term by term, RAM, disk by folder, cores, each setting with its
   exact YAML key, environment variable and argument, the JVM arguments and one command line to paste; calibrated on the measured
   1,000,000-position run; `tools/sizing_planner.py` regenerates it.
@@ -525,7 +778,7 @@ Data view; choosing the stress window; the lenses' own menus.**
   Trading: Blotter, Positions, Risk, Counterparties; Market: Curves, Volatility, FX, Credit; World: Economies, Markets, Companies), each
   entry showing the command it runs.
 - **Documents:** one benchmark document ([BENCHMARK](docs/admin/BENCHMARK.md)) for every measurement; three machines on premises and on
-  AWS with sizing and monthly cost ([CLUSTER_DEPLOYMENT section 16](docs/architecture/CLUSTER_DEPLOYMENT.md)); the decks updated; the
+  AWS with sizing and monthly cost ([CLUSTER_DEPLOYMENT section 16](docs/guides/CLUSTER_GUIDE.md)); the decks updated; the
   designs and mock-ups of the next release's oversight screens.
 - **Operating it:** every temporary file of Drishti's processes and of the release drill lives in a configurable folder under the data
   folder (`DRISHTI_TMP_DIR`, `drishti.tmp-dir`; the command line too), never the system `/tmp`.
@@ -539,7 +792,7 @@ Data view; choosing the stress window; the lenses' own menus.**
 *Released 2026-11-01.* **Four editions; stressed and 10-day VaR; the scenario matrix; VaR that scales with the scope, not the date;
 a cluster that upgrades one member at a time; one configuration document.**
 
-- **Editions: Drishti World, Market and Trading** beside Drishti Risk ([EDITIONS](docs/admin/EDITIONS.md)): each one setting
+- **Editions: Drishti World, Market and Trading** beside Drishti Risk ([EDITIONS](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is)): each one setting
   (`drishti.edition: world | market | trading`), with three landings each; on a full instance the lenses (`drishti.lenses`, by default
   `risk,world,market,trading`) open any of them for a person, with no restart. Drishti Trading scopes "my" desks and books per person.
 - **VaR** ([VAR_GUIDE](docs/guides/VAR_GUIDE.md), now the one VaR document): **10-day VaR** by √10 or the sum of ten consecutive days,
@@ -553,13 +806,13 @@ a cluster that upgrades one member at a time; one configuration document.**
 - **Ad-hoc scopes:** owners delete their own baskets, administrators anyone's (Admin → Ad-hoc scopes), audited, owners told.
 - **Counterparty risk:** derived netting-set and counterparty MtM (`NSMTM`, `CPMTM`), stress P&L by scenario (`SSPNL`), check panels
   on collateral, limits and netting sets; the exposure engine reads members and MtM from trade valuations and collateral after haircut.
-- **Clusters** ([CLUSTER_DEPLOYMENT](docs/architecture/CLUSTER_DEPLOYMENT.md)): readiness that means ready (joined, the newest date open,
+- **Clusters** ([CLUSTER_DEPLOYMENT](docs/guides/CLUSTER_GUIDE.md)): readiness that means ready (joined, the newest date open,
   owned shards loaded), a drain before every stop (`POST /api/v1/admin/node/drain`), a rolling upgrade runner
   (`tools/rolling-upgrade.sh`); the console's live channels relayed across console hosts.
 - **Operating it:** Admin → Caches (every cache with size against limit, purge or reload one date), one memory budget and one disk
   budget with a free-space guard (`DRS-5218`), the version watch, platform metrics and 17 alert rules (Health,
   `GET /api/v1/admin/alerts`, a Prometheus rule file); the loaders read `.zip`, `.tar.gz`, `.tgz` and `.tar` archives in place.
-- **The client-side renderer** ([CLIENT_RENDERER](docs/architecture/CLIENT_RENDERER.md)): phase 2 draws the console's entity page;
+- **The client-side renderer** ([CLIENT_RENDERER](docs/guides/EMBED_GUIDE.md)): phase 2 draws the console's entity page;
   embedding on another site with a token exchange or a sign-in window. Arrow to the browser for the VaR contribution tables.
 - **Documents:** one configuration document with every setting of every kind, also in the UI (Help → Configuration); the Java and
   Python API references (Help → Developer); the documentation consolidated (one document per subject per audience) and written for
@@ -577,18 +830,18 @@ a cluster that upgrades one member at a time; one configuration document.**
 *Released 2026-10-29.* **Drishti Risk with one setting; VaR sharded across servers; a parallel Java loader; servers that run for
 days.**
 
-- **Editions: Drishti Risk** ([EDITIONS_GUIDE](docs/admin/EDITIONS.md), [EDITIONS](docs/admin/EDITIONS.md#13-the-design-as-built)): one setting,
+- **Editions: Drishti Risk** ([EDITIONS_GUIDE](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is), [EDITIONS](docs/architecture/LENSES.md#10-the-lens-mechanism-the-design)): one setting,
   `drishti.edition: risk` (or `DRISHTI_EDITION=risk`), turns an instance into **Drishti Risk**, VaR and exposure first: its packs
   (others refused, `DRS-1017`), its commands (others hidden from the command line, FUNC and type-ahead, `DRS-4023`; the engines still
   read every kind), its menus, help, Knowledge, Admin pages, BI datasets and models, and its name. Three landings: **Risk desk** (the
   default), **Command first** and **Risk map**, each person's choice remembered. On a full instance, the **lens** (`drishti.lenses:
   risk`, off by default) gives each person *Open Drishti Risk* and *Leave Drishti Risk*, with no restart; a lens hides, it does not
   secure. Without an edition Drishti is exactly as before. Works across a cluster; Admin → Net warns when members differ.
-- **VaR sharded across Drishti\*net** ([VAR_SHARDING](docs/architecture/VAR_SHARDING.md)): off by default; with the market-risk pack's
+- **VaR sharded across Drishti\*net** ([VAR_SHARDING](docs/architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)): off by default; with the market-risk pack's
   `sharding:` block each date is cut into legal-entity and desk ranges, owned by two members each (rendezvous hashing, no consensus
   protocol); every member keeps every node's aggregate, so bank and desk totals answer even with a shard's owners down; other scopes sum
   one partial per shard, never a partial VaR (`DRS-5215`); handover and drain for scale-in. Equal to one server to the cent.
-- **The parallel lake loader** ([PARALLEL_LOADER](docs/architecture/PARALLEL_LOADER.md), [TOOLS 4.13](docs/guides/TOOLS.md)): a
+- **The parallel lake loader** ([PARALLEL_LOADER](docs/architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload), [TOOLS 4.13](docs/guides/CLI_REFERENCE.md)): a
   config-driven, multi-threaded Java loader of JSON Lines from a folder or S3 into Delta or Iceberg, memory bounded, one commit per
   date. `lake build` keeps the Python path as the default; `--engine java` asks for the loader. Both follow one duplicate-record rule:
   the latest `COMPUTED_AT` wins (else the last read), the others counted, never a failure.
@@ -603,7 +856,7 @@ days.**
   `GET /api/v1/viewmodel/schema`); how a screen is made, generic not bespoke (ARCHITECTURE section 7a); a worked example of every data
   type, field by field ([data samples](docs/contracts/samples/README.md)), with every input contract audited against all its rows and a
   drift test; the computed-attributes analysis of the market-risk and counterparty-risk packs, with its decisions
-  ([COMPUTED_ATTRIBUTES](docs/architecture/COMPUTED_ATTRIBUTES.md)); the documentation consolidated (178 to 152 active documents,
+  ([COMPUTED_ATTRIBUTES](docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)); the documentation consolidated (178 to 152 active documents,
   obsolete designs deleted); the README rewritten as a product page.
 - **Upgrade:** rebuild the server image or jar so the new launch flags apply; nothing else to do. The lens and sharding are off until
   you turn them on.
@@ -622,15 +875,15 @@ limit letters; connector files that upgrade themselves safely.**
   (`LIMIT_LETTER > DESK`) with their limits (`var-limit`); a letter may hold part of a book (the positions split, and said); `VAR SCOPE
   LL:LL-0011`, the VaR page's hierarchy select, official VaR and exposure records for every hierarchy. Data without the column skips
   that hierarchy alone, with a warning (`DRS-5211`, Admin → Health, *not available* in the select); the rest answers as before.
-- **Iceberg, as a full alternative to Delta** ([ICEBERG_CONNECTOR 18–19](docs/connectors/ICEBERG_CONNECTOR.md),
-  [tutorial 29](docs/tutorials/29-var-on-iceberg.md)): VaR, intraday (files and Kafka) and exposure read from Iceberg, equal to Delta
+- **Iceberg, as a full alternative to Delta** ([ICEBERG_CONNECTOR 18–19](plugins/drishti-plugin-iceberg/README.md),
+  [tutorial 29](docs/tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg)): VaR, intraday (files and Kafka) and exposure read from Iceberg, equal to Delta
   to the cent (VAR BANK 112,041,646 on 2026-09-30 on both); `lake build --format iceberg`, `build_demo_lakes.py --store risk=iceberg`;
   Admin → Lakes and `lake maintain` for Iceberg (the Format column, snapshot expiry, orphan files, the 7-year floor); official results
   published as Delta or Iceberg, to a folder or to S3, with BI's readers following; `deploy/aws/iceberg/` scripts. Delta stays the
   default.
 - **Your own lake** ([EXTERNAL_LAKES](docs/guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg)): Databricks Delta tables or Iceberg tables from Spark, Databricks,
   Trino or Snowflake, path-based or through a REST catalog (Unity Catalog, Polaris, Glue), by configuration only.
-- **Connector upgrades made airtight** ([CONNECTOR_FILES "Upgrades"](docs/connectors/CONNECTOR_FILES.md)): a file nobody edited follows
+- **Connector upgrades made airtight** ([CONNECTOR_FILES "Upgrades"](docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)): a file nobody edited follows
   the pack's new template; an edited one gains every missing key and keeps its values; each conflict has **Use the pack's value**; the
   file before is kept beside it (`.before-upgrade-….bak`); an upgrade test in the drill.
 - **Also:** P&L-vector ids are `PNL-<trade>-<set>` (`PV-` ids still read); one download button per panel with a CSV / JSON Lines menu;
@@ -686,11 +939,11 @@ finally right.**
   with no setup. It found 11 joins that do not hold (e.g. a jurisdiction code where an id is expected).
 - **The fact of the day on Home** ([USER_GUIDE "Home: the fact of the day"](docs/guides/USER_GUIDE.md)): one surprising, true
   sentence from your data, with a small picture, "Why does that happen?", the command that shows it and "Another fact". Each pack
-  declares its facts ([PACK_DEVELOPER_GUIDE "Facts for Home"](docs/guides/PACK_DEVELOPER_GUIDE.md)); they are computed as you, on
+  declares its facts ([PACK_DEVELOPER_GUIDE "Facts for Home"](docs/guides/BUILD_GUIDE.md)); they are computed as you, on
   your business date, and only those that hold today are shown. Seven ship: a book over its VaR limit while its desk is within, a
   desk that lowers VaR, posted collateral raising exposure, VaR against peak PFE, the most-held company, two managers holding one
   portfolio, a fund's weights above its net assets. Quick cards below: VAR BANK, EXP BANK, FUND SPY, DATAMAP.
-- **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/companies-funds-and-etfs.md)): share classes, NAV,
+- **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/world.md#1-companies-funds-and-etfs)): share classes, NAV,
   look-through, expense ratios, active share and overlap on the demo data; 23 new `WHAT` terms (162 in all); "What does this mean?"
   on USEQ, FUND, HELD and TRACK.
 - **Index membership from the tracking ETFs** ([External data](docs/guides/EXTERNAL_DATA.md)): the S&P 500, Nasdaq-100 and Dow members
@@ -740,7 +993,7 @@ finally right.**
 
 *2026-10-26.* **Every command in one directory (`FUNC`); groupings and analytics computed, not stored; one External data page; every pack's guide carries its data contracts and where its data comes from.**
 
-- **Functions, `FUNC`** ([COMMANDS.md](docs/admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)): Views → *Functions* lists every command you can use, by pack, with
+- **Functions, `FUNC`** ([COMMANDS.md](docs/guides/ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)): Views → *Functions* lists every command you can use, by pack, with
   what it does and an example; `FUNC <words>` filters it. A pack's name opens its search form; a command opens with its example.
   Administrators see the same page with the commands that are off and the Everyone switches, review, history and the cluster's
   versions; `/admin/commands` opens it. The server still decides who may switch.
@@ -812,10 +1065,10 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
     `drishti.py var`.
   - **The numbers change:** with every live trade the bank's VaR on the test data is about 112m (the 1,673-trade sample gave 9.9m); the
     old stored VAR-COMM (446.9m) was not a historical-simulation figure.
-- **Admin → Commands** ([COMMANDS.md](docs/admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)): switch any command off for everyone; it then answers "not active"
+- **Admin → Commands** ([COMMANDS.md](docs/guides/ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)): switch any command off for everyone; it then answers "not active"
   everywhere (page, API, command, CLI, search, exports, BI, AI; `403 DRS-1016`), stored in the Drishti database and gossiped to every
   server; ready for role-based access.
-- **Write-back** ([WRITE_BACK.md](docs/guides/WRITE_BACK.md#16-the-design-and-its-reasons), [EDITS.md](docs/guides/WRITE_BACK.md#for-administrators-write-back-is-off-as-shipped), tutorial 24, off by default):
+- **Write-back** ([WRITE_BACK.md](docs/architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [EDITS.md](docs/guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on), tutorial 24, off by default):
   forms save through an edit log in the Drishti database, with four-eyes approval, a cluster mode, JDBC writes through an outbox, and
   reactive recomputes and live updates after each change.
 - **Branding from configuration:** the product name, owner, copyright and notices come from configuration only; guard tests.
@@ -830,7 +1083,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 *2026-10-24.* **Sutra Next: screens that respond, built from one UI kit, designed in plain words; two public-data packs.**
 Everything since 2.6.7, including the patches pushed to main without a tag.
 
-- **Sutra Next** ([SUTRA_NEXT.md](docs/guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)):
+- **Sutra Next** ([SUTRA_NEXT.md](docs/guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)):
   - **The Drishti UI kit** (`config/ui-kit/`): reusable fragments (`row-picker@1`, `field-list@1`, `cashflow-ladder@1`...), pack
     fragments (`trading/trade-table@1`), theme tokens and brand; every fragment and every Sutra carries a `doc:` docstring. Every pack
     screen now uses fragments, each proven to draw the same as before.
@@ -839,7 +1092,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
   - **Refresh and freshness:** `refresh:` per panel or screen, with pause, resume and interval per person and Pause all; every panel says
     "updated N s ago", marks stale data and names a source that is not answering.
   - **Layout:** named areas on a 12-column grid, splits, tabs, sections, a sticky header, phone order; `user-can-arrange` per reader.
-  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/WRITE_BACK.md)): edit beside a table, in its cells, or New in a guided drawer;
+  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/APPROVALS_GUIDE.md)): edit beside a table, in its cells, or New in a guided drawer;
     money, date-time and linked-record fields (live server search), rules, computed defaults, masks and roles; **drafts only** until
     2.8.0's write-back.
   - **One server per screen** on a cluster; "your selections were reset" in words when a server goes away.
@@ -866,7 +1119,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 *2026-10-21.* **BI runs: every heavy question becomes a visible, shareable run; chart any table; Delta and Iceberg side by side.**
 2.6.7 also carries 2.6.6, the QA release that was never tagged on its own (see below).
 
-- **BI runs** ([BI_RUNS.md](docs/architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267), [BI_RUNS_GUIDE.md](docs/guides/BI_GUIDE.md#28-background-runs-long-bi-questions)):
+- **BI runs** ([BI_RUNS.md](docs/architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), [BI_RUNS_GUIDE.md](docs/guides/REPORTS_GUIDE.md#15-background-runs-long-bi-questions)):
   - **Planned before it runs:** a planner sizes every question from metadata only (Delta's row counts, Iceberg's manifests, built
     layers; tested to read no data). A cheap question answers at once; a heavy one becomes a run; a very heavy one asks to confirm; an
     impossible one is refused before anything runs. Report visuals, MQ, SQL and statements all take `Prefer: respond-async`; without it
@@ -930,19 +1183,19 @@ tutorial 21, [USER_GUIDE](docs/guides/USER_GUIDE.md#history-an-entity-over-time)
 # Drishti 2.6.0 — release notes
 
 *2026-10-20.* **Paper statements and field parameters in BI, Cassandra and Iceberg without Hadoop, three new themes, and the
-known bugs fixed.** ([BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+known bugs fixed.** ([BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
 
 - **Paginated reports and statements:** a report page with `layout: statement` is paper: page-exact PDF (written by the
   server) and Excel set to print, headers and footers with tokens, page breaks, repeated column titles, groups kept
   together, and bursting through subscriptions, one statement per recipient, masked as them. The statement designer
-  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), tutorial 20).
+  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers), tutorial 20).
 - **Field parameters in a report's wells:** a reader's slicer switches which field or measure a visual draws.
 - **Apache Cassandra connector** (`cassandra`): Cassandra 4 and 5, ScyllaDB, Astra; a day appears whole or not at all
-  ([CASSANDRA_CONNECTOR.md](docs/connectors/CASSANDRA_CONNECTOR.md)).
+  ([CASSANDRA_CONNECTOR.md](plugins/drishti-plugin-cassandra/README.md)).
 - **drishti-iceberg:** Drishti's own Apache Iceberg engine with no Hadoop, so Iceberg runs on Windows; it is the default
   engine (`engine: library` brings back the old one), and faster: a connector starts in 637 ms (1.8 s before), a trade on a
   past day reads in 94 ms (353 ms). **`iceberg-external`** reads Iceberg tables Drishti did not write (Spark, Flink, Trino,
-  Snowflake, Glue) ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), [ICEBERG_EXTERNAL_CONNECTOR.md](docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
+  Snowflake, Glue) ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), [ICEBERG_EXTERNAL_CONNECTOR.md](plugins/drishti-plugin-iceberg-external/README.md)).
 - **Three themes:** Green Terminal, Crimson Terminal and Blue Terminal (ten in all); every text colour passes the contrast
   rule on every ground, labels on button fills too.
 - **Known bugs fixed:** a Drishti*net cluster never ends with no enabled administrator; members advertise only a real
@@ -950,8 +1203,8 @@ known bugs fixed.** ([BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
   change; Show the rows and Drill through use the selection at the click; embedded reports and Analyse wait as long as the
   server runs a query; flaky browser tests made steady under load.
 - **Designs:** history queries (2.6.5, [HISTORY_QUERIES.md](docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)), Drishti on AWS
-  ([AWS_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-b-drishti-on-aws-ecs-efs-and-s3)) and super scale, 500 GB a day for seven years
-  ([SUPER_SCALE.md](docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built)).
+  ([AWS_DEPLOYMENT.md](docs/guides/CLUSTER_GUIDE.md#12-drishti-on-aws-ecs-efs-and-s3)) and super scale, 500 GB a day for seven years
+  ([SUPER_SCALE.md](docs/architecture/ARCHITECTURE.md#3213-super-scale-design-not-built)).
 - **Roadmap:** 2.6.5 history queries → 2.7.0 write-back → 2.8.0 AI and the Sajha MCP connector; send and push and
   integration (PG-wire, Excel feed, embed tokens) after 3.0.0.
 - **Known:** two browser tests still flaky under heavy load (`test_showcase_clean_browser[map]`, the embedded Pivot click
@@ -960,7 +1213,7 @@ known bugs fixed.** ([BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
 # Drishti 2.5.0 — release notes
 
 *2026-10-19.* **Drishti*net: several servers act as one Drishti, and the console carries on when one stops.** (Wave N of
-[BI_DESIGN.md](docs/architecture/BI_DESIGN.md); operator's guide [NET.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), tutorial 19.)
+[BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer); operator's guide [NET.md](docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), tutorial 19.)
 
 - **One cluster, off by default:** servers find each other by gossip over HTTP from one seed, keep the member list in
   `<data dir>/net/peers.json`, and publish what they serve (packs with versions, kinds, the tables they read). Configured
@@ -977,7 +1230,7 @@ known bugs fixed.** ([BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
 - **Admin → Net:** members with a hash ring of the cluster, the capability map, routing with *Explain*, access, security,
   the configuration files.
 - **Measured on real processes:** three servers, 20 users for 10 minutes with servers killed and restarted: 0 wrong answers
-  of 9,362 checked, the console moved in 0.27 s, nobody signed out ([NET.md section 13](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)).
+  of 9,362 checked, the console moved in 0.27 s, nobody signed out ([NET.md section 13](docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)).
 - **A ready-made local cluster:** `drishti-stack/` (start, stop, status; secrets stay local and are never committed).
 - **No JVM fills `/tmp`:** every Java process Drishti and its build start gets its own temporary folder at launch; the
   server warns in Admin → Health when it was started without one.
@@ -992,7 +1245,7 @@ Upgrading from 2.4.0: nothing to do for a single server (Drishti*net is off with
 # Previous release: Drishti 2.4.0 — release notes
 
 *2026-10-19.* **BI Studio: authoring and analysis as one product, Python data prep step by step, and query by form at
-scale.** (Wave C of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+scale.** (Wave C of [BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
 
 - **BI Studio:** the report, model and theme designers share one shell: an Explorer of your items, open items as tabs,
   and a dock with **Problems** (the server's check of the draft, linked to each visual) and **Query** (the visual's model
@@ -1025,7 +1278,7 @@ Upgrading from 2.3.0: stored boards become reports at the first start (`/bi/b/<i
 # Previous release: Drishti 2.3.0 — release notes
 
 *2026-10-17.* **BI that calculates like Power BI and stays live, production-shaped trades from three source systems, and a
-demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
 
 - **Calculations with filter context:** `calc`, `share_of`, `parent_of` and `avg_by` change the filter a measure sees;
   calculation groups, field and numeric parameters (slicers), and % of total built in the UI.
@@ -1049,7 +1302,7 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
   itself, no hidden files, everything Drishti writes under the data folder.
 - **A page explains itself:** the Sutra and connector named in *How this view was built* and *About this page* open in
   the designer and on the connector's page, at one click.
-- **Docs verified for this release:** [docs/qa/2.3.0-docs-verification.md](docs/qa/QA_HISTORY.md#5-2026-10-17-the-230-documentation-verification) lists
+- **Docs verified for this release:** [docs/qa/2.3.0-docs-verification.md](CHANGELOG.md) lists
   every guide, tutorial and help page with what was checked and how to re-check it.
 
 - **Offline demos:** `DRISHTI_OFFLINE=true` (set by the *Drishti server (demo lakes)* run configuration) starts no
@@ -1057,7 +1310,7 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
   2026-10-18) that `lake demo` builds into the lake. World economy data was already offline.
 - **Ids are text everywhere:** a numeric `TRADE_ID` in a file is read as its exact text; ids may hold letters, dashes and
   underscores; nothing expects a prefix. Older lakes with numeric id columns still read.
-- **[How to QA in Windows Environment using Custom Data](docs/qa/windows-custom-data.md):** an offline
+- **[How to QA in Windows Environment using Custom Data](docs/DEPLOYMENT_AND_QA_GUIDE.md#11-offline-qa-with-your-own-trade-files):** an offline
   Windows demo with your own ENDUR files replacing the synthetic ENDUR trades, with screenshots; a *Load ENDUR file into
   the lake* run configuration; every Python run configuration uses the project interpreter (works on Windows).
 - **Security fix:** field masks match whatever the case or naming style (a camelCase mask masks the UPPER_SNAKE field);
@@ -1073,7 +1326,7 @@ the old camelCase names need the new names (the shipped packs and examples are c
 # Previous release: Drishti 2.2.0 — release notes
 
 *2026-10-17.* **The BI foundation rebuilt: datasets and data models rooted in packs, a Python-like expression language,
-read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer).)
 
 - **Datasets and data models.** Every pack kind is a dataset automatically; a dataset can narrow, filter, de-duplicate
   explicitly, derive columns (expression or Python) and group, and always traces back to its pack. A **data model** is
@@ -1107,7 +1360,7 @@ read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/a
   size, memory capped by the batch) into a Delta lake partitioned by business date and any classifier columns
   (`--partition-by PRODUCT_TYPE`), with Drishti's own Java Delta writer or the Python `deltalake`; scheduler-friendly
   (exit codes, a lock, a run summary); the same from **Admin → Data loads → Lakes**, which binds the lake to a pack.
-- **[TOOLS.md](docs/guides/TOOLS.md):** one guide to every command-line and UI tool, with examples and scheduling.
+- **[TOOLS.md](docs/guides/CLI_REFERENCE.md):** one guide to every command-line and UI tool, with examples and scheduling.
 - **The console reconnects by itself** when the server starts late or restarts (a banner, then the page recovers).
 - **Also:** `external_lib/` (jars on the server's class path, Python modules in the console, `DRISHTI_EXTERNAL_LIB`); a
   deployed pack's Sutra opens in the designer; tutorials 10–18 rewritten for models with UI, CLI and YAML in every step.
@@ -1286,7 +1539,7 @@ refresh, time intelligence and window functions, live visuals, several visual ty
 
 *2026-10-10.* **Connectors as files with TLS everywhere, query by form, Drishti Elements, no restarts, and the start of BI.**
 
-- **Connectors are files** (docs/connectors/CONNECTOR_FILES.md): one `config/connectors/<name>.yaml` per connector, named
+- **Connectors are files** (docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors): one `config/connectors/<name>.yaml` per connector, named
   by packs; **Admin → Connectors** creates, tests, edits and disables them; changes apply live. Inline pack connectors are
   templates, written to files once at first start; old per-pack data-source overrides migrate automatically.
 - **TLS/SSL for every connector** (docs/connectors/TLS.md): PEM, PKCS12 and JKS, mutual TLS, expiry warnings; Kafka

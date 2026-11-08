@@ -38,7 +38,7 @@ import org.junit.jupiter.api.io.TempDir;
 class SutraFragmentsTest {
 
     static final Path LIBRARY = Path.of("../config/ui-kit/fragments");
-    static final Path MARKET = Path.of("../config/packs/market-data/sutras");
+    static final Path MARKET = Path.of("../config/packs/banking/market-data/sutras");
 
     @TempDir Path dir;
 

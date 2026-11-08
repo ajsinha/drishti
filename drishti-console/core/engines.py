@@ -12,10 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Compute engines in the console (docs/architecture/COMPUTE_ENGINES.md section 5.2): an engine that runs on no server of the cluster
+"""Compute engines in the console (docs/guides/ADMIN_GUIDE.md section 5.2): an engine that runs on no server of the cluster
 disappears everywhere: its command words, menu items, Help pages, Home cards, pages and playgrounds. What runs is learned from the server's
 about answer (``engines``: ``[{id, title, here, cluster}]``, polled by core/backend_watch.py with the edition); what each engine brings to
-the screen is the engine catalogue (config/engines.yaml, the server's engines/catalogue.yaml byte for byte). Until the server has said
+the screen is the engine catalogue (config/engines.yaml, the server's engines/catalogue.yaml byte for byte, and each module's
+plugins/<module>/engines.yaml, its jar's META-INF/drishti/engines.yaml). Until the server has said
 (an older server, no answer yet) nothing is hidden. One helper, :func:`engine_available`, answers for every place; the others are built on it.
 """
 from __future__ import annotations
@@ -72,14 +73,21 @@ def state() -> State:
 
 
 def entries() -> list[dict]:
-    """The catalogue's engines, in its order (read once)."""
+    """The catalogue's engines, in its order (read once): each module's own (``plugins/<module>/engines.yaml``, its jar's
+    META-INF/drishti/engines.yaml byte for byte) first, then the core's (config/engines.yaml)."""
     global _entries
     if _entries is None:
-        try:
-            _entries = list((yaml.safe_load(CATALOGUE.read_text(encoding="utf-8")) or {}).get("engines") or [])
-        except (OSError, yaml.YAMLError) as e:
-            LOG.warning("engines: cannot read %s (%s); nothing is hidden", CATALOGUE, e)
-            _entries = []
+        from core import modules
+
+        out: list[dict] = []
+        for f in [modules.PLUGINS / p.id / "engines.yaml" for p in modules.plugins()] + [CATALOGUE]:
+            if not f.is_file():
+                continue
+            try:
+                out += list((yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("engines") or [])
+            except (OSError, yaml.YAMLError) as e:
+                LOG.warning("engines: cannot read %s (%s); its engines are not hidden", f, e)
+        _entries = out
     return _entries
 
 

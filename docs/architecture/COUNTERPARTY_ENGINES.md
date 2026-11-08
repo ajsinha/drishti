@@ -20,8 +20,8 @@ design to build. The product owner decided every open point on 2026-11-02 ([sect
 Companion to [SACCR.md](../contracts/SACCR.md) (the SA-CCR contract this document narrows to a build), [NSET.md](../contracts/NSET.md)
 (netting sets and CSAs), [COLL.md](../contracts/COLL.md) (collateral values), [CVA.md](../contracts/CVA.md) (the xVA formulas, FVA among
 them), [LIM.md](../contracts/LIM.md) (limits), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine, built),
-[CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md) (the CCR cube: landing A with tabs B and C, decided) and the
-[VaR Playground](VAR_PLAYGROUND.md) (the playground frame every metric here reuses).
+[CCR_CUBE_LENS.md](LENSES.md#7-ccr-cube-lens) (the CCR cube: landing A with tabs B and C, decided) and the
+[VaR Playground](../guides/VAR_GUIDE.md) (the playground frame every metric here reuses).
 
 Drishti computes counterparty figures the way it computes VaR: **from trade-grain inputs, when asked, for any scope, never stored as a
 figure.** SA-CCR exposure at default comes from one classification row per derivative (`saccr-trade`) and the netting set's terms;
@@ -54,7 +54,7 @@ results over counterparties, groups, desks and tenors.
 | SA-CCR playground (`PLAY SACCR`) | one netting set's EAD worked trade by trade and hedging set by hedging set, every derived cell a formula | the VaR Playground's frame |
 | Exposure playground (`PLAY EXP`) | one netting set's EE, ENE, EEE, PFE at a quantile, EPE, EEPE, CE, informational IMM EAD: the simulated paths as data, every step after them a formula | Basel CRE50 (definitions), CRE53 (effective EE, effective EPE, alpha) |
 | FVA engine and playground (`PLAY FVA`) | funding cost (FCA) on EE and funding benefit (FBA) on ENE, discounted, by the funding spread | market practice (IFRS 13 fair value; Gregory, *The xVA Challenge*) |
-| CCR cube core | the CCR cube on the shared cube core: the limit board (counterparty × tenor bucket), the treemap, the PFE fan with the limit line, allocated exposure by desk, the group roll-up over the legal tree, the netting-set drill, the pre-deal overlay | [CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md) sections 6 to 8 and 12 |
+| CCR cube core | the CCR cube on the shared cube core: the limit board (counterparty × tenor bucket), the treemap, the PFE fan with the limit line, allocated exposure by desk, the group roll-up over the legal tree, the netting-set drill, the pre-deal overlay | [CCR_CUBE_LENS.md](LENSES.md#7-ccr-cube-lens) sections 6 to 8 and 12 |
 
 **Principles.**
 
@@ -232,7 +232,7 @@ never shown as a decomposition.
 
 | Work | Where |
 |---|---|
-| per trade: S, E, M, T, SD, δ, both MFs, both D; per set and (asset class, hedging set, sub-key): Σ D margined and unmargined | Java at date load (`com.ash.drishti.compute.ccr.SaccrAggregates`, planned): additive sums, 64 bytes an aggregate row |
+| per trade: S, E, M, T, SD, δ, both MFs, both D; per set and (asset class, hedging set, sub-key): Σ D margined and unmargined | Java at date load (`com.ash.drishti.banking.compute.ccr.SaccrAggregates`, planned): additive sums, 64 bytes an aggregate row |
 | RC, EN, add-ons, multiplier, PFE, EAD, the cap; what-if; standalone | Python `drishti_ccr.saccr:SaccrEngine` on the `risk` pool, Arrow in and out, split by netting set (sums reduce) |
 | the reference implementation for tests | `tools/packgen/ccr/ccrmath.py` (the exposure maths already there; SA-CCR added), parity-tested against both |
 
@@ -339,9 +339,9 @@ carrying a second copy ([CVA.md section 16](../contracts/CVA.md#16-open-question
 
 ## 6. The CCR cube core: data flow
 
-The CCR cube is the shared cube core ([MR_CUBE_LENS.md section 4](../lenses/MR_CUBE_LENS.md#4-the-shared-cube-core-mr-and-ccr), MC2 and
+The CCR cube is the shared cube core ([MR_CUBE_LENS.md section 4](LENSES.md#65-the-shared-cube-core-mr-and-ccr), MC2 and
 MCP1) with CCR measures. The layouts are decided: **landing A (limit board) with tabs B (netting-set drill) and C (pre-deal and XVA)**
-([CCR_CUBE_LENS.md section 6.7](../lenses/CCR_CUBE_LENS.md#67-mock-ups-the-screens-to-build)).
+([CCR_CUBE_LENS.md section 6.7](LENSES.md#74-mock-ups-and-build-checklist)).
 
 ### 6.1 The flow of a date
 
@@ -396,9 +396,17 @@ members' peaks (section 9, case X2).
 CCP1 (the endpoints above), CCP2 (`credit_limits.py`, `legal_tree.py`), CCP3 (the lens `ccrcube`, `/ccube`, landing A with tabs B and C),
 CCP4 (the pre-deal overlay over the built `addon` and `paths` what-if), CCP5 (tests: allocation adds up as a property test, group sums per
 path, board buckets, browser), CCP6 (the exposure guide's cube chapter, a tutorial, screenshots, the demo script), as
-[CCR_CUBE_LENS.md section 12](../lenses/CCR_CUBE_LENS.md#12-lens-design-and-proof-of-concept-poc). With SA-CCR computed in the same
+[CCR_CUBE_LENS.md section 12](LENSES.md#721-the-preset-and-the-proof-of-concept). With SA-CCR computed in the same
 release, the lens control A3's measure **EAD SA-CCR** is live (not greyed), the kind `saccr-result` is no longer hidden in the lens, and
 C1's **Incremental EAD (SA-CCR)** tile is answered by SA-CCR's what-if.
+
+**As built: the exposure what-if in Java** (IMPLEMENTATION_PLAN 2.9.12 row 5). The `addon` and `paths` what-if that CCP4 overlays are
+both the server's exposure engine's: `POST /api/v1/risk/exposure/what-if` computes the exact method with `ExposureWhatIfMath`
+(`drishti-compute-banking`, `com.ash.drishti.banking.compute.ccr`) over `ExposureMath`'s collateral and statistics, the scope and each joined netting set
+read as the asker, no sandbox, no compute pool, no Python ([EXPOSURE_GUIDE.md section 19.5](../guides/EXPOSURE_GUIDE.md#195-the-exact-what-if-in-the-java-engine)).
+The request and the answer are unchanged; reference answers on four netting sets under the three collateral models and both rank rules
+are given to the cent (`ExposureWhatIfMathTest`). The pre-deal check is the word `EXP`'s (the explorer's Pre-deal tab, the Trading
+landing's check, C's pre-deal tab); there is no separate what-if kind or command.
 
 ## 7. API, command line and screens
 
@@ -411,7 +419,7 @@ All planned; the names follow the VaR and exposure APIs and are fixed at build.
 | A trade's SA-CCR terms | `GET /api/v1/saccr/trade/{tradeId}` | `SACCR TRD:…` | `drishti.py saccr trade` |
 | Incremental EAD | `POST /api/v1/saccr/what-if` | in the pre-deal tab (C) | `drishti.py saccr what-if` |
 | FVA of a scope | `GET /api/v1/fva/scope?scope=…` | `FVA NSET:…`, `FVA CPTY:…`, `FVA BANK` | `drishti.py fva show` |
-| The playgrounds | `/api/v1/saccr/playground`, `/api/v1/exposure/playground`, `/api/v1/fva/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY SACCR <netting set>`, `PLAY EXP <netting set>`, `PLAY FVA <netting set>` | `drishti.py play saccr`, `play exp`, `play fva` |
+| The playgrounds | `/api/v1/saccr/playground`, `/api/v1/risk/exposure/playground`, `/api/v1/fva/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY SACCR <netting set>`, `PLAY EXP <netting set>`, `PLAY FVA <netting set>` | `drishti.py play saccr`, `play exp`, `play fva` |
 | The CCR cube | section 6.2 | `CCUBE BANK`, `CCUBE GROUP:…`, `CCUBE NSET:…` | `drishti.py cube ccr` |
 | Official captures | `saccr-official`, `saccr-official-cpty` (SACCR.md section 9.5); `fva-official` per set and counterparty | — | `drishti.py saccr capture` |
 
@@ -424,7 +432,7 @@ landing and tabs (decided), the three playgrounds on the VaR Playground's frame.
 
 ## 8. The playgrounds
 
-Every metric ships with its playground ([VAR_PLAYGROUND.md section 13](VAR_PLAYGROUND.md#13-the-playground-family-and-the-rule)): the grid
+Every metric ships with its playground ([VAR_PLAYGROUND.md section 13](../guides/VAR_GUIDE.md#314-the-playground-frame-every-metrics-playground)): the grid
 with the tall explanation panel beside it, the formula bar, Export to Excel from a version-controlled template with real formulas and
 check cells, the ALL CHECKS PASS band at the top of Main. Each playground below adds its model (the cached values), its generator (the tabs
 and formulas through `SeriesLayout`), its inputs as the person and its endpoints.
@@ -802,7 +810,7 @@ Drafts here; at build they become files of the counterparty-risk pack's configur
 every answer's provenance. One file per regulation; a jurisdiction's variant is its own file. After BCBS the next file is OSFI CAR
 chapter 4 (`saccr-osfi.yaml`, as the FRTB order); the US final rule and EU CRR2 follow when a client asks (decision 4).
 
-### 11.1 SA-CCR (`config/packs/counterparty-risk/capital-parameters/saccr-bcbs.yaml`, draft, not loaded)
+### 11.1 SA-CCR (`config/packs/banking/counterparty-risk/capital-parameters/saccr-bcbs.yaml`, draft, not loaded)
 
 ```yaml
 regulation: BCBS
@@ -878,8 +886,8 @@ drishti.ccr.saccr.playground:
 
 ## 12. Mock-ups: the screens to build
 
-Decided already: the CCR cube's landing A with tabs B and C ([CCR_CUBE_LENS.md section 6.7](../lenses/CCR_CUBE_LENS.md#67-mock-ups-the-screens-to-build)),
-and the playgrounds' frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)). **Still to make before
+Decided already: the CCR cube's landing A with tabs B and C ([CCR_CUBE_LENS.md section 6.7](LENSES.md#74-mock-ups-and-build-checklist)),
+and the playgrounds' frame ([VAR_PLAYGROUND.md section 16](../guides/VAR_GUIDE.md#313-the-var-playgrounds-workbook-cell-by-cell)). **Still to make before
 the build (mock-ups first):** the SA-CCR page that replaces the stored Sutra (three options: the EAD waterfall from RC and add-ons by class
 with the hedging-set table; the netting-set list with the selected set's breakdown; the counterparty's sets side by side), and the FVA
 figures on the netting-set and counterparty pages (the term bars per date beside CVA's future bars). Each option self-contained HTML, dark
@@ -899,9 +907,9 @@ its text; `#` lines are comments), so `PlaygroundTemplate.explain()` reads them:
 
 | File | Covers |
 |---|---|
-| [`playground/saccr/template/explain.txt`](../../drishti-server/src/main/resources/playground/saccr/template/explain.txt) | in plain words: what SA-CCR answers, why a bank must hold it, the tabs, signs and units, the regulation and its parameters; the steps from the classification row to EAD after the cap, each with a worked number from cases S1 to S7; every term of Main, Config, Data, Trades, Hedging sets and Provenance with its CRE52 paragraph |
-| [`playground/exposure/template/explain.txt`](../../drishti-server/src/main/resources/playground/exposure/template/explain.txt) | in plain words: what exposure answers, why paths, the tabs, signs and units; the steps from the paths to EE, PFE, EPE, EEPE and the contributions, worked with case X1 and X2; every term of Main, Config, Data, Netting, Collateral, Exposure, Stats, Contributions and Provenance |
-| [`playground/fva/template/explain.txt`](../../drishti-server/src/main/resources/playground/fva/template/explain.txt) | in plain words: what FVA answers, why funding costs money, the tabs, signs and units; the steps from the profile to FCA, FBA and FVA, worked with case F1 (a) to (d); every term of Main, Config, Data, Terms and Provenance |
+| [`playground/saccr/template/explain.txt`](../../drishti-banking/src/main/resources/playground/saccr/template/explain.txt) | in plain words: what SA-CCR answers, why a bank must hold it, the tabs, signs and units, the regulation and its parameters; the steps from the classification row to EAD after the cap, each with a worked number from cases S1 to S7; every term of Main, Config, Data, Trades, Hedging sets and Provenance with its CRE52 paragraph |
+| [`playground/exposure/template/explain.txt`](../../drishti-banking/src/main/resources/playground/exposure/template/explain.txt) | in plain words: what exposure answers, why paths, the tabs, signs and units; the steps from the paths to EE, PFE, EPE, EEPE and the contributions, worked with case X1 and X2; every term of Main, Config, Data, Netting, Collateral, Exposure, Stats, Contributions and Provenance |
+| [`playground/fva/template/explain.txt`](../../drishti-banking/src/main/resources/playground/fva/template/explain.txt) | in plain words: what FVA answers, why funding costs money, the tabs, signs and units; the steps from the profile to FCA, FBA and FVA, worked with case F1 (a) to (d); every term of Main, Config, Data, Terms and Provenance |
 
 The cell references (`{Name}`, `{Name:v}`) are added when each generator names its Main cells.
 

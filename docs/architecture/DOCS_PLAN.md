@@ -16,8 +16,14 @@
 
 # Documentation plan for 2.9.11.h (internal, for the product owner's approval)
 
-**Status: proposal, 2026-11-07. Nothing is rewritten or deleted until the owner approves.** This file is internal and is deleted
-when 2.9.11.h is released (it supersedes [TUTORIAL_INVENTORY.md](TUTORIAL_INVENTORY.md)).
+**Status, 2026-11-08 (2.9.11.h, branch wip/h-docs):** approved and largely done: 217 → 172 Markdown files under `docs/`; tutorials 22
+(+ index), knowledge 4, the combined guides of §2 written except BANK_DATA_GUIDE (R6) and WORLD_DATA_GUIDE (W1, FUNDS_GUIDE and
+EXTERNAL_DATA stand in); the gates of §5 that can hold today fail (`drishti-console/tests/test_docs_gates.py`, register
+`config/docs-features.yaml`), page budgets and the contract count warn. Still open: guides over their budgets (USER, REPORTS, BUILD,
+DEVELOPER, OPERATIONS, CLUSTER, DATA, EMBED), contracts 51 → 28, a docs/reference folder (references stay in guides/ and admin/),
+FUNCTION_CATALOGUE (a Java test reads it), VIEWMODEL in architecture/ (the frozen renderers name its path), the connector type READMEs
+(served by the API), the screenshots after the g tag. This file is internal and is deleted
+when 2.9.11.h is released (it supersedes TUTORIAL_INVENTORY.md).
 
 **The rules it applies** (owner, 2026-10-26 to 2026-11-06): fewer documents, no repeated content; each fact has one home (a field → its
 data contract, a setting → CONFIGURATION.md, a function → the function catalogue, an endpoint → the API reference, a measure's maths → its
@@ -249,7 +255,7 @@ Knowledge primers and the release notes. Help listed entries: 79 → about 60 (e
 ## 4. The contracts plan: 118 → 28 pages
 
 - **11 pack pages** (`contracts/packs/<pack>.md`, one per pack): every kind, derived kinds included, with its fields table (from
-  `config/packs/<pack>/contracts/<kind>.contract.yaml`) and **one JSON example** from `data/testdata`, formatted, long arrays shortened
+  `config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`) and **one JSON example** from `data/testdata`, formatted, long arrays shortened
   `/* … N more … */`. The 90 `contracts/samples/**` pages fold in; `contracts/packs/README` folds into the index.
 - **16 computed pages** (the 16 sections of `contracts/README`): VAR and EXP move here from VAR_GUIDE and EXPOSURE_GUIDE (contracts are the one
   home for data), FRTB_DATA_STRUCTURES folds into FRTB; TVAL, STR, PNL, TRADING_GROUPINGS, SIMM, NSET, SACCR, COLL, MC, LIM, GRP, CVA, WWR stay.

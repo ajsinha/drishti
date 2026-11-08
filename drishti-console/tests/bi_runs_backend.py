@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A stand-in server for BI runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 6, 7, 14): synthetic data only. It answers the endpoints of section 14.1 with
+"""A stand-in server for BI runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), sections 6, 7, 14): synthetic data only. It answers the endpoints of section 14.1 with
 the run object of 14.3, moves a run queued -> running (progress 0 to 1, a phase) -> done on a clock, publishes every change on
 ``/bi/runs/events`` (and a ``bi-run`` notice on the bell's stream when a visible run ends), and answers a report visual's question with
 ``Prefer: respond-async`` as 200 (in time), 202 (a run), 409 DRS-9082 (confirm first) or 409 DRS-9089 (an interaction that needs a run).
@@ -217,7 +217,7 @@ class RunsBackend(BiBackend):
                 while sent < len(self.events):
                     yield "run", json.dumps(self.events[sent])
                     sent += 1
-        if path == "/me/alerts/stream":
+        if path == "/alerts/stream":
             yield "hello", "{}"
             sent = len(self.notices)
             while True:
@@ -402,7 +402,7 @@ class RunsBackend(BiBackend):
             if tail == "keep":
                 r["expiresAt"] = "2027-01-18T09:14:00Z"
                 return self.view_of(r)
-            if tail == "promote":                                                          # as RunPromotion (BI_DESIGN › BI runs, 9.4 as built)
+            if tail == "promote":                                                          # as RunPromotion (ARCHITECTURE §28 › BI runs, 9.4 as built)
                 b = body or {}
                 name, to = b.get("name") or r["id"], b.get("to") or "dataset"
                 if to not in ("dataset", "report"):

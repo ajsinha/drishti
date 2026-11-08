@@ -76,7 +76,7 @@ def test_my_designs_and_the_workbench_show_proposed_and_live(app_client, backend
     _save_as(backend, monkeypatch, {"proposal": {"id": "P-000042", "name": "ship", "version": 1, "status": "pending"}})
     app_client.post(f"/build/designs/{id_}/propose", json={})
     list_page = app_client.get("/build").text
-    assert 'href="/build/reviews/P-000042"' in list_page and "proposed" in list_page
+    assert 'href="/approvals/sutra/P-000042"' in list_page and "proposed" in list_page
     bench = app_client.get(f"/build/d/{id_}").text
     assert "data-status-chip" in bench and "proposed(P-000042)" in bench
     _save_as(backend, monkeypatch, {"name": "ship", "latest": 3})
@@ -90,25 +90,16 @@ def test_a_reviewer_sees_the_check_matrix_sample_names_and_notes(client, backend
     matrix = {"ok": False, "counts": {"ok": 2, "empty": 1, "error": 1, "noAccess": 0}, "samples": [{"name": "a.json", "status": "ok"}, {"name": "b.json", "status": "ok"}],
               "panels": [{"id": "terms", "cells": [{"status": "ok"}, {"status": "ok"}]}, {"id": "legs", "cells": [{"status": "empty"}, {"status": "error", "message": "boom"}]}]}
 
-    async def proposal(id_, ident=None):
-        return {"id": id_, "name": "ship", "version": 1, "note": "", "author": "ana", "createdAt": "2026-09-30T14:02:11Z", "status": "pending", "reviewer": None,
-                "comment": None, "newVersion": True, "stale": False, "mayApprove": True, "mayWithdraw": False, "text": "rachana: 1\nsutra: ship\nversion: 1\n",
-                "baseText": "", "liveText": "", "previousText": "",
-                "evidence": {"designId": "d1", "designName": "Ship", "rev": 7, "sampleNames": ["a.json", "b.json", "synthetic-1"], "syntheticSamples": ["synthetic-1"],
-                             "notes": "reviewer: look at legs", "matrix": matrix}}
-    monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    page = client.get("/build/reviews/P-000042").text
+    page = _sutra_view(client, backend, monkeypatch, "", "rachana: 1\nsutra: ship\nversion: 1\n",
+                       evidence={"designId": "d1", "designName": "Ship", "rev": 7, "sampleNames": ["a.json", "b.json", "synthetic-1"],
+                                 "syntheticSamples": ["synthetic-1"], "notes": "reviewer: look at legs", "matrix": matrix})
     assert "data-evidence" in page and "some samples fail" in page and 'class="wb-cell-error"' in page and 'title="boom"' in page
     assert "a.json, b.json, synthetic-1" in page and "reviewer: look at legs" in page and "not real data" in page
     assert "SECRET" not in page
 
 
 def test_a_proposal_without_evidence_has_no_evidence_section(client, backend, monkeypatch):
-    async def proposal(id_, ident=None):
-        return {"id": id_, "name": "ship", "version": 1, "note": "", "author": "ana", "createdAt": "2026-09-30T14:02:11Z", "status": "pending", "reviewer": None,
-                "comment": None, "newVersion": True, "stale": False, "mayApprove": False, "mayWithdraw": False, "text": "x", "baseText": "", "liveText": "", "previousText": ""}
-    monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    assert "data-evidence" not in client.get("/build/reviews/P-1").text
+    assert "data-evidence" not in _sutra_view(client, backend, monkeypatch, "", "x")
 
 
 # ---- pack fragments -----------------------------------------------------------------------------------------------------------------
@@ -261,3 +252,12 @@ def test_a_design_that_published_the_live_version_carries_no_base_moved_flag(app
     row["status"] = "live(v2)"
     page = app_client.get(f"/build/d/{id_}").text
     assert '"baseMoved": null' in page and "base moved to" not in page
+
+
+def _sutra_view(client, backend, monkeypatch, before, after, evidence=None, new_version=True):
+    """The Approvals queue's Sutra view (the diff with its moves, the evidence) of a proposal whose texts the server gives as facts."""
+    async def approvals_item(kind, id_, ident=None):
+        return {"detail": {"item": {"kind": kind, "id": id_}, "facts": {"before": before, "after": after, "evidence": evidence, "newVersion": new_version}},
+                "actions": ["ask"]}
+    monkeypatch.setattr(backend, "approvals_item", approvals_item, raising=False)
+    return client.get("/approvals/api/view/sutra/P-000042").text

@@ -20,7 +20,7 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm">
-  {% if form.target and form.target.type == 'report' %}<nav class="dist-binav" aria-label="Business intelligence"><a href="/bi">BI home</a> <a href="/bi/catalogue">Catalogue</a> <a href="/bi/workspaces">Workspaces</a> <a href="/bi/designer">Designer</a> <a href="/reports">All subscriptions</a></nav>{% endif %}
+  {% if form.target and form.target.type == 'report' %}<nav class="dist-binav" aria-label="Business intelligence"><a href="/build">Build home</a> <a href="/bi/catalogue">Catalogue</a> <a href="/bi/workspaces">Workspaces</a> <a href="/bi/designer">Designer</a> <a href="/reports">All subscriptions</a></nav>{% endif %}
   <h1>Subscribe</h1>
   <p class="text-muted-d">Send this by email on a schedule. <b>Each recipient gets their own render</b>: the figures are asked of the data as that person, with their
     row rules and masks, never copied from yours. Someone who may not open it is skipped and the history says why.</p>
@@ -31,25 +31,21 @@
       <input type="hidden" name="title" value="{{ form.title or '' }}">
       <label>Name<input name="name" class="studio-in" value="{{ form.name or '' }}" required maxlength="64"></label>
       <fieldset class="wide dist-when" data-when><legend>When</legend>
-        <label>Send<select class="studio-select" data-when-kind aria-label="How often">
-          <option value="daily">every day</option><option value="business-days">every business day</option><option value="weekly">every week on</option>
-          <option value="month-end">on the last business day of the month</option><option value="hourly">every hour</option><option value="custom">on a schedule I write (advanced)</option></select></label>
-        <label data-when-day-row hidden>Day<select class="studio-select" data-when-day><option value="mon">Monday</option><option value="tue">Tuesday</option><option value="wed">Wednesday</option><option value="thu">Thursday</option><option value="fri">Friday</option><option value="sat">Saturday</option><option value="sun">Sunday</option></select></label>
-        <label data-when-time-row>At<input type="time" class="studio-in" data-when-time value="07:30"></label>
+        <div class="wide" data-when-form>{# how often, the day, the time: drishti-inputs' Form, live (drishti_subscribe-when.js); it writes the schedule below #}</div>
         <p class="text-muted-d wide" data-when-says aria-live="polite"></p>
         <p class="text-muted-d wide" data-model-note aria-live="polite"></p>
         <details class="wide"><summary>Advanced: the schedule as text</summary>
           <label>Schedule<input name="schedule" class="studio-in mono" value="{{ form.schedule or '' }}" list="subWhen" required data-schedule></label>
           <datalist id="subWhen">{% for w in when %}<option value="{{ w }}">{% endfor %}</datalist></details></fieldset>
-      <label>Data for<select name="date" class="studio-select">
+      <label>Data for<drishti-select name="date" label="Data for">
         <option value="today"{% if form.date == 'today' %} selected{% endif %}>the current business day</option>
         <option value="previous"{% if form.date == 'previous' %} selected{% endif %}>the business day before</option>
-        <option value="load"{% if form.date == 'load' %} selected{% endif %}>the date of the load that triggered it (after-load)</option></select></label>
-      <label>Send as<select name="format" class="studio-select">
+        <option value="load"{% if form.date == 'load' %} selected{% endif %}>the date of the load that triggered it (after-load)</option></drishti-select></label>
+      <label>Send as<drishti-select name="format" label="Send as">
         <option value="html"{% if form.format == 'html' %} selected{% endif %}>the email itself (tables in the body)</option>
         <option value="pdf"{% if form.format == 'pdf' %} selected{% endif %}>a PDF attached</option>
         <option value="xlsx"{% if form.format == 'xlsx' %} selected{% endif %}>an Excel workbook attached</option>
-        <option value="jsonl"{% if form.format == 'jsonl' %} selected{% endif %}>a JSON Lines file attached (one row a line)</option></select></label>
+        <option value="jsonl"{% if form.format == 'jsonl' %} selected{% endif %}>a JSON Lines file attached (one row a line)</option></drishti-select></label>
       {% if form.statement %}<p class="text-muted-d wide" data-statement-hint><b>This is a statement page: each recipient gets one statement of their own</b>, made as them
         (their rows and masks), as a page-exact PDF or an Excel workbook that prints on the statement's paper. A role sends one statement to each person in it.</p>
       {% elif form.target and form.target.type == 'report' %}<p class="text-muted-d wide" data-statement-hint>A statement page (<code>layout: statement</code>) is sent as
@@ -57,8 +53,7 @@
       <label class="wide">To (user names, <code>role:NAME</code> for everyone with a role, separated by commas)
         <input name="recipients" class="studio-in mono" value="{{ form.recipients or '' }}" required placeholder="alice, role:risk"></label>
       <label class="wide bi-people">Find people or roles to add
-        <input class="studio-in" data-find-people autocomplete="off" placeholder="type a name or a role to search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="subFindList">
-        <ul class="shr-list" id="subFindList" role="listbox" aria-label="Known people and roles" data-find-list hidden></ul></label>
+        <input class="studio-in" data-find-people autocomplete="off" placeholder="type a name or a role to search"></label>
       {% if opts.ai %}<label class="wide"><input type="checkbox" name="narrative" data-narrative{% if form.narrative %} checked{% endif %}> Open the email with a short written summary
         <span class="text-muted-d">Written by an AI model from <b>each recipient's own</b> figures (what they may see, masked values left out), through your administrator's AI policy.
         {% if opts.mode != 'aggregates' %}The policy here lets the model see labels only, so the summary is left out of every email until an administrator sets <code>drishti.bi.ai.values: aggregates</code>.{% endif %}</span></label>{% endif %}
@@ -69,7 +64,7 @@
         <label><input type="checkbox" name="sms"{% if form.sms %} checked{% endif %}> Text each recipient who has given a number a link to it</label>
         <label>Your own mobile number<input name="phone" class="studio-in" type="tel" autocomplete="tel" placeholder="{{ opts.phone or '+44 20 7946 0000' }}" maxlength="24"></label>
         <span class="text-muted-d">{% if opts.phone %}On file for you: {{ opts.phone }}. {% endif %}A text carries the title and a link, never a figure. Everyone gives their own number (here, or in their own subscription).</span></fieldset>{% endif %}
-      <label class="dist-check"><input type="checkbox" name="enabled" checked> Active</label>
+      <label class="dist-check"><input type="checkbox" name="enabled"{% if form.enabled is not defined or form.enabled %} checked{% endif %}> Active</label>
       <button type="submit" class="btn-pill btn-accent dist-act">Subscribe</button>
       {% if error %}<span class="pnl-err dist-err-near" data-subscribe-err>{{ error }}</span>{% endif %}
       <a class="btn-pill btn-ghost dist-act" href="/reports">Cancel</a>

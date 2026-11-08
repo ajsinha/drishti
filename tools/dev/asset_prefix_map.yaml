@@ -209,7 +209,6 @@ files:
   js/bi-tooltips.js: js/drishti_bi-tooltips.js
   js/bi-transform-view.js: js/drishti_bi-transform-view.js
   js/bi-transform.js: js/drishti_bi-transform.js
-  js/bi-vega.js: js/drishti_bi-vega.js
   js/bi-visuals-format.js: js/drishti_bi-visuals-format.js
   js/bi-visuals.js: js/drishti_bi-visuals.js
   js/bi.js: js/drishti_bi.js

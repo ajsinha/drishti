@@ -17,7 +17,7 @@
 
     resp = await request.app.state.ai.gateway.chat(CallContext(user, roles, "my-feature", ident), ChatRequest.of("question"))
 
-See docs/admin/AI.md."""
+See docs/guides/AI_GUIDE.md."""
 from __future__ import annotations
 
 import time

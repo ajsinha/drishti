@@ -169,7 +169,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shar
 
 def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"):
     if jar() is None or not JAVA.exists():
-        pytest.skip("needs the built server jar (./mvnw -o package -DskipTests -pl drishti-server -am) and JDK 25")
+        pytest.skip("needs the built server jar (./mvnw -o package -DskipTests -pl drishti-app -am) and JDK 25")
     import uvicorn
 
     from core.app import create_app

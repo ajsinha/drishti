@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** BI_DESIGN › BI runs, 18.2b: what makes a report visual depend on who views it, so its answer stays personal. */
+/** ARCHITECTURE §28 › BI runs, 18.2b: what makes a report visual depend on who views it, so its answer stays personal. */
 class ViewerIdentityTest {
 
     @Test

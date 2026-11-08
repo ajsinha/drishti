@@ -17,7 +17,7 @@
 
 # Data contracts of the world-economy pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/world-economy/guides/world-economy.md](../../../config/packs/world-economy/guides/world-economy.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/economy/world-economy/guides/world-economy.md](../../../config/packs/economy/world-economy/guides/world-economy.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -41,7 +41,7 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 
 |  |  |
 |---|---|
-| Contract | [economy.contract.yaml](../../../config/packs/world-economy/contracts/economy.contract.yaml) · version 1.0 |
+| Contract | [economy.contract.yaml](../../../config/packs/economy/world-economy/contracts/economy.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper); CIA, The World Factbook (factbook.json mirror, CC0) |
@@ -52,8 +52,8 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/economy/` |
 | Columns | `NAME`, `ISO3`, `REGION_NAME`, `INCOME_NAME`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `GROWTH`, `INFLATION`, `UNEMPLOYMENT`, `POPULATION_M` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/economy](../samples/world-economy/economy.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/economy](../samples/world-economy.md#economy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -141,7 +141,7 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 
 - required inferred from 100% coverage in 213 documents (213 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key ECONOMY_ID is the field holding the sample catalogue's id (ECON-ABW): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: REGION_NAME, INCOME_NAME, SECTORS[].SECTOR: confirm they are closed lists.
 - number types decided by the field's name: RESERVES_USD_BN amount, TRADE_SHARE rate: confirm amount, rate or integer.
 - no unit stated for the amounts RESERVES_USD_BN, POPULATION_M (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -152,7 +152,7 @@ One headline statistic of one economy: the series, the latest value, the change 
 
 |  |  |
 |---|---|
-| Contract | [macro-indicator.contract.yaml](../../../config/packs/world-economy/contracts/macro-indicator.contract.yaml) · version 1.0 |
+| Contract | [macro-indicator.contract.yaml](../../../config/packs/economy/world-economy/contracts/macro-indicator.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators |
@@ -162,8 +162,8 @@ One headline statistic of one economy: the series, the latest value, the change 
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/macro-indicator/` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/macro-indicator](../samples/world-economy/macro-indicator.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/macro-indicator](../samples/world-economy.md#macro-indicator) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -230,7 +230,7 @@ One headline statistic of one economy: the series, the latest value, the change 
 
 - required inferred from 100% coverage in 3119 documents (3119 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key INDICATOR_ID is the field holding the sample catalogue's id (MACRO-ABW-AGRICULTURE): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: UNIT, FACTS.UNIT: confirm they are closed lists.
 - number types decided by the field's name: HISTORY[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, PREVIOUS, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -241,7 +241,7 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 
 |  |  |
 |---|---|
-| Contract | [economic-forecast.contract.yaml](../../../config/packs/world-economy/contracts/economic-forecast.contract.yaml) · version 1.0 |
+| Contract | [economic-forecast.contract.yaml](../../../config/packs/economy/world-economy/contracts/economic-forecast.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: International Monetary Fund, World Economic Outlook (DataMapper) |
@@ -251,8 +251,8 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/economic-forecast/` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/economic-forecast](../samples/world-economy/economic-forecast.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/economic-forecast](../samples/world-economy.md#economic-forecast) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -315,7 +315,7 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 
 - required inferred from 100% coverage in 192 documents (192 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key FORECAST_ID is the field holding the sample catalogue's id (FCST-ABW-WEO): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: PROJECTIONS[].BASIS: confirm they are closed lists.
 
 ## LABR: Labour market (`labour-market`)
@@ -324,7 +324,7 @@ Unemployment, participation, youth and female labour, and employment and output 
 
 |  |  |
 |---|---|
-| Contract | [labour-market.contract.yaml](../../../config/packs/world-economy/contracts/labour-market.contract.yaml) · version 1.0 |
+| Contract | [labour-market.contract.yaml](../../../config/packs/economy/world-economy/contracts/labour-market.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators |
@@ -334,8 +334,8 @@ Unemployment, participation, youth and female labour, and employment and output 
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/labour-market/` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/labour-market](../samples/world-economy/labour-market.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/labour-market](../samples/world-economy.md#labour-market) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -395,7 +395,7 @@ Unemployment, participation, youth and female labour, and employment and output 
 
 - required inferred from 100% coverage in 185 documents (185 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key LABOUR_ID is the field holding the sample catalogue's id (LABR-AFG): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: BY_SECTOR[].SECTOR: confirm they are closed lists.
 - no unit stated for the amounts VULNERABLE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
@@ -405,7 +405,7 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 
 |  |  |
 |---|---|
-| Contract | [fiscal-position.contract.yaml](../../../config/packs/world-economy/contracts/fiscal-position.contract.yaml) · version 1.0 |
+| Contract | [fiscal-position.contract.yaml](../../../config/packs/economy/world-economy/contracts/fiscal-position.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper) |
@@ -415,8 +415,8 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/fiscal-position/` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/fiscal-position](../samples/world-economy/fiscal-position.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/fiscal-position](../samples/world-economy.md#fiscal-position) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -482,7 +482,7 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 
 - required inferred from 100% coverage in 192 documents (192 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key FISCAL_ID is the field holding the sample catalogue's id (FISC-ABW): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: RATIOS[].ITEM: confirm they are closed lists.
 
 ## ECG: Country group (`country-group`)
@@ -491,7 +491,7 @@ A World Bank region or income group (or the world), computed from its member eco
 
 |  |  |
 |---|---|
-| Contract | [country-group.contract.yaml](../../../config/packs/world-economy/contracts/country-group.contract.yaml) · version 1.0 |
+| Contract | [country-group.contract.yaml](../../../config/packs/economy/world-economy/contracts/country-group.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector macro-groupings over the kind economy |
@@ -565,7 +565,7 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 
 |  |  |
 |---|---|
-| Contract | [region-economy.contract.yaml](../../../config/packs/world-economy/contracts/region-economy.contract.yaml) · version 1.0 |
+| Contract | [region-economy.contract.yaml](../../../config/packs/economy/world-economy/contracts/region-economy.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting, Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting |
@@ -576,8 +576,8 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/region-economy/` |
 | Columns | `ISO3`, `COUNTRY_NAME`, `REGION_CODE`, `NAME`, `POPULATION`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `YEAR`, `SOURCE` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/region-economy](../samples/world-economy/region-economy.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/region-economy](../samples/world-economy.md#region-economy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -635,7 +635,7 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 
 - required inferred from 100% coverage in 59 documents (59 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key REGION_ID is the field holding the sample catalogue's id (REGE-AU-ACT): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ISO3, COUNTRY_NAME, SOURCE, PROVENANCE.SOURCE: confirm they are closed lists.
 
 ## JUR: Jurisdiction (`jurisdiction`)
@@ -644,7 +644,7 @@ A country: government type, capital, legislature and seats by party, office hold
 
 |  |  |
 |---|---|
-| Contract | [jurisdiction.contract.yaml](../../../config/packs/world-economy/contracts/jurisdiction.contract.yaml) · version 1.0 |
+| Contract | [jurisdiction.contract.yaml](../../../config/packs/economy/world-economy/contracts/jurisdiction.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: CIA, The World Factbook (factbook.json mirror, CC0); World Bank, World Development Indicators; World Bank, Worldwide Governance Indicators; UNDP, Human Development Report: composite indices time series |
@@ -654,8 +654,8 @@ A country: government type, capital, legislature and seats by party, office hold
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/jurisdiction/` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/jurisdiction](../samples/world-economy/jurisdiction.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/jurisdiction](../samples/world-economy.md#jurisdiction) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -757,7 +757,7 @@ A country: government type, capital, legislature and seats by party, office hold
 
 - required inferred from 100% coverage in 216 documents (216 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key JURISDICTION_ID is the field holding the sample catalogue's id (JUR-ABW): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: REGION_NAME, LEGISLATURE_STRUCTURE, INDICATORS[].UNIT: confirm they are closed lists.
 - number types decided by the field's name: INDICATORS[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts INDICATORS[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -768,7 +768,7 @@ A political party that won seats in the lower chamber at the most recent electio
 
 |  |  |
 |---|---|
-| Contract | [party.contract.yaml](../../../config/packs/world-economy/contracts/party.contract.yaml) · version 1.0 |
+| Contract | [party.contract.yaml](../../../config/packs/economy/world-economy/contracts/party.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: CIA, The World Factbook (factbook.json mirror, CC0) |
@@ -778,8 +778,8 @@ A political party that won seats in the lower chamber at the most recent electio
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/party/` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/party](../samples/world-economy/party.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/party](../samples/world-economy.md#party) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -832,7 +832,7 @@ A political party that won seats in the lower chamber at the most recent electio
 
 - required inferred from 100% coverage in 282 documents (282 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key PARTY_ID is the field holding the sample catalogue's id (PARTY-ARG-01): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - number types decided by the field's name: TOTAL_SEATS amount, RESULTS[].SHARE rate: confirm amount, rate or integer.
 - no unit stated for the amounts TOTAL_SEATS (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
@@ -842,7 +842,7 @@ The chief of state or head of government of a country as the CIA World Factbook 
 
 |  |  |
 |---|---|
-| Contract | [office-holder.contract.yaml](../../../config/packs/world-economy/contracts/office-holder.contract.yaml) · version 1.0 |
+| Contract | [office-holder.contract.yaml](../../../config/packs/economy/world-economy/contracts/office-holder.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: CIA, The World Factbook (factbook.json mirror, CC0) |
@@ -852,8 +852,8 @@ The chief of state or head of government of a country as the CIA World Factbook 
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/office-holder/` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/office-holder](../samples/world-economy/office-holder.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/office-holder](../samples/world-economy.md#office-holder) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -911,7 +911,7 @@ The chief of state or head of government of a country as the CIA World Factbook 
 
 - required inferred from 100% coverage in 430 documents (430 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key OFFICE_ID is the field holding the sample catalogue's id (OFFC-ABW-COS): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ROLE: confirm they are closed lists.
 
 ## ELEC: Election (`election`)
@@ -920,7 +920,7 @@ The most recent election to a chamber or to the executive, with the system, term
 
 |  |  |
 |---|---|
-| Contract | [election.contract.yaml](../../../config/packs/world-economy/contracts/election.contract.yaml) · version 1.0 |
+| Contract | [election.contract.yaml](../../../config/packs/economy/world-economy/contracts/election.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: CIA, The World Factbook (factbook.json mirror, CC0) |
@@ -930,8 +930,8 @@ The most recent election to a chamber or to the executive, with the system, term
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/election/` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/election](../samples/world-economy/election.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/election](../samples/world-economy.md#election) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1001,7 +1001,7 @@ The most recent election to a chamber or to the executive, with the system, term
 
 - required inferred from 100% coverage in 378 documents (378 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key ELECTION_ID is the field holding the sample catalogue's id (ELEC-ABW-EXE): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: SUMMARY.ELECTORAL_SYSTEM: confirm they are closed lists.
 
 ## REGN: World region (`region`)
@@ -1010,7 +1010,7 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 
 |  |  |
 |---|---|
-| Contract | [region.contract.yaml](../../../config/packs/world-economy/contracts/region.contract.yaml) · version 1.0 |
+| Contract | [region.contract.yaml](../../../config/packs/economy/world-economy/contracts/region.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators; CIA, The World Factbook (factbook.json mirror, CC0) |
@@ -1020,8 +1020,8 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/region/` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/region](../samples/world-economy/region.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/region](../samples/world-economy.md#region) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1088,7 +1088,7 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 
 - required inferred from 100% coverage in 7 documents (7 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key REGION_ID is the field holding the sample catalogue's id (REGN-EAS): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - no unit stated for the amounts URBAN (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
 ## SOCI: Social indicator (`social-indicator`)
@@ -1097,7 +1097,7 @@ A social or governance statistic of one country over time, with the regional com
 
 |  |  |
 |---|---|
-| Contract | [social-indicator.contract.yaml](../../../config/packs/world-economy/contracts/social-indicator.contract.yaml) · version 1.0 |
+| Contract | [social-indicator.contract.yaml](../../../config/packs/economy/world-economy/contracts/social-indicator.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators, World Bank, Worldwide Governance Indicators |
@@ -1107,8 +1107,8 @@ A social or governance statistic of one country over time, with the regional com
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `civic-store` (plugin `delta`), table `<root>/civic/social-indicator/` |
-| Test data | config/packs/world-economy/samples |
-| Worked example | [world-economy/social-indicator](../samples/world-economy/social-indicator.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Test data | config/packs/economy/world-economy/samples |
+| Worked example | [world-economy/social-indicator](../samples/world-economy.md#social-indicator) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1188,7 +1188,7 @@ A social or governance statistic of one country over time, with the regional com
 
 - required inferred from 100% coverage in 4297 documents (4297 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
 - key INDICATOR_ID is the field holding the sample catalogue's id (SOCI-ABW-EDUCATION-SPEND): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: THEME, SOURCE_NAME, REGION_NAME, PROVENANCE.SOURCE, PROVENANCE.DATASET, PROVENANCE.LICENCE, PROVENANCE.ATTRIBUTION, PROVENANCE.URL, MEANING.COMPARED_WITH: confirm they are closed lists.
 - number types decided by the field's name: SERIES[].VALUE amount, BY_REGION[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, CHANGE_5Y, SERIES[].VALUE, BY_REGION[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.

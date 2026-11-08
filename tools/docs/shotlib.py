@@ -154,6 +154,11 @@ def render_panel(panel: dict) -> str:
     """One panel view rendered by the console's own Jinja macro (_macros/panels.html), as the view page does on first paint."""
     import jinja2
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(str(ROOT / "drishti-console" / "web" / "templates")), autoescape=True)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("drishti_half_up", ROOT / "drishti-console" / "core" / "half_up.py")
+    hu = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hu)
+    hu.install(env)                                    # the panel macros' rounding filter
     return env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}').render(p=panel)
 
 
@@ -177,13 +182,13 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
     """Starts the scratch server and console; `extra_env` (a guide's SERVER_ENV) is added to the environment of both."""
     jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-server -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     for name in ("config",):
         if not (work / name).exists() and (ROOT / name).exists():
             (work / name).symlink_to(ROOT / name)
     (work / "sutras").mkdir(exist_ok=True)
-    # a guide's SERVER_ENV wins over these (tutorial 27 loads the public-data packs too)
+    # a guide's SERVER_ENV wins over these (tutorial 6 loads the public-data packs too)
     env = {**os.environ, "DRISHTI_PORT": str(SERVER_PORT), "DRISHTI_PACKS": PACKS, "DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true", "DRISHTI_LABS_CALC": "true",
            "DRISHTI_SUTRAS": str(work / "sutras"), "DRISHTI_PACKS_INSTALLED": str(work / "data" / "packs" / "installed"), **(extra_env or {})}
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)

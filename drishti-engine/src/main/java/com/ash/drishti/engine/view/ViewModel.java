@@ -35,7 +35,7 @@ import java.util.Map;
  * @param selects the panels whose rows or bars set a control when clicked
  * @param layout the Sutra's {@code layout:} (RACHANA_REFERENCE.md 13: areas, columns, split, tabs, sections, sticky, arrange, phone) with each
  *     top-level panel's place ({@code place: {id: {area, order, section, collapsible}}}), or null: the panels flow
- * @param phone what the Sutra says about the phone (MOBILE_DISPLAY.md section 5): {@code panels: {id: {tier, from, rows, columns, sort,
+ * @param phone what the Sutra says about the phone (docs/guides/BUILD_GUIDE.md section 5): {@code panels: {id: {tier, from, rows, columns, sort,
  *     series, figures, tab}}}, {@code order}, {@code default} and the {@code summary} line read against the document; null when it says
  *     nothing (the console then uses each panel kind's default tier)
  * @param contract the ViewModel contract this view speaks, {@code major.minor} ({@link #CONTRACT}; VIEWMODEL.md section 8): a client
@@ -106,7 +106,7 @@ public record ViewModel(
         return new ViewModel(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects, layout, contract, phone);
     }
 
-    /** The same view with what its Sutra says about the phone (MOBILE_DISPLAY.md section 5), or none (null). */
+    /** The same view with what its Sutra says about the phone (docs/guides/BUILD_GUIDE.md section 5), or none (null). */
     public ViewModel withPhone(Map<String, Object> phone) {
         return new ViewModel(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects, layout, contract, phone);
     }

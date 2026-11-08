@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The fingerprint a connector file generated from a pack template carries in its own text (CONNECTOR_FILES.md, "Upgrades"): one comment
+ * The fingerprint a connector file generated from a pack template carries in its own text (docs/guides/DATA_GUIDE.md section 9, "Upgrades"): one comment
  * line after the header,
  *
  * <pre>
@@ -78,6 +78,16 @@ public final class TemplateStamp {
     public static boolean pristine(String text) {
         Optional<Stamp> s = of(text);
         return s.isPresent() && s.get().text().equals(ConnectorFiles.etag(normal(split(text)[1])));
+    }
+
+    /**
+     * The text a tool wrote over a file ({@code after}: the lake move's {@code lake: demo}), stamped again when the file it replaces
+     * ({@code before}) was stamped and never edited, so it still counts as unedited and keeps following its pack's template; otherwise
+     * {@code after} as it is (an edited file stays edited, a file without a stamp gets none).
+     */
+    public static String keepPristine(String before, String after) {
+        Optional<Stamp> s = of(before);
+        return s.isPresent() && pristine(before) ? stamp(after, s.get().pack(), s.get().template()) : after;
     }
 
     /** The text without its stamp line (what a person reads and edits). */

@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Rupaka phase 3: the designer's start (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): your report drafts and a new report on a dataset. Drawn by static/js/drishti_bi-design.js. #}
+{# Rupaka phase 3: the designer's start (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 9): your report drafts and a new report on a dataset. Drawn by static/js/drishti_bi-design.js. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Designer{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-design.css?v={{ ASSET_V }}">{% endblock %}
@@ -25,10 +25,10 @@
   <section class="bi-sec" aria-labelledby="dNew"><h2 id="dNew">New report</h2>
     <form class="bi-form" data-new autocomplete="off">
       <label>Title<input class="studio-in" data-new-title maxlength="200" placeholder="Left empty: Report with the date and time"></label>
-      <label>Model or dataset<select class="studio-select" data-new-dataset required><option value="">Choose a model or a dataset</option></select><small class="text-muted-d">A report reads one model. A dataset from a pack reads as its own small model; make it a shared model later with Make it a model.</small></label>
-      <label>Also add (optional)<select class="studio-select" data-new-also multiple size="4" aria-label="More datasets to open in the Fields pane"></select>
-        <small class="text-muted-d">Hold Ctrl or Shift to choose several. They open beside the main dataset in the Fields pane; link them there.</small></label>
-      <label>Workspace<select class="studio-select" data-new-workspace aria-label="Save the draft in this workspace"></select></label>
+      <label>Model or dataset<drishti-select native class="studio-select" data-new-dataset label="Model or dataset"><option value="">Choose a model or a dataset</option></drishti-select><small class="text-muted-d">A report reads one model. A dataset from a pack reads as its own small model; make it a shared model later with Make it a model.</small></label>
+      <label>Also add (optional)<drishti-multiselect class="studio-select" data-new-also label="More datasets to open in the Fields pane" placeholder="none"></drishti-multiselect>
+        <small class="text-muted-d">Pick as many as you need. They open beside the main dataset in the Fields pane; link them there.</small></label>
+      <label>Workspace<drishti-select native class="studio-select" data-new-workspace label="Save the draft in this workspace"></drishti-select></label>
       <button type="submit" class="btn-pill btn-accent">Start designing</button>
     </form>
     <p class="bi-empty" data-no-datasets hidden>There is no dataset you can read yet. <a href="/bi/datasets">Open the Datasets page</a> to see what exists, or <a data-new-wizard href="/bi/datasets/new-layer">make a new dataset</a>.</p></section>
@@ -40,7 +40,7 @@
     <p class="text-muted-d">A board is a report whose pages are walls of tiles (visuals of your reports, with alert colours) for a screen: kiosk, rotation and live updates. It opens in the report designer, where a page's layout is grid or board.</p>
     <form class="bi-form" data-new-board autocomplete="off">
       <label>Title<input class="studio-in" data-new-board-title maxlength="200" value="My board"></label>
-      <label>Workspace<select class="studio-select" data-new-board-workspace aria-label="Save the board draft in this workspace"></select></label>
+      <label>Workspace<drishti-select native class="studio-select" data-new-board-workspace label="Save the board draft in this workspace"></drishti-select></label>
       <button type="submit" class="btn-pill btn-accent">Start a board</button>
     </form>
     <h3>Your board drafts</h3>
@@ -54,4 +54,4 @@
     <p class="bi-empty" data-no-samples hidden>No shipped reports or boards on this site.</p></section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-design.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "_designer_kit.html" %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-design.js?v={{ ASSET_V }}"></script>{% endblock %}

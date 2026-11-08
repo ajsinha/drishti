@@ -34,7 +34,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The quick wins of docs/architecture/COMPUTED_ATTRIBUTES.md (2.9.7) on the packs' samples: the derived kinds nset-mtm and cpty-mtm (net MtM,
+ * The quick wins of docs/architecture/DATA_ARCHITECTURE.md section 12 (2.9.7) on the packs' samples: the derived kinds nset-mtm and cpty-mtm (net MtM,
  * gross parts, live trades, netting benefit, uncollateralised exposure, by product group) equal to the stored totals they will replace, shown
  * on the netting-set and counterparty pages beside the stored figures; stress-scenario-pnl adding the desks' results with each desk's limit
  * use against its positive limit (F5); and the "check" panels of the collateral balance, credit limit, SA-CCR and stress-result pages.
@@ -65,7 +65,7 @@ class ComputedAttributesPagesTest {
     }
 
     private static List<JsonNode> samples(String pack, String kind) throws Exception {
-        return Files.readAllLines(PACKS.resolve(pack).resolve("samples").resolve(kind + ".jsonl")).stream().filter(l -> !l.isBlank()).map(l -> {
+        return Files.readAllLines(com.ash.drishti.api.PackFolders.of(PACKS, pack).resolve("samples").resolve(kind + ".jsonl")).stream().filter(l -> !l.isBlank()).map(l -> {
             try {
                 return JSON.readTree(l);
             } catch (Exception e) {

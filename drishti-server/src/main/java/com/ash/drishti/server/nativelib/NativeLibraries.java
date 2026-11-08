@@ -34,7 +34,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 /**
- * The server's native libraries (HIGH_PERFORMANCE_NATIVE.md section 6; OPERATIONS.md section 2.1): binds BLAS once at start from
+ * The server's native libraries (HIGH_PERFORMANCE_NATIVE.md section 6; OPERATIONS_GUIDE.md section 2.1): binds BLAS once at start from
  * {@code drishti.native.*} before any engine sums ({@code VarConfiguration} asks for this bean first), and says what it chose:
  *
  * <ul>

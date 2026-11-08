@@ -22,7 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * What a Sutra says about the phone (MOBILE_DISPLAY.md sections 4 and 5), as the view model carries it: each top-level panel's tier and
+ * What a Sutra says about the phone (docs/guides/BUILD_GUIDE.md sections 4 and 5), as the view model carries it: each top-level panel's tier and
  * compact options with the layer that set them ({@code from: fragment} or {@code sutra}), the screen's phone order and default tier, and
  * the summary line read against the document. The console adds the kind defaults, the site's, pack's and edition's settings and caps,
  * resolves the tier per panel and draws the phone page. Pure.

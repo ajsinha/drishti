@@ -213,7 +213,7 @@ class IntradayTest(unittest.TestCase):
             self.assertFalse(Path(t, "none").exists())
 
     def test_the_committed_sample_is_a_batch_of_the_contract(self):
-        f = C.ROOT / "config" / "packs" / "market-risk" / "samples" / "intraday" / "scenario-pv.2026-09-30.jsonl"     # batch I-2026-09-30-001
+        f = C.ROOT / "config" / "packs" / "banking" / "market-risk" / "samples" / "intraday" / "scenario-pv.2026-09-30.jsonl"     # batch I-2026-09-30-001
         rows = C.read_jsonl(f)
         self.assertEqual([r["TRADE_STATUS"] for r in rows].count("CANCELLED"), 1)
         self.assertEqual([r["TRADE_STATUS"] for r in rows].count("NEW"), 1)

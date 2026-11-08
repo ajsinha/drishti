@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The compute worker SDK (docs/architecture/PYTHON_COMPUTE.md section 8): the pure-Python Arrow codec (and its agreement with pyarrow when
+"""The compute worker SDK (docs/guides/NOTEBOOK_GUIDE.md section 8): the pure-Python Arrow codec (and its agreement with pyarrow when
 pyarrow is installed), the sample engine, and the worker's protocol, sandbox and isolation in both modes. Warm mode runs everywhere,
 Windows included; fork mode skips on Windows (there is no fork). Nothing here needs a native binary."""
 from __future__ import annotations

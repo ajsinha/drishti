@@ -46,6 +46,15 @@
     return e;
   }
   function icon(name) { return el('i', { cls: 'bi bi-' + name, 'aria-hidden': 'true' }); }
+  /** drishti-inputs' Select (<drishti-select>) for one setting: its data-tc-k key, its control's name, [{value, label, disabled}], the value
+      picked (else the first), fn(value as text) on a person's pick. */
+  function pick(key, label, options, value, fn, off) {
+    var s = el('drishti-select', { cls: 'tc-pick', 'data-tc-k': key });
+    s.options = { label: label, options: options, disabled: !!off,
+      value: options.some(function (o) { return String(o.value) === String(value); }) ? String(value) : undefined };
+    s.addEventListener('drishti:change', function (e) { fn(e.detail.value == null ? '' : String(e.detail.value)); });
+    return s;
+  }
   function group(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
   /** The theme's tokens (drishti_charts.js reads a shadow host's in an embedded view); the palette without repeats, since a theme may give
       two tones one colour (Crimson's link and accent), and two series must never share one. */
@@ -66,7 +75,7 @@
     });
     return t;
   }
-  function inField(e) { var t = e.target; return t && t.closest && !!t.closest('input, select, textarea, [contenteditable]'); }
+  function inField(e) { var t = e.target; return t && t.closest && !!t.closest('input, select, textarea, [contenteditable], drishti-select, .di-pop'); }
   function fileName(s) { return String(s || 'table').replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'table'; }
   function today() { return new Date().toISOString().slice(0, 10); }
   function download(blob, name) {
@@ -178,23 +187,23 @@
   Dialog.prototype.say = function (text) { this.live.textContent = ''; var l = this.live; setTimeout(function () { l.textContent = text; }, 30); };
 
   // ---- the settings pane ---------------------------------------------------------------------------------------------------------
-  Dialog.prototype.colOptions = function (sel, pickable, value, none) {
-    if (none) { sel.appendChild(el('option', { value: '', text: none })); }
+  /** The columns a setting may pick: a masked one greyed (hidden for your role), one of another kind left out; none first when given. */
+  Dialog.prototype.colOptions = function (pickable, none) {
+    var out = none ? [{ value: '', label: none }] : [];
     this.cols.forEach(function (c) {
       var ok = c.chartable && pickable(c);
       if (!ok && c.chartable) { return; }                // not this role's kind (a text column as a Y): left out, not greyed
-      sel.appendChild(el('option', { value: c.name, text: c.label + (c.chartable ? '' : ' (hidden for your role)'), disabled: !ok, selected: c.name === value }));
+      out.push({ value: c.name, label: c.label + (c.chartable ? '' : ' (hidden for your role)'), disabled: !ok });
     });
-    sel.value = value == null ? '' : value;
-    return sel;
+    return out;
   };
   Dialog.prototype.field = function (label, control, cls) {
     var id = 'tc-' + Math.random().toString(36).slice(2, 8);
-    control.id = id;
+    (control.component ? control.component.control : control).id = id;
     return el('div', { cls: 'tc-f ' + (cls || '') }, [el('label', { for: id, text: label }), control]);
   };
   Dialog.prototype.renderPane = function (empty) {
-    var self = this, s = this.settings, pane = this.pane, act = document.activeElement, keep = act && pane.contains(act) ? act.getAttribute('data-tc-k') : null;
+    var self = this, s = this.settings, pane = this.pane, act = document.activeElement, kept = act && pane.contains(act) ? act.closest('[data-tc-k]') : null, keep = kept ? kept.getAttribute('data-tc-k') : null;
     pane.textContent = '';
     if (empty || !s) { pane.appendChild(el('p', { cls: 'tc-note', text: 'Nothing here can be charted.' })); return; }
     var types = E().types(this.cols);
@@ -207,15 +216,15 @@
     pane.appendChild(el('fieldset', { cls: 'tc-group' }, [el('legend', { text: 'Type' }), tg]));
     var xcol = this.col(s.x.field), roleX = xcol ? xcol.role : null;
     var xPick = s.type === 'pie' ? function (c) { return c.role !== 'number' || c.id; } : s.type === 'scatter' ? function (c) { return c.role === 'number'; } : function () { return true; };
-    var xs = this.colOptions(el('select', { 'data-tc-k': 'x', onchange: function () { self.change(function (n) { n.x.field = this.value; n.x.bucket = 'auto'; }.bind(this)); } }), xPick, s.x.field);
+    var xs = pick('x', 'X', this.colOptions(xPick), s.x.field, function (v) { self.change(function (n) { n.x.field = v; n.x.bucket = 'auto'; }); });
     var xRow = [this.field('X', xs)];
     if (roleX === 'date') {
-      var bk = el('select', { 'data-tc-k': 'bucket', onchange: function () { var v = this.value; self.change(function (n) { n.x.bucket = v; }); } });
-      Object.keys(BUCKET_TEXT).forEach(function (b) { bk.appendChild(el('option', { value: b, text: BUCKET_TEXT[b], selected: s.x.bucket === b })); });
+      var bk = pick('bucket', 'Dates', Object.keys(BUCKET_TEXT).map(function (b) { return { value: b, label: BUCKET_TEXT[b] }; }), s.x.bucket,
+        function (v) { self.change(function (n) { n.x.bucket = v; }); });
       xRow.push(this.field('Dates', bk));
       if (s.type === 'line' || s.type === 'area' || s.type === 'combo') {
-        var gp = el('select', { 'data-tc-k': 'gaps', onchange: function () { var v = this.value; self.change(function (n) { n.x.gaps = v; }); } },
-          [el('option', { value: 'connect', text: 'Connect across gaps', selected: s.x.gaps === 'connect' }), el('option', { value: 'break', text: 'Break at missing business days', selected: s.x.gaps === 'break' })]);
+        var gp = pick('gaps', 'Gaps', [{ value: 'connect', label: 'Connect across gaps' }, { value: 'break', label: 'Break at missing business days' }], s.x.gaps,
+          function (v) { self.change(function (n) { n.x.gaps = v; }); });
         xRow.push(this.field('Gaps', gp));
       }
     }
@@ -223,14 +232,13 @@
     pane.appendChild(this.seriesGroup(s));
     var rest = [];
     if (s.type !== 'pie' && s.type !== 'combo') {
-      var sp = this.colOptions(el('select', { 'data-tc-k': 'split', onchange: function () { var v = this.value; self.change(function (n) { n.split = v || null; }); } }),
-        function (c) { return c.role !== 'number' && c.name !== s.x.field; }, s.split, 'None');
+      var sp = pick('split', 'Split by', this.colOptions(function (c) { return c.role !== 'number' && c.name !== s.x.field; }, 'None'), s.split || '',
+        function (v) { self.change(function (n) { n.split = v || null; }); });
       rest.push(this.field('Split by', sp));
     }
-    var sortBy = el('select', { 'data-tc-k': 'sort', onchange: function () { var v = this.value.split(':'); self.change(function (n) { n.sort = { by: v[0], dir: v[1], series: 0 }; }); } });
-    [['x:asc', 'X, ascending'], ['x:desc', 'X, descending'], ['value:desc', 'Value, largest first'], ['value:asc', 'Value, smallest first']].forEach(function (o) {
-      sortBy.appendChild(el('option', { value: o[0], text: o[1], selected: s.sort.by + ':' + s.sort.dir === o[0] }));
-    });
+    var sortBy = pick('sort', 'Sort', [['x:asc', 'X, ascending'], ['x:desc', 'X, descending'], ['value:desc', 'Value, largest first'], ['value:asc', 'Value, smallest first']]
+      .map(function (o) { return { value: o[0], label: o[1] }; }), s.sort.by + ':' + s.sort.dir,
+      function (t) { var v = t.split(':'); self.change(function (n) { n.sort = { by: v[0], dir: v[1], series: 0 }; }); });
     if (s.type !== 'scatter') { rest.push(this.field('Sort', sortBy)); }
     if (roleX !== 'date' && s.type !== 'scatter') {
       var top = el('input', { type: 'number', min: '0', max: '1000', step: '1', inputmode: 'numeric', value: String(s.top.n), 'data-tc-k': 'top', 'aria-describedby': 'tcTopHint',
@@ -249,7 +257,7 @@
     opts.push(this.check('Labels', s.labels, 'labels', function (n, v) { n.labels = v; }));
     rest.push(el('div', { cls: 'tc-f tc-opts' }, opts));
     pane.appendChild(el('fieldset', { cls: 'tc-group' }, [el('legend', { text: 'Arrange' })].concat(rest)));
-    if (keep) { var f = pane.querySelector('[data-tc-k="' + keep + '"]'); if (f) { f.focus(); } }
+    if (keep) { var f = pane.querySelector('[data-tc-k="' + keep + '"]'); if (f) { if (f.component) { f.component.focus(); } else { f.focus(); } } }
   };
   Dialog.prototype.check = function (label, on, key, fn) {
     var self = this, box = el('input', { type: 'checkbox', checked: on, 'data-tc-k': key, onchange: function () { var v = this.checked; self.change(function (n) { fn(n, v); }); } });
@@ -259,23 +267,21 @@
     var self = this, box = el('fieldset', { cls: 'tc-group tc-series' }, [el('legend', { text: s.type === 'pie' ? 'Value' : 'Y series' })]);
     var right = s.type !== 'pie' && s.type !== 'scatter';
     s.series.forEach(function (e, i) {
-      var f = self.colOptions(el('select', { 'data-tc-k': 's' + i + '-field', 'aria-label': 'Series ' + (i + 1) + ' column',
-        onchange: function () { var v = this.value; self.change(function (n) { var x = n.series[i]; if (v) { x.field = v; if (x.agg === 'count') { x.agg = 'sum'; } } else { x.field = null; x.agg = 'count'; } }); } }),
-      function (c) { return c.role === 'number' && !c.id; }, e.field || '', s.type === 'scatter' ? null : 'Rows (count)');
+      var f = pick('s' + i + '-field', 'Series ' + (i + 1) + ' column', self.colOptions(function (c) { return c.role === 'number' && !c.id; }, s.type === 'scatter' ? null : 'Rows (count)'),
+        e.field || '', function (v) { self.change(function (n) { var x = n.series[i]; if (v) { x.field = v; if (x.agg === 'count') { x.agg = 'sum'; } } else { x.field = null; x.agg = 'count'; } }); });
       var aggs = s.type === 'pie' ? ['sum', 'count'] : s.type === 'scatter' ? ['none', 'sum', 'avg', 'count', 'min', 'max'] : ['sum', 'avg', 'count', 'min', 'max'];
-      var ag = el('select', { 'data-tc-k': 's' + i + '-agg', 'aria-label': 'Series ' + (i + 1) + ' aggregation', disabled: !e.field,
-        onchange: function () { var v = this.value; self.change(function (n) { n.series[i].agg = v; }); } });
-      aggs.forEach(function (a) { ag.appendChild(el('option', { value: a, text: AGG_TEXT[a], selected: e.agg === a })); });
+      var ag = pick('s' + i + '-agg', 'Series ' + (i + 1) + ' aggregation', aggs.map(function (a) { return { value: a, label: AGG_TEXT[a] }; }), e.agg,
+        function (v) { self.change(function (n) { n.series[i].agg = v; }); }, !e.field);
       var ctl = el('div', { cls: 'tc-sctl' }, [f, ag]);
       var row = el('div', { cls: 'tc-srow', role: 'group', 'aria-label': 'Series ' + (i + 1) }, [el('span', { cls: 'tc-snum mono', 'aria-hidden': 'true', text: String(i + 1) }), ctl]);
       if (right) {
-        var ax = el('select', { 'data-tc-k': 's' + i + '-axis', 'aria-label': 'Series ' + (i + 1) + ' axis', onchange: function () { var v = this.value; self.change(function (n) { n.series[i].axis = v; }); } },
-          [el('option', { value: 'left', text: 'Left axis', selected: e.axis === 'left' }), el('option', { value: 'right', text: 'Right axis', selected: e.axis === 'right' })]);
+        var ax = pick('s' + i + '-axis', 'Series ' + (i + 1) + ' axis', [{ value: 'left', label: 'Left axis' }, { value: 'right', label: 'Right axis' }], e.axis,
+          function (v) { self.change(function (n) { n.series[i].axis = v; }); });
         ctl.appendChild(ax);
       }
       if (s.type === 'combo') {
-        var ty = el('select', { 'data-tc-k': 's' + i + '-type', 'aria-label': 'Series ' + (i + 1) + ' drawn as', onchange: function () { var v = this.value; self.change(function (n) { n.series[i].type = v; }); } });
-        ['bar', 'line', 'area'].forEach(function (t) { ty.appendChild(el('option', { value: t, text: t[0].toUpperCase() + t.slice(1), selected: e.type === t })); });
+        var ty = pick('s' + i + '-type', 'Series ' + (i + 1) + ' drawn as', ['bar', 'line', 'area'].map(function (t) { return { value: t, label: t[0].toUpperCase() + t.slice(1) }; }), e.type,
+          function (v) { self.change(function (n) { n.series[i].type = v; }); });
         ctl.appendChild(ty);
       }
       if (s.series.length > 1) {
@@ -467,20 +473,30 @@
       self.status.textContent += ' · Chart all failed: ' + (err && err.message ? err.message : err);
     });
   };
+  /** The chart's data as a table, drawn by drishti-grid (Drishti Elements): the engine's figures as they are (the grid sums nothing:
+      clientAggregation false), sortable, the first column pinned; loaded the first time it is asked for. */
   Dialog.prototype.drawTable = function (m) {
-    var g = E().exportGrid(m, this.settings, this.src.title), PE = window.Drishti.pivotEngine || (window.drishtiModules || {}).pivotEngine;
-    var t = el('table', { cls: 'tbl', 'data-plain': true, 'data-no-chart': true, 'aria-label': 'The chart’s data' });
-    t.appendChild(el('thead', {}, [el('tr', {}, g.header.map(function (h) { return el('th', { scope: 'col', text: h }); }))]));
-    var b = el('tbody');
-    g.rows.forEach(function (r) {
-      b.appendChild(el('tr', {}, r.map(function (v, i) {
-        var n = typeof v === 'number';
-        return el(i ? 'td' : 'th', { scope: i ? null : 'row', cls: n ? 'num mono' : 'mono', text: v == null ? '' : n && PE ? PE.format(v, 'compact') : String(v) });
-      })));
+    var g = E().exportGrid(m, this.settings, this.src.title), PE = window.Drishti.pivotEngine || (window.drishtiModules || {}).pivotEngine, self = this;
+    var EL = window.Drishti.elements;
+    if (!EL || !(EL.grid || EL.load)) { this.tableBox.textContent = 'The table needs the Elements grid (drishti-grid), which this page did not load.'; return; }
+    if (!EL.grid) {
+      EL.load('drishti-grid').then(function () { if (self.view === 'table' && self.last === m) { self.drawTable(m); } },
+        function (err) { self.tableBox.textContent = 'The table could not be drawn: ' + (err && err.message ? err.message : err); });
+      return;
+    }
+    var cols = g.header.map(function (h, i) {
+      var num = g.rows.some(function (r) { return typeof r[i] === 'number'; });
+      return { id: 'c' + i, field: 'c' + i, header: h, type: num ? 'number' : 'text', pinned: i ? null : 'left', width: i ? 120 : 180,
+        enableRowGroup: false, enablePivot: false, enableValue: false,
+        format: function (v) { return v == null ? '' : typeof v === 'number' && PE ? PE.format(v, 'compact') : String(v); } };
     });
-    t.appendChild(b);
+    var rows = g.rows.map(function (r, j) { var o = { __id: String(j) }; r.forEach(function (v, i) { o['c' + i] = v; }); return o; });
+    if (this.tgrid) { this.tgrid.destroy(); }
     this.tableBox.textContent = '';
-    this.tableBox.appendChild(t);
+    var box = el('div', { cls: 'tc-grid' });
+    this.tableBox.appendChild(box);
+    this.tgrid = new EL.grid.Grid(box, { columns: cols, rows: rows, getRowId: function (r) { return r.__id; }, layout: 'wells', density: 'compact', chrome: false,
+      clientAggregation: false, checkboxes: false, rowSelection: 'none', label: 'The chart’s data' });
   };
   Dialog.prototype.toggleTable = function () {
     this.view = this.view === 'table' ? 'chart' : 'table';

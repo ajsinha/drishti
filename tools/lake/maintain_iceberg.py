@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Iceberg tables in ``lake maintain`` and Admin -> Lakes (docs/admin/OPERATIONS.md, "Iceberg lakes"). Delta stays the default;
+"""Iceberg tables in ``lake maintain`` and Admin -> Lakes (docs/guides/OPERATIONS_GUIDE.md, "Iceberg lakes"). Delta stays the default;
 a lake whose ``format: iceberg`` (or whose tables are Iceberg tables: ``<root>/<domain>/<table>/metadata/*.metadata.json``) is maintained
 by Drishti's own Iceberg maintenance (IcebergMaintenance in the server's exec jar, engine native), each step one Iceberg commit:
 
@@ -72,15 +72,25 @@ def tables(root: str, domains: list[str], options: dict | None = None) -> list[s
 
 
 def current_metadata(t: pathlib.Path) -> dict | None:
-    """The table's current metadata (version-hint.text, else the highest version), or None."""
+    """The table's current metadata, found as drishti-iceberg's PathTableOps and the Apache library find it: version-hint.text's vN, else the
+    highest version (vN, or a catalog's NNNNN-uuid); gzip-compressed metadata files (vN.gz.metadata.json, *.metadata.json.gz) included."""
     m = t / "metadata"
     hint = m / "version-hint.text"
     if hint.is_file():
-        f = m / f"v{hint.read_text(encoding='utf-8').strip()}.metadata.json"
-        if f.is_file():
-            return json.loads(f.read_text(encoding="utf-8"))
-    files = sorted(m.glob("*.metadata.json"), key=lambda f: (int(VERSION.match(f.name).group(1)) if VERSION.match(f.name) else -1, f.stat().st_mtime))
-    return json.loads(files[-1].read_text(encoding="utf-8")) if files else None
+        n = hint.read_text(encoding="utf-8").strip()
+        for name in (f"v{n}.metadata.json", f"v{n}.gz.metadata.json", f"v{n}.metadata.json.gz"):
+            if (m / name).is_file():
+                return read_metadata(m / name)
+    files = sorted([*m.glob("*.metadata.json"), *m.glob("*.metadata.json.gz")],
+                   key=lambda f: (int(VERSION.match(f.name).group(1)) if VERSION.match(f.name) else -1, f.stat().st_mtime))
+    return read_metadata(files[-1]) if files else None
+
+
+def read_metadata(f: pathlib.Path) -> dict:
+    """A metadata file's JSON, gunzipped when it is gzip-compressed (write.metadata.compression-codec: gzip)."""
+    import gzip
+    data = f.read_bytes()
+    return json.loads(gzip.decompress(data) if data[:2] == b"\x1f\x8b" else data)
 
 
 def summary(t: pathlib.Path) -> dict:

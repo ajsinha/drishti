@@ -50,7 +50,7 @@ settings:
 auth: None; a local file read by the server process (file-system permissions only).
 licence: DuckDB JDBC driver 1.5.6 (MIT), bundled; it carries DuckDB's native library inside the jar, unpacked at start.
 windows: The connector reads on Windows (the native library is inside the jar, no .exe); a load cannot rename a file over one the server holds open, so load into a new path and switch path, or stop the server; tools/load-duckdb.sh needs bash.
-doc: docs/connectors/DUCKDB_CONNECTOR.md
+doc: plugins/drishti-plugin-duckdb/README.md
 ---
 # The duckdb connector
 
@@ -94,7 +94,7 @@ DuckDB 1.5 or later wrote the file (the storage format).
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9).
 <!-- settings:end -->
 
 ## Data structure
@@ -111,12 +111,36 @@ CREATE TABLE trading.entity_dates (kind VARCHAR, business_date DATE, rows BIGINT
                                    PRIMARY KEY (kind, business_date));
 ```
 
-- **Id rule:** the `id` column; one row per `(kind, id, business_date)`. The sort order lets DuckDB's zone maps skip every row
-  group of other days, so a point read touches one row group.
-- **Document:** `doc` is the JSON document as the pack's kind defines it; nested lists stay inside it.
-- **Promoted columns:** a path `counterparty.id` is the column `counterparty__id`; a column is `DOUBLE` when the first value the
-  loader meets is a number, else `VARCHAR`.
-- **`entity_dates`** lists the days and when they were loaded; a file without it still works (one grouped scan of two columns).
+- **Id rule:** the `id` column; one row per `(kind, id, business_date)`.
+- **Document:** `doc` is the JSON document as the pack's kind defines it; nested lists stay inside it. It stays whole so any question
+  about it can still be asked in SQL (DuckDB's `json` extension is in the JDBC driver); the 1.5 storage format compresses it with ZSTD.
+- **Promoted columns:** copies of the fields questions filter, sort, group and link by; a path `counterparty.id` is the column
+  `counterparty__id`; a column is `DOUBLE` (ALP-compressed) when the first value the loader meets is a number, else `VARCHAR`
+  (dictionary-compressed: a few hundred books cost almost nothing). A day's columns are read without touching the documents. The
+  connector serves a path as a column only when the table has it; a declared path the table lacks shows in Health.
+- **`entity_dates`** lists each kind's days, rows and load time, so the connector never scans the table to learn the days; a file
+  without it still works (one grouped scan of two columns).
+- **Why the sort order and no index.** DuckDB keeps the minimum and maximum of every column of every row group (122,880 rows): with
+  each day of each kind written contiguously and sorted by id, a query naming a kind and a day skips every other day's row groups, and
+  one naming an id reads one row group. An ART index on `(kind, id, business_date)` was measured to make no difference to the point
+  read, while making the file larger and the load slower, so the loader builds none.
+- **One file, a schema per domain:** the six banking connectors share one instance, one memory limit and one buffer pool, and a load
+  replaces every domain at once, consistently.
+
+One row, for one trade on one day:
+
+```
+kind            trade
+id              MX-20000001
+business_date   2026-09-17
+doc             {"SOURCE_SYSTEM": "MUREX", "TRADE_DATE": "2025-07-25", "TRADE_ID": "MX-20000001", …}
+TRADE_ID        MX-20000001
+PRODUCT_TYPE    IRS_FIXFLOAT
+CURRENCY        AUD
+QUANTITY        242000000.0
+PORTFOLIO       BOOK-RATES-3
+COUNTERPARTY    CP-MERIDIAN-RE
+```
 
 ## Examples
 
@@ -124,33 +148,182 @@ CREATE TABLE trading.entity_dates (kind VARCHAR, business_date DATE, rows BIGINT
 # config/connectors/trade-endur.yaml
 plugin: duckdb
 kinds: [trade]
+description: Trading documents in an embedded DuckDB file
 settings:
   domain: trading
   path: ${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}
   memory-limit: ${DRISHTI_DUCKDB_MEMORY:1GB}
   table: trading.entities
   pool-size: '8'
-  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,CURRENCY,QUANTITY,COUNTERPARTY,PORTFOLIO
+  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_SUB_TYPE,PRODUCT_GROUP,TRADE_STATUS,TRADE_VERSION,BUY_SELL_CODE,CURRENCY,QUANTITY,TRADE_DATE,MATURITY_DATE,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID
 ```
 
-Ready-made files for the six banking domains: `config/connectors.examples/duckdb/`. Load data with
-`tools/load-duckdb.sh data/duckdb/drishti.duckdb` (add `--trades 10000 --days 3` for a generated book, `--keep-days N` for retention).
+The pack declares the promoted columns on the connector that stores the kind (the trading pack on `trade-endur`, exactly as for Delta
+Lake and PostgreSQL); a connector file replaces the pack's template wholesale, so it repeats that `layout`. Ready-made files for the six
+banking domains: `config/connectors.examples/duckdb/`. Every setting is also in
+[CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#duckdb).
+
+Load data:
+
+```bash
+tools/load-duckdb.sh data/duckdb/drishti.duckdb                              # the banking samples
+tools/load-duckdb.sh data/duckdb/drishti.duckdb --trades 10000 --days 3      # and 10,000 generated trades a day for 3 days
+tools/load-duckdb.sh data/duckdb/drishti.duckdb --keep-days 2557             # keep seven years
+```
+
+Loader options (`DuckDbLoader FILE|- DATABASE`, through `tools/load-duckdb.sh [database]`): `--recreate` (drop the existing rows of
+each domain the stream reaches; other domains are copied unchanged), `--keep-days N` (0: keep everything), `--as-of yyyy-MM-dd` (a plain
+file's business date; refused for a tar), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`),
+`--max-drop-share F` (0.5), `--force-drop`, `--parsers N` (8, or the cores if fewer), `--memory-limit` (`2GB`), `--threads N` (every
+core); the script adds `--trades N --days D` for a generated book. Input rows are `{"domain", "kind", "id", "date", "doc", "columns"}`,
+filed by the [load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo): a tar of
+`<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date; a plain file (`<kind>.<YYYY-MM-DD>.jsonl`, or `-`) is one kind
+on one date (`--as-of`, else its `.ready` file's, else its name's, else the business today). A plain file of two kinds is refused.
 
 ## Troubleshooting
 
-- `DOWN: no DuckDB file at …`: never loaded, or `path` is wrong; run the loader, the file is opened within `refresh-seconds`.
-- `DOWN: DuckDB file … not opened: …`: the file is locked by a writer, damaged, or from a newer DuckDB; never open it read-write
-  while the server runs.
-- `UP (catalogue not refreshed: trading.entities is not in …)`: check `table`, or load that domain.
-- `UP (not laid out as the pack declares: …; searches read documents)`: the file lacks the promoted columns; reload with the loader.
-- Loader: `another load of … is running`: wait for the first. A `.stage`, `.loading` or `.tmp` beside the file is from a killed load
-  and is removed by the next.
-- Resident memory a gigabyte above the heap: DuckDB's native memory, bounded by `memory-limit`.
+`GET /api/v1/admin/health` shows each connector and its catalogue; `generation` counts the files opened since start (one more after each
+load):
 
-Every health text is in the full document, section *Diagnosing*.
+```json
+{"name": "trade-endur", "health": "UP", "cache": {"ids": 10000, "kinds": 1, "datesIndexed": 10, "columnSets": 2, "generation": 3}}
+```
+
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| `DOWN: no DuckDB file at …` | never loaded, or `path` is wrong | run the loader; the file is opened within `refresh-seconds`. Until then reads fail with `DRS-1003` (the connector cannot tell what it holds, so no other store answers instead) |
+| `DOWN: DuckDB file … not opened: …` | locked by a writer, damaged, or from a newer DuckDB | never open the served file read-write; load through the loader's swap |
+| `UP (catalogue not refreshed: trading.entities is not in …)` | the file has no such domain | check `table`, or load that domain |
+| `UP (not laid out as the pack declares: trade (0 of 19 columns); searches read documents)` | the file lacks the promoted columns | reload with the loader, with the `columns` in each row |
+| searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns` and reload |
+| type-ahead misses new trades, `generation` unchanged | the load finished less than `refresh-seconds` ago, or failed before the rename | wait; check the loader's output |
+| loader: `another load of … is running` | two loads of one file at once | wait for the first |
+| a `.stage`, `.loading` or `.tmp` beside the file | a load was killed | harmless: the next load deletes them |
+| loader: `… retention would drop … rows …; nothing was dropped` | `--keep-days` would drop more than `--max-drop-share` of a domain | check the dates; `--force-drop` if intended |
+| resident memory a gigabyte above the heap | DuckDB's native memory | expected; bounded by `memory-limit` |
+
+## Loading, and replacing the file under a running server
+
+DuckDB lets one process write a file, or any number read it, never both. The server holds the file read-only, so the loader builds a
+new file and swaps it in:
+
+1. **Stage.** The stream is parsed on `--parsers` threads in batches of 1,000 lines, kept in order, and appended to `<database>.stage`
+   (one table per domain); a promoted path seen with a value for the first time becomes a column.
+2. **Build.** `<database>.loading` is written in the 1.5 storage format in one transaction, with the current file attached read-only.
+   Per domain: the current rows that stay are copied (already sorted); a (kind, business date) the stream carries is left out, so **a
+   day in the stream replaces that day whole**; each staged day is inserted **sorted by id** (the last copy of an entity wins);
+   `entity_dates` records each day (kept days keep their load time).
+3. **Swap.** The new file is checkpointed, closed and renamed over `<database>` atomically; the stage file and the spill directory
+   (`<database>.tmp`) are deleted. A lock file (`<database>.lock`) keeps two loads of one file apart.
+
+**How the server notices.** Every `refresh-seconds` each connector `stat`s the file (inode, modification time, size); when nothing
+changed that is all. When it was replaced, the shared instance opens the new file as a new **generation**: new reads go to it at once,
+reads in flight finish on the old instance, which closes when the last returns. On Linux and macOS a file renamed over stays readable
+through open handles, so no read fails during the swap. Each connector then reads its dates, columns and ids again.
+
+**Your own loader.** Write the same layout into a new file, then rename:
+
+```sql
+ATTACH 'data/duckdb/drishti.duckdb' AS cur (READ_ONLY);
+ATTACH 'data/duckdb/drishti.duckdb.loading' AS nxt (STORAGE_VERSION 'v1.5.0');
+BEGIN;
+CREATE SCHEMA nxt.trading;
+CREATE TABLE nxt.trading.entities AS SELECT * FROM cur.trading.entities WHERE NOT (kind = 'trade' AND business_date = DATE '2026-10-01');
+INSERT INTO nxt.trading.entities BY NAME SELECT * FROM read_json('trades-2026-10-01.jsonl') ORDER BY id;   -- your rows
+CREATE TABLE nxt.trading.entity_dates AS SELECT * FROM cur.trading.entity_dates WHERE NOT (kind = 'trade' AND business_date = DATE '2026-10-01');
+INSERT INTO nxt.trading.entity_dates VALUES ('trade', DATE '2026-10-01', 1000000, now());
+COMMIT;
+CHECKPOINT nxt;
+DETACH nxt;
+-- then, outside DuckDB: mv data/duckdb/drishti.duckdb.loading data/duckdb/drishti.duckdb
+```
+
+What matters: each day sorted by id and written contiguously, promoted columns holding exactly the document's values, each day in
+`entity_dates`, storage version 1.5, and an atomic rename of a closed file.
+
+**Retention.** `--keep-days N` drops every business date more than N calendar days before the newest business date of the load (never
+counted from the newest date the file holds). A run that would drop more than `--max-drop-share` of a domain's rows fails before the
+swap and leaves the current file as it was; a row dated after tomorrow in the business zone is not loaded and the load ends with an
+error naming it. The new file is written from scratch, so dropped days free their space at once, with no `VACUUM`. Retention applies to
+every kind of the domain, `effective` kinds included: keep reference data in a domain with a longer `--keep-days` if that matters.
+
+**The cost of rewriting.** Every load rewrites the whole file: seconds for thousands of trades a day, but at a million trades a day a
+year of history (about 180 GB, estimated) would be copied every night. For large histories use one file per month (a daily load
+rewrites only the current month; retention deletes files; the connector reads one file, so each month is its own connector), or
+DuckDB for recent days and Delta Lake for the years (below).
+
+## How the connector reads
+
+The connectors of one server naming the same `path` share one DuckDB instance opened `read_only`, with the first connector's
+`memory-limit` and `threads` and a spill directory under the JVM's temporary directory. Each read borrows a duplicated connection;
+DuckDB runs statements of different connections at once. Reads per connector are bounded by `pool-size` permits (a read waiting more
+than 5 seconds fails). DuckDB is **not pooled** in the network sense: no database connections, no idle timeout, and the site pool
+settings do not apply ([connection pools](../../docs/guides/DATA_GUIDE.md#914-connection-pools)); Admin shows the reads running
+and waiting, marked *embedded, not pooled*. Tables are always qualified with the database name (`"drishti".trading.entities`), because
+a file named like a schema would otherwise be ambiguous.
+
+When a generation opens, the connector reads `entity_dates`, the table's columns (`duckdb_columns()`), and each kind's newest day's ids
+(every id for an `effective` kind) into the in-memory type-ahead index, then the newest day's columns in the background.
+
+| Read | How |
+|---|---|
+| one entity (`TRD CLY-4000834` on a date) | the snapshot date from memory (newest on or before the date, within `lookback-days`), then `SELECT doc … WHERE kind = ? AND business_date = ? AND id = ?`: the zone maps leave one row group and only the matching document is decompressed; an `effective` kind reads the newest row on or before the date |
+| type-ahead | from memory, by prefix; no query per keystroke. With `index.days` above 1 (and `index.storage: mmap` for a lake searched often by past date) past days answer from their own ids ([several business days](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)); a file swap rebuilds them, `index.reload-every` catches a restated day, and Admin → Connectors → Index reloads one by hand ([sizing](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)) |
+| a day's columns (searches, pick lists, derived kinds, impact, reverse lookups) | `quantile_disc` over the day's ids cuts it into `scan-threads` id ranges, read at once on their own connections, columns only; kept within `columns-cache-mb` for `columns-seconds`, dropped when a new file opens; repeated texts share one copy; at most two days read at a time; another day is read when first asked for |
+| reverse lookups | the day's promoted text columns: every value equal to the id. A kind without promoted link columns reads at most `max-load-rows` documents with `contains(doc, '"<id>"')` (`arg_max(doc, business_date)` for an `effective` kind); `reverse-index: false` turns them off |
+| history (`TRD 1000015 30`, [history queries](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)) | one query, `business_date BETWEEN ? AND ?`, newest first |
+
+## Sizing, memory and limits
+
+A generated book of 10,000 trades a day over three days (30,000 documents of 6–7 KB, about 190 MB of JSON) makes a **20 MB** file:
+about **0.7 KB per trade a day** with documents, promoted columns and dates. The storage format is what makes this: the same documents in
+DuckDB's older default format took 242 MB, uncompressed; the loader always writes `STORAGE_VERSION 'v1.5.0'`. Scaled linearly
+(**estimates**; generated trades compress better than real ones may, so measure a day of your own data): a million trades a day is
+about 0.7 GB a day, 45 GB for three months, 180 GB a year, 1.2 TB for seven years.
+
+**Recent history in DuckDB, the years in Delta Lake.** Configure both connectors for the kind, DuckDB first: a day the file does not
+hold returns no columns and no document, so the router asks Delta Lake next. Keep the file to the days users work with
+(`--keep-days 31`) and the full history in the lake.
+
+| Held in the server | 10,000 trades a day (measured) | A million a day (**estimate**) | Bounded by |
+|---|---|---|---|
+| type-ahead ids (newest day) | a few MB | about 150 MB | `index.*` |
+| a day's column set (19 fields) | about 2 MB | about 230 MB | `columns-cache-mb` |
+| DuckDB's buffers (native, outside the heap) | under 1 GB | up to the limit | `memory-limit` |
+
+Documents are not cached by the connector: DuckDB's buffer pool keeps the blocks read often. Size the machine for the heap plus
+`memory-limit`; for a million trades a day, about 4 GB of heap and 2–4 GB for DuckDB (estimate). Measured on the 10,000-trade book: a
+trade's document in about 15 ms over HTTP, today or a past day; type-ahead 18 ms; searches over the whole day 10–20 ms
+(`partial: false`); desk P&L 34 ms then 11 ms; impact of a netting set 60 ms; the first search on another day 59 ms, then 9 ms; a load
+picked up within 10 s with no failed read; 141 MB of heap in use. The curve from 10,000 to 50,000 trades a day, beside the other stores,
+is in [BENCHMARK.md](../../docs/admin/BENCHMARK.md#9-the-stores-compared-10000-to-50000-trades-a-day).
+
+Limits:
+
+- **Each load rewrites the whole file**; fine up to a few months of a large book or years of a small one.
+- **The swap needs Linux or macOS rename semantics**; on Windows load into a new path and switch `path`, or stop the server.
+- **A load is seen within `refresh-seconds`**; until then type-ahead and searches answer from the previous file.
+- **Disk during a load:** the stage file (uncompressed) and the new file sit beside the old one: allow three times the file plus the
+  day's raw JSON.
+- **Only promoted fields are fast**; a search on another field reads documents (at most 20,000, `partial`). `effective` kinds are read
+  as documents, not columns.
+- **DuckDB 1.5 or later reads the file**; the connector bundles 1.5.6.
+- **The memory limit is per instance**: give every connector on a file the same `memory-limit` and `threads`.
+- **Not offered: reading the Delta lake in place.** DuckDB's `delta` and `iceberg` extensions are not bundled in the JDBC driver and the
+  connector downloads nothing at run time; reading the lake's Parquet files without the Delta log is unsafe (it would see removed files).
+
+## Checklist for production
+
+1. Declare `layout.<kind>.columns` for every large kind; load with the `columns` in each row.
+2. Load through the loader (or your own writer of the same layout, then an atomic rename); never open the served file read-write.
+3. Choose the history the file keeps (`--keep-days`); keep the full history in Delta Lake, or one file per month.
+4. Size the disk for three times the file during a load, and the machine for the heap plus `memory-limit`.
+5. Give every connector on a file the same `memory-limit` and `threads`.
+6. Check Admin → Health (`UP`, `generation`), then measure on your data (`elapsedMs`, `scanned`, `partial` of a search) and a day's file
+   size before extrapolating.
 
 ## See also
 
-- [The full DuckDB connector document](../../docs/connectors/DUCKDB_CONNECTOR.md): layout, the file swap, retention, sizing, measured results.
-- [The PostgreSQL connector](../../docs/connectors/POSTGRES_CONNECTOR.md) (the table mode it mirrors) and [Connector files](../../docs/connectors/CONNECTOR_FILES.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The PostgreSQL connector](../drishti-plugin-jdbc/README.md) (the table mode it mirrors) and [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
+- [The demo data](../../docs/guides/DATA_GUIDE.md#11-the-demo-data) (data of any size) and [the data lake guide](../../docs/guides/DATA_LAKE_GUIDE.md) (load rules).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

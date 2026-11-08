@@ -1,0 +1,193 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the index-membership kind (command IDX): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap index-membership`; owned by people from then on: confirm the review points, then remove them.
+kind: index-membership
+mnemonic: IDX
+pack: us-equities
+version: '1.1'
+class: fundamental
+status: active
+title: Index members
+description: An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF reports holding them; a click opens the member's summary beside.
+source: 'public data: SEC EDGAR (with the tracking ETFs'' Form N-PORT), Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)'
+grain: One row per index members, keyed by INDEX.
+key:
+- INDEX
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: us-equities-store
+  plugin: delta
+  domain: us-equities
+  table: <root>/us-equities/index-membership/
+  columns:
+  - INDEX
+  - NAME
+  - MEMBERS
+  test-data:
+  - data/testdata/us-equities/index-membership
+fields:
+- name: INDEX
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: DJIA
+- name: NAME
+  type: text
+  presence: required
+  description: The index or list's name (Dow Jones Industrial Average, Nasdaq-100, S&P 500, Major US banks …).
+  example: Dow Jones Industrial Average
+- name: MEMBERS
+  type: integer
+  presence: required
+  description: How many members ROWS holds.
+  example: 34
+- name: ROWS
+  type: record list
+  presence: required
+  description: The members, by ticker, one element each with its name, SIC sector and division, exchange, latest revenue and net income in CURRENCY, fiscal year and SINCE.
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Where the membership comes from, one object: SOURCE (the tracking ETF''s N-PORT holdings, or a curated list), LICENCE, NOTE and RETRIEVED_AT.'
+nested:
+  ROWS[]:
+  - name: TICKER
+    type: text
+    presence: required
+    description: 'The member''s ticker (its us-company record''s key).'
+    example: AAPL
+  - name: NAME
+    type: text
+    presence: required
+    description: The member's name as the pack shows it (Wikidata's label, else EDGAR's name).
+    example: Apple Inc.
+  - name: SECTOR
+    type: text
+    presence: required
+    description: 'The name of the member''s SIC division.'
+    example: Manufacturing
+    enum:
+    - Agriculture, Forestry and Fishing
+    - Construction
+    - Finance, Insurance and Real Estate
+    - Manufacturing
+    - Mining
+    - Retail Trade
+    - Services
+    - Transportation, Communications, Electric, Gas and Sanitary Services
+    - Wholesale Trade
+  - name: SIC
+    type: text
+    presence: required
+    description: 'The member''s SEC SIC code.'
+    example: '3571'
+  - name: SIC_DESCRIPTION
+    type: text
+    presence: required
+    description: 'The SIC code''s description, from EDGAR.'
+    example: Electronic Computers
+  - name: EXCHANGE
+    type: text
+    presence: required
+    description: 'The exchanges the member is listed on.'
+    example: Nasdaq
+  - name: REVENUE
+    type: amount
+    presence: optional
+    description: 'The member''s revenue for its latest fiscal year.'
+    unit: 'currency units of ROWS[].CURRENCY'
+    example: 416161000000
+  - name: NET_INCOME
+    type: amount
+    presence: optional
+    description: 'The member''s net income for its latest fiscal year; a loss is negative.'
+    unit: 'currency units of ROWS[].CURRENCY'
+    example: 112010000000
+  - name: CURRENCY
+    type: text
+    presence: required
+    description: 'The currency the member reports in.'
+    example: USD
+  - name: FISCAL_YEAR
+    type: integer
+    presence: optional
+    description: 'The member''s latest fiscal year.'
+    example: 2025
+  - name: SINCE
+    type: date
+    presence: optional
+    description: 'The date the member joined the index, from Wikidata (YYYY-MM-DD); empty when unknown.'
+    example: '2000-06-05'
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: 'The public source of the membership (the tracking ETF''s Form N-PORT, Wikidata, or Drishti''s list of bank filers).'
+    example: SEC Form N-PORT of DIA (SPDR DOW JONES INDUSTRIAL AVERAGE ETF TRUST), the…
+  - name: LICENCE
+    type: text
+    presence: required
+    description: 'The licences of the sources.'
+    example: Public domain (SEC EDGAR); CC0 1.0 (Wikidata)
+  - name: NOTE
+    type: text
+    presence: required
+    description: 'What the membership is and is not (membership only: index weights and levels are proprietary).'
+    example: Membership only. Index weights and levels are proprietary t…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: 'The date the sources were retrieved (YYYY-MM-DD).'
+    example: '2026-10-24'
+links: []
+validation:
+- rule: required
+  fields:
+  - INDEX
+  - NAME
+  - MEMBERS
+  - ROWS
+  - PROVENANCE
+- rule: unique
+  key:
+  - INDEX
+  per: snapshot
+- rule: enum
+  field: ROWS[].SECTOR
+  values:
+  - Agriculture, Forestry and Fishing
+  - Construction
+  - Finance, Insurance and Real Estate
+  - Manufacturing
+  - Mining
+  - Retail Trade
+  - Services
+  - Transportation, Communications, Electric, Gas and Sanitary Services
+  - Wholesale Trade
+notes:
+- 'ROWS[].NET_MARGIN is not kept on the record: a member''s net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md,
+  section 16).'
+- 'SECTORS, REVENUE, NET_INCOME and BY_SECTOR are not kept on the record: the page sums the members'' rows (USD reporters) and counts their SIC
+  divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16). The membership (ROWS) and MEMBERS stay.'
+- '1.1: ROWS[].SECTOR lists every SIC division of the data.'
+review:
+- 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/index-membership.2026-10-24.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: ROWS[].SECTOR: confirm they are closed lists.'

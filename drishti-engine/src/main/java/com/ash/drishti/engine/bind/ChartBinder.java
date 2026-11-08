@@ -422,7 +422,7 @@ final class ChartBinder {
 
     /**
      * The pivot engine's function of a pivot panel's {@code value} written as a Rachana aggregate over the row ({@code sum(@.MTM)},
-     * {@code percentile(@.PNL, 0.99)}; ONE_GRAMMAR.md part 3), over the value column {@code v}; refused in words for an aggregate of
+     * {@code percentile(@.PNL, 0.99)}; docs/architecture/ARCHITECTURE.md part 3), over the value column {@code v}; refused in words for an aggregate of
      * two inputs or of text, which a panel's one value column cannot carry.
      */
     private static String measure(com.ash.drishti.rachana.el.Functions.AggregateCall call) {
@@ -444,7 +444,7 @@ final class ChartBinder {
 
     /**
      * A pivot panel (Rachana {@code kind: pivot}): its rows grouped by {@code by} (nested when a list) and {@code across}, every cell,
-     * subtotal and total computed by the pivot engine (drishti-bicompute; PIVOT_ENGINE.md section 13: nothing else aggregates) over the
+     * subtotal and total computed by the pivot engine (drishti-bicompute; ARCHITECTURE.md section 26.10: nothing else aggregates) over the
      * rows held in memory, each from its own rows. {@code by}, {@code across} and {@code value} take field names or Rachana paths over
      * the row ({@code "@.BOOK"}, {@code upper(@.DESK)}); {@code value} may be an aggregate of the engine written in Rachana
      * ({@code sum(@.MTM)}, {@code percentile(@.PNL, 0.99)}), which then replaces {@code agg}. The groups keep the order the rows first

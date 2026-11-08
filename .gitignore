@@ -38,6 +38,9 @@ hs_err_pid*
 !/data/delta/capitalmarket/
 /data/delta/capitalmarket/*
 !/data/delta/capitalmarket/README.md
+!/data/delta/referencelake/
+/data/delta/referencelake/*
+!/data/delta/referencelake/README.md
 .claude/
 # the Python runtime of Calc: installed by tools/fetch-pyodide.sh (pinned and verified), never committed
 drishti-console/web/static/vendor/pyodide/
@@ -72,7 +75,7 @@ external_lib/python/*
 net-key
 # the AWS scripts' settings (deploy/aws/env, copied from deploy/aws/env.example): account ids and resource names, never committed
 /deploy/aws/env
-# the compose stack's secrets (deploy/.env, passed with --env-file; docs/admin/OPERATIONS.md): never committed
+# the compose stack's secrets (deploy/.env, passed with --env-file; docs/guides/OPERATIONS_GUIDE.md): never committed
 /deploy/.env
 
 # downloaded test tools (the MinIO server binary for the S3 tests): tools/cache, never committed
@@ -81,3 +84,6 @@ net-key
 # the Java and Python API references (tools/api_docs.py build; IMPLEMENTATION_PLAN row 2g): generated at build time, never committed;
 # the console serves them at Help -> Developer
 drishti-console/web/apidocs/
+
+# test scratch (TMPDIR and --basetemp of local runs, under the worktree)
+drishti-console/test-tmp/

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Console polish in a real browser, against a real server with sign-in on (COLLABORATION.md, Console polish): the share dialog's "also start a
+"""Console polish in a real browser, against a real server with sign-in on (ARCHITECTURE.md §31, Console polish): the share dialog's "also start a
 discussion" tick, the reply box on a shared view, and Admin > Collaboration (moderation by keyboard, holds, export and verify for a compliance
 role, retention dry run, bridges), with times in the top bar's zone.
 
@@ -74,7 +74,7 @@ def share_to(ann, who_prefix, note, tick=None):
     dlg = ann.locator("[data-share-dialog]:not([hidden])")
     dlg.wait_for()
     ann.keyboard.type(who_prefix)
-    ann.locator("#shrList [role=option]").first.wait_for()
+    ann.locator(".di-combo-pop [role=option]").first.wait_for()          # drishti-inputs' combobox list
     ann.keyboard.press("Enter")
     ann.locator("[data-shr-chips] .shr-chip").first.wait_for()
     if tick is not None:

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: Confluent Cloud. The flavour gives SASL_SSL with PLAIN; Confluent's brokers use public CAs, so no tls.* is needed.
 # The API key and secret, and the Schema Registry key and secret, are environment references. Copy to
-# config/connectors/kafka-confluent-cloud.yaml. See docs/connectors/KAFKA_CONNECTOR.md.
+# config/connectors/kafka-confluent-cloud.yaml. See plugins/drishti-plugin-kafka/README.md.
 plugin: kafka
 kinds: [trade]
 description: Trades from Confluent Cloud, Avro through Schema Registry

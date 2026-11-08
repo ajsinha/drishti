@@ -72,6 +72,10 @@ import jsonstream  # noqa: E402
 import stage  # noqa: E402
 import writers  # noqa: E402
 
+if str(HERE.parents[1] / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(HERE.parents[1] / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+
 EXIT_OK, EXIT_FAILED, EXIT_PARTIAL, EXIT_LOCKED = 0, 1, 2, 3
 MODES = ("overwrite-dates", "overwrite-partitions", "append")
 STATE = "_drishti-lake"
@@ -203,8 +207,10 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
             out["vectors"] = [x.strip() for x in (vec.split(",") if isinstance(vec, str) else vec) if str(x).strip()]
             named = (st.get("table") or {}).get(kind) if isinstance(st.get("table"), dict) else st.get(f"table.{kind}")
             out["table"] = named or None
+    if kind:                                          # the kind's key: its ingest key, else its data contract's (one field)
+        out["key"] = feedroute.contract_key(pack, kind)
     if kind and isinstance(ing.get(kind), dict):
-        out["key"] = ing[kind].get("key")
+        out["key"] = ing[kind].get("key") or out.get("key")
         out["date"] = ing[kind].get("date")
         if isinstance(ing[kind].get("latest-by"), str):
             out["latest_by"] = ing[kind]["latest-by"]
@@ -300,7 +306,7 @@ def _plan_only(a, p, summary, started, say) -> tuple[int, dict]:
 
 def _pack_dir(name: str) -> pathlib.Path:
     p = pathlib.Path(name)
-    return p if (p / "pack.yaml").is_file() else PACKS_ROOT / name
+    return p if (p / "pack.yaml").is_file() else pack_dir(name, PACKS_ROOT)
 
 
 def _run_tars(a, say, summary, started, lake) -> tuple[int, dict]:
@@ -332,7 +338,8 @@ def _run_tars(a, say, summary, started, lake) -> tuple[int, dict]:
     for t in tables:
         sub = copy.copy(a)
         r = routes[t]
-        sub.pack, sub.kind, sub.connector, sub.table, sub._tar_table = str(r.pack), r.kind, r.connector, None, t
+        # a folder named after a table (trade_endur) writes that table: one of several of its kind (DATA_LAKE_GUIDE.md section 4.4)
+        sub.pack, sub.kind, sub.connector, sub.table, sub._tar_table = str(r.pack), r.kind, r.connector, r.table, t
         sub.domain = None
         sub.summary = None
         code, s = run(sub, lambda *_x, **_k: None)
@@ -538,7 +545,23 @@ def data_dir() -> pathlib.Path:
     return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (HERE.parents[1] / "data"))
 
 
+PARTITION_NAME_REFUSED = set(" ,;{}()\n\t=/\\%:#?*\"'[]^") | {chr(c) for c in range(32)} | {"\x7f"}
+
+
+def check_partition_names(names) -> None:
+    """A partition column's name is a folder name as it is (Delta Kernel and Spark escape the value, never the name): one with a
+    character Spark refuses in a column name without column mapping (`` ,;{}()\\n\\t=``) or one a folder name would change
+    (``/ \\ % : # ? * " ' [ ] ^``, control characters) is refused, as Databricks refuses it."""
+    for n in names:
+        col = stage.column_name(n)
+        bad = sorted({c for c in col if c in PARTITION_NAME_REFUSED})
+        if not col or bad:
+            raise BuildError(f"partition column {n!r} cannot name a Delta partition folder (characters {''.join(bad)!r}); "
+                             "partition by a field with a plain name (letters, digits, _ and -)")
+
+
 def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str | None = None) -> tuple[int, dict]:
+    check_partition_names(p["partition_by"])
     staging = None
     if remote_root:
         import tempfile
@@ -872,7 +895,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                         "business-date: beside the file counts as --as-of; a row's own --date field never decides (rows that differ are counted)")
     g.add_argument("--latest-by", metavar="FIELD",
                    help="when an id appears more than once on one business date, keep the copy with the latest FIELD (an ISO timestamp); "
-                        "default: the pack's ingest latest-by, else COMPUTED_AT; give '' for the last one read (TOOLS.md section 4.13)")
+                        "default: the pack's ingest latest-by, else COMPUTED_AT; give '' for the last one read (CLI_REFERENCE.md section 4.13)")
     g.add_argument("--partition-by", action="append", metavar="COL[,COL]", help="partition columns after business_date (dotted paths; up to 4)")
     g.add_argument("--promote", action="append", metavar="COL[,COL]", help="fields to keep as real columns too (default: the pack's layout columns)")
     g.add_argument("--vector", action="append", metavar="COL[,COL]",
@@ -901,7 +924,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                         "the default, --engine java asks for the loader)")
     g.add_argument("--loader-set", action="append", metavar="KEY=VALUE",
                    help="--engine java: a setting of the parallel loader (memory.budget-mb=4096, memory.spill-dir=/mnt/ebs, parallel.writers=16, "
-                        "target.layout.sort-by=[LEGAL_ENTITY,DESK,id]; docs/guides/TOOLS.md section 4.13); repeatable")
+                        "target.layout.sort-by=[LEGAL_ENTITY,DESK,id]; docs/guides/CLI_REFERENCE.md section 4.13); repeatable")
     g.add_argument("--mode", choices=MODES, default=None,
                    help="append (the default: the rows are added), overwrite-dates (each business date of the input replaced) or "
                         "overwrite-partitions; a .ready file's mode: when not given (--format iceberg: overwrite-dates, its only mode)")

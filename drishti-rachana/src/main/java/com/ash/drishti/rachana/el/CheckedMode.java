@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Rachana's checked mode, from text (BI_FOUNDATION_2911E.md 2.1): the one parser, then the {@link Checker} with the types, masks and
+ * Rachana's checked mode, from text (docs/architecture/ARCHITECTURE.md §28 2.1): the one parser, then the {@link Checker} with the types, masks and
  * measures of a table or model. Wherever the types are known (a virtual table's source contract, a model's tables, a pivot over a typed
  * source) an expression is read here; a Sutra over untyped documents stays unchecked ({@link ElCompiler}). The same text means the same
  * thing in both: checked mode only refuses more, with DEL's codes ({@code DRS-9127}, {@code DRS-9129}, {@code DRS-9152},

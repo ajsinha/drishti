@@ -13,36 +13,34 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Functions, FUNC (docs/admin/USER_MANAGEMENT.md): the command directory for everyone and, for an administrator, the commands × who-may-use-them
+/* Functions, FUNC (docs/guides/ADMIN_GUIDE.md): the command directory for everyone and, for an administrator, the commands × who-may-use-them
    matrix with its side panel. Colours come from the theme tokens,
    so light and dark both work; a state always has its word (on, off, turning off), never colour alone. */
-.cmd-h { font-size: 1.05rem; margin: 1.2rem 0 .5rem; }
-.cmd-nodes ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; }
-.cmd-nodes li { padding: .15rem 0; }
-.cmd-layout { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
+.cmd-h { font-size: var(--d-fs-16_8); margin: var(--d-sp-19_2) 0 var(--d-sp-8); }
+.cmd-nodes ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--d-sp-4_8) var(--d-sp-22_4); }
+.cmd-nodes li { padding: var(--d-sp-2_4) 0; }
+.cmd-layout { display: flex; flex-wrap: wrap; gap: var(--d-sp-16); align-items: flex-start; }
 .cmd-main { flex: 999 1 40rem; min-width: 0; }
 .cmd-side { flex: 1 1 22rem; min-width: 0; border: 1px solid var(--d-bad); border-radius: var(--d-radius); background: var(--d-surface);
-  padding: .8rem 1rem 1rem; position: sticky; top: 4.5rem; display: flex; flex-direction: column; gap: .6rem; }
-.cmd-side[hidden] { display: none; }
-.cmd-side-h h2 { font-size: 1.05rem; margin: 0; }
-.cmd-side-h p { margin: .2rem 0 0; }
-.cmd-side-k { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--d-muted); }
-.cmd-changes, .cmd-blocks { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .3rem; }
-.cmd-blocks ul { padding-left: 1.1rem; margin: .2rem 0 .4rem; }
-.cmd-reason { display: flex; flex-direction: column; gap: .3rem; color: var(--d-muted); font-size: .85rem; }
-.cmd-reason textarea { width: 100%; min-height: 4.5rem; color: var(--d-ink); background: var(--d-bg); border: 1px solid var(--d-border); border-radius: 4px;
-  padding: .4rem .6rem; font: inherit; }
-.cmd-side-acts { display: flex; flex-wrap: wrap; gap: .6rem; }
+  padding: var(--d-sp-12_8) var(--d-sp-16) var(--d-sp-16); position: sticky; top: 4.5rem; display: flex; flex-direction: column; gap: var(--d-sp-9_6); }
+.cmd-side-h h2 { font-size: var(--d-fs-16_8); margin: 0; }
+.cmd-side-h p { margin: var(--d-sp-3_2) 0 0; }
+.cmd-side-k { font-size: var(--d-fs-12); letter-spacing: .06em; text-transform: uppercase; color: var(--d-muted); }
+.cmd-changes, .cmd-blocks { margin: 0; padding-left: var(--d-sp-17_6); display: flex; flex-direction: column; gap: var(--d-sp-4_8); }
+.cmd-blocks ul { padding-left: var(--d-sp-17_6); margin: var(--d-sp-3_2) 0 var(--d-sp-6_4); }
+.cmd-reason { display: flex; flex-direction: column; gap: var(--d-sp-4_8); color: var(--d-muted); font-size: var(--d-fs-13_6); }
+.cmd-reason textarea { width: 100%; min-height: 4.5rem; color: var(--d-ink); background: var(--d-bg); border: 1px solid var(--d-border); border-radius: var(--d-radius-4);
+  padding: var(--d-sp-6_4) var(--d-sp-9_6); font: inherit; }
+.cmd-side-acts { display: flex; flex-wrap: wrap; gap: var(--d-sp-9_6); }
 .cmd-side-acts .btn-pill { min-height: 44px; }
-.cmd-danger { background: var(--d-bad); border-color: var(--d-bad); color: #fff; }
-.cmd-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
-.cmd-bar .cmd-h { margin: .4rem 0; }
-.cmd-find { display: flex; align-items: center; gap: .4rem; color: var(--d-muted); font-size: .85rem; }
-.cmd-find input, .cmd-find select { min-height: 36px; min-width: 0; width: 14rem; max-width: 60vw; }
-.cmd-find select { width: auto; }
+.cmd-danger { background: var(--d-bad); border-color: var(--d-bad); color: var(--d-on-color); }
+.cmd-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8) var(--d-sp-16); }
+.cmd-bar .cmd-h { margin: var(--d-sp-6_4) 0; }
+.cmd-find { display: flex; align-items: center; gap: var(--d-sp-6_4); color: var(--d-muted); font-size: var(--d-fs-13_6); }
+.cmd-find input { min-height: 36px; min-width: 0; width: 14rem; max-width: 60vw; }
+.cmd-find drishti-select { max-width: 60vw; color: var(--d-ink); }
 .cmd-bar .btn-pill { min-height: 36px; }
-.cmd-pending { padding: .1rem .6rem; border-radius: 1rem; background: var(--d-emph-bg); color: var(--d-warn); font-size: .8rem; }
-.cmd-pending[hidden] { display: none; }
+.cmd-pending { padding: var(--d-sp-1_6) var(--d-sp-9_6); border-radius: var(--d-radius-16); background: var(--d-emph-bg); color: var(--d-warn); font-size: var(--d-fs-12_8); }
 .cmd-tbl th, .cmd-tbl td { white-space: normal; vertical-align: top; }
 .cmd-tbl .cmd-col { text-align: center; width: 6rem; }
 .cmd-tbl .func-ex { white-space: nowrap; }
@@ -54,11 +52,11 @@
 .cmd-tbl .cmd-pack-name { font-weight: 600; }
 .cmd-tbl tr.cmd-changing > * { background: var(--d-emph-bg); }
 .cmd-note { color: var(--d-warn); }
-.cmd-switch { display: inline-flex; align-items: center; gap: .3rem; font-size: .8rem; color: var(--d-muted); min-height: 32px; }
+.cmd-switch { display: inline-flex; align-items: center; gap: var(--d-sp-4_8); font-size: var(--d-fs-12_8); color: var(--d-muted); min-height: 32px; }
 .cmd-switch input { width: 20px; height: 20px; accent-color: var(--d-ok); }
-.cmd-foot { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; font-size: .8rem; padding: .6rem 0; }
+.cmd-foot { display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4) var(--d-sp-24); font-size: var(--d-fs-12_8); padding: var(--d-sp-9_6) 0; }
 .cmd-foot span:last-child { margin-left: auto; }
-.func-word { font-size: .8rem; font-weight: 600; color: var(--d-accent); border: 1px solid var(--d-border); border-radius: 4px; padding: .05rem .4rem;
+.func-word { font-size: var(--d-fs-12_8); font-weight: 600; color: var(--d-accent); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-0_8) var(--d-sp-6_4);
   vertical-align: middle; }
 .cmd-tbl .cmd-code a { color: var(--d-accent); text-decoration: none; }
 .cmd-tbl .cmd-code a:hover, .cmd-tbl .cmd-code a:focus-visible { text-decoration: underline; }
@@ -67,9 +65,8 @@
 .cmd-tbl tr.cmd-is-off > td { color: var(--d-faint); }
 .cmd-tbl .cmd-off-code > span:first-child { text-decoration: line-through; }
 .cmd-tbl .func-form { font-family: inherit; font-style: italic; }
-.func-empty { padding: .6rem 0; }
-.func-empty[hidden] { display: none; }
-.func-cluster { margin-top: 1.2rem; border-top: 1px solid var(--d-border); padding-top: .6rem; }
+.func-empty { padding: var(--d-sp-9_6) 0; }
+.func-cluster { margin-top: var(--d-sp-19_2); border-top: 1px solid var(--d-border); padding-top: var(--d-sp-9_6); }
 .func-cluster > summary { cursor: pointer; color: var(--d-muted); min-height: 32px; display: flex; align-items: center; }
 @media (max-width: 640px) {
   .cmd-side { position: static; }

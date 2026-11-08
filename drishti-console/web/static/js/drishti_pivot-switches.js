@@ -25,8 +25,8 @@
   var box = root && root.querySelector("[data-pv-switches]");
   if (!root || !box) { return; }
   var $ = function (s) { return root.querySelector(s); };
-  var esc = function (s) { return window.Drishti.PivotCore ? window.Drishti.PivotCore.esc(s) : String(s == null ? "" : s); };
   var screen = function () { return window.Drishti.PivotScreen; };
+  var esc = function (s) { return screen() ? screen().esc(s) : String(s == null ? "" : s); };
   var live = {id: null, node: "", source: null, checked: null};
   var notes = {byCell: {}, list: [], view: null};
 
@@ -96,17 +96,6 @@
     live = {id: null, node: "", source: null, checked: null};
   }
 
-  function flash(keys) {
-    var grid = screen().grid();
-    keys.forEach(function (k) {
-      grid.querySelectorAll('td[data-cell="' + (window.CSS && CSS.escape ? CSS.escape(k) : k) + '"]').forEach(function (td) {
-        td.classList.remove("pv-flash");
-        void td.offsetWidth;                              // restart the animation
-        td.classList.add("pv-flash");
-      });
-    });
-  }
-
   function patched(p) {
     var a = JSON.parse(JSON.stringify(screen().answer()));
     (p.removed || []).forEach(function (k) { delete a.cells[k]; });
@@ -114,8 +103,7 @@
     ["provenance", "provenanceShared", "notes", "exactness", "computedAs", "computed", "version", "date"].forEach(function (k) {
       if (p[k] !== undefined) { a[k] = p[k]; }
     });
-    screen().show(a, {patched: true, live: true});
-    flash(Object.keys(p.cells || {}));
+    screen().show(a, {patched: true, live: true});     // the grid flashes each figure that moved, up or down
   }
 
   function startLive() {
@@ -168,20 +156,16 @@
     }).catch(function () { /* not shared with this person, or saved elsewhere: no markers */ });
   }
 
-  function mark(a) {
-    var grid = screen().grid();
-    grid.querySelectorAll(".pv-commented").forEach(function (td) { td.classList.remove("pv-commented", "pv-resolved"); });
-    Object.keys((a && a.cells) || {}).forEach(function (k) {
-      var list = notes.byCell[a.cells[k].key];
-      if (!list) { return; }
-      var open = list.some(function (c) { return !c.resolved; });
-      grid.querySelectorAll('td[data-cell="' + (window.CSS && CSS.escape ? CSS.escape(k) : k) + '"]').forEach(function (td) {
-        td.classList.add("pv-commented");
-        td.classList.toggle("pv-resolved", !open);
-        td.setAttribute("aria-description", list.length + " comment" + (list.length === 1 ? "" : "s") + (open ? "" : ", resolved"));
-      });
-    });
+  /** A commented cell's mark, drawn by the grid (the screen's decorate): a corner mark, its count and state in its hover note. */
+  function commentMark(key) {
+    var a = screen().answer(), cell = a && a.cells ? a.cells[key] : null;
+    var list = cell ? notes.byCell[cell.key] : null;
+    if (!list) { return null; }
+    var open = list.some(function (c) { return !c.resolved; });
+    return {cls: "pv-commented" + (open ? "" : " pv-resolved"), title: list.length + " comment" + (list.length === 1 ? "" : "s") + (open ? "" : ", resolved")};
   }
+
+  function mark() { screen().redraw(); }
 
   function commentHtml(c) {
     return '<li class="pv-cm' + (c.resolved ? " resolved" : "") + '" data-cm="' + esc(c.id) + '"><b>' + esc(c.by) + '</b> <span class="pv-sub">'
@@ -211,7 +195,7 @@
       add.onclick = function () {
         var text = extra.querySelector("[data-cm-text]").value;
         screen().call("POST", path, {coords: (cell && cell.coords) || {}, measure: extra.querySelector("[data-cm-measure]").checked ? m.label : null, text: text})
-          .then(function () { loadComments(screen().answer()); pop.hidden = true; screen().notice("comment added"); })
+          .then(function () { loadComments(screen().answer()); screen().notice("comment added"); })
           .catch(function (e) { screen().notice(e.message); });
       };
     }
@@ -220,7 +204,7 @@
         var id = b.closest("[data-cm]").getAttribute("data-cm");
         var op = b.getAttribute("data-cm-op");
         var req = op === "delete" ? screen().call("DELETE", path + "/" + encodeURIComponent(id)) : screen().call("POST", path + "/" + encodeURIComponent(id) + "/" + op, {});
-        req.then(function () { loadComments(screen().answer()); pop.hidden = true; }).catch(function (e) { screen().notice(e.message); });
+        req.then(function () { loadComments(screen().answer()); }).catch(function (e) { screen().notice(e.message); });
       };
     });
   }
@@ -242,20 +226,18 @@
     }
     if (screen() && screen().answer()) { screen().run(); }   // exact / auto / ≈, progressive or rollups changed: asked again
   });
-  document.addEventListener("keydown", function (e) {
-    var tag = (e.target.tagName || "").toLowerCase();
-    if (tag === "input" || tag === "select" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) { return; }
-    var k = e.key.toLowerCase();
-    if (k === "l" && screen() && screen().answer()) {
-      e.preventDefault();
+  // L and M (the one keymap, drishti_keys.js)
+  window.Drishti.keys.register({id: "pivot.live", keys: ["L", "Shift+L"], scope: "screen", area: "pivot-switches", group: "Pivot", description: "Live: follow the source's changes, or stop",
+    when: function () { return !!(screen() && screen().answer()); },
+    run: function () {
       var cb = $("[data-pv-live]");
       cb.checked = !cb.checked;
       cb.dispatchEvent(new Event("change", {bubbles: true}));
-    } else if (k === "m") {
-      var t = root.querySelector("[data-pv-pop]:not([hidden]) [data-cm-text]");
-      if (t) { e.preventDefault(); t.focus(); }
-    }
-  });
+    }});
+  window.Drishti.keys.register({id: "pivot.comment", keys: ["M", "Shift+M"], scope: "screen", area: "pivot-switches", group: "Pivot", description: "Write a comment on the cell shown",
+    when: function () { return !!root.querySelector("[data-pv-pop] [data-cm-text]"); },
+    run: function () { root.querySelector("[data-pv-pop] [data-cm-text]").focus(); }});
+  if (screen()) { screen().decorate(commentMark); }
   window.addEventListener("pagehide", function () { if (live.off) { live.off(); } });   // the server ends it after idle-seconds
 
   window.Drishti.PivotSwitches = {

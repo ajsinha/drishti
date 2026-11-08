@@ -81,7 +81,7 @@ def wait(url: str, seconds: int = 150) -> None:
 def stack(tmp_path_factory):
     jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     if not jars or not Path(JAVA).exists():
-        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
     for port in (SERVER_PORT, CONSOLE_PORT):
         if listening(port):
             pytest.skip(f"port {port} is in use")
@@ -96,7 +96,7 @@ def stack(tmp_path_factory):
     # replaces the template with a file connector over the pack's sample economies, as one business date
     day = tmp / "macro" / "2026-10-07"
     day.mkdir(parents=True)
-    shutil.copy(ROOT / "config/packs/world-economy/samples/economy.jsonl", day / "economy.jsonl")
+    shutil.copy(ROOT / "config/packs/economy/world-economy/samples/economy.jsonl", day / "economy.jsonl")
     (work / "config" / "connectors").mkdir(parents=True)
     (work / "config" / "connectors" / "macro-store.yaml").write_text(MACRO_STORE.format(root=tmp / "macro"))
     env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config/packs"), DRISHTI_PACKS="world-economy", DRISHTI_BI_DIR=str(work / "config/bi"),

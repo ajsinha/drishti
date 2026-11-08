@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Builds the client-side renderer's sheet and integrity record (docs/architecture/CLIENT_RENDERER.md section 13).
+"""Builds the client-side renderer's sheet and integrity record (docs/guides/EMBED_GUIDE.md section 13).
 
     python3 tools/render_sheet.py           # write static/render/<version>/drishti-render.css and integrity.json
     python3 tools/render_sheet.py --check   # exit 1 when either is stale (what the guard test does)

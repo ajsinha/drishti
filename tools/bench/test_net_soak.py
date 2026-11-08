@@ -409,7 +409,7 @@ class UsersHistoryTest(unittest.TestCase):
 
 
 class ServerLaunchTest(unittest.TestCase):
-    """--jvm-arg and --server-env: the production settings of docs/admin/PERFORMANCE.md reach every server."""
+    """--jvm-arg and --server-env: the production settings of docs/guides/CLUSTER_GUIDE.md reach every server."""
 
     def test_jvm_args_follow_the_heap_in_order(self):
         import net_soak

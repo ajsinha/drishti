@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Compute (/admin/compute): the server's compute workers (docs/admin/OPERATIONS.md, docs/architecture/PYTHON_COMPUTE.md section 15).
+"""Admin → Compute (/admin/compute): the server's compute workers (docs/guides/OPERATIONS_GUIDE.md, docs/guides/NOTEBOOK_GUIDE.md section 15).
 The page shows the switch, each pool (its workers on this node and on the other Drishti*net nodes, queues by class, latency, crashes and
 recycles), the workers busy now, recent requests, the locked environments, and the approval requests for what connectors and pools
-require. It carries the administrator's decisions to the server as same-origin JSON: approve, reject or revoke (always with a reason; the
+require. It carries the administrator's decisions to the server as same-origin JSON: revoke an approval (approving and rejecting a request is done in the one Approvals queue; always with a reason; the
 server refuses the person who asked: four eyes), build a pool's approved environment, test a pool with the sample engine, cancel a
 running request. The server decides who may do what."""
 from __future__ import annotations
@@ -66,8 +66,8 @@ async def page(request: Request):
 
 @router.post("/api/requests/{rid}/{verb}")
 async def decide(request: Request, rid: str, verb: str):
-    if verb not in ("approve", "reject", "revoke"):
-        return JSONResponse({"code": "DRS-5001", "detail": "approve, reject or revoke"}, status_code=404)
+    if verb != "revoke":                       # approve and reject are made in the one Approvals queue (/approvals/compute/<id>)
+        return JSONResponse({"code": "DRS-5001", "detail": "revoke an approval here; approve or reject a request in Approvals"}, status_code=404)
     body = await json_body(request)
     reason = body.get("reason") if isinstance(body.get("reason"), str) else ""
     try:

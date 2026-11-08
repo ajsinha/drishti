@@ -13,27 +13,25 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* BI with AI (docs/guides/BI_GUIDE.md): the question box under the report bar, its answer, the explain panel */
-.bi-ai-ask { margin: .5rem 0 1rem; padding: .6rem .8rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
-.bi-ai-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; }
+/* BI with AI (docs/guides/REPORTS_GUIDE.md): the question box under the report bar, its answer, the explain panel */
+.bi-ai-ask { margin: var(--d-sp-8) 0 var(--d-sp-16); padding: var(--d-sp-9_6) var(--d-sp-12_8); border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
+.bi-ai-form { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: flex-end; }
 .bi-ai-form .bi-tool { flex: 1 1 18rem; }
 .bi-ai-form .studio-in { width: 100%; }
 .bi-ai-chart { width: 100%; height: 260px; }
-.bi-ai-card { font-size: 2rem; margin: .4rem 0; }
-.bi-ai-summary { margin: .5rem 0; font-style: italic; }
+.bi-ai-card { font-size: var(--d-fs-32); margin: var(--d-sp-6_4) 0; }
+.bi-ai-summary { margin: var(--d-sp-8) 0; font-style: italic; }
 .bi-ai-query pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-.bi-ai-panel { position: fixed; right: 1rem; bottom: 1rem; width: min(34rem, calc(100vw - 2rem)); max-height: 70vh; overflow: auto; z-index: 60; padding: .8rem 1rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); box-shadow: 0 6px 24px rgba(0, 0, 0, .25); }
-.bi-ai-panel[hidden] { display: none; }
-.bi-ai-panel header { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
-.bi-ai-panel h2 { font-size: 1.05rem; margin: 0; }
-.bi-ai-lineage { padding-left: 1.2rem; }
+.bi-ai-panel { position: fixed; right: 1rem; bottom: 1rem; width: min(34rem, calc(100vw - 2rem)); max-height: 70vh; overflow: auto; z-index: 60; padding: var(--d-sp-12_8) var(--d-sp-16); border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); box-shadow: var(--d-elev-panel); }
+.bi-ai-panel header { display: flex; justify-content: space-between; align-items: center; gap: var(--d-sp-8); }
+.bi-ai-panel h2 { font-size: var(--d-fs-16_8); margin: 0; }
+.bi-ai-lineage { padding-left: var(--d-sp-19_2); }
 @media (pointer: coarse) { .bi-ai-form .btn-pill, .bi-ai-panel .btn-pill { min-height: 44px; } }
 
 /* the designer copilot's suggestions and explanations, and the dataset helper's proposals */
-.bi-ai-suggestions { list-style: none; padding: 0; margin: .5rem 0; display: grid; gap: .6rem; }
-.bi-ai-suggestion { padding: .5rem .7rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
-.bi-ai-yaml { white-space: pre-wrap; overflow-wrap: anywhere; margin: .3rem 0; font-size: .8rem; }
-.bi-ai-checks { margin: .5rem 0; }
-.bi-ai-box[hidden] { display: none; }
+.bi-ai-suggestions { list-style: none; padding: 0; margin: var(--d-sp-8) 0; display: grid; gap: var(--d-sp-9_6); }
+.bi-ai-suggestion { padding: var(--d-sp-8) var(--d-sp-11_2); border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
+.bi-ai-yaml { white-space: pre-wrap; overflow-wrap: anywhere; margin: var(--d-sp-4_8) 0; font-size: var(--d-fs-12_8); }
+.bi-ai-checks { margin: var(--d-sp-8) 0; }
 .bi-ai-box textarea { width: 100%; box-sizing: border-box; }
 @media (pointer: coarse), (max-width: 640px) { .bi-ai-suggestion .btn-pill, .bi-ai-checks .btn-pill, .bi-ai-box .btn-pill { min-height: 44px; } }

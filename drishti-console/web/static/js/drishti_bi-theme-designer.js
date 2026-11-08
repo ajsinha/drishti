@@ -13,11 +13,12 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The theme designer in BI Studio (report schema v2, R6, 2.4.0; docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2): a theme item's series colours (add, remove, move), its page,
-   text, good and bad colours, its type, and the format defaults of each kind of visual, drawn with the same generated Format pane as the report designer
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* The theme designer in BI Studio (report schema v2, R6, 2.4.0; docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2): a theme item's name,
+   series colours (add, remove, move), its page, text, good and bad colours and its type (one live drishti-inputs Form), and the format defaults of each kind of visual, drawn with the same generated Format pane as the report designer
    (so a theme can set only what a visual accepts), with a preview of a chart, a table and a card in the theme. The server checks the theme
    (POST /bi/api/themes/validate) as you go; Save stores the item, Publish makes it the version reports read. /bi/design/theme/new makes a theme in your
-   private workspace, starting from the shipped Corporate one. The YAML tab shows the same theme as text. */
+   private workspace, starting from the shipped Corporate one. The Studio's YAML panel (Visual, YAML or Both) shows the same theme as text, both ways. */
 (function () {
   'use strict';
   const canvas = document.getElementById('biCanvas');
@@ -32,58 +33,74 @@
   const STARTER = 'rachana: 1\ntheme: my-theme\ntitle: My theme\npalette: ["#1f4e79", "#2e75b6", "#9dc3e6", "#c55a11", "#70ad47", "#7f7f7f"]\ngood: "#2e7d32"\nbad: "#c62828"\n';
   let model = null, item = null, dirty = false, schemas = null, checkTimer = 0;
 
-  // ---- YAML: the theme written the way a person writes it ------------------------------------------------------------------------
-  const scalar = (v) => (typeof v === 'number' || typeof v === 'boolean' ? String(v) : /^[A-Za-z_][A-Za-z0-9_ .-]*$/.test(String(v)) && !/^(true|false|null|yes|no|on|off|y|n)$/i.test(String(v)) ? String(v) : JSON.stringify(String(v)));
-  const flow = (v) => (Array.isArray(v) ? '[' + v.map(flow).join(', ') + ']' : v && typeof v === 'object' ? '{ ' + Object.keys(v).map((k) => k + ': ' + flow(v[k])).join(', ') + ' }' : scalar(v));
-  function yamlOf(m) {
-    const lines = ['rachana: 1'];
-    ['theme', 'version', 'title', 'description', 'sample', 'tags', 'palette', 'background', 'foreground', 'good', 'bad', 'font'].forEach((k) => { if (m[k] != null && m[k] !== '' && k !== 'rachana') { lines.push(k + ': ' + flow(m[k])); } });
-    if (m.visuals && Object.keys(m.visuals).length) {
-      lines.push('visuals:');
-      Object.keys(m.visuals).forEach((k) => lines.push('  ' + k + ': ' + flow(m.visuals[k])));
-    }
-    return lines.join('\n') + '\n';
+  // ---- YAML: drishti-designer's YamlPane in the Studio shell's YAML panel, both ways: a change on the visual side writes it again; an
+  // edit of the YAML is read by the server after a pause and becomes the theme (or its problem shows at its line, the theme unchanged) --
+  const K = window.Drishti.elements.designer;
+  const ORDER = ['theme', 'version', 'title', 'description', 'sample', 'tags', 'palette', 'background', 'foreground', 'good', 'bad', 'font', 'visuals'];
+  function textOf(m) {
+    const o = { rachana: 1 };
+    ORDER.forEach((k) => { if (m[k] != null && m[k] !== '' && !(k === 'visuals' && !Object.keys(m[k]).length)) { o[k] = m[k]; } });
+    return K.dumpYaml(o);
   }
+  function readTheme(text) {
+    return B.api('POST', '/themes/validate', { yaml: text }).then((r) => {
+      if (!r.theme) {                                                      // the problem at the line of its path
+        const p = (r.problems || [])[0] || {}, at = p.path ? K.yamlRanges(text).get(p.path) : null;
+        throw { message: p.message || 'The YAML does not read as a theme.', line: at ? at[0] + 1 : 1 };
+      }
+      const t = Object.assign({}, r.theme);
+      delete t.rachana;
+      delete t.version;
+      return t;
+    });
+  }
+  let pane = null;
 
   function change(fn) {
     fn(model);
     dirty = true;
-    q('[data-state]').textContent = 'Unsaved changes';
+    if (B.studio && B.studio.state) { B.studio.state('Unsaved changes', item && item.status); }
     draw();
   }
 
-  // ---- the editor ------------------------------------------------------------------------------------------------------------------
-  function drawPalette(box) {
-    const list = h('ol', { class: 'bi-theme-palette', 'data-theme-palette-list': '' });
-    (model.palette || []).forEach((c, i) => {
-      const up = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Move colour ' + (i + 1) + ' earlier', disabled: i === 0 }, B.icon('chevron-up'));
-      const x = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove colour ' + (i + 1), disabled: model.palette.length <= 3, 'data-theme-remove-colour': String(i) }, B.icon('x-lg'));
-      up.addEventListener('click', () => change((m) => { const t = m.palette[i - 1]; m.palette[i - 1] = m.palette[i]; m.palette[i] = t; }));
-      x.addEventListener('click', () => change((m) => { m.palette.splice(i, 1); }));
-      const inp = h('input', { type: 'color', value: c, 'aria-label': 'Series colour ' + (i + 1), 'data-theme-colour': String(i) });
-      inp.addEventListener('change', () => change((m) => { m.palette[i] = inp.value; }));
-      list.appendChild(h('li', {}, inp, h('code', { text: ' ' + c + ' ' }), up, x));
-    });
-    const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-theme-add-colour': '', disabled: (model.palette || []).length >= 12 }, B.icon('plus-lg'), ' Add a colour');
-    add.addEventListener('click', () => change((m) => { (m.palette = m.palette || []).push('#888888'); }));
-    box.appendChild(h('fieldset', { class: 'bi-fieldset' }, h('legend', { text: 'Series colours (3 to 12, in order)' }), list, add));
-  }
+  // ---- the editor: one live Form (drishti-inputs, B.formatPane.form) for the theme's name, its series colours (3 to 12, in order:
+  // add, remove, move) and its colours and type; the format defaults below are the generated Format pane --------------------------------
+  const FONTS = ['sans', 'serif', 'mono', 'system'];
+  const COLOURS = [['background', 'Page and visual background'], ['foreground', 'Text'], ['good', 'Good (a KPI above target, a scale\'s high end)'], ['bad', 'Bad']];
+  const setFont = (k, x) => change((m) => {
+    const f = Object.assign({}, m.font);
+    if (x !== undefined) { f[k] = x; } else { delete f[k]; }
+    if (Object.keys(f).length) { m.font = f; } else { delete m.font; }
+  });
 
-  function drawColours(box) {
-    [['background', 'Page and visual background'], ['foreground', 'Text'], ['good', 'Good (a KPI above target, a scale\'s high end)'], ['bad', 'Bad']].forEach(([k, label]) => {
-      box.appendChild(P.row(label, P.colour(model[k], (c) => change((m) => { if (c) { m[k] = c; } else { delete m[k]; } }), { ['data-theme-' + k]: '', 'aria-label': label })));
-    });
+  function drawSettings(box) {
     const font = model.font || {};
-    box.appendChild(P.row('Type', P.select([['', 'the console\'s'], ['sans', 'sans'], ['serif', 'serif'], ['mono', 'mono'], ['system', 'system']], font.family || '', (x) => change((m) => {
-      const f = Object.assign({}, m.font);
-      if (x) { f.family = x; } else { delete f.family; }
-      if (Object.keys(f).length) { m.font = f; } else { delete m.font; }
-    }), { 'data-theme-font': '' })));
-    box.appendChild(P.row('Text size (px)', P.text(font.size, (x) => change((m) => {
-      const f = Object.assign({}, m.font), n = parseInt(x, 10);
-      if (n >= 10 && n <= 18) { f.size = n; } else { delete f.size; }
-      if (Object.keys(f).length) { m.font = f; } else { delete m.font; }
-    }), { type: 'number', min: '10', max: '18', 'data-theme-font-size': '' })));
+    const fields = {
+      title: { type: 'string', title: 'Title', lazy: true, hook: 'theme-title' },
+      theme: { type: 'string', title: 'Name', lazy: true, hook: 'theme-key', description: 'What a report writes: theme: ' + model.theme },
+      description: { type: 'string', title: 'Description', lazy: true, hook: 'theme-description' },
+      palette: { type: 'array', title: 'Series colours (3 to 12, in order)', minItems: 3, maxItems: 12, addLabel: 'Add a colour', hook: 'theme-palette-list',
+        items: { type: 'object', title: 'Colour', properties: { colour: { type: 'string', title: 'Colour', widget: 'colour', hook: 'theme-colour', default: '#888888' } } } }
+    };
+    const value = { title: model.title, theme: model.theme, description: model.description, palette: (model.palette || []).map((c) => ({ colour: c })), fontFamily: font.family, fontSize: font.size };
+    const on = {
+      title: (x) => change((m) => { m.title = String(x || '').trim() || m.title; }),
+      theme: (x) => change((m) => { m.theme = B.slug(x || '') || m.theme; }),
+      description: (x) => change((m) => { if (String(x || '').trim()) { m.description = x.trim(); } else { delete m.description; } }),
+      palette: (list) => change((m) => { m.palette = (list || []).map((c, i) => (c && c.colour) || (m.palette || [])[i] || '#888888'); }),
+      fontFamily: (x) => setFont('family', x || undefined),
+      fontSize: (x) => setFont('size', typeof x === 'number' && x >= 10 && x <= 18 ? Math.round(x) : undefined)
+    };
+    COLOURS.forEach(([k, label]) => {
+      fields[k] = { type: 'string', title: label, widget: 'colour', hook: 'theme-' + k };
+      value[k] = model[k];
+      on[k] = (c) => change((m) => { if (c) { m[k] = c; } else { delete m[k]; } });
+    });
+    fields.fontFamily = { type: 'string', title: 'Type', enum: FONTS, widget: 'select', emptyLabel: 'the console\'s', hook: 'theme-font' };
+    fields.fontSize = { type: 'integer', title: 'Text size (px)', minimum: 10, maximum: 18, lazy: true, hook: 'theme-font-size' };
+    const host = h('div', { class: 'bi-fform', 'data-theme-settings': '' });
+    box.appendChild(host);
+    P.form(host, { fields, value, on, label: 'The theme' });
   }
 
   function drawDefaults(box) {
@@ -129,21 +146,16 @@
 
   function draw() {
     const ed = B.clear(q('[data-theme-editor]'));
-    ed.appendChild(P.row('Title', P.text(model.title, (x) => change((m) => { m.title = x.trim() || m.title; }), { 'data-theme-title': '' })));
-    ed.appendChild(P.row('Name', P.text(model.theme, (x) => change((m) => { m.theme = B.slug(x) || m.theme; }), { 'data-theme-key': '' }), 'What a report writes: theme: ' + model.theme));
-    ed.appendChild(P.row('Description', P.text(model.description, (x) => change((m) => { if (x.trim()) { m.description = x.trim(); } else { delete m.description; } }))));
-    drawPalette(ed);
-    drawColours(ed);
+    drawSettings(ed);
     drawDefaults(ed);
     drawPreview();
-    const ta = q('[data-theme-yaml]');
-    if (document.activeElement !== ta) { ta.value = yamlOf(model); }
+    if (pane) { pane.setModel(model); }
     clearTimeout(checkTimer);
     checkTimer = setTimeout(check, 400);
   }
 
   function check() {
-    return B.api('POST', '/themes/validate', { yaml: yamlOf(model) }).then((r) => {
+    return B.api('POST', '/themes/validate', { yaml: textOf(model) }).then((r) => {
       const ul = B.clear(q('[data-theme-problems]'));
       (r.problems || []).forEach((p) => ul.appendChild(h('li', { class: 'bi-problem bi-problem-' + p.level, 'data-code': p.code }, h('strong', { text: p.code + ' ' }), h('code', { text: p.path }), ': ' + p.message)));
       if (B.studio && B.studio.problems) { B.studio.problems(r.problems || [], (list, box) => list.forEach((p) => box.appendChild(h('li', { class: 'bi-problem bi-problem-' + p.level }, h('strong', { text: p.code + ' ' }), h('code', { text: p.path }), ': ' + p.message)))); }
@@ -156,8 +168,8 @@
     const btn = q('[data-save]');
     return B.busy(btn, () => check().then((r) => {
       if (!r.valid) { throw new Error('Fix the errors first: ' + (r.problems.find((p) => p.level === 'error') || {}).message); }
-      return B.saveItem(itemId, { body: yamlOf(model), title: model.title }, item && item.etag, btn);
-    }).then((it) => { item = it; dirty = false; q('[data-state]').textContent = 'Saved'; B.near(btn, 'Saved. Publish it so that reports read this version.', false); }))
+      return B.saveItem(itemId, { body: textOf(model), title: model.title }, item && item.etag, btn);
+    }).then((it) => { item = it; dirty = false; if (B.studio && B.studio.state) { B.studio.state('Saved', it.status); } B.near(btn, 'Saved. Publish it so that reports read this version.', false); }))
       .catch((e) => { if (!e.cancelled) { B.near(btn, e.message, true); } });
   }
 
@@ -172,16 +184,20 @@
       const go = () => B.api('POST', '/items/' + B.id2path(itemId) + '/' + (item && item.workspaceReviewRequired ? 'propose' : 'publish'), {}).then((it) => { const proposed = item && item.workspaceReviewRequired; item = it; B.near(btn, proposed ? 'Proposed for review: once approved, reports that name ' + model.theme + ' draw with it.' : 'Published: reports that name ' + model.theme + ' draw with it.', false); });
       B.busy(btn, () => (dirty ? save().then(go) : go())).catch((e) => B.near(btn, e.message, true));
     });
-    const ta = q('[data-theme-yaml]');
-    ta.addEventListener('change', () => B.api('POST', '/themes/validate', { yaml: ta.value }).then((r) => {
-      if (r.theme) { model = r.theme; dirty = true; draw(); say(''); } else { say((r.problems[0] || {}).message || 'The YAML does not read as a theme.', true); }
-    }));
+    const shell = B.studio && B.studio.shell;
+    const host = h('div', { 'data-theme-yaml': '' });
+    shell.yamlBody.appendChild(host);
+    shell.setOpen(true);
+    pane = new K.YamlPane(host, { label: 'Theme YAML', height: 300, delay: 400, toYaml: textOf, fromYaml: readTheme });
+    pane.on('model', (e) => { model = e.model; dirty = true; if (B.studio.state) { B.studio.state('Unsaved changes', item && item.status); } say(''); draw(); });
+    shell.on('mode', () => pane.refresh());
+    shell.on('yaml', () => pane.refresh());
     window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
   }
 
   if (itemId === 'new') {                                                  // a new theme in your private workspace, starting from the shipped Corporate theme
     B.api('GET', '/themes/corporate').then((t) => Object.assign({}, t, { theme: 'my-theme', title: 'My theme', sample: undefined, tags: undefined, description: 'Made from Corporate.' }), () => null)
-      .then((t) => B.writable().then((wss) => { const shared = wss.find((w) => !w.personal); return B.api('POST', '/workspaces/' + encodeURIComponent(shared ? shared.id : 'me') + '/items', { kind: 'theme', title: 'My theme', description: '', body: t ? yamlOf(t) : STARTER }); }))      // a shared workspace when you have one: a theme is published for others
+      .then((t) => B.writable().then((wss) => { const shared = wss.find((w) => !w.personal); return B.api('POST', '/workspaces/' + encodeURIComponent(shared ? shared.id : 'me') + '/items', { kind: 'theme', title: 'My theme', description: '', body: t ? textOf(t) : STARTER }); }))      // a shared workspace when you have one: a theme is published for others
       .then((it) => { window.location.replace('/bi/design/theme/' + B.id2path(it.id)); })
       .catch((e) => say(e.message, true));
     return;
@@ -199,7 +215,7 @@
     start();
     draw();
     if (B.studio && B.studio.attach) { B.studio.attach(item); }
-    q('[data-state]').textContent = item.status === 'published' ? 'Published' : 'Draft';
+    if (B.studio && B.studio.state) { B.studio.state(item.status === 'published' ? 'Published' : 'Draft', item.status); }
     q('[data-theme-root]').setAttribute('data-ready', 'yes');
   }).catch((e) => say(e.message, true));
 })();

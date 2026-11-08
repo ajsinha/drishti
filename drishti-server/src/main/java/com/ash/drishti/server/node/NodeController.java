@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * This node's readiness and its drain before a stop (CD1 and CD2, CLUSTER_DEPLOYMENT.md sections 4.6 and 9.1). Administrators only; a
+ * This node's readiness and its drain before a stop (CD1 and CD2, CLUSTER_GUIDE.md sections 4.6 and 9.1). Administrators only; a
  * personal API token needs the {@code node:drain} scope for the {@code POST} (the stop hooks and the rolling upgrade runner use one).
  *
  * <pre>

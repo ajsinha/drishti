@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  drishti-grid's fixture harness: the grid with synthetic data, no server (static files only; it opens from the file system too). Every
+  layout × density × theme by its controls or the address: ?layout=terminal&density=compact&theme=light&mode=pivot|grid|server&rows=N
+  &matrix=1 (all nine layouts and densities at once). The browser test (tests/test_elements_grid_browser.py) drives it; the gallery
+  (ELEMENTS.md section 10) grows from it. Nothing inline: it runs under a strict CSP.
+-->
+<html lang="en" data-theme="terminal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>drishti-grid · fixture harness</title>
+<link rel="stylesheet" href="../../css/drishti_tokens.css">
+<link rel="stylesheet" href="../drishti-inputs/drishti_inputs.css">
+<link rel="stylesheet" href="drishti_grid.css">
+<link rel="stylesheet" href="drishti_harness.css">
+</head>
+<body>
+<header class="hx-top">
+  <b class="hx-brand">drishti-grid</b>
+  <span class="hx-seg" role="group" aria-label="Layout">
+    <button type="button" data-layout="wells">Wells</button><button type="button" data-layout="panel">Panel</button><button type="button" data-layout="terminal">Terminal</button>
+  </span>
+  <span class="hx-seg" role="group" aria-label="Density">
+    <button type="button" data-density="comfortable">Comfortable</button><button type="button" data-density="compact">Compact</button><button type="button" data-density="terminal">Terminal</button>
+  </span>
+  <button type="button" id="hx-theme">Light / dark</button>
+  <button type="button" id="hx-tick">Tick</button>
+  <button type="button" id="hx-stream" aria-pressed="false">Stream</button>
+  <span id="hx-log" class="hx-log" aria-live="off"></span>
+</header>
+<main id="hx-stage" class="hx-stage"></main>
+<script src="../drishti-core/drishti_core.js"></script>
+<script src="../drishti-inputs/drishti_inputs.js"></script>
+<script src="drishti_grid.js"></script>
+<script src="drishti_harness.js"></script>
+</body>
+</html>

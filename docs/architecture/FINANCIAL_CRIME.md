@@ -18,7 +18,7 @@
 Status: design, not built. Requested by the product owner on 2026-11-02 ("put AML / fraud / financial-crime unit engines on the
 roadmap; design first"); proposed for releases 2.9.21 and 2.9.22, placement to confirm
 ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#2921-and-2922-financial-crime-aml-fraud-fcu-proposed)). It follows the engine pattern of
-[SENSITIVITIES_AND_FRTB_SA.md](SENSITIVITIES_AND_FRTB_SA.md) and [IFRS9_ECL.md](IFRS9_ECL.md): method, data contracts, outputs, API and
+[SENSITIVITIES_AND_FRTB_SA.md](../guides/FRTB_SA_GUIDE.md) and [IFRS9_ECL.md](IFRS9_ECL.md): method, data contracts, outputs, API and
 screens, playground, hand-built cases, parameters as configuration, decisions.
 
 **What Drishti is, and is not, here.** Drishti provides **explainable, testable engines**: scenarios and scores that run in Java on the
@@ -89,7 +89,7 @@ defaults are not a compliance programme.
 
 The contracts follow the [contract rules](../contracts/README.md) and are YAML files of a new pack `financial-crime` when built. All data
 is JSON Lines. Names are UPPER_SNAKE. Personal data fields are marked `pii: true` in the contract, which drives masking (section 14).
-Any of these sources may be memory-only ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)) when the bank's data agreement forbids a copy at rest.
+Any of these sources may be memory-only ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)) when the bank's data agreement forbids a copy at rest.
 
 ### 2.1 `fcu-customer` (KYC)
 
@@ -297,7 +297,7 @@ with drop-downs), Curve (`COUNTIFS` of measures ≥ θ and of outcomes per θ st
 `RAND`-free rank so it reproduces), Sample (the sample-size formula), Main (the figures at θ against the engine's), Explain, Provenance.
 The switches: θ per segment, the outcome counted as productive (`ESCALATED` or `STR_FILED`), the history window, the BTL band.
 
-**Recipes and reproduction** as every playground ([SENSITIVITIES_AND_FRTB_SA.md section 12.1a](SENSITIVITIES_AND_FRTB_SA.md#121a-critique-and-reproduce-the-method-choices-as-switches)):
+**Recipes and reproduction** as every playground ([SENSITIVITIES_AND_FRTB_SA.md section 12.1a](../guides/FRTB_SA_GUIDE.md#81-critique-the-choices-panel)):
 a tuning run is a recipe (the scenario version, the data versions, the switches), replayable to the same counts.
 
 **Size:** M.
@@ -317,7 +317,7 @@ type), not as objects per node:
 
 Drishti's `drishti-graph` module today resolves entity references and links between records (which field names which entity); the
 network engine is new, and uses `drishti-graph` to turn every node of a result into a link to its record page. The GLEIF pack
-([its README](../../config/packs/gleif/README.md)) gives corporate ownership chains for entities with an LEI.
+([its README](../../config/packs/core/gleif/README.md)) gives corporate ownership chains for entities with an LEI.
 
 | Pattern | Algorithm (defaults) | Evidence |
 |---|---|---|
@@ -428,7 +428,7 @@ investigation, rule testing and the evidence that tunes the platform.
 
 ## 11. Alerts and case management
 
-Built on write-back's Drishti-owned records and approvals ([WRITE_BACK.md](../guides/WRITE_BACK.md#10-approval)): alerts, cases and
+Built on write-back's Drishti-owned records and approvals ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue)): alerts, cases and
 actions are `owned` records, every action is a form, every decision that ends a case or files a report needs a second approver.
 
 | State | Who | Action (each a form, each audited) |
@@ -504,7 +504,7 @@ SR 11-7 for US entities). Drishti supplies the evidence; the validation and appr
 | **Entitlements on alerts and cases** | by the FCU team, region and legal entity; a case may be restricted further to named investigators (an employee or a high-profile customer); access to a restricted case is logged and reviewed |
 | **PII masking** | contract fields marked `pii: true` are masked for every role without the field's grant (Drishti's masking); tuning and effectiveness views use de-identified ids; exports carry the masks |
 | **Tipping off** | the PCMLTFA (section 8) forbids disclosing that an STR was made, or its contents, with intent to prejudice a criminal investigation; Drishti enforces a stricter design rule: FCU records never appear outside FCU roles: not in customer or account pages, relationship-manager screens, search, AI, shares, comments, notifications or exports; an exit recommendation reaches the business without its reason |
-| **Memory-only sources** | a source the bank must not store at rest is a memory-only table ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)); alerts and cases keep only the fields the policy lists |
+| **Memory-only sources** | a source the bank must not store at rest is a memory-only table ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)); alerts and cases keep only the fields the policy lists |
 | **AI** | off for FCU data by default; when on, only through the same entitlements and masks, and never for a decision |
 | **Retention** | records the PCMLTFA requires kept for at least 5 years (FINTRAC record keeping); cases, alerts and reports 5 years after closing by default, configurable longer; BTL events and tuning data 2 years; legal hold suspends deletion; deletion is logged |
 | **Audit** | every view, search, export and decision, signed as the write-back log is |

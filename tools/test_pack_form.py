@@ -25,6 +25,9 @@ import drishti  # noqa: E402
 import packform as PF  # noqa: E402
 
 ROOT = HERE.parent
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import manifests  # noqa: E402  (the one rule for where a pack's folder is)
 
 
 def manifest(form, kinds=("trade",)):
@@ -90,7 +93,7 @@ class WriteTest(unittest.TestCase):
     def test_every_pack_in_the_repository_declares_forms_that_pass(self):
         import yaml
         found = 0
-        for yml in sorted((ROOT / "config" / "packs").glob("*/pack.yaml")):
+        for yml in manifests():
             if yml.parent.name == "compute-demo":     # computed kinds only (the reactive engines' demo): nothing to search by form
                 continue
             m = yaml.safe_load(yml.read_text(encoding="utf-8"))
@@ -98,7 +101,7 @@ class WriteTest(unittest.TestCase):
             self.assertTrue(m.get("form"), f"{yml.parent.name} has no form: section")
             self.assertEqual(set(m["form"]) - set(m["kinds"]), set(), yml.parent.name)
             found += 1
-        self.assertEqual(found, 10)                   # the seven shipped packs, us-equities, gleif and funds (retired ones: examples/packs)
+        self.assertEqual(found, 16)                   # the seven shipped packs, us-equities, gleif, funds and the six public-sector packs (retired ones: examples/packs)
 
 
 if __name__ == "__main__":

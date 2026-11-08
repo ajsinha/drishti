@@ -38,7 +38,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Step C3 through the server (docs/architecture/PYTHON_COMPUTE.md section 16): a connector whose file has {@code requires:} stays off and
+ * Step C3 through the server (docs/guides/NOTEBOOK_GUIDE.md section 16): a connector whose file has {@code requires:} stays off and
  * says why until an administrator approves; the person who asked cannot approve it; approval starts it, revocation stops it again; each
  * decision is audited; Admin → Compute's data says compute is off as shipped.
  */
@@ -103,10 +103,10 @@ class ComputeApiTest {
                 .andExpect(jsonPath("$.state").value("NOT_APPROVED"))
                 .andExpect(jsonPath("$.health", containsString("waiting for approval")));
         String id = pendingFor("connector:compute-gate");
-        mvc.perform(post("/api/v1/admin/compute/requests/" + id + "/approve").contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"\"}"))
+        mvc.perform(post("/api/v1/approvals/compute/" + id + "/approve").contentType(MediaType.APPLICATION_JSON).content("{\"comment\":\"\"}"))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9202"));
-        mvc.perform(post("/api/v1/admin/compute/requests/" + id + "/approve").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"reason\":\"the file plugin ships with Drishti\"}")).andExpect(status().isOk()).andExpect(jsonPath("$.state").value("approved"));
+        mvc.perform(post("/api/v1/approvals/compute/" + id + "/approve").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"comment\":\"the file plugin ships with Drishti\"}")).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("approved"));
         awaitState("compute-gate", false);
         mvc.perform(post("/api/v1/admin/compute/requests/" + id + "/revoke").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"reason\":\"withdrawn for review\"}")).andExpect(status().isOk()).andExpect(jsonPath("$.state").value("revoked"));
@@ -120,9 +120,9 @@ class ComputeApiTest {
         String me = overview().get("me").asText();
         connector("compute-mine", me);
         String id = pendingFor("connector:compute-mine");
-        mvc.perform(post("/api/v1/admin/compute/requests/" + id + "/approve").contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"mine\"}"))
+        mvc.perform(post("/api/v1/approvals/compute/" + id + "/approve").contentType(MediaType.APPLICATION_JSON).content("{\"comment\":\"mine\"}"))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.detail", containsString("four eyes")));
-        mvc.perform(post("/api/v1/admin/compute/requests/nope/approve").contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"x\"}"))
+        mvc.perform(post("/api/v1/approvals/compute/nope/approve").contentType(MediaType.APPLICATION_JSON).content("{\"comment\":\"x\"}"))
                 .andExpect(status().isNotFound());
     }
 

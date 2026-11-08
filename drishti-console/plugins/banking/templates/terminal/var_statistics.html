@@ -1,0 +1,44 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Period statistics, VAR <scope> STATS <period> (VAR_GUIDE.md section 18.10; the statistics row of the approved mock-up report-signoff A):
+   period end, average, high, low, the 60-day average and the 12-week stressed VaR average of a node over a fiscal year or quarter, from
+   the official records; the records missing in the period named. A shell: drishti_var-reports.js fills it from /api/var/statistics. #}
+{% extends "base.html" %}
+{% block title %}Period statistics · {{ scope }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}var-statistics{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="rg" data-statistics data-scope="{{ scope }}" data-period="{{ period }}" data-measure="{{ measure }}">
+  <div class="rg-head">
+    <h1>Period statistics</h1>
+    <span class="rg-word">VAR {{ scope }} STATS {{ period }}</span>
+    <span class="rg-meta" data-st-meta aria-live="polite">loading…</span>
+    <a class="rg-meta" href="/help/context/var-statistics" title="Help: period statistics (VAR_GUIDE.md section 18.10)"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+  </div>
+  <form class="rg-ask" method="get" action="/var/statistics">
+    <label>Scope <input name="scope" value="{{ scope }}" class="mono"></label>
+    <label>Period <input name="period" value="{{ period }}" placeholder="FY2026, FY2026Q1, 2026-01-01..2026-03-31" class="mono"></label>
+    <label>Measure <drishti-select name="measure" label="Measure">{% for m in ['var', 'es', 'svar', 'ses'] %}<option value="{{ m }}"{% if m == measure %} selected{% endif %}>{{ m|upper }}</option>{% endfor %}</drishti-select></label>
+    <button type="submit" class="rg-btn primary">Show</button>
+  </form>
+  <p class="rg-notice" data-st-notice role="status" hidden></p>
+  <div class="rg-tiles" data-st-tiles></div>
+  <p class="rg-note" data-st-missing></p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}

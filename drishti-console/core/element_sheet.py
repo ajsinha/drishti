@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The stylesheet of ``<drishti-view>`` (docs/architecture/CLIENT_RENDERER.md, build step 8), generated from the console's own sheets.
+"""The stylesheet of ``<drishti-view>`` (docs/guides/EMBED_GUIDE.md, build step 8), generated from the console's own sheets.
 
 The console's sheets are rewritten for a shadow root (``:root``, ``html`` and ``body`` become the host element), the icon
 font's ``@font-face`` is left out (the element registers the font through the document's ``FontFace`` API: a face declared
@@ -43,12 +43,13 @@ REPORT_NAMED_ICONS = ("table", "x-circle", "play-fill", "pause-fill", "caret-dow
                       "arrow-down-circle-fill", "arrow-right-circle-fill", "arrow-up-circle-fill", "circle-fill", "x-circle-fill", "exclamation-circle-fill", "check-circle-fill", "flag-fill")
 REPORT_ICON_CALL = re.compile(r"icon\('([a-z0-9]+(?:-[a-z0-9]+)*)'\)")
 # the console's own sheets, in the order base.html loads them (the icon sheet is handled apart: only its used glyphs go in)
-SHEETS = ("css/drishti_tokens.css", "css/drishti_theme.css", "css/drishti_terminal.css", "css/drishti_layout.css", "css/drishti_gradients.css", "css/drishti_pivot.css", "css/drishti_colfilter.css", "css/drishti_controls.css", "css/drishti_about.css", "css/drishti_touch.css")
+SHEETS = ("css/drishti_tokens.css", "css/drishti_theme.css", "css/drishti_terminal.css", "css/drishti_layout.css", "css/drishti_gradients.css", "css/drishti_pivot.css", "elements/drishti-grid/drishti_grid.css", "elements/drishti-graph/drishti_graph.css", "elements/drishti-tree/drishti_tree.css", "css/drishti_colfilter.css", "css/drishti_controls.css", "elements/drishti-inputs/drishti_inputs.css", "css/drishti_about.css", "css/drishti_touch.css")
 ICON_SHEET = "vendor/bootstrap-icons/bootstrap-icons.css"
-GZIP_TARGET = 25 * 1024
+GZIP_TARGET = 33 * 1024          # raised on purpose in 2.9.11.e (from 25 KB): drishti-grid's sheet, for the nested pivots tree rows draw with it, and drishti-inputs' sheet, for the controls' multi-select and dates; then drishti-graph's, for a view's graph panel, and drishti-tree's, for a table with children
 # where a glyph can be named: the macros every embedded view is rendered with, and the scripts that run inside the element
 ICON_SOURCES = ("templates/_macros/panels.html", "templates/_macros/view.html", "static/js/drishti_tables.js", "static/js/drishti_colfilter.js", "static/js/drishti_tree-rows.js",
-                "static/js/drishti_view.js", "static/js/drishti_zoom.js", "static/js/drishti_charts.js", "embed/enhancers.js", "embed/element.js", "embed/assets.js")
+                "static/js/drishti_view.js", "static/js/drishti_zoom.js", "static/js/drishti_charts.js", "embed/enhancers.js", "embed/element.js", "embed/assets.js",
+                "static/elements/drishti-grid/src/drishti_doc-console.js")   # the tables' chart button (drishti-grid's console tables)
 ICON_NAME = re.compile(r"(?<![\w-])bi-([a-z0-9]+(?:-[a-z0-9]+)*)")
 BASE_ICON_CLASSES = {"bi"}          # the font's base rule is always kept
 _LICENCE = re.compile(r"\A/\*.*?\*/\s*", re.S)
@@ -161,6 +162,53 @@ def glyph_rules() -> dict[str, str]:
     return rules
 
 
+# The scale and fixed-colour token families of drishti_tokens.css (the theme colours are not among them: scripts read those). In a
+# generated sheet each one that has a single value in every theme is written into the rules that use it, and its declaration goes
+# when no rule still uses it: the sheet stays as small as it was before the tokens, and draws the same.
+PRUNABLE = re.compile(r"--d-(?:fs|sp|radius|z|bp|density|elev|swatch|frtb|heat|band|scrim|cap|market|trading|on-trading|world|statement|calc|print|on-color|paper|on-band|form)(?:-[\w-]*)?")
+_DECL = re.compile(r"(--d-[\w-]+)\s*:\s*([^;{}]*);[ \t]*")
+_REF = re.compile(r"var\((--d-[\w-]+)\)")
+
+
+def fixed_tokens() -> dict[str, str]:
+    """The tokens of PRUNABLE's families declared once in drishti_tokens.css with a plain value (no var()), by name."""
+    text = re.sub(r"/\*.*?\*/", "", (STATIC / SHEETS[0]).read_text(encoding="utf-8"), flags=re.S)
+    found: dict[str, list[str]] = {}
+    for m in _DECL.finditer(text):
+        found.setdefault(m.group(1), []).append(" ".join(m.group(2).split()))
+    return {k: v[0] for k, v in found.items() if len(v) == 1 and PRUNABLE.fullmatch(k) and "var(" not in v[0]}
+
+
+def inline_tokens(body: str, fixed: dict[str, str]) -> str:
+    """Writes each fixed token's value where a rule uses it (declarations of tokens are left as they are)."""
+    return "\n".join(line if _DECL.match(line.strip()) else _REF.sub(lambda m: fixed.get(m.group(1), m.group(0)), line) for line in body.split("\n"))
+
+
+def prune_tokens(body: str, also: str = "") -> str:
+    """Drops the declarations of PRUNABLE tokens that no rule of the sheet (or of ``also``, a sheet laid over it) uses, following
+    tokens that use tokens."""
+    values = {m.group(1): m.group(2) for m in _DECL.finditer(body)}
+    used = set(_REF.findall(_DECL.sub("", body) + also))
+    todo = list(used)
+    while todo:
+        for r in _REF.findall(values.get(todo.pop(), "")):
+            if r not in used:
+                used.add(r)
+                todo.append(r)
+    body = _DECL.sub(lambda m: m.group(0) if m.group(1) in used or not PRUNABLE.fullmatch(m.group(1)) else "", body)
+    return "\n".join(line.rstrip() for line in body.splitlines() if line.strip()) + "\n"
+
+
+def report_body() -> str:
+    """The report sheet's rules (before its header), with the fixed tokens written in."""
+    rules = glyph_rules()
+    icons = [n for n in report_icons() if n in rules]      # a class such as bi-vis is not a glyph
+    parts = [_compact(container_queries(shadow_css((STATIC / s).read_text(encoding="utf-8")))) for s in REPORT_SHEETS]
+    parts.append(REPORT_ADDENDUM)
+    parts.append("".join(_compact(rules[n]) for n in icons))
+    return inline_tokens("".join(parts), fixed_tokens())
+
+
 def build() -> tuple[str, dict]:
     """The sheet text and its manifest. Deterministic: the same sources always give the same bytes."""
     used = icons_used()
@@ -171,7 +219,7 @@ def build() -> tuple[str, dict]:
     parts = [_compact(container_queries(shadow_css((STATIC / s).read_text(encoding="utf-8")))) for s in SHEETS]
     parts.append(ELEMENT_ADDENDUM)
     parts.append(_compact(rules[""]) + "".join(_compact(rules[n]) for n in used))
-    body = "".join(parts)
+    body = prune_tokens(inline_tokens("".join(parts), fixed_tokens()), report_body())
     version = hashlib.sha256(body.encode()).hexdigest()[:12]
     text = licence_header() + f"/* drishti-view sheet {version}: generated by tools/elements_sheet.py from {public_names(SHEETS)}; do not edit. */\n" + body
     raw = text.encode()
@@ -206,10 +254,7 @@ def build_report() -> tuple[str, dict]:
     """The report element's sheet and its manifest (deterministic, content-addressed like the view sheet)."""
     rules = glyph_rules()
     icons = [n for n in report_icons() if n in rules]      # a class such as bi-vis is not a glyph
-    parts = [_compact(container_queries(shadow_css((STATIC / s).read_text(encoding="utf-8")))) for s in REPORT_SHEETS]
-    parts.append(REPORT_ADDENDUM)
-    parts.append("".join(_compact(rules[n]) for n in icons))
-    body = "".join(parts)
+    body = report_body()
     version = hashlib.sha256(body.encode()).hexdigest()[:12]
     text = licence_header() + f"/* drishti-report sheet {version}: generated by tools/elements_sheet.py from {public_names(REPORT_SHEETS)}; do not edit. */\n" + body
     raw = text.encode()

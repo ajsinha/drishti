@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Discussion, the console (COLLABORATION.md, build step 6): the view's one side drawer with its About and Discussion tabs, the thread calls
+"""Discussion, the console (ARCHITECTURE.md §31, build step 6): the view's one side drawer with its About and Discussion tabs, the thread calls
 the tab makes (and the link *Open as it was* that the console adds from a comment's pin), the page's own date travelling with a post, ids that
 never reach a server path, and the account page's email opt-outs."""
 import sys

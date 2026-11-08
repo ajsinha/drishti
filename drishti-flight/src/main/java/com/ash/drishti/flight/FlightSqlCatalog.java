@@ -21,7 +21,7 @@ import org.apache.arrow.vector.types.pojo.Schema;
 /**
  * What Flight SQL's catalog calls list, from the server (the BI model catalogue, as the person may see it): one catalog (the product), a
  * schema per BI model the caller may read (its id, {@code risk-summary@1}), a table per alias of the model ({@code trades}) with its
- * columns as the model describes them. A statement reads one model (DSQL, API_GUIDE.md, Drishti SQL): its {@code FROM} names the model's
+ * columns as the model describes them. A statement reads one model (DSQL, API_REFERENCE.md, Drishti SQL): its {@code FROM} names the model's
  * aliases, so the schema of the tables is the model the statement is about.
  */
 public interface FlightSqlCatalog {

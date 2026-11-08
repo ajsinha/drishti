@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of docs/guides/BI_GUIDE.md and of the export and subscription chapter of BI_TUTORIAL.md from the real stack (not a test:
+"""Makes the pictures and the captured output of docs/guides/REPORTS_GUIDE.md and of the export and subscription chapter of BI_TUTORIAL.md from the real stack (not a test:
 run it by hand).
 
     DRISHTI_BI_REPORT_SERVER_PORT=18950 DRISHTI_BI_REPORT_CONSOLE_PORT=17950 \
@@ -126,7 +126,7 @@ def main(out: Path, captures: Path) -> None:
                 smtp.messages.clear()
                 page.goto(CONSOLE_URL + "/reports/subscribe?type=report&id=" + REPORT + "&page=overview&title=PDF+pack")
                 page.fill('input[name="recipients"]', "rita")
-                page.select_option('select[name="format"]', "pdf")
+                page.select_option('drishti-select[name="format"]', "pdf")
                 page.click("[data-when] summary")
                 page.fill('input[name="schedule"]', "monthly last 18:00 business")
                 page.click("[data-subscribe-form] button[type=submit]")

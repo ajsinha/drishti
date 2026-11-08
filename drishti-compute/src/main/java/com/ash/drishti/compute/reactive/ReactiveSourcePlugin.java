@@ -76,7 +76,7 @@ public final class ReactiveSourcePlugin implements SourcePlugin {
         String json = context.settings().get("reactive.spec");
         if (json == null || json.isBlank()) {
             throw new com.ash.drishti.api.PluginNotConfigured("the reactive plugin runs only as a connector file that declares a computation "
-                    + "(kinds, engine, reads, triggers): docs/connectors/REACTIVE_CONNECTOR.md");
+                    + "(kinds, engine, reads, triggers): docs/connectors/types/reactive/README.md");
         }
         ReactiveSpec s = ReactiveSpec.parse(json, source + ".yaml", v -> v);
         EngineRunner runner = "java".equals(s.engine().type()) ? new DeferredJava(s.engine().entry(), source, hub)

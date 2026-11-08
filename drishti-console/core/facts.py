@@ -14,7 +14,7 @@
 
 """Did you know: the Home page's fact of the day (docs/guides/USER_GUIDE.md, "Home: the fact of the day").
 
-Every fact is declared by the pack it needs, in ``config/packs/<pack>/config/facts.yaml``, and computed from the server's answers on the
+Every fact is declared by the pack it needs, in ``config/packs/<domain>/<pack>/config/facts.yaml``, and computed from the server's answers on the
 business date: the steps fetch (``var``, ``exposure``, ``search``, ``raw``), pick a row (``pick`` with ``where`` and ``order``) or compute
 a value (``let``); ``when`` says what makes it surprising; ``text``, ``why`` and the picture are filled from the result. No number is
 written in a fact: a fact whose condition does not hold today is not shown. Results are kept per server, user, business date and set of
@@ -36,6 +36,7 @@ import yaml
 
 from core import engine_figures as engine
 from core.facts_expr import FORMATS, Expr, ExprError, Template, fmt, overlap_rows
+from core.pack_paths import pack_dirs
 
 log = logging.getLogger(__name__)
 
@@ -256,29 +257,38 @@ def load_pack(pack: dict) -> tuple[list[Fact], list[str]]:
 def check(packs_dir: Path) -> dict[str, list[str]]:
     """Every pack's facts file under ``packs_dir``, checked: ``{pack: [problems]}`` (empty lists when all is well)."""
     out = {}
-    for d in sorted(p for p in Path(packs_dir).iterdir() if (p / FILE).is_file()):
-        out[d.name] = load_pack({"name": d.name, "dir": d})[1]
+    for name, d in pack_dirs(packs_dir).items():
+        if (d / FILE).is_file():
+            out[name] = load_pack({"name": name, "dir": d})[1]
     return out
 
 
 # ---------------------------------------------------------------------------------------------------------------------- computing
 
+def engine_api(engine_id: str) -> str:
+    """A compute engine's API root after /api/v1 (``var`` -> ``/risk/var``), from the engine catalogue (config/engines.yaml ``api:``)."""
+    from core import engines
+
+    api = [str(a) for a in ((engines.entry(engine_id) or {}).get("api") or [])]
+    return api[0][len("/api/v1"):] if api and api[0].startswith("/api/v1/") else ""
+
+
 class Fetcher:
-    """What the steps fetch, as the user: the VaR and exposure APIs, structured search and raw records (core/backend.py)."""
+    """What the steps fetch, as the user: a compute engine's API (the step's key is the engine: ``var``, ``exposure``), structured search and
+    raw records (core/backend.py)."""
 
     def __init__(self, backend, ident, as_of: str | None = None, timeout: float = 60.0):
         self.backend, self.ident, self.as_of, self.timeout = backend, ident, as_of, timeout
 
     async def fetch(self, kind: str, target: Any, params: dict) -> Any:
         dated = {**params, **({"asOf": self.as_of} if self.as_of and "asOf" not in params else {})}
-        if kind == "var":
-            return await self.backend.var("GET", target, self.ident, **dated)
-        if kind == "exposure":
-            return await self.backend.exposure("GET", target, self.ident, **dated)
         if kind == "search":
             return await self.backend.search(target, self.ident)
         if kind == "raw":
             return await self.backend.raw(target[0], target[1], self.ident)
+        root = engine_api(kind)
+        if root:                                       # a compute engine's step (var: /tree): its API as the engine catalogue names it
+            return await self.backend.engine("GET", root + target, self.ident, timeout=self.timeout, **dated)
         raise ValueError(kind)
 
     async def figure(self, fn: str, args: list) -> Any:

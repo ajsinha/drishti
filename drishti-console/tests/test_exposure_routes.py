@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Exposure commands (routes/exposure_routes.py): EXP opens the exposure explorer (/exposure) on the scope it means, as typed or spaced;
+"""Exposure commands (plugins/banking/routes/exposure_routes.py): EXP opens the exposure explorer (/exposure) on the scope it means, as typed or spaced;
 an id or a link of the retired stored exposure profile (EXP EXP-ALDERSHOT-FRA, /v/exposure-profile/EXP-ALDERSHOT-FRA) opens the same
 netting set there with a notice (docs/guides/EXPOSURE_GUIDE.md section 3)."""
-from routes.exposure_routes import exp_command, retired_link
+from plugins.banking.routes.exposure_routes import exp_command, retired_link
 
 
 def test_every_exp_command_opens_the_explorer():
@@ -46,3 +46,28 @@ def test_the_old_link_redirects(client):
 def test_other_words_are_not_exposure_commands():
     assert exp_command("NSET NS-ALDERSHOT-FRA".split()) is None
     assert exp_command([]) is None
+
+
+def test_predeal_typed_opens_the_pre_deal_check(client):
+    """PREDEAL (the server's pre-deal service, EXPOSURE_GUIDE.md section 18.9) opens Counterparties → Pre-deal check: with words, the
+    check is made at once (?command=); the word alone opens the empty form. Not an explorer command."""
+    from urllib.parse import unquote
+
+    r = client.get("/go?q=PREDEAL CP-ALDERSHOT LIKE 1000001 250M <GO>", follow_redirects=False)
+    assert r.status_code == 303 and unquote(r.headers["location"]) == "/predeal?command=PREDEAL CP-ALDERSHOT LIKE 1000001 250M"
+    r = client.get("/go?q=PREDEAL <GO>", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/predeal"
+    assert exp_command("PREDEAL CP-ALDERSHOT".split()) is None                       # not an explorer command
+
+
+def test_the_explorers_old_pre_deal_tab_opens_the_check(client):
+    """One way: the explorer's Pre-deal tab is gone; its address opens Counterparties → Pre-deal check at the same counterparty or netting
+    set, and the explorer's what-if proxy is gone with it (the check asks POST /api/exposure/predeal)."""
+    r = client.get("/exposure?scope=CPTY:CP-ALDERSHOT&tab=predeal", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/predeal?counterparty=CP-ALDERSHOT"
+    r = client.get("/exposure?scope=NSET:NS-ALDERSHOT-LDN&tab=predeal", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/predeal?nettingSet=NS-ALDERSHOT-LDN"
+    assert client.post("/api/exposure/what-if", json={}).status_code == 404
+    page = client.get("/predeal?counterparty=cp-aldershot")
+    assert page.status_code == 200 and 'data-counterparty="CP-ALDERSHOT"' in page.text and "drishti_exposure-predeal.js" in page.text
+    assert 'data-tab="predeal"' not in client.get("/exposure?scope=CPTY:CP-ALDERSHOT").text

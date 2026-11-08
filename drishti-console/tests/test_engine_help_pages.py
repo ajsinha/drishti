@@ -23,7 +23,8 @@ import yaml
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
 CONSOLE = Path(__file__).resolve().parents[1]
-HELP = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text(encoding="utf-8"))
+HELP = [yaml.safe_load(f.read_text(encoding="utf-8"))                 # the core's Help and each module's (plugins/<module>/help.yaml)
+        for f in [CONSOLE / "config" / "help.yaml", *sorted((CONSOLE / "plugins").glob("*/help.yaml"))]]
 
 
 def _guides():
@@ -44,8 +45,8 @@ def _guides():
 
 def test_an_engine_hides_only_its_own_pages():
     guides = _guides()
-    engines = yaml.safe_load((CONSOLE / "config" / "engines.yaml").read_text(encoding="utf-8"))
-    engines = engines["engines"] if isinstance(engines, dict) else engines
+    from core import engines as catalogue
+    engines = catalogue.entries()                      # the core's and every module's (plugins/<module>/engines.yaml)
     shared = {"operations", "configuration", "user-guide", "api-guide", "cli-guide", "troubleshooting", "getting-started"}
     for e in engines:
         for slug in e.get("help") or []:

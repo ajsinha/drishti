@@ -13,20 +13,20 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 5 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12): live visuals, the live indicator, Perspective, and boards (a wall of tiles, tile alerts, kiosk). Colours are theme tokens;
+/* Rupaka phase 5 (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 12): live visuals, the live indicator, Perspective, and boards (a wall of tiles, tile alerts, kiosk). Colours are theme tokens;
    every state has its word as well as its colour; touch targets are 44 px; a phone shows one column; people who ask for less motion get no flash. */
 
 /* the live indicator of a report or board */
-.bi-live-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; margin: .4rem 0; padding: .15rem 0; }
-.bi-live-state { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-size: .85rem; }
+.bi-live-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-6_4) var(--d-sp-14_4); margin: var(--d-sp-6_4) 0; padding: var(--d-sp-2_4) 0; }
+.bi-live-state { display: inline-flex; align-items: center; gap: var(--d-sp-7_2); font-weight: 600; font-size: var(--d-fs-13_6); }
 .bi-live-dot { width: .6rem; height: .6rem; border-radius: 50%; background: var(--d-muted); display: inline-block; }
 .bi-live-live .bi-live-dot { background: var(--d-ok); }
 .bi-live-stale .bi-live-dot, .bi-live-paused .bi-live-dot, .bi-live-hidden .bi-live-dot, .bi-live-connecting .bi-live-dot { background: var(--d-warn); }
 .bi-live-disconnected .bi-live-dot, .bi-live-failed .bi-live-dot { background: var(--d-bad); }
 .bi-live-stale, .bi-live-failed, .bi-live-disconnected { color: var(--d-ink); }
-.bi-live-time { color: var(--d-muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.bi-live-time { color: var(--d-muted); font-size: var(--d-fs-12_8); font-variant-numeric: tabular-nums; }
 .bi-live-pause { min-height: 2.2rem; }
-.bi-board-rotate { color: var(--d-muted); font-size: .8rem; }
+.bi-board-rotate { color: var(--d-muted); font-size: var(--d-fs-12_8); }
 
 /* a visual drawn over in place; a failed live update keeps the old picture and says so */
 .bi-flash { animation: bi-flash 900ms ease-out; }
@@ -37,12 +37,9 @@
 /* Perspective */
 .bi-psp { position: relative; width: 100%; height: 100%; min-height: 200px; }
 .bi-psp perspective-viewer { position: absolute; inset: 0; display: block; }
-.bi-psp-plain { height: calc(100% - 2.4rem); overflow: auto; }
 .bi-vis-perspective-grid .bi-vis-body, .bi-vis-perspective-pivot .bi-vis-body { padding: 0; }
 
 /* boards */
-.bi-board-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: .5rem 1rem; border-bottom: 1px solid var(--d-border); margin: .5rem 0 .4rem; }
-.bi-board-tools { display: flex; flex-wrap: wrap; gap: .4rem; padding-bottom: .4rem; }
 .bi-board-grid .bi-vis { transition: border-color .2s, box-shadow .2s; }
 .bi-tile-warn { border-color: var(--d-warn); box-shadow: inset 0 0 0 3px var(--d-warn); }
 .bi-tile-crit { border-color: var(--d-bad); box-shadow: inset 0 0 0 3px var(--d-bad); }
@@ -53,23 +50,20 @@
 .bi-tile-badge-crit { color: var(--d-bad); }
 
 /* kiosk: the menus go, the wall fills the screen */
-body.bi-kiosk .tbar, body.bi-kiosk .bi-rail, body.bi-kiosk .bi-head, body.bi-kiosk .skip-link, body.bi-kiosk .bi-board-tools [data-prev], body.bi-kiosk .bi-board-tools [data-next] { display: none; }
-body.bi-kiosk .bi-shell { display: block; max-width: none; padding: .5rem .6rem; position: fixed; inset: 0; overflow: auto; background: var(--d-bg); z-index: 20; }
-body.bi-kiosk .bi-board-bar { margin: 0 0 .3rem; }
+body.bi-kiosk .tbar, body.bi-kiosk .bi-rail, body.bi-kiosk .bi-head, body.bi-kiosk .skip-link { display: none; }
+body.bi-kiosk .bi-shell { display: block; max-width: none; padding: var(--d-sp-8) var(--d-sp-9_6); position: fixed; inset: 0; overflow: auto; background: var(--d-bg); z-index: 20; }
 body.bi-kiosk .bi-board-grid { grid-auto-rows: calc((100vh - 6rem) / 13); }
-body.bi-kiosk .bi-vis-title { font-size: 1rem; }
-body.bi-kiosk .bi-card-value { font-size: clamp(1.6rem, 12cqi, 3.4rem); }
+body.bi-kiosk .bi-vis-title { font-size: var(--d-fs-16); }
+body.bi-kiosk .bi-card-value { font-size: var(--d-fs-display-3); }
 
 @media (prefers-reduced-motion: reduce) {
   .bi-flash { animation: none; }
   .bi-board-grid .bi-vis { transition: none; }
 }
-@media (pointer: coarse) {
-  .bi-live-pause, .bi-board-tools .btn-pill { min-height: 44px; min-width: 44px; }
+@media (pointer: coarse) {.bi-live-pause { min-height: 44px; min-width: 44px; }
 }
 @media (max-width: 760px) {
   .bi-rgrid .bi-vis-live-chart { height: 16rem; }
   .bi-rgrid .bi-vis-perspective-grid, .bi-rgrid .bi-vis-perspective-pivot { height: 24rem; }
-  .bi-live-pause, .bi-board-tools .btn-pill { min-height: 44px; min-width: 44px; }
-  .bi-board-tools { width: 100%; }
+  .bi-live-pause { min-height: 44px; min-width: 44px; }
 }

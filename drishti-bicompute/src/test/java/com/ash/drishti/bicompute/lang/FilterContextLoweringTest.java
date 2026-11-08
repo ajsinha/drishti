@@ -38,7 +38,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
- * The filter-context functions in the engine (BI_DESIGN.md 3.3.5, carried over by BI_FOUNDATION_2911E.md 2.3): each Rachana form of
+ * The filter-context functions in the engine (ARCHITECTURE.md §28 3.3.5, carried over by docs/architecture/ARCHITECTURE.md §28 2.3): each Rachana form of
  * the design's examples lowered to its context sub-plan, the edited question the engine decides for it, and the rules 1 to 7.
  */
 class FilterContextLoweringTest {

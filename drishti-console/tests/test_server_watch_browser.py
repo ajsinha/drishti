@@ -54,7 +54,7 @@ def start_server(tmp: Path):
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     jar = find_jar()
     if not jar or not Path(java).exists():
-        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
     work = tmp / "server"
     work.mkdir(exist_ok=True)
     env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading", DRISHTI_SECURITY_ENABLED="false",

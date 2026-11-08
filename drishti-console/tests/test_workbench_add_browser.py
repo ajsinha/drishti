@@ -25,8 +25,8 @@ EMPTY = "rachana: 1\nsutra: empty\nversion: 1\nmatch: { kind: trade }\ntitle: { 
 
 
 def settled_selection(page, kind):
-    wait(page, "!!document.querySelector('[data-preview] .wb-sel[data-panel]')")
-    return page.evaluate("document.querySelector('[data-preview] .wb-sel[data-panel]').dataset.kind") == kind
+    wait(page, "!!document.querySelector('[data-preview] .dd-selected[data-panel]')")
+    return page.evaluate("document.querySelector('[data-preview] .dd-selected[data-panel]').dataset.kind") == kind
 
 
 def test_a_studio_address_opens_with_the_canvas_and_yaml_and_the_header_button_adds_a_draggable_panel(live_console, page):
@@ -41,10 +41,10 @@ def test_a_studio_address_opens_with_the_canvas_and_yaml_and_the_header_button_a
     rev = state(page, "rev")
     page.get_by_role("button", name="Add panel", exact=True).click()
     page.keyboard.type("line")
-    page.locator("[role=option]").first.click()
+    page.locator(".wb-menu [role=option]").first.click()                        # the Add list (the palette's entries are options too)
     settle(page, rev)
     assert settled_selection(page, "line")
-    new = page.evaluate("document.querySelector('[data-preview] .wb-sel[data-panel]').dataset.panel")
+    new = page.evaluate("document.querySelector('[data-preview] .dd-selected[data-panel]').dataset.panel")
     grip = page.locator(f'[data-preview] [data-panel="{new}"] .wb-grip')
     assert grip.count() == 1 and "Drag to move" in page.locator(f'[data-preview] [data-panel="{new}"] .pnl-h').get_attribute("title")
     ids0 = page.evaluate("window.Drishti.workbench.canvas.ids()")
@@ -72,11 +72,11 @@ def test_the_header_button_and_the_palette_add_from_the_yaml_tab(live_console, p
     page.get_by_role("tab", name="YAML").click()
     assert page.get_by_role("button", name="Add panel", exact=True).is_visible()
     rev = state(page, "rev")
-    page.get_by_role("button", name="Add a gauge panel").click()                  # the palette's Add, on the YAML tab
+    page.locator("[data-palette] [data-dd-entry='gauge']").click()                 # the palette's entry (drishti-designer's Palette), on the YAML tab
     settle(page, rev)
     assert page.get_by_role("tab", name="Design").get_attribute("aria-selected") == "true"
     assert settled_selection(page, "gauge")
-    assert page.locator("[data-preview] .wb-sel").is_visible()
+    assert page.locator("[data-preview] .dd-selected").is_visible()
     page.get_by_role("tab", name="YAML").click()
     rev = state(page, "rev")
     page.get_by_role("button", name="Add panel", exact=True).click()
@@ -90,9 +90,9 @@ def test_the_header_button_and_the_palette_add_from_the_yaml_tab(live_console, p
 def test_the_palette_is_a_filterable_grid_of_all_twenty_one_kinds(live_console, page):
     open_design(page, live_console, "palette", sutra=SUTRA, files={"t.json": SAMPLE})
     assert page.locator("#wbPalette").inner_text() == "Add a panel"
-    assert page.locator("[data-palette] .wb-kind").count() == 22
-    page.get_by_label("Filter the panel kinds").fill("candle")
-    assert page.locator("[data-palette] .wb-kind:not([hidden])").count() == 1
+    assert page.locator("[data-palette] [data-dd-entry]").count() == 22               # drishti-designer's Palette
+    page.get_by_label("Search panel kinds").fill("candle")
+    assert page.locator("[data-palette] [data-dd-entry]").count() == 1
 
 
 def test_an_empty_design_offers_to_add_the_first_panel(live_console, page):

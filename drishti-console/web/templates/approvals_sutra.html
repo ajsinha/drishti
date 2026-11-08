@@ -1,0 +1,25 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# A Sutra proposal's "what changes" in the Approvals queue: the Sutra diff with its moved panels (core/sutra_diff.py) and, for a design
+   shipped from the workbench, its evidence (the check matrix, the sample names, the notes). A fragment: drishti-insight's Approvals queue puts it in
+   the item's diff box. #}
+<div class="ap-sutra" data-ap-sutra>
+  {% if stale %}<p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The live Sutra changed after this was
+    proposed. It cannot be approved: reject it and propose again from the live version.</p>{% endif %}
+  <p class="text-muted-d" data-ap-sutra-against>{{ ('New version: changes against the latest earlier version' if before else 'New version: the whole Sutra') if new_version else 'Changes against the live Sutra' }}</p>
+  {% include "build/_diff.html" %}
+  {% include "build/_evidence.html" %}
+</div>

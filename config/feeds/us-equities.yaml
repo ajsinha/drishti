@@ -1,0 +1,55 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/feeds/us-equities.yaml: the US equities feed (docs/guides/EXTERNAL_DATA.md; every key in its section "The feed file").
+#   python3 tools/drishti.py feed run us-equities                pull, write data/datafeeds/us-equities/<date>/, load into capitalmarket
+#   python3 tools/drishti.py feed run us-equities --snapshot     refresh the committed pack and data/testdata/us-equities instead
+#   python3 tools/drishti.py feed run us-equities -- --scope TSLA,YEARS:15        arguments after -- go to the source
+# Index membership comes from the tracking ETFs' Form N-PORT holdings (Dow 30 via DIA, S&P 500 via SPY, Nasdaq-100 via QQQ,
+# Russell 2000 via IWM), read from the funds feed's download cache: run the funds feed first (its schedule is earlier).
+# Every request carries the feeds' User-Agent with a contact, as the SEC asks ("Drishti ajsinha@gmail.com"; set DRISHTI_FEEDS_USER_AGENT to
+# your organisation's contact in production).
+feed: us-equities
+title: US equities from SEC EDGAR (companies, filings, financials, index membership)
+description: >-
+  The companies of the Dow 30, the S&P 500, the Nasdaq-100 and the Russell 2000 (index membership from SPY, DIA, QQQ and IWM N-PORT
+  holdings) and major US, Canadian and UK banks: SEC EDGAR companies, SIC sectors, recent filings and ten years of annual XBRL
+  financials, LEIs from GLEIF, headquarters and websites from Wikidata.
+class: us_equities.UsEquitiesFeed      # tools/feeds/sources/us_equities.py
+source:
+  provider: SEC EDGAR, Nasdaq Trader, GLEIF, Wikidata
+  url: https://www.sec.gov/edgar
+  pause: 0.13                          # the SEC's fair access policy: at most 10 requests a second
+  retries: 3
+  cache-hours: 20
+lake: capitalmarket
+load: java
+schedule: {at: "07:00", days: daily}
+licence:
+  name: Public domain (U.S. Government work); Wikidata and GLEIF CC0
+  url: https://www.sec.gov/privacy#dissemination
+  redistribution: allowed
+  internal-only: false
+  attribution: "Source: U.S. Securities and Exchange Commission (EDGAR); Wikidata (CC0); GLEIF (CC0)"
+  notes: SEC fair access policy (a descriptive User-Agent with a contact, at most 10 requests a second)
+datasets:
+  us-company:       {pack: us-equities, kind: us-company, key: TICKER, description: "a listed company: CIK, ticker, LEI, SIC, headquarters"}
+  index-membership: {pack: us-equities, kind: index-membership, key: INDEX, description: "an index's members (SP500, NDX, DJIA, R2000, bank lists)"}
+  filing-feed:      {pack: us-equities, kind: filing-feed, key: FEED, description: "a company's recent filings as one feed"}
+  filing:           {pack: us-equities, kind: filing, key: ACCESSION, description: "one filing (10-K, 10-Q, 8-K, ...)"}
+  financial-fact:   {pack: us-equities, kind: financial-fact, key: FACT_ID, description: "one XBRL fact of a fiscal year"}
+options:
+  args: []
+snapshot:
+  note: refreshes config/packs/capitalmarkets/us-equities (samples, guide) and data/testdata/us-equities

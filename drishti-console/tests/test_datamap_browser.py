@@ -14,8 +14,9 @@
 
 """The data map, DATAMAP, in a real browser (docs/guides/USER_GUIDE.md "The data map"): typing DATAMAP trade opens the Map with the trade
 selected, its joins lit and the side panel listing its join fields with their coverage and the commands that open it; Cards shows the
-domain's table, comes from and crosses into; the chips and Find narrow both views and everything is in the address; a phone keeps the
-page from scrolling sideways; the page follows the server while it is still checking. Runs Chromium through Playwright; skipped when
+domain's table, comes from and crosses into; the chips and Find narrow both views and everything is in the address; the map is
+drishti-graph (its kinds and joins the server's, the layout in the address); a phone keeps the page from scrolling sideways; the page
+follows the server while it is still checking. Runs Chromium through Playwright; skipped when
 Playwright or its Chromium is missing."""
 import socket
 import threading
@@ -65,9 +66,16 @@ def map_console():
     thread.join(10)
 
 
+G = "document.querySelector('[data-graph]').__drishtiGraph"
+
+
+def _ready(page):
+    page.wait_for_function(f"() => {G} && {G}.layoutMs !== null", timeout=15000)
+
+
 def test_datamap_trade_selects_the_trade_and_lights_its_joins(browser, map_console):
     url, _ = map_console
-    page = browser.new_page(viewport={"width": 1440, "height": 1000})
+    page = browser.new_page(viewport={"width": 1440, "height": 1400})
     page.goto(url + "/t")
     page.locator("#cmdInput").fill("DATAMAP trade")
     page.keyboard.press("Enter")
@@ -77,12 +85,19 @@ def test_datamap_trade_selects_the_trade_and_lights_its_joins(browser, map_conso
     for words in ("Joins to", "COUNTERPARTY", "15,000 of 15,000 ids match (100%)", "PORTFOLIO", "1 of 4 ids match (25%)", "finding",
                   "Joined from", "Exposure", "Open it", "TRD T-1", "Data contract"):
         assert words in text, words
-    assert "dm-sel" in page.locator(".dm-n[data-kind='trade']").get_attribute("class")
-    assert page.locator(".dm-j.dm-on").count() == 3, "the trade's three lines are lit"
-    assert "dm-dim" not in page.locator(".dm-n[data-kind='counterparty']").get_attribute("class")
+    _ready(page)
+    assert page.evaluate(f"() => {G}.selection()") == ["trade"]
+    assert page.evaluate(f"() => {G}.neighbourList('trade').length") == 3, "the trade's three joins are lit"
+    assert "counterparty" in page.evaluate(f"() => {G}.neighbourList('trade').map((x) => x.node.id)")
+    data = page.evaluate("() => JSON.parse(document.querySelector('[data-datamap]').getAttribute('data-model'))")
+    drawn = page.evaluate(f"() => ({{ nodes: {G}.model.nodeList().map((n) => n.id).sort(), edges: {G}.model.edgeList().map((e) => e.source + '>' + e.target).sort() }})")
+    assert drawn["nodes"] == sorted(k["kind"] for k in data["kinds"]), "the same kinds as the server's model"
+    assert drawn["edges"] == sorted(l["from"] + ">" + l["to"] for l in data["lines"]), "the same joins as the server's model"
+    assert page.evaluate(f"() => {G}.frames.map((f) => f.label).sort()") == sorted(d["title"] for d in data["domains"]), "a frame per domain"
     assert side.locator("a.dm-cmd").first.get_attribute("href") == "/go?q=TRD%20T-1"
 
-    page.locator(".dm-n[data-kind='counterparty']").click()
+    xy = page.evaluate(f"() => {{ const g = {G}; g.P.canvas.scrollIntoView({{ block: 'center' }}); const s = g.toScreen('counterparty'), r = g.P.canvas.getBoundingClientRect(); return [r.left + s.x, r.top + s.y]; }}")
+    page.mouse.click(xy[0], xy[1])
     assert "kind=counterparty" in page.url
     assert "Joined from" in side.inner_text() and "Trade" in side.inner_text()
     page.close()
@@ -105,11 +120,14 @@ def test_cards_show_the_domain_table_and_the_state_is_in_the_address(browser, ma
     assert "chip=organisation" in page.url
     assert page.locator("[data-card='trades']").is_hidden() and page.locator("[data-card='organisation']").is_visible()
     page.locator("[data-set-view='map']").click()
-    assert "dm-hidden" in page.locator(".dm-n[data-kind='trade']").get_attribute("class")
+    _ready(page)
+    assert "trade" not in page.evaluate(f"() => {G}.visibleNodes().map((n) => n.id)"), "the chip leaves the other domains out"
     page.locator("[data-chip-set='']").click()
     page.locator("[data-find]").fill("PORTFOLIO")
     assert "find=PORTFOLIO" in page.url
-    assert "dm-dim" not in page.locator(".dm-n[data-kind='trade']").get_attribute("class")
+    assert page.evaluate(f"() => {G}.highlighted.has('trade')"), "Find marks the kinds with the field"
+    page.evaluate(f"() => {G}.setLayout('layered')")
+    assert "layout=layered" in page.url, "the layout is in the address"
     page.reload()
     assert page.locator("[data-find]").input_value() == "PORTFOLIO", "a reload opens the same picture"
     page.close()

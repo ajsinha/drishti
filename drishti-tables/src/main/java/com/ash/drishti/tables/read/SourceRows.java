@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- * Where a virtual table's documents come from, for one reader (VIRTUAL_TABLES.md section 10, V9 and V11): the server reads a kind through
+ * Where a virtual table's documents come from, for one reader (docs/architecture/ARCHITECTURE.md section 10, V9 and V11): the server reads a kind through
  * its connector as the Data view does, the reader's row rules and masks on the source applied to every document; a test reads JSONL. The
  * layer never reads a connector itself, so it calls no SQL engine of its own (V14).
  */

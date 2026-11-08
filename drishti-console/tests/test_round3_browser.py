@@ -22,7 +22,7 @@ import pytest
 from playwright.sync_api import expect
 
 from test_bi_notebook_browser import browser, open_extract, stack  # noqa: F401  (the module's stack and browser fixtures)
-from bi_report_helpers import sign_in
+from bi_report_helpers import code_text, sign_in, type_code
 from bi_report_stack import CONSOLE_URL, PASSWORD, admin
 
 REPORT = 'rachana: 1\nreport: pr\ntitle: "Private report"\nmodel: trades-basic@1\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n'
@@ -31,7 +31,7 @@ MAKE = "([k, t, b]) => window.drishtiBi.api('POST', '/workspaces/me/items', {kin
 
 
 def test_publish_in_a_private_workspace_explains_and_ctrl_s_saves_the_yaml(stack, browser):
-    page = sign_in(browser, "wes", "/bi")
+    page = sign_in(browser, "wes", "/bi/catalogue")
     rid = page.evaluate(MAKE, ["report", "Private report", REPORT])
     bid = page.evaluate(MAKE, ["board", "Private board", BOARD])
     for iid in (rid, bid):
@@ -86,7 +86,8 @@ def test_a_notebook_has_one_title_and_promotes_once_and_fits_a_phone(stack, brow
     page.click("[data-edit] [type=submit]")
     expect(page.locator("[data-body]")).to_contain_text('title: "Renamed on the item"', timeout=15000)       # the item's title is the YAML's
     page.click("[data-actions] >> text=Edit")
-    page.fill("[data-edit] textarea[name=body]", page.input_value("[data-edit] textarea[name=body]").replace('title: "Renamed on the item"', "title: Changed in the YAML"))
+    body = "[data-edit] textarea[name=body]"                                                                 # drishti-inputs' CodeEditor
+    type_code(page, body, code_text(page, body).replace('title: "Renamed on the item"', "title: Changed in the YAML"))
     page.click("[data-edit] [type=submit]")
     expect(page.locator("[data-title]")).to_have_text("Changed in the YAML", timeout=15000)                  # and the YAML's is the item's
     page.set_viewport_size({"width": 390, "height": 800})
@@ -103,7 +104,7 @@ def test_a_dataset_can_be_created_from_pasted_yaml(stack, browser):
     page.select_option("[data-new-item] [name=kind]", "dataset")
     expect(page.locator("[data-paste-dataset]")).to_be_visible()
     page.click("[data-paste-dataset]")
-    page.fill("[name=yamlbody]", 'rachana: 1\ndataset: pasted-one\ntitle: "Pasted one"\ntables: []\n')
+    type_code(page, "[name=yamlbody]", 'rachana: 1\ndataset: pasted-one\ntitle: "Pasted one"\ntables: []\n')     # drishti-inputs' CodeEditor
     page.click("[data-paste-dataset]")
     page.wait_for_url("**/bi/i/**", timeout=15000)
     expect(page.locator("[data-title]")).to_have_text("Pasted one")
@@ -113,13 +114,13 @@ def test_a_steward_outside_the_audience_approves_and_is_told_instead_of_seeing_a
     assert admin("PUT", "/admin/role-definitions/bi-stew", {"kinds": ["*"], "bi": ["bi", "bi-steward"]})[0] == 200
     assert admin("POST", "/admin/users", {"username": "stew", "displayName": "Stew", "email": "stew@desk.test", "roles": ["bi-stew"], "packs": ["trading"], "password": PASSWORD,
                                           "mustChangePassword": False})[0] in (200, 201, 409)
-    wes = sign_in(browser, "wes", "/bi")
+    wes = sign_in(browser, "wes", "/bi/catalogue")
     ws = wes.evaluate("() => window.drishtiBi.api('POST', '/workspaces', {name: 'Review desk', description: 'r'}).then(w => w.id)")
     wes.evaluate("(w) => window.drishtiBi.api('PUT', '/workspaces/' + w, {reviewRequired: true})", ws)
     iid = wes.evaluate("(w) => window.drishtiBi.api('POST', '/workspaces/' + w + '/items', {kind: 'report', title: 'To approve', description: '', body: %r}).then(i => i.id)" % REPORT, ws)
     wes.evaluate("(i) => window.drishtiBi.api('POST', '/items/' + i + '/propose', {})", iid)
-    stew = sign_in(browser, "stew", f"/bi/i/{iid}")
-    stew.click("[data-actions] >> text=Approve and publish")
-    expect(stew.locator("[data-msg]")).to_contain_text("you are not in it", timeout=15000)
-    assert not stew.errors and "undefined" not in stew.inner_text("#biCanvas")
-    expect(stew.locator("[data-back-inbox]")).to_be_visible()
+    stew = sign_in(browser, "stew", f"/approvals/bi/{iid}")                                # a steward outside the item's audience decides it in the queue
+    stew.locator("[data-ap-item]:not([hidden])").wait_for()
+    stew.get_by_role("button", name="Approve", exact=True).click()
+    expect(stew.locator("[data-ap-said]")).to_have_text("Approved.", timeout=15000)
+    assert not stew.errors and "undefined" not in stew.inner_text("[data-ap-detail]")

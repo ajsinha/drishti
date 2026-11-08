@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The lens menus in a real browser (docs/lenses/README.md, mock-up menus/A): with an edition's subject menus the top bar's controls
+"""The lens menus in a real browser (docs/architecture/LENSES.md section 1.4.4, mock-up docs/lenses/mockups/menus/A): with an edition's subject menus the top bar's controls
 never overlap at desktop widths and the page never scrolls sideways; an item to finish (Engines -> Exposure -> A counterparty) puts its words in
 the command line, the menu closed, instead of opening a page. Skipped when Playwright or Chromium is missing."""
 import threading
@@ -128,7 +128,7 @@ def test_counterparties_ccr_cube_opens_the_pivot_preset_under_construction(brows
         page.locator(".tbar-menu-btn", has_text="Counterparties").click()
         item = page.locator("a.mega-item[href='/pivot?preset=ccr']")
         item.wait_for(state="visible")
-        assert "CCR cube" in item.inner_text() and item.locator(".drishti_uc-chip").count() == 1
+        assert "Counterparty-risk cube" in item.inner_text() and item.locator(".drishti_uc-chip").count() == 1
         item.click()
         page.wait_for_url("**/pivot?preset=ccr**")
         assert page.locator("[data-pv-title]").text_content().strip() == "CCR cube"

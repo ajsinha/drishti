@@ -1,0 +1,97 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this page: what the central-banks pack's kinds and fields mean (the README, the contracts and the About card read it).
+about: 1
+vocabulary:
+  provenance: { term: Provenance, means: "Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY." }
+  source: { term: Source, means: "The organisation whose published data the record holds." }
+  dataset: { term: Dataset, means: "The source and the series (or the bank) the record was built from." }
+  retrieved: { term: Retrieved, means: "The business date of the feed's pull that wrote the record." }
+  licence: { term: Licence, means: "The terms under which the source allows reuse, as recorded in the feed's YAML." }
+  attribution: { term: Attribution, means: "The credit line to repeat when the data is shown or republished." }
+  url: { term: Address, means: "The source's page for this record." }
+  internal: { term: Internal only, means: "True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)." }
+  date: { term: Date, means: "The observation's date (a monthly series is dated the first of its month)." }
+  value: { term: Value, means: "The observation, in the series' unit." }
+kinds:
+  central-bank:
+    title: Central bank
+    about: The ${$.NAME}'s policy rate was ${fmt($.POLICY_RATE, 'price2')}% on ${$.POLICY_RATE_DATE}; it last moved on ${$.LAST_MOVE_DATE}.
+    guide: central-banks
+    glossary:
+      BANK_ID: { term: Bank id, means: "CBANK- and the bank's short id in the feed's YAML (FED, BOC)." }
+      NAME: { term: Name, means: "The central bank's name." }
+      COUNTRY: { term: Country, means: "The ISO 3166-1 alpha-3 code of the bank's country." }
+      COUNTRY_NAME: { term: Country name, means: "The bank's country." }
+      CURRENCY: { term: Currency, means: "The ISO 4217 code of the bank's currency." }
+      WEBSITE: { term: Website, means: "The bank's website." }
+      POLICY_RATE: { term: Policy rate, means: "The latest value of the bank's policy-rate series (the Fed: the target range's upper limit; the Bank of Canada: the target for the overnight rate).", unit: "%" }
+      POLICY_RATE_DATE: { term: Policy rate date, means: "The date of that value." }
+      POLICY_SERIES: { term: Policy rate series, means: "The rate-series page of the policy rate." }
+      LAST_MOVE_DATE: { term: Last move, means: "The first date the policy rate took its current value, within the history window; empty when it did not move in the window." }
+      LAST_MOVE_BP: { term: Move, means: "The size of that move: the new rate less the old one, in basis points (negative for a cut).", unit: bp }
+      POLICY_HISTORY: { term: Policy rate history, means: "The policy rate by date over the window, oldest first (DATE, VALUE)." }
+      POLICY_HISTORY.DATE: { use: date }
+      POLICY_HISTORY.VALUE: { use: value }
+      SERIES: { term: Series, means: "Every series of the bank the feed follows, one row each: RATE_SERIES, TITLE, LATEST, DATE, CHANGE, UNIT." }
+      SERIES.RATE_SERIES: { term: Series, means: "The rate-series page (CBSER-<source>-<code>)." }
+      SERIES.TITLE: { term: Title, means: "The series' title in the feed's YAML." }
+      SERIES.LATEST: { term: Latest, means: "The series' latest value, in its unit." }
+      SERIES.DATE: { term: Date, means: "The date of the latest value." }
+      SERIES.CHANGE: { term: Change, means: "The latest value less the previous observation." }
+      SERIES.UNIT: { term: Unit, means: "What the series measures." }
+      PRESS: { term: Press releases, means: "The bank's publisher page in the official-news pack (PRESS-<id>)." }
+      PROVENANCE: { use: provenance }
+      PROVENANCE.SOURCE: { use: source }
+      PROVENANCE.DATASET: { use: dataset }
+      PROVENANCE.RETRIEVED_AT: { use: retrieved }
+      PROVENANCE.LICENCE: { use: licence }
+      PROVENANCE.ATTRIBUTION: { use: attribution }
+      PROVENANCE.URL: { use: url }
+      PROVENANCE.INTERNAL_ONLY: { use: internal }
+  rate-series:
+    title: Central bank series
+    about: ${$.TITLE} was ${fmt($.LATEST, 'amount2')} (${$.UNIT}) on ${$.LATEST_DATE}.
+    guide: central-banks
+    glossary:
+      SERIES_ID: { term: Series id, means: "CBSER-, the source (FRED or BOC) and the source's series code with dots as underscores." }
+      NAME: { term: Name, means: "The series' title, as NAME for search." }
+      SOURCE: { term: Source, means: "The source the series is read from: FRED (Federal Reserve Bank of St. Louis) or the Bank of Canada." }
+      CODE: { term: Code, means: "The series' code at its source (DGS10, V39079)." }
+      CENTRAL_BANK: { term: Central bank, means: "The central-bank page the series belongs to (CBANK-<id>)." }
+      TITLE: { term: Title, means: "The series' title in the feed's YAML, else the source's own." }
+      DESCRIPTION: { term: What it is, means: "The source's description of the series (FRED's notes, the Valet description), cut at 600 characters." }
+      UNIT: { term: Unit, means: "What the series measures (%, percentage points, an index, USD millions, CAD per USD)." }
+      FREQUENCY: { term: Frequency, means: "How often the source publishes the series, in its own words." }
+      LATEST: { term: Latest, means: "The latest observation, in the series' unit." }
+      LATEST_DATE: { term: Latest date, means: "The date of the latest observation." }
+      PREVIOUS: { term: Previous, means: "The observation before the latest one." }
+      PREVIOUS_DATE: { term: Previous date, means: "The date of the previous observation." }
+      CHANGE: { term: Change, means: "The latest observation less the previous one, in the series' unit." }
+      CHANGE_1Y: { term: On the year, means: "The latest observation less the last one at least a year before it; empty when the window is shorter." }
+      HIGH: { term: High, means: "The highest observation in the history window." }
+      LOW: { term: Low, means: "The lowest observation in the history window." }
+      OBSERVATIONS: { term: Observations, means: "How many observations the history holds." }
+      HISTORY: { term: History, means: "The observations over the window (the feed's history-days), oldest first (DATE, VALUE)." }
+      HISTORY.DATE: { use: date }
+      HISTORY.VALUE: { use: value }
+      PROVENANCE: { use: provenance }
+      PROVENANCE.SOURCE: { use: source }
+      PROVENANCE.DATASET: { use: dataset }
+      PROVENANCE.RETRIEVED_AT: { use: retrieved }
+      PROVENANCE.LICENCE: { use: licence }
+      PROVENANCE.ATTRIBUTION: { use: attribution }
+      PROVENANCE.URL: { use: url }
+      PROVENANCE.INTERNAL_ONLY: { use: internal }

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The phone display and the lens menus' phone form in a real browser (MOBILE_DISPLAY.md, LX1 option C), at 390 px and 1280 px, in the
+"""The phone display and the lens menus' phone form in a real browser (docs/guides/BUILD_GUIDE.md, LX1 option C), at 390 px and 1280 px, in the
 dark (terminal) and light themes:
 
 * a phone gets the phone page (must, then glance in its compact form, More on this page, On desktop) without scrolling sideways, each
@@ -237,7 +237,6 @@ def test_the_var_page_on_a_desktop_is_unchanged(browser, risk_console, theme):
         _open(page, risk_console + "/var?scope=BANK")
         assert page.locator("[data-phone-tier]").count() == 0 and page.locator(".ph-parts").count() == 0
         assert page.locator(".vx-tab[data-tab=contrib]").is_visible()
-        page.locator("[data-vx-how]").click()                                     # 2.9.11.b: What-if… sits in the How calculated drawer
-        assert page.locator("[data-vx-whatif]").is_visible()
+        assert page.locator("[data-vx-whatif]").is_visible()                       # What-if… in the toolbar
     finally:
         ctx.close()

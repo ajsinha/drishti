@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.util.AntPathMatcher;
 
 /**
- * Embed tokens (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 8): the RFC 8693 token exchange a host application's BACKEND makes, and the
+ * Embed tokens (docs/guides/EMBED_GUIDE.md › Drishti Elements: the design, section 8): the RFC 8693 token exchange a host application's BACKEND makes, and the
  * checks every embed call goes through.
  *
  * <p><b>Exchange.</b> The host authenticates ({@code client_secret_basic}, or {@code private_key_jwt} with a key it registered) and
@@ -195,7 +195,7 @@ public final class EmbedTokenService {
         return new Response(token, ACCESS_TOKEN, "Bearer", exp.getEpochSecond() - now.getEpochSecond(), scope);
     }
 
-    // ---- the sign-in window (CLIENT_RENDERER.md section 10.1) ----------------------------------------------------------------------
+    // ---- the sign-in window (EMBED_GUIDE.md section 10.1) ----------------------------------------------------------------------
 
     /**
      * The renderer's optional sign-in window ({@code auth: 'popup'}): a host page WITHOUT a backend opened a window on the console on a click;

@@ -29,7 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * One audit line per migrated item (BI_FOUNDATION_2911E.md section 4.1, {@code tables-migrate}): who, when, the item, and the hashes of the
+ * One audit line per migrated item (docs/architecture/ARCHITECTURE.md §28 section 4.1, {@code tables-migrate}): who, when, the item, and the hashes of the
  * text before and after; the text before itself is kept in the item's history by the server (stored items) or by version control and the
  * migrated folder (files). The server's implementation writes to its audit log; {@link #jsonl} appends to a file for the command line.
  */

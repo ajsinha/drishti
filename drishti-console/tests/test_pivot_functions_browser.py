@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The pivot screen's Why, What-if and Functions cards (PIVOT_GUIDE.md) in a real browser against a stand-in engine: each button (and its
-key, W, I, U) opens its card, and the card fills with the engine's answer: the waterfall of steps, the cells a what-if changes, the list of
+key, W, I, U) opens its card, and the card fills with the engine's answer (Why asks the one Explain), the cells a what-if changes, the list of
 functions. The cards' script finds the screen by its root attribute; a script that misses it exits silently and the buttons do nothing, so
 every test here clicks and asserts the card's content, never only that the page loaded."""
 import pytest
@@ -21,6 +21,7 @@ import pytest
 pytest.importorskip("playwright")
 from playwright import sync_api  # noqa: E402
 
+import select_helpers  # noqa: E402
 from pivot_screen_backend import PivotBackend  # noqa: E402
 from table_chart_backend import serve  # noqa: E402
 
@@ -50,7 +51,7 @@ def page(stack, browser):
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
     pg.goto(stack[0] + "/pivot?source=trade", wait_until="load")
-    pg.wait_for_selector("[data-pv-grid] table.pv-table td.pv-c")
+    pg.wait_for_selector("[data-pv-grid] .dg-cell[data-cell]")
     yield pg
     ctx.close()
 
@@ -59,15 +60,32 @@ def _card(page, which):
     return page.locator(f"section[data-pf-card='{which}']")
 
 
-def test_why_opens_its_card_and_draws_the_engines_waterfall(page):
+def _explained(page):
+    page.wait_for_function("() => { const d = document.querySelector('[data-explain-drawer]'); return d && !d.hidden && d.dataset.state === 'ready'; }")
+    return page.locator("[data-explain-drawer]")
+
+
+def test_why_opens_its_card_and_asks_the_one_explain(stack, page):
+    """The card chooses the two cells or dates and the split; Explain › opens the one Explain at Why it moved (kind pivot, the view in
+    the body): the card draws nothing of its own."""
     page.click("[data-pf-open='explain']")
     card = _card(page, "explain")
     card.wait_for(state="visible")
-    assert page.locator("[data-pf-by] option").count() > 0                 # the split-by list filled from the view and the catalogue
+    assert select_helpers.values(page, "[data-pf-by]")                 # the split-by list filled from the view and the catalogue
     page.click("[data-pf-explain]")
-    page.wait_for_selector("[data-pf-waterfall] .pf-bar")
-    assert "Rates minus FX is 30" in page.locator("[data-pf-words]").text_content()
-    assert page.locator("[data-pf-waterfall] .pf-bar").count() == 2
+    drawer = _explained(page)
+    assert drawer.get_attribute("data-tab") == "why"
+    assert "Rates minus FX is 30" in drawer.text_content()
+    sent = [b for k, b in stack[1].asked if k == "explain"][-1]
+    assert sent["kind"] == "pivot" and sent["measure"] == "cell" and sent["part"] == "why" and sent["view"]["source"] == "trade"
+    # Open as a page: the view sent in the body rides along, and the page asks the server with it (all four parts)
+    href = drawer.locator("[data-dx-page]").get_attribute("href")
+    assert "body=" in href
+    n = len(stack[1].asked)
+    page.goto(stack[0] + href)
+    page.wait_for_function("() => { const r = document.querySelector('[data-explain-page]'); return r && r.dataset.state === 'ready'; }")
+    full = [b for k, b in stack[1].asked[n:] if k == "explain"][-1]
+    assert full["part"] == "all" and full["kind"] == "pivot" and full["view"] == sent["view"] and full["from"] == sent["from"] and full["by"] == sent["by"]
     assert not page.errors, page.errors
 
 
@@ -106,19 +124,19 @@ def test_why_splits_by_any_field_of_the_source(stack, page):
     rows and columns; the field chosen is the one sent (the CLI and the API accept any field too)."""
     page.click("[data-pf-open='explain']")
     _card(page, "explain").wait_for(state="visible")
-    options = page.locator("[data-pf-by] option").all_text_contents()
+    options = select_helpers.labels(page, "[data-pf-by]")
     assert options[0] == "DESK", options                                  # the view's row first
     assert {"CURRENCY", "PRODUCT", "TRADE_DATE", "NOTIONAL", "PNL"} <= set(options), options
     page.select_option("[data-pf-by]", "PRODUCT")
     page.click("[data-pf-explain]")
-    page.wait_for_selector("[data-pf-waterfall] .pf-bar")
+    _explained(page)
     sent = [b for k, b in stack[1].asked if k == "explain"][-1]
     assert sent["by"] == "PRODUCT"
     assert not page.errors, page.errors
 
 
 def test_the_playground_shows_the_states_and_small_figures_unrounded(page):
-    """Tutorial 37 step 2: each state as the engine words it ([Σ=… n=…, Σ=… n=…]), and a figure such as 0.007 or 0.006429 as it is,
+    """Tutorial 7, step 12: each state as the engine words it ([Σ=… n=…, Σ=… n=…]), and a figure such as 0.007 or 0.006429 as it is,
     never rounded to 0.01."""
     page.click("[data-pf-open='functions']")
     _card(page, "functions").wait_for(state="visible")

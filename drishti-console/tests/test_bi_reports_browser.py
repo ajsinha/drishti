@@ -30,6 +30,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import card_value, chart, clean, click_mark, open_report, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
+from select_helpers import has_option
 
 REPORT = "file:report:trades-overview"
 DAY = "2026-10-08"
@@ -92,9 +93,9 @@ def test_the_overview_opens_and_every_figure_adds_up(stack, browser):
     assert dict(zip(bar["categories"], bar["series"][0]["values"])) == want
     assert list(bar["series"][0]["values"]) == sorted(want.values(), reverse=True)                   # ranked by the measure, largest first
     assert chart(page, "by-date")["categories"] == [DAY]
-    table = page.locator('[data-visual="rows"] tbody tr')
+    table = page.locator('[data-visual="rows"] .dg-row')                                           # the table, drawn by drishti-grid
     expect(table).to_have_count(3)
-    assert [t.inner_text().split("\t")[0] for t in table.all()] == sorted(want)
+    assert [r[0] for r in page.eval_on_selector_all('[data-visual="rows"] .dg-row', "rows => rows.map(r => [...r.querySelectorAll('.dg-cell')].map(c => c.textContent.trim()))")] == sorted(want)
     expect(page.locator('[data-visual="currency"] [data-slicer-value]')).to_have_count(3)
     foot = page.locator('[data-visual="by-desk"] .bi-vis-foot').inner_text()
     assert re.search(r"3 rows · [\d.]+ ms|3 rows · from the cache", foot) and "columns" in foot          # the query time and the layer are under every visual
@@ -112,7 +113,7 @@ def test_clicking_a_bar_filters_the_other_visuals_and_clearing_restores_them(sta
     assert card_value(page, "trades") == 20
     assert card_value(page, "mtm") == sum(t["mtm"] for t in fx)
     assert card_value(page, "notional") == sum(t["notional"] for t in fx)
-    expect(page.locator('[data-visual="rows"] tbody tr')).to_have_count(1)
+    expect(page.locator('[data-visual="rows"] .dg-row')).to_have_count(1)
     bar = chart(page, "by-desk")
     assert bar["series"][0]["opacity"].count(0.35) == 2 and bar["series"][0]["opacity"].count(1) == 1       # the other bars are dimmed, the chosen one is not
     page.click('[data-visual="by-desk"] [data-act="clear"]')
@@ -184,14 +185,17 @@ def test_show_the_rows_and_show_as_a_table(stack, browser):
     expect(page.locator('[data-chip="selection"]')).to_contain_text("DESK-EQD")                      # the selection is made and the visuals answered it
     settled(page)
     page.click('[data-visual="by-desk"] [data-act="rows"]')
-    page.wait_for_selector('[data-visual="by-desk"] table tbody tr')
-    expect(page.locator('[data-visual="by-desk"] table tbody tr')).to_have_count(20)                     # the 20 trades of that desk, every column of the table
-    head = page.locator('[data-visual="by-desk"] thead th').all_inner_texts()
+    page.wait_for_selector('[data-visual="by-desk"] .dg-row')
+    expect(page.locator('[data-visual="by-desk"] [aria-rowcount="21"]')).to_have_count(1)                # the 20 trades of that desk (and the heading), every column of the table
+    head = page.locator('[data-visual="by-desk"] .dg-hcell .dg-hlabel').all_inner_texts()
+    page.eval_on_selector('[data-visual="by-desk"] .dg-scroll', "e => { e.scrollLeft = e.scrollWidth; }")    # the grid draws the columns in view
+    page.evaluate("() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))")       # its next frame, drawn after the scroll
+    head += page.locator('[data-visual="by-desk"] .dg-hcell .dg-hlabel').all_inner_texts()
     assert "TRADE_ID" in " ".join(head) and "DESK" in " ".join(head) and "MTM_IN_MILLIONS" in " ".join(head)
     page.click('[data-visual="by-desk"] [data-act="rows"]')
     page.wait_for_selector('[data-visual="by-desk"] .bi-chart')
     page.click('[data-visual="by-date"] [data-act="as-table"]')
-    expect(page.locator('[data-visual="by-date"] table tbody tr')).to_have_count(1)
+    expect(page.locator('[data-visual="by-date"] .dg-row')).to_have_count(1)
     page.click('[data-visual="by-date"] [data-act="as-table"]')
     page.wait_for_selector('[data-visual="by-date"] .bi-chart')
     clean(page)
@@ -235,8 +239,9 @@ def test_the_keyboard_selects_a_mark_clears_it_and_switches_to_the_table(stack, 
     page.keyboard.press("Escape")
     expect(page.locator('[data-chip="selection"]')).to_have_count(0)
     page.keyboard.press("t")
-    page.wait_for_selector('[data-visual="by-desk"] table')
-    page.locator('[data-visual="rows"] tbody tr').first.focus()
+    page.wait_for_selector('[data-visual="by-desk"] .dg-row')
+    page.locator('[data-visual="rows"] .dg-scroll').focus()                                           # the grid by the keyboard: the first row, Enter
+    page.keyboard.press("ArrowDown")
     page.keyboard.press("Enter")
     expect(page.locator('[data-chip="selection"]')).to_have_count(1)                                       # a table row selects too
     clean(page)
@@ -272,7 +277,7 @@ def test_a_missing_report_says_so_with_its_code(stack, browser):
 
 def new_draft(page):
     page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-dataset] option[value='mq:trades-basic@1']", state="attached")
+    page.wait_for_function(has_option("[data-new-dataset]", "mq:trades-basic@1"))
     page.select_option("[data-new-dataset]", "mq:trades-basic@1")
     page.fill("[data-new-title]", "Designer test")
     page.click("[data-new] button[type=submit]")
@@ -315,7 +320,7 @@ def test_designer_change_a_well_set_a_filter_check_save_and_reload(stack, browse
     draft = new_draft(page)
     page.drag_and_drop('[data-field="trade.DESK"]', "[data-canvas-grid]", target_position={"x": 60, "y": 40})
     page.wait_for_selector('.bi-dvis[data-type="table"]')
-    page.click('.bi-vtype[data-type="bar"]')                                                              # change the visual's type: the fields follow
+    page.click('[data-types] [data-type="bar"]')                                                              # change the visual's type: the fields follow
     settled_design(page)
     page.select_option('[data-add="values"]', "Notional")                                                  # a well, by the select (no dragging)
     settled_design(page)
@@ -342,7 +347,7 @@ def test_designer_change_a_well_set_a_filter_check_save_and_reload(stack, browse
     page.fill("[data-format-title]", "Notional by desk, USD")
     page.press("[data-format-title]", "Enter")
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved")
+    expect(page.locator("[data-status]")).to_have_text("Saved")
     page.goto(CONSOLE_URL + "/bi/design/" + draft)
     page.wait_for_selector("[data-design-root][data-ready=yes]")
     saved = model(page)["pages"][0]
@@ -421,7 +426,7 @@ def test_designer_resize_with_the_pointer_snaps_to_the_grid(stack, browser):
     new_draft(page)
     page.drag_and_drop('[data-field="Notional"]', "[data-canvas-grid]", target_position={"x": 20, "y": 20})
     page.wait_for_selector('.bi-dvis[data-type="card"]')
-    handle = page.locator(".bi-dvis .bi-resize").first
+    handle = page.locator(".bi-dvis [data-dd-edge=se]").first                          # the layout canvas's corner (drishti-designer)
     hb = handle.bounding_box()
     grid = page.locator("[data-canvas-grid]").bounding_box()
     step = (grid["width"] - 11 * 10) / 12 + 10
@@ -537,15 +542,15 @@ def test_every_visual_type_draws_with_data(stack, browser):
     assert float(page.locator('[data-visual="gauge"] .bi-chart').count()) == 1
     assert "▲" in page.locator('[data-visual="kpi"]').inner_text() or "▼" in page.locator('[data-visual="kpi"]').inner_text()     # the KPI says how it stands against its target
     assert page.locator('[data-visual="multi"] [role=listitem]').count() == 3
-    assert page.locator('[data-visual="table"] tbody tr').count() == 5
+    assert page.locator('[data-visual="table"] [aria-rowcount]').get_attribute("aria-rowcount") == "6"           # 5 rows and the heading
     expect(page.locator('[data-visual="matrix"] tr[data-subtotal]')).to_have_count(3)                # a subtotal per desk, collapsible
     page.click('[data-visual="matrix"] [data-group="DESK-FX"]')
     expect(page.locator('[data-visual="matrix"] tr[data-row^="DESK-FX"]')).to_have_count(0)
     page.click('[data-visual="matrix"] [data-group="DESK-FX"]')
     expect(page.locator('[data-visual="matrix"] tr[data-row^="DESK-FX"]')).to_have_count(1)
     assert page.locator('[data-visual="s-list"] [data-slicer-value]').count() == 3
-    page.click('[data-visual="s-drop"] summary')
-    assert page.locator('[data-visual="s-drop"] [data-slicer-value]').count() == 3
+    page.click('[data-visual="s-drop"] .di-ms-control')                              # drishti-inputs' multi-select over the slicer's values
+    assert page.locator('[data-visual="s-drop"] [data-slicer-value]').count() == 3 and page.locator(".di-ms-pop .di-option").count() == 3
     page.keyboard.press("Escape")
     page.fill('[data-visual="s-range"] [data-range="from"]', "3000000")
     page.press('[data-visual="s-range"] [data-range="from"]', "Enter")
@@ -605,7 +610,8 @@ def test_designer_filters_advanced_and_top_n_the_suggestions_and_conditional_col
     # the YAML tab offers what fits the cursor
     page.click('[data-tab="yaml"]')
     page.evaluate("""() => { const cm = document.querySelector('.CodeMirror').CodeMirror; cm.focus(); const n = cm.lineCount(); cm.setCursor({line: n - 1, ch: 0}); cm.replaceRange('      - { type: ', {line: n - 1, ch: cm.getLine(n - 1).length}); cm.setCursor({line: cm.lineCount() - 1, ch: 100}); }""")
-    page.wait_for_function("() => [...document.querySelectorAll('[data-suggest] .bi-suggest')].some(b => b.textContent === 'waterfall')", timeout=10000)
+    page.keyboard.press("Control+Space")                                                   # the editor's completion (drishti-inputs' CodeEditor)
+    page.wait_for_function("() => [...document.querySelectorAll('.di-complete-pop .di-option-label')].some(b => b.textContent === 'waterfall')", timeout=10000)
     clean(page)
 
 

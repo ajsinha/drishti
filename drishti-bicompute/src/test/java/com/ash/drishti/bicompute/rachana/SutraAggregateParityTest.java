@@ -37,9 +37,9 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * Parity (ONE_GRAMMAR.md part 2): every shipped Sutra draws the same figures from the pivot engine's aggregates as from Rachana's own
+ * Parity (docs/architecture/ARCHITECTURE.md part 2): every shipped Sutra draws the same figures from the pivot engine's aggregates as from Rachana's own
  * list aggregates before they were removed. Every call of {@code sum}, {@code min}, {@code max} and {@code group} in every Sutra and
- * fragment of {@code config/packs/<pack>/sutras} is evaluated on every test case of the pack ({@code config/packs/<pack>/tests/<sutra>/
+ * fragment of {@code config/packs/<domain>/<pack>/sutras} is evaluated on every test case of the pack ({@code config/packs/<domain>/<pack>/tests/<sutra>/
  * cases.jsonl}), at the document's root and, for a call that reads {@code @}, on every element of every list in the document (the rows
  * a panel binds); the figure from the engine is compared with the figure from {@link LegacyListAggregates} (the old code, unchanged)
  * on the same evaluated arguments. Equal means equal, or, for a total of fractional numbers, equal to 12 significant digits: the
@@ -64,7 +64,7 @@ class SutraAggregateParityTest {
         int comparisons = 0;
         int figures = 0;
         List<String> skipped = new ArrayList<>();
-        try (Stream<Path> s = Files.list(PACKS)) {
+        try (Stream<Path> s = com.ash.drishti.api.PackFolders.list(PACKS).stream()) {
             for (Path pack : s.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList()) {
                 List<Call> found = calls(pack.resolve("sutras"), skipped);
                 List<DataNode> docs = documents(pack.resolve("tests"));

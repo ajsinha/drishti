@@ -20,8 +20,8 @@
    its label (a subject menu of a lens: VaR, Curves, Economies ...), and one whose link is /t?cmd= puts it in the command line to finish. #}
 {% from "_macros/ui.html" import brand_mark %}
 {% set path = request.url.path %}
-{# The menus are data: config/menus.yaml, each item with its requires:, and the edition's (or the person's lens's) menus: lists
-   (core/menus.py, docs/admin/EDITIONS.md › The design as built, section 5.4). #}
+{# The menus are data: config/sitemap.yaml, each item with its requires:, and the edition's (or the person's lens's) menus: lists
+   (core/menus.py, docs/guides/ADMIN_GUIDE.md › The design). #}
 {% set MENU = top_bar_menus(request, {'me': me, 'bi_me': bi_me, 'pack_switcher': pack_switcher, 'PRODUCT': PRODUCT}) %}
 {# The Engines menu (mock-up engines-menu/A): a column per running engine the person's role opens; its panel in terminal/_engines_menu.html #}
 {% set ENGINES = engines_panel(request, {'me': me, 'bi_me': bi_me, 'pack_switcher': pack_switcher, 'PRODUCT': PRODUCT}) %}
@@ -45,6 +45,7 @@
       <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Suggestions" hidden></ul>
     </div>
   </form>
+  <button type="button" class="tbar-find-btn" data-find-open title="Search everything (Alt+K)" aria-label="Search everything (Alt+K)"><i class="bi bi-search" aria-hidden="true"></i></button>{# the global search: drishti-insight's search box #}
 
   {% set bd = business_date or {} %}
   <form class="asof{% if asof != 'live' %} asof-past{% endif %}" action="/asof" method="get" data-asof
@@ -53,7 +54,7 @@
     <label for="asofDate" class="visually-hidden">Business date</label>
     <input id="asofDate" class="asof-date mono" type="date" name="d" value="{{ bd.selected or (asof if asof != 'live' else bd.current) or '' }}"
            {% if bd.earliest %}min="{{ bd.earliest }}"{% endif %} {% if bd.current %}max="{{ bd.current }}"{% endif %}
-           data-holidays="{{ (bd.holidays or []) | join(',') }}" data-current="{{ bd.current or '' }}">
+           data-holidays="{{ (bd.holidays or []) | join(',') }}" data-calendar-name="{{ bd.calendar or 'NY' }}" data-current="{{ bd.current or '' }}" data-business>
     {% set live_on = asof == 'live' %}{% set live_tip = 'Live updates on — click to pause' if live_on else 'Live updates paused — click to resume' %}
     {% if asof != 'live' %}
     <label for="asofKnown" class="visually-hidden">Known at</label>
@@ -152,7 +153,7 @@
           {% for href, i, l, d, match, c in items %}{% set on = _on(href, match) %}
           <a class="mega-item{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}{% if c and href.startswith('/t?cmd=') %} data-fill="{{ c }}"{% endif %}>
             <span class="mega-icon"><i class="bi bi-{{ i }}" aria-hidden="true"></i></span>
-            <span class="mega-text"><span class="mega-label">{{ l }}{% if href == '/build/reviews' %} <span class="rv-count" data-review-count hidden></span>{% endif %}{% if c %}<code class="mega-cmd mono">{{ c }}{% if href.startswith('/t?cmd=') %} …{% endif %}</code>{% endif %}</span><span class="mega-desc">{{ d }}</span></span></a>
+            <span class="mega-text"><span class="mega-label">{{ l }}{% if href == '/approvals' %} <span class="rv-count" data-approvals-count hidden></span>{% endif %}{% if c %}<code class="mega-cmd mono">{{ c }}{% if href.startswith('/t?cmd=') %} …{% endif %}</code>{% endif %}</span><span class="mega-desc">{{ d }}</span></span></a>
           {% endfor %}
         </div>
         {% endfor %}
@@ -176,6 +177,7 @@
       </div>
     </div>
     {% endif %}
+    {% if me %}<a class="tool approvals" href="/approvals" title="Approvals waiting for you" aria-label="Approvals waiting for you" data-approvals-tool><i class="bi bi-patch-check" aria-hidden="true"></i><span class="bell-count" data-approvals-top hidden>0</span></a>{% endif %}
     <a class="tool bell" href="/inbox" title="Inbox and alerts (Alt+I)" aria-label="Inbox and alerts" aria-keyshortcuts="Alt+I" data-bell><i class="bi bi-bell" aria-hidden="true"></i><span class="bell-count" data-bell-count hidden>0</span></a>
     {% if pack_switcher | length > 1 %}
     {% set on = pack_switcher | selectattr('active') | map(attribute='name') | list %}
@@ -219,7 +221,7 @@
         <form method="post" action="/logout" class="m-0"><button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out</button></form>
         {% else %}<div class="dropdown-divider"></div>
         <div class="dropdown-item-text text-muted-d small" data-sign-in-off><i class="bi bi-unlock" aria-hidden="true"></i> Sign-in is off on this server</div>
-        <a class="dropdown-item" href="/help/user-management#signing-in-and-out"><i class="bi bi-question-circle" aria-hidden="true"></i> How to turn it on</a>{% endif %}
+        <a class="dropdown-item" href="/help/admin#1-signing-in-and-out"><i class="bi bi-question-circle" aria-hidden="true"></i> How to turn it on</a>{% endif %}
       </div>
     </div>
   </div>

@@ -44,7 +44,7 @@ import fetch as F  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))
 import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
-PACK = ROOT / "config" / "packs" / "gleif"
+PACK = ROOT / "config" / "packs" / "core" / "gleif"
 DEFAULT_CACHE = ROOT / "data" / "cache" / "gleif"
 SOURCE = "GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)"
 LICENCE = "CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)"
@@ -80,8 +80,8 @@ def _addr(a: dict | None) -> str:
 def _other_packs() -> tuple[dict[str, str], dict[str, str]]:
     """core's legal entities and counterparties by LEI: {LEI: ENTITY_ID}, {LEI: COUNTERPARTY_ID} (fictional, so none match today)."""
     out: tuple[dict[str, str], dict[str, str]] = ({}, {})
-    for f, key, into in ((ROOT / "config/packs/core/samples/legal-entity.jsonl", "ENTITY_ID", out[0]),
-                         (ROOT / "config/packs/core/samples/counterparty.jsonl", "COUNTERPARTY_ID", out[1])):
+    for f, key, into in ((ROOT / "config/packs/core/core/samples/legal-entity.jsonl", "ENTITY_ID", out[0]),
+                         (ROOT / "config/packs/core/core/samples/counterparty.jsonl", "COUNTERPARTY_ID", out[1])):
         if f.is_file():
             for line in f.read_text(encoding="utf-8").splitlines():
                 if line.strip():
@@ -309,8 +309,8 @@ The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PAC
 
 | Type | Opens | Examples |
 |---|---|---|
-| `LEI <code>` | an entity: key facts, addresses, registration and renewal (late renewal flagged), its parents chain, its children (a click opens the child's summary beside), BICs and ISINs, the us-equities company | `LEI 8I5DZWZKVSZI1NUHU748`, `LEI HWUPKR0MPOU8FGXBT394` |
-| `LEIG <code>` | a group, computed from the entities when asked: the ultimate parent with its whole tree, counts by country and legal form, no member cap; a click on a member opens it beside | `LEIG 8I5DZWZKVSZI1NUHU748`; `LEIG ALL` lists every group and searches the entities |
+| `LEI <code>` | an entity: key facts, addresses, registration and renewal (late renewal flagged), its parents chain (an org chart from the ultimate parent down to it), its children (a click opens the child's summary beside), BICs and ISINs, the us-equities company | `LEI 8I5DZWZKVSZI1NUHU748`, `LEI HWUPKR0MPOU8FGXBT394` |
+| `LEIG <code>` | a group, computed from the entities when asked: the ultimate parent with its whole tree (a tree grid, or an org chart), counts by country and legal form, no member cap; a click on a member opens it beside | `LEIG 8I5DZWZKVSZI1NUHU748`; `LEIG ALL` lists every group and searches the entities |
 | `LEIC <country>` | a country, computed from the entities when asked: every entity of the pack there, the groups present, legal forms and cities | `LEIC US`, `LEIC GB`; `LEIC ALL` lists every country |
 | `LEIR <id>` | one relationship: child, parent, direct or ultimate, status, periods, accounting standard | `LEIR LEIREL-<child LEI>-DIRECT`, from an entity |
 | `LEIM <identifier>` | an ISIN, BIC or MIC and the LEI it maps to | a BIC or ISIN from an entity page |
@@ -330,11 +330,17 @@ A bare LEI (twenty characters) opens its entity.
 **The cap.** The committed data keeps at most {cap} entities a group, the nearest levels first (the size of the snapshot); {capped} groups are
 larger in GLEIF and their page says so (`MEMBERS_IN_GLEIF`, from the ultimate parent's `GLEIF_GROUP_SIZE`). The computation itself has no
 cap: a group page counts and lists every entity of the group the lake holds. The formulas are in
-[GROUPINGS_ANALYTICS_GUIDE.md](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
+[GROUPINGS_ANALYTICS_GUIDE.md](../../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
 consolidation relationships only (`IS_DIRECTLY_CONSOLIDATED_BY`, `IS_ULTIMATELY_CONSOLIDATED_BY`); fund management, sub-fund, feeder
 and branch relationships are not ownership and are left out. A member whose direct parent is not reported hangs under the ultimate
 parent in the tree. An entity with no reported parent may carry a reporting exception (controlled by natural persons, not
 consolidated, no known person) which its page shows.
+
+**The ownership trees.** Both hierarchies are drawn by drishti-tree (Drishti Elements), from the server's rows, every name a link.
+An entity's **parents chain** (`PAR`, F2) is one chain: the ultimate parent at the top, each parent over the one below it, the entity
+itself at the foot (highlighted), so it opens as an **org chart**; **Tree grid** shows the same rows as a table with the relationship,
+the level and the LEI. A group's **tree** (`TREE`, F2) branches, so it opens as the **tree grid** (two levels open, a filter that keeps
+the ancestors of a match), with **Org chart** a click away. A relationship (`LEIR`) is one child and one parent, shown as the pair.
 
 **Late renewal.** An LEI must be renewed every year. A registration whose next renewal date has passed, or which GLEIF lists as
 `LAPSED`, is flagged *Late* on its page, in its group and in its country; {late} of the pack's entities are late today.
@@ -370,17 +376,17 @@ GLEIF publishes the LEI data free of charge under CC0 1.0: anyone may use it wit
 
 ## Refreshing the data
 
-The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/EXTERNAL_DATA.md`, gleif):
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/EXTERNAL_DATA.md`, gleif):
 
 ```bash
-python3 tools/publicdata/gleif.py status                       # licence, last refreshed, cached size
-python3 tools/publicdata/gleif.py refresh --dry-run            # what would be fetched; changes nothing
-python3 tools/publicdata/gleif.py refresh                      # the network (about 90 MB of golden copy, 45 MB of mapping files, 70 API calls), then make.py and --check
-python3 tools/publicdata/gleif.py refresh --offline            # rebuild the pack from the cache only
-python3 tools/publicdata/gleif.py refresh --scope GROUP:<LEI>,COUNTRY:LU,NAME:allianz   # a wider build in the data folder, not this pack
+python3 tools/drishti.py feed status gleif                       # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run gleif --dry-run            # what would be fetched; changes nothing
+python3 tools/drishti.py feed run gleif --snapshot                      # the network (about 90 MB of golden copy, 45 MB of mapping files, 70 API calls), then make.py and --check
+python3 tools/drishti.py feed run gleif --snapshot --offline            # rebuild the pack from the cache only
+python3 tools/drishti.py feed run gleif --snapshot -- --scope GROUP:<LEI>,COUNTRY:LU,NAME:allianz   # a wider build in the data folder, not this pack
 ```
 
-`tools/publicdata/gleif.sh` and `tools/windows/publicdata-gleif.ps1` run the same script. Underneath it are the generator's two
+`tools/feeds/feed.sh run gleif` and `tools/windows/feed.ps1 run gleif` run the same command. Underneath it are the generator's two
 steps, which can also be run by hand:
 
 ```bash
@@ -435,14 +441,14 @@ def main(argv: list[str], extra: list[str] | None = None, cap: int | None = None
     p = argparse.ArgumentParser(description="Build the gleif pack from the fetched cache (no network).")
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     p.add_argument("--check", action="store_true")
-    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/gleif; "
-                                               "tools/publicdata/gleif.py points a widened build at the data folder)")
+    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/core/gleif; "
+                                               "drishti.py feed run gleif points a widened build at the data folder)")
     p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed "
                                                   "pack; beside a widened build's pack folder otherwise)")
     a = p.parse_args(argv)
     global PACK
-    PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "gleif"
-    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "gleif")
+    PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "core" / "gleif"
+    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "core" / "gleif")
     F.reduce_rr(a.cache)                                     # offline: the relationship file from the downloaded golden copy
     if (a.cache / "reduced" / "rr.json").is_file():
         docs = build(a.cache, extra, cap)

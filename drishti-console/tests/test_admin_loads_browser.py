@@ -95,7 +95,7 @@ def test_history_steps_and_expectations_are_readable_and_filterable(browser, loa
     assert "16 trade entities on 2026-10-06" in steps and "verify" in steps and "skipped" in steps
     states = page.locator("[data-expectations] tbody tr")
     assert states.count() == 2 and "late" in states.nth(0).inner_text() and "on-time" in states.nth(1).inner_text()
-    page.select_option("select[name=status]", "failed")
+    page.select_option(".loads-filter [data-path=status] drishti-select", "failed")                 # the filter is drishti-inputs' Form embedded in the GET form
     page.click(".loads-filter button[type=submit]")
     page.wait_for_url("**status=failed**")
     assert page.locator("[data-loads-table] tbody tr").count() == 1
@@ -109,7 +109,7 @@ def test_settings_are_edited_saved_and_reset_from_the_keyboard(browser, loads_co
     page = browser.new_page()
     page.goto(url + "/admin/packs/trading/loads")
     page.keyboard.press("/")
-    assert page.evaluate("document.activeElement.hasAttribute('data-filter-kind')")                # "/" goes to the filter
+    assert page.evaluate("!!document.activeElement.closest('[data-filter-kind]')")                # "/" goes to the filter (its Select's combobox)
     page.evaluate("document.activeElement.blur()")
     page.keyboard.press("e")
     dialog = page.locator("[data-config-dialog]")
@@ -117,8 +117,8 @@ def test_settings_are_edited_saved_and_reset_from_the_keyboard(browser, loads_co
     assert page.evaluate("document.activeElement.name") == "roles"                                 # focus lands in the dialog
     dialog.locator("[name=roles]").fill("admin, risk-ops")
     dialog.locator("[data-expect-add]").click()
-    new = dialog.locator("[data-expect-rows] tbody tr").nth(1)
-    new.locator("[name=x-kind]").select_option("curve")
+    new = dialog.locator("[data-expect-row]").nth(1)                                             # a repeatable row of the settings Form
+    new.locator("drishti-select[data-x-kind]").select_option("curve")                          # the row's Kind is a Select (its name rides a hidden input once picked)
     new.locator("[name=x-by]").fill("08:30")
     new.locator("[name=x-zone]").fill("Europe/London")
     dialog.locator("[name=email]").check()

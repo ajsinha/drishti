@@ -1,0 +1,207 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the financial-fact kind (command FACT): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap financial-fact`; owned by people from then on: confirm the review points, then remove them.
+kind: financial-fact
+mnemonic: FACT
+pack: us-equities
+version: '1.0'
+class: fundamental
+status: active
+title: Financial fact
+description: One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings.
+source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)'
+grain: One row per financial fact, keyed by FACT_ID.
+key:
+- FACT_ID
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: us-equities-store
+  plugin: delta
+  domain: us-equities
+  table: <root>/us-equities/financial-fact/
+  columns:
+  - FACT_ID
+  - COMPANY
+  - COMPANY_NAME
+  - CONCEPT
+  - LABEL
+  - LATEST
+  - LATEST_YEAR
+  test-data:
+  - data/testdata/us-equities/financial-fact
+fields:
+- name: FACT_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: ABT-REVENUE
+- name: COMPANY
+  type: id
+  presence: required
+  description: 'The company: a TICKER of the us-company kind.'
+  example: ABT
+  link: us-company
+- name: COMPANY_NAME
+  type: text
+  presence: required
+  description: The company's name as the pack shows it (Wikidata's label, else EDGAR's name).
+  example: Abbott Laboratories
+- name: CIK
+  type: text
+  presence: required
+  description: 'The company''s SEC Central Index Key, ten digits with leading zeros (text).'
+  example: 0000001800
+- name: CONCEPT
+  type: text
+  presence: required
+  description: 'Which financial figure the record is: REVENUE, NET_INCOME, ASSETS, LIABILITIES, EQUITY, EPS_DILUTED or SHARES_OUTSTANDING.'
+  example: REVENUE
+  enum:
+  - ASSETS
+  - EPS_DILUTED
+  - EQUITY
+  - LIABILITIES
+  - NET_INCOME
+  - REVENUE
+  - SHARES_OUTSTANDING
+- name: LABEL
+  type: text
+  presence: required
+  description: The concept in words (Revenue, Net income, Total assets, Total liabilities, Stockholders' equity, Diluted EPS, Shares outstanding).
+  example: Revenue
+  enum:
+  - Diluted EPS
+  - Net income
+  - Revenue
+  - Shares outstanding
+  - Stockholders' equity
+  - Total assets
+  - Total liabilities
+- name: UNIT
+  type: text
+  presence: required
+  description: 'The unit of LATEST and HISTORY[].VALUE as XBRL reports it: a currency (USD, CAD …), USD/share for EPS, or shares.'
+  example: USD
+- name: XBRL_TAG
+  type: text
+  presence: required
+  description: The XBRL tags the values were read from (us-gaap or dei, comma-separated when several years used different tags; a derived value says so, "LiabilitiesAndStockholdersEquity less equity").
+  example: RevenueFromContractWithCustomerExcludingAssessedTax
+- name: LATEST
+  type: amount
+  presence: required
+  unit: UNIT
+  description: The latest fiscal year's value, the last element of HISTORY.
+  example: 44328000000
+- name: LATEST_YEAR
+  type: integer
+  presence: required
+  description: The fiscal year of LATEST (an integer).
+  example: 2025
+- name: YEARS
+  type: integer
+  presence: required
+  description: How many fiscal years HISTORY holds.
+  example: 10
+- name: HISTORY
+  type: record list
+  presence: required
+  description: 'The figure for each fiscal year, oldest first, one element per year: YEAR, PERIOD_END, VALUE, FILED and ACCESSION (the annual report it came from).'
+nested:
+  HISTORY[]:
+  - name: YEAR
+    type: integer
+    presence: required
+    description: The fiscal year (an integer, XBRL fy).
+    example: 2016
+  - name: PERIOD_END
+    type: date
+    presence: required
+    description: The last day of the fiscal year or the balance-sheet date, YYYY-MM-DD.
+    example: '2016-12-31'
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: UNIT
+    description: The figure for that fiscal year, in UNIT.
+    example: 20853000000
+  - name: FILED
+    type: date
+    presence: required
+    description: The date the annual report carrying the value was filed, YYYY-MM-DD.
+    example: '2019-02-22'
+  - name: ACCESSION
+    type: text
+    presence: required
+    description: The EDGAR accession number of that annual report (0001047469-19-000624).
+    example: 0001047469-19-000624
+links:
+- field: COMPANY
+  kind: us-company
+validation:
+- rule: required
+  fields:
+  - FACT_ID
+  - COMPANY
+  - COMPANY_NAME
+  - CIK
+  - CONCEPT
+  - LABEL
+  - UNIT
+  - XBRL_TAG
+  - LATEST
+  - LATEST_YEAR
+  - YEARS
+  - HISTORY
+- rule: unique
+  key:
+  - FACT_ID
+  per: snapshot
+- rule: link
+  field: COMPANY
+  kind: us-company
+- rule: enum
+  field: CONCEPT
+  values:
+  - ASSETS
+  - EPS_DILUTED
+  - EQUITY
+  - LIABILITIES
+  - NET_INCOME
+  - REVENUE
+  - SHARES_OUTSTANDING
+- rule: enum
+  field: LABEL
+  values:
+  - Diluted EPS
+  - Net income
+  - Revenue
+  - Shares outstanding
+  - Stockholders' equity
+  - Total assets
+  - Total liabilities
+notes:
+- 'CHANGE_PCT and HISTORY[].CHANGE_PCT are not kept on the record: the page computes each year''s change from the values (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md,
+  section 16).'
+review:
+- 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/financial-fact/financial-fact.2026-10-24.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: CONCEPT, LABEL: confirm they are closed lists.'
+- 'no unit stated for the amounts LATEST, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'

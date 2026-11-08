@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One grammar, one engine (docs/architecture/ONE_GRAMMAR.md section 5): the server computes, the console displays. No console Python or
+"""One grammar, one engine (docs/architecture/ARCHITECTURE.md section 5): the server computes, the console displays. No console Python or
 JavaScript sums, averages or groups risk or BI figures: every figure (totals, medians, averages, deviations, risk) is the server's, in Java,
 through the one engine (the console sends rows it read to the pivot engine, POST /api/v1/pivot/inline, core/engine_figures.py, and shows
 its cells). The check finds every aggregation idiom in the console's own code (Python: sum, statistics, a groupby, a division by len;
@@ -55,7 +55,6 @@ KNOWN = {
     "web/static/js/drishti_designer-grid.js: var sum = out.reduce(function (a, b) { return a + b; }, 0);": "LAYOUT: column widths",
     "web/static/js/drishti_screen-grid.js: bar.setAttribute('aria-valuenow', String(Math.round(cols.slice(0, k).r": "LAYOUT: a column splitter's position",
     "web/static/js/drishti_screen-grid.js: function have() { return cols.slice(0, k).reduce(function (a, b) { ret": "LAYOUT: the same, for the resize handle",
-    "web/static/js/drishti_resize.js: table.style.width = ws.reduce(function (a, b) { return a + Math.max(mi": "LAYOUT: a resized table's width, the sum of its columns' widths",
     "web/static/js/drishti_admin-net-ring.js: var total = weights.reduce(function (a, b) { return a + b; }, 0) || 1;": "LAYOUT: a ring's arc lengths",
     "web/static/js/drishti_bi-visuals.js: const total = sr.values.reduce((a, v) => a + (typeof v === 'number' ? ":
         "LAYOUT: a donut's angles from the values the server sent",

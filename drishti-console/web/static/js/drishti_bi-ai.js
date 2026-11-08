@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* BI with AI (docs/guides/BI_GUIDE.md): "Describe a report" in the designer, "Ask the data" and "Explain" on a report page. Off unless the server's AI layer is on
+/* BI with AI (docs/guides/REPORTS_GUIDE.md): "Describe a report" in the designer, "Ask the data" and "Explain" on a report page. Off unless the server's AI layer is on
    (GET /bi/api/ai/status); every call is the signed-in person's, through the server's AI policy. The model never sees rows and never runs anything: a draft is checked by
    the report checker before it is shown, a question is run by the engine as the reader, a number's breakdown is worked out by the engine. Same-origin JSON only. */
 (function () {
@@ -133,9 +133,8 @@
   // ---- the designer: describe a report --------------------------------------------------------------------------------------------------------------------
   function designer() {
     const D = B.design;
-    const bar = document.querySelector('.bi-dactions');
-    if (!D || !bar) { return; }
-    const open = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-ai-draft': '', hidden: '' }, B.icon('stars'), ' Describe a report');
+    const open = document.querySelector('[data-ai-draft]');             // the Studio's header action (drishti_bi-studio.js), shown when the AI may draft
+    if (!D || !open) { return; }
     const text = h('textarea', { class: 'studio-in', rows: '3', maxlength: '600', 'data-ai-request': '', 'aria-label': 'Describe the report you want', placeholder: 'Describe the report: for example, notional by desk as a bar chart and the total as a card' });
     const msg = h('p', { class: 'bi-msg', role: 'status', 'aria-live': 'polite', 'data-ai-msg': '' });
     const yaml = h('textarea', { class: 'studio-in mono', rows: '14', readonly: '', 'data-ai-yaml': '', 'aria-label': 'The draft, as YAML', hidden: '' });
@@ -145,7 +144,6 @@
     const box = h('section', { class: 'bi-checkpanel bi-ai-box', 'data-ai-box': '', hidden: '', 'aria-label': 'Describe a report' }, h('h2', { text: 'Describe a report' }),
       h('p', { class: 'text-muted-d', text: 'The model sees the names, types and descriptions of this report’s dataset, never a row. Its draft is checked before you see it; it changes nothing until you use it and save.' }),
       text, h('p', {}, go, ' ', use, ' ', close), msg, yaml);
-    bar.insertBefore(open, bar.firstChild);
     const anchor = document.querySelector('[data-check-box]');
     anchor.parentNode.insertBefore(box, anchor);
     ai.on(() => { open.hidden = !(ai.enabled && ai.draft); });

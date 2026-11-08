@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures of the pivot screen (PIVOT_GUIDE.md, tutorial 33) from the stand-in server's synthetic trades (not a test: run it
+"""Makes the pictures of the pivot screen (PIVOT_GUIDE.md, tutorial 7, Part A) from the stand-in server's synthetic trades (not a test: run it
 by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/pivot_shots.py [pictures dir]
@@ -43,14 +43,14 @@ def main(out: Path) -> None:
             browser = p.chromium.launch()
             page = browser.new_context(viewport={"width": 1440, "height": 860}, bypass_csp=True).new_page()
             page.goto(url + "/pivot?source=trade", wait_until="load")
-            page.wait_for_selector("[data-pv-grid] table.pv-table td.pv-c")
+            page.wait_for_selector("[data-pv-grid] .dg-cell[data-cell]")
             theme(page, "terminal")
             page.screenshot(path=str(out / "pivot-screen-terminal.png"))
             print(out / "pivot-screen-terminal.png")
             theme(page, "light")
-            page.click('[data-pv-fields] .pv-field[data-field="CURRENCY"]')
-            page.keyboard.press("c")
-            page.wait_for_selector("[data-pv-grid] thead th.pv-colhead")
+            page.click(".dg-fields .dg-chip[data-field='CURRENCY'] .dg-chip-menu")
+            page.click(".dg-menu [data-action='to:columns']")
+            page.wait_for_selector("[data-pv-grid] .dg-hcell.dg-hgroup")
             page.wait_for_timeout(200)
             page.screenshot(path=str(out / "pivot-screen-columns-light.png"))
             print(out / "pivot-screen-columns-light.png")

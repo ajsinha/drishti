@@ -23,13 +23,13 @@ the console's own help guides. For each one the checks below compare a name the 
 * a repository path written in backticks exists;
 * a ``drishti.py`` command and its sub-commands exist in the CLI's argparse tree;
 * a ``DRISHTI_*`` environment variable, a ``drishti.*`` server setting and a console ``application.yaml`` key exist;
-* a ``DRS-NNNN`` code is one the code has, and every code the code has is in the one error-code table (API_GUIDE's *Error code
+* a ``DRS-NNNN`` code is one the code has, and every code the code has is in the one error-code table (API_REFERENCE's *Error code
   table*, status and meaning; TROUBLESHOOTING keeps cause and fix only where needed) or RACHANA_REFERENCE;
 * a command word typed with ``<GO>`` is a pack's mnemonic, a pack code or a reserved word;
 * a kind named as a kind (``the `trade` kind``, ``kind `trade```, ``--kind trade``, ``/v/trade/``) is a kind of some pack.
 
-History is exempt from the "still exists" checks, not from the link check: the CHANGELOG, the release notes and the
-dated QA logs (``docs/qa``) record what was true then, and every link in them, as in every document, goes to a file that
+History is exempt from the "still exists" checks, not from the link check: the CHANGELOG and the release notes
+record what was true then, and every link in them, as in every document, goes to a file that
 exists, whatever the line around it says. An obsolete design is deleted, not archived: git keeps its history, and a
 document that still mentions it names the release tag where it last lived, as text, not as a link. Run this file
 directly to print every finding at once.
@@ -53,10 +53,10 @@ from core.guides import GithubSlugger  # noqa: E402
 
 # Markdown that is not documentation a reader opens: vendored libraries' notes, test resources, the generator's
 # README fragments (they are pasted into the packs' READMEs, which are checked) and the parallel gleif build.
-NOT_DOCS = ("drishti-console/web/static/vendor/", "drishti-console/web/elements/package/", "plugins/drishti-plugin-feeds/src/test/",
-            "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/gleif/")
+NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-plugin-feeds/src/test/",
+            "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
-HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md", "docs/qa/")
+HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md")
 
 
 @functools.lru_cache(maxsize=None)
@@ -71,7 +71,7 @@ def documents() -> tuple[str, ...]:
     return tuple(p for p in tracked() if p.endswith(".md") and not p.startswith(NOT_DOCS) and (ROOT / p).is_file())
 
 
-# "analysis and product description": a lens document (docs/lenses/) whose built parts are cited as built and the rest are proposals.
+# "analysis and product description": a lens product document (docs/architecture/LENSES.md) whose built parts are cited as built and the rest are proposals.
 _PLANNED = re.compile(r"Status:\W*(design, not built|proposed|target design|design note, proposed|analysis and product description)", re.I)
 
 
@@ -224,14 +224,14 @@ def tracked_set() -> frozenset[str]:
 
 def _pack_roots(rel: str) -> list[str]:
     """Where a pack-relative path (``sutras/x.sutra.yaml``, ``config/formats.yaml``) may live for this document."""
-    m = re.match(r"((?:config|examples)/packs/[^/]+)/", rel)
-    return [m.group(1)] if m else []
+    return [r for r in pack_roots_all() if rel.startswith(r + "/")]
 
 
 @functools.lru_cache(maxsize=None)
 def pack_roots_all() -> tuple[str, ...]:
-    return tuple(sorted({re.match(r"((?:config|examples)/packs/[^/]+)/", p).group(1) for p in tracked()
-                         if re.match(r"(?:config|examples)/packs/[^/]+/", p)}))
+    """Every pack folder: a folder holding a pack.yaml under config/packs (in its domain folder, core.pack_paths) or examples/packs."""
+    return tuple(sorted({p[: -len("/pack.yaml")] for p in tracked()
+                         if re.match(r"(?:config|examples)/packs/(?:[^/]+/)?[^/]+/pack\.yaml$", p)}))
 
 
 def ignored(paths: list[str]) -> set[str]:
@@ -245,13 +245,13 @@ def ignored(paths: list[str]) -> set[str]:
 
 # Files a worked example asks the reader to create (and another project's files the text points to), by document.
 EXAMPLE_PATHS = {
-    # the pack guide's worked example, and its Part VIII (was DEVELOPER_GUIDE.md, 2.9.7): the developer recipe's new files
-    "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank",
+    # the build guide's worked examples, and the developer guide's recipes: the new files they create
+    "docs/guides/BUILD_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank"),
+    "docs/guides/DEVELOPER_GUIDE.md": ("config/packs/my-bank",
                                             "MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
                                             "sources.html", "sources.js", "test_sources.py"),
-    "docs/connectors/CONNECTORS.md": ("config/packs/equity-desk",),
-    "docs/guides/CLI_GUIDE.md": ("config/packs/curves-demo",),
-    "docs/guides/DATA_GUIDE.md": ("docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),
+    "docs/guides/CLI_REFERENCE.md": ("config/packs/curves-demo",),
+    "docs/guides/DATA_GUIDE.md": ("config/packs/equity-desk", "docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),
 }
 
 
@@ -363,8 +363,9 @@ CODE_SUFFIXES = (".java", ".py", ".js", ".ts", ".yaml", ".yml", ".sh", ".ps1", "
                  ".json", ".xml", ".env", ".service", ".tf", ".txt", ".cfg", ".conf", ".mjs", ".kts")
 # Variables a document makes up for the reader: a CI secret, the placeholder form of the console's variables.
 ENV_EXAMPLES = {"DRISHTI_PG_PASSWORD", "DRISHTI_CI_TOKEN", "DRISHTI_CONSOLE__SECTION__KEY",
-                "DRISHTI_CONSOLE"}   # tutorial 15: a shell variable holding the console's address, beside DRISHTI_SERVER
-# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (BI_GUIDE.md).
+                "DRISHTI_CONSOLE",   # tutorial 10: a shell variable holding the console's address, beside DRISHTI_SERVER
+                "DRISHTI_FIGURES_OUT", "DRISHTI_FIGURES_BASELINE"}   # read only by tests/test_var_family_figures_browser.py (ELEMENTS.md 12.2)
+# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (REPORTS_GUIDE.md).
 NOT_SETTINGS = {"layouts.phone.desk.order"}
 
 
@@ -542,8 +543,8 @@ def _ranges(text: str) -> set[str]:
 
 # Codes the documents name as reserved or retired on purpose (the error code table says which).
 RESERVED_CODES = {"DRS-3001"}
-# What a worked example adds: PACK_DEVELOPER_GUIDE Part VIII, section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
-EXAMPLE_NAMES = {"docs/guides/PACK_DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
+# What a worked example adds: DEVELOPER_GUIDE section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
+EXAMPLE_NAMES = {"docs/guides/DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
 
 
 def code_problems() -> list[str]:
@@ -556,23 +557,23 @@ def code_problems() -> list[str]:
         for m in _CODE.finditer(text):
             if m.group(0) not in known and m.group(0) not in EXAMPLE_NAMES.get(rel, ()):
                 bad.append(f"{rel}:{line_of(text, m.start())}: {m.group(0)} (not in the code)")
-    api = read("docs/guides/API_GUIDE.md")
+    api = read("docs/guides/API_REFERENCE.md")
     table = api.split("\n## Error code table", 1)[1].split("\n## ", 1)[0]
     listed = _ranges(table) | _ranges(read("docs/guides/RACHANA_REFERENCE.md"))
-    bad += [f"{c} is in the code and neither in API_GUIDE's error code table nor in RACHANA_REFERENCE" for c in sorted(codes_in_code() - listed)]
+    bad += [f"{c} is in the code and neither in API_REFERENCE's error code table nor in RACHANA_REFERENCE" for c in sorted(codes_in_code() - listed)]
     return bad
 
 
 # ---- 6. command words and kinds -------------------------------------------------------------------------------------
 
-RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DATA", "EXPORT", "ADMIN", "SMAT", "PLAY", "FRSA", "PIVOT", "MCUBE", "CCUBE", "PVAR"}    # routes/terminal_routes.py (PVAR: var_routes.py, an alias of the explorer with the Parametric toggle on; FRSA: frtb_routes.py, the FRTB-SA capital screen; VAR: var_routes.py, the explorer; PIVOT: pivot_routes.py, the pivot screen; MCUBE: mcube_routes.py, the pivot screen with the MR lens; SMAT: smat_routes.py, the scenario matrix; DATA: data_routes.py, Export data; ADMIN: terminal_routes.py, the Admin pages by command): no pack may define these; PLAY: play_routes.py, the VaR Playground
+RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DATA", "EXPORT", "ADMIN", "SMAT", "PLAY", "FRSA", "PIVOT", "MCUBE", "CCUBE", "PVAR", "PREDEAL"}    # routes/terminal_routes.py (PVAR: var_routes.py, an alias of the explorer with the Parametric toggle on; FRSA: frtb_routes.py, the FRTB-SA capital screen; VAR: var_routes.py, the explorer; PIVOT: pivot_routes.py, the pivot screen; MCUBE: mcube_routes.py, the pivot screen with the MR lens; SMAT: smat_routes.py, the scenario matrix; DATA: data_routes.py, Export data; ADMIN: terminal_routes.py, the Admin pages by command): no pack may define these; PLAY: play_routes.py, the VaR Playground
 
 
 @functools.lru_cache(maxsize=None)
 def packs() -> list[dict]:
     out = []
     for p in tracked():
-        if re.match(r"(config/|examples/|docs/guides/examples/)packs?/[^/]+/pack\.yaml$", p) or re.match(r"drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
+        if re.match(r"(config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?[^/]+/pack\.yaml$", p) or re.match(r"drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
             try:
                 out.append(yaml.safe_load(read(p)) or {})
             except yaml.YAMLError:
@@ -614,7 +615,7 @@ _KIND_DEFINED = re.compile(r"^\s*-?\s*kind:\s*([a-z][a-z0-9-]*)\s*$", re.M)
 EXAMPLE_WORDS = {"ORD",          # CONNECTORS (Combining connectors): the illustrative equity-desk pack
                  "DEA",          # DATA_GUIDE's schema to pack: the pack a schema turns into
                  "MYBOOK"}       # USER_GUIDE: a saved command a user names
-EXAMPLE_KINDS = {"deals", "desk-quote",                          # DATA_GUIDE's schema-to-pack generated pack; tutorial 4 adds desk-quote in the page
+EXAMPLE_KINDS = {"deals", "desk-quote",                          # DATA_GUIDE's schema-to-pack generated pack; tutorial 15 adds desk-quote in the page
                  "board", "model", "report", "dataset", "python", "notebook"}   # Rupaka item kinds, not entity kinds
 
 

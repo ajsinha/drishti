@@ -28,6 +28,7 @@ from playwright.sync_api import expect  # noqa: E402
 import bi_live_stack as S  # noqa: E402
 from bi_live_stack import CONSOLE_URL, PASSWORD, REPORT  # noqa: E402
 from test_bi_live_browser import browser, clean, sign_in, stack  # noqa: E402,F401  (the module's stack and browser fixtures)
+import select_helpers  # noqa: E402
 
 BOARD_REPORT = "file:report:live-trading-desk"
 
@@ -51,15 +52,15 @@ def design_board(page, title="Wave B wall"):
 
 
 def add_tile(page, visual="desk/mtm"):
-    page.click("[data-design-root] [data-title]")
+    page.click("[data-studio] [data-title]")
     page.keyboard.press("Escape")
-    page.click('.bi-vtype[data-type="tile"]')
+    page.click('[data-types] [data-type="tile"]')
     page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'tile'; }")
     tile = page.evaluate("window.drishtiBi.design.sel().id")
     page.click("[data-ptab='format']")
-    page.wait_for_selector(f'[data-tile-report] option[value="{BOARD_REPORT}"]', state="attached", timeout=15000)
+    page.wait_for_function(select_helpers.has_option("[data-tile-report]", BOARD_REPORT), timeout=15000)
     page.select_option("[data-tile-report]", BOARD_REPORT)
-    page.wait_for_function("() => document.querySelectorAll('[data-tile-visual] option').length > 1")
+    page.wait_for_function(select_helpers.has_option("[data-tile-visual]", ">1"))
     page.select_option("[data-tile-visual]", visual)
     return tile
 
@@ -145,7 +146,7 @@ def test_admin_health_shows_the_temp_folders_of_both_processes(stack, browser):
 def test_an_import_is_rolled_back_from_environments(stack, browser):
     s, ws = S.admin("POST", "/bi/workspaces", {"name": "Wave B Desk"})
     assert s in (200, 201), ws
-    body = "report: wave-b-rep\ndataset: file:dataset:live-trading\npages:\n  - id: main\n    title: Main\n    visuals:\n      - { id: n, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n"
+    body = "report: wave-b-rep\nmodel: live-trading@1\npages:\n  - id: main\n    title: Main\n    visuals:\n      - { id: n, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n"
     s, rep = S.admin("POST", f"/bi/workspaces/{ws['id']}/items", {"kind": "report", "title": "Wave B report", "body": body})
     assert s in (200, 201), rep
     S.admin("POST", f"/bi/items/{rep['id']}/publish", {"note": "v1"})

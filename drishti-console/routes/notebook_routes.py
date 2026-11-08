@@ -182,7 +182,7 @@ def _sql_name(request: Request) -> str:
 
 @router.post("/bi/notebook/sql")
 async def sql(request: Request):
-    """Body ``{extract: {dataset, ...}, sql}``: one Drishti SQL statement over the model the extract reads (BI_DESIGN.md 3.4), run by the server as the
+    """Body ``{extract: {dataset, ...}, sql}``: one Drishti SQL statement over the model the extract reads (ARCHITECTURE.md §28 3.4), run by the server as the
     signed-in person (their row rules and masks), the cell's row limit applied; ``{columns, rows, rowCount, truncated, ms, engine: server, plan, masked}``.
     The console never reads the SQL: the server parses, binds and plans it (the same plan as the model query it is equal to)."""
     body = await json_body(request)
@@ -262,7 +262,7 @@ async def promote(request: Request):
             text = promote_transform(source, name, check_extracts(body.get("extracts") or [], limits), cell_packages(source, await _packages(request)))
             notes = ["Each extract(\"name\") became a parameter of run(); the cell's result is returned and must be a pandas DataFrame with usable column names.",
                      "Check it (Check the Python on the item page) and publish it, then make a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, "
-                     "one input per parameter of run(), in this order (the dataset wizard's source A Python Transform; docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2)."]
+                     "one input per parameter of run(), in this order (the dataset wizard's source A Python Transform; docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 1.2)."]
             return JSONResponse({"kind": "python", "title": name, "yaml": text, "notes": notes}, headers=NO_STORE)
         if to == "report":
             return JSONResponse(await _sql_report(request, body, name), headers=NO_STORE)

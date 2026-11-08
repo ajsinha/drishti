@@ -20,9 +20,9 @@ bank's own data: trades, positions, the scenario PVs that VaR is computed from, 
 (called `risklake` throughout), beside the demo lake and never mixed with it.
 
 The hands-on walk-through of the same, every step in the UI, on the command line and in YAML, is
-[tutorial 45, Load your own data into a new lake](../tutorials/45-load-your-own-data-into-a-new-lake.md). Connecting a source that is
+[tutorial 16, Part A, Load your own data into a new lake](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-a--a-new-lake-of-your-own). Connecting a source that is
 not a lake (a database, a file folder, Kafka) is the [data guide](DATA_GUIDE.md); telling Drishti that an outside job has loaded data is
-its section 1. The in-memory lake (feeds that may never touch a disk) has [its own guide](IN_MEMORY_LAKE_GUIDE.md).
+its section 1. The in-memory lake (feeds that may never touch a disk) is [section 13](#13-the-in-memory-lake).
 
 Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`, `DESK`, `BOOK`, `COUNTERPARTY_ID`); outputs marked
 *captured* were produced on a scratch data folder with 2,000 trades, 300 positions of 509 scenarios and 26 hierarchy nodes.
@@ -41,6 +41,9 @@ Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`,
 10. [Connecting to an existing lakehouse (Databricks, Unity Catalog)](#10-connecting-to-an-existing-lakehouse-databricks-unity-catalog)
 11. [Archives: zip and tar](#11-archives-zip-and-tar)
 12. [Other lakes, packs and older installations](#12-other-lakes-packs-and-older-installations)
+13. [The in-memory lake](#13-the-in-memory-lake)
+14. [Delta protocol compliance](#14-delta-protocol-compliance)
+15. [Iceberg spec compliance](#15-iceberg-spec-compliance)
 
 ## 1. What a lake is
 
@@ -85,20 +88,22 @@ and your data cannot mix (section 6).
 | `_load_id`, `_source_file` | which load wrote the row, and from which file: every load can be traced and undone |
 
 **Delta or Iceberg.** A lake is Delta unless its file says `format: iceberg`; one table may differ. On the same rows both give the same
-answers, VaR equal to the cent ([tutorial 29](../tutorials/29-var-on-iceberg.md)). An Iceberg table of this layout is partitioned by
+answers, VaR equal to the cent ([tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg)). An Iceberg table of this layout is partitioned by
 business date alone.
 
 **In memory.** A lake whose root is `mem://<store>` lives in the server's memory under a hard cap, for feeds that may never be written
-to disk: [IN_MEMORY_LAKE_GUIDE.md](IN_MEMORY_LAKE_GUIDE.md).
+to disk: [section 13](#13-the-in-memory-lake).
 
 **Where the files are read from.** `config/lakes/` (the system property `drishti.lakes.dir` or `DRISHTI_LAKES_DIR` say otherwise). The
 demo lake's file also ships inside the server, so a server started in another folder, a container or a cluster node knows it; a
 `demo.yaml` in the folder wins. Example lake files for S3, Iceberg path tables, AWS S3 Tables, a REST catalog behind a private CA and an
 in-memory store are in `config/lakes.examples/`, each beside its connectors in `config/connectors.examples/`.
 
-**The lakes Drishti ships.** `demo` (the demo data, built from the committed test data in `data/testdata/`) and five lakes that ship empty, as definitions only: `risklake` (the bank's own risk data), `newslake` (news), `worldlake` (the World Bank, the IMF, the United Nations), `regulators` (the SEC, the Federal Reserve, OSFI and other central banks) and `capitalmarket` (prices, curves, volatility surfaces, funds). Each has its lake file in `config/lakes/` with no tables and its folder `data/delta/<lake>/` holding only a README.md; what a build or a load writes there is never committed. Nothing shipped points at the five: every connector reads `demo` until you point it elsewhere (section 6).
+**The lakes Drishti ships.** `demo` (the demo data, built from the committed test data in `data/testdata/`) and six lakes that ship empty, as definitions only: `risklake` (the bank's own risk data), `newslake` (news), `worldlake` (the World Bank, the IMF, the United Nations), `regulators` (the SEC, the Federal Reserve, OSFI and other central banks), `capitalmarket` (prices, curves, volatility surfaces, funds) and `referencelake` (core reference data: GLEIF legal entities, ownership, identifier mappings). Each has its lake file in `config/lakes/` with no tables and its folder `data/delta/<lake>/` holding only a README.md; what a build or a load writes there is never committed. Nothing shipped points at the six: every connector reads `demo` until you point it elsewhere (section 6); only the data feeds (`config/feeds/`, [EXTERNAL_DATA.md](EXTERNAL_DATA.md)) name them, as the lakes they load.
 
 ## 2. The lake file, every key
+
+Why one file per lake, who reads it and how it is built: [DATA_ARCHITECTURE.md section 8](../architecture/DATA_ARCHITECTURE.md#8-the-lake-file-one-description-of-every-lake).
 
 ### 2.1 A worked example: `config/lakes/risklake.yaml`
 
@@ -144,6 +149,12 @@ tables:
     date: BUSINESS_DATE
 ```
 
+The shipped demo lake (`config/lakes/demo.yaml`) lays out its scenario PVs with `partition-by: [SCENARIO_SET_ID, GRAIN]`,
+`sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID]`, zstd, 256 MB files, 16 MB row groups, 30 days of time travel and
+maintenance (compaction, vacuum after 7 days, checkpoints), and its Calypso and Murex trades by `PRODUCT_GROUP`. A demo lake built
+before this layout keeps its old partitions: a load into such a table is refused, naming both layouts, until the lake is rebuilt with
+`python3 tools/drishti.py lake demo` (VaR answers are the same on either layout).
+
 Positions are scenario-PV rows of `GRAIN: POSITION` (a `POSITION_ID`, placed by its book and naming its trades in `TRADE_IDS`); a
 position the VaR engine derives from trades needs no table of its own. The shape of every VaR input, field by field, is the
 [VaR guide's data contract](VAR_GUIDE.md).
@@ -168,7 +179,7 @@ Check the file before you load: `drishti.py lake show` lists it as the server re
 | `catalog` | Iceberg only: `none` (path tables, the default), `rest`, `glue`, `s3tables`, `hadoop`, with their settings (`uri`, `warehouse`, `token: ${…}`) |
 | `defaults` | any table key, for every table that does not set it |
 | `tables` | the tables, each `<domain>.<table>: {…}` (below) |
-| `memory` | an in-memory lake only: `max-mb`, `chunk-kb`, `contract`, `owner`, `idle-trim-minutes` ([IN_MEMORY_LAKE_GUIDE.md](IN_MEMORY_LAKE_GUIDE.md)) |
+| `memory` | an in-memory lake only: `max-mb`, `chunk-kb`, `contract`, `owner`, `idle-trim-minutes` ([section 13](#13-the-in-memory-lake)) |
 | `description` | free text, shown on Admin → Lakes |
 
 Values may name environment variables or server settings: `${NAME}`, `${NAME:default}`, nested
@@ -226,7 +237,10 @@ an entry for every one of them. The first row answers the same questions from 3 
 
 **Rules of thumb**: a partition (one date and one value) should hold **at least about 1 GB**; partition only by a **low-cardinality**
 column (a handful of values) that almost every query names; when a day holds less than about 1 GB, use **no extra partition at all**.
-The demo lake partitions its trades by `PRODUCT_TYPE` to show the feature; for 1M trades a day, section 9 recommends none.
+The demo lake partitions Endur's trades by `PRODUCT_TYPE` (a few products), Calypso's and Murex's by `PRODUCT_GROUP` (each books 50+
+product types: a folder per type would be the small-file shape above), and the scenario PVs by `SCENARIO_SET_ID, GRAIN` (a VaR run reads
+one scenario set, trades and positions apart), each sorted so a legal entity's, desk's and book's rows sit together; for 1M trades a
+day, section 9 recommends no trade partition at all.
 
 A partition column is fixed when the table is first written: changing `partition-by` later means rebuilding the table (load its dates
 again into a fresh table), and `drishti.py lake check` reports a table whose partitions differ from its file (section 8).
@@ -238,7 +252,7 @@ again into a fresh table), and `drishti.py lake check` reports a table whose par
 | `promote` | `[TRADE_ID, DESK, BOOK, PRODUCT_TYPE, COUNTERPARTY_ID]` | these fields of the document are also written as typed columns: what filters, sorting, the pivot engine and BI read without opening documents. Promote the fields people filter by; twenty or thirty is normal |
 | `vectors` | `[SCENARIO_PV]` | list-of-numbers fields written as `list<double>` columns and kept out of the document (it keeps a marker). VaR reads the vector column directly |
 | `flatten` | `{LEGS[0].NOTIONAL: LEG1_NOTIONAL}` | a nested field written as a column of its own (and promoted) |
-| `id` | `TRADE_ID` | the field that holds each row's id (default: the pack's key, else `id`) |
+| `id` | `TRADE_ID` | the field that holds each row's id (default: the kind's key from its pack, its ingest key else the single `key:` field of the kind's data contract; else `id`) |
 | `date` | `BUSINESS_DATE` | the rows' own business-date field. It **never** decides a row's partition (section 5.2): rows whose own date differs from the file's are loaded under the file's date and counted |
 | `latest-by` | `UPDATED_AT`, `COMPUTED_AT` | when one id appears twice on one date, the copy with the latest of this timestamp is kept (default `COMPUTED_AT`; empty: the last read). The others are dropped and counted, never a failure |
 
@@ -417,7 +431,7 @@ summary: data/delta/risklake/_drishti-lake/runs/20261107T080146.064-1786979.json
 2026-11-07T08:01:53-05:00 lake-build ok exit=0 run=20261107T080146.064-1786979 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=15 seconds=7.012
 ```
 
-The useful options (the full list: `drishti.py lake build --help`, [TOOLS.md](TOOLS.md)):
+The useful options (the full list: `drishti.py lake build --help`, [CLI_REFERENCE.md](CLI_REFERENCE.md)):
 
 | Option | Means |
 |---|---|
@@ -473,8 +487,363 @@ documents read: 300, rows written: 300, rejected: 0
 (*Captured*: the sample file repeated 20 position ids, so `latest-by: COMPUTED_AT` kept one copy of each and the date holds 280 rows.)
 On Windows, the same command in PowerShell with the jar's path; nothing else is needed. Command-line options over the file: `--as-of`,
 `--table`, `--pack`, `--kind`, `--mode append|replace`, `--key`, `--date-from`, `--plan`, `--set key.path=value`. Every key of a load
-file, with S3 and Iceberg examples, is [TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader); the design and the memory model
-are [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md).
+file, with S3 and Iceberg examples, is [CLI_REFERENCE.md section 4.13](CLI_REFERENCE.md#713-the-parallel-lake-loader); the design and the memory model
+are [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload).
+
+### 3.4 Pushing data from your own programs
+
+Your system writes the rows; Drishti loads them. The safe way, at any volume, is the **data inbox** (section 3.1): your program writes a
+JSON Lines file (gzipped) into the inbox, and its `.ready` file **last**. Both programs below were run against a server with the inbox on
+and their rows checked in the lake; they are checked in under [examples/lake-push/](examples/lake-push/) (`push_inbox.py`,
+`PushInbox.java`), and a test keeps this page equal to them.
+
+**The three rules every pusher follows:**
+
+1. **Write, then rename.** The data file is written outside the inbox (here `<dataload>/staging/`, beside `inbox/` on the same file
+   system) and renamed in when complete: one atomic rename, so the inbox never sees half a file.
+2. **The `.ready` file last**, the same way, with `sha256:` and `rows:` of what you wrote: a file cut short is refused before anything is
+   written. The inbox also waits until both are unchanged for `stable-seconds` (30).
+3. **`mode: replace`** for a day you may send again: a re-run replaces that business date in one commit, never doubles it.
+
+**Name the file `<table>.<YYYY-MM-DD>.jsonl.gz`** (the business date in the name), or give `table:` and `business-date:` in the `.ready`
+file. The table is a pack's kind or, with `connector:`, one of its tables: for trades, whose kind `trade` has one table per source system,
+name the connector (`trade-endur` writes `trading/trade_endur`), or name the file after the table (`trade_endur.2026-11-06.jsonl.gz`
+resolves to the kind `trade` and the connector `trade-endur`). **No `key:` is needed**, also into a lake that does not exist yet: a table
+created by its first load takes the pack's layout and its kind's key as its `id:` (the pack's ingest key, else the `key:` of the kind's data
+contract, `TRADE_ID` for trades); `key:` in the `.ready` file wins when you give it.
+
+#### (a) Python: one file, a tar, and `lake build`
+
+The script uses Python's standard library only. One file:
+
+```bash
+python3 push_inbox.py --inbox <data>/dataload/inbox --table trade_endur --date 2026-11-06 --source export.jsonl.gz \
+    --lake risklake --pack trading --kind trade --connector trade-endur
+```
+
+```text
+pushed <data>/dataload/inbox/trade_endur.2026-11-06.jsonl.gz and trade_endur.2026-11-06.jsonl.gz.ready
+```
+
+```yaml
+# the .ready file it wrote (captured)
+pack: trading
+kind: trade
+connector: trade-endur
+lake: risklake
+mode: replace
+sha256: ef759f8486980a5b311b5efdf90ea575be65655412b28e983963b61dfb4139c6
+rows: 164
+```
+
+**A tar of several tables and dates**, all or nothing: `<folder>/<YYYY-MM-DD>/part-0001.jsonl.gz` inside. A folder is a **table**
+(`trade_endur`, `trade_calypso`: the tables of the kind `trade`, one per source system) or a **kind** with one table (`risk-hierarchy`: [contract](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy), [example](../contracts/samples/market-risk.md#risk-hierarchy),
+written `risk_hierarchy` too), so one archive may mix the trades of several systems with the hierarchy:
+
+```bash
+python3 push_inbox.py --inbox <data>/dataload/inbox --tar eod-2026-11-06 \
+    --part trade_endur:2026-11-05:endur-1105.jsonl --part trade_endur:2026-11-06:endur-1106.jsonl \
+    --part trade_calypso:2026-11-05:calypso-1105.jsonl --part trade_calypso:2026-11-06:calypso-1106.jsonl \
+    --part risk_hierarchy:2026-11-05:nodes-1105.jsonl --part risk_hierarchy:2026-11-06:nodes-1106.jsonl \
+    --folders trade_endur=trading,trade_calypso=trading,risk_hierarchy=market-risk --lake risklake
+```
+
+You should see the pair go through the inbox within a cycle; the outbox's `eod-2026-11-06.tar.loaded.json` says `"outcome" : "loaded"`
+with one entry per table, and each table has a folder per date (`business_date=2026-11-05`, `business_date=2026-11-06`). A lake with no
+entry for a table yet (or no file at all) gets the pack's entry for it, with the kind's key as its `id:` (`TRADE_ID`, `NODE_ID`): nothing to
+prepare. `--folders` is optional when each folder names one pack's table or kind.
+
+```python
+"""Push rows into a Drishti lake through the data inbox (docs/guides/DATA_LAKE_GUIDE.md section 3.4). Python's standard library only.
+
+One file:  push_inbox.py --inbox <data>/dataload/inbox --table trade_endur --date 2026-11-06 --source rows.jsonl.gz --lake risklake \
+               --pack trading --kind trade --connector trade-endur
+A tar:     push_inbox.py --inbox ... --tar eod-2026-11-06 --part trade_endur:2026-11-06:a.jsonl.gz --part risk_hierarchy:2026-11-06:b.jsonl \
+               --folders trade_endur=trading,risk_hierarchy=market-risk --lake risklake
+
+The data file is written in <dataload>/staging/ and renamed into the inbox when complete (one atomic rename); its .ready file,
+with the SHA-256 and the row count, is written LAST, the same way. A re-run of a day is safe with --mode replace."""
+from __future__ import annotations
+
+import argparse
+import gzip
+import hashlib
+import io
+import json
+import os
+import tarfile
+from pathlib import Path
+
+
+def documents(source: Path):
+    """Your rows, one JSON object each: here read from a JSON Lines export (.jsonl or .jsonl.gz); yield dicts from your program instead."""
+    opener = gzip.open if source.name.endswith(".gz") else open
+    with opener(source, "rt", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                yield json.loads(line)
+
+
+def write_jsonl_gz(rows, out) -> int:
+    """Rows as gzipped JSON Lines into a binary stream; the number written."""
+    n = 0
+    with gzip.GzipFile(fileobj=out, mode="wb", mtime=0) as gz:
+        for row in rows:
+            gz.write((json.dumps(row, separators=(",", ":"), ensure_ascii=False) + "\n").encode("utf-8"))
+            n += 1
+    return n
+
+
+def sha256_of(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def place(inbox: Path, name: str, write) -> Path:
+    """Writes inbox/<name> atomically: first into <dataload>/staging/ (beside the inbox, the same file system), flushed, then renamed in."""
+    staging = inbox.parent / "staging"
+    staging.mkdir(parents=True, exist_ok=True)
+    final, tmp = inbox / name, staging / name
+    with open(tmp, "wb") as f:
+        write(f)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, final)
+    return final
+
+
+def ready_text(keys: dict) -> str:
+    return "".join(f"{k}: {json.dumps(v) if isinstance(v, dict) else v}\n" for k, v in keys.items() if v is not None)
+
+
+def push_file(inbox: Path, table: str, day: str, rows, **keys) -> Path:
+    """One table, one business date: inbox/<table>.<day>.jsonl.gz, then its .ready with sha256 and rows."""
+    counted = {}
+    data = place(inbox, f"{table}.{day}.jsonl.gz", lambda f: counted.setdefault("rows", write_jsonl_gz(rows, f)))
+    note = {**keys, "sha256": sha256_of(data), "rows": counted["rows"]}
+    place(inbox, data.name + ".ready", lambda f: f.write(ready_text(note).encode("utf-8")))
+    return data
+
+
+def push_tar(inbox: Path, name: str, parts: list[tuple[str, str, object]], **keys) -> Path:
+    """Several tables and dates in one archive: <table>/<YYYY-MM-DD>/part-0001.jsonl.gz each; one .ready, all or nothing."""
+    total = 0
+
+    def write(f):
+        nonlocal total
+        with tarfile.open(fileobj=f, mode="w") as tar:
+            for table, day, rows in parts:
+                buf = io.BytesIO()
+                total += write_jsonl_gz(rows, buf)
+                info = tarfile.TarInfo(f"{table}/{day}/part-0001.jsonl.gz")
+                info.size = buf.tell()
+                buf.seek(0)
+                tar.addfile(info, buf)
+
+    data = place(inbox, f"{name}.tar", write)
+    note = {**keys, "sha256": sha256_of(data), "rows": total}
+    place(inbox, data.name + ".ready", lambda f: f.write(ready_text(note).encode("utf-8")))
+    return data
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--inbox", required=True, type=Path, help="<data>/dataload/inbox of the inbox's owner node")
+    ap.add_argument("--table"), ap.add_argument("--date"), ap.add_argument("--source", type=Path)
+    ap.add_argument("--tar", help="an archive's name (without .tar)")
+    ap.add_argument("--part", action="append", default=[], help="table:YYYY-MM-DD:source, for --tar")
+    ap.add_argument("--folders", help="table=pack,... for --tar")
+    ap.add_argument("--lake"), ap.add_argument("--pack"), ap.add_argument("--kind"), ap.add_argument("--connector")
+    ap.add_argument("--key", help="the id field (default: the lake entry's id:, else the kind's key from its pack: TRADE_ID)")
+    ap.add_argument("--mode", default="replace", choices=["replace", "append"])
+    ap.add_argument("--hold", action="store_true", help="the inbox waits until hold is removed from the .ready file")
+    a = ap.parse_args()
+    a.inbox.mkdir(parents=True, exist_ok=True)
+    common = {"lake": a.lake, "mode": a.mode, "hold": True if a.hold else None}
+    if not a.tar:
+        common["key"] = a.key
+    if a.tar:
+        parts = [(t, d, documents(Path(s))) for t, d, s in (p.split(":", 2) for p in a.part)]
+        folders = dict(x.split("=", 1) for x in a.folders.split(",")) if a.folders else None
+        out = push_tar(a.inbox, a.tar, parts, folders=folders, **common)
+    else:
+        out = push_file(a.inbox, a.table, a.date, documents(a.source), pack=a.pack, kind=a.kind, connector=a.connector, **common)
+    print("pushed", out, "and", out.name + ".ready")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+**Without the inbox**, the same rows straight into a lake from the machine that holds it (the `.ready` file is optional here; command-line
+options win over it):
+
+```bash
+python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake risklake \
+    --pack config/packs/banking/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates
+```
+
+```text
+… lake-build ok exit=0 … domain=trading kind=trade engine=drishti mode=overwrite-dates rows=100 rejected=0 dates=1 partitions=4 seconds=2.573
+```
+
+#### (b) Java: the JDK alone
+
+`Files`, `GZIPOutputStream` and `MessageDigest`; no other library. `push(...)` takes your own JSON lines; `main` reads them from a file:
+
+```bash
+javac PushInbox.java
+java PushInbox <data>/dataload/inbox trade_endur 2026-11-04 rows.jsonl lake=risklake pack=trading kind=trade connector=trade-endur
+```
+
+```text
+pushed <data>/dataload/inbox/trade_endur.2026-11-04.jsonl.gz and trade_endur.2026-11-04.jsonl.gz.ready (100 rows)
+```
+
+```java
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Push rows into a Drishti lake through the data inbox (docs/guides/DATA_LAKE_GUIDE.md section 3.4), with the JDK alone.
+ *
+ * <pre>
+ * javac PushInbox.java
+ * java PushInbox &lt;data&gt;/dataload/inbox trade_endur 2026-11-06 rows.jsonl lake=risklake pack=trading kind=trade connector=trade-endur
+ * </pre>
+ *
+ * The rows (one JSON object a line) are written gzipped into &lt;dataload&gt;/staging/ and renamed into the inbox when complete; the
+ * .ready file, with the given keys, mode replace, the SHA-256 and the row count, is written last the same way. Your program passes its
+ * own JSON lines to {@link #push}.
+ */
+public final class PushInbox {
+
+    private PushInbox() {
+    }
+
+    /** One table, one business date: inbox/&lt;table&gt;.&lt;day&gt;.jsonl.gz, then its .ready with {@code keys} (lake, pack, kind, ...). */
+    public static Path push(Path inbox, String table, String day, Iterable<String> jsonLines, Map<String, String> keys) throws IOException {
+        Path staging = inbox.resolveSibling("staging");                 // beside the inbox: the same file system, so the move is one rename
+        Files.createDirectories(inbox);
+        Files.createDirectories(staging);
+        String name = table + "." + day + ".jsonl.gz";
+        Path tmp = staging.resolve(name);
+        long rows = 0;
+        try (OutputStream out = Files.newOutputStream(tmp);
+             BufferedWriter w = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(out, 1 << 16), StandardCharsets.UTF_8))) {
+            for (String line : jsonLines) {
+                w.write(line);
+                w.write('\n');
+                rows++;
+            }
+        }
+        Map<String, String> note = new LinkedHashMap<>(keys);
+        note.putIfAbsent("mode", "replace");                              // a re-run of the day replaces it
+        note.put("sha256", sha256(tmp));
+        note.put("rows", Long.toString(rows));
+        Path data = Files.move(tmp, inbox.resolve(name), StandardCopyOption.ATOMIC_MOVE);
+        StringBuilder ready = new StringBuilder();
+        note.forEach((k, v) -> ready.append(k).append(": ").append(v).append('\n'));
+        Path marker = staging.resolve(name + ".ready");
+        Files.writeString(marker, ready);
+        Files.move(marker, inbox.resolve(name + ".ready"), StandardCopyOption.ATOMIC_MOVE);   // last: the inbox takes the pair from now on
+        return data;
+    }
+
+    static String sha256(Path file) throws IOException {
+        try (DigestInputStream in = new DigestInputStream(Files.newInputStream(file), MessageDigest.getInstance("SHA-256"))) {
+            in.transferTo(OutputStream.nullOutputStream());
+            return HexFormat.of().formatHex(in.getMessageDigest().digest());
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        if (args.length < 4) {
+            System.err.println("usage: java PushInbox <inbox> <table> <YYYY-MM-DD> <rows.jsonl> [key=value ...]   (lake=, pack=, kind=, connector=, key=, mode=)");
+            System.exit(2);
+        }
+        Map<String, String> keys = new LinkedHashMap<>();
+        for (int i = 4; i < args.length; i++) {
+            String[] kv = args[i].split("=", 2);
+            keys.put(kv[0], kv[1]);
+        }
+        List<String> lines;
+        try (InputStream in = Files.newInputStream(Path.of(args[3]))) {
+            lines = new String(in.readAllBytes(), StandardCharsets.UTF_8).lines().filter(l -> !l.isBlank()).toList();
+        }
+        Path data = push(Path.of(args[0]), args[1], args[2], lines, keys);
+        System.out.println("pushed " + data + " and " + data.getFileName() + ".ready (" + lines.size() + " rows)");
+    }
+}
+```
+
+**The parallel loader instead of the inbox** (every core, bounded memory, a file of any size; section 3.3): `lake build … --engine java`
+into a lake whose file has the table's entry (here the demo lake's `trading.trade_endur`; `--key` is passed to the loader, and an entry
+without `id:` takes it, else the kind's key), or the loader alone from the server's jar with a load file:
+
+```bash
+python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake demo \
+    --pack config/packs/banking/trading --connector trade-endur --mode overwrite-dates --engine java
+```
+
+```text
+… lake-build ok exit=0 … domain=trading kind=trade engine=java-loader mode=overwrite-dates rows=100 rejected=0 dates=1 partitions=4 seconds=2.129
+```
+
+```bash
+java -Xmx4g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-2.9.11.g-exec.jar --config load-trades.yaml
+```
+
+#### (c) Where the inbox is, and watching it load
+
+| | |
+|---|---|
+| The inbox | `<data>/dataload/inbox/` on the inbox's **owner** node (`drishti.dataload.dir`, default `<data>/dataload`; `<data>` is `DRISHTI_DATA_DIR`). Turn it on: Admin → Engines → **Data inbox**, or `DRISHTI_DATALOAD_ENABLED=true` (section 3.1) |
+| Which table | the `.ready` file's keys, else the first rule of `config/dataload.yaml`, else the name's table (section 5.1) |
+| Which date | the `.ready` file's `business-date:`, else the name's date, else business today (section 5.2) |
+| Which lake | the `.ready` file's `lake:`, else the rule's, else `drishti.dataload.lake` (`demo`) |
+| Watch it | **Admin → Data loads → Inbox** (Waiting, Loading, Last cycles, Failures with **Retry**); `drishti.py dataload status`; `GET /api/v1/admin/dataload` |
+| Load now | **Load now** on the Inbox screen; `drishti.py dataload run`; `POST /api/v1/admin/dataload/run` |
+| Its report | `outbox/<day>/<run>/<file>.loaded.json` (tables, dates, Delta versions, rows); a refusal: `failed/<day>/<run>/<file>.failed.json` with the reason in words |
+| Undo a load | `drishti.py dataload undo <load id>` (a dry run, then `--yes`), `POST /api/v1/admin/dataload/undo`; section 5.5 |
+
+#### (d) At scale
+
+- **One file per table and business date**, gzipped, up to a few GB each; or **one tar** per batch when several tables (the trades of
+  several systems, the hierarchy, the PVs) must land together (all or nothing). Many small files cost more than a few large ones: aim for 100 MB to 2 GB per file.
+- **One `.ready` per data file**; or, when a whole batch is written, one `ready.all` in the inbox releases every file there at once.
+- **Order:** a cycle takes every ready, stable file at that moment, oldest first, and loads the files of one table together; files that
+  become ready during a run wait for the next cycle (`interval`, 10 minutes; **Load now** starts one at once). Send a table's dates in
+  order when a later date depends on an earlier one.
+- **Idempotent:** `mode: replace` (and the ledger, which skips a file whose SHA-256 was already loaded) make a re-run safe.
+- **Throughput:** the loader runs as its own process (`loader-heap`, 4g) on every core; a cycle can be bounded with `max-files` and
+  `max-gb`; keep the inbox and the lake on local or fast shared storage; exclude them from real-time antivirus scanning.
+- **Hold and release:** `hold: true` keeps a pair waiting (shown as *held*) until you remove the key, for example until a risk run is
+  signed off.
+- **Checks:** a wrong `sha256:` or `rows:`, an unknown key, a bad date or mode, a table that cannot be routed, or rejected rows over
+  `reject-max-percent` (0) send the pair to `failed/` with the reason, and nothing is committed; **Retry** (or `drishti.py dataload
+  retry`) puts it back after you fix it. Every row a load rejects is listed in the load's `*.rejects.jsonl` with its line and reason.
 
 ## 4. The `.ready` file, every key
 
@@ -485,24 +854,54 @@ it, and so do `lake build` and the parallel loader for a file given on their com
 (`trade_endur.2026-11-06.ready`, `eod.tar.ready`). A short name that could release two data files (`trades.ready` beside `trades.jsonl`
 and `trades.jsonl.gz`) releases neither, and the Inbox screen says why.
 
-**A full, annotated example** (every key; a real file uses only those it needs):
+### 4.0 A complete `.ready` file, every key
+
+Every key a `.ready` file can carry, each with what it does and its default. All are optional: a real file uses only those it needs (most
+need none, or `lake:`, `mode:`, `sha256:` and `rows:`). The keys are one list shared by the inbox and the command-line loaders
+(`ReadyNote.KEYS` in drishti-dataload, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
+by `drishti-console/tests/test_docs_ready_example.py`, so a renamed key fails the docs.
 
 ```yaml
-# trade_endur.2026-11-06.jsonl.gz.ready
-lake: risklake                  # the lake the file goes to, over the rule's and the inbox's (section 5.1); a lake with no file yet is created
-pack: trading                   # the pack whose kind and recommended layout the table uses
-kind: trade                     # the pack's kind, when the pack has several
-connector: trade-endur          # the pack's connector whose table is written (here trading/trade_endur), when several serve the kind
-table: trade_endur              # the table, over the name's (refused for a tar)
-business-date: 2026-11-06       # every row's business date, over the name's (YYYY-MM-DD; refused for a tar)
-mode: replace                   # replace (the date replaced) or append (rows added); section 5.3
-key: TRADE_ID                   # the id field (default: the lake entry's or the pack's)
-sha256: 3f0c...                 # 64 hex characters: the file's checksum, checked before anything is written (inbox)
-rows: 1048576                   # the documents the file holds (a tar: all its files), checked before anything is written (inbox)
-new-table: false                # true: this file may create a table no pack has (with pack:, and new-tables: true in the inbox)
-hold: false                     # true: the file waits in the inbox until this key is removed or set to false
-# folders: {trades: trading, scenario_pv: market-risk}   a tar only: each table folder's pack
+# trade_endur.2026-11-06.jsonl.gz.ready   (YAML; JSON works too; an EMPTY file is fine and only says "the data file beside me is complete")
+#
+# --- Where the rows go -----------------------------------------------------------------------------------------------------------------------
+lake: risklake               # the lake (its file config/lakes/<lake>.yaml; created at <data>/delta/<lake> when it has none yet).
+                             #   Default: the routing rule's lake:, else drishti.dataload.lake (demo as shipped). Section 5.1
+pack: trading                # the pack whose kind and recommended layout (promoted columns, id, partitions) the table takes.
+                             #   Default: the rule's pack:, else the pack that has a kind or table named like the file
+kind: trade                  # the pack's kind, when the pack has several. Default: the rule's kind:, else the one the file name names
+connector: trade-endur       # the pack's connector whose table is written (here trading/trade_endur), when several serve the kind.
+                             #   Default: the rule's connector:, else the first that serves the kind
+table: trade_endur           # the table, instead of the name's. Default: the file name's table (trade_endur.2026-11-06...). Refused for a tar
+#
+# --- Which business date -----------------------------------------------------------------------------------------------------------------------
+business-date: 2026-11-06    # every row's business date (YYYY-MM-DD), the partition. Default: the date in the file name, else the
+                             #   business today (New York calendar). Refused for a tar: a tar's folders name their dates. Section 5.2
+#
+# --- How it loads ------------------------------------------------------------------------------------------------------------------------------
+mode: replace                # replace: the file's business date(s) replaced in one commit, so a re-run is safe; append: rows added.
+                             #   Default: the lake entry's load-mode (replace in the shipped lake files), else drishti.dataload.default-mode (append)
+key: TRADE_ID                # the id field. Default: the lake entry's id:, else the kind's key (the pack's ingest key, else the key: of
+                             #   the kind's data contract), else a field named id. A table created by its first load takes it as its id:
+new-table: false             # true: this file may create a table no pack has (with pack:, and drishti.dataload.new-tables: true). Default false
+#
+# --- A tar only ----------------------------------------------------------------------------------------------------------------------------------
+folders: {trade_endur: trading, scenario-pv: market-risk, risk_hierarchy: market-risk}
+                             # each top folder's pack (a tar holds <table or kind>/<YYYY-MM-DD>/ files). Default: the one pack with a
+                             #   kind or table of that name (_ and - alike), else a pack of that name with one kind; an unresolved folder
+                             #   refuses the whole tar. Section 4.4
+#
+# --- Checks before anything is written (the inbox: a mismatch sends the pair to failed/, nothing committed) -------------------------------
+sha256: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae
+                             # the data file's SHA-256, 64 hexadecimal characters (sha256sum, Get-FileHash). Default: not checked
+rows: 1048576                # the documents the file holds (a tar: all its files together). Default: not checked
+#
+# --- Hold it ---------------------------------------------------------------------------------------------------------------------------------------
+hold: false                  # true: the pair waits in the inbox, shown as held, until this key is removed or set to false. Default false
 ```
+
+The example names every key at once to show them: a real tar's `.ready` refuses `table:` and `business-date:`, and `folders:` is meant
+for a tar only. The table below says the same per key.
 
 | Key | Value | Notes |
 |---|---|---|
@@ -511,10 +910,10 @@ hold: false                     # true: the file waits in the inbox until this k
 | `table` | a table name | over the name's; refused for a tar |
 | `business-date` | `YYYY-MM-DD` | over the name's date; refused for a tar |
 | `mode` | `replace` or `append` | over the lake entry's `load-mode` and the inbox's default |
-| `key` | a field | the id field; a new table needs one (else a field named `id`) |
+| `key` | a field | the id field; default the lake entry's `id:`, else the kind's key from its pack (ingest key, else data contract), which a new table takes as its `id:` |
 | `sha256`, `rows` | 64 hex characters; a whole number | checked by the inbox before anything is written; a mismatch sends the file to `failed/` |
 | `new-table` | `true`/`false` | see section 5.6 |
-| `folders` | `{<folder>: <pack>}` | a tar only (section 4.4) |
+| `folders` | `{<folder>: <pack>}` | a tar only; a folder is a table or a kind (section 4.4) |
 | `hold` | `true`/`false` | the Inbox screen shows the file as *held* |
 
 **An unknown key is refused** (the file goes to `failed/` naming the keys there are), so a typo never goes unnoticed; so is a bad date, a
@@ -563,31 +962,36 @@ The Inbox screen shows it as *held*; delete the `hold:` line (or set it to `fals
 
 ### 4.4 A tar with several tables and dates
 
-A tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<table>/<YYYY-MM-DD>/<files>.jsonl[.gz]`, nothing else (operating-system litter
-such as `__MACOSX/` and `.DS_Store` is ignored):
+A tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<folder>/<YYYY-MM-DD>/<files>.jsonl[.gz]`, nothing else (operating-system litter
+such as `__MACOSX/` and `.DS_Store` is ignored). **Each top folder is a table or a kind**: a table name (`trade_endur`, `trade_calypso`,
+`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv` ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv), [example](../contracts/samples/market-risk.md#scenario-pv)), `risk-hierarchy`)
+writes the kind's one table. Names compare without case and with `_` and `-` alike (`risk_hierarchy` is the kind `risk-hierarchy`):
 
 ```text
 eod-2026-11-06.tar.gz
+├── trade_endur/2026-11-05/part-0001.jsonl.gz
 ├── trade_endur/2026-11-06/part-0001.jsonl.gz
-├── trade_endur/2026-11-06/part-0002.jsonl.gz
-├── scenario_pv/2026-11-05/restated.jsonl.gz
-├── scenario_pv/2026-11-06/positions.jsonl.gz
+├── trade_calypso/2026-11-06/part-0001.jsonl.gz
+├── scenario-pv/2026-11-06/part-0001.jsonl.gz
+├── scenario-pv/2026-11-06/part-0002.jsonl.gz
 └── risk_hierarchy/2026-11-06/nodes.jsonl
 ```
 
 ```yaml
-# eod-2026-11-06.tar.ready
+# eod-2026-11-06.tar.gz.ready
 lake: risklake
-folders: {trade_endur: trading, scenario_pv: market-risk, risk_hierarchy: market-risk}
+folders: {trade_endur: trading, trade_calypso: trading, scenario-pv: market-risk, risk_hierarchy: market-risk}
 rows: 2050326
 ```
 
 **A tar names its own tables and dates; nothing overrides them**: `business-date:` or `table:` in its `.ready` is refused. Each folder's
-pack is `folders:`, else the pack that already has a table of that name, else a pack of that name with one kind; an unresolved folder
-refuses the whole archive. Every table of the archive shares one load id, and **an archive loads completely or not at all**: if one
-table's load fails, the tables already committed are undone and the archive goes to `failed/` saying what failed and what was rolled
-back. Make one from dated files with `tar -czf eod-2026-11-06.tar.gz trade_endur scenario_pv risk_hierarchy` run in the folder holding
-the three table folders.
+pack is `folders:`, else the one pack with a kind or table of that name, else a pack of that name with one kind; an unresolved folder
+refuses the whole archive, listing the kinds and tables there are. A folder named after a kind with **several tables** (`trade`) is
+refused naming them: name the table's folder (`trade_endur`). Each table's id is its lake entry's `id:`; a table the lake has no entry for
+gets the pack's entry with the kind's key as `id:` (section 5.1), so a tar into a new lake needs nothing prepared. Every table of the archive shares
+one load id, and **an archive loads completely or not at all**: if one table's load fails, the tables already committed are undone and the
+archive goes to `failed/` saying what failed and what was rolled back. Make one from dated folders with
+`tar -czf eod-2026-11-06.tar.gz trade_endur trade_calypso scenario-pv risk_hierarchy` run in the folder holding them.
 
 ### 4.5 Checks: sha256 and rows
 
@@ -634,8 +1038,9 @@ Every key of a rule: `match`, `pack`, `kind`, and optionally `connector`, `table
 `lake` (a lake's name; a folder is the older form), `format` (`delta` or `iceberg`).
 
 **Which lake**: the `.ready` file's `lake:`, else the rule's `lake:`, else `drishti.dataload.lake` (`demo` as shipped). When the lake
-file has no entry for the kind, the pack's recommended entry is copied into it first (said in the log); when the lake has no file at all,
-`config/lakes/<lake>.yaml` is created. From then on the lake file is the truth: edit it there.
+file has no entry for the table (a kind's, or one of a kind's several tables: `trade_endur`), the pack's recommended entry is copied into it
+first (said in the log), with the kind's key as its `id:` when the entry names none (the `.ready` file's `key:`, else the pack's ingest
+key, else the single `key:` field of the kind's data contract); when the lake has no file at all, `config/lakes/<lake>.yaml` is created. From then on the lake file is the truth: edit it there.
 
 A file of *lake rows* or *loader rows* (the row forms of [DATA_GUIDE.md section 2.2](DATA_GUIDE.md#2-the-row-forms)) is refused with the
 tool that loads it (`tools/samplegen/load_rows.py`, or the store's own loader): the loader reads documents.
@@ -767,7 +1172,7 @@ The rows are in the lake; nothing shows them until a connector names it.
 **Demo and real never mix.** Each lake has its own folder and its own file, and a connector reads one lake. Three rules keep a server
 from showing demo data beside yours:
 
-- **The packs' samples step aside.** Every pack ships sample documents (`config/packs/<pack>/samples/`), served by the `demo` connector,
+- **The packs' samples step aside.** Every pack ships sample documents (`config/packs/<domain>/<pack>/samples/`), served by the `demo` connector,
   which answers any kind and, on a live read, before the lakes. Once a kind's routed connector, or any Delta or Iceberg connector serving
   it, names a lake other than `demo`, the samples no longer answer for that kind: not by id (`TRD 1000001`, a demo ComSwap, is not
   found once `trade-endur` reads risklake), not in a search. A kind whose connectors all read `demo` keeps its samples, so a demo server
@@ -789,8 +1194,8 @@ pack's template is written again at the next start), and restart. Nothing in eit
 
 ## 7. The demo lake's one-time move
 
-Until 2.9.11.d the demo lake's tables sat directly in `<data>/delta/<domain>/`; now the demo lake is `<data>/delta/demo/`. A demo lake
-built in the older layout is **moved once, safely, at the server's first start** (`drishti.lakes.relocate-on-start`, on), or by hand with
+The demo lake is `<data>/delta/demo/`. A demo lake built in the older layout, its tables directly in `<data>/delta/<domain>/`, is
+**moved once, safely, at the server's first start** (`drishti.lakes.relocate-on-start`, on), or by hand with
 the server stopped:
 
 ```bash
@@ -803,11 +1208,13 @@ is measured before and after (version, data files, rows, every named file presen
 back**; it refuses, moving nothing, when `<data>/delta/demo` exists, when a folder belongs to no lake file, or while a load holds the lock;
 it **never deletes** a file and records the move in `<data>/delta/demo/_drishti-lake/relocated.json`. Connector files the server once
 generated with the old default root follow the move: they are rewritten to `lake: demo`, each kept beside it as
-`<name>.yaml.before-lake-<time>.bak`. A site that sets `DRISHTI_DELTA_ROOT` keeps that root: nothing moves.
+`<name>.yaml.before-lake-<time>.bak`. A file nobody edited since it was generated keeps counting as unedited (its template stamp is
+written again over the new text), so it still follows its pack's template at upgrades; an edited file stays edited. A site that sets
+`DRISHTI_DELTA_ROOT` keeps that root: nothing moves.
 
 **Roll back by hand**: stop the server, set `drishti.lakes.relocate-on-start: false`, rename the folders under `<data>/delta/demo/` back to
 `<data>/delta/`, delete `relocated.json`, and put the `.bak` connector files back. Every check, refusal and message:
-[OPERATIONS.md, The lakes' folders](../admin/OPERATIONS.md#the-lakes-folders).
+[OPERATIONS_GUIDE.md, The lakes' folders](OPERATIONS_GUIDE.md#71-the-lakes-folders).
 
 ## 8. Checking a load, and troubleshooting
 
@@ -900,14 +1307,15 @@ each) starts to earn its folders.
 When the bank's tables already sit in a lakehouse that Databricks, Spark, Trino or Snowflake writes, Drishti reads them in place, with its
 own readers inside the server (Delta Kernel and drishti-iceberg): **no Databricks cluster, Spark or warehouse is needed to read**. The
 tables need the shape of section 1 (`id`, `doc`, `business_date`, promoted columns); a Spark job that writes it is in
-[DELTA_CONNECTOR.md section 5](../connectors/DELTA_CONNECTOR.md#5-writing-the-lake). Each day sorted by `id` (on Databricks,
-`OPTIMIZE … ZORDER BY (id)` or liquid clustering on `id`) reads fastest.
+[DELTA_CONNECTOR.md section 5](../../plugins/drishti-plugin-delta/README.md#writing-the-lake). Each day sorted by `id` (on Databricks,
+`OPTIMIZE … ZORDER BY (id)` or liquid clustering on `id`) reads fastest. Drishti's lakes follow the Delta protocol's path encoding and are
+tested against delta-rs both ways; the table features each reader supports are in [section 14](#14-delta-protocol-compliance).
 
 ### 10.1 Built
 
 **Delta by storage path.** The lake file's `root` is the folder above the domains: `s3://bucket/prefix` (the default `native` engine),
 or `abfs://…` (Azure) and `gs://…` (Google Cloud) with the connector setting `engine: hadoop`
-([DELTA_CONNECTOR.md section 16](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop)). Credentials: S3 from the AWS default
+([DELTA_CONNECTOR.md section 16](../../plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop)). Credentials: S3 from the AWS default
 chain (a task or instance role) or `${ENV}` references; Azure and Google Cloud through `hadoop.<key>` settings; a private CA through
 `tls.*`. With Unity Catalog, point the root at an external table's location and give the server read access to that storage.
 
@@ -936,7 +1344,7 @@ settings:
 Catalog's Iceberg REST catalog, with **vended credentials**: the catalog hands the server each table's own temporary credentials
 (`vended-credentials: true`, the default), so the server needs no storage keys of its own. Apache Polaris, Snowflake Open Catalog, AWS
 Glue's Iceberg REST endpoint, Nessie, Lakekeeper and Gravitino are read the same way
-([ICEBERG_CONNECTOR.md section 4](../connectors/ICEBERG_CONNECTOR.md#4-catalogs-path-based-tables-and-rest-catalogs)):
+([ICEBERG_CONNECTOR.md section 4](../../plugins/drishti-plugin-iceberg/README.md#catalogs-and-storage)):
 
 ```yaml
 # config/lakes/uc-risk.yaml
@@ -952,7 +1360,7 @@ tables:
 ```
 
 AWS Glue and S3 Tables through their REST endpoints with SigV4 are built and **not yet run on AWS**
-([ICEBERG_CONNECTOR.md section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need)). Iceberg format
+([ICEBERG_CONNECTOR.md section 19](../../plugins/drishti-plugin-iceberg/README.md#aws-glue)). Iceberg format
 version 3 is refused by name: write format version 2.
 
 **Delta features.** Delta Kernel 4.4 checks a table's protocol before reading; a reader feature it does not support is **refused by
@@ -969,8 +1377,8 @@ name** (the table and the feature named), never read wrongly.
 | Parquet codecs BROTLI, LZO | refused, naming the table, the file and the codec | rewrite as Snappy, ZSTD or LZ4_RAW |
 
 Check a connector against the real store before it serves anyone: `drishti.py connector test <file>` tries it and says what failed, in
-words. Every setting: [DELTA_CONNECTOR.md section 14](../connectors/DELTA_CONNECTOR.md#14-settings),
-[ICEBERG_CONNECTOR.md section 15](../connectors/ICEBERG_CONNECTOR.md#15-settings).
+words. Every setting: [DELTA_CONNECTOR.md section 14](../../plugins/drishti-plugin-delta/README.md#settings),
+[ICEBERG_CONNECTOR.md section 15](../../plugins/drishti-plugin-iceberg/README.md#settings).
 
 ### 10.2 Planned (not built)
 
@@ -980,7 +1388,7 @@ words. Every setting: [DELTA_CONNECTOR.md section 14](../connectors/DELTA_CONNEC
 |---|---|---|
 | **Unity Catalog for Delta** | a table found by its name, `catalog.schema.table`; Unity Catalog's credential vending; Unity Catalog's grants as the permissions | read Delta by storage path (external tables), or the same table as Iceberg through Unity's REST endpoint (UniForm) |
 | **Delta Sharing** | read tables a provider shares through the Delta Sharing protocol | not supported |
-| **Plain tables without the `id`/`doc` shape** | read a table of ordinary columns directly, driven by per-table configuration | a small job writes a Drishti-shaped copy beside it ([DELTA_CONNECTOR.md section 5](../connectors/DELTA_CONNECTOR.md#5-writing-the-lake)) |
+| **Plain tables without the `id`/`doc` shape** | read a table of ordinary columns directly, driven by per-table configuration | a small job writes a Drishti-shaped copy beside it ([DELTA_CONNECTOR.md section 5](../../plugins/drishti-plugin-delta/README.md#writing-the-lake)) |
 
 ## 11. Archives: zip and tar
 
@@ -1006,7 +1414,7 @@ The caps come from `DRISHTI_ARCHIVE_MAX_MB`, `DRISHTI_ARCHIVE_MAX_RATIO` and `DR
 takes `source.archive.*` in its load file. **Datasets** (the parallel loader with `datasets:`, and `drishti.py convert`): an archive with
 no folders is one dataset named after it; folders one level deep are one dataset each; loose files beside folders, or files deeper than
 one folder, are refused. With several datasets every one is read and checked before the first commit, so one that would fail stops the
-run with nothing loaded ([TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader)).
+run with nothing loaded ([CLI_REFERENCE.md section 4.13](CLI_REFERENCE.md#713-the-parallel-lake-loader)).
 
 ```bash
 # a day's trades as one archive, into the table its folder names
@@ -1034,12 +1442,12 @@ An S3-compatible store adds `endpoint:` and `path-style: true` under `storage:`.
 file's `tables:`), and its connector templates name the lake and their entries. When a writer first meets a kind its lake file lacks,
 the pack's entry is copied in once and said so; from then on the lake file is the truth.
 
-**The official results** are lakes of their own: `config/lakes/var-official.yaml` and `ccr-official.yaml` take their format, root and
+**The official results** are lakes of their own: `config/lakes/banking/var-official.yaml` and `ccr-official.yaml` take their format, root and
 storage from the publishers' settings (`drishti.var.official.*`, `drishti.ccr.exposure.official.*`), so BI's readers follow wherever the
 results are published.
 
 **An Iceberg copy of a demo store**: `tools/build_demo_lakes.py --store risk=iceberg` copies the tables into Iceberg with a lake file
-`demo-iceberg.yaml` and connectors naming it ([tutorial 29](../tutorials/29-var-on-iceberg.md)).
+`demo-iceberg.yaml` and connectors naming it ([tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg)).
 
 **The local cluster** (`drishti-stack`): the stack's synthetic lakes are written through the demo lake's file with another root
 (`lake build --lake demo --lake-root data/stack/lakes/<name>`); every node reads the same description.
@@ -1056,3 +1464,464 @@ lake file of their own:
 2. `python3 tools/drishti.py lake migrate-config --write` writes them (an existing lake file is never overwritten).
 3. `python3 tools/drishti.py lake check` compares each lake file with its tables on disk.
 4. Restart the server. Nothing under the data folder changes.
+
+## 13. The in-memory lake
+
+Some feeds may not, by contract, be saved on a disk. Drishti holds them in an **in-memory lake**: ordinary Delta tables (a `_delta_log`
+and Parquet files) whose files live in the server's memory, off the Java heap, under a hard cap. A server job, the **replenish job**,
+fills each table from its feed; every page, search, BI dataset and Export data read it exactly as they read a lake on a disk; a guard
+refuses every way the data could reach a disk. Only a user's download leaves the server. How it is built:
+[DATA_ARCHITECTURE.md section 9](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk); a
+worked example: [tutorial 16, Part D](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-d--news-held-in-memory-only).
+
+### 13.1 How it works
+
+```
+ feed (URL, file, connector) ──► replenish job ──► lake writer ──► mem://<store>/<table>   (Delta: _delta_log + Parquet, zstd)
+                                     (server)                              │ off-heap chunks, hard cap
+ pages, search, BI, Export data ◄── Delta connector (root: mem://<store>) ◄──┘
+```
+
+- A **memory store** (`mem://<store>`) is one pool of memory with its own cap: files are lists of fixed-size chunks taken from the pool
+  and given back the moment a file is deleted, so the cap is exact.
+- A **memory table** is a Delta table at `mem://<store>/<folder>`; a run of its job is one Delta commit, so a reader sees the whole run
+  or none of it, and a read in progress finishes on the version it started on.
+- A **restart empties** the stores, by design. The jobs refill them at start, in warm-up order; meanwhile the connector's health says
+  *held in memory only and is empty now* rather than a blank.
+
+### 13.2 Setting up a memory-only feed
+
+Three files. The store is a lake like any other: its own lake file, its root `mem://<store>`, its cap and contract under `memory:`:
+
+```yaml
+# config/lakes/news.yaml (config/lakes.examples/memory/news.yaml)
+lake: news
+root: mem://news
+memory:
+  max-mb: 256                 # the hard cap
+  chunk-kb: 64                # small tables: every file holds at least one chunk
+  contract: VX-2026-07        # shown on every refusal and on Admin -> Lakes
+tables:                       # the tables sit at mem://news/<kind>
+  news.news-topic: {path: news-topic}
+  news.listed-company: {path: listed-company}
+  news.news: {path: news}
+  news.quote: {path: quote}
+```
+
+The connector reads it like any lake:
+
+```yaml
+# config/connectors/news-store.yaml (config/connectors.examples/memory/news-store.yaml)
+plugin: delta
+kinds: [news-topic, listed-company, news, quote]
+settings:
+  lake: news
+  lake-tables: news.news-topic,news.listed-company,news.news,news.quote
+```
+
+The tables' replenish jobs live in the in-memory lake's engine file `config/engines/memory-lake.yaml`, with its switch
+`drishti.engines.memory-lake.enabled` (off as shipped: set it to `true` or turn it on in Admin → Engines, then restart, since the stores'
+caps size the direct memory at start; [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)), or in
+`application.local.yaml` or the environment:
+
+```yaml
+# config/examples/in-memory-lake.yaml
+drishti:
+  lake:
+    memory:
+      tables:
+        - name: news
+          store: news
+          source: { url: "https://feeds.example.com/news.jsonl", headers: { Authorization: "Bearer ${VENDOR_TOKEN}" } }
+          key: [NEWS_ID]
+          every: 15m
+          warm-up: 1
+          pin: true
+```
+
+Restart the server with the shipped start scripts (they raise the JVM's direct-memory limit by the stores' caps, 13.7), then check it:
+
+```bash
+python3 tools/drishti.py lake memory status
+python3 tools/drishti.py lake memory jobs --table news
+```
+
+UI: **Admin → Lakes** lists the store (cap, use, contract) and each table (state, bytes, rows, version, last and next refill). Switching
+back: remove the files and restart; the pack's own connector reads the disk lake again.
+
+### 13.3 Replenish jobs: sources, modes, when they run
+
+| Source (`source:`) | What the job reads |
+|---|---|
+| `url` (and `headers`) | an HTTP(S) feed answering JSON Lines or one JSON array; headers name secrets as `${ENV}` |
+| `file` | a JSON Lines file, plain or `.jsonl.gz` |
+| `connector` and `kind` | every document of a kind from any connector that can list them (Kafka's topic state, JDBC, files, the vendor feeds) |
+| `connector`, `kind` and `ids` or `ids-from` | a connector that computes a document when asked (the news connector), entity by entity: `ids: [NEWS-Apple]`, or `ids-from: listed-company.NEWS_ID` (that field of every row of another memory table) |
+
+A connector whose own lake is in memory is never a source.
+
+**Rows.** Each document becomes a row: `id` from `key` (fields joined with `|`), `doc` the document, `business_date` from
+`business-date` (`today`, a date, or `field:AS_OF`: the first ten characters of a field), and the `columns` promoted beside it, sorted
+by `sort-by` (the key when empty) before they are written.
+
+| Mode | A run | Use for |
+|---|---|---|
+| `replace` (default) | is the whole table: one commit removes every earlier file and adds the new | snapshots: prices, reference lists |
+| `append` | adds its rows | ticks, events |
+| `merge` | replaces rows by key on the dates the run touches | a feed of changes |
+
+**When.** `every: 15m` (or `30s`, `1h`), or `cron: "0 0/15 * * * *"`; on the source's signal (`signal: true`, the default: a file's time
+or size, a connector's last update, checked every 10 s); at start in `warm-up` order; 30 s after an eviction; and on demand
+(`drishti.py lake memory refill <table>`, audited). One run of a table at a time; `job-threads` tables at once. Every run is recorded in
+memory (when, why, `ok` / `failed` / `refused`, rows, bytes, the version, the time taken), without any value of the data.
+
+### 13.4 The hard cap and the eviction ladder
+
+`max-mb` is a hard limit. When a write needs room the store frees memory in this order and stops as soon as there is enough:
+
+1. **Old versions** past `keep-versions` (2 by default: the current and the one a reader may still be on).
+2. **Whole tables, least recently read first**: never a pinned table (`pin: true`), never the table being written. A table goes whole;
+   it becomes *evicted, refill queued*, and its pages say so.
+3. **Refuse the write.** The commit fails, the table stays whole at its previous version; the run records *refused: the store is full*;
+   Health turns amber.
+
+### 13.5 Automated compaction
+
+After every commit and every `every-seconds`, each store's tables are scored by the memory a rewrite would save, and the best is
+rewritten as one commit: more small files (below `small-file-mb`) than dates are merged per date; replaced rows past `dead-rows` are
+dropped (merge mode); after `resort-after` appends the table is rewritten sorted by `sort-by`. A rewrite starts only when `headroom-mb`
+(at most a quarter of the store) plus the table's size is free under the cap, so compaction never causes an eviction; `idle-only: true`
+keeps it to quiet periods. Admin → Lakes shows the memory saved today and in total.
+
+### 13.6 Never on disk: what is refused and what is allowed
+
+A connector whose root is `mem://` is **memory-only**, and so is what is read from it. One check sits in front of every place Drishti
+writes:
+
+| Where Drishti writes | Memory-only data |
+|---|---|
+| The connector's disk caches: documents (RocksDB), id-map files, index segments | **off** for that connector, whatever its settings |
+| A scheduled report (`/me/reports`) | **refused** (`DRS-5219`) when saved and when run |
+| A share's picture, its e-mail, a note copying the page's values | **refused** (`DRS-5219`); a share as a link is allowed |
+| A BI run's stored result | not stored: the definition is kept, the rows are recomputed when opened |
+| DuckDB's temporary spill | **off** on a server with memory stores (a query past `memory-limit` fails instead of spilling) |
+| Ask about this page (an outside AI provider) | **refused** (`DRS-5219`) |
+| **A user's download** (Export data) | **allowed**: streamed from memory with no temporary file, audited (the audit line keeps the selection's shape, not its values) |
+| Another node of the cluster | answers over Drishti\*net only (13.8) |
+| Logs and audit | ids and counts only |
+
+A refusal says why, in words: *"This report uses news data held in memory only (contract VX-2026-07); it cannot be delivered by a
+scheduled report. Only a download by you may leave the server."*
+
+### 13.7 Memory, the JVM and the host
+
+- **Direct memory.** The stores live in direct buffers. The JVM's limit must be 256 MB (the server's own I/O) plus the stores' caps.
+  `tools/windows/start-server.ps1` computes it from the configuration (`tools/lake/memory_caps.py`); the Docker image and the ECS
+  entrypoint take `DRISHTI_LAKE_MEMORY_MB` (the caps added up); a systemd unit or a run configuration adds
+  `-XX:MaxDirectMemorySize=<256 + caps>m` after the existing flag (the later one wins). Admin → Health turns **red** when the running
+  limit is below it.
+- **Memory is given back.** A deleted or evicted file's chunks return to the pool at once; free chunks are released to the operating
+  system after `idle-trim-minutes` of quiet, and at once when a cap is lowered.
+- **Host checks** (Admin → Health, *In-memory lake*): no swap (or encrypted swap), no heap dump on out-of-memory unless to a RAM disk, no
+  JFR recording at launch, the temporary folder on a RAM disk. Each is amber when not met.
+- **Sizing.** Memory per table is close to its Parquet size with zstd, plus at most one partly filled chunk per file. Measured on the demo
+  tables ([CLUSTER_GUIDE.md](../admin/BENCHMARK.md#216-bounded-resources-of-one-server)): the in-memory files are 4 to
+  42 times smaller than the decoded JSON and 1.6 to 3.9 times smaller than the disk lake's Snappy files. Small tables want small chunks
+  (`chunk-kb: 64`).
+
+### 13.8 A cluster: the owner node binds the pack
+
+A memory store is owned by one node, which fills it and serves the pack whose connectors read it; the others reach the pack through
+Drishti\*net as they reach any pack a peer holds, and keep nothing of it.
+
+```yaml
+# config/net/node.yaml on the owner
+memory-stores: [news]
+```
+
+On the other nodes a store not named in their `memory-stores` is not loaded, its tables show as *held by its owner node*, the kinds are
+not offered in their digest, and a request for them is forwarded to the owner. Without `memory-stores`, each store's `owner:` setting
+(true by default) decides.
+
+### 13.9 What an administrator sees
+
+| Where | What |
+|---|---|
+| Admin → Lakes (`GET /api/v1/admin/lakes/memory`) | each store: cap, used, allocated, contract, refusals; each table: state in words, bytes in memory, the files' bytes, the decoded bytes and their ratio, rows, version, last and next refill, pinned, evictions, refusals, compactions, memory saved |
+| `drishti.py lake memory status` / `jobs` / `refill` | the same from the terminal; `--json` for scripts |
+| Admin → Health, *In-memory lake* | amber: a store over 85% of its cap, a refused write, a host check; red: a pinned table empty after warm-up, the direct-memory limit below the caps |
+| Admin → Health, *Busy protection* | a gauge per memory store (its use against its cap) |
+| Admin → Caches, memory budget | the stores as the off-heap pool `memory-lake` |
+
+### 13.10 Every setting
+
+The store's own keys (`max-mb`, `chunk-kb`, `contract`, `owner`, `idle-trim-minutes`) are in its lake file's `memory:` block (section
+2.2). The jobs and compaction are under `drishti.lake.memory` (environment `DRISHTI_LAKE_MEMORY_…`; command line
+`--drishti.lake.memory.…`); the full table is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `max-mb` | 0 | the hard cap; 0 holds nothing |
+| `chunk-kb` | 1024 | the chunk size (64 for stores of small tables) |
+| `contract` | | shown on every refusal and on Admin → Lakes |
+| `owner` | true | this node owns the store (node.yaml `memory-stores` wins when set) |
+| `idle-trim-minutes` | 10 | free chunks go back to the operating system after this much quiet |
+| `tables[].name`, `.store`, `.folder` | | the table, its store, its folder (the name) |
+| `tables[].source` | | `url` (+ `headers`), `file`, `connector` + `kind` (+ `ids` or `ids-from`) |
+| `tables[].mode` | replace | `replace`, `append`, `merge` |
+| `tables[].key`, `.sort-by` | | the id's fields; the sort (the key) |
+| `tables[].business-date` | today | `today`, a date, `field:<NAME>` |
+| `tables[].columns` | | fields promoted beside the document |
+| `tables[].every`, `.cron`, `.signal`, `.warm-up` | , , true, | when it runs |
+| `tables[].pin`, `.keep-versions`, `.codec` | false, 2, zstd | never evicted; versions kept; `zstd`, `lz4`, `snappy` |
+| `history-keep`, `job-threads` | 50, 2 | runs kept per table; jobs at once |
+| `compaction.*` | enabled, 30 s idle, 512 MB headroom, 8 MB small files, 0.2 dead rows, 20 appends, 60 s | 13.5 |
+
+**A memory table's layout** is the Delta connector's: `id` (string, the key), `doc` (string, the document as JSON), `business_date`
+(date, the partition), one string column per `columns` entry; Parquet with zstd level 3 (`codec: snappy` gives byte-equal files to the
+disk lake's), row groups of 256 KB, a checkpoint every 10 commits. The pack's data contracts describe the documents; holding them in
+memory changes nothing in them. The Iceberg engine reads and writes through the same store (`warehouse: mem://<store>/…`); the replenish
+jobs write Delta.
+
+### 13.11 Troubleshooting the in-memory lake
+
+| What you see | Why, and what to do |
+|---|---|
+| `UP: mem://news is held in memory only and is empty now` | the warm-up has not reached it, or its job failed: `drishti.py lake memory jobs --table <t>` gives the reason |
+| a run `refused: the store is full` | raise `max-mb` (and restart, so the launcher raises the direct-memory limit), unpin a table, or lower `keep-versions` |
+| Health red, *direct-memory limit* | the server was started without the caps in `-XX:MaxDirectMemorySize`: use the shipped scripts or add the flag |
+| `DRS-5219` on a report, a share, an Ask | as the contract asks; download the rows from Export data instead |
+| a table *evicted, a refill is queued* | the store needed room for another table; pin the tables that must stay |
+| a run `failed: … connector cannot list its documents` | that connector computes documents when asked: give `ids` or `ids-from`, or read its feed by `url` |
+
+## 14. Delta protocol compliance
+
+Drishti's Delta tables are plain [Delta Lake protocol](https://github.com/delta-io/delta/blob/master/PROTOCOL.md) tables: Spark,
+Databricks, delta-rs and any Delta Kernel reader open them as they are, and Drishti reads the tables those engines write. No Drishti-only
+file, field or naming rule is involved, and it is tested both ways against delta-rs. The internals (the lake file, the in-memory lake,
+the loader) are in [DATA_ARCHITECTURE.md sections 8–10](../architecture/DATA_ARCHITECTURE.md#8-the-lake-file-one-description-of-every-lake).
+
+### 14.1 The four readers and writers
+
+| Path | Library | Writes | Reads |
+|---|---|---|---|
+| Java writer (`lake build --engine drishti`) and the parallel loader (`--engine java`, the data inbox's large loads) | Delta Kernel 4.4.0 with Drishti's file access | protocol `{"minReaderVersion":1,"minWriterVersion":2}`, no table features; a classic checkpoint every `delta.checkpointInterval` commits (10) | |
+| Java reader (the server's Delta connector) | Delta Kernel 4.4.0 on Drishti's native engine (no Hadoop) | | the features in 14.3's Java column |
+| Python writer (`lake build --engine deltalake`) | delta-rs 1.6.6 | the protocol delta-rs writes | |
+| Python reader (`tools/lake/deltaread.py`: `lake maintain`'s relayout, the Delta-to-Iceberg copy) | delta-rs 1.6.6, or Delta Kernel through the server's exec jar when delta-rs would not read the table completely | | the features in 14.3's Python column |
+
+### 14.2 Partition paths: values, folders, `add.path`
+
+A partition value goes to three places, each by the protocol's rule:
+
+- **the folder** is the value Hive-escaped, as Spark writes it: `"` `#` `%` `'` `*` `/` `:` `=` `?` `\` `{` `[` `]` `^`, DEL and the
+  control characters become `%XX`; a space, a dot and non-ASCII letters stay as they are; null is `__HIVE_DEFAULT_PARTITION__`;
+- **`add.path`** in the log is that relative path as a URI, encoded once (`%` becomes `%25`, a space `%20`); every reader decodes it
+  once and finds the file;
+- **`partitionValues`** hold the raw value; an empty value is written as null, as Spark writes it.
+
+From a table the Java writer wrote (captured):
+
+| Value | Folder on disk | In `add.path` | `partitionValues` |
+|---|---|---|---|
+| `Money market` | `PRODUCT_GROUP=Money market` | `PRODUCT_GROUP=Money%20market` | `"Money market"` |
+| `x/y` | `PRODUCT_GROUP=x%2Fy` | `PRODUCT_GROUP=x%252Fy` | `"x/y"` |
+| `100%` | `PRODUCT_GROUP=100%25` | `PRODUCT_GROUP=100%2525` | `"100%"` |
+| the text `%2F` | `PRODUCT_GROUP=%252F` | `PRODUCT_GROUP=%25252F` | `"%2F"` (never decoded to `/`) |
+| `a:b` | `PRODUCT_GROUP=a%3Ab` | `PRODUCT_GROUP=a%253Ab` | `"a:b"` |
+| `k=v` | `PRODUCT_GROUP=k%3Dv` | `PRODUCT_GROUP=k%253Dv` | `"k=v"` |
+| `.` | `PRODUCT_GROUP=.` | `PRODUCT_GROUP=.` | `"."` |
+| `..` | `PRODUCT_GROUP=..` | `PRODUCT_GROUP=..` | `".."` |
+| `Zürich` | `PRODUCT_GROUP=Zürich` | `PRODUCT_GROUP=Zürich` | `"Zürich"` |
+| `東京` | `PRODUCT_GROUP=東京` | `PRODUCT_GROUP=東京` | `"東京"` |
+| empty | `PRODUCT_GROUP=__HIVE_DEFAULT_PARTITION__` | the same | `null` |
+| null | `PRODUCT_GROUP=__HIVE_DEFAULT_PARTITION__` | the same | `null` |
+
+A value never adds a folder level or leaves the table: `/` and `\` are escaped, and `..` is part of the name `PRODUCT_GROUP=..`, not a
+folder of its own. One `add` action of that table, as written (statistics shortened):
+
+```json
+{"add":{"path":"business_date=2026-11-06/PRODUCT_GROUP=Money%20market/c8daa754-2833-4db9-b0b1-1397f1b207d5-000.parquet","partitionValues":{"PRODUCT_GROUP":"Money market","business_date":"2026-11-06"},"size":1718,"modificationTime":1794142500377,"dataChange":true,"stats":"{\"numRecords\":1,\"minValues\":{\"id\":\"0\"},\"maxValues\":{\"id\":\"0\"},\"nullCount\":{\"id\":0}}"}}
+```
+
+**The Python writer** (delta-rs) spells folders its own way: it percent-encodes a space and non-ASCII letters too
+(`PRODUCT_GROUP=Money%20market`, `PRODUCT_GROUP=Z%C3%BCrich`). That is within the protocol (the folder is whatever `add.path` decodes
+to, and every reader, Drishti's included, reads it), but the names differ from Spark's convention; use the Java writer when the folder
+names themselves must be Spark's.
+
+**A partition column's name** is never escaped (by Kernel or by Spark), so `lake build` refuses one a folder would change, or that Spark
+refuses without column mapping (a space, `,` `;` `{` `}` `(` `)` `=` `/` `\` `%` `:` `#` `?` `*` quotes `[` `]` `^`, control
+characters): *partition column 'PRODUCT GROUP' cannot name a Delta partition folder*. A dotted field path is a plain name
+(`counterparty.id` is the column `counterparty__id`).
+
+### 14.3 Table features
+
+Each feature below was put on a table with delta-rs 1.6.6, appended to and read back by both readers. Delta Kernel 4.4.0's own list
+(`TableFeatures`) declares read support for every feature it knows, including the ones delta-rs cannot create.
+
+**The Python reader** is `tools/lake/deltaread.py`: delta-rs reads a table its pyarrow reader reads completely; any other table is read
+by Delta Kernel, the server's reader, through the server's exec jar (`com.ash.drishti.deltalake.read.DeltaRowsCli`), so Python reads
+exactly what the server reads. delta-rs alone is not enough: version 1.6.6 (the latest) refuses deletion vectors and v2 checkpoints,
+and reads a column-mapped table of reader version 2 (the protocol Databricks gives column mapping) as all nulls.
+
+| Feature | Java reader (server) | Python reader (`deltaread`) | delta-rs appends (the feature's flag only) |
+|---|---|---|---|
+| `appendOnly`, `invariants`, `checkConstraints`, `generatedColumns`, `changeDataFeed` | reads | reads (delta-rs) | yes |
+| `timestampNtz`, `variantType`, `variantType-preview` | reads | reads (delta-rs) | yes |
+| `deletionVectors` | reads, the deleted rows left out (tested with real deletion-vector files) | reads (Kernel), the same rows | yes |
+| `v2Checkpoint` | reads a table whose files only its single-file checkpoint names (tested); with sidecar files: **not verified** | reads (Kernel), the same | yes |
+| `columnMapping`, mode `name` or `id` | reads: every path (documents, columns, type-ahead, vectors, partition values, statistics) uses the physical names (tested) | reads (Kernel) | yes |
+| `domainMetadata`, `identityColumns`, `rowTracking`, `icebergCompatV1` (UniForm) | reads | reads (delta-rs) | **refused** |
+| `typeWidening`, `inCommitTimestamp`, `vacuumProtocolCheck`, `clustering`, `collations`, `allowColumnDefaults`, `icebergCompatV2`/`V3`, `timestampNanos` | **not verified**: Kernel declares read support; delta-rs cannot create them | through Kernel when delta-rs refuses them; **not verified** | not tested |
+
+The server reads through Kernel's scan plan (the files, their partition values, deletion vectors), and its fast paths then read the
+Parquet columns of those files directly, by their physical names (`delta.columnMapping.physicalName`, which Databricks writes in both
+modes). A v2 checkpoint with sidecar files is left to Kernel's declared support: neither delta-rs nor Kernel 4.4.0 writes sidecars, so
+there is no local fixture. **Writing into an existing external table** (one Databricks writes) that uses deletion vectors, column
+mapping or another of these features is **not verified**: Drishti's writers write and append to their own plain tables (protocol 1/2,
+no features). A table that needs a feature no reader knows is refused, never half-read:
+
+- Java reader (and the Python reader through it): `UnsupportedTableFeatureException: Unsupported Delta table feature: table requires
+  feature "madeUpFeature" which is unsupported by this version of Delta Kernel.`
+- Python writer: `Unsupported table features required: [RowTracking]`; `lake maintain` compacts and vacuums with delta-rs, so on
+  such a table it stops with that message and changes nothing.
+
+### 14.4 Maintenance in protocol terms
+
+`drishti.py lake maintain` (section 2.6) does each step as an ordinary commit any engine reads: compaction is delta-rs
+`optimize.compact` (OPTIMIZE: the small files removed and the rewritten ones added, `dataChange: false`); a checkpoint is a classic
+Parquet checkpoint with `_last_checkpoint`; old log files go after `delta.logRetentionDuration`; vacuum deletes only files no version
+within `time-travel` needs. A table Databricks also maintains follows the same rules.
+
+### 14.5 Check it yourself
+
+```bash
+python3 tools/drishti.py lake check
+uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/lake/test_delta_interop.py -q
+```
+
+Reading a Drishti table with delta-rs, as Spark or Databricks would:
+
+```python
+from deltalake import DeltaTable
+t = DeltaTable("data/delta/risklake/trading/trade_endur")
+print(t.protocol(), t.to_pyarrow_table().num_rows)
+```
+
+A table with deletion vectors, column mapping or a v2 checkpoint (one Databricks wrote, say) is read completely from Python with
+`deltaread` (it needs the server's exec jar and Java 21):
+
+```python
+import sys; sys.path.insert(0, "tools/lake")
+import deltaread
+print(deltaread.read("data/delta/risklake/trading/trade_endur", date="2026-11-06").num_rows)
+```
+
+Section 10 is the other way round: Drishti reading the tables a lakehouse writes.
+
+## 15. Iceberg spec compliance
+
+Drishti's Iceberg tables are standard Apache Iceberg tables, and Drishti reads other engines' Iceberg tables to the
+[Iceberg table spec](https://iceberg.apache.org/spec/) with no workaround: Spark, Trino, Flink, Snowflake, AWS Glue, pyiceberg and the Apache
+Iceberg Java library read what Drishti writes, and Drishti reads what they write, or refuses a table by name. It never reads one wrongly.
+The design is in [DATA_ARCHITECTURE.md › drishti-iceberg](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine);
+the connectors are [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) and
+[ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md).
+
+### 15.1 Who reads and writes
+
+| Engine | Where | Reads | Writes |
+|---|---|---|---|
+| **drishti-iceberg** (`engine: native`, the default) | inside the server, the loader (`IcebergLoader`, `lake build --format iceberg`, the data inbox) and maintenance (`IcebergMaintenance`); the `iceberg-external` connector | format v1 and v2 | v1 and v2 tables in Drishti's layout (section 1): partitioned by `business_date` |
+| **Apache Iceberg Java 1.10.1** (`engine: library`) | the `iceberg` connector, loader and maintenance when chosen | everything the library reads | everything the library writes |
+| **Python** (`tools/lake`) | `lake build --format iceberg` streams rows to the loader above; `lake maintain` and Admin → Lakes read the metadata JSON for the figures, then run `IcebergMaintenance` | | no Iceberg writer of its own |
+
+### 15.2 File paths and partition values
+
+Per the spec, a data file's path in a manifest is opaque: a reader opens it **as written**, never percent-decoding it, and takes partition
+values from the manifest, never from the folder name. Each writer names its partition folders its own way. The Apache library and pyiceberg
+URL-encode the value, so the folder name on disk holds the `%XX` literally. Captured with pyiceberg 0.12.0, an identity partition on `g`
+with the table at `file:///…/wh/ns/t`:
+
+| Value of `g` | Data file path in the manifest (after `…/ns/t/data/`) |
+|---|---|
+| `a b` | `g=a+b/00000-0-….parquet` |
+| `a/b` | `g=a%2Fb/…` |
+| `100%` | `g=100%25/…` |
+| `a%2Fb` (the text itself) | `g=a%252Fb/…` |
+| `a:b`, `a=b`, `a\b`, `a+b` | `g=a%3Ab/…`, `g=a%3Db/…`, `g=a%5Cb/…`, `g=a%2Bb/…` |
+| `.` and `..` | `g=./…` and `g=../…` (folder names that start with `g=`, never a path step) |
+| `x` U+0001 `y`, `é漢` | `g=x%01y/…`, `g=%C3%A9%E6%BC%A2/…` |
+| empty text | `g=/…` |
+| null | `g=null/…` (the text `null` gets the same folder; the manifest tells them apart) |
+
+Drishti opens each of these as written: `g=a%2Fb` is that folder, not `g=a/b`. The same holds through `relocate`, whose two sides are also
+compared as written. The pairs in `relocate` are plain folders or `file:` paths spelled as the metadata spells them (`/data/100%25` names
+the folder `100%25`). Drishti's own writers make `business_date=YYYY-MM-DD` folders and plain `file:` locations (`file:/srv/my lake/…`),
+the form the library uses. The library engine's lake is the folder its `root` names, spaces, `%` and unicode included.
+
+### 15.3 The feature table
+
+| Area | Drishti reads | Drishti writes | Otherwise |
+|---|---|---|---|
+| Format versions | 1, 2 | 1, 2 (the loader makes 2) | 3: refused by name |
+| Partition transforms | identity, bucket[N], truncate[W], year, month, day, hour, void; pruned by each; the partition values the library computes, value for value | identity on `business_date` | an unknown transform is read, never pruned; a table another engine **re-partitioned** (any field besides `business_date`) is refused for writing |
+| Partition evolution | every spec, void fields, a field whose source column was dropped | | |
+| Schema evolution by field id | add, drop, rename, reorder, int→long, float→double, decimal widening; nested structs, lists, maps; `schema.name-mapping.default` for files without ids | adds optional columns | |
+| Sort orders | read | `sort_order_id` set when the files are sorted by `id` | |
+| Snapshots, time travel | by snapshot id and by time (*known at*, the snapshot log) | one snapshot per commit | |
+| Refs | the `main` branch | moves `main`, keeping its retention settings | other branches and tags are not read by name; expiry keeps every branch's and tag's snapshot |
+| Position deletes (v2) | applied by the spec's sequence-number rule (`referenced_data_file` and `file_path` bounds honoured) | never writes delete files (rewrites copy on write) | |
+| Equality deletes (v2) | applied by partition and sequence number, unpartitioned ones globally, null equal to null | | |
+| Deletion vectors (v3) | | | refused (format version 3) |
+| Row lineage, default values, `variant`, `geometry`, `geography`, `timestamp_ns`, `unknown`, multi-argument transforms (v3) | | | refused by name |
+| Data files | Parquet | Parquet with field ids and column metrics | ORC and Avro data or delete files: refused, naming the file |
+| Manifests and manifest lists | Avro v1 and v2 from any writer, inherited snapshot ids and sequence numbers | Avro v1 and v2 | |
+| Statistics (Puffin) | not used | not written; expiry drops the entries of expired snapshots | |
+| Metadata tables (`snapshots`, `files`, …) | | | not offered as tables; Admin → Lakes and Health show snapshots and files |
+| Encryption | | | refused (`encryption-keys`, a file's `key_metadata`) |
+| Catalogs | path-based (`version-hint.text` and `vN.metadata.json`, or a catalog's `NNNNN-uuid.metadata.json`), a metadata file named directly, REST (Polaris, Snowflake Open Catalog, AWS Glue's REST endpoint, Unity Catalog, Nessie, Lakekeeper, Gravitino), AWS S3 Tables | path-based, REST | Hive metastore, JDBC/SQL catalog, the Glue SDK: through a REST catalog in front, or `metadata-location.<table>` |
+| Storage | local disk (Windows too), `s3://`, `s3a://`, `s3n://`, `mem://` | the same | `abfs://`, `gs://`, `hdfs://`: `engine: library` |
+| Maintenance | | expire snapshots (keeping every branch and tag), rewrite a day's files, rewrite manifests, remove orphans, drop old days ([ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md#retention-and-maintenance)) | |
+
+### 15.4 What a refusal says
+
+A table or file the native engine does not read stops the read with this message (`[…]` names the table or file where it was met):
+
+```text
+drishti-iceberg does not read format version 3 tables; use the connector's engine: library for this table [<table>]
+drishti-iceberg does not read ORC data files; use the connector's engine: library for this table [<the .orc file>]
+drishti-iceberg does not read the Iceberg type 'variant' (format version 3); use the connector's engine: library for this table
+drishti-iceberg does not read column defaults (format version 3) on NOTIONAL; use the connector's engine: library for this table
+drishti-iceberg does not read encrypted data files; use the connector's engine: library for this table [<the file>]
+```
+
+A load into a table another engine re-partitioned stops before any file is written (the parallel loader's wording; the Iceberg loader's says the same):
+
+```text
+<table> is not in the layout: its partition spec 1 has the field 'id_bucket_8' (bucket[8]) beside the identity partition on
+business_date; this writer writes only tables partitioned by business_date alone (write this table with engine: library, or restore its spec)
+```
+
+### 15.5 Check it yourself
+
+`IcebergSpecInteropTest` (plugins/drishti-plugin-iceberg) runs both directions against the Apache Iceberg Java library: the library
+writes a table partitioned by identity, bucket, truncate, year, month, day, hour and truncate of a decimal, with 26 partition values
+(space, `/`, `%`, `%2F`, `%20`, `:`, `=`, `.`, `..`, `\`, control characters, a tab, a newline, quotes, unicode, an emoji, `+`, `?#`, `*`,
+`~`, 200 characters, empty, `__HIVE_DEFAULT_PARTITION__`, the text `null`, null), then position and equality deletes. Drishti reads
+every row the library reads, computes each file's partition values as the library did, and prunes to exactly the matching rows.
+Drishti expires a library table's snapshots, and the library still reads its tag and its branch. `PyicebergReadsNativeTest` and
+`NativeReadInteropTest` do the same with pyiceberg.
+
+```bash
+./mvnw -pl plugins/drishti-plugin-iceberg -am test -Dtest='IcebergSpecInteropTest,PyicebergReadsNativeTest,NativeReadInteropTest' \
+    -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+Read a Drishti table from Python with pyiceberg alone:
+
+```python
+from pyiceberg.table import StaticTable
+t = StaticTable.from_metadata("file:///srv/drishti/data/iceberg/risk/pnl-vector/metadata/v12.metadata.json")
+print(t.scan(row_filter="business_date = '2026-09-30'").to_arrow().num_rows)
+```

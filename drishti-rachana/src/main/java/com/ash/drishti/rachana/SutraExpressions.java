@@ -37,7 +37,7 @@ public final class SutraExpressions {
 
     /** Per panel kind, the options that hold expressions (the rest are field names or literals). */
     static final Map<PanelKind, Set<String>> EL_OPTIONS = Map.ofEntries(
-            Map.entry(PanelKind.KV, Set.of("rows")), Map.entry(PanelKind.TABLE, Set.of("rows", "where", "limit", "moreLabel", "children", "crumb", "root")),
+            Map.entry(PanelKind.KV, Set.of("rows")), Map.entry(PanelKind.TABLE, Set.of("rows", "where", "limit", "moreLabel", "highlight", "children", "crumb", "root")),
             Map.entry(PanelKind.TABS, Set.of("each", "tabTitle")), Map.entry(PanelKind.LINE, Set.of("rows", "where", "source", "mark")),
             Map.entry(PanelKind.AREA, Set.of("where", "rows", "limit")), Map.entry(PanelKind.HBAR, Set.of("where", "rows")),
             Map.entry(PanelKind.LADDER, Set.of("rows", "where", "highlight", "children", "crumb", "root")), Map.entry(PanelKind.GAUGE, Set.of("value", "max")),

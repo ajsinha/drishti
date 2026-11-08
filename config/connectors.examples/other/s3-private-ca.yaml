@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: S3-compatible storage (MinIO, Ceph) behind a certificate from a private CA. Keys are references. Copy to
-# config/connectors/s3-private-ca.yaml. See docs/connectors/S3_CONNECTOR.md, section Security.
+# config/connectors/s3-private-ca.yaml. See plugins/drishti-plugin-s3/README.md, section Security.
 plugin: s3
 kinds: [trade]
 description: Documents in MinIO over TLS

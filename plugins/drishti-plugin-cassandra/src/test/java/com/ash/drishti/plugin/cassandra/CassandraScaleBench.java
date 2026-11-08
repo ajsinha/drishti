@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 /**
- * The measurements of docs/connectors/CASSANDRA_CONNECTOR.md section 9, at the connector (no HTTP): a generated trade book
+ * The measurements of plugins/drishti-plugin-cassandra/README.md section 9, at the connector (no HTTP): a generated trade book
  * ({@code bulk_trades.py --jsonl FILE.tar}) loaded into the shared Cassandra 5 node, then each read path timed, medians of 25. Runs
  * only when asked: {@code -Ddrishti.cassandra.bench=<the tar of trade/<YYYY-MM-DD>/ folders>} (keep it at 10,000 trades a day locally).
  */

@@ -32,6 +32,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import card_value, clean, open_report, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL  # noqa: E402
+from select_helpers import has_option
 
 DATASET = "wa-demo"
 REPORT = "file:report:wa-demo"
@@ -212,13 +213,13 @@ def test_a_tablet_gets_two_columns_with_the_wide_visuals_across_and_a_desktop_th
 def test_the_designer_has_a_tablet_tab_that_writes_layouts_tablet(stack, browser):
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-dataset] option[value='mq:" + DATASET + "@1']", state="attached")
+    page.wait_for_function(has_option("[data-new-dataset]", "mq:" + DATASET + "@1"))
     page.select_option("[data-new-dataset]", "mq:" + DATASET + "@1")
     page.fill("[data-new-title]", "Tablet draft")
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     expect(page.locator('[data-tab="tablet"]')).to_have_count(1)
-    page.click('.bi-vtype[data-type="card"]')                                                         # one visual, so the tab has a row
+    page.click('[data-types] [data-type="card"]')                                                         # one visual, so the tab has a row
     page.wait_for_selector(".bi-dvis")
     page.click('[data-tab="tablet"]')
     page.wait_for_selector("[data-tablet-list] li")

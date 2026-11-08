@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The embed API v2 (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 19; CLIENT_RENDERER.md section 13): the ViewModel as JSON for the client-side
+"""The embed API v2 (docs/guides/EMBED_GUIDE.md › Drishti Elements: the design, section 19; EMBED_GUIDE.md section 13): the ViewModel as JSON for the client-side
 renderer and Elements 2.0, beside the embed API v1 (HTML for Elements 1.x, unchanged) for one release.
 
 The same guards as v1: a bearer embed token on every data call (verified, masked, counted as that user), CORS by the exact origins of the
@@ -51,7 +51,9 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 API = "2.0"
 BASE = "/embed/v2"
-ELEMENTS = {"2.2.0": "1.2.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js (2.0.0 and 2.1.0 retired with renderers 1.0.0 and 1.1.0)
+ELEMENTS = {"2.2.0": "1.2.0", "2.3.0": "2.0.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js (2.0.0 and 2.1.0 retired with renderers 1.0.0 and 1.1.0)
+# The Elements libraries renderer 2.0.0 imports from beside the console's static root (/embed/v2/elements/<library>/src/<module>.js)
+LIBRARY_FILE = re.compile(r"drishti-(core|grid|chart|data|graph|tree|inputs|renderer)/(src/drishti_[a-z0-9-]+\.js|drishti_[a-z]+\.(css|js))")
 # What the renderer loads from beside itself (its folder is /embed/v2/render/<v>/, so /embed/v2/ stands for the console's /static/)
 SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "drill", "zoom", "multiselect", "controls", "geomap",
            "table-chart", "table-chart-engine", "table-chart-sources"}
@@ -160,6 +162,15 @@ async def elements(request: Request, version: str):
     if exact is None or ELEMENTS[exact] not in rd.versions():
         return await refuse(request, 410 if dist.SEMVER.fullmatch(version) else 404, "DRS-8006", f"this console serves Elements {', '.join(sorted(ELEMENTS))} at {BASE}/elements/, not {version}")
     return await cors(request, RedirectResponse(f"{BASE}/render/{ELEMENTS[exact]}/drishti-elements.js", status_code=302, headers={"Cache-Control": "public, max-age=60"}))
+
+
+@router.get("/elements/{library}/{rest:path}")
+async def library(request: Request, library: str, rest: str):
+    """A module of the Elements libraries renderer 2.0.0 is drawn with (revalidated: the libraries are not per-version folders yet)."""
+    rel = f"{library}/{rest}"
+    if not LIBRARY_FILE.fullmatch(rel) or not (STATIC / "elements" / rel).is_file():
+        return await refuse(request, 404, "DRS-9404", f"no such file: {rel}")
+    return await static(request, STATIC / "elements" / rel)
 
 
 @router.get("/js/{name}.js")

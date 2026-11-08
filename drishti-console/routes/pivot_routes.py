@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot screen (docs/guides/PIVOT_GUIDE.md; mock-up A of docs/architecture/PIVOT_ENGINE.md section 25): ``PIVOT <GO>``,
+"""The pivot screen (docs/guides/PIVOT_GUIDE.md; mock-up A of docs/architecture/ARCHITECTURE.md section 26): ``PIVOT <GO>``,
 ``PIVOT <table> <GO>`` (a table of Export data, or ``var``), ``PIVOT @owner/name <GO>`` (a saved view), Views → Pivot and "Pivot" on a
 table; ``/pivot?preset=<name>`` is a preset (config/pivot-presets.yaml: the MR cube, ``MCUBE``, and the CCR cube), the same screen with a source,
 a lens and a landing, never a grid of its own. The page is a shell that web/static/js/drishti_pivot-grid.js and drishti_pivot.js fill: the field list and its four zones on the right, the grid with
@@ -74,8 +74,9 @@ async def page(request: Request, source: str = "", view: str = "", date: str = "
     from core import engines
     if cube.engine and not engines.engine_available(cube.engine):          # its engine runs on no server of the cluster: said in the server's words
         return RedirectResponse("/t?error=" + quote(engines.refusal(engines.entry(cube.engine) or {"id": cube.engine})), status_code=303)
-    from routes.mcube_routes import parse                                  # a preset's word lays a view over its landing (the PIVOT grammar's preset form)
-    laid = parse(text.split()) if text.strip() else {}
+    from core import plugins
+    parse = plugins.preset_parser(cube.lens)                               # a preset's word lays a view over its landing (its module's grammar)
+    laid = parse(text.split()) if parse is not None and text.strip() else {}
     if date and "date" not in laid:
         laid["date"] = date
     typed = f"{cube.word} @{view}" if view else f"{cube.word} {text}".strip()
@@ -122,7 +123,7 @@ async def export(request: Request):
 
 @router.post("/api/pivot/{action}")
 async def post(request: Request, action: str):
-    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote", "explain", "whatif", "functions", "live"):
+    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote", "whatif", "functions", "live"):   # Why did it move: the one Explain (/api/explain, kind pivot)
         return JSONResponse({"detail": "no such pivot action"}, status_code=404)
     return await _call(request, "POST", "/" + action, await _body(request))
 
@@ -181,7 +182,7 @@ async def function_get(request: Request, owner: str, name: str, version: str = "
 
 @router.post("/api/pivot/functions/{owner}/{ref}/{op}")
 async def function_op(request: Request, owner: str, ref: str, op: str):
-    if op not in ("submit", "approve", "revoke"):
+    if op not in ("submit", "revoke"):                  # approving is done in the one Approvals queue (/approvals/function/<owner:name@v>)
         return JSONResponse({"detail": "no such function action"}, status_code=404)
     return await _call(request, "POST", f"/functions/{owner}/{ref}/{op}", await _body(request))
 

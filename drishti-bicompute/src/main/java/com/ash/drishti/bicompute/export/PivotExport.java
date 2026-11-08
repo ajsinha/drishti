@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A pivot's answer exported (PIVOT_ENGINE.md section 15): the pivot as shown to Excel (values with formats, the outline as Excel's row
+ * A pivot's answer exported (ARCHITECTURE.md section 26.11): the pivot as shown to Excel (values with formats, the outline as Excel's row
  * grouping levels with summaries below or above as on screen, a {@code SUM} formula only where a measure's total is the plain sum of its parts,
  * every other figure a value, and a Provenance sheet), CSV (one row per cell and measure, or the grid as shown), the underlying rows as CSV,
  * and the view's definition as YAML. Masks and entitlements were applied before the answer was made: a file holds what the screen showed.

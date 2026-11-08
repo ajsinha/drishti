@@ -18,7 +18,7 @@
 
 .DESCRIPTION
   Writes the sample documents (ten business days) and, with -Trades, a book of that many trades a day over -Days days, in
-  the layout the Cassandra connector reads (docs/connectors/CASSANDRA_CONNECTOR.md): a keyspace per data domain, a table
+  the layout the Cassandra connector reads (plugins/drishti-plugin-cassandra/README.md): a keyspace per data domain, a table
   per kind with a partition per business day, generation and bucket. Each day is loaded under a new generation and appears
   whole. -Create creates the tables (without it the loader prints the CQL for an administrator); -CreateKeyspace 1 makes a
   development keyspace. Other loader options (--ttl-days, --keep-days, --setting tls.enabled=true …) go in -LoaderArgs.

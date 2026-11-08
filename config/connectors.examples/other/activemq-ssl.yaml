@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: ActiveMQ Classic over an ssl:// transport, trusting a private CA, with a user name and password from the
-# environment. Copy to config/connectors/activemq-ssl.yaml. See docs/connectors/ACTIVEMQ_CONNECTOR.md.
+# environment. Copy to config/connectors/activemq-ssl.yaml. See plugins/drishti-plugin-activemq/README.md.
 plugin: activemq
 kinds: [order]
 description: Orders from ActiveMQ over SSL

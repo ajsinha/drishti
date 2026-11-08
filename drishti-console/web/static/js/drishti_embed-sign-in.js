@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The renderer's sign-in window, last step (CLIENT_RENDERER.md 10.1): hands the embed token to the page that opened the window, posted to
+/* The renderer's sign-in window, last step (EMBED_GUIDE.md 10.1): hands the embed token to the page that opened the window, posted to
    that page's EXACT origin (the browser delivers it to no other), then closes; in the same-tab flow (no opener: a webview) it goes back to
    the page with a one-time code in the fragment. The token is never written anywhere here. */
 (function () {

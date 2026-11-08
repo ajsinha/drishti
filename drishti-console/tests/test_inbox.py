@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The inbox and the bell (COLLABORATION.md, build step 3): the page draws the server's rows as the reader may see them now, marks read,
+"""The inbox and the bell (ARCHITECTURE.md §31, build step 3): the page draws the server's rows as the reader may see them now, marks read,
 filters, and the bell opens it; notices arrive on the same live connection as alerts."""
 import re
 import sys
@@ -110,7 +110,7 @@ def test_the_bell_opens_the_inbox_and_alt_i_is_bound():
     html = c.get("/t").text
     assert 'class="tool bell" href="/inbox"' in html and "data-bell-count" in html
     js = (JS / "drishti_alerts.js").read_text()
-    assert "notice: onNotice" in js and "/api/inbox/count" in js and "KeyI" in js
+    assert "notice: onNotice" in js and "/api/inbox/count" in js and "id: 'inbox.open', keys: ['Alt+I']" in js     # Alt+I: the one keymap's
     assert "'notice'" in (JS / "drishti_live-hub.js").read_text()                        # the live connection passes notices on, beside alerts
 
 

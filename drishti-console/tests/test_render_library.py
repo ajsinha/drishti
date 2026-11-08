@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The client-side renderer's distribution and rules, without a browser (docs/architecture/CLIENT_RENDERER.md sections 5, 9 and 13):
+"""The client-side renderer's distribution and rules, without a browser (docs/guides/EMBED_GUIDE.md sections 5, 9 and 13):
 a version's folder is immutable (its integrity record matches every file), the sheet is generated and current, the sources never write
 markup or evaluate code, nothing comes from a CDN, every file carries the licence and stays under the size cap, every kind of the grammar
 is drawn, and the console's routes the library needs (the playground and the raw stream) answer."""
@@ -27,7 +27,8 @@ EXTERNAL = re.compile(r"""(?:from|import)\s*\(?\s*['"]https?://|(?:src|href)\s*=
 
 
 def js_files():
-    return sorted(SRC.rglob("*.js"))
+    """The current version's files and the renderer's own modules (drishti-renderer, under static/elements/)."""
+    return sorted(SRC.rglob("*.js")) + sorted(rd.LIBRARY.glob("*.js"))
 
 
 def code(path) -> str:
@@ -42,6 +43,13 @@ def test_a_version_is_one_folder_and_its_record_matches_every_file():
     assert have == rd.record(), "a file of static/render/%s changed: a released version is immutable; make a new version folder and run tools/render_sheet.py" % rd.VERSION
     assert {"drishti-render.js", "drishti-render.css", "drishti-render.d.ts"} <= set(have["files"])
     assert all(v["integrity"].startswith("sha384-") for v in have["files"].values())
+
+
+def test_the_frozen_versions_are_served_unchanged():
+    """1.2.0 stays served, byte for byte, for the embedders that pinned it (drishti-renderer 2.0.0 is beside it)."""
+    for v in rd.FROZEN:
+        have = json.loads((rd.ROOT / v / rd.RECORD).read_text(encoding="utf-8"))
+        assert have == rd.record(v), f"static/render/{v} is frozen: a released version never changes"
 
 
 def test_the_sheet_is_generated_and_current():
@@ -59,24 +67,38 @@ def test_the_sources_never_write_markup_or_evaluate_code():
 
 
 def test_nothing_comes_from_outside_the_console():
-    for p in list(SRC.rglob("*.js")) + list(SRC.rglob("*.css")) + list(SRC.rglob("*.html")):
+    for p in js_files() + list(SRC.rglob("*.css")) + list(SRC.rglob("*.html")):
         assert not EXTERNAL.search(code(p)), p
 
 
 def test_every_file_has_the_licence_and_stays_under_the_cap():
-    for p in SRC.rglob("*"):
+    for p in list(SRC.rglob("*")) + js_files():
         if p.is_file() and p.suffix in (".js", ".css", ".ts", ".html"):
             text = p.read_text(encoding="utf-8")
             assert "PROPRIETARY AND CONFIDENTIAL" in text[:1200], p
             assert p.name == rd.SHEET or len(text.splitlines()) <= 1500, p          # the generated sheet is not a source
+            assert rd.LIBRARY not in p.parents or len(text.splitlines()) <= 530, p  # an Elements module stays under 530 lines
 
 
 def test_every_kind_of_the_grammar_is_drawn():
-    kinds = re.search(r"KINDS = Object\.freeze\(\[(.*?)\]\)", (SRC / "m" / "kinds.js").read_text(encoding="utf-8"), re.S).group(1)
+    kinds = re.search(r"KINDS = Object\.freeze\(\[(.*?)\]\)", (rd.LIBRARY / "drishti_kinds.js").read_text(encoding="utf-8"), re.S).group(1)
     drawn = set(re.findall(r"'([a-z]+)'", kinds))
     macro = set(re.findall(r"p\.kind (?:==|in) \[?'([a-z]+)'", (rd.WEB / "templates/_macros/panels.html").read_text(encoding="utf-8")))
     macro |= set(re.findall(r"'([a-z]+)'", re.search(r"p\.kind in \(([^)]*)\)", (rd.WEB / "templates/_macros/panels.html").read_text(encoding="utf-8")).group(1)))
     assert len(drawn) == 22 and macro <= drawn, sorted(macro - drawn)
+
+
+def test_the_renderer_draws_with_the_libraries_and_keeps_no_grid_chart_format_or_live_code_of_its_own():
+    """The owner's rule (2026-11-07): tables are drishti-grid's, charts drishti-chart's (the only place an engine is called), formats and
+    the element maker drishti-core's, streams drishti-data's live client; one component test covers the console and the renderer."""
+    src = {p.name: code(p) for p in rd.LIBRARY.glob("*.js")}
+    engine = re.compile(r"echarts\.init|\.setOption\(|getInstanceByDom|new EventSource|\.toFixed\(|Intl\.NumberFormat|createElement\('table'\)|h\('table'")
+    assert {k: engine.findall(v) for k, v in src.items() if engine.search(v)} == {}
+    gone = {"drishti_tables.js", "drishti_charts.js", "drishti_draw.js", "drishti_format.js"}
+    assert not gone & set(src), "the renderer's private table, chart and format modules are gone (no dual machinery)"
+    joined = "\n".join(src.values())
+    for lib in ("drishti-grid", "drishti-chart", "drishti-core", "drishti-data"):
+        assert f"../../{lib}/src/drishti_index.js" in joined, lib
 
 
 def test_the_playground_asks_for_sign_in_first():

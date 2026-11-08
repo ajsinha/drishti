@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build › Tables & models, console lane (docs/architecture/EDITORS.md): the page is a shell with its scripts and needs the bi power; the
+"""Build › Tables & models, console lane (docs/architecture/SHARED_SCREENS.md): the page is a shell with its scripts and needs the bi power; the
 editor API is passed on as the person, its paths an allow-list; the Python run's chip follows the under-construction registry; the menu and
 the BI rail link to it; nothing per person is kept in the console. The browser side is tests/test_editors_browser.py."""
 from bi_backend import BiBackend
@@ -50,11 +50,13 @@ def test_the_page_is_a_shell_with_its_scripts_and_needs_bi():
     assert r.status_code == 200
     for s in SCRIPTS:
         assert s in r.text
-    for act in ("validate", "preview", "history", "impact", "save", "propose", "new"):
-        assert f'data-act="{act}"' in r.text
-    for mode in ("visual", "yaml", "both"):
-        assert f'data-mode="{mode}"' in r.text
-    assert 'data-resize="panel"' in r.text and 'data-name="trading.trade_summary"' in r.text
+    # the header, the modes and the resizable panes are drawn by drishti-designer's DesignerShell in the page's [data-editors] (the kit)
+    assert "data-editors" in r.text and '{% include "_designer_kit.html" %}' not in r.text and "drishti-designer" in r.text
+    shell = (CONSOLE / "web" / "static" / "elements" / "drishti-designer" / "src" / "drishti_shell.js").read_text(encoding="utf-8")
+    for act in ("validate", "preview", "history", "impact", "save", "propose"):
+        assert f"id: '{act}'" in shell
+    assert "'data-act': 'new'" in shell and "'data-mode': m" in shell and "'data-resize': 'panel'" in shell
+    assert 'data-name="trading.trade_summary"' in r.text
     assert make(powers=())[0].get("/build/tables").status_code == 403
 
 
@@ -81,5 +83,5 @@ def test_the_python_run_follows_the_servers_runtime_and_the_menu_and_rail_link_h
     assert "python-table-runs" not in (CONSOLE.parent / "config/under-construction.yaml").read_text(encoding="utf-8")
     run = client.post("/build/tables/api/python/run", json={"yaml": "table: a.b\n", "source": "def build(inputs, params):\n    return None\n"})
     assert run.status_code == 200 and backend.sent[-1][1] == "/tables/editor/python/run"
-    assert 'href="/build/tables"' in client.get("/bi").text
+    assert 'href="/build/tables"' in client.get("/bi/catalogue").text
     assert under_construction.Registry([{"id": "x"}]).marked("x") and not under_construction.Registry([]).marked("x")

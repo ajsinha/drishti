@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures of the Python in BI chapter (docs/tutorials/10-first-bi-report.md chapter 24, BI_GUIDE.md) from the real stack (not a test: run it by hand).
+"""Makes the pictures of the Python in BI chapter (docs/tutorials/08-reports-and-dashboards.md chapter 24, REPORTS_GUIDE.md) from the real stack (not a test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/bi_python_shots.py <pictures dir>
 
@@ -40,7 +40,7 @@ def main(out: Path) -> None:
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch()
-                page = sign_in(browser, "rita", "/bi")
+                page = sign_in(browser, "rita", "/bi/catalogue")
                 for run in ("server", "browser"):
                     if run == "browser" and not PYODIDE.exists():
                         break
@@ -49,7 +49,7 @@ def main(out: Path) -> None:
                     page.wait_for_timeout(600)
                     page.locator("[data-grid]").screenshot(path=str(out / f"report-{run}.png"))
                 page.context.close()
-                wes = sign_in(browser, "wes", "/bi")
+                wes = sign_in(browser, "wes", "/bi/catalogue")
                 wes.goto(CONSOLE_URL + "/bi/i/file:python:desk-pnl-volatility")
                 wes.wait_for_selector("[data-body]:not(:empty)", timeout=30000)
                 wes.get_by_role("button", name="Check the Python").click()

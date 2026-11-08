@@ -26,11 +26,7 @@ import com.ash.drishti.server.admission.AdmissionGate;
 import com.ash.drishti.server.admission.Work;
 import com.ash.drishti.server.data.DataViewService;
 import com.ash.drishti.server.edition.EditionCommands;
-import com.ash.drishti.server.frtb.FrtbService;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.var.MrCubeProperties;
-import com.ash.drishti.server.var.VarPivotProvider;
-import com.ash.drishti.server.var.VarService;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.ArrayList;
@@ -42,7 +38,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * The pivot engine's beans (PIVOT_GUIDE.md): the node's DuckDB executor, the tabular provider over the Data view's tables, the VaR provider
- * when the VaR engine runs here (the MR cube when engine {@code mr-cube} runs too, MR_CUBE_GUIDE.md), the partial-state cache in the one memory budget ({@code pivot.states}), busy protection, and saved views.
+ * when the VaR engine runs here (the MR cube when engine {@code mr-cube} runs too, PIVOT_GUIDE.md#29-the-mr-cube-preset), the partial-state cache in the one memory budget ({@code pivot.states}), busy protection, and saved views.
  * The engine itself is the {@code drishti-bicompute} module's {@link PivotCore}; nothing here aggregates.
  */
 @Configuration
@@ -152,20 +148,9 @@ public class PivotConfiguration {
 
     @Bean
     public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, PanelSources panels, ObjectProvider<TableSources> tables,
-            States states,
-            ObjectProvider<VarService> var, ObjectProvider<MrCubeProperties> mr, ObjectProvider<FrtbService> frtb,
-            org.springframework.core.env.Environment env,
-            ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines,
-            ObjectProvider<com.ash.drishti.server.var.VarParametricProperties> parametric) {
+            States states, ObjectProvider<PivotSourceProvider> contributed, ObjectProvider<AdmissionGate> gate) {
         List<PivotProvider> providers = new ArrayList<>();
-        VarService v = var.getIfAvailable();
-        if (v != null) {
-            boolean mrSwitch = env.getProperty("drishti.engines.mr-cube.enabled", Boolean.class, false);
-            providers.add(new VarPivotProvider(v, () -> running(engines, "var", true), () -> running(engines, "mr-cube", mrSwitch),
-                    mr.getIfAvailable(MrCubeProperties::defaults), () -> running(engines, "frtb-sa", true)
-                            ? com.ash.drishti.server.var.MrCubeExtras.running(frtb.getIfAvailable()) : null)
-                    .parametric(parametric.getIfAvailable()));
-        }
+        contributed.orderedStream().map(PivotSourceProvider::provider).filter(java.util.Objects::nonNull).forEach(providers::add);   // a module's own sources first
         providers.add(new TabularProvider(exec, both(kinds, panels, tables.getIfAvailable())));
         PivotCore core = new PivotCore(providers, states, props.core());
         AdmissionGate g = gate.getIfAvailable();
@@ -176,13 +161,13 @@ public class PivotConfiguration {
     }
 
     /** True when an engine runs here ({@code dflt} without the registry: tests and tools that start no engines). */
-    static boolean running(ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines, String id, boolean dflt) {
+    public static boolean running(ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines, String id, boolean dflt) {
         com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
         return r == null ? dflt : !r.known(id) || r.running(id);
     }
 
     /**
-     * The pivot engine as a compute engine (docs/architecture/COMPUTE_ENGINES.md, {@code config/engines/pivot.yaml}): off, its API answers
+     * The pivot engine as a compute engine (docs/guides/ADMIN_GUIDE.md, {@code config/engines/pivot.yaml}): off, its API answers
      * 404 DRS-1020, the PIVOT word, the menu entry, Help pages and the CLI's pivot commands are gone, and its partial states and staged
      * tables are released.
      */
@@ -229,7 +214,7 @@ public class PivotConfiguration {
     }
 
     /**
-     * Rachana's {@code measure(...)} and {@code cell(...)} answered by this server's pivot engine (ONE_GRAMMAR.md part 3); while the
+     * Rachana's {@code measure(...)} and {@code cell(...)} answered by this server's pivot engine (docs/architecture/ARCHITECTURE.md part 3); while the
      * pivot engine is switched off they are refused with the reason.
      */
     @Bean

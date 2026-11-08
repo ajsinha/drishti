@@ -24,7 +24,7 @@ import java.util.Map;
 
 /**
  * Opens the catalog a connector's settings describe, the same settings the library engine reads
- * (ICEBERG_CONNECTOR.md section 15):
+ * (plugins/drishti-plugin-iceberg/README.md section 15):
  *
  * <ul>
  *   <li>{@code catalog: hadoop} (the default): path-based tables under {@code <root>/<domain>}; {@code root} a local

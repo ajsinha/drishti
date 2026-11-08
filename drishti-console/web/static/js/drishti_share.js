@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Share with a note (COLLABORATION.md, Share with a note): the dialog behind the view's Share button, a panel's share button and Alt+S.
+/* Share with a note (ARCHITECTURE.md §31, Share with a note): the dialog behind the view's Share button, a panel's share button and Alt+S.
    It asks the console what the caller may do (GET /api/collab, once); when collaboration is off or the caller may not collaborate the
    button stays what it was, a copy-link button. Otherwise: what (the whole view or one panel), the page's own pin (shown, never typed),
    the people (type-ahead, drishti_people.js), a note, Send (POST /api/share, Ctrl+Enter), and Copy link kept as the first, one-click use. The
@@ -29,7 +29,6 @@
 
   function $(sel, from) { return (from || root).querySelector(sel); }
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) { n.className = cls; } if (text != null) { n.textContent = text; } return n; }
-  function typing(t) { return t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)); }
 
   function config() {
     if (conf) { return Promise.resolve(conf); }
@@ -211,7 +210,7 @@
   }
 
   // ---- wiring ----------------------------------------------------------------------------------------------
-  picker = window.Drishti.People ? window.Drishti.People.attach(to, $('[data-shr-to]').parentNode.querySelector('.shr-list'), {
+  picker = window.Drishti.People ? window.Drishti.People.attach(to, {
     kind: view.getAttribute('data-kind'), minQuery: 2, taken: taken,
     onPick: function (e) { picked.push(e); drawChips(); say(''); to.focus(); }
   }) : null;
@@ -266,11 +265,10 @@
     }
   });
 
-  document.addEventListener('keydown', function (e) {
-    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.code === 'KeyS' || e.key === 's' || e.key === 'S') && !typing(e.target) && root.hidden) {
-      e.preventDefault(); main.click();
-    }
-  });
+  window.Drishti.keys.register({ id: 'share.open', keys: ['Alt+S'], scope: 'screen', area: 'view', group: 'View', description: 'Share this view (or panel) with people, with a note',
+    when: function () { return root.hidden; }, run: function () { main.click(); } });
+  window.Drishti.keys.describe({ id: 'share.dialog', keys: ['Ctrl+Enter', 'Escape'], scope: 'dialog', area: 'share', label: 'Ctrl+Enter · Esc',
+    description: 'In Share: send, or close' });
 
   window.Drishti.Share = { open: open, close: close };
 })();

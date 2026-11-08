@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * The manifest of a Python item (BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 13 and 20.8): the body of a BI item of kind {@code python}. It says what the function is
+ * The manifest of a Python item (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 13 and 20.8): the body of a BI item of kind {@code python}. It says what the function is
  * ({@code interface}: a measure or a visual), which columns it reads, which packages it needs, where it may run, and its limits, and carries the
  * source. Parsing never runs the code: the compute pool python checks the syntax (PythonRuns), and checks it again before every run.
  *
@@ -52,7 +52,7 @@ public final class PythonManifest {
 
     public static final Set<String> INTERFACES = Set.of("measure", "visual", "transform");
     public static final Set<String> TARGETS = Set.of("server", "browser", "both");
-    public static final Set<String> OUTPUTS = Set.of("echarts", "vega-lite", "svg", "png");
+    public static final Set<String> OUTPUTS = Set.of("drishti-chart", "echarts", "vega-lite", "svg", "png");
     /** The most characters of source one item holds. */
     public static final int MAX_SOURCE = 65_536;
     private static final Pattern IDENT = Pattern.compile("[A-Za-z_][A-Za-z0-9_]{0,63}");
@@ -166,7 +166,7 @@ public final class PythonManifest {
         int memory = number(root, "memory", 256, 32, maxMemory, out);
         String output = root.path("output").asText("visual".equals(iface) ? "echarts" : "number").toLowerCase(Locale.ROOT);
         if ("visual".equals(iface) && !OUTPUTS.contains(output)) {
-            out.add(new Problem("error", "output", "a visual's output is echarts (an option), vega-lite (a specification), svg or png"));
+            out.add(new Problem("error", "output", "a visual's output is drishti-chart (a spec, the preferred form), echarts (an option), vega-lite (a specification), svg or png"));
         }
         if ("measure".equals(iface)) {
             output = "number";

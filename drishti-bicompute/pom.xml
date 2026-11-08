@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>2.9.11.d</version>
+    <version>2.9.11.g</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-bicompute</artifactId>
@@ -34,7 +34,7 @@
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
-    <!-- Rachana's grammar (ONE_GRAMMAR.md): the engine registers every aggregate into its function table (one direction only:
+    <!-- Rachana's grammar (docs/architecture/ARCHITECTURE.md): the engine registers every aggregate into its function table (one direction only:
          Rachana never depends on the engine). Rachana's Spring wiring stays out of the engine; the tests that load Sutras add it. -->
     <dependency>
       <groupId>com.ash.drishti</groupId><artifactId>drishti-rachana</artifactId>

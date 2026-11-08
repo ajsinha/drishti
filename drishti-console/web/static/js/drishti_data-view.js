@@ -118,7 +118,7 @@
     });
   }
   if (dateSel) {
-    dateSel.addEventListener("change", function () { sel.date = dateSel.value; shown = sel.date.slice(0, 7); drawCal(); changed(); });
+    dateSel.addEventListener("drishti:change", function () { sel.date = dateSel.value; shown = sel.date.slice(0, 7); drawCal(); changed(); });
   }
 
   // ---- columns -------------------------------------------------------------------------------------------------------------------
@@ -153,15 +153,15 @@
     lines.forEach(function (l, i) {
       var unary = l.op === "is empty" || l.op === "is not empty";
       h += '<div class="dv-line" data-line="' + i + '"><span class="dv-and">' + (i ? "AND" : "") + "</span>" +
-        '<select data-f aria-label="Attribute">' + columns.map(function (c) { return '<option' + (c === l.field ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
-        '</select><select data-o aria-label="Operator">' + OPS.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === l.op ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
-        '</select><input data-v aria-label="Value" class="mono" placeholder="' + (l.op === "in" ? "a, b, c" : "value") + '" value="' + esc(l.value) + '"' + (unary ? " hidden" : "") + ">" +
+        '<drishti-select data-f label="Attribute">' + columns.map(function (c) { return '<option' + (c === l.field ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
+        '</drishti-select><drishti-select data-o label="Operator">' + OPS.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === l.op ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
+        '</drishti-select><input data-v aria-label="Value" class="mono" placeholder="' + (l.op === "in" ? "a, b, c" : "value") + '" value="' + esc(l.value) + '"' + (unary ? " hidden" : "") + ">" +
         (l.op === "between" ? '<span class="dv-and">and</span><input data-v2 aria-label="Second value" class="mono" value="' + esc(l.value2) + '">' : "") +
         '<button type="button" class="dv-x" data-rm aria-label="Remove this line">×</button></div>';
     });
     linesBox.innerHTML = h;
   }
-  linesBox.addEventListener("change", edit);
+  linesBox.addEventListener("drishti:change", edit);                     // the attribute and the operator: drishti-inputs' Selects
   linesBox.addEventListener("input", edit);
   function edit(e) {
     var row = e.target.closest("[data-line]");
@@ -172,7 +172,7 @@
     if (e.target.hasAttribute("data-o")) { redraw = true; l.op = e.target.value; }   // the value boxes follow the operator (none, one, two)
     if (e.target.hasAttribute("data-v")) { l.value = e.target.value; }
     if (e.target.hasAttribute("data-v2")) { l.value2 = e.target.value; }
-    if (redraw && e.type === "change") { drawLines(); }
+    if (redraw && e.type === "drishti:change") { drawLines(); }
     changed();
   }
   linesBox.addEventListener("click", function (e) {
@@ -199,12 +199,7 @@
     return p;
   }
 
-  function size(n) {
-    if (n < 1024) { return "≈ " + n + " B"; }
-    if (n < 1048576) { return "≈ " + (n / 1024).toFixed(n < 10240 ? 1 : 0) + " KB"; }
-    if (n < 1073741824) { return "≈ " + (n / 1048576).toFixed(1) + " MB"; }
-    return "≈ " + (n / 1073741824).toFixed(2) + " GB";
-  }
+  function size(n) { return "≈ " + window.Drishti.elements.core.formatBytes(n, { small: " B" }); }
 
   function cli(p) {
     var out = "drishti.py data get " + kind + (p.get("date") ? " --date " + p.get("date") : "");
@@ -252,8 +247,8 @@
         $("[data-how]").textContent = "For reference only; it cannot be edited or run. " + (j.pushdown
           ? "Pushed down: the connector filters as it reads its columns."
           : "Filtered on the way as the rows stream (" + (j.read || "the source") + ").");
-        $("[data-rows]").textContent = (j.complete ? "" : "at least ") + Number(j.rows).toLocaleString();
-        $("[data-total]").textContent = "of " + (j.complete ? "" : "at least ") + Number(j.total).toLocaleString() + (j.date ? " on the date" : " rows");
+        $("[data-rows]").textContent = (j.complete ? "" : "at least ") + window.Drishti.elements.core.formatNumber(Number(j.rows));
+        $("[data-total]").textContent = "of " + (j.complete ? "" : "at least ") + window.Drishti.elements.core.formatNumber(Number(j.total)) + (j.date ? " on the date" : " rows");
         $("[data-size]").textContent = size(j.gzipBytes || 0);
         var dl = $("[data-download]");
         var none = !j.rows;
@@ -277,7 +272,7 @@
   drawLines();
   changed();
 
-  // Busy protection (docs/admin/OPERATIONS.md "Busy protection"): the download did not start; the card counts down the server's Retry-After
+  // Busy protection (docs/guides/OPERATIONS_GUIDE.md "Busy protection"): the download did not start; the card counts down the server's Retry-After
   // and starts it again by itself (three times at most); the selection is kept.
   var busyHost = $("[data-busy-host]");
   if (busyHost && busyHost.getAttribute("data-busy") && window.Drishti.Busy) {

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin → BI → Runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 17.2), drawn from GET /bi/api/admin/runs every 5 seconds while the page is shown: the gate (slots
+/* Admin → BI → Runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 17.2), drawn from GET /bi/api/admin/runs every 5 seconds while the page is shown: the gate (slots
    per work class), the queue, what runs (with Cancel), the result store, the estimates' accuracy, the inline rate, the settings, and the repeated heavy
    questions a rollup would answer, each accepted (the rollup added to the model's draft for review) or dismissed. Every part is optional: what the server does not report is left out, never shown as zero. */
 (function () {
@@ -64,7 +64,8 @@
     drawSuggestions(d.suggestions || []);
 
     const nodes = (d.nodes || []).map((n) => (typeof n === 'string' ? { node: n } : n));
-    if (nodes.length && nodeSel.options.length === 1) { nodes.forEach((n) => nodeSel.appendChild(h('option', { value: n.node, text: n.node + (n.alive === false ? ' (not reachable)' : '') }))); }
+    const pick = nodeSel.component;                                       // drishti-inputs' Select: "all", then each node once
+    if (nodes.length && pick.options.length === 1) { pick.setOptions(pick.options.concat(nodes.map((n) => ({ value: n.node, label: n.node + (n.alive === false ? ' (not reachable)' : '') })))); }
   }
 
   // the rollup suggestions (section 8.3a): redrawn only when they change, so an open YAML or the focus survives the 5-second refresh

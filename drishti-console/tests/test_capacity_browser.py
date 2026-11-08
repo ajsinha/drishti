@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin -> Capacity in a real browser (docs/admin/OPERATIONS.md 12.4; RESOURCES_AND_SCALE.md 9.7), over a real server and console:
+"""Admin -> Capacity in a real browser (docs/guides/OPERATIONS_GUIDE.md 12.4; CLUSTER_GUIDE.md 9.7), over a real server and console:
 
 - the page opens on today against the plan: the four resources with a state in words, their headroom bars, what breaks first, this
   server beside the plan (its Java version measured), growth ×1 to ×3; the Capacity tab is the current one, after Caches;
@@ -90,8 +90,8 @@ def test_typing_an_input_changes_the_recommended_heap(browser, stack):
     assert pg.is_visible("[data-cap-view='plan']") and not pg.is_visible("[data-cap-view='today']")
     pg.click("[data-cap-reset]")
     wait(pg, "document.querySelector('[data-cap-answer=heap]').textContent === '-Xmx10g'")
-    pg.fill("#cap-in-Trades", "1,000,000")
-    pg.fill("#cap-in-Positions", "1000000")
+    pg.fill("[data-cap-in=Trades]", "1,000,000")
+    pg.fill("[data-cap-in=Positions]", "1000000")
     wait(pg, "document.querySelector('[data-cap-answer=heap]').textContent === '-Xmx20g'")
     if SHOTS:
         pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
@@ -99,10 +99,10 @@ def test_typing_an_input_changes_the_recommended_heap(browser, stack):
     assert "ch" in pg.get_attribute("[data-cap-field='Trades']", "class")
     assert "-Xmx20g -Xms20g" in pg.inner_text("[data-cap-cmd]")
     assert "hot-dates: 10" in pg.inner_text("[data-cap-yaml]")
-    pg.fill("#cap-in-HotDates", "12")
+    pg.fill("[data-cap-in=HotDates]", "12")
     wait(pg, "document.querySelector('[data-cap-yaml]').textContent.indexOf('hot-dates: 12') >= 0")
     pg.reload()
-    wait(pg, "document.querySelector('#cap-in-Trades') && document.querySelector('#cap-in-Trades').value === '1,000,000'")
+    wait(pg, "document.querySelector('[data-cap-in=Trades]') && document.querySelector('[data-cap-in=Trades]').value === '1,000,000'")
     pg.click("[data-cap-edit]")
     pg.click("[data-cap-reset]")
     wait(pg, "document.querySelector('[data-cap-answer=heap]').textContent === '-Xmx10g'")

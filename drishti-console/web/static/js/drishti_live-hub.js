@@ -34,7 +34,7 @@
    stream would have opened with (the view's generation, the alerts hello, a deleted entity's last frame, the end). */
 (function (root) {
   'use strict';
-  var TYPES = ['view', 'frame', 'gone', 'alert', 'notice', 'row', 'hello', 'tick', 'status', 'answer', 'run', 'progress', 'state', 'done', 'failed', 'updated', 'switches', 'edit', 'patch', 'reshape', 'ended'];               // run: a BI run changed (BI_DESIGN.md 3.5); patch, reshape, ended: a live pivot (pivotlive:<id>); progress..updated: a computed panel's request (compute:<id>); switches: Admin -> Commands; edit: write-back
+  var TYPES = ['view', 'frame', 'gone', 'alert', 'notice', 'row', 'hello', 'tick', 'status', 'answer', 'run', 'progress', 'state', 'done', 'failed', 'updated', 'switches', 'edit', 'patch', 'reshape', 'ended'];               // run: a BI run changed (ARCHITECTURE.md §28 3.5); patch, reshape, ended: a live pivot (pivotlive:<id>); progress..updated: a computed panel's request (compute:<id>); switches: Admin -> Functions; edit: write-back
   var REPLAY = ['view', 'hello', 'deleted', 'gone'];
 
   function Hub(opts) {
@@ -44,8 +44,8 @@
     this.keys = {};              // key -> {tabs: {tab id: true}, replay: {view, hello, deleted, gone}}
     this.who = null;             // the session the channel runs (or will run) as
     this.checking = false;       // asking the console which session the browser has now
-    this.es = null; this.id = null; this.serverSubs = [];
-    this.syncTimer = null; this.connectTimer = null; this.retryTimer = null; this.pruneTimer = null; this.retryMs = 0;
+    this.es = null; this.live = null; this.id = null; this.serverSubs = [];
+    this.syncTimer = null; this.connectTimer = null; this.pruneTimer = null;
   }
 
   Hub.prototype.now = function () { return this.o.now ? this.o.now() : Date.now(); };
@@ -200,7 +200,7 @@
   Hub.prototype.sync = function () {
     var want = this.wanted();
     if (!want.length) { this.close(); return; }
-    if (!this.es) { if (!this.retryTimer) { this.open(); } return; }
+    if (!this.es) { this.open(); return; }
     if (!this.id) { return; }                                   // the `channel` event will sync
     var add = want.filter(function (k) { return this.serverSubs.indexOf(k) < 0; }, this);
     var remove = this.serverSubs.filter(function (k) { return want.indexOf(k) < 0; });
@@ -213,47 +213,49 @@
       .catch(function () { /* the connection's own reconnect resyncs */ });
   };
 
+  // The connection is drishti-data's LiveClient (Drishti Elements: the one home of a live connection): Server-Sent Events, the
+  // address asked at every connect (the keys wanted then), each message's event name kept, a dropped or refused connection opened again
+  // after a back-off. The console's channel keeps itself alive with comments, which an EventSource does not show: no watchdog here.
+  Hub.prototype.client = function () {
+    var self = this, Live = liveLib(this.o);
+    if (this.live) { return this.live; }
+    this.live = new Live.LiveClient({
+      url: function () { return self.url + '?' + self.wanted().map(function (k) { return 's=' + encodeURIComponent(k); }).join('&'); },
+      transport: 'sse', EventSource: this.o.EventSource, events: ['channel', 'end'].concat(TYPES), eventField: '__event', heartbeatMs: 0,
+      backoff: { baseMs: this.o.retryMs || 2000, maxMs: this.o.maxRetryMs || 30000, jitter: false },
+      setTimeout: function (fn, ms) { return self.later(fn, ms); }, clearTimeout: function (t) { self.cancel(t); }, window: root
+    });
+    this.live.on('state', function (s) {
+      if (s.state === 'reconnecting') { self.id = null; self.toAll({ t: 'error' }); }   // every tab hears it; the client opens it again
+    });
+    this.live.on('message', function (e) { self.message(e.message); });
+    return this.live;
+  };
+
   Hub.prototype.open = function () {
-    var self = this, keys = this.wanted();
-    if (!keys.length || !this.o.EventSource) { return; }
-    var es = this.es = new this.o.EventSource(this.url + '?' + keys.map(function (k) { return 's=' + encodeURIComponent(k); }).join('&'));
+    if (!this.wanted().length || !this.o.EventSource) { return; }
+    this.es = this.client();
+    this.es.open();
     this.armConnectTimer();
-    es.addEventListener('channel', function (e) {               // on every (re)connection: the channel's id and what it carries
-      if (es !== self.es) { return; }
-      var m;
-      try { m = JSON.parse(e.data); } catch (err) { return; }
-      self.cancel(self.connectTimer); self.connectTimer = null;
-      self.retryMs = 0;
-      self.id = m.d.id;
-      self.serverSubs = m.d.subs || [];
-      Object.keys(self.keys).forEach(function (k) { self.keys[k].replay = {}; });   // a new stream starts afresh
-      if (typeof m.d.who === 'string' && m.d.who !== self.who) {
-        self.who = m.d.who;                                     // the cookies changed under us: the console is right
-        self.staleOthers();
+  };
+
+  Hub.prototype.message = function (m) {
+    var t = m.__event;
+    if (t === 'channel') {                                      // on every (re)connection: the channel's id and what it carries
+      this.cancel(this.connectTimer); this.connectTimer = null;
+      this.id = m.d.id;
+      this.serverSubs = m.d.subs || [];
+      Object.keys(this.keys).forEach(function (k) { this.keys[k].replay = {}; }, this);   // a new stream starts afresh
+      if (typeof m.d.who === 'string' && m.d.who !== this.who) {
+        this.who = m.d.who;                                     // the cookies changed under us: the console is right
+        this.staleOthers();
       }
-      self.sync();                                              // anything subscribed since the URL was built
-    });
-    TYPES.forEach(function (t) {
-      es.addEventListener(t, function (e) {
-        if (es !== self.es) { return; }
-        var m;
-        try { m = JSON.parse(e.data); } catch (err) { return; }
-        self.event(m.ch, t, m.d);
-      });
-    });
-    es.addEventListener('end', function () {                    // nothing left to stream: do not let the browser reconnect
-      if (es !== self.es) { return; }
-      self.close();                                             // a new subscription opens a new channel
-    });
-    es.onerror = function () {
-      if (es !== self.es) { return; }
-      self.id = null;
-      self.toAll({ t: 'error' });
-      if (es.readyState === 2) {                                // given up (refused, not an event stream): try again later
-        self.es = null;
-        self.retry();
-      }
-    };
+      this.sync();                                              // anything subscribed since the address was asked
+    } else if (t === 'end') {                                   // nothing left to stream: no reconnect
+      this.close();                                             // a new subscription opens a new channel
+    } else {
+      this.event(m.ch, t, m.d);
+    }
   };
 
   Hub.prototype.event = function (key, type, d) {
@@ -270,7 +272,7 @@
   };
 
   // No `channel` event in time (the console is unreachable, or the browser cannot open another connection): say so
-  // rather than wait silently. The EventSource keeps trying.
+  // rather than wait silently. The client keeps trying.
   Hub.prototype.armConnectTimer = function () {
     var self = this;
     this.cancel(this.connectTimer);
@@ -280,16 +282,8 @@
     }, this.o.connectTimeoutMs || 10000);
   };
 
-  Hub.prototype.retry = function () {
-    var self = this;
-    this.retryMs = Math.min(Math.max(this.retryMs * 2, this.o.retryMs || 2000), this.o.maxRetryMs || 30000);
-    this.cancel(this.retryTimer);
-    this.retryTimer = this.later(function () { self.retryTimer = null; if (!self.es && self.wanted().length) { self.open(); } }, this.retryMs);
-  };
-
   Hub.prototype.close = function () {
     this.cancel(this.connectTimer); this.connectTimer = null;
-    this.cancel(this.retryTimer); this.retryTimer = null;
     if (this.es) { this.es.close(); }
     this.es = null; this.id = null; this.serverSubs = [];
   };
@@ -299,6 +293,20 @@
     this.staleOthers();
     if (this.wanted().length) { this.open(); }
   };
+
+  /** drishti-data (its LiveClient): the page's or the worker's, else loaded beside this script (a SharedWorker), or required (Node). */
+  function liveLib(o) {
+    var E = root.Drishti && root.Drishti.elements;
+    if (o.live) { return o.live; }
+    if (E && E.data) { return E.data; }
+    if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { return require('../elements/drishti-data/drishti_data.js'); }
+    if (typeof root.importScripts === 'function' && root.location) {
+      var base = String(root.location.href).replace(/js\/(?:drishti_)?live-hub\.js.*$/, ''), v = /[?&]v=([^&]+)/.exec(root.location.href);
+      root.importScripts(base + 'elements/drishti-core/drishti_core.js' + (v ? '?v=' + v[1] : ''), base + 'elements/drishti-data/drishti_data.js' + (v ? '?v=' + v[1] : ''));
+      return root.Drishti.elements.data;
+    }
+    throw new Error('the live hub needs drishti-data: load it first');
+  }
 
   (root.Drishti = root.Drishti || {}).LiveHub = Hub;
   if (typeof module !== 'undefined' && module.exports) { module.exports = Hub; }

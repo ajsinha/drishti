@@ -33,6 +33,7 @@ import pytest
 from test_var_explorer_browser import open_var, painted, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from var_stack import VAR_TRADES, var_data, var_lake, var_server
+from select_helpers import choose, labels, value  # <drishti-select>: drishti-inputs' Select
 
 THEMES = ["terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"]
 TILE = "document.querySelector('.vx-tile[data-tile=\"%d\"] %s').innerText"
@@ -64,10 +65,10 @@ def test_each_horizon_and_confidence_redraws_every_panel_and_round_trips(stack, 
     painted(pg, "BANK")
     lens_painted(pg, "1D|0.99|0.975")
     wait(pg, "document.querySelector('[data-var]').dataset.lensReady === 'true'", 30)
-    assert pg.eval_on_selector_all("[data-vx-horizon] option", "os => os.map(o => o.textContent)") == ["1-day", "10-day (√10)", "10-day (sum)"]
-    confs = pg.eval_on_selector_all("[data-vx-conf] option", "os => os.map(o => o.textContent)")
+    assert labels(pg, "[data-vx-horizon]") == ["1-day", "10-day (√10)", "10-day (sum)"]
+    confs = labels(pg, "[data-vx-conf]")
     assert confs == ["95%", "97.5%", "99% · default", "99.5%"], confs
-    assert "97.5% · default" in pg.eval_on_selector_all("[data-vx-esconf] option", "os => os.map(o => o.textContent)")
+    assert "97.5% · default" in labels(pg, "[data-vx-esconf]")
     one = money(pg.evaluate(TILE % (0, ".v")))
     assert "limit" in pg.evaluate(TILE % (4, ".s")) and pg.evaluate(TILE % (4, ".v")) != "—"
     assert "zone" in pg.evaluate(TILE % (5, ".s"))
@@ -76,7 +77,7 @@ def test_each_horizon_and_confidence_redraws_every_panel_and_round_trips(stack, 
     shot(pg, "lens-1d")
 
     # 10-day √10: the 1-day VaR × √10; the tree, the path and the method strip follow; limit use not comparable; no backtest
-    pg.select_option("[data-vx-horizon]", "10d:sqrt10")
+    choose(pg, "[data-vx-horizon]", "10d:sqrt10")
     lens_painted(pg, "10D-SQRT10|0.99|0.975")
     assert "h=10d" in pg.url and "m=sqrt10" in pg.url
     assert pg.locator("[data-vx-cmd]").inner_text() == "VAR BANK 10D SQRT"
@@ -87,19 +88,19 @@ def test_each_horizon_and_confidence_redraws_every_panel_and_round_trips(stack, 
     assert "backtesting is 1-day" in pg.evaluate(TILE % (5, ".s"))
     assert "√10" in pg.locator("[data-vx-method]").inner_text()
     # the tree drawn for this lens: asked again on the lens change, aria-busy until its answer is drawn (its rows before that are the old lens's)
-    wait(pg, "!!document.querySelector('[data-vx-tree]:not([aria-busy]) .vx-row[data-scope=\"NODE:MGMT~BANK\"]')", 60)
-    tree_bank = pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~BANK"] .num').first.inner_text()
+    wait(pg, "!!document.querySelector('[data-vx-tree]:not([aria-busy]) .dg-row[data-scope=\"NODE:MGMT~BANK\"]')", 60)
+    tree_bank = pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~BANK"] .dg-cell[aria-colindex="2"]').first.inner_text()
     assert abs(money(tree_bank) - sq) <= 0.006 * sq, (tree_bank, sq)
     shot(pg, "lens-10d-sqrt")
 
     # 10-day sum: 500 overlapping windows; the path is drawn on them; the history says there is no 10-day backtest
-    pg.select_option("[data-vx-horizon]", "10d:sum")
+    choose(pg, "[data-vx-horizon]", "10d:sum")
     lens_painted(pg, "10D-SUM|0.99|0.975")
     assert pg.locator("[data-vx-cmd]").inner_text() == "VAR BANK 10D SUM"
     assert "5th worst of 500 overlapping windows" in pg.evaluate(TILE % (0, ".s"))
     assert "(500 windows)" in pg.locator("[data-vx-n]").inner_text()
-    wait(pg, "document.querySelectorAll('[data-vx-pathtable] tbody tr').length > 0", 60)
-    first = pg.locator("[data-vx-pathtable] tbody tr").first.locator("td").nth(1).inner_text()
+    wait(pg, "(((document.querySelector('[data-vx-pathtable] drishti-grid') || {}).grid || null) ? ((document.querySelector('[data-vx-pathtable] drishti-grid') || {}).grid || null).model.rowCount() : 0) > 0", 60)
+    first = pg.locator("[data-vx-pathtable] .dg-row").first.locator('.dg-cell[aria-colindex="2"]').inner_text()
     assert " … " in first, first                                                     # a window: its first and last day
     assert "sum of days" in pg.locator("[data-vx-method]").inner_text()
     shot(pg, "lens-10d-sum")
@@ -108,13 +109,13 @@ def test_each_horizon_and_confidence_redraws_every_panel_and_round_trips(stack, 
     assert "backtesting is 1-day" in pg.locator("[data-vx-hist-note]").inner_text()
     pg.locator('.vx-tab[data-tab="contrib"]').click()
     wait(pg, "document.querySelector('[data-var]').dataset.tabPainted === 'contrib'", 60)
-    assert pg.locator("[data-vx-ctable] tbody tr.vx-click").count() > 0
+    assert pg.locator("[data-vx-ctable] .dg-row[data-scope]").count() > 0
     pg.locator('.vx-tab[data-tab="ccy"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    wait(pg, "(((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid || null) ? ((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid || null).model.rowCount() : 0) >= 5", 60)
     pg.locator('.vx-tab[data-tab="path"]').click()
 
     # a confidence: another rank of the same vector; 95% at 10 days sum is the 25th of 500
-    pg.select_option("[data-vx-conf]", "0.95")
+    choose(pg, "[data-vx-conf]", "0.95")
     lens_painted(pg, "10D-SUM|0.95|0.975")
     assert "q=0.95" in pg.url and pg.locator("[data-vx-cmd]").inner_text() == "VAR BANK 10D SUM 95"
     assert "25th worst of 500" in pg.evaluate(TILE % (0, ".s")) and "VaR 95%" in pg.evaluate(TILE % (0, ".l"))
@@ -124,15 +125,15 @@ def test_each_horizon_and_confidence_redraws_every_panel_and_round_trips(stack, 
     link = pg.url
     pg2 = open_var(browser, str(stack), link.replace(str(stack), ""))
     lens_painted(pg2, "10D-SUM|0.95|0.975")
-    assert pg2.input_value("[data-vx-horizon]") == "10d:sum"
+    assert value(pg2, "[data-vx-horizon]") == "10d:sum"
     pg2.close()
 
     # 1-day 95%: the limit is 1-day 99%, so still not comparable; back at 99% it is shown again
-    pg.select_option("[data-vx-horizon]", "1d")
+    choose(pg, "[data-vx-horizon]", "1d")
     lens_painted(pg, "1D|0.95|0.975")
     assert "26th worst of 509" in pg.evaluate(TILE % (0, ".s"))
     assert "not comparable" in pg.evaluate(TILE % (4, ".s"))
-    pg.select_option("[data-vx-conf]", "")
+    choose(pg, "[data-vx-conf]", "")
     lens_painted(pg, "1D|0.99|0.975")
     assert abs(money(pg.evaluate(TILE % (0, ".v"))) - one) < 1 and pg.evaluate(TILE % (4, ".v")) != "—"
     assert "h=" not in pg.url and "q=" not in pg.url
@@ -145,16 +146,16 @@ def test_the_command_opens_the_lens_and_the_person_keeps_it(stack, browser):
     lens_painted(pg, "10D-SUM|0.975|0.975")
     assert "13th worst of 500" in pg.evaluate(TILE % (0, ".s"))
     # the person's settings keep the last choice: a VaR page without a lens opens with it
-    pg.select_option("[data-vx-horizon]", "10d:sqrt10")
+    choose(pg, "[data-vx-horizon]", "10d:sqrt10")
     lens_painted(pg, "10D-SQRT10|0.975|0.975")
     pg.wait_for_timeout(500)
     pg.goto(str(stack) + "/var?scope=DESK:DESK-RATES")
     lens_painted(pg, "10D-SQRT10|0.975|0.975", "DESK:DESK-RATES")
     assert "h=10d" in pg.url and "m=sqrt10" in pg.url
     # back to the default for the next tests
-    pg.select_option("[data-vx-horizon]", "1d")
+    choose(pg, "[data-vx-horizon]", "1d")
     lens_painted(pg, "1D|0.975|0.975", "DESK:DESK-RATES")
-    pg.select_option("[data-vx-conf]", "")
+    choose(pg, "[data-vx-conf]", "")
     lens_painted(pg, "1D|0.99|0.975", "DESK:DESK-RATES")
     pg.wait_for_timeout(500)
     pg.close()
@@ -165,7 +166,7 @@ def test_on_a_phone_the_controls_are_full_width_and_draw_in_every_theme(stack, b
     lens_painted(pg, "10D-SUM")
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     for sel in ("[data-vx-horizon]", "[data-vx-conf]", "[data-vx-esconf]", "[data-vx-ccy]"):
-        box = pg.locator(sel).bounding_box()
+        box = pg.locator(sel + " .di-select-control").bounding_box()
         assert box and box["height"] >= 36 and box["x"] + box["width"] <= 391, (sel, box)
         label = pg.locator(sel).locator("xpath=..").bounding_box()
         assert label["width"] >= 330, (sel, label)                              # the control's row is the screen's width
@@ -173,7 +174,7 @@ def test_on_a_phone_the_controls_are_full_width_and_draw_in_every_theme(stack, b
     seen = set()
     for theme in THEMES:
         pg.evaluate(f"document.documentElement.setAttribute('data-theme', '{theme}')")
-        colours = pg.evaluate("""() => { const s = getComputedStyle(document.querySelector('[data-vx-horizon]'));
+        colours = pg.evaluate("""() => { const s = getComputedStyle(document.querySelector('[data-vx-horizon] .di-select-control'));
             const m = getComputedStyle(document.querySelector('[data-vx-method]'));
             return [s.backgroundColor, s.color, s.borderTopColor, m.backgroundColor, m.color]; }""")
         assert all(c and c != "rgba(0, 0, 0, 0)" for c in colours), (theme, colours)

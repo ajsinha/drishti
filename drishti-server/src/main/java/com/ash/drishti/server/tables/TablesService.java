@@ -48,7 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The server's virtual tables (VIRTUAL_TABLES.md section 10; TABLES_GUIDE.md section 7a): the catalogue of {@code drishti.tables.root},
+ * The server's virtual tables (docs/architecture/ARCHITECTURE.md section 10; TABLES_GUIDE.md section 7a): the catalogue of {@code drishti.tables.root},
  * read again when a file under it changes, and a read per request for one person ({@link #reads}) whose source is the kind read through its
  * connector as the Data view reads it ({@link DataViewService#walk}): the person's entitlement to the kind, the edition's kinds, and their
  * masks on every document. Nothing here calls a SQL engine: consumers stage the rows through their own executor (the pivot's), V14.
@@ -60,6 +60,8 @@ public final class TablesService {
     private static final Logger LOG = LoggerFactory.getLogger(TablesService.class);
 
     private final Path root;
+    /** Whether a domain folder of the tables is read (false for an off module's: {@link #domains}). */
+    private volatile java.util.function.Predicate<String> domainOn = d -> true;
     private final DataViewService data;
     private final com.ash.drishti.engine.source.SourceRouter router;
     private final EditionCommands edition;
@@ -72,6 +74,12 @@ public final class TablesService {
 
     /** The catalogue as last read, with the stamp of the files it was read from and the names refused. */
     private record Loaded(String stamp, Catalogue catalogue, List<Problem> problems, Set<String> refused) {}
+
+    /** Reads a domain folder only while its domain's module is on (docs/architecture/DOMAIN_MODULES.md section 8). */
+    public TablesService domains(java.util.function.Predicate<String> on) {
+        this.domainOn = on == null ? d -> true : on;
+        return this;
+    }
 
     public TablesService(Path root, DataViewService data, com.ash.drishti.engine.source.SourceRouter router,
             EditionCommands edition, java.util.function.BooleanSupplier enforce, long maxRows, long scanWarnRows, Clock clock) {
@@ -86,7 +94,7 @@ public final class TablesService {
     }
 
     /**
-     * The stored tables and models (BI's item store: what the editors publish, BI_FOUNDATION_2911E.md Q16) beside the files: the pivot, Sutras,
+     * The stored tables and models (BI's item store: what the editors publish, docs/architecture/ARCHITECTURE.md §28 Q16) beside the files: the pivot, Sutras,
      * Flight and BI then read one catalogue. Set once at start.
      */
     public void itemStore(ItemStore store) {
@@ -265,7 +273,7 @@ public final class TablesService {
             Catalogue c;
             List<Problem> problems = new ArrayList<>();
             try {
-                c = Catalogue.load(root, items);
+                c = Catalogue.load(root, items, domainOn);
                 problems.addAll(c.check());
             } catch (IOException | RuntimeException e) {
                 LOG.warn("virtual tables under {} could not be read: {}", root, e.getMessage());

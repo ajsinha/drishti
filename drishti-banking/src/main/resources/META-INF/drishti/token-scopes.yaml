@@ -1,0 +1,47 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The banking module's token declarations (docs/architecture/DOMAIN_MODULES.md section 8): read by the core's ModuleTokenScopes while the
+# module is on, beside drishti.security.token-read-posts and token-scopes (the same shapes). Off, none of them exists: no risk:write
+# among a token's choices, and the read POSTs are the module's API, which answers 404 DRS-1025 anyway.
+module: banking
+# POSTs that only read: a personal API token may call them with no scope
+read-posts:
+  - /api/v1/risk/mr/headline        # the MR cube's lens (PIVOT_GUIDE.md#29-the-mr-cube-preset): a view's headline, a cell's detail and history and the
+  - /api/v1/risk/mr/detail          # what-if side by side, each computed by the VaR engine as the caller, written nowhere
+  - /api/v1/risk/mr/history
+  - /api/v1/risk/mr/what-if
+  - /api/v1/risk/var/basket/sheet        # the basket sheet's checks and figures, computed as the caller, saved nowhere
+  - /api/v1/risk/var/basket/sheet.xlsx   # the sheet as a workbook, written nowhere on the server
+  - /api/v1/risk/exposure/what-if        # incremental exposure before dealing (EXPOSURE_GUIDE.md section 18.7) for the caller: computed, stores nothing
+  - /api/v1/risk/exposure/predeal        # the pre-deal check (EXPOSURE_GUIDE.md section 18.9) for the caller: computed, audited, stores nothing else
+  - /api/v1/risk/var/what-if             # VaR before and after hypothetical trades (VAR_GUIDE.md section 8.5) for the caller: computed by the Python engine, stores nothing
+# write scopes a token may be given (risk:write also keeps the core's sandboxes and cancellations, as it always did)
+scopes:
+  "risk:write":
+    description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only (an administrator's token may also delete anyone's basket, as its user may); the bank's data is never changed."
+    allow:
+      - POST /api/v1/risk/var/baskets
+      - POST /api/v1/risk/frtb/playground/recipes   # save a FRTB-SA playground recipe (yours, replayable)
+      - POST /api/v1/risk/simm/playground/recipes   # save a SIMM playground recipe
+      - DELETE /api/v1/risk/var/baskets/*/*
+      - DELETE /api/v1/risk/var/baskets/*
+      - POST /api/v1/risk/var/captures
+      - POST /api/v1/risk/var/reports/*/runs           # generate a regulatory report run (frozen, versioned); its sign-off is never a token's
+      - POST /api/v1/risk/exposure/captures
+      - POST /api/v1/compute/sandboxes
+      - PUT /api/v1/compute/sandboxes/*
+      - DELETE /api/v1/compute/sandboxes/*
+      - POST /api/v1/compute/sandboxes/*/copy
+      - DELETE /api/v1/compute/requests/*

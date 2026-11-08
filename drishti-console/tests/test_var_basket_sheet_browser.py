@@ -32,6 +32,7 @@ sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (
 
 from test_live_tabs_browser import _free_port  # noqa: E402
 from test_workbench_browser import wait  # noqa: E402
+import engine_fakes  # noqa: E402
 
 COLS = [{"key": k, "title": t} for k, t in (("TRD", "Trade"), ("POS", "Position"), ("PORT", "Portfolio"), ("BOOK", "Book"),
                                             ("DESK", "Desk"), ("LL", "Limit letter"), ("CPTY", "Counterparty"))]
@@ -66,6 +67,8 @@ class SheetBackend(FakeBackend):
                 "found": found, "notFound": nf, "flagged": len(cells) - nf, "cells": cells, "scope": "TRD:STAND-IN" if found else "",
                 "empty": not found, "trades": found, "var": 100.0 * found, "es": 120.0 * found, "sumOfParts": 150.0 * found,
                 "diversification": 50.0 * found, "partsAdded": found, "confidence": 0.99, "esConfidence": 0.975, "computeMs": 3}
+
+    engine = engine_fakes.method
 
     async def var(self, method, path, ident, /, body=None, raw=False, accept="", **params):
         from core.backend import BackendError

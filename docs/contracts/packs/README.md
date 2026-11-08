@@ -17,12 +17,14 @@
 
 # Data contracts of every command
 
-Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
+Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-109 contracts, 407 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+118 contracts, 407 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
+| `CBANK` | `central-bank` | [central-banks](central-banks.md#cbank-central-bank-central-bank) | fundamental | active |  | 0 |
+| `CBSER` | `rate-series` | [central-banks](central-banks.md#cbser-central-bank-series-rate-series) | fundamental | active |  | 0 |
 | `PBOOK` | `path-book` | [compute-demo](compute-demo.md#pbook-path-book-path-book) | input | active |  | 4 |
 | `PSTRIP` | `path-strip` | [compute-demo](compute-demo.md#pstrip-pl-strip-path-strip) | input | active |  | 4 |
 | `PSUM` | `path-sum` | [compute-demo](compute-demo.md#psum-book-path-python-path-sum) | computed | active |  | 1 |
@@ -49,13 +51,13 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `XRUN` | `simulation-run` | [counterparty-risk](counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) | input | active |  | 3 |
 | `XPATH` | `exposure-path` | [counterparty-risk](counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | input | active |  | 6 |
 | `EXP` | `exposure-result` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-of-a-scope-computed-exposure-result) | computed | active |  | 0 |
-| `XWIF` | `exposure-whatif` | [counterparty-risk](counterparty-risk.md#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | computed | active |  | 0 |
 | `XOFC` | `exposure-official-cpty` | [counterparty-risk](counterparty-risk.md#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | computed | active |  | 0 |
 | `NSMTM` | `nset-mtm` | [counterparty-risk](counterparty-risk.md#nsmtm-netting-set-mtm-totals-derived-from-the-trade-valuations-nset-mtm) | computed | active |  | 0 |
 | `CPMTM` | `cpty-mtm` | [counterparty-risk](counterparty-risk.md#cpmtm-counterparty-mtm-totals-derived-from-the-trade-valuations-cpty-mtm) | computed | active |  | 0 |
 | `FUND` | `fund` | [funds](funds.md#fund-fund-or-etf-fund) | fundamental | active |  | 0 |
 | `HELD` | `fund-holder` | [funds](funds.md#held-funds-holding-a-company-fund-holder) | fundamental | active |  | 0 |
 | `TRACK` | `index-funds` | [funds](funds.md#track-funds-tracking-an-index-index-funds) | fundamental | active |  | 0 |
+| `GDELT` | `event-country` | [gdelt-events](gdelt-events.md#gdelt-world-events-by-country-event-country) | fundamental | active |  | 0 |
 | `LEI` | `lei-entity` | [gleif](gleif.md#lei-lei-legal-entity-lei-entity) | fundamental | active |  | 3 |
 | `LEIG` | `lei-group` | [gleif](gleif.md#leig-lei-ownership-group-lei-group) | computed | active |  | 0 |
 | `LEIR` | `lei-relationship` | [gleif](gleif.md#leir-lei-parent-relationship-lei-relationship) | fundamental | active |  | 3 |
@@ -103,10 +105,15 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `VRES` | `var-result` | [market-risk](market-risk.md#vres-var-of-a-scope-computed-var-result) | computed | active |  | 0 |
 | `VOFF` | `var-official` | [market-risk](market-risk.md#voff-var-official-results-published-var-official) | computed | active |  | 0 |
 | `SSPNL` | `stress-scenario-pnl` | [market-risk](market-risk.md#sspnl-stress-pl-of-a-scenario-across-desks-derived-from-the-stress-results-stress-scenario-pnl) | computed | active |  | 0 |
+| `NSTAT` | `statistics-series` | [national-statistics](national-statistics.md#nstat-national-statistic-statistics-series) | fundamental | active |  | 0 |
 | `TOPIC` | `news-topic` | [news-and-markets](news-and-markets.md#topic-news-topic-news-topic) | fundamental | active |  | 6 |
 | `NEWS` | `news` | [news-and-markets](news-and-markets.md#news-headlines-news) | fundamental | active |  | 3 |
 | `CO` | `listed-company` | [news-and-markets](news-and-markets.md#co-listed-company-listed-company) | fundamental | active |  | 6 |
 | `QUOTE` | `quote` | [news-and-markets](news-and-markets.md#quote-quote-and-price-history-quote) | fundamental | active |  | 5 |
+| `OECD` | `oecd-country` | [oecd](oecd.md#oecd-oecd-country-oecd-country) | fundamental | active |  | 0 |
+| `OECDS` | `oecd-series` | [oecd](oecd.md#oecds-oecd-series-oecd-series) | fundamental | active |  | 0 |
+| `PRESS` | `release-source` | [official-news](official-news.md#press-official-press-releases-release-source) | fundamental | active |  | 0 |
+| `PREL` | `press-release` | [official-news](official-news.md#prel-press-release-press-release) | fundamental | active |  | 0 |
 | `TRD` | `trade` | [trading](trading.md#trd-trade-trade) | fundamental | active |  | 7 |
 | `CTRD` | `counterparty-trades` | [trading](trading.md#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | computed | active |  | 1 |
 | `PTRD` | `portfolio-trades` | [trading](trading.md#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | computed | active |  | 1 |
@@ -119,6 +126,8 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `FILING` | `filing` | [us-equities](us-equities.md#filing-sec-filing-filing) | fundamental | active |  | 2 |
 | `FACT` | `financial-fact` | [us-equities](us-equities.md#fact-financial-fact-financial-fact) | fundamental | active |  | 4 |
 | `PXH` | `price-history` | [us-equities](us-equities.md#pxh-price-history-live-internal-use-only-price-history) | fundamental | active |  | 3 |
+| `WDI` | `development-profile` | [world-development](world-development.md#wdi-development-profile-development-profile) | fundamental | active |  | 0 |
+| `WDIS` | `development-series` | [world-development](world-development.md#wdis-development-indicator-series-development-series) | fundamental | active |  | 0 |
 | `ECON` | `economy` | [world-economy](world-economy.md#econ-economy-economy) | fundamental | active |  | 6 |
 | `MACRO` | `macro-indicator` | [world-economy](world-economy.md#macro-macro-indicator-macro-indicator) | fundamental | active |  | 6 |
 | `FCST` | `economic-forecast` | [world-economy](world-economy.md#fcst-economic-forecast-economic-forecast) | fundamental | active |  | 4 |

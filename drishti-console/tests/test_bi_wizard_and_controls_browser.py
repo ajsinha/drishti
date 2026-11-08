@@ -37,6 +37,8 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import clean, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, api  # noqa: E402
+import select_helpers  # noqa: E402
+from select_helpers import has_option, values
 
 WES = ("wes", ["bi-writer"])
 state = {}
@@ -129,21 +131,21 @@ def test_a_report_is_started_on_the_model_and_gets_a_relative_date_slicer_a_top_
     try:
         page.wait_for_function("() => document.querySelector('[data-new-dataset]').value === 'mq:wiz-trades@1'", timeout=8000)
     except Exception:
-        raise AssertionError(page.url + " | " + str(page.evaluate("[...document.querySelector('[data-new-dataset]').options].map(o => o.value)")))
-    expect(page.locator("[data-new-workspace] option").first).to_be_attached()
+        raise AssertionError(page.url + " | " + str(values(page, "[data-new-dataset]")))
+    page.wait_for_function(has_option("[data-new-workspace]"))
     page.fill("[data-new-title]", "Wizard report")
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     state["report"] = re.sub(r".*/bi/design/", "", page.url).replace("%3A", ":")
     # a slicer on the date field: click the field, make it a slicer, then make it a relative-date one
     page.click('[data-field="trade.tradeDate"]')
-    page.click('.bi-vtype[data-type="slicer"]')
+    page.click('[data-types] [data-type="slicer"]')
     page.click('[data-ptab="format"]')
     page.select_option("[data-format-mode]", "relative-date")
     page.select_option("[data-format-default]", "last-30-days")
     page.uncheck('[data-format-options] [data-option="last-90-days"]')
     page.uncheck('[data-format-options] [data-option="last-12-months"]')
-    expect(page.locator("[data-format-default] option")).not_to_have_count(0)
+    assert select_helpers.values(page, "[data-format-default]")
     # a top filter in the Filters pane
     page.click('[data-add-filter="report"]')
     page.select_option('[data-filter-editor] [name="field"]', "trade.desk")
@@ -176,7 +178,7 @@ def test_a_report_is_started_on_the_model_and_gets_a_relative_date_slicer_a_top_
 def test_duplicate_and_delete_show_what_depends(stack, page):
     page.goto(f"{CONSOLE_URL}/bi/i/{state['report']}")
     page.get_by_role("button", name="Duplicate…").click()
-    expect(page.locator("[data-ask-target] option").first).to_be_attached()
+    page.wait_for_function(has_option("[data-ask-target]"))
     page.click("[data-ask-go]")
     page.wait_for_url(re.compile(r"/bi/i/(?!" + re.escape(state["report"]) + r"$)"))
     copy = re.sub(r".*/bi/i/", "", page.url).replace("%3A", ":")
@@ -224,7 +226,7 @@ def test_the_designer_start_copies_a_sample_into_a_chosen_workspace_and_lists_dr
     assert s in (200, 201), ws
     page.goto(f"{CONSOLE_URL}/bi/designer")
     page.wait_for_selector("[data-sample-copy]", timeout=20000)
-    assert page.locator("[data-new-workspace] option").count() >= 2                                      # private first, then the shared one
+    assert len(values(page, "[data-new-workspace]")) >= 2                                      # private first, then the shared one
     page.locator("[data-sample-copy]").first.click()
     page.select_option("[data-ask-target]", ws["id"])
     page.click("[data-ask-go]")
@@ -246,8 +248,8 @@ def test_a_member_is_found_by_typing_part_of_a_name(stack, page):
     page.wait_for_selector("[data-add-member]:not([hidden])")
     expect(page.locator("[data-member-user]")).to_be_visible()
     page.fill("[data-member-user]", "ri")
-    page.wait_for_selector("#wMemberList li", timeout=10000)
-    page.click("#wMemberList li:has-text('rita')")
+    page.wait_for_selector(".di-combo-pop [role=option]", timeout=10000)
+    page.click(".di-combo-pop [role=option]:has-text('rita')")
     assert page.input_value("[data-member-user]") == "rita"
     clean(page)
 
@@ -304,7 +306,7 @@ def test_a_proposed_draft_opens_read_only_with_a_banner_instead_of_failing_on_sa
 def test_one_broken_visual_is_one_error_card_and_the_others_are_drawn_for_a_reader(stack, browser):
     rid = make_report("One bad visual", "      - { id: good, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Gross notional] } }\n"
                                         "      - { id: bad, type: card, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [NoSuchMeasure] } }\n")
-    pg = sign_in(browser, "wes", "/bi")
+    pg = sign_in(browser, "wes", "/bi/catalogue")
     pg.goto(f"{CONSOLE_URL}/bi/r/{rid}")
     pg.wait_for_selector("[data-ready=yes]", timeout=30000)
     pg.wait_for_function("() => !document.querySelector('.bi-vis-busy') && document.querySelectorAll('.bi-vis').length === 2", timeout=30000)
@@ -341,17 +343,17 @@ def test_a_board_page_lists_a_draft_report_draws_its_tile_and_refuses_to_publish
     page.goto(f"{CONSOLE_URL}/bi/design/board/{brd}")                                                    # the 2.3 address opens the report designer
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     assert "/bi/design/board/" not in page.url
-    page.click("[data-design-root] [data-title]")
+    page.click("[data-studio] [data-title]")
     page.keyboard.press("Escape")
-    page.click('.bi-vtype[data-type="tile"]')
+    page.click('[data-types] [data-type="tile"]')
     page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'tile'; }")
     tile = page.evaluate("window.drishtiBi.design.sel().id")
     expect(page.locator(f'[data-design-root] [data-visual="{tile}"] [data-tile-placeholder]')).to_have_count(1)      # nothing chosen yet: it says what to do
     page.click("[data-ptab='format']")
-    option = page.locator(f'[data-tile-report] option[value="{rep}"]')
-    expect(option).to_have_text("Draft KPIs (draft)")                                                    # the author's own draft is offered, labelled
+    page.wait_for_function(select_helpers.has_option("[data-tile-report]", rep))
+    assert [o["label"] for o in select_helpers.options(page, "[data-tile-report]") if o["value"] == rep] == ["Draft KPIs (draft)"]                                                    # the author's own draft is offered, labelled
     page.select_option("[data-tile-report]", rep)
-    page.wait_for_function("() => document.querySelectorAll('[data-tile-visual] option').length > 1")
+    page.wait_for_function(select_helpers.has_option("[data-tile-visual]", ">1"))
     page.select_option("[data-tile-visual]", "main/card-1")
     expect(page.locator(f'[data-design-root] [data-visual="{tile}"] .bi-card-value')).to_have_count(1, timeout=20000)    # drawn with the report's numbers
     page.click("[data-save]")
@@ -380,10 +382,10 @@ def test_view_as_readers_see_it_shows_the_published_version_not_the_draft(stack,
     assert s == 200, r
     page.goto(f"{CONSOLE_URL}/bi/design/{never}")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
-    assert page.locator('[data-view-as] option[value="published"]').get_attribute("disabled") is not None       # never published: nothing to look at
+    assert [o["disabled"] for o in select_helpers.options(page, "[data-view-as]") if o["value"] == "published"] == [True]       # never published: nothing to look at
     page.goto(f"{CONSOLE_URL}/bi/design/{rep}")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
-    assert page.locator('[data-view-as] option[value="published"]').get_attribute("disabled") is None
+    assert [o["disabled"] for o in select_helpers.options(page, "[data-view-as]") if o["value"] == "published"] == [False]
     page.select_option("[data-view-as]", "published")
     assert "as=published" in page.get_attribute("[data-view-link]", "href")
     page.click("[data-view-link]")
@@ -410,14 +412,14 @@ def test_a_visual_id_follows_its_type_and_what_named_it_follows_the_id(stack, pa
     page.goto(f"{CONSOLE_URL}/bi/design/{rep}")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     page.evaluate("window.drishtiBi.design.select('card-1')")
-    page.click('.bi-vtype[data-type="bar"]')
+    page.click('[data-types] [data-type="bar"]')
     m = page.evaluate("window.drishtiBi.design.model")
     ids = [v["id"] for v in m["pages"][0]["visuals"]]
     assert "bar-1" in ids and "card-1" not in ids, ids
     phone = m["layouts"]["phone"]["main"]
     assert "bar-1" in phone["order"] and "card-1" not in phone["order"] and "bar-1" in phone["span"] and "card-1" not in phone["span"], phone
     page.evaluate("window.drishtiBi.design.select('slicer-1')")
-    page.click('.bi-vtype[data-type="table"]')
+    page.click('[data-types] [data-type="table"]')
     m = page.evaluate("window.drishtiBi.design.model")
     assert "table-1" in [v["id"] for v in m["pages"][0]["visuals"]]
     assert list(m["bookmarks"][0]["slicers"]) == ["table-1"] and "table-1" in m["layouts"]["phone"]["main"]["hide"], m["bookmarks"]

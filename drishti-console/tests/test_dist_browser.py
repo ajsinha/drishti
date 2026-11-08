@@ -111,7 +111,7 @@ def test_export_subscribe_run_now_and_the_list(stack, browser, smtp, tmp_path):
     assert "Trades overview" in page.inner_text("main, .adm")
     page.fill('input[name="name"]', "Morning desk pack")
     page.fill('input[name="recipients"]', "rita, hana, ann")
-    page.select_option('select[name="format"]', "html")
+    page.select_option('drishti-select[name="format"]', "html")
     page.click("[data-when] summary")                                                   # the schedule text sits under Advanced
     page.fill('input[name="schedule"]', "business-days 07:30")
     page.click("[data-subscribe-form] button[type=submit]")
@@ -149,7 +149,7 @@ def test_export_subscribe_run_now_and_the_list(stack, browser, smtp, tmp_path):
     smtp.messages.clear()
     page.goto(CONSOLE_URL + "/reports/subscribe?type=report&id=" + REPORT + "&page=overview&title=PDF+pack")
     page.fill('input[name="recipients"]', "rita")
-    page.select_option('select[name="format"]', "pdf")
+    page.select_option('drishti-select[name="format"]', "pdf")
     page.click("[data-subscribe-form] button[type=submit]")
     page.wait_for_url("**/reports?msg=**")
     page.locator('tr[data-row-name="PDF pack"]').get_by_role("button", name="Run now").click()
@@ -180,7 +180,7 @@ def test_the_list_on_a_phone_has_tap_targets_of_44_px(stack, browser):
 
 
 def test_a_reader_who_may_not_open_the_report_is_refused_the_file(stack, browser):
-    page = sign_in(browser, "nobi", next_path="/bi")
+    page = sign_in(browser, "nobi", next_path="/bi/catalogue")
     r = page.request.get(CONSOLE_URL + "/dist/bi/" + REPORT + ".xlsx?page=overview")
     assert r.status in (403, 404) and "DRS-" in r.text()
     page.context.close()

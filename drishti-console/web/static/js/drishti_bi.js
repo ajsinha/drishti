@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 1 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 5): the BI pages. The pages are a shell; this script draws them from the same-origin JSON
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* Rupaka phase 1 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 5): the BI pages. The pages are a shell; this script draws them from the same-origin JSON
    (/bi/api/..., passed on to the server under the signed-in user's identity). Everything is built with DOM calls and textContent, never innerHTML,
    so a title or a description can never become markup. Keys: / search, g h, g c, g w, ?. */
 (function () {
@@ -117,20 +118,6 @@
     items.forEach(function (it) { box.appendChild(card(it, onChange)); });
   }
 
-  // -- Home -------------------------------------------------------------------------------------------------------------
-  function home() {
-    function load() {
-      api('GET', '/home').then(function (d) {
-        qa('[data-sec]').forEach(function (sec) {
-          var items = d[sec.getAttribute('data-sec')] || [];
-          fillCards(q('[data-cards]', sec), items, load);
-          q('[data-empty]', sec).hidden = items.length > 0;
-        });
-      }).catch(fail);
-    }
-    load();
-  }
-
   // -- Catalogue --------------------------------------------------------------------------------------------------------
   // The catalogue by kind (core/bi_catalogue_tabs.py): Reports · Boards · Models · Datasets · Python · All, ?kind= in the address. A tab switches in place
   // and is a history entry (back and forward walk the tabs); search, filters and sort work inside the tab and replace the address. The tab last used is
@@ -165,16 +152,14 @@
     }
     function facets(f, names) {
       FILTERS.forEach(function (k) {
-        var sel = form.elements[k], keep = sel.value || params.get(k) || '';
-        clear(sel);
-        sel.appendChild(h('option', { value: '', text: 'any' }));
-        var seen = f[k] || {};
+        var sel = q('drishti-select[name="' + k + '"]', form), keep = sel.value || params.get(k) || '';     // drishti-inputs' Select
+        var items = [{ value: '', label: 'any' }], seen = f[k] || {};
         Object.keys(seen).sort().forEach(function (v) {
           var label = k === 'workspace' && names[v] ? names[v] : v;
-          sel.appendChild(h('option', { value: v, text: label + ' (' + seen[v] + ')' }));
+          items.push({ value: v, label: label + ' (' + seen[v] + ')' });
         });
-        if (keep && !seen[keep]) { sel.appendChild(h('option', { value: keep, text: keep })); }
-        sel.value = keep;
+        if (keep && !seen[keep]) { items.push({ value: keep, label: keep }); }
+        sel.component.setOptions(items, keep);
       });
     }
     function again() { run(false); }
@@ -224,7 +209,7 @@
     form.addEventListener('submit', function (e) { e.preventDefault(); run(false); });
     form.addEventListener('input', function (e) { if (e.target.name === 'q') { clearTimeout(timer); timer = setTimeout(again, 180); } });
     form.addEventListener('change', function (e) { if (e.target.name !== 'q') { run(false); } });
-    q('[data-clear]').addEventListener('click', function () { qa('input, select', form).forEach(function (el) { el.value = el.name === 'sort' ? 'use' : ''; }); params = new URLSearchParams(); run(false); });
+    q('[data-clear]').addEventListener('click', function () { qa('input', form).forEach(function (el) { el.value = el.name === 'sort' ? 'use' : ''; }); params = new URLSearchParams(); run(false); });   // the search and each Select's named field
     remember(tab);
     run(false);
     if (params.get('focus')) { q('input[data-search]').focus(); }
@@ -402,7 +387,7 @@
           .then(function (it) { window.location.href = '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }).catch(function (err) { near(go, err.message, true); });
       });
     });
-    q('[data-new-item]').elements.kind.addEventListener('change', kindChanged);
+    q('[data-new-item] drishti-select[name=kind]').addEventListener('change', kindChanged);      // drishti-inputs' Select: a pick fires change
     kindChanged();
     var fillPickers = function () { var B = window.drishtiBi; if (B && B.fillDatasetPickers) { B.fillDatasetPickers(q('[data-new-dataset]'), q('[data-new-also]')).then(function () { B.excludeMain(q('[data-new-dataset]'), q('[data-new-also]'))(); }).catch(function () {}); } else { setTimeout(fillPickers, 50); } };
     fillPickers();
@@ -413,8 +398,8 @@
       var title = f.elements.title.value.trim() || defaultTitle(kind), body, to, also = [];
       var name = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || kind;
       if (kind === 'report') {
-        if (!f.elements.dataset.value) { say('Choose a main dataset: a report draws one.', true); f.elements.dataset.focus(); return; }
-        also = Array.prototype.filter.call(f.elements.also.selectedOptions, function (o) { return o.value !== f.elements.dataset.value; }).map(function (o) { return o.value.replace(/^file:dataset:/, ''); });
+        if (!f.elements.dataset.value) { say('Choose a main dataset: a report draws one.', true); q('[data-new-dataset]', f).focus(); return; }
+        also = (q('[data-new-also]', f).value || []).filter(function (v) { return v !== f.elements.dataset.value; }).map(function (v) { return String(v).replace(/^file:dataset:/, ''); });
         body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\n' + window.drishtiBi.sourceLine(f.elements.dataset.value) + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
         to = '/bi/design/';
       } else if (kind === 'python') {
@@ -434,7 +419,7 @@
       e.preventDefault();
       var f = e.target, go = f.querySelector('[type=submit]');
       api('PUT', '/workspaces/' + encodeURIComponent(ws.id) + '/members/' + encodeURIComponent(f.elements.user.value.trim()), { role: f.elements.role.value })
-        .then(function () { var told = 'Saved ' + f.elements.user.value + ' as ' + f.elements.role.value + '.'; say(told); near(go, told, false); f.reset(); load(); }).catch(function (err) { near(go, err.message, true); });
+        .then(function () { var told = 'Saved ' + f.elements.user.value + ' as ' + f.elements.role.value + '.'; say(told); near(go, told, false); f.reset(); f.elements.role.value = 'viewer'; load(); }).catch(function (err) { near(go, err.message, true); });
     });
     q('[data-review]').addEventListener('change', function (e) {
       api('PUT', '/workspaces/' + encodeURIComponent(ws.id), { reviewRequired: e.target.checked }).then(function () { say('Review before publishing is ' + (e.target.checked ? 'on' : 'off') + '.'); near(e.target, 'Review before publishing is ' + (e.target.checked ? 'on' : 'off') + '.', false); load(); }).catch(function (err) { e.target.checked = !e.target.checked; near(e.target, err.message, true); });
@@ -491,7 +476,7 @@
       var brd = q('[data-open-board]');
       if (brd) { brd.hidden = !it.board; brd.href = '/bi/r/' + enc + '?kiosk=1'; }                 // a report with board pages (2.4.0): its kiosk
       if (des) { const designable = it.kind === 'report'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
-      // a table or a model is written in Build › Tables & models (EDITORS.md): one way per job
+      // a table or a model is written in Build › Tables & models (docs/architecture/SHARED_SCREENS.md): one way per job
       if (mod) { mod.hidden = !(it.kind === 'table' || it.kind === 'model'); mod.href = '/build/tables?kind=' + it.kind + '&item=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       if (open && (it.kind === 'table' || it.kind === 'dataset' && /^rachana:\s*2\b/m.test(it.body || ''))) { open.href = '/bi/ds/' + enc; }   // a model-layer dataset has its own page
       document.dispatchEvent(new CustomEvent('drishti:bi-item', { detail: x }));          // drishti_bi-govern.js draws history, review, impact and lineage
@@ -552,9 +537,8 @@
         box.appendChild(h('p', { class: 'bi-approvers', 'data-approvers': '' }, h('strong', { text: 'Waiting for review. ' }), 'Frozen until decided or withdrawn. Who can approve: ' + (it.approveRule || 'a reviewer') + (it.approvers && it.approvers.length ? '. Told by notification: ' + it.approvers.join(', ') : '. Nobody is eligible yet: ask a steward, or give a member of the workspace a role with the approve power') + '.'));
       }
       if (c.withdraw) { box.appendChild(act('Withdraw proposal', function (b) { post('withdraw', null, 'Withdrawn: a draft again.', b); })); }
-      if (c.approve) {
-        box.appendChild(act('Approve and publish', function (b) { post('approve', { note: note.value }, 'Approved and published.', b); }, 'btn-accent'));
-        box.appendChild(act('Reject', function (b) { post('reject', { reason: note.value }, 'Rejected: a draft again.', b); }));
+      if (c.approve) {                                    // decided in the one Approvals queue: what changes, its effect, the rules and questions
+        box.appendChild(h('a', { class: 'btn-pill btn-accent', 'data-bi-approvals': '', href: '/approvals/bi/' + encodeURIComponent(it.id).replace(/%3A/g, ':') }, 'Decide in Approvals'));
       }
       if (c.promote && it.endorsement !== 'certified') { box.appendChild(act(it.endorsement === 'promoted' ? 'Remove promotion' : 'Promote', function (b) { post('endorse', { level: it.endorsement === 'promoted' ? 'none' : 'promoted' }, it.endorsement === 'promoted' ? 'Promotion removed.' : 'Promoted: it is listed first for others.', b); })); }
       if (c.certify) { box.appendChild(act(it.endorsement === 'certified' ? 'Remove certification' : 'Certify', function (b) { post('endorse', { level: it.endorsement === 'certified' ? 'none' : 'certified' }, it.endorsement === 'certified' ? 'Certification removed.' : 'Certified.', b); })); }
@@ -596,7 +580,8 @@
       closePanels();
       api('GET', '/workspaces').then(function (list) {
         var targets = list.filter(function (w) { return !w.shipped && RANK[w.role] >= RANK.contributor && w.id !== it.workspace; });
-        var sel = h('select', { class: 'studio-select', 'aria-label': 'Move to' }, targets.map(function (w) { return h('option', { value: w.personal ? 'me' : w.id, text: w.name + (w.personal ? ' (private)' : '') }); }));
+        var sel = window.Drishti.elements.inputs.selectElement(document, { label: 'Move to', options: targets.map(function (w) { return { value: w.personal ? 'me' : w.id, label: w.name + (w.personal ? ' (private)' : '') }; }) },
+          { class: 'studio-select', 'aria-label': 'Move to' });                // drishti-inputs' Select
         var go = act('Move', function (g) {
           busy(g, function () {
             return api('POST', path + '/move', { workspace: sel.value }).then(function (n) { say('Moved to ' + n.workspaceName + '.'); show(n); near(q('[data-actions] .btn-pill'), 'Moved to ' + n.workspaceName + '.', false); }).catch(function (err) { near(g, err.message, true); });
@@ -715,32 +700,21 @@
     load();
   }
 
-  // -- Keys -------------------------------------------------------------------------------------------------------------
-  var pendingG = 0;
-  window.addEventListener('keydown', function (e) {
-    if (e.ctrlKey || e.metaKey || e.altKey) { return; }
-    var t = e.target, tag = (t.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'textarea' || tag === 'select' || t.isContentEditable) { return; }
-    var keys = document.getElementById('biKeys');
-    if (e.key === '/') {
-      e.preventDefault(); e.stopImmediatePropagation();
-      var s = q('input[data-search]');
-      if (s) { s.focus(); } else { window.location.href = '/bi/catalogue?focus=1'; }
-    } else if (e.key === '?' && keys) {
-      e.preventDefault(); if (!keys.open) { keys.showModal(); }
-    } else if (pendingG && Date.now() - pendingG < 1500) {
-      var to = { h: '/bi', c: '/bi/catalogue', w: '/bi/w/me', r: '/bi/w/me?tab=runs' }[e.key];
-      pendingG = 0;
-      if (to) { e.preventDefault(); window.location.href = to; }
-    } else if (e.key === 'g') {
-      pendingG = Date.now();
-    }
-  }, true);
-  var keysBtn = document.querySelector('[data-bi-keys]');
-  if (keysBtn) { keysBtn.addEventListener('click', function () { document.getElementById('biKeys').showModal(); }); }
+  // -- Keys (the one keymap, drishti_keys.js: ? lists them with the rest of the screen's) ----------------------------------------
+  var K = window.Drishti.keys, pendingG = 0;
+  var gWaits = function () { return pendingG && Date.now() - pendingG < 1500; };
+  K.register({ id: 'bi.search', keys: ['/'], scope: 'screen', area: 'bi', group: 'BI', description: 'Search the catalogue',
+    run: function () { var s = q('input[data-search]'); if (s) { s.focus(); } else { window.location.href = '/bi/catalogue?focus=1'; } } });
+  K.register({ id: 'bi.go', keys: ['G'], scope: 'screen', area: 'bi', group: 'BI', label: 'g, then h c w r',
+    description: 'Go to: h the Build home, c the catalogue, w your workspace, r your runs', when: function () { return !gWaits(); },
+    run: function () { pendingG = Date.now(); } });
+  [['H', '/build', 'the Build home'], ['C', '/bi/catalogue', 'the catalogue'], ['W', '/bi/w/me', 'your workspace'], ['R', '/bi/w/me?tab=runs', 'your runs']].forEach(function (g) {
+    K.register({ id: 'bi.go.' + g[0].toLowerCase(), keys: [g[0]], scope: 'screen', area: 'bi-go', hidden: true, description: 'After g: ' + g[2],
+      when: gWaits, run: function () { pendingG = 0; window.location.href = g[1]; } });
+  });
 
   // -- start ------------------------------------------------------------------------------------------------------------
-  /** The rail's Runs count: the person's runs queued or running (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1); drishti_bi-runs-tab.js keeps it live on the Runs tab. Quiet on an older server. */
+  /** The rail's Runs count: the person's runs queued or running (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1); drishti_bi-runs-tab.js keeps it live on the Runs tab. Quiet on an older server. */
   function runsCount() {
     var badge = q('[data-runs-count]');
     if (!badge) { return; }
@@ -753,6 +727,6 @@
   api('GET', '/me').then(function (m) {
     me = m;
     runsCount();
-    ({ home: home, catalogue: catalogue, workspaces: workspaces, workspace: workspace, item: item, settings: settings }[page] || function () {})();
+    ({ catalogue: catalogue, workspaces: workspaces, workspace: workspace, item: item, settings: settings }[page] || function () {})();
   }).catch(fail);
 })();

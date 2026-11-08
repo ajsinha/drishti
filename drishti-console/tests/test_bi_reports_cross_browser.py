@@ -29,7 +29,7 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_report_stack  # noqa: E402
-from bi_report_helpers import card_value, chart, clean, click_mark, open_report, settled, sign_in  # noqa: E402
+from bi_report_helpers import card_value, chart, clean, click_mark, grid_rows, open_report, pick_in_dropdown_slicer, settled, sign_in  # noqa: E402
 from bi_report_stack import api  # noqa: E402
 
 COUNTERPARTY = "file:report:counterparty-risk"
@@ -86,7 +86,7 @@ def test_the_counterparty_report_shows_what_the_engine_answers(stack, browser):
     assert [s["name"] for s in bar["series"]] == ["Exposure (EE peak)", "Exposure (PFE peak)"]
     donut = chart(page, "by-sector")
     assert round(sum(donut["series"][0]["values"])) == int(ee[0])
-    expect(page.locator('[data-visual="mtm-by-counterparty"] tbody tr').first).to_be_visible()
+    expect(page.locator('[data-visual="mtm-by-counterparty"] .dg-row').first).to_be_visible()           # the table, drawn by drishti-grid
     clean(page)
 
 
@@ -94,12 +94,11 @@ def test_a_report_scope_slicer_filters_every_visual_through_the_relationships(st
     page = sign_in(browser, "rita")
     open_report(page, COUNTERPARTY)
     settled(page)
-    page.click('[data-visual="sector"] summary')
-    page.check('[data-visual="sector"] [data-slicer-value="Banking"]')
+    pick_in_dropdown_slicer(page, "sector", "Banking")                    # the dropdown slicer: drishti-inputs' MultiSelect
     settled(page)
     want = engine("rita", ["risk"], {"measures": ["Exposure (EE peak)"], "filters": [{"field": "counterparties.SECTOR", "op": "in", "values": ["Banking"]}]})["rows"][0][0]
     assert card_value(page, "ee") == int(want)
-    mtm_sectors = [r.inner_text().split("\t")[0] for r in page.locator('[data-visual="mtm-by-counterparty"] tbody tr').all()]
+    mtm_sectors = [row[0] for row in grid_rows(page, "mtm-by-counterparty")]
     assert mtm_sectors == ["Banking"]                                                                   # the trades table was filtered by the counterparties' sector too
     expect(page.locator('[data-chip="slicer"]')).to_contain_text("Banking")
     clean(page)
@@ -120,8 +119,8 @@ def test_drill_through_carries_the_counterparty_to_its_own_page_and_back(stack, 
     trades = engine("rita", ["risk"], {"measures": ["Trades"], "filters": one})["rows"][0][0]
     ee = engine("rita", ["risk"], {"measures": ["Exposure (EE peak)"], "filters": one})["rows"][0][0]
     assert card_value(page, "c-trades") == int(trades) and card_value(page, "c-ee") == int(ee)
-    rows = page.locator('[data-visual="c-trades-table"] tbody tr')
-    assert rows.count() == min(int(trades), 200)                                                         # one row per trade of that counterparty (the visual's limit is 200)
+    rows = grid_rows(page, "c-trades-table")
+    assert len(rows) == min(int(trades), 200)                                                         # one row per trade of that counterparty (the visual's limit is 200)
     link = page.locator('[data-visual="c-trades-table"] a[data-open-terminal="trade"]').first          # a trade is a Drishti kind: open it in the terminal
     assert re.match(r"/v/trade/[^/]+$", link.get_attribute("href"))
     assert page.locator('[data-pages] [data-page="exposure"]').count() == 1 and page.locator('[data-pages] [data-page="counterparty"]').count() == 1
@@ -146,10 +145,9 @@ def test_a_trade_row_opens_in_the_terminal_and_an_unknown_counterparty_is_an_emp
     name = chart(page, "by-counterparty")["categories"][0]
     open_report(page, COUNTERPARTY, "/counterparty" + carry("counterparties.NAME", name))
     settled(page)
-    first = page.locator('[data-visual="c-trades-table"] tbody tr').first
+    first = page.locator('[data-visual="c-trades-table"] .dg-row').first
     trade_id = first.locator("a[data-open-terminal=trade]").inner_text()                                # the desk opens too, as a desk
-    first.focus()
-    page.keyboard.press("Enter")                                                                         # a table row is selectable from the keyboard
+    first.locator(".dg-cell:not(:has(a))").first.click()                                                 # a click on a row (not on a link): its actions, the row selected
     expect(page.locator('[data-chip="selection"]')).to_contain_text("trades.TRADE_ID")
     page.locator('[data-visual="c-trades-table"] [data-act="open-terminal"]').click()
     page.wait_for_url(f"**/v/trade/{trade_id}")
@@ -163,8 +161,7 @@ def test_a_desk_head_sees_her_desk_and_the_exposure_of_every_counterparty(stack,
     mine = engine("hana", ["desk-head"], {"measures": ["Trades"]})["rows"][0][0]
     everyone = engine("rita", ["risk"], {"measures": ["Trades"]})["rows"][0][0]
     assert mine < everyone
-    rows = page.locator('[data-visual="mtm-by-counterparty"] tbody tr')
-    total = sum(int(r.inner_text().split("\t")[1].replace(",", "")) for r in rows.all())
+    total = sum(int(row[1].replace(",", "")) for row in grid_rows(page, "mtm-by-counterparty"))
     assert total == mine                                                                                 # the table counts only her desk's trades, whatever she clicks
     assert page.locator(".bi-vis-failed").count() == 0                                                # 2.2: the netting sets are a fact of their own, not cut by her trades' rule
     ee = engine("hana", ["desk-head"], {"measures": ["Exposure (EE peak)"]})["rows"][0][0]

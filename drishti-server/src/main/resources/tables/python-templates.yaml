@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Python-driven table editor's templates (docs/architecture/EDITORS.md section 4, option C; docs/guides/TABLES_GUIDE.md section 11):
+# The Python-driven table editor's templates (docs/architecture/SHARED_SCREENS.md section 4, option C; docs/guides/TABLES_GUIDE.md section 11):
 # each writes the build function and shows it, with its inputs, parameters and output contract filled in. The table names in `inputs`
 # are examples: the editor asks for the person's own. A build function is build(inputs, params): inputs by alias, each a table of rows
 # (a pandas DataFrame), read as the person may see it; it returns one table whose columns are the contract's.

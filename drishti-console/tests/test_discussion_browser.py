@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Discussion in a real browser, against a real server with sign-in on (COLLABORATION.md, build step 6): two people discuss a trade, an @mention
+"""Discussion in a real browser, against a real server with sign-in on (ARCHITECTURE.md §31, build step 6): two people discuss a trade, an @mention
 reaches the bell, a comment is edited inside its window and retracted, a viewer without raw sees a masked value as ••• (typed or quoted),
 *Open as it was* lands on the pinned date, an administrator hides a comment, the whole thing works from the keyboard alone, and the drawer
 is a bottom sheet on a phone.
@@ -102,14 +102,14 @@ def test_two_people_discuss_a_trade_with_a_mention_a_masked_value_and_open_as_it
     assert ann.locator("#discTab").get_attribute("aria-selected") == "true"
     wait(ann, "document.activeElement && document.activeElement.id === 'discBody'")
     ann.keyboard.type("@rav")                                                # the mention picker: users and roles from the directory
-    ann.locator("#discOpts [role=option]").first.wait_for()
-    assert "Ravi Kumar" in ann.locator("#discOpts").inner_text()
+    ann.locator(".di-combo-pop [role=option]").first.wait_for()                     # drishti-inputs' listbox, floating in the page
+    assert "Ravi Kumar" in ann.locator(".di-combo-pop").inner_text()
     ann.keyboard.press("Enter")
     assert ann.locator("#discBody").input_value().startswith("@ravi ")
     ann.keyboard.type(f"did {SECRET} book this? The trader is {{$.TRADER_ID}} and the quantity is {{")   # a typed secret, a typed quote, the { picker
-    ann.locator("#discOpts [role=option]").first.wait_for()
+    ann.locator(".di-combo-pop [role=option]").first.wait_for()
     ann.keyboard.type("QUANTITY")
-    ann.locator("#discOpts [role=option]").first.wait_for()
+    ann.locator(".di-combo-pop [role=option]").first.wait_for()
     ann.keyboard.press("Enter")
     assert "{$.TRADER_ID}" in ann.locator("#discBody").input_value() and "{$.QUANTITY} " in ann.locator("#discBody").input_value()
     ann.keyboard.press("Control+Enter")

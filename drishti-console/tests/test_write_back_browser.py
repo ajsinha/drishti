@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Write-back in a real browser (docs/guides/WRITE_BACK.md W5-W7, tutorial 24), against the built server jar with editing on: a trade's
+"""Write-back in a real browser (docs/guides/APPROVALS_GUIDE.md W5-W7, tutorial 24), against the built server jar with editing on: a trade's
 notional corrected beside the book desk's table, Submit and the review and confirm sheet (the difference, where it goes, who approves,
 the reason), Review -> Changes, the approval by another person, the sheet following the change to Applied, the new value shown to a
-second browser watching the book (drawn again by itself, with "Changed ... just now"), and the sheet at phone width. The pictures are tutorial 24's. Skipped without Playwright, Chromium,
+second browser watching the book (drawn again by itself, with "Changed ... just now"), and the sheet at phone width. The pictures are tutorial 11's. Skipped without Playwright, Chromium,
 the jar or JDK 25."""
 import json
 import urllib.request
@@ -51,7 +51,7 @@ def row_under_limit(pg):
 
 
 def approve_as(stack, change, user):
-    req = urllib.request.Request(stack.server + "/api/v1/changes/" + change + "/approve", data=json.dumps({"note": "checked against the ticket"}).encode(),
+    req = urllib.request.Request(stack.server + "/api/v1/approvals/change/" + change + "/approve", data=json.dumps({"comment": "checked against the ticket"}).encode(),
                                  headers={"Content-Type": "application/json", "X-Drishti-User": user}, method="POST")
     return json.loads(urllib.request.urlopen(req, timeout=20).read())
 
@@ -82,8 +82,8 @@ def test_a_correction_is_submitted_approved_applied_and_seen_by_another_browser(
     assert "Waiting for an approver" in sheet.inner_text()
 
     queue = browser.new_page(viewport={"width": 1500, "height": 950})
-    queue.goto(stack + "/review/changes")
-    queue.locator(f"[data-change='{change}']").wait_for()
+    queue.goto(stack + "/approvals?box=all&kind=change")                               # the one Approvals queue (all: the submitter sees it in Mine sent)
+    queue.locator(f"[data-ap-row='change/{change}']").wait_for()
     queue.screenshot(path=str(IMG / "review-changes.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 700})
     queue.close()
 
@@ -93,7 +93,7 @@ def test_a_correction_is_submitted_approved_applied_and_seen_by_another_browser(
     # load, then read the new page. Polling the old page across the reload failed whenever an evaluate landed while the page navigated
     # ("Execution context was destroyed"), which is most of the time under the drill's load
     with other.expect_navigation(wait_until="load", timeout=BROWSER_WAIT_MS):
-        assert approve_as(stack, change, "kim")["state"] in ("queued", "applied")
+        assert approve_as(stack, change, "kim")["status"] in ("queued", "applied")
         wait(pg, f"(document.querySelector('[data-wb-id=\"{change}\"] [data-wb-state]') || {{}}).textContent.startsWith('Applied')")
     pg.screenshot(path=str(IMG / "applied.jpg"), type="jpeg", quality=84)
     shown = f"{wanted:,}"

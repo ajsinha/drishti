@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The MR cube in a real browser (docs/guides/MR_CUBE_GUIDE.md; MR_CUBE_LENS.md section 6.7), over the market-risk pack's committed VaR data
+"""The MR cube in a real browser (docs/guides/PIVOT_GUIDE.md section 29; docs/architecture/LENSES.md section 6.4), over the market-risk pack's committed VaR data
 built into a scratch lake and served by its Delta connector, the demo connector off:
 
 - ``MCUBE <GO>`` opens the Pivot's preset mr, the pivot screen on source var with the MR lens: the landing view (desks by risk class), the headline strip, the
@@ -34,6 +34,7 @@ from pathlib import Path
 import pytest
 
 from test_var_explorer_browser import _engine_ready, shot
+from risk_elements import chart, chart_ready, grid_ready, grid_rows
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
 
@@ -75,7 +76,7 @@ def scope_var(pg, scope):
 
 def opened(pg):
     """Waits for the MR cube's landing: the grid's cells and the headline's VaR drawn."""
-    wait(pg, "document.querySelectorAll('[data-pv-grid] td[data-cell]').length > 0", 120)
+    wait(pg, "document.querySelectorAll('[data-pv-grid] .dg-cell[data-cell]').length > 0", 120)
     wait(pg, "!!document.querySelector('[data-mr-tiles] .mr-tile .mr-tv')", 120)
 
 
@@ -147,11 +148,13 @@ def test_the_doors_open_the_same_preset_the_var_explorer_link_and_the_older_addr
 
 def test_a_cell_fills_the_rail_lists_its_trades_and_a_desk_opens_by_its_books(stack, browser):
     pg = open_cube(browser, str(stack))
-    first = pg.locator("[data-pv-grid] td[data-cell]").first
+    first = pg.locator("[data-pv-grid] .dg-cell[data-cell]").first
     key = first.get_attribute("data-cell")
     first.click()
-    wait(pg, "!!document.querySelector('[data-mr-tail] svg.mr-histo')", 60)
-    wait(pg, "!document.querySelector('[data-pv-pop]').hidden", 30)
+    wait(pg, chart_ready("[data-mr-tail]"), 60)
+    tail = chart(pg, "[data-mr-tail]")
+    assert tail["kind"] == "risk.pnl-distribution" and tail["figures"]["computedHere"] is False    # the server's bins, VaR and ES
+    wait(pg, "!!document.querySelector('[data-pv-grid] [data-pv-pop]')", 30)
     a = fetch(pg, "POST", "/api/pivot/query", {"view": view(pg)})["body"]
     cell = a["cells"][key]
     if cell.get("scope"):
@@ -178,7 +181,7 @@ def test_a_cell_fills_the_rail_lists_its_trades_and_a_desk_opens_by_its_books(st
 def test_tab_b_components_add_up_and_the_10_day_lens_asks_again(stack, browser):
     pg = open_cube(browser, str(stack))
     pg.click('[data-mr-tab="tail"]')
-    wait(pg, "!!document.querySelector('[data-mr-comp] table') && !!document.querySelector('[data-mr-waterfall] svg')", 120)
+    wait(pg, grid_ready("[data-mr-comp]") + " && " + chart_ready("[data-mr-waterfall]"), 120)
     assert pg.locator(".pv-main").is_hidden()
     v = view(pg)
     comp = dict(v, columns=[], rows=v["rows"][:1], values=[{"measure": "comp_var()", "as": "Comp"}, {"measure": "var()", "as": "VaR"}], expanded=[])
@@ -186,6 +189,9 @@ def test_tab_b_components_add_up_and_the_10_day_lens_asks_again(stack, browser):
     row, total, col = grand(a)
     parts = sum(a["cells"][r["key"] + "|" + col["key"]]["values"]["Comp"] for r in a["rows"] if r["kind"] == "node")
     assert abs(parts - total["values"]["VaR"]) < 0.05, "component VaR adds up to the total"
+    shown = grid_rows(pg, "[data-mr-comp]")                               # the grid shows the server's figures: its total row is the grand total
+    assert shown[-1]["data"]["total"] and abs(shown[-1]["data"]["standalone"] - total["values"]["VaR"]) < 0.005
+    assert len(shown) - 1 == sum(1 for r in a["rows"] if r["kind"] in ("node", "others"))
     shot(pg, "mr-cube-tab-b")
     pg.click('[data-mr-tab="pivot"]')
     one_day = fetch(pg, "POST", "/api/pivot/mr/headline", {"view": view(pg)})["body"]["var"]      # the lens's own 1-day figure, to the cent

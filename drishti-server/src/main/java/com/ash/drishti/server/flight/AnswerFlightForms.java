@@ -76,12 +76,12 @@ final class AnswerFlightForms {
         @Override
         public FlightBackend.Subscription subscribe(Principal p, FlightRequest r, int part, int batchRows) {
             throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "form " + form().name().toLowerCase(java.util.Locale.ROOT)
-                    + " is read as a snapshot; a standing query's updates come over Server-Sent Events (BI_GUIDE.md)");
+                    + " is read as a snapshot; a standing query's updates come over Server-Sent Events (REPORTS_GUIDE.md)");
         }
     }
 
     /**
-     * {@code form: model}: a BI model query (MQ, BI_GUIDE.md), {@code {"model": "risk-summary", "query": {...}}} or the MQ JSON with
+     * {@code form: model}: a BI model query (MQ, REPORTS_GUIDE.md), {@code {"model": "risk-summary", "query": {...}}} or the MQ JSON with
      * {@code model} in it; answered by MQ with the person's row rules, masks and the BI power checked.
      */
     static final class Model extends Computed {

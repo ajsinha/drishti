@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 45, your own data in a new lake (docs/tutorials/45-load-your-own-data-into-a-new-lake.md), written to
+"""Pictures of tutorial 16, Part A, your own data in a new lake (docs/tutorials/16-load-your-own-data-into-a-new-lake.md), written to
 docs/tutorials/img/t45/, in the light theme. The pictures follow the tutorial's steps, which this module runs itself, in order, on a
 scratch stack of its own (start_servers below): a working folder with its own copy of config/ and a demo lake of the trades and the
 reference data built into it (`lake demo --only trades/,core/`), sign-in off, the data inbox on. Nothing is written to the repository's

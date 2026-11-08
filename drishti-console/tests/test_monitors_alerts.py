@@ -34,9 +34,12 @@ def test_alerts_page_rules_and_bell(client, backend):
     assert "Delayed more than 12 h" not in page.text
     ok = client.post("/alerts/api/Near limit", json={"kind": "netting-set", "id": "NS-NORTH-01", "when": "$.utilisation > 0.8"})
     assert ok.status_code == 200 and "Near limit" in client.get("/alerts").text
+    kept = backend.alerts_kept["Near limit"]                                        # a rule on one entity is an alert rule of the one engine
+    assert kept["source"] == {"type": "field", "kind": "netting-set", "id": "NS-NORTH-01", "field": "$.utilisation > 0.8"}
+    assert kept["condition"] == {"type": "rule"} and kept["trigger"] == {"mode": "after-load", "kind": "netting-set"}
     bad = client.post("/alerts/api/Bad", json={"kind": "trade", "id": "IRS-48213", "when": "$.mtm <"})
     assert bad.status_code == 422 and bad.json()["code"] == "DRS-2101"
     view = client.get("/v/trade/IRS-48213").text
     assert "data-bell" in view and "/static/js/drishti_alerts.js" in view and "/alerts?kind=trade&id=IRS-48213" in view
     with client.stream("GET", "/api/alerts/stream") as s:
-        assert "event: alert" in "".join(s.iter_text())
+        assert "event: notice" in "".join(s.iter_text())

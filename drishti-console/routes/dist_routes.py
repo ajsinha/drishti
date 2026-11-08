@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Distribution (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 15): a BI report, page or visual and a Sutra view as PDF, PNG, Excel or CSV, and subscriptions (the same
+"""Distribution (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 15): a BI report, page or visual and a Sutra view as PDF, PNG, Excel or CSV, and subscriptions (the same
 content by email on a schedule). Every file is made by the server as the signed-in reader, so their masks and row rules apply; the console
 passes the bytes on. Subscriptions are listed with the scheduled reports on ``/reports`` (report_routes); this module holds the download
 links, the Subscribe form and the actions on a subscription, and the administrators' list of everyone's."""
@@ -164,9 +164,10 @@ async def subscribe_save(request: Request):
     name = f.get("name", "").strip()
     hooks = [x for x in parsed.get("webhooks", []) if x]
     form = {"name": name, "title": f.get("title", ""), "target": target, "schedule": f.get("schedule", ""), "format": f.get("format", "html"), "date": f.get("date", "today"),
-            "recipients": ", ".join(recipients), "narrative": f.get("narrative") == "on", "webhooks": hooks, "sms": f.get("sms") == "on"}
+            "recipients": ", ".join(recipients), "narrative": f.get("narrative") == "on", "webhooks": hooks, "sms": f.get("sms") == "on",
+            "enabled": f.get("enabled") == "on"}
     body = {"title": form["title"], "target": target, "schedule": form["schedule"], "format": form["format"], "date": form["date"], "recipients": recipients,
-            "enabled": f.get("enabled", "on") == "on", "narrative": form["narrative"], "webhooks": hooks, "sms": form["sms"]}
+            "enabled": form["enabled"], "narrative": form["narrative"], "webhooks": hooks, "sms": form["sms"]}
     try:
         if f.get("phone", "").strip():                               # a number typed here is the person's own: kept for texts (blank leaves the one on file)
             await request.app.state.backend.set_phone(f["phone"].strip(), ident(request))

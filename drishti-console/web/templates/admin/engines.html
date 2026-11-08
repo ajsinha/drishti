@@ -20,7 +20,7 @@
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-{# Admin -> Engines (docs/architecture/COMPUTE_ENGINES.md section 8; mock-up A, docs/architecture/mockups/engines/A.html, with C as the
+{# Admin -> Engines (docs/guides/ADMIN_GUIDE.md section 8; mock-up A, docs/architecture/mockups/engines/A.html, with C as the
    Cluster tab): one table of the engines on this server, a change staged and reviewed in the side panel (dependencies, what disappears for
    people, live or restart, the reason), History below. drishti_admin-engines.js draws everything from the JSON below and the page's API. #}
 <div class="adm eng" data-engines>
@@ -74,8 +74,7 @@
       <div data-eng-hides></div>
       <h4>On the server</h4>
       <div data-eng-effect></div>
-      <label class="eng-reason-l" for="eng-reason">Reason (required)</label>
-      <input id="eng-reason" class="eng-reason" data-eng-reason maxlength="500" autocomplete="off" placeholder="Why: kept in History and the audit log">
+      {{ admin_form('field', key='reason', title='Reason (required)', maxLength=500, hook={'data-eng-reason': '', 'class': 'eng-reason'}, placeholder='Why: kept in History and the audit log') }}
       <div class="eng-actions">
         <button type="button" class="btn-pill eng-primary" data-eng-apply disabled>Apply</button>
         <button type="button" class="btn-pill btn-ghost" data-eng-cancel>Cancel</button>

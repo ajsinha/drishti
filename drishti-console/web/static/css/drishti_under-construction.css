@@ -17,9 +17,9 @@
    A page's figure carries the tone uc (the server's rewrite of its Sutra); a menu item or help page carries .drishti_uc-chip. Theme tokens
    only, so it reads in the light and the dark theme. */
 .drishti_uc-chip, .t-uc {
-  display: inline-block; padding: 0 6px; border: 1px dashed var(--d-warn); border-radius: 3px; color: var(--d-warn);
-  font-size: 11px; font-weight: 600; letter-spacing: 0.02em; line-height: 1.6; white-space: nowrap; background: transparent;
+  display: inline-block; padding: 0 var(--d-sp-6); border: 1px dashed var(--d-warn); border-radius: var(--d-radius-3); color: var(--d-warn);
+  font-size: var(--d-fs-11); font-weight: 600; letter-spacing: 0.02em; line-height: 1.6; white-space: nowrap; background: transparent;
 }
 td.t-uc, dd.t-uc { display: table-cell; border-radius: 0; }
 dd.t-uc { display: block; width: fit-content; }
-.drishti_uc-banner { margin: 0 0 12px; padding: 6px 10px; border: 1px dashed var(--d-warn); border-radius: 4px; color: var(--d-muted); font-size: 13px; }
+.drishti_uc-banner { margin: 0 0 var(--d-sp-12); padding: var(--d-sp-6) var(--d-sp-10); border: 1px dashed var(--d-warn); border-radius: var(--d-radius-4); color: var(--d-muted); font-size: var(--d-fs-13); }

@@ -102,12 +102,21 @@ def test_a_file_becomes_a_lake_bound_and_announced(browser, lakes_console, tmp_p
     page.locator("[data-step=fields]").wait_for(state="visible", timeout=30000)
     assert page.locator("[data-key]").input_value() == "TRADE_ID"
     assert "2026-10-16, from the file name" in page.locator("[data-date-said]").inner_text()
-    page.locator("[data-lake-asof]").fill("2026-10-15")                                         # another date, given: said, then put back
+    day = page.locator("[data-lake-asof]")                                                       # the Form's date picker
+    day.fill("2026-10-15")                                                                       # another date, given: said, then put back
+    day.press("Enter")
     assert "2026-10-15, the date given here" in page.locator("[data-date-said]").inner_text()
-    page.locator("[data-lake-asof]").fill("")
-    assert page.locator("[data-pick=classifier][value=PRODUCT_TYPE]").is_checked()
+    day.fill("")
+    day.press("Enter")
+    page.wait_for_function("!!document.querySelector('[data-fields] .dg-row[data-field]')")                # the fields are drishti-grid rows
+    assert page.evaluate("""() => /true|yes|✓|☑/i.test(document.querySelector("[data-fields] .dg-row[data-field=PRODUCT_TYPE] .dg-cell[data-c='4']").textContent)"""), \
+        "the suggested classifier is ticked"
+    # the classifier suggested; the promote ticked in the grid (a checkbox cell turns on Enter, as on a double click)
+    cell = page.locator("[data-fields] .dg-row[data-field=QUANTITY] .dg-cell[data-c='5']")
+    cell.click()
+    page.keyboard.press("Enter")
+    page.wait_for_function("""() => { const t = document.querySelector("[data-fields] .dg-row[data-field=QUANTITY] .dg-cell[data-c='5']"); return t && /true|yes|✓|☑/i.test(t.textContent + t.getAttribute('aria-checked')); }""")
     assert "Read 300 documents" in page.locator("[data-scan-note]").inner_text()
-    page.locator("[data-pick=promote][value=QUANTITY]").check()
     page.locator("[data-step=target]").wait_for(state="visible")
     page.locator("[data-domain]").fill("comswap")
     page.locator("[data-kind]").fill("deal")

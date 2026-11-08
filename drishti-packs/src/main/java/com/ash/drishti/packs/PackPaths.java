@@ -30,7 +30,7 @@ public final class PackPaths {
     public static final String DEFAULT_PACKS = "./config/packs";
     /**
      * The packs enabled when {@code drishti.packs.enabled} is not set (or blank) and no edition names them: the one list,
-     * {@code config/editions/default-packs.yaml} (copied into this jar at build; the console reads the same file).
+     * {@code config/packs/default-packs.yaml} (copied into this jar at build; the console reads the same file).
      */
     public static final String DEFAULT_ENABLED = String.join(",", com.ash.drishti.packs.edition.Editions.defaultPacks());
     private static final String LEGACY_PACKS = "./packs";

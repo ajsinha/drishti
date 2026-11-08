@@ -24,9 +24,9 @@
   <a class="dz-btn" data-dz-mode="{{ key }}" href="{{ href }}"{% if key == mode %} aria-current="page"{% endif %}{% if not on %} aria-disabled="true" title="{{ label }}: coming later"{% elif key == 'customize' and not (k and i) %} title="Customize: open any page and press Customize"{% endif %}>{{ label }}</a>
   {% endfor %}
   <label class="dz-first">Open first
-    <select class="dz-pill" data-dz-default aria-label="The designer mode you open first">
+    <drishti-select data-dz-default label="The designer mode you open first">
       {% for key, label, on in modes %}<option value="{{ key }}"{% if key == (default_mode | default('customize')) %} selected{% endif %}>{{ label }}</option>{% endfor %}
-    </select>
+    </drishti-select>
   </label>
 </nav>
 <script src="/static/js/drishti_designer-modes.js?v={{ ASSET_V }}" defer></script>

@@ -35,7 +35,7 @@ import org.springframework.core.env.Environment;
 /**
  * The virtual tables' beans ({@code drishti.tables.*}, TABLES_GUIDE.md section 7a): the catalogue under {@code drishti.tables.root} and the
  * reads for a viewer (the request's {@link com.ash.drishti.engine.ViewerContext}: who, their attributes, masks and kinds), and the view
- * pipeline's port for panels whose source is a virtual table (VIRTUAL_TABLES.md V13).
+ * pipeline's port for panels whose source is a virtual table (docs/architecture/ARCHITECTURE.md V13).
  */
 @Configuration
 public class TablesConfiguration {
@@ -47,11 +47,12 @@ public class TablesConfiguration {
         long maxRows = env.getProperty("drishti.tables.read-max-rows", Long.class, 2_000_000L);
         long warn = env.getProperty("drishti.tables.scan-warn-rows", Long.class, 1_000_000L);
         TablesService tables = new TablesService(root, data, router, edition, security::enabled, maxRows, warn, java.time.Clock.systemUTC());
-        tables.itemStore(new BiItemTableStore(store));                     // the editors' published tables and models beside the files (Q16)
+        tables.itemStore(new BiItemTableStore(store));
+        tables.domains(com.ash.drishti.server.modules.DomainFolders.on(env));    // an off module's tables and models are not read                     // the editors' published tables and models beside the files (Q16)
         return tables;
     }
 
-    /** The editors of tables, models and Python-driven tables (EDITORS.md sections 1 to 4): their API is {@link EditorController}. */
+    /** The editors of tables, models and Python-driven tables (docs/architecture/SHARED_SCREENS.md sections 1 to 4): their API is {@link EditorController}. */
     @Bean
     public EditorService tablesEditorService(TablesService tables, DataViewService data, com.ash.drishti.server.security.Entitlements entitlements,
             com.ash.drishti.server.bi.BiAccess access, com.ash.drishti.server.bi.BiService bi, com.ash.drishti.identity.PreferenceStore preferences,

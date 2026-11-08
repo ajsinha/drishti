@@ -47,12 +47,12 @@ the records prove.
 
 ## Consequences
 - The identity database now grows with discussion; retention (off by default) and its backup are an operations matter
-  ([OPERATIONS.md](../../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export)).
+  ([OPERATIONS_GUIDE.md](../../guides/OPERATIONS_GUIDE.md#123-retention-legal-holds-and-the-compliance-export)).
 - Mail already sent cannot be recalled: that is why it carries no values. A reader who loses a right sees the notice stop showing the title and
   excerpt at once, because every read renders for current rights.
 - Replacing an email provider, adding a bridge or moving the records to PostgreSQL touches configuration or one bean, not the services.
 - Considered and rejected: a separate collaboration service and store (a second thing to back up, with no gain at this size); storing a rendered
   snapshot with the share (it would freeze rights at send time and leak to later readers); an in-memory queue (loses mail on a crash).
 
-Design and as-built notes: [COLLABORATION.md](../COLLABORATION.md). The whole path worked through on one trade:
-[HOW_IT_FITS.md §3.10](../COLLABORATION.md#share-and-discussion-end-to-end).
+Design and as-built notes: [ARCHITECTURE.md §31](../ARCHITECTURE.md#31-collaboration-write-back-and-approvals). The whole path worked through on one trade:
+[HOW_IT_FITS.md §3.10](../ARCHITECTURE.md#3111-share-and-discussion-end-to-end).

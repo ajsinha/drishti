@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Each source system's trades in Delta Lake or Apache Iceberg: ``build_demo_lakes.py --store calypso=iceberg`` (docs/connectors/DEMO_DATA.md,
+"""Each source system's trades in Delta Lake or Apache Iceberg: ``build_demo_lakes.py --store calypso=iceberg`` (docs/guides/DATA_GUIDE.md section 11,
 "Mixed Delta and Iceberg storage").
 
 A system stored in Iceberg is built as Delta first (``lake demo`` or ``lake build``, so its documents and promoted columns are exactly those
@@ -43,6 +43,10 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import lakeconfig  # noqa: E402  (where the lakes are: config/lakes/<lake>.yaml)
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+
 SYSTEMS = ("endur", "calypso", "murex")
 STORES = ("delta", "iceberg")
 DOMAIN = "trading"
@@ -97,7 +101,7 @@ def data_of(lake: pathlib.Path) -> pathlib.Path:
 def older_layout(lake: pathlib.Path, lakes_dir: pathlib.Path | None = None) -> list[str]:
     """The demo lake's table folders still directly in <data>/delta (the older layout) when ``lake`` is the demo lake's own folder
     <data>/delta/<name> and does not exist yet: building there now would leave two copies. Empty: nothing in the way. The server moves them
-    at start, or ``drishti.py lake relocate demo`` (docs/admin/OPERATIONS.md)."""
+    at start, or ``drishti.py lake relocate demo`` (docs/guides/OPERATIONS_GUIDE.md)."""
     import yaml
     lake = pathlib.Path(lake).resolve()
     placeholder = lake.is_dir() and [c.name for c in lake.iterdir()] == ["README.md"]   # kept in git with only its README.md
@@ -160,10 +164,12 @@ def rows(delta: pathlib.Path, table_name: str, newest: list, domain: str = DOMAI
     column, a null kept: a column null on every row, such as POSITION_ID on trade-grain scenario PVs, is still a column of the Iceberg
     table, as it is of the Delta one, so the layout check finds every column the pack declares)}; ``newest`` gets the newest business
     date."""
-    from deltalake import DeltaTable
-    ds = DeltaTable(str(delta)).to_pyarrow_dataset()
+    if str(HERE) not in sys.path:
+        sys.path.insert(0, str(HERE))
+    import deltaread                                    # every reader feature honoured (DATA_LAKE_GUIDE.md section 14)
+    ds = deltaread.read(delta)
     names = [n for n in ds.schema.names if n not in ("id", "doc", "business_date")]
-    for batch in ds.to_batches(batch_size=2000):
+    for batch in ds.to_batches(max_chunksize=2000):
         cols = batch.to_pydict()
         for i, rid in enumerate(cols["id"]):
             day = cols["business_date"][i]
@@ -308,7 +314,7 @@ def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Pat
     """trade-<system>.yaml for its store: the trading pack's template (one source system of the union, table trade_<system>) with
     plugin and root set; ``engine: native`` for Iceberg."""
     import yaml
-    pack = yaml.safe_load((ROOT / "config" / "packs" / "trading" / "pack.yaml").read_text(encoding="utf-8"))
+    pack = yaml.safe_load((ROOT / "config" / "packs" / "banking" / "trading" / "pack.yaml").read_text(encoding="utf-8"))
     tpl = _template(pack, f"trade-{system}", store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
     if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)
@@ -387,7 +393,7 @@ def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: path
     root set; ``engine: native`` for Iceberg. ``pair`` (pack, connector): by default the domain's first."""
     import yaml
     pack_name, name = pair or DOMAIN_STORES[domain][0]
-    pack = yaml.safe_load((ROOT / "config" / "packs" / pack_name / "pack.yaml").read_text(encoding="utf-8"))
+    pack = yaml.safe_load((pack_dir(pack_name) / "pack.yaml").read_text(encoding="utf-8"))
     tpl = _template(pack, name, store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
     if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)

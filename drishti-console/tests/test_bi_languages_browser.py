@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave A of the BI design, console lane, in Chromium (docs/architecture/BI_DESIGN.md section 12.2) over the real server and console on scratch ports
+"""Wave A of the BI design, console lane, in Chromium (docs/architecture/ARCHITECTURE.md §28 section 12.2) over the real server and console on scratch ports
 18916 and 17916 (the W1 model stack of tests/test_w1_model_designer_browser.py: security on, the trading and core packs, a small file lake of
 trades and desks). Checked, on a table and a model of the table layer seeded through the API (the dataset wizard and the model designer are
 gone: Build › Tables & models writes them): a report's own measure in the ExpressionEditor and the Query panel's MQ and SQL views; a report's
@@ -115,11 +115,11 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
     # a measure of this report only, in the ExpressionEditor over the model's measures
     page.click("[data-local-measure] summary")
     page.fill("[data-lm-name]", "MTM in thousands")
-    lm = page.locator("[data-lm-expr]")
+    lm = page.locator("[data-local-measure] .bi-xe .CodeMirror")                                 # the formula: drishti-inputs' one-line CodeEditor
     lm.click()
-    lm.type("Sum")
-    page.click('[data-xe-opt="Sum of MTM"]')
-    lm.type(" / 1000")
+    page.keyboard.type("Sum")
+    page.locator(".di-complete-pop .di-option-label", has_text="Sum of MTM").first.click()        # its completion writes measure('Sum of MTM')
+    page.keyboard.type(" / 1000")
     page.click("[data-lm-add]")
     expect(page.locator('[data-field="MTM in thousands"] [data-origin="report"], [data-field="MTM in thousands"]').first).to_be_visible(timeout=15000)
     page.click("[data-local-measure] summary")                                                   # close the form: the Fields pane stops moving under the pointer
@@ -145,7 +145,7 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
     expect(page.locator(".bi-near").first).to_contain_text("Saved", timeout=15000)
     body = fetch(page, "GET", "/bi/api/items/" + page.url.rsplit("/", 1)[-1])["body"]["body"]
     assert "measures:" in body and "MTM in thousands" in body, body
-    # the same question as a visual, a model query and SQL: one plan hash (BI_DESIGN.md 12.2, acceptance 2)
+    # the same question as a visual, a model query and SQL: one plan hash (ARCHITECTURE.md §28 12.2, acceptance 2)
     mq = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": f"{name}@1", "select": {"fields": ["trade.DESK"], "measures": ["Sum of MTM"]}})
     sq = fetch(page, "POST", "/bi/api/sql", {"model": f"{name}@1", "sql": "SELECT trade.DESK, MEASURE('Sum of MTM') AS \"Sum of MTM\" FROM trade GROUP BY trade.DESK"})
     assert mq["status"] == 200 and sq["status"] == 200, (mq, sq)
@@ -161,7 +161,9 @@ def test_a_reports_fields_pane_inherits_the_models_properties_and_perspectives(b
                                       "perspectives:\n  desk-view: { title: Desk view, fields: [trade.DESK], measures: [Sum of MTM] }\n")
     expect(page.locator('[data-model-header="model"]')).to_be_visible(timeout=30000)
     expect(page.locator('[data-field="trade.DESK"]')).to_contain_text("Trading desk")              # the model's display name, not re-declared
-    expect(page.locator('[data-folder="Risk"] [data-field="trade.MTM"]')).to_be_visible()
+    expect(page.locator('[data-fields-tree] [data-folder="Risk"]')).to_be_visible()                     # the model's folder, the field one level under it
+    expect(page.locator('[data-field="trade.MTM"]')).to_be_visible()
+    assert page.evaluate("() => { const lv = (s) => +document.querySelector(s).closest('[aria-level]').getAttribute('aria-level'); return lv('[data-field=\"trade.MTM\"]') - lv('[data-folder=\"Risk\"]'); }") == 1
     expect(page.locator('[data-field="trade.PORTFOLIO"]')).to_have_count(0)                            # hidden by the model
     page.select_option("[data-perspective-pick]", "desk-view")
     expect(page.locator('[data-field="trade.CURRENCY"]')).to_have_count(0, timeout=10000)

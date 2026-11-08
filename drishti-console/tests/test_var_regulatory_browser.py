@@ -15,7 +15,7 @@
 """Regulatory VaR's three screens in a real browser (docs/guides/VAR_GUIDE.md sections 18.10, 18.11 and 18.14), over the market-risk
 pack's committed VaR data and desk P&L built into a scratch lake (lake demo --as-of data --only market-risk/<the VaR kinds>,desk-pnl),
 served by its Delta connector with the demo connector off, sign-in on and ``drishti.regulatory.synthetic-history`` on; the administrator
-seeds the synthetic official history (``POST /api/v1/var/official/synthetic-history?days=259``) once the server has captured the newest
+seeds the synthetic official history (``POST /api/v1/risk/var/official/synthetic-history?days=259``) once the server has captured the newest
 date. Three people sign in: a maker, a checker and an approver.
 
 - ``VAR BANK BACKTEST <GO>`` opens the backtest: the zone, the multiplier, the counts at 99% and 97.5% and the exceptions are the API's
@@ -43,6 +43,8 @@ import pytest
 
 from core.auth import mint_token
 from test_var_explorer_browser import ROOT, VAR_DATA
+from risk_elements import chart, chart_ready, grid_ready, grid_rows
+from select_helpers import choose, value  # <drishti-select>: drishti-inputs' Select
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import BROWSER_WAIT_MS, TOKEN_SECRET, _stack
 
@@ -87,7 +89,7 @@ def stack(tmp_path_factory):
         # background; the synthetic history is seeded before it (refused with 404 until that record exists)
         deadline = time.monotonic() + 600
         while True:
-            status, out = _server(st, "POST", "/api/v1/var/official/synthetic-history?days=259", seconds=300)
+            status, out = _server(st, "POST", "/api/v1/risk/var/official/synthetic-history?days=259", seconds=300)
             if status == 200:
                 break
             if time.monotonic() > deadline or status not in (404, 503):
@@ -163,8 +165,9 @@ def f1_opens(pg, anchor):
 # ---------------------------------------------------------------------------------------------------------------------------------- backtest
 
 def bt_painted(pg, node):
-    wait(pg, "(() => { const r = document.querySelector('[data-bt-parts] tr.sel'); return r && r.dataset.node === %r"
+    wait(pg, "(() => { const r = document.querySelector('[data-bt-parts]'); return r && r.dataset.selected === %r"
              " && document.querySelector('[data-bt-zone]').textContent !== '—'; })()" % node)
+    wait(pg, grid_ready("[data-bt-parts]"))
 
 
 def test_the_backtest_shows_the_engines_zone_multiplier_and_exceptions(stack, people, browser):
@@ -181,39 +184,44 @@ def test_the_backtest_shows_the_engines_zone_multiplier_and_exceptions(stack, pe
     assert pg.locator(f'[data-lamp="{d["zone"]}"]').evaluate("e => e.classList.contains('on')")
     assert pg.locator("[data-bt-mult]").inner_text() == f"{d['multiplier']:.2f}"
     # the counts: per confidence a heading row, then actual, hypothetical and risk-theoretical
-    rows = pg.locator("[data-bt-counts] tr")
-    assert rows.count() == 4 * len(d["counts"])
+    rows = grid_rows(pg, "[data-bt-counts]")
+    assert len(rows) == 4 * len(d["counts"])
     for i, c in enumerate(d["counts"]):
-        assert rows.nth(4 * i + 1).locator("td").nth(1).inner_text() == str(c["actual"])
-        assert rows.nth(4 * i + 2).locator("td").nth(1).inner_text() == str(c["hypothetical"])
-    # the exceptions table: one row per exception of the answer, each its date and its drivers
-    exc = pg.locator("[data-bt-exc] tr")
-    assert exc.count() == len(d["exceptions"])
+        assert rows[4 * i + 1]["cells"][1] == str(c["actual"])
+        assert rows[4 * i + 2]["cells"][1] == str(c["hypothetical"])
+    # the exceptions grid: one row per exception of the answer, each its date and its drivers
+    exc = grid_rows(pg, "[data-bt-exc]")
+    assert len(exc) == len(d["exceptions"])
     for i, e in enumerate(d["exceptions"]):
-        cells = exc.nth(i).locator("td")
-        assert cells.nth(0).inner_text() == e["date"]
-        assert cells.nth(7).inner_text() == ", ".join(e.get("drivers") or [])
+        assert exc[i]["cells"][0] == e["date"]
+        assert exc[i]["cells"][7] == ", ".join(e.get("drivers") or [])
     # the exceptions listed are those at the first confidence: the actual ones are the count the zone reads
     assert sum(1 for e in d["exceptions"] if e["which"] in ("actual", "both")) == d["counts"][0]["actual"]
     assert sum(1 for e in d["exceptions"] if e["which"] in ("hypothetical", "both")) == d["counts"][0]["hypothetical"]
-    # the chart: a bar a tested day, a marker an actual exception at 99%
-    assert pg.locator("[data-bt-chart] svg rect").count() == len(d["rows"])
-    marks99 = pg.locator("[data-bt-chart] svg path.exc").count()
+    # the chart (risk.backtest): a point a tested day, the actual exceptions at 99% marked, the card the server's zone and count
+    wait(pg, chart_ready("[data-bt-chart]"))
+    ch = chart(pg, "[data-bt-chart]")
+    assert ch["kind"] == "risk.backtest" and ch["series"][0]["n"] == len(d["rows"])
+    marks99 = ch["figures"]["counted"]
     assert marks99 == sum(1 for r in d["rows"] if r.get("var990") is not None and r["actual"] < -r["var990"])
-    pg.locator('[data-bt-q="1"]').click()                                   # 97.5%: more markers, the same page
-    wait(pg, "document.querySelector('[data-bt-q=\"1\"]').getAttribute('aria-pressed') === 'true'")
-    assert pg.locator("[data-bt-chart] svg path.exc").count() == sum(1 for r in d["rows"] if r.get("var975") is not None and r["actual"] < -r["var975"])
-    assert pg.locator("[data-bt-chart] svg path.exc").count() >= marks99
+    assert ch["figures"]["exceptions"] == d["counts"][0]["actual"] and ch["figures"]["zone"] == d["zone"]
+    assert ch["badge"]["text"].startswith(f"{d['zone']} · {d['counts'][0]['actual']} exceptions")
+    pg.locator('[data-bt-q="1"]').click()                                   # 97.5%: more exceptions, the same page
+    wait(pg, "document.querySelector('[data-bt-chart]').dataset.var === 'var975'")
+    ch = chart(pg, "[data-bt-chart]")
+    assert ch["figures"]["counted"] == sum(1 for r in d["rows"] if r.get("var975") is not None and r["actual"] < -r["var975"])
+    assert ch["figures"]["counted"] >= marks99
+    assert ch["figures"]["exceptions"] == d["counts"][1]["actual"]
     # the bank and its desks: a row each part; a desk's row draws its own backtest in place
-    assert pg.locator("[data-bt-parts] tr").count() == len(d["parts"])
+    assert len(grid_rows(pg, "[data-bt-parts]")) == len(d["parts"])
     desk = next(p for p in d["parts"] if p.get("level") == "desk" and p.get("zone"))
     pg.evaluate("window.__marker = 1")
-    pg.locator(f'[data-bt-parts] tr[data-node="{desk["node"]}"] td').nth(1).click()
+    pg.locator(f'[data-bt-parts] .dg-row[data-node="{desk["node"]}"] .dg-cell').nth(1).click()
     bt_painted(pg, desk["node"])
     dd = get(pg, base, "/api/var/backtesting?scope=" + "NODE:" + desk["node"])
     assert pg.locator("[data-bt-zone]").inner_text().lower() == dd["zone"] == desk["zone"]
     assert pg.locator("[data-bt-mult]").inner_text() == f"{dd['multiplier']:.2f}"
-    assert pg.locator("[data-bt-exc] tr").count() == len(dd["exceptions"])
+    assert len(grid_rows(pg, "[data-bt-exc]")) == len(dd["exceptions"])
     assert pg.evaluate("window.__marker") == 1                              # in place: no page load
     clean(pg)
     f1_opens(pg, "46-backtesting")
@@ -270,6 +278,13 @@ def test_the_period_statistics_are_the_engines(stack, people, browser):
         assert f"{s['synthetic']} synthetic demo records" in meta                # the screens say so
     missing = pg.locator("[data-st-missing]").inner_text()
     assert missing == ("Missing official records: " + ", ".join(s["missing"]) if s.get("missing") else "No official record missing in the period.")
+    # the measure is drishti-inputs' Select in a plain form: its hidden input carries the pick
+    assert value(pg, "drishti-select[name=measure]") == "var"
+    choose(pg, "drishti-select[name=measure]", "es")
+    pg.locator(".rg-ask button[type=submit]").click()
+    pg.wait_for_url("**measure=es*")
+    wait(pg, "document.querySelectorAll('[data-st-tiles] .rg-tile').length >= 4")
+    assert value(pg, "drishti-select[name=measure]") == "es"
     clean(pg)
     f1_opens(pg, "44-period-statistics")
     pg.context.close()
@@ -285,14 +300,35 @@ def test_the_period_statistics_are_the_engines(stack, people, browser):
 # ---------------------------------------------------------------------------------------------------------------------------------- reports
 
 def drawn(pg, version, label):
-    """The run of a version drawn with its approve button reading ``label`` (``Approve as Checker``; ``Signed`` once signed)."""
+    """The run of a version drawn with its sign button reading ``label`` (``Sign as Checker in Approvals``; ``Signed`` once signed)."""
     wait(pg, "document.querySelector('[data-rp-meta]').textContent.indexOf('run v%d,') === 0"
              " && document.querySelector('[data-rp-approve]').textContent === %s" % (version, json.dumps(label)))
 
 
-def approve(pg, comment=""):
-    pg.locator("[data-rp-comment]").fill(comment)
+def sign_label(step):
+    return "Sign as " + step + " in Approvals"
+
+
+def decide(pg, act, comment=""):
+    """The next step decided in the one Approvals queue: the report's sign button opens the run's item there; approve or reject (send it
+    back) with a comment; back on the report page. Returns what the queue said."""
+    back = pg.url
     pg.locator("[data-rp-approve]").click()
+    pg.wait_for_url("**/approvals/var-report/**")
+    pg.wait_for_selector("[data-ap-item]:not([hidden])")
+    if pg.locator("[data-ap-act=%s]" % act).is_hidden():           # the queue offers no such decision to this person (four eyes)
+        pg.goto(back)
+        return None
+    pg.locator("[data-ap-comment]").fill(comment)
+    pg.locator("[data-ap-act=%s]" % act).click()
+    wait(pg, "document.querySelector('[data-ap-said]').textContent !== ''")
+    said = pg.locator("[data-ap-said]").inner_text()
+    pg.goto(back)
+    return said
+
+
+def approve(pg, comment=""):
+    return decide(pg, "approve", comment)
 
 
 def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, people, browser):
@@ -301,12 +337,12 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     go(mara, base, f"VAR REPORT {REPORT} {PERIOD} <GO>")
     mara.wait_for_url(f"**/var/reports/{REPORT}?period={PERIOD}*")
     pack = get(mara, base, "/api/var/reports")
-    wait(mara, "document.querySelectorAll('[data-rp-pack] tr').length === %d" % len(pack["reports"]))
-    row = mara.locator("[data-rp-pack] tr.sel")
+    wait(mara, "document.querySelectorAll('[data-rp-pack] .dg-row').length === %d" % len(pack["reports"]))
+    row = mara.locator("[data-rp-pack] .dg-row.rg-sel")
     assert REPORT in row.inner_text() and "not generated" in row.inner_text()
 
     # Generate freezes run v1 and opens it
-    row.locator("button").click()
+    row.locator("button.dg-cell-btn").click()
     mara.wait_for_url(f"**/var/reports/{REPORT}?period={PERIOD}&version=1")
     run = get(mara, base, f"/api/var/reports/{REPORT}/runs/{PERIOD}?version=1")
     assert run["version"] == 1 and run["signoff"]["next"] == "maker"
@@ -314,33 +350,34 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     print(f"\nreport {REPORT} {PERIOD} v1: checks {summary}: " + "; ".join(f"{c['status']} {c.get('title') or c.get('check')}" for c in run["checks"]))
     wait(mara, "document.querySelector('[data-rp-meta]').textContent.indexOf('run v1,') === 0")
     # the checks as the API's: a row each, its status and its title
-    checks = mara.locator("[data-rp-checks] tr")
-    assert checks.count() == len(run["checks"]) > 0
+    wait(mara, grid_ready("[data-rp-checks]"))
+    checks = grid_rows(mara, "[data-rp-checks]")
+    assert len(checks) == len(run["checks"]) > 0
     for i, c in enumerate(run["checks"]):
-        assert checks.nth(i).locator(".rg-pill").inner_text() == c["status"]
-        assert checks.nth(i).locator("td").nth(1).inner_text() == (c.get("title") or c.get("check"))
+        assert checks[i]["cells"][0] == c["status"]
+        assert checks[i]["cells"][1] == (c.get("title") or c.get("check"))
     assert mara.locator("[data-rp-checks-sub]").inner_text().startswith(f"{len(run['checks'])} · {summary['pass']} pass, {summary['note']} need a note, "
                                                                        f"{summary['fail']} fail")
     # the table as it will be filed: a row a definition row; the total's period end is the official figure; a cell's lineage
-    assert mara.locator("[data-rp-table] tbody tr").count() == len(run["rows"])
+    table = grid_rows(mara, "[data-rp-table]")
+    assert len(table) == len(run["rows"])
     total = next(r for r in run["rows"] if r.get("total"))
     end = total["cells"]["period-end"]["value"]
     shown = f"{round(end / 1000 if run.get('units') == 'thousands' else end):,}"
-    assert shown in mara.locator("[data-rp-table] tbody tr.total").inner_text()
-    mara.locator("[data-rp-table] tbody tr.total td[data-cell]").first.click()
+    assert shown in next(t for t in table if t["data"]["line"].get("total"))["cells"]
+    mara.locator("[data-rp-table] .dg-row.rg-total .dg-cell.rg-cell").first.click()
     mara.locator("[data-rp-lin-card]").wait_for()
     lin = mara.locator("[data-rp-lineage]").inner_text()
     assert "Official record" in lin and total["cells"]["period-end"]["lineage"]["node"] in lin
     assert mara.locator("[data-rp-lin-links] a").first.get_attribute("href").startswith("/var?scope=NODE%3A")
     # before the last approval the files are drafts
     assert all("(draft)" in a.inner_text() for a in mara.locator("[data-rp-files] a").all())
-    assert mara.locator("[data-rp-approve]").inner_text() == "Approve as Maker"
-    CRO = "Approve as " + ((run.get("stepTitles") or {}).get("approver") or "Approver")    # the definition names the approver's step
+    assert mara.locator("[data-rp-approve]").inner_text() == sign_label("Maker")             # each step is signed in the Approvals queue
+    CRO = sign_label((run.get("stepTitles") or {}).get("approver") or "Approver")             # the definition names the approver's step
 
     if summary["fail"]:
         # a failed check blocks every approval, said in words (the demo's data should not get here: the checks are printed above)
-        approve(mara, "reviewed")
-        wait(mara, "document.querySelector('[data-rp-notice]').textContent.indexOf('failed') >= 0")
+        assert "failed" in approve(mara, "reviewed")
         clean(mara)
         pytest.fail(f"a check of the demo's run failed, so the sign-off chain could not be walked: {run['checks']}")
 
@@ -352,14 +389,13 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     while get(mara, base, f"/api/var/reports/{REPORT}/runs/{PERIOD}?version=1")["signoff"].get("narrative") != text:
         assert time.monotonic() < deadline, "the narrative was not saved: " + mara.locator("[data-rp-notice]").inner_text()
         mara.wait_for_timeout(200)
-    approve(mara, "Movement reviewed against the desks' positions.")
-    drawn(mara, 1, "Approve as Checker")
+    assert approve(mara, "Movement reviewed against the desks' positions.") == "Approved."
+    drawn(mara, 1, sign_label("Checker"))
     assert "mara" in mara.locator("[data-rp-steps]").inner_text()
-    # four eyes: the maker may not sign the checker's step too
-    approve(mara, "")
-    wait(mara, "document.querySelector('[data-rp-notice]').textContent.indexOf('four eyes') >= 0")
-    assert "mara signed this run as maker" in mara.locator("[data-rp-notice]").inner_text()
-    assert mara.locator("[data-rp-approve]").inner_text() == "Approve as Checker"           # nothing signed
+    # four eyes: the maker may not sign the checker's step too (the queue offers her no Approve; nothing is signed)
+    assert approve(mara, "") is None
+    drawn(mara, 1, sign_label("Checker"))
+    assert get(mara, base, f"/api/var/reports/{REPORT}/runs/{PERIOD}?version=1")["signoff"]["next"] == "checker"
     assert mara.locator("[data-rp-narrative]").evaluate("e => e.readOnly")    # past the maker: the narrative is closed
     clean(mara)
     f1_opens(mara, "6-controls-definitions-checks-frozen-runs-and-sign-off")
@@ -368,21 +404,19 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     # the checker sends it back (with a comment), which clears the steps; the maker signs again; the checker signs
     chen = sign_in(browser, base, "chen", PASSWORD)
     chen.goto(f"{base}/var/reports/{REPORT}?period={PERIOD}&version=1")
-    drawn(chen, 1, "Approve as Checker")
-    chen.locator("[data-rp-comment]").fill("Please name the desk in the narrative.")
-    chen.locator("[data-rp-return]").click()
-    wait(chen, "document.querySelector('[data-rp-approve]').textContent === 'Approve as Maker'")
-    assert chen.locator("[data-rp-return]").is_disabled()
+    drawn(chen, 1, sign_label("Checker"))
+    assert decide(chen, "reject", "Please name the desk in the narrative.") != ""              # sent back: the steps clear
+    drawn(chen, 1, sign_label("Maker"))
     mara = sign_in(browser, base, "mara", PASSWORD)
     mara.goto(f"{base}/var/reports/{REPORT}?period={PERIOD}&version=1")
-    drawn(mara, 1, "Approve as Maker")
-    approve(mara, "Desk named: rates.")
-    drawn(mara, 1, "Approve as Checker")
+    drawn(mara, 1, sign_label("Maker"))
+    assert approve(mara, "Desk named: rates.") == "Approved."
+    drawn(mara, 1, sign_label("Checker"))
     clean(mara)
     mara.context.close()
     chen.reload()
-    drawn(chen, 1, "Approve as Checker")
-    approve(chen, "Checked.")
+    drawn(chen, 1, sign_label("Checker"))
+    assert approve(chen, "Checked.") == "Approved."
     drawn(chen, 1, CRO)
     clean(chen)
     chen.context.close()
@@ -391,9 +425,9 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     aria = sign_in(browser, base, "aria", PASSWORD)
     aria.goto(f"{base}/var/reports/{REPORT}?period={PERIOD}&version=1")
     drawn(aria, 1, CRO)
-    approve(aria, "Approved.")
+    assert approve(aria, "Approved.") == "Approved."
     drawn(aria, 1, "Signed")
-    assert aria.locator("[data-rp-approve]").is_disabled()
+    assert aria.locator("[data-rp-approve]").get_attribute("aria-disabled") == "true"
     files = aria.locator("[data-rp-files] a")
     assert [a.inner_text() for a in files.all()] == run["outputs"]               # released: no longer drafts
     done = get(aria, base, f"/api/var/reports/{REPORT}/runs/{PERIOD}?version=1")
@@ -403,7 +437,7 @@ def test_a_report_run_is_generated_checked_and_signed_by_three_people(stack, peo
     assert all(w in steps for w in ("mara", "chen", "aria"))
     r = aria.request.get(base + files.first.get_attribute("href"))
     assert r.ok and len(r.body()) > 100
-    wait(aria, "Array.from(document.querySelectorAll('[data-rp-pack] tr.sel td')).some((t) => t.textContent === 'signed')")
+    wait(aria, "Array.from(document.querySelectorAll('[data-rp-pack] .dg-row.rg-sel .dg-cell')).some((t) => t.textContent === 'signed')")
     clean(aria)
     aria.context.close()
 

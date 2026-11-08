@@ -14,7 +14,7 @@
 
 """Wave B, console lane, in Chromium over the real server and console (the W1 model stack of tests/test_w1_model_designer_browser.py on this file's own ports
 18926 and 17926 plus the pytest-xdist offset: security on, the trading and core packs, a small file lake of trades and desks). The acceptance of
-docs/architecture/BI_DESIGN.md section 12.2 for the console lane:
+docs/architecture/ARCHITECTURE.md §28 section 12.2 for the console lane:
 
 * no BI page computes: no WebAssembly, Pyodide, DuckDB-Wasm or Perspective file is requested, and no page's policy allows 'wasm-unsafe-eval';
 * a %-of-total measure (share_of), equal to an independent computation of the same rows;
@@ -131,8 +131,8 @@ def made(browser, stack):
 
 
 def rows_of(page):
-    page.wait_for_selector('[data-visual="desks"] tbody tr', timeout=30000)
-    return page.eval_on_selector_all('[data-visual="desks"] tbody tr', "rs => rs.map(r => [...r.children].map(c => c.textContent.trim()))")
+    page.wait_for_selector('[data-visual="desks"] .dg-row', timeout=30000)              # the table, drawn by drishti-grid
+    return page.eval_on_selector_all('[data-visual="desks"] .dg-row', "rs => rs.map(r => [...r.querySelectorAll('.dg-cell')].map(c => c.textContent.trim()))")
 
 
 def num(text):
@@ -144,7 +144,7 @@ def test_no_bi_page_loads_a_compute_engine(browser, made):
     page = sign_in(browser, "wes")
     seen = []
     page.on("request", lambda r: seen.append(r.url) if COMPUTE.search(r.url) else None)
-    for path in ("/bi", "/bi/notebook", "/bi/r/" + made["report"], "/bi/models", "/bi/designer"):
+    for path in ("/bi/catalogue", "/bi/notebook", "/bi/r/" + made["report"], "/bi/models", "/bi/designer"):
         resp = page.goto(CONSOLE_URL + path)
         csp = resp.headers["content-security-policy"]
         assert "wasm" not in csp and "unsafe-eval" not in csp, (path, csp)
@@ -178,7 +178,7 @@ def test_a_parameter_slicer_shocks_the_report(browser, made):
     expect(page.locator('[data-chip="param"]')).to_contain_text("shock: 0.5", timeout=15000)
     page.wait_for_timeout(1500)
     shoot(page, "[data-report]", "parameter-slicer")
-    page.wait_for_function("""(b) => { const r = [...document.querySelectorAll('[data-visual="desks"] tbody tr')].map(x => x.children[3].textContent.trim()); return r.length && r.join('|') !== b; }""",
+    page.wait_for_function("""(b) => { const r = [...document.querySelectorAll('[data-visual="desks"] .dg-row')].map(x => x.querySelectorAll('.dg-cell')[3].textContent.trim()); return r.length && r.join('|') !== b; }""",
                            arg="|".join(r[3] for r in before), timeout=30000)
     after = rows_of(page)
     for b, x in zip(sorted(before), sorted(after)):
@@ -231,7 +231,7 @@ def test_the_explain_panel_shows_tiers_layers_and_times(browser, made):
     expect(panel.locator("[data-explain-times]")).to_contain_text("ms")
     assert panel.locator("[data-explain-op]").count() >= 2
     assert "SecureScan" in panel.locator("[data-explain-text]").text_content() or panel.locator('[data-explain-op="SecureScan"]').count() >= 1
-    if os.environ.get("DRISHTI_CAPTURES"):                       # the answer the guide quotes (BI_GUIDE.md section 25.1)
+    if os.environ.get("DRISHTI_CAPTURES"):                       # the answer the guide quotes (REPORTS_GUIDE.md section 25.1)
         a = fetch(page, "POST", "/bi/api/mq", {"mq": 2, "model": made["model"] + "@1", "select": {"fields": ["trade.DESK"], "measures": ["MTM shocked"]},
                                                 "params": {"shock": 0.5}, "options": {"explain": True}})
         with open(os.path.join(os.environ["DRISHTI_CAPTURES"], "wave-b-explain.json"), "w") as f:

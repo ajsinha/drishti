@@ -14,87 +14,79 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* The editors' Rachana input (docs/architecture/EDITORS.md section 7, "one grammar"): every formula, filter, row rule and computed column is
-   typed in one of these. As you type, the word before the caret is completed from Rachana's function catalogue (the server's, with each
-   function's signature and one line) and the names the editor knows (columns, aliases, measures, tables). Up and Down move, Enter or Tab
-   takes, Escape closes. The console never parses Rachana for meaning: the server checks every formula as typed and the problem shows
-   at its line. Built with DOM calls and textContent only. */
+/* The editors' Rachana input (docs/architecture/SHARED_SCREENS.md section 7, "one grammar"): every formula, filter, row rule and computed column is
+   typed in one of these: drishti-inputs' code editor in Rachana (one line for an input, the whole text for a text area), the element kept
+   as the value's holder (upgradeCodeArea). As you type, the word before the caret is completed from Rachana's function catalogue (the
+   server's, with each function's signature and one line) and the names the editor knows (columns, aliases, measures, tables): the code
+   editor's completion (Up and Down, Enter or Tab, Escape). The console never parses Rachana for meaning: the server checks every
+   formula as typed and the problem shows at its line. */
 (function () {
   'use strict';
   var E = (window.Drishti.editors = window.Drishti.editors || {});
-  var seq = 0;
 
-  function word(text, at) {
-    var m = /[A-Za-z_$@^][A-Za-z0-9_.$@^]*$/.exec(text.slice(0, at));
-    return m ? { word: m[0], start: at - m[0].length } : { word: '', start: at };
+  /** What completes a word: the editor's names first, then the functions (a name or a dotted part starting with it). */
+  function entries(w, names) {
+    w = String(w || '').toLowerCase();
+    if (!w) { return []; }
+    var ns = (names ? names() : []).filter(function (n) { var x = n.name.toLowerCase(); return x.indexOf(w) === 0 || x.indexOf('.' + w) > 0; })
+      .map(function (n) { return { name: n.name, description: n.note || '', kind: 'field' }; });
+    var fns = (E.functions || []).filter(function (f) { return f.name.toLowerCase().indexOf(w) === 0; })
+      .map(function (f) { return { name: f.name, signature: f.signature || f.name + '()', description: String(f.description || '').split('. ')[0], kind: 'function' }; });
+    return ns.concat(fns).slice(0, 12);
   }
 
-  /** Makes {@code el} (an input or textarea) a Rachana input. {@code names()} answers the editor's names: [{name, note}]. */
-  E.formula = function (el, names) {
-    if (el.getAttribute('data-formula-bound')) { return el; }
-    el.setAttribute('data-formula-bound', '1');
-    el.setAttribute('autocomplete', 'off');
-    el.setAttribute('spellcheck', 'false');
-    var id = 'edfx' + (++seq);
-    var list = document.createElement('ul');
-    list.className = 'ed-fx';
-    list.id = id;
-    list.setAttribute('role', 'listbox');
-    list.hidden = true;
-    el.setAttribute('aria-autocomplete', 'list');
-    el.setAttribute('aria-controls', id);
-    if (el.parentNode) { el.insertAdjacentElement('afterend', list); }      // else placed at the first completion (bound before it is in the page)
-    var items = [], at = -1, ctx = null;
+  /** The code editor's completion hook over the editor's names ({@code names()}: [{name, note}]) and the functions (a Form's formula widget takes it as options.complete). */
+  E.complete = function (names) { return function (c) { return entries(c.word.replace(/^[$@]/, ''), names); }; };
 
-    function close() { list.hidden = true; items = []; at = -1; el.removeAttribute('aria-activedescendant'); }
-    function choose(i) {
-      var it = items[i];
-      if (!it || !ctx) { return; }
-      var v = el.value, insert = it.insert;
-      el.value = v.slice(0, ctx.start) + insert + v.slice(el.selectionStart);
-      var caret = ctx.start + (it.fn ? insert.length - 1 : insert.length);
-      el.setSelectionRange(caret, caret);
-      close();
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    function mark(i) {
-      at = i;
-      Array.prototype.forEach.call(list.children, function (li, j) { li.setAttribute('aria-selected', j === i ? 'true' : 'false'); });
-      if (list.children[i]) { el.setAttribute('aria-activedescendant', list.children[i].id); }
-    }
-    function open() {
-      ctx = word(el.value, el.selectionStart || 0);
-      if (ctx.word.length < 1) { close(); return; }
-      var w = ctx.word.toLowerCase();
-      var fns = (E.functions || []).filter(function (f) { return f.name.toLowerCase().indexOf(w) === 0; })
-        .map(function (f) { return { label: f.signature || f.name + '()', note: f.description || '', insert: f.name + '()', fn: true }; });
-      var ns = (names ? names() : []).filter(function (n) { return n.name.toLowerCase().indexOf(w) === 0 || n.name.toLowerCase().indexOf('.' + w) > 0; })
-        .map(function (n) { return { label: n.name, note: n.note || '', insert: n.name, fn: false }; });
-      items = ns.concat(fns).slice(0, 12);
-      while (list.firstChild) { list.removeChild(list.firstChild); }
-      if (!items.length) { close(); return; }
-      items.forEach(function (it, i) {
-        var li = document.createElement('li');
-        li.id = id + '-' + i;
-        li.setAttribute('role', 'option');
-        var b = document.createElement('b'); b.textContent = it.label; li.appendChild(b);
-        if (it.note) { var s = document.createElement('small'); s.textContent = ' ' + String(it.note).split('. ')[0]; li.appendChild(s); }
-        li.addEventListener('mousedown', function (e) { e.preventDefault(); choose(i); });
-        list.appendChild(li);
-      });
-      if (!list.parentNode && el.parentNode) { el.insertAdjacentElement('afterend', list); }
-      list.hidden = false;
-      mark(0);
-    }
-    el.addEventListener('input', function (e) { if (e.isTrusted !== false) { open(); } });
-    el.addEventListener('keydown', function (e) {
-      if (list.hidden) { return; }
-      if (e.key === 'ArrowDown') { e.preventDefault(); mark(Math.min(items.length - 1, at + 1)); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); mark(Math.max(0, at - 1)); }
-      else if (e.key === 'Enter' || e.key === 'Tab') { if (at >= 0) { e.preventDefault(); choose(at); } }
-      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
+  /** A live drishti-inputs Form for some of the document's fields (the table and model editors): each change goes into the document
+   * ({@code apply(doc, path, value)}), each focus tells the editor where the cursor is (a field's hook data-path). */
+  E.liveForm = function (ctx, cls, label, schema, value, apply) {
+    var host = ctx.h('div', { class: cls });
+    var f = new window.Drishti.elements.inputs.Form(host, { schema: { type: 'object', properties: schema }, value: value, live: true, layout: 'columns', label: label, pathAttr: 'data-form-path' });
+    f.on('change', function (e) { ctx.change(function (d) { apply(d, e.path, e.value); }, e.path); });
+    host.addEventListener('focusin', function (e) { var p = e.target.getAttribute && e.target.getAttribute('data-path'); if (p) { ctx.focus(p); } });
+    return host;
+  };
+
+  /** The rows of a document's list (a model's tables, relationships, measures, hierarchies and row rules; a table's columns and sources) as
+   * drishti-grid with cell editing: Enter, F2, a double click or typing edits a cell; a select's options, a checkbox, a formula (the
+   * column's editor 'code': drishti-inputs' one-line CodeEditor completing from the editor's names and the functions). Each edit
+   * transaction (an edit, a paste, Delete, undo or redo) goes into the document through the column's {@code set(doc, row, value)}.
+   * {@code o}: {label, rows, id(row), rowData(row) -> data-* of the row, columns: [{field, header, width, set, options, editor, render(row,
+   * doc) -> Node (a cell drawn by the host: a button, a computed word)}]}. Answers the box (its grid as box.grid). */
+  E.rowGrid = function (ctx, key, o) {
+    var G = window.Drishti.elements.grid, ro = !ctx.S || ctx.S.readOnly;
+    var box = ctx.h('div', { class: 'ed-rowgrid', 'data-rowgrid': key });
+    var byField = {};
+    var cols = o.columns.map(function (c) {
+      byField[c.field] = c;
+      var x = { id: c.field, field: c.field, header: c.header, width: c.width || 160, validate: c.validate, sortable: false, filterable: false, enableRowGroup: false, enablePivot: false, enableValue: false,
+        editable: !ro && !!c.set && (c.editable === undefined ? true : c.editable), options: c.options, editor: c.editor, type: c.type || 'text',
+        complete: c.editor === 'code' ? E.complete(ctx.names) : undefined };
+      if (c.render) { x.cellRenderer = function (p) { return c.render(p.row, p.doc); }; }
+      return x;
     });
-    el.addEventListener('blur', function () { setTimeout(close, 0); });
+    var rows = (o.rows || []).map(function (r, i) { return Object.assign({ __id: String(o.id ? o.id(r, i) : i) }, r); });
+    var grid = box.grid = new G.Grid(box, { columns: cols, rows: rows, getRowId: function (r) { return r.__id; }, layout: 'wells', density: 'compact', chrome: false,
+      checkboxes: false, rowSelection: 'none', clientAggregation: false, pinTotals: false, label: o.label, getRowData: o.rowData });
+    var byId = {};
+    rows.forEach(function (r) { byId[r.__id] = r; });
+    grid.on('editTransaction', function (tx) {
+      if (!tx.edits.length) { return; }
+      ctx.change(function (d) { tx.edits.forEach(function (e) { var c = byField[e.field]; if (c && c.set) { c.set(d, byId[e.rowId], e.value); } }); }, o.path || key);
+      if (tx.edits.some(function (e) { return (byField[e.field] || {}).redraw; })) { setTimeout(function () { ctx.redraw(); }, 0); }   // a column whose edit changes the rows (a rename, show or hide)
+    });
+    var rh = (grid.model.viewport && grid.model.viewport.rowHeight) || 28;                // as tall as its rows and heading (a 44 px heading on a touch screen) and a scroll bar, scrolling past 14 rows
+    box.style.height = (Math.min(rows.length, 14) * rh + Math.max(44, rh + 4) + 18) + 'px';
+    return box;
+  };
+
+  /** Makes {@code el} (an input or textarea outside a Form) a Rachana input. {@code names()} answers the editor's names: [{name, note}]. */
+  E.formula = function (el, names) {
+    if (el.getAttribute('data-di-code')) { return el; }
+    el.drishtiCodeOptions = { complete: E.complete(names) };
+    el.setAttribute('data-di-code', 'rachana');
+    if (el.isConnected) { window.Drishti.elements.inputs.upgradeCodeArea(el); }   // else drishti-inputs makes it one as it arrives in the page
     return el;
   };
 })();

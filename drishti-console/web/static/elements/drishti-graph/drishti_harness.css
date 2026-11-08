@@ -1,0 +1,29 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The graph harness's own page (drishti_harness.html): a bar of switches above the component. */
+html, body { margin: 0; background: var(--d-bg); color: var(--d-ink); font: 13px var(--d-font-sans); }
+.hx-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--d-border); background: var(--d-bg-2); position: sticky; top: 0; z-index: 60; }
+.hx-brand { color: var(--d-accent); letter-spacing: 0.1em; }
+.hx-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: 8px; overflow: hidden; }
+.hx-top button { background: transparent; border: 0; padding: 5px 10px; cursor: pointer; color: var(--d-muted); font: inherit; }
+.hx-seg button + button { border-left: 1px solid var(--d-border); }
+.hx-top > button { border: 1px solid var(--d-border); border-radius: 7px; }
+.hx-top button.on { background: var(--d-accent-tint); color: var(--d-accent); }
+.hx-log { color: var(--d-faint); font-size: 12px; margin-left: auto; }
+.hx-stage { padding: 10px 14px; }
+.hx-link { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; }
+.hx-link > div:last-child { height: 520px; }
+.hx-panel { height: 340px; border: 1px solid var(--d-border); border-radius: 8px; }

@@ -19,8 +19,8 @@ Drishti computes the FRTB standardised approach (the Basel Framework's MAR21 to 
 when asked, for any scope, never stored as a figure.** The input is one table of position sensitivities; a factor dictionary says what
 each factor is and where it falls in the regulator's grid; the parameters are configuration files that name their paragraphs. Every figure
 opens in a playground that shows the same calculation as spreadsheet formulas, with every method choice a switch you can flip, compare
-and reproduce. The tutorial is [tutorial 30](../tutorials/30-frtb-sa-from-the-cases-to-a-desk.md); the design behind it is
-[SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md).
+and reproduce. The tutorial is [tutorial 4](../tutorials/04-frtb-sa.md); the data contract, every field of
+every record and the worked records are [FRTB.md](../contracts/FRTB.md).
 
 ## Contents
 
@@ -37,6 +37,9 @@ and reproduce. The tutorial is [tutorial 30](../tutorials/30-frtb-sa-from-the-ca
 - [11. Refusals and error codes](#11-refusals-and-error-codes)
 - [12. Parameters as configuration](#12-parameters-as-configuration)
 - [13. FRTB-SA data: every dataset the engine reads](#13-frtb-sa-data-every-dataset-the-engine-reads)
+- [14. Where each number comes from](#14-where-each-number-comes-from)
+- [15. Decisions and the screens chosen](#15-decisions-and-the-screens-chosen)
+- [16. Tests and the rules they were checked against](#16-tests-and-the-rules-they-were-checked-against)
 
 ## 1. What FRTB-SA answers
 
@@ -69,12 +72,12 @@ All money is in the reporting currency (USD unless asked); every sensitivity is 
 ## 3. The inputs and their data contract
 
 The full data contract (every field, its unit, the checks, the record layouts and the samples) is [FRTB.md](../contracts/FRTB.md); the
-YAML contracts are in `config/packs/market-risk/contracts/`. In short:
+YAML contracts are in `config/packs/banking/market-risk/contracts/`. In short:
 
 | Kind (command) | What | Grain | Required |
 |---|---|---|---|
-| `position-sensitivity` (SENS) | each position's sensitivities: DV01, CS01, IE01 per bp; DELTA per 1% (equity repo per bp); VEGA per vol point with `IMPLIED_VOL`; CURVATURE_UP and CURVATURE_DOWN with `SHOCK_SIZE`; or GAMMA for a source that cannot revalue | one record per position (or trade), date and batch, a sparse `SENSITIVITIES[]` list | yes |
-| `risk-factor` (RFAC) | the factor dictionary: the standard name, class, type, qualifier, curve, tenor, FRTB and SIMM buckets, seniority, liquidity horizon, the source systems' names | one row per factor and date | yes |
+| [`position-sensitivity`](../contracts/samples/market-risk.md#position-sensitivity) ([contract](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity)) (SENS) | each position's sensitivities: DV01, CS01, IE01 per bp; DELTA per 1% (equity repo per bp); VEGA per vol point with `IMPLIED_VOL`; CURVATURE_UP and CURVATURE_DOWN with `SHOCK_SIZE`; or GAMMA for a source that cannot revalue | one record per position (or trade), date and batch, a sparse `SENSITIVITIES[]` list | yes |
+| [`risk-factor`](../contracts/samples/market-risk.md#risk-factor) ([contract](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor)) (RFAC) | the factor dictionary: the standard name, class, type, qualifier, curve, tenor, FRTB and SIMM buckets, seniority, liquidity horizon, the source systems' names | one row per factor and date | yes |
 | `default-risk` (DRCI, planned) | obligor, DRC bucket, seniority, credit quality, bond-equivalent notional and market value, maturity, cash-equity maturity, recovery independence | one row per position (or trade), obligor and date | for the DRC |
 | `residual-risk` (RRAI, planned) | RRAO class (exotic, other, none), gross notional, back-to-back and listed-or-clearable flags | one row per trade and date | optional |
 
@@ -163,6 +166,23 @@ contribution is `Σ_k WS_ik · ∂SBM/∂WS_k` (and the same on its CVRs); the c
 contributions follow each obligor's share of its bucket's charge, pro rata over its positions; the RRAO is additive. The figures are not
 additive across scopes: a desk's charge is computed from its own netted sensitivities.
 
+### 4.7 Curvature from gamma: the expansion and its limits
+
+Where a source sends `GAMMA` instead of the two revaluations, the revaluations are replaced by their second-order Taylor expansion in the
+shock h of the curvature factor:
+
+```
+V(x ± h) − V(x) ≈ ± Δ · h + ½ · Γ · h²            so      CVR+ ≈ CVR− ≈ − ½ · Γ · h²
+h = RW_curvature · 10,000 bp for a curve, RW_curvature · 100 (per cent) for a spot; Γ in the delivered unit (per bp² or per (1%)²)
+Γ = Σ_t Σ_u Γ_tu  for a curve: the gamma of the parallel shift, every pair of tenors of every curve of the factor
+```
+
+It is an approximation: it drops the third and higher orders, which matter at these shock sizes (a 170 bp parallel move, 15% to 70% on
+an equity) and for barriers and digitals; it makes the up and down terms equal, so the side choice carries no information; and when the
+source delivers only the diagonal gammas per tenor, `Σ_t Γ_tt` stands for the parallel gamma, a second approximation. MAR21.17 and its
+first FAQ allow an alternative formulation only where the bank shows its supervisor the results are very close to the prescribed one
+(hand-built case 10 shows the difference: 22,500 estimated against 30,000 revalued).
+
 ## 5. The default risk charge
 
 1. **Gross jump-to-default**: `JTD = LGD × notional + (market value − notional)`, kept positive for a long and negative for a short; LGD
@@ -189,7 +209,7 @@ runs the hand-built cases of section 10 with no data.
 **`FRSA <scope> <GO>`** opens the capital screen:
 
 - **Capital stack** (the default tab): one bar each for delta, vega and curvature of the reported scenario, DRC, RRAO and the total, then
-  the class × measure grid; select a cell to drill into its buckets (K_b and S_b per scenario, the curvature side) and their factors.
+  the class × measure grid with each class's **Total** (its three charges added, the server's figure) and SBM; select a cell to drill into its buckets (K_b and S_b per scenario, the curvature side) and their factors.
 - **Scenarios**: every class and measure in the low, medium and high scenarios, the binding scenario outlined, the alternative
   specification marked where it applied.
 - **Contributions**: by desk, book, legal entity, product type or position; the sum is shown beside the total.
@@ -251,25 +271,33 @@ the engine's own figure for that alternative. The formulas use only functions Ex
 recalculates the workbook in headless LibreOffice and compares it with the engine to the cent, with the defaults and with each switch
 flipped. **Hand-built cases workbook** (`/api/frtb/template.xlsx`) is the same workbook on the cases of section 10.
 
+**The Explain tab's words** come from `drishti-banking/src/main/resources/playground/frtb-sa/template/explain.txt` (a line `## <title>`,
+then its text; `#` lines are comments), read by the playground frame's `PlaygroundTemplate.explain()`: in plain words what FRTB-SA
+answers, why a bank must hold it, the tabs, signs and units, the regime and its parameters; 18 steps from the delivered sensitivity to the
+total and the contributions, each worked with the hand-built cases (cases 1 to 5 with the published table: GIRR delta 110,555.42, the
+index's own delta charge 150,000 and its curvature 30,000 give SBM 290,555.42 on the low scenario and a total of 566,732.73); and every
+term of every tab with its MAR paragraph. The SIMM playground's `playground/simm/template/explain.txt` does the same with the toy
+parameter set, so no licensed number appears.
+
 ## 9. API, command line and settings
 
 | What | API | Command | CLI |
 |---|---|---|---|
-| Sensitivities of a scope by factor, bucket, class, tenor, measure or attribute | `GET /api/v1/sensitivities?scope=…&by=BUCKET` | `SENS <id>` (a record) | `drishti.py sens show <scope> --by BUCKET` |
-| The factor dictionary and the load's refusals | `GET /api/v1/risk-factors?q=…` | `RFAC <factor>` | `drishti.py sens factors --q SOFR` |
-| FRTB-SA of a scope | `GET /api/v1/frtb/sa?scope=…` | `FRSA <scope>` | `drishti.py frtb sa <scope>` |
-| Its steps | `GET /api/v1/frtb/sa/explain?scope=…&class=GIRR` | in FRSA | `drishti.py frtb explain <scope>` |
-| Contributions | `GET /api/v1/frtb/sa/contributions?scope=…&by=DESK` | in FRSA | `drishti.py frtb contributions <scope>` |
-| The playground, a comparison | `GET /api/v1/frtb/playground?scope=…&compare=girr-correlation=exact` | `PLAY FRTB <scope>` | `drishti.py play frtb <scope> --compare …` |
-| The workbook | `GET /api/v1/frtb/playground.xlsx?scope=…` | Export to Excel | `drishti.py play frtb <scope> --xlsx f.xlsx` |
-| The hand-built cases' workbook | `GET /api/v1/frtb/playground/template` | Hand-built cases workbook | `drishti.py play frtb EXAMPLE --xlsx f.xlsx` |
-| Save a recipe; replay it | `POST /api/v1/frtb/playground/recipes?scope=…`; `GET …/recipes/{id}` | Save recipe; `PLAY FRTB RUN <id>` | `--save`; `--recipe <id>` |
+| Sensitivities of a scope by factor, bucket, class, tenor, measure or attribute | `GET /api/v1/risk/sensitivities?scope=…&by=BUCKET` | `SENS <id>` (a record) | `drishti.py sens show <scope> --by BUCKET` |
+| The factor dictionary and the load's refusals | `GET /api/v1/risk/risk-factors?q=…` | `RFAC <factor>` | `drishti.py sens factors --q SOFR` |
+| FRTB-SA of a scope | `GET /api/v1/risk/frtb/sa?scope=…` | `FRSA <scope>` | `drishti.py frtb sa <scope>` |
+| Its steps | `GET /api/v1/risk/frtb/sa/explain?scope=…&class=GIRR` | in FRSA | `drishti.py frtb explain <scope>` |
+| Contributions | `GET /api/v1/risk/frtb/sa/contributions?scope=…&by=DESK` | in FRSA | `drishti.py frtb contributions <scope>` |
+| The playground, a comparison | `GET /api/v1/risk/frtb/playground?scope=…&compare=girr-correlation=exact` | `PLAY FRTB <scope>` | `drishti.py play frtb <scope> --compare …` |
+| The workbook | `GET /api/v1/risk/frtb/playground.xlsx?scope=…` | Export to Excel | `drishti.py play frtb <scope> --xlsx f.xlsx` |
+| The hand-built cases' workbook | `GET /api/v1/risk/frtb/playground/template` | Hand-built cases workbook | `drishti.py play frtb EXAMPLE --xlsx f.xlsx` |
+| Save a recipe; replay it | `POST /api/v1/risk/frtb/playground/recipes?scope=…`; `GET …/recipes/{id}` | Save recipe; `PLAY FRTB RUN <id>` | `--save`; `--recipe <id>` |
 
 Every FRTB endpoint takes the switches (`curvatureSource`, `girrCurvatureShock`, `fxCurvatureDivisor`, `girrCorrelation`, `scenario`),
 `override=path=value` (repeatable), `ccy` and `asOf`. Every answer carries its provenance: the date, the knowledge time, the batches, the
 dictionary's version, the parameter files' regimes, versions and SHA-256, the choices, the overrides, what was refused and why.
 
-**Settings** (`drishti.frtb.*` in the engine's own file `config/engines/frtb-sa.yaml`, all in [CONFIGURATION.md](../admin/CONFIGURATION.md)): the switch `drishti.engines.frtb-sa.enabled` (the old name `drishti.frtb.enabled` still works; off: `404 DRS-1020`; it needs VaR and the sensitivities on the same server, [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)), `parameters-dir` (else the
+**Settings** (`drishti.frtb.*` in the engine's own file `config/engines/frtb-sa.yaml`, all in [CONFIGURATION.md](../admin/CONFIGURATION.md)): the switch `drishti.engines.frtb-sa.enabled` (the old name `drishti.frtb.enabled` still works; off: `404 DRS-1020`; it needs VaR and the sensitivities on the same server, [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)), `parameters-dir` (else the
 market-risk pack's `capital/`), `sensitivity-kind`, `factor-kind` (now `drishti.sensitivities.*` in `config/engines/sensitivities.yaml`, read under the old names too), `default-risk-kind`, `residual-risk-kind`, `rrao-from-positions`,
 `max-factors` (2,000), `recipes-dir` (under the data folder), `cache-minutes`, `playground-template`.
 
@@ -310,7 +338,7 @@ revaluations are used as delivered.
 
 ## 12. Parameters as configuration
 
-The parameters are two files of the market-risk pack, `config/packs/market-risk/capital/frtb-sa-sbm.yaml` (MAR21: risk weights, the
+The parameters are two files of the market-risk pack, `config/packs/banking/market-risk/capital/frtb-sa-sbm.yaml` (MAR21: risk weights, the
 published GIRR table, correlations, the scenario multipliers, curvature shocks) and `frtb-sa-drc-rrao.yaml` (MAR22 and MAR23: LGDs,
 seniority order, maturity scaling, DRC risk weights, RRAO weights and the product-type mapping). Each names its `regime`, `version` and
 `effective-from` and the paragraph of every value. The engine reads them at start and checks every value and range (a symmetric unit-
@@ -320,9 +348,7 @@ so it reproduces after the parameters change.
 
 ## 13. FRTB-SA data: every dataset the engine reads
 
-Every dataset the FRTB-SA engine reads, what it is for, whether it is required, where its sample lives, and one real record from the shipped sample
-data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The field-by-field rules of each kind are its
-**data contract** ([docs/contracts/packs/](../contracts/packs/README.md)); how files are named, dated and loaded is
+Every dataset the FRTB-SA engine reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
@@ -342,114 +368,101 @@ One record per position (or trade), date and batch with a sparse `SENSITIVITIES[
 `IMPLIED_VOL`; curvature up and down with `SHOCK_SIZE`. Each element names its factor by the standard name the factor dictionary
 defines.
 
-- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required.
-- **Sample:** `data/testdata/market-risk/position-sensitivity/position-sensitivity.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "SENSITIVITY_ID": "SENS-1000003-B-SENS-2026-09-30-01",
-  "GRAIN": "TRADE",
-  "POSITION_ID": "POS-BOOK-COMM-1~1000003",
-  "TRADE_ID": "1000003",
-  "TRADE_IDS": [
-    "1000003"
-  ],
-  "SOURCE_SYSTEM": "ENDUR",
-  "BUSINESS_DATE": "2026-09-30",
-  "BATCH_ID": "B-SENS-2026-09-30-01",
-  "RUN_KIND": "FULL",
-  "COMPUTED_AT": "2026-09-30T06:10:00Z",
-  "RESTATEMENT": 0,
-  "STATUS": "ok",
-  "PRICER": "demo-factor-model",
-  "MODEL_VERSION": "demo-sens-1",
-  "LEGAL_ENTITY": "LE-NY",
-  "DIVISION": "DIV-MARKETS",
-  "DESK": "DESK-COMM",
-  "TT_BOOK": "BOOK-COMM-1",
-  "LIMIT_LETTER": "LL-0001",
-  "FRTB_DESK": "FD-COMM",
-  "PRODUCT_GROUP": "Commodity",
-  "PRODUCT_TYPE": "ComSwap",
-  "TRADE_STATUS": "AMENDED",
-  "MATURITY_DATE": "2027-02-28",
-  "CURRENCY": "USD",
-  "SENSITIVITIES": [
-    {
-      "RISK_FACTOR": "CM/PRICE/NG/HENRY_HUB/3M",
-      "MEASURE": "DELTA",
-      "VALUE": -73736.91,
-      "CURRENCY": "USD",
-      "RISK_CLASS": "COMM",
-      "FRTB_BUCKET": "6",
-      "TENOR": "3M",
-      "SIMM_BUCKET": "6"
-    },
-    {
-      "RISK_FACTOR": "CM/PRICE/NG/HENRY_HUB/6M",
-      "MEASURE": "DELTA",
-      "VALUE": -139167.48,
-      "CURRENCY": "USD",
-      "RISK_CLASS": "COMM",
-      "FRTB_BUCKET": "6",
-      "TENOR": "6M",
-      "SIMM_BUCKET": "6"
-    },
-    /* … 1 more … */
-  ]
-}
-```
+- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#position-sensitivity) (files `data/testdata/market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz`).
 
 ### 13.3 `risk-factor`: the factor dictionary
 
 One row per factor and date: the standard name, risk class, factor type, qualifier, curve and tenor, the FRTB and SIMM buckets,
 seniority and liquidity horizon, and `SOURCE_NAMES` mapping each system's own name to it.
 
-- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required.
-- **Sample:** `data/testdata/market-risk/risk-factor/risk-factor.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "RISK_FACTOR": "CM/PRICE/BRENT",
-  "FACTOR_TYPE": "PRICE",
-  "RISK_CLASS": "COMM",
-  "QUALIFIER": "BRENT",
-  "CURVE": null,
-  "UNDERLYING": "BRENT",
-  "TENOR": null,
-  "UNDERLYING_TENOR": null,
-  "FRTB_BUCKET": "2",
-  "SIMM_RISK_CLASS": "Commodity",
-  "SIMM_BUCKET": "2",
-  "SIMM_LABEL1": null,
-  "SIMM_LABEL2": null,
-  "LIQUIDITY_HORIZON": 20,
-  "MODELLABLE": true,
-  "MARKET_DATA_REF": "CMD-BRENT",
-  "SOURCE_NAMES": [
-    "MX:CM:PRICE-BRENT",
-    "CM.PRICE.BRENT",
-    "BRENT_PRICE_CM"
-  ],
-  "VALID_FROM": "2026-01-02",
-  "BUSINESS_DATE": "2026-09-30",
-  "SOURCE": "demo-factor-master"
-}
-```
+- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required; the file [`risk-factor.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-factor) (files `data/testdata/market-risk/risk-factor/risk-factor.*.jsonl.gz`).
 
 ### 13.4 `default-risk`: the DRC inputs
 
 The default risk charge's inputs per position and obligor. Without them the answer says *DRC not computed: no default-risk inputs*,
 never 0.
 
-- **Data contract:** [`default-risk`](../contracts/packs/market-risk.md#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) (DRCI), key `DEFAULT_RISK_ID`; 15 fields, 10 required.
-- **Sample:** no sample in the demo data.
+- **Data contract:** [`default-risk`](../contracts/packs/market-risk.md#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) (DRCI), key `DEFAULT_RISK_ID`; 15 fields, 10 required; the file [`default-risk.contract.yaml`](../../config/packs/banking/market-risk/contracts/default-risk.contract.yaml).
+- **Example:** no sample in the demo data.
 
 ### 13.5 `residual-risk`: the RRAO inputs
 
 The residual risk add-on's class (exotic, other, none) and gross notional per trade. Without them the engine derives the class from
 each position's `PRODUCT_TYPE` and its notional from the VaR book.
 
-- **Data contract:** [`residual-risk`](../contracts/packs/market-risk.md#rrai-residual-risk-inputs-the-rrao-per-trade-residual-risk) (RRAI), key `RESIDUAL_RISK_ID`; 12 fields, 7 required.
-- **Sample:** no sample in the demo data.
+- **Data contract:** [`residual-risk`](../contracts/packs/market-risk.md#rrai-residual-risk-inputs-the-rrao-per-trade-residual-risk) (RRAI), key `RESIDUAL_RISK_ID`; 12 fields, 7 required; the file [`residual-risk.contract.yaml`](../../config/packs/banking/market-risk/contracts/residual-risk.contract.yaml).
+- **Example:** no sample in the demo data.
 <!-- guide-data:end -->
+
+## 14. Where each number comes from
+
+| Figure | Inputs | Computed by | Shown with |
+|---|---|---|---|
+| A sensitivity in a ladder or heat map | the `position-sensitivity` elements of the cell's positions, the date's FX | a sum per factor or bucket | the batch, the source system, the proxied share |
+| `s_k`, `WS_k` | the elements; the dictionary's bucket; the parameter file's RW | [section 3](#3-the-inputs-and-their-data-contract), [section 4.1](#41-delta) | the parameter file, its version and paragraph |
+| `K_b`, `S_b`, delta, vega, curvature | the scope's WS; the scenario's correlations | [section 4](#4-the-sensitivities-based-method) | the scenario, whether the alternative specification applied, the curvature side chosen per bucket |
+| SBM | the class charges of each scenario | [section 4.4](#44-the-three-correlation-scenarios) | the three scenarios, the binding one marked |
+| DRC | the `default-risk` inputs or the trade and issuer masters | [section 5](#5-the-default-risk-charge) | the obligors netted, each bucket's HBR |
+| RRAO | the trades' gross notional and product types; the RRAO mapping | [section 6](#6-the-residual-risk-add-on) | the instruments in each class |
+
+Every answer carries a provenance record: the data versions of each input table, the batches, the parameter files and their SHA-256,
+refusals and proxies counted. A scope's netted sensitivities are a sparse sum, so in a cluster each owner sums its shards' positions per
+factor and the coordinator adds the partial sums in shard order before the formula runs once: the bank's SBM on a sharded date equals one
+server's, bit for bit. The same position sensitivities and factor dictionary feed SIMM ([SIMM_GUIDE.md](SIMM_GUIDE.md)), the MR cube's
+ladders and heat maps, sensitivity limits, sensitivity-based stress and P&L explain: a bank delivers one sensitivity batch, not one per
+consumer.
+
+## 15. Decisions and the screens chosen
+
+| # | Decision |
+|---|---|
+| 1 | **The screens:** the FRTB-SA capital screen is the capital stack with the three scenarios as a second tab; SIMM is the netting-set list with margin against the counterparty as a second tab; the factor dictionary is the searchable table with the load's quality as a second tab |
+| 2 | **Curvature from gamma** is accepted from a source that cannot revalue, computed by the second-order expansion ([section 4.7](#47-curvature-from-gamma-the-expansion-and-its-limits)) and labelled an estimate on every screen and export |
+| 3 | **Rates vega convention:** lognormal volatility points by default; a source sending normal volatility in basis points declares it and is converted on load |
+| 4 | **The regime:** Basel MAR21 to MAR23 as the reference, then OSFI CAR chapter 9 |
+| 5 | **SIMM indices:** a credit index is one qualifier; look-through to the constituents later |
+| 6 | **FX curvature ÷ 1.5** (MAR21.98): on by default for FX options that do not reference the reporting currency; extending it to every FX instrument is a second setting, off, for a bank with the supervisor's approval |
+| 7 | A curvature **estimated from gamma is an analysis figure** until the supervisor accepts it for the filing (MAR21.17 and its FAQ); the playground shows it beside the revalued figure whenever both exist |
+| 8 | **The GIRR curvature shock** where the bank uses the √2 reduction: the undivided 1.7% until a regulator says otherwise; 1.7%/√2 is a switch |
+| 9 | FX ÷ 1.5 only where the rules allow it by default (as 6) |
+| 10 | **GIRR correlations:** MAR21.46's published table (rounded to 0.1%) by default, so the bank's figures match what its regulator expects; the exact formula is a switch |
+| 11 | **SIMM numbers** ship empty; the bank loads its licensed ISDA file, whose version is recorded on every figure and export |
+
+The screen options, three each, are self-contained mock-ups (dark by default, `#light` for the light theme):
+
+| Screen | A | B | C |
+|---|---|---|---|
+| FRTB-SA capital | [scenarios first](../lenses/mockups/frtb-sa/A.html): the three scenarios side by side by risk class (the Scenarios tab) | [the capital stack](../lenses/mockups/frtb-sa/B.html): the waterfall from delta to the total, the class × measure grid, the bucket drill (chosen) | [desk by class pivot](../lenses/mockups/frtb-sa/C.html): the MR cube's pivot with the SBM measure |
+| SIMM | [netting-set list](../lenses/mockups/simm/A.html) (chosen) | [one netting set](../lenses/mockups/simm/B.html): the product-class tree and the concentration factors | [margin against the counterparty](../lenses/mockups/simm/C.html) (the second tab) |
+| Factor dictionary | [the dictionary](../lenses/mockups/risk-factors/A.html) (chosen) | [the load's quality](../lenses/mockups/risk-factors/B.html): coverage by desk, refusals by reason, unmapped names (the second tab) | [the factor's page](../lenses/mockups/risk-factors/C.html): its mapping, its exposure by desk, its move against VaR |
+
+**Proposed, not built:** the consistency check of sensitivities against VaR (for a sample of positions, the first-order P&L
+Σ_k s_k · Δx_k,j of each scenario j against the position's scenario P&L, the correlation per desk on the data-trust card: it catches
+sensitivities and vectors from different runs or trades); the bank's own limit grids (a DV01 ladder 0–2Y, 2–5Y, 5–10Y, 10Y+ per currency
+that sensitivity limits name); the official FRTB-SA captures per filer and date ([FRTB.md section 9.6](../contracts/FRTB.md#96-official-captures)).
+
+## 16. Tests and the rules they were checked against
+
+Each hand-built case of [section 10](#10-the-hand-built-cases) is an engine unit test to the cent (`FrtbHandBuiltCasesTest`), a
+check-cell test of the workbook recalculated by LibreOffice (`FrtbPlaygroundWorkbookTest`, with the defaults and each switch flipped) and
+the `EXAMPLE` scope. Besides them:
+
+| Area | What the tests prove |
+|---|---|
+| Parameter files | every value present and in range; every bucket's correlations a valid matrix (symmetric, unit diagonal, positive semi-definite in each scenario); the paragraph references present; a missing SIMM parameter refuses the version |
+| Grids | every dictionary factor in exactly one bucket of each grid; a source name under two factors refuses the dictionary |
+| Loader | each refusal class of [section 11](#11-refusals-and-error-codes) with its code and count; a proxied record counted; an intraday record replacing a record whole |
+| Scopes | a desk's charge equals its positions' charge as a basket; the bank's equals the re-aggregated figure, not the sum of desks; contributions add up to the charge to the cent |
+| Cluster | the bank's SBM on a sharded date equals one server's, bit for bit |
+| Demo data | `tools/packgen/sensitivity/test_sensitivity_data.py`: names on the standard, every element's factor in the dictionary, one record per derived position, a hand-built swap's ladder and one-sigma P&L equal to the VaR batch's, the committed files equal to the generator's |
+| Playground | every check cell passes after recalculation; the formula scanner finds no function outside the common set; a saved recipe replayed gives byte-equal figures; an override never reaches an official record |
+
+The method (sections 4 to 6, the hand-built cases and the parameter files) was checked paragraph by paragraph against the Basel
+Framework's MAR21, MAR22 and MAR23 (the version effective 1 January 2023, [bis.org](https://www.bis.org/basel_framework/chapter/MAR/21.htm))
+and ISDA's SIMM methodology 2.8+2512 ([isda.org](https://www.isda.org/2026/06/12/isda-publishes-isda-simm-methodology-version-2-8-2512/)),
+and every hand-built case was recomputed. The points that a reader most often gets wrong are stated where they apply: one CVR+ and one
+CVR− per factor with the side chosen per bucket and per scenario (MAR21.5); curvature across buckets floored at zero, never capped at ±K_b
+(MAR21.5(4)); curvature correlations squared first, then the scenario applied (MAR21.100, MAR21.101); the other-sector buckets summed in
+absolute value (MAR21.56, MAR21.79); listed or clearable instruments excluded from the other-residual part only (MAR23.7).

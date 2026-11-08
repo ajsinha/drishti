@@ -44,9 +44,9 @@ ROOT = Path(__file__).resolve().parents[1]
 PY = sys.executable
 
 #: the generators whose source is read (data generators; tests and fixtures under them are skipped)
-GENERATORS = ["tools/packgen/**/*.py", "tools/samplegen/*.py", "tools/testdata/*.py", "tools/realdata/*.py", "tools/publicdata/*.py",
+GENERATORS = ["tools/packgen/**/*.py", "tools/samplegen/*.py", "tools/testdata/*.py", "tools/realdata/*.py", "tools/feeds/*.py", "tools/feeds/sources/*.py",
               "tools/sutragen.py", "tools/schemapack.py", "tools/bench/trades.py", "tools/convertcmd.py", "tools/pvgen/*.py",
-              "config/packs/*/tools/*.py",
+              "config/packs/*/*/tools/*.py",
               "examples/packs/*/tools/*.py"]
 
 #: files that write a store on purpose: the loaders (generating and loading are separate steps; these are the loading step)
@@ -54,7 +54,9 @@ LOADERS = {"tools/samplegen/layout.py", "tools/samplegen/load_rows.py"}
 
 #: written file names that are not data: manifests, state, download caches, test oracles and run summaries (they stay as they are)
 ALLOWED_NAMES = {"MANIFEST.json", "manifest.json", "meta.json", "cache-index.json", "testdata.yaml", "trackers.json", "factbook_ref.json",
-                 "fetch.json", "rr.json", "wikidata.json", "reference.json", "last-run.json", "help-coverage.txt", "expect.yaml"}
+                 "fetch.json", "rr.json", "wikidata.json", "reference.json", "last-run.json", "help-coverage.txt", "expect.yaml",
+                 "index.json"}   # index.json: the recorded responses' index (request key -> raw response file) of a feed's test fixtures
+                                 # (tools/feeds/sources/publicsector.py Recorder), a manifest like cache-index.json, not data
 
 #: non-data files a pack generator writes beside its samples (the pack itself, its docs)
 NON_DATA_SUFFIXES = (".yaml", ".yml", ".md", ".txt", ".sutra.yaml", ".svg", ".png", ".jpg", ".html", ".css", ".js", ".py")
@@ -107,7 +109,10 @@ class RunTheGenerators(unittest.TestCase):
         self.tmp.cleanup()
 
     def run_tool(self, *args, env=None, timeout=600):
-        r = subprocess.run([PY, *map(str, args)], cwd=ROOT, capture_output=True, text=True, timeout=timeout, env={**os.environ, **(env or {})})
+        # the data folder is the test's own: a generator that writes beside its rows (make_data.py's feed, <data>/feeds/fixing.jsonl) never
+        # reaches the repository's data/
+        r = subprocess.run([PY, *map(str, args)], cwd=ROOT, capture_output=True, text=True, timeout=timeout,
+                           env={**os.environ, "DRISHTI_DATA_DIR": str(self.d), **(env or {})})
         self.assertEqual(r.returncode, 0, r.stdout[-2000:] + r.stderr[-2000:])
         return r
 
@@ -186,12 +191,12 @@ class RunTheGenerators(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("tar", r.stderr)
         r = subprocess.run([PY, "tools/packgen/banking/make_data.py", "--jsonl", str(self.d / "banking.jsonl")],
-                           cwd=ROOT, capture_output=True, text=True, timeout=300)
+                           cwd=ROOT, capture_output=True, text=True, timeout=300, env={**os.environ, "DRISHTI_DATA_DIR": str(self.d)})
         self.assertNotEqual(r.returncode, 0, "several kinds and days in one plain file")
 
     def test_a_pack_generator_writes_jsonl_samples_and_sutra_cases(self):
         self.run_tool("tools/packgen/genomics/make.py", env={"DRISHTI_PACKS_OUT": str(self.d / "packs")})
-        pack = self.d / "packs" / "genomics"
+        pack = next(self.d.glob("packs/*/genomics"))             # written in its domain's folder, <out>/<domain>/genomics
         self.assert_jsonl(pack / "samples", 3)
         self.assertTrue((pack / "samples" / "catalog.jsonl").is_file())
         if (pack / "tests").is_dir():

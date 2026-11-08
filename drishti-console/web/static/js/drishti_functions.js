@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Functions, FUNC <GO> (docs/admin/USER_MANAGEMENT.md): the command directory, server-rendered. For everyone: Find (every word must appear in a
+/* Functions, FUNC <GO> (docs/guides/ADMIN_GUIDE.md): the command directory, server-rendered. For everyone: Find (every word must appear in a
    command's code, title, description, kind or its pack's name and title; FUNC <words> arrives with them typed) and the Pack picker, kept in
    the address as ?q= so a reload or a shared link shows the same list. For an administrator (the page carries the switches): a row per
    command with the Everyone column and a pack switch; ticking a box only records a change: changes are batched (Undo takes back the last
@@ -35,7 +35,7 @@
   var total = Number(counts.getAttribute('data-total')) || 0, adminCounts = counts.textContent;
   function on(tr) { var box = $('[data-switch]', tr); return box ? box.checked : tr.getAttribute('data-on') === 'true'; }
   function filter() {
-    var words = find.value.trim().toLowerCase().split(/\s+/).filter(Boolean), pack = packPick.value, mode = show ? show.value : 'all', shown = 0;
+    var words = find.value.trim().toLowerCase().split(/\s+/).filter(Boolean), pack = packPick.value || '', mode = show ? show.value : 'all', shown = 0;
     $$('tbody[data-pack]').forEach(function (body) {
       var any = false, packText = body.getAttribute('data-pack-text') || '';
       $$('tr[data-command]', body).forEach(function (tr) {
@@ -53,7 +53,7 @@
     if (empty) {
       empty.hidden = shown > 0 || total === 0;
       var eq = $('[data-empty-q]', empty);
-      if (eq) { eq.textContent = find.value.trim() || (pack ? packPick.options[packPick.selectedIndex].text : ''); }
+      if (eq) { eq.textContent = find.value.trim() || (pack ? packPick.component.getOption().label : ''); }
     }
     try {
       var url = new URL(window.location.href);
@@ -62,11 +62,10 @@
     } catch (e) { /* an old browser keeps the address as it is */ }
   }
   find.addEventListener('input', filter);
-  packPick.addEventListener('change', filter);
-  if (show) { show.addEventListener('change', filter); }
-  document.addEventListener('keydown', function (e) {
-    if (e.key === '/' && document.activeElement && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); find.focus(); }
-  });
+  packPick.addEventListener('drishti:change', filter);                   // drishti-inputs' Selects (<drishti-select>)
+  if (show) { show.addEventListener('drishti:change', filter); }
+  window.Drishti.keys.register({ id: 'functions.find', keys: ['/'], scope: 'screen', area: 'functions', group: 'Functions', description: 'Find a command',
+    run: function () { find.focus(); } });
   filter();
   if (!admin) { return; }
 

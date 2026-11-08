@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Tests of `drishti.py server engines` and its alias `admin engines` (docs/architecture/COMPUTE_ENGINES.md section 10) against an
+"""Tests of `drishti.py server engines` and its alias `admin engines` (docs/guides/ADMIN_GUIDE.md section 10) against an
 in-process stand-in for the server: the list, show with --sources, on and off with a reason and the flags, the refusal (exit 2) and an
 engine's command answering DRS-1020 (exit 3, the server's words)."""
 import json
@@ -101,7 +101,7 @@ class Engines(unittest.TestCase):
         self.assertIn("give --reason", err)
 
     def test_an_engines_command_running_nowhere_exits_3(self):
-        FakeServer.routes[("GET", "/api/v1/frtb/sa")] = (404, {"code": "DRS-1020", "engine": "frtb-sa",
+        FakeServer.routes[("GET", "/api/v1/risk/frtb/sa")] = (404, {"code": "DRS-1020", "engine": "frtb-sa",
                                                               "detail": "DRS-1020 FRTB-SA is not running on this server, and no other server of this cluster runs it."})
         code, _, err = self.go("frtb", "sa", "EXAMPLE")
         self.assertEqual(3, code, err)

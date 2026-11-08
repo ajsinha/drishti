@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin -> Engines (templates/admin/engines.html; docs/architecture/COMPUTE_ENGINES.md section 8, mock-up A). Flipping a switch only stages
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* Admin -> Engines (templates/admin/engines.html; docs/guides/ADMIN_GUIDE.md section 8, mock-up A). Flipping a switch only stages
    the change; the side panel shows the dependency check (refused changes say why and offer "Turn on both" / "Turn off all three"), what
    disappears for people (from the catalogue), what happens on the server (live, drain up to 30 s, or restart needed) and asks for the
    reason. Apply sends one batch; the server writes each engine's file (refusing a file changed by hand since the page read it) and the
@@ -36,7 +37,7 @@
   function mb(bytes) {
     var n = Number(bytes || 0);
     if (n <= 0) { return '-'; }
-    if (n >= 1 << 30) { return (n / (1 << 30)).toFixed(1) + ' GB'; }
+    if (n >= 1 << 30) { return window.Drishti.elements.core.formatBytes(n); }
     return Math.max(1, Math.round(n / (1 << 20))) + ' MB';
   }
   function byId(id) { return (view.engines || []).filter(function (e) { return e.id === id; })[0]; }
@@ -162,6 +163,7 @@
     return refusals;
   }
 
+  var RF = window.Drishti.elements.inputs.formOf($('[data-field-of=reason]'));     // the reason: drishti-inputs' Form (core/admin_forms.py)
   function drawPanel() {
     var panel = $('[data-eng-panel]');
     if (!staged.length) { panel.hidden = true; return; }
@@ -218,7 +220,7 @@
     $('[data-eng-writes]').textContent = 'writes ' + staged.map(function (s) { var e = byId(s.engine); return s.node ? s.node + ': config/engines/' + s.engine + '.yaml' : e.file; }).join(', ');
     var apply = $('[data-eng-apply]');
     apply.textContent = staged.length === 1 ? 'Turn ' + title(first.engine) + ' ' + (first.on ? 'on' : 'off') : 'Apply ' + staged.length + ' changes';
-    apply.disabled = refusals.length > 0 || !$('[data-eng-reason]').value.trim() || nodesOf().length > 1;
+    apply.disabled = refusals.length > 0 || !String(RF.getField('reason') || '').trim() || nodesOf().length > 1;
     if (nodesOf().length > 1) { $('[data-eng-deps]').insertAdjacentHTML('beforeend', '<p class="eng-bad">Apply the changes of one node at a time.</p>'); }
   }
 
@@ -272,10 +274,10 @@
     }
     if (ev.target.closest('[data-eng-apply]')) { apply(); }
   });
-  $('[data-eng-reason]').addEventListener('input', drawPanel);
+  RF.on('change', drawPanel);
 
   function apply() {
-    var reason = $('[data-eng-reason]').value.trim();
+    var reason = String(RF.getField('reason') || '').trim();
     var node = staged[0].node || '';
     var expected = {};
     if (!node) { staged.forEach(function (s) { var e = byId(s.engine); expected[s.engine] = e.checksum || ''; }); }
@@ -300,7 +302,7 @@
         var out = (res.j.outcomes || []).map(function (o) { return title(o.engine) + ' ' + (o.on ? 'on' : 'off') + ': ' + o.outcome; }).join('; ');
         if (!res.j.engines && res.j.forwardedTo) { out = 'sent to ' + res.j.forwardedTo + ': ' + out; }
         staged = [];
-        $('[data-eng-reason]').value = '';
+        RF.setValue({ reason: '' });
         return refresh().then(function () {                 // said once the list and History show the change
           var done = $('[data-eng-done]');
           done.hidden = false;

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of the pack developer guide (docs/guides/PACK_DEVELOPER_GUIDE.md), written to docs/guides/img/packs/.
+"""The pictures of the pack developer guide (docs/guides/BUILD_GUIDE.md), written to docs/guides/img/packs/.
 
 The worked example is the help-desk pack, docs/guides/examples/pack/helpdesk. The pictures need a scratch server and console that load the
 QUICKSTART packs but NOT helpdesk, and that trust a registry holding a signed helpdesk-0.1.0.zip, so that the install picture is a real
@@ -36,6 +36,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from shotlib import Ctx, java_cmd, listening, out_dir, register  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 PACK = ROOT / "docs" / "guides" / "examples" / "pack" / "helpdesk"
 QUICKSTART = ["core", "market-data", "trading", "market-risk", "counterparty-risk", "world-economy", "news-and-markets"]
 LISTED = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets"
@@ -145,7 +148,7 @@ def serve(work: Path) -> list:
     packs = work / "packs"
     packs.mkdir()
     for name in QUICKSTART:
-        (packs / name).symlink_to(ROOT / "config" / "packs" / name)
+        (packs / name).symlink_to(pack_dir(name))
     reg = work / "reg"
     reg.mkdir()
     py = ROOT / "drishti-console" / ".venv" / "bin" / "python"

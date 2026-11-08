@@ -26,7 +26,7 @@
   {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="adm-crumb"><a href="/admin/packs">Packs</a> <span aria-hidden="true">/</span> <span class="mono">{{ p.name }}</span></p>
   <h1 class="ws-h">{{ p.title or p.name }}{% if p.sample %} <span class="st st-warn" data-sample-badge title="A sample pack: a demonstration, shown or hidden by the sample-pack setting">Sample</span>{% endif %}
-    <a class="emb-help" href="/help/pack-developer-guide#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which" aria-label="Help: domain packs and this page" title="Help: domain packs and this page">?</a></h1>
+    <a class="emb-help" href="/help/build-guide#31-the-packs-that-ship-turning-them-on-who-sees-which" aria-label="Help: domain packs and this page" title="Help: domain packs and this page">?</a></h1>
   {% if p.description %}<p class="text-muted-d">{{ p.description }}</p>{% endif %}
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
 
@@ -79,9 +79,7 @@
       again is replaced. Every row is checked against the pack's Sutras, then search, type-ahead, the pages per value and BI catch up.</p>
     <div data-data-targets><p class="text-muted-d">Reading what this pack can load…</p></div>
     <div class="pd-data-form" data-data-form hidden>
-      <div class="pd-field"><label for="pdFile">Data file</label><input id="pdFile" type="file" accept=".json,.jsonl,.ndjson" data-data-file></div>
-      <div class="pd-field" data-data-kind-box hidden><label for="pdKind">Kind</label><select id="pdKind" class="studio-in" data-data-kind></select></div>
-      <div class="pd-field" data-data-date-box hidden><label for="pdDate">Business date (snapshot)</label><input id="pdDate" type="date" class="studio-in" data-data-date></div>
+      {{ admin_form('pack_data') }}
       <p class="adm-actions"><button type="button" class="fk" data-data-load disabled>Load the file</button>
         <button type="button" class="fk" data-data-cancel hidden>Cancel</button></p>
       <progress data-data-prog max="100" value="0" hidden aria-label="Sent so far"></progress>

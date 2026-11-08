@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of the Sutra developer guide (docs/guides/SUTRA_DEVELOPER_GUIDE.md), written to docs/guides/img/sutras/. Run through
+"""The pictures of the Sutra developer guide (docs/guides/BUILD_GUIDE.md), written to docs/guides/img/sutras/. Run through
 tools/docs/screenshots.py --guide sutras."""
 from __future__ import annotations
 

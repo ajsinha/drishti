@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * True totals on the pivot engine (BI_DESIGN.md, totals; PIVOT_ENGINE.md section 12): every level of a matrix and a table, for every measure that is a
+ * True totals on the pivot engine (ARCHITECTURE.md §28, totals; ARCHITECTURE.md section 26.9): every level of a matrix and a table, for every measure that is a
  * pivot function, in one grouping-sets statement over the model's rows as the reader sees them, checked here against a brute-force computation over the
  * same trades. The shown figures could not give them: the average of averages is not the average.
  */

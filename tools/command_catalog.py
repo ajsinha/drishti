@@ -29,6 +29,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import manifests  # noqa: E402  (the one rule for where a pack's folder is)
 PACKS = ROOT / "config" / "packs"
 BUILTIN = Path(__file__).resolve().parent / "commands.builtin.yaml"
 OUT = ROOT / "docs" / "guides" / "COMMAND_CATALOG.md"
@@ -71,7 +74,7 @@ def _change(contract: dict) -> str:
 def packs() -> list[dict]:
     """Each pack with a mnemonic: its code, title, description, examples and, per mnemonic, its kind, label and contract."""
     out = []
-    for path in sorted(PACKS.glob("*/pack.yaml")):
+    for path in manifests(PACKS):
         pack = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         mnemonics = pack.get("mnemonics") or {}
         if not mnemonics:
@@ -103,7 +106,7 @@ def render() -> str:
            "# The command catalog", "",
            f"Every command of the command line: its own words and forms, the {len(all_packs)} packs' codes, and the {len(rows)} mnemonics "
            "the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on "
-           "([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).", "",
+           "([BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).", "",
            "**Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): "
            "*fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for "
            "the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a "

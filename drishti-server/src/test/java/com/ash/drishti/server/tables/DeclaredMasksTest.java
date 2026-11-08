@@ -108,7 +108,7 @@ class DeclaredMasksTest {
 
     @Test
     void aBiDatasetsMaskedColumnHoldsTheSameWay() throws Exception {
-        Dataset ds = Layered.dataset(Files.readString(Path.of("../config/tables/bi/trading_risk_counterparties.table.yaml"))).dataset();
+        Dataset ds = Layered.dataset(Files.readString(Path.of("../config/tables/banking/trading_risk_counterparties.table.yaml"))).dataset();
         String table = ds.tables().keySet().iterator().next();
         assertThat(datasets.masks(new Principal("u-plain", List.of("plain")), ds).masked(table, "NAME")).isTrue();
         assertThat(datasets.masks(new Principal("u-plain", List.of("plain")), ds).masked(table, "SECTOR")).isFalse();

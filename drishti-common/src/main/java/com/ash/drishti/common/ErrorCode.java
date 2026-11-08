@@ -39,17 +39,17 @@ public enum ErrorCode {
     /** The connector a kind is routed to is being restarted (its file changed, a retry) and was not back within the read's wait. */
     CONNECTOR_RESTARTING("DRS-1015", 503),
     /**
-     * An administrator turned the command off (Admin → Commands): its kind is not active on this server, by command, link, API, export, BI
+     * An administrator turned the command off (Admin → Functions): its kind is not active on this server, by command, link, API, export, BI
      * or AI alike, and nothing of it is shown.
      */
     COMMAND_OFF("DRS-1016", 403),
     /**
-     * The server's edition (drishti.edition, docs/admin/EDITIONS.md) refuses the pack: the edition lists its packs with
+     * The server's edition (drishti.edition, docs/guides/ADMIN_GUIDE.md) refuses the pack: the edition lists its packs with
      * {@code allow-only}, so Admin → Packs, Deploy archive and the registry may not load another one.
      */
     EDITION_PACK_REFUSED("DRS-1017", 403),
     /**
-     * A compute engine is not running on this server and no other server of the cluster runs it (docs/architecture/COMPUTE_ENGINES.md
+     * A compute engine is not running on this server and no other server of the cluster runs it (docs/guides/ADMIN_GUIDE.md
      * section 5.1): its API answers 404 in words, never 403 (nothing is forbidden; the engine is not here).
      */
     ENGINE_OFF("DRS-1020", 404),
@@ -61,6 +61,15 @@ public enum ErrorCode {
     ENGINE_FILE_CONFLICT("DRS-1023", 409),
     /** An old switch name still in use ({@code drishti.var.enabled} for {@code drishti.engines.var.enabled}): a warning at start, never an answer. */
     ENGINE_OLD_KEY("DRS-1024", 400),
+    /**
+     * A module is off here (docs/architecture/ACCESS_MODEL.md): not installed, not licensed or switched off by an administrator. Its API
+     * answers 404 in words, never 403 (nothing is forbidden; the module is not here).
+     */
+    MODULE_OFF("DRS-1025", 404),
+    /** A function (a command word such as VAR or TRD) is off here: its module is off or an administrator switched it off; its APIs answer 404. */
+    FUNCTION_OFF("DRS-1026", 404),
+    /** A function this person may not use (per-person grants and denials, 2.9.11.i): 403 with the reason, audited. */
+    FUNCTION_NOT_ALLOWED("DRS-1027", 403),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),
@@ -92,7 +101,7 @@ public enum ErrorCode {
     REGEX_REFUSED("DRS-4010", 400),
     /** A regular expression ran over its time budget on one value. */
     REGEX_TIMEOUT("DRS-4011", 408),
-    /** The AI layer (docs/admin/AI.md) or the MCP client is switched off. */
+    /** The AI layer (docs/guides/AI_GUIDE.md) or the MCP client is switched off. */
     AI_OFF("DRS-4015", 404),
     /** An AI or MCP call failed at the provider or server (never carries a key or a prompt). */
     AI_FAILED("DRS-4016", 502),
@@ -104,7 +113,7 @@ public enum ErrorCode {
     AI_POLICY("DRS-4018", 403),
     /** No such model, provider, MCP server or tool. */
     AI_NOT_FOUND("DRS-4019", 404),
-    /** BI with AI (docs/guides/BI_GUIDE.md): the model's answer could not be used (not a valid report, not a query the engine accepts); nothing was changed. */
+    /** BI with AI (docs/guides/REPORTS_GUIDE.md): the model's answer could not be used (not a valid report, not a query the engine accepts); nothing was changed. */
     AI_ANSWER("DRS-4020", 422),
     /** History queries: a range of more business days than the kind's or the server's max-days. */
     HISTORY_RANGE_TOO_LARGE("DRS-4021", 400),
@@ -181,7 +190,7 @@ public enum ErrorCode {
     /** VaR (2.9.5): the tree of a hierarchy the date does not have ({@code GET /api/v1/var/tree?hierarchy=LL}). */
     VAR_HIERARCHY_UNKNOWN("DRS-5214", 404),
     /**
-     * VaR sharding (2.9.6, VAR_SHARDING.md): a shard of the date has no live owner that holds it (every replica down, draining or refusing),
+     * VaR sharding (2.9.6, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a shard of the date has no live owner that holds it (every replica down, draining or refusing),
      * so its part of a scope cannot be summed: the scope's figures are refused, never given from the other shards alone.
      */
     VAR_SHARD_UNAVAILABLE("DRS-5215", 503),
@@ -197,13 +206,13 @@ public enum ErrorCode {
      */
     VAR_NOT_SHARDABLE("DRS-5217", 422),
     /**
-     * The free-space guard (2.9.7, RESOURCES_AND_SCALE.md section 7.2): a hot file, shard book or currency's book was not built because the
+     * The free-space guard (2.9.7, CLUSTER_GUIDE.md section 7.2): a hot file, shard book or currency's book was not built because the
      * disk would fall under {@code drishti.disk.min-free-percent} / {@code min-free-gb} even after every folder freed space down to 90% of its
      * cap. Nothing was written; a date already open keeps answering; the answer says what is free, what was needed and the guard.
      */
     DISK_GUARD("DRS-5218", 503),
     /**
-     * The in-memory lake's guard (docs/architecture/IN_MEMORY_LAKE.md section 8): the data is held in memory only by contract, and this
+     * The in-memory lake's guard (docs/architecture/DATA_ARCHITECTURE.md section 8): the data is held in memory only by contract, and this
      * place would keep it (a scheduled report, a mail attachment, an inbox or share item with rows, a saved result, an outside AI provider).
      * Only a user's download may leave; the answer names the data and its contract.
      */
@@ -239,7 +248,7 @@ public enum ErrorCode {
     PIVOT_FUNCTION_OFF("DRS-5713", 404),
     /** A custom function past a limit: a holistic cell over its rows or megabytes, a state over its bound, a call over its time. */
     PIVOT_FUNCTION_LIMIT("DRS-5714", 422),
-    /** A custom function in an official run, report or sign-off: official measures stay the Java engines (PIVOT_ENGINE.md decision 14). */
+    /** A custom function in an official run, report or sign-off: official measures stay the Java engines (ARCHITECTURE.md section 26). */
     PIVOT_FUNCTION_OFFICIAL("DRS-5715", 403),
     /** An explanation or a what-if the engine cannot make as asked (two cells of different measures, a holistic measure without its provider's steps). */
     PIVOT_EXPLAIN("DRS-5716", 400),
@@ -269,11 +278,6 @@ public enum ErrorCode {
     EXPOSURE_ROW_REJECTED("DRS-5444", 422),
     /** Exposure: a date's netting-set matrices need more memory than the budget (drishti.ccr.exposure.memory-budget-gb). */
     EXPOSURE_CAPACITY("DRS-5445", 503),
-    /**
-     * Exposure: the exact what-if (method {@code paths}) could not be answered: the Python exposure engine (the reactive connector
-     * {@code exposure-whatif} and its compute pool) is not running on this server, or did not answer in time.
-     */
-    EXPOSURE_METHOD_UNAVAILABLE("DRS-5446", 503),
     /** A connector file or draft that fails validation. */
     CONNECTOR_INVALID("DRS-5031", 422),
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */
@@ -443,9 +447,9 @@ public enum ErrorCode {
     TRANSFORM_FAILED("DRS-9075", 422),
     /** Python in BI: a test shipped with a Python item failed, so the item is not published (a bi-admin may force it). */
     PYTHON_TESTS("DRS-9076", 422),
-    /** BI: a Vega-Lite specification could not be drawn (a url or loader in it, a library that did not load); raised by the page, in the visual's frame, and listed here so the code has one home. */
+    /** BI: a Vega-Lite specification was not drawn (a url or loader in it, or a feature drishti-chart does not translate, named with what to use instead); raised by the page, in the visual's frame, and listed here so the code has one home. */
     VEGA_FAILED("DRS-9077", 422),
-    /** BI runs (docs/architecture/BI_DESIGN.md): no such run, or not one the caller may see. */
+    /** BI runs (docs/architecture/ARCHITECTURE.md §28): no such run, or not one the caller may see. */
     RUN_NOT_FOUND("DRS-9080", 404),
     /** BI runs: the caller has {@code queue.per-user} runs queued or running, or the node's queue is at {@code queue.max} (Retry-After). */
     RUN_QUEUE_FULL("DRS-9081", 429),
@@ -575,7 +579,7 @@ public enum ErrorCode {
     CONTENT_BAD_KEY("DRS-5058", 400),
     /** Content store: the backing store (database, bucket, shared folder) could not be reached or answered with an error. */
     CONTENT_UNAVAILABLE("DRS-5059", 503),
-    /** Compute workers (docs/architecture/PYTHON_COMPUTE.md): compute is off on this server ({@code compute.enabled}). */
+    /** Compute workers (docs/guides/NOTEBOOK_GUIDE.md): compute is off on this server ({@code compute.enabled}). */
     COMPUTE_OFF("DRS-9201", 503),
     /** Compute: refused before any work (unknown pool, requirements not approved, an environment not built, four eyes, a bad request). */
     COMPUTE_REFUSED("DRS-9202", 409),
@@ -587,7 +591,7 @@ public enum ErrorCode {
     COMPUTE_FAILED("DRS-9205", 502),
     /** Compute: no such approval request or running computation. */
     COMPUTE_NOT_FOUND("DRS-9206", 404),
-    /** Write-back (docs/guides/WRITE_BACK.md): editing is off on this server ({@code edit.enabled: false} in config/edit/edit.yaml). */
+    /** Write-back (docs/guides/APPROVALS_GUIDE.md): editing is off on this server ({@code edit.enabled: false} in config/edit/edit.yaml). */
     EDIT_OFF("DRS-9301", 403),
     /** Write-back: the change is refused: the field is not editable for you (no Sutra says so, a mask, a role, a read-only field, a restatement without the role), or the target is not usable. */
     EDIT_REFUSED("DRS-9302", 403),
@@ -599,7 +603,7 @@ public enum ErrorCode {
     EDIT_NOT_FOUND("DRS-9305", 404),
     /** Write-back: edits are paused (the edit primary is not reachable, or this cluster has no shared edit log); reading is not affected. */
     EDIT_PAUSED("DRS-9306", 503),
-    /** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): the server is very busy, a new sign-in waits; people signed in keep working. */
+    /** Busy protection (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): the server is very busy, a new sign-in waits; people signed in keep working. */
     BUSY_SIGN_IN("DRS-9501", 503),
     /** Busy protection: a business date cannot be opened just yet (memory, the loads running, the open dates' memory, disk); open dates keep working. */
     BUSY_LOAD("DRS-9502", 503),

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave A of the BI design, console lane (docs/architecture/BI_DESIGN.md section 12.2): the ExpressionEditor on every page that writes an expression, the
+"""Wave A of the BI design, console lane (docs/architecture/ARCHITECTURE.md §28 section 12.2): the ExpressionEditor on every page that writes an expression, the
 report's own measures read and written by the console, the proxy passing the language endpoints (``/expr``, ``/sql``) on, the dataset wizard's derivation
 document, the model designer's field properties, the YAML round trip that keeps comments and order, and Analyse's SQL on the server. The browser side is
 tests/test_bi_languages_browser.py."""

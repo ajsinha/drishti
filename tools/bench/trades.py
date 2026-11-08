@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Trades at scale for the scale strategy (docs/architecture/CLUSTER_DEPLOYMENT.md › Appendix D. Scale strategy: millions of trades, fast, in a bounded heap, section 4): synthetic trades of the real shapes of
+"""Trades at scale for the scale strategy (docs/guides/CLUSTER_GUIDE.md › Appendix D. Scale strategy: millions of trades, fast, in a bounded heap, section 4): synthetic trades of the real shapes of
 ENDUR, CALYPSO and MUREX (the committed test data, cloned with new ids), N a day per system for D business days, with counterparties
 and netting sets, loaded into a Delta lake with drishti.py lake build, one system and day at a time (one day's file on disk at once).
 
@@ -39,6 +39,9 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 SYSTEMS = {"endur": (lambda i: str(10_000_000 + i), "trade-endur", 0), "calypso": (lambda i: f"CLY-{30_000_000 + i}", "trade-calypso", 3),
            "murex": (lambda i: f"MX-{50_000_000 + i}", "trade-murex", 5)}
 LES = ["LE-NY", "LE-LDN", "LE-FRA"]
@@ -111,7 +114,7 @@ days_of: list[str] = []
 def build(a, src: Path, day: str, pack: str, connector: str, kind: str | None = None, key: str | None = None) -> None:
     # the layout (partitions, promoted columns) from the demo lake's file, config/lakes/demo.yaml; written under --lake as its root
     argv = [sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "build", "--from", str(src), "--as-of", day,
-            "--pack", str(ROOT / "config" / "packs" / pack), "--connector", connector, "--mode", "overwrite-dates",
+            "--pack", str(pack_dir(pack)), "--connector", connector, "--mode", "overwrite-dates",
             "--lake", "demo", "--lake-root", a.lake, "-q"]
     argv += ["--kind", kind] if kind else []
     argv += ["--key", key] if key else []                    # trades: the pack's ingest.trade.key

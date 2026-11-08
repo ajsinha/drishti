@@ -29,7 +29,7 @@
 #   DRILL_GATE_THREADS          Maven threads of the gate's build (default 1C: one per CPU)
 #   DRILL_BROWSER_RERUNS        browser-lane files re-run at a time (default 1); DRILL_LANE_LIMIT a console lane's time limit in seconds
 #
-# Full drill, in two stages (docs/guides/TOOLS.md, "The release drill"):
+# Full drill, in two stages (docs/guides/CLI_REFERENCE.md, "The release drill"):
 # 1. The gate, a few minutes, every job at once; the first failure stops the drill with the list:
 #    licence headers; the generated documents and data that must be current (settings catalogue, data contracts and their pages,
 #    data samples, the packs' generated content, the Python API reference); the docs and help console tests; the repository rules
@@ -210,7 +210,7 @@ gate_static() {
     "python3 tools/api_docs.py check-python")          # every public Python function, class and method has a docstring and type hints
   # (tools/test_no_hidden_names.py runs in the tool tests only: its pack-make case needs the server jar, which the gate runs before)
   local gen
-  for gen in $(grep -l -- "--check" config/packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do checks+=("python3 $gen --check"); done   # generated pack content is current
+  for gen in $(grep -l -- "--check" config/packs/*/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do checks+=("python3 $gen --check"); done   # generated pack content is current
   all_of "${checks[@]}"
 }
 

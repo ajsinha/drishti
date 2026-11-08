@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Write-back on this server, put together (WRITE_BACK.md): the edit log and the records it leaves in the Drishti database, the layer the
+ * Write-back on this server, put together (APPROVALS_GUIDE.md): the edit log and the records it leaves in the Drishti database, the layer the
  * router lays over every document, the lanes this node owns and their handler, the outbox of source commands, the triggers of the reactive
  * connectors, the events on the consoles' streams, and the part this node plays in a cluster (section 11). With {@code edit.enabled:
  * false} (as shipped) nothing starts: no lane, no worker, no pencil; overlays applied earlier are still laid over the documents.

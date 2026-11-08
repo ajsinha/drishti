@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The share dialog (COLLABORATION.md, Share with a note). Hidden until drishti_share.js opens it from the Share button, a panel's share
+{# The share dialog (ARCHITECTURE.md §31, Share with a note). Hidden until drishti_share.js opens it from the Share button, a panel's share
    button or Alt+S. Nothing here names a pack, a kind or a person: the lists come from the server. #}
 <div class="shr-shade" data-share-dialog hidden>
   <div class="shr-dlg" role="dialog" aria-modal="true" aria-labelledby="shrTitle" aria-describedby="shrHelp">
@@ -38,9 +38,8 @@
         <div class="shr-to">
           <ul class="shr-chips" data-shr-chips aria-label="Recipients"></ul>
           <div class="shr-pick">
-            <input id="shrTo" type="text" class="studio-in" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="shrList"
+            <input id="shrTo" type="text" class="studio-in" aria-label="People and roles"
                    autocomplete="off" spellcheck="false" placeholder="type a name or a role" data-shr-to>
-            <ul id="shrList" class="shr-list" role="listbox" aria-label="People and roles" hidden></ul>
           </div>
         </div>
       </div>

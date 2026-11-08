@@ -24,14 +24,14 @@ reports of Canada and the US, the lenses and editions that show VaR, the configu
 It is **the one complete document on VaR**: methodology, the calculation worked step by step,
 Drishti's implementation and the regulatory side; other documents link here. Anything described that is not in the code says
 **design, not built** and names the plan row that will build it. The hands-on walk-through is
-[tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) (twelve steps on the test data). In the console, **F1** on the explorer
+[tutorial 2, Part A](../tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) (twelve steps on the test data). In the console, **F1** on the explorer
 (or its **?**) opens this guide.
 
 **Start here:** [Input, computed, cache and the official record](#input-computed-cache-and-the-official-record-compute-first) says in
 one table what Drishti receives, what it computes, what it keeps only as a cache and what it records officially. The rest of the guide
 keeps to those four words.
 
-**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md).
+**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../architecture/LENSES.md#5-oversight-lens) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../architecture/LENSES.md#6-mr-cube-lens).
 
 On 2026-10-26 this guide replaced five documents (this guide's first version, the explorer's page, the data contract `VAR.md`, the
 engine design and the data model); they were deleted (in git at tag v2.9.5). Where a design said otherwise,
@@ -351,7 +351,8 @@ set says so in place of the figures.
 
 Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-layout/A.html`, and `A-drawer.html` with the drawer open):
 
-- **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket**, **Backtest ›** and **How calculated ›**.
+- **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket**, **Backtest ›**, **What-if…** and
+  **Explain ›**.
   - **Backtest ›** opens the regulatory backtest of the scope in view, on the date in view (the same page as `VAR <scope> BACKTEST`,
     [REGULATORY_VAR_REPORTING.md section 4.6](REGULATORY_VAR_REPORTING.md#46-backtesting)): its VaR against the P&L of the last 250
     business days, the exceptions and the zone.
@@ -368,17 +369,22 @@ Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-lay
   - **+ New basket** (also **Alt+B**; the count of the parts your sheet holds beside it) opens **Construct your basket**, the sheet,
     across the top of the page ([section 3.5](#35-construct-your-basket)). The sheet is collapsed when the page opens; once you save, the
     new basket is in My baskets and the sheet collapses again.
-  - **How calculated ›** (key **H**) opens **How this number was built** as a drawer over the right of the screen
-    ([section 3.6](#36-how-this-number-was-built)).
+  - **Explain ›** (key **E**) opens the Explain drawer of the scope's VaR over the right of the screen: the formula with its values,
+    how the number was built, why it moved and the workbook ([section 3.6](#36-how-this-number-was-built)). Every figure tile has its
+    own: hover it for a one-line preview, click it for the drawer.
 - **Scopes** (left): the hierarchy chosen in the selector above it (Management: bank, division, desk, book; Legal entities: bank, legal
   entity, desk, book; and every configured hierarchy by its title, such as *Limit letters*: letter, desk; the choice kept
   in the link as `hierarchy=LL`; a hierarchy skipped on the date because its column is not in the data is listed *(not available)*,
   disabled, its reason on hover: [section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)) with each
-  node's VaR, ES and a bar of its limit use (green, amber at 75%, red at 90%; *no limit* where the node has none). Click **▸** to open
+  node's VaR, ES and a bar of its limit use in the tone of the node's limit status as the server says it (`limitStatus`: *within*
+  green, *near* amber, *breach* red; no tone without a status; *no limit* where the node has none). Click **▸** to open
   a node, click its name to see its VaR. A book opens to its positions (a LONG or SHORT chip, the
   quantity, VaR, ES, the component VaR in the book); a position opens to its trades. Every row has **+ basket** (shown as you point at it).
 - **The scope** (the rest of the width): the breadcrumb, six tiles (VaR 99% 1-day, ES 97.5%, the sum of the children's standalone VaR, the
-  diversification, the limit use, the backtest exceptions over 250 days with the Basel light), and the tabs.
+  diversification, the limit use in the tone of the scope's limit status, the backtest exceptions over 250 days with the Basel light),
+  and the tabs. The page decides no limit status of its own: **near** starts at the one setting `drishti.risk.limit-near` (0.8 by
+  default, in `config/engines/var.yaml`) and **breach** is over 100%, the same rule for every screen, the official record and the
+  what-if ([section 11.2](#112-the-headline-get-scope-and-its-provenance), `limitStatus` and `limitNear`).
 - The **?** in the status line opens this guide.
 
 The keys **B**, **M** and **H** work anywhere on the page except while you type in a box or in the basket's sheet.
@@ -546,10 +552,10 @@ basket, so you can save it again. Captures taken of the basket are kept: each st
 and says the basket no longer exists. Official end-of-day records never name a basket. A basket changed by its owner after you opened
 the dialog is not deleted unseen: the dialog says it changed (`409`) and you look again. Administrators manage everyone's baskets in
 **Admin → Ad-hoc scopes** (every owner's, filtered by owner, **Delete** with an optional reason that goes to the audit log and to the
-owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)). CLI: `drishti.py var basket-delete <name>`
-(yours), `--owner <user> --reason <text>` (an administrator, anyone's). API: `POST /api/v1/var/basket/sheet` (the checks and figures),
-`GET /api/v1/var/basket/sheet?scope=` (a basket, a portfolio's copy or a scope laid into the sheet), `POST /api/v1/var/basket/sheet.xlsx`,
-`POST /api/v1/var/baskets` (save, edit), `DELETE /api/v1/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
+owner's inbox; [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#126-deleting-peoples-var-baskets)). CLI: `drishti.py var basket-delete <name>`
+(yours), `--owner <user> --reason <text>` (an administrator, anyone's). API: `POST /api/v1/risk/var/basket/sheet` (the checks and figures),
+`GET /api/v1/risk/var/basket/sheet?scope=` (a basket, a portfolio's copy or a scope laid into the sheet), `POST /api/v1/risk/var/basket/sheet.xlsx`,
+`POST /api/v1/risk/var/baskets` (save, edit), `DELETE /api/v1/risk/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
 
 ![Construct your basket: one sheet, a column per kind; a position from its row, a portfolio from the hints, the FX desk from the tree, trades pasted from Excel, one taken away by its leading minus and one not live said in words on its cell; the basket's VaR, ES, sum of the parts and diversification, the server's](img/var/06-basket.jpg)
 
@@ -557,19 +563,21 @@ owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-
 
 ### 3.6 How this number was built
 
-**How calculated ›** in the toolbar (or the key **H**) slides a drawer over the right of the screen; **Esc** or **✕** closes it and
-the focus goes back to the link. The drawer's state is in the page's link (`&how=1`), so a link can open the page with it open. Its
-content is the server's, as sent with the scope's answer (the browser computes nothing), with **Export CSV** (the scope's path),
-**Capture VaR** and **What-if…** (which closes the drawer and opens the basket's sheet). It starts under the top bar, so the command
-line and the bar's menus stay in reach. On a phone it rises from the bottom.
-
-![How calculated open on the bank: the drawer under the top bar, over the right of the screen](img/var/18-how-calculated.jpg)
+How a VaR figure was built is the **Explain** drawer's tab **Inputs & lineage** (the one Explain of every number,
+[USER_GUIDE.md, "Explain: one for every number"](USER_GUIDE.md#explain-one-for-every-number)): **Explain ›** in the toolbar (or the key
+**E**), or a click on the VaR or ES tile, slides the drawer over the right of the screen; **Esc** or **✕** closes it and the focus goes
+back to where it was. It starts under the top bar, so the command line and the bar's menus stay in reach; on a phone it rises from the
+bottom. Its four tabs are the same on every screen: **Formula** (the rank rule with the scope's numbers: N, k, the k-th worst scenario
+and its P&L), **Inputs & lineage** (below), **Why it moved** ([section 3.11](#311-why-it-moved-the-var-change-explained)) and
+**Workbook** (the explanation's .xlsx and the VaR Playground). **Open as a page** shows all four at once, for an auditor or for printing
+(`/explain?kind=var&scope=…`). Everything is the server's, computed for you (the browser computes nothing).
 
 The scope as resolved, the positions and trades included, those without a vector, those outside your entitlement, unknown ids, the
 vector batch and data version, the scenario set and its window, the method and rank rule, the ES rule, how components are allocated,
 the engine and its threads, your view, **the tier** the vector came from (a node's float64 aggregate, the date's memory-mapped hot file,
 or memory: [section 26](#26-the-tiered-memory-and-the-hot-file)), the members' hash, the time taken and whether the cache answered. The
-fields are those of the answer's provenance ([section 11.2](#112-the-headline-get-scope-and-its-provenance)).
+fields are those of the answer's provenance ([section 11.2](#112-the-headline-get-scope-and-its-provenance)); the lineage lists every input
+table's data version on the date, the batches and the scenario set.
 
 ![How this number was built: the rates desk without one book, from the hot file](img/var/08-provenance.jpg)
 
@@ -618,8 +626,8 @@ Opening a trade page never waits for the engines to load a date: until they have
 
 ### 3.8 On a phone
 
-The panels stack, with no sideways scrolling; the two basket drop-downs are full width, and *How this number was built* is a sheet that
-rises from the bottom (How calculated, or *More on this page*):
+The panels stack, with no sideways scrolling; the two basket drop-downs are full width, and the Explain drawer is a sheet that rises
+from the bottom (Explain ›, or a tap on a tile):
 
 ![The explorer on a 390 px phone](img/var/11-phone.jpg)
 
@@ -730,17 +738,17 @@ scenario picker and the details; the full matrix is on a larger screen. Nothing 
 ![The scenario matrix on a 390 px phone: the glance form](../tutorials/img/t25/21-scenario-matrix-phone.jpg)
 
 **Editions.** `SMAT` is part of Drishti Risk and Drishti Trading (`commands.words.SMAT: on`); Drishti Market and Drishti World leave it
-out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers the link ([EDITIONS.md](../admin/EDITIONS.md)).
+out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers the link ([LENSES.md](ADMIN_GUIDE.md#12-what-a-lens-is)).
 From the command line: `drishti.py var matrix <id> [--days N] [--by trade] [--csv]` ([section 10](#10-the-command-line)); the API:
-`GET /api/v1/var/matrix` ([section 11.1](#111-the-endpoints)).
+`GET /api/v1/risk/var/matrix` ([section 11.1](#111-the-endpoints)).
 
 ### 3.10 The VaR Playground (PLAY VAR)
 
 The playground answers *how was this VaR worked out?* with the numbers themselves: every position's scenario P&L, the portfolio, its
 rank, VaR, ES, the components, incremental VaR and both 10-day methods, in a spreadsheet-like grid with the explanation beside it, and
 **exported as an Excel workbook of real formulas** whose figures equal the engine's to the cent. Change a PV in the workbook and every
-figure moves; the check cells say whether the sheet still equals the engine. The design, the workbook's tabs and every formula are in
-[VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md).
+figure moves; the check cells say whether the sheet still equals the engine. The workbook's tabs and every formula are in
+[section 3.13](#313-the-var-playgrounds-workbook-cell-by-cell); the frame every metric's playground shares is [section 3.14](#314-the-playground-frame-every-metrics-playground).
 
 **Open it.** `PLAY VAR <scope> <GO>` in the VaR explorer's words (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`,
 `PLAY VAR DESK:DESK-RATES-NY IN EUR`), or `PLAY VAR <id> <id> ...` with up to 50 positions or trades (`PLAY VAR POS-10442 MX-20000274`);
@@ -786,16 +794,17 @@ rules, PV and PnL input forms, and positions as rows; `VarPlaygroundApiTest` doe
 formula is scanned for functions outside the common set.
 
 From the command line: `drishti.py var playground <scope> [--ids ...] [--xlsx FILE] [--count N|all] [--estimate]`
-([section 10](#10-the-command-line)); the API: `GET /api/v1/var/playground`, `/playground.xlsx`, `/playground/estimate`,
+([section 10](#10-the-command-line)); the API: `GET /api/v1/risk/var/playground`, `/playground.xlsx`, `/playground/estimate`,
 `/playground/template` ([section 11.1](#111-the-endpoints)). **Editions:** `PLAY` is part of Drishti Risk and Drishti Trading
 (`commands.words.PLAY: on`); off, the command answers `DRS-4023` and `/play` and `/api/play/...` answer 404.
 
 ### 3.11 Why it moved: the VaR change explained
 
 VaR moved from one business date to the next; **Why it moved** says why, in causes that **add up exactly** to the change, and who drove
-each one. It is a tab of the VaR page beside the others (`VAR EXPLAIN <scope> <GO>`, or `VAR <scope> EXPLAIN`), it answers any scope the
-page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
-newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation).
+each one. It is the **Why it moved** tab of the VaR figure's Explain (the drawer, or the page `VAR EXPLAIN <scope> <GO>`, or
+`VAR <scope> EXPLAIN [from] [to]`, opens), in three views (**Waterfall**, **Matrix**: the scope and each child node, the steps across,
+and **Sentences**) with the two dates to compare; it answers any scope the page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
+newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../architecture/LENSES.md#531-ro1-var-change-explanation).
 
 **In plain words.** Drishti moves **one thing at a time** from yesterday's state to today's (the corrections to yesterday's data, the
 books that moved, the trades that left, the oldest day leaving the scenario window, the market, the newest day entering it, the new
@@ -915,7 +924,7 @@ book moved in (+10); the new trade C offset 11. The newest day became the worst 
 
 **On the demo data.** The test data holds three business dates, 2026-09-28 to 2026-09-30 ([section 22.1](#221-what-the-repository-ships-verified-2026-10-25-version-13)),
 so the tab compares 2026-09-29 with 2026-09-30 by default. The engine's answers (99%, 1-day, the default order; `GET
-/api/v1/var/explain` on a lake built with `lake demo --as-of data`), USD:
+/api/v1/explain?kind=var&part=why` on a lake built with `lake demo --as-of data`), USD:
 
 | Step | BANK 2026-09-29 → 09-30 | BANK 2026-09-28 → 09-29 | DESK:CREDIT 09-28 → 09-29 | DESK:FI 09-28 → 09-29 |
 |---|---|---|---|---|
@@ -958,8 +967,8 @@ VaR 2026-09-30                         55
 change                                +35  the steps add up: yes
 ```
 
-**The working as a workbook.** *Download the working (.xlsx)* (`drishti.py var explain <scope> --xlsx FILE`, `GET
-/api/v1/var/explain.xlsx`) writes the explanation on the VaR Playground's frame ([section 3.10](#310-the-var-playground-play-var)): **Main**
+**The working as a workbook.** The Explain drawer's **Workbook** tab (`drishti.py var explain <scope> --xlsx FILE`, `GET
+/api/v1/risk/var/explain.xlsx`) writes the explanation on the VaR Playground's frame ([section 3.10](#310-the-var-playground-play-var)): **Main**
 (the inputs Confidence and RankRule; each state's VaR worked from its column, N, k, the VaR scenario's date, the engine's VaR beside it and
 a check; each step as the difference of two state cells beside the engine's; the add-up check; the last state checked against the later
 date's scope; the order), **Data** (values only: the two dates' scope P&L by scenario day on one axis of both sets' days, and the churn's
@@ -971,8 +980,9 @@ formula over the state before it and Data, and its ranks), **Drivers** (the engi
 **Settings** (`drishti.var.explain.*`, [section 12](#12-settings)): `enabled` (true), `order`, `window-lines` (`two`, or `one` window-roll
 line), `split-amendments` (true), `top` (10), `drivers-max` (2,000 trades per step whose incremental VaR is computed, the largest by their
 share of the state's tail), `cache-minutes` (10: answers are kept, never stored), `cache-mb` (32, weighed in bytes) and `matrix-max` (60
-child nodes). The API: `GET /api/v1/var/explain`, `/explain/matrix` and `/explain.xlsx` ([section 11.1](#111-the-endpoints)); the same
-entitlements as the scope's VaR (a scope is resolved as you on each date).
+child nodes). The API: `GET /api/v1/explain?kind=var&scope=…&from=…&to=…&part=why` (`view=matrix` for the Matrix view;
+[API_REFERENCE.md, "Explain"](API_REFERENCE.md#18-explain-any-number)) and `GET /api/v1/risk/var/explain.xlsx` ([section 11.1](#111-the-endpoints)); the
+same entitlements as the scope's VaR (a scope is resolved as you on each date).
 
 ### 3.12 Parametric VaR beside historical (PVAR)
 
@@ -991,15 +1001,225 @@ With the toggle on:
 | **The tree** | the **Parametric** and **Gap** columns beside each node's VaR, ES and limit |
 | **The P&L path** | the **normal curve** over the histogram, the historical marker (solid) and the parametric one (dashed), both tails lightly shaded and the gap bracket between the markers |
 
-**The ? on every parametric figure** (a tile, a tree cell, the curve) opens the server's own lines: the method, the window, the
-weighting, the confidence and z, the horizon, n, μ and σ, the formula with the scope's numbers, ES, historical VaR beside it and the gap
-with its reading. Every number comes from the answer (the browser computes nothing); on a phone it is a bottom sheet.
+**The ? on every parametric figure** (a tile, a tree cell) is its Explain: hover it for the preview, click it for the drawer, whose
+**Formula** is the server's own lines: the method, the window, the weighting, the confidence and z, the horizon, n, μ and σ, the formula
+with the scope's numbers, ES, historical VaR beside it and the gap with its reading. Every number comes from the answer (the browser
+computes nothing); on a phone the drawer is a bottom sheet.
 
 **The Normal curve toggle** (key **N**) hides the curve, the parametric marker, its tail and the gap bracket; the choice is remembered
-for you and in the link (`nc=0`). **Worked in the playground** (and the ? popovers' foot) opens the VaR Playground's **Parametric tab**
+for you and in the link (`nc=0`). **Worked in the playground** (and the Explain drawer's Workbook tab) opens the VaR Playground's **Parametric tab**
 on the scope ([section 3.10](#310-the-var-playground-play-var)): the figures, the steps, each position's μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the
 Euler components that add up to the parametric VaR, and the workbook's Parametric tab. The MR cube and the pivot offer `pvar()` beside
-`var()` and `comp_var()`. [Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through it on the demo data.
+`var()` and `comp_var()`. [Tutorial 2, Part B](../tutorials/02-var-from-the-bank-to-a-trade.md#part-b--parametric-var-beside-historical-the-fat-tail-gap) walks through it on the demo data.
+
+### 3.13 The VaR Playground's workbook, cell by cell
+
+**Inputs, as the person.** The playground's endpoint builds its inputs with the person's entitlements and masks, from the same date,
+batch, scenario window and scenario set the engine used, and says so in the Provenance tab: the **scenario PVs** of each position in its
+own currency (`scenario-pv`, the preferred input; [section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) or
+its **P&L vector** (`pnl-vector`, flagged *input form PnL*, base PV *n/a*); the **scenario FX** per currency and its base rate
+(`fx-scenario` as supplied, or derived from the FX history: each currency's column says *supplied* or *derived*); the scenario dates,
+window, set id and stress flag; the rank rule, component window, confidences, horizon and 10-day method (`drishti.var.*` and the
+pickers, written to Main as inputs); and the engine's own figures for the same scope and pickers (Main's check cells). A trade or position
+the engine refused (a missing PV, an unknown currency) is listed in Provenance with its DRS code and left out, as the engine leaves it
+out; never zero-filled. A position whose trades came in different currencies is shown in USD. Stressed VaR (USD only) shows every
+position as input form PnL on the stress set's scenarios; a date with no stress set says so, never zeros.
+
+**Which figures for which positions.** Standalone and component VaR and ES for every position (a sum over the scope's tail scenarios);
+**incremental VaR for the top 50 by |component VaR|** (`drishti.var.playground.incremental-positions`), because each needs its own
+re-ranked portfolio column (the others say *not computed (top 50 only)*); diversification for the scope.
+
+**Size and layout.** 500 positions × 509 scenarios is about 12 MB and recalculates in headless LibreOffice in about 10 seconds; 50
+positions about 1.3 MB; one position about 140 KB. The estimate the export states before the download comes from these measurements
+(about 11 bytes a value cell and 30 a formula cell, compressed); while it writes, the server holds the chosen positions' scenario values
+(about 8 bytes a cell), which `export-max-cells` caps. Positions are columns while the PnL tab's columns fit (label, positions, Rest of
+scope, nine series and the 50 incremental helpers within 16,384 columns: about 16,300 positions); beyond that positions are rows and
+scenarios columns, the same formulas through the other orientation.
+
+**The template: in git, built into each export.** The look and the words are a template kept in the repository as text, under
+`drishti-banking/src/main/resources/playground/var/template/`: `template.properties` (name, version, every cell format by name, the check
+colours), `xl/styles.xml` (the look), `docProps/core.xml` and `docProps/app.xml` (with `{{PRODUCT}}`, `{{COPYRIGHT}}`, `{{OWNER}}` and
+`{{TEMPLATE_VERSION}}` filled from the branding configuration) and `explain.txt` (the Explain tab's steps; `{Name}` a cell reference,
+`{Name:v}` its value). The sheets, the named cells and every formula are written by the generator (`VarPlaygroundBook`) for exactly the
+positions chosen, streamed row by row onto the response; each formula cell is checked against the common function set and carries its
+**cached result** from `VarPlaygroundModel` (the same arithmetic as the formulas), and the workbook asks to be recalculated on open
+(`fullCalcOnLoad`). A bank's own house style is a folder named by `drishti.var.playground.template` that keeps every style name of
+`template.properties` (checked at start: a missing name or file refuses it, listed). The **empty workbook**
+(`GET /api/v1/risk/var/playground/template?positions=10`) has every formula in place over blank Data, Config and FX: paste scenario PVs,
+fill the rates and it calculates offline. The template's version is in every tab's footer and the document properties.
+
+**The tabs.** Positions are columns and scenarios rows, oldest first, in every tab.
+
+| Tab | What it holds | Typed or formula |
+|---|---|---|
+| **Main** | the title band (product name, scope, date, currency, horizon, confidence); the named inputs (`Confidence`, `EsConfidence`, `Horizon`, `TenDayMethod`, `RankRule`, `ComponentWindow`, `ReportingCurrency`, `ScenarioCount`); the results (VaR, ES, the VaR scenario's rank and date, 10-day √10 and 10-day sum VaR and ES, every configured confidence and ES confidence, and per position standalone VaR and ES, component VaR and ES, % of VaR, incremental VaR, diversification), each beside the engine's figure with a check; the ALL CHECKS PASS band | inputs typed; results formulas |
+| **Config** | one row a position: id, kind, currency, base PV in its own currency, base FX (USD per unit), input form `PV` or `PnL`, its source, its value today in USD | typed; the last column a formula |
+| **Data** | values only, the one place data is pasted: each position's scenario PVs in its own currency (form PV) or its P&L vector as delivered (form PnL); Rest of scope's P&L in the reporting currency | values |
+| **FX** | one column a currency (not a position): each scenario's rate (USD per unit), the base rate and *supplied* or *derived* in header rows; USD is 1 throughout | values |
+| **PnL** | every cell a formula: each position's P&L in USD and then in the reporting currency, the portfolio, its tie-broken rank, the V and E marks, the 10-day sums, the incremental helper columns | formulas |
+| **Explain** | the calculation in plain language (what VaR answers, how to read the tabs, signs and units), then ten steps, each in plain words with its formula and cells, then every term of every tab: what it is, why it matters, what changing it does, its cell and value | text with references |
+| **Parametric** | the parametric cross-check ([section 18.16](#1816-parametric-var-signs-the-gap-the-decomposition-and-a-worked-example)): a row a scenario (its weight, the portfolio P&L, its deviation and square), a column a position (its deviation and the product with the portfolio's), under them μᵢ, cov(pᵢ, v), ρᵢ, component VaR and ES, standalone VaR; the sums and the checks | formulas |
+| **Provenance** | date, batch, data versions, scenario set id and dates, window, stress flag, source per position, refused items with DRS codes, engine and template versions, who exported it and when, the scope's full position count | values |
+
+**The formulas** mirror the engine (`ScenarioFx` and the ranking of [section 18](#18-the-computation)). A position's P&L in USD:
+`PV(s) × FX_c(s) − PV(base) × FX_c(base)` for input form PV (for a USD position `PV(s) − PV(base)`); the vector as delivered for form PnL
+in USD, converted at each scenario's rate otherwise. Into the reporting currency, with `p` the position's USD value today and `FX_r` the
+reporting currency's USD-per-unit rates: `P&L_r(s) = (p + P&L_USD(s)) / FX_r(s) − p / FX_r(base)`, every cross through USD. The Config
+flag switches the PnL formula, so a person can see and flip it. Positions as columns, item `i` in column `B + i` of Data and PnL, Config
+row `2 + i`, scenario `j` in row `4 + j`:
+
+| Cell | Formula |
+|---|---|
+| PnL, a position | `=(Config!$H$c+IF(Config!$F$c="PV",Data!Bj*INDEX(FX!$B$j:$X$j,Config!$I$c)-Config!$H$c,IF(Config!$C$c="USD",Data!Bj,Data!Bj*INDEX(FX!$B$j:$X$j,Config!$I$c))))/FX!$R$j-Config!$H$c/FX!$R$2` (`Config!H` the value today in USD, `= base PV × base FX`; `Config!I` the position's FX column, `=MATCH(currency, FX!$B$1:$X$1, 0)`; `FX!R` the reporting currency's rate) |
+| PnL, Rest of scope | `=Data!x` (already in the reporting currency) |
+| Portfolio `v(s)` | `=SUM(B j:… j)` across the positions and Rest of scope |
+| Rank, worst first, ties by index | `=SUMPRODUCT(($P$4:$P$512<Pj)*1)+SUMPRODUCT(($P$4:$P(j−1)=Pj)*1)+1` |
+| `k` (kth-worst) | `=MAX(1, MIN(N, ROUNDUP(N*(1-Confidence) - 1E-9, 0)))` |
+| Mark, VaR window, ES tail | `=IF(Rank=VarRank,"V",IF(Rank<=EsRank,"E",""))`; `=(Rank>=VarLo)*(Rank<=VarHi)`; `=(Rank<=EsRank)*1` |
+| VaR (`VaROneDay`) | `=IF(RankRule="interpolated",-((1-IW)*SMALL(PF,ILo)+IW*SMALL(PF,IHi)),-SMALL(PF,VarRank))` |
+| ES (`ESOneDay`) | `=-SUMPRODUCT(ES tail,PF)/EsRank` |
+| Tail window, scale | ranks `k−h … k+h`, `h = ROUNDDOWN(ComponentWindow/2, 0)`, clamped to 1..N; `Scale = VaR / S`, `S = −mean over the window of v` (1 when the scaling is off or `S` is 0) |
+| Component VaR, ES | `=-Scale*SUMPRODUCT(VaR window,p)/(VarHi-VarLo+1)`; `=-SUMPRODUCT(ES tail,p)/EsRank` |
+| Standalone ES, every ES confidence | with no rank column: `=-(SUMPRODUCT((x<SMALL(x,k))*x)+(k-SUMPRODUCT((x<SMALL(x,k))*1))*SMALL(x,k))/k` |
+| Incremental helpers (top 50) | `=Pj − position j`: the portfolio without the position, its own rank and kth-worst; incremental VaR `= VaR(v) − VaR(v − p)` |
+| Diversification | `Σ standalone VaR − VaR` |
+| 10-day sum, its rank | `=SUM(P(j−9):Pj)` from the 10th scenario (509 scenarios give 500 windows); ranked, VaR and ES as the 1-day figures |
+| 10-day weights | for each scenario, how many of the 10-day VaR window's (and ES tail's) windows contain it: `=SUMPRODUCT((R10 range>=TenLo)*(R10 range<=TenHi))` over the windows that end in `j … j+9`, so a position's 10-day component is `−TenScale × SUMPRODUCT(weights, its 1-day column) / (TenHi − TenLo + 1)` with no 10-day column per position |
+| Headline | `=IF(Horizon="1D",VaROneDay,IF(TenDayMethod="SUM",VaRTenSum,VaROneDay*SQRT(10)))` |
+
+Main's derived named cells (`VarRank`, `EsRank`, `VarLo`, `VarHi`, `IPos`, `ILo`, `IHi`, `IW`, `VaROneDay`, `ESOneDay`, `Smoothed`,
+`Scale` and their 10-day twins `TenCount`, `TenRank`, `TenEsRank`, `TenLo`, `TenHi`, `TenPos`, `TenILo`, `TenIHi`, `TenIW`, `VaRTenSum`,
+`ESTenSum`, `TenSmoothed`, `TenScale`) sit under the inputs with their formula in words; no name looks like a cell reference. Every
+confidence and ES confidence has its own row of results on Main (a different rank of the same ranked vector).
+
+**The Parametric tab's formulas** (`W` the weights, `PF` the portfolio column, `Pᵢ` a position's):
+
+| Cell | Formula |
+|---|---|
+| weight `w_j` | equal: `=1/N`; EWMA: `=(1-PLambda)*PLambda^(N-j)/(1-PLambda^N)` |
+| `PMu`, `PSigma` | `=SUMPRODUCT(W, PF)`; equal: `=SQRT(SUMPRODUCT((PF-PMu)^2)/(N-1))`, EWMA: `=SQRT(SUMPRODUCT(W,(PF-PMu)^2))` |
+| `PZ`, `PEsFactor` | `=NORM.S.INV(PConfidence)`; `=EXP(-(NORM.S.INV(PEsConfidence)^2)/2)/SQRT(2*PI())/(1-PEsConfidence)` (the brackets matter: without them a spreadsheet squares the negated value) |
+| `PVaR`, `PES` | `=PZ*PSigma-PMu`; `=PSigma*PEsFactor-PMu` |
+| μᵢ, cov(pᵢ, v), ρᵢ | `=SUMPRODUCT(W, Pᵢ)`; equal: `=SUMPRODUCT((Pᵢ-μᵢ)*(PF-PMu))/(N-1)`, EWMA: `=SUMPRODUCT(W,(Pᵢ-μᵢ)*(PF-PMu))`; `=covᵢ/(σᵢ*PSigma)` |
+| component VaR, ES; standalone | `=PZ*covᵢ/PSigma-μᵢ`; `=PEsFactor*covᵢ/PSigma-μᵢ`; `=PZ*σᵢ-μᵢ` |
+| 10-day | the lens's vector: √10 × the 1-day results (`sqrt10`), or μ and σ of the PnL tab's 10-day sum column (`sum`) |
+
+Main also holds the parametric inputs as named cells (`PConfidence`, `PEsConfidence`, `PWeighting`, `PLambda`) and results beside the
+engine's figures, historical VaR and the gap beside them. Rest of scope takes part as one more position, so the portfolio is the scope's.
+
+**Check cells.** Portfolio VaR and ES (every confidence, both 10-day methods) equal the engine's figure written beside them to the cent
+(`ABS(sheet − engine) < 0.005`); Σ component VaR = VaR, Σ component ES = ES and Σ 10-day-sum components = the 10-day sum VaR; every
+position's component VaR, component ES, 10-day component and incremental VaR equal the engine's; positions shown + Rest of scope = the
+scope's count; `COUNT` of each Data column = `ScenarioCount`; every position's currency has an FX column; on the Parametric tab `PVaR`,
+`PES` to the cent, `PMu`, `PSigma` to 10⁻⁶, Σ components = `PVaR` and `PES`, Σ weights = 1. The **ALL CHECKS PASS** band sits at the top
+of Main (row 3), green, or red naming the failed check. A person who changes a PV sees the engine checks turn red (the engine's figure is
+for the original inputs) while the *adds up* checks stay green. The engine's figures are its calculator's (`VarCalc`, `VarLens`) on its
+own scope vector and the positions' vectors.
+
+**The look.** One font family; a navy title band, light-blue headings, inputs light yellow with blue figures, formula figures black,
+losses red; colour-blind-safe markers as well (*V* on the VaR scenario, *E* on the ES tail); thousands separators and two decimals for
+money; frozen headers, set widths, landscape print fit to width. Copyright and product name in the footer of every tab and in the
+properties, **only from the branding configuration** (`drishti.branding.*`). The look's mock-ups:
+[Main](../architecture/mockups/var-playground/workbook-main.png), [Config](../architecture/mockups/var-playground/workbook-config.png),
+[Data](../architecture/mockups/var-playground/workbook-data.png), [FX](../architecture/mockups/var-playground/workbook-fx.png),
+[PnL](../architecture/mockups/var-playground/workbook-pnl.png), [Explain](../architecture/mockups/var-playground/workbook-explain.png),
+[Provenance](../architecture/mockups/var-playground/workbook-provenance.png); the screen: [option A](../architecture/mockups/var-playground/A.png).
+
+**Excel, LibreOffice and Google Sheets: one file.** Formulas use only the functions the three share: `SUM`, `SUMPRODUCT`, `SMALL`,
+`LARGE`, `AVERAGE`, `COUNT`, `INDEX`, `MATCH`, `ROUNDDOWN`, `ROUNDUP`, `SQRT`, `IF`, `ABS`, `MAX`, `MIN`, `AND`, `OR`, `ISNUMBER`,
+`EXP`, `SUMIF`, `SUMIFS`, `NORM.S.INV`, `PI` (the list is `XlsxFormulas.ALLOWED`; a formula naming anything else is refused when it is written). Never
+Excel-365-only dynamic arrays (`FILTER`, `SORT`, `SEQUENCE`, `LET`, `LAMBDA`, `XLOOKUP`), structured references, volatile `INDIRECT` or
+`OFFSET`, or macros. Cached values ride with every formula, so a viewer that never recalculates (a browser preview, a mail client) shows
+the right numbers.
+
+**Tests.** `VarPlaygroundWorkbookTest` writes the workbook without cached values, recalculates it with `soffice --headless` and compares
+every result row, every confidence row and every position's component VaR, component ES, 10-day component and incremental VaR to the
+engine's calculator to the cent: 1 position (USD), 50 (EUR reporting, the interpolated rank rule, the 10-day sum headline) and 500 with
+Rest of scope (USD, √10), PV and PnL input forms, positions as rows. `VarPlaygroundApiTest` does it through the server on a 611-trade lake
+(scenario PVs in EUR and GBP, USD P&L vectors); `PvarPlaygroundWorkbookTest` does the same for the Parametric tab (equal and EWMA, USD and
+EUR). A bank template missing a style is refused with the list; every formula is scanned for functions outside the common set. The
+LibreOffice harness skips where LibreOffice is absent and runs one LibreOffice at a time. The screen: `test_play.py` and
+`test_play_browser.py` (the windowed grid, the formula bar, the explanation, the arrow keys, the export's estimate, at 1280 and 390 px).
+
+### 3.14 The playground frame: every metric's playground
+
+**The rule: every metric calculation ships with its playground, in the same release as the metric.** A metric is not done without
+`PLAY <METRIC> <ids|scope>`; the screen (the inputs grid with the tall explanation panel and real numbers); the export from a
+version-controlled template with Main, Config, Data (values only), formula tabs, Explain and Provenance; every derived cell a formula;
+check cells (sheet = engine to the cent); the look of [section 3.13](#313-the-var-playgrounds-workbook-cell-by-cell); copyright from the
+branding configuration; one file for Excel, LibreOffice and Google Sheets; a test that recalculates it in headless LibreOffice. Where a
+metric's core is a large simulation (exposure paths, projected IM or capital), the simulation's output is **data** and everything after it
+is **formulas**, and the sheet says so on Main and in Explain; VaR's core is a sum and a rank, so every step after the scenario PVs is a
+formula. Critique and reproduce (a Choices panel of named method switches, compare, saved recipes) are part of the frame as the FRTB-SA
+and SIMM playgrounds use them ([FRTB_SA_GUIDE.md section 8](FRTB_SA_GUIDE.md#8-the-frtb-sa-playground-play-frtb)).
+
+**How a metric plugs in.** In `drishti-server`:
+
+| Piece | Where | What a metric does with it |
+|---|---|---|
+| `PlaygroundTemplate` | `server/playground` | `PlaygroundTemplate.builtIn("<metric>", STYLES)` reads `playground/<metric>/template/` (copy VaR's folder) and refuses a bank's folder missing a style |
+| `WorkbookStream`, `SheetStream` | `server/playground` | the zip written onto the response, sheet by sheet and row by row: `sheet`, `row`, `text`, `number`, `formula(col, f, cached, style)`, `formulaText`, `freeze`, `width`, `merge`, `checks`, the branding footer, `name(...)` for the named cells |
+| `SeriesLayout` | `server/playground` | items (positions, netting sets, trades) by points (scenarios, time steps) as columns or as rows: every formula reference comes from it, so one generator serves both orientations |
+| `ExportSizing` | `server/playground` | the estimate of a count: columns, rows, cells, size, recalculation time, the applications that open it, or why not |
+| `XlsxFormulas`, `XlsxWriter.formula` | `server/dist` | the common function set, the check of every formula written, the scan of a finished file |
+| `LibreOfficeRecalc` | the tests' `server/playground` | `recalc(xlsx, work)` and `cells(file, sheet)`: the headless recalculation, one LibreOffice at a time |
+| The screen | `drishti-console`: `play_routes.py`, `terminal/play.html`, `drishti_var-playground.js`, `drishti_var-playground.css` | `PLAY <METRIC>` (the word added to `METRICS`); the windowed grid, formula bar and explanation take the metric's columns, rows and steps |
+
+A metric adds its model (the formulas' arithmetic, for the cached values: VaR's `VarPlaygroundModel`), its generator (VaR's
+`VarPlaygroundBook`), its inputs as the person (VaR's `VarPlayground`), its endpoints (`/api/v1/risk/<metric>/playground`, `.xlsx`,
+`/estimate`, `/template`) and its recalculation test at its own sizes.
+
+| Playground | Metric | Status |
+|---|---|---|
+| VaR (`PLAY VAR`) | VaR, ES, components, incremental, 10-day, stressed; parametric on its Parametric tab | built |
+| FRTB SA (`PLAY FRTB`) | SBM, DRC, RRAO ([FRTB_SA_GUIDE.md section 8](FRTB_SA_GUIDE.md#8-the-frtb-sa-playground-play-frtb)) | built |
+| SIMM (`PLAY SIMM`) | IM per netting set and regime ([SIMM_GUIDE.md section 8](SIMM_GUIDE.md#8-the-simm-playground-play-simm)) | built |
+| Exposure | EE, EPE, PFE for one netting set (the paths as data) | proposed |
+| SA-CCR | EAD by CRE52 (replacement cost, add-ons, the multiplier) | proposed, with the engine |
+| FVA | EPE and ENE × funding spread | proposed |
+| CVA, BA-CVA, SA-CVA | CVA (EE × DF × ΔPD × LGD), its capital | proposed |
+| FRTB IMA | ES by liquidity horizon, stressed calibration | proposed |
+| MVA, KVA | from projected IM and capital (as data) | proposed |
+
+### 3.15 The parametric curve and the ? line by line
+
+**The curve on the P&L histogram.** The P&L path's histogram (`histogram {edges, counts}`, `drishti.var.histogram-bins` equal bins) gains
+an overlay that the server computes point by point; the browser draws the polyline it is given and computes nothing. `GET /scope/path`
+carries a `parametric` block with `mu`, `sigma`, `n`, `var`, `es`, `z`, `zSigma`, `gap`, `gapPct` as the headline's, and:
+
+| Field | Meaning |
+|---|---|
+| `curve {x, y}` | `curve-points` (121) points evenly from the first edge to the last; `y = n × binWidth × φ((x − μ)/σ)/σ`, the expected days per bin, so the curve sits on the bars' scale |
+| `expected` | days the normal expects in each bin, `n·(Φ((b − μ)/σ) − Φ((a − μ)/σ))` for bin [a, b) |
+| `markers {historical, parametric}` | the x of each VaR line: `−var` (historical) and `μ − z·σ` (parametric) |
+| `binWidth` | the width of one bin |
+
+The chart draws the bars (bins wholly beyond historical VaR in the loss colour), the fitted normal (blue, 2 px), the historical marker
+(solid, loss colour, *historical 158.5m*) and the parametric marker (dashed, *parametric 126.4m*), each tail lightly shaded in its colour,
+and the **fat-tail gap** bracket between the markers (*fat-tail gap 32.1m (+25%)*, in the warning colour). Hovering the curve reads
+*Fitted normal N(μ, σ²) · n · μ · σ · at P&L x: y days expected per bin · VaR = z·σ − μ*. With EWMA weights the bars stay unweighted counts
+and the curve is the weighted fit; the legend says so.
+
+**The ? on a parametric figure** (a tile, a tree cell, a component, the curve) opens on click (and on hover on a desktop), stays open
+until closed, and is a bottom sheet on a phone. Every number in it comes from the answer's `parametric` block and its `describe` lines,
+built in the server:
+
+| Line | Content (a desk of the worked example, [section 18.16](#1816-parametric-var-signs-the-gap-the-decomposition-and-a-worked-example)) |
+|---|---|
+| Title | *Parametric VaR 99% · 1 day · Rates (DESK-RATES)* |
+| Status | *A cross-check, not the official VaR. The official figure is historical: 84,051,284.* |
+| Method | *normal (variance–covariance) on this scope's own scenario P&L vector: the same 509 values historical VaR ranks* |
+| Window | *509 scenario days, the date's set HS-509, ending 2026-09-29* (stressed: the stress set and its period) |
+| Weighting | *equal (1/n each)*, or *EWMA, λ = 0.94: the newest day weighs 6.0%, half the weight in the newest 11 days* |
+| Confidence, horizon | *99% → z = 2.3263*; *1 day*, *10 days: σ and μ × √10*, or *10 days: 500 overlapping windows (about 50 independent periods)* |
+| n, μ, σ | *509 · 156,350 · 30,464,843 (sample, n − 1)* |
+| Formula | *VaR = z·σ − μ = 2.3263 × 30,464,843 − (156,350) = 70,871,822 − 156,350 = 70,715,472*; on an ES figure the ES formula with `esFactor` |
+| Component (on a component) | *z·cov(Pᵢ, P)/σ_P − μᵢ = z·ρ·σᵢ − μᵢ; cov = 1.3639·10¹⁵ USD², σ_P = 54,240,760, ρ = 0.8254 → 58,341,667 (46.2% of the bank); the five components add up to the bank's 126,394,284 exactly* |
+| Historical beside it, the gap | *Historical VaR (6th worst of 509): 84,051,284 · Fat-tail gap = historical − parametric = +13,335,812 (+18.9%): the real tail is heavier than a normal with the same σ (skew −1.00, excess kurtosis +5.78), so the normal understates the loss* |
+| Foot | *Computed in the server, never in the browser · provenance · Worked in the playground · Guide* |
+
+The screen options it was chosen from are mock-ups under [docs/lenses/mockups/parametric-var/](../lenses/mockups/parametric-var/A.html)
+(A, the toggle and columns on the explorer, is what the explorer shows; B and C are the options not taken; `phone.html` the phone sheet).
 
 ## 4. Positions: derived, never delivered
 
@@ -1033,7 +1253,7 @@ signed** (bought positive, sold negative), so a position's quantity is the net o
 `FLAT`; `POSITION_TYPE` says `fungible` (several trades) or `single-trade`. On 2026-09-30 the rules give **7,984 positions**: 359
 securities, 212 listed, 7,413 OTC; 476 are fungible and 111 net buys against sells. The engine counts 7,993: nine positions whose
 trades sit under two limit letters are split in two ([section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)). Example: `POS-BOOK-EQD-2~SEC-WARRANT-USD-01` is
-nine trades of one warrant in `BOOK-EQD-2`, with a VaR of 67,209 against 111,930 for the trades alone. The bond future of tutorial 25 is
+nine trades of one warrant in `BOOK-EQD-2`, with a VaR of 67,209 against 111,930 for the trades alone. The bond future of tutorial 2, Part A is
 in `POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-02` (the *listed* rule).
 
 The same trades and rules always give the same positions, and every official capture records them (each position with its trades, the
@@ -1107,7 +1327,7 @@ SP       := whitespace (or, before an operator, a closing ')'; after it, an open
 | Rules and positions | `WHERE:` and `POS:` take whole positions; `TRD:` takes single trades (a position held in part is a *partial* part) |
 | Entitlements | the resolved set is intersected with the trades the viewer may see; the rest are counted (`hidden`). A scope that names `POS`, `TRD`, `CPTY`, `WHERE`, `BASKET`, `CAPTURE` or a `PORT:` of a BASKET-type portfolio is refused (`403 DRS-5002`) unless every resolved trade is at `positions` level for the viewer; `CPTY:` is refused to a viewer who sees `COUNTERPARTY` masked |
 | Warnings | data-quality findings about what was resolved, in `provenance.warnings`: a legal entity's trades outside its `LEGAL` node, a `LEGAL` node holding another entity's trades ([section 5.5](#55-scope-words-by-a-trades-attribute)) |
-| Kind of a scope | `node` (exactly one node term, `LE:` included when its `LEGAL` node exists, a configured word's node too), `position`, `trade` (exactly one id), `portfolio`, `basket`, `capture`, `rule`, `counterparty`, `legal-entity` (one term of that word), else `adhoc` |
+| Kind of a scope | `node` (exactly one node term, `LE:` included when its `LEGAL` node exists, a configured word's node too), `position`, `trade` (exactly one id), `portfolio`, `basket`, `capture`, `rule`, `counterparty`, [`legal-entity`](../contracts/samples/core.md#legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)) (one term of that word), else `adhoc` |
 | Date | resolved on the request's date: a `CAPTURE:` or a basket of trades holds ids; trades the date does not have are `unknown` |
 
 **Aggregate-only access** ([section 9](#9-who-sees-what-entitlements-and-audit)): a scope that is a node or a HIERARCHY or RULE portfolio
@@ -1146,8 +1366,8 @@ Membership of a rule is evaluated per date against that date's positions: the sa
 |---|---|---|
 | `LE:<id>` | **the bank's legal entity (decided 2026-10-25, open question 14):** the trades whose booking `LEGAL_ENTITY` is the entity (`LE:NY` is `LE-NY` too). The `LEGAL` hierarchy rolls up by books; when its node `LEGAL~<id>` misses some of the entity's trades or holds another entity's, the answer is still the trades' entity and the difference is a data-quality warning in `provenance.warnings`. The node, when it exists, gives the scope its children, limit and official history | `LEGAL_ENTITY` of the trade vectors |
 | `CPTY:<id>[,<id>…]` | the trades with that counterparty, across books and positions (compared ignoring case); refused to an aggregate-only viewer and to a viewer who sees `COUNTERPARTY` masked | `COUNTERPARTY` of the trade vectors |
-| `GROUP:<id>` | **PARKED** (product owner, 2026-10-25: fundamentals and VaR only): the trades with any member of a connected group (GLEIF parents) | `counterparty`, `lei-entity` |
-| `NSET:<id>` | **PARKED**: the trades of a netting set | `netting-set` (`TRADE_IDS`) |
+| `GROUP:<id>` | **PARKED** (product owner, 2026-10-25: fundamentals and VaR only): the trades with any member of a connected group (GLEIF parents) | `counterparty`, [`lei-entity`](../contracts/samples/gleif.md#lei-entity) ([contract](../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity)) |
+| `NSET:<id>` | **PARKED**: the trades of a netting set | [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) (`TRADE_IDS`) |
 
 ### 5.6 Examples on the test data
 
@@ -1190,7 +1410,7 @@ once (two overlapping portfolios' vectors cannot simply be added, and a table of
 ### 5.8 Baskets
 
 A **basket** is a scope you save under a name (on the VaR explorer: **Construct your basket**, then **Save basket and open VaR**,
-[section 3.5](#35-construct-your-basket); CLI: `drishti.py var basket`; API: `POST /api/v1/var/baskets`). A basket built in the sheet is
+[section 3.5](#35-construct-your-basket); CLI: `drishti.py var basket`; API: `POST /api/v1/risk/var/baskets`). A basket built in the sheet is
 kept as the **sheet's lists**, one per column, never as one long scope text: `sheet` holds `wholeBank` (Start from the whole bank), `op`
 (the Op column, `+` or `-` a row) and each filled column (`TRD`, `POS`, `PORT`, `BOOK`, `DESK`, a configured hierarchy's word such as
 `LL`, `CPTY`), aligned by row. Its scope is composed from them whenever it is read: the parts added joined by ` + ` (the ids of a kind as
@@ -1198,7 +1418,7 @@ one list, `TRD:a,b`), or `BANK` when the whole bank is ticked, then each part ta
 (`TRD:MX-1,MX-2 + PORT:PF-USD-RATES + DESK:DESK-FX - TRD:MX-30000121`), so it computes like any scope and stays computable as the data
 changes. A basket saved from scope text (the CLI, the API) keeps its `scope`. Opening a basket in the sheet lays it out column by column:
 the sheet's own lists, or a scope's top-level terms, the parts added first and those taken away below them
-(`GET /api/v1/var/basket/sheet?scope=`).
+(`GET /api/v1/risk/var/basket/sheet?scope=`).
 
 A basket of two parts or more is broken down **by part** (`by=part`, the default child of a basket or an ad-hoc union): each part's
 standalone VaR is the part alone inside the basket, its component VaR the part's trades not already in an earlier part, so the components
@@ -1232,7 +1452,7 @@ anyone else naming another person's basket gets `404`. **Delete:** the owner, or
 **portfolio** is the bank's (the `portfolio` feed, [section 5.7](#57-stored-portfolios)): it is never saved, edited or deleted here; the
 sheet's *Edit a copy* saves its parts as your own basket.
 
-**The sheet's checks** (`POST /api/v1/var/basket/sheet`, the body the sheet itself or `{"sheet": {...}}`, with `asOf` and `ccy`) answer
+**The sheet's checks** (`POST /api/v1/risk/var/basket/sheet`, the body the sheet itself or `{"sheet": {...}}`, with `asOf` and `ccy`) answer
 `cells` (only the cells that need a word: `column`, `row`, `text`, `word`, `id`, `op`, `status` `not-found`, `adds-nothing` or
 `takes-nothing`, `reason`), the counts `found`, `notFound`, `flagged`, `takesNothing`, and the basket's `var`, `es`, `sumOfParts`,
 `diversification`, `trades`, `takenAway`, `partsAdded`, `confidence`, `esConfidence`, `currency`, `businessDate`, `scope` (composed from
@@ -1243,7 +1463,7 @@ more than 20,000 rows are refused in words (`400`, `413`); a role that may not n
 
 ## 6. Captures and compare
 
-**Capture VaR** (in the *How calculated* drawer, or the *Captured results* tab with a note) stores an immutable record of the answer as it is now:
+**Capture VaR** (the *Captured results* tab, with a note) stores an immutable record of the answer as it is now:
 
 - the numbers: VaR, ES, the rank rule, each part's component VaR, the 25 worst scenarios, and the full vector (whole dollars);
 - the members: the trades the scope resolved to;
@@ -1311,7 +1531,7 @@ for a viewer who sees every node, and the source of the node history ([section 1
 
 ## 7. History and backtesting
 
-The *VaR / ES history* tab and `GET /api/v1/var/scope/history` answer in one of two modes (`VarViews.history`):
+The *VaR / ES history* tab and `GET /api/v1/risk/var/scope/history` answer in one of two modes (`VarViews.history`):
 
 | Mode | When | Rows | Backtest |
 |---|---|---|---|
@@ -1356,23 +1576,23 @@ feed the regulatory backtest of [section 18.11](#1811-backtesting-for-regulation
 ## 8. What-if and VaR as a kind
 
 The **computed kind** `var-result` of the market-risk pack makes VaR an ordinary kind, served by a reactive connector (`plugin: reactive`,
-[REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)): by command (`VRES DESK:RATES <GO>`), link (`/v/var-result/DESK:RATES`),
+[REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)): by command (`VRES DESK:RATES <GO>`), link (`/v/var-result/DESK:RATES`),
 the entities and compute APIs, the CLI (`drishti.py compute run var-engine var-result DESK:RATES`), search and the AI tools, with the
 explorer's entitlements (computed as the person asking: their nodes, masks and audit entry; cached per view signature). Names decided
 (open question 12): `var-result`, fields `VAR` with `CONFIDENCE` (never `VAR_99`); the retired kind name `var` is not reused. The
 designs' `var-contribution`, `var-path` and `var-history` are not separate kinds: a `var-result` carries the parts (`CHILDREN`), the
 worst scenarios and the vector, and the explorer and the API serve paths and histories. Contract:
-`config/packs/market-risk/contracts/var-result.contract.yaml` (class `computed`). The **pre-deal what-if** is the same engine's, asked
-through the VaR API (`POST /api/v1/var/what-if`, [section 8.2](#82-the-what-if-the-java-engine)), not a kind.
+`config/packs/banking/market-risk/contracts/var-result.contract.yaml` (class `computed`). The **pre-deal what-if** is the same engine's, asked
+through the VaR API (`POST /api/v1/risk/var/what-if`, [section 8.2](#82-the-what-if-the-java-engine)), not a kind.
 
-**Ids.** The id is the scope text. Like every computed id ([ComputeRef](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)), a
+**Ids.** The id is the scope text. Like every computed id ([ComputeRef](../connectors/types/reactive/README.md#reading-a-computed-kind)), a
 `~` inside it is written `%7E` (`NODE:MGMT%7EDESK-RATES`; prefer `DESK:RATES`, which needs none), `=` `%3D` (a `WHERE:` rule's `==`),
 and parameters ride after a `~` (`DESK:RATES~ccy=EUR`). A scope with a `/` (a basket) is read through the compute API's body,
 not a link.
 
 ### 8.1 `var-result`: the Java engine
 
-`VRES <scope> <GO>`: connector `var-engine`, Java engine `com.ash.drishti.server.var.VarResultEngine` (in the server, over `VarService`);
+`VRES <scope> <GO>`: connector `var-engine`, Java engine `com.ash.drishti.banking.var.VarResultEngine` (in the server, over `VarService`);
 triggers: the data versions of the four inputs (`affects: all`); answers wait up to 5 s.
 
 ```text
@@ -1412,7 +1632,7 @@ engine's refusal in words (`failed` with the reason); a role that may not open t
 
 ### 8.2 The what-if: the Java engine
 
-`POST /api/v1/var/what-if`: a scope's VaR, ES and stressed VaR **before and after hypothetical trades**, and each trade's figures,
+`POST /api/v1/risk/var/what-if`: a scope's VaR, ES and stressed VaR **before and after hypothetical trades**, and each trade's figures,
 computed by the server's VaR engine (`VarWhatIf` over `VarWhatIfMath`, the same rules as every other VaR answer: the confidence, the
 rank rule, the component window and its scale, [section 18](#18-the-computation)). Nothing else is needed: no compute workers, no
 sandbox, so it answers on every server, the compute workers on or off. A hypothetical trade is one of:
@@ -1486,14 +1706,14 @@ systems are built** (the subsection *Intraday updates* below).
 | **Move** a position to another book | no vector change; the scopes it belongs to change | **no** |
 
 **Pricing over the scenario days.** The pricer receives the trade, the base market of the business date (assembled by the server as
-AI.md › Server-side pricing: the quant service (proposed), section 7 describes) and the scenario set's market moves, and returns the 509 P&Ls. QLRisk's
-`MarketRiskEngine.scenario_pnl` is the default path ([PYTHON_COMPUTE.md section 9.2](../architecture/PYTHON_COMPUTE.md#92-qlrisk-default-python)),
+AI_GUIDE.md › Server-side pricing: the quant service (proposed), section 7 describes) and the scenario set's market moves, and returns the 509 P&Ls. QLRisk's
+`MarketRiskEngine.scenario_pnl` is the default path ([NOTEBOOK_GUIDE.md section 9.2](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)),
 QuantLib-Java the Java alternative. The pricer's scenario moves must be the **same moves the batch used**; a **reprice check** proves it:
 for a sample of existing trades in the scope the engine reprices them and compares with their stored vectors, and shows the agreement on
 the what-if panel (*parity with the batch: 0.02%*); a scope whose check fails beyond tolerance shows its what-if numbers in amber with
 the reason. For the sandbox the engine returns before and after VaR, ES and limit use; each change's incremental VaR (in the order
 listed, and standalone); the new trade's component VaR in the scope; overlaid distributions; and a waterfall from before to after.
-*Book via write-back…* turns a sandbox's change into a change request ([WRITE_BACK.md](WRITE_BACK.md#16-the-design-and-its-reasons)); once applied,
+*Book via write-back…* turns a sandbox's change into a change request ([APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)); once applied,
 the event trigger recomputes the real scopes; the sandbox is left as it was. Without QLRisk declared stable, what-if offers only the
 changes that need no pricing.
 
@@ -1577,7 +1797,7 @@ not grow with the batches before it (the first 50 and the last 50 the same, the 
 `SOURCE_SYSTEM` and `POSITION_ID` as promoted columns of the risk lake's connector. A connector file written from the pack's template
 at an earlier first start (`config/connectors/risk-store.yaml`) lacks them: **at start the server adds the template's new columns to
 its `layout.pnl-vector.columns` and `layout.scenario-pv.columns` by itself** (connector template updates, `template-updates:
-additive`, the default; CONNECTOR_FILES.md, *Template updates*): the connector's own columns are kept, the file as it was is kept beside
+additive`, the default; DATA_GUIDE.md section 9, *Template updates*): the connector's own columns are kept, the file as it was is kept beside
 it as `risk-store.yaml.before-<time>.bak`, one line is logged and the change is listed under Admin → Connectors → Template updates.
 With `template-updates: notify` or `off` it is listed only: press **Add missing kinds** there. Until the columns are promoted the server
 logs *VaR: the connector does not promote …* once, and the records cannot say what they are (`DRS-5208`, or `DRS-5202` for an
@@ -1592,7 +1812,7 @@ run.
 A pricing system may publish the same updates to a **PV topic** instead of writing files; the two channels mix on one date, the latest
 `COMPUTED_AT` per trade winning across both. The market-risk pack's connector **`pv-updates`** (plugin `var-pv-stream`, **off by
 default**: `DRISHTI_VAR_PV_STREAM=true`) reads it like the Kafka connector (every partition from the beginning, no consumer group, its
-`bootstrap-servers`, security and `client.*` settings; [KAFKA_CONNECTOR.md section 17](../connectors/KAFKA_CONNECTOR.md#17-the-var-pv-topic-var-pv-stream)).
+`bootstrap-servers`, security and `client.*` settings; [KAFKA_CONNECTOR.md section 17](../../plugins/drishti-plugin-kafka/README.md#the-var-pv-topic-var-pv-stream)).
 
 ```text
 pricing system ──► PV topic (each message's value JSONL text: one or more records; the key not read)
@@ -1644,8 +1864,8 @@ The key is not read: it may be absent or name a batch. An example message of thr
 | its `topic` | `${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}` | the PV topic |
 | its `lake` | `${DRISHTI_DELTA_ROOT:./data/delta/demo}` | the risk lake's root (an Iceberg risk lake: the root holding `risk/<kind>/metadata`) |
 
-**Admin.** `GET /api/v1/var/intraday/streams` (the topic, state, waiting trades, offsets, counts, the last ten windows and the newest 20
-rejections) and `POST /api/v1/var/intraday/streams/{connector}/apply` (administrators: the waiting window now); the connector's page
+**Admin.** `GET /api/v1/risk/var/intraday/streams` (the topic, state, waiting trades, offsets, counts, the last ten windows and the newest 20
+rejections) and `POST /api/v1/risk/var/intraday/streams/{connector}/apply` (administrators: the waiting window now); the connector's page
 in Admin has an **Apply now** button.
 
 **Sizing.** A record is 4–8 KB (509 numbers as JSON text): 10,000 updates a day are 40–80 MB on the topic, whatever the records per
@@ -1663,7 +1883,7 @@ VaR 99% and ES 97.5% **before → after** and the **incremental** change, and ea
 in the order listed and its component in the basket after. Several may be added; **×** removes one. Good for pre-deal (*what does this
 trade do to my desk's VaR?*) and for VaR (*which unwind takes the most out?*).
 
-It is `POST /api/v1/var/what-if {"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}]}`, computed by
+It is `POST /api/v1/risk/var/what-if {"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}]}`, computed by
 the server's VaR engine as you ([section 8.2](#82-the-what-if-the-java-engine)): each copied trade's vector is read as you (a trade you
 may not see one by one is refused). The answer: `before`, `after` and `change` (`var`, `es`; `stressedVar` before and after), `items`
 (`label`, `factor`, `standaloneVar`, `incrementalVar`, `incrementalAlone`, `componentVar`), `engine`, `note`. A scope with no trades, a
@@ -1731,8 +1951,8 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 
 ## 10. The command line
 
-`drishti.py var …` (`tools/varcli.py`) asks the server's `/api/v1/var` as your token's user ([TOOLS.md section 5.12](TOOLS.md#512-var),
-[CLI_GUIDE.md](CLI_GUIDE.md#var-the-var-engine)):
+`drishti.py var …` (`tools/varcli.py`) asks the server's `/api/v1/risk/var` as your token's user ([CLI_REFERENCE.md section 5.12](CLI_REFERENCE.md#var-the-var-engine),
+[CLI_REFERENCE.md](CLI_REFERENCE.md#var-the-var-engine)):
 
 | Command | Does |
 |---|---|
@@ -1748,12 +1968,12 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var official --synthetic-history DAYS` | a demo server's synthetic official history before its oldest record (administrators; [section 18.10](#1810-period-statistics)) |
 | `var backtest [SCOPE] [--date D] [--xlsx FILE]` | the regulatory backtest of a node: the counts at 99% and 97.5%, the zone, the multiplier, the exceptions and the desks ([section 18.11](#1811-backtesting-for-regulation)) |
 | `var stats [SCOPE] [--period FY2026] [--measure var]` | period end, average, high and low over the official records, the 60-day and 12-week stressed averages ([section 18.10](#1810-period-statistics)) |
-| `var report list`, `var report run REPORT [PERIOD]`, `var report show REPORT PERIOD`, `var report sign REPORT PERIOD --step S [--do approve\|return\|narrative] [--comment]`, `var report file REPORT PERIOD --format xlsx\|csv\|pdf [--draft]` | report runs, their sign-off and files ([section 18.14](#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
+| `var report list`, `var report run REPORT [PERIOD]`, `var report show REPORT PERIOD`, `var report narrative REPORT PERIOD --narrative TEXT` (each step is signed with `approvals approve var-report REPORT:PERIOD:vN --param step=S`), `var report file REPORT PERIOD --format xlsx\|csv\|pdf [--draft]` | report runs, their sign-off and files ([section 18.14](#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
 | `var intraday [--date D]`, `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` | each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `--load` appends an intraday batch file (scenario PVs or P&L vectors, one kind a file) to the lake with `lake build --mode append` and raises its data-load signal (a Delta lake: `lake build --format iceberg` only replaces dates, so on an Iceberg risk lake the pricing system appends with its own Iceberg writer, or publishes to the PV topic), `--date` moving its rows to another business date ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
 | `var whatif <scope> [--copy TRADE=FACTOR ...] [--trades FILE]` | the pre-deal what-if: copies of booked trades or scopes scaled (`--copy MX-30000121=-1`, `--copy BOOK:BOOK-RATES-3=-0.5`), or trades priced elsewhere from a JSON file ([section 8.2](#82-the-what-if-the-java-engine)) |
 | `--horizon 1d\|10d [--method sqrt10\|sum] [--confidence Q] [--es-confidence Q]` | on `show`, `parts`, `path`, `history`, `tree` and `capture`: the answer through that lens ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); `drishti.py var show BANK --horizon 10d --method sum`, `drishti.py var show BANK --confidence 95` |
 | `--stressed` | on the same commands: stressed VaR, the scope on the date's stress scenario set, in USD; `show` prints the 12-week average of a node's official stressed VaR ([section 18.8](#188-stressed-var)); `drishti.py var show BANK --stressed --horizon 10d --method sum` |
-| `var stress-window [scope] [--length N] [--propose [--first D]] [--proposals] [--decide ID --decision approve\|reject]` | the stress window selection ([section 18.9](#189-choosing-the-stress-window)): the current and the worst window, the alert, the candidates, each node; freeze and propose; decide |
+| `var stress-window [scope] [--length N] [--propose [--first D]] [--proposals]` | the stress window selection ([section 18.9](#189-choosing-the-stress-window)): the current and the worst window, the alert, the candidates, each node; freeze and propose; decide |
 | `var matrix <id> [--days N] [--date D] [--by trade [--scenario D]] [--confidence Q] [--window N] [--csv]` | the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat)) of a trade, position or node over its last N business dates: each date's source, VaR (rank), ES, base PV and gap, then the scenarios worst on the newest date (`*` in a tail, `—` no value); `--csv` the whole matrix as the page's export |
 | `var explain <scope> [--from D] [--to D] [--confidence Q] [--matrix] [--xlsx FILE]` | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): the change between two business dates (default the one before the newest, and the newest) in steps that add up exactly, printed as sentences, the waterfall as aligned lines, the states, each step's top drivers and the order-free view; `--matrix` the scope and each child node, the steps across; `--xlsx` the working as a workbook of formulas |
 | `var playground <scope> [--ids A,B] [--xlsx FILE] [--count N\|all] [--estimate]` | the VaR Playground ([section 3.10](#310-the-var-playground-play-var)): the headline, the checks and the largest positions' figures; `--xlsx` writes the workbook of real formulas (500 positions by default, the rest in Rest of scope); `--estimate` each export size's file size, recalculation time and applications |
@@ -1797,8 +2017,8 @@ Drishti Bank                     112,041,646  160,143,809      74.7%    9572
 
 ### 11.1 The endpoints
 
-Base `/api/v1/var`, JSON, as the caller (security on: the token's user or the console's session;
-[API_GUIDE.md](API_GUIDE.md#var-engine-apiv1var)). Every scope endpoint takes `scope` and the platform's `asOf=YYYY-MM-DD` (or the
+Base `/api/v1/risk/var`, JSON, as the caller (security on: the token's user or the console's session;
+[API_REFERENCE.md](API_REFERENCE.md#19-var-engine-apiv1riskvar)). Every scope endpoint takes `scope` and the platform's `asOf=YYYY-MM-DD` (or the
 `X-Drishti-As-Of` header; default, and when later than the newest date with vectors: the newest; a date that is not one run answers
 the date before it, with a warning). Errors are RFC 7807 problems with a `code` ([section 20](#20-validation-errors-and-data-quality)).
 
@@ -1825,7 +2045,8 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /reports` | | the report definitions and each one's newest run of its current period ([section 18.14](#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
 | `POST /reports/{report}/runs` | `period` | generates and freezes the next run: its cells with their lineage, the checks, the facts; with its sign-off record |
 | `GET /reports/{report}/runs/{period}` | `version` (the newest) | a run with its sign-off record and the versions of the period |
-| `POST /reports/{report}/runs/{period}/signoff` | body `{version, action: approve\|return\|narrative, step, comment, narrative}` | the run with its updated sign-off record; refused (`409`) in words: not the next step, the same person twice, a failed check, a check needing the maker's note |
+| `POST /reports/{report}/runs/{period}/narrative` | body `{version, narrative}` | the maker's text, before the maker signs; the run with its sign-off record |
+| `POST /api/v1/approvals/var-report/{report}:{period}:v{n}/approve` · `/reject` | `{comment, params: {step}}` | a sign-off step in the one Approvals queue (reject sends the run back to the maker); refused (`409`) in words: not the next step, the same person twice, a failed check, a check needing the maker's note |
 | `GET /reports/{report}/runs/{period}/file` | `format` (`xlsx`, `csv`, `pdf`), `version`, `draft` | the file; released after the last approval (`409` before), a draft marked so on request |
 | `POST /official/synthetic-history` | `days` (259) | administrators, on a demo server (`drishti.regulatory.synthetic-history`): seeds synthetic official records ([section 18.10](#1810-period-statistics)) |
 | `GET /baskets`, `POST /baskets` | body `{name, title, description, scope or sheet, sharedWith, version, owner}` | baskets ([section 5.8](#58-baskets)): a list (without the sheets' lists, `fromSheet` on those), or a save; `version` the one the editor opened (`409` when changed since), `owner` someone else's basket an administrator edits (audited, the owner told) |
@@ -1844,20 +2065,18 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /playground/estimate` | `scope` or `ids`, `asOf`, `ccy`, `set` | the export's choices for the scope: `positions`, `layout`, `columns`, `rows`, `cells`, `formulas`, `bytes`, `size`, `recalc`, `apps`, `refused` (why it cannot be made) |
 | `GET /playground.xlsx` | as `/playground`, and `count` (`100`, `500` the default, `1000`, `10000`, `all`) | the workbook, streamed (`X-Drishti-Positions`, `X-Drishti-Estimated-Bytes`); a size no application opens, or above `playground.export-max-cells`: `400` in words before a byte is sent |
 | `GET /playground/template` | `positions` (10; 1 to 500), `scenarios` (509; 20 to 5,000) | the empty workbook: every formula in place, to paste PVs into and recalculate offline |
-| `GET /explain` | `scope`, `from`, `to` (business dates; none: the one before the newest, and the newest), `confidence`, `method` (`sequence`; `shapley` answers 400: planned) | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): the states (trades, vectors, days, VaR, the VaR scenario), the steps with their drivers, the display lines, the order used, the order-free view, the limit-use line, the sentences, `change`, `sumOfSteps` and `addsUp` |
-| `GET /explain/matrix` | `scope`, `from`, `to`, `confidence` | the Matrix view: the scope and each child node with every step |
-| `GET /explain.xlsx` | `scope`, `from`, `to`, `confidence` | the explanation as a workbook of formulas, checked against the engine |
+| `GET /explain.xlsx` | `scope`, `from`, `to`, `confidence` | why VaR moved as a workbook of formulas, checked against the engine (the explanation itself: `GET /api/v1/explain?kind=var`, [API_REFERENCE.md, "Explain"](API_REFERENCE.md#18-explain-any-number)) |
 
 ```
-GET  /api/v1/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
-GET  /api/v1/var/scope/path?scope=…&page=0&size=60          histogram, worst 25, the 509 values, a page of the ranked table
-GET  /api/v1/var/scope/history?scope=…                      250 days of VaR, ES, hypothetical P&L, exceptions, backtest
-GET  /api/v1/var/scope/contributions?scope=…&by=child|node|position|trade|desk|book&scenario=2025-01-31
-GET  /api/v1/var/tree?hierarchy=MGMT                        every node you see with its figures, and the stored portfolios
-POST /api/v1/var/baskets {"name": "unwind", "scope": "POS:… + TRD:…", "sharedWith": ["risk"]}
-POST /api/v1/var/captures {"scope": "BASKET:asha/unwind", "note": "before the unwind"}
-GET  /api/v1/var/captures/{id}/csv?part=components          GET /api/v1/var/compare?a=CAP-20260930-1&b=now
-POST /api/v1/var/official?asOf=2026-09-30                   an administrator's official capture of a date
+GET  /api/v1/risk/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
+GET  /api/v1/risk/var/scope/path?scope=…&page=0&size=60          histogram, worst 25, the 509 values, a page of the ranked table
+GET  /api/v1/risk/var/scope/history?scope=…                      250 days of VaR, ES, hypothetical P&L, exceptions, backtest
+GET  /api/v1/risk/var/scope/contributions?scope=…&by=child|node|position|trade|desk|book&scenario=2025-01-31
+GET  /api/v1/risk/var/tree?hierarchy=MGMT                        every node you see with its figures, and the stored portfolios
+POST /api/v1/risk/var/baskets {"name": "unwind", "scope": "POS:… + TRD:…", "sharedWith": ["risk"]}
+POST /api/v1/risk/var/captures {"scope": "BASKET:asha/unwind", "note": "before the unwind"}
+GET  /api/v1/risk/var/captures/{id}/csv?part=components          GET /api/v1/risk/var/compare?a=CAP-20260930-1&b=now
+POST /api/v1/risk/var/official?asOf=2026-09-30                   an administrator's official capture of a date
 ```
 
 **`by` and truncation (decided 2026-10-25, open question 9).** `by=node` lists a node's child nodes; on a scope that is not a
@@ -1874,11 +2093,11 @@ The headline's `children` is likewise the number of all the parts. How, and what
 `GET /api/v1/views/var-result/DESK:RATES`. For example, with a token in `DRISHTI_TOKEN`:
 
 ```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/var/scope?scope=DESK:DESK-RATES" | python3 -m json.tool
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/risk/var/scope?scope=DESK:DESK-RATES" | python3 -m json.tool
 curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" -H "Content-Type: application/json" \
-     -d '{"scope": "TRD:MX-30000121,MX-30000565", "note": "two swaps"}' http://localhost:18480/api/v1/var/captures
+     -d '{"scope": "TRD:MX-30000121,MX-30000565", "note": "two swaps"}' http://localhost:18480/api/v1/risk/var/captures
 curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" \
-  "http://localhost:18480/api/v1/var/scope?scope=DESK:RATES%20-%20TRD:MX-30000121"
+  "http://localhost:18480/api/v1/risk/var/scope?scope=DESK:RATES%20-%20TRD:MX-30000121"
 ```
 
 The last answers:
@@ -1917,6 +2136,7 @@ The last answers:
 | `sumStandalone` | integer or null | Σ standalone VaR of every default part ([section 11.1](#111-the-endpoints): never cut by `max-parts`) |
 | `diversification` | integer or null | `sumStandalone − var` (two parts or more) |
 | `limit`, `limitUse` | integer, number, or null | the node's or the portfolio's VaR limit (its `var-limit` row); `var / limit` |
+| `limitStatus`, `limitNear` | text or null, number | where the VaR stands against the limit: `within`, `near` (from `limitNear`, the setting `drishti.risk.limit-near`, 0.8) or `breach` (over 100%); null without a comparable limit. The official record's nodes carry it too (read with the record), and the what-if's `limit` gives the scope's limit, `useBefore`, `useAfter`, `statusBefore` and `status`. Screens show it; none computes its own |
 | `backtest` | object | `{days, exceptions, light, kupiecLr, kupiecPValue, christoffersenLr, christoffersenPValue}` ([section 18.4](#184-history-and-backtest)) |
 | `ancestors` | list | `[{label, scope}]` from the MGMT root to the node (a position or trade: its book's path, then its position) |
 | `provenance` | object | below |
@@ -1990,7 +2210,7 @@ has no `raw`) gets the scope's `var` and `es`, `masked: true`, no rows and the n
 needs a role that sees it*.
 
 ```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/var/scope/contributions?scope=DESK:DESK-RATES&by=attribute:TRADER_ID"
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/risk/var/scope/contributions?scope=DESK:DESK-RATES&by=attribute:TRADER_ID"
 ```
 
 ### 11.4 History, the tree and the status
@@ -2009,10 +2229,51 @@ tier, aggregateBytes, hotFile, loadMs, version, rejected, excluded, batchIds}]` 
 file's float32 matrices; `hotFile`: the file under the tier folder) and `{businessDate, refused}` for a date that could not load. An
 example is in [section 26.7](#267-what-the-status-shows).
 
+### 11.5 The `parametric` block
+
+While parametric VaR is enabled ([section 18.15](#1815-parametric-var-and-es-a-cross-check)), every answer that carries historical
+figures carries a `parametric` block beside them, computed from the same vector in the same request; the historical fields are unchanged.
+There is no new endpoint and no new mode parameter (`method` is the 10-day method). `parametric=false` leaves the block out;
+`matrix=true` on contributions adds the correlation matrix.
+
+| Endpoint | What it gains |
+|---|---|
+| `GET /scope`, `/scopes/{scope}` | `parametric` (below); `provenance.parametric`: *normal, equal weights, z 2.3263, σ with N − 1, 1-day lens · cross-check, not official* |
+| `GET /tree` | per node `parametric {var, es, gap, gapPct}` |
+| `GET /scope/path` | `parametric` with `curve`, `expected`, `markers` and `binWidth` ([section 3.15](#315-the-parametric-curve-and-the--line-by-line)) |
+| `GET /scope/contributions` | per row `pComponentVar`, `pComponentEs`, `pStandaloneVar`, `pIncrementalVar`, `pMarginalPer1m`, `pPct`, `rho`, `sigma`, `mu`; totals `pSumComponent`, `pSumStandalone`, `pDiversification`; with `matrix=true`: `matrix {keys, labels, correlation, covariance, truncated, sigmaCheck, engine}`; Arrow: the same as columns |
+| `POST /captures`, `GET /captures/{id}` | the capture keeps its `parametric` block; `/compare` shows both |
+| `GET /status` | `parametric {enabled, weighting, lambda, confidences, esConfidences, horizonRule, curvePoints}` |
+| `GET /playground…` | `measure=parametric`: the Parametric tab's data |
+
+The block of a headline:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `var`, `es` | integer | parametric VaR at `confidence`, ES at `esConfidence`, positive for a loss |
+| `mu`, `sigma`, `n` | number, number, integer | μ and σ of the lens's vector; scenarios (or 10-day windows) used |
+| `z`, `zEs`, `esFactor`, `zSigma` | number | Φ⁻¹(c), Φ⁻¹(c_ES), φ(z_ES)/(1 − c_ES), z·σ (so the ? prints the formula without the browser multiplying) |
+| `weighting`, `lambda`, `horizonRule` | string, number or null, string | `equal` or `ewma` with λ; `lens` or `square-root-of-time` |
+| `skew`, `excessKurtosis` | number | the shape |
+| `gap`, `gapPct`, `esGap` | integer, number, integer | historical − parametric, against this answer's `var` and `es` |
+| `beyond`, `expectedBeyond` | integer, number | scenarios whose P&L is below −`var`; n·(1 − c) |
+| `sumStandalone`, `diversification` | integer or null | over the default parts |
+| `official` | boolean | always `false` |
+| `describe`, `notes` | list of strings | the ?'s lines, built in the server; *σ = 0: the normal is a point*, *10-day sum: 500 overlapping windows*, *ewma: the histogram is unweighted, the curve weighted* |
+
+**Errors.** Switched off: no block, and `parametric=true` answers `403 DRS-5002` in words (*parametric VaR is switched off on this
+server*); `matrix=true` on a scope without parts is `400`. Entitlements are historical VaR's (an aggregate-only viewer gets node-level
+figures, never positions or trades). The computed kind `VRES` (`POST /api/v1/compute/var-engine/var-result`) carries the same figures as
+the optional fields `PARAMETRIC_VAR`, `PARAMETRIC_ES`, `PARAMETRIC_MU`, `PARAMETRIC_SIGMA`, `PARAMETRIC_Z`, `PARAMETRIC_N`,
+`PARAMETRIC_WEIGHTING`, `PARAMETRIC_LAMBDA`, `PARAMETRIC_HORIZON_RULE`, `PARAMETRIC_SKEW`, `PARAMETRIC_EXCESS_KURTOSIS`, `FAT_TAIL_GAP`,
+`FAT_TAIL_GAP_PCT`, `FAT_TAIL_ES_GAP` and `PARAMETRIC_OFFICIAL` (always false) ([the generated contract](../contracts/packs/market-risk.md#vres-var-of-a-scope-computed-var-result));
+`"params": {"parametric": false}` leaves them out. The words: `VAR BANK PARAM`, `VAR DESK RATES PARAM 10D SUM 95`, `VAR BANK PARAM BY DESK`;
+`VRES BANK~parametric=true`.
+
 ## 12. Settings
 
-`drishti.var.*` in the engine's own file, `config/engines/var.yaml` (its switch `drishti.engines.var.enabled`; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivar--the-var-engine)), bound
-by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var/status` shows the effective values.
+`drishti.var.*` in the engine's own file, `config/engines/var.yaml` (its switch `drishti.engines.var.enabled`; [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)) ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivar--the-var-engine)), bound
+by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/risk/var/status` shows the effective values.
 
 | Setting | application.yaml | Default when unset or invalid | Meaning |
 |---|---|---|---|
@@ -2101,8 +2362,8 @@ VaR needs no compute workers: every figure, the what-if included, is the server'
 | the history says *Replay* | the scope is not one node, you see the node in part, or it has one official date | as designed: the replay is in-sample |
 | other numbers than this guide's | the lake was built with `--as-of today`: trades matured since 2026-09-30 drop out | rebuild with `--as-of data` |
 
-The server's log names every load, hot file built or reopened, and refusal; `GET /api/v1/var/status` shows what is open and on disk.
-More codes: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+The server's log names every load, hot file built or reopened, and refusal; `GET /api/v1/risk/var/status` shows what is open and on disk.
+More codes: [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting).
 
 ## Part II · The data contract
 
@@ -2117,15 +2378,15 @@ VaR differs or adds to them. Other contracts reuse VaR's model (the scope gramma
 guide's sections.
 
 **Sources of truth checked:** `tools/packgen/var/make_var_data.py`, `positions.py`, `portfolios.py`, `factors.py`, `varmath.py`, `rules.py`;
-`config/packs/market-risk/pack.yaml`, `config/packs/market-risk/config/about.yaml`, the pack's `samples/`; the test data in
+`config/packs/banking/market-risk/pack.yaml`, `config/packs/banking/market-risk/config/about.yaml`, the pack's `samples/`; the test data in
 `data/testdata/market-risk/` and its entries in `data/testdata/testdata.yaml`; `drishti-compute` (packages
-`com.ash.drishti.compute.vector` and `com.ash.drishti.compute.var`); `drishti-server` (package `com.ash.drishti.server.var`); the Delta
+`com.ash.drishti.compute.vector` and `com.ash.drishti.banking.compute.var`); `drishti-server` (package `com.ash.drishti.banking.var`); the Delta
 plugin's vector reader (`DeltaTable.vectors`, `DeltaSourcePlugin.vectorColumns`); `tools/lake/stage.py` and `tools/lake/writers.py`;
 `drishti.var` in `config/engines/var.yaml` (and its jar copy); the market-risk pack's `positions:` section.
 
 **Commands and pages.** `VAR <word> <id> <GO>` opens the VaR explorer at a scope (`VAR DESK RATES <GO>`, `VAR BANK <GO>`,
 `VAR CAPTURE CAP-20260930-1 <GO>`); `POS` and `PORT` open the position and portfolio pages; `VRES` the computed kind; the
-API is `/api/v1/var`.
+API is `/api/v1/risk/var`.
 
 **Status.** The engine is **built** and tested: there is no stored `var` or `var-node` kind, no input or fundamental kind carries a VaR figure, positions are
 derived by Drishti, the test data holds every live trade, official end-of-day captures are taken and published, the data-load signal
@@ -2143,7 +2404,7 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | The in-memory engine: vector store, trade ordinals, node aggregates, planner, parallel sums | Built | §25 |
 | VaR, ES, standalone, component, incremental, marginal, diversification; backtest | Built | §18 |
 | Scope grammar `BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET CAPTURE WHERE`, `+ - &`; `LE:` by the trades' legal entity; ids in any case | Built | §5 |
-| API `/api/v1/var`, baskets and captures in the content store, entitlements by node, field masks, audit | Built | §11, §9 |
+| API `/api/v1/risk/var`, baskets and captures in the content store, entitlements by node, field masks, audit | Built | §11, §9 |
 | Retire the stored `var` kind: `VAR-*` ids and `/v/var/<id>` open the explorer at the matching scope | Built | §21 |
 | Retire the stored `var-node` kind: a node's history is the engine's **official end-of-day captures** | Built | §19, §21 |
 | No computed column on `position`, `portfolio` or the core pack's `desk`: their pages show the engine's figures, computed as they open (`VAR_ENGINE`) | Built | §3.7, §21.3 |
@@ -2154,9 +2415,9 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | An optional "risk position" grouping for viewing (book × product × currency × underlying × maturity quarter) | PLANNED | §15.6 |
 | Tiered memory: each loaded date a memory-mapped local hot file (float32 position rows in hierarchy order, the trades of fungible positions, float64 aggregates; Delta stays float64), the heap holding aggregates, columns and links; history dates opened lazily from their file; rebuilt when the inputs change; cleaned on eviction and shutdown | Built | §26 |
 | The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | Built (measured locally; the full run is for a server) | [BENCHMARK.md section 5.2](../admin/BENCHMARK.md#52-the-tiered-store-vartierbenchmark) |
-| Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | §28, [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) |
+| Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | §28, [DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built) |
 | The common risk lake (domain `risk`, one connector `risk-store` for every risk pack) | PLANNED (VaR's tables already there) | §15.1 |
-| The computed kind `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and the pre-deal what-if (`POST /api/v1/var/what-if`, the same engine: copies of booked trades or scopes, trades priced elsewhere, the stressed window) | Built | §8 |
+| The computed kind `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and the pre-deal what-if (`POST /api/v1/risk/var/what-if`, the same engine: copies of booked trades or scopes, trades priced elsewhere, the stressed window) | Built | §8 |
 | VaR by a trade column (`by=attribute:TRADER_ID`), summed over every trade of the scope, the column's mask honoured | Built | §11.3 |
 | The command line `drishti.py var` (show, parts, path, history, tree, status, captures, baskets, official, reload, whatif) | Built | §10 |
 | What-if pricing of amended or new trades over the scenarios (QLRisk) | PLANNED (parked until QLRisk's API is stable; a what-if trade's vector is supplied) | §8.4 |
@@ -2166,7 +2427,7 @@ also served as the computed kind `var-result` through a reactive connector; the 
 
 ## 15. Inputs from upstream engines
 
-Every dataset below, with one formatted sample record each and whether it is required: [section 36](#36-var-data-every-dataset-the-engine-reads).
+Every dataset below, whether it is required and the links to its data contract and its example (a real record, every field explained): [section 36](#36-var-data-every-dataset-the-engine-reads).
 
 ### 15.1 Where they live
 
@@ -2198,22 +2459,22 @@ Positions are not a table: Drishti derives them when it loads a date ([section 1
 **The physical table** (every kind, `tools/lake/writers.py`): `id` STRING (the kind's key value), `doc` STRING (the whole document as
 JSON), `business_date` DATE (the partition), the **promoted columns** of the pack's `layout.<kind>.columns` (DOUBLE when every value of
 the column is a number, else STRING) and the **vector columns** of `layout.<kind>.vectors` (`list<double>`; the document keeps the
-marker `{"$vector": "PNL"}` in their place). A field not promoted lives only inside `doc`. In the column tables below, *Delta* is the
-promoted column's type, or `doc` when the field is only in the document. How the vector column is written and read is
+marker `{"$vector": "PNL"}` in their place). A field not promoted lives only inside `doc`. Which fields a kind
+promotes, and every field's type, is its data contract (each section below links it). How the vector column is written and read is
 [section 29](#29-the-pl-vector-in-the-lake).
 
 | Kind | `drishti.var.kinds` key (default) | Lake key (`id`) | Promoted columns (pack.yaml) | Vector columns |
 |---|---|---|---|---|
-| `pnl-vector` | `vector` (`pnl-vector`) | `VECTOR_ID` | 23 ([section 15.2](#152-pnl-vector-one-pl-vector-per-trade)) | `PNL` |
-| `scenario-pv` | `scenario-pv` (`scenario-pv`) | `SCENARIO_PV_ID` | 24 ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | `SCENARIO_PV` |
-| `fx-scenario` | `fx-scenario` (`fx-scenario`) | `FX_SCENARIO_ID` | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` | none (`RATES` stays in the document) |
-| `fx-spot` (market-data pack, read for derived FX) | `fx-spot` (`fx-spot`) | `PAIR` | (the market-data pack's) | none |
-| `scenario-set` | `scenario-set` (`scenario-set`) | `SCENARIO_SET_ID` | none | none |
-| `risk-hierarchy` | `hierarchy` (`risk-hierarchy`) | `NODE_ID` | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME` | none |
+| [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector)) | `vector` (`pnl-vector`) | `VECTOR_ID` | 23 ([section 15.2](#152-pnl-vector-one-pl-vector-per-trade)) | `PNL` |
+| [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv)) | `scenario-pv` (`scenario-pv`) | `SCENARIO_PV_ID` | 24 ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | `SCENARIO_PV` |
+| [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario)) | `fx-scenario` (`fx-scenario`) | `FX_SCENARIO_ID` | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` | none (`RATES` stays in the document) |
+| [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) (market-data pack, read for derived FX) | `fx-spot` (`fx-spot`) | `PAIR` | (the market-data pack's) | none |
+| [`scenario-set`](../contracts/samples/market-risk.md#scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)) | `scenario-set` (`scenario-set`) | `SCENARIO_SET_ID` | none | none |
+| [`risk-hierarchy`](../contracts/samples/market-risk.md#risk-hierarchy) ([contract](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy)) | `hierarchy` (`risk-hierarchy`) | `NODE_ID` | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME` | none |
 | `portfolio` | `portfolio` (`portfolio`) | `PORTFOLIO_ID` | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` | none |
 | `position` (served, not stored) | `position` (`position`) | `POSITION_ID` | (the `var-positions` connector) | none |
 
-The connector's layout in the market-risk pack (`config/packs/market-risk/pack.yaml`):
+The connector's layout in the market-risk pack (`config/packs/banking/market-risk/pack.yaml`):
 
 ```yaml
 connectors:
@@ -2243,7 +2504,7 @@ keeps its Delta log and its removed files 7 years (`delta.logRetentionDuration` 
 server (`drishti.var.official.retention-years`, 7). Lake maintenance (`lake maintain`, Admin → Lakes) never vacuums a file nor deletes
 a business date of those domains younger than 7 years, whatever a table's settings say: a lower `vacuum-hours` or `keep-business-days`
 is raised (61,368 hours; 1,827 business days) and the run says so (`retention-floor`); a lake's `retain-years:` changes it per domain
-([OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain)). The connector only reads, and never vacuums.
+([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling)). The connector only reads, and never vacuums.
 
 **The common risk lake (planned).** The VaR tables are already in domain `risk` behind `risk-store`. Every risk pack reads
 the same lake through that one connector ([README.md section 2](../contracts/README.md#2-the-common-risk-lake)); nothing changes for
@@ -2257,46 +2518,10 @@ VaR's tables.
 *position*; the product owner chose the trade (2026-10-24, [section 29.1](#291-the-vector-grain-the-trade)). A bank whose batch values
 positions may send one row per position, its `TRADE_ID` the position's id (an OTC rule then makes it a position of its own).
 
-"Engine" says whether the server engine reads the field: **R** (read as a column when the table keeps it promoted; `LEGAL_ENTITY`,
-`DESK` and `TT_BOOK` must be promoted or the load fails), **C** (read for a check of section 20 when promoted), **–** (kept for people,
-links and audit).
+The engine reads a field as a column when the table keeps it promoted (`LEGAL_ENTITY`, `DESK` and `TT_BOOK` must be, or the load
+fails); some it reads only for the checks of section 20; the rest are kept for people, links and audit.
 
-| Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
-|---|---|---|---|---|---|---|---|
-| `VECTOR_ID` | id | `id` STRING | required | – | | `PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>` (`PV-` before, still read); the lake key | `PNL-MX-20000274-HS-509` |
-| `TRADE_ID` | id | STRING | required | R | | the booking system's trade id (text even when all digits). When null the engine uses the row's `id` | `MX-20000274` |
-| `SECURITY_ID` | id | STRING | for securities and listed products | R | | the security or exchange contract the trade is in: a position rule's key (section 15.6). The test data's are synthetic | `SEC-WARRANT-USD-01` |
-| `ISIN`, `TICKER`, `CONTRACT` | id | STRING | optional | R (when a rule names them) | | other keys a rule may name, read when promoted | |
-| `INSTRUMENT` | text | STRING | optional | R | | the instrument's name, the position's label | `Equity warrant USD 2027-05` |
-| `BUSINESS_DATE` | date | `business_date` DATE | required | R | | the close of business the vector belongs to | `2026-09-30` |
-| `SCENARIO_SET_ID` | id | STRING | required | C | | the scenario set whose `SCENARIO_DATES` order the vector; another set's id refuses the date (`DRS-5203`) | `HS-509` |
-| `SOURCE_SYSTEM` | text | doc | optional | – | | booking system | `MUREX` |
-| `TRADE_VERSIONS` | text | doc | optional | – | | the trade version the batch priced (`v<TRADE_VERSION>`) | `v4` |
-| `TRADE_STATUS` | text | STRING | optional | R | | the trade's status the batch priced: only the live statuses count; none: it counts | `AMENDED` |
-| `MATURITY_DATE` | date | STRING | optional | R | | a trade matured before the business date does not count | `2027-05-26` |
-| `LEGAL_ENTITY` | id | STRING | required | R | | the bank's legal entity that booked the trade: `LE:` (section 5.5), 1st sort key in memory | `LE-LDN` |
-| `DIVISION` | id | STRING | optional | R | | division of the desk | `DIV-MARKETS` |
-| `DESK` | id | STRING | required | R | | desk (2nd sort key) | `DESK-EQD` |
-| `TT_BOOK` | id | STRING | required | R | | book (3rd sort key); a trade without a book is in no node | `BOOK-EQD-2` |
-| `PORTFOLIO` | text | STRING | optional | R | | booking portfolio on the trade | `BOOK-EQD-2` |
-| `STRATEGY` | text | STRING | optional | R | | trading strategy | `""` |
-| `PRODUCT_GROUP` | text | STRING | optional | R | | product group: picks the position rule | `Equity` |
-| `PRODUCT_TYPE` | text | STRING | optional | R | | product type as booked: picks the position rule | `WARRANT` |
-| `CURRENCY` | ccy | STRING | required | R | | the currency the P&L values are in; not USD: converted per scenario with its FX (approximate), `DRS-5207` without FX | `USD` |
-| `TRADE_CURRENCY` | ccy | STRING | optional | R | | the trade's own currency when it is not the P&L's (scopes, rules, Trade currency) | `GBP` |
-| `COUNTERPARTY` | id | STRING | optional | R | | counterparty id: `CPTY:` (section 5.5) | `CP-SUMMIT` |
-| `DIRECTION` | text | STRING | optional | R | | `LONG` (quantity ≥ 0) or `SHORT` | `SHORT` |
-| `QUANTITY` | amount | DOUBLE | optional | R | units or notional | signed quantity: positive bought, negative sold (the batch applies the sign of `BUY_SELL_CODE`) | `-179000000.0` |
-| `TAGS` | text | STRING | optional | R | | the trade's tags joined by `\|` (`internal`, `option`): a position's are the union | `""` |
-| `REPORTING_CCY` | ccy | STRING | optional | C | | deprecated: an alias of `CURRENCY`; when present it must equal it (`DRS-5208`) | `USD` |
-| `PV` | amount | DOUBLE | optional | R | USD | present value on the business date (a position's market value; the size behind a trade's marginal VaR) | `3143714` |
-| `PNL` | vector | `list<double>` | required | R | USD | the trade's P&L under each scenario, in `SCENARIO_DATES` order, gain positive; length = `SCENARIO_COUNT` | `[4169, -3347, -1306, …]` (509) |
-| `STATUS` | text | STRING | required | C | | `ok`, `proxied` (priced by a proxy) or `failed` (then `PNL` null; a failed row with a vector is rejected, never silently zero) | `ok` |
-| `PRICER` | text | doc | optional | – | | pricer used | `demo-factor-model` |
-| `MODEL_VERSION` | text | doc | optional | – | | pricer version | `demo-2` |
-| `COMPUTED_AT` | timestamp | doc | optional | – | UTC | when the batch valued the trade | `2026-09-30T06:00:00Z` |
-| `BATCH_ID` | id | STRING | required | C | | the run: one per date (several refuse the date, `DRS-5203`) | `B-2026-09-30-01` |
-| `RESTATEMENT` | integer | doc | optional | – | | 0 for the first run, 1, 2, … for restatements | `0` |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`pnl-vector.contract.yaml`](../../config/packs/banking/market-risk/contracts/pnl-vector.contract.yaml), published as [PNLV: `pnl-vector`](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#pnl-vector).
 
 `POSITION_ID` and `INSTRUMENT_ID` are not delivered: the engine derives them; an upstream value is not read. A per-risk-class
 split (`PNL_BY_RISK_CLASS`, `{IR, FX, CR, EQ, CO}` vectors adding up to `PNL`) is designed and not built.
@@ -2329,21 +2554,7 @@ when the batch sends a **stress set** for stressed VaR (`SET_TYPE: STRESS`, [sec
 is not loaded (`DRS-5203`), nor one whose `SCENARIO_DATES` are not strictly increasing or not all before the business date; two stress
 sets refuse the stress set alone.
 
-| Column | JSON | Delta | Req. | Engine | Meaning | Example |
-|---|---|---|---|---|---|---|
-| `SCENARIO_SET_ID` | id | `id` STRING | required | R | the set; stamped on every answer; the stress set's rows in every input table carry its own | `HS-509`, `HS-STRESS-2008` |
-| `BUSINESS_DATE` | date | `business_date` DATE | required | R | the date whose vectors the set orders | `2026-09-30` |
-| `SCENARIO_DATES` | date list | doc | required | R | the N scenario days, oldest first, strictly increasing; index *i* of every vector | `["2024-09-17", …, "2026-09-29"]` (509) |
-| `SCENARIO_COUNT` | integer | doc | required | – | N = length of `SCENARIO_DATES` | `509` |
-| `WINDOW_START` | date | doc | required | – | `SCENARIO_DATES[0]` | `2024-09-17` |
-| `WINDOW_END` | date | doc | required | – | `SCENARIO_DATES[N-1]`: the business day before `BUSINESS_DATE` | `2026-09-29` |
-| `HORIZON_DAYS` | integer | doc | required | – | 1 (10-day vectors, where a batch makes them, would be a separate set) | `1` |
-| `REVALUATION` | text | doc | optional | – | `full` or `sensitivities` (Taylor), as the batch did it | `full` |
-| `WEIGHTS` | number list | doc | optional | – | age weights for a weighted method (not used: equal weights) | `null` |
-| `SOURCE_BATCH` | id | doc | optional | – | the batch that produced the set and its vectors | `B-2026-09-30-01` |
-| `DESCRIPTION` | text | doc | optional | – | shown with a stressed answer | `Historical simulation, 509 business days, equal weights` |
-| `SET_TYPE` | text | doc | optional | R | `STRESS` for the date's stress set; absent (or `HISTORICAL`) for the normal set; a set without it is the stress set when its id starts with `drishti.var.stress.id-prefix` | `STRESS` |
-| `SYNTHETIC` | boolean | doc | optional | R | the set's moves are synthetic, not market history (the demo's stress set): every stressed answer says so | `true` |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`scenario-set.contract.yaml`](../../config/packs/banking/market-risk/contracts/scenario-set.contract.yaml), published as [SSET: `scenario-set`](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#scenario-set).
 
 Scenario days are business days of the USNY calendar (`tools/packgen/var/make_var_data.py`, `business_days`). The set is itself dated,
 so the meaning of index *i* is never ambiguous: each date moves the window by one day (the oldest scenario day drops out, the newest
@@ -2356,19 +2567,7 @@ enters) and, under full revaluation, every value of every vector changes.
 planner and the history use it. The demo's MGMT tree is generated from the core pack's `desk` and `legal-entity` records (books under
 desks) with a `DIV-MARKETS` division added; nothing contradicts them.
 
-| Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
-|---|---|---|---|---|---|---|---|
-| `NODE_ID` | id | STRING (also `id`) | required | R | | `<HIERARCHY>~<id>` | `LEGAL~LE-NY` |
-| `HIERARCHY` | text | STRING | required | R | | any id (`[A-Z][A-Z0-9_]*`); `MGMT` and `LEGAL` in the demo. `DIV`, `DESK`, `BOOK` look in MGMT, `LE` in LEGAL; a configured word in its own hierarchy ([section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)) | `LEGAL` |
-| `LEVEL` | text | STRING | required | R | | the hierarchy's own level names (the enum opened): `bank`, `division`, `legal-entity`, `desk`, `book` in the demo | `legal-entity` |
-| `PARENT_ID` | id | STRING | required (null at the root) | R | | parent node; the engine builds children from it | `LEGAL~BANK` |
-| `NAME` | text | STRING | required | R | | display name | `LE-NY` |
-| `REF` | record | doc | optional | – | | the master the node is: `{KIND, ID}` | `{"KIND": "legal-entity", "ID": "LE-NY"}` |
-| `CHILDREN` | id list | doc | optional | – | | child node ids (informational; the engine uses `PARENT_ID`) | `["LEGAL~DESK-COMM", …]` |
-| `BOOKS` | id list | doc | required | R | | **every** book beneath the node (a book node lists itself); the node's members are these books' trades | `["BOOK-COMM-1", …]` (15) |
-| `LIMIT_VAR` | amount | DOUBLE | optional | R | USD | **not in the demo**: a node's limit is its `var-limit` row (decision 8 of [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)); a bank's row that still carries one is read when `var-limit` has no row for the node | `8500000` |
-| `BUSINESS_DATE` | date | `business_date` DATE | required | R | | | `2026-09-30` |
-| `VALID_FROM`, `VALID_TO` | date | doc | optional | – | | validity of the node (informational) | `2026-01-02`, `null` |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`risk-hierarchy.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml), published as [HIER: `risk-hierarchy`](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#risk-hierarchy).
 
 A past date's VaR uses that date's hierarchy, never today's: a book moved to another desk last month counts under its old desk for dates
 before the move. `risk-hierarchy` is one source of hierarchies among two (the rows, book-based; or the trades' columns:
@@ -2382,16 +2581,7 @@ is a **definition**: its positions, VaR, ES and contributions are the engine's, 
 ([section 21.3](#213-what-is-not-stored)). How a definition becomes a scope is in
 [section 5.7](#57-stored-portfolios).
 
-| Column | JSON | Delta | Req. | Engine | Meaning | Example |
-|---|---|---|---|---|---|---|
-| `PORTFOLIO_ID` | id | STRING (also `id`) | required | R | the portfolio; scope `PORT:<id>` | `PF-RATES-DESK` |
-| `NAME` | text | STRING | required | R | | `Rates desk (New York)` |
-| `OWNER` | text | STRING | required | R | user or team | `rates-risk` |
-| `TYPE` | text | STRING | required | R | `HIERARCHY`, `RULE` or `BASKET` | `HIERARCHY` |
-| `DEFINITION` | record | doc | required | R | `{NODE: <NODE_ID>}`, `{RULE: <rule text>}` ([section 5.4](#54-the-position-rule-language-where-and-rule-portfolios)) or `{MEMBERS: [{POSITION_ID} or {TRADE_ID}, …]}` | `{"NODE": "MGMT~DESK-RATES"}` |
-| `ROLLS_UP_TO` | record | doc | optional | – | `{KIND, ID}` the portfolio reports under | `{"KIND": "desk", "ID": "DESK-RATES"}` |
-| `LIMIT_VAR` | amount | DOUBLE | optional | R | **not in the demo**: a portfolio's VaR limit is its `var-limit` row of hierarchy `PORTFOLIO` ([section 15.15](#1515-var-limit-the-nodes-var-limits)); a record that still carries one is read when there is no row | `106000000` |
-| `BUSINESS_DATE`, `VALID_FROM`, `VALID_TO` | date | `business_date` / doc | required / optional | – | | `2026-09-30`, `2026-01-02`, `null` |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`portfolio.contract.yaml`](../../config/packs/banking/market-risk/contracts/portfolio.contract.yaml), published as [PORT: `portfolio`](../contracts/packs/market-risk.md#port-portfolio-portfolio); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#portfolio).
 
 A BASKET's `POSITION_ID` members name derived positions: `POS-<TT_BOOK>~<security>` or `POS-<TT_BOOK>~<TRADE_ID>`. Rule portfolios and
 baskets saved by people live in the content store ([section 5.8](#58-baskets)); the stored `portfolio` kind holds the demo's (and a
@@ -2496,7 +2686,7 @@ built: a node's backtest reads its official `HYPO_PNL`; any other scope replays 
 
 **Reload on load (open question 5).** A `ready` load of an input kind (`drishti.var.kinds`: `pnl-vector`, `scenario-set`,
 `risk-hierarchy`, `portfolio`) or of `trade` (`LoadService.onReady`) drops that date from the engine (the same as
-`POST /api/v1/var/reload` for the date, audited `var-reload`), so a restated date is never stale, then captures the date officially in
+`POST /api/v1/risk/var/reload` for the date, audited `var-reload`), so a restated date is never stale, then captures the date officially in
 the background ([section 19](#19-official-end-of-day-results)): a date whose inputs are unchanged is not captured again, a restated one
 gets the next result version. A **new** date is picked up without a signal (each request asks the connector for the newest date with
 vectors); a **restated** open date is too, within `drishti.var.version-check` (30 s, the version watch: reloaded in the
@@ -2532,22 +2722,9 @@ scopes, captures and the official record do not know which form it came in (the 
 
 **Grain:** one row per trade, business date and scenario set. **Key:** `SCENARIO_PV_ID` (`SPV-<TRADE_ID>-<SCENARIO_SET_ID>`), command
 `SPV`. **Table:** `risk/scenario-pv/`, the vector column `SCENARIO_PV` (`list<double>`), the same promoted trade columns as `pnl-vector`
-plus those below. Contract: `config/packs/market-risk/contracts/scenario-pv.contract.yaml`.
+plus `CURRENCY`, `BASE_PV` and the valuation dates.
 
-| Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
-|---|---|---|---|---|---|---|---|
-| `SCENARIO_PV_ID` | id | `id` STRING | required | – | | the lake key: `SPV-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>` (an intraday update adds `-<BATCH_ID>`); it names the input row, never a position ([section 36.14](#3614-from-an-input-row-to-a-position)) | `SPV-1000054-HS-509` |
-| `TRADE_ID` … `TAGS` | | | | R | | the trade's terms, as in [section 15.2](#152-pnl-vector-one-pl-vector-per-trade) (`LEGAL_ENTITY`, `DESK` and `TT_BOOK` promoted) | |
-| `CURRENCY` | ccy | STRING | required | R | | the currency **both PVs** are in: the trade's own | `EUR` |
-| `BASE_PV` | amount | DOUBLE | required | R | `CURRENCY` | the trade's value on the business date, from the same run as the scenario PVs | `14997.44` |
-| `SCENARIO_PV` | vector | `list<double>` | required | R | `CURRENCY` | the trade's value under each scenario, in `SCENARIO_DATES` order; length `SCENARIO_COUNT`; a scenario that failed to price is `null` | `[15062.11, 14950.27, …]` (509) |
-| `VALUATION_DATE`, `BASE_VALUATION_DATE` | date | STRING | required | C | | the dates the scenario PVs and the base PV are valued on: the same, the business date | `2026-09-30` |
-| `RUN_KIND` | text | STRING | optional | R | | `FULL` (or none) for the day's run; `INTRADAY` for an update sent during the day ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)); the same column on `pnl-vector` | `INTRADAY` |
-| `COMPUTED_AT` | timestamp | STRING | optional | R | | when the run priced the row; for an intraday update, later than the morning run's, the latest per trade winning | `2026-09-30T23:05:00Z` |
-| `TRADE_STATUS`, `MATURITY_DATE` | | STRING | optional | R | | live or not, as in section 15.2 | |
-| `STATUS` | text | STRING | required | C | | `ok`, `proxied` or `failed` (then `SCENARIO_PV` null: counted as failed, never zero) | `ok` |
-| `SCENARIO_SET_ID`, `BATCH_ID` | id | STRING | required | C | | the run, checked with the vectors': one batch and the date's set across both forms (`DRS-5203`) | `HS-509`, `B-2026-09-30-01` |
-| `SOURCE_SYSTEM`, `TRADE_VERSIONS`, `PRICER`, `MODEL_VERSION`, `COMPUTED_AT`, `RESTATEMENT` | | doc | optional | – | | as in section 15.2 | |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`scenario-pv.contract.yaml`](../../config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml), published as [SPV: `scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#scenario-pv).
 
 **What the load checks** (each a rejected row, counted and listed in `provenance.rejections`, never padded): a `null` or `NaN` in
 `SCENARIO_PV` is a **scenario that failed to price**: `DRS-5206 <trade>: 1 scenario failed to price: 312 (2025-11-21); the trade is not
@@ -2568,7 +2745,9 @@ neither, or whose history does not cover every scenario day and the day before t
 `fx` says per currency where its rates came from (`supplied`, `derived`) and today's rate. The market-data pack's demo history is 30
 days, so the demo **supplies** its scenario FX (AUD, CAD, CHF, EUR, GBP, JPY); a bank with 510 days of FX history needs to send none.
 `scenario-pv` and `fx-scenario` are inputs (their data-load signal reloads the date, and they enter the hot file's digest); `fx-spot` is
-read when a date loads, not watched. Contract: `config/packs/market-risk/contracts/fx-scenario.contract.yaml`.
+read when a date loads, not watched.
+
+**Fields and example of `fx-scenario`.** Every field is its data contract, [`fx-scenario.contract.yaml`](../../config/packs/banking/market-risk/contracts/fx-scenario.contract.yaml), published as [FXS: `fx-scenario`](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#fx-scenario).
 
 **On the test data.** The Endur trades (1,339: 1,089 USD, 246 EUR, 4 CAD) come as scenario PVs: a factor-model move,
 valued in the trade's currency (`tools/packgen/var/scenario_fx.py`). A USD trade's P&L from its scenario PVs is its P&L
@@ -2674,14 +2853,14 @@ The provenance's `tier` says `per-trade-currency totals of the USD book (float64
 (2026-09-30) the figures of section 15.10 are unchanged (the totals equal the converted book).
 
 **The picker (the console, mock-up A).** The VaR page's header strip has **Reporting currency**: the listed currencies, then
-**More…**, which adds every other currency with scenario FX on the date (`GET /api/v1/var/currencies`: `listed`, `available`,
+**More…**, which adds every other currency with scenario FX on the date (`GET /api/v1/risk/var/currencies`: `listed`, `available`,
 `ready`). The whole page follows it: the tiles (`VaR 99% · 1 day · EUR`), the limit (`set in USD, at today's rate`), the P&L path,
 the history, the contributions, the scope tree (`VaR EUR`), captures and the basket's sheet. The choice stays for the browser tab's session
 and goes into the link (`/var?scope=DESK:DESK-RATES&ccy=EUR`); the command line says the same, **`VAR DESK DESK-RATES IN EUR`** (any
 VAR command ends with `IN <currency>`). The provenance says the reporting currency, the input form (`P&L vectors (USD) and scenario PVs
 in each trade's currency (1199 of 8566 trades)`), the scenario FX (`supplied`, `derived`) and `Cross rates: via USD`.
 
-**The tab In other currencies** (mock-up C's table, loaded **only when opened**): `GET /api/v1/var/scope/currencies?scope=&ccy=`, one
+**The tab In other currencies** (mock-up C's table, loaded **only when opened**): `GET /api/v1/risk/var/scope/currencies?scope=&ccy=`, one
 row per listed currency (and the page's own when it is not listed): its VaR 99% and ES 97.5% from the totals, that VaR in the page's
 currency at today's rate, and the difference from the page's VaR (`+3.2%`). The shown currency is marked; a click on another switches
 the page to it. The difference is the currency move on the scenario days: a euro-based owner carries a risk a dollar-based one does not.
@@ -2702,7 +2881,7 @@ A pricing system sends a business day's trades in either form, side by side: **P
 when it has it; during the day, only the changed trades (section 8.4); per trade or per position (section 15.13). **This is the
 contract a pricing system sends:** every record leads with what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`); JSONL, one
 JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly the fields of its kind's contract
-(`config/packs/market-risk/contracts/{scenario-pv,pnl-vector,fx-scenario}.contract.yaml`, which say the same), no other. Sample lines
+(`config/packs/banking/market-risk/contracts/{scenario-pv,pnl-vector,fx-scenario}.contract.yaml`, which say the same), no other. Sample lines
 (the vector cut to its first 3 values here: a row carries all 509):
 
 ```text
@@ -2731,11 +2910,11 @@ JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly
 | `tools/pvgen/morning.py` (`morning.sh`, `tools\windows\pvgen-morning.ps1`) | a full day: `scenario-pv` for `--pv-systems` (default ENDUR), `pnl-vector` for the others (`--pnl-systems`; `--all-vectors`: every trade a P&L vector), `fx-scenario`; `--date` moves it to another business date; `--lake` writes it into the lake (replacing the date), `--server` signals | `tools/pvgen/morning.sh --date 2026-10-27 --lake data/delta/demo --server http://127.0.0.1:18480` |
 | `tools/pvgen/intraday.py` (`intraday.sh`, `pvgen-intraday.ps1`) | N small batches (`--batches 20 --trades-per-batch 15`) of amended, new and cancelled trades (`--mix amend=70,new=15,cancel=15`, or `--plan amend,new,cancel`), each its own `BATCH_ID` (`I-<date>-001`; a second run on the same date goes on with `--first 21` and a later `--start`), `RUN_KIND: INTRADAY`, a `COMPUTED_AT` a minute after the batch before; each update as scenario PVs or a P&L vector by its system; `--seed` makes the same batches; `--lake` appends each batch, `--server` signals it, `--every 30s` drips them | `tools/pvgen/intraday.sh --date 2026-10-27 --batches 5 --lake data/delta/demo --server http://127.0.0.1:18480 --every 30s` |
 | `tools/pvgen/publish_kafka.py` (`publish-kafka.sh`, `pvgen-publish-kafka.ps1`) | the same updates to the PV topic, each message's value JSONL text of `--per-message` records (default 10), one row of the contract a line; a cancel a cancel line; the key names the message, never a trade; `--rate`, `--seconds`, `--seed` as `tools/samplegen/stream.py`; `--save` keeps every record sent as JSONL | `tools/pvgen/publish-kafka.sh --bootstrap localhost:9092 --rate 5 --seconds 60 --save data/pvgen/sent.jsonl` |
-| `tools/pvgen/check.py` (`check.sh`, `pvgen-check.ps1`) | recomputes from the files what the engine should show (each trade's USD P&L, scenario PVs through the engine's own formula `engine_pnl`, the latest `COMPUTED_AT` per trade, cancels removed) and compares the bank's and every desk's VaR and ES with `GET /api/v1/var/scope`; exit 1 on a difference | `tools/pvgen/check.sh --morning data/pvgen/morning-2026-10-27 --intraday data/pvgen/intraday-2026-10-27 --server http://127.0.0.1:18480` |
+| `tools/pvgen/check.py` (`check.sh`, `pvgen-check.ps1`) | recomputes from the files what the engine should show (each trade's USD P&L, scenario PVs through the engine's own formula `engine_pnl`, the latest `COMPUTED_AT` per trade, cancels removed) and compares the bank's and every desk's VaR and ES with `GET /api/v1/risk/var/scope`; exit 1 on a difference | `tools/pvgen/check.sh --morning data/pvgen/morning-2026-10-27 --intraday data/pvgen/intraday-2026-10-27 --server http://127.0.0.1:18480` |
 
 The files go under `<data folder>/pvgen/` by default (`morning-<date>/`, `intraday-<date>/`). The morning run of the test data's date is
 the engine's to the unit (`check.py` on it: VaR 112,041,646, ES 160,143,809; with `--all-vectors` 112,035,906 and 160,132,107).
-The committed intraday sample (`config/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`: three amended Endur trades,
+The committed intraday sample (`config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`: three amended Endur trades,
 one new, one cancelled) loads with `drishti.py var intraday --load <file> --date <the lake's date>`. `make_var_data.py` takes the same
 `--pv-systems`, `--pnl-systems` and `--all-vectors`: the P&L-vector generation is whole, for any system.
 
@@ -2801,8 +2980,8 @@ currency with each scenario's FX (section 15.11); a P&L vector's conversion is a
 already folded into the vector, so `inputsBySystem.<system>.tradesWithoutPv` counts the records that limit multi-currency exactness.
 
 **Visibility.** Every answer's provenance carries `inputsBySystem`: per source system on the date, `form`, `grain`, `rows`,
-`decidedBy` (*record fields*, or *record fields, agreeing with the pin pv, position*) and `tradesWithoutPv`; `GET /api/v1/var/status`
-lists it per loaded date; the VaR page shows it in *How this number was built*.
+`decidedBy` (*record fields*, or *record fields, agreeing with the pin pv, position*) and `tradesWithoutPv`; `GET /api/v1/risk/var/status`
+lists it per loaded date; the VaR page shows it in the Explain drawer's *Inputs & lineage*.
 
 **Files without the fields.** The fields are required on every PV or vector record: a file without them is refused (`DRS-5208`). `drishti.py var convert
 FILE --set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD --set SOURCE_SYSTEM=MUREX` adds them (`--infer` takes `VALUE_TYPE` from
@@ -2881,19 +3060,10 @@ the test data has none.)
 **Grain:** one row per node with a limit and business date. **Key:** `LIMIT_ID` = `VL-<NODE_ID>`. **Row count:** 157 in the test data
 (41: the 43 nodes of LL but two letter-desk nodes left without one; the 88 MGMT and LEGAL nodes; the 28 portfolios, hierarchy
 `PORTFOLIO`, `NODE_ID` the portfolio's id: every VaR limit lives here, with its currency, decision 8 of
-[COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md)). Read for the hierarchies whose `limits` names the kind
+[DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)). Read for the hierarchies whose `limits` names the kind
 (`drishti.var.kinds.limit`, `var-limit`) and for the portfolios; JSON Lines, one row a line.
 
-| Column | JSON | Delta | Req. | Meaning | Example |
-|---|---|---|---|---|---|
-| `LIMIT_ID` | id | STRING (also `id`) | required | `VL-<NODE_ID>` | `VL-LL~LL-0003` |
-| `HIERARCHY` | text | STRING | required | the node's hierarchy; `PORTFOLIO` for a portfolio's limit | `LL` |
-| `NODE_ID` | id | STRING | required | the node's id as the engine builds it; a row naming no node of the date is unused and said (`DRS-5212` in `provenance.warnings`) | `LL~LL-0003/DESK-RATES` |
-| `LIMIT_VAR` | amount | DOUBLE | required | the VaR limit, USD (another reporting currency: at today's rate), at `HORIZON` and `CONFIDENCE` | `4100000` |
-| `HORIZON`, `CONFIDENCE` | text, rate | doc | optional | what the limit is set for, `1D` and `0.99` when absent; limit use is shown only for an answer at the same horizon and confidence ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) | `1D`, `0.99` |
-| `CURRENCY` | text | STRING | required | `USD` | `USD` |
-| `BUSINESS_DATE` | date | `business_date` DATE | required | | `2026-09-30` |
-| `VALID_FROM`, `VALID_TO` | date | doc | `VALID_FROM` required | validity (informational) | `2026-01-02`, `null` |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`var-limit.contract.yaml`](../../config/packs/banking/market-risk/contracts/var-limit.contract.yaml), published as [VLIM: `var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#var-limit).
 
 The kind is an input: its data version is part of a date's hot-file digest, and its data-load signal reloads the date.
 
@@ -2908,17 +3078,7 @@ not this kind: it is the risk model's P&L, shown beside these two as the **risk-
 **Grain:** one row per desk (and its legal entity) per business date. **Key:** `DESK_PNL_ID` = `DPNL-<DESK_ID>-<BUSINESS_DATE>`.
 **Row count:** 2,600 in the test data (10 desks × 260 business days to 2026-09-30). JSON Lines, one row a line.
 
-| Column | JSON | Delta | Req. | Meaning | Example |
-|---|---|---|---|---|---|
-| `DESK_PNL_ID` | id | STRING (also `id`) | required | `DPNL-<DESK_ID>-<BUSINESS_DATE>` | `DPNL-DESK-RATES-2026-09-30` |
-| `BUSINESS_DATE` | date | `business_date` DATE | required | the day the market moved: tested against the official VaR of the business day before | `2026-09-30` |
-| `DESK_ID` | id | STRING | required | a desk node of the hierarchies (`DESK-RATES` is `MGMT~DESK-RATES`); a node's P&L is the sum of its desks' rows, the bank's of every row | `DESK-RATES` |
-| `LEGAL_ENTITY` | id | STRING | optional | the entity the P&L is booked in: a LEGAL node sums its entity's rows | `LE-NY` |
-| `ACTUAL_PNL` | amount | DOUBLE | required | finance's **clean** actual P&L: fees, commissions, reserves, net interest income and intraday trading left out (12 CFR 217.204(b); OSFI CAR chapter 9); USD, a loss negative | `870301` |
-| `HYPOTHETICAL_PNL` | amount | DOUBLE | required | front office's hypothetical P&L: the end of the day before's positions revalued on the day's market, nothing traded; USD | `1774641` |
-| `FEES_AND_COMMISSIONS` | amount | DOUBLE | optional | what finance left out of the actual P&L, for the record: never tested | `365672` |
-| `CURRENCY` | text | STRING | required | `USD` | `USD` |
-| `SOURCE`, `AS_OF` | text, timestamp | STRING | required | the system the row came from; when it produced the figures (a restated day is sent again with a later `AS_OF`) | `demo-finance`, `2026-09-30T22:00:00Z` |
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`desk-pnl.contract.yaml`](../../config/packs/banking/market-risk/contracts/desk-pnl.contract.yaml), published as [DPNL: `desk-pnl`](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#desk-pnl).
 
 **On the test data** (`tools/packgen/var/desk_pnl.py`, generated by `make_var_data.py`): a desk's risk-theoretical P&L of a date is its
 scenario P&L of the scenario day before it (today's trades under that day's move: the official record's convention); the hypothetical
@@ -2938,10 +3098,10 @@ per node). Positions are derived from those rows, not from the trade master: one
 | `trade` (ENDUR, CALYPSO, MUREX connectors; TRD) | `TRADE_ID` | the generator (the batch's copy of each trade); the pages' links | live trades, status, maturity, book, signed quantity, product and currency, version; the security id a bank's batch copies |
 | `desk` (core pack; DESK) | `DESK_ID`, `BOOKS[].ID` | generator | book → desk, desk → legal entity, desk names; the hierarchies |
 | `book` (BOOK) | `TT_BOOK` | pages (links) | |
-| `legal-entity` (LE) | `LEGAL_ENTITY` | generator (via desks); pages | `LE:` reads the trades' own `LEGAL_ENTITY` ([section 5.5](#55-scope-words-by-a-trades-attribute)) |
-| `trade-valuation` (TVAL) | `VALUATION_ID` = `TVAL-<TRADE_ID>` | generator | `MTM` → `PV` |
+| [`legal-entity`](../contracts/samples/core.md#legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)) (LE) | `LEGAL_ENTITY` | generator (via desks); pages | `LE:` reads the trades' own `LEGAL_ENTITY` ([section 5.5](#55-scope-words-by-a-trades-attribute)) |
+| [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)) (TVAL) | `VALUATION_ID` = `TVAL-<TRADE_ID>` | generator | `MTM` → `PV` |
 | `counterparty` (CPTY) | `COUNTERPARTY` | pages (links) | `CPTY:` reads the trades' own `COUNTERPARTY` |
-| `lei-entity` (LEI), `netting-set` (NSET) | `LEI`, `NETTING_SET` | `GROUP:` and `NSET:` scopes (parked) | |
+| [`lei-entity`](../contracts/samples/gleif.md#lei-entity) ([contract](../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity)) (LEI), `netting-set` (NSET) | `LEI`, `NETTING_SET` | `GROUP:` and `NSET:` scopes (parked) | |
 
 Positions link to trades (`graph.fields.TRADE_IDS` → `trade`); the explorer links each trade row to `TRD:<id>` and each node to its
 `NODE:` scope.
@@ -3053,7 +3213,7 @@ less from one day's scenario dropping out. The bank's lake can keep receiving lo
 99%. **Limits** are set against VaR at the configured confidence: changing the confidence changes limit use. **Backtesting** stays at
 its own setting: the Basel traffic light is defined at 99%.
 
-**Asked per request.** `GET /api/v1/var/scope?scope=BANK&window=250&confidence=0.95&es-confidence=0.975` (`drishti.py var show BANK
+**Asked per request.** `GET /api/v1/risk/var/scope?scope=BANK&window=250&confidence=0.95&es-confidence=0.975` (`drishti.py var show BANK
 --window 250 --confidence 0.95`) recomputes the headline's VaR and ES from the same vector on the newest 250 scenarios or at another
 confidence, to compare one year with two or 95% with 99%: the answer says so (`override`: `window`, `of`, `from`, `to`, the
 confidences, `official: false`, a note) and is never official or captured; a window longer than the date's is used whole, with a
@@ -3078,9 +3238,9 @@ the sources already send (P&L vectors or scenario PVs, [section 15](#15-inputs-f
 
 **Sums for any scope come first.** A scope's 10-day vector is the windowed sum of its **1-day vector**, which the engine sums from the
 position rows (the hot file's float32 rows in float64, or a node's float64 aggregate) in the fixed reduction order
-([RESOURCES_AND_SCALE.md section 6.7](../architecture/RESOURCES_AND_SCALE.md)). The windowing is a fixed left-to-right sum of ten values, so
+([CLUSTER_GUIDE.md section 6.7](CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk)). The windowing is a fixed left-to-right sum of ten values, so
 a node's 10-day vector is **equal to the bit** whatever the shards and threads that summed its 1-day vector
-([VAR_SHARDING.md](../architecture/VAR_SHARDING.md): the partials stay the 1-day vectors, never windows). **Tested:**
+([DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): the partials stay the 1-day vectors, never windows). **Tested:**
 `VarLensTest` (√10 equals the 1-day VaR and ES × √10 exactly at every confidence; the windows by hand on `1, 2, … 14` give `55, 65, 75,
 85, 95`; 509 → 500, 250 → 241; the ranks; ES; components adding up; the 10-day vector of four scopes the same bits on 1, 2, 3, 8 and 24
 threads), `ShardAssemblyTest` (23 scopes over six shards, three held and three through an owner: the 10-day vectors, VaR and ES
@@ -3203,10 +3363,10 @@ through the same feed and the same contracts as the normal set ([section 15](#15
 
 | Input | The normal set | The stress set |
 |---|---|---|
-| `scenario-set` | one row, e.g. `HS-509`: the date's recent days | one more row, its own `SCENARIO_SET_ID` (`HS-STRESS-2008`), **`SET_TYPE: STRESS`**, `SCENARIO_DATES` the stress period's days in date order; optionally `SYNTHETIC: true` and a `DESCRIPTION` |
-| `scenario-pv` (preferred) | each trade's (or position's) PVs under the normal scenarios, in its own currency, with its base PV | the same trade's PVs under the **stress** scenarios, the **same base PV** (one valuation today), `SCENARIO_SET_ID` the stress set's |
-| `pnl-vector` (accepted) | each trade's P&L vector in USD | its P&L vector under the stress scenarios, `SCENARIO_SET_ID` the stress set's |
-| `fx-scenario` | each currency's rate today and under each normal scenario | each currency's rates under each **stress** scenario, `SCENARIO_SET_ID` the stress set's |
+| [`scenario-set`](../contracts/samples/market-risk.md#scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)) | one row, e.g. `HS-509`: the date's recent days | one more row, its own `SCENARIO_SET_ID` (`HS-STRESS-2008`), **`SET_TYPE: STRESS`**, `SCENARIO_DATES` the stress period's days in date order; optionally `SYNTHETIC: true` and a `DESCRIPTION` |
+| [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv)) (preferred) | each trade's (or position's) PVs under the normal scenarios, in its own currency, with its base PV | the same trade's PVs under the **stress** scenarios, the **same base PV** (one valuation today), `SCENARIO_SET_ID` the stress set's |
+| [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector)) (accepted) | each trade's P&L vector in USD | its P&L vector under the stress scenarios, `SCENARIO_SET_ID` the stress set's |
+| [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario)) | each currency's rate today and under each normal scenario | each currency's rates under each **stress** scenario, `SCENARIO_SET_ID` the stress set's |
 
 The rows sit in the same tables: the engine tells them apart by `SCENARIO_SET_ID` (so the connector must promote that column, as the
 market-risk pack does), and a set is the stress set when its `SET_TYPE` is `STRESS` or, when it does not say, when its id starts with
@@ -3407,7 +3567,7 @@ window).
 | Top candidates | the windows apart from one another, by stressed VaR: the window, its VaR, the change against the current, *worst* and *current* tags, the worst day in it; click a row to select it |
 | By node | each node's VaR in the current window, its own worst window and when it starts, the gap |
 | Current against proposed | window, stressed VaR 1-day and 10-day √10, scenarios, the worst day in each; who approved the current window |
-| Proposals | the frozen analyses, newest first: id, node, window, VaR, status, who proposed and who decided; **Approve** and **Reject** for another person |
+| Proposals | the frozen analyses, newest first: id, node, window, VaR, status, who proposed and who decided; **Decide in Approvals** for another person (approved or rejected in the one Approvals queue) |
 
 The page needs a role that sees every node of the VaR hierarchies (the history is node-level P&L of the whole bank); another role is
 refused in words. The page lives under the `VAR` command word: an edition or a lens without `VAR` does not offer it.
@@ -3420,16 +3580,16 @@ decided proposal is not decided again, `DRS-2006`). Every step is audited. An ap
 system's next stress scenario set; once a date's stress set covers it, the tool names the approval beside the current window. Stressed
 VaR itself always uses the stress set the date holds.
 
-**From the command line:** `drishti.py var stress-window BANK` (the analysis as text), `--propose --first 2007-11-30 --note "..."`, `--proposals`, `--decide SWP-000001 --decision approve` ([section 10](#10-the-command-line)).
+**From the command line:** `drishti.py var stress-window BANK` (the analysis as text), `--propose --first 2007-11-30 --note "..."`, `--proposals` (it is decided in the queue: `drishti.py approvals approve stress-window SWP-000001`) ([section 10](#10-the-command-line)).
 
-**The API** (every endpoint in [API_GUIDE.md](API_GUIDE.md)):
+**The API** (every endpoint in [API_REFERENCE.md](API_REFERENCE.md)):
 
 | Call | What |
 |---|---|
-| `GET /api/v1/var/stress-window?scope=BANK&hierarchy=MGMT&length=250&confidence=0.99&asOf=2026-09-30` | the analysis: `node`, `nodes`, `hierarchies`, `history`, `length`, `confidence`, `rank`, `stressSet`, `current`, `worst`, `today`, `alert`, `candidates`, `series` (`starts`, `var`), `byNode`, `approval` |
-| `POST /api/v1/var/stress-window/proposals` | freeze and propose: `{"scope", "hierarchy", "date", "length", "confidence", "first", "note"}` (`first`: the window's first day; none: the worst) |
-| `GET /api/v1/var/stress-window/proposals` and `/proposals/{id}` | the proposals, newest first; one proposal |
-| `POST /api/v1/var/stress-window/proposals/{id}/decision` | `{"decision": "approve" \| "reject", "note"}` by another person |
+| `GET /api/v1/risk/var/stress-window?scope=BANK&hierarchy=MGMT&length=250&confidence=0.99&asOf=2026-09-30` | the analysis: `node`, `nodes`, `hierarchies`, `history`, `length`, `confidence`, `rank`, `stressSet`, `current`, `worst`, `today`, `alert`, `candidates`, `series` (`starts`, `var`), `byNode`, `approval` |
+| `POST /api/v1/risk/var/stress-window/proposals` | freeze and propose: `{"scope", "hierarchy", "date", "length", "confidence", "first", "note"}` (`first`: the window's first day; none: the worst) |
+| `GET /api/v1/risk/var/stress-window/proposals` and `/proposals/{id}` | the proposals, newest first; one proposal |
+| `POST /api/v1/approvals/stress-window/{id}/approve` | `{"decision": "approve" \| "reject", "note"}` by another person |
 
 A date without long-history rows answers `404` in words; a node without a row `404` naming the nodes that have one; a window shorter than
 20 days or longer than the history `400`; a row whose dates and values differ in length, or whose dates do not increase, `400`. A date
@@ -3462,7 +3622,7 @@ and normal days giving 213,637,794 and 112,041,646, a node the sum of its childr
 A node's **period end, average, high and low** of `var`, `es`, `svar` or `ses` over a fiscal year, quarter or any dates, the
 **60-business-day average** of VaR and the **12-week average** of stressed VaR, computed on request from the official records
 ([section 19](#19-official-end-of-day-results)) and never stored (`VarPeriodStats`; `VAR <scope> STATS <period>`, `drishti.py var stats`,
-`GET /api/v1/var/statistics`). Missing records are named, never skipped; a demo server may seed a synthetic year of records
+`GET /api/v1/risk/var/statistics`). Missing records are named, never skipped; a demo server may seed a synthetic year of records
 (`drishti.regulatory.synthetic-history`). On the demo, FY2026: period end 112,041,646, average 151,812,526, high 167,372,692, low
 87,874,268. The formulas, periods, settings and the synthetic history: [REGULATORY_VAR_REPORTING.md section 4.4](REGULATORY_VAR_REPORTING.md#44-period-statistics).
 
@@ -3472,7 +3632,7 @@ The official VaR of the day before against the **bank's** actual and hypothetica
 [section 15.16](#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)) and Drishti's own risk-theoretical P&L, at 99% and 97.5%, for the
 bank, a division, a legal entity or a desk, over 250 days: exceptions, the Basel zone, the capital multiplier, the desks that drove each
 exception, Kupiec and Christoffersen (`VarBacktesting`; `VAR <scope> BACKTEST`, `drishti.py var backtest`,
-`GET /api/v1/var/backtesting`). On the demo the bank has 3 exceptions at 99% against actual and against hypothetical P&L: green,
+`GET /api/v1/risk/var/backtesting`). On the demo the bank has 3 exceptions at 99% against actual and against hypothetical P&L: green,
 multiplier 3.00. The rule, the US and Canadian multiplier tables, the settings, the screen and the playground:
 [REGULATORY_VAR_REPORTING.md section 4.6](REGULATORY_VAR_REPORTING.md#46-backtesting).
 
@@ -3541,7 +3701,7 @@ and backtesting compare against; VaR by risk class and by Greek; quick what-if (
 
 **Its playground.** The VaR Playground's workbook gains a **Sensitivities** tab: each position's deltas, gammas and vegas, the factor
 shocks per scenario day, and every DGV P&L cell written as the expansion above in formulas, with a check cell against the engine's DGV
-VaR to the cent ([VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md)).
+VaR to the cent ([section 3.13](#313-the-var-playgrounds-workbook-cell-by-cell)).
 
 ### 18.13 Statistical factor VaR, estimated from scenario P&L (design, not built: parked)
 
@@ -3588,7 +3748,7 @@ with a check cell against the engine's factor VaR to the cent.
 
 ### 18.14 Regulatory reports: definitions, runs, checks and sign-off
 
-Reports are produced **automatically, with human sign-off**: one YAML definition per report in `config/reports/`
+Reports are produced **automatically, with human sign-off**: one YAML definition per report in `config/reports/banking/`
 (`drishti.regulatory.reports-dir`), a run that reads the official records, fills every cell, runs the checks and **freezes** the result
 with each cell's lineage, a maker-checker-approver sign-off (one person a step), and files in xlsx, csv and PDF released after the last
 approval (`VarReports`, `VarReportSignoff`; `VAR REPORT <report> <period>`, `drishti.py var report`). The pilot pack is
@@ -3599,7 +3759,7 @@ approval (`VarReports`, `VarReportSignoff`; `VAR REPORT <report> <period>`, `dri
 
 For any scope, the server fits a normal distribution to the scope's own summed scenario P&L vector, the very vector historical VaR ranks
 (the lens's: 1-day, 10-day √10, or the 10-day windows), and reads VaR and ES from it (`ParametricVar` in drishti-compute;
-[PARAMETRIC_VAR.md](../architecture/PARAMETRIC_VAR.md) is the design with the worked example). **Not official**, never a limit's measure;
+the signs, the decomposition and a worked example are in [section 18.16](#1816-parametric-var-signs-the-gap-the-decomposition-and-a-worked-example)). **Not official**, never a limit's measure;
 no new input.
 
 | Figure | Formula |
@@ -3632,6 +3792,100 @@ a scenario, a row a position; recalculated by LibreOffice it equals the engine t
 no block, the toggle shows a notice, the playground's Parametric tab and `parametric=true` are refused in words), `weighting` (`equal` or `ewma`), `lambda` (0.94),
 `horizon-rule` (`lens` or `square-root-of-time`), `curve-points` (121), `matrix-max-parts` (60), `show-curve` (true). Not in the official
 end-of-day records (a capture keeps it on demand).
+
+### 18.16 Parametric VaR: signs, the gap, the decomposition and a worked example
+
+**What it is for.** A cross-check of the official historical figure (a large gap points to a few extreme scenario days carrying the VaR:
+fat tails, skew, a jump; a small one to a book whose P&L is close to normal); a smooth decomposition (covariance components are stable
+from day to day, where historical components depend on the scenarios around the VaR rank); the correlations between desks behind the
+diversification; and a teaching device. It is not factor-level parametric VaR (sensitivities × a factor covariance matrix, usable before
+a deal), which belongs with the parked delta-gamma-vega inputs ([section 18.12](#1812-delta-gamma-vega-var-on-request-design-not-built-parked)).
+
+**Signs.** `v` is P&L (a gain positive), so a loss is the left tail and the normal's c-quantile loss is `−(μ − z·σ) = z·σ − μ`. A scope
+that made money on average (μ > 0) has a lower VaR, one that lost on average a higher one; VaR is not floored at zero (a scope whose μ
+exceeds z·σ shows a negative VaR, and the answer says so). **σ = 0** (a constant vector): VaR = ES = −μ, every component is −μᵢ, and
+the ? says *no spread: the normal is a point*; an empty scope has no figure (*No trades*). **The shape**, shown to explain the gap and
+not used in the VaR: skewness `(1/N) Σ (v−μ)³ / ((1/N) Σ (v−μ)²)^{3/2}` and excess kurtosis `(1/N) Σ (v−μ)⁴ / ((1/N) Σ (v−μ)²)² − 3`
+(weighted the same way under EWMA).
+
+**The fat-tail gap** `= VaR_historical − VaR_parametric` (same scope, date, currency, lens and confidence), `gap % = gap / VaR_parametric`,
+and the ES gap likewise. Positive: the scenario tail is heavier than the normal predicts, so the normal understates the loss (the usual
+case for trading books); negative: the worst days were milder than a normal with that σ. The gap compares one order statistic (the 6th
+worst of 509) with a quantile of a fitted curve, so one extreme day moves it.
+
+**The lens.** Parametric reads the very vector historical VaR reads:
+
+| Lens | The vector | Effect |
+|---|---|---|
+| 1-day | the 1-day vector | as above |
+| 10-day `sqrt10` | the 1-day vector × √10 | μ and σ both × √10, so VaR and ES are the 1-day figures × √10 exactly |
+| 10-day `sum` | the N − 9 overlapping 10-day window sums (500 of 509) | μ and σ of the windows, estimated from about 50 independent periods |
+
+The textbook square-root-of-time rule scales μ by 10 and σ by √10; the `sqrt10` lens scales μ by √10 because it scales the whole vector.
+The difference, `(10 − √10)·μ`, is small next to z·σ√10 for a trading book (0.4% on the worked example below); `horizon-rule:
+square-root-of-time` chooses the textbook form (the `sum` lens is then not offered). Window, stressed set (μ and σ of the stress set's
+scenarios) and reporting currency apply unchanged. EWMA's λ = 0.94 puts 95% of the weight in the newest 49 days, so the curve can differ
+sharply from the bars.
+
+**The decomposition.** A scope's parts are historical VaR's parts ([section 18.3](#183-decomposition-of-a-scope-into-parts)). For part i
+with vector `pᵢ` (Σ pᵢ = v when the parts partition the scope), with the weights and normalisation of σ:
+
+```
+cov(pᵢ, v)       = (1/(N−1)) Σ_j (p_ij − μᵢ)(v_j − μ)     (equal)   or   Σ_j w_j (p_ij − μᵢ)(v_j − μ)   (EWMA)
+ρᵢ               = cov(pᵢ, v) / (σᵢ · σ)                  the part's correlation with the scope
+βᵢ               = cov(pᵢ, v) / σ²                        its share of the scope's variance (Σ βᵢ = 1)
+component VaRᵢ   = z · cov(pᵢ, v)/σ − μᵢ  = z·ρᵢ·σᵢ − μᵢ
+component ESᵢ    = (φ(z_ES)/(1 − c_ES)) · cov(pᵢ, v)/σ − μᵢ
+standalone VaRᵢ  = z·σᵢ − μᵢ
+incremental VaRᵢ = VaR(v) − VaR(v − pᵢ)                   (μ and σ of v − pᵢ recomputed)
+marginal VaRᵢ    = component VaRᵢ / |sᵢ| × 1,000,000      per million of market value or PV; null without a size
+diversification  = Σ standalone VaRᵢ − VaR(v)
+```
+
+Σ cov(pᵢ, v) = σ² and Σ μᵢ = μ, so the components add up to z·σ − μ exactly, and the same for ES; the **−μᵢ term is what makes them**
+(z·cov/σ alone adds up to z·σ). Parts that do not partition the scope (a selection) do not add up. For nodes and groups (no size) the
+marginal is shown *per +1% of the part*, `0.01 × component VaRᵢ`. The **correlation matrix** of up to `matrix-max-parts` (60) parts is
+`C = XᵀX` with X the centred N × k matrix (`X_ji = √w_j·(p_ij − μᵢ)`), one `dgemm` through the BLAS seam
+([HIGH_PERFORMANCE_NATIVE.md](../architecture/HIGH_PERFORMANCE_NATIVE.md)), `R_il = C_il / √(C_ii·C_ll)`, `σ² = Σ C` returned as a
+check; beyond 60 parts the largest by |component VaR|, `truncated: true`. The components never come from the matrix: each is one `ddot` of
+its centred vector with the scope's, in index order, so the figures never depend on which BLAS answered.
+
+**A worked example** (a synthetic bank of five desks over 509 scenario days, a fat-tailed sample):
+
+| Figure | Value |
+|---|---:|
+| μ; σ (sample, N − 1) | −211,407; 54,240,760 |
+| z (99%); z·σ | 2.326348; 126,182,877 |
+| **parametric VaR 99%** = z·σ − μ | **126,394,284** |
+| **parametric ES 97.5%** = 54,240,760 × 2.337803 + 211,407 | **127,015,607** |
+| historical VaR 99% (6th worst); historical ES 97.5% (mean of the 13 worst) | 158,495,340; 166,821,647 |
+| **fat-tail gap** | **+32,101,056 (+25.4%)** |
+| skew, excess kurtosis | −0.73, +3.20 |
+| scenario days beyond the parametric VaR | 9 (the normal expects 5.09) |
+
+| Desk | σᵢ | μᵢ | ρᵢ | Component VaR | Standalone VaR | Historical VaR |
+|---|---:|---:|---:|---:|---:|---:|
+| Rates | 30,464,843 | 156,350 | 0.8254 | 58,341,667 | 70,715,472 | 84,051,284 |
+| Credit | 13,729,034 | −630,809 | 0.7489 | 24,550,841 | 32,569,318 | 38,206,986 |
+| FX | 12,361,674 | 192,864 | 0.1354 | 3,699,951 | 28,564,691 | 32,992,760 |
+| Equity derivatives | 18,967,232 | −133,035 | 0.7347 | 32,550,423 | 44,257,414 | 55,876,274 |
+| Commodities | 8,808,345 | 203,223 | 0.3638 | 7,251,401 | 20,288,052 | 24,216,953 |
+| **Σ** | | **−211,407** | | **126,394,284** = the bank | 196,394,947 | |
+
+Rates in full: cov(Rates, bank) = 1.3639·10¹⁵ USD², so z·cov/σ = 2.326348 × 1.3639·10¹⁵ / 54,240,760 = 58,498,017; minus μ_Rates 156,350
+gives **58,341,667**, 46.2% of the bank. Diversification: 196,394,947 − 126,394,284 = 70,000,663.
+
+**Where it runs, cost and precision.** In the server's VaR engine (`ParametricVar` in drishti-compute, pure functions on `double[]`,
+called by the request path that ranks the vector); sharded dates need nothing new, as it reads the scope's assembled vector. μ and σ cost
+2N operations on a vector already in hand; the tree one more pass a node; contributions one `ddot` a part; the matrix one `dgemm` of N × k
+(509 × 60 × 60, under a millisecond); nothing is stored beyond the answer cache. Two passes in float64 in scenario order give the same
+bits on any number of threads or shards; Σ components equals the VaR to about 10⁻⁶ USD. Φ⁻¹ is Acklam's rational approximation refined by
+one Halley step (relative error under 10⁻¹⁵); φ and Φ by the standard series and `erfc`. Tests: `ParametricVarTest` (μ, σ, VaR, ES by
+hand and against BigDecimal; z at 95, 97.5, 99 and 99.5% against tables to 10⁻¹²; EWMA weights; the shape), `ParametricEulerTest`
+(components add up to the cent on desks, 1,000 positions, a basket, `by=attribute:TRADER_ID`, μ ≠ 0, EWMA), `ParametricLensTest`,
+`ParametricDeterminismTest` (1 to 24 threads, six shards), `ParametricMatrixTest` (Java and native BLAS against a plain loop),
+`ParametricCurveTest`, `VarParametricApiTest` (every endpoint, off, entitlements, historical fields byte-identical with and without the
+block) and `PvarPlaygroundWorkbookTest`.
 
 ## 19. Official end-of-day results
 
@@ -3737,8 +3991,8 @@ No vectors and no trade or position rows are published; the capture itself keeps
 
 **In BI.** The published table is also the read-only kind `var-official` (`VOFF`) of the market-risk pack, served by the Delta
 connector `var-results` for BI and other readers (still no engine reads it; the guard allows only a read-only connector of computed
-kinds). The sample report **Market risk: VaR** (`config/bi/reports/market-risk-var.report.yaml`, model `market-risk-var`;
-[BI_GUIDE.md](BI_GUIDE.md)) shows the bank's VaR and ES, VaR by desk and by legal entity, the bank and a desk over time, and every node
+kinds). The sample report **Market risk: VaR** (`config/bi/reports/banking/market-risk-var.report.yaml`, model `market-risk-var`;
+[REPORTS_GUIDE.md](REPORTS_GUIDE.md)) shows the bank's VaR and ES, VaR by desk and by legal entity, the bank and a desk over time, and every node
 with its limit use, from the latest result version of each date; it never adds VaRs across nodes.
 
 ## 20. Validation, errors and data quality
@@ -3815,7 +4069,7 @@ first 100,000 are read).
 
 A desk's VaR record id has the form `VAR-<desk>` (`RESULT_ID`; there is no stored `var` kind with `VAR_99`, `ES_975`, `SVAR`, `LIMIT`, `EXCEPTIONS`,
 `SCENARIO_PNL` of 500 values, `PNL_SERIES`, `CONTRIBUTIONS`, `DESK`): every such id and link opens the explorer at the
-matching scope (the console: `VAR <id>`, `/v/var/<id>`; `drishti-console/routes/var_routes.py`):
+matching scope (the console: `VAR <id>`, `/v/var/<id>`; `drishti-console/plugins/banking/routes/var_routes.py`):
 
 | Id | Scope | Node |
 |---|---|---|
@@ -3874,7 +4128,7 @@ The stress results stay stored (one per desk and scenario, `STR`, with a positiv
 derived, not stored: `stress-scenario-pnl` (`SSPNL`, connector `mr-derived` of the market-risk pack) adds the desks' results of one
 scenario once per business date: the bank's P&L, the number of desks, the worst desk, each desk's limit use and the breaches. The
 stress-scenario page shows it in two panels, **Bank P&L under this scenario** and **Desks under this scenario**
-([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 13). It does not touch VaR: `VAR BANK` on 2026-09-30 stays
+([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes) section 13). It does not touch VaR: `VAR BANK` on 2026-09-30 stays
 112,041,646.
 
 ![SCN SCN-COVID2020: the bank's P&L under the scenario, the desks' results added, and each desk with its limit use](img/computed/04-stress-scenario.jpg)
@@ -3910,13 +4164,13 @@ The kinds, on the newest date (each of the other two dates has the same files):
 
 | Kind | Folder files | Dated | Documents on 2026-09-30 | Bytes (gzip), 2026-09-30 |
 |---|---|---|---|---|
-| `pnl-vector` | `pnl-vector-<date>.tar`: `pnl-vector/<date>/cob.part-001.jsonl.gz` … `part-010` | 2026-09-28 to 2026-09-30 | **8,233** trades (CALYPSO 4,155, MUREX 4,078; all `ok`), every vector 509 values (the Endur trades moved to `scenario-pv`) | 13,451,636 |
-| `scenario-pv` | `scenario-pv-<date>.tar`: `scenario-pv/<date>/cob.part-001.jsonl.gz` … `part-003` | 2026-09-28 to 2026-09-30 | **1,339** Endur trades (USD 1,089, EUR 246, CAD 4), 509 scenario PVs and a base PV each, in cents of the trade's currency ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | 2,770,923 |
-| `fx-scenario` | `fx-scenario.tar`: `fx-scenario/<date>/cob.jsonl.gz` | 2026-09-28 to 2026-09-30 | 6 currencies (AUD, CAD, CHF, EUR, GBP, JPY): today's `fx-spot` mid and 509 scenario rates moved by the factor model's FX factors | 16,315 |
-| `scenario-set` | `scenario-set.tar`: `scenario-set/<date>/cob.jsonl.gz` | 2026-09-28 to 2026-09-30 | 1 (`HS-509`, 2024-09-17 to 2026-09-29) | 1,399 |
-| `risk-hierarchy` | `risk-hierarchy.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **88** nodes | 1,921 |
+| [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector)) | `pnl-vector-<date>.tar`: `pnl-vector/<date>/cob.part-001.jsonl.gz` … `part-010` | 2026-09-28 to 2026-09-30 | **8,233** trades (CALYPSO 4,155, MUREX 4,078; all `ok`), every vector 509 values (the Endur trades moved to `scenario-pv`) | 13,451,636 |
+| [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv)) | `scenario-pv-<date>.tar`: `scenario-pv/<date>/cob.part-001.jsonl.gz` … `part-003` | 2026-09-28 to 2026-09-30 | **1,339** Endur trades (USD 1,089, EUR 246, CAD 4), 509 scenario PVs and a base PV each, in cents of the trade's currency ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | 2,770,923 |
+| [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario)) | `fx-scenario.tar`: `fx-scenario/<date>/cob.jsonl.gz` | 2026-09-28 to 2026-09-30 | 6 currencies (AUD, CAD, CHF, EUR, GBP, JPY): today's `fx-spot` mid and 509 scenario rates moved by the factor model's FX factors | 16,315 |
+| [`scenario-set`](../contracts/samples/market-risk.md#scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)) | `scenario-set.tar`: `scenario-set/<date>/cob.jsonl.gz` | 2026-09-28 to 2026-09-30 | 1 (`HS-509`, 2024-09-17 to 2026-09-29) | 1,399 |
+| [`risk-hierarchy`](../contracts/samples/market-risk.md#risk-hierarchy) ([contract](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy)) | `risk-hierarchy.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **88** nodes | 1,921 |
 | `portfolio` | `portfolio.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **28** definitions | 1,643 |
-| `var-limit` | `var-limit.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **157** limits | 1,858 |
+| [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)) | `var-limit.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **157** limits | 1,858 |
 
 The data's 30 books hold every live trade of the date (9,572; open question 1), over 10 desks and 4 legal entities (`LE-FRA`, `LE-LDN`,
 `LE-NY`, `LE-TKY`). The rules derive 7,984 positions. The 28 portfolios: one HIERARCHY portfolio per desk (`PF-<DESK>-DESK`, 10)
@@ -3971,7 +4225,7 @@ the position rules and the measures.
 | 2 | **Decided (2026-10-25): in memory**, rebuilt from the date's trades and the rules on every load (reproducible); each official capture records the date's membership and the rules (audit). No database or lake table | §15.6 |
 | 3 | **Decided (2026-10-25):** the demo risk batch adds a deterministic synthetic `SECURITY_ID` to securities and listed trades (the trade master is unchanged); *securities* and *listed* are the pack's `positions:` rules (by product group and type), configuration not code | §15.6 |
 | 4 | Due time of the batch (for example 06:00 New York the next business day) and the completeness rule per book | §15.8 |
-| 5 | **Decided (product owner, 2026-10-25): yes.** The data-load signal of `pnl-vector`, `scenario-set`, `risk-hierarchy`, `portfolio` (and `trade`) reloads that date in the engine automatically (the same as `POST /api/v1/var/reload` for the date), so a restated date is never stale, then captures it officially. Built | §15.8 |
+| 5 | **Decided (product owner, 2026-10-25): yes.** The data-load signal of `pnl-vector`, `scenario-set`, `risk-hierarchy`, `portfolio` (and `trade`) reloads that date in the engine automatically (the same as `POST /api/v1/risk/var/reload` for the date), so a restated date is never stale, then captures it officially. Built | §15.8 |
 | 6 | Several scenario sets on one date (a stressed set `SVAR-250`): select by `SCENARIO_SET_ID` (a scope or request parameter), and which is the default? | §15.3 |
 | 7 | Lake layout for the vectors at bank scale: sort by hierarchy and partition by scenario set (both designed, not built); file and row-group sizes; `BYTE_STREAM_SPLIT` + ZSTD | §15.1, §29 |
 | 8 | **Decided and built (2026-10-26): keep `TMAT`, for the trades of positions of more than one trade only.** A trade alone in its position is its position's row; the others' rows are in the file, read only on a drill or a trade scope (a lake read per drill would scan a whole date) | §26 |
@@ -4016,7 +4270,7 @@ recommended defaults unless the product owner said otherwise):
 | Bitmaps | Roaring, over positions | `java.util.BitSet`, over trades |
 | Marginal VaR | per unit of notional or PV | per million of market value (positions) or PV (trades) |
 | Audit | basket changes audited | as designed ([section 9](#9-who-sees-what-entitlements-and-audit)) |
-| `by` values | API_GUIDE.md: `child`, `node`, `position`, `trade` | `child`, `node`, `position`, `trade`, `desk`, `book` |
+| `by` values | API_REFERENCE.md: `child`, `node`, `position`, `trade` | `child`, `node`, `position`, `trade`, `desk`, `book` |
 | Truncated parts | the largest by gross exposure | as designed (by gross size) |
 | Provenance | the input tables' versions and batch ids | as designed (`provenance.inputs`) |
 | Load signal | the shared rules' section 9: the signal reloads the date (confirmed 2026-10-25) | as designed (and the date is captured officially) |
@@ -4027,7 +4281,7 @@ recommended defaults unless the product owner said otherwise):
 | Computed kinds | `var-result`, `var-contribution`, `var-path`, `var-history`, `what-if` | `var-result`; parts and worst scenarios inside `var-result`; the what-if is the VaR API's (`POST /what-if`) |
 | Where the engine runs | a reactive connector `var-engine` over a Python package `compute/drishti-var` | every figure in the server's JVM (additions and sorts next to the data), the what-if included; the reactive connector `var-engine` serves the computed kind ([section 24](#24-where-the-engine-lives)) |
 | The explorer | a Sutra of the market-risk pack, opened by `VARX <scope>` | a console page (`/var`), opened by `VAR` ([section 24](#24-where-the-engine-lives)) |
-| API paths | `/api/v1/var/scopes/{scope}`, `/path`, `/history`, `/contributions?by=child\|position\|risk-class`, `PATCH /baskets/{id}`, `/sandboxes` | `GET /scope?scope=` (and `/scopes/{scope}` for a scope without a slash) with `/scope/path`, `/scope/history`, `/scope/contributions`; baskets by owner and name; `POST /what-if` ([section 11](#11-the-api)) |
+| API paths | `/api/v1/risk/var/scopes/{scope}`, `/path`, `/history`, `/contributions?by=child\|position\|risk-class`, `PATCH /baskets/{id}`, `/sandboxes` | `GET /scope?scope=` (and `/scopes/{scope}` for a scope without a slash) with `/scope/path`, `/scope/history`, `/scope/contributions`; baskets by owner and name; `POST /what-if` ([section 11](#11-the-api)) |
 
 ## Part III · How the engine works and stores data
 
@@ -4048,14 +4302,14 @@ as the viewer; packs stay declarative.
 |---|---|
 | the pack | the **market-risk** pack: the kinds `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`, and `position` to the `var-positions` connector (the engine's derived positions); the computed kind `var-result` on the reactive connector `var-engine`; mnemonics `POS`, `PORT`, `PNLV`, `SSET`, `HIER`, `VRES`; Sutras for `portfolio` and `position` |
 | the stored data | `risk-store` (Delta), the vectors in a `list<double>` column (`layout.<kind>.vectors: [PNL]`); demo data from `tools/packgen/var/make_var_data.py` |
-| the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.compute.var`); loading, entitlements, baskets, captures, official records and the API in `drishti-server` (`com.ash.drishti.server.var`). Base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
+| the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.banking.compute.var`); loading, entitlements, baskets, captures, official records and the API in `drishti-banking` (`com.ash.drishti.banking.var`). Base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
 | the what-if | `VarWhatIf` (`drishti-server`) over `VarWhatIfMath` (`drishti-compute`): copies of booked trades or scopes and vectors priced elsewhere added to a scope, before and after ([section 8.2](#82-the-what-if-the-java-engine)) |
-| the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/drishti_var-explorer.js`, `drishti_var-charts.js`, `web/static/css/drishti_var.css`) over `/api/v1/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs came with reactive connectors. The portfolio and position pages are Sutras, with the UI kit fragment `pnl-distribution@1` |
+| the explorer | a console page (`/var`, `drishti-console/plugins/banking/routes/var_routes.py`, `drishti-console/plugins/banking/static/js/drishti_var-explorer.js` on drishti-risk's grid and chart presets, `drishti-console/plugins/banking/static/css/drishti_var.css`) over `/api/v1/risk/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs came with reactive connectors. The portfolio and position pages are Sutras, with the UI kit fragment `pnl-distribution@1` |
 
 **The compute boundary.** Base VaR is sums of stored vectors and measures over the sums, in the server's JVM on a bounded pool
 (`drishti.var.threads`). The heavy work that needs Python or a pricer (what-if pricing over the scenarios, intraday repricing:
 [section 8.4](#84-what-if-pricing-and-intraday-recomputes)) is a separate request of whole trades to price, which the compute
-workers of [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) serve: any number of workers (their count is configuration, never
+workers of [NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md) serve: any number of workers (their count is configuration, never
 code), one trade or a batch each, the 509 values each returns joining as a vector. Nothing in the engine assumes one worker or calls
 one in its request path. Moving gigabytes of vectors into a Python worker for every query would be too slow; every VaR figure is the
 server's.
@@ -4332,7 +4586,7 @@ never grows with the years kept; it grows only with the dates **open at once**, 
 2. **Least recently used out first.** Every request stamps the date it reads (not only its load). A date asked for and not open is
    opened; when that makes one more than the number, the date used longest ago is closed.
 3. **Always kept (protected):** the date just used, the newest business date, and the dates pinned in memory (below; counted within the
-   number). When the protected dates alone exceed the number, it is exceeded and `GET /api/v1/var/status` says so (`memory.warnings`).
+   number). When the protected dates alone exceed the number, it is exceeded and `GET /api/v1/risk/var/status` says so (`memory.warnings`).
 4. **A date's books go together:** its reporting-currency books (`drishti.var.currencies`), its stress book and its intraday layers close
    with it; and when room is short (next point) a date's currency books, then its stress book, close first, before any date. They are
    reopened from their hot files on the next ask.
@@ -4402,9 +4656,9 @@ drishti:
 ```
 
 The calendars are those of the business date (`drishti.business-date.calendar`); a date pinned by two rules is kept once, with both
-reasons, in memory when either says so. `GET /api/v1/var/status` (`pinned`) lists every pinned date with its reasons, how
+reasons, in memory when either says so. `GET /api/v1/risk/var/status` (`pinned`) lists every pinned date with its reasons, how
 it is kept, whether it is open, whether its hot file is built and the state of its build (`queued`, `building`, `built in … ms`, or *not
-built:* and why), and `GET /api/v1/exposure/status` the same for exposure; Admin → Caches counts them (`var.hot-files`: `pinned`) and names the protected dates (`var.dates`).
+built:* and why), and `GET /api/v1/risk/exposure/status` the same for exposure; Admin → Caches counts them (`var.hot-files`: `pinned`) and names the protected dates (`var.dates`).
 
 **Opening a date, by where it is.** Open: no cost. A hot file on disk: mapped again, seconds. Only in the lake: built once, then on disk.
 For dates people return to (a year-end, the stress window), raise `disk-dates` and `max-disk-gb` or pin them; at 1,000,000 positions a
@@ -4450,7 +4704,7 @@ Heap tier, N = 509:
 | vectors (float64) | 4,072,000 (3.88 MiB) | 509 × 8 per trade; the budget's measure |
 | vectors during load | + 4,072,000 | the unsorted copy while permuting |
 | trade columns | 84,000 | 17 × 4-byte codes + 2 × 8-byte numbers per trade, plus the dictionaries |
-| trade ids and index | about 98,000 | `String` per id and 8 bytes of two sorted indexes, exact and any case; measured at 100,000 trades, two dates open: 117 MB of heap (RESOURCES_AND_SCALE.md 14.22) |
+| trade ids and index | about 98,000 | `String` per id and 8 bytes of two sorted indexes, exact and any case; measured at 100,000 trades, two dates open: 117 MB of heap (CLUSTER_GUIDE.md 14.22) |
 | position index | 4 per trade + per position about 120 bytes of columns, 8 of run, an id and 8 bytes of two sorted indexes | |
 | ordinal set | 125 per set | one bit per trade of the date |
 | aggregates | 4,072 per book and per node | 88 nodes + 30 books in the demo: 0.48 MB |
@@ -4484,7 +4738,7 @@ aggregates. The rest of the heap is the columns and ids (`108·T + 136·P` and `
 `P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + about 120·T` a book (2.9 GB at 1,000,000).
 
 These formulas, term by term, with the heap to set, the RAM, the disk by folder and the settings for your own sizes, are in the planner
-workbook ([RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)).
+workbook ([CLUSTER_GUIDE.md section 9.7](CLUSTER_GUIDE.md#155-the-sizing-planner)).
 
 A memory budget applies to the heap tier (`drishti.var.memory-budget-mb`: float64 rows, 8 bytes a value); a date over it answers
 `503 DRS-5204`. The mapped tier's rows are bounded by the disk (a hard limit) and the page cache (advisory), section 26.8; its heap by
@@ -4525,13 +4779,13 @@ ordinal by ordinal.
 
 ### 27a.2 The headline and the contribution table
 
-**The headline** (`GET /api/v1/var/scope`) answers the scope's VaR and ES from the scope's own vector (the aggregates and the planned sum
+**The headline** (`GET /api/v1/risk/var/scope`) answers the scope's VaR and ES from the scope's own vector (the aggregates and the planned sum
 of [section 25](#25-one-business-date-in-memory)), and three figures about its default parts: `children` (how many), `sumStandalone`
 (Σ standalone VaR) and `diversification` (`sumStandalone − var`, with two parts or more). For a node the default parts are its child nodes
 (their aggregates). For a scope whose default parts are positions (a leaf node, a portfolio, a basket, an ad-hoc scope) or trades (a
 position), **the headline builds no list of parts**: it counts them and sums their standalone VaR in one pass (27a.3).
 
-**The contribution table** (`GET /api/v1/var/scope/contributions`) lists rows: each part's standalone VaR and ES, component VaR and ES,
+**The contribution table** (`GET /api/v1/risk/var/scope/contributions`) lists rows: each part's standalone VaR and ES, component VaR and ES,
 incremental and marginal VaR. It lists at most `max-parts` rows (27a.4); its totals `sumStandalone`, `sumComponent` and `diversification`
 are over **every** part.
 
@@ -4630,11 +4884,11 @@ Scope membership itself adds nothing that grows with the date: a position costs 
 
 ## 28. Sharding across Drishti\*net
 
-Deploying a sharded cluster (owners and coordinators per role, shard sizes, zones, drains, failure timings): [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md).
+Deploying a sharded cluster (owners and coordinators per role, shard sizes, zones, drains, failure timings): [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md).
 
 **Off by default.** With no `sharding:` block in the market-risk pack and no `drishti.var.sharding.enabled`, every server holds whole dates
-as in sections 25 to 27. Switched on, a date's rows are spread over the Drishti\*net members; the design, the handover, the failure cases,
-the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING.md). In short:
+as in sections 25 to 27. Switched on, a date's rows are spread over the Drishti\*net members (how it is built:
+[DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)). In short:
 
 - **A shard map per date**: the date's rows counted per legal entity and desk (columns only, no vector), cut into contiguous ranges near
   `target-shard-mb` (a desk never split), the same on every member that reads the same data (`ShardMap`).
@@ -4644,19 +4898,19 @@ the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING
   checked), each its own hot file (`<hot>/<date>-shard-<i>/`, the same format with a `RANG` section).
 - **Every member puts the date together** from its own shards and the others' skeletons (the hot file without its matrices): the same
   trades, positions and nodes as one server, **every node's aggregate to the bit**, so `VAR BANK` and the desks answer at once everywhere.
-- **Any other scope**: the planner's rows split by shard, each part summed by one ready owner (`POST /api/v1/var/partial`, signed, one hop,
+- **Any other scope**: the planner's rows split by shard, each part summed by one ready owner (`POST /api/v1/risk/var/partial`, signed, one hop,
   as the caller), exactly one answer per shard, added in shard order, VaR and ES taken once. No live owner of a needed shard: `503
   DRS-5215`, never a partial VaR. The answer's `provenance.shards` says how many shards were asked and who answered.
 - **Handover**: a new owner builds its shards from the lake and announces them ready in its capability digest; the old owner keeps
   serving until the new one has been ready for `grace-seconds`. A member drains before it stops (`drishti.py var shards --drain`).
 - **Intraday**: each member reads the day's updates from the lake on its own data-load signal and applies them on the date it put
   together; `provenance.intraday.batches` says which batches an answer includes, in the same order on every member (section 8.4). A client
-  that must see a batch everywhere polls it there (VAR_SHARDING.md section 7, *Convergence after a batch*).
-- **API tokens**: `POST /api/v1/var/partial` (the members' signed channel) and `POST /api/v1/var/shards/drain` (administrators) are in
+  that must see a batch everywhere polls `provenance.intraday.batches` on each member until it lists the batch.
+- **API tokens**: `POST /api/v1/risk/var/partial` (the members' signed channel) and `POST /api/v1/risk/var/shards/drain` (administrators) are in
   `token-never`.
 
 Measured equal to one server **to the cent** (VaR, ES, contributions, the P&L path, the tree, intraday, the official record) on three
-members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`, VAR_SHARDING.md section 12). `GET /api/v1/var/shards?asOf=`
+members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`). `GET /api/v1/risk/var/shards?asOf=`
 and `drishti.py var shards` show the map, the owners and who is ready.
 
 **Bit-equality, and why.** Every member sums the same rows in the same fixed order: a shard's partial is summed in row order, the partials
@@ -4665,18 +4919,10 @@ and sent in the skeleton, and every node's is summed from them bottom-up exactly
 bits on every member. A book (or, with a hierarchy built from columns, a position) under
 two shards would break this, so such a date is refused (`422 DRS-5217`) rather than answered differently from one server.
 
-**Operating it** (the full reference is [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) sections 7 to 11):
-
-| Task | How |
-|---|---|
-| switch it on | the market-risk pack's `sharding:` block (`enabled`, `key: [LEGAL_ENTITY, DESK]`, `kinds: [scenario-pv, pnl-vector]`, `target-shard-mb`, `replicas`), or the same keys under `drishti.var.sharding.*`, which win; needs `drishti.var.tier.mode: mapped` (the default) |
-| tune the hand-over | `drishti.var.sharding.stable-seconds` (members unchanged this long before shards move, 30), `grace-seconds` (a new owner ready this long before the old one releases, 30), `rebalance-seconds` (2), `release-after-seconds` (a shard book of a date nobody has open released, 900) |
-| place members | `coordinator-only` (puts dates together and coordinates, owns no shard), `zone-tag` (a second owner in another zone), `pins` (tests) |
-| stop a member safely | `drishti.py var shards --drain` (or `POST /api/v1/var/shards/drain`), then wait for `"safeToStop": true` on `GET /api/v1/var/shards`; give a Fargate task's `stopTimeout` the time to build its largest shard plus `grace-seconds` |
-| an owner dies | its replica answers; after `stable-seconds` a new owner builds the shard from the lake (never from a peer) |
-| every owner of a shard down | a scope that needs it answers `503 DRS-5215`, never a partial VaR; node figures keep answering from the skeletons |
-| a load lands between members | `409 DRS-5216`, the next member asked; the date is put together again at the new version and swapped in whole, never dropped |
-| intraday | each member reads the day's batches from the lake on its own load signal; `provenance.intraday.batches` lists them in one order on every member |
+**Operating it**: switching it on, how many shards and where (`target-shard-mb`, `replicas`, `coordinator-only`, `zone-tag`), the
+hand-over timings, stopping a member safely with a drain, and what each failure looks like and what to do are in
+[DATA_ARCHITECTURE.md, VaR sharding for operators](../architecture/DATA_ARCHITECTURE.md#14-var-sharding-for-operators); every setting
+with its default is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 The shard books are hot files too: caches, rebuilt from the lake, under the same disk budget ([section 26](#26-the-tiered-memory-and-the-hot-file)).
 What sharding costs and gives on one machine is measured in [BENCHMARK.md section 4](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run).
@@ -4756,7 +5002,7 @@ the whole bank's vectors as 10 GB of JSON a date, usable for a few desk-level ar
 | `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/build.py` | `lake build --vector` and both writers write a vector column as `list<double>` (pyarrow `pa.list_(pa.float64())` for the `deltalake` engine; type `vector` in Drishti's Java `LakeWriter`), the document keeping `{"$vector": "PNL"}` (the vector not stored twice); Snappy and default encodings (no `BYTE_STREAM_SPLIT` yet) |
 | the Delta plugin (`DeltaTable`, `DeltaSourcePlugin`) | streams a date's vectors (`SourcePlugin.vectors`, `VectorSink`, through `SourceRouter.vectors`) one buffer per read, reused for every row, so a date of millions of vectors is never held there; puts a vector back into a fetched document, so a page shows the P&L path unchanged; reading goes through Delta Kernel's own list reader (no custom fast path yet) |
 | Iceberg (`--store iceberg`) | **built.** `lake build --format iceberg` and `build_demo_lakes.py --store risk=iceberg` write the same `list<double>` column; the Iceberg plugin implements `vectors()`, `documents()`, `tableIdentity()`, `inventory()` and `refreshVersions()`, so VaR and exposure read their inputs from an Iceberg risk lake as from Delta. The same day on both formats gives VaR, ES, component VaR, the limit-letter nodes, intraday and the official records equal to the cent in USD and EUR (`VarFormatEqualityTest`), exposure too (`ExposureFormatEqualityTest`). Delta stays the default |
-| the data pattern | unchanged ([DEMO_DATA.md](../connectors/DEMO_DATA.md)): `data/testdata/<domain>/<kind>/*.jsonl.gz` → `lake demo` (`tools/lake/demo.py`, each day with `lake build`) → Delta → the connector `risk-store`, with `DRISHTI_LAKE_ENABLED` as for every pack and the demo connector off; in production the bank's batch writes Parquet or JSON Lines and the loader (`lake build`, `lake publish`) builds the same tables |
+| the data pattern | unchanged ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)): `data/testdata/<domain>/<kind>/*.jsonl.gz` → `lake demo` (`tools/lake/demo.py`, each day with `lake build`) → Delta → the connector `risk-store`, with `DRISHTI_LAKE_ENABLED` as for every pack and the demo connector off; in production the bank's batch writes Parquet or JSON Lines and the loader (`lake build`, `lake publish`) builds the same tables |
 | tests | a vector round trip (JSON Lines → Delta → `double[]` → document) equal to the bit: `DeltaVectorColumnTest`, `tools/lake/test_vectors.py` |
 
 ## 30. The design record
@@ -4820,7 +5066,7 @@ wholly inside, so 8,420 leaves are summed (about 34 MB, about 10 ms); the stamp 
 | V3 | baskets, entitlements by node (`positions`, `aggregate`), audit entries, official numbers; captures (new, product owner 2026-10-24). Accepted: an aggregate-only viewer sees a division's numbers and never a position; every answer is audited | built |
 | *VaR complete* parts 1 and 2 | retired stored kinds, derived positions, official captures and their publication, 7-year retention (part 1); the tiered memory, the benchmark, the computed kind, the what-if, `drishti.py var` (part 2) | built |
 | V4 | what-if: sandboxes, unwind and linear scaling, the reprice check; pricing through QLRisk if its API is stable; the QuantLib-Java parity. Accepted: a sandbox removing three trades matches the scope minus those trades exactly; with QLRisk, a new swap's incremental VaR in under 3 s | partly: copies of booked trades and vectors priced elsewhere ([section 8.2](#82-the-what-if-the-java-engine)); pricing planned ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
-| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md › The design and its reasons, section 18](WRITE_BACK.md#18-saving-through-connectors-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
+| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([APPROVALS_GUIDE.md › The design and its reasons, section 18](../architecture/ARCHITECTURE.md#317-the-applied-event-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
 | V6 | scale: sharding across Drishti\*net, the targets measured on a real server. Accepted: the measured numbers published; any target missed has a stated reason and plan | the hot store built (part 2); sharding built ([section 28](#28-sharding-across-drishtinet)) |
 
 **Tests.** The design asked for: additivity (a scope's vector equals the sum of its trades'; node vectors equal their children's sums);
@@ -4873,7 +5119,7 @@ Everything in this list is **design, not built**; the plan row that builds it is
 | The lake layout at bank scale: the sort by hierarchy, the partition by scenario set, file and row-group sizes, `BYTE_STREAM_SPLIT` + ZSTD | open question 7, [section 29.2](#292-the-layout-the-design-chose-and-what-is-built) |
 | Age-weighted and filtered methods; ES backtests (Acerbi–Székely) | [section 18.3](#183-decomposition-of-a-scope-into-parts), [section 18.4](#184-history-and-backtest) |
 | The batch's due time and completeness rule; the load checks still not made | open question 4, [section 20.3](#203-what-the-load-checks) |
-| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) |
+| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../architecture/LENSES.md#6-mr-cube-lens) |
 | The common risk lake for every risk pack; the scope words `GROUP:` and `NSET:` | parked, [section 15.1](#151-where-they-live) |
 
 Built since this list was first written: regulatory backtesting, period statistics and the report framework with its pilot pack
@@ -4897,16 +5143,16 @@ annual report's trading VaR table (built); the US needs 10-day VaR and stressed 
 | Where | Status | What it shows of VaR |
 |---|---|---|
 | **The full product** (no edition) | built | the VaR explorer (`VAR BANK <GO>`, [section 3](#3-the-explorer-screen-by-screen)) with the Horizon, Confidence, ES and Reporting currency pickers; the position and portfolio pages; the computed kind `VRES` and the what-if under the basket's sheet; the scenario matrix `SMAT`; the official records (`VOFF`); BI's VaR datasets; the API and the CLI |
-| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([EDITIONS.md](../admin/EDITIONS.md#7-drishti-risks-home-three-landings), [RISK_LENS.md](../lenses/RISK_LENS.md#31-var)) |
-| **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/TRADING_LENS.md#44-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
+| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([LENSES.md](ADMIN_GUIDE.md#161-drishti-risk), [RISK_LENS.md](../architecture/LENSES.md#12-what-it-answers-today)) |
+| **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../architecture/LENSES.md#222-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
 | **Drishti Market** and **Drishti World** | built | no VaR (`VAR` and `SMAT` off) |
-| A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md)) |
-| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md)); the CRO's VaR against risk appetite ([CRO_LENS.md](../lenses/CRO_LENS.md)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../lenses/CIO_LENS.md)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md)) |
+| A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](BUILD_GUIDE.md#32-designing-for-phones)) |
+| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../architecture/LENSES.md#5-oversight-lens)); the CRO's VaR against risk appetite ([CRO_LENS.md](../architecture/LENSES.md#8-cro-lens)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../architecture/LENSES.md#9-cio-lens)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../architecture/LENSES.md#6-mr-cube-lens)) |
 
 Under every edition the engine is the same: any scope, any currency, intraday, official records, the what-if, the API and the CLI. The
 lens gaps that concern VaR (stressed VaR on the landings, horizon and confidence there, backtesting on the bank's P&L, why it moved) are
-listed in [RISK_LENS.md section 5](../lenses/RISK_LENS.md#5-gaps-with-design-sketches) and
-[TRADING_LENS.md section 5](../lenses/TRADING_LENS.md#5-gaps-with-design-sketches).
+listed in [RISK_LENS.md section 5](../architecture/LENSES.md#13-gaps-and-proposals) and
+[TRADING_LENS.md section 5](../architecture/LENSES.md#23-gaps-and-proposals).
 
 ## 34. Configuration keys
 
@@ -4940,10 +5186,8 @@ the loaders ([section 7](../admin/BENCHMARK.md#7-the-loaders)); and the extrapol
 
 ## 36. VaR data: every dataset the engine reads
 
-Every dataset historical VaR uses, what it is for, whether it is required, where it lives, and one real record from the shipped sample
-data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The engine itself, its computations and its
-screens are in the sections above; the field-by-field rules of each kind are its **data contract**
-([docs/contracts/packs/market-risk.md](../contracts/packs/market-risk.md)); how files are named, dated and loaded is
+Every dataset historical VaR uses, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. The engine itself, its computations and its
+screens are in the sections above; how files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 The sample data is synthetic (a 40-factor model, labelled with source systems such as ENDUR, CALYPSO and MUREX); the demo lake moves its
@@ -4979,34 +5223,8 @@ length (509 in the sample); the engine uses the newest `drishti.var.scenario-win
 
 - **`SCENARIO_DATES`:** strictly increasing; the newest N are the window. Every vector names its set in `SCENARIO_SET_ID`.
 
-- **Data contract:** [`scenario-set`](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set) (SSET), key `SCENARIO_SET_ID`; 13 fields, 10 required.
-- **Sample:** `data/testdata/market-risk/scenario-set/scenario-set.tar` → `scenario-set/2026-09-28/cob.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "SCENARIO_SET_ID": "HS-509",
-  "BUSINESS_DATE": "2026-09-28",
-  "SCENARIO_DATES": [
-    "2024-09-13",
-    "2024-09-16",
-    "2024-09-17",
-    "2024-09-18",
-    /* … 501 more … */,
-    "2026-09-22",
-    "2026-09-23",
-    "2026-09-24",
-    "2026-09-25"
-  ],
-  "SCENARIO_COUNT": 509,
-  "WINDOW_START": "2024-09-13",
-  "WINDOW_END": "2026-09-25",
-  "HORIZON_DAYS": 1,
-  "REVALUATION": "full",
-  "WEIGHTS": null,
-  "SOURCE_BATCH": "B-2026-09-28-01",
-  "DESCRIPTION": "Historical simulation, 509 business days, equal weights"
-}
-```
+- **Data contract:** [`scenario-set`](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set) (SSET), key `SCENARIO_SET_ID`; 13 fields, 10 required; the file [`scenario-set.contract.yaml`](../../config/packs/banking/market-risk/contracts/scenario-set.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#scenario-set) (files `data/testdata/market-risk/scenario-set/scenario-set.tar`).
 
 ### 36.3 `scenario-pv`: scenario PVs per trade (preferred)
 
@@ -5019,60 +5237,8 @@ so a trade's position is known without reading the trade itself.
 - **`STATUS`:** `ok`, or a pricing failure the completeness checks show.
 - **`BATCH_ID`, `RESTATEMENT`, `RUN_KIND`:** which run produced it; a restatement replaces the earlier row.
 
-- **Data contract:** [`scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 39 fields, 28 required.
-- **Sample:** `data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar` → `scenario-pv/2026-09-30/cob.part-001.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "VALUE_TYPE": "PV",
-  "GRAIN": "TRADE",
-  "TRADE_ID": "1000003",
-  "CURRENCY": "USD",
-  "SOURCE_SYSTEM": "ENDUR",
-  "SCENARIO_PV_ID": "SPV-1000003-HS-509",
-  "SECURITY_ID": null,
-  "INSTRUMENT": "ENGY-B-SWAP USD 2027-02",
-  "BUSINESS_DATE": "2026-09-30",
-  "SCENARIO_SET_ID": "HS-509",
-  "TRADE_VERSIONS": "v7",
-  "TRADE_STATUS": "AMENDED",
-  "MATURITY_DATE": "2027-02-28",
-  "LEGAL_ENTITY": "LE-NY",
-  "DIVISION": "DIV-MARKETS",
-  "DESK": "DESK-COMM",
-  "TT_BOOK": "BOOK-COMM-1",
-  "LIMIT_LETTER": "LL-0001",
-  "PORTFOLIO": "BOOK-COMM-1",
-  "STRATEGY": "",
-  "PRODUCT_GROUP": "Commodity",
-  "PRODUCT_TYPE": "ComSwap",
-  "COUNTERPARTY": "CP-CASCADIA",
-  "DIRECTION": "SHORT",
-  "QUANTITY": -4687500.0,
-  "TAGS": "",
-  "BASE_PV": -5176568.0,
-  "VALUATION_DATE": "2026-09-30",
-  "BASE_VALUATION_DATE": "2026-09-30",
-  "SCENARIO_PV": [
-    -4754754.0,
-    -5608689.0,
-    -5444664.0,
-    -5103789.0,
-    /* … 501 more … */,
-    -5371205.0,
-    -5327780.0,
-    -4800104.0,
-    -5239083.0
-  ],
-  "STATUS": "ok",
-  "PRICER": "demo-factor-model",
-  "MODEL_VERSION": "demo-2",
-  "COMPUTED_AT": "2026-09-30T06:00:00Z",
-  "BATCH_ID": "B-2026-09-30-01",
-  "RESTATEMENT": 0,
-  "RUN_KIND": "FULL"
-}
-```
+- **Data contract:** [`scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 39 fields, 28 required; the file [`scenario-pv.contract.yaml`](../../config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#scenario-pv) (files `data/testdata/market-risk/scenario-pv/scenario-pv-*.tar`).
 
 ### 36.4 `pnl-vector`: P&L vectors per trade (accepted)
 
@@ -5084,60 +5250,8 @@ downstream knows which form a trade came in.
 - **`GRAIN`:** `TRADE`, or a coarser grain (a position or a book) when the source aggregates ([15.13](#1513-inputs-any-form-any-grain)).
 - **`PV`:** today's value, shown beside the P&L.
 
-- **Data contract:** [`pnl-vector`](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (PNLV), key `VECTOR_ID`; 39 fields, 27 required.
-- **Sample:** `data/testdata/market-risk/pnl-vector/pnl-vector-2026-09-30.tar` → `pnl-vector/2026-09-30/cob.part-001.jsonl.gz`, the first record where `SOURCE_SYSTEM` = `CALYPSO`.
-
-```jsonc
-{
-  "VALUE_TYPE": "PNL",
-  "GRAIN": "TRADE",
-  "TRADE_ID": "CLY-3000267",
-  "CURRENCY": "USD",
-  "SOURCE_SYSTEM": "CALYPSO",
-  "VECTOR_ID": "PNL-CLY-3000267-HS-509",
-  "SECURITY_ID": null,
-  "INSTRUMENT": "Repurchase agreement USD 2027-01",
-  "BUSINESS_DATE": "2026-09-30",
-  "SCENARIO_SET_ID": "HS-509",
-  "TRADE_VERSIONS": "v3",
-  "TRADE_STATUS": "AMENDED",
-  "MATURITY_DATE": "2027-01-04",
-  "LEGAL_ENTITY": "LE-FRA",
-  "DIVISION": "DIV-TREASURY",
-  "DESK": "DESK-SFT",
-  "TT_BOOK": "BOOK-SFT-1",
-  "LIMIT_LETTER": "LL-0001",
-  "PORTFOLIO": "BOOK-SFT-1",
-  "STRATEGY": "",
-  "PRODUCT_GROUP": "Securities financing",
-  "PRODUCT_TYPE": "REPO",
-  "COUNTERPARTY": "CP-BRAMBLE",
-  "DIRECTION": "SHORT",
-  "QUANTITY": -178000000.0,
-  "TAGS": "",
-  "TRADE_CURRENCY": "USD",
-  "REPORTING_CCY": "USD",
-  "PV": 396058,
-  "PNL": [
-    1535,
-    57,
-    5271,
-    -2374,
-    /* … 501 more … */,
-    -855,
-    -5201,
-    57,
-    2303
-  ],
-  "STATUS": "ok",
-  "PRICER": "demo-factor-model",
-  "MODEL_VERSION": "demo-2",
-  "COMPUTED_AT": "2026-09-30T06:00:00Z",
-  "BATCH_ID": "B-2026-09-30-01",
-  "RESTATEMENT": 0,
-  "RUN_KIND": "FULL"
-}
-```
+- **Data contract:** [`pnl-vector`](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (PNLV), key `VECTOR_ID`; 39 fields, 27 required; the file [`pnl-vector.contract.yaml`](../../config/packs/banking/market-risk/contracts/pnl-vector.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#pnl-vector) (files `data/testdata/market-risk/pnl-vector/pnl-vector-*.tar`).
 
 ### 36.5 `fx-scenario`: scenario FX rates
 
@@ -5145,32 +5259,8 @@ One row per currency per business date: the currency's rate (`QUOTE`, USD per on
 (`RATES`, in the scenario set's order). Used to turn scenario PVs in other currencies into USD P&L. When it is not sent, the engine
 derives the same rates from `fx-spot` history of each scenario day.
 
-- **Data contract:** [`fx-scenario`](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) (FXS), key `FX_SCENARIO_ID`; 9 fields, 9 required.
-- **Sample:** `data/testdata/market-risk/fx-scenario/fx-scenario.tar` → `fx-scenario/2026-09-28/cob.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "FX_SCENARIO_ID": "FXS-AUD-HS-509",
-  "BUSINESS_DATE": "2026-09-28",
-  "SCENARIO_SET_ID": "HS-509",
-  "CURRENCY": "AUD",
-  "QUOTE": "USD per 1 AUD",
-  "RATE": 0.6683,
-  "RATES": [
-    0.6729415125,
-    0.6667086598,
-    0.6709755486,
-    0.670913006,
-    /* … 501 more … */,
-    0.6708494492,
-    0.6719584576,
-    0.6745211482,
-    0.6651427482
-  ],
-  "SOURCE": "demo-factor-model",
-  "BATCH_ID": "B-2026-09-28-01"
-}
-```
+- **Data contract:** [`fx-scenario`](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) (FXS), key `FX_SCENARIO_ID`; 9 fields, 9 required; the file [`fx-scenario.contract.yaml`](../../config/packs/banking/market-risk/contracts/fx-scenario.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#fx-scenario) (files `data/testdata/market-risk/fx-scenario/fx-scenario.tar`).
 
 ### 36.6 `fx-spot`: FX history
 
@@ -5178,41 +5268,8 @@ Market data: each currency pair's quote today and its recent history (`HISTORY`)
 Reporting currency picker), for today's conversion, and to derive scenario FX when `fx-scenario` is not supplied. It is read, never
 watched: a change during the day does not recompute VaR.
 
-- **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required.
-- **Sample:** `data/testdata/market-data/fx-spot/fx-spot.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "PAIR": "FX-AUDUSD",
-  "PAIR_NAME": "AUD/USD",
-  "MID": 0.661,
-  "BID": 0.66097,
-  "ASK": 0.66103,
-  "CHANGE_1D": -0.01092,
-  "SPOT_DATE": "2026-10-02",
-  "HISTORY": [
-    {
-      "DATE": "2026-08-19",
-      "MID": 0.69653
-    },
-    {
-      "DATE": "2026-08-20",
-      "MID": 0.70057
-    },
-    /* … 28 more … */
-  ],
-  "CONVENTIONS": {
-    "BASE": "AUD",
-    "QUOTE": "USD",
-    "PIP_FACTOR": 10000,
-    "SPOT_LAG": "T+2",
-    "CALENDAR": "GBLO+USNY",
-    "NDF": false
-  },
-  "FX_FORWARD_CURVE": "FXF-AUDUSD",
-  "FX_VOL_SURFACE": "FXV-AUDUSD"
-}
-```
+- **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../config/packs/banking/market-data/contracts/fx-spot.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
 
 ### 36.7 `risk-hierarchy`: the trees
 
@@ -5223,39 +5280,8 @@ join it. These are the **Scopes** on the VaR screen.
 - **`NODE_ID`:** `<hierarchy>~<id>`, valid from `VALID_FROM` to `VALID_TO` (open-ended when null).
 - A hierarchy can instead be built from the trades' own columns ([15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)).
 
-- **Data contract:** [`risk-hierarchy`](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (HIER), key `NODE_ID`; 11 fields, 8 required.
-- **Sample:** `data/testdata/market-risk/risk-hierarchy/risk-hierarchy.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "NODE_ID": "LEGAL~BANK",
-  "HIERARCHY": "LEGAL",
-  "LEVEL": "bank",
-  "PARENT_ID": null,
-  "NAME": "Drishti Bank",
-  "REF": null,
-  "CHILDREN": [
-    "LEGAL~LE-NY",
-    "LEGAL~LE-LDN",
-    "LEGAL~LE-FRA",
-    "LEGAL~LE-TKY"
-  ],
-  "BOOKS": [
-    "BOOK-COMM-1",
-    "BOOK-COMM-2",
-    "BOOK-COMM-3",
-    "BOOK-CREDIT-1",
-    /* … 22 more … */,
-    "BOOK-SFT-3",
-    "BOOK-STRUCT-1",
-    "BOOK-STRUCT-2",
-    "BOOK-STRUCT-3"
-  ],
-  "BUSINESS_DATE": "2026-09-30",
-  "VALID_FROM": "2026-01-02",
-  "VALID_TO": null
-}
-```
+- **Data contract:** [`risk-hierarchy`](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) (HIER), key `NODE_ID`; 11 fields, 8 required; the file [`risk-hierarchy.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-hierarchy) (files `data/testdata/market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz`).
 
 ### 36.8 `portfolio`: stored portfolios and baskets
 
@@ -5263,167 +5289,40 @@ Named sets of positions beyond the trees: a **hierarchy** portfolio (a node), a 
 and a **basket** (an explicit member list, as here). They appear as Portfolios and System baskets on the VaR screen. `ROLLS_UP_TO` says
 which node it belongs to for limits and reporting.
 
-- **Data contract:** [`portfolio`](../contracts/packs/market-risk.md#port-portfolio-portfolio) (PORT), key `PORTFOLIO_ID`; 9 fields, 8 required.
-- **Sample:** `data/testdata/market-risk/portfolio/portfolio.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "PORTFOLIO_ID": "PF-ASHA-UNWIND",
-  "NAME": "Unwind candidates (Asha)",
-  "OWNER": "asha",
-  "TYPE": "BASKET",
-  "DEFINITION": {
-    "MEMBERS": [
-      {
-        "POSITION_ID": "POS-BOOK-RATES-1~MX-20000002"
-      },
-      {
-        "POSITION_ID": "POS-BOOK-RATES-1~MX-20000003"
-      },
-      /* … 7 more … */
-    ]
-  },
-  "ROLLS_UP_TO": {
-    "KIND": "division",
-    "ID": "DIV-MARKETS"
-  },
-  "BUSINESS_DATE": "2026-09-30",
-  "VALID_FROM": "2026-01-02",
-  "VALID_TO": null
-}
-```
+- **Data contract:** [`portfolio`](../contracts/packs/market-risk.md#port-portfolio-portfolio) (PORT), key `PORTFOLIO_ID`; 9 fields, 8 required; the file [`portfolio.contract.yaml`](../../config/packs/banking/market-risk/contracts/portfolio.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#portfolio) (files `data/testdata/market-risk/portfolio/portfolio.*.jsonl.gz`).
 
 ### 36.9 `var-limit`: VaR limits
 
 A node's VaR limit with its horizon and confidence: the **Limit** column and limit use on the VaR screen. A limit is compared only at its
 own horizon and confidence (the screen says *not comparable* otherwise).
 
-- **Data contract:** [`var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (VLIM), key `LIMIT_ID`; 10 fields, 7 required.
-- **Sample:** `data/testdata/market-risk/var-limit/var-limit.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "LIMIT_ID": "VL-LL~BANK",
-  "HIERARCHY": "LL",
-  "NODE_ID": "LL~BANK",
-  "LIMIT_VAR": 150000000,
-  "CURRENCY": "USD",
-  "HORIZON": "1D",
-  "CONFIDENCE": 0.99,
-  "BUSINESS_DATE": "2026-09-30",
-  "VALID_FROM": "2026-01-02",
-  "VALID_TO": null
-}
-```
+- **Data contract:** [`var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (VLIM), key `LIMIT_ID`; 10 fields, 7 required; the file [`var-limit.contract.yaml`](../../config/packs/banking/market-risk/contracts/var-limit.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#var-limit) (files `data/testdata/market-risk/var-limit/var-limit.*.jsonl.gz`).
 
 ### 36.10 `desk-pnl`: actual and hypothetical P&L for backtesting
 
 Each desk's real P&L per day, from finance: **actual** (with intraday trading and fees), **hypothetical** (today's positions held still)
 and fees. The backtest compares each day's VaR with these to count exceptions and set the traffic-light zone (Backtest ›).
 
-- **Data contract:** [`desk-pnl`](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) (DPNL), key `DESK_PNL_ID`; 10 fields, 8 required.
-- **Sample:** `data/testdata/market-risk/desk-pnl/desk-pnl.tar` → `desk-pnl/2025-09-17/cob.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "DESK_PNL_ID": "DPNL-DESK-COMM-2025-09-17",
-  "BUSINESS_DATE": "2025-09-17",
-  "DESK_ID": "DESK-COMM",
-  "LEGAL_ENTITY": "LE-NY",
-  "ACTUAL_PNL": -351052,
-  "HYPOTHETICAL_PNL": -2307182,
-  "FEES_AND_COMMISSIONS": 837316,
-  "CURRENCY": "USD",
-  "SOURCE": "demo-finance",
-  "AS_OF": "2025-09-17T22:00:00Z"
-}
-```
+- **Data contract:** [`desk-pnl`](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) (DPNL), key `DESK_PNL_ID`; 10 fields, 8 required; the file [`desk-pnl.contract.yaml`](../../config/packs/banking/market-risk/contracts/desk-pnl.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#desk-pnl) (files `data/testdata/market-risk/desk-pnl/desk-pnl.tar`).
 
 ### 36.11 `pnl-history`: the long history of each node
 
 A node's P&L over many years (`HISTORY_DATES`, `PNL`), e.g. from 2007, so a stressed window (2008) can be found and long-history views
 drawn. The sample's history is synthetic (`SYNTHETIC: true`), anchored to the stress set and HS-509.
 
-- **Data contract:** [`pnl-history`](../contracts/packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) (PNLH), key `HISTORY_ID`; 16 fields, 10 required.
-- **Sample:** `data/testdata/market-risk/pnl-history/pnl-history.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "HISTORY_ID": "PNLH-LEGAL~BANK",
-  "BUSINESS_DATE": "2026-09-30",
-  "HIERARCHY": "LEGAL",
-  "NODE_ID": "LEGAL~BANK",
-  "NAME": "Drishti Bank",
-  "LEVEL": "bank",
-  "CURRENCY": "USD",
-  "FIRST_DAY": "2007-01-02",
-  "LAST_DAY": "2026-09-29",
-  "DAY_COUNT": 4938,
-  "HISTORY_DATES": [
-    "2007-01-02",
-    "2007-01-03",
-    "2007-01-04",
-    "2007-01-05",
-    /* … 4930 more … */,
-    "2026-09-24",
-    "2026-09-25",
-    "2026-09-28",
-    "2026-09-29"
-  ],
-  "PNL": [
-    34375815.28,
-    -26816987.53,
-    -31968465.89,
-    -9368696.87,
-    /* … 4930 more … */,
-    70184458.13,
-    35883219.34,
-    -44744875.68,
-    -2554349.24
-  ],
-  "SYNTHETIC": true,
-  "ANCHORS": [
-    "HS-STRESS-2008",
-    "HS-509"
-  ],
-  "SOURCE_BATCH": "B-2026-09-30-HIST",
-  "DESCRIPTION": "The long-history P&L of today's portfolio at this node, one value per business day since 2007, for the stress window selection; synthetic for the demo (not mar…"
-}
-```
+- **Data contract:** [`pnl-history`](../contracts/packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) (PNLH), key `HISTORY_ID`; 16 fields, 10 required; the file [`pnl-history.contract.yaml`](../../config/packs/banking/market-risk/contracts/pnl-history.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#pnl-history) (files `data/testdata/market-risk/pnl-history/pnl-history.*.jsonl.gz`).
 
 ### 36.12 `trade-valuation`: each trade's value today
 
 The trade's MTM today with its attributes (desk, portfolio, counterparty, netting set, trader). Shown on a position's page and used by
 What-if; not needed for the VaR number itself, which comes from the vectors.
 
-- **Data contract:** [`trade-valuation`](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation) (TVAL), key `VALUATION_ID`; 21 fields, 20 required.
-- **Sample:** `data/testdata/market-risk/trade-valuation/trade-valuation.2026-09-30.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "VALUATION_ID": "TVAL-1000001",
-  "TRADE_ID": "1000001",
-  "SOURCE_SYSTEM": "ENDUR",
-  "PRODUCT_TYPE": "ComSwap",
-  "PRODUCT_GROUP": "Commodity",
-  "PORTFOLIO": "BOOK-COMM-2",
-  "DESK": "DESK-COMM",
-  "COUNTERPARTY": "CP-HARBORPT",
-  "NETTING_SET": "NS-HARBORPT-NY",
-  "TRADER_ID": "TRDR-FROSSI",
-  "BUY_SELL_CODE": "S",
-  "TRADE_STATUS": "AMENDED",
-  "CURRENCY": "USD",
-  "NOTIONAL": 209962179.0,
-  "MTM": 5151600,
-  "MTM_CURRENCY": "USD",
-  "PNL_1D": -347255,
-  "DV01": 0,
-  "TRADE_DATE": "2025-06-20",
-  "MATURITY_DATE": "2028-07-31",
-  "VALUATION_DATE": "2026-09-30"
-}
-```
+- **Data contract:** [`trade-valuation`](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation) (TVAL), key `VALUATION_ID`; 21 fields, 20 required; the file [`trade-valuation.contract.yaml`](../../config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#trade-valuation) (files `data/testdata/market-risk/trade-valuation/trade-valuation.*.jsonl.gz`).
 
 ### 36.13 The trades: `trade_murex`, `trade_endur`, `trade_calypso`
 
@@ -5432,34 +5331,8 @@ The trades themselves (one kind per source system: `trade_murex`, `trade_endur`,
 columns), but every position links to its trade, and hierarchies may be built from the trades' columns. The record below shows the main
 fields; a real trade also carries its `LEGS` and `EVENTS` (cash flows, fixings).
 
-- **Data contract:** [`trade`](../contracts/packs/trading.md#trd-trade-trade) (TRD), key `TRADE_ID`; 47 fields, 25 required.
-- **Sample:** `data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz`, the first record.
-
-```jsonc
-{
-  "SOURCE_SYSTEM": "MUREX",
-  "TRADE_ID": "MX-20000001",
-  "TRADE_VERSION": "2",
-  "TRADE_STATUS": "AMENDED",
-  "TRADE_DATE": "2025-07-25",
-  "PRODUCT_GROUP": "Rates",
-  "PRODUCT_TYPE": "IRS_FIXFLOAT",
-  "BUY_SELL_CODE": "S",
-  "QUANTITY": 242000000.0,
-  "PRICE": 0.040829,
-  "CURRENCY": "AUD",
-  "COUNTERPARTY": "CP-MERIDIAN-RE",
-  "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-3",
-  "TT_BOOK": "BOOK-RATES-3",
-  "TRADER_ID": "TRDR-ASHAH",
-  "STRATEGY": null,
-  "START_DATE": "2025-07-28",
-  "MATURITY_DATE": "2032-06-25"
-}
-```
-
-The record shows 19 of its 47 fields; omitted here: `SOURCE_UPDATE_TIME`, `INPUT_DATE`, `TRADE_ACTION`, `TRANSACTION_ID`, `PACKAGE_ID`, `PRODUCT_SUB_TYPE`, `PRODUCT_SUB_GROUP`, `OPTION_TYPE` and 20 more.
+- **Data contract:** [`trade`](../contracts/packs/trading.md#trd-trade-trade) (TRD), key `TRADE_ID`; 47 fields, 25 required; the file [`trade.contract.yaml`](../../config/packs/banking/trading/contracts/trade.contract.yaml).
+- **Example:** [a real record of the test data, every field explained](../contracts/samples/trades.md#murex) (files `data/testdata/trades/murex/trade_murex.*.jsonl.gz`).
 <!-- guide-data:end -->
 
 ### 36.14 From an input row to a position

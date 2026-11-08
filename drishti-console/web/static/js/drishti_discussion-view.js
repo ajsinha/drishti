@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Drawing a discussion (COLLABORATION.md, Discussion): threads and comments as DOM, from the server's JSON, for the Discussion tab of the
+/* Drawing a discussion (ARCHITECTURE.md §31, Discussion): threads and comments as DOM, from the server's JSON, for the Discussion tab of the
    side drawer (drishti_discussion.js). Everything the server sent is put in with textContent: a comment's text arrives already scrubbed for THIS
    reader (masked values as •••, {$.path} quotes filled from their view), and nothing here can turn it into markup. Buttons carry data-act;
    drishti_discussion.js handles them in one delegated listener. Drishti.ThreadView.thread(t, ctx) / .comment(c, t, ctx); ctx = {me, admin, pageGen, pageAsOf}. */
@@ -70,7 +70,7 @@
     if (same) { return shown; }
     var m = /^(\D*?)([-+]?\d[\d,]*)(?:\.(\d+))?(\D*)$/.exec(shown), n = Number(raw);
     if (!m || !isFinite(n) || raw.trim() === '') { return raw; }
-    var out = Math.abs(n).toLocaleString('en-US', { useGrouping: m[2].indexOf(',') >= 0, minimumFractionDigits: (m[3] || '').length, maximumFractionDigits: (m[3] || '').length });
+    var out = window.Drishti.elements.core.formatNumber(Math.abs(n), { grouping: m[2].indexOf(',') >= 0, decimals: (m[3] || '').length });
     return m[1].replace(/[-+]$/, '') + (n < 0 ? '-' : '') + out + m[4];
   }
 
@@ -153,9 +153,8 @@
       var form = el('form', 'disc-reply'); form.setAttribute('data-reply', t.id);
       var lab = el('label', 'sr-only', 'Reply to ' + (t.label || 'this thread')); lab.setAttribute('for', 'discReply-' + t.id);
       var ta = el('textarea', 'studio-in'); ta.id = 'discReply-' + t.id; ta.rows = 2; ta.placeholder = 'Reply… @ to mention, { to quote a value'; ta.maxLength = ctx.maxText || 2000;
-      var lst = el('ul', 'shr-list disc-opts'); lst.id = 'discReplyList-' + t.id; lst.hidden = true; lst.setAttribute('role', 'listbox'); lst.setAttribute('aria-label', 'Suggestions');
       var send = el('button', 'btn-pill btn-accent btn-sm-pill', 'Reply'); send.type = 'submit';
-      var wrap = el('div', 'disc-box'); wrap.appendChild(ta); wrap.appendChild(lst);
+      var wrap = el('div', 'disc-box'); wrap.appendChild(ta);
       form.appendChild(lab); form.appendChild(wrap); form.appendChild(send);
       d.appendChild(form);
     }

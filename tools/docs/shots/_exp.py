@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Shared pieces of the exposure pictures (the guide docs/guides/EXPOSURE_GUIDE.md, module exp; tutorial 26, module t26): a scratch
+"""Shared pieces of the exposure pictures (the guide docs/guides/EXPOSURE_GUIDE.md, module exp; tutorial 3, module t26): a scratch
 server and console over the demo lake's exposure run (`drishti.py lake demo --exposure demo`, the default: the run XR-2026-09-30-01
 generated for 74 netting sets of 23 counterparties, 200 paths, 24 grid dates; the committed eight sets inside it with the same figures)
 with the netting sets, CSAs, collateral balances, credit limits, counterparties, groups and legal entities beside them, built into a
@@ -82,6 +82,16 @@ def painted(c: Ctx, scope: str, seconds: int = 120) -> None:
     c.until("document.querySelector('[data-exposure]') && document.querySelector('[data-exposure]').dataset.painted === %r" % scope, seconds)
     c.until("document.querySelector('[data-exposure]').dataset.tabPainted !== undefined", seconds)
     c.page.wait_for_timeout(800)                                       # the chart and the fan finish drawing
+
+
+def predeal_check(c: Ctx, command: str, name: str, width: int = WIDE, height: int = HIGH) -> None:
+    """Counterparties → Pre-deal check made by a typed command (EXPOSURE_GUIDE.md section 18.9): the server's verdict and the what-if."""
+    from urllib.parse import quote
+
+    open_exp(c, "/predeal?command=" + quote(command), width, height)
+    c.until("document.querySelector('[data-predeal]') && !!document.querySelector('[data-predeal]').dataset.decision", 180)
+    c.page.wait_for_timeout(900)                                       # the overlay and the bars finish drawing
+    c.save(name)
 
 
 def tab(c: Ctx, name: str) -> None:

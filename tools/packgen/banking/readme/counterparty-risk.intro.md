@@ -59,4 +59,4 @@ netting set, applies each CSA's collateral path by path with the margin period o
 and EEPE for any scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `TRD:`); the netting-set and counterparty pages show the engine's
 figures computed as they open. There is no stored `exposure-profile` kind (`EXP-<cp>-<le>`): `EXP EXP-ALDERSHOT-FRA`
 opens `EXP NSET:NS-ALDERSHOT-FRA`. The exposure explorer ([EXPOSURE_GUIDE.md section 3](../../../docs/guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen))
-walks from the bank to a trade; [tutorial 26](../../../docs/tutorials/26-exposure-from-the-bank-to-a-trade.md) does it on the test data.
+walks from the bank to a trade; [tutorial 3](../../../docs/tutorials/03-exposure-from-the-bank-to-a-trade.md) does it on the test data.

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The model layer's shared helpers (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 5): B.layer.post/get for the console's /bi/model-api routes, and B.mq, which
+/* The model layer's shared helpers (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 5): B.layer.post/get for the console's /bi/model-api routes, and B.mq, which
    turns a report visual (its wells, its own, its page's and its report's filters, the reader's slicer and cross-filter choices) into ONE model query and asks
    the server's /mq as the signed-in person. The answer has the shape a visual draws (columns by name, rows, meta), so a visual on a model draws exactly as
    one on a dataset. */
@@ -82,10 +82,10 @@
     });
   };
   /** Fills a select with `groups` (optgroups) after a placeholder option. */
-  B.layer.fillSelect = function (sel, groups, placeholder) {
-    B.clear(sel);
-    sel.appendChild(B.h('option', { value: '', text: placeholder || '(choose)' }));
-    groups.forEach((g) => sel.appendChild(B.h('optgroup', { label: g.label }, g.items.map((i) => B.h('option', { value: i.value, text: i.label })))));
+  B.layer.fillSelect = function (sel, groups, placeholder) {            // a <drishti-select> (drishti-inputs' Select): the placeholder, then each group's items
+    const items = [{ value: '', label: placeholder || '(choose)' }];
+    groups.forEach((g) => g.items.forEach((i) => items.push({ value: i.value, label: i.label, group: g.label })));
+    sel.component.setOptions(items, '');
   };
 
   /** Who uses a model: {known, consumers[{kind, id, title, href}]} from the server's consumers list. A report references a model, it never owns it. */

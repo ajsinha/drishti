@@ -16,82 +16,84 @@
 /* Distribution: the reports and subscriptions list, the Subscribe form, and the export controls. */
 .dist-tbl { min-width: 860px; }
 .dist-tbl td, .dist-tbl th { white-space: normal; overflow-wrap: break-word; vertical-align: top; }
-.dist-hist { margin-top: .35rem; }
+.dist-hist { margin-top: var(--d-sp-5_6); }
 .dist-hist summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 32px; color: var(--d-link); }
-.dist-runs { margin: .35rem 0 0 1rem; padding: 0; font-size: .85rem; }
-.dist-runs ul { margin: .15rem 0 .4rem 1rem; padding: 0; list-style: disc; }
+.dist-runs { margin: var(--d-sp-5_6) 0 0 var(--d-sp-16); padding: 0; font-size: var(--d-fs-13_6); }
+.dist-runs ul { margin: var(--d-sp-2_4) 0 var(--d-sp-6_4) var(--d-sp-16); padding: 0; list-style: disc; }
 .dist-form { align-items: end; }
 .dist-form .btn-pill { align-self: end; }
-.dist-form .dist-channels { grid-column: span 2; border: 1px solid var(--d-border, #d5dae1); border-radius: .3rem; padding: .4rem .7rem; margin: 0; }
-.dist-form .dist-channels label, .dist-form label[data-narrative-row] { flex-direction: row; align-items: center; gap: .4rem; }
-.dist-form .dist-channels legend { font-size: .82rem; color: var(--d-muted); padding: 0 .3rem; }
-.dist-form .wide:has(> input[type=checkbox]) { flex-direction: row; align-items: flex-start; gap: .5rem; }
+.dist-form .dist-channels { grid-column: span 2; border: 1px solid var(--d-border); border-radius: var(--d-radius-4_8); padding: var(--d-sp-6_4) var(--d-sp-11_2); margin: 0; }
+.dist-form .dist-channels label, .dist-form label[data-narrative-row] { flex-direction: row; align-items: center; gap: var(--d-sp-6_4); }
+.dist-form .dist-channels legend { font-size: var(--d-fs-13_12); color: var(--d-muted); padding: 0 var(--d-sp-4_8); }
+.dist-form .wide:has(> input[type=checkbox]) { flex-direction: row; align-items: flex-start; gap: var(--d-sp-8); }
 @media (max-width: 640px) { .dist-form .dist-channels { grid-column: auto; } }
 @media (max-width: 640px), (pointer: coarse) { .dist-form .dist-channels label, .dist-form .wide:has(> input[type=checkbox]) { min-height: 44px; } .dist-form input[type=checkbox] { width: 24px; height: 24px; } }
-.bi-export { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.bi-export { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-6_4); }
 .bi-export .btn-pill { min-height: 36px; }
-.vhead-export .dropdown-menu a { display: flex; align-items: center; gap: .5rem; min-height: 36px; }
+.vhead-export .dropdown-menu a { display: flex; align-items: center; gap: var(--d-sp-8); min-height: 36px; }
 @media (max-width: 640px), (pointer: coarse) {
   .dist-act, .dist-link, .dist-hist summary, .bi-export .btn-pill, .bi-export select, .vhead-export .dropdown-menu a, .vhead-export > button { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; }
-  .dist-form input, .dist-form select { font-size: 16px; min-height: 44px; }
-  .rpt-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .dist-form input, .dist-form select { font-size: var(--d-fs-16); min-height: 44px; }
+  .rpt-actions { display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4); }
 }
 
 /* a phone: the export picker takes its own row and shrinks to the screen (its options name long visuals) */
 @media (max-width: 640px) {
   .bi-export { flex: 1 1 100%; min-width: 0; max-width: 100%; }
-  .bi-export .bi-tool { flex: 1 1 100%; min-width: 0; display: flex; align-items: center; gap: .4rem; }
+  .bi-export .bi-tool { flex: 1 1 100%; min-width: 0; display: flex; align-items: center; gap: var(--d-sp-6_4); }
   .bi-export .bi-tool select { flex: 1 1 auto; min-width: 0; max-width: 100%; }
 }
 
 /* Alerts on numbers: the form, the history, the lists. */
-.al-form fieldset { grid-column: 1 / -1; border: 1px solid var(--d-border); border-radius: 8px; padding: .6rem .8rem; margin: 0; min-width: 0;
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem .9rem; align-items: end; }
-.al-form legend { font-size: .85rem; color: var(--d-muted); width: auto; float: none; padding: 0 .35rem; margin: 0; }
-.al-grp { display: contents; }
-.al-grp[hidden] { display: none; }
+.al-form fieldset { grid-column: 1 / -1; border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-9_6) var(--d-sp-12_8); margin: 0; min-width: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--d-sp-9_6) var(--d-sp-14_4); align-items: end; }
+.al-form legend { font-size: var(--d-fs-13_6); color: var(--d-muted); width: auto; float: none; padding: 0 var(--d-sp-5_6); margin: 0; }
+.al-form [data-alert-fields] { min-width: 0; }                                   /* drishti-inputs' Form (core/alert_form.py) */
+.al-form .di-form-field.di-t-object, .al-form .di-form-field.di-t-array { grid-column: 1 / -1; }   /* a group or a list of the Form: the whole row */
+.al-form drishti-select { display: block; min-width: 10em; }                 /* drishti-inputs' Select fills its cell, as the native select did */
 .al-form .wide2 { grid-column: 1 / -1; }
 .al-form textarea { width: 100%; }
-.al-check { flex-direction: row !important; align-items: center; gap: .5rem; min-height: 36px; font-size: .9rem !important; color: inherit !important; }
-.al-check input { width: 20px; height: 20px; flex: 0 0 auto; }
-.al-actions, .al-act-row { display: flex; flex-wrap: wrap; gap: .5rem; }
-.al-act-row { margin-bottom: .6rem; }
+.al-actions, .al-act-row { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); }
+.al-act-row { margin-bottom: var(--d-sp-9_6); }
 .al-hist td, .al-hist th { white-space: normal; overflow-wrap: anywhere; vertical-align: top; }
-.al-sub, .al-h2 { margin: 1rem 0 .4rem; font-size: 1rem; }
-.al-facts { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.al-sub, .al-h2 { margin: var(--d-sp-16) 0 var(--d-sp-6_4); font-size: var(--d-fs-16); }
+.al-facts { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: center; }
 .al-check-out { min-height: 1.4rem; margin: 0; }
 @media (max-width: 640px), (pointer: coarse) {
   .al-form fieldset { grid-template-columns: 1fr; }
-  .al-form input:not([type=checkbox]), .al-form select, .al-form textarea { font-size: 16px; min-height: 44px; }
-  .al-check { min-height: 44px; }
-  .al-check input { width: 24px; height: 24px; }
+  .al-form input:not([type=checkbox]), .al-form select, .al-form textarea { font-size: var(--d-fs-16); min-height: 44px; }
   .al-actions .btn-pill, .al-act-row .fk, .al-facts a { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; }
 }
 
 /* the older rule form on the Alerts page, on a phone */
 @media (max-width: 640px), (pointer: coarse) {
   [data-alerts] .alert-form input, [data-alerts] .alert-form select, [data-alerts] .alert-form button, [data-alerts] .fk, [data-alerts] .lnk { min-height: 44px; }
-  [data-alerts] .alert-form input, [data-alerts] .alert-form select { font-size: 16px; }
+  [data-alerts] .alert-form input, [data-alerts] .alert-form select { font-size: var(--d-fs-16); }
   [data-alerts] .fk, [data-alerts] .lnk { display: inline-flex; align-items: center; min-width: 44px; }
   .inbox .fk, .inbox .inbox-open { min-height: 44px; display: inline-flex; align-items: center; min-width: 44px; }
 }
 
 /* the reports page: the places that used to sit in the Reports menu, and one box to find a row */
-.rep-links { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin: .4rem 0 .8rem; }
-.rep-links a { color: var(--d-link); font-weight: 600; text-decoration: none; padding: .3rem 0; }
+.rep-links { display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4) var(--d-sp-19_2); margin: var(--d-sp-6_4) 0 var(--d-sp-12_8); }
+.rep-links a { color: var(--d-link); font-weight: 600; text-decoration: none; padding: var(--d-sp-4_8) 0; }
 .rep-links a:hover, .rep-links a:focus-visible { text-decoration: underline; }
-.rep-find { display: block; max-width: 34rem; margin: 0 0 .8rem; }
+.rep-find { display: block; max-width: 34rem; margin: 0 0 var(--d-sp-12_8); }
 .rep-find input { width: 100%; }
 
-.dist-form .dist-check { flex-direction: row; align-items: center; gap: .5rem; align-self: end; }
+.dist-form .dist-check { flex-direction: row; align-items: center; gap: var(--d-sp-8); align-self: end; }
 .dist-form .bi-people { position: relative; }
-.dist-binav { display: flex; flex-wrap: wrap; gap: .75rem; margin: 0 0 .5rem; }
+.dist-binav { display: flex; flex-wrap: wrap; gap: var(--d-sp-12); margin: 0 0 var(--d-sp-8); }
 @media (max-width: 640px), (pointer: coarse) { .dist-binav a { display: inline-flex; align-items: center; min-height: 44px; } }
 
 /* the alert form's model source, and the Subscribe form's When choices */
-.al-filter { display: grid; grid-template-columns: minmax(8rem, 1.2fr) minmax(7rem, .8fr) minmax(8rem, 1.4fr) auto; gap: .4rem; margin: .3rem 0; align-items: center; }
-.al-filters { min-width: 0; }
-.dist-when { border: 1px solid var(--d-border); border-radius: 8px; padding: .6rem .8rem; margin: 0; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .6rem 1rem; grid-column: 1 / -1; }
-.dist-when legend { font-size: .85rem; color: var(--d-muted); padding: 0 .35rem; }
+.dist-when { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-9_6) var(--d-sp-12_8); margin: 0; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--d-sp-9_6) var(--d-sp-16); grid-column: 1 / -1; }
+.dist-when legend { font-size: var(--d-fs-13_6); color: var(--d-muted); padding: 0 var(--d-sp-5_6); }
 .dist-when .wide { grid-column: 1 / -1; }
-@media (max-width: 640px) { .al-filter { grid-template-columns: minmax(0, 1fr); } .al-filter .btn-pill, .dist-when .studio-in, .dist-when .studio-select { min-height: 44px; } }
+@media (max-width: 640px) { .al-form .di-btn, .dist-when .studio-in, .dist-when .studio-select { min-height: 44px; } }
+
+/* the alerts raised for you (Alerts page): acknowledge, snooze, resolve, assign side by side, wrapping; full-size targets on a phone */
+[data-raised-list] .rpt-actions form { display: inline-flex; flex-wrap: wrap; gap: var(--d-sp-4); align-items: center; margin: 0 var(--d-sp-4) var(--d-sp-4) 0; }
+[data-raised-list] .rpt-actions .studio-in { max-width: 9rem; }
+@media (max-width: 640px), (pointer: coarse) {
+  [data-raised-list] .rpt-actions select, [data-raised-list] .rpt-actions input { min-height: 44px; font-size: var(--d-fs-16); }
+}

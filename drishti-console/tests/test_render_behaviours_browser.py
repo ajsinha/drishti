@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""Drishti Render 1.0.0 on a page that is not the console (CLIENT_RENDERER.md sections 7.4, 12 and 16): the behaviours phase 2 adds to the
+"""Drishti Render 1.0.0 on a page that is not the console (EMBED_GUIDE.md sections 7.4, 12 and 16): the behaviours phase 2 adds to the
 library, in a blank page under the console's CSP on one made-up origin (render_harness.py), Chromium.
 
 ``behaviours: 'console'`` starts the console's own scripts inside the container: the per-column filter funnels, Chart any table, the Pivot

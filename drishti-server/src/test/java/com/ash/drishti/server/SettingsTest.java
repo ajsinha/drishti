@@ -60,7 +60,7 @@ class SettingsTest {
         patchAs(cy, "{\"refresh\":{\"trade/x\":{\"all\":\"yes\"}}}").andExpect(status().isBadRequest());
     }
 
-    /** The lens and the edition landing a person chose (EDITIONS.md 8) are kept and read back, as the console needs them. */
+    /** The lens and the edition landing a person chose (LENSES.md 8) are kept and read back, as the console needs them. */
     @Test
     void theLensAndTheChosenLandingAreReadBack() throws Exception {
         String cy = "cy-" + System.nanoTime();
@@ -72,7 +72,7 @@ class SettingsTest {
         mvc.perform(get("/api/v1/me/settings").header("Authorization", bearer))
                 .andExpect(jsonPath("$.lens").value("risk")).andExpect(jsonPath("$.homeLanding").value("map"));
         patchAs(cy, "{\"lens\":null}").andExpect(jsonPath("$.lens").isEmpty()).andExpect(jsonPath("$.homeLanding").value("map"));
-        // Drishti Trading's View as (EDITIONS.md 14): a trader or a desk, kept and read back; anything else refused
+        // Drishti Trading's View as (LENSES.md 14): a trader or a desk, kept and read back; anything else refused
         patchAs(cy, "{\"tradingView\":\"trader:TRDR-ASHAH\"}").andExpect(status().isOk()).andExpect(jsonPath("$.tradingView").value("trader:TRDR-ASHAH"));
         mvc.perform(get("/api/v1/me/settings").header("Authorization", bearer)).andExpect(jsonPath("$.tradingView").value("trader:TRDR-ASHAH"));
         patchAs(cy, "{\"tradingView\":\"book:X\"}").andExpect(status().isBadRequest());
@@ -81,8 +81,6 @@ class SettingsTest {
         patchAs(cy, "{\"varView\":{\"h\":\"10d\",\"m\":\"sum\",\"q\":0.95,\"esq\":0.975}}").andExpect(status().isOk())
                 .andExpect(jsonPath("$.varView.h").value("10d")).andExpect(jsonPath("$.varView.m").value("sum"));
         mvc.perform(get("/api/v1/me/settings").header("Authorization", bearer)).andExpect(jsonPath("$.varView.q").value(0.95));
-        patchAs(cy, "{\"varExplainView\":\"matrix\"}").andExpect(status().isOk()).andExpect(jsonPath("$.varExplainView").value("matrix"));
-        patchAs(cy, "{\"varExplainView\":\"pie\"}").andExpect(status().isBadRequest());
         patchAs(cy, "{\"varView\":{\"h\":\"5d\"}}").andExpect(status().isBadRequest());
         patchAs(cy, "{\"varView\":{\"q\":1.5}}").andExpect(status().isBadRequest());
         patchAs(cy, "{\"varView\":null}").andExpect(jsonPath("$.varView").isEmpty());

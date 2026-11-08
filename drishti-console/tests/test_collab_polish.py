@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Collaboration console polish (COLLABORATION.md, Console polish): the share dialog's "also start a discussion" tick, the reply box on a shared
+"""Collaboration console polish (ARCHITECTURE.md §31, Console polish): the share dialog's "also start a discussion" tick, the reply box on a shared
 view, Admin > Collaboration (sections by role, every call passed to the server and its refusal told in words), times in the top bar's zone,
 and a quoted value drawn the way the page shows the field."""
 import json
@@ -259,6 +259,7 @@ function node() { return { children: [], attrs: {}, className: '', textContent: 
   appendChild(c) { this.children.push(c); return c; }, setAttribute(k, v) { this.attrs[k] = v; }, getAttribute(k) { return this.attrs[k]; } }; }
 global.document = { createElement: node, createTextNode: (t) => ({ text: t }),
   querySelectorAll: () => cells.map((c) => ({ getAttribute: () => c.path, textContent: c.text, closest: () => null })) };
+eval(require('fs').readFileSync(process.argv[5], 'utf8'));   // drishti-core first: the page's numbers are its (Drishti Elements)
 eval(require('fs').readFileSync(process.argv[1], 'utf8'));
 const c = JSON.parse(process.argv[3]), ctx = JSON.parse(process.argv[4]);
 const p = window.Drishti.ThreadView.comment(c, {}, ctx);
@@ -271,7 +272,8 @@ def quoted(parts, cells, pin_gen=1742, page_gen="1742"):
     if not shutil.which("node"):
         pytest.skip("needs node")
     c = {"id": "cm_1", "revision": 1, "author": "a", "pin": {"generation": pin_gen}, "state": "live", "parts": parts}
-    out = subprocess.run(["node", "-e", HARNESS, str(JS / "drishti_discussion-view.js"), json.dumps(cells), json.dumps(c), json.dumps({"pageGen": page_gen})],
+    out = subprocess.run(["node", "-e", HARNESS, str(JS / "drishti_discussion-view.js"), json.dumps(cells), json.dumps(c), json.dumps({"pageGen": page_gen}),
+                          str(JS.parent / "elements" / "drishti-core" / "drishti_core.js")],
                          capture_output=True, text=True, check=True).stdout
     return json.loads(out)
 

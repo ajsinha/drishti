@@ -18,6 +18,7 @@ ones back), a mistake located, and the small preview working the controls (the c
 
 Skipped when Playwright, its Chromium, the server jar or a JDK 21 is missing."""
 import json
+import re
 
 from test_workbench_browser import browser, open_design, page, wait  # noqa: F401 - fixtures and helpers
 from wb_live import live_console  # noqa: F401 - the fixture
@@ -49,8 +50,8 @@ def test_add_control_from_a_card_see_the_yaml_and_try_it_on_the_sample(live_cons
     assert card.get_attribute("aria-label").startswith("new control") is False and "control 1 of 1" in card.get_attribute("aria-label")
     card.locator("input[aria-label='control1 id']").fill("legs")
     card.locator("input[aria-label='legs options']").fill("$.cashflows[*].leg")
-    card.locator("select[aria-label='legs placement']").select_option("header")
-    card.locator("select[aria-label='legs panel']").select_option("cf")
+    card.locator("drishti-select:has([aria-label='legs placement'])").select_option("header")
+    card.locator("drishti-select:has([aria-label='legs panel'])").select_option("cf")
     card.locator("input[aria-label='legs label']").fill("Legs")
     text = page.input_value("[data-ctl-src]")
     assert text.startswith("- { id: \"legs\", kind: \"multi-select\", label: \"Legs\", options: \"$.cashflows[*].leg\"") and 'panel: "cf"' in text    # the YAML follows the cards
@@ -69,11 +70,12 @@ def test_add_control_from_a_card_see_the_yaml_and_try_it_on_the_sample(live_cons
     assert page.locator("[data-problem-count]").is_hidden(), page.locator("[data-problems]").inner_text()
     page.locator("#wbTabCtl").click()
     page.evaluate("window.Drishti.workbench.controls.preview()")
-    page.locator("[data-ctl-preview] [data-ctl='legs'] summary").wait_for(timeout=20000)
+    # the multi-select is drishti-inputs' MultiSelect (since the console's pickers moved onto it): its box opens a list of options
+    legs = page.locator("[data-ctl-preview] [data-ctl='legs']")
+    legs.locator(".di-ms-control").wait_for(timeout=20000)
     assert page.locator("[data-ctl-preview] tbody tr").count() == 3
-    page.locator("[data-ctl-preview] [data-ctl='legs'] summary").click()
-    page.locator("[data-ctl-preview] [data-ctl='legs'] input[value='2']").check()
-    page.locator("[data-ctl-preview] [data-ctl='legs'] input[value='1']").uncheck() if False else None
+    legs.locator(".di-ms-control").click()
+    page.locator(".di-ms-pop .di-option").filter(has=page.locator(".di-option-label", has_text=re.compile("^2$"))).click()
     wait(page, "document.querySelectorAll('[data-ctl-preview] tbody tr').length === 1")
     assert page.locator("[data-ctl-preview] tbody tr").inner_text().startswith("2")
     assert page.locator("[data-ctl-preview] [id^='wbc-p-cf']").count() == 1                      # the preview's ids do not clash with the canvas's

@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8): the report viewer at /bi/r/<id>[/<page>]. It asks the server for the report once (/bi/api/reports/<id>: the model, the
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* Rupaka phase 3 (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 8): the report viewer at /bi/r/<id>[/<page>]. It asks the server for the report once (/bi/api/reports/<id>: the model, the
    problems and the dataset's fields), lays each page out on its 12-column grid, and asks for each visual's data one query at a time (at most three at once:
    the server allows three per person; a refusal for busy is retried), under the state the person has built: slicers, the marks selected on other visuals,
    the drill-down path of each visual, the values carried by a drill-through and the business date. Interactions: clicking (or Enter on) a mark selects it,
@@ -26,6 +27,12 @@
   const B = window.drishtiBi;
   const h = B.h, q = (s, sc) => B.q(s, sc || canvas);
   const reportId = canvas.getAttribute('data-item');
+  // a visual's own keys (visualKey, bound on each frame): described to the one keymap so ? lists them
+  [['bi.visual.walk', ['Tab'], 'Next visual, in reading order'], ['bi.visual.marks', ['ArrowLeft', 'ArrowRight'], 'In a chart: the next mark; Enter selects it'],
+    ['bi.visual.clear', ['Escape'], 'Clear the selection of a visual'], ['bi.visual.table', ['T', 'R'], 'In a visual: show as a table; show the rows'],
+    ['bi.visual.drill', ['D', 'U'], 'In a visual: drill down; drill up']].forEach((d) => {
+    window.Drishti.keys.describe({ id: d[0], keys: d[1], scope: 'panel', area: 'bi-visual', group: 'Report', description: d[2] });
+  });
 
   const state = { slicers: {}, selections: [], drills: {}, carry: [], dates: null, mode: 'filter', rows: {}, all: {}, asTable: {}, time: { mode: 'now' } };
   const MAX_FOLLOW = 12;                    // standing queries one page holds (the server allows drishti.bi.mq.max-subscriptions-per-user for a person)
@@ -212,7 +219,7 @@
   }
 
   /**
-   * A visual's question (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): asked with the inline wait, so a slow one becomes a run card and frees its place in the queue at once; a live
+   * A visual's question (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 6): asked with the inline wait, so a slow one becomes a run card and frees its place in the queue at once; a live
    * redraw asks as before (live views stay streams). The first draw of a page is not an interaction; a later ask (a slicer, a cross-filter, a drill) is, and an
    * interaction that would need a background run is refused at once with the way forward. A ?run=<id> in the address draws its visual from the stored result.
    */
@@ -276,7 +283,7 @@
   function asOfNote(res) {
     const note = q('[data-asof-note]');
     if (!note || !res || !res.meta) { return; }
-    const top = document.querySelector('form[data-asof] input[type="date"]');
+    const top = document.getElementById('asofDate');
     const asked = state.dates ? '' : (state.time && state.time.mode === 'asof' && state.time.asOf) || (top && top.value) || '';
     const line = B.visuals.asOfLine(state.dates ? { dates: res.meta.dates } : res.meta, asked);   // a window of the report's own dates: the last day read
     if (line) { note.textContent = line; note.setAttribute('data-asof-aligned', String(!(res.meta.dataAsOf && res.meta.dataAsOf.aligned === false))); }
@@ -293,7 +300,7 @@
       B.live.markStale(entry.frame, false);
     }, (e) => {
       if (token !== entry.token) { return; }
-      if (quiet && entry.frame.body.querySelector('.bi-py-chart,.bi-py-img,.bi-vega')) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); return; }
+      if (quiet && entry.frame.body.querySelector('.bi-py-chart,.bi-py-img,drishti-chart')) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); return; }
       entry.frame.error(e);
       if (e.traceback) { entry.frame.body.appendChild(B.h('pre', { class: 'bi-py-trace', 'data-py-trace': '', text: e.traceback })); }
     });
@@ -333,7 +340,7 @@
     syncChips();
   }
 
-  // ---- live: the page follows the report's live tables (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12) -----------------------------------------------
+  // ---- live: the page follows the report's live tables (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 12) -----------------------------------------------
   /** A tick: every visual of the page that draws data is asked again, quietly, three at a time; a burst of ticks is one round (drishti_bi-live.js coalesce). */
   function refreshLive() {
     if (watch && watch.paused()) { return Promise.resolve(); }      // a round asked just before Pause (waiting out the coalescing) does not redraw a paused page
@@ -427,7 +434,7 @@
     });
   }
 
-  /** The page's layout for this screen (a phone, 640 px and narrower, or a tablet, 1024 px and narrower) when the report declares one (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6): {device, lay}; else null. */
+  /** The page's layout for this screen (a phone, 640 px and narrower, or a tablet, 1024 px and narrower) when the report declares one (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.6): {device, lay}; else null. */
   function deviceLayout() {
     if (!window.matchMedia) { return null; }
     const mm = (px) => window.matchMedia('(max-width: ' + px + 'px)').matches;
@@ -516,7 +523,7 @@
     if (picker) { picker.reset(); }
     if (pbar) { pbar.reset(); }
     q('[data-date]').value = '';
-    { const t = document.querySelector('form[data-asof] input[type="date"]'); if (t && t.value) { q('[data-date]').value = t.value; } }
+    { const t = document.getElementById('asofDate'); if (t && t.value) { q('[data-date]').value = t.value; } }
     Object.keys(state.drills).forEach((k) => { delete state.drills[k]; });
     refreshAll(null);
     drawGrid();
@@ -524,7 +531,7 @@
 
   function bar() {
     const date = q('[data-date]');
-    const topDate = document.querySelector('form[data-asof] input[type="date"]');
+    const topDate = document.getElementById('asofDate');
     if (topDate && topDate.value && !date.value) { date.value = topDate.value; date.setAttribute('data-from-topbar', ''); }          // the control shows the day the top bar has; it asks for nothing until it is changed
     date.addEventListener('change', () => date.removeAttribute('data-from-topbar'));
     picker = B.consume.timePicker(q('[data-time]'), (t) => { state.time = t; state.dates = B.consume.datesOf(t); syncChips(); refreshAll(null); });
@@ -533,7 +540,7 @@
     q('[data-reset]').addEventListener('click', reset);
     q('[data-back]').addEventListener('click', () => { window.history.back(); });
     const bm = q('[data-bookmarks]');
-    (rep.report.bookmarks || []).forEach((b) => bm.appendChild(h('option', { value: b.name, text: b.name })));
+    bm.component.setOptions(bm.component.options.concat((rep.report.bookmarks || []).map((x) => ({ value: x.name, label: x.name }))), '');   // drishti-inputs' Select: Choose one, then each bookmark
     q('[data-bookmarks-wrap]').hidden = !(rep.report.bookmarks || []).length;
     bm.addEventListener('change', () => { if (bm.value) { applyBookmark(bm.value); bm.value = ''; } });
     window.addEventListener('popstate', () => { const m = window.location.pathname.split('/bi/r/' + B.id2path(reportId))[1]; const p = m ? decodeURIComponent(m.replace(/^\//, '')) : rep.report.pages[0].id; if (pageOf(p)) { go(p, readCarry(), false); } });

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The renderer's optional sign-in window, ``auth: 'popup'`` (CLIENT_RENDERER.md 10.1), end to end in Chromium, with no internet: a stand-in
+"""The renderer's optional sign-in window, ``auth: 'popup'`` (EMBED_GUIDE.md 10.1), end to end in Chromium, with no internet: a stand-in
 OpenID Connect provider (a tiny IdP in this file: discovery, authorize, token with PKCE, refresh, keys), the real server (the built jar, security
 and single sign-on on, the trading pack), the console (embed and auth.oidc on) and a host page with NO backend on another origin.
 
@@ -41,6 +41,8 @@ from pathlib import Path
 
 import pytest
 
+from core import render_dist as rd
+
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 from playwright.sync_api import sync_playwright  # noqa: E402
 
@@ -58,7 +60,7 @@ SECRET = "sign-in-window-scratch-secret-0123456789abcdef"
 USER = "pat"
 TRADE = "1000008"
 APP = "intranet"
-LIB = CONSOLE / "web" / "static" / "render" / "1.2.0"
+LIB = CONSOLE / "web" / "static"            # a host that copied the renderer's version folder and the Elements libraries beside it
 
 
 # ---- the stand-in identity provider -----------------------------------------------------------------------------------------------
@@ -175,12 +177,12 @@ class Host:
             def do_GET(self):
                 path = urllib.parse.urlsplit(self.path).path
                 if path == "/page.html":
-                    body, kind = (PAGE % {"lib": CONSOLE_URL + "/embed/v2/render/1.2.0/drishti-render.js", "console": CONSOLE_URL, "trade": TRADE}).encode(), "text/html"
+                    body, kind = (PAGE % {"lib": CONSOLE_URL + f"/embed/v2/render/{rd.VERSION}/drishti-render.js", "console": CONSOLE_URL, "trade": TRADE}).encode(), "text/html"
                 elif path == "/bundled.html":                # the library bundled with the page (the npm package's files), on any origin
-                    body, kind = (PAGE % {"lib": "/lib/drishti-render.js", "console": CONSOLE_URL, "trade": TRADE}).encode(), "text/html"
+                    body, kind = (PAGE % {"lib": f"/lib/render/{rd.VERSION}/drishti-render.js", "console": CONSOLE_URL, "trade": TRADE}).encode(), "text/html"
                 elif path == "/elements.html":
                     body, kind = (ELEMENT_PAGE % {"console": CONSOLE_URL, "trade": TRADE}).encode(), "text/html"
-                elif path.startswith("/lib/") and (LIB / path[5:]).resolve().is_file() and LIB in (LIB / path[5:]).resolve().parents:
+                elif path.startswith(("/lib/render/", "/lib/elements/")) and (LIB / path[5:]).resolve().is_file() and LIB in (LIB / path[5:]).resolve().parents:
                     f = (LIB / path[5:]).resolve()
                     body, kind = f.read_bytes(), {".js": "text/javascript", ".css": "text/css"}.get(f.suffix, "application/octet-stream")
                 else:
@@ -238,7 +240,7 @@ def stack(tmp_path_factory):
             pytest.skip(f"port {port} is in use: this test starts its own server, console, host and provider there")
     jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     if not jars or not JAVA.exists():
-        pytest.skip("needs the built server (./mvnw -o -q package -DskipTests -pl drishti-server -am) and a JDK")
+        pytest.skip("needs the built server (./mvnw -o -q package -DskipTests -pl drishti-app -am) and a JDK")
     tmp = tmp_path_factory.mktemp("sign-in")
     idp, host, procs = Idp(IDP_PORT), Host(HOST_PORT), {}
     try:
@@ -431,7 +433,7 @@ def test_the_same_tab_flow_comes_back_to_the_page(stack, visit):
 def test_elements_2_signs_in_through_the_window_too(stack, visit):
     v = visit(path="/elements.html").open()
     v.until(lambda: v.page.evaluate("document.querySelector('#main').state") == "sign-in", what="the element's sign-in state")
-    assert v.page.evaluate("window.DrishtiElements.version") == "2.2.0"     # the newest Elements 2: 2.2 signs in as 2.1 did
+    assert v.page.evaluate("window.DrishtiElements.version") == "2.3.0"     # the newest Elements 2: 2.3 signs in as 2.1 did
     v.sign_in("#main")
     v.until(lambda: v.page.evaluate("document.querySelector('#main').state") in ("live", "static"), what="the element drawn")
     assert TRADE in v.page.evaluate("document.querySelector('#main').shadowRoot.querySelector('.view').innerText")

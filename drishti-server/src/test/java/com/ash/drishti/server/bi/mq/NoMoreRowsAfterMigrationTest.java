@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The guard of the owner's decision of 2026-11-07 (BI_DESIGN.md 8.5): nobody sees more data after the upgrade. Every shipped sample in the
+ * The guard of the owner's decision of 2026-11-07 (ARCHITECTURE.md §28 8.5): nobody sees more data after the upgrade. Every shipped sample in the
  * form it had before the table layer ({@code src/test/resources/bi/before-tables}) is migrated as {@code tables migrate} does, and every
  * case of {@link BiFoundationCases} is asked of the migrated models as {@code rita} (risk), {@code hana} (a desk head with two desks) and
  * {@code ann} (an analyst): no answer may have more rows than the one recorded before the switch, and a question refused before is refused

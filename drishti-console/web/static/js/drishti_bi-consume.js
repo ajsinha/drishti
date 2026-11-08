@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Wave B, what every consumer of a model shares (docs/architecture/BI_DESIGN.md sections 4.5 to 4.7, console tasks 3 to 5; docs/guides/BI_GUIDE.md section 25):
+/* Wave B, what every consumer of a model shares (docs/architecture/ARCHITECTURE.md §28 sections 4.5 to 4.7, console tasks 3 to 5; docs/guides/REPORTS_GUIDE.md section 25):
 
      B.consume.timePicker(root, onChange)   now (live), as of a date, or a window: the three times one plan answers in. A past as-of date never changes, so it is
                                             asked once; now and a window are followed.
@@ -95,11 +95,13 @@
       const title = p.title || p.name;
       let ctl;
       const dflt = p.default;
+      // a choice is drishti-inputs' Select (B.select); data-default is what Reset puts back
+      const pick = (items, v) => B.select({ id, 'data-param': p.name, 'aria-label': title, 'data-default': v }, items, v);
       if (p.kind === 'field') {
-        ctl = h('select', { class: 'studio-select', id, 'data-param': p.name }, (p.fields || []).map((f) => h('option', { value: f, text: B.label ? B.label(f) : f, selected: f === dflt })));
+        ctl = pick((p.fields || []).map((f) => [f, B.label ? B.label(f) : f]), (p.fields || []).indexOf(dflt) >= 0 ? dflt : undefined);
         ctl.addEventListener('change', () => { if (ctl.value === dflt) { delete vals[p.name]; } else { vals[p.name] = ctl.value; } changed(); });
       } else if (p.kind === 'boolean') {
-        ctl = h('select', { class: 'studio-select', id, 'data-param': p.name }, h('option', { value: 'false', text: 'no', selected: !dflt }), h('option', { value: 'true', text: 'yes', selected: !!dflt }));
+        ctl = pick([['false', 'no'], ['true', 'yes']], dflt ? 'true' : 'false');
         ctl.addEventListener('change', () => { const v = ctl.value === 'true'; if (v === !!dflt) { delete vals[p.name]; } else { vals[p.name] = v; } changed(); });
       } else if ((p.kind === 'number' || p.kind === 'integer') && p.min != null && p.max != null) {
         const out = h('output', { class: 'bi-param-out', for: id, 'data-param-out': p.name, text: String(dflt) });
@@ -108,7 +110,7 @@
         range.addEventListener('change', () => { const v = Number(range.value); if (v === Number(dflt)) { delete vals[p.name]; } else { vals[p.name] = p.kind === 'integer' ? Math.round(v) : v; } changed(); });
         ctl = h('span', { class: 'bi-param-slider' }, range, out);
       } else if (p.values && p.values.length) {
-        ctl = h('select', { class: 'studio-select', id, 'data-param': p.name }, p.values.map((v) => h('option', { value: String(v), text: String(v), selected: String(v) === String(dflt) })));
+        ctl = pick(p.values.map((v) => String(v)), p.values.some((v) => String(v) === String(dflt)) ? String(dflt) : undefined);
         ctl.addEventListener('change', () => { if (ctl.value === String(dflt)) { delete vals[p.name]; } else { vals[p.name] = typeof dflt === 'number' ? Number(ctl.value) : ctl.value; } changed(); });
       } else {
         const type = p.kind === 'date' ? 'date' : p.kind === 'text' ? 'text' : 'number';
@@ -120,11 +122,13 @@
         });
       }
       host.appendChild(h('label', { class: 'bi-tool bi-param', for: id, title: p.description || '' }, title + ' ', ctl));
+      const I = window.Drishti && window.Drishti.elements && window.Drishti.elements.inputs;
+      if (p.kind === 'date' && ctl.tagName === 'INPUT' && I) { I.upgradeDateInput(ctl, { label: title }); }   // drishti-inputs' date picker; the field keeps its value and events
     });
     groups.forEach((g) => {
       const items = (g.items || []).map((i) => (typeof i === 'string' ? i : i.name)).filter(Boolean);
       const id = 'bcg-' + g.name.replace(/[^A-Za-z0-9_]/g, '_');
-      const ctl = h('select', { class: 'studio-select', id, 'data-calc-group': g.name }, h('option', { value: '', text: 'as it is' }), items.map((i) => h('option', { value: i, text: i })));
+      const ctl = B.select({ id, 'data-calc-group': g.name, 'aria-label': 'Show as (' + g.name + ')', 'data-default': '' }, [['', 'as it is']].concat(items), '');      // drishti-inputs' Select
       ctl.addEventListener('change', () => { if (ctl.value) { calc[g.name] = ctl.value; } else { delete calc[g.name]; } changed(); });
       host.appendChild(h('label', { class: 'bi-tool bi-param', for: id, title: g.description || '' }, 'Show as (' + g.name + ') ', ctl));
     });
@@ -132,7 +136,7 @@
       params: () => Object.assign({}, vals),
       calc: () => Object.assign({}, calc),
       active: () => Object.keys(vals).length + Object.keys(calc).length > 0,
-      reset() { Object.keys(vals).forEach((k) => delete vals[k]); Object.keys(calc).forEach((k) => delete calc[k]); B.qa('[data-param], [data-calc-group]', host).forEach((c) => { c.value = c.defaultValue !== undefined && c.tagName === 'INPUT' ? c.defaultValue : (B.q('option[selected]', c) || {}).value || ''; }); }
+      reset() { Object.keys(vals).forEach((k) => delete vals[k]); Object.keys(calc).forEach((k) => delete calc[k]); B.qa('[data-param], [data-calc-group]', host).forEach((c) => { c.value = c.tagName === 'INPUT' ? c.defaultValue : c.getAttribute('data-default') || ''; }); }
     };
   };
   /** A model query with the parameter values and calculation items on it (MQ v2); the query unchanged when there are none. */

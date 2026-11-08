@@ -1,0 +1,45 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin → Configuration (/admin/configuration, 2.9.11.e): tiers, search, the settings with their values in effect, proposals. Tokens only. */
+.cfe-warn { color: var(--d-warn); }
+.cfe-queue { margin: var(--d-sp-12) 0; padding: var(--d-sp-10) var(--d-sp-12); background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); }
+.cfe-queue h2 { margin: 0 0 var(--d-sp-6); font-size: var(--d-fs-15); }
+.cfe-n { color: var(--d-muted); font-weight: 400; }
+.cfe-props { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--d-sp-6); }
+.cfe-props li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-6); }
+.cfe-decided summary { cursor: pointer; color: var(--d-muted); margin-top: var(--d-sp-6); }
+.cfe-tiers { display: flex; gap: var(--d-sp-4); margin: var(--d-sp-12) 0 var(--d-sp-8); border-bottom: 1px solid var(--d-border); }
+.cfe-tiers a { padding: var(--d-sp-6) var(--d-sp-12); color: var(--d-ink); text-decoration: none; border-bottom: 2px solid transparent; }
+.cfe-tiers a[aria-current="page"] { border-bottom-color: var(--d-accent); font-weight: 600; }
+.cfe-tiers small { color: var(--d-muted); }
+.cfe-search { display: flex; gap: var(--d-sp-6); flex-wrap: wrap; margin-bottom: var(--d-sp-6); }
+.cfe-search input { min-width: 320px; padding: var(--d-sp-5) var(--d-sp-10); border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); color: var(--d-ink); }
+.cfe-search select { padding: var(--d-sp-5) var(--d-sp-8); border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); color: var(--d-ink); }
+.cfe-count { color: var(--d-muted); }
+.cfe-tbl td { vertical-align: top; }
+.cfe-env { font-family: var(--d-font-mono); font-size: var(--d-fs-11); color: var(--d-muted); }
+.cfe-meaning { margin-top: var(--d-sp-2); max-width: 70ch; }
+.cfe-where, .cfe-origin { font-size: var(--d-fs-11); }
+.cfe-tier { padding: var(--d-sp-1) var(--d-sp-8); border-radius: var(--d-radius-10); font-size: var(--d-fs-11); border: 1px solid var(--d-border); }
+.cfe-tier-everyday { border-color: var(--d-accent); color: var(--d-accent); }
+.cfe-tier-expert { color: var(--d-muted); }
+.cfe-dlg { min-width: min(520px, 92vw); color: var(--d-ink); background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); }
+.cfe-dlg form { display: flex; flex-direction: column; gap: var(--d-sp-6); }
+.cfe-dlg input, .cfe-dlg textarea { padding: var(--d-sp-6) var(--d-sp-8); border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-bg); color: var(--d-ink); }
+.cfe-dlg-error { color: var(--d-bad); }
+.cfe-dlg-btns { display: flex; justify-content: flex-end; gap: var(--d-sp-6); }
+.cfe-status.bad { color: var(--d-bad); }
+@media (max-width: 760px) { .cfe-search input { min-width: 0; width: 100%; } }

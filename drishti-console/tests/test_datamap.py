@@ -30,12 +30,14 @@ def shipped(with_packs):
 
 def test_the_map_draws_every_kind_the_server_infers_with_counts_joins_and_a_finding(client, shipped):
     page = client.get("/datamap").text
-    for text in ("data-datamap", 'data-view="map"', "Data map", "DATAMAP", 'data-kind="trade"', 'data-kind="counterparty"', "15,000", "computed",
-                 'class="dm-n dm-computed"', 'data-from="trade" data-to="counterparty"', "dm-j-low", "1 finding",
-                 "Trade.PORTFOLIO → Book: 1 of 4 ids match (25%)", ">Trades<", ">Organisation<", ">Counterparty credit<", "drishti_datamap.js", "drishti_datamap.css",
-                 'data-set-view="cards"', 'data-chip-set="trades"', "stored in the lake", "computed on demand, never stored"):
+    for text in ("data-datamap", 'data-view="map"', 'data-layout="grouped"', "Data map", "DATAMAP", "15,000", "computed", "data-graph",
+                 "1 finding", "Trade.PORTFOLIO → Book: 1 of 4 ids match (25%)", ">Trades<", ">Organisation<", ">Counterparty credit<", "drishti_datamap.js",
+                 "drishti_datamap.css", "drishti-graph/drishti_graph.js", "drishti-graph/drishti_graph.css", 'data-set-view="cards"', 'data-chip-set="trades"',
+                 "stored in the lake", "computed on demand"):
         assert text in page, text
-    assert 'style="' not in page.split("data-datamap", 1)[1], "no inline style (CSP): positions are SVG attributes"
+    assert "<svg" not in page.split("data-datamap", 1)[1].split("data-pane=\"cards\"", 1)[0], "the map is drishti-graph's, not a drawn svg"
+    assert 'style="' not in page.split("data-datamap", 1)[1], "no inline style (CSP)"
+    assert 'data-layout="layered"' in client.get("/datamap?layout=layered").text and 'data-layout="grouped"' in client.get("/datamap?layout=nonsense").text
 
 
 def test_the_model_links_each_kind_to_its_command_contract_guide_and_what(client, shipped):
@@ -52,7 +54,7 @@ def test_the_model_links_each_kind_to_its_command_contract_guide_and_what(client
     exp = next(j for j in m["joins"] if j["from"] == "exposure-result")
     assert exp["text"].startswith("computed on demand")
     for k in m["kinds"]:
-        assert {"x", "y", "w", "h"} <= set(k), "every node is placed by the layout"
+        assert not {"x", "y", "w", "h"} & set(k), "the page lays the map out (drishti-graph); the server places nothing"
     names = [d["id"] for d in m["domains"]]
     assert names == ["trades", "organisation", "counterparty-credit"], "config/datamap.yaml's order"
     org = next(d for d in m["domains"] if d["id"] == "organisation")
@@ -83,20 +85,20 @@ def test_a_pack_no_configuration_names_is_a_domain_of_its_own_and_is_laid_out():
     assert [(d["id"], d["title"]) for d in m["domains"]] == [("trades", "Trades"), ("acme", "Acme widgets")]
     widget = next(k for k in m["kinds"] if k["kind"] == "widget")
     assert widget["domain"] == "acme" and widget["degree"] == 2
-    acme = next(d for d in m["domains"] if d["id"] == "acme")["box"]
-    assert acme["x"] <= widget["x"] < acme["x"] + acme["w"] and acme["y"] <= widget["y"] < acme["y"] + acme["h"]
     assert [f["field"] for f in m["findings"]] == ["TRADE_ID"], "0 of 2 ids match: a finding"
     assert datamap.build(server, {}, {}, [])["domains"][0]["title"] == "Trading", "no configuration at all: one domain per pack"
 
 
-def test_layout_is_deterministic_and_nodes_never_overlap(client, shipped):
+def test_one_edge_per_pair_of_joined_kinds_the_same_every_time(client, shipped):
     a = client.get("/datamap/data").json()
     b = client.get("/datamap/data").json()
-    assert [(k["x"], k["y"]) for k in a["kinds"]] == [(k["x"], k["y"]) for k in b["kinds"]]
-    boxes = [(k["x"], k["y"], k["x"] + k["w"], k["y"] + k["h"]) for k in a["kinds"]]
-    for i, p in enumerate(boxes):
-        for q in boxes[i + 1:]:
-            assert p[2] <= q[0] or q[2] <= p[0] or p[3] <= q[1] or q[3] <= p[1], (p, q)
+    assert a["lines"] == b["lines"] and [k["kind"] for k in a["kinds"]] == [k["kind"] for k in b["kinds"]]
+    pairs = [(l["from"], l["to"]) for l in a["lines"]]
+    assert len(pairs) == len(set(pairs)), "one edge per pair, whatever the number of fields joining them"
+    trade = next(l for l in a["lines"] if (l["from"], l["to"]) == ("trade", "counterparty"))
+    assert trade["fields"] == ["COUNTERPARTY"] and trade["cross"] and not trade["low"]
+    assert any(l["low"] for l in a["lines"]), "the finding's edge"
+    assert not {"x1", "y1", "x2", "y2"} & set(trade), "no coordinates: the page lays it out"
 
 
 @pytest.mark.parametrize("typed,where", [("DATAMAP <GO>", "/datamap"), ("datamap", "/datamap"), ("DATAMAP trade", "/datamap?q=trade"),
@@ -130,7 +132,7 @@ def test_the_page_follows_the_server_while_it_is_still_checking(client, backend,
 
 
 def test_datamap_in_the_type_ahead_the_views_menu_and_help(client, shipped):
-    s = client.get("/api/suggest", params={"q": "DATAMAP coun"}).json()
+    s = client.get("/api/search", params={"in": "command", "q": "DATAMAP coun"}).json()["items"]
     assert s[0]["mnemonic"] == "DATAMAP" and s[0]["href"] == "/datamap?q=coun" and s[0]["complete"] == "DATAMAP coun"
     page = client.get("/t").text
     assert 'href="/datamap"' in page and "Every kind of data, how it joins and how much there is · also DATAMAP &lt;GO&gt;" in page

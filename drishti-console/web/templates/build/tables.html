@@ -13,88 +13,17 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Build › Tables & models (docs/architecture/EDITORS.md sections 1 to 4; docs/guides/TABLES_GUIDE.md section 11): one shell for every object people
+{# Build › Tables & models (docs/architecture/SHARED_SCREENS.md sections 1 to 4; docs/guides/TABLES_GUIDE.md section 11): one shell for every object people
    author on the table layer. Three panes: the objects with search | the editor with the live YAML below it | the live preview with checks. The page
-   carries no data: static/js/drishti_editors.js draws it from /build/tables/api/... (the server's editor API, as the signed-in person). #}
+   carries no data: static/js/drishti_editors.js draws it on drishti-designer's DesignerShell from /build/tables/api/... (the server's editor API, as the signed-in person). #}
 {% extends "base.html" %}
 {% block title %}Tables &amp; models · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal ed-page{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_editors.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_editors.css?v={{ ASSET_V }}">{% endblock %}
 {% block content %}
 <div class="ed" data-editors data-kind="{{ kind }}" data-name="{{ name }}" data-item="{{ item }}" data-new="{{ new }}"
-     data-python-runs="{{ 'true' if python_runs else 'false' }}" data-python-why="{{ python_why }}" data-user="{{ me.user if me else '' }}">
-  <header class="ed-head" aria-label="The object being edited">
-    <div class="ed-title">
-      <nav class="ed-crumb" aria-label="Where you are"><span>Build</span> › <a href="/build/tables">Tables &amp; models</a> › <span data-crumb-group>Choose an object</span></nav>
-      <h1 data-title>Tables &amp; models</h1>
-      <span class="ed-pill" data-status hidden></span>
-      <span class="ed-versions" data-versions></span>
-    </div>
-    <div class="ed-modes" role="group" aria-label="Show the visual editor, the YAML or both">
-      <button type="button" class="ed-mode" data-mode="visual" aria-pressed="false">Visual</button>
-      <button type="button" class="ed-mode" data-mode="yaml" aria-pressed="false">YAML</button>
-      <button type="button" class="ed-mode" data-mode="both" aria-pressed="false">Both</button>
-    </div>
-    <div class="ed-actions">
-      <button type="button" class="ed-btn" data-act="validate" title="Check the definition now (Ctrl+Enter)" disabled>Validate</button>
-      <button type="button" class="ed-btn" data-act="preview" title="Read the preview again" disabled>Preview</button>
-      <button type="button" class="ed-btn" data-act="history" title="The saved versions and reviews" disabled>History</button>
-      <button type="button" class="ed-btn" data-act="impact" title="What uses this object" disabled>Impact <span data-impact-count></span></button>
-      <button type="button" class="ed-btn" data-act="save" title="Save a draft (Ctrl+S): nothing goes live until it is approved" disabled>Save draft</button>
-      <button type="button" class="ed-btn ed-primary" data-act="propose" title="Ask another person to approve it (four eyes)" disabled>Propose for review</button>
-      <button type="button" class="ed-btn ed-new" data-act="new" aria-haspopup="menu" aria-expanded="false">+ New</button>
-      <div class="ed-newmenu" role="menu" data-newmenu hidden>
-        <button type="button" role="menuitem" data-new-kind="table">Table or virtual table</button>
-        <button type="button" role="menuitem" data-new-kind="model">Semantic model</button>
-        <button type="button" role="menuitem" data-new-kind="python">Python-driven table</button>
-      </div>
-    </div>
-  </header>
-  <p class="ed-msg" data-msg role="status" aria-live="polite"></p>
-  <div class="ed-grid" data-grid>
-    <aside class="ed-objects" aria-label="Objects">
-      <input type="search" class="ed-in ed-search" data-ed-search placeholder="Search tables and models" aria-label="Search tables and models">
-      <div data-objects></div>
-      <div data-resize="panel" data-resize-key="editors.objects" data-resize-var="--ed-left" data-resize-min="180" data-resize-max="480" aria-label="Resize the objects pane"></div>
-    </aside>
-    <section class="ed-main" aria-label="Editor">
-      <div class="ed-ro" data-readonly hidden></div>
-      <div class="ed-visual" data-visual>
-        <div class="ed-empty" data-empty>
-          <h2>Tables, virtual tables, models and Python-driven tables</h2>
-          <p>Choose an object on the left, or <strong>+ New</strong> to make one in guided steps. Every change is a draft until another person approves it.</p>
-        </div>
-      </div>
-      <section class="ed-yaml" data-yaml-panel aria-label="The definition as YAML" hidden>
-        <div class="ed-yh">
-          <button type="button" class="ed-ytoggle" data-yaml-toggle aria-expanded="true">▾ YAML</button>
-          <span class="ed-ystate" data-yaml-state>live</span>
-          <span class="ed-ynote">edits on either side show on the other</span>
-        </div>
-        <div class="ed-ybody" data-yaml-body>
-          <div class="ed-gutter" data-gutter aria-hidden="true"></div>
-          <div class="ed-ywrap">
-            <div class="ed-yhl" data-yaml-hl aria-hidden="true"></div>
-            <textarea class="ed-ytext" data-yaml spellcheck="false" autocomplete="off" aria-label="YAML of the definition" wrap="off"></textarea>
-          </div>
-        </div>
-        <ul class="ed-problems" data-problems aria-label="Problems"></ul>
-      </section>
-    </section>
-    <aside class="ed-side" aria-label="Preview and checks" data-side>
-      <div data-resize="panel" data-resize-key="editors.preview" data-resize-var="--ed-right" data-resize-edge="left" data-resize-min="240" data-resize-max="720" aria-label="Resize the preview pane"></div>
-      <div class="ed-preview" data-preview aria-busy="false">
-        <p class="ed-muted">The preview is read on the server as you may see the data.</p>
-      </div>
-    </aside>
-  </div>
-  <dialog class="ed-dialog" data-dialog aria-labelledby="edDlgH">
-    <h2 id="edDlgH" data-dialog-title></h2>
-    <div data-dialog-body></div>
-    <p class="ed-dlg-actions"><button type="button" class="ed-btn" data-dialog-close>Close</button></p>
-  </dialog>
-</div>
+     data-python-runs="{{ 'true' if python_runs else 'false' }}" data-python-why="{{ python_why }}" data-user="{{ me.user if me else '' }}"></div>{# drishti-designer's DesignerShell draws the header, the panes and the dialog here #}
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_editor-formula.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editors.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-new.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-table.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-model.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-python.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "_designer_kit.html" %}<script src="/static/js/drishti_editor-formula.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editors.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-new.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-table.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-model.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-python.js?v={{ ASSET_V }}"></script>{% endblock %}

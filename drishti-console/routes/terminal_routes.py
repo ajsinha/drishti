@@ -29,17 +29,9 @@ from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes, phone_routes
 from core.edition import ADMIN_PAGES, WORDS
 from routes.common import ident, packs, render
-from routes.var_routes import redirect_for as var_redirect
-from routes.var_routes import retired_link as var_retired_link
-from routes.exposure_routes import redirect_for as exp_redirect
-from routes.frtb_routes import redirect_for as frsa_redirect
-from routes.simm_routes import redirect_for as simm_redirect
-from routes.play_routes import redirect_for as play_redirect
-from routes.smat_routes import redirect_for as smat_redirect
-from routes.mcube_routes import redirect_for as mcube_redirect
-from core import pivot_presets as _pivot_presets
+from core import modules as _modules
+from core import plugins as _plugins
 from routes.pivot_routes import redirect_for as pivot_redirect
-from routes.exposure_routes import retired_link as exp_retired_link
 
 router = APIRouter(include_in_schema=False)
 
@@ -90,11 +82,11 @@ async def rupaka(request: Request, rest: str):
                if request.app.state.bi_on else "Rupaka (business intelligence) is switched off in this console (bi.enabled).")
         return RedirectResponse(f"/t?error={quote(why)}", status_code=303)
     word = rest.upper()
-    if not rest:
-        return RedirectResponse("/bi", status_code=303)
+    if not rest:                                                      # BI's own home is the one Build home
+        return RedirectResponse("/build", status_code=303)
     if word in ("WORKSPACE", "WORKSPACES"):
         return RedirectResponse("/bi/w/me", status_code=303)
-    if word in ("RUNS", "RUN"):                                       # BI RUNS <GO>: my runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1)
+    if word in ("RUNS", "RUN"):                                       # BI RUNS <GO>: my runs (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1)
         return RedirectResponse("/bi/w/me?tab=runs", status_code=303)
     if word in ("CATALOGUE", "CATALOG"):
         return RedirectResponse("/bi/catalogue", status_code=303)
@@ -117,6 +109,8 @@ async def go(request: Request, q: str = ""):
     typed = q.replace("<GO>", "").replace("<go>", "").strip()
     ed = getattr(request.state, "edition", None) or request.app.state.editions.instance
     head = typed.split(None, 1)[0].upper() if typed else ""
+    if (gone := _modules.typed_refusal(typed)) is not None:        # a function whose module is off, switched off or not the person's
+        return RedirectResponse(f"/t?error={quote(gone)}", status_code=303)   # (ACCESS_MODEL.md): "VRES is not available to you: ..."
     from core import engines as _engines
     if (off := _engines.typed_engine(typed)) is not None:          # FRSA with FRTB-SA running nowhere: said in the server's words (DRS-1020)
         return RedirectResponse(f"/t?error={quote(_engines.refusal(off))}", status_code=303)
@@ -125,7 +119,7 @@ async def go(request: Request, q: str = ""):
         return RedirectResponse(f"/t?error={quote(_menus.refusal_for_role(closed))}", status_code=303)
     if head in WORDS and head != "EXP" and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not part of {ed.title}: FUNC lists what you can use')}", status_code=303)
-    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 4), whatever packs define
+    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 4), whatever packs define
         return await rupaka(request, typed.split(None, 1)[1].strip() if " " in typed else "")
     words = q.replace("<GO>", "").replace("<go>", "").split()
     if words and words[0].upper() == FORM_WORD:                    # reserved too: FORM <pack> [kind] opens the pack's search form
@@ -147,31 +141,17 @@ async def go(request: Request, q: str = ""):
         rest = " ".join(words[1:])
         return RedirectResponse("/data" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
     me = getattr(request.state, "identity", None)
-    if ed.word_on("VAR") and (to_var := var_redirect(typed, (me.user if me else "") or "")) is not None:   # VAR DESK RATES: the VaR explorer (var_routes.py)
-        return to_var
-    if ed.word_on("PLAY") and ed.word_on("VAR") and (to_play := play_redirect(typed, (me.user if me else "") or "")) is not None:   # PLAY VAR <scope|ids>: the VaR Playground (play_routes.py)
-        return to_play
-    if ed.word_on("VAR") and ed.word_on("FRSA") and (to_frsa := frsa_redirect(typed)) is not None:   # FRSA <scope>: FRTB-SA capital (frtb_routes.py)
-        return to_frsa
-    if ed.word_on("SIMM") and (to_simm := simm_redirect(typed)) is not None:          # SIMM [<netting set> | CPTY <id>]: ISDA SIMM (simm_routes.py)
-        return to_simm
-    if ed.word_on("VAR") and ed.word_on("PIVOT") and ed.word_on("MCUBE") and (to_mcube := mcube_redirect(typed)) is not None:   # MCUBE [scope BY ...]: the pivot screen with the MR lens (mcube_routes.py)
-        return to_mcube
-    if ed.word_on("EXP") and ed.word_on("PIVOT") and [w.upper() for w in typed.split()[:1]] == ["CCUBE"]:              # CCUBE: the Pivot's preset ccr (core/pivot_presets.py), under construction
-        return RedirectResponse(_pivot_presets.command(typed.split()) or "/pivot?preset=ccr", status_code=303)
+    if (to_module := _plugins.redirect(ed, typed, (me.user if me else "") or "")) is not None:   # a module's command (VAR DESK RATES, SMAT ...)
+        return to_module
     if ed.word_on("PIVOT") and (to_pivot := pivot_redirect(typed)) is not None:        # PIVOT [table | @owner/name]: the pivot screen (pivot_routes.py)
         return to_pivot
-    if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)
-        return to_smat
-    if ed.word_on("EXP") and (to_exp := exp_redirect(typed)) is not None:            # EXP NSET NS-X, EXP EXP-X (retired): exposure-result (exposure_routes.py)
-        return to_exp
     if _SEARCH.match(q.replace("<GO>", "")):
         return RedirectResponse(f"/s?q={quote(q.replace('<GO>', '').strip())}", status_code=303)
     try:
         r = await request.app.state.backend.command(q, ident(request))
     except BackendError as e:
         text = q.replace("<GO>", "").strip()
-        if e.code == "DRS-1016":            # a command an administrator turned off (Admin -> Commands): "not active", whatever was typed after it
+        if e.code == "DRS-1016":            # a command an administrator turned off (Admin -> Functions): "not active", whatever was typed after it
             return render(request, "terminal/missing.html", status_code=403, kind=(e.extra or {}).get("kind", ""), id=text, error=e, embed=False)
         if e.code in ("DRS-4021", "DRS-4022"):  # a range after an entity that cannot be read (TRD 1000001 -5): say so, with what to type
             return RedirectResponse(f"/t?error={quote(f'{e.code} {e.detail}')}", status_code=303)
@@ -433,7 +413,7 @@ async def my_arrangement(request: Request, sutra: str):
 async def about(request: Request, kind: str, id_: str, generation: int = 0, format: str = ""):  # noqa: A002 - the query parameter's name
     """The body of the About this page drawer (an HTML fragment), asked for when the drawer first opens, never with the view.
     ``?format=json``: the explanation itself, ``{explain, index}`` (or ``{error: {code, detail}}``), for the pages the client-side renderer
-    draws: it draws the body from it (CLIENT_RENDERER.md section 12)."""
+    draws: it draws the body from it (EMBED_GUIDE.md section 12)."""
     me = ident(request)
     extra = {}                                       # the language of the pack's text: ?locale=, else the user's setting, else the browser's
     loc = request.query_params.get("locale") or (await request.app.state.user_settings.get(request.app.state.backend, me)).get("locale")
@@ -488,7 +468,7 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     shown = layout["panels"]
     env = request.app.state.templates.env
     parts = env.get_template("_macros/view.html").module
-    # each panel as HTML (the macros, the page's) and as its JSON (what an embed's renderer draws: CLIENT_RENDERER.md)
+    # each panel as HTML (the macros, the page's) and as its JSON (what an embed's renderer draws: EMBED_GUIDE.md)
     out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": api_routes._panel_html(request, p, ref={"kind": kind, "id": id_}), "panel": p,
             **({"provenance": p["provenance"]} if p.get("provenance") else {})} for p in shown]   # a panel's own source: its freshness (RACHANA_REFERENCE.md 9)
     prov = vm.get("provenance") or {}
@@ -564,9 +544,7 @@ async def view_children(request: Request, kind: str, id_: str, panel: str):
 
 @router.get("/v/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int = 0, share: str = ""):
-    if (retired := var_retired_link(kind, id_)) is not None:   # a retired stored VaR record (VAR-COMM): the explorer at its scope
-        return RedirectResponse(retired, status_code=303)
-    if (retired := exp_retired_link(kind, id_)) is not None:   # a retired stored exposure profile (EXP-X-FRA): NSET:NS-X-FRA, computed
+    if (retired := _plugins.retired_link(kind, id_)) is not None:   # a module's retired stored record (VAR-COMM, EXP-X-FRA): where it is now
         return RedirectResponse(retired, status_code=303)
     hist = history_routes.history_link(kind, id_, request.query_params)
     if hist:                                        # /v/trade/1000015?days=30, the short form of a history link
@@ -597,7 +575,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
     layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
     grid_mine = await _grid_layout(request, vm, layout)                             # a Sutra with layout: (RACHANA_REFERENCE.md 13)
     panels = layout["panels"]
-    phone = await phone_routes.plan_for(request, vm, panels, bool(embed))   # a phone or tablet (MOBILE_DISPLAY.md): its tiers
+    phone = await phone_routes.plan_for(request, vm, panels, bool(embed))   # a phone or tablet (docs/guides/BUILD_GUIDE.md): its tiers
     if phone and phone["device"] == "tablet":                       # a tablet keeps the page's layout, less its desk panels (under More)
         keep = {p.get("id") for p in phone["shown"]}
         panels = [p for p in panels if p.get("id") in keep]

@@ -45,7 +45,7 @@ import java.util.Map;
  * A bare identifier is a field of the current row inside a row, otherwise of the document. {@code ^} is the current element's parent
  * ({@code ^^} its parent). {@code [a, b]} is a list; {@code x in list} and {@code x not in list} test membership strictly (an empty
  * list holds nothing). A named argument {@code name = expr} is bound by the function's signature: to its place for a positional
- * parameter, kept by name for a keyword-only one ({@code where}, {@code by}, {@code ignore} ...) (BI_FOUNDATION_2911E.md 2.1).
+ * parameter, kept by name for a keyword-only one ({@code where}, {@code by}, {@code ignore} ...) (docs/architecture/ARCHITECTURE.md §28 2.1).
  *
  * <p>Both the parse and the tree it builds are bounded by {@link ElLimits}: the parser counts how deep it has recursed, and every node
  * records how deep its subtree is (a chain {@code a + b + c} parses in a loop but builds a tree as deep as it is long, and evaluation

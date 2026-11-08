@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Write-back from a form (docs/guides/WRITE_BACK.md › The design and its reasons, section 18; the forms guide: docs/guides/WRITE_BACK.md): Submit on a form
+/* Write-back from a form (docs/guides/APPROVALS_GUIDE.md › The design and its reasons, section 18; the forms guide: docs/guides/APPROVALS_GUIDE.md): Submit on a form
    whose Sutra says where it goes (form.save) opens the review and confirm sheet: per record, three columns per field (what you saw, what is
    there now, your change; a field that moved underneath is flagged before you submit), where it goes (a correction kept beside the source, an
    owned record, or an amendment through a connector), who must approve (never you), what it will recompute, and the reason box when the form
@@ -29,7 +29,7 @@
 
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) { n.className = cls; } if (text !== undefined) { n.textContent = text; } return n; }
   function btn(cls, text, on) { var b = el('button', cls, text); b.type = 'button'; if (on) { b.addEventListener('click', on); } return b; }
-  function show(v) { return v === null || v === undefined || v === '' ? '—' : typeof v === 'number' ? v.toLocaleString('en-US', { maximumFractionDigits: 6 }) : String(v); }
+  function show(v) { return v === null || v === undefined || v === '' ? '—' : typeof v === 'number' ? window.Drishti.elements.core.formatNumber(v, { maxDecimals: 6, minus: '-' }) : String(v); }
   function call(method, path, body) {
     return fetch('/api/changes' + (path || ''), { method: method, credentials: 'same-origin',
       headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' }, body: body ? JSON.stringify(body) : undefined })

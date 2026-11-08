@@ -24,9 +24,10 @@
   if (!box) { return; }
   var pack = box.getAttribute('data-pack-data');
   var base = '/admin/api/packs/' + encodeURIComponent(pack) + '/data';
-  var targetsEl = box.querySelector('[data-data-targets]'), form = box.querySelector('[data-data-form]'), fileIn = box.querySelector('[data-data-file]');
-  var kindSel = box.querySelector('[data-data-kind]'), kindBox = box.querySelector('[data-data-kind-box]'), dateIn = box.querySelector('[data-data-date]');
-  var dateBox = box.querySelector('[data-data-date-box]'), go = box.querySelector('[data-data-load]'), cancel = box.querySelector('[data-data-cancel]');
+  var targetsEl = box.querySelector('[data-data-targets]'), form = box.querySelector('[data-data-form]');
+  var DF = window.Drishti.elements.inputs.formOf(box.querySelector('[data-data-fields]'));   // file, kind, date: drishti-inputs' Form (core/admin_forms.py)
+  function chosen() { var f = box.querySelector('[data-data-file]'); return f && f.files && f.files[0]; }
+  var go = box.querySelector('[data-data-load]'), cancel = box.querySelector('[data-data-cancel]');
   var prog = box.querySelector('[data-data-prog]'), msg = box.querySelector('[data-data-msg]'), out = box.querySelector('[data-data-result]');
   var kinds = [], xhr = null, maxMb = 2048;
 
@@ -39,15 +40,16 @@
     return e;
   }
   function say(t, bad) { msg.textContent = t; msg.classList.toggle('t-bad', !!bad); msg.classList.toggle('t-ok', !bad && !!t); }
-  function num(n) { return Number(n || 0).toLocaleString('en-US'); }
-  function mb(b) { return (b / 1048576).toFixed(b < 10485760 ? 1 : 0) + ' MB'; }
+  var F = window.Drishti.elements.core;                                         // counts, sizes and durations by drishti-core
+  function num(n) { return F.formatNumber(Number(n || 0)); }
+  function mb(b) { return F.formatBytes(b, { decimals: function (a) { return a < 10485760 ? 1 : 0; } }); }
   function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 
-  function current() { var k = kindSel.value; return kinds.filter(function (x) { return x.kind === k; })[0]; }
+  function current() { var k = DF.getField('kind'); return kinds.filter(function (x) { return x.kind === k; })[0]; }
   function sync() {
-    var k = current();
-    dateBox.hidden = !(k && k.snapshot);
-    go.disabled = !(fileIn.files && fileIn.files[0]) || !k || !!k.problem || !!xhr;
+    var k = current(), snap = !!(k && k.snapshot);
+    if (DF.getField('snapshot') !== snap) { DF.setField('snapshot', snap); }          // the date shows for a snapshot kind
+    go.disabled = !chosen() || !k || !!k.problem || !!xhr;
   }
 
   fetch(base, { headers: { Accept: 'application/json' } }).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); }).then(function (r) {
@@ -69,26 +71,24 @@
       tb.appendChild(el('tr', { 'data-data-target': k.kind }, k.problem ? [el('th', { scope: 'row', class: 'mono', text: k.kind }), el('td', { colspan: '4', class: 't-warn', text: k.problem })]
         : [el('th', { scope: 'row', class: 'mono', text: k.kind }), el('td', { class: 'mono', text: k.connector }), el('td', { class: 'mono pd-folder', text: k.folder }),
           el('td', { class: 'mono', text: k.key }), el('td', { text: k.snapshot ? 'snapshot: the day you choose below' : (k.date || '') })]));
-      kindSel.appendChild(el('option', { value: k.kind, text: k.kind + (k.problem ? ' (cannot be loaded here)' : '') }));
     });
     t.appendChild(tb);
     targetsEl.appendChild(el('div', { class: 'tbl-wrap' }, [t]));
     targetsEl.appendChild(el('p', { class: 'text-muted-d', text: 'Up to ' + num(maxMb) + ' MB per file (drishti.loads.upload-max-mb).' }));
-    kindBox.hidden = kinds.length < 2;
-    dateIn.value = r.body.businessDate || today();
+    DF.setOptions('kind', kinds.map(function (k) { return k.kind; }), kinds.map(function (k) { return k.kind + (k.problem ? ' (cannot be loaded here)' : ''); }));
+    DF.setValue({ kind: kinds[0].kind, date: r.body.businessDate || today(), many: kinds.length > 1, snapshot: false });
     form.hidden = false;
     sync();
   });
 
-  fileIn.addEventListener('change', function () { out.hidden = true; say(''); sync(); });
-  kindSel.addEventListener('change', sync);
+  DF.on('change', function (e) { if (e.path === 'file') { out.hidden = true; say(''); } if (e.path === 'file' || e.path === 'kind') { sync(); } });
 
   function result(b) {
     while (out.firstChild) { out.removeChild(out.firstChild); }
     var days = Object.keys(b.days || {});
     out.appendChild(el('p', { 'data-data-summary': true }, [el('b', { text: num(b.rows) + ' ' + b.kind + ' rows loaded' }),
       ' into ' + b.connector + ' for ' + (days.length === 1 ? days[0] : days.length + ' business dates') + (b.rejected ? '; ' + num(b.rejected) + ' refused' : '') +
-      ' (' + mb(b.bytes) + ' in ' + (b.millis / 1000).toFixed(1) + ' s).']));
+      ' (' + mb(b.bytes) + ' in ' + F.formatDuration(b.millis) + ').']));
     if (b.rejections && b.rejections.length) {
       out.appendChild(el('ul', { class: 'det-list t-warn', 'aria-label': 'Rows refused' }, b.rejections.map(function (x) { return el('li', { text: x }); })));
     }
@@ -115,10 +115,10 @@
   }
 
   go.addEventListener('click', function () {
-    var f = fileIn.files && fileIn.files[0], k = current();
+    var f = chosen(), k = current(), day = DF.getField('date');
     if (!f || !k) { return; }
     if (f.size > maxMb * 1048576) { say(f.name + ' is ' + mb(f.size) + ', over the ' + num(maxMb) + ' MB limit.', true); return; }
-    var q = '?kind=' + encodeURIComponent(k.kind) + '&file=' + encodeURIComponent(f.name.replace(/[^\x20-\x7e]/g, '_')) + (k.snapshot && dateIn.value ? '&date=' + encodeURIComponent(dateIn.value) : '');
+    var q = '?kind=' + encodeURIComponent(k.kind) + '&file=' + encodeURIComponent(f.name.replace(/[^\x20-\x7e]/g, '_')) + (k.snapshot && day ? '&date=' + encodeURIComponent(day) : '');
     xhr = new XMLHttpRequest();
     xhr.open('POST', base + q);
     xhr.setRequestHeader('Content-Type', 'application/octet-stream');

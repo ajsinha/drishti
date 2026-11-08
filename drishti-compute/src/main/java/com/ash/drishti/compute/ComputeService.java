@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The compute supervisor (docs/architecture/PYTHON_COMPUTE.md): this node's pools of out-of-process Python workers, the fan-out of one
+ * The compute supervisor (docs/guides/NOTEBOOK_GUIDE.md): this node's pools of out-of-process Python workers, the fan-out of one
  * request over many workers and nodes, the locked environments pools run in and the approval that gates them. Generic: nothing here knows
  * about VaR or pricing; a reactive connector (DATA_ARCHITECTURE.md › Reactive connectors, section 16) hands it requests with inputs already read and masked as
  * the viewer.

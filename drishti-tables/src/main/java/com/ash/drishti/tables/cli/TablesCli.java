@@ -42,7 +42,7 @@ import java.util.Optional;
 
 /**
  * The table layer's command line, run as {@code java -jar drishti-server-*-exec.jar tables <command>} (no engine, no Spring: definitions
- * and sample files only; the server hands it its DEL translator) and through {@code drishti.py tables} (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_GUIDE.md):
+ * and sample files only; the server hands it its DEL translator) and through {@code drishti.py tables} (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_REFERENCE.md):
  *
  * <pre>
  * tables list     [--root DIR] [--json]
@@ -369,7 +369,7 @@ public final class TablesCli {
         return out;
     }
 
-    /** The flat virtual table offered for a new table (VIRTUAL_TABLES.md section 10, V8): printed, or written with --write. */
+    /** The flat virtual table offered for a new table (docs/architecture/ARCHITECTURE.md section 10, V8): printed, or written with --write. */
     private int offer(Args a) throws IOException {
         if (a.positional.isEmpty() || a.value("--sample", null) == null || a.value("--kind", null) == null && a.value("--table", null) == null) {
             err.println("tables offer: NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE)");

@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * The {@code tests:} a Python item may carry (BI_GUIDE.md "Tests shipped with an item"). The server only reads and checks their shape; the console's sandbox, which has
+ * The {@code tests:} a Python item may carry (REPORTS_GUIDE.md "Tests shipped with an item"). The server only reads and checks their shape; the console's sandbox, which has
  * Python, runs them (Check shows each as passed, failed or could-not-run; publishing through the console refuses an item with a failing one).
  *
  * <pre>
@@ -48,7 +48,7 @@ final class PythonTests {
     static final int MAX_TESTS = 50;
     static final int MAX_ROWS = 1000;
     private static final Set<String> KEYS = Set.of("name", "input", "sample", "params", "by", "expect", "tolerance");
-    private static final Set<String> KINDS = Set.of("echarts", "vega-lite", "svg", "png");
+    private static final Set<String> KINDS = Set.of("drishti-chart", "echarts", "vega-lite", "svg", "png");
     private static final Pattern IDENT = Pattern.compile("[A-Za-z_][A-Za-z0-9_]{0,63}");
     private static final ObjectMapper JSON = new ObjectMapper();
 

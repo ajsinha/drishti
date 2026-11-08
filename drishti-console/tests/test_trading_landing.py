@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Trading's figures (core/trading_landing.py; EDITIONS.md › The design as built, section 14) against the stand-in server of trading_fake.py: "my" scope
+"""Drishti Trading's figures (plugins/banking/trading_landing.py; LENSES.md › The design) against the stand-in server of trading_fake.py: "my" scope
 (a mapping, a trader record, a choice, nobody), P&L today only from valuations on both dates, the pages of the server's search, today's
 events, VaR and limits, the official limit use and P&L against VaR, by trader (masked for a role without raw), and the new-trade check
 built from one VaR what-if and one pre-deal check."""
@@ -23,7 +23,7 @@ from datetime import date
 
 import pytest
 
-from core import trading_landing as tl
+from plugins.banking import trading_landing as tl
 from core.auth import Identity
 from core.backend import BackendError
 from core.edition import Edition
@@ -186,7 +186,7 @@ def test_var_and_limits_are_the_engines_own():
     r = asyncio.run(tl.risk(b, me, d, {}))
     assert r["scope"] == "DESK:DESK-RATES" and r["state"] == "ok" and [x["book"] for x in r["breaches"]] == ["BOOK-RATES-3"]
     assert [x["book"] for x in r["nearLimit"]] == ["BOOK-RATES-1"]
-    assert asyncio.run(tl.risk(b, me, d, {"near-limit": 0.5}))["nearLimit"][1]["book"] == "BOOK-RATES-2"
+    assert asyncio.run(tl.risk(b, me, d, {"near-limit": 0.5}))["nearLimit"] == asyncio.run(tl.risk(b, me, d, {}))["nearLimit"]   # no console share
 
 
 def test_limit_use_by_book_from_the_official_records_with_the_missing_day_said():
@@ -276,21 +276,35 @@ def test_the_check_is_one_var_what_if_and_one_pre_deal_check():
     assert v["scope"] == "BOOK:BOOK-RATES-1" and v["before"] == 6_120_000 and v["after"] == 6_300_000 and v["state"] == "near"
     assert v["useAfter"] == pytest.approx(6_300_000 / 7_400_000)
     assert x["scope"] == "CPTY:CP-ALDERSHOT" and x["method"] == "paths" and x["nettingSet"] == "NS-ALDERSHOT-NY" and not x["proxy"]
-    assert x["state"] == "near" and x["useAfter"] == pytest.approx(409_200_000 / 420_000_000) and x["confidence"] == 0.95
+    assert x["state"] == "near" and x["decision"] == "approve" and x["useAfter"] == pytest.approx(409_200_000 / 420_000_000)
+    assert x["confidence"] == 0.95 and x["checkId"] == "PDC-TEST"
     calls = [a for a in b.asked if isinstance(a, tuple) and a[0] in ("var", "exposure") and a[1] == "POST"]
     assert len(calls) == 2                                                               # one call each
     whatif = calls[0][4] if calls[0][0] == "var" else calls[1][4]
     assert whatif["items"][0]["copyOf"] == "MX-20000010"
+    predeal = [c for c in calls if c[0] == "exposure"][0]
+    assert predeal[2] == "/predeal" and predeal[4]["like"] == "MX-20000010" and predeal[4]["side"] == "same"   # the server's pre-deal service
     sold = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "250m", "counterparty": "CP-ALDERSHOT", "side": "B"}))
     assert sold["factor"] < 0                                                            # the other side: the copy's unwind direction
+    # the exposure half's state is the server's limit status (within, near from the engine's limit-near, breach), never a share of the console's
+    b.limit_status = "within"
+    w = asyncio.run(tl.check(b, me, s, {"near-limit": 0.5}, {"product": "IR_SWAP", "notional": "250m", "counterparty": "CP-ALDERSHOT", "side": "S"}))
+    assert w["exposure"]["state"] == "ok" and w["exposure"]["useAfter"] == pytest.approx(409_200_000 / 420_000_000)
+    b.limit_status = "near"
+    # so is the VaR half's: the what-if's own limit block (use before and after, the status after), not a division here
+    b.var_status = "breach"
+    vb = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "250m", "counterparty": "CP-ALDERSHOT", "side": "S"}))["var"]
+    assert vb["state"] == "breach" and vb["useAfter"] == pytest.approx(6_300_000 / 7_400_000) and vb["limit"] == 7_400_000
+    b.var_status = None
 
 
 def test_the_check_falls_back_to_the_engines_proxy_and_says_so():
     b, me, s = _scope(backend=TradingBackend(paths=False))
     c = asyncio.run(tl.check(b, me, s, {}, {"product": "SWAPTION", "notional": "75m", "counterparty": "CP-ALDERSHOT"}))
-    assert c["exposure"]["proxy"] and c["exposure"]["method"] == "addon" and "DRS-5446" in c["exposure"]["fallback"]
+    assert c["exposure"]["proxy"] and c["exposure"]["method"] == "addon" and "DRS-1001" in c["exposure"]["fallback"]
+    assert c["exposure"]["state"] == "refer" and c["exposure"]["decision"] == "refer"       # a proxy only refers, never approves
     n = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "10m", "counterparty": "CP-NORTHPLAINS"}))
-    assert n["exposure"]["state"] == "none" and n["exposure"]["proxy"]                     # no limit, no netting set: the add-on, said
+    assert n["exposure"]["state"] == "refer" and "no credit limit" in " ".join(n["exposure"]["reasons"])   # no limit: refer, said
     bad = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "lots", "counterparty": "CP-ALDERSHOT"}))
     assert not bad["ok"] and "notional" in bad["reason"]
     none = asyncio.run(tl.check(b, me, s, {}, {"product": "CAP", "notional": "10m", "counterparty": "CP-ALDERSHOT"}))

@@ -26,7 +26,7 @@ files:
 - reference-store.yaml
 - risk-store.yaml
 - trading-store.yaml
-doc: docs/connectors/FILE_CONNECTOR.md
+doc: plugins/drishti-plugin-file/README.md
 ---
 # File connector templates
 
@@ -92,5 +92,5 @@ Set `DRISHTI_FILES_ROOT` when the folders are elsewhere. `trading-store.yaml` is
 
 ## See also
 
-- [The file connector](../../../docs/connectors/FILE_CONNECTOR.md) and the [file connector README](../../../plugins/drishti-plugin-file/README.md).
-- [Connector files](../../../docs/connectors/CONNECTOR_FILES.md) (copying examples, the trade union note) and [Demo data](../../../docs/connectors/DEMO_DATA.md).
+- The [file connector README](../../../plugins/drishti-plugin-file/README.md).
+- [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (copying examples, the trade union note) and [Demo data](../../../docs/guides/DATA_GUIDE.md#11-the-demo-data).

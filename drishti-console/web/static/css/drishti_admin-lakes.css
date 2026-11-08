@@ -14,67 +14,57 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Admin -> Data loads -> Lakes: the four steps (file, fields, target, build) and the run log. */
-.lk-crumb { margin: .2rem 0 0; font-size: .85rem; color: var(--d-muted); }
-.lk-step { border: 1px solid var(--d-border); border-radius: 8px; margin: .8rem 0; padding: .2rem .9rem .8rem; }
-.lk-step h2, .lk-h2 { font-size: 1.05rem; margin: .6rem 0 .4rem; }
+.lk-crumb { margin: var(--d-sp-3_2) 0 0; font-size: var(--d-fs-13_6); color: var(--d-muted); }
+.lk-step { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); margin: var(--d-sp-12_8) 0; padding: var(--d-sp-3_2) var(--d-sp-14_4) var(--d-sp-12_8); }
+.lk-step h2, .lk-h2 { font-size: var(--d-fs-16_8); margin: var(--d-sp-9_6) 0 var(--d-sp-6_4); }
 .lk-n { display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border-radius: 50%;
-  background: var(--d-accent, #2f6fde); color: #fff; font-size: .8rem; margin-right: .3rem; }
-.lk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 1rem; }
+  background: var(--d-accent); color: var(--d-on-color); font-size: var(--d-fs-12_8); margin-right: var(--d-sp-4_8); }
+.lk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 var(--d-sp-16); }
 .lk-grid .loads-field { max-width: none; }
-.lk-progress { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: .5rem 0; }
+.lk-progress { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-9_6); margin: var(--d-sp-8) 0; }
 .lk-progress progress { width: min(24rem, 100%); }
-.lk-fields { max-height: 26rem; overflow: auto; }
-.lk-fields td, .lk-fields th { white-space: normal; }
-.lk-top { color: var(--d-muted); font-size: .85rem; max-width: 22rem; overflow-wrap: anywhere; }
-.lk-warn { color: var(--d-warn, #9a6200); margin: .4rem 0; }
-.lk-runs td { white-space: normal; overflow-wrap: anywhere; font-size: .8rem; }
+.lk-fields { width: 100%; max-width: 100%; min-width: 0; }               /* drishti-grid (its own scroll); its height set by the script from the rows */
+.lk-warn { color: var(--d-warn); margin: var(--d-sp-6_4) 0; }
+.lk-runs td { white-space: normal; overflow-wrap: anywhere; font-size: var(--d-fs-12_8); }
 /* Maintain: the toolbar over the tables, the run, settings, schedules and history (drishti_admin-lake-maintain.js) */
 .mt-intro { max-width: 70rem; }
-.mt-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; margin: .5rem 0; }
-.mt-bar .loads-field { margin: 0; }
+.mt-picks { min-width: 0; }                                                      /* drishti-inputs' Forms (core/admin_forms.py) */
+.mt-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--d-sp-8) var(--d-sp-16); margin: var(--d-sp-8) 0; }
 .mt-count { color: var(--d-muted); min-width: 10rem; }
-.mt-check { display: inline-flex; align-items: center; gap: .35rem; min-height: 44px; min-width: 44px; cursor: pointer; }
-.mt-check input { width: 18px; height: 18px; }
-.mt-pick-col { width: 3rem; text-align: center; }
 .mt-foreign th, .mt-foreign td { color: var(--d-muted); }
-.mt-foreign .mt-check { cursor: not-allowed; }
 .mt-publisher { font-weight: 600; }
-.mt-own { white-space: normal; min-width: 14rem; font-size: .85rem; }
+.mt-own { white-space: normal; min-width: 14rem; font-size: var(--d-fs-13_6); }
 /* a folder or file named in a sentence (the lake roots, the settings and history files) breaks anywhere: a long path never widens the page */
 .adm p .mono, .mt .mono:not(td) { overflow-wrap: anywhere; }
-.mt-cli { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: .5rem 0; }
-.mt-cli code { overflow-wrap: anywhere; white-space: normal; font-size: .8rem; background: var(--d-surface-2, transparent); padding: .2rem .4rem; border-radius: 4px; }
+.mt-cli { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-6_4); margin: var(--d-sp-8) 0; }
+.mt-cli code { overflow-wrap: anywhere; white-space: normal; font-size: var(--d-fs-12_8); background: var(--d-surface-2, transparent); padding: var(--d-sp-3_2) var(--d-sp-6_4); border-radius: var(--d-radius-4); }
 .mt-panel summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
-.mt-panel summary h3, .mt-run h3 { font-size: 1rem; margin: .5rem 0; display: inline; }
-.mt-panel h4 { font-size: .95rem; margin: .8rem 0 .3rem; }
-.mt-when, .mt-days { border: 0; padding: 0; margin: .3rem 0; display: flex; flex-wrap: wrap; gap: 0 .9rem; }
-.mt-when legend, .mt-days legend { font-size: .85rem; color: var(--d-muted); padding: 0; width: 100%; }
-.mt-result td, .mt-history td, .mt-history th { white-space: normal; overflow-wrap: anywhere; font-size: .85rem; }
-.mt-paused { color: var(--d-warn, #9a6200); font-size: .8rem; font-weight: 400; }
-.mt-actions { display: flex; flex-wrap: wrap; gap: .3rem; }
+.mt-panel summary h3, .mt-run h3 { font-size: var(--d-fs-16); margin: var(--d-sp-8) 0; display: inline; }
+.mt-panel h4 { font-size: var(--d-fs-15_2); margin: var(--d-sp-12_8) 0 var(--d-sp-4_8); }
+.mt-result td, .mt-history td, .mt-history th { white-space: normal; overflow-wrap: anywhere; font-size: var(--d-fs-13_6); }
+.mt-paused { color: var(--d-warn); font-size: var(--d-fs-12_8); font-weight: 400; }
+.mt-actions { display: flex; flex-wrap: wrap; gap: var(--d-sp-4_8); }
 .mt-panel .lk-grid input.studio-in { width: 100%; box-sizing: border-box; }
 @media (max-width: 640px) {
-  .mt-bar .btn-pill, .mt-actions .btn-pill, .mt-cli .btn-pill, .mt-panel .btn-pill, .mt-panel input:not([type=checkbox]):not([type=radio]), .mt-bar select { min-height: 44px; font-size: 16px; }
-  .mt-check input { width: 24px; height: 24px; }
-  .lk-step { padding: .2rem .5rem .6rem; }
+  .mt-bar .btn-pill, .mt-actions .btn-pill, .mt-cli .btn-pill, .mt-panel .btn-pill, .mt-panel input:not([type=checkbox]):not([type=radio]), .mt-bar select { min-height: 44px; font-size: var(--d-fs-16); }
+  .lk-step { padding: var(--d-sp-3_2) var(--d-sp-8) var(--d-sp-9_6); }
   .lk-step input[type=checkbox] { width: 24px; height: 24px; }
-  .lk-step .btn-pill, .lk-step select, .lk-step input:not([type=checkbox]) { min-height: 44px; font-size: 16px; }
-  .lk-fields td, .lk-fields th { padding: .5rem .3rem; }
+  .lk-step .btn-pill, .lk-step select, .lk-step input:not([type=checkbox]) { min-height: 44px; font-size: var(--d-fs-16); }
 }
 
 /* Admin -> Lakes -> one table (/admin/lakes/table) */
 .lt-path { margin-top: -.5rem; overflow-wrap: anywhere; }
-.lt-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: .75rem; margin: .75rem 0 1.25rem; }
-.lt-stats > div { border: 1px solid var(--d-border); border-radius: .5rem; padding: .6rem .75rem; display: flex; flex-direction: column; gap: .15rem; }
-.lt-stats b { font-size: 1.15rem; overflow-wrap: anywhere; }
-.lt-stats span { color: var(--d-muted); font-size: .85rem; }
-.lt-readers { padding-left: 1.1rem; }
+.lt-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: var(--d-sp-12); margin: var(--d-sp-12) 0 var(--d-sp-20); }
+.lt-stats > div { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-9_6) var(--d-sp-12); display: flex; flex-direction: column; gap: var(--d-sp-2_4); }
+.lt-stats b { font-size: var(--d-fs-18_4); overflow-wrap: anywhere; }
+.lt-stats span { color: var(--d-muted); font-size: var(--d-fs-13_6); }
+.lt-readers { padding-left: var(--d-sp-17_6); }
 .lt-bar-cell { width: 22%; min-width: 6rem; }
 .lt-bar { width: 100%; height: .55rem; display: block; }
 .lt-bar rect { fill: var(--d-pos); opacity: .6; }
-.lt-parts { font-size: .85rem; }
+.lt-parts { font-size: var(--d-fs-13_6); }
 .lt-more summary { cursor: pointer; color: var(--d-muted); }
-.lt-kv { font-size: .8rem; overflow-wrap: anywhere; max-width: 28rem; }
-.lt-dl { display: grid; grid-template-columns: minmax(10rem, max-content) 1fr; gap: .25rem 1rem; }
+.lt-kv { font-size: var(--d-fs-12_8); overflow-wrap: anywhere; max-width: 28rem; }
+.lt-dl { display: grid; grid-template-columns: minmax(10rem, max-content) 1fr; gap: var(--d-sp-4) var(--d-sp-16); }
 .lt-dl dd { margin: 0; }
 @media (max-width: 600px) { .lt-dl { grid-template-columns: 1fr; } .lt-bar-cell { display: none; } }

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""An engine that runs on no server disappears everywhere in the console (docs/architecture/COMPUTE_ENGINES.md sections 5.2 and 13,
+"""An engine that runs on no server disappears everywhere in the console (docs/guides/ADMIN_GUIDE.md sections 5.2 and 13,
 test_engine_off_everywhere.py): generated from the engine catalogue, for every installed engine with words or pages: its words are unknown
 to the edition (word_on, typed_shown, so FUNC, type-ahead, Home cards and chips drop them), the command line says the server's words
 (DRS-1020), its pages and playgrounds answer 404, its menu items are not drawn, its Help pages are not listed or reached. The engine coming
@@ -31,8 +31,8 @@ from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
 
-CATALOGUE = yaml.safe_load((CONSOLE / "config" / "engines.yaml").read_text(encoding="utf-8"))["engines"]
-MENUS = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+CATALOGUE = engines.entries()
+MENUS = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
 LABELS = {str(it.get("id")): str(it.get("label")) for m in MENUS["menus"] for c in m.get("columns") or [] for it in c.get("items") or []}
 SHOWN = [e for e in CATALOGUE if e.get("installed") and (e.get("words") or e.get("console"))]
 

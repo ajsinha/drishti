@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 13: the model of the rates desk: the dataset rates-trades as its one fact, three measures, a desk-to-book hierarchy. The tutorial edits
+# Tutorial 8, Part G: the model of the rates desk: the dataset rates-trades as its one fact, three measures, a desk-to-book hierarchy. The tutorial edits
 # it, has it reviewed and published, certifies it, follows its lineage and then asks what dropping `book` would break.
 rachana: 2
 expressions: 2

@@ -33,6 +33,9 @@ ROOT = Path(__file__).resolve().parents[2]
 TD = ROOT / "data" / "testdata"
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "trades"))
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 import schema as TS  # noqa: E402
 import feedfiles as FF  # noqa: E402  (our dated files and tars: DATA_LAKE_GUIDE.md section 5.2)
 import filedate  # noqa: E402
@@ -103,8 +106,8 @@ class TestData(unittest.TestCase):
         want = len(self.m["datasets"])
         said = re.compile(r"(?m)(?:Demo lake ready: [^\n]*?: |the same |each of the |`gleif` \(|`funds` \(|`civic` \(|minutes\), |\(943 s\): |^\s+)(\d+) (?:Delta )?tables")
         wrong = []
-        for rel in ("data/testdata/README.md", "docs/guides/GETTING_STARTED.md", "docs/guides/PACK_DEVELOPER_GUIDE.md", "docs/guides/PACK_DEVELOPER_GUIDE.md",
-                    "docs/qa/windows-custom-data.md", "docs/connectors/DEMO_DATA.md", "docs/tutorials/01-first-15-minutes.md"):
+        for rel in ("data/testdata/README.md", "docs/guides/OPERATIONS_GUIDE.md", "docs/guides/BUILD_GUIDE.md", "docs/guides/BUILD_GUIDE.md",
+                    "docs/architecture/TEST_HARNESS.md", "docs/guides/DATA_GUIDE.md", "docs/tutorials/01-first-15-minutes.md"):
             text = (ROOT / rel).read_text(encoding="utf-8")
             found = [int(n) for n in said.findall(text)]
             self.assertTrue(found, f"{rel} no longer quotes the count: update this test")
@@ -116,7 +119,7 @@ class TestData(unittest.TestCase):
         self.assertEqual(len(self.dates), 60)
         packs = {}
         for ds in self.m["datasets"]:
-            spec = packs.setdefault(ds["pack"], yaml.safe_load((ROOT / "config" / "packs" / ds["pack"] / "pack.yaml").read_text(encoding="utf-8")))
+            spec = packs.setdefault(ds["pack"], yaml.safe_load((pack_dir(ds["pack"]) / "pack.yaml").read_text(encoding="utf-8")))
             conn = spec["connectors"][ds["connector"]]
             self.assertEqual(conn["plugin"], "delta", ds)
             self.assertIn(ds["kind"], conn["kinds"], ds)
@@ -274,7 +277,7 @@ class TestData(unittest.TestCase):
         self.assertEqual(set(snaps), {"quote", "news"})
         sys.path.insert(0, str(ROOT / "tools" / "testdata"))
         import capture_market as CM
-        want = CM.targets(ROOT / "config" / "packs" / "news-and-markets")
+        want = CM.targets(ROOT / "config" / "packs" / "economy" / "news-and-markets")
         for kind, ds in snaps.items():
             self.assertEqual((ds["pack"], ds["connector"]), ("news-and-markets", "news-store"))
             docs = {d[ds["key"]]: d for d in lines(TD / ds["folder"])}

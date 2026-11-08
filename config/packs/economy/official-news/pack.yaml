@@ -1,0 +1,98 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Official news · the economy module's public-sector free news pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): press releases and notices of central
+# banks, regulators and governments from their own feeds, filled daily by the official-news feed (config/feeds/official-news.yaml) into
+# the newslake lake.
+pack: official-news
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+version: 1.0.0
+code: ONEWS
+title: Official news
+description: >-
+  Press releases and notices from the publishers' own feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank
+  of England, the SEC, OSFI, the US Federal Register and the Canada Gazette. A publisher's page lists its latest releases newest first,
+  each a link to the original, with its terms; a release's page gives its title, date, summary and link. Each publisher's terms are
+  recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases are internal only. Filled daily
+  by the official-news feed into the newslake lake.
+kinds: [release-source, press-release]
+sutras: sutras
+mnemonics:
+  PRESS: { kind: release-source, label: Official press releases }
+  PREL:  { kind: press-release, label: Press release }
+graph:
+  id-patterns:
+    - { pattern: "^PRESS-", kind: release-source }
+    - { pattern: "^PREL-", kind: press-release }
+  fields:
+    RELEASE_SOURCE: { kind: release-source, label: Publisher }
+    PRESS_RELEASE:  { kind: press-release, label: Release }
+  badges:
+    release-source: "$.RELEASES + ' releases'"
+    press-release: "$.DATE"
+connectors:
+  officialnews-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [release-source, press-release]
+    settings:
+      lake: newslake
+      lake-tables: officialnews.release-source,officialnews.press-release
+lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
+  tables:
+    officialnews.release-source:
+      id: SOURCE_ID
+      promote:
+      - NAME
+      - PUBLISHER_TYPE
+      - COUNTRY
+      - INTERNAL_ONLY
+      - RELEASES
+      - LAST_PUBLISHED
+      retention: 90
+    officialnews.press-release:
+      id: RELEASE_ID
+      promote:
+      - TITLE
+      - PUBLISHED
+      - DATE
+      - URL
+      - CATEGORY
+      - RELEASE_SOURCE
+      - PUBLISHER_NAME
+      - COUNTRY
+      - INTERNAL_ONLY
+      retention: 90
+routes:                # the connector that answers each kind
+  release-source: officialnews-store
+  press-release: officialnews-store
+form:                          # FORM official-news: the search form of each kind
+  release-source:
+    - { path: SOURCE_ID, label: Publisher id, type: id, group: Identity }
+    - { path: NAME, type: text, group: Identity }
+    - { path: PUBLISHER_TYPE, label: Publisher type, type: enum, group: Identity }
+    - { path: COUNTRY, type: enum, group: Identity }
+  press-release:
+    - { path: RELEASE_ID, label: Release id, type: id, group: Identity }
+    - { path: TITLE, type: text, group: Release, help: "TITLE contains rate finds every release about rates." }
+    - { path: PUBLISHER_NAME, label: Publisher, type: enum, group: Release }
+    - { path: PUBLISHED, type: date, group: Release }
+    - { path: CATEGORY, type: text, group: Release }
+console:
+  examples:
+    - ["PRESS PRESS-FED", "The Federal Reserve Board's latest press releases, each a link to the original"]
+    - ["PRESS PRESS-ECB", "The European Central Bank"]
+    - ["PRESS PRESS-FEDREG", "The US Federal Register's newest documents"]
+    - ["PRESS PRESS-BOE", "The Bank of England (internal only: its terms allow no commercial reuse)"]
+  help: config/help.yaml

@@ -14,111 +14,145 @@
 
 # Where every pack's data comes from, for the "Data retrieval" section of each pack's guide (tools/packgen/common/guide_data.py; the
 # product owner's request of 2026-10-26: data contract, data retrieval and details for all packs). The contracts say what a kind holds
-# and how it is stored (config/packs/<pack>/contracts/*.contract.yaml); this file says how its data is made: an external source (with
-# its refresh script), a generator of synthetic test data, or a Drishti engine. A computed kind needs no entry: its contract names its
+# and how it is stored (config/packs/<domain>/<pack>/contracts/*.contract.yaml); this file says how its data is made: an external source (with
+# the data feed that pulls it), a generator of synthetic test data, or a Drishti engine. A computed kind needs no entry: its contract names its
 # connector and engine, and `engines` below adds the guide that explains it. The External data help page (docs/guides/EXTERNAL_DATA.md)
 # documents every external source at length; a new source is a row there and an entry here.
 
-# External sources: id -> what the guide says of it. `script` and `source` are the refresh script and its SOURCE argument.
+# External sources: id -> what the guide says of it. `feed` is the data feed that pulls it (config/feeds/<feed>.yaml) and `source`
+# its SOURCE argument (after --); a source typed into a generator names the generator as `script` instead.
 external:
-  worldbank: { title: "World Bank World Development Indicators and Worldwide Governance Indicators", url: "https://api.worldbank.org/v2",
-               licence: "CC BY 4.0", internal: false, script: tools/publicdata/world_economy.py, source: worldbank }
+  worldbank: { title: "World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed)", url: "https://api.worldbank.org/v2",
+               licence: "CC BY 4.0", internal: false, feed: world-economy, source: worldbank }
   imf: { title: "IMF World Economic Outlook (DataMapper)", url: "https://www.imf.org/external/datamapper/api/v1",
          licence: "IMF terms: reuse with attribution; commercial reuse needs the IMF's permission", internal: true,
-         script: tools/publicdata/world_economy.py, source: imf }
+         feed: world-economy, source: imf }
   undp: { title: "UNDP Human Development Index", url: "https://hdr.undp.org/data-center/documentation-and-downloads",
-          licence: "CC BY 3.0 IGO", internal: false, script: tools/publicdata/world_economy.py, source: undp }
+          licence: "CC BY 3.0 IGO", internal: false, feed: world-economy, source: undp }
   factbook: { title: "CIA World Factbook (the factbook.json mirror at a pinned commit)", url: "https://github.com/factbook/factbook.json",
-              licence: "public domain (the mirror CC0 1.0)", internal: false, script: tools/publicdata/world_economy.py, source: factbook }
+              licence: "public domain (the mirror CC0 1.0)", internal: false, feed: world-economy, source: factbook }
   census: { title: "US Census Bureau population estimates and BEA state GDP (rounded by hand, illustrative)",
             url: "https://www.census.gov/programs-surveys/popest.html", licence: "public domain (US Government work)", internal: false,
             script: tools/packgen/world/make.py, source: "(typed into the generator; no fetch)" }
   yahoo-quote: { title: "Yahoo Finance quotes and daily history (the yfinance connector)", url: "https://finance.yahoo.com",
-                 licence: "Yahoo terms: personal use, no redistribution", internal: true, script: tools/publicdata/news_and_markets.py,
+                 licence: "Yahoo terms: personal use, no redistribution", internal: true, feed: news-and-markets,
                  source: quote }
   google-news: { title: "Google News RSS headlines (the news connector)", url: "https://news.google.com/rss",
-                 licence: "the headlines belong to their publishers", internal: true, script: tools/publicdata/news_and_markets.py,
+                 licence: "the headlines belong to their publishers", internal: true, feed: news-and-markets,
                  source: news }
   ecb-fx: { title: "ECB euro reference FX rates", url: "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip",
-            licence: "ECB: free reuse with the source acknowledged", internal: false, script: tools/publicdata/official_market_data.py,
+            licence: "ECB: free reuse with the source acknowledged", internal: false, feed: market-data,
             source: ecb-fx }
   us-treasury: { title: "US Treasury daily par yield curve", url: "https://home.treasury.gov/resource-center/data-chart-center/interest-rates",
-                 licence: "public domain (US Government work)", internal: false, script: tools/publicdata/official_market_data.py,
+                 licence: "public domain (US Government work)", internal: false, feed: market-data,
                  source: us-treasury }
   sofr: { title: "SOFR, Federal Reserve Bank of New York", url: "https://markets.newyorkfed.org/api/rates/secured/sofr",
-          licence: "NY Fed terms of use: reuse with attribution", internal: false, script: tools/publicdata/official_market_data.py, source: sofr }
+          licence: "NY Fed terms of use: reuse with attribution", internal: false, feed: market-data, source: sofr }
   estr: { title: "Euro short-term rate (ECB)", url: "https://data-api.ecb.europa.eu/service/data/EST",
-          licence: "ECB: free reuse with the source acknowledged", internal: false, script: tools/publicdata/official_market_data.py,
+          licence: "ECB: free reuse with the source acknowledged", internal: false, feed: market-data,
           source: estr }
   wikidata: { title: "Wikidata: index membership and company facts", url: "https://query.wikidata.org/sparql", licence: "CC0 1.0",
-              internal: false, script: tools/publicdata/us_equities.py, source: wikidata }
+              internal: false, feed: us-equities, source: wikidata }
   nasdaq: { title: "Nasdaq Trader symbol directory", url: "https://www.nasdaqtrader.com/dynamic/SymDir/", licence: "public symbol directory files",
-            internal: false, script: tools/publicdata/us_equities.py, source: nasdaq }
+            internal: false, feed: us-equities, source: nasdaq }
   sec: { title: "SEC EDGAR: tickers, submissions, XBRL company facts", url: "https://data.sec.gov",
-         licence: "public domain (US Government work); EDGAR fair access policy", internal: false, script: tools/publicdata/us_equities.py,
+         licence: "public domain (US Government work); EDGAR fair access policy", internal: false, feed: us-equities,
          source: sec }
   gleif-us: { title: "GLEIF LEI records (each company's LEI)", url: "https://api.gleif.org/api/v1", licence: "CC0 1.0", internal: false,
-              script: tools/publicdata/us_equities.py, source: gleif }
+              feed: us-equities, source: gleif }
   yahoo-prices: { title: "Yahoo Finance daily prices (the us-equities-prices connector)", url: "https://finance.yahoo.com",
-                  licence: "Yahoo terms: personal use, no redistribution", internal: true, script: tools/publicdata/us_equities.py, source: prices }
+                  licence: "Yahoo terms: personal use, no redistribution", internal: true, feed: us-equities, source: prices }
   gleif-golden: { title: "GLEIF golden copy, level 2: relationship records and reporting exceptions", url: "https://goldencopy.gleif.org",
-                  licence: "CC0 1.0 (attribution appreciated)", internal: false, script: tools/publicdata/gleif.py, source: golden }
+                  licence: "CC0 1.0 (attribution appreciated)", internal: false, feed: gleif, source: golden }
   gleif-api: { title: "GLEIF LEI API: LEI records, legal forms, countries, LEI issuers", url: "https://api.gleif.org/api/v1",
-               licence: "CC0 1.0 (attribution appreciated)", internal: false, script: tools/publicdata/gleif.py, source: api }
+               licence: "CC0 1.0 (attribution appreciated)", internal: false, feed: gleif, source: api }
   gleif-mapping: { title: "GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI", url: "https://mapping.gleif.org",
-                   licence: "CC0 1.0", internal: false, script: tools/publicdata/gleif.py, source: mapping }
+                   licence: "CC0 1.0", internal: false, feed: gleif, source: mapping }
   sec-nport: { title: "SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns)",
                url: "https://www.sec.gov/data-research/sec-markets-data/form-n-port-data-sets",
-               licence: "public domain (US Government work); SEC fair access policy", internal: false, script: tools/publicdata/funds.py, source: nport }
+               licence: "public domain (US Government work); SEC fair access policy", internal: false, feed: funds, source: nport }
   sec-ncen: { title: "SEC Form N-CEN data sets (ETF facts, service providers, authorised participants)",
               url: "https://www.sec.gov/data-research/sec-markets-data/form-n-cen-data-sets",
-              licence: "public domain (US Government work); SEC fair access policy", internal: false, script: tools/publicdata/funds.py, source: ncen }
+              licence: "public domain (US Government work); SEC fair access policy", internal: false, feed: funds, source: ncen }
   sec-rr: { title: "SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns)",
             url: "https://www.sec.gov/data-research/sec-markets-data/mutual-fund-prospectus-riskreturn-summary-data-sets",
-            licence: "public domain (US Government work); SEC fair access policy", internal: false, script: tools/publicdata/funds.py, source: rr }
+            licence: "public domain (US Government work); SEC fair access policy", internal: false, feed: funds, source: rr }
   sec-fund-tickers: { title: "SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json)", url: "https://www.sec.gov/file/company-tickers",
-                      licence: "public domain (US Government work)", internal: false, script: tools/publicdata/funds.py, source: tickers }
+                      licence: "public domain (US Government work)", internal: false, feed: funds, source: tickers }
   nasdaq-funds: { title: "Nasdaq Trader symbol directory (which tickers are ETFs)", url: "https://www.nasdaqtrader.com/dynamic/SymDir/",
-                  licence: "public symbol directory files", internal: false, script: tools/publicdata/funds.py, source: nasdaq }
+                  licence: "public symbol directory files", internal: false, feed: funds, source: nasdaq }
   gleif-funds: { title: "GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to)", url: "https://goldencopy.gleif.org",
-                 licence: "CC0 1.0", internal: false, script: tools/publicdata/funds.py, source: gleif }
+                 licence: "CC0 1.0", internal: false, feed: funds, source: gleif }
+  # the public-sector module's feeds (config/feeds/<feed>.yaml; `source` is the feed): daily, incremental, into worldlake or newslake
+  wdi: { title: "World Bank World Development Indicators API (v2), pulled only by the world-development feed", url: "https://api.worldbank.org/v2", licence: "CC BY 4.0",
+         internal: false, feed: world-development }
+  fred: { title: "FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY)", url: "https://api.stlouisfed.org/fred",
+          licence: "FRED API terms; the default series are US government works (public domain)", internal: false,
+          feed: central-banks }
+  boc-valet: { title: "Bank of Canada Valet API", url: "https://www.bankofcanada.ca/valet", licence: "Bank of Canada terms: free use with attribution",
+               internal: false, feed: central-banks }
+  statcan-wds: { title: "Statistics Canada Web Data Service", url: "https://www150.statcan.gc.ca/t1/wds/rest", licence: "Statistics Canada Open Licence",
+                 internal: false, feed: national-statistics }
+  oecd-sdmx: { title: "OECD Data Explorer SDMX API", url: "https://sdmx.oecd.org/public/rest", licence: "OECD terms: reuse with the source acknowledged (CC BY 4.0)",
+               internal: false, feed: oecd }
+  press-public: { title: "Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API)", url: "https://www.federalreserve.gov/feeds/press_all.xml",
+                  licence: "public domain (US Government works)", internal: false, feed: official-news }
+  press-attributed: { title: "Press releases of the European Central Bank and the Bank of Canada (RSS)", url: "https://www.ecb.europa.eu/rss/press.html",
+                      licence: "free reuse with the source acknowledged", internal: false, feed: official-news }
+  press-noncommercial: { title: "News of the Bank of England and OSFI, the Canada Gazette (RSS)", url: "https://www.bankofengland.co.uk/rss/news",
+                         licence: "non-commercial or internal use only without permission", internal: true, feed: official-news }
+  gdelt: { title: "GDELT 1.0 daily event files", url: "https://data.gdeltproject.org/events/", licence: "GDELT terms: free for any use with a citation",
+           internal: false, feed: gdelt-events }
 
-# The refresh scripts (tools/publicdata/): their wrappers' pack name and the examples each guide shows besides status and --dry-run.
-scripts:
-  tools/publicdata/world_economy.py:
-    wrapper: world-economy
+# The data feeds (config/feeds/<feed>.yaml, docs/guides/EXTERNAL_DATA.md): the examples each guide shows besides status, --dry-run and a
+# plain run (pull and load into the feed's lake). Arguments after -- go to the source.
+feeds:
+  world-economy:
     examples:
-      - ["refresh", "a full build in <data>/publicdata/world-economy (the IMF data never goes to a committed folder by default)"]
-      - ["refresh --internal-ok", "refresh the committed dataset and pack (they carry IMF data: internal demos only)"]
-      - ["refresh --no-imf", "a build without any IMF data, for anything shown outside the organisation"]
-  tools/publicdata/news_and_markets.py:
-    wrapper: news-and-markets
+      - ["-- --no-imf", "the same without any IMF data, for anything shown outside the organisation"]
+      - ["--snapshot --internal-ok", "refresh the committed dataset and pack instead (they carry IMF data: internal demos only)"]
+  news-and-markets:
     examples:
-      - ["refresh", "a new snapshot in <data>/publicdata/news-and-markets/testdata (through a scratch server's live connectors)"]
-      - ["refresh --internal-ok", "replace the committed snapshot in data/testdata (internal demos only), then lake demo"]
-  tools/publicdata/official_market_data.py:
-    wrapper: market-data
+      - ["--set server=http://localhost:18480", "through a running server's live connectors instead of a scratch server"]
+      - ["--snapshot --internal-ok", "replace the committed snapshot in data/testdata instead (internal demos only), then lake demo"]
+  market-data:
     examples:
-      - ["refresh", "a year of official history into <data>/publicdata/market-data (never over the synthetic samples)"]
-      - ["refresh ecb-fx --years 5 --scope USDMXN,EURSEK", "more history and more pairs"]
-  tools/publicdata/us_equities.py:
-    wrapper: us-equities
+      - ["-- ecb-fx --years 5 --scope USDMXN,EURSEK", "more history and more pairs"]
+  us-equities:
     examples:
-      - ["refresh", "the committed pack: data/testdata/us-equities, samples/ and this guide, then make.py --check"]
-      - ["refresh --offline", "the same from the download cache only"]
-      - ["refresh --scope TSLA,FILINGS:40", "a widened build in <data>/publicdata/us-equities"]
-  tools/publicdata/gleif.py:
-    wrapper: gleif
+      - ["--snapshot", "refresh the committed pack instead: data/testdata/us-equities, samples/ and this guide, then make.py --check"]
+      - ["--snapshot --offline", "the same from the download cache only"]
+      - ["-- --scope TSLA,FILINGS:40", "a widened pull of more companies and filings"]
+  gleif:
     examples:
-      - ["refresh", "the committed pack: data/testdata/gleif, samples/ and this guide, then make.py --check"]
-      - ["refresh --offline", "the same from the download cache only"]
-      - ["refresh --scope NAME:allianz,CAP:200", "a widened build in <data>/publicdata/gleif"]
-  tools/publicdata/funds.py:
-    wrapper: funds
+      - ["--snapshot", "refresh the committed pack instead: data/testdata/gleif, samples/ and this guide, then make.py --check"]
+      - ["--snapshot --offline", "the same from the download cache only"]
+      - ["-- --scope NAME:allianz,CAP:200", "a widened pull of more entities"]
+  funds:
     examples:
-      - ["refresh", "the committed pack: data/testdata/funds, samples/, the README and this guide, then make.py --check"]
-      - ["refresh --offline", "the same from the downloads only (about 700 MB in <data>/publicdata/cache/funds)"]
-      - ["refresh --scope FUNDS:300,HOLDINGS:1000", "a widened build in <data>/publicdata/funds"]
+      - ["--snapshot", "refresh the committed pack instead: data/testdata/funds, samples/, the README and this guide, then make.py --check"]
+      - ["--snapshot --offline", "the same from the downloads only (about 700 MB in <data>/datafeeds/sources/cache/funds)"]
+      - ["-- --scope FUNDS:300,HOLDINGS:1000", "a widened pull of more funds and holdings"]
+  # the public-sector module's feeds (PUBLIC_SECTOR_GUIDE.md section 5)
+  world-development:
+    examples:
+      - ["--load inbox", "the same through the data inbox: the server loads it"]
+      - ["--since 2026-01-01", "pull again although the World Bank has not changed (after editing the indicators)"]
+  central-banks:
+    examples:
+      - ["--load inbox", "the same through the data inbox (FRED needs DRISHTI_FRED_API_KEY; without it the Bank of Canada still loads)"]
+  national-statistics:
+    examples:
+      - ["--load inbox", "the same through the data inbox: the server loads it"]
+  oecd:
+    examples:
+      - ["--load inbox", "the same through the data inbox: the server loads it"]
+  official-news:
+    examples:
+      - ["--load inbox", "the same through the data inbox: the server loads it"]
+  gdelt-events:
+    examples:
+      - ["--since 2026-11-01", "read the GDELT days from this date (a run reads at most a week by default)"]
 
 # Generators of synthetic (or hand-written) data: id -> the command, what it writes, its check and the origin it is shown as (label,
 # default "synthetic").
@@ -133,27 +167,26 @@ generators:
          what: "the VaR engine's inputs into data/testdata/market-risk/<kind>/, as an upstream risk batch would deliver them, from the committed trades (VAR_GUIDE.md)" }
   ccr: { run: "python3 tools/packgen/ccr/make_ccr_data.py", check: "python3 -m pytest -q tools/packgen/ccr/test_ccr_data.py",
          what: "the exposure engine's inputs into data/testdata/counterparty-risk/<kind>/, as an upstream exposure simulator would deliver them, from the committed netting sets (EXPOSURE_GUIDE.md)" }
-  news-reference: { run: "python3 config/packs/news-and-markets/tools/make_samples.py", label: "hand-written reference data",
+  news-reference: { run: "python3 config/packs/economy/news-and-markets/tools/make_samples.py", label: "hand-written reference data",
                     what: "hand-written reference data (topics and listed companies) into the pack's samples/" }
-  compute-demo: { run: "python3 config/packs/compute-demo/tools/make_samples.py",
+  compute-demo: { run: "python3 config/packs/core/compute-demo/tools/make_samples.py",
                   what: "synthetic P&L strips (a seeded random walk) into the pack's samples/" }
 
 # The guide that explains each engine (by the connector named in a computed kind's contract).
 engines:
-  var-engine: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md)"
-  var-results: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (official results)"
-  var-positions: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (positions)"
-  exposure-engine: "the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md)"
-  exposure-whatif: "the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md)"
-  exposure-results: "the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) (official results)"
-  correlation-engine: "the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
-  equity-analytics: "the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
-  gleif-groupings: "the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
-  us-equities-groupings: "the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
-  macro-groupings: "the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
+  var-engine: "the [VaR guide](../../../../../docs/guides/VAR_GUIDE.md)"
+  var-results: "the [VaR guide](../../../../../docs/guides/VAR_GUIDE.md) (official results)"
+  var-positions: "the [VaR guide](../../../../../docs/guides/VAR_GUIDE.md) (positions)"
+  exposure-engine: "the [Exposure guide](../../../../../docs/guides/EXPOSURE_GUIDE.md)"
+  exposure-results: "the [Exposure guide](../../../../../docs/guides/EXPOSURE_GUIDE.md) (official results)"
+  correlation-engine: "the [Groupings and analytics guide](../../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
+  equity-analytics: "the [Groupings and analytics guide](../../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
+  gleif-groupings: "the [Groupings and analytics guide](../../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
+  us-equities-groupings: "the [Groupings and analytics guide](../../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
+  macro-groupings: "the [Groupings and analytics guide](../../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
   trade-pages: "the derived connector's settings in the trading pack's pack.yaml (`trade-pages`)"
-  path-sum-python: "the [reactive connectors](../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)"
-  path-sum-java: "the [reactive connectors](../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)"
+  path-sum-python: "the [reactive connectors](../../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)"
+  path-sum-java: "the [reactive connectors](../../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)"
 
 # Each pack: the default origin of its stored kinds and the kinds that differ. An entry is {generator: id} or {external: [ids]};
 # `live` names the external sources a connector reads live when switched on (off as shipped), next to the committed data.
@@ -186,13 +219,13 @@ packs:
       simulation-run: { generator: ccr }
   world-economy:
     kinds:
-      economy: { external: [worldbank, imf] }
+      economy: { external: [wdi, worldbank, imf] }
       economic-forecast: { external: [imf] }
-      fiscal-position: { external: [worldbank, imf] }
-      labour-market: { external: [worldbank] }
-      macro-indicator: { external: [worldbank] }
-      social-indicator: { external: [worldbank, undp] }
-      jurisdiction: { external: [factbook, worldbank] }
+      fiscal-position: { external: [wdi, imf] }
+      labour-market: { external: [wdi] }
+      macro-indicator: { external: [wdi] }
+      social-indicator: { external: [wdi, undp] }
+      jurisdiction: { external: [factbook, worldbank, wdi] }
       region: { external: [worldbank, factbook] }
       election: { external: [factbook] }
       office-holder: { external: [factbook] }
@@ -220,3 +253,17 @@ packs:
       index-funds: { external: [sec-nport, sec-rr] }
   compute-demo:
     default: { generator: compute-demo }
+  # the public-sector module's packs: filled by their feeds (`feed`) into worldlake or newslake; samples/ holds a few documents for the
+  # renderer's tests, never served beside the lake (demo and real never mix)
+  world-development:
+    default: { external: [wdi], feed: world-development }
+  central-banks:
+    default: { external: [fred, boc-valet], feed: central-banks }
+  national-statistics:
+    default: { external: [statcan-wds], feed: national-statistics }
+  oecd:
+    default: { external: [oecd-sdmx], feed: oecd }
+  official-news:
+    default: { external: [press-public, press-attributed, press-noncommercial], feed: official-news }
+  gdelt-events:
+    default: { external: [gdelt], feed: gdelt-events }

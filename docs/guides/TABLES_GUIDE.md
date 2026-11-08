@@ -19,8 +19,9 @@ A **virtual table** is a named, typed table defined once by configuration over a
 table, an in-memory table), a SQL query, a Python transform, a model's answer or another virtual table. A **model** relates virtual tables
 and defines measures over them. Every consumer reads them the same way: BI, the pivot, Arrow Flight and alerts. This guide is the
 reference: every key, every check, the command line and the migration of BI's datasets and models; the hands-on walk-through is the
-[virtual tables tutorial](../tutorials/44-virtual-tables-and-models.md). The design, with its decisions, is
-[BI_FOUNDATION_2911E.md](../architecture/BI_FOUNDATION_2911E.md) and [VIRTUAL_TABLES.md](../architecture/VIRTUAL_TABLES.md).
+[virtual tables tutorial](../tutorials/18-tables-and-models.md). The design, with its decisions, is
+[ARCHITECTURE.md section 24](../architecture/ARCHITECTURE.md#24-virtual-tables-the-central-table-layer); how BI reads the layer is
+[ARCHITECTURE.md §28 section 18](../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana).
 
 The outputs below are real: the shipped BI datasets and models as migrated into `config/tables/bi` (where they ship) beside the tutorial's own two tables and model, and the
 test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties).
@@ -39,13 +40,14 @@ test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties
 9. [The migration: tables migrate](#9-the-migration-tables-migrate)
 10. [Problem codes](#10-problem-codes)
 11. [The editors](#11-the-editors)
+12. [Measures in a model: filter context, and what is refused](#12-measures-in-a-model-filter-context-and-what-is-refused)
 
 ## 1. Where definitions live
 
 | Where | What |
 |---|---|
 | `config/tables/<domain>/<name>.table.yaml` | one virtual table per file, in its domain's folder (`config/tables/trading/trade_legs.table.yaml`) |
-| `config/tables/<domain>/<name>.model.yaml` | one model per file (migrated BI models are in `config/tables/bi/`) |
+| `config/tables/<domain>/<name>.model.yaml` | one model per file (the shipped samples: `config/tables/banking/` for the banking module's, read only while it is on, and `config/tables/bi/`) |
 | the item store (`drishti_bi_item`, kinds `table` and `model`) | stored definitions, governed as BI's items are: workspaces, review, versions (no schema change) |
 
 The catalogue reads both, checks every definition and the catalogue as a whole, and is replaced in one step when a definition changes. The
@@ -59,7 +61,7 @@ Every file starts with `rachana: 3`, the language version of the layer's files: 
 | Kind | Rule | Example |
 |---|---|---|
 | table | `<domain>.<name>`: lower case, letters, digits, underscores, starting with a letter; the domain is the file's folder | `trading.trade_legs` |
-| migrated BI dataset | the domain `bi`, hyphens as underscores | `trading-risk-trades` is `bi.trading_risk_trades` |
+| migrated BI dataset | the domain `bi`, hyphens as underscores | `trading-risk-trades` is `banking.trading_risk_trades` |
 | pack-generated dataset | the pack's name as the domain | `pack.trading.trade` is `trading.trade` |
 | model | BI's model name, kept (reports, boards and bookmarks bind it by name and major) | `trading-risk@1` |
 | a table's old name | `was: trading-risk-trades`: resolves for one release, with a warning wherever it is used | |
@@ -73,7 +75,7 @@ one source, each with its own columns, grain and filter (`trading.trade_summary`
 
 ```yaml
 rachana: 3
-table: bi.trading_cashflows_cashflows
+table: banking.trading_cashflows_cashflows
 was: trading-cashflows-cashflows             # the name before, one release
 version: 1.0.0
 title: "Trade legs and cashflows: cashflows"
@@ -149,10 +151,10 @@ rachana: 3
 model: trading-risk
 version: 1.0.0
 tables:
-  trades:         { table: bi.trading_risk_trades, role: fact }
-  netting_sets:   { table: bi.trading_risk_netting_sets, role: fact }
-  counterparties: { table: bi.trading_risk_counterparties, role: dimension }
-  desks:          { table: bi.trading_risk_desks, role: dimension }
+  trades:         { table: banking.trading_risk_trades, role: fact }
+  netting_sets:   { table: banking.trading_risk_netting_sets, role: fact }
+  counterparties: { table: banking.trading_risk_counterparties, role: dimension }
+  desks:          { table: banking.trading_risk_desks, role: dimension }
 relationships:
   - { from: trades.DESK, to: desks.id }
   - { from: trades.NETTING_SET, to: netting_sets.id, active: false }
@@ -208,7 +210,7 @@ on the exposure table keeps the exposure rows that share a key (a dimension both
 between the two) with the trades the desk head sees, so she sees the exposure of the counterparties her desks trade with and nothing
 more. BI's engine works it out over the other table with that table's own rules; a model where the two share no key refuses the question,
 and a table with such a rule read on its own shows that role no rows. `tables migrate` writes it wherever an old dataset's rule named
-another table (nobody sees more data after the upgrade; BI_DESIGN.md 8.5). A live table's history follows its table's rules the same way,
+another table (nobody sees more data after the upgrade; ARCHITECTURE.md §28 8.5). A live table's history follows its table's rules the same way,
 on its group columns.
 
 Before the table's own rules, a read is a read of the source as the reader: their row rules and masks on the source kind apply to every
@@ -239,12 +241,12 @@ The command line reads definitions and sample files only; it starts no server. R
 
 ```text
 $ drishti.py tables list
-table  bi.counterparty_exposure_counterparties@1.0.0  from kind, 4 columns, materialize on-load
-table  bi.counterparty_exposure_official_counterparties@1.0.0  from table, 0 columns, materialize on-load
+table  banking.counterparty_exposure_counterparties@1.0.0  from kind, 4 columns, materialize on-load
+table  banking.counterparty_exposure_official_counterparties@1.0.0  from table, 0 columns, materialize on-load
 ...
-table  bi.live_trading_trade@1.0.0  from kind, 14 columns, materialize live
-table  bi.trading_cashflows_cashflows@1.0.0  from kind, grain $.LEGS[*].CASH_FLOWS[*], 9 columns, materialize on-load
-table  bi.trading_risk_trades@1.0.0  from kind, 17 columns, materialize on-load
+table  banking.live_trading_trade@1.0.0  from kind, 14 columns, materialize live
+table  banking.trading_cashflows_cashflows@1.0.0  from kind, grain $.LEGS[*].CASH_FLOWS[*], 9 columns, materialize on-load
+table  banking.trading_risk_trades@1.0.0  from kind, 17 columns, materialize on-load
 table  core.books@1.0.0  from kind, 3 columns, materialize none
 table  trading.trade_legs@1.0.0  from kind, grain $.LEGS[*], 8 columns, materialize on-load
 model  trading-risk@1.0.0  7 tables, 17 measures
@@ -265,7 +267,7 @@ exits 1 when it finds an error. With `--sample TABLE=FILE.jsonl` it also checks 
 business date, every path present in some row.
 
 ```text
-$ drishti.py tables preview bi.trading_cashflows_cashflows --sample trades.jsonl --limit 5
+$ drishti.py tables preview banking.trading_cashflows_cashflows --sample trades.jsonl --limit 5
 id	business_date	index	LEG_ID	CURRENCY	FLOW_TYPE	FLOW_ID	PAYMENT_DATE	START_DATE	END_DATE	NOTIONAL	RATE
 row-1		0	1	USD		5000028	2026-11-03	2026-11-01	2026-11-01	1.484794E7
 row-1		0	2	USD		5000029	2026-11-03	2026-11-01	2026-11-01	1.1878352E7
@@ -279,11 +281,11 @@ A sample is JSON Lines (plain or `.gz`), one entity a line: the document itself,
 The preview expands the grain, walks `$`, `@` and `^`, evaluates filters and calculated columns with Rachana, and shows at most 10,000 rows.
 A sample has no entity id or business date unless it is in the lake's form: the preview numbers its documents (`row-1`). `related(...)`
 reads another table's sample given with `--related TABLE=FILE.jsonl` (repeatable), and `fx(...)` the spot rates of `--fx FILE.jsonl`
-(documents with `PAIR_NAME: "EUR/USD"` and `MID`, the market-data pack's `fx-spot`: a pair as quoted, its inverse, or through USD); without
+(documents with `PAIR_NAME: "EUR/USD"` and `MID`, the market-data pack's [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)): a pair as quoted, its inverse, or through USD); without
 them `related` finds nothing and only a currency to itself converts.
 
 ```text
-$ drishti.py tables lineage bi.trading_risk_trades
+$ drishti.py tables lineage banking.trading_risk_trades
 used by  model trading-risk: reads it as trades (fact)
 ```
 
@@ -420,7 +422,7 @@ their models. Run against a `config/tables` that already holds tables of its own
 ## 11. The editors
 
 **Build › Tables & models** (`/build/tables`; also from BI's rail) is one screen for every table, virtual table, semantic model and
-Python-driven table. The designs and the mock-ups the product owner chose are in [EDITORS.md](../architecture/EDITORS.md). Opening it needs
+Python-driven table. The designs and the mock-ups the product owner chose are in [EDITORS.md](../architecture/SHARED_SCREENS.md#7-the-editors-one-pattern-for-every-object-people-author). Opening it needs
 the `bi` power; saving and proposing need `bi-author` (or an administrator); a person without it reads the YAML and the preview but cannot
 change them.
 
@@ -517,10 +519,10 @@ tests:
 | **Runs** | on demand and kept per business date, or on each load of an input; the compute pool and the time and memory limits |
 | **Templates** | join and derive, resample a series, statistics per group, a file or feed from an approved source: each writes the code, the inputs and the contract |
 | **Notebook → Turn into table** | cells become the build function: `drishti.table("domain.name")` becomes an input, the imports move to the top, the last expression is returned, and the contract is proposed |
-| **Sample run** | reads each input as you may see it (a table by name, or a model query), runs the build function on the server's compute pool `python` (the strict sandbox of [BI_GUIDE.md section 34](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), section 7), and checks the rows against the contract: each contract column there and of its type, the keys unique and the never-empty columns filled, each failure said in words in the checks; the first 20 rows show. Needs `bi-author`; where the server cannot run Python safely (compute off, Windows) the button is off and says why. The Notebook's **Run cells on the server** turns the cells into a build function and runs it the same way |
+| **Sample run** | reads each input as you may see it (a table by name, or a model query), runs the build function on the server's compute pool `python` (the strict sandbox of [REPORTS_GUIDE.md section 34](NOTEBOOK_GUIDE.md#3-python-measures-and-visuals), section 7), and checks the rows against the contract: each contract column there and of its type, the keys unique and the never-empty columns filled, each failure said in words in the checks; the first 20 rows show. Needs `bi-author`; where the server cannot run Python safely (compute off, Windows) the button is off and says why. The Notebook's **Run cells on the server** turns the cells into a build function and runs it the same way |
 
 **Where the code runs.** On the server's compute pool `python`, never in the console or the browser, in the strict sandbox of
-[PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write): the inputs read as the person the run
+[NOTEBOOK_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime): the inputs read as the person the run
 is for (their row rules and masks), the pinned libraries only (`config/compute/locks/python.lock`), the build function's time and memory limits, no
 network (a file or feed from an approved source is read by the server and handed in as an input), files only in its own folder; every run is audited.
 When BI reads the table, the same function runs for the reader and its rows are checked against the contract: a column missing or of another type is
@@ -550,3 +552,47 @@ Everything the screen shows is computed on the server, for the person who asks: 
 
 The same definitions are checked on the command line by `drishti.py tables check` (section 8); a saved draft is a BI item of kind `table` or
 `model` in the layer's form (`rachana: 3`).
+
+## 12. Measures in a model: filter context, and what is refused
+
+Every expression is written in one of four scopes, decided by where it stands: **row** (a column's `expr`, a `filter`), **rule** (a
+table's `rules`, a model's `security.rows`), **aggregate** (a model's measures, MQ `define` and `having`) and **context** (the first
+argument of `calc`, `share_of`, `parent_of`, `as_of`). What each scope may name: [ARCHITECTURE.md §28 section
+18.2](../architecture/ARCHITECTURE.md#284-the-expression-language-del-and-its-checks). Every function, with its arguments and where it runs:
+[FUNCTIONS.md](FUNCTIONS.md).
+
+A measure is evaluated per group of the answer in four layers: the reader's **security** (fixed: no function touches it), the **query**
+(MQ `where`, report, page and visual filters, slicers, drill, cross-filter), the **group** (the current group's values) and the
+**measure**'s own `where =` and `calc` edits. The context functions edit the query and group layers:
+
+```yaml
+measures:
+  MTM:             { expr: "sum(trades.MTM)" }
+  Open MTM:        { expr: "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)" }
+  MTM all desks:   { expr: "calc(measure('MTM'), ignore = [desks.NAME])" }        # the desk filter dropped
+  MTM % of total:  { expr: "share_of(measure('MTM'), over = ALL)", format: share } # of everything you may see
+  MTM % of parent: { expr: "parent_of(measure('MTM'), hierarchy = 'Desk and book')" }
+  MTM day on day:  { expr: "measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))" }
+  MTM ytd:         { expr: "ytd(sum(trades.MTM), trades.TRADE_DATE)" }
+  Closing balance: { expr: "latest(sum(accounts.BALANCE), accounts.business_date)" }
+```
+
+`ignore = ALL` means everything **you** may see: security is never in scope. `share_of` and `parent_of` drop filters, so a book's share
+of the total stays a share of everything you may see whatever the slicers say; the pivot's `pct_of_total` and `pct_of_parent` are shares
+of the totals the answer shows. Context functions nest at most three deep; iteration is explicit (`avg_by(sum(trades.MTM), by = [desks.NAME])`),
+never a silent context transition. A literal mapping reads better as `switch(payments.CURRENCY, 'JPY', 1 / 148.2, 'EUR', 1.174, null)`
+than as a chain of `? :`.
+
+**What is refused, and why.**
+
+| Refused | Why |
+|---|---|
+| any function that edits the security layer or adds rows a rule removed | nothing adds rights |
+| an aggregate in a column, a filter or a rule; a bare column outside an aggregate in a measure (`DRS-9127`) | a column is one value per row, a measure one value per group |
+| a document path in a measure (`sum(trades.LEGS[*].NOTIONAL)`) | add the path as a table column, so every consumer reads the same figure |
+| a filter, sort, `in` or grouping on a masked column (`DRS-9161`) | a hidden value must not be inferred from what a filter keeps |
+| `reduce` with `+` over a list | an aggregate is the engine's (`sum`) |
+| `as_of` with a date that depends on a row (`DRS-9166`), or on a live table (`DRS-9157`) | the second plan is bound to one date before the query runs |
+| context functions nested deeper than three | the plans stay bounded and readable |
+| `ctl.x`, `link`, `fmt` in tables and models | display concerns of a Sutra; a column or a measure has a `format` |
+| VaR, ES, exposure, FRTB-SA or SIMM as an aggregate over a vector or a table | they come only from their engines, through `measure('VAR', scope)` |

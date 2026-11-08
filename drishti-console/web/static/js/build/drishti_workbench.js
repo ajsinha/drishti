@@ -24,7 +24,7 @@
   if (!root) { return; }
   var WB = window.Drishti.WB, $ = function (s, r) { return (r || root).querySelector(s); }, $$ = function (s, r) { return Array.prototype.slice.call((r || root).querySelectorAll(s)); };
   var d = root.dataset, init = JSON.parse(d.init || '{}');
-  var store = WB.Store({ id: d.id, kind: d.kind, rev: parseInt(d.rev, 10), yaml: $('[data-yaml-src]').value, about: init.about || '', form: init.form || '', samples: init.samples.map(function (s) { return s.name; }), opsAt: init.opsAt, opsCount: init.opsCount, status: init.status });
+  var store = WB.Store({ id: d.id, kind: d.kind, rev: parseInt(d.rev, 10), yaml: $('[data-yaml-src]').getAttribute('data-text') || '', about: init.about || '', form: init.form || '', samples: init.samples.map(function (s) { return s.name; }), opsAt: init.opsAt, opsCount: init.opsCount, status: init.status });
   store.state.sampleInfo = init.samples;
 store.state.baseMoved = init.baseMoved || null;
   var live = $('[data-live]'), status = $('[data-say]'), stale = 0;
@@ -73,15 +73,9 @@ store.state.baseMoved = init.baseMoved || null;
   // ---- the parts ---------------------------------------------------------------------------------------------------------------
   var canvas, inspector, actions, data, versions, about, form, controls;
   var schemaP = fetch('/studio/schema').then(function (r) { return r.json(); });
-  var toastTimer = 0;
+  var toasts = new window.Drishti.elements.core.ToastTray({ bare: true, single: true, timeout: 8000 });     // one toast at a time, with its action (drishti-core)
   function toast(text, label, run) {
-    var old = $('[data-toast]'); if (old) { old.remove(); }
-    clearTimeout(toastTimer);
-    var t = WB.el('div', 'wb-toast', null, { 'data-toast': '' }), b = WB.el('button', 'btn-pill btn-accent', label, { type: 'button' });
-    t.appendChild(WB.el('span', null, text + ' · ')); t.appendChild(b);
-    b.addEventListener('click', function () { clearTimeout(toastTimer); t.remove(); run(); });
-    document.body.appendChild(t);
-    toastTimer = setTimeout(function () { t.remove(); }, 8000);
+    toasts.show({ className: 'wb-toast', attrs: { 'data-toast': '' }, text: text + ' · ', action: { label: label, className: 'btn-pill btn-accent', run: run } });
   }
   var ui = { toast: toast, design: function () { centre.show('design'); }, required: function (k) { return inspector ? inspector.required(k) : []; }, canvas: function () { return canvas; }, inspect: function (s, o) { if (s) { right.show('inspector'); } inspector.show(s, o); }, selection: function () { return canvas.selected(); } };
   actions = WB.Actions(store, ui);
@@ -93,7 +87,7 @@ store.state.baseMoved = init.baseMoved || null;
   });
   inspector = WB.Inspector($('[data-inspector]'), store, function () { return schemaP; }, { remove: function (id) { return canvas.remove(id); }, paths: function () { return data ? data.fields() : []; }, actions: actions });
   data = WB.Data($('[data-left]'), store, actions, { maxFile: parseFloat(d.maxFileMb) * 1048576, selection: function () { return canvas.selected(); } });
-  WB.palette.render($('[data-palette]'), function (kind) { actions.add(kind, actions.afterSelected()); }, $('[data-kind-filter]'));
+  WB.palette.render($('[data-palette]'), function (kind) { actions.add(kind, actions.afterSelected()); });
   $('[data-add-panel]').addEventListener('click', function () { actions.menuAdd(this); });
   var notes = WB.Notes($('[data-notes]'), store, init.notes || '');
   var yaml = WB.YamlTab($('[data-yaml-src]'), $('[data-field-help]'), store);
@@ -142,11 +136,11 @@ store.state.baseMoved = init.baseMoved || null;
       store.emit('say', b.dataset.width === 'phone' ? 'Phone width.' : 'Desktop width.');
     });
   });
-  var themeSel = $('[data-theme-pick]'), choices = $$('[data-theme-choice]', document);
+  var themeSel = $('[data-theme-pick]'), choices = $$('[data-theme-choice]', document);       // drishti-inputs' Select: (current), then the themes
   if (choices.length) {
-    choices.forEach(function (c) { themeSel.appendChild(WB.el('option', null, c.textContent.trim(), { value: c.dataset.themeChoice })); });
-    themeSel.value = document.documentElement.getAttribute('data-theme') || '';
-    themeSel.addEventListener('change', function () { var c = choices.filter(function (x) { return x.dataset.themeChoice === themeSel.value; })[0]; if (c) { c.click(); window.dispatchEvent(new Event('resize')); } });
+    themeSel.component.setOptions(themeSel.component.options.concat(choices.map(function (c) { return { value: c.dataset.themeChoice, label: c.textContent.trim() }; })),
+      document.documentElement.getAttribute('data-theme') || '');
+    themeSel.addEventListener('drishti:change', function (e) { var c = choices.filter(function (x) { return x.dataset.themeChoice === e.detail.value; })[0]; if (c) { c.click(); window.dispatchEvent(new Event('resize')); } });
   } else { themeSel.parentNode.hidden = true; }
 
   // ---- preview with a file ----------------------------------------------------------------------------------------------------
@@ -155,7 +149,7 @@ store.state.baseMoved = init.baseMoved || null;
     var f = pf.files[0];
     pf.value = '';
     if (!f) { return; }
-    if (f.size > parseFloat(d.maxFileMb) * 1048576) { store.emit('say', 'This file is too large: ' + (f.size / 1048576).toFixed(1) + ' MB; the limit is ' + d.maxFileMb + ' MB', true); return; }
+    if (f.size > parseFloat(d.maxFileMb) * 1048576) { store.emit('say', 'This file is too large: ' + window.Drishti.elements.core.formatBytes(f.size) + '; the limit is ' + d.maxFileMb + ' MB', true); return; }
     f.text().then(function (t) {
       var doc;
       try { doc = /\.jsonl$/i.test(f.name) ? JSON.parse(t.split('\n').filter(Boolean)[0]) : JSON.parse(t); } catch (e) { store.emit('say', f.name + ' is not valid JSON: ' + e.message, true); return; }
@@ -186,15 +180,14 @@ store.state.baseMoved = init.baseMoved || null;
     });
   }
   function typing(t) { var tag = (t.tagName || '').toLowerCase(); return tag === 'input' || tag === 'textarea' || tag === 'select' || t.isContentEditable || !!(t.closest && t.closest('.CodeMirror')); }
-  document.addEventListener('keydown', function (e) {
-    var k = e.key.toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === 'z' || k === 'y') && !typing(e.target)) {
-      e.preventDefault();
-      if (k === 'y' || e.shiftKey) { store.redo(); } else { store.undo(); }
-    } else if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && (k === 'n') && e.target.closest && e.target.closest('[data-preview]') && e.target.matches('.pnl[data-panel], [data-wb-region]')) {
-      e.preventDefault(); actions.menuAdd();
-    }
-  });
+  var K = window.Drishti.keys, notTyping = function (e) { return !typing(e.target); };
+  K.register({ id: 'build.undo', keys: ['Ctrl+Z', 'Meta+Z'], scope: 'screen', area: 'build-design', group: 'Workbench', description: 'Undo', when: notTyping,
+    run: function () { store.undo(); } });
+  K.register({ id: 'build.redo', keys: ['Ctrl+Y', 'Meta+Y', 'Ctrl+Shift+Z', 'Shift+Meta+Z', 'Ctrl+Shift+Y', 'Shift+Meta+Y'], scope: 'screen', area: 'build-design', group: 'Workbench',
+    description: 'Redo', when: notTyping, run: function () { store.redo(); } });
+  K.register({ id: 'build.add', keys: ['N'], scope: 'panel', area: 'build-canvas', group: 'Workbench', description: 'On a panel or region of the canvas: add a panel',
+    when: function (e) { return e.target.closest && e.target.closest('[data-preview]') && e.target.matches('.pnl[data-panel], [data-wb-region]'); },
+    run: function () { actions.menuAdd(); } });
   // an edit still waiting for its pause is sent before F1 or a link takes the page away (UX-22); Escape in the inspector goes back to the panel (UX-10)
   function held() {
     var p = [yaml.flush(), inspector.flush(), notes.flush(), about.flush(), form.flush(), controls.flush()];

@@ -12,13 +12,14 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): a Parametric toggle on the
+"""Parametric VaR on the VaR explorer (docs/guides/VAR_GUIDE.md; VAR_GUIDE.md section 3.12): a Parametric toggle on the
 explorer (pm=1) and, when on, the tiles, the tree's columns and the Normal curve toggle; PVAR is only an alias that opens the explorer with
 the toggle on, on the scope and lens VAR would read: no screen, view or menu item of its own; the console passes parametric= and matrix= to
 the engine and nothing else."""
 import pathlib
 
-from routes.var_routes import pvar_command, var_command, var_suggestions
+from plugins.banking.routes.var_routes import pvar_command, var_command, var_suggestions
+import engine_fakes  # noqa: E402
 
 
 def test_pvar_opens_the_explorer_in_parametric_mode():
@@ -50,7 +51,7 @@ def test_the_explorer_has_a_parametric_toggle_and_no_views_of_its_own(client):
 
 
 def test_no_menu_item_names_parametric_var(client):
-    menus = (pathlib.Path(__file__).resolve().parents[1] / "config" / "menus.yaml").read_text()
+    menus = (pathlib.Path(__file__).resolve().parents[1] / "config" / "sitemap.yaml").read_text()
     assert "PVAR" not in menus and "Parametric VaR" not in menus
 
 
@@ -60,7 +61,7 @@ def test_the_proxy_passes_parametric_and_matrix_on(client, backend, monkeypatch)
     async def var(method, path, ident, body=None, raw=False, **params):
         seen.append((method, path, params))
         return {"rows": [], "parametric": {"var": 1}}
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     r = client.get("/api/var/scope?scope=BANK&parametric=false")
     assert r.status_code == 200
     assert seen[-1][2].get("parametric") == "false"

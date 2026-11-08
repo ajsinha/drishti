@@ -13,19 +13,19 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Drishti: server + console. Secrets come from the environment or an .env file that is never committed:
-#   DRISHTI_TOKEN_SECRET, DRISHTI_SESSION_SECRET (>= 32 characters each; the token secret is a master key: OPERATIONS.md 9)
+#   DRISHTI_TOKEN_SECRET, DRISHTI_SESSION_SECRET (>= 32 characters each; the token secret is a master key: OPERATIONS_GUIDE.md 9)
 #   DRISHTI_ADMIN_USER, DRISHTI_ADMIN_PASSWORD (the first administrator, created on first start; at least 10 characters).
 #   The development admin with its well-known password is off, and nothing here has a default password.
 #   docker compose -f deploy/docker/compose.yaml up
 services:
   server:
-    image: drishti-server:2.9.11.d
+    image: drishti-server:2.9.11.g
     build: { context: ../.., dockerfile: deploy/docker/server.Dockerfile }
     environment:
       DRISHTI_SECURITY_ENABLED: "true"
       DRISHTI_TOKEN_SECRET: ${DRISHTI_TOKEN_SECRET:?set DRISHTI_TOKEN_SECRET}
-      DRISHTI_PACKS: ${DRISHTI_PACKS:-default}   # default: the edition's packs, else config/editions/default-packs.yaml
-      DRISHTI_EDITION: ${DRISHTI_EDITION:-}   # blank: the full Drishti; risk: Drishti Risk (docs/admin/EDITIONS.md)
+      DRISHTI_PACKS: ${DRISHTI_PACKS:-default}   # default: the edition's packs, else config/packs/default-packs.yaml
+      DRISHTI_EDITION: ${DRISHTI_EDITION:-}   # blank: the full Drishti; risk: Drishti Risk (docs/guides/ADMIN_GUIDE.md)
       DRISHTI_LENSES: ${DRISHTI_LENSES-risk,world,market,trading}   # the default lenses; set DRISHTI_LENSES= (empty) to turn them off
       DRISHTI_SEED_ADMIN: "true"              # creates the one administrator below on first start, never the development admin
       DRISHTI_SEED_USERNAME: ${DRISHTI_ADMIN_USER:?set DRISHTI_ADMIN_USER}
@@ -40,7 +40,7 @@ services:
       - drishti-identity:/opt/drishti/data/identity
     ports: ["127.0.0.1:18480:18480"]      # the console reaches the server over the compose network; publish wider only behind TLS
   console:
-    image: drishti-console:2.9.11.d
+    image: drishti-console:2.9.11.g
     build: { context: ../.., dockerfile: deploy/docker/console.Dockerfile }
     depends_on: [server]
     environment:

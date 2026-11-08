@@ -41,6 +41,9 @@ _ALIGN = re.compile(r'\s+style="text-align:\s*(left|right|center);?"')
 _CODE = re.compile(r'<pre><code(?: class="language-([\w+-]+)")?>(.*?)</code></pre>', re.S)
 _BOX = {"tip": "tip", "warning": "warn", "danger": "warn", "note": "concept", "info": "concept", "example": "concept"}
 _TAG = re.compile(r"<[^>]+>")
+# Rendered pages by file, shared by every library (each pack set has its own library, the same core guides): rendering all of them takes
+# seconds, and the global search reads every page's text, so warm() fills it once in a worker thread when the console starts.
+_RENDERED: dict[Path, tuple[float, dict]] = {}
 _MARKUP = re.compile(r"</?(?:code|em|strong|b|i|a|span|kbd|del|sub|sup)\b[^>]*>")   # inline markup only: "<kind>" in a heading is text
 # A screenshot in a guide: fitted to its column by drishti_help.css and wrapped in a link that opens it full size (UX-03).
 _RELATIVE_SRC = re.compile(r'(<img\b[^>]*?\b)src="((?![a-z][a-z0-9+.-]*:|/|#|data:)[^"]+)"', re.I)
@@ -108,9 +111,11 @@ class Guide:
     listed: bool = True
     packs: tuple = ()                 # the packs the guide is about (a pack's own guide; help.yaml packs:), for an edition's help filter
     roles: tuple = ()                 # help.yaml roles: only people with one of these roles (or an administrator) see the guide; empty = everyone
-    engine: str = ""                  # help.yaml engine: the compute engine the guide is about; hidden while it runs nowhere (COMPUTE_ENGINES.md)
+    engine: str = ""                  # help.yaml engine: the compute engine the guide is about; hidden while it runs nowhere (ADMIN_GUIDE.md)
     pair: str = ""                    # help.yaml pair: the tutorial drawn beside this guide on its section's page
     group: str = ""                   # the group of its section it sits in (help.yaml groups[].title)
+    domain: str = ""                  # help.yaml domain: the domain module the page belongs to (banking, capitalmarkets, economy); core when not said
+    lenses: tuple = ()                # help.yaml lenses: the lenses that show the page (none said: every lens; the full product shows it)
 
     def permits(self, ident) -> bool:
         """Whether this person may see the guide: an unrestricted guide anyone; a guide with ``roles:`` (an internal page such as the
@@ -125,17 +130,25 @@ class Guide:
 class Library:
     """Loads the catalogue once; renders and searches guides on demand. Thread-safe for reads.
 
-    ``categories`` are the help centre's sections (help.yaml ``sections:``), in order: ``{id, name, icon, blurb, roles, groups, guides}``,
+    ``categories`` are the help centre's sections (the sitemap's ``help-sections:``, their pages from help.yaml ``sections:``), in order: ``{id, name, icon, blurb, roles, groups, guides}``,
     each group ``{title, words, guides}`` and ``guides`` every page of the section in order; a page's ``category`` is its section's id."""
 
-    def __init__(self, console_dir: Path, catalogue: Path, docs_dir: Path, packs: list | None = None):
+    def __init__(self, console_dir: Path, catalogue: Path, docs_dir: Path, packs: list | None = None, sections: list | None = None):
+        """``sections``: the sections' heads in order ({id, name, icon, blurb, roles}; default: the sitemap's help-sections:); the
+        catalogue lists each section's groups of pages by its id."""
         self.docs_dir = docs_dir
         data = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
+        if sections is None:
+            from core.menus import help_sections
+            sections = help_sections(console_dir)
+        from core import modules
+        pages = {str(sec.get("id")): sec for sec in [*(data.get("sections") or []), *modules.help_pages()]}
         self.categories = []
         self.guides: dict[str, Guide] = {}
         self.aliases = {str(k): str(v) for k, v in (data.get("aliases") or {}).items()}
         self.documents = {str(k): str(v) for k, v in (data.get("documents") or {}).items()}
-        for sec in data.get("sections", []):
+        for head in sections:
+            sec = {**pages.get(str(head["id"]), {}), **head}
             groups = []
             for grp in sec.get("groups", []):
                 items = []
@@ -145,7 +158,8 @@ class Library:
                     guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
                                   g.get("kind", "reference" if src else "guide"), sec["id"], path, packs=tuple(g.get("packs") or ()),
                                   roles=tuple(str(r) for r in (g.get("roles") or ())), engine=str(g.get("engine") or ""),
-                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""))
+                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""), domain=str(g.get("domain") or ""),
+                                  lenses=tuple(str(x) for x in (g.get("lenses") or ())))
                     if path.exists():
                         self.guides[guide.slug] = guide
                         items.append(guide)
@@ -176,7 +190,6 @@ class Library:
         self.by_file = {g.path.resolve(): g.slug for g in self.guides.values()}
         self.listed = sum(1 for g in self.guides.values() if g.listed and not g.roles)
         self._documents(cats)
-        self._cache: dict[str, tuple[float, dict]] = {}
 
     def section_id(self, name: str) -> str:
         """A section's id from its id or an old name (help.yaml ``aliases:``: a pack guide's category, an edition's help.categories, the
@@ -212,7 +225,7 @@ class Library:
     def render(self, slug: str) -> dict:
         g = self.guides[slug]
         mtime = g.path.stat().st_mtime
-        hit = self._cache.get(slug)
+        hit = _RENDERED.get(g.path)
         if hit and hit[0] == mtime:
             return hit[1]
         body, md = self._html(g.path)
@@ -220,8 +233,19 @@ class Library:
                for t in md.toc_tokens]
         text = html.unescape(_TAG.sub(" ", body))
         out = {"html": body, "toc": toc, "text": re.sub(r"\s+", " ", text)}
-        self._cache[slug] = (mtime, out)
+        _RENDERED[g.path] = (mtime, out)
         return out
+
+    def warm(self) -> int:
+        """Renders every page not rendered yet (in a worker thread: the first global search then reads cached text); the count."""
+        n = 0
+        for slug in list(self.guides):
+            try:
+                self.render(slug)
+                n += 1
+            except Exception:  # noqa: BLE001 - a page that does not render is shown with its error when opened, as before
+                pass
+        return n
 
     def _html(self, path: Path) -> tuple[str, markdown.Markdown]:
         """A markdown file as help HTML: examples, boxes, tables, screenshots and links to other documents."""
@@ -289,29 +313,6 @@ class Library:
         except ValueError:
             shown = Path(target)
         return f'<span class="help-repo" title="In the repository: {html.escape(str(shown))}">{m.group(3)}</span>'
-
-    def search(self, q: str, limit: int = 20, section: str = "") -> list[dict]:
-        """The guides whose text holds every word of ``q``, best first; with ``section`` only that section's listed pages (the
-        section-scoped search of its page)."""
-        words = [w for w in re.split(r"\W+", q.lower()) if len(w) > 1]
-        if not words:
-            return []
-        hits = []
-        sid = self.section_id(section) if section else ""
-        for g in self.guides.values():
-            if not g.listed and "qa" in g.path.parts:
-                continue                             # the QA records (history) are reachable by link, not search
-            if sid and (g.category != sid or not g.listed):
-                continue
-            text = self.render(g.slug)["text"]
-            low = text.lower()
-            score = sum(low.count(w) for w in words) + sum(10 for w in words if w in g.title.lower())
-            if score and all(w in low or w in g.title.lower() for w in words):
-                i = min((low.find(w) for w in words if low.find(w) >= 0), default=0)
-                snippet = text[max(0, i - 80): i + 160].strip()
-                hits.append({"guide": g, "score": score, "snippet": snippet})
-        hits.sort(key=lambda h: -h["score"])
-        return hits[:limit]
 
 
 def _full_size(m: re.Match) -> str:
