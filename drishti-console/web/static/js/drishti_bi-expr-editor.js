@@ -110,6 +110,8 @@
     input.setAttribute('data-di-code', 'rachana');
     const editor = window.Drishti.elements.inputs.upgradeCodeArea(input);
     row.append(help, tryBtn || '');
+    const fold = wrap.closest('details');                     // drawn while folded away: laid out again when it opens
+    if (fold) { fold.addEventListener('toggle', () => { if (fold.open) { editor.refresh(); } }); }
     const cm = () => editor.cm;
     const caret = () => (cm() ? cm().indexFromPos(cm().getCursor()) : input.value.length);
     let timer = null, seq = 0, lastChecked = null, fns = [];
