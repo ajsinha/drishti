@@ -42,7 +42,7 @@ export class GridPointer {
     }
     if (x && x.el.classList.contains('dg-nadd') && !this.drag) {
       const col = this.model.shownColumns()[x.c];
-      this.view.notes.showTip(nonAdditiveNote(col.measure || col.header, x.el.textContent), x.el);
+      if (col) { this.view.notes.showTip(nonAdditiveNote(col.measure || col.header, x.el.textContent), x.el); }   // a column gone since the cell was drawn: no note
     } else { this.view.notes.hideTip(); }
   }
 

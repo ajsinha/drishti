@@ -44,10 +44,10 @@ export function buildShell(v) {
   R.status = h(doc, 'div', { cls: 'dg-status', attrs: { 'aria-label': 'Status' } });
   R.center = h(doc, 'div', { cls: 'dg-gridarea' }, [v.body.scroller, R.status]);
   if (L === 'panel') {
-    R.side = h(doc, 'aside', { cls: 'dg-side', attrs: { 'aria-label': 'Pivot tool panel' } }, [h(doc, 'div', { cls: 'dg-side-head', text: 'Pivot' }), R.wells]);
+    R.side = h(doc, 'aside', { cls: 'dg-side', attrs: { 'aria-label': 'Pivot panes: Build and Fields' } }, [R.wells]);
     R.card = h(doc, 'div', { cls: 'dg-card', attrs: { role: 'dialog', 'aria-label': 'Explain', hidden: true } });
     R.center.insertBefore(R.toolbar, R.center.firstChild);
-    R.main = h(doc, 'div', { cls: 'dg-main' }, [R.center, R.side, R.card]);
+    R.main = h(doc, 'div', { cls: 'dg-main' + (v.ui.panesClosed ? ' dg-panes-closed' : '') }, [R.center, R.side, R.card]);
     root.append(R.main);
   } else if (L === 'terminal') {
     R.cmd = h(doc, 'div', { cls: 'dg-cmd' });

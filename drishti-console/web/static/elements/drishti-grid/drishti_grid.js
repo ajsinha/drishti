@@ -180,7 +180,9 @@
           const hay = fold(c.header + ' ' + c.id + ' ' + c.description + ' ' + (c.group || ''));
           return words.every((w) => hay.indexOf(w) >= 0);
         }).map((c) => ({ id: c.id, header: c.header, type: c.type, group: c.group, rowGroup: !!c.enableRowGroup, pivot: !!c.enablePivot,
-          value: !!c.enableValue, additive: c.additive !== false, description: c.description }));
+          value: !!c.enableValue, additive: c.additive !== false, description: c.description,
+          role: c.role || (c.measure && !c.enableRowGroup ? 'measure' : 'field'), folder: c.folder || null, more: !!c.listHidden, unit: c.unit || null,
+          measure: c.measure || null }));
       }
       getState() { return this.cols.map((c) => ({ id: c.id, width: c.width, pinned: c.pinned, hidden: c.hidden })); }
       setState(state) {
@@ -1678,6 +1680,15 @@
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
     const WELLS = Object.freeze(['rows', 'columns', 'values', 'filters']);
     const VALUE_FUNCS = Object.freeze(['sum', 'count', 'avg', 'min', 'max', 'count_distinct', 'first', 'last']);
+    const FUNC_LABELS = Object.freeze({ sum: 'Sum', count: 'Count', count_distinct: 'Distinct count', distinct: 'Distinct count', avg: 'Average',
+      wavg: 'Weighted average…', min: 'Min', max: 'Max', median: 'Median', percentile: 'Percentile…', var_samp: 'Variance', var_pop: 'Variance (population)',
+      stddev_samp: 'Std dev', stddev_pop: 'Std dev (population)', first: 'First', last: 'Last', custom: 'Custom ƒ…' });
+    const FUNC_ARGS = Object.freeze({ wavg: { kind: 'field', label: 'Weight' }, percentile: { kind: 'number', label: 'Quantile (0 to 1)', default: 0.95 } });
+    function funcLabel(name) {
+      if (FUNC_LABELS[name]) { return FUNC_LABELS[name]; }
+      const f = aggFunc(name);
+      return f ? f.label : name;
+    }
     class WellsModel {
       constructor(columns, initial) {
         this.columns = columns;
@@ -1685,19 +1696,78 @@
         this.state = { rows: [], columns: [], values: [], filters: [] };
         this.serverFuncs = [];
         this.allowedFuncs = null;
+        this.hierarchies = [];
         if (initial) { this.setState(initial); }
+      }
+      setHierarchies(list) {
+        this.hierarchies = (list || []).map((x) => ({ id: String(x.id), title: x.title || String(x.id),
+          levels: (x.levels || []).map((l) => (typeof l === 'string' ? { id: l, label: l } : { id: l.id || l.field, label: l.label || l.id || l.field }))
+            .filter((l) => this.columns.get(l.id)) })).filter((x) => x.levels.length);
+      }
+      hierarchyOf(colId) { return this.hierarchies.find((x) => x.levels.some((l) => l.id === colId)) || null; }
+      segments(well) {
+        const out = [];
+        this.state[well].forEach((id, i) => {
+          const hh = this.hierarchyOf(id), last = out[out.length - 1];
+          if (hh && last && last.hierarchy === hh) { last.ids.push(id); } else { out.push({ hierarchy: hh, ids: [id], index: i }); }
+        });
+        return out;
+      }
+      stepHierarchy(well, id, dir) {
+        const hh = this.hierarchies.find((x) => x.id === id);
+        if (!hh) { return { ok: false, why: 'there is no hierarchy ' + id }; }
+        const l = this.state[well], at = hh.levels.map((x) => l.indexOf(x.id));
+        const deepest = at.reduce((m, p, k) => (p >= 0 ? k : m), -1);
+        if (dir < 0) {
+          if (deepest < 0) { return { ok: false, why: hh.title + ' is not in ' + well }; }
+          if (at.filter((p) => p >= 0).length === 1) { return { ok: false, why: hh.title + ' is at its top level: remove it with ×' }; }
+          l.splice(at[deepest], 1);
+        } else {
+          const next = deepest + 1;
+          if (next >= hh.levels.length) { return { ok: false, why: hh.title + ' has no level below ' + hh.levels[deepest].label }; }
+          const nid = hh.levels[next].id;
+          this.state.rows = this.state.rows.filter((x) => x !== nid);
+          this.state.columns = this.state.columns.filter((x) => x !== nid);
+          const list = this.state[well], after = deepest >= 0 ? list.indexOf(hh.levels[deepest].id) : list.length - 1;
+          list.splice(after + 1, 0, nid);
+        }
+        this.events.emit('changed', { well: well });
+        return { ok: true, why: null };
+      }
+      setHierarchyLevels(well, id, levels) {
+        const hh = this.hierarchies.find((x) => x.id === id);
+        if (!hh) { throw new Error('there is no hierarchy ' + id); }
+        const all = hh.levels.map((x) => x.id), keep = all.filter((x) => levels.indexOf(x) >= 0);
+        const l = this.state[well];
+        let at = l.findIndex((x) => all.indexOf(x) >= 0);
+        if (at < 0) { at = l.length; }
+        const other = well === 'rows' ? 'columns' : 'rows';
+        this.state[other] = this.state[other].filter((x) => all.indexOf(x) < 0);
+        const rest = l.filter((x, i) => all.indexOf(x) < 0 && i < at), tail = l.filter((x, i) => all.indexOf(x) < 0 && i >= at);
+        this.state[well] = rest.concat(keep, tail);
+        this.events.emit('changed', { well: well });
       }
       funcs() {
         const out = VALUE_FUNCS.filter((f) => !this.allowedFuncs || this.allowedFuncs.indexOf(f) >= 0).map((f) => ({ name: f, label: aggFunc(f).label, server: false }));
         this.serverFuncs.forEach((f) => { if (!out.some((x) => x.name === f.name)) { out.push({ name: f.name, label: f.label || f.name, server: true }); } });
         return out;
       }
-      funcLabel(name) {
-        const f = this.funcs().find((x) => x.name === name);
-        return f ? f.label : name;
+      funcsFor(colId) {
+        const c = this.columns.get(colId);
+        if (!c || (c.measure && c.additive === false) || c.perCell) { return []; }
+        const grid = this.funcs(), known = (n) => grid.find((f) => f.name === n);
+        const names = Array.isArray(c.funcs) ? c.funcs.slice() : grid.map((f) => f.name).filter((n) => c.type === 'number' || ['count', 'count_distinct', 'first', 'last', 'min', 'max'].indexOf(n) >= 0);
+        const out = names.map((n) => ({ name: n, label: funcLabel(n), server: known(n) ? known(n).server : true, disabled: false, why: null, arg: FUNC_ARGS[n] || null }));
+        const rate = c.unit === 'rate' || c.unit === 'pct';
+        if (names.indexOf('sum') < 0 && (rate || c.type !== 'number')) {
+          out.unshift({ name: 'sum', label: 'Sum', server: false, disabled: true, arg: null,
+            why: rate ? c.header + ' is a ' + (c.unit === 'pct' ? 'percentage' : 'rate') + ': it is never summed (an average or a weighted average is)' : c.header + ' is not a number: count it, or count its distinct values' });
+        }
+        return out;
       }
+      funcLabel(name) { return funcLabel(name); }
       fieldList(search) {
-        return this.columns.fields(search).map((f) => Object.assign(f, { in: WELLS.filter((w) => this.has(w, f.id)) }));
+        return this.columns.fields(search).map((f) => Object.assign(f, { in: WELLS.filter((w) => this.has(w, f.id)), hierarchy: this.hierarchyOf(f.id) }));
       }
       has(well, colId) {
         const l = this.state[well];
@@ -1710,12 +1780,13 @@
         if (well === 'rows' && !c.enableRowGroup) { return { ok: false, why: c.header + ' cannot group rows (a figure goes in Values)' }; }
         if (well === 'columns' && !c.enablePivot) { return { ok: false, why: c.header + ' cannot make columns (a figure goes in Values)' }; }
         if (well === 'values' && !c.enableValue && c.type !== 'number' && !c.enableRowGroup) { return { ok: false, why: c.header + ' is not a figure' }; }
+        if (well === 'values' && !c.measure && Array.isArray(c.funcs) && !c.funcs.length) { return { ok: false, why: c.header + ' has no function here: the source\'s values are its own measures' }; }
         if ((well === 'rows' && this.has('columns', colId)) || (well === 'columns' && this.has('rows', colId))) {
           return { ok: true, why: c.header + ' moves from ' + (well === 'rows' ? 'Columns' : 'Rows') };
         }
         return { ok: true, why: null };
       }
-      drop(colId, well, index) {
+      drop(colId, well, index, value) {
         const ok = this.canDrop(colId, well);
         if (!ok.ok) { throw new Error(ok.why); }
         const c = this.columns.get(colId);
@@ -1726,7 +1797,10 @@
           l.splice(index === undefined ? l.length : Math.max(0, Math.min(l.length, index)), 0, colId);
         } else if (well === 'values') {
           const l = this.state.values;
-          const v = { colId: colId, aggFunc: c.aggFunc || (c.type === 'number' ? 'sum' : 'count') };
+          const fs = this.funcsFor(colId).filter((f) => !f.disabled), first = fs.length ? fs[0].name : null;
+          const dflt = c.aggFunc && (!Array.isArray(c.funcs) || c.funcs.indexOf(c.aggFunc) >= 0) ? c.aggFunc : first || (c.type === 'number' ? 'sum' : 'count');
+          const v = { colId: colId, aggFunc: value && value.aggFunc ? value.aggFunc : dflt };
+          if (value && value.args) { v.args = value.args.slice(); }
           l.splice(index === undefined ? l.length : index, 0, v);
         } else {
           if (this.has('filters', colId)) { return; }
@@ -1746,16 +1820,44 @@
         l.splice(Math.max(0, Math.min(l.length, to)), 0, x);
         this.events.emit('changed', { well: well });
       }
-      setAggregation(index, func) {
+      setAggregation(index, func, args) {
         const v = this.state.values[index];
         if (!v) { throw new Error('no value ' + index); }
         const c = this.columns.get(v.colId);
-        if (c && c.additive === false) { return { ok: false, why: c.header + ' is not additive: every total is computed by the server from its members, never a ' + func + ' made in the browser' }; }
-        if (!this.funcs().some((f) => f.name === func)) { throw new Error('no aggregation ' + func + ' (' + this.funcs().map((f) => f.name).join(', ') + ')'); }
-        if (v.as && v.as === this.measureOf(v)) { delete v.as; }   // a label that was only the measure's text follows the new function
+        if (c && (c.additive === false && c.measure || c.perCell)) { return { ok: false, why: c.header + ' is computed per cell by the server from the cell\'s own members, never a ' + func + ' made of other figures' }; }
+        const fs = this.funcsFor(v.colId), f = fs.find((x) => x.name === func);
+        if (!f && !this.funcs().some((x) => x.name === func)) { throw new Error('no aggregation ' + func + ' (' + fs.map((x) => x.name).join(', ') + ')'); }
+        if (f && f.disabled) { return { ok: false, why: f.why }; }
+        if (FUNC_ARGS[func] && FUNC_ARGS[func].kind === 'field' && (!args || !this.columns.get(String(args[0])))) { return { ok: false, why: funcLabel(func) + ' needs a ' + FUNC_ARGS[func].label.toLowerCase() + ' field' }; }
+        if (FUNC_ARGS[func] && FUNC_ARGS[func].kind === 'number') {
+          const q = args && args.length ? +args[0] : FUNC_ARGS[func].default;
+          if (!(q >= 0 && q <= 1)) { return { ok: false, why: funcLabel(func) + ' needs a quantile between 0 and 1 (0.95)' }; }
+          args = [q];
+        }
+        if (v.as && (v.as === this.measureOf(v) || v.as === this.labelOf(v))) { delete v.as; }   // a label that was only the measure's text follows the new function
         v.aggFunc = func;
+        delete v.formula;
+        if (args && args.length) { v.args = args.slice(); } else { delete v.args; }
         this.events.emit('changed', { well: 'values' });
         return { ok: true, why: null };
+      }
+      setFormula(index, formula, label) {
+        const v = this.state.values[index];
+        if (!v) { throw new Error('no value ' + index); }
+        const text = String(formula || '').trim();
+        if (!text) { return { ok: false, why: 'write a formula: sum(PV) / sum(NOTIONAL)' }; }
+        v.aggFunc = 'custom';
+        v.formula = text;
+        delete v.args;
+        if (label) { v.as = label; } else if (!v.as) { v.as = text; }
+        this.events.emit('changed', { well: 'values' });
+        return { ok: true, why: null };
+      }
+      setShowAs(index, showAs) {
+        const v = this.state.values[index];
+        if (!v) { throw new Error('no value ' + index); }
+        if (showAs) { v.showAs = showAs; } else { delete v.showAs; }
+        this.events.emit('changed', { well: 'values' });
       }
       setFilter(colId, filter) {
         let f = this.state.filters.find((x) => x.colId === colId);
@@ -1772,9 +1874,22 @@
       measureOf(v) {
         const c = this.columns.get(v.colId);
         if (c && c.measure) { return c.measure; }
+        if (v.formula) { return v.formula; }
         if (v.aggFunc === 'count' && !c) { return 'count()'; }
-        return (v.aggFunc || 'sum') + '(' + (c ? c.field : v.colId) + ')';
+        const args = (v.args || []).map((a) => { const ac = typeof a === 'string' ? this.columns.get(a) : null; return ac ? ac.field : String(a); });
+        return (v.aggFunc || 'sum') + '(' + [c ? c.field : v.colId].concat(args).join(', ') + ')';
       }
+      labelOf(v) {
+        const c = this.columns.get(v.colId);
+        if (c && c.measure) { return c.header; }
+        if (v.formula) { return v.formula; }
+        const base = c ? c.header : v.colId;
+        if (!v.aggFunc || v.aggFunc === 'sum') { return base; }
+        const fn = aggFunc(v.aggFunc) ? aggFunc(v.aggFunc).label.toLowerCase() : FUNC_LABELS[v.aggFunc] ? FUNC_LABELS[v.aggFunc].replace('…', '').toLowerCase() : v.aggFunc;
+        const a = v.args && v.args.length ? (FUNC_ARGS[v.aggFunc] && FUNC_ARGS[v.aggFunc].kind === 'field' ? ' by ' + this.headerOf(String(v.args[0])) : ' ' + v.args.join(', ')) : '';
+        return base + ' (' + fn + a + ')';
+      }
+      headerOf(id) { const c = this.columns.get(id); return c ? c.header : id; }
       toView(extra) {
         const filters = {};
         this.state.filters.forEach((f) => {
@@ -1787,20 +1902,19 @@
         return Object.assign({
           rows: this.state.rows.map(field), columns: this.state.columns.map(field),
           values: this.state.values.map((v) => {
-            const c = this.columns.get(v.colId);
-            const label = v.as || (c && c.measure ? c.header : (c ? c.header : v.colId) + (v.aggFunc && v.aggFunc !== 'sum' ? ' (' + (aggFunc(v.aggFunc) ? aggFunc(v.aggFunc).label.toLowerCase() : v.aggFunc) + ')' : ''));
+            const label = v.as || this.labelOf(v);
             return v.showAs ? { measure: this.measureOf(v), as: label, showAs: v.showAs } : { measure: this.measureOf(v), as: label };
           }),
           filters: filters
         }, extra || {});
       }
     }
-    return { "WELLS": WELLS, "VALUE_FUNCS": VALUE_FUNCS, "WellsModel": WellsModel };
+    return { "WELLS": WELLS, "VALUE_FUNCS": VALUE_FUNCS, "FUNC_LABELS": FUNC_LABELS, "FUNC_ARGS": FUNC_ARGS, "funcLabel": funcLabel, "WellsModel": WellsModel };
   })();
   /* ---- src/drishti_grid-ui.js ---- */
   __m["src/drishti_grid-ui.js"] = (function () {
     const VIEW_EVENTS = Object.freeze(['layoutChanged', 'densityChanged', 'menuOpened', 'menuAction', 'chartRequested', 'drillThrough',
-      'viewSaved', 'measureSwitched', 'phoneChanged', 'explainShown', 'copied', 'exported']);
+      'viewSaved', 'measureSwitched', 'phoneChanged', 'explainShown', 'copied', 'exported', 'customizeChanged']);
     const PHONE_WIDTH = 640;
     const FUNCTION_KEYS = Object.freeze([
       { key: 'F2', action: 'explain', label: 'Explain' }, { key: 'F3', action: 'expand-all', label: 'Expand' },
@@ -2043,7 +2157,7 @@
   })();
   /* ---- src/drishti_pivot-answer.js ---- */
   __m["src/drishti_pivot-answer.js"] = (function () {
-    var passes = __lib("drishti-core").passes;
+    var passes = __lib("drishti-core").passes, columnScale = __lib("drishti-core").columnScale, formatScaled = __lib("drishti-core").formatScaled;
     var SEP = __m["src/drishti_pivot.js"].SEP, memberText = __m["src/drishti_pivot.js"].memberText;
     function pivotApplyUpdates(answer, updates) {
       const inc = answer && answer.incremental;
@@ -2152,13 +2266,25 @@
       const whole = showAs === 'rank' || showAs.indexOf('ntile:') === 0
         || (m && (m.unit === 'count' || ((m.unit === null || m.unit === undefined) && /^count/.test(m.id || ''))));   // no unit: a count by its function
       if (whole) { return Math.round(v).toLocaleString('en-US'); }
+      if (m && m.scale) { return formatScaled(v, m.scale); }        // the column's one unit (answerScales): every figure of the measure in it
       const a = Math.abs(v);
       if (a >= 1e9) { return (v / 1e9).toFixed(2) + ' bn'; }
       if (a >= 1e6) { return (v / 1e6).toFixed(2) + ' m'; }
       return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     function answerFormat(m) { return (v) => measureText(v, m); }
-    return { "pivotApplyUpdates": pivotApplyUpdates, "mergeAnswer": mergeAnswer, "applyValueFilters": applyValueFilters, "resultColumns": resultColumns, "cellValue": cellValue, "measureText": measureText, "answerFormat": answerFormat };
+    function answerScales(answer) {
+      const out = {};
+      const cells = (answer && answer.cells) || {};
+      ((answer && answer.measures) || []).forEach((m) => {
+        if (m.showAs || m.unit === 'count' || m.unit === 'pct' || m.unit === 'rate' || ((m.unit === null || m.unit === undefined) && /^count/.test(m.id || ''))) { return; }
+        const vals = [];
+        Object.keys(cells).forEach((k) => { const c = cells[k]; if (c && c.values) { vals.push(c.values[m.label]); } });
+        out[m.label] = columnScale(vals);
+      });
+      return out;
+    }
+    return { "pivotApplyUpdates": pivotApplyUpdates, "mergeAnswer": mergeAnswer, "applyValueFilters": applyValueFilters, "resultColumns": resultColumns, "cellValue": cellValue, "measureText": measureText, "answerFormat": answerFormat, "answerScales": answerScales };
   })();
   /* ---- src/drishti_server-rows.js ---- */
   __m["src/drishti_server-rows.js"] = (function () {
@@ -2585,6 +2711,11 @@
         if (s.pivotView) { this.pivotState = new PivotState(s.pivotView); }
         return this.setPivotMode(!!s.pivot);
       }
+      headWidth() {
+        let w = 220;
+        ((this.answer && this.answer.rows) || []).forEach((r) => { w = Math.max(w, 34 + (r.depth || 0) * 16 + String(r.label || '').length * 7.2); });
+        return Math.min(460, Math.round(w));
+      }
     }
     return { "LAYOUTS": LAYOUTS, "DENSITIES": DENSITIES, "placeGrandRow": placeGrandRow, "rowModelFor": rowModelFor, "GridModelBase": GridModelBase };
   })();
@@ -2813,6 +2944,7 @@
     function onKey(v, e) {
       const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey;
       if (e.target !== v.body.scroller && e.target.closest && e.target.closest('.dg-editor')) { return; }
+      if (e.altKey && (k === 'ArrowUp' || k === 'ArrowDown') && m.pivotMode && v.wells.hostKey(e)) { return; }   // a hierarchy's level
       if (editKey(v, e)) { return; }
       if (mod && e.shiftKey && (k === 'c' || k === 'C')) { e.preventDefault(); runAction(v, 'copy-headers'); return; }
       if (k === 'F2') { e.preventDefault(); v.explainFocused(); return; }
@@ -3499,6 +3631,7 @@
         this.wells = new WellsModel(this.columns);
         this.wells.serverFuncs = (o.serverFuncs || []).map((f) => (typeof f === 'string' ? { name: f, label: f } : { name: f.name, label: f.label || f.name }));
         this.wells.allowedFuncs = o.valueFuncs ? o.valueFuncs.slice() : null;
+        this.wells.setHierarchies(o.hierarchies); this.showAs = (o.showAs || []).slice();   // one item per hierarchy; the forms of Show value as
         this.pivotState = new PivotState();
         this.pivotMode = false;
         this.pivotExtra = {};
@@ -3543,7 +3676,7 @@
         if (this._pivotCols) { return this._pivotCols; }
         const a = this.answer;
         const dims = a ? a.rowDimensions : [];
-        const head = { id: '__rows', header: dims.map((d) => { const c = this.columns.get(d); return c ? c.header : d; }).join(' / ') || 'Total', type: 'text', pinned: 'left', width: 220, additive: true, rowHeader: true };
+        const head = { id: '__rows', header: dims.map((d) => { const c = this.columns.get(d); return c ? c.header : d; }).join(' › ') || 'Total', type: 'text', pinned: 'left', width: this.headWidth(), additive: true, rowHeader: true };
         const rc = a ? resultColumns(a) : [];
         const byLabel = {};
         (a ? a.measures || [] : []).forEach((x) => { byLabel[x.label] = x; });
@@ -3750,7 +3883,7 @@
         }
         if (x && x.el.classList.contains('dg-nadd') && !this.drag) {
           const col = this.model.shownColumns()[x.c];
-          this.view.notes.showTip(nonAdditiveNote(col.measure || col.header, x.el.textContent), x.el);
+          if (col) { this.view.notes.showTip(nonAdditiveNote(col.measure || col.header, x.el.textContent), x.el); }   // a column gone since the cell was drawn: no note
         } else { this.view.notes.hideTip(); }
       }
       click(e) {
@@ -4100,6 +4233,11 @@
           if (deco && deco.title) { note = note ? note + '\n' + deco.title : String(deco.title); }
           if (deco && deco.style) { Object.keys(deco.style).forEach((k) => { if (DECO_STYLES.indexOf(k) >= 0 && deco.style[k]) { style[k] = String(deco.style[k]); } }); }
         }
+        const blank = x.kind === 'pivot' && col.rowHeader && !loading && /^\(blank\)$/i.test(String(text || '').trim());   // an empty member: (Blank)
+        if (x.kind === 'pivot' && col.rowHeader && !loading && !note) {                                     // the full label, its path
+          note = x.entry.path && x.entry.path.length ? x.entry.path.map((p) => (p[1] === null || p[1] === undefined || p[1] === '' ? '(Blank)' : p[1])).join(' › ') : x.entry.label || null;
+        }
+        if (blank) { cls += ' dg-blank'; }
         const focused = k.focus && k.focus.row === r && k.focus.col === c;
         if (focused) { cls += ' dg-focus'; }
         if ((col.cellClass || col.cellStyle) && !loading && (x.kind === 'leaf' || x.kind === 'group' || x.tree)) {
@@ -4139,6 +4277,10 @@
         } else if (drawn !== null && drawn !== undefined && drawn !== '') {
           cell.appendChild(typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn);
         } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
+        if (blank) {
+          const dim = x.entry.path && x.entry.path.length ? x.entry.path[x.entry.path.length - 1][0] : 'this level';
+          cell.appendChild(h(doc, 'span', { cls: 'dg-blank-q', text: '?', attrs: { role: 'note', title: '(Blank): the rows with no ' + dim + ' value are kept here, so every total above stays complete' } }));
+        }
         if (deco && deco.after !== undefined && deco.after !== null && deco.after !== '') {
           cell.appendChild(typeof deco.after === 'object' && deco.after.nodeType ? deco.after : h(doc, 'span', { cls: 'dg-after', text: String(deco.after) }));
         }
@@ -4181,21 +4323,397 @@
     }
     return { "GridBody": GridBody };
   })();
+  /* ---- src/drishti_grid-wells-menus.js ---- */
+  __m["src/drishti_grid-wells-menus.js"] = (function () {
+    var FUNC_ARGS = __m["src/drishti_wells.js"].FUNC_ARGS, funcLabel = __m["src/drishti_wells.js"].funcLabel;
+    var parseCondition = __m["src/drishti_grid-ui.js"].parseCondition;
+    const NAMES = { filters: 'Filters', rows: 'Rows', columns: 'Columns', values: 'Values' };
+    const PER_CELL = 'Computed per cell by the server from the cell\'s own members: a total is never a sum of its cells (Σ − total = the diversification)';
+    function perCell(c) { return !!c && (c.perCell || (c.measure && c.additive === false)); }
+    function chipMenu(wv, chip) {
+      const field = chip.dataset.field, well = chip.dataset.well, index = +chip.dataset.index, v = wv.view, w = wv.w(), c = w.columns.get(field);
+      if (well === 'values') { valueMenu(wv, chip, index); return; }
+      const items = () => {
+        const out = [];
+        if (well === 'filters') {
+          const f = w.state.filters[index].filter, ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
+          out.push({ heading: 'Show ' + c.header });
+          v.membersOf(field).slice(0, 200).forEach((mm) => out.push({ id: 'member:' + mm.text, label: mm.text + (mm.count !== undefined ? '  (' + mm.count + ')' : ''), checked: !ex.has(mm.text), keep: true }));
+          out.push({ id: 'members-all', label: 'Select all' }, { id: 'members-none', label: 'Clear all' }, { sep: true });
+        }
+        if ((well === 'rows' || well === 'columns') && v.model.pivotMode) {
+          const s = (v.model.pivotExtra.sort || {})[c.field], first = w.toView().values[0];
+          out.push({ heading: 'Order of ' + c.header }, { id: 'order-label', label: 'By name', checked: !s || s.by === 'label' });
+          if (first) { out.push({ id: 'order-measure', label: 'By ' + first.as + ', largest first', checked: !!s && s.by === first.as }, { id: 'top-5', label: 'Top 5 by ' + first.as + ' (the rest in Others)', checked: !!(v.model.pivotExtra.top || {})[c.field] }); }
+          out.push({ sep: true });
+        }
+        if (!well) { ['rows', 'columns', 'values', 'filters'].forEach((t) => out.push({ id: 'to:' + t, label: 'Add to ' + NAMES[t], disabled: !w.canDrop(field, t).ok, why: w.canDrop(field, t).why })); }
+        else {
+          ['rows', 'columns', 'values', 'filters'].filter((t) => t !== well).forEach((t) => out.push({ id: 'to:' + t, label: 'Move to ' + NAMES[t], disabled: !w.canDrop(field, t).ok, why: w.canDrop(field, t).why }));
+          out.push({ id: 'left', label: 'Move left', key: 'Ctrl+←', disabled: index === 0 }, { id: 'right', label: 'Move right', key: 'Ctrl+→' }, { sep: true }, { id: 'remove', label: 'Remove', key: 'Delete', icon: '×' });
+        }
+        return out;
+      };
+      v.menu.open(items, { anchor: chip, label: c.header + ' options', theme: v.host, run: (id) => chipAction(wv, id, field, well, index) });
+    }
+    function valueMenu(wv, anchor, index) {
+      const v = wv.view, w = wv.w(), val = w.state.values[index];
+      if (!val) { return; }
+      const c = w.columns.get(val.colId), header = c ? c.header : val.colId;
+      const items = () => {
+        const cur = w.state.values[index] || val, out = [];
+        if (perCell(c)) {
+          out.push({ heading: header + ' · computed per cell' }, { note: c.perCellNote || PER_CELL });
+          const opts = wv.opts = v.o.valueOptions ? v.o.valueOptions(c, cur) || {} : {};
+          (opts.items || []).forEach((it) => out.push(it.id ? Object.assign({}, it, { id: 'opt:' + it.id }) : it));
+        } else {
+          out.push({ heading: 'Summarize ' + header + ' by' });
+          w.funcsFor(cur.colId).forEach((f) => {
+            const on = cur.aggFunc === f.name;
+            const label = on && cur.args && cur.args.length ? funcLabel(f.name).replace('…', '') + ' (' + (FUNC_ARGS[f.name].kind === 'field' ? 'by ' + wv.header(String(cur.args[0])) : cur.args.join(', ')) + ')' : f.label;
+            out.push({ id: 'agg:' + f.name, label: label + (f.server && !FUNC_ARGS[f.name] && v.o.clientAggregation !== false && !v.o.serverPivot ? ' (server)' : ''), checked: on, disabled: f.disabled, why: f.why, showWhy: true });
+          });
+          if (out.length === 1) { out.push({ note: header + ' is its own measure (' + w.measureOf(cur) + '): Custom ƒ… writes another' }); }
+          if (v.o.customFormulas !== false) { out.push({ id: 'custom', label: funcLabel('custom'), checked: cur.aggFunc === 'custom' }); }
+          (v.o.customFunctions || []).forEach((f) => out.push({ id: 'fn:' + f.name, label: 'ƒ ' + (f.label || f.name), checked: !!cur.formula && cur.formula.indexOf(f.name + '(') === 0 }));
+        }
+        const forms = v.model.showAs || [];
+        if (forms.length) {
+          out.push({ sep: true }, { heading: 'Show value as' }, { id: 'show:', label: 'The figure itself', checked: !cur.showAs });
+          const dims = w.state.rows.concat(w.state.columns);
+          forms.forEach((s) => {
+            const pct = String(s.id).indexOf('pct-') === 0 && s.needs !== 'dimension';
+            const off = pct && perCell(c) ? header + ' does not add up (its parts exceed its total): a share of a total would mislead' : null;
+            if (s.needs === 'dimension') {
+              dims.forEach((d) => { const f = (w.columns.get(d) || {}).field || d, id = s.id + ':1:' + f; out.push({ id: 'show:' + id, label: s.label + ' ' + wv.header(d), checked: cur.showAs === id }); });
+            } else { out.push({ id: 'show:' + s.id, label: s.label, checked: cur.showAs === s.id, disabled: !!off, why: off, showWhy: true }); }
+          });
+        }
+        out.push({ sep: true });
+        if (!perCell(c)) { out.push({ id: 'again', label: 'Add another value of ' + header }); }
+        out.push({ id: 'left', label: 'Move left', key: 'Ctrl+←', disabled: index === 0 }, { id: 'right', label: 'Move right', key: 'Ctrl+→' }, { id: 'remove', label: 'Remove', key: 'Delete', icon: '×' });
+        return out;
+      };
+      v.menu.open(items, { anchor: anchor, label: header + ' value options', theme: v.host, run: (id, value) => valueAction(wv, anchor, index, id, value) });
+    }
+    function valueAction(wv, anchor, index, id, value) {
+      const v = wv.view, w = wv.w(), val = w.state.values[index], c = w.columns.get(val.colId), header = c ? c.header : val.colId;
+      const said = (r, what) => { if (!r.ok) { v.say(r.why); return; } v.wellsChanged(what); };
+      if (id.indexOf('agg:') === 0) {
+        const fn = id.slice(4);
+        if (FUNC_ARGS[fn]) { argsMenu(wv, anchor, index, fn); return; }
+        said(w.setAggregation(index, fn), header + ': ' + funcLabel(fn));
+        return;
+      }
+      if (id === 'custom' || id.indexOf('fn:') === 0) { formulaMenu(wv, anchor, index, id.indexOf('fn:') === 0 ? id.slice(3) : null); return; }
+      if (id.indexOf('show:') === 0) { w.setShowAs(index, id.slice(5) || null); v.wellsChanged(header + (id.length > 5 ? ' shown as ' + id.slice(5) : ' as its figure')); return; }
+      if (id.indexOf('opt:') === 0) { if (wv.opts && wv.opts.run) { wv.opts.run(id.slice(4), c, val); } return; }
+      if (id === 'again') {
+        const other = w.funcsFor(val.colId).filter((f) => !f.disabled && !FUNC_ARGS[f.name] && f.name !== val.aggFunc)[0];
+        w.drop(val.colId, 'values', index + 1, { aggFunc: other ? other.name : val.aggFunc });
+        v.wellsChanged('Another value of ' + header);
+        return;
+      }
+      if (id === 'left' || id === 'right') { wv.move(val.colId, 'values', index, 'values', id === 'left' ? Math.max(0, index - 1) : index + 2); return; }
+      if (id === 'remove') { wv.remove('values', index, val.colId); }
+    }
+    function argsMenu(wv, anchor, index, fn) {
+      const v = wv.view, w = wv.w(), val = w.state.values[index], header = wv.header(val.colId), a = FUNC_ARGS[fn];
+      const items = () => {
+        if (a.kind === 'field') {
+          const out = [{ heading: funcLabel(fn).replace('…', '') + ' of ' + header + ': the weight' }];
+          w.columns.fields('').filter((f) => f.type === 'number' && !f.measure && f.id !== val.colId).forEach((f) => out.push({ id: 'arg:' + f.id, label: f.header, checked: fn === val.aggFunc && val.args && val.args[0] === f.id }));
+          if (out.length === 1) { out.push({ note: 'No other number field to weigh by' }); }
+          return out;
+        }
+        const q = fn === val.aggFunc && val.args ? val.args[0] : a.default;
+        return [{ heading: funcLabel(fn).replace('…', '') + ' of ' + header }].concat([0.5, 0.9, 0.95, 0.99].map((x) => ({ id: 'arg:' + x, label: 'p' + Math.round(x * 100) + (x === 0.5 ? ' (the median)' : ''), checked: +q === x })),
+          [{ id: 'arg-typed', label: a.label, input: { placeholder: String(a.default), value: String(q) } }]);
+      };
+      v.menu.open(items, { anchor: anchor, label: funcLabel(fn), theme: v.host, run: (id, typed) => {
+        const arg = id === 'arg-typed' ? String(typed || '').trim() : id.slice(4);
+        const r = w.setAggregation(index, fn, [a.kind === 'number' ? +arg : arg]);
+        if (!r.ok) { v.say(r.why); return; }
+        v.wellsChanged(header + ': ' + w.labelOf(w.state.values[index]));
+      } });
+    }
+    function formulaMenu(wv, anchor, index, fn) {
+      const v = wv.view, w = wv.w(), val = w.state.values[index], c = w.columns.get(val.colId);
+      const start = val.formula || (fn ? fn + '(' + (c ? c.field : val.colId) + ')' : 'sum(' + (c ? c.field : val.colId) + ')');
+      const done = (text, label) => { const r = w.setFormula(index, text, label); if (!r.ok) { v.say(r.why); return; } v.wellsChanged('Formula: ' + text + ' (the server checks it)'); };
+      if (v.o.formulaEditor) { v.o.formulaEditor({ formula: start, field: c, value: val, done: done }); return; }
+      v.menu.open([{ heading: 'Custom formula' }, { note: 'A Rachana formula or a custom function: sum(PV) / sum(NOTIONAL), wret(RET, W). The server checks it when it answers.' },
+        { id: 'formula', label: 'Formula', input: { placeholder: 'sum(PV) / sum(NOTIONAL)', value: start } }], { anchor: anchor, label: 'Custom formula', theme: v.host, run: (id, text) => done(text) });
+    }
+    function chipAction(wv, id, field, well, index) {
+      const v = wv.view, w = wv.w(), c = w.columns.get(field);
+      if (id.indexOf('agg:') === 0) { const r = w.setAggregation(index, id.slice(4)); if (!r.ok) { v.say(r.why); } v.wellsChanged(c.header + ': ' + w.funcLabel(id.slice(4))); return; }
+      if (id.indexOf('member:') === 0) {
+        const text = id.slice(7), f = w.state.filters[index].filter, ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
+        if (ex.has(text)) { ex.delete(text); } else { ex.add(text); }
+        w.setFilter(field, ex.size ? { type: 'set', excluded: Array.from(ex) } : null);
+        v.wellsChanged(null);
+        return;
+      }
+      if (id === 'members-all') { w.setFilter(field, null); v.wellsChanged('All of ' + c.header); return; }
+      if (id === 'members-none') { w.setFilter(field, { type: 'set', excluded: v.membersOf(field).map((m) => m.text) }); v.wellsChanged('None of ' + c.header); return; }
+      if (id === 'order-label' || id === 'order-measure') {
+        const sort = Object.assign({}, v.model.pivotExtra.sort);
+        const first = w.toView().values[0];
+        if (id === 'order-label') { delete sort[c.field]; } else { sort[c.field] = { by: first.as, desc: true }; }
+        v.setPivotOptions({ sort: sort }, 'Order of ' + c.header + ' changed');
+        return;
+      }
+      if (id === 'top-5') {
+        const top = Object.assign({}, v.model.pivotExtra.top), first = w.toView().values[0];
+        if (top[c.field]) { delete top[c.field]; } else { top[c.field] = { n: 5, by: first.as }; }
+        v.setPivotOptions({ top: top }, 'Top 5 of ' + c.header);
+        return;
+      }
+      if (id.indexOf('to:') === 0) { wv.move(field, well, index, id.slice(3)); return; }
+      if (id === 'left' || id === 'right') { wv.move(field, well, index, well, id === 'left' ? Math.max(0, index - 1) : index + 2); return; }
+      if (id === 'remove') { wv.remove(well, well === 'values' ? index : field, field); }
+    }
+    function valueFilterMenu(wv, index, anchor) {
+      const v = wv.view, w = wv.w();
+      const view = w.toView(), dims = view.rows, measures = view.values.map((x) => x.as);
+      if (!dims.length || !measures.length) { v.say('A value filter needs a row field and a value'); return; }
+      const list = (v.model.pivotExtra.valueFilters || []).slice();
+      const cur = index >= 0 ? Object.assign({}, list[index]) : { dim: dims[dims.length - 1], by: measures[0], op: 'gt', value: 0 };
+      const save = (f) => { if (index >= 0) { list[index] = f; } else { list.push(f); } v.setValueFilters(list); };
+      const items = () => {
+        const med = v.levelFigures(cur.dim, cur.by);
+        const out = [{ heading: 'Value filter on ' + wv.header(cur.dim) }];
+        dims.forEach((d) => out.push({ id: 'dim:' + d, label: 'Level: ' + wv.header(d), checked: cur.dim === d, keep: true }));
+        out.push({ sep: true }, { heading: 'Measure' });
+        measures.forEach((m) => out.push({ id: 'by:' + m, label: m, checked: cur.by === m, keep: true }));
+        out.push({ sep: true }, { heading: 'Condition' }, { id: 'c:gt:0', label: cur.by + ' > 0' }, { id: 'c:lt:0', label: cur.by + ' < 0' });
+        if (med) { out.push({ id: 'c:gt:' + med.median, label: cur.by + ' > ' + v.fmtMeasure(cur.by, med.median) + ' (the median)' }, { id: 'c:gt:' + med.p75, label: cur.by + ' > ' + v.fmtMeasure(cur.by, med.p75) + ' (the top quarter)' }); }
+        out.push({ id: 'custom', label: 'Condition', input: { placeholder: '> 400k', value: index >= 0 ? (cur.op === 'gt' ? '> ' : cur.op === 'lt' ? '< ' : '') + cur.value : '' } });
+        if (index >= 0) { out.push({ sep: true }, { id: 'remove', label: 'Remove this filter', icon: '×' }); }
+        return out;
+      };
+      v.menu.open(items, { anchor: anchor, label: 'Value filter', theme: v.host, run: (id, value) => {
+        if (id.indexOf('dim:') === 0) { cur.dim = id.slice(4); return; }
+        if (id.indexOf('by:') === 0) { cur.by = id.slice(3); return; }
+        if (id.indexOf('c:') === 0) { const [, op, n] = id.split(':'); save(Object.assign(cur, { op: op, value: +n })); return; }
+        if (id === 'custom') { const c = parseCondition(value); if (!c) { v.say('Write a condition such as > 400k or < 0'); return; } save(Object.assign(cur, c)); return; }
+        if (id === 'remove') { v.setValueFilters(list.filter((x, k) => k !== index)); }
+      } });
+    }
+    return { "chipMenu": chipMenu, "valueMenu": valueMenu, "formulaMenu": formulaMenu, "chipAction": chipAction, "valueFilterMenu": valueFilterMenu };
+  })();
+  /* ---- src/drishti_grid-fields.js ---- */
+  __m["src/drishti_grid-fields.js"] = (function () {
+    var FieldPicker = __lib("drishti-inputs").FieldPicker;
+    const NAMES = { filters: 'Filters', rows: 'Rows', columns: 'Columns', values: 'Values' };
+    const HINTS = { rows: 'pick a hierarchy, then its levels; or a field', columns: 'what goes across', filters: 'what the view keeps',
+      values: 'the figures: several of one field with different functions are allowed' };
+    function fieldIcon(f) {
+      if (f.role === 'measure' || (f.value && f.type === 'number' && f.measure)) { return 'Σ'; }
+      return f.type === 'number' ? '#' : f.type === 'date' ? '◷' : 'Aa';
+    }
+    function whereIs(f) { return f.in && f.in.length ? 'in ' + f.in.map((w) => NAMES[w]).join(', ') : null; }
+    function fieldGroups(w, well) {
+      const fields = w.fieldList(''), byId = {};
+      fields.forEach((f) => { byId[f.id] = f; });
+      const groups = [], levelIds = new Set();
+      const axis = well === 'rows' || well === 'columns';
+      if (well !== 'values' && w.hierarchies.length) {
+        groups.push({ id: 'hierarchies', label: 'Hierarchies', items: w.hierarchies.map((hh) => {
+          hh.levels.forEach((l) => levelIds.add(l.id));
+          const inWell = hh.levels.filter((l) => w.has(well, l.id));
+          return { id: 'h:' + hh.id, label: hh.id, detail: hh.levels.map((l) => l.label).join(' › '), icon: '⋔', checked: inWell.length > 0,
+            note: inWell.length ? 'in ' + NAMES[well] : null, open: inWell.length > 0,
+            children: hh.levels.map((l) => {
+              const f = byId[l.id] || {}, ok = w.canDrop(l.id, well);
+              return { id: l.id, label: l.label, checked: w.has(well, l.id), disabled: !ok.ok, why: ok.ok ? null : ok.why,
+                note: w.has(well, l.id) ? 'in ' + NAMES[well] : axis ? whereIs(f) : null };
+            }) };
+        }) });
+      } else {
+        w.hierarchies.forEach((hh) => hh.levels.forEach((l) => levelIds.add(l.id)));
+      }
+      const folders = new Map(), measures = new Map(), more = [];
+      fields.forEach((f) => {
+        if (levelIds.has(f.id)) { return; }
+        const measure = f.role === 'measure' || (!f.rowGroup && f.value);
+        if (axis && measure) { return; }                                                  // a figure goes in Values, not here
+        if (well === 'values' && !measure && f.type !== 'number' && !f.value) { return; }
+        const ok = w.canDrop(f.id, well);
+        const item = { id: f.id, label: f.header, icon: fieldIcon(f), checked: w.has(well, f.id), disabled: !ok.ok, why: ok.ok ? null : ok.why,
+          note: w.has(well, f.id) ? (well === 'values' ? countIn(w, f.id) : 'in ' + NAMES[well]) : axis ? whereIs(f) : null };
+        if (f.more) { more.push(item); return; }
+        const target = measure ? measures : folders;
+        const g = f.folder || (measure ? 'Measures' : f.group && f.group !== 'Fields' ? f.group : 'Fields');
+        if (!target.has(g)) { target.set(g, []); }
+        target.get(g).push(item);
+      });
+      folders.forEach((items, g) => groups.push({ id: 'f:' + g, label: g, items: items, columns: items.length > 6 }));
+      measures.forEach((items, g) => groups.push({ id: 'm:' + g, label: well === 'values' ? g : 'Measures · ' + g, items: items, columns: items.length > 6 }));
+      if (more.length) { groups.push({ id: 'more', label: 'More fields', items: more, collapsed: true }); }
+      return groups;
+    }
+    function countIn(w, id) { const n = w.state.values.filter((v) => v.colId === id).length; return 'in Values' + (n > 1 ? ' ×' + n : ''); }
+    function pickField(v, well, item, child) {
+      const w = v.activeWells();
+      if (item.id.indexOf('h:') === 0) {
+        const hh = w.hierarchies.find((x) => 'h:' + x.id === item.id);
+        const now = hh.levels.filter((l) => w.has(well, l.id)).map((l) => l.id);
+        let next;
+        if (child) { next = now.indexOf(child.id) >= 0 ? now.filter((x) => x !== child.id) : now.concat([child.id]); }
+        else { next = now.length ? [] : [hh.levels[0].id]; }
+        if (well === 'filters') {
+          hh.levels.forEach((l) => { if (now.indexOf(l.id) >= 0 && next.indexOf(l.id) < 0) { w.remove('filters', l.id); } else if (now.indexOf(l.id) < 0 && next.indexOf(l.id) >= 0) { w.drop(l.id, 'filters'); } });
+        } else { w.setHierarchyLevels(well, hh.id, next); }
+        v.wellsChanged(hh.id + (next.length ? ': ' + next.map((x) => (hh.levels.find((l) => l.id === x) || {}).label).join(' › ') : ' taken out of ' + NAMES[well]));
+        return;
+      }
+      const c = w.columns.get(item.id);
+      if (!c) { return; }
+      if (well === 'values') {
+        if (item.checked && !v._addAgain) {
+          const at = w.state.values.map((x) => x.colId).lastIndexOf(item.id);
+          w.remove('values', at);
+          v.wellsChanged('Removed ' + c.header + ' from Values');
+        } else { w.drop(item.id, 'values'); v.wellsChanged(c.header + ' to Values'); }
+        return;
+      }
+      if (w.has(well, item.id)) { w.remove(well, item.id); v.wellsChanged('Removed ' + c.header + ' from ' + NAMES[well]); return; }
+      const ok = w.canDrop(item.id, well);
+      if (!ok.ok) { v.say(ok.why); return; }
+      w.drop(item.id, well);
+      v.wellsChanged(c.header + ' to ' + NAMES[well]);
+    }
+    function openPicker(v, well, anchor) {
+      if (v.picker && v.picker.isOpen()) { v.picker.close(); }
+      const p = v.picker = new FieldPicker(v.doc, { label: NAMES[well] + ' fields', title: NAMES[well], hint: HINTS[well], theme: v.host,
+        groups: () => fieldGroups(v.activeWells(), well),
+        onPick: (item, child) => pickField(v, well, item, child),
+        keys: '↑↓ move · → levels · Space on/off · Enter use · Esc close',
+        link: v.o.customize === false ? null : { label: v.model.layout === 'panel' ? 'Close the panes ›' : 'Customize ›', run: () => v.toggleCustomize() } });
+      p.open(anchor);
+      return p;
+    }
+    return { "fieldIcon": fieldIcon, "fieldGroups": fieldGroups, "pickField": pickField, "openPicker": openPicker };
+  })();
+  /* ---- src/drishti_grid-views.js ---- */
+  __m["src/drishti_grid-views.js"] = (function () {
+    var h = __lib("drishti-core").h;
+    var Popover = __lib("drishti-inputs").Popover, Listbox = __lib("drishti-inputs").Listbox;
+    class ViewPicker {
+      constructor(v) {
+        this.v = v;
+        this.doc = v.doc;
+        this.pop = new Popover(this.doc, { cls: 'dg-views-pop', label: 'Views', theme: v.host });
+        this.entries = { ready: [], mine: [], shared: [] };
+        this.scope = 'personal';
+      }
+      hook() { return this.v.o.views; }
+      button() {
+        const cur = this.hook().current ? this.hook().current() : null;
+        return h(this.doc, 'button', { cls: 'dg-viewbtn' + (cur && cur.dirty ? ' dg-dirty' : ''), attrs: { type: 'button', 'aria-haspopup': 'dialog',
+          'aria-label': 'View: ' + (cur ? cur.name : 'none') + (cur && cur.dirty ? ' (changed)' : '') + '. Shift+V', title: 'Views (Shift+V)' }, data: { act: 'views' } },
+        [h(this.doc, 'span', { cls: 'dg-zl', text: 'View' }), h(this.doc, 'b', { text: cur ? cur.name : 'Choose…' }), cur && cur.dirty ? h(this.doc, 'span', { cls: 'dg-dot', text: '●', attrs: { 'aria-hidden': 'true' } }) : null,
+          h(this.doc, 'span', { cls: 'dg-caret', text: '▾', attrs: { 'aria-hidden': 'true' } })]);
+      }
+      isOpen() { return this.pop.isOpen(); }
+      open(anchor) {
+        const doc = this.doc, hk = this.hook();
+        const search = this.search = h(doc, 'input', { cls: 'di-field di-search', attrs: { type: 'search', placeholder: 'Find a view', 'aria-label': 'Find a view', autocomplete: 'off' } });
+        const list = this.list = new Listbox(doc, { label: 'Views', followActive: true, onPick: (it) => this.pick(it.value),
+          render: (it, el) => {
+            el.append(h(doc, 'span', { cls: 'dg-vp-name' }, [h(doc, 'b', { text: it.label }), it.detail ? h(doc, 'span', { cls: 'dg-vp-detail', text: it.detail }) : null]));
+            if (it.badge) { el.append(h(doc, 'span', { cls: 'dg-vp-badge', text: it.badge })); }
+            if (it.key) { el.append(h(doc, 'kbd', { cls: 'dg-vp-key', text: it.key })); }
+          } });
+        const name = this.name = h(doc, 'input', { cls: 'di-field dg-vp-save-name', attrs: { type: 'text', placeholder: 'Name of the view', 'aria-label': 'Save the view as' } });
+        const who = this.who = h(doc, 'input', { cls: 'di-field dg-vp-share', attrs: { type: 'text', placeholder: 'people or role:risk', 'aria-label': 'Share with', hidden: true } });
+        const seg = h(doc, 'span', { cls: 'dg-seg', attrs: { role: 'radiogroup', 'aria-label': 'Who sees it' } }, ['personal', 'shared'].map((s) =>
+          h(doc, 'button', { cls: 'dg-seg-b' + (this.scope === s ? ' on' : ''), text: s === 'personal' ? 'Personal' : 'Shared', attrs: { type: 'button', role: 'radio', 'aria-checked': String(this.scope === s) }, data: { scope: s } })));
+        const cur = hk.current ? hk.current() : null;
+        const box = h(doc, 'div', { cls: 'dg-vp' }, [
+          h(doc, 'div', { cls: 'dg-vp-head' }, [h(doc, 'b', { text: 'Views' }), h(doc, 'span', { cls: 'dg-vp-detail', text: hk.title || 'the layouts for this pivot' })]),
+          search, list.el,
+          cur && cur.dirty && hk.revert ? h(doc, 'button', { cls: 'di-btn dg-vp-revert', text: 'Revert to ' + cur.name, attrs: { type: 'button' }, data: { act: 'revert' } }) : null,
+          h(doc, 'div', { cls: 'dg-vp-save' }, [h(doc, 'span', { text: 'Save view as…' }), name, seg, who,
+            h(doc, 'button', { cls: 'di-btn dg-vp-save-btn', attrs: { type: 'button', 'aria-keyshortcuts': 'Control+S' }, data: { act: 'save' } }, ['Save ', h(doc, 'kbd', { text: 'Ctrl+S' })])]),
+          h(doc, 'div', { cls: 'dg-vp-foot', text: '1–9 a ready-made view · Enter open · Esc close' })]);
+        box.addEventListener('click', (e) => {
+          const s = e.target.closest('[data-scope]');
+          if (s) { this.scope = s.dataset.scope; box.querySelectorAll('[data-scope]').forEach((b) => { const on = b.dataset.scope === this.scope; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); }); who.hidden = this.scope !== 'shared'; return; }
+          const a = e.target.closest('[data-act]');
+          if (a && a.dataset.act === 'save') { this.save(); }
+          if (a && a.dataset.act === 'revert') { this.close(); hk.revert(); }
+        });
+        box.addEventListener('keydown', (e) => {
+          if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); this.save(); }
+        });
+        search.addEventListener('input', () => this.draw());
+        search.addEventListener('keydown', (e) => {
+          if (/^[1-9]$/.test(e.key) && !search.value) {
+            const r = this.entries.ready[+e.key - 1];
+            if (r) { e.preventDefault(); this.pick(r); }
+            return;
+          }
+          list.key(e, search);
+        });
+        this.pop.open(anchor, box);
+        search.focus();
+        list.render([], () => false, { empty: 'Loading the views…' });
+        return Promise.resolve(hk.list()).then((r) => { this.entries = { ready: r.ready || [], mine: r.mine || [], shared: r.shared || [] }; this.draw(); })
+          .catch((err) => { list.render([], () => false, { empty: 'The views could not be listed: ' + (err && err.message ? err.message : err) }); });
+      }
+      draw() {
+        const q = (this.search.value || '').toLowerCase();
+        const hit = (e) => !q || (e.name + ' ' + (e.detail || '')).toLowerCase().indexOf(q) >= 0;
+        const cur = this.hook().current ? this.hook().current() : null;
+        const items = [];
+        this.entries.ready.forEach((e, i) => { if (hit(e)) { items.push({ value: e, label: e.name, detail: e.detail, group: this.hook().readyTitle || 'Ready-made', key: i < 9 ? String(i + 1) : '', badge: '' }); } });
+        this.entries.mine.forEach((e) => { if (hit(e)) { items.push({ value: e, label: e.name, detail: e.detail, group: 'My views', badge: e.badge || 'personal' }); } });
+        this.entries.shared.forEach((e) => { if (hit(e)) { items.push({ value: e, label: e.name, detail: e.detail, group: 'Shared with me', badge: e.badge || 'shared' }); } });
+        this.list.render(items, (it) => !!cur && it.value && it.value.name === cur.name, { empty: 'No view matches' });
+        const at = cur ? items.findIndex((it) => it.value.name === cur.name) : -1;
+        this.list.setActive(at >= 0 ? at : 0, this.search);
+      }
+      pick(e) {
+        this.close();
+        this.hook().open(e);
+      }
+      save() {
+        const name = (this.name.value || '').trim();
+        if (!name) { this.name.focus(); this.v.say('Name the view first'); return; }
+        Promise.resolve(this.hook().save(name, this.scope, (this.who.value || '').trim())).then((saved) => {
+          this.close();
+          this.v.say('Saved ' + (saved && saved.name ? saved.name : name) + (this.scope === 'shared' ? ', shared' : ''));
+          this.v.renderChrome();
+        }).catch((err) => this.v.say('Not saved: ' + (err && err.message ? err.message : err)));
+      }
+      close() { this.pop.close(true); }
+    }
+    return { "ViewPicker": ViewPicker };
+  })();
   /* ---- src/drishti_grid-wells-ui.js ---- */
   __m["src/drishti_grid-wells-ui.js"] = (function () {
     var h = __lib("drishti-core").h;
-    var VALUE_FUNCS = __m["src/drishti_wells.js"].VALUE_FUNCS;
-    var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
-    var parseCondition = __m["src/drishti_grid-ui.js"].parseCondition, conditionText = __m["src/drishti_grid-ui.js"].conditionText;
+    var conditionText = __m["src/drishti_grid-ui.js"].conditionText;
+    var chipMenu = __m["src/drishti_grid-wells-menus.js"].chipMenu, valueMenu = __m["src/drishti_grid-wells-menus.js"].valueMenu, valueFilterMenu = __m["src/drishti_grid-wells-menus.js"].valueFilterMenu;
+    var fieldGroups = __m["src/drishti_grid-fields.js"].fieldGroups, openPicker = __m["src/drishti_grid-fields.js"].openPicker;
+    var ViewPicker = __m["src/drishti_grid-views.js"].ViewPicker;
     const NAMES = { filters: 'Filters', rows: 'Rows', columns: 'Columns', values: 'Values' };
     const LANE = { rows: 'ROWS', columns: 'COLS', values: 'VALS', filters: 'FILT' };
+    const KEYS = { rows: 'R', columns: 'C', values: 'V', filters: 'F' };
     const MIME = 'text/x-drishti-field';
+    const TOGGLES = 8;
     class WellsView {
       constructor(view) {
         this.view = view;
         this.doc = view.doc;
         this.search = '';
         this.dragging = null;
+        this.views = view.o.views ? new ViewPicker(view) : null;
+        this.openHier = new Set();
+        this.closedGroups = new Set(['more']);
       }
       w() { return this.view.activeWells(); }
       render(el, how) {
@@ -4203,37 +4721,87 @@
         const keepFocus = doc.activeElement && el.contains(doc.activeElement) && doc.activeElement.classList.contains('dg-field-search');
         el.textContent = '';
         el.className = 'dg-wells dg-wells-' + how;
-        const order = how === 'lane' ? ['rows', 'columns', 'values', 'filters'] : how === 'panel' ? ['filters', 'columns', 'rows', 'values'] : ['filters', 'rows', 'columns', 'values'];
-        const zones = h(doc, 'div', { cls: 'dg-zones' }, order.map((w) => this.zone(w, how)));
-        const search = h(doc, 'input', { cls: 'dg-field-search', attrs: { type: 'search', placeholder: 'Find a field', 'aria-label': 'Find a field', value: this.search } });
-        search.addEventListener('input', () => { this.search = search.value; this.view.renderChrome(); });
-        if (how === 'panel') {
-          el.append(h(doc, 'div', { cls: 'dg-field-list', attrs: { role: 'group', 'aria-label': 'Fields' } }, [search].concat(this.groupedFields())), zones, this.switches());
-        } else if (how === 'lane') {
-          el.append(zones, h(doc, 'div', { cls: 'dg-lane-fields' }, [h(doc, 'span', { cls: 'dg-zl', text: '+ FIELD' }), search].concat(this.unusedChips())));
-        } else {
-          el.append(h(doc, 'span', { cls: 'dg-zl', text: 'Fields' }), h(doc, 'div', { cls: 'dg-fields', attrs: { role: 'list', 'aria-label': 'Fields' } }, [search].concat(this.unusedChips())),
-            h(doc, 'span', { cls: 'dg-zl', text: 'Wells' }), zones);
-        }
+        if (how === 'panel') { this.panes(el); }
+        else if (how === 'lane') {
+          const search = this.searchBox();
+          el.append(h(doc, 'div', { cls: 'dg-zones' }, ['rows', 'columns', 'values', 'filters'].map((w) => this.zone(w, how))),
+            h(doc, 'div', { cls: 'dg-lane-fields' }, [h(doc, 'span', { cls: 'dg-zl', text: '+ FIELD' }), search].concat(this.unusedChips())));
+        } else { this.line(el); }
         if (!el.dataset.dgWired) { el.dataset.dgWired = '1'; this.listen(el); }
-        if (keepFocus) { const s = el.querySelector('.dg-field-search'); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+        if (keepFocus) { const s = el.querySelector('.dg-field-search'); if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
       }
-      fields() { return this.w().fieldList(this.search); }
-      unusedChips() { return this.fields().filter((f) => !f.in.length).map((f) => this.chip(f.id, '', -1)); }
-      groupedFields() {
-        const doc = this.doc, groups = new Map();
-        this.fields().forEach((f) => { const g = f.group || (f.value ? 'Measures' : 'Fields'); if (!groups.has(g)) { groups.set(g, []); } groups.get(g).push(f); });
-        const out = [];
-        groups.forEach((list, g) => {
-          out.push(h(doc, 'div', { cls: 'dg-fgroup', text: g }));
-          list.forEach((f) => {
-            const box = h(doc, 'input', { attrs: { type: 'checkbox', 'aria-label': 'Use ' + f.header }, data: { use: f.id } });
-            box.checked = f.in.length > 0;
-            out.push(h(doc, 'div', { cls: 'dg-field', attrs: { draggable: 'true' }, data: { field: f.id, well: '', index: '-1' } }, [box, h(doc, 'span', { text: f.header }),
-              f.value && !f.additive ? h(doc, 'span', { cls: 'dg-na', text: '◆' }) : null, h(doc, 'span', { cls: 'dg-ftype', text: f.value ? (f.additive ? 'Σ' : 'server') : 'abc' })]));
+      searchBox() {
+        const search = h(this.doc, 'input', { cls: 'dg-field-search', attrs: { type: 'search', placeholder: 'Search fields  /', 'aria-label': 'Search fields', value: this.search } });
+        search.addEventListener('input', () => { this.search = search.value; this.view.renderChrome(); });
+        return search;
+      }
+      line(el) {
+        const doc = this.doc, dot = () => h(doc, 'span', { cls: 'dg-dotsep', text: '·', attrs: { 'aria-hidden': 'true' } });
+        if (this.views) { el.append(this.views.button(), h(doc, 'span', { cls: 'dg-bar', attrs: { 'aria-hidden': 'true' } })); }
+        el.append(this.zone('rows', 'line'), dot(), this.zone('columns', 'line'), dot(), this.zone('filters', 'line'), dot(), this.valuesLine(), h(doc, 'span', { cls: 'dg-sp' }));
+        if (this.view.o.customize !== false) {
+          el.append(h(doc, 'button', { cls: 'dg-customize', text: 'Customize ›', attrs: { type: 'button', title: 'The Fields and Build panes (\\)', 'aria-keyshortcuts': '\\' }, data: { act: 'customize' } }));
+        }
+      }
+      valuesLine() {
+        const doc = this.doc, w = this.w(), st = w.state;
+        const items = st.values.map((v, i) => this.chip(v.colId, 'values', i));
+        const used = new Set(st.values.map((v) => v.colId));
+        const cands = w.fieldList('').filter((f) => !used.has(f.id) && !f.more && (f.role === 'measure' || (f.value && f.type === 'number')))
+          .sort((a, b) => (a.role === 'measure' ? 0 : 1) - (b.role === 'measure' ? 0 : 1));   // the measures first, then the number fields
+        cands.slice(0, TOGGLES).forEach((f) => items.push(h(doc, 'button', { cls: 'dg-vtoggle', text: f.header, attrs: { type: 'button', 'aria-pressed': 'false', title: 'Add ' + f.header + ' to Values' }, data: { field: f.id } })));
+        items.push(h(doc, 'button', { cls: 'dg-add', text: cands.length > TOGGLES ? '⋯' : '+', attrs: { type: 'button', 'aria-label': 'Values: every measure and field (V)', title: 'Values (V)' }, data: { pick: 'values' } }));
+        return h(doc, 'div', { cls: 'dg-zone dg-zone-values', attrs: { role: 'list', 'aria-label': 'Values' }, data: { well: 'values' } },
+          [h(doc, 'button', { cls: 'dg-zl dg-pick', text: 'Values', attrs: { type: 'button', 'aria-keyshortcuts': 'V', title: 'Values (V)' }, data: { pick: 'values' } })].concat(items));
+      }
+      panes(el) {
+        const doc = this.doc, v = this.view;
+        if (v.ui.panesClosed) {
+          el.classList.add('dg-rail');
+          el.append(h(doc, 'button', { cls: 'dg-rail-btn', text: '«', attrs: { type: 'button', 'aria-label': 'Open the Build and Fields panes', title: 'Open the panes' }, data: { act: 'panes' } }),
+            h(doc, 'span', { cls: 'dg-rail-label', text: 'Build · Fields' }));
+          return;
+        }
+        const head = (text, act) => h(doc, 'div', { cls: 'dg-pane-head' }, [h(doc, 'span', { text: text }), act ? h(doc, 'button', { cls: 'dg-pane-close', text: '»', attrs: { type: 'button', 'aria-label': 'Close the panes to a rail', title: 'Close the panes' }, data: { act: act } }) : null]);
+        const build = h(doc, 'section', { cls: 'dg-build', attrs: { 'aria-label': 'Build' } }, [head('Build', 'panes')]);
+        if (this.views) { build.append(h(doc, 'div', { cls: 'dg-pane-views' }, [this.views.button()])); }
+        build.append(h(doc, 'div', { cls: 'dg-zones' }, ['rows', 'columns', 'values', 'filters'].map((w) => this.zone(w, 'panel'))), this.switches());
+        if (v.o.customize !== false) { build.append(h(doc, 'button', { cls: 'dg-customize', text: '‹ Close the panes', attrs: { type: 'button', title: 'Back to the compact line (\\)' }, data: { act: 'customize' } })); }
+        const list = h(doc, 'div', { cls: 'dg-field-list', attrs: { role: 'tree', 'aria-label': 'Fields' } }, this.fieldTree());
+        const fields = h(doc, 'section', { cls: 'dg-fieldpane', attrs: { 'aria-label': 'Fields' } }, [head('Fields', null), this.searchBox(), list]);
+        el.append(build, fields);
+      }
+      fieldTree() {
+        const doc = this.doc, w = this.w(), out = [], q = this.search.toLowerCase();
+        const groups = fieldGroups(w, 'rows').concat(fieldGroups(w, 'values').filter((g) => g.id.indexOf('m:') === 0));
+        groups.forEach((g) => {
+          const items = g.items.filter((it) => !q || (it.label + ' ' + (it.detail || '') + ' ' + (it.children || []).map((c) => c.label).join(' ')).toLowerCase().indexOf(q) >= 0);
+          if (!items.length) { return; }
+          const closed = !q && this.closedGroups.has(g.id);
+          out.push(h(doc, 'div', { cls: 'dg-fgroup', attrs: { role: 'presentation' }, data: { group: g.id } }, [closed ? '▸ ' : '▾ ', g.label, h(doc, 'span', { cls: 'dg-fcount', text: String(items.length) })]));
+          if (closed) { return; }
+          items.forEach((it) => {
+            if (it.children) {
+              const open = this.openHier.has(it.id) || !!q;
+              out.push(h(doc, 'div', { cls: 'dg-field dg-hfield', attrs: { role: 'treeitem', 'aria-expanded': String(open), draggable: 'true' }, data: { hier: it.id.slice(2), well: '', index: '-1' } },
+                [h(doc, 'span', { cls: 'dg-twist', text: open ? '▾' : '▸', data: { act: 'hier-open' } }), h(doc, 'span', { cls: 'dg-ficon', text: it.icon }), h(doc, 'b', { text: it.label }),
+                  h(doc, 'span', { cls: 'dg-fdetail', text: it.detail }), it.checked ? h(doc, 'span', { cls: 'dg-fin', text: '✓' }) : null]));
+              if (open) { it.children.forEach((l) => out.push(this.fieldRow(l, true))); }
+              return;
+            }
+            out.push(this.fieldRow(it, false));
           });
         });
         return out;
+      }
+      fieldRow(it, level) {
+        const doc = this.doc, w = this.w(), f = this.view.model.columns.get(it.id) || {};
+        const inAny = ['rows', 'columns', 'values', 'filters'].some((x) => w.has(x, it.id));
+        const box = h(doc, 'input', { attrs: { type: 'checkbox', 'aria-label': 'Use ' + it.label }, data: { use: it.id } });
+        box.checked = inAny;
+        return h(doc, 'div', { cls: 'dg-field' + (level ? ' dg-level' : ''), attrs: { role: 'treeitem', draggable: 'true', title: f.description || null }, data: { field: it.id, well: '', index: '-1' } },
+          [box, it.icon ? h(doc, 'span', { cls: 'dg-ficon', text: it.icon }) : null, h(doc, 'span', { text: it.label }), f.additive === false && f.type === 'number' ? h(doc, 'span', { cls: 'dg-na', text: '◆' }) : null,
+            it.note && !level ? h(doc, 'span', { cls: 'dg-ftype', text: it.note }) : null]);
       }
       switches() {
         const doc = this.doc, v = this.view, m = v.model;
@@ -4242,16 +4810,40 @@
           sw('above', 'Subtotals above', m.pivotExtra.subtotals === 'above'), sw('defer', 'Defer update', !!v.draft),
           h(doc, 'button', { cls: 'dg-btn', text: 'Update', attrs: { type: 'button', disabled: !v.draft || !v.draftDirty }, data: { act: 'apply-draft' } })]);
       }
+      unusedChips() { return this.w().fieldList(this.search).filter((f) => !f.in.length && !f.more && !f.hierarchy).map((f) => this.chip(f.id, '', -1)); }
       zone(well, how) {
         const doc = this.doc, w = this.w(), st = w.state;
-        const label = how === 'lane' ? LANE[well] : NAMES[well];
-        const items = well === 'values' ? st.values.map((v, i) => this.chip(v.colId, well, i)) : well === 'filters' ? st.filters.map((f, i) => this.chip(f.colId, well, i)) : st[well].map((id, i) => this.chip(id, well, i));
+        let items;
+        if (well === 'values') { items = st.values.map((v, i) => this.chip(v.colId, well, i)); }
+        else if (well === 'filters') { items = st.filters.map((f, i) => this.chip(f.colId, well, i)); }
+        else { items = how === 'lane' ? st[well].map((id, i) => this.chip(id, well, i)) : this.segmentChips(well); }
         if (well === 'filters') {
           (this.view.model.pivotExtra.valueFilters || []).forEach((f, i) => items.push(this.vfChip(f, i)));
           if (st.values.length && st.rows.length) { items.push(h(doc, 'button', { cls: 'dg-add-vf', text: '+ value filter', attrs: { type: 'button', 'aria-label': 'Add a value filter' }, data: { act: 'add-vf' } })); }
         }
-        if (!items.length) { items.push(h(doc, 'span', { cls: 'dg-zone-hint', text: how === 'lane' ? '—' : 'Drop fields here' })); }
-        return h(doc, 'div', { cls: 'dg-zone', attrs: { role: 'list', 'aria-label': NAMES[well] }, data: { well: well } }, [h(doc, 'span', { cls: 'dg-zl', text: label })].concat(items));
+        if (how === 'line' || how === 'panel') {
+          items.push(h(doc, 'button', { cls: 'dg-add', text: '+', attrs: { type: 'button', 'aria-label': 'Add to ' + NAMES[well] + ' (' + KEYS[well] + ')', title: NAMES[well] + ' (' + KEYS[well] + ')' }, data: { pick: well } }));
+        } else if (!items.length) { items.push(h(doc, 'span', { cls: 'dg-zone-hint', text: how === 'lane' ? '—' : 'Drop fields here' })); }
+        const label = how === 'lane' ? h(doc, 'span', { cls: 'dg-zl', text: LANE[well] })
+          : h(doc, 'button', { cls: 'dg-zl dg-pick', text: NAMES[well], attrs: { type: 'button', 'aria-keyshortcuts': KEYS[well], title: NAMES[well] + ' (' + KEYS[well] + ')' }, data: { pick: well } });
+        return h(doc, 'div', { cls: 'dg-zone', attrs: { role: 'list', 'aria-label': NAMES[well] }, data: { well: well } }, [label].concat(items));
+      }
+      segmentChips(well) {
+        return this.w().segments(well).map((s) => (s.hierarchy ? this.hierChip(s, well) : this.chip(s.ids[0], well, s.index)));
+      }
+      hierChip(s, well) {
+        const doc = this.doc, hh = s.hierarchy, labels = s.ids.map((id) => (hh.levels.find((l) => l.id === id) || {}).label || id);
+        const text = hh.id + ' ' + labels.join(' › ');
+        const deepest = hh.levels.findIndex((l) => l.id === s.ids[s.ids.length - 1]);
+        return h(doc, 'span', { cls: 'dg-chip dg-hchip', attrs: { role: 'listitem', tabindex: '0', draggable: 'true', 'aria-label': text + ' in ' + NAMES[well] + '. Alt+Up and Alt+Down: a level up or down; Enter: its levels; Delete: remove', title: hh.title + ': ' + labels.join(' › ') },
+          data: { hier: hh.id, well: well, field: s.ids[0], index: String(s.index) } }, [
+          h(doc, 'span', { cls: 'dg-ficon', text: '⋔', attrs: { 'aria-hidden': 'true' } }), h(doc, 'b', { text: hh.id }),
+          h(doc, 'button', { cls: 'dg-chip-menu', text: '▾', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'The levels of ' + hh.id }, data: { pick: well } }),
+          h(doc, 'span', { cls: 'dg-chip-label', text: labels.join(' › ') }),
+          h(doc, 'span', { cls: 'dg-stepper' }, [
+            h(doc, 'button', { cls: 'dg-step', text: '▲', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Up a level (Alt+Up)', title: 'Up a level (Alt+↑)', disabled: s.ids.length < 2 ? true : null }, data: { step: '-1' } }),
+            h(doc, 'button', { cls: 'dg-step', text: '▼', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'The next level (Alt+Down)', title: 'The next level (Alt+↓)', disabled: deepest >= hh.levels.length - 1 ? true : null }, data: { step: '1' } })]),
+          h(doc, 'button', { cls: 'dg-chip-x', text: '×', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Remove ' + hh.id + ' from ' + NAMES[well] } })]);
       }
       chip(colId, well, index) {
         const doc = this.doc, w = this.w(), c = w.columns.get(colId);
@@ -4259,7 +4851,8 @@
         let text = c.header;
         if (well === 'values') {
           const v = w.state.values[index];
-          text = v.as ? v.as : c.additive === false ? c.header : c.header + (v.aggFunc && v.aggFunc !== 'sum' ? ' (' + w.funcLabel(v.aggFunc).toLowerCase() + ')' : '');
+          text = v.as ? v.as : w.labelOf(v);
+          if (v.showAs) { text += ' · ' + v.showAs.replace(/:1:/, ' vs ').replace(/^pct-/, '% '); }
         }
         if (well === 'filters') {
           const f = w.state.filters[index].filter;
@@ -4267,11 +4860,11 @@
           if (n > 0) { text += ' (−' + n + ')'; } else if (n < 0) { text += ' (' + (-n) + ')'; }
         }
         const kids = [h(doc, 'span', { cls: 'dg-chip-label', text: text })];
-        if (c.additive === false && c.type === 'number') { kids.push(h(doc, 'span', { cls: 'dg-na', text: '◆', attrs: { 'aria-label': 'not additive' } })); }
+        if (c.additive === false && c.type === 'number') { kids.push(h(doc, 'span', { cls: 'dg-na', text: '◆', attrs: { 'aria-label': 'computed per cell' } })); }
         kids.push(h(doc, 'button', { cls: 'dg-chip-menu', text: '▾', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Options of ' + text } }));
         if (well) { kids.push(h(doc, 'button', { cls: 'dg-chip-x', text: '×', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Remove ' + text + ' from ' + NAMES[well] } })); }
-        return h(doc, 'span', { cls: 'dg-chip' + (c.type === 'number' ? ' dg-measure' : '') + (c.additive === false ? ' dg-chip-nadd' : ''),
-          attrs: { role: 'listitem', tabindex: '0', draggable: 'true', 'aria-label': text + (well ? ' in ' + NAMES[well] : ', a field') + '. Enter for options, Delete to remove' },
+        return h(doc, 'span', { cls: 'dg-chip' + (c.type === 'number' ? ' dg-measure' : '') + (well === 'values' ? ' dg-vchip' : '') + (c.additive === false ? ' dg-chip-nadd' : ''),
+          attrs: { role: 'listitem', tabindex: '0', draggable: 'true', title: c.description || null, 'aria-label': text + (well ? ' in ' + NAMES[well] : ', a field') + '. Enter for options, Delete to remove' },
           data: { field: colId, well: well, index: String(index) } }, kids);
       }
       vfChip(f, i) {
@@ -4285,13 +4878,13 @@
         el.addEventListener('keydown', (e) => this.key(e));
         el.addEventListener('change', (e) => this.change(e));
         el.addEventListener('dragstart', (e) => {
-          const c = e.target.closest('[data-field]');
+          const c = e.target.closest('[data-field], [data-hier]');
           if (!c) { return; }
-          this.dragging = { field: c.dataset.field, from: c.dataset.well || '', index: +c.dataset.index };
+          this.dragging = { field: c.dataset.field || '', hier: c.dataset.hier || '', from: c.dataset.well || '', index: +(c.dataset.index || -1) };
           c.classList.add('dg-dragging');
           e.dataTransfer.effectAllowed = 'move';
           e.dataTransfer.setData(MIME, JSON.stringify(this.dragging));
-          e.dataTransfer.setData('text/plain', this.dragging.field);
+          e.dataTransfer.setData('text/plain', this.dragging.field || this.dragging.hier);
         });
         el.addEventListener('dragend', () => { this.dragging = null; el.querySelectorAll('.dg-over').forEach((z) => z.classList.remove('dg-over')); });
         el.addEventListener('dragover', (e) => {
@@ -4310,13 +4903,28 @@
           let d = this.dragging;
           if (!d) { try { d = JSON.parse(e.dataTransfer.getData(MIME)); } catch (err) { d = null; } }
           if (!d) { return; }
+          if (d.hier) { this.moveHierarchy(d.hier, d.from, z.dataset.well || ''); return; }
           if (!z.dataset.well) { if (d.from) { this.remove(d.from, d.from === 'values' || d.from === 'filters' ? d.index : d.field, d.field); } return; }
           const chips = Array.from(z.querySelectorAll('.dg-chip[data-field]'));
           const vertical = z.closest('.dg-wells-panel') !== null;
           let at = chips.findIndex((c) => { const r = c.getBoundingClientRect(); return vertical ? e.clientY < r.top + r.height / 2 : e.clientX < r.left + r.width / 2; });
-          if (at < 0) { at = chips.length; }
+          at = at < 0 ? this.w().state[z.dataset.well].length : +chips[at].dataset.index;
           this.move(d.field, d.from, d.index, z.dataset.well, at);
         });
+      }
+      moveHierarchy(id, from, to) {
+        const w = this.w(), v = this.view, hh = w.hierarchies.find((x) => x.id === id);
+        if (!hh) { return; }
+        const levels = from ? hh.levels.filter((l) => w.has(from, l.id)).map((l) => l.id) : [hh.levels[0].id];
+        if (!to) { if (from) { w.setHierarchyLevels(from, id, []); v.wellsChanged(id + ' taken out of ' + NAMES[from]); } return; }
+        if (to === 'rows' || to === 'columns') {
+          if (from && from !== to && (from === 'rows' || from === 'columns')) { w.setHierarchyLevels(from, id, []); }
+          w.setHierarchyLevels(to, id, from === to ? levels : levels.concat(hh.levels.filter((l) => w.has(to, l.id)).map((l) => l.id)));
+          v.wellsChanged(id + ' to ' + NAMES[to]);
+          return;
+        }
+        if (to === 'filters') { levels.forEach((l) => { if (!w.has('filters', l)) { w.drop(l, 'filters'); } }); v.wellsChanged(id + ' to Filters'); return; }
+        v.say(hh.title + ' cannot be a value: its levels group the rows');
       }
       move(field, from, fromIndex, to, at) {
         const w = this.w(), v = this.view;
@@ -4340,29 +4948,72 @@
         this.w().remove(well, which);
         this.view.wellsChanged('Removed ' + this.header(field) + ' from ' + NAMES[well]);
       }
+      pick(well, anchor) {
+        const root = this.view.regions ? this.view.regions.wells : null;
+        const at = anchor || (root && root.querySelector('[data-well="' + well + '"] .dg-pick')) || (root && root.querySelector('[data-pick="' + well + '"]')) || this.view.host;
+        openPicker(this.view, well, at);
+      }
+      openViews() {
+        if (!this.views) { return false; }
+        const root = this.view.regions ? this.view.regions.wells : null, b = root && root.querySelector('.dg-viewbtn');
+        this.views.open(b || this.view.host);
+        return true;
+      }
+      step(dir, id) {
+        const w = this.w(), seg = w.segments('rows').find((s) => s.hierarchy && (!id || s.hierarchy.id === id)) || w.segments('columns').find((s) => s.hierarchy && (!id || s.hierarchy.id === id));
+        if (!seg) { this.view.say('No hierarchy in Rows: add one with R'); return; }
+        const well = w.state.rows.indexOf(seg.ids[0]) >= 0 ? 'rows' : 'columns';
+        const r = w.stepHierarchy(well, seg.hierarchy.id, dir);
+        if (!r.ok) { this.view.say(r.why); return; }
+        const now = w.segments(well).find((s) => s.hierarchy === seg.hierarchy);
+        this.view.wellsChanged(seg.hierarchy.id + ': ' + (now ? now.ids.map((x) => (seg.hierarchy.levels.find((l) => l.id === x) || {}).label).join(' › ') : ''));
+      }
+      valueFilterMenu(index, anchor) { valueFilterMenu(this, index, anchor); }
       click(e) {
-        const t = e.target, v = this.view;
+        const t = e.target, v = this.view, w = this.w();
         const act = t.closest('[data-act]');
-        if (act && act.dataset.act === 'add-vf') { this.valueFilterMenu(-1, act); return; }
-        if (act && act.dataset.act === 'apply-draft') { v.applyDraft(); return; }
+        if (act) {
+          const a = act.dataset.act;
+          if (a === 'add-vf') { valueFilterMenu(this, -1, act); return; }
+          if (a === 'apply-draft') { v.applyDraft(); return; }
+          if (a === 'views') { this.views.open(act); return; }
+          if (a === 'customize') { v.toggleCustomize(); return; }
+          if (a === 'panes') { v.ui.panesClosed = !v.ui.panesClosed; v.regions.main.classList.toggle('dg-panes-closed', !!v.ui.panesClosed); v.renderChrome(); return; }
+          if (a === 'hier-open') { const id = 'h:' + t.closest('[data-hier]').dataset.hier; if (this.openHier.has(id)) { this.openHier.delete(id); } else { this.openHier.add(id); } v.renderChrome(); return; }
+        }
+        const grp = t.closest('.dg-fgroup');
+        if (grp) { const id = grp.dataset.group; if (this.closedGroups.has(id)) { this.closedGroups.delete(id); } else { this.closedGroups.add(id); } v.renderChrome(); return; }
+        const step = t.closest('[data-step]');
+        if (step) { const chip = step.closest('[data-hier]'); const r = w.stepHierarchy(chip.dataset.well, chip.dataset.hier, +step.dataset.step); if (!r.ok) { v.say(r.why); } else { v.wellsChanged(chip.dataset.hier + ' ' + (+step.dataset.step > 0 ? 'down a level' : 'up a level')); } return; }
+        const hchip = t.closest('.dg-hchip');
+        if (hchip) {
+          if (t.closest('.dg-chip-x')) { w.setHierarchyLevels(hchip.dataset.well, hchip.dataset.hier, []); v.wellsChanged(hchip.dataset.hier + ' taken out of ' + NAMES[hchip.dataset.well]); return; }
+          openPicker(v, hchip.dataset.well, hchip);
+          return;
+        }
+        const pk = t.closest('[data-pick]');
+        if (pk) { openPicker(v, pk.dataset.pick, pk); return; }
+        const tog = t.closest('.dg-vtoggle');
+        if (tog) { w.drop(tog.dataset.field, 'values'); v.wellsChanged(this.header(tog.dataset.field) + ' to Values'); return; }
         const vf = t.closest('.dg-vf');
         if (vf) {
           const i = +vf.dataset.vf;
           if (t.closest('.dg-chip-x')) { v.setValueFilters(v.model.pivotExtra.valueFilters.filter((x, k) => k !== i)); return; }
-          this.valueFilterMenu(i, vf);
+          valueFilterMenu(this, i, vf);
           return;
         }
         const chip = t.closest('[data-field]');
         if (!chip || t.matches('input')) { return; }
         const field = chip.dataset.field, well = chip.dataset.well, index = +chip.dataset.index;
         if (t.closest('.dg-chip-x')) { this.remove(well, well === 'values' ? index : field, field); return; }
-        if (t.closest('.dg-chip-menu') || !well) { this.chipMenu(chip); }
+        if (t.closest('.dg-chip-menu') || !well || well === 'values') { chipMenu(this, chip); }
       }
       change(e) {
         const t = e.target, v = this.view, w = this.w();
         if (t.dataset.use) {
           const id = t.dataset.use, c = w.columns.get(id);
-          if (t.checked) { w.drop(id, c.enableValue ? 'values' : c.enableRowGroup ? 'rows' : 'filters'); }
+          const measure = c.role === 'measure' || (c.measure && !c.enableRowGroup) || (c.enableValue && !c.enableRowGroup);
+          if (t.checked) { w.drop(id, measure ? 'values' : c.enableRowGroup ? 'rows' : 'filters'); }
           else {
             const st = w.getState();
             w.setState({ rows: st.rows.filter((x) => x !== id), columns: st.columns.filter((x) => x !== id), values: st.values.filter((x) => x.colId !== id), filters: st.filters.filter((x) => x.colId !== id) });
@@ -4375,10 +5026,16 @@
       key(e) {
         const chip = e.target.closest ? e.target.closest('.dg-chip') : null;
         if (!chip || e.target !== chip) { return; }
-        const field = chip.dataset.field, well = chip.dataset.well, index = +chip.dataset.index;
+        const field = chip.dataset.field, well = chip.dataset.well, index = +chip.dataset.index, w = this.w();
+        if (chip.dataset.hier) {
+          if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); this.step(e.key === 'ArrowDown' ? 1 : -1, chip.dataset.hier); return; }
+          if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); openPicker(this.view, well, chip); return; }
+          if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); w.setHierarchyLevels(well, chip.dataset.hier, []); this.view.wellsChanged(chip.dataset.hier + ' taken out of ' + NAMES[well]); }
+          return;
+        }
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
           e.preventDefault();
-          if (chip.dataset.vf !== undefined) { this.valueFilterMenu(+chip.dataset.vf, chip); } else { this.chipMenu(chip); }
+          if (chip.dataset.vf !== undefined) { valueFilterMenu(this, +chip.dataset.vf, chip); } else if (well === 'values') { valueMenu(this, chip, index); } else { chipMenu(this, chip); }
         } else if ((e.key === 'Delete' || e.key === 'Backspace') && well) {
           e.preventDefault();
           if (chip.dataset.vf !== undefined) { this.view.setValueFilters(this.view.model.pivotExtra.valueFilters.filter((x, k) => k !== +chip.dataset.vf)); }
@@ -4388,92 +5045,18 @@
           this.move(field, well, index, well, e.key === 'ArrowLeft' ? Math.max(0, index - 1) : index + 2);
         }
       }
-      chipMenu(chip) {
-        const field = chip.dataset.field, well = chip.dataset.well, index = +chip.dataset.index, v = this.view, w = this.w(), c = w.columns.get(field);
-        const items = () => {
-          const out = [];
-          if (well === 'values') {
-            const val = w.state.values[index];
-            if (c.additive === false) { out.push({ heading: 'Aggregation · computed by the server' }, { id: 'agg-server', label: c.measure || c.header, checked: true, disabled: true, why: c.header + ' is not additive: every total is the server\'s figure for its group, never a sum made in the browser' }); }
-            else { out.push({ heading: 'Aggregation' }); w.funcs().forEach((f) => out.push({ id: 'agg:' + f.name, label: f.label + (f.server ? ' (server)' : ''), checked: val.aggFunc === f.name })); }
-            out.push({ sep: true });
-          }
-          if (well === 'filters') {
-            const f = w.state.filters[index].filter, ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
-            out.push({ heading: 'Show ' + c.header });
-            v.membersOf(field).slice(0, 200).forEach((mm) => out.push({ id: 'member:' + mm.text, label: mm.text + (mm.count !== undefined ? '  (' + mm.count + ')' : ''), checked: !ex.has(mm.text), keep: true }));
-            out.push({ id: 'members-all', label: 'Select all' }, { id: 'members-none', label: 'Clear all' }, { sep: true });
-          }
-          if ((well === 'rows' || well === 'columns') && v.model.pivotMode) {
-            const s = (v.model.pivotExtra.sort || {})[c.field], first = w.toView().values[0];
-            out.push({ heading: 'Order of ' + c.header }, { id: 'order-label', label: 'By name', checked: !s || s.by === 'label' });
-            if (first) { out.push({ id: 'order-measure', label: 'By ' + first.as + ', largest first', checked: !!s && s.by === first.as }, { id: 'top-5', label: 'Top 5 by ' + first.as + ' (the rest in Others)', checked: !!(v.model.pivotExtra.top || {})[c.field] }); }
-            out.push({ sep: true });
-          }
-          if (!well) { ['rows', 'columns', 'values', 'filters'].forEach((t) => out.push({ id: 'to:' + t, label: 'Add to ' + NAMES[t], disabled: !w.canDrop(field, t).ok, why: w.canDrop(field, t).why })); }
-          else {
-            ['rows', 'columns', 'values', 'filters'].filter((t) => t !== well).forEach((t) => out.push({ id: 'to:' + t, label: 'Move to ' + NAMES[t], disabled: !w.canDrop(field, t).ok, why: w.canDrop(field, t).why }));
-            out.push({ id: 'left', label: 'Move left', key: 'Ctrl+←', disabled: index === 0 }, { id: 'right', label: 'Move right', key: 'Ctrl+→' }, { sep: true }, { id: 'remove', label: 'Remove', key: 'Delete', icon: '×' });
-          }
-          return out;
-        };
-        v.menu.open(items, { anchor: chip, label: c.header + ' options', theme: v.host, run: (id) => this.chipAction(id, field, well, index) });
-      }
-      chipAction(id, field, well, index) {
-        const v = this.view, w = this.w(), c = w.columns.get(field);
-        if (id.indexOf('agg:') === 0) { const r = w.setAggregation(index, id.slice(4)); if (!r.ok) { v.say(r.why); } v.wellsChanged(c.header + ': ' + w.funcLabel(id.slice(4))); return; }
-        if (id.indexOf('member:') === 0) {
-          const text = id.slice(7), f = w.state.filters[index].filter, ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
-          if (ex.has(text)) { ex.delete(text); } else { ex.add(text); }
-          w.setFilter(field, ex.size ? { type: 'set', excluded: Array.from(ex) } : null);
-          v.wellsChanged(null);
-          return;
-        }
-        if (id === 'members-all') { w.setFilter(field, null); v.wellsChanged('All of ' + c.header); return; }
-        if (id === 'members-none') { w.setFilter(field, { type: 'set', excluded: v.membersOf(field).map((m) => m.text) }); v.wellsChanged('None of ' + c.header); return; }
-        if (id === 'order-label' || id === 'order-measure') {
-          const sort = Object.assign({}, v.model.pivotExtra.sort);
-          const first = w.toView().values[0];
-          if (id === 'order-label') { delete sort[c.field]; } else { sort[c.field] = { by: first.as, desc: true }; }
-          v.setPivotOptions({ sort: sort }, 'Order of ' + c.header + ' changed');
-          return;
-        }
-        if (id === 'top-5') {
-          const top = Object.assign({}, v.model.pivotExtra.top), first = w.toView().values[0];
-          if (top[c.field]) { delete top[c.field]; } else { top[c.field] = { n: 5, by: first.as }; }
-          v.setPivotOptions({ top: top }, 'Top 5 of ' + c.header);
-          return;
-        }
-        if (id.indexOf('to:') === 0) { this.move(field, well, index, id.slice(3)); return; }
-        if (id === 'left' || id === 'right') { this.move(field, well, index, well, id === 'left' ? Math.max(0, index - 1) : index + 2); return; }
-        if (id === 'remove') { this.remove(well, well === 'values' ? index : field, field); }
-      }
-      valueFilterMenu(index, anchor) {
-        const v = this.view, w = this.w();
-        const view = w.toView(), dims = view.rows, measures = view.values.map((x) => x.as);
-        if (!dims.length || !measures.length) { v.say('A value filter needs a row field and a value'); return; }
-        const list = (v.model.pivotExtra.valueFilters || []).slice();
-        const cur = index >= 0 ? Object.assign({}, list[index]) : { dim: dims[dims.length - 1], by: measures[0], op: 'gt', value: 0 };
-        const save = (f) => { if (index >= 0) { list[index] = f; } else { list.push(f); } v.setValueFilters(list); };
-        const items = () => {
-          const med = v.levelFigures(cur.dim, cur.by);
-          const out = [{ heading: 'Value filter on ' + this.header(cur.dim) }];
-          dims.forEach((d) => out.push({ id: 'dim:' + d, label: 'Level: ' + this.header(d), checked: cur.dim === d, keep: true }));
-          out.push({ sep: true }, { heading: 'Measure' });
-          measures.forEach((m) => out.push({ id: 'by:' + m, label: m, checked: cur.by === m, keep: true }));
-          out.push({ sep: true }, { heading: 'Condition' }, { id: 'c:gt:0', label: cur.by + ' > 0' }, { id: 'c:lt:0', label: cur.by + ' < 0' });
-          if (med) { out.push({ id: 'c:gt:' + med.median, label: cur.by + ' > ' + v.fmtMeasure(cur.by, med.median) + ' (the median)' }, { id: 'c:gt:' + med.p75, label: cur.by + ' > ' + v.fmtMeasure(cur.by, med.p75) + ' (the top quarter)' }); }
-          out.push({ id: 'custom', label: 'Condition', input: { placeholder: '> 400k', value: index >= 0 ? (cur.op === 'gt' ? '> ' : cur.op === 'lt' ? '< ' : '') + cur.value : '' } });
-          if (index >= 0) { out.push({ sep: true }, { id: 'remove', label: 'Remove this filter', icon: '×' }); }
-          return out;
-        };
-        v.menu.open(items, { anchor: anchor, label: 'Value filter', theme: v.host, run: (id, value) => {
-          if (id.indexOf('dim:') === 0) { cur.dim = id.slice(4); return; }
-          if (id.indexOf('by:') === 0) { cur.by = id.slice(3); return; }
-          if (id.indexOf('c:') === 0) { const [, op, n] = id.split(':'); save(Object.assign(cur, { op: op, value: +n })); return; }
-          if (id === 'custom') { const c = parseCondition(value); if (!c) { v.say('Write a condition such as > 400k or < 0'); return; } save(Object.assign(cur, c)); return; }
-          if (id === 'remove') { v.setValueFilters(list.filter((x, k) => k !== index)); }
-        } });
+      hostKey(e) {
+        const t = e.target, tag = t && t.tagName;
+        if (e.defaultPrevented || e.ctrlKey || e.metaKey || (t && (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable))) { return false; }
+        if (this.view.o.chrome === false || !this.view.model) { return false; }
+        const k = e.key;
+        if (e.altKey && (k === 'ArrowUp' || k === 'ArrowDown')) { e.preventDefault(); this.step(k === 'ArrowDown' ? 1 : -1); return true; }
+        if (e.altKey) { return false; }
+        if (k === '\\' && this.view.o.customize !== false) { e.preventDefault(); this.view.toggleCustomize(); return true; }
+        if ((k === 'V') && e.shiftKey && this.views) { e.preventDefault(); this.openViews(); return true; }
+        const well = { r: 'rows', c: 'columns', v: 'values', f: 'filters' }[String(k).toLowerCase()];
+        if (well && !e.shiftKey && this.view.model.layout !== 'terminal') { e.preventDefault(); this.pick(well); return true; }
+        return false;
       }
     }
     return { "WellsView": WellsView };
@@ -4514,6 +5097,7 @@
         list.forEach((it) => {
           if (it.sep) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-sep', attrs: { role: 'separator' } })); return; }
           if (it.heading) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-head', text: it.heading, attrs: { role: 'presentation' } })); return; }
+          if (it.note) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-note', text: it.note, attrs: { role: 'note' } })); return; }
           if (it.input) {
             const field = h(doc, 'input', { cls: 'dg-menu-input', attrs: { type: 'text', placeholder: it.input.placeholder || '', 'aria-label': it.label, value: it.input.value || '' } });
             const go = () => this.run(it, field.value);
@@ -4529,6 +5113,7 @@
               'aria-disabled': it.disabled ? 'true' : null, title: it.disabled && it.why ? it.why : null },
             data: { action: it.id }
           }, [h(doc, 'span', { cls: 'dg-menu-ic', text: it.checked ? '✓' : (it.icon || ''), attrs: { 'aria-hidden': 'true' } }), h(doc, 'span', { cls: 'dg-menu-label', text: it.label }),
+            it.disabled && it.why && it.showWhy ? h(doc, 'span', { cls: 'dg-menu-why', text: it.why }) : null,
             it.key ? h(doc, 'span', { cls: 'dg-menu-key', text: it.key }) : null]);
           item.addEventListener('click', (e) => { e.stopPropagation(); this.run(it); });
           item.addEventListener('mousemove', () => { if (this.doc.activeElement !== item) { item.focus(); } });
@@ -4705,7 +5290,7 @@
         if (id === 'grand') { this.ui.grandColumn = on; this._disp = null; this.refresh(); return; }
         if (id === 'above') { this.setPivotOptions({ subtotals: on ? 'above' : 'below' }, 'Subtotals ' + (on ? 'above' : 'below')); return; }
         if (id === 'defer') {
-          if (on) { this.draft = new WellsModel(m.columns, m.wells.getState()); this.draft.serverFuncs = m.wells.serverFuncs; this.draft.allowedFuncs = m.wells.allowedFuncs; this.draftDirty = false; } else { const d = this.draftDirty; if (d) { this.applyDraft(); } this.draft = null; }
+          if (on) { this.draft = new WellsModel(m.columns, m.wells.getState()); this.draft.serverFuncs = m.wells.serverFuncs; this.draft.allowedFuncs = m.wells.allowedFuncs; this.draft.hierarchies = m.wells.hierarchies; this.draftDirty = false; } else { const d = this.draftDirty; if (d) { this.applyDraft(); } this.draft = null; }
           this.renderChrome();
         }
       }
@@ -4749,6 +5334,16 @@
         this.refresh();
       }
       measures() { return pivotMeasures(this.model.shownColumns()); }
+      toggleCustomize() {
+        const L = this.model.layout;
+        if (L === 'panel') { this.setLayout(this.backLayout && this.backLayout !== 'panel' ? this.backLayout : 'wells'); }
+        else { this.backLayout = L; this.setLayout('panel'); }
+        this.emitView('customizeChanged', { open: this.model.layout === 'panel' });
+      }
+      openPicker(well) { this.wells.pick(well); }
+      openViews() { return this.wells.openViews(); }
+      stepHierarchy(dir, id) { this.wells.step(dir, id); }
+      setHierarchies(list) { this.model.wells.setHierarchies(list); this.renderChrome(); }
     }
     return { "GridBase": GridBase };
   })();
@@ -4779,10 +5374,10 @@
       R.status = h(doc, 'div', { cls: 'dg-status', attrs: { 'aria-label': 'Status' } });
       R.center = h(doc, 'div', { cls: 'dg-gridarea' }, [v.body.scroller, R.status]);
       if (L === 'panel') {
-        R.side = h(doc, 'aside', { cls: 'dg-side', attrs: { 'aria-label': 'Pivot tool panel' } }, [h(doc, 'div', { cls: 'dg-side-head', text: 'Pivot' }), R.wells]);
+        R.side = h(doc, 'aside', { cls: 'dg-side', attrs: { 'aria-label': 'Pivot panes: Build and Fields' } }, [R.wells]);
         R.card = h(doc, 'div', { cls: 'dg-card', attrs: { role: 'dialog', 'aria-label': 'Explain', hidden: true } });
         R.center.insertBefore(R.toolbar, R.center.firstChild);
-        R.main = h(doc, 'div', { cls: 'dg-main' }, [R.center, R.side, R.card]);
+        R.main = h(doc, 'div', { cls: 'dg-main' + (v.ui.panesClosed ? ' dg-panes-closed' : '') }, [R.center, R.side, R.card]);
         root.append(R.main);
       } else if (L === 'terminal') {
         R.cmd = h(doc, 'div', { cls: 'dg-cmd' });
@@ -5128,6 +5723,7 @@
         this.wire();
         if (o.pivotOptions) { this.model.pivotExtra = Object.assign({}, o.pivotOptions); }
         if (o.pivot) { this.model.wells.setState(o.pivot); this.model.setPivotMode(true); }
+        host.addEventListener('keydown', (e) => this.wells.hostKey(e));      // R C V F, Shift+V, \, Alt+arrows: the wells' keys
         this.watchSize();
         this.refresh();
       }
@@ -6320,7 +6916,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineGridElement = __m["src/drishti_grid-element.js"].defineGridElement;
     function install(root) { if (root && root.document && root.customElements) { defineGridElement(root.customElements, root); } }
-    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "registerAggFunc": __m["src/drishti_aggregate.js"].registerAggFunc, "unregisterAggFunc": __m["src/drishti_aggregate.js"].unregisterAggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot-answer.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot-answer.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot-answer.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot-answer.js"].resultColumns, "cellValue": __m["src/drishti_pivot-answer.js"].cellValue, "measureText": __m["src/drishti_pivot-answer.js"].measureText, "answerFormat": __m["src/drishti_pivot-answer.js"].answerFormat, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "LAYOUTS": __m["src/drishti_grid-model-base.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid-model-base.js"].DENSITIES, "placeGrandRow": __m["src/drishti_grid-model-base.js"].placeGrandRow, "GridModelBase": __m["src/drishti_grid-model-base.js"].GridModelBase, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "consoleTables": __m["src/drishti_doc-console.js"].consoleTables, "rowSelection": __m["src/drishti_doc-select.js"].rowSelection, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "cellLook": __m["src/drishti_grid-ui.js"].cellLook, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement, "AG_MAPPING": __m["src/drishti_grid-ag-map.js"].AG_MAPPING, "AG_NOT_COVERED": __m["src/drishti_grid-ag-map.js"].AG_NOT_COVERED, "AG_GRID_OPTIONS": __m["src/drishti_grid-ag-map.js"].AG_GRID_OPTIONS, "AG_COLUMN_KEYS": __m["src/drishti_grid-ag-map.js"].AG_COLUMN_KEYS, "AG_UNSUPPORTED": __m["src/drishti_grid-ag-map.js"].AG_UNSUPPORTED, "AG_NO_OP": __m["src/drishti_grid-ag-map.js"].AG_NO_OP, "AG_EVENTS": __m["src/drishti_grid-ag-map.js"].AG_EVENTS, "agFilterToDrishti": __m["src/drishti_grid-ag-map.js"].agFilterToDrishti, "drishtiFilterToAg": __m["src/drishti_grid-ag-map.js"].drishtiFilterToAg, "translateFilterModel": __m["src/drishti_grid-ag-map.js"].translateFilterModel, "AG_GROUP_COLUMN": __m["src/drishti_grid-ag.js"].AG_GROUP_COLUMN, "AgReport": __m["src/drishti_grid-ag.js"].AgReport, "agAggFunc": __m["src/drishti_grid-ag.js"].agAggFunc, "translateAgOptions": __m["src/drishti_grid-ag.js"].translateAgOptions, "callGetRows": __m["src/drishti_grid-ag-server.js"].callGetRows, "agRequest": __m["src/drishti_grid-ag-server.js"].agRequest, "agDatasource": __m["src/drishti_grid-ag-server.js"].agDatasource, "parseResultField": __m["src/drishti_grid-ag-server.js"].parseResultField, "agServerPivot": __m["src/drishti_grid-ag-server.js"].agServerPivot, "AgEvents": __m["src/drishti_grid-ag-events.js"].AgEvents, "AgColumnsApi": __m["src/drishti_grid-ag-columns.js"].AgColumnsApi, "AgGridApi": __m["src/drishti_grid-ag-api.js"].AgGridApi, "createGridFromAgOptions": __m["src/drishti_grid-ag-api.js"].createGridFromAgOptions };
+    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "registerAggFunc": __m["src/drishti_aggregate.js"].registerAggFunc, "unregisterAggFunc": __m["src/drishti_aggregate.js"].unregisterAggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot-answer.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot-answer.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot-answer.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot-answer.js"].resultColumns, "cellValue": __m["src/drishti_pivot-answer.js"].cellValue, "measureText": __m["src/drishti_pivot-answer.js"].measureText, "answerFormat": __m["src/drishti_pivot-answer.js"].answerFormat, "answerScales": __m["src/drishti_pivot-answer.js"].answerScales, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "FUNC_LABELS": __m["src/drishti_wells.js"].FUNC_LABELS, "FUNC_ARGS": __m["src/drishti_wells.js"].FUNC_ARGS, "funcLabel": __m["src/drishti_wells.js"].funcLabel, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "fieldIcon": __m["src/drishti_grid-fields.js"].fieldIcon, "fieldGroups": __m["src/drishti_grid-fields.js"].fieldGroups, "pickField": __m["src/drishti_grid-fields.js"].pickField, "openPicker": __m["src/drishti_grid-fields.js"].openPicker, "ViewPicker": __m["src/drishti_grid-views.js"].ViewPicker, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "LAYOUTS": __m["src/drishti_grid-model-base.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid-model-base.js"].DENSITIES, "placeGrandRow": __m["src/drishti_grid-model-base.js"].placeGrandRow, "GridModelBase": __m["src/drishti_grid-model-base.js"].GridModelBase, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "consoleTables": __m["src/drishti_doc-console.js"].consoleTables, "rowSelection": __m["src/drishti_doc-select.js"].rowSelection, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "cellLook": __m["src/drishti_grid-ui.js"].cellLook, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement, "AG_MAPPING": __m["src/drishti_grid-ag-map.js"].AG_MAPPING, "AG_NOT_COVERED": __m["src/drishti_grid-ag-map.js"].AG_NOT_COVERED, "AG_GRID_OPTIONS": __m["src/drishti_grid-ag-map.js"].AG_GRID_OPTIONS, "AG_COLUMN_KEYS": __m["src/drishti_grid-ag-map.js"].AG_COLUMN_KEYS, "AG_UNSUPPORTED": __m["src/drishti_grid-ag-map.js"].AG_UNSUPPORTED, "AG_NO_OP": __m["src/drishti_grid-ag-map.js"].AG_NO_OP, "AG_EVENTS": __m["src/drishti_grid-ag-map.js"].AG_EVENTS, "agFilterToDrishti": __m["src/drishti_grid-ag-map.js"].agFilterToDrishti, "drishtiFilterToAg": __m["src/drishti_grid-ag-map.js"].drishtiFilterToAg, "translateFilterModel": __m["src/drishti_grid-ag-map.js"].translateFilterModel, "AG_GROUP_COLUMN": __m["src/drishti_grid-ag.js"].AG_GROUP_COLUMN, "AgReport": __m["src/drishti_grid-ag.js"].AgReport, "agAggFunc": __m["src/drishti_grid-ag.js"].agAggFunc, "translateAgOptions": __m["src/drishti_grid-ag.js"].translateAgOptions, "callGetRows": __m["src/drishti_grid-ag-server.js"].callGetRows, "agRequest": __m["src/drishti_grid-ag-server.js"].agRequest, "agDatasource": __m["src/drishti_grid-ag-server.js"].agDatasource, "parseResultField": __m["src/drishti_grid-ag-server.js"].parseResultField, "agServerPivot": __m["src/drishti_grid-ag-server.js"].agServerPivot, "AgEvents": __m["src/drishti_grid-ag-events.js"].AgEvents, "AgColumnsApi": __m["src/drishti_grid-ag-columns.js"].AgColumnsApi, "AgGridApi": __m["src/drishti_grid-ag-api.js"].AgGridApi, "createGridFromAgOptions": __m["src/drishti_grid-ag-api.js"].createGridFromAgOptions };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.4.0" }, __m["src/drishti_index.js"]));
 });

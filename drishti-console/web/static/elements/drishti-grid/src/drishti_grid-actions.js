@@ -37,6 +37,7 @@ import { editorOf } from './drishti_grid-edit.js';
 export function onKey(v, e) {
   const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey;
   if (e.target !== v.body.scroller && e.target.closest && e.target.closest('.dg-editor')) { return; }
+  if (e.altKey && (k === 'ArrowUp' || k === 'ArrowDown') && m.pivotMode && v.wells.hostKey(e)) { return; }   // a hierarchy's level
   if (editKey(v, e)) { return; }
   if (mod && e.shiftKey && (k === 'c' || k === 'C')) { e.preventDefault(); runAction(v, 'copy-headers'); return; }
   if (k === 'F2') { e.preventDefault(); v.explainFocused(); return; }

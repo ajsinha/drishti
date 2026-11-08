@@ -75,6 +75,7 @@ export class Menu {
     list.forEach((it) => {
       if (it.sep) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-sep', attrs: { role: 'separator' } })); return; }
       if (it.heading) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-head', text: it.heading, attrs: { role: 'presentation' } })); return; }
+      if (it.note) { el.appendChild(h(doc, 'div', { cls: 'dg-menu-note', text: it.note, attrs: { role: 'note' } })); return; }
       if (it.input) {
         const field = h(doc, 'input', { cls: 'dg-menu-input', attrs: { type: 'text', placeholder: it.input.placeholder || '', 'aria-label': it.label, value: it.input.value || '' } });
         const go = () => this.run(it, field.value);
@@ -90,6 +91,7 @@ export class Menu {
           'aria-disabled': it.disabled ? 'true' : null, title: it.disabled && it.why ? it.why : null },
         data: { action: it.id }
       }, [h(doc, 'span', { cls: 'dg-menu-ic', text: it.checked ? '✓' : (it.icon || ''), attrs: { 'aria-hidden': 'true' } }), h(doc, 'span', { cls: 'dg-menu-label', text: it.label }),
+        it.disabled && it.why && it.showWhy ? h(doc, 'span', { cls: 'dg-menu-why', text: it.why }) : null,
         it.key ? h(doc, 'span', { cls: 'dg-menu-key', text: it.key }) : null]);
       item.addEventListener('click', (e) => { e.stopPropagation(); this.run(it); });
       item.addEventListener('mousemove', () => { if (this.doc.activeElement !== item) { item.focus(); } });

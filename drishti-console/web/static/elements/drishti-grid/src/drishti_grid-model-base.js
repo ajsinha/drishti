@@ -306,4 +306,15 @@ export class GridModelBase {
     if (s.pivotView) { this.pivotState = new PivotState(s.pivotView); }
     return this.setPivotMode(!!s.pivot);
   }
+
+  /**
+   * The pivot's row-header column wide enough for its labels (indented by depth), 220 px at least and 460 at most: full row labels
+   * (POS-BOOK-RATES-3~CORP-BOND-ALLY-4.25-2031), a longer one ends with … and its full path in its tooltip.
+   * @returns {number} px
+   */
+  headWidth() {
+    let w = 220;
+    ((this.answer && this.answer.rows) || []).forEach((r) => { w = Math.max(w, 34 + (r.depth || 0) * 16 + String(r.label || '').length * 7.2); });
+    return Math.min(460, Math.round(w));
+  }
 }

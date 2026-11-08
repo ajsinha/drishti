@@ -52,6 +52,14 @@ export const ADDITIVE_FUNCS = Object.freeze(['sum', 'count']);
  * @property {boolean} [enableValue] may be a value (default: numbers)
  * @property {string} [group] a heading above several columns
  * @property {string} [description] words for the field list
+ * @property {('field'|'measure')} [role] the field pickers' group: a field to group or filter by, or a measure (default: a column with a
+ *   server measure that cannot group rows is a measure)
+ * @property {string} [folder] its display folder in the pickers and the Fields pane (VaR, Contribution, Limits)
+ * @property {boolean} [listHidden=false] listed under "More fields" (a hierarchy's level column, the long tail), still usable
+ * @property {string[]} [funcs] the functions valid for a value of it (the server's catalogue: sum, count, count_distinct, avg, wavg, min,
+ *   max, median, percentile, var_samp, stddev_samp, a custom function's name); default: the grid's by its type
+ * @property {boolean} [perCell] its figure is computed per cell by the server (VaR, ES): it takes no function
+ * @property {string} [unit] money, rate, pct, count: a rate or a percentage is never summed
  * @property {(string|function(*, Object): (string|string[]))} [cellClass] classes on a row's cell (letters, digits, - and _ only; others are
  *   dropped): a name, or a function of the value and the row
  * @property {(Object|function(*, Object): Object)} [cellStyle] a row's cell's style, limited to colour, background, font weight and style,
@@ -241,7 +249,10 @@ export class ColumnModel {
       const hay = fold(c.header + ' ' + c.id + ' ' + c.description + ' ' + (c.group || ''));
       return words.every((w) => hay.indexOf(w) >= 0);
     }).map((c) => ({ id: c.id, header: c.header, type: c.type, group: c.group, rowGroup: !!c.enableRowGroup, pivot: !!c.enablePivot,
-      value: !!c.enableValue, additive: c.additive !== false, description: c.description }));
+      value: !!c.enableValue, additive: c.additive !== false, description: c.description,
+      // the field list's metadata (the server's catalogue): measure or field, the display folder, under "More fields", the unit
+      role: c.role || (c.measure && !c.enableRowGroup ? 'measure' : 'field'), folder: c.folder || null, more: !!c.listHidden, unit: c.unit || null,
+      measure: c.measure || null }));
   }
 
   /**
