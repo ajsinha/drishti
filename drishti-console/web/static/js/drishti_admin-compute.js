@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin → Compute. The page is server-rendered; this carries the administrator's decisions: revoke an approval (approve and reject: Approvals)
    request (a dialog asks for the reason, which goes into the audit log; the server refuses the person who asked), build a pool's
    approved environment, test a pool with the sample engine, cancel a running request. Every call is same-origin JSON to

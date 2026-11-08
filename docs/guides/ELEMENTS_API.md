@@ -7808,6 +7808,33 @@ Problems from elsewhere shown at once, without marking every field tried (a live
 
 Returns `void`.
 
+### drishti_form-host.js
+
+#### `FORM_HOST_SELECTOR`
+
+The attribute that marks a form host.
+
+#### `formOf(host, extra)`
+
+The Form of a host the server drew (made at the first call; later calls answer the same Form).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | an element with data-schema: {schema, value, options} |
+| `[extra]` | `Object` | options added by the page's script (onSubmit, widgets, check) |
+
+Returns `Form\|null`.
+
+#### `upgradeForms(root)`
+
+Every form host under a root made a Form (drishti_app.js does it for each page, with upgradeFields).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `(Document\|HTMLElement)` |  |
+
+Returns `Form[]`.
+
 ### drishti_form-fields.js
 
 #### `defineWidget(name, factory)`
@@ -8027,7 +8054,7 @@ Upgrades every `&lt;input type="date"&gt;`, `"time"` and `"datetime-local"` unde
 | `root` | `(Document\|Element)` |  |
 | `[options]` | `{small: number, offClass: string, dates: UpgradeDateOptions}` |  |
 
-Returns `{dates: DatePicker[], checks: Array&lt;Object&gt;}`.
+Returns `{dates: DatePicker[], checks: Array&lt;Object&gt;, forms: Array&lt;Object&gt;}`: (forms: the server's form hosts made Forms, drishti_form-host.js).
 
 ### drishti_code-modes.js
 
@@ -8650,7 +8677,7 @@ A custom widget: draws a field's control. Returns its element and, as it can, se
 | `[submitLabel='Save']` | `string` |  |
 | `[doneText='Saved']` | `string` | what the form says once onSubmit answered ('': nothing, for a page that shows the answer itself, such as a check) |
 | `[readOnly=false]` | `boolean` |  |
-| `[layout='stacked']` | `('stacked'\|'columns')` |  |
+| `[layout='stacked']` | `('stacked'\|'columns'\|'inline')` | inline: the fields side by side in a row (a filter bar's search and lists) |
 | `[locale]` | `string` | how numbers are read and shown |
 | `[live=false]` | `boolean` | no Save or Reset: each change is the host's at once (a designer's inspector, a property pane) |
 | `[embedded=false]` | `boolean` | no &lt;form&gt; element of its own (the fields sit inside a page's server form, which submits the fields that have a name); implies live |
