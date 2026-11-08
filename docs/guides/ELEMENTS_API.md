@@ -28,9 +28,11 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-designer](#drishti-designer) | 0.1.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
+| [drishti-graph](#drishti-graph) | 0.1.0 | The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel |
+| [drishti-tree](#drishti-tree) | 0.1.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, export, keyboard and ARIA |
 | [drishti-insight](#drishti-insight) | 0.1.0 | Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export |
-| [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser) |
-| [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
+| [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself |
+| [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-tree, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
 
 ## drishti-core
 
@@ -745,6 +747,35 @@ Returns `EventBus`.
 
 The bus a page shares.
 
+### drishti_link.js
+
+#### `SELECTION_EVENT`
+
+The selection's event on the shared bus: {channel, ids, source}.
+
+#### `linkGrid(grid, o)`
+
+Links a drishti-grid (the Grid, the element's grid, or its GridModel) to a selection channel: its row selection is published, and a selection published by a chart selects the grid's rows.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `grid` | `Object` |  |
+| `o` | `{channel: string, bus: Object}` | the channel the charts share; bus default drishti-core's |
+
+Returns `function(): void`: unlinks.
+
+#### `publishSelection(channel, ids, o)`
+
+Publishes a selection on a channel (a page's own control, a test).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `channel` | `string` |  |
+| `ids` | `string[]` |  |
+| `[o]` | `{bus: Object, source: *}` |  |
+
+Returns `void`.
+
 ### drishti_a11y.js
 
 #### `FOCUSABLE`
@@ -1356,6 +1387,80 @@ Draws an Explain state into its place: 'drawer' and 'card' one column, 'split' t
 
 Returns `void`.
 
+### drishti_visual.js
+
+#### `DENSITIES`
+
+The densities every component shares (the grid's three), in the order a picker lists them.
+
+#### `blend(a, b, f)`
+
+A colour between two (each a hex or rgb() colour), as rgb().
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `a` | `string` |  |
+| `b` | `string` |  |
+| `f` | `number` | 0 is a, 1 is b |
+
+Returns `string`.
+
+#### `alpha(c, a)`
+
+A colour with an alpha, as rgba().
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `string` |  |
+| `a` | `number` | 0 to 1 |
+
+Returns `string`.
+
+#### `visualTheme(o)`
+
+The look every drawing component shares (the chart, the graph, the tree): the tokens it draws with, the categorical palette, the tones a spec names, the ramps of scales and the density.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{element: Element, theme: string, density: string, tokens: Object&lt;string, string&gt;}` | element: read the page's computed tokens on it; theme: read a theme of the table instead; tokens: given outright (tests) |
+
+Returns `VisualTheme`.
+
+#### `toneColour(th, tone, i)`
+
+A tone a spec names (good, bad, warn, accent, muted ...) as its colour, or the colour itself, or the palette's nth.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `th` | `VisualTheme` |  |
+| `tone` | `*` | a name, a colour, or a number (the palette's index) |
+| `[i]` | `number` | the palette's index when tone is empty |
+
+Returns `string`.
+
+#### `rampColour(ramp, v, lo, hi)`
+
+The colour of a value on a ramp (five colours) between lo and hi.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ramp` | `string[]` |  |
+| `v` | `number` |  |
+| `lo` | `number` |  |
+| `hi` | `number` |  |
+
+Returns `string`.
+
+#### `formatterFor(f)`
+
+A formatter for a spec's format: a drishti-core named format (amount0, pct2, compact ...), money (compact, two decimals), number, integer, percent, bp, date, {currency: 'USD'}, or a function. Nothing given: a compact figure for large values, else up to two decimals.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `*` |  |
+
+Returns `function(*): string`.
+
 ### drishti_index.js
 
 #### `install(root)`
@@ -1528,6 +1633,19 @@ A table to export.
 | `[start]` | `function(PointerEvent): (boolean\|void)` | the press became a drag; false cancels it |
 | `move` | `function(PointerEvent): void` |  |
 | `end` | `function(PointerEvent, boolean, boolean): void` | (event, committed, moved): committed is false after Escape or a cancel |
+
+#### `VisualTheme` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `dark` | `boolean` |  |
+| `tokens` | `Object&lt;string, string&gt;` | the token values by name without --d- (ink, muted, link ...) |
+| `palette` | `string[]` | the categorical colours, in order |
+| `density` | `string` |  |
+| `tones` | `Object&lt;string, string&gt;` | good, bad, warn, accent, link, pos, neg, muted, faint, ink |
+| `sequential` | `string[]` | five colours from faint to strong |
+| `diverging` | `string[]` | five colours, negative to positive through the ground |
+| `nodata` | `string` |  |
 
 ## drishti-grid
 
@@ -3762,18 +3880,6 @@ The plain Data table a chart keeps (nothing is only in the picture): in a detail
 Returns `HTMLElement`: details.xchart-data (or div.tbl-wrap).
 
 ### drishti_doc-behave.js
-
-#### `treeVisibility(depths, opens, matches)`
-
-What a tree table shows: per row, whether it is visible and whether it is drawn open. With a query (matches given) a row shows when it or a row under it matches, and a row is open when a row under it matches; without one, a row shows when its parent is shown and open.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `depths` | `number[]` | each row's depth, rows in document order (a row's children follow it) |
-| `opens` | `boolean[]` | whether each row is open (by the person) |
-| `matches` | `?boolean[]` | whether each row matches the query, or null when there is no query |
-
-Returns `{visible: boolean[], open: boolean[]}`.
 
 #### `pageInfo(total, page, size)`
 
@@ -11518,6 +11624,41 @@ Returns `string[]`.
 
 The densities: font size, the chart's inner padding, the symbol size and the line width.
 
+#### `chartTheme(o)`
+
+The chart's theme: drishti-core's visualTheme (tokens, palette, tones, ramps) and the chart's sizes at the density.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{element: Element, theme: string, density: string, tokens: Object&lt;string, string&gt;}` | as visualTheme's |
+
+Returns `ChartTheme`.
+
+#### `textStyle(th, colour)`
+
+The text style of the chart's words at the density.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `th` | `ChartTheme` |  |
+| `[colour]` | `string` | default: faint |
+
+Returns `Object`.
+
+#### `axisOf(th, base, fmt)`
+
+An axis of the theme: its line, ticks, split lines and labels with their formatter.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `th` | `ChartTheme` |  |
+| `base` | `Object` | the ECharts axis (type, data, name ...) |
+| `[fmt]` | `function(*): string` | the labels' formatter (value axes) |
+
+Returns `Object`.
+
+### drishti_visual.js
+
 #### `blend(a, b, f)`
 
 A colour between two (each a hex or rgb() colour), as rgb().
@@ -11541,23 +11682,13 @@ A colour with an alpha, as rgba().
 
 Returns `string`.
 
-#### `chartTheme(o)`
-
-The chart's theme: the tokens it draws with, the categorical palette, the tones a spec names, the ramps of scales and the density.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[o]` | `{element: Element, theme: string, density: string, tokens: Object&lt;string, string&gt;}` | element: read the page's computed tokens on it; theme: read a theme of the table instead; tokens: given outright (tests) |
-
-Returns `ChartTheme`.
-
 #### `toneColour(th, tone, i)`
 
 A tone a spec names (good, bad, warn, accent, muted ...) as its colour, or the colour itself, or the palette's nth.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `th` | `ChartTheme` |  |
+| `th` | `VisualTheme` |  |
 | `tone` | `*` | a name, a colour, or a number (the palette's index) |
 | `[i]` | `number` | the palette's index when tone is empty |
 
@@ -11585,29 +11716,6 @@ A formatter for a spec's format: a drishti-core named format (amount0, pct2, com
 | `f` | `*` |  |
 
 Returns `function(*): string`.
-
-#### `textStyle(th, colour)`
-
-The text style of the chart's words at the density.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `th` | `ChartTheme` |  |
-| `[colour]` | `string` | default: faint |
-
-Returns `Object`.
-
-#### `axisOf(th, base, fmt)`
-
-An axis of the theme: its line, ticks, split lines and labels with their formatter.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `th` | `ChartTheme` |  |
-| `base` | `Object` | the ECharts axis (type, data, name ...) |
-| `[fmt]` | `function(*): string` | the labels' formatter (value axes) |
-
-Returns `Object`.
 
 ### drishti_chart-kinds.js
 
@@ -12331,10 +12439,6 @@ Every event a chart emits (on chart.events and as DOM events drishti:&lt;kebab-n
 
 The modes of a chart: card (g2 A, the default) and studio (g2 B).
 
-#### `SELECTION_EVENT`
-
-The selection's event on drishti-core's bus: {channel, ids, source}.
-
 #### class `Chart`
 
 A chart: the spec drawn in its card (or studio), with its tools, Explain, selection, export and live data.
@@ -12524,7 +12628,11 @@ Shows the crosshair and the tooltip at a row (a page's selected row followed by 
 
 Returns `void`.
 
-### drishti_chart-link.js
+### drishti_link.js
+
+#### `SELECTION_EVENT`
+
+The selection's event on the shared bus: {channel, ids, source}.
 
 #### `linkGrid(grid, o)`
 
@@ -12612,10 +12720,10 @@ A panel's chart option: the console's, from the panel's data (VIEWMODEL.md secti
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `kind` | `string` | one of PANEL_KINDS but map (line, area, waterfall, histogram, scatter, candlestick, graph, donut, surface) |
+| `kind` | `string` | one of PANEL_KINDS but map and graph (line, area, waterfall, histogram, scatter, candlestick, donut, surface; a graph panel is drishti-graph's: PanelCharts hands it over) |
 | `data` | `Object` | the panel's data |
 | `tokens` | `Object&lt;string, string&gt;` | panelTokens of the view |
-| `[size]` | `{width: number, height: number}` | the drawing's size (the waterfall's labels and the graph's layers use it) |
+| `[size]` | `{width: number, height: number}` | the drawing's size (the waterfall's labels use it) |
 | `[view]` | `('heatmap'\|'3d')` | the surface's view (default heatmap) |
 
 Returns `Object`: the engine's option.
@@ -12762,6 +12870,7 @@ Returns `void`.
 | `engine` | `function(): Promise&lt;Object&gt;` | loads the engine (ECharts) and resolves with it (the host's loader: its own policy for scripts) |
 | `[gl]` | `function(): Promise&lt;void&gt;` | loads ECharts GL (the surface in 3D); without it a 3D surface is drawn as its heatmap |
 | `[geo]` | `function(): Promise&lt;Object&gt;` | the console's map helper (drishti_geomap.js); without it a map says it did not load |
+| `[graph]` | `function(): Promise&lt;Object&gt;` | loads drishti-graph and resolves with its API (drawGraphPanel draws a graph panel); without it a graph panel says it did not load |
 | `[onLink]` | `function(Object, HTMLElement): void` | a point, a node or a place that names an entity was clicked ({kind, id}, the container) |
 | `[onPlaces]` | `function(HTMLElement, Array&lt;{name: string, link: Object, text: string}&gt;, string): void` | a map's clickable places and its note, for the host to list |
 | `[selector='[data-r-chart]` | `string` | '] the chart containers |
@@ -12797,6 +12906,8 @@ What a kind builds.
 
 #### `ChartTheme` : `Object`
 
+The chart's theme: a VisualTheme (drishti-core) with the chart's sizes.
+
 | Name | Type | Meaning |
 |---|---|---|
 | `dark` | `boolean` |  |
@@ -12828,6 +12939,2709 @@ The options of a chart (the spec says what to draw; these say how it lives in it
 | `[download]` | `function(string, (string\|Blob), string): void` | where exports go (default: a download) |
 | `[height]` | `number` | the drawing's height in pixels (default 300; a map 440) |
 | `[asOf]` | `string` | the data's date, for the status line |
+
+## drishti-graph
+
+Version 0.1.0. Bundle `static/elements/drishti-graph/drishti_graph.js`, global `Drishti.elements.graph`; requires drishti-core, drishti-grid.
+
+### drishti_graph-model.js
+
+#### class `GraphModel`
+
+The graph's nodes and edges with their adjacency.
+
+##### `new GraphModel(data, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[data]` | `GraphData` |  |
+| `[o]` | `{bus: EventBus}` | the bus its events go on (default its own) |
+
+##### `GraphModel.setData(data)`
+
+Replaces every node and edge.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `data` | `GraphData` |  |
+
+Returns `void`.
+
+##### `GraphModel.applyTransaction(tx)`
+
+Applies a change by id: nodes added, updated (merged) and removed with their edges; edges added, updated and removed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `GraphTransaction` |  |
+
+Returns `{addedNodes: string[], removedNodes: string[], addedEdges: string[], removedEdges: string[], updated: number}`.
+
+##### `GraphModel.node(id)`
+
+A node by id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?Object`.
+
+##### `GraphModel.nodeList()`
+
+Every node, in the order given.
+
+Returns `Object[]`.
+
+##### `GraphModel.edgeList()`
+
+Every edge, in the order given.
+
+Returns `Object[]`.
+
+##### `GraphModel.edgesOf(id, dir)`
+
+The edges at a node: out, in or both.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[dir='both']` | `('out'\|'in'\|'both')` |  |
+
+Returns `Object[]`.
+
+##### `GraphModel.neighbours(id, dir)`
+
+A node's neighbours (each once), by direction.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[dir='both']` | `('out'\|'in'\|'both')` |  |
+
+Returns `string[]`.
+
+##### `GraphModel.degree(id)`
+
+How many edges meet a node.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `number`.
+
+##### `GraphModel.types()`
+
+The node types with their counts, in the order first met.
+
+Returns `Array&lt;{type: string, count: number}&gt;`.
+
+##### `GraphModel.fields()`
+
+The attributes (text fields) and measures (number fields) the nodes carry, for the group, size and colour pickers.
+
+Returns `{attributes: string[], measures: string[]}`.
+
+##### `GraphModel.find(words, limit)`
+
+Finds nodes by words in their id or label (case ignored), best first: an exact id, a label that starts with them, then any.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `words` | `string` |  |
+| `[limit=20]` | `number` |  |
+
+Returns `Object[]`.
+
+##### `GraphModel.toData()`
+
+The data as given back (for export and a host's save): nodes and edges as plain objects.
+
+Returns `GraphData`.
+
+### drishti_graph-algo.js
+
+#### `adjacency(g)`
+
+The adjacency of a node list: for each id its edges out and in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+
+Returns `Map&lt;string, {out: Object[], in: Object[]}&gt;`.
+
+#### `shortestPath(g, from, to, o)`
+
+The shortest path between two nodes: the fewest hops (breadth first), or the least cost when cost is given (Dijkstra; a cost is never negative). Directed graphs follow the arrows unless directed is false.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+| `from` | `string` |  |
+| `to` | `string` |  |
+| `[o]` | `{directed: boolean, cost: function(Object): number}` | cost: an edge's cost (e.g. (e) =&gt; 1 / e.weight); default one hop |
+
+Returns `?{nodes: string[], edges: string[], cost: number}`: null when there is none.
+
+#### `rings(g, root, depth)`
+
+The rings around a node: each node's hops from it (either direction), to a depth.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+| `root` | `string` |  |
+| `[depth=Infinity]` | `number` |  |
+
+Returns `Map&lt;string, number&gt;`.
+
+#### `components(g)`
+
+The connected components (arrows ignored), largest first.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+
+Returns `string[][]`.
+
+#### `layers(g, o)`
+
+The layers of a directed graph: its cycles broken (the edges back to a node still on the walk, found depth first from the nodes nothing points to, are read reversed), then each node on the longest path from a source, then pulled down next to what it feeds. A rank given (rank(node) =&gt; number: the lineage's stages) wins over the computed one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+| `[o]` | `{rank: function(Object): ?number}` |  |
+
+Returns `{layer: Map&lt;string, number&gt;, reversed: Set&lt;string&gt;, count: number}`.
+
+#### `topBy(nodes, measure, n)`
+
+The nodes largest by a measure (missing values last).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `Object[]` |  |
+| `measure` | `string` |  |
+| `n` | `number` |  |
+
+Returns `Object[]`.
+
+### drishti_graph-force.js
+
+#### `seededRandom(seed)`
+
+A seeded random generator (mulberry32): the same seed, the same numbers.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `seed` | `number` |  |
+
+Returns `function(): number`: numbers in [0, 1).
+
+#### `forceLayout(g, o)`
+
+The force layout's positions.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+| `[o]` | `{seed: number, iterations: number, start: Map&lt;string, {x: number, y: number}&gt;, fixed: Map&lt;string, {x: number, y: number}&gt;, spacing: number, theta: number}` | theta: Barnes-Hut's accuracy (0.9; lower is slower and closer) |
+
+Returns `Map&lt;string, {x: number, y: number}&gt;`.
+
+#### `forceSteps(g, o)`
+
+The force layout step by step (a generator), for a view that lays out a large graph a few steps a frame (the page stays responsive, and the picture settles in front of the user unless motion is reduced): each yield is {step, steps, positions()}; the return value is the final positions, as forceLayout's.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+| `[o]` | `Object` | as forceLayout's |
+
+Returns `Generator&lt;{step: number, steps: number, positions: function(): Map&lt;string, {x: number, y: number}&gt;}, Map&lt;string, {x: number, y: number}&gt;&gt;`.
+
+### drishti_graph-layout.js
+
+#### `LAYOUTS`
+
+The layouts by name, in the order the picker lists them.
+
+#### `layout(name, g, o)`
+
+The positions of a layout by name.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` | one of LAYOUTS |
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+| `[o]` | `LayoutOptions` |  |
+
+Returns `{positions: Map&lt;string, {x: number, y: number}&gt;, frames: Array&lt;{id: string, label: string, x: number, y: number, w: number, h: number}&gt;}`: frames: the grouped layout's group frames (empty for the others).
+
+#### `layeredLayout(g, o)`
+
+The layered layout: layers of a directed graph (cycles broken), each ordered by its neighbours' barycentres (sweeps down and up).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+| `[o]` | `LayoutOptions` |  |
+
+Returns `Map&lt;string, {x: number, y: number}&gt;`.
+
+#### `radialLayout(g, o)`
+
+The radial layout: the root at the centre, each ring of hops on a circle, a ring ordered by its parent's angle; nodes the root cannot reach on an outer ring.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+| `[o]` | `LayoutOptions` |  |
+
+Returns `Map&lt;string, {x: number, y: number}&gt;`.
+
+#### `circularLayout(g, o)`
+
+The circular layout: every node on one circle, by type then label.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+| `[o]` | `LayoutOptions` |  |
+
+Returns `Map&lt;string, {x: number, y: number}&gt;`.
+
+#### `groupedLayout(g, o)`
+
+The grouped layout: a frame per group packed on shelves, the most connected group first, its nodes in a grid of one to three columns inside (the most connected first).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+| `[o]` | `LayoutOptions` |  |
+
+Returns `{positions: Map&lt;string, {x: number, y: number}&gt;, frames: Array&lt;{id: string, label: string, x: number, y: number, w: number, h: number}&gt;}`.
+
+#### `presetLayout(g)`
+
+The preset layout: the positions the nodes carry (x, y); a node without one is put on a row under the others.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `{nodes: Object[], edges: Object[]}` |  |
+
+Returns `Map&lt;string, {x: number, y: number}&gt;`.
+
+#### `bounds(points)`
+
+The box around positions.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `points` | `Iterable&lt;{x: number, y: number}&gt;` |  |
+
+Returns `{x: number, y: number, w: number, h: number}`.
+
+### drishti_graph-scene.js
+
+#### `SHAPES`
+
+The node shapes, in the order types take them.
+
+#### `groupId(attr, value)`
+
+The id of a group's node.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `attr` | `string` | the attribute grouped by |
+| `value` | `string` | its value |
+
+Returns `string`.
+
+#### `visibleGraph(model, st, measures)`
+
+The visible graph: filtered, collapsed and grouped (no encodings yet).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `import('./drishti_graph-model.js').GraphModel` |  |
+| `st` | `SceneState` |  |
+| `measures` | `Object&lt;string, GraphMeasure&gt;` |  |
+
+Returns `{nodes: Object[], edges: Object[], groups: Map&lt;string, string[]&gt;, memberOf: Map&lt;string, string&gt;}`.
+
+#### `encode(vis, st, o)`
+
+The encodings of a visible graph: each node's radius, colour and shape, each edge's width, and the legend.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `vis` | `{nodes: Object[], edges: Object[]}` | from visibleGraph |
+| `st` | `SceneState` |  |
+| `o` | `{theme: import('../../drishti-core/src/drishti_visual.js').VisualTheme, types: Object&lt;string, GraphType&gt;, typeOrder: string[], radius: number[], measures: Object&lt;string, GraphMeasure&gt;, format: function(string, *): string}` | radius: [smallest, largest] in pixels at zoom 1 |
+
+Returns `{nodes: Map&lt;string, {r: number, colour: string, shape: string}&gt;, edges: Map&lt;string, {width: number}&gt;, legend: GraphLegend}`.
+
+### drishti_graph-canvas.js
+
+#### `pointInPolygon(x, y, poly)`
+
+Whether a point is inside a polygon (even-odd rule).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `x` | `number` |  |
+| `y` | `number` |  |
+| `poly` | `Array&lt;{x: number, y: number}&gt;` |  |
+
+Returns `boolean`.
+
+#### class `HitIndex`
+
+The buckets of node positions, to find a node under a point without looking at every node.
+
+##### `new HitIndex(items, cell)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `Array&lt;{id: string, x: number, y: number, r: number}&gt;` |  |
+| `[cell=40]` | `number` | the bucket's side in layout units |
+
+##### `HitIndex.at(x, y, slack)`
+
+The nearest item whose circle (grown by slack) holds the point.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `x` | `number` | layout units |
+| `y` | `number` |  |
+| `[slack=0]` | `number` |  |
+
+Returns `?{id: string, x: number, y: number, r: number}`.
+
+#### `shapePath(ctx, shape, x, y, r)`
+
+A node's outline as a path on a 2D context (the caller fills or strokes it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ctx` | `CanvasRenderingContext2D` |  |
+| `shape` | `string` | one of SHAPES |
+| `x` | `number` |  |
+| `y` | `number` |  |
+| `r` | `number` |  |
+
+Returns `void`.
+
+#### class `CanvasRenderer`
+
+Draws frames of the graph on a canvas.
+
+##### `new CanvasRenderer(canvas)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `canvas` | `HTMLCanvasElement` |  |
+
+##### `CanvasRenderer.resize(w, h, ratio)`
+
+Sizes the canvas to its box (and the screen's pixel ratio).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `w` | `number` | css pixels |
+| `h` | `number` |  |
+| `[ratio]` | `number` |  |
+
+Returns `void`.
+
+##### `CanvasRenderer.draw(f, t)`
+
+Draws one frame.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `Frame` |  |
+| `t` | `Transform` |  |
+
+Returns `void`.
+
+##### `CanvasRenderer.drawMinimap(f, box, view, viewSize)`
+
+Draws the minimap: every node as a dot, and the view's window.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `Frame` |  |
+| `box` | `{x: number, y: number, w: number, h: number}` | the layout's bounds |
+| `view` | `Transform` | the main view's transform |
+| `viewSize` | `{w: number, h: number}` | the main view's size in css pixels |
+
+Returns `Transform`: the minimap's own transform (its clicks are read with it).
+
+### drishti_graph-export.js
+
+#### `toSvg(f, box, o)`
+
+The graph as drawn, as an SVG document: every visible node and edge at the layout's positions, the labels, arrows on a directed graph, the path and the selection in the accent.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `import('./drishti_graph-canvas.js').Frame` |  |
+| `box` | `{x: number, y: number, w: number, h: number}` | the layout's bounds |
+| `[o]` | `{title: string}` |  |
+
+Returns `string`.
+
+#### `nodesTable(nodes, columns)`
+
+The nodes as a table (the fields given, each with its header), for CSV, Excel or a grid.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `Object[]` |  |
+| `columns` | `Array&lt;{field: string, header: string, type: string, format: *}&gt;` |  |
+
+Returns `import('../../drishti-core/src/drishti_files.js').ExportTable`.
+
+#### `edgesTable(edges, labelOf)`
+
+The edges as a table: source, target, label, type, weight.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `edges` | `Object[]` |  |
+| `[labelOf]` | `function(string): string` | a node's label by id |
+
+Returns `import('../../drishti-core/src/drishti_files.js').ExportTable`.
+
+#### `graphCsv(nodes, edges, columns)`
+
+The nodes and edges as CSV (two sections in one file: the nodes, a blank line, the edges).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `Object[]` |  |
+| `edges` | `Object[]` |  |
+| `columns` | `Array&lt;{field: string, header: string, type: string, format: *}&gt;` | the node columns |
+
+Returns `string`.
+
+#### `adjacencyRows(nodes, edges, directed)`
+
+The adjacency table, the graph's text alternative: one row per node with its type, what it points to and what points to it (each by label, with the edge's label), its degree. Sorted by label.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `Object[]` |  |
+| `edges` | `Object[]` |  |
+| `directed` | `boolean` | false: one list of neighbours |
+
+Returns `Array&lt;{id: string, label: string, type: string, out: string[], in: string[], degree: number}&gt;`.
+
+### drishti_graph-terminal.js
+
+#### `COMMANDS`
+
+The commands, in the order help lists them.
+
+#### `FUNCTION_KEYS`
+
+The function keys of the terminal mode and the command each runs.
+
+#### `words(line)`
+
+Splits a command line into words (double quotes keep spaces: find "ACME Bank").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `line` | `string` |  |
+
+Returns `string[]`.
+
+#### `runCommand(G, line)`
+
+Runs one command line on a Graph; resolves with the lines of its answer (an error is a line, never a throw).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `G` | `Object` | the Graph (model, selection, select, findPath, expand, collapse, setLayout, setGroupBy, setSizeBy, setColourBy, setTypes, pin, unpin, hide, explain, export, fit, clearSelection, clearPath, centerOn, fields, layouts, state) |
+| `line` | `string` |  |
+
+Returns `Promise&lt;TerminalLine[]&gt;`.
+
+#### `complete(G, line)`
+
+Completes the last word of a line (Tab): the command words first, then what the command takes.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `G` | `Object` | the Graph |
+| `line` | `string` |  |
+
+Returns `string[]`: the candidates for the last word, best first (at most 12).
+
+### drishti_graph-chrome.js
+
+#### `GRAPH_MODES`
+
+The modes of the graph: inspector (g5 A, the default), table (B) and terminal (C).
+
+### drishti_graph-base.js
+
+#### `GRAPH_EVENTS`
+
+The events of the graph, on its bus and as drishti:&lt;kebab-name&gt; DOM events on its host.
+
+#### class `GraphBase`
+
+The graph's engine room: options, state, the pipeline and the drawing.
+
+##### `new GraphBase(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the graph fills |
+| `options` | `GraphOptions` |  |
+
+##### `GraphBase.recompute(relayout)`
+
+What is visible, its encodings and (when the topology changed) its layout; then a frame.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `relayout` | `boolean` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `GraphBase.draw()`
+
+Draws on the next frame (several changes in one frame draw once).
+
+Returns `void`.
+
+##### `GraphBase.drawNow()`
+
+Draws now: the canvas, the minimap, the status line and the canvas's words for a screen reader.
+
+Returns `void`.
+
+##### `GraphBase.stats()`
+
+What the last frame drew and how long it took, and the layout's time.
+
+Returns `{nodes: number, edges: number, labels: number, frameMs: number, layoutMs: ?number, path: number, hidden: number}`.
+
+##### `GraphBase.toScreen(id)`
+
+A node's place on the screen (css pixels in the canvas), or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?{x: number, y: number}`.
+
+##### `GraphBase.toLayout(x, y)`
+
+A screen point in layout units.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `x` | `number` |  |
+| `y` | `number` |  |
+
+Returns `{x: number, y: number}`.
+
+##### `GraphBase.fit(ids)`
+
+Fits the whole graph (or the selection's nodes) in the view.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[ids]` | `string[]` |  |
+
+Returns `void`.
+
+##### `GraphBase.zoomAt(x, y, f)`
+
+Zooms by a factor around a screen point.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `x` | `number` |  |
+| `y` | `number` |  |
+| `f` | `number` |  |
+
+Returns `void`.
+
+##### `GraphBase.zoomBy(f)`
+
+Zooms by a factor around the middle of the view.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `number` |  |
+
+Returns `void`.
+
+##### `GraphBase.panTo(tx, ty)`
+
+Moves the view.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `number` |  |
+| `ty` | `number` |  |
+
+Returns `void`.
+
+##### `GraphBase.centerOn(id)`
+
+Centres the view on a node.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `void`.
+
+##### `GraphBase.nodeAt(x, y)`
+
+The node under a screen point.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `x` | `number` |  |
+| `y` | `number` |  |
+
+Returns `?{id: string}`.
+
+##### `GraphBase.state()`
+
+The view's state: mode, density, layout, group, size, colour.
+
+Returns `Object`.
+
+##### `GraphBase.visibleNodes()`
+
+The visible nodes (groups as one node).
+
+Returns `Object[]`.
+
+##### `GraphBase.visibleEdges()`
+
+The visible edges.
+
+Returns `Object[]`.
+
+##### `GraphBase.nodeOrGroup(id)`
+
+A visible node or group by id, else the model's node.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?Object`.
+
+##### `GraphBase.lookOf(id)`
+
+A node's drawn look.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?{r: number, colour: string, shape: string}`.
+
+##### `GraphBase.positionOf(id)`
+
+A node's layout position.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?{x: number, y: number}`.
+
+##### `GraphBase.measureList()`
+
+The measures: those given, then the other numbers the nodes carry.
+
+Returns `import('./drishti_graph-scene.js').GraphMeasure[]`.
+
+##### `GraphBase.measureLabel(f)`
+
+A measure's words.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `string` |  |
+
+Returns `string`.
+
+##### `GraphBase.formatMeasure(f, v)`
+
+A measure's value as text by its format.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `string` |  |
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `GraphBase.typeLabel(t)`
+
+A type's words.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `string` |  |
+
+Returns `string`.
+
+##### `GraphBase.fields()`
+
+The attributes and measures of the nodes.
+
+Returns `{attributes: string[], measures: string[]}`.
+
+##### `GraphBase.legend()`
+
+The legend with the types (counts, drawn or not).
+
+Returns `import('./drishti_graph-scene.js').GraphLegend`.
+
+##### `GraphBase.neighbourList(id)`
+
+A visible node's neighbours with the edge and its direction.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `Array&lt;{node: Object, edge: Object, dir: string}&gt;`.
+
+##### `GraphBase.groupCount()`
+
+The groups drawn.
+
+Returns `number`.
+
+##### `GraphBase.edgeLabel(id)`
+
+An edge's label.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `string`.
+
+##### `GraphBase.on(name, fn)`
+
+Listens to one of GRAPH_EVENTS.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object, string): void` |  |
+
+Returns `function(): void`: stops listening.
+
+### drishti_graph-pointer.js
+
+#### `neighbourInDirection(from, candidates, dir)`
+
+The neighbour of a node that lies best in a direction: the smallest angle off the direction, then the nearest.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `from` | `{x: number, y: number}` |  |
+| `candidates` | `Array&lt;{id: string, x: number, y: number}&gt;` |  |
+| `dir` | `('left'\|'right'\|'up'\|'down')` |  |
+
+Returns `?string`.
+
+### drishti_graph-view.js
+
+#### class `Graph`
+
+The graph, drawn: the plain JavaScript API every host uses.
+
+##### `new Graph(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `import('./drishti_graph-base.js').GraphOptions` |  |
+
+##### `Graph.selection()`
+
+The selected node ids.
+
+Returns `string[]`.
+
+##### `Graph.select(ids, o)`
+
+Selects nodes (add: to the selection; silent: not published on the bus).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+| `[o]` | `{add: boolean, silent: boolean, from: string}` |  |
+
+Returns `void`.
+
+##### `Graph.clearSelection()`
+
+Clears the selection.
+
+Returns `void`.
+
+##### `Graph.setFocus(id, o)`
+
+The keyboard's node (announced, outlined).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `?string` |  |
+| `[o]` | `{quiet: boolean}` |  |
+
+Returns `void`.
+
+##### `Graph.highlight(ids)`
+
+Marks the nodes a search matched: the others are dimmed (null: none marked). The selection is kept.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `?string[]` |  |
+
+Returns `void`.
+
+##### `Graph.findPath(from, to)`
+
+The shortest path between two visible nodes, highlighted (the fewest hops, or the least cost by 1 / weight with weightedPath).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `from` | `string` |  |
+| `to` | `string` |  |
+
+Returns `?{nodes: string[], edges: string[], cost: number}`.
+
+##### `Graph.pathNow()`
+
+The path drawn, or null.
+
+Returns `?{nodes: string[], edges: string[], cost: number}`.
+
+##### `Graph.clearPath()`
+
+Clears the path.
+
+Returns `void`.
+
+##### `Graph.expand(id)`
+
+Shows a node's neighbours: the host's lazy hook (expand option) adds them; without one, what was collapsed below or hidden next to it comes back.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `Promise&lt;{added: number}&gt;`.
+
+##### `Graph.collapse(id)`
+
+Hides what is below a node (reached only through it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Graph.setGroupBy(attr)`
+
+Folds the nodes into groups by an attribute (null: none).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `attr` | `?string` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Graph.openGroup(gid)`
+
+Opens a group: its members drawn.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `gid` | `string` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Graph.pin(ids)`
+
+Pins nodes where they are (every layout keeps them).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `void`.
+
+##### `Graph.unpin(ids)`
+
+Unpins nodes.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `void`.
+
+##### `Graph.hide(ids)`
+
+Leaves nodes out of the picture.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Graph.showAll()`
+
+Draws every node again (hidden and collapsed ones).
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Graph.toggleType(type)`
+
+Draws a type or leaves it out.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `type` | `string` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Graph.setTypes(types)`
+
+Draws only these types.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `types` | `string[]` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Graph.setSizeBy(m)`
+
+Node size by a measure (null: one size).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `m` | `?string` |  |
+
+Returns `void`.
+
+##### `Graph.setColourBy(f)`
+
+Node colour by an attribute or a measure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `string` |  |
+
+Returns `void`.
+
+##### `Graph.setLayout(name)`
+
+Switches the layout (pinned nodes stay; the move is animated unless motion is reduced).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` | one of LAYOUTS |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Graph.setMode(mode)`
+
+Switches the mode (g5 A, B or C; the same graph, selection and layout).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `mode` | `string` |  |
+
+Returns `void`.
+
+##### `Graph.setDensity(d)`
+
+Switches the density.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `string` |  |
+
+Returns `void`.
+
+##### `Graph.explain(id)`
+
+Explains a node through the host's hook, drawn in the inspector (A), the card (B) or the answers (C).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `Promise&lt;*&gt;`.
+
+##### `Graph.export(kind)`
+
+Exports what is drawn: png (2×), svg, csv (nodes then edges) or json (the data); saved through the download option or the browser.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `kind` | `('png'\|'svg'\|'csv'\|'json')` |  |
+
+Returns `{name: string, content: (string\|Blob), type: string}`.
+
+##### `Graph.toggleAdjacency(on)`
+
+Shows or hides the adjacency table (the text alternative).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[on]` | `boolean` |  |
+
+Returns `boolean`: shown.
+
+##### `Graph.toggleLasso()`
+
+The lasso tool on or off (Alt-drag is the lasso without it).
+
+Returns `boolean`.
+
+##### `Graph.setData(data)`
+
+Replaces the data (the view's state stays; a new layout).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `data` | `import('./drishti_graph-model.js').GraphData` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Graph.applyTransaction(tx)`
+
+A live change by id (nodes and edges added, updated, removed): drawn at most once a throttle window, the picture moving little (the force layout starts from where the nodes are).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `import('./drishti_graph-model.js').GraphTransaction` |  |
+
+Returns `Promise&lt;void&gt;`: resolves when it is drawn.
+
+##### `Graph.command(line)`
+
+Runs a terminal command (any mode may call it; the terminal mode prints the answer).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `line` | `string` |  |
+
+Returns `Promise&lt;Array&lt;{text: string, tone: string, node: string}&gt;&gt;`.
+
+##### `Graph.getState()`
+
+The view's state for a host to keep (mode, density, layout, encodings, filters, selection, pins).
+
+Returns `Object`.
+
+##### `Graph.setState(s)`
+
+Puts a kept state back.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `s` | `Object` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `Graph.destroy()`
+
+Removes the graph from its element.
+
+Returns `void`.
+
+### drishti_graph-lineage.js
+
+#### `LINEAGE_STAGES`
+
+The stages of a lineage by default, in their order.
+
+#### `lineageOptions(spec, more)`
+
+The graph's options for a lineage: the layered layout left to right with each stage a column, the stages as types (shape, colour, words), directed edges, colour by stage.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `LineageSpec` |  |
+| `[more]` | `Object` | options to add (mode, explain, onLink, height ...) |
+
+Returns `import('./drishti_graph-base.js').GraphOptions`.
+
+#### `lineageHealth(spec)`
+
+A lineage's health: how many nodes of each status, and the nodes downstream of a bad one (what its failure reaches).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `LineageSpec` |  |
+
+Returns `{counts: Object&lt;string, number&gt;, affected: string[]}`.
+
+### drishti_graph-panel.js
+
+#### `panelGraphOptions(data, o)`
+
+The graph's options for a view's graph panel.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `data` | `{nodes: Object[], edges: Object[], layout: string, title: string}` | the panel's data |
+| `[o]` | `{onLink: function(Object): void, density: string, height: number}` |  |
+
+Returns `import('./drishti_graph-base.js').GraphOptions`.
+
+#### `drawGraphPanel(el, data, o)`
+
+Draws a view's graph panel into its container (again, after a theme change or new data: the graph is replaced).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` | the panel's chart container |
+| `data` | `Object` | the panel's data |
+| `[o]` | `{onLink: function(Object): void, density: string}` |  |
+
+Returns `Graph`.
+
+### drishti_graph-element.js
+
+#### `GRAPH_ELEMENT`
+
+The element's tag name.
+
+#### `defineGraphElement(registry, win)`
+
+Defines &lt;drishti-graph&gt; in a registry (once; the bundle does it when it loads in a page).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[registry]` | `CustomElementRegistry` | default: the window's |
+| `[win]` | `Window` | the window whose HTMLElement the element extends |
+
+Returns `boolean`: whether it was defined now.
+
+### drishti_index.js
+
+#### `install(root)`
+
+Starts drishti-graph in a page: defines &lt;drishti-graph&gt; (the bundle calls it when it loads; nothing happens without a document).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.
+
+### Types of drishti-graph
+
+#### `GraphOptions` : `Object`
+
+The graph's options.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `data` | `import('./drishti_graph-model.js').GraphData` | the nodes and edges |
+| `[mode='inspector']` | `('inspector'\|'table'\|'terminal')` | g5 A (the default), B or C |
+| `[density='compact']` | `('comfortable'\|'compact'\|'terminal')` |  |
+| `[layout='force']` | `('force'\|'layered'\|'radial'\|'circular'\|'grouped'\|'preset')` |  |
+| `[layoutOptions]` | `import('./drishti_graph-layout.js').LayoutOptions` | seed, direction, root, rank, groupBy, spacing |
+| `[title]` | `string` |  |
+| `[types]` | `Object&lt;string, import('./drishti_graph-scene.js').GraphType&gt;` | each type's label, shape and colour |
+| `[measures]` | `import('./drishti_graph-scene.js').GraphMeasure[]` | the measures the nodes carry (their words, format, additivity) |
+| `[groupBy]` | `?string` | fold the nodes into groups by this attribute |
+| `[sizeBy]` | `?string` | node size by this measure |
+| `[colourBy='type']` | `?string` | node colour by an attribute or a measure |
+| `[typesOff]` | `string[]` | types not drawn at first |
+| `[link]` | `{channel: string}` | linked selection on drishti-core's bus (a drishti-grid joins with linkGrid, a chart with its link) |
+| `[explain]` | `function(Object): Promise&lt;*&gt;` | the Explain hook: a node's context ({kind: 'node', id, label, type, node, members}) to an explanation (drishti-core's ExplainResult); drishti-insight's hook in the console |
+| `[expand]` | `function(Object): Promise&lt;{nodes: Object[], edges: Object[]}&gt;` | the neighbours of a node, asked on demand (lazy) |
+| `[onLink]` | `function(Object, Object): void` | a node that names an entity ({kind, id}) was opened |
+| `[live]` | `{throttleMs: number}` | changes by applyTransaction are drawn at most once a window (default 200 ms) |
+| `[minimap=true]` | `boolean` |  |
+| `[animate=true]` | `boolean` | false (or the page's reduced motion): no animated layout |
+| `[tables=true]` | `boolean` | the tables under the canvas (the selection, or the table mode's tabs) |
+| `[card=true]` | `boolean` | the table mode's card at the selected node (false: the host shows the selection itself) |
+| `[height]` | `number` | the canvas's height in pixels (default by mode) |
+| `[openOnClick=false]` | `boolean` | a click on a node that names an entity (link) opens it (the view's graph panel) |
+| `[weightedPath=false]` | `boolean` | the shortest path by cost (1 / weight) rather than by hops |
+| `[download]` | `function(string): void` | who saves an exported file (name, content, type); default the browser's download |
+| `[bus]` | `EventBus` | the bus linked selection goes on (default drishti-core's shared bus) |
+
+#### `Transform` : `Object`
+
+The view's transform: screen = layout × k + (tx, ty).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `k` | `number` |  |
+| `tx` | `number` |  |
+| `ty` | `number` |  |
+
+#### `Frame` : `Object`
+
+What one frame draws.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `nodes` | `Object[]` | the visible nodes (id, label, status, pinned, _group) |
+| `edges` | `Object[]` | the visible edges (id, source, target, label) |
+| `pos` | `Map&lt;string, {x: number, y: number}&gt;` |  |
+| `look` | `Map&lt;string, {r: number, colour: string, shape: string}&gt;` |  |
+| `edgeLook` | `Map&lt;string, {width: number}&gt;` |  |
+| `frames` | `Array&lt;{id: string, label: string, x: number, y: number, w: number, h: number}&gt;` | group frames |
+| `selected` | `Set&lt;string&gt;` |  |
+| `path` | `?{nodes: Set&lt;string&gt;, edges: Set&lt;string&gt;}` |  |
+| `hover` | `?string` |  |
+| `focus` | `?string` | the keyboard's node |
+| `directed` | `boolean` |  |
+| `theme` | `Object` | drishti-core's VisualTheme |
+| `labelSize` | `number` |  |
+| `lasso` | `?Array&lt;{x: number, y: number}&gt;` | screen points |
+| `[highlight]` | `?Set&lt;string&gt;` | nodes a search matched: the others dimmed |
+
+#### `LayoutOptions` : `Object`
+
+A layout's input and result.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[seed=7]` | `number` | the force layout's seed (the same seed, the same picture) |
+| `[direction='TB']` | `('TB'\|'LR')` | the layered layout's flow: top to bottom or left to right (the lineage) |
+| `[root]` | `string` | the radial layout's centre (default the node with most edges) |
+| `[rank]` | `function(Object): ?number` | the layered layout's layer of a node (the lineage's stages) |
+| `[groupBy]` | `string` | the grouped layout's attribute (default group, else type) |
+| `[fixed]` | `Map&lt;string, {x: number, y: number}&gt;` | positions kept (pinned nodes) |
+| `[start]` | `Map&lt;string, {x: number, y: number}&gt;` | positions to start from (force: the last picture, so a change moves little) |
+| `[iterations]` | `number` | force: the steps (default by size) |
+| `[spacing=1]` | `number` | a factor on every gap |
+
+#### `LineageSpec` : `Object`
+
+A lineage: nodes with their stage and status, edges from what feeds to what is fed.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `nodes` | `Array&lt;{id: string, label: string, stage: string, status: string}&gt;` | stage: one of stages (the column); status: a badge |
+| `edges` | `Array&lt;{source: string, target: string, label: string}&gt;` |  |
+| `[stages]` | `string[]` | the columns, in order (default LINEAGE_STAGES) |
+| `[stageLabels]` | `Object&lt;string, string&gt;` | each stage's words (default the stage, capitalised and plural) |
+| `[title]` | `string` |  |
+
+#### `GraphNodeInput` : `Object`
+
+A node as given: any object with an id; label, type and group are read by name (or by the field names in GraphDataOptions), every other field is an attribute (a text) or a measure (a number) the encodings and the tables can use.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[label]` | `string` | default the id |
+| `[type]` | `string` | what kind of node it is (a filter and a shape) |
+| `[group]` | `string` | a parent group (a frame in the grouped layout) |
+| `[link]` | `{kind: string, id: string}` | an entity a click opens (the view's graph panel) |
+| `[status]` | `string` | a badge: ok, warn, bad, stale, running (the lineage preset) |
+| `[x]` | `number` | a position given (the preset layout) |
+| `[y]` | `number` |  |
+| `[pinned]` | `boolean` | keeps its place through every layout |
+
+#### `GraphEdgeInput` : `Object`
+
+An edge as given: source and target (or from and to) are node ids.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[id]` | `string` | default source→target (and a counter for a second edge between the same nodes) |
+| `[source]` | `string` |  |
+| `[target]` | `string` |  |
+| `[from]` | `string` | the same as source (the view's graph panel) |
+| `[to]` | `string` | the same as target |
+| `[weight]` | `number` | the edge's width and the path's cost (when the path asks for weights) |
+| `[label]` | `string` |  |
+| `[type]` | `string` |  |
+| `[directed]` | `boolean` | default the graph's directed option |
+
+#### `GraphData` : `Object`
+
+A graph's data.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `nodes` | `GraphNodeInput[]` |  |
+| `[edges]` | `GraphEdgeInput[]` |  |
+| `[directed=true]` | `boolean` | arrows drawn and paths follow the direction |
+
+#### `GraphTransaction` : `Object`
+
+A change to the graph's data, by id.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[addNodes]` | `GraphNodeInput[]` |  |
+| `[updateNodes]` | `GraphNodeInput[]` | merged into the node of the same id |
+| `[removeNodes]` | `string[]` | their edges go too |
+| `[addEdges]` | `GraphEdgeInput[]` |  |
+| `[updateEdges]` | `GraphEdgeInput[]` |  |
+| `[removeEdges]` | `string[]` |  |
+
+#### `GraphMeasure` : `Object`
+
+A measure the nodes carry: its words, format and whether it adds up.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+| `[label]` | `string` | default the field |
+| `[format]` | `*` | a drishti-core format name (money, compact, pct2 ...) |
+| `[additive=true]` | `boolean` | false: a group's or a selection's figure is never a sum (the host's hook gives it, or none is shown) |
+
+#### `GraphType` : `Object`
+
+A node type's look and words.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[label]` | `string` |  |
+| `[shape]` | `('circle'\|'square'\|'diamond'\|'triangle'\|'hexagon')` |  |
+| `[colour]` | `string` | a tone (accent, good, bad ...) or a colour |
+
+#### `SceneState` : `Object`
+
+The view's state the scene is made from.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[typesOff]` | `Set&lt;string&gt;` | types not drawn |
+| `[hidden]` | `Set&lt;string&gt;` | nodes not drawn |
+| `[collapsed]` | `Set&lt;string&gt;` | nodes whose descendants (reached only through them) are not drawn |
+| `[groupBy]` | `?string` | an attribute whose members fold into one node each |
+| `[openGroups]` | `Set&lt;string&gt;` | groups drawn as their members |
+| `[sizeBy]` | `?string` | a measure (null: every node the same) |
+| `[colourBy]` | `?string` | an attribute or a measure (default type) |
+
+#### `GraphLegend` : `Object`
+
+The legend of a scene.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `colour` | `?{kind: string, field: string, label: string, items: Array&lt;{value: string, label: string, colour: string, shape: string}&gt;, lo: number, hi: number, loText: string, hiText: string, colours: string[]}` |  |
+| `size` | `?{field: string, label: string, samples: Array&lt;{value: number, text: string, r: number}&gt;}` |  |
+| `types` | `Array&lt;{type: string, label: string, count: number, shown: number, off: boolean, shape: string, colour: string}&gt;` |  |
+
+#### `TerminalLine` : `Object`
+
+One line of a command's answer.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `[tone]` | `('ok'\|'error'\|'dim'\|'echo'\|'')` |  |
+| `[node]` | `string` | a node the line names (the line is a link that selects it) |
+
+## drishti-tree
+
+Version 0.1.0. Bundle `static/elements/drishti-tree/drishti_tree.js`, global `Drishti.elements.tree`; requires drishti-core, drishti-grid.
+
+### drishti_tree-model.js
+
+#### `PATH_SEP`
+
+The separator of a path's keys inside the library.
+
+#### class `HierarchyModel`
+
+The hierarchy: nodes, open state, search, measures (additive roll-ups; non-additive figures from the host) and the edit draft.
+
+##### `new HierarchyModel(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `HierarchySource` |  |
+
+##### `HierarchyModel.load(src)`
+
+Reads the hierarchy again (the open state is kept for the ids still there).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `src` | `HierarchySource` | rows, root, or getPath (the field names of the first reading are kept) |
+
+Returns `void`.
+
+##### `HierarchyModel.addChildren(id, rows)`
+
+The children the host gave for a node read as lazy (lazyField): rows with their ids, each under the node or under another of these rows named by its parent field; a row may be lazy in turn. The open state is kept.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `rows` | `Object[]` |  |
+
+Returns `number`: how many nodes were added.
+
+##### `HierarchyModel.childrenFailed(id, why)`
+
+The host could not give a lazy node's children: the words shown in their place (not asked again until the data is read again).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `why` | `string` |  |
+
+Returns `void`.
+
+##### `HierarchyModel.hasChildren(id)`
+
+Whether a node has children, or children to come (lazy).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `boolean`.
+
+##### `HierarchyModel.node(id)`
+
+A node by its id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?TreeNode`.
+
+##### `HierarchyModel.all()`
+
+Every node, depth first.
+
+Returns `TreeNode[]`.
+
+##### `HierarchyModel.size()`
+
+The number of nodes.
+
+Returns `number`.
+
+##### `HierarchyModel.pathOf(id)`
+
+The nodes from the root down to this one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `TreeNode[]`.
+
+##### `HierarchyModel.breadcrumbs(id)`
+
+The breadcrumbs of a node: the labels from the root.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `string[]`.
+
+##### `HierarchyModel.isUnder(id, ancestor)`
+
+Whether a node is under another (or is it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `ancestor` | `string` |  |
+
+Returns `boolean`.
+
+##### `HierarchyModel.measure(field)`
+
+A measure by its field.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+
+Returns `?TreeMeasure`.
+
+##### `HierarchyModel.value(id, field)`
+
+A node's figure of a measure: its own, the host's, or (additive) its children's sum; null while a non-additive figure waits.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `field` | `string` |  |
+
+Returns `*`.
+
+##### `HierarchyModel.isPending(id, field)`
+
+Whether a node's non-additive figure is still waiting for the host.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `field` | `string` |  |
+
+Returns `boolean`.
+
+##### `HierarchyModel.childSum(id, field)`
+
+The children's figures of a non-additive measure added up (null unless every child has one): shown beside the node's own figure, never as it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `field` | `string` |  |
+
+Returns `?number`.
+
+##### `HierarchyModel.requests(ids)`
+
+What the host must give: every node without a figure of a non-additive measure, with its path of ids.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[ids]` | `string[]` | only these nodes (default: all) |
+
+Returns `Array&lt;{id: string, path: string[], fields: string[]}&gt;`.
+
+##### `HierarchyModel.invalidate(ids)`
+
+Forgets the non-additive figures of some nodes (they changed: a move, a live update) so they are asked again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `void`.
+
+##### `HierarchyModel.setValues(answers)`
+
+Puts the host's answers in (the figures of non-additive measures; any other field too).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `answers` | `Array&lt;{id: string, values: Object&lt;string, *&gt;}&gt;` |  |
+
+Returns `number`: how many nodes took figures.
+
+##### `HierarchyModel.isOpen(id)`
+
+Whether a node is open.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `boolean`.
+
+##### `HierarchyModel.toggle(id, open)`
+
+Opens or closes a node (default: the other state).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[open]` | `boolean` |  |
+
+Returns `boolean`: whether it is open now.
+
+##### `HierarchyModel.expandAll(o)`
+
+Opens every node (under one, or everywhere), or down to a depth.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{under: string, depth: number}` |  |
+
+Returns `void`.
+
+##### `HierarchyModel.collapseAll()`
+
+Closes every node but the roots.
+
+Returns `void`.
+
+##### `HierarchyModel.reveal(id)`
+
+Opens the nodes above one so it shows.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `void`.
+
+##### `HierarchyModel.visible()`
+
+The nodes shown (each node whose ancestors are all open), depth first.
+
+Returns `TreeNode[]`.
+
+##### `HierarchyModel.search(q, o)`
+
+Finds the nodes whose label, id or kind holds the words (each word, any case), and opens their branches.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+| `[o]` | `{open: boolean, limit: number}` | open default true |
+
+Returns `Array&lt;{id: string, label: string, breadcrumbs: string[]}&gt;`.
+
+##### `HierarchyModel.moveProblem(id, to)`
+
+Why a node cannot move under another, in words (null: it can).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `to` | `string` |  |
+
+Returns `?string`.
+
+##### `HierarchyModel.move(id, to)`
+
+Moves a node under a new parent in the draft (shown at once, marked proposed; nothing is sent).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `to` | `string` |  |
+
+Returns `{id: string, from: string, to: string}`: the move.
+
+##### `HierarchyModel.undoMove()`
+
+Undoes the draft's last move.
+
+Returns `?{id: string, from: string, to: string}`: the move undone.
+
+##### `HierarchyModel.proposal()`
+
+The draft as one proposal for review: its moves with each node's label and breadcrumbs before and after.
+
+Returns `{moves: Array&lt;{id: string, label: string, from: string, to: string, fromPath: string[], toPath: string[]}&gt;}`.
+
+##### `HierarchyModel.discardMoves()`
+
+Undoes every move of the draft.
+
+Returns `number`: how many.
+
+##### `HierarchyModel.commitMoves()`
+
+The draft became the hierarchy (the host says it was approved): the marks go.
+
+Returns `number`: how many moves.
+
+##### `HierarchyModel.toJSON()`
+
+The hierarchy nested, as JSON data (id, label, kind, the measures' figures, children).
+
+Returns `Object[]`.
+
+##### `HierarchyModel.toTable()`
+
+One row per node (the path, id, kind and every measure), for drishti-core's toCsv.
+
+Returns `import('../../drishti-core/src/drishti_files.js').ExportTable`.
+
+### drishti_tree-layout.js
+
+#### `orgLayout(model, o)`
+
+The org chart's layout of the nodes shown.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `import('./drishti_tree-model.js').HierarchyModel` |  |
+| `[o]` | `OrgSizes` |  |
+
+Returns `{boxes: Array&lt;{id: string, x: number, y: number, w: number, h: number, depth: number}&gt;, links: Array&lt;{from: string, to: string, shared: boolean, d: string}&gt;, width: number, height: number}`.
+
+#### `partition(model, o)`
+
+The partition of the sunburst and the icicle: each node's share of its parent by an additive measure, from a focus node down.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `import('./drishti_tree-model.js').HierarchyModel` |  |
+| `o` | `{sizeBy: string, focus: string, depth: number}` | sizeBy: the additive measure; focus: the centre (default the first root); depth: rings drawn below it (default 4) |
+
+Returns `TreeSlice[]`.
+
+#### `arcPath(cx, cy, r0, r1, a0, a1)`
+
+The SVG path of a ring's slice.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `cx` | `number` |  |
+| `cy` | `number` |  |
+| `r0` | `number` | inner radius (0: a disc's slice) |
+| `r1` | `number` | outer radius |
+| `a0` | `number` | start, a share of the turn (0 at the top, clockwise) |
+| `a1` | `number` | end |
+
+Returns `string`.
+
+#### `bandTone(v, bands)`
+
+The tone of a figure by bands (the first band whose `to` the figure stays under; the last band past them all).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `number` |  |
+| `bands` | `Array&lt;{to: number, tone: string}&gt;` | in rising order |
+
+Returns `?string`: the tone's name, or null without a figure.
+
+### drishti_tree-draw.js
+
+#### `svg(doc, tag, attrs, kids)`
+
+An SVG element.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `tag` | `string` |  |
+| `[attrs]` | `Object&lt;string, *&gt;` |  |
+| `[kids]` | `Array&lt;(Node\|string)&gt;` |  |
+
+Returns `SVGElement`.
+
+#### `nodeColour(c, n)`
+
+A node's fill: the tone of its colourBy figure by the measure's bands, else its kind's colour of the palette.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `DrawContext` |  |
+| `n` | `Object` | a TreeNode |
+
+Returns `string`.
+
+#### `drawOrg(doc, c)`
+
+The org chart (g6 A): an &lt;svg&gt; holding a group of boxes (role tree) and their links.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `c` | `DrawContext` |  |
+
+Returns `{svg: SVGSVGElement, width: number, height: number, layer: SVGGElement}`.
+
+#### `drawPartition(doc, c, shape, size)`
+
+The sunburst or the icicle (g6 C) of the partition by an additive measure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `c` | `DrawContext` |  |
+| `shape` | `('sunburst'\|'icicle')` |  |
+| `size` | `{width: number, height: number}` |  |
+
+Returns `{svg: SVGSVGElement, slices: Array&lt;Object&gt;, layer: SVGGElement}`.
+
+#### `partitionTable(doc, c, slices)`
+
+The text alternative of a partition: a table of each slice (its breadcrumbs, its size and share, and every measure).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `c` | `DrawContext` |  |
+| `slices` | `Array&lt;Object&gt;` | TreeSlice[] |
+
+Returns `HTMLTableElement`.
+
+### drishti_tree-grid.js
+
+#### `gridRows(model, o)`
+
+The rows of the grid: one per node (its own row's fields, its path of keys (labels, made unique among siblings), its figures and its children's sums), and a waiting row under a lazy node (__wait: the node's id; its label the words given or why the children failed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `import('./drishti_tree-model.js').HierarchyModel` |  |
+| `[o]` | `{lazyText: string}` | the waiting row's words (default "loading…") |
+
+Returns `{rows: Object[], idByKeys: Map&lt;string, string&gt;, keysById: Map&lt;string, string[]&gt;}`.
+
+#### class `TreeGrid`
+
+The tree grid of a Tree: a drishti-grid Grid over the hierarchy.
+
+##### `new TreeGrid(host, tree)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `tree` | `Object` | the Tree (its model, theme, text(), select(), explainNode(), proposeMove(), o) |
+
+##### `TreeGrid.idOfRow(r)`
+
+The node id of a display row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+
+Returns `?string`.
+
+##### `TreeGrid.syncOpen()`
+
+The grid's open nodes as the model's.
+
+Returns `void`.
+
+##### `TreeGrid.refresh()`
+
+The figures, the shape (a move) or the marks changed: the rows again.
+
+Returns `void`.
+
+##### `TreeGrid.repaint()`
+
+Redraws the marks (a search, a selection).
+
+Returns `void`.
+
+##### `TreeGrid.select(id)`
+
+Shows and selects a node's row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `void`.
+
+##### `TreeGrid.setDensity(d)`
+
+The density.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `string` |  |
+
+Returns `void`.
+
+##### `TreeGrid.destroy()`
+
+Takes the grid down.
+
+Returns `void`.
+
+### drishti_tree-hooks.js
+
+#### `loadOpenChildren(tree)`
+
+Asks the host for the children of every open lazy node not asked yet (TreeOptions.loadChildren); each answer joins the model, a failure is shown in the waiting row. A node read again (new data) while its answer is out is asked again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tree` | `Object` | the Tree (its model, o.loadChildren and the map of the answers out) |
+
+Returns `number`: how many were asked now.
+
+### drishti_tree-side.js
+
+#### `sideContent(t)`
+
+The side panel's content for a Tree.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `Object` | the Tree (model, selected, editing, mode, theme, text(), o) |
+
+Returns `Node[]`.
+
+#### `statusParts(t)`
+
+The status line's parts for a Tree.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `Object` | the Tree |
+
+Returns `Node[]`.
+
+### drishti_tree-io.js
+
+#### `TREE_EXPORTS`
+
+The formats a tree exports.
+
+#### `svgText(el, o)`
+
+A drawing as SVG text.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `SVGSVGElement` |  |
+| `[o]` | `{font: string, ground: string}` | the font family and the background drawn under it |
+
+Returns `string`.
+
+#### `pngOf(el, o)`
+
+A drawing as a PNG data URL (2×).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `SVGSVGElement` |  |
+| `[o]` | `{font: string, ground: string}` |  |
+
+Returns `Promise&lt;string&gt;`.
+
+#### `dataText(model, kind)`
+
+The data of a hierarchy as text: CSV (a row per node) or JSON (nested).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `import('./drishti_tree-model.js').HierarchyModel` |  |
+| `kind` | `('csv'\|'json')` |  |
+
+Returns `string`.
+
+#### `keyMove(key, model, order, at, tree)`
+
+Where a key moves in a drawn mode: the next node to focus, or an action.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `key` | `string` | the KeyboardEvent's key |
+| `model` | `Object` | the HierarchyModel |
+| `order` | `string[]` | the nodes in the order shown |
+| `at` | `?string` | the node focused |
+| `[tree=true]` | `boolean` | the org chart (→ and ← open, close and walk the tree); false: a partition (they move like ↓ and ↑) |
+
+Returns `?{to: string, act: string}`: act: focus, open, close, expand-below, explain, select; null: not a key of the tree.
+
+#### `exportTree(t, kind)`
+
+Exports a Tree's drawing (png, svg: the org chart and the partitions) or its data (csv, json), through its download option (default drishti-core's download); the tree emits exported.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `Object` | the Tree |
+| `kind` | `('png'\|'svg'\|'csv'\|'json')` |  |
+
+Returns `Promise&lt;{name: string, content: string, type: string}&gt;`.
+
+### drishti_tree-view.js
+
+#### `TREE_MODES`
+
+The modes of one tree: grid (g6 B, the default), org (A), sunburst and icicle (C).
+
+#### `TREE_EVENTS`
+
+Every event a tree emits (on tree.events, and as drishti:&lt;kebab-name&gt; on its host).
+
+#### class `Tree`
+
+The tree: a hierarchy in one of four modes, with the plain JavaScript API every host uses (the web component wraps it).
+
+##### `new Tree(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the tree fills |
+| `options` | `TreeOptions` |  |
+
+##### `Tree.text(field, v)`
+
+A measure's figure as text, by its format.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `Tree.on(name, fn)`
+
+Listens to an event of TREE_EVENTS.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`: stops listening.
+
+##### `Tree.askNow()`
+
+Asks the host now for every non-additive figure the nodes lack.
+
+Returns `Promise&lt;number&gt;`: how many nodes took figures.
+
+##### `Tree.select(id, o)`
+
+Selects a node (null: none), shows it and its breadcrumbs, shares it on the link's channel.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `?string` |  |
+| `[o]` | `{silent: boolean, quiet: boolean, from: string}` | silent: not published on the bus; quiet: only marked (the host's own selection followed: nothing opened, no event, nothing announced) |
+
+Returns `void`.
+
+##### `Tree.find(q)`
+
+Finds nodes by words: marks them, opens their branches, selects the first.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+
+Returns `Array&lt;{id: string, label: string, breadcrumbs: string[]}&gt;`.
+
+##### `Tree.explainNode(id, field, fromGrid)`
+
+Explains a node (its figure of a measure, or the node): the host's Explain hook, drawn in the side panel.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[field]` | `?string` | the measure |
+| `[fromGrid]` | `boolean` | the grid asked (the grid shows nothing of its own) |
+
+Returns `Promise&lt;*&gt;`.
+
+##### `Tree.setMode(mode)`
+
+Draws the tree in another mode (one engine: the open state, the selection and the draft stay).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `mode` | `('grid'\|'org'\|'sunburst'\|'icicle')` |  |
+
+Returns `void`.
+
+##### `Tree.setDensity(d)`
+
+Changes the density.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `('comfortable'\|'compact'\|'terminal')` |  |
+
+Returns `void`.
+
+##### `Tree.toggle(id, open)`
+
+Opens or closes a node.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[open]` | `boolean` |  |
+
+Returns `void`.
+
+##### `Tree.expandAll()`
+
+Opens every node.
+
+Returns `void`.
+
+##### `Tree.collapseAll()`
+
+Closes every node but the top.
+
+Returns `void`.
+
+##### `Tree.setData(data)`
+
+New data (the open state and the selection kept where the ids remain); the host's figures asked again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `data` | `import('./drishti_tree-model.js').HierarchySource` |  |
+
+Returns `void`.
+
+##### `Tree.setEditing(on)`
+
+Turns the edit mode on or off (default: the other state).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[on]` | `boolean` |  |
+
+Returns `void`.
+
+##### `Tree.proposeMove(id, to)`
+
+Proposes a move (the edit mode): drawn at once as a draft; the proposal event carries every move so far.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `to` | `string` | the new parent |
+
+Returns `boolean`: whether it was taken (a refused move says why: moveRefused).
+
+##### `Tree.proposal()`
+
+The draft's proposal (its moves).
+
+Returns `{moves: Array&lt;Object&gt;}`.
+
+##### `Tree.undoMove()`
+
+Undoes the last proposed move.
+
+Returns `void`.
+
+##### `Tree.applyProposal()`
+
+The host's approval came: the draft becomes the hierarchy.
+
+Returns `void`.
+
+##### `Tree.discardProposal()`
+
+The draft is thrown away.
+
+Returns `void`.
+
+##### `Tree.exportAs(kind)`
+
+Exports the drawing (png, svg: the org chart and the partitions) or the data (csv, json).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `kind` | `('png'\|'svg'\|'csv'\|'json')` |  |
+
+Returns `Promise&lt;{name: string, content: string, type: string}&gt;`.
+
+##### `Tree.destroy()`
+
+Takes the tree down.
+
+Returns `void`.
+
+### drishti_tree-panel.js
+
+#### `PANEL_MODES`
+
+The modes of a table tree: the tree grid (the default) and the org chart.
+
+#### `readTableTree(table)`
+
+Reads a server's tree table (table.tbl-tree: tr[data-depth] rows; the first cell's toggle, .tr-tog, says whether it is open).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `table` | `HTMLTableElement` |  |
+
+Returns `TableTree`.
+
+#### `isChain(rows)`
+
+Whether a tree is one chain: one top row and every row with at most one row under it (an org chart reads it better than a table).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `TableTreeRow[]` |  |
+
+Returns `boolean`.
+
+#### class `TreePanel`
+
+A table tree: the tree grid or the org chart of a server's tree table, with the mode switch and the filter box.
+
+##### `new TreePanel(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the panel fills |
+| `options` | `{tree: TableTree, mode: string, label: string, search: boolean, density: string, fitRows: number, state: TreePanelState, onState: function(TreePanelState): void}` | mode: grid, org, or auto (the default: org for a chain); search default true |
+
+##### `TreePanel.setMode(mode)`
+
+Draws the rows in another mode (the open rows and the filter stay).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `mode` | `('grid'\|'org')` |  |
+
+Returns `void`.
+
+##### `TreePanel.filter(q)`
+
+Keeps the rows that match the words and their ancestors (empty: every row).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+
+Returns `void`.
+
+##### `TreePanel.toggle(id, open)`
+
+Opens or closes a row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[open]` | `boolean` | default: the other state |
+
+Returns `void`.
+
+##### `TreePanel.getState()`
+
+What the panel keeps for the next drawing of the same table.
+
+Returns `TreePanelState`.
+
+##### `TreePanel.destroy()`
+
+Takes the panel down.
+
+Returns `void`.
+
+#### `treeTables(scope, options)`
+
+Draws every server tree table under a scope (table.tbl-tree not yet drawn) as a table tree: the panel goes before the table's wrapper, which stays in the page hidden (print, no scripts). Panels whose table left the page are taken down on the next call.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `scope` | `ParentNode` | a view, a panel a live patch replaced, a shadow root |
+| `[options]` | `{memory: Object&lt;string, TreePanelState&gt;, scope: string, density: string, live: TreePanel[], address: TreeAddress}` | memory: the state by table (kept by the host across calls, so a live patch keeps the mode, the open rows and the filter); scope: a prefix of the keys (the page's address); live: the panels drawn before (those whose table left the page are destroyed); address: the host's page address, which carries each panel's filter (a link or a reload shows the same rows) |
+
+Returns `TreePanel[]`: the panels drawn now and still in the page.
+
+### drishti_tree-outline.js
+
+#### `OUTLINE_TONES`
+
+The tones a mark may take.
+
+#### `outlineFilter(model, q, textOf)`
+
+The filter of an outline: the nodes whose words hold every word of the query (any case), and the nodes to keep (those and every node above them). An empty query keeps everything (keep null).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `HierarchyModel` |  |
+| `q` | `string` |  |
+| `[textOf]` | `function(import('./drishti_tree-model.js').TreeNode): string` | default: label, id and kind |
+
+Returns `{hits: string[], keep: ?Set&lt;string&gt;}`.
+
+#### `outlineKey(key, model, order, at)`
+
+What a key does on an outline's focused node: keyMove's tree keys, with Enter and Space opening or closing a node with children and showing the detail of one without.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `key` | `string` |  |
+| `model` | `HierarchyModel` |  |
+| `order` | `string[]` | the ids of the rows shown, top to bottom |
+| `at` | `string` | the focused node |
+
+Returns `?{to: string, act: ('focus'\|'open'\|'close'\|'detail')}`.
+
+#### class `TreeOutline`
+
+The outline: a hierarchy as a compact tree grid (a Tree without its chrome), with marks, a hiding filter, a tree's keys and a detail.
+
+##### `new TreeOutline(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the outline fills |
+| `options` | `OutlineOptions` |  |
+
+##### `TreeOutline.setData(data)`
+
+New data: the open state kept for the nodes still there (opened by openDepth when none is), the filter applied again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `data` | `import('./drishti_tree-model.js').HierarchySource` |  |
+
+Returns `void`.
+
+##### `TreeOutline.filter(q)`
+
+Keeps the nodes whose words hold the query and the nodes above them (an empty query: every node); their branches open.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+
+Returns `string[]`: the ids of the matching nodes.
+
+##### `TreeOutline.expandAll()`
+
+Opens every node.
+
+Returns `void`.
+
+##### `TreeOutline.collapseAll()`
+
+Closes every node: the top level shows.
+
+Returns `void`.
+
+##### `TreeOutline.nodeAt(el)`
+
+The node of an element inside the outline (a row's cell, its marks), for a host's drag or menu.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `?Element` |  |
+
+Returns `?import('./drishti_tree-model.js').TreeNode`.
+
+##### `TreeOutline.shownIds()`
+
+The ids of the rows shown, top to bottom.
+
+Returns `string[]`.
+
+##### `TreeOutline.focusedId()`
+
+The focused node's id (the grid's focus), or null.
+
+Returns `?string`.
+
+##### `TreeOutline.focusNode(id)`
+
+Moves the grid's focus to a node's row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `void`.
+
+##### `TreeOutline.showDetail(id)`
+
+Shows a node's detail under the tree (the detail option); nothing when the node has none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `boolean`: whether a detail shows.
+
+##### `TreeOutline.closeDetail()`
+
+Closes the detail.
+
+Returns `void`.
+
+##### `TreeOutline.destroy()`
+
+Takes the outline down.
+
+Returns `void`.
+
+### drishti_tree-element.js
+
+#### `TREE_ELEMENT`
+
+The element's tag name.
+
+#### `defineTreeElement(registry, win)`
+
+Defines &lt;drishti-tree&gt; in a registry (once; the bundle does it when it loads in a page).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[registry]` | `CustomElementRegistry` | default: the window's |
+| `[win]` | `Window` | the window whose HTMLElement the element extends |
+
+Returns `boolean`: whether it was defined now.
+
+### drishti_index.js
+
+#### `install(root)`
+
+Starts drishti-tree in a page (the bundle calls it when it loads): defines &lt;drishti-tree&gt;.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.
+
+### Types of drishti-tree
+
+#### `DrawContext` : `Object`
+
+What a drawing needs: the model, the theme, the formatter of each measure, the view's state.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `model` | `import('./drishti_tree-model.js').HierarchyModel` |  |
+| `theme` | `import('../../drishti-core/src/drishti_visual.js').VisualTheme` |  |
+| `text` | `function(string, *): string` | a measure's figure as text (field, value) |
+| `selected` | `?string` |  |
+| `hits` | `Set&lt;string&gt;` | the search's matches |
+| `colourBy` | `?string` | the measure whose bands colour a node (else its kind) |
+| `shown` | `string[]` | the measures a box shows |
+| `sizeBy` | `?string` | the additive measure of the partition |
+| `focus` | `?string` | the partition's centre |
+| `editing` | `boolean` |  |
+| `[sizes]` | `Object` | OrgSizes |
+
+#### `TreeGridHooks` : `Object`
+
+The tree grid's hooks for a host (TreeOptions.grid).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[labelColumn]` | `Object` | drishti-grid ColumnDef properties for the node's column (header, width, pinned, cellRenderer given {value, text, row, doc}: the row carries the node's own row's fields) |
+| `[columns]` | `Object[]` | more drishti-grid ColumnDefs after the measures', reading the node's own row's fields (valueGetter, format (value, row), cellClass, cellRenderer); left empty on a waiting row |
+| `[rowClass]` | `function(Object): ?string` | more classes for a node's row, from the node's own row (and __id, the node's id) |
+| `[rowData]` | `function(Object): ?Object&lt;string, *&gt;` | data-* attributes for a node's row ({key: 'A-1'}: data-key) |
+| `[widths]` | `Object&lt;string, number&gt;` | column widths by column id (the node's column is __label, a measure's its field) |
+| `[onResize]` | `function(Object&lt;string, number&gt;): void` | a column was resized: every column's width by id (for the host to keep) |
+| `[fitRows]` | `number` | the grid as tall as its rows, up to this many (then it scrolls) |
+| `[phoneWidth]` | `number` | below this width the grid is drawn for a phone (drishti-grid's; 1: never, a narrow panel is not a phone) |
+
+#### `TreeChildrenRequest` : `Object`
+
+What the host's loadChildren hook is given.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` | the node's id |
+| `label` | `string` |  |
+| `kind` | `string` |  |
+| `path` | `string[]` | the ids from the top |
+| `data` | `Object` | the node's own row |
+
+#### `OrgSizes` : `Object`
+
+The org chart's sizes.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[boxW=176]` | `number` | a box's width |
+| `[boxH=74]` | `number` | a box's height |
+| `[gapX=18]` | `number` | between boxes side by side |
+| `[gapY=46]` | `number` | between levels |
+
+#### `TreeSlice` : `Object`
+
+A slice of the partition: a node's share of the whole, from a0 up to (not including) a1, (0 to 1) and its ring (depth below the focus).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `a0` | `number` |  |
+| `a1` | `number` |  |
+| `depth` | `number` |  |
+| `value` | `number` | the node's size (its leaves' figures added up) |
+
+#### `TreeMeasure` : `Object`
+
+A measure of the nodes.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `field` | `string` | the node's property |
+| `[label]` | `string` | its heading (default: the field) |
+| `[format]` | `(string\|Object\|function(*): string)` | a drishti-core named format (compact, amount0, pct1 ...), money, percent ... |
+| `[additive=true]` | `boolean` | false: never summed here (◆); a node's figure is the host's (TreeOptions.measures hook) |
+| `[rollup=true]` | `boolean` | an additive measure: a node with no figure of its own shows its children's sum |
+| `[childSum=false]` | `boolean` | a non-additive measure: show the children's figures added up beside it (Σ children, not a figure of the measure: the gap is the diversification) |
+| `[bar]` | `{bands: Array&lt;{to: number, tone: string}&gt;, max: number}` | draw the figure as a bar (a ratio such as a limit's use): its tone by the first band whose `to` it stays under; max the full bar (default 1) |
+| `[column]` | `Object` | drishti-grid ColumnDef properties for its column in the tree grid (header, width, format (value, row), cellClass, cellRenderer: drawn where the tree draws nothing of its own, the waiting mark and the bar) |
+
+#### `TreeNode` : `Object`
+
+A node of the hierarchy.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `label` | `string` |  |
+| `kind` | `string` | its type (a level's name: division, desk, book ...) |
+| `parent` | `?TreeNode` |  |
+| `children` | `TreeNode[]` |  |
+| `also` | `string[]` | further parents' ids (a DAG), shown, never walked |
+| `depth` | `number` | 0 at the root |
+| `values` | `Object&lt;string, *&gt;` | the measures' figures by field (the data's, the host's answers and the roll-ups) |
+| `data` | `Object` | the row it was read from |
+| `moved` | `boolean` | part of the draft proposal |
+| `lazy` | `boolean` | its children come later, from the host (TreeOptions.loadChildren), the first time it opens |
+| `lazyError` | `?string` | why its children did not come (shown in their place) |
+
+#### `HierarchySource` : `Object`
+
+How a hierarchy is read.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[rows]` | `Object[]` | rows naming their parent (parentField), or each with a path (pathField or getPath) |
+| `[root]` | `Object` | nested: a node with its children (childrenField) |
+| `[idField='id']` | `string` |  |
+| `[parentField='parent']` | `string` |  |
+| `[labelField='label']` | `string` |  |
+| `[kindField='kind']` | `string` |  |
+| `[childrenField='children']` | `string` |  |
+| `[alsoField='also']` | `string` | further parents' ids (a DAG) |
+| `[getPath]` | `function(Object): string[]` | a row's path of ids or names from the top (instead of parentField) |
+| `[lazyField='lazy']` | `string` | a row's field that is true when the node has children the host gives later (addChildren) |
+| `[measures]` | `TreeMeasure[]` |  |
+
+#### `OutlineMark` : `Object`
+
+A mark after a node's label.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `[tone='muted']` | `('muted'\|'accent'\|'link'\|'good'\|'warn'\|'bad')` |  |
+| `[badge=false]` | `boolean` | drawn as a pill (a role, a state) rather than plain words |
+| `[title]` | `string` | the words on hover (the reason, the whole text of a clipped mark) |
+| `[mono=false]` | `boolean` | in the monospace face (a type, an example value) |
+| `[clip=false]` | `boolean` | long text cut with an ellipsis |
+
+#### `OutlineOptions` : `Object`
+
+The options of an outline.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `data` | `import('./drishti_tree-model.js').HierarchySource` | the hierarchy (rows with parents, a nested root, or paths) |
+| `[title='Node']` | `string` | the grid's heading |
+| `[label]` | `string` | its name for a screen reader (default: the title) |
+| `[density='compact']` | `('comfortable'\|'compact'\|'terminal')` |  |
+| `[labelWidth=480]` | `number` | the width of the node's column (its marks included); a narrower panel scrolls across |
+| `[openDepth=-1]` | `number` | nodes open down to this depth at the start (-1: all) |
+| `[fitRows=24]` | `number` | the tree as tall as its rows, up to this many (then it scrolls) |
+| `[marks]` | `function(import('./drishti_tree-model.js').TreeNode): OutlineMark[]` | the marks after a node's label |
+| `[rowClass]` | `function(import('./drishti_tree-model.js').TreeNode): ?string` | more classes on a node's row |
+| `[text]` | `function(import('./drishti_tree-model.js').TreeNode): string` | the words a filter looks in (default: label, id, kind) |
+| `[detail]` | `function(import('./drishti_tree-model.js').TreeNode, HTMLElement): (string[]\|void)` | a node's detail: lines of text to show, or nothing after filling the box itself; no lines and an empty box: the node has no detail |
+| `[onKey]` | `function(import('./drishti_tree-model.js').TreeNode, KeyboardEvent): boolean` | the host's keys on the focused node, before the outline's (true: handled) |
+
+#### `TableTreeRow` : `Object`
+
+One row of a server's tree table.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` | its place in the table's order (r0, r1 ...) |
+| `parent` | `?string` | the id of the row it is nested under (null at the top) |
+| `depth` | `number` | 0 at the top |
+| `label` | `string` | the first cell's text |
+| `texts` | `string[]` | each cell's text |
+| `tones` | `Array&lt;?string&gt;` | each cell's tone class (t-...), or null |
+| `cells` | `Array&lt;?Element&gt;` | the server's cells: their content (links, badges) is shown as it is |
+| `kids` | `boolean` | whether rows are nested under it |
+| `open` | `boolean` | whether the server showed it open (its expand) |
+| `highlight` | `boolean` | the row the server marked (hl) |
+
+#### `TableTree` : `Object`
+
+A server's tree table, read.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `headers` | `string[]` | the column headings |
+| `numeric` | `boolean[]` | which columns hold figures (right aligned, ordered as numbers) |
+| `rows` | `TableTreeRow[]` | in the table's order, each after the row it is nested under |
+| `foot` | `string[]` | the footer's rows as text (a total, "n more") |
+
+#### `TreePanelState` : `Object`
+
+What a table tree keeps between two drawings of the same table (a live patch).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[mode]` | `string` | 'grid' or 'org' |
+| `[q]` | `string` | the filter's words |
+| `[open]` | `string[]` | the ids of the open rows |
+
+#### `TreeAddress` : `Object`
+
+A host's page address for its table trees' filters (treeTables' options.address).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `read` | `function(string): ?string` | the filter's words in the address for a panel id (null: none) |
+| `write` | `function(string, string): void` | the panel's filter's words into the address ('' takes them out) |
+
+#### `TreeOptions` : `Object`
+
+The options of a tree.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `data` | `import('./drishti_tree-model.js').HierarchySource` | the hierarchy (rows with parents, a nested root, or paths) and its measures |
+| `[mode='grid']` | `('grid'\|'org'\|'sunburst'\|'icicle')` |  |
+| `[density='compact']` | `('comfortable'\|'compact'\|'terminal')` |  |
+| `[title]` | `string` | the tree's name (the grid's first heading, the status line) |
+| `[label]` | `string` | its name for a screen reader (default: the title) |
+| `[modes]` | `string[]` | the modes the toolbar offers (default all four; one: no switch) |
+| `[serverMeasures]` | `function(Array&lt;{id: string, path: string[], fields: string[]}&gt;): Promise&lt;Array&lt;{id: string, values: Object}&gt;&gt;` | the non-additive figures of the nodes that lack them, asked of the host (debounced), never computed here |
+| `[serverDebounceMs=60]` | `number` |  |
+| `[explain]` | `function(Object): Promise&lt;*&gt;` | the Explain hook: given a node's context ({id, label, kind, path, field, measure, value, text, additive, values, childSum}), the explanation (drishti-core's ExplainResult, words or a node) |
+| `[link]` | `{channel: string, bus: Object}` | share the selection on drishti-core's bus (a grid, a chart, a graph on the channel) |
+| `[editable=false]` | `boolean` | offer the edit mode (✎ Edit (propose)): moves become one proposal for four eyes |
+| `[proposalNote]` | `string` | words under the proposal (who approves, the impact) |
+| `[sizeBy]` | `string` | the additive measure that sizes a partition (default: the first additive one) |
+| `[colourBy]` | `string` | the measure whose bands colour the nodes (default: the first with bar bands) |
+| `[shown]` | `string[]` | the measures an org chart box shows (default: the first two) |
+| `[openDepth=1]` | `number` | nodes open down to this depth at the start (-1: all) |
+| `[status]` | `string[]` | more words for the status line (the business date) |
+| `[emptyText]` | `string` | the side panel's words when nothing is selected |
+| `[download]` | `function(string, (string\|Blob), string): void` | saves an export (default: drishti-core's download) |
+| `[chrome=true]` | `boolean` | false: the view alone (no toolbar, breadcrumbs, side panel or status line), for a screen with its own |
+| `[grid]` | `import('./drishti_tree-hooks.js').TreeGridHooks` | the host's look in the tree grid (its columns, a row's class, widths) |
+| `[loadChildren]` | `function(import('./drishti_tree-hooks.js').TreeChildrenRequest): Promise&lt;Object[]&gt;` | a lazy node's children (rows, read as the data's), asked the first time it is open |
+| `[lazyText='loading…']` | `string` | the waiting row's words while a lazy node's children are asked |
 
 ## drishti-insight
 
@@ -13058,6 +15872,70 @@ Draws a risk chart in host.
 
 Returns `Object`: the Chart.
 
+### drishti_risk-tree.js
+
+#### `LIMIT_USE_BANDS`
+
+The VaR limit's use bands (the colours of the bar and of the nodes).
+
+#### `VAR_TREE_MEASURES`
+
+The measures of a VaR hierarchy, in the order the tree grid shows them.
+
+#### `limitUseText(v, row)`
+
+A node's limit use in words: its share of the limit, or why it has none (its LIMIT_NOTE: "n/c" for a limit of another horizon or confidence; "no limit" by default).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?number` | the server's use (1 = at the limit) |
+| `[row]` | `Object` | the node's row |
+
+Returns `string`.
+
+#### `varHierarchyTree(rows, o)`
+
+The options of a VaR hierarchy tree.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` | the nodes: {ID, PARENT, LABEL, LEVEL} and any figures the server sent with them (VAR, ES, LIMIT, LIMIT_USE, POSITIONS, NOTIONAL), LIMIT_NOTE (why a node has no limit use), lazy (its children come later, loadChildren) and any field of the screen's own; the books' POSITIONS and NOTIONAL roll up, the risk figures never do |
+| `[o]` | `Object` | serverMeasures (the non-additive figures of the nodes that lack them), explain, link, editable, proposalNote, mode (default grid), density (default terminal), title, status; fields (the measures shown, in order: default all), measures (by field, what a screen changes of one: its label, childSum, its column); and any TreeOptions (chrome, grid, loadChildren ...) |
+
+Returns `Object`: TreeOptions (drishti-tree).
+
+#### `limitBreaches(rows)`
+
+The nodes over their VaR limit (the server's use of 1 or more), for a screen's warning.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+
+Returns `string[]`: their ids.
+
+### drishti_risk-graph.js
+
+#### `COUNTERPARTY_LEVELS`
+
+The levels of a counterparty structure, top to bottom, with their words, shapes and tones.
+
+#### `COUNTERPARTY_MEASURES`
+
+The measures of a counterparty structure.
+
+#### `counterpartyStructureGraph(rows, links, o)`
+
+The options of a counterparty structure graph.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` | the nodes: {ID, NAME, LEVEL (group, legal-entity, netting-set or csa), PARENT (the node above it), COUNTRY, RATING, LEI} and the figures the server sent (EAD, PFE, MTM, COLLATERAL, THRESHOLD) |
+| `[links]` | `Array&lt;{FROM: string, TO: string, KIND: string}&gt;` | links beyond the parents (a guarantee, a CSA covering a second set) |
+| `[o]` | `Object` | explain, expand, link, mode (default inspector), density, title and any GraphOptions |
+
+Returns `Object`: GraphOptions (drishti-graph).
+
 ### drishti_risk-columns.js
 
 #### `textColumn(field, header, o)`
@@ -13145,7 +16023,7 @@ Returns `void`.
 
 ## drishti-renderer
 
-Version 2.0.0. Bundle `static/elements/drishti-renderer/drishti_renderer.js`, global `Drishti.elements.renderer`; requires drishti-core, drishti-grid, drishti-chart, drishti-data.
+Version 2.0.0. Bundle `static/elements/drishti-renderer/drishti_renderer.js`, global `Drishti.elements.renderer`; requires drishti-core, drishti-grid, drishti-chart, drishti-data, drishti-graph, drishti-tree.
 
 ### drishti_render.js
 

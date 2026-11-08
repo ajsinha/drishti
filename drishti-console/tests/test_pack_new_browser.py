@@ -131,7 +131,8 @@ def test_the_whole_flow_three_schemas_and_a_folder_to_a_downloaded_bundle(browse
     assert cards.count() == 3
     text = page.locator("[data-kinds]").inner_text()
     assert "3 kinds, 5 Sutras to create" in text      # one per product type; no catch-all: every trade in the data has one
-    assert page.locator("svg.pk-graph").count() == 1 and "trade to counterparty" in page.locator("svg.pk-graph title").text_content()
+    assert page.locator(".pk-graph.dn canvas.dn-canvas").count() == 1 and "trade to counterparty" in page.locator(".pk-graph").get_attribute("data-links")
+    assert page.evaluate("() => document.querySelector('.pk-graph').__drishtiGraph.model.edgeList().some((e) => e.source === 'trade' && e.target === 'counterparty')")
     trade = page.locator(".pk-card", has=page.locator("h3", has_text="Trade"))
     assert "trades.jsonl" in trade.inner_text() and "30 rows" in trade.inner_text()
     assert trade.locator("select[data-focus^=key-]").input_value() == "tradeId"

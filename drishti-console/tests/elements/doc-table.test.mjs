@@ -76,15 +76,6 @@ test('the sort keys read amounts, signs, units, dates and text as the console do
   assert.deepEqual(sorted, ['−3', '10k', '2m', '2026-01-01', '', 'a'.toUpperCase(), 'b']);
 });
 
-test('a tree shows open branches, and a query keeps matches with their ancestors, opened', () => {
-  const depths = [0, 1, 2, 1, 0], opens = [true, false, false, false, false];
-  assert.deepEqual(G.treeVisibility(depths, opens, null), { visible: [true, true, false, true, true], open: [true, false, false, false, false] });
-  const q = G.treeVisibility(depths, opens, [false, false, true, false, false]);
-  assert.deepEqual(q.visible, [true, true, true, false, false]);
-  assert.deepEqual(q.open, [true, true, false, false, false]);
-  assert.deepEqual(G.treeVisibility(depths, opens, [false, false, false, false, false]).visible, [false, false, false, false, false]);
-});
-
 test('a pager says which rows it shows, or that none match', () => {
   assert.equal(G.pageInfo(60, 0, 25).text, '1–25 of 60');
   assert.deepEqual(G.pageInfo(60, 2, 25), { page: 2, pages: 3, first: 50, last: 60, text: '51–60 of 60' });

@@ -39,12 +39,7 @@
 /* cards */
 .pk-top { display: flex; flex-wrap: wrap; gap: var(--d-sp-16); align-items: flex-start; margin-bottom: var(--d-sp-12_8); }
 .pk-top > div { flex: 1 1 22rem; min-width: 0; }
-.pk-graph { width: 100%; max-width: 36rem; height: auto; border: 1px solid var(--d-border); border-radius: var(--d-radius-8); background: var(--d-surface); }
-.pk-node { fill: var(--d-surface-2); stroke: var(--d-accent); stroke-width: 1.4; }
-.pk-node-t { fill: var(--d-ink); font-size: var(--d-fs-12); font-weight: 700; }
-.pk-edge { stroke: var(--d-muted); stroke-width: 1.4; fill: none; }
-.pk-arrow { fill: var(--d-muted); }
-.pk-edge-t { fill: var(--d-muted); font-size: var(--d-fs-10); }
+.pk-graph { width: 100%; max-width: 44rem; }
 .pk-edges { margin: var(--d-sp-6_4) 0 0; padding-left: var(--d-sp-17_6); font-size: var(--d-fs-13_76); }
 .pk-assign { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-6_4) var(--d-sp-14_4) var(--d-sp-11_2); margin-bottom: var(--d-sp-12_8); }
 .pk-card { border: 1px solid var(--d-border); border-radius: var(--d-radius-10); padding: var(--d-sp-11_2) var(--d-sp-16) var(--d-sp-16); margin-bottom: var(--d-sp-14_4); background: var(--d-surface); }

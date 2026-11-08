@@ -45,7 +45,7 @@ RULES = {
     "code-editor": (re.compile(r"""\bfromTextArea\b|\bCodeMirror\s*\(\s*[\w.]+\s*,|CodeMirror\.defineMode\b|<textarea(?![^>]*data-di-code=)[^>]*(?:data-[\w-]*(?:yaml|sutra|code|python|formula)\b|name="(?:body|yamlbody)")"""),
                     "makes its own code or YAML editor: use drishti-inputs' CodeEditor or drishti-designer's YamlPane"),
     "tree": (re.compile(r"""role['"]?\s*[:=,]\s*['"]tree['"]|setAttribute\(\s*['"]role['"]\s*,\s*['"]tree['"]"""),
-             "draws its own tree view: use drishti-designer's Outline or drishti-inputs' TreePicker"),
+             "draws its own tree view: use drishti-designer's Outline, drishti-tree's TreeOutline or drishti-inputs' TreePicker"),
     "undo": (re.compile(r"\b(?:undo|redo)(?:Stack)?\s*=\s*\[\s*\]|\bconst\s+undo\s*=\s*\[|\bvar\s+undo\s*=\s*\["),
              "keeps its own undo history: use drishti-designer's CommandStack or SnapshotHistory"),
 }
@@ -53,9 +53,7 @@ RULES = {
 AUTHORING = re.compile(r"design|editor|build|studio|outline|form|notebook|pack-new|transform|calc|alert|connector|lens|edition|workflow|approval")
 AUTHORING_ONLY = {"tree", "undo"}
 # file (relative to drishti-console/web) -> the rules it still breaks (each the designer or editor still being moved onto the kit)
-ALLOWED = {
-    "templates/build/design.html": {"tree"},                      # the workbench's data-shape tree (drishti_build-shape-tree.js)
-}
+ALLOWED: dict = {}                     # empty (2.9.11.e): the Sutra designer on the kit, the workbench's shape tree on drishti-tree
 
 COMMENT = re.compile(r"/\*.*?\*/|(?<![:\\'\"])//[^\n]*|\{#.*?#\}|<!--.*?-->", re.S)
 
@@ -104,7 +102,7 @@ def test_the_allow_list_only_shrinks():
 
 def test_the_allow_list_is_capped():
     """The list never grows past what it was when the rule was made (2026-11-07): new files cannot be added to it."""
-    assert len(ALLOWED) <= 1 and sum(len(r) for r in ALLOWED.values()) <= 1
+    assert len(ALLOWED) == 0                                      # every designer and editor on the kit: the list stays empty
 
 
 def test_the_guard_finds_what_it_looks_for():

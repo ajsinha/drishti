@@ -154,7 +154,7 @@
   }));
 
   demos.push(chartDemo({
-    id: 'linked', title: 'Linked selection', about: 'drishti_chart-link.js', summary: 'A grid and a chart that share a selection through drishti-core\'s bus: click marks, the grid selects the rows; select rows, the chart outlines them.',
+    id: 'linked', title: 'Linked selection', about: 'drishti_link.js', summary: 'A grid and a chart that share a selection through drishti-core\'s bus: click marks, the grid selects the rows; select rows, the chart outlines them.',
     values: { density: 'compact' }, types: ['ChartOptions'],
     examples: [{ title: 'Trades: a grid and a scatter', values: {} }],
     build: function (values, ctx) { return chartBuild(specs(ctx).scatter, values, ctx, { link: { channel: 'gallery-trades' } }); },

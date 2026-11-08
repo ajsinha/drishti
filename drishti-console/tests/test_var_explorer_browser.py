@@ -196,7 +196,7 @@ def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(stack, browser):
     assert "hierarchy=LL" in pg.url
     letter = pg.locator('.vx-tree .dg-row[data-scope^="NODE:LL~LL-"]').first.get_attribute("data-scope")
     assert "/" not in letter
-    assert pg.locator('.vx-tree .dg-row[data-scope="%s"] .dg-cell[aria-colindex="4"] .vx-ubar' % letter).count() + \
+    assert pg.locator('.vx-tree .dg-row[data-scope="%s"] .dg-cell[aria-colindex="4"] .dt-bar' % letter).count() + \
         pg.locator('.vx-tree .dg-row[data-scope="%s"] .dg-cell[aria-colindex="4"] *' % letter).count() > 0
     pg.locator('.vx-tree .dg-row[data-scope="%s"]' % letter).click()
     painted(pg, letter)

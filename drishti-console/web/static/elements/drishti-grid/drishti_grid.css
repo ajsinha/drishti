@@ -111,6 +111,8 @@
 .dg-tw { display: inline-block; width: 16px; flex: none; text-align: center; color: var(--d-faint); cursor: pointer; font-family: var(--d-font-mono); }
 .dg-tw:hover { color: var(--d-accent); }
 .dg-tw-none { cursor: default; }
+/* the twisty on a touch screen (a phone, a tablet): a 44 px target (its row is 44 px tall there, drishti_grid-body.js) */
+@media (pointer: coarse) { .dg-tw:not(.dg-tw-none) { width: 44px; align-self: stretch; display: inline-flex; align-items: center; justify-content: center; } }
 .dg-check { margin: 0 6px 0 0; accent-color: var(--d-accent); flex: none; }
 .dg-pending .dg-text, .dg-loading::after { color: transparent; display: inline-block; min-width: 46px; height: 0.9em; border-radius: 3px;
   background: linear-gradient(90deg, var(--d-bg-2), var(--d-highlight), var(--d-bg-2)); background-size: 200% 100%; animation: dg-shimmer 1.2s linear infinite; }

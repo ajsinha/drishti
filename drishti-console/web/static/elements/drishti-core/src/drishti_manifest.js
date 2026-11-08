@@ -112,6 +112,40 @@ export const MANIFEST = Object.freeze({
       ],
       "module": "core"
     },
+    "drishti-graph": {
+      "version": "0.1.0",
+      "title": "The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel",
+      "bundle": "drishti-graph/drishti_graph.js",
+      "entry": "drishti-graph/src/drishti_index.js",
+      "global": "graph",
+      "requires": [
+        "drishti-core",
+        "drishti-grid"
+      ],
+      "css": [
+        "elements/drishti-graph/drishti_graph.css",
+        "elements/drishti-grid/drishti_grid.css"
+      ],
+      "scripts": [],
+      "module": "core"
+    },
+    "drishti-tree": {
+      "version": "0.1.0",
+      "title": "The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, export, keyboard and ARIA",
+      "bundle": "drishti-tree/drishti_tree.js",
+      "entry": "drishti-tree/src/drishti_index.js",
+      "global": "tree",
+      "requires": [
+        "drishti-core",
+        "drishti-grid"
+      ],
+      "css": [
+        "elements/drishti-tree/drishti_tree.css",
+        "elements/drishti-grid/drishti_grid.css"
+      ],
+      "scripts": [],
+      "module": "core"
+    },
     "drishti-insight": {
       "version": "0.1.0",
       "title": "Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export",
@@ -130,7 +164,7 @@ export const MANIFEST = Object.freeze({
     },
     "drishti-risk": {
       "version": "0.2.0",
-      "title": "The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser)",
+      "title": "The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself",
       "bundle": "drishti-risk/drishti_risk.js",
       "entry": "drishti-risk/src/drishti_index.js",
       "global": "risk",
@@ -145,7 +179,7 @@ export const MANIFEST = Object.freeze({
     },
     "drishti-renderer": {
       "version": "2.0.0",
-      "title": "The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js",
+      "title": "The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-tree, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js",
       "bundle": "drishti-renderer/drishti_renderer.js",
       "entry": "drishti-renderer/src/drishti_index.js",
       "global": "renderer",
@@ -153,10 +187,14 @@ export const MANIFEST = Object.freeze({
         "drishti-core",
         "drishti-grid",
         "drishti-chart",
-        "drishti-data"
+        "drishti-data",
+        "drishti-graph",
+        "drishti-tree"
       ],
       "css": [
-        "elements/drishti-grid/drishti_grid.css"
+        "elements/drishti-grid/drishti_grid.css",
+        "elements/drishti-graph/drishti_graph.css",
+        "elements/drishti-tree/drishti_tree.css"
       ],
       "scripts": [],
       "module": "core"

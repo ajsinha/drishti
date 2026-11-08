@@ -598,8 +598,9 @@ SR = "document.querySelector('#main').shadowRoot"
 PAGED = ("<div class='tbl-wrap'><table class='tbl' aria-label='Injected'><thead><tr><th>Name</th><th>Amount</th></tr></thead><tbody>"
          + "".join(f"<tr><td>row{i:02d}</td><td>{(i * 37) % 31}</td></tr>" for i in range(30)) + "</tbody></table></div>")
 TREE = ("<div class='tbl-wrap'><table class='tbl tbl-tree' data-plain data-tree><thead><tr><th>Item</th></tr></thead><tbody>"
-        "<tr data-depth='0'><td><span class='tr-ind tr-d0'><button type='button' class='tr-tog' aria-expanded='false' aria-label='Expand Parent'>▸</button>Parent</span></td></tr>"
-        "<tr data-depth='1'><td><span class='tr-ind tr-d1'>Child</span></td></tr></tbody></table></div>")
+        "<tr data-depth='0' data-kids><td><span class='tr-ind tr-d0'><button type='button' class='tr-tog' aria-expanded='false' aria-label='Expand Parent'>▸</button></span>Parent</td></tr>"
+        "<tr data-depth='1'><td><span class='tr-ind tr-d1'>Child</span></td></tr>"
+        "<tr data-depth='1'><td><span class='tr-ind tr-d1'>Sibling</span></td></tr></tbody></table></div>")   # two children: not a chain, so the tree grid
 
 
 def inject(h, html):
@@ -668,15 +669,17 @@ def test_column_filters_work_inside_the_element_and_leave_the_host_page_alone(ho
 
 
 def test_tree_row_expands_inside_the_element(host):
+    """A table with children inside the element is drishti-tree's tree grid (its bundle served as elements-tree, its sheet part of
+    <drishti-view>'s); the server's table stays hidden."""
     h = host()
     h.open()
     inject(h, TREE)
-    t = h.page.locator("#main").locator(".injected table.tbl-tree")
-    child = t.locator("tbody tr").nth(1)
-    expect(child).to_be_hidden()
-    t.locator(".tr-tog").click()
-    expect(child).to_be_visible()
-    expect(t.locator(".tr-tog")).to_have_attribute("aria-expanded", "true")
+    tree = h.page.locator("#main").locator(".injected .dt-tp")
+    expect(tree.locator(".dg-row")).to_have_count(1)
+    expect(h.page.locator("#main").locator(".injected table.tbl-tree")).to_be_hidden()
+    tree.locator(".dg-row[aria-expanded] .dg-tw").click()
+    expect(tree.locator(".dg-row")).to_have_count(3)
+    expect(tree.locator(".dg-row[aria-expanded]")).to_have_attribute("aria-expanded", "true")
 
 
 def test_a_tables_pivot_inside_the_element_is_a_link_to_the_console_s_pivot_screen(host):

@@ -22,7 +22,7 @@
 {% block title %}{{ PRODUCT }}{% endblock %}
 {% block screen %}home{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_risk-landing.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_risk-landing.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}">{% endblock %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
 {{ back(request) }}
@@ -73,7 +73,7 @@
     <section class="rl-card" aria-labelledby="rlTreeH"{{ part(PP, 'card-1') }}>
       <h2 id="rlTreeH"><span data-rl-tree-title>{{ hierarchies[0] }}</span><small>VaR · limit use</small></h2>
       <div class="rl-hier" data-rl-hierarchies role="group" aria-label="Hierarchy"></div>
-      <div class="rl-tree mono" data-rl-tree role="tree"><p class="rl-muted">…</p></div>
+      <div class="rl-tree" data-rl-tree><p class="rl-muted">…</p></div>
     </section>
     <section class="rl-card" aria-labelledby="rlHeatH"{{ part(PP, 'chart') }}>
       <h2 id="rlHeatH">Limit use<small>each node against its VaR limit</small></h2>
@@ -105,4 +105,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_risk-landing.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="/static/elements/drishti-tree/drishti_tree.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_risk-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -91,15 +91,28 @@ def parse_doc(block: str) -> dict:
     return d
 
 
+def origin(name: str, module: Path, seen: int = 0) -> Path:
+    """The module that declares a name a module re-exports (a chain of ``export { a } from``, across libraries too: drishti-chart
+    re-exports drishti-core's visual theme, documented where it is written)."""
+    if seen > 8:
+        return module
+    for m in EXPORT_LIST.finditer(module.read_text(encoding="utf-8")):
+        for part in m.group(1).split(","):
+            part = part.strip()
+            if part and part.split(" as ")[-1].strip() == name:
+                return origin(part.split(" as ")[0].strip(), (module.parent / m.group(2)).resolve(), seen + 1)
+    return module
+
+
 def exports_of(entry: Path) -> list[tuple[str, Path]]:
-    """(name, module) for every name the entry re-exports, in order; plus the entry's own declarations."""
+    """(name, module) for every name the entry re-exports, in order (the module that declares it); plus the entry's own declarations."""
     text = entry.read_text(encoding="utf-8")
     out = []
     for m in EXPORT_LIST.finditer(text):
         for part in m.group(1).split(","):
             part = part.strip()
             if part:
-                out.append((part.split(" as ")[-1].strip(), (entry.parent / m.group(2)).resolve()))
+                out.append((part.split(" as ")[-1].strip(), origin(part.split(" as ")[0].strip(), (entry.parent / m.group(2)).resolve())))
     for m in ANY_DECL.finditer(text):
         out.append((m.group(1) or m.group(2) or m.group(3), entry))
     return out

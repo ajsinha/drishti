@@ -14,19 +14,19 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The shape tree of the Build workbench: conflicts and rare fields first, then an accessible tree (role=tree: arrows,
- * Home/End, Right/Left to open and close, Enter for a field's reason), with a filter. Used by New and by a Design's page.
- * window.Drishti.ShapeTree(root) wires the elements inside root that carry data-tree, data-filter, data-counts, data-attention,
- * data-conflicts, data-rare, data-expand-all and data-collapse-all, and returns {show(report)}. All text from the data goes in as
- * text nodes, never as HTML. opts.onRow(row, li, line, detail), when given, is called for every field so the workbench can make it
- * draggable and add its own buttons. */
+/* The shape tree of the Build workbench: conflicts and rare fields first, then the fields as drishti-tree's outline (a tree grid without
+ * chrome: arrows, Home/End, Right/Left to open, close and go up, Enter for a field's reason, its files and examples), with a filter.
+ * Used by a Design's page. window.Drishti.ShapeTree(root, opts) wires the elements inside root that carry data-tree, data-filter,
+ * data-counts, data-attention, data-conflicts, data-rare, data-expand-all and data-collapse-all, and returns {show(report),
+ * fieldAt(element)}. All text from the data goes in as text, never as HTML. opts (the workbench's): rowClass(row) more classes on a
+ * field's row; onField(row, box) adds to a field's detail; onKey(row, event) its keys on a focused field (true: handled). */
 (function () {
   'use strict';
   window.Drishti.ShapeTree = function (root, opts) {
     opts = opts || {};
     var $ = function (s) { return root.querySelector(s); };
-    var tree = $('[data-tree]'), counts = $('[data-counts]'), filter = $('[data-filter]');
-    var rows = [];            // [{n, li, kids, detail, text}]
+    var host = $('[data-tree]'), counts = $('[data-counts]'), filter = $('[data-filter]');
+    var outline = null, total = 0;
 
     function el(tag, cls, text) {
       var e = document.createElement(tag);
@@ -36,186 +36,99 @@
     }
     function pct(p) { return (Math.round(p * 1000) / 10) + '%'; }
 
-  // ---- conflicts and rare fields ---------------------------------------------------------------------------------
-  function attention(rep) {
-    var box = $('[data-attention]'), c = $('[data-conflicts]'), r = $('[data-rare]');
-    c.textContent = ''; r.textContent = '';
-    if (rep.conflicts.length) {
-      c.appendChild(el('h3', 'bs-h', 'Conflicts: ' + rep.conflicts.length));
-      c.appendChild(el('p', 'text-muted-d', 'The same field has different types in different files.'));
-      var ul = el('ul', 'bs-list');
-      rep.conflicts.forEach(function (x) { ul.appendChild(el('li', 'mono', x.path + '  ' + x.types.join(' | '))); });
-      c.appendChild(ul);
+    // ---- conflicts and rare fields ---------------------------------------------------------------------------------
+    function attention(rep) {
+      var box = $('[data-attention]'), c = $('[data-conflicts]'), r = $('[data-rare]');
+      c.textContent = ''; r.textContent = '';
+      if (rep.conflicts.length) {
+        c.appendChild(el('h3', 'bs-h', 'Conflicts: ' + rep.conflicts.length));
+        c.appendChild(el('p', 'text-muted-d', 'The same field has different types in different files.'));
+        var ul = el('ul', 'bs-list');
+        rep.conflicts.forEach(function (x) { ul.appendChild(el('li', 'mono', x.path + '  ' + x.types.join(' | '))); });
+        c.appendChild(ul);
+      }
+      if (rep.rare.length) {
+        r.appendChild(el('h3', 'bs-h', 'Rare fields: ' + rep.rare.length));
+        r.appendChild(el('p', 'text-muted-d', 'Present in under half of their records: a panel built on one may be empty for many files.'));
+        var ul2 = el('ul', 'bs-list');
+        rep.rare.forEach(function (x) { ul2.appendChild(el('li', 'mono', x.path + '  ' + pct(x.presence))); });
+        r.appendChild(ul2);
+      }
+      box.hidden = !(rep.conflicts.length || rep.rare.length);
     }
-    if (rep.rare.length) {
-      r.appendChild(el('h3', 'bs-h', 'Rare fields: ' + rep.rare.length));
-      r.appendChild(el('p', 'text-muted-d', 'Present in under half of their records: a panel built on one may be empty for many files.'));
-      var ul2 = el('ul', 'bs-list');
-      rep.rare.forEach(function (x) { ul2.appendChild(el('li', 'mono', x.path + '  ' + pct(x.presence))); });
-      r.appendChild(ul2);
+
+    // ---- the fields as a hierarchy: one node per step of a path ($.legs[].notional: legs, [], notional) ----------------
+    var SEG = /\.([^.\[\]{}]+)|\[\]|\{\}|\['((?:[^'\\]|\\.)*)'\]/g;
+    function segments(path) {
+      var out = [], m;
+      SEG.lastIndex = 0;
+      while ((m = SEG.exec(path.slice(1))) !== null) { out.push(m[1] !== undefined ? m[1] : m[2] !== undefined ? m[2].replace(/\\'/g, "'") : m[0]); }
+      return out;
     }
-    box.hidden = !(rep.conflicts.length || rep.rare.length);
-  }
-
-  // ---- the tree --------------------------------------------------------------------------------------------------
-  var SEG = /\.([^.\[\]{}]+)|\[\]|\{\}|\['((?:[^'\\]|\\.)*)'\]/g;
-  function segments(path) {
-    var out = [], m;
-    SEG.lastIndex = 0;
-    while ((m = SEG.exec(path.slice(1))) !== null) { out.push(m[1] !== undefined ? m[1] : m[2] !== undefined ? m[2].replace(/\\'/g, "'") : m[0]); }
-    return out;
-  }
-
-  function build(paths) {
-    tree.textContent = '';
-    rows = [];
-    var byPath = {};
-    var rootNode = { children: [], ul: tree, level: 0 };
-    byPath['$'] = rootNode;
-    paths.forEach(function (p) {
-      var segs = segments(p.path), parent = rootNode;
-      if (!segs.length) { return; }
-      var key = '$';
-      for (var i = 0; i < segs.length; i++) {
-        key += '\u0001' + segs[i];
-        var n = byPath[key];
-        if (!n) {
-          n = { label: segs[i], row: null, children: [], parent: parent, level: parent.level + 1, path: key };
-          byPath[key] = n;
-          parent.children.push(n);
+    function rows(paths) {
+      var out = [], seen = {};
+      paths.forEach(function (p) {
+        var segs = segments(p.path), key = '$', parent = null;
+        for (var i = 0; i < segs.length; i++) {
+          key += '\u0001' + segs[i];
+          if (!seen[key]) { seen[key] = { id: key, parent: parent, label: segs[i] }; out.push(seen[key]); }
+          parent = key;
         }
-        parent = n;
-      }
-      parent.row = p;
-    });
-    rootNode.children.forEach(function (n) { render(n, tree); });
-    var first = tree.querySelector('[role="treeitem"]');
-    if (first) { first.tabIndex = 0; }
-    applyFilter();
-  }
-
-  function render(n, ul) {
-    var li = el('li');
-    li.setAttribute('role', 'treeitem');
-    li.setAttribute('aria-level', n.level);
-    li.tabIndex = -1;
-    var r = n.row, hasKids = n.children.length > 0;
-    if (hasKids) { li.setAttribute('aria-expanded', 'true'); }
-    var line = el('div', 'bs-row');
-    line.appendChild(el('span', 'bs-twist', hasKids ? '▾' : ''));
-    line.appendChild(el('span', 'bs-name mono', n.label));
-    if (r) {
-      line.appendChild(el('span', 'bs-type mono', r.type));
-      if (r.role) {
-        var b = el('span', 'bs-role' + (r.conflict ? ' conflict' : ''), r.role);
-        b.title = r.reason || '';
-        line.appendChild(b);
-      }
-      if (r.conflict) { line.appendChild(el('span', 'bs-role conflict', 'conflict')); }
-      line.appendChild(el('span', 'bs-pres' + (r.presence < 0.5 ? ' rare' : ''), pct(r.presence)));
-      if (r.examples && r.examples.length) {
-        var ex = el('span', 'bs-ex mono', r.examples.join(', '));
-        ex.title = r.examples.join(', ');
-        line.appendChild(ex);
-      }
+        if (segs.length) { seen[key].field = p; }
+      });
+      return out;
     }
-    li.appendChild(line);
-    var detail = null;
-    if (r) {
-      detail = el('div', 'bs-detail');
-      detail.hidden = true;
-      detail.appendChild(el('div', null, 'Path: ' + r.path));
-      detail.appendChild(el('div', null, 'Role: ' + (r.role || 'none') + (r.reason ? ' — ' + r.reason : '')));
-      detail.appendChild(el('div', null, 'Present in ' + pct(r.presence) + ' of its records' + (r.masked ? ' (masked)' : '')));
-      if (r.examples && r.examples.length) { detail.appendChild(el('div', null, 'Examples: ' + r.examples.join(', '))); }
-      if (r.files && r.files.length) { detail.appendChild(el('div', null, 'Files: ' + r.files.join(', '))); }
-      li.appendChild(detail);
+
+    function marks(n) {
+      var r = n.data.field, out = [];
+      if (!r) { return out; }
+      out.push({ text: r.type, mono: true });
+      if (r.role) { out.push({ text: r.role, badge: true, tone: r.conflict ? 'bad' : 'accent', title: r.reason || '' }); }
+      if (r.conflict) { out.push({ text: 'conflict', badge: true, tone: 'bad' }); }
+      out.push({ text: pct(r.presence), tone: r.presence < 0.5 ? 'warn' : 'muted' });
+      if (r.examples && r.examples.length) { out.push({ text: r.examples.join(', '), mono: true, clip: true, title: r.examples.join(', ') }); }
+      return out;
     }
-    var kids = null;
-    if (hasKids) {
-      kids = el('ul');
-      kids.setAttribute('role', 'group');
-      n.children.forEach(function (c) { render(c, kids); });
-      li.appendChild(kids);
+    function detail(n, box) {
+      var r = n.data.field;
+      if (!r) { return []; }
+      var lines = ['Path: ' + r.path, 'Role: ' + (r.role || 'none') + (r.reason ? ' — ' + r.reason : ''),
+        'Present in ' + pct(r.presence) + ' of its records' + (r.masked ? ' (masked)' : '')];
+      if (r.examples && r.examples.length) { lines.push('Examples: ' + r.examples.join(', ')); }
+      if (r.files && r.files.length) { lines.push('Files: ' + r.files.join(', ')); }
+      if (opts.onField) { opts.onField(r, box); }
+      return lines;
     }
-    if (r && opts.onRow) { opts.onRow(r, li, line, detail); }
-    ul.appendChild(li);
-    var rec = { n: n, li: li, kids: kids, detail: detail, text: ((r ? r.path + ' ' + r.type + ' ' + (r.role || '') + ' ' + (r.reason || '') : n.label)).toLowerCase() };
-    li._rec = rec;
-    rows.push(rec);
-    line.addEventListener('click', function () { focusItem(li); toggle(li); });
-  }
+    function words(n) { var r = n.data.field; return r ? r.path + ' ' + r.type + ' ' + (r.role || '') + ' ' + (r.reason || '') : n.label; }
 
-  function toggle(li, open) {
-    var rec = li._rec;
-    if (rec.kids) {
-      var want = open === undefined ? li.getAttribute('aria-expanded') !== 'true' : open;
-      li.setAttribute('aria-expanded', want ? 'true' : 'false');
-      rec.kids.hidden = !want;
-      li.querySelector('.bs-twist').textContent = want ? '▾' : '▸';
-    } else if (rec.detail) {
-      rec.detail.hidden = !rec.detail.hidden;
+    function build(paths) {
+      var data = { rows: rows(paths) };
+      total = data.rows.filter(function (r) { return r.field; }).length;      // the paths with a step ($ itself is not a field)
+      if (outline) { outline.setData(data); applyFilter(); return; }
+      var T = window.Drishti.elements && window.Drishti.elements.tree;
+      if (!T) { host.textContent = 'The shape tree needs drishti-tree (elements/drishti-tree/drishti_tree.js).'; return; }
+      outline = new T.TreeOutline(host, {
+        data: data, title: 'Field', label: 'Shape of the samples', marks: marks, detail: detail, text: words,
+        rowClass: function (n) { return n.data.field && opts.rowClass ? opts.rowClass(n.data.field) : null; },
+        onKey: function (n, e) { return !!(n && n.data.field && opts.onKey && opts.onKey(n.data.field, e)); }
+      });
+      applyFilter();
     }
-  }
 
-  function visibleItems() {
-    return Array.prototype.filter.call(tree.querySelectorAll('[role="treeitem"]'), function (li) {
-      for (var p = li; p && p !== tree; p = p.parentNode) { if (p.hidden) { return false; } }
-      return true;
-    });
-  }
-  function focusItem(li) {
-    Array.prototype.forEach.call(tree.querySelectorAll('[role="treeitem"][tabindex="0"]'), function (x) { x.tabIndex = -1; });
-    li.tabIndex = 0;
-    li.focus();
-  }
-
-  tree.addEventListener('keydown', function (e) {
-    var li = e.target.closest && e.target.closest('[role="treeitem"]');
-    if (!li || e.target !== li) { return; }
-    var items = visibleItems(), i = items.indexOf(li), rec = li._rec;
-    var handled = true;
-    switch (e.key) {
-      case 'ArrowDown': if (i < items.length - 1) { focusItem(items[i + 1]); } break;
-      case 'ArrowUp': if (i > 0) { focusItem(items[i - 1]); } break;
-      case 'Home': focusItem(items[0]); break;
-      case 'End': focusItem(items[items.length - 1]); break;
-      case 'ArrowRight':
-        if (rec.kids && li.getAttribute('aria-expanded') !== 'true') { toggle(li, true); }
-        else if (rec.kids) { focusItem(rec.kids.querySelector('[role="treeitem"]')); }
-        break;
-      case 'ArrowLeft':
-        if (rec.kids && li.getAttribute('aria-expanded') === 'true') { toggle(li, false); }
-        else { var up = li.parentNode.closest('[role="treeitem"]'); if (up) { focusItem(up); } }
-        break;
-      case 'Enter': case ' ': toggle(li); break;
-      default: handled = false;
+    // ---- filter, expand and collapse -----------------------------------------------------------------------------------
+    function applyFilter() {
+      if (!outline) { return; }
+      var q = filter.value.trim(), hits = outline.filter(q);
+      var shown = hits.filter(function (id) { var n = outline.full.node(id); return n && n.data.field; }).length;
+      counts.textContent = q ? shown + ' of ' + total + ' paths match' : total + ' paths';
     }
-    if (handled) { e.preventDefault(); }
-  });
+    filter.addEventListener('input', applyFilter);
+    $('[data-expand-all]').addEventListener('click', function () { if (outline) { outline.expandAll(); } });
+    $('[data-collapse-all]').addEventListener('click', function () { if (outline) { outline.collapseAll(); } });
 
-  function setAll(open) {
-    rows.forEach(function (r) { if (r.kids) { toggle(r.li, open); } });
-  }
-  $('[data-expand-all]').addEventListener('click', function () { setAll(true); });
-  $('[data-collapse-all]').addEventListener('click', function () { setAll(false); });
-
-  // ---- filter ----------------------------------------------------------------------------------------------------
-  function applyFilter() {
-    var q = filter.value.trim().toLowerCase(), shown = 0, total = 0;
-    rows.forEach(function (r) { r.hit = !q || r.text.indexOf(q) >= 0; if (r.n.row) { total++; } });
-    rows.slice().reverse().forEach(function (r) {            // a parent stays when a descendant matches
-      r.keep = r.hit || (r.kids && Array.prototype.some.call(r.kids.children, function (c) { return c._rec.keep; }));
-    });
-    rows.forEach(function (r) {
-      r.li.hidden = !r.keep;
-      if (r.keep && r.n.row && r.hit) { shown++; }
-      if (q && r.keep && r.kids) { toggle(r.li, true); }
-    });
-    counts.textContent = q ? shown + ' of ' + total + ' paths match' : total + ' paths';
-  }
-  filter.addEventListener('input', applyFilter);
-
-    return { show: function (rep) { attention(rep); build(rep.paths); } };
+    return {
+      show: function (rep) { attention(rep); build(rep.paths); },
+      fieldAt: function (elm) { var n = outline ? outline.nodeAt(elm) : null; return n && n.data.field ? n.data.field : null; }
+    };
   };
 })();
