@@ -45,7 +45,7 @@ written earlier, disagrees with sections 1 to 20 on deployment, sections 1 to 20
 
 The operator's day-to-day guide to a cluster (the files of `config/net/`, Admin → Net, drain and maintenance, a cluster of three on one
 machine) is [OPERATIONS.md section 18](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one); one machine, its services,
-TLS and monitoring are the rest of [OPERATIONS.md](../admin/OPERATIONS.md); the shard machinery is [VAR_SHARDING.md](VAR_SHARDING.md);
+TLS and monitoring are the rest of [OPERATIONS.md](../admin/OPERATIONS.md); the shard machinery is [DATA_ARCHITECTURE.md section 13](DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built);
 memory, CPU and disk are [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md).
 
 ## Contents
@@ -276,7 +276,7 @@ built).
 **Footnote 2.** RESOURCES_AND_SCALE footnotes 1 and 4: an owner holds replicas ÷ owners of the page cache, a load and the disk (1/3 at 6,
 1/8 at 16); its heap is **not** divided (the skeleton is copied to every member). RAM sizes are the need ÷ 0.61 (the decks' 39%
 headroom) rounded up to a machine size. **Footnote 3.** A coordinator puts every open date together too: it holds the whole skeleton
-(`ShardAssembly`, VAR_SHARDING section 5) but no rows, so its heap need is the owner's (21.2 GB at 2.3M before D1, `-Xmx36g`) and its page
+(`ShardAssembly`, DATA_ARCHITECTURE.md section 13) but no rows, so its heap need is the owner's (21.2 GB at 2.3M before D1, `-Xmx36g`) and its page
 cache is only what it reads of the mapped aggregates. The capacity model's coordinator row (`capacity.py`: "16–20 GB, 32 GB RAM",
 marked ASSUMPTION) holds only after D1; the decks are to be corrected. **Footnote 4.** EXPOSURE_GUIDE section 26.2: V, E and N
 matrices float32, 800 KB a set at P = 2,000, G = 50 (G_primary 25): 80 GB a date for 100,000 sets; with replicas 2 over 4 owners, 40 GB
@@ -446,7 +446,7 @@ in between unless it stayed out longer than `stable-seconds` (section 4.5).
 (a desk) is never split**: a desk larger than the target is a shard of its own. The ranges cover the whole key space (shard 0 also takes
 everything before, the last everything after), so every row has exactly one shard. The map is a pure function of the counts: every member
 reading the same data computes the same map. Its digest names the **cut**, not the data, so an intraday batch that moves no cut keeps the
-map (VAR_SHARDING section 3).
+map (DATA_ARCHITECTURE.md section 13).
 
 **How many shards (ESTIMATED).** At 1-day width (509 scenarios, 2,036 B a row) 2.3M positions are 4.7 GB of rows: 3 shards at the
 default target; at 1,518 values (6,072 B) 14 GB: 7 shards. With 6 owners and 2 replicas, 7 shards are 14 owner slots over 6 members:
@@ -486,7 +486,7 @@ each, to the next heaviest member (its other replica is untouched). `ShardOwners
 
 *Worked example, 6 → 7 owners at 2.3M, 1,518 values, `target-shard-mb: 512`* (ESTIMATED): S = 27 shards of about 0.52 GB, R = 2, 54
 slots, 9 an owner. The seventh member takes about 54/7 ≈ 7.7 slots (each of the six gives up about 1.3); about 7.7 shards change one owner;
-the seventh builds about 4 GB of shard books from the lake (it reads only the files of those key ranges, VAR_SHARDING section 5); each
+the seventh builds about 4 GB of shard books from the lake (it reads only the files of those key ranges, DATA_ARCHITECTURE.md section 13); each
 owner's share falls from 9/54 to 7.7/54 of the rows (page cache 26.1 → 22.4 GB, NVMe need 394 → 338 GB). Nothing else moves.
 
 **Zones.** With `zone-tag: az` and tags `az:<zone>` on every member, the second owner of every shard is in another zone whenever one
@@ -502,7 +502,7 @@ bigger machine; not a placement tool for everyday use.
 member alive, a member's sharding state changed, a drain (at once), or a new cut (a reload with new counts). A flap shorter than
 `stable-seconds` moves nothing (`ShardMembership.look`: the stable view is replaced only after the new one stayed the same that long).
 
-**The handover protocol** (`ShardHandover.decide`, `VarShards` every `rebalance-seconds`, VAR_SHARDING section 7):
+**The handover protocol** (`ShardHandover.decide`, `VarShards` every `rebalance-seconds`, DATA_ARCHITECTURE.md section 13):
 
 ```
  new owner N                                    old owner O                                  every member
@@ -564,7 +564,7 @@ holds and per shard the first 16 characters of the data digest it is ready to se
 the digest at once (`ShardPeers.announce`), raises its hash in gossip, and peers pull it within a round: readiness needs no protocol of
 its own.
 
-**Scatter-gather** (`ShardGather`, VAR_SHARDING section 6): a scope's rows are split by shard; each shard's part goes to **one** member in
+**Scatter-gather** (`ShardGather`, DATA_ARCHITECTURE.md section 13): a scope's rows are split by shard; each shard's part goes to **one** member in
 this order: owners that announced it ready at the data version the date was put together from (first owner first), any other member that
 announced it so (an old owner mid-handover), then owners not yet ready (they build from the lake). `POST /api/v1/risk/var/partial`, signed, one
 hop, with the caller's on-behalf-of token; the answer is labelled with shard, map digest, data digest and row count and refused if any
@@ -649,7 +649,7 @@ stream reader) under a partition; Drishti uses the database it already has for t
 ## 5. VaR sharding in depth (built)
 
 Built, **off by default** (no `sharding:` block in `config/packs/banking/market-risk/pack.yaml`, no `drishti.var.sharding.enabled`). The
-full design is [VAR_SHARDING.md](VAR_SHARDING.md); this section is the deployment view.
+full design is [DATA_ARCHITECTURE.md section 13](DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built); this section is the deployment view.
 
 ### 5.1 What is sharded and what is copied
 
@@ -682,7 +682,7 @@ fixed order, to the bit for the same set (`VarShardClusterTest`, `ShardAssemblyT
 
 ### 5.4 Intraday, official records, currencies
 
-- **Intraday** (VAR_SHARDING section 7): file batches and Kafka windows change no shard; each member applies the day's updates on the date it
+- **Intraday** (DATA_ARCHITECTURE.md section 13): file batches and Kafka windows change no shard; each member applies the day's updates on the date it
   put together, a trade's morning row read back from the lake by id. Convergence is visible in `provenance.intraday.batches` on any answer.
 - **Official records** are computed from the same vectors on the member that runs the capture; the capture is idempotent by its inputs
   (`VarOfficial`). **Today every member that receives a full-run signal runs it** (the signal is forwarded to all, PO-5): idempotent by
@@ -728,7 +728,7 @@ a rolling restart (section 10.4).
 **Today** exposure runs on one server (`ExposureService`, EXPOSURE_GUIDE section 18.8: "Fan-out across nodes is PLANNED"). Its load holds
 every set's value matrix in float64 on the heap until the date is built (80 GB at P = 2,000, G = 50 for 100,000 sets; refused over
 `memory-budget-gb` with `DRS-5445`, EXPOSURE_GUIDE section 28), so a large bank does not fit one server. This section is the design,
-**PLANNED as `CD10`**, on the measure-agnostic machinery VaR plugs into (VAR_SHARDING section 13; RESOURCES_AND_SCALE section 9.3).
+**PLANNED as `CD10`**, on the measure-agnostic machinery VaR plugs into (DATA_ARCHITECTURE.md section 13; RESOURCES_AND_SCALE section 9.3).
 
 ### 6.1 The key, and what is sharded
 
@@ -815,11 +815,11 @@ set is its own set and may go to any owner.
 
 | Aggregation | Where it runs today | How it scales | Plan |
 |---|---|---|---|
-| **Stress P&L** (`STR`) | stored desk × scenario results, a derived bank total (COMPUTED_ATTRIBUTES section 4.8) on the server holding the pack | small (desks × scenarios) | per-trade scenario P&L is VaR-shaped (a vector a trade): the same `ShardedMeasure` with key `[LEGAL_ENTITY, DESK]` once computed (computed-measures roadmap) |
+| **Stress P&L** (`STR`) | stored desk × scenario results, a derived bank total (IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps") on the server holding the pack | small (desks × scenarios) | per-trade scenario P&L is VaR-shaped (a vector a trade): the same `ShardedMeasure` with key `[LEGAL_ENTITY, DESK]` once computed (computed-measures roadmap) |
 | **Sensitivities and FRTB SBM** | stored per book | net sensitivities add per factor; charges never add (square roots of correlated sums) | trade-grain sensitivities sharded by desk; the charge on the coordinator from summed net sensitivities |
 | **P&L explain, backtesting** | stored (`PNL`); backtesting planned | backtests read official records: one member, small | the backtest over 250 official dates runs on the coordinator |
 | **Computed attributes** (netting-set and counterparty MtM, utilisation) | on demand on the server answering the page | per entity, small | unchanged |
-| **BI rollups and caches** | Rūpaka on DuckDB layers per server; a heavy run goes to the model's owner by rendezvous (`RunCluster`); leases in the identity database | add BI servers; runs spread by model | BI sharding by model partition is a later release (VAR_SHARDING section 14) |
+| **BI rollups and caches** | Rūpaka on DuckDB layers per server; a heavy run goes to the model's owner by rendezvous (`RunCluster`); leases in the identity database | add BI servers; runs spread by model | BI sharding by model partition is a later release (DATA_ARCHITECTURE.md section 13) |
 | **Regulatory report runs** (planned: the framework, then the packs) | not built | one run a period: one member, by lease | a BI run or a scheduled job on a BI server, singleton by lease (`CD5`) |
 | **Scheduled reports, alerts** | each server's scheduler | — | singleton by lease (`CD5`) so a cluster sends one email, not one a member |
 
@@ -898,7 +898,7 @@ The container health checks moved to **liveness** with this (a drained or loadin
 
 ### 9.3 Spreading heavy work
 
-**Today** a shard's partial goes to its **first ready owner first**; the replica serves only when the first refuses or fails (VAR_SHARDING
+**Today** a shard's partial goes to its **first ready owner first**; the replica serves only when the first refuses or fails (DATA_ARCHITECTURE.md section 13
 section 6), so the first owners carry all the partial load. **PLANNED (`CD6`):** pick among the ready owners by a hash of the request id (or
 least outstanding calls), keeping exactly one answer a shard; a shorter call timeout for partials with one hedged retry; an **admission
 queue** for ad-hoc whole-bank scopes per coordinator (like BI's `max-concurrent`, `max-concurrent-per-user`), so ten people asking "the
@@ -1096,7 +1096,7 @@ skeletons are available. Whole-cluster stop: in reverse.
 | loader | job exit code, the manifest | missed expectation (Data loads page) |
 | database | replication lag, connections against `max_connections` | lag > 10 s; connections > 80% |
 
-The Admin → Health "Shards" panel is an open item (VAR_SHARDING section 14).
+The Admin → Health "Shards" panel is an open item (DATA_ARCHITECTURE.md section 13).
 
 ### 14.3 Logs
 
@@ -1497,7 +1497,7 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 | Exposure sharding and the set-at-a-time load | **PLANNED** | CD10 |
 | Second-site DR runbook and exercise | **PLANNED** | CD11 |
 | A minority warning under a partition | **PLANNED** | CD12 |
-| Admin → Health "Shards" panel | open item (mock-ups first) | VAR_SHARDING 14 |
+| Admin → Health "Shards" panel | open item (mock-ups first) | DATA_ARCHITECTURE.md section 13 14 |
 
 ---
 
@@ -1900,7 +1900,7 @@ APIs behind the page (new, admin token): `GET /api/v1/net/members`, `POST /api/v
 
 ### 14. Configuration
 
-Managed **the way connectors are** ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)), not in `application.yaml`
+Managed **the way connectors are** ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)), not in `application.yaml`
 (decided by the product owner, 2026-10-18). `application.yaml` holds only where the files are and how they are watched:
 
 ```yaml
@@ -2086,7 +2086,7 @@ The soak also exercises history queries ([DATA_ARCHITECTURE.md](DATA_ARCHITECTUR
   counterparty-risk, **b** trading, the reference trading and counterparty-risk (trading brings core and market-data; no market-risk).
   Before a server starts, the soak writes a connector file into the node's connector folder for every Delta connector of those packs whose
   tables its lake lacks (`<lake>/<domain>/<table>/_delta_log`): the pack's template with `enabled: "false"`, the documented way
-  ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) section 3). On **c**'s MUREX lake that is `trade-endur`, `trade-calypso`,
+  ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) section 3). On **c**'s MUREX lake that is `trade-endur`, `trade-calypso`,
   `market-store`, `legal-store` and `collateral-store`. So no server retries a store it cannot read, and none warns `deprecated` about
   `--drishti.sources.connectors.<name>.enabled=false`, which the soak does not pass.
 
@@ -2201,7 +2201,7 @@ address they advertise, never a loopback one. Tested by `RunClusterTest`.
 Each phase as it was built, with anything that differs from the design above. The operator's guide is [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one).
 
 **VaR sharding over the members (off by default).** The VaR engine can spread each date's rows over the members
-([VAR_SHARDING.md](VAR_SHARDING.md)): shard maps by legal entity and desk, owners by rendezvous hashing over the members that may own shards
+([DATA_ARCHITECTURE.md section 13](DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)): shard maps by legal entity and desk, owners by rendezvous hashing over the members that may own shards
 (as `RunCluster` chooses a model's owner, with replicas, zones and a stable view), each owner building its shards from the lake. It uses
 Drishti*net as it is: membership and liveness from the member table; **readiness in the capability digest**, a new optional field
 `services` (name to compact text; the VaR engine publishes `var-shards`: on, owner, draining, per date the shard map and the shards ready

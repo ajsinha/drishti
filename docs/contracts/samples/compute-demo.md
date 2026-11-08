@@ -100,7 +100,7 @@ None: all 3 rows were read, and every field any of them has is in the record abo
 ### See also
 
 - Data contract: [PBOOK in the compute-demo pack's contracts](../packs/compute-demo.md#pbook-path-book-path-book) (`config/packs/core/compute-demo/contracts/path-book.contract.yaml`, the source of every meaning on this page).
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="path-strip"></a>
 
@@ -180,4 +180,4 @@ None: all 120 rows were read, and every field any of them has is in the record a
 ### See also
 
 - Data contract: [PSTRIP in the compute-demo pack's contracts](../packs/compute-demo.md#pstrip-pl-strip-path-strip) (`config/packs/core/compute-demo/contracts/path-strip.contract.yaml`, the source of every meaning on this page).
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

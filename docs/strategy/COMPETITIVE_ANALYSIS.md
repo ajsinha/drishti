@@ -626,7 +626,7 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
   [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [BI_GUIDE](../guides/BI_GUIDE.md);
   [BI_DESIGN](../architecture/BI_DESIGN.md) (gap check against Power BI); [EDITIONS](../admin/LENSES.md);
   [MOBILE_DISPLAY](../guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones); [RESOURCES_AND_SCALE](../architecture/RESOURCES_AND_SCALE.md);
-  [BENCHMARK](../admin/BENCHMARK.md); [AI](../admin/AI.md); [lenses](../lenses/README.md); [connectors](../connectors/CONNECTORS.md).
+  [BENCHMARK](../admin/BENCHMARK.md); [AI](../admin/AI.md); [lenses](../lenses/README.md); [connectors](../guides/DATA_GUIDE.md#8-connectors).
 
 **Risk aggregation cubes**
 

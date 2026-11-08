@@ -281,7 +281,7 @@ does not force the terminal density, and any layout takes any density.
 **The model.** A pivot is a view: `rows` (dimensions, in order), `columns` (dimensions, in order), `values` (a measure with its
 aggregation), `filters` (members of a dimension, and value filters such as "VaR 99% > 1m" or "top 5 by VaR"), `totals` (grand total
 and subtotals, before or after), `expanded` (which row and column groups are open). It is the pivot engine's view
-([PIVOT_ENGINE.md section 4](PIVOT_ENGINE.md#4-the-pivot-model)); the grid adds nothing to its meaning.
+([ARCHITECTURE.md section 26.2](ARCHITECTURE.md#262-the-pivot-model)); the grid adds nothing to its meaning.
 
 **What the grid draws.** Row groups with + and − (lazy: a group's children are asked when it opens), **pivot result columns** with
 collapsible column groups (a collapsed group shows its own total), totals and subtotals in the server's order, a grand total row and
@@ -308,7 +308,7 @@ column (pinnable), the measure's name in the leaf header, ≈ beside an approxim
   "expandedColumns": ["Americas", "EMEA"] }
 ```
 
-The answer is the pivot engine's answer ([PIVOT_ENGINE.md 4.4](PIVOT_ENGINE.md#44-the-answer)): rows in display order, the
+The answer is the pivot engine's answer ([ARCHITECTURE.md section 26 4.4](ARCHITECTURE.md#262-the-pivot-model)): rows in display order, the
 pivot result column keys, cells with values, texts and tones, totals, approximation marks, the row count. drishti-data's
 `source.drishtiPivot()` speaks it; a host's own server may answer the same JSON, or the AG-style request (section 6).
 

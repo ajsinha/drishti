@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The bank's own names in the demo data, from config/demo/names.yaml (2.9.4; docs/connectors/DEMO_DATA.md, "Your bank's names").
+"""The bank's own names in the demo data, from config/demo/names.yaml (2.9.4; docs/guides/DATA_GUIDE.md section 11, "Your bank's names").
 
     names = DemoNames.load()                 # config/demo/names.yaml (or a path); the defaults when the file is missing
     names.mapping                            # {old name: new name}, only the names that change (empty: the defaults)

@@ -178,7 +178,7 @@ A Delta connector never writes per edit: write-back keeps corrections as overlay
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 Every key with its tier and whether it applies live: [CONFIGURATION.md, `delta`](../../docs/admin/CONFIGURATION.md#delta-tls-proxy); sizing the
@@ -601,7 +601,7 @@ settings:
 ## Security: TLS and credentials
 
 A store with a certificate from a private CA (MinIO, Ceph, an internal gateway) takes the shared `tls.*` settings
-([TLS.md](../../docs/connectors/TLS.md#1-the-settings)), read by the **native engine** only:
+([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#101-the-settings)), read by the **native engine** only:
 
 | Setting | Meaning |
 |---|---|
@@ -625,7 +625,7 @@ Check a store with `openssl s_client -connect minio.example.com:9000 -CAfile ca.
 ### Outbound proxy
 
 The `proxy.*` settings are shared by every HTTP-based connector
-([TLS.md, proxy](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)); `proxy: none` overrides
+([DATA_GUIDE.md section 10, proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)); `proxy: none` overrides
 the site default. The native engine uses the AWS SDK's proxy configuration; the Hadoop engine gets `fs.s3a.proxy.*` (no no-proxy list:
 set only when the endpoint is not on it). `https://` endpoints are tunnelled with `CONNECT` and keep `tls.*`. Health adds
 `via proxy host:port (source)`.
@@ -641,7 +641,7 @@ set only when the endpoint is not on it). `https://` endpoints are tunnelled wit
 
 ## See also
 
-- [Several connectors for one kind (a union)](../../docs/connectors/CONNECTORS.md#several-connectors-for-one-kind-a-union), [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
+- [Several connectors for one kind (a union)](../../docs/guides/DATA_GUIDE.md#83-several-connectors-for-one-kind-a-union), [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
 - [The data lake and data load guide](../../docs/guides/DATA_LAKE_GUIDE.md): lake files, loading, `.ready` files, maintenance.
 - [BENCHMARK.md, Trades at scale](../../docs/admin/BENCHMARK.md#8-trades-at-scale) and [OPERATIONS.md, Memory and caches](../../docs/admin/OPERATIONS.md#12-memory-and-caches).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

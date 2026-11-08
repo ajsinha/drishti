@@ -38,7 +38,7 @@ items:
       caption: Held by the pack's funds, as filed
     open: "HELD {co['$.TICKER']}"
     what: Held by funds
-    knowledge: companies-funds-and-etfs.md#4-a-worked-example-on-the-demo-data
+    knowledge: world.md#companies-funds-and-etfs-a-worked-example-on-the-demo-data
 
   - id: index-twins
     domain: Funds and companies
@@ -69,7 +69,7 @@ items:
       caption: "{a.ADVISER} · {b.ADVISER}"
     open: "FUND {a.TICKER}"
     what: Fund overlap
-    knowledge: companies-funds-and-etfs.md#4-a-worked-example-on-the-demo-data
+    knowledge: world.md#companies-funds-and-etfs-a-worked-example-on-the-demo-data
 
   - id: weights-over-net-assets
     domain: Funds and companies
@@ -98,4 +98,4 @@ items:
       caption: "Total assets {f.TOTAL_ASSETS|money}, net assets {f.NET_ASSETS|money}"
     open: "FUND {f.TICKER}"
     what: NAV
-    knowledge: companies-funds-and-etfs.md#6-common-confusions
+    knowledge: world.md#companies-funds-and-etfs-common-confusions

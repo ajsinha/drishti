@@ -33,7 +33,7 @@ import java.util.zip.ZipInputStream;
 import org.junit.jupiter.api.Test;
 
 /**
- * The exports (PIVOT_ENGINE.md section 15): the xlsx keeps the outline (row outline levels, summaries below), writes a SUM formula only for a
+ * The exports (ARCHITECTURE.md section 26.11): the xlsx keeps the outline (row outline levels, summaries below), writes a SUM formula only for a
  * measure that adds up (sum, count) and the engine's values for everything else (a median), and has a Provenance sheet; the CSV has one row
  * per cell and measure; the definition is YAML with no figures.
  */

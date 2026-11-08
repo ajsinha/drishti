@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The named maturity-bucket sets of the counterparty-risk pack: one set per purpose (product owner, 2026-10-29: decision 10 of
-# docs/architecture/COMPUTED_ATTRIBUTES.md, finding F23). A trade's remaining maturity (years from the business date to MATURITY_DATE)
+# docs/architecture/DATA_ARCHITECTURE.md section 12). A trade's remaining maturity (years from the business date to MATURITY_DATE)
 # falls in the first bucket whose below-years it is under; the last bucket has none and takes the rest.
 #
 #   display  how a trade list groups its trades: a netting set's, a book's and a clearing account's TRADES[].MATURITY_BUCKET, the

@@ -16,7 +16,7 @@
 package com.ash.drishti.bicompute.spi;
 
 /**
- * How a function's total is made (PIVOT_ENGINE.md section 5.1). The core never mixes them up:
+ * How a function's total is made (ARCHITECTURE.md section 26.3). The core never mixes them up:
  *
  * <ul>
  *   <li>{@link #MERGEABLE}: a small, fixed state with an exact merge (a sum; a sum and a count; Welford's count, mean and M2): a total is the

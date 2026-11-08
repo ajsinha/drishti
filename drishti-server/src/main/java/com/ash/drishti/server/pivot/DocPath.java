@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * A pivot field of an entity document as a Rachana path (PIVOT_ENGINE.md section 6.7): parsed by Rachana's own parser
+ * A pivot field of an entity document as a Rachana path (ARCHITECTURE.md section 26.4): parsed by Rachana's own parser
  * ({@link ElCompiler}), never a second dialect, and compiled to DuckDB's JSON functions over the document. The grain comes from the path:
  * each {@code [*]} steps into a list ({@code $.LEGS[*].NOTIONAL} is a leg field, {@code $.LEGS[*].CASH_FLOWS[*].AMOUNT} a cash-flow one),
  * a filter before it keeps some elements ({@code $.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL}: the fixed legs'), a filter before an index

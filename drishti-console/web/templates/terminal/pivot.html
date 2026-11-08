@@ -13,13 +13,13 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The pivot screen, PIVOT [table | @owner/name] <GO> (PIVOT_GUIDE.md; mock-up A of PIVOT_ENGINE.md section 25): drawn by drishti-grid
+{# The pivot screen, PIVOT [table | @owner/name] <GO> (PIVOT_GUIDE.md; mock-up A of ARCHITECTURE.md section 26): drawn by drishti-grid
    (Drishti Elements) in its wells layout: the ribbon of wells (Rows, Columns, Values, Filters) and the field list above the grid, nested
    rows opened with + and − (each asked of the server), ≈ and ◆ marks, a figure's Explain (its provenance) in the drawer; the
    scan-estimate bar above; slicers and paths; a chart of the selection below (a non-additive measure is never stacked); the Export menu
    (Excel with outline and formulas only where a measure adds up, CSV, Arrow, the definition). drishti_pivot.js fills it from
    /api/pivot/...; every figure is the server's (clientAggregation: false). A preset's lens (a domain module's: MCUBE's "mr", the
-   banking module's MR cube, MR_CUBE_GUIDE.md) adds its parts while its module is on: the module's plugin.yaml names them (screens.pivot:
+   banking module's MR cube, PIVOT_GUIDE.md#29-the-mr-cube-preset) adds its parts while its module is on: the module's plugin.yaml names them (screens.pivot:
    its style sheets, scripts and the templates above and below the grid), drawn here by screen_parts(); the core names none of them. One
    pivot engine, one grid. #}
 {% extends "base.html" %}

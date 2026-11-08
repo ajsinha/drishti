@@ -91,7 +91,7 @@ Because ids are encoded, an id cannot change the path or add query parameters.
 | `timeout-ms` | int | `2000` | Connect timeout and request timeout, in milliseconds |
 | `header.*` | string |  | A request header: header.<Name> (header.Authorization: Bearer ${SERVICE_TOKEN}) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 The site-wide settings summary is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#rest-tls-proxy). Server settings that
@@ -174,7 +174,7 @@ settings:
 Ready-made files in `config/connectors.examples/other/`: `pricing-api.yaml` (TLS with a PKCS12 truststore), `rest-mtls.yaml` (private CA
 and a client certificate) and `rest-via-proxy.yaml` (a vendor API through the corporate proxy). There is no loader. A connector file is applied to the
 running server within seconds, edited in any editor, in **Admin → Connectors** (a form, a YAML tab, **Test connection**) or with
-`drishti.py connector apply` ([CONNECTOR_FILES.md](../../docs/connectors/CONNECTOR_FILES.md)).
+`drishti.py connector apply` ([../../docs/guides/DATA_GUIDE.md section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 
 A pack suggests the same as a template in `config/packs/<domain>/<pack>/pack.yaml` (keys with dots written flat); the server writes
 it to `config/connectors/crm-api.yaml` at the first start if the site has none, and the file is then the site's:
@@ -293,7 +293,7 @@ Alert on `reads.errors`, `lastError` and `lastErrorAt`. When the service comes b
 ### TLS for the REST connector
 
 An `https://` base URL is checked against the JVM's authorities and the host name unless the connector's own `tls.*` settings
-say otherwise ([TLS.md](../../docs/connectors/TLS.md); keys in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls)):
+say otherwise ([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy); keys in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls)):
 `tls.ca-file` or `tls.truststore` for a private CA (`tls.trust-jvm-default: true` keeps the public ones too), `tls.cert-file` +
 `tls.key-file` (or `tls.keystore`) for mutual TLS, `tls.verify-hostname: false` to check the chain but not the name. Each
 connector has its own, so two services can use two CAs. `tls.*` with an `http://` URL is a start-up error, never a silent
@@ -333,7 +333,7 @@ Once a certificate has under 30 days left, health reads `UP (TLS certificate CN=
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector ([TLS.md, proxy](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers);
+The settings and rules are shared by every HTTP-based connector ([DATA_GUIDE.md section 10, proxy](../../docs/guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers);
 keys in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-proxy)). A `proxy:` block in `settings:` (or `proxy: none`)
 overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
 
@@ -388,5 +388,5 @@ connector sends, build it by hand (`<base-url without trailing slashes><path wit
 
 ## See also
 
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS (and the outbound proxy)](../../docs/connectors/TLS.md).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS (and the outbound proxy)](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

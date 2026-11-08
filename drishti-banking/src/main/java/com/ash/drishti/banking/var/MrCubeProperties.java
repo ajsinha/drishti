@@ -21,7 +21,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The market-risk cube's settings, {@code drishti.cube.mr} (MR_CUBE_GUIDE.md section 9; engine {@code mr-cube}, COMPUTE_ENGINES.md: needs
+ * The market-risk cube's settings, {@code drishti.cube.mr} (PIVOT_GUIDE.md section 29.9; engine {@code mr-cube}, COMPUTE_ENGINES.md: needs
  * {@code var} and {@code pivot}, uses {@code sensitivities} and {@code frtb-sa}). The cube is the pivot engine's VaR source with its MR
  * lens: the switch is {@code drishti.engines.mr-cube.enabled} ({@code config/engines/mr-cube.yaml}); the pivot engine's budget, busy
  * protection and partial-state cache ({@code drishti.pivot.*}) apply to it as to every source.

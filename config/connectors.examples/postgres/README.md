@@ -100,4 +100,4 @@ The server starts the copied connector within seconds. `trading-store.yaml` is a
 ## See also
 
 - [The PostgreSQL connector](../../../plugins/drishti-plugin-jdbc/README.md) and the [jdbc connector README](../../../plugins/drishti-plugin-jdbc/README.md).
-- [Connector files](../../../docs/connectors/CONNECTOR_FILES.md) (copying examples, the trade union note) and [Demo data](../../../docs/connectors/DEMO_DATA.md).
+- [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (copying examples, the trade union note) and [Demo data](../../../docs/guides/DATA_GUIDE.md#11-the-demo-data).

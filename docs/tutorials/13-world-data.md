@@ -107,7 +107,7 @@ Start from a counterparty of the bank and reach the economy it depends on, its o
 `world-economy` pack holds the World Bank's development indicators, the IMF's World Economic Outlook and the CIA World Factbook; these records
 are not dated by business date, so every date reads the same snapshot. The figures below are the committed snapshot's (World Bank WDI updated
 2026-10-08, IMF World Economic Outlook April 2026, CIA World Factbook; retrieved 2026-10-10), as the
-[Economies primer](../knowledge/economies.md#4-a-worked-example-on-the-demo-data) gives them.
+[Economies primer](../knowledge/world.md#economies-a-worked-example-on-the-demo-data) gives them.
 
 ## Step 1 · From a counterparty to its economy
 
@@ -156,7 +156,7 @@ A counterparty's `ECONOMY` is a link column of its data contract (`config/packs/
 
 The economy record takes the IMF series' latest *actual* year for debt, never a projection.
 
-Further: the [Economies primer](../knowledge/economies.md) and the pack's guide,
+Further: the [Economies primer](../knowledge/world.md#2-economies) and the pack's guide,
 [world-economy.md](../../config/packs/economy/world-economy/guides/world-economy.md).
 
 ## Step 2 · Its outlook, its peers and who governs it
@@ -191,7 +191,7 @@ Further: [GROUPINGS_ANALYTICS_GUIDE.md section 5](../guides/GROUPINGS_ANALYTICS_
 
 The `us-equities` pack holds every company of the S&P 500, the Nasdaq-100 and the Dow from the SEC's EDGAR: its identifiers, its industry,
 its index memberships, its filings and ten years of annual financials. The committed snapshot was retrieved on 2026-10-24: 586 companies,
-194 SIC codes in 9 divisions, 531 with an LEI ([Companies, funds and ETFs primer](../knowledge/companies-funds-and-etfs.md#4-a-worked-example-on-the-demo-data)).
+194 SIC codes in 9 divisions, 531 with an LEI ([Companies, funds and ETFs primer](../knowledge/world.md#companies-funds-and-etfs-a-worked-example-on-the-demo-data)).
 
 ## Step 3 · One company, five identifiers
 
@@ -663,7 +663,7 @@ Further in the guide: [sections 15](../guides/FUNDS_GUIDE.md#15-the-refresh-scri
 
 The `gleif` pack holds GLEIF's legal entity identifiers (LEIs), their reference data and who owns whom (GLEIF's level 2 data). The committed
 snapshot was retrieved on 2026-10-25: 9,937 legal entities in 590 ownership groups across 133 countries
-([Entities and ownership primer](../knowledge/entities-and-ownership.md#4-a-worked-example-on-the-demo-data)).
+([Entities and ownership primer](../knowledge/data.md#entities-and-ownership-a-worked-example-on-the-demo-data)).
 
 ## Step 13 · Who owns this company, all the way up
 

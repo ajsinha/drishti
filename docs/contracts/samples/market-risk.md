@@ -132,8 +132,8 @@ None: all 30 rows were read, and every field any of them has is in the record ab
 
 - Data contract: [FRTB in the market-risk pack's contracts](../packs/market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity) (`config/packs/banking/market-risk/contracts/frtb-sensitivity.contract.yaml`, the source of every meaning on this page).
 - [FRTB standardised approach: the data contract](../../contracts/FRTB.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="pnl-explain"></a>
 
@@ -228,8 +228,8 @@ None: all 30 rows were read, and every field any of them has is in the record ab
 
 - Data contract: [PNL in the market-risk pack's contracts](../packs/market-risk.md#pnl-pl-explain-pnl-explain) (`config/packs/banking/market-risk/contracts/pnl-explain.contract.yaml`, the source of every meaning on this page).
 - [PNL, P&L explain: the data contract](../../contracts/PNL.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="stress-result"></a>
 
@@ -313,8 +313,8 @@ None: all 80 rows were read, and every field any of them has is in the record ab
 
 - Data contract: [STR in the market-risk pack's contracts](../packs/market-risk.md#str-stress-result-stress-result) (`config/packs/banking/market-risk/contracts/stress-result.contract.yaml`, the source of every meaning on this page).
 - [STR, stress P&L: the data contract](../../contracts/STR.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="stress-scenario"></a>
 
@@ -392,8 +392,8 @@ None: all 8 rows were read, and every field any of them has is in the record abo
 ### See also
 
 - Data contract: [SCN in the market-risk pack's contracts](../packs/market-risk.md#scn-stress-scenario-stress-scenario) (`config/packs/banking/market-risk/contracts/stress-scenario.contract.yaml`, the source of every meaning on this page).
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="trade-valuation"></a>
 
@@ -492,8 +492,8 @@ None: all 806,304 rows were read, and every field any of them has is in the reco
 - [TVAL, trade valuation totals: the data contract](../../contracts/TVAL.md)
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="risk-hierarchy"></a>
 
@@ -755,8 +755,8 @@ Fields no record above has, found by reading all 88 rows, with how many rows fil
 - [15.4 `risk-hierarchy`: the trees and their limits](../../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits)
 - [15.14 Hierarchies: from the rows or from the trades' columns](../../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="scenario-set"></a>
 
@@ -848,8 +848,8 @@ Fields no record above has, found by reading all 2 rows, with how many rows fill
 - Data contract: [SSET in the market-risk pack's contracts](../packs/market-risk.md#sset-scenario-set-scenario-set) (`config/packs/banking/market-risk/contracts/scenario-set.contract.yaml`, the source of every meaning on this page).
 - [15.3 `scenario-set`: the scenario days](../../guides/VAR_GUIDE.md#153-scenario-set-the-scenario-days)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="pnl-vector"></a>
 
@@ -1075,8 +1075,8 @@ Fields no record above has, found by reading all 16,468 rows, with how many rows
 - [8.4 What-if pricing and intraday recomputes](../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
 - [15.13 Inputs: any form, any grain](../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="scenario-pv"></a>
 
@@ -1422,8 +1422,8 @@ Fields no record above has, found by reading all 2,685 rows, with how many rows 
 - [8.4 What-if pricing and intraday recomputes](../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
 - [15.13 Inputs: any form, any grain](../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="fx-scenario"></a>
 
@@ -1504,8 +1504,8 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 - Data contract: [FXS in the market-risk pack's contracts](../packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) (`config/packs/banking/market-risk/contracts/fx-scenario.contract.yaml`, the source of every meaning on this page).
 - [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="portfolio"></a>
 
@@ -1674,8 +1674,8 @@ Fields no record above has, found by reading all 28 rows, with how many rows fil
 - Data contract: [PORT in the market-risk pack's contracts](../packs/market-risk.md#port-portfolio-portfolio) (`config/packs/banking/market-risk/contracts/portfolio.contract.yaml`, the source of every meaning on this page).
 - [15.5 `portfolio`: stored portfolio definitions](../../guides/VAR_GUIDE.md#155-portfolio-stored-portfolio-definitions)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="var-limit"></a>
 
@@ -1754,8 +1754,8 @@ Fields no record above has, found by reading all 157 rows, with how many rows fi
 - Data contract: [VLIM in the market-risk pack's contracts](../packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (`config/packs/banking/market-risk/contracts/var-limit.contract.yaml`, the source of every meaning on this page).
 - [15.15 `var-limit`: the nodes' VaR limits](../../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="desk-pnl"></a>
 
@@ -1832,8 +1832,8 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 - [15.16 `desk-pnl`: the bank's actual and hypothetical P&L](../../guides/VAR_GUIDE.md#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)
 - [4.6 Backtesting](../../guides/REGULATORY_VAR_REPORTING.md#46-backtesting)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="pnl-history"></a>
 
@@ -1935,8 +1935,8 @@ None: all 28 rows were read, and every field any of them has is in the record ab
 
 - Data contract: [PNLH in the market-risk pack's contracts](../packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) (`config/packs/banking/market-risk/contracts/pnl-history.contract.yaml`, the source of every meaning on this page).
 - [18.9 Choosing the stress window](../../guides/VAR_GUIDE.md#189-choosing-the-stress-window)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="position-sensitivity"></a>
 
@@ -2084,8 +2084,8 @@ None: all 8,052 rows were read, and every field any of them has is in the record
 - Data contract: [SENS in the market-risk pack's contracts](../packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (`config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml`, the source of every meaning on this page).
 - [20. position-sensitivity (SENS): every field](../../contracts/FRTB.md#20-position-sensitivity-sens-every-field)
 - [FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital](../../guides/FRTB_SA_GUIDE.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="risk-factor"></a>
 
@@ -2197,5 +2197,5 @@ Fields no record above has, found by reading all 867 rows, with how many rows fi
 - Data contract: [RFAC in the market-risk pack's contracts](../packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (`config/packs/banking/market-risk/contracts/risk-factor.contract.yaml`, the source of every meaning on this page).
 - [21. risk-factor (RFAC): every field](../../contracts/FRTB.md#21-risk-factor-rfac-every-field)
 - [FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital](../../guides/FRTB_SA_GUIDE.md)
-- [Market risk](../../knowledge/market-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

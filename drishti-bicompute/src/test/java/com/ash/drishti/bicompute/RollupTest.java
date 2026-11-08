@@ -44,7 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Rollups of partial states and aggregate awareness (PIVOT_ENGINE.md section 9.6): a view answered from a rollup equals the same view read
+ * Rollups of partial states and aggregate awareness (ARCHITECTURE.md section 26.6): a view answered from a rollup equals the same view read
  * from the table (every built-in that merges, the sketch's registers exactly, a month from a grain of days); the provider is not asked; the
  * smallest covering rollup is picked; a person with row rules is never answered from a rollup; a holistic function is refused as rollup
  * material; an incremental refresh (new parts merged, a restated partition rebuilt) equals a rebuild; a rollup read back from disk answers

@@ -1415,7 +1415,7 @@ the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browse
   lists, history, BI tables), one shared `drishti_table-chart.js` over the pivot engine and ECharts; chart all N through the panel records, the
   search pivot or a BI run; save, export, Promote to Sutra as a new `chart` panel kind, Open in BI. Build steps C1–C10, one console and
   one server builder.
-* **Mixed Delta and Iceberg storage** ([DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)): each source system's trades in Delta or
+* **Mixed Delta and Iceberg storage** ([../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage)): each source system's trades in Delta or
   Iceberg, chosen per system by `build_demo_lakes.py --store <system>=delta|iceberg`, proven by an equality test against all-Delta.
 
 **Accepted when:** (1) a question answered within the inline wait looks exactly as; (2) a burst of heavy runs leaves
@@ -3524,7 +3524,7 @@ title: Desk risk and P&L
 description: Trades, desks and counterparties with live MTM and daily P&L.
 tables:
   trades:
-    source: { connector: trading-lake, kind: trade }      # a connector by its logical name (CONNECTOR_FILES.md)
+    source: { connector: trading-lake, kind: trade }      # a connector by its logical name (../guides/DATA_GUIDE.md section 9)
     mode: cached                                          # live | cached | direct
     refresh: { schedule: "0 */15 * * *", on-load: true }  # cron in the business zone, and on a data-load signal (built: 20.7)
     columns:
@@ -3566,7 +3566,7 @@ security:
 #### 6.1 Where the data comes from: the same connectors
 
 Rūpaka reads through the **same connectors as the rest of Drishti, by their logical names**
-(`config/connectors/<name>.yaml`, CONNECTOR_FILES.md): one place for credentials, TLS, health, the Admin → Connectors page
+(`config/connectors/<name>.yaml`, ../guides/DATA_GUIDE.md section 9): one place for credentials, TLS, health, the Admin → Connectors page
 and the audit of what reads where. There is no BI-only path to the data. What BI adds is two optional connector
 capabilities for reading whole tables instead of one record:
 
@@ -3625,7 +3625,7 @@ config/bi/
 - **Never inside a pack.** A pack describes data (kinds, Sutras, links, vocabulary). A dataset may combine kinds from several
   packs and a report several datasets, so BI content is deployed, versioned and switched on by itself; a pack does not mention
   BI, and switching a pack off never deletes a report (the visuals over its kinds say they have no rows).
-- **Datasets name connectors** by logical name ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)), as packs do.
+- **Datasets name connectors** by logical name ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)), as packs do.
 - **Workspace drafts and published versions** live in the identity database (section 21, decision 1); the folder holds the
   reviewed content shipped with a site.
 - The folders may be empty or absent. The `datasets/` files are parsed, validated and queried (phase 2, section 20.2), the `reports/` files drawn (phase 3, 20.3) and the `boards/` files drawn (phase 5, 20.5); `notebooks/` files are stored items, not run. The folder is watched live ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 10).
@@ -4315,7 +4315,7 @@ References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-express
 * **Visuals** (8). `map` (countries shaded by an ISO country code, or points at a latitude and longitude; the country file is **vendored**, Natural Earth 1:110m, countries only, 177 features, 176 KB: no tiles, no CDN, no outside request; served to `<drishti-report>` at `/embed/v1/world-countries.json`), `funnel`, `histogram`, `box`, `bubble`. The histogram and box plot ask the engine for the measure of **every member** of the axis
   (`drishti.bi.report.distribution-rows`) and the server bins or summarises it (equal-width bands; quartiles by linear interpolation, whiskers at 1.5 interquartile ranges, outliers), so the screen, the export (PDF, PNG, Excel, CSV: bars for a funnel, a histogram and a map by country, tables for the rest) and a subscription show one set of numbers. In the visual catalogue (`GET /bi/reports/catalogue`), the designer
   (Charts group, Build wells, Format **Bars**), the viewer and the element; masks apply (a masked measure is blank). A value the map does not hold is named under it.
-* **True totals** (8: "true subtotals for measures that do not add up"). Every total and subtotal of a matrix and a table with `totals: true` comes with the answer (`totals`: one entry per level, as the reader, under the same filters), computed by the pivot engine in one grouping-sets statement over the model's rows for every measure that is a pivot function ([PIVOT_ENGINE.md section 12](PIVOT_ENGINE.md#12-bi-on-the-pivot-engine)); the page adds nothing up.
+* **True totals** (8: "true subtotals for measures that do not add up"). Every total and subtotal of a matrix and a table with `totals: true` comes with the answer (`totals`: one entry per level, as the reader, under the same filters), computed by the pivot engine in one grouping-sets statement over the model's rows for every measure that is a pivot function ([ARCHITECTURE.md section 26.9](ARCHITECTURE.md#269-bi-on-the-pivot-engine)); the page adds nothing up.
 * **The sample.** *Counterparty risk* gains a map of the exposure by country, a year-to-date MTM card (`MTM ytd` in `trading-risk`) and a histogram of the trades' MTM.
 
 **Not built, and not faked.** Regions below the country, a tile map or a map service, a choropleth by anything but a country code or name; a histogram with bands of your own; a refresh of an earlier date than the current business date by schedule. (The window functions, the refresh state across a restart and the Refresh now button are built: 20.11.)

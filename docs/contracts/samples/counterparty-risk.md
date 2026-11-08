@@ -121,8 +121,8 @@ None: all 24 rows were read, and every field any of them has is in the record ab
 - Data contract: [AGR in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#agr-master-agreement-agreement) (`config/packs/banking/counterparty-risk/contracts/agreement.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="collateral-balance"></a>
 
@@ -221,8 +221,8 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 - Data contract: [COLL in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#coll-collateral-balance-collateral-balance) (`config/packs/banking/counterparty-risk/contracts/collateral-balance.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="credit-limit"></a>
 
@@ -318,8 +318,8 @@ None: all 1,440 rows were read, and every field any of them has is in the record
 - Data contract: [LIM in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#lim-credit-limit-credit-limit) (`config/packs/banking/counterparty-risk/contracts/credit-limit.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="csa"></a>
 
@@ -427,8 +427,8 @@ None: all 76 rows were read, and every field any of them has is in the record ab
 - Data contract: [CSA in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#csa-credit-support-annex-csa) (`config/packs/banking/counterparty-risk/contracts/csa.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="cva"></a>
 
@@ -531,8 +531,8 @@ None: all 4,373 rows were read, and every field any of them has is in the record
 - Data contract: [CVA in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#cva-cva--xva-cva) (`config/packs/banking/counterparty-risk/contracts/cva.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="margin-call"></a>
 
@@ -624,8 +624,8 @@ None: all 152 rows were read, and every field any of them has is in the record a
 - Data contract: [MC in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#mc-margin-call-margin-call) (`config/packs/banking/counterparty-risk/contracts/margin-call.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="netting-set"></a>
 
@@ -776,8 +776,8 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 - Data contract: [NSET in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#nset-netting-set-netting-set) (`config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="sa-ccr"></a>
 
@@ -878,8 +878,8 @@ None: all 76 rows were read, and every field any of them has is in the record ab
 - Data contract: [SACCR in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr) (`config/packs/banking/counterparty-risk/contracts/sa-ccr.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="simm"></a>
 
@@ -963,8 +963,8 @@ None: all 24 rows were read, and every field any of them has is in the record ab
 - Data contract: [SIMM in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#simm-isda-simm-initial-margin-simm) (`config/packs/banking/counterparty-risk/contracts/simm.contract.yaml`, the source of every meaning on this page).
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="simulation-run"></a>
 
@@ -1090,8 +1090,8 @@ None: all 1 rows were read, and every field any of them has is in the record abo
 - Data contract: [XRUN in the counterparty-risk pack's contracts](../packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) (`config/packs/banking/counterparty-risk/contracts/simulation-run.contract.yaml`, the source of every meaning on this page).
 - [15.2 `simulation-run`: the run's identity and grid (reference row)](../../guides/EXPOSURE_GUIDE.md#152-simulation-run-the-runs-identity-and-grid-reference-row)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="exposure-path"></a>
 
@@ -1197,5 +1197,5 @@ None: all 7,540 rows were read, and every field any of them has is in the record
 - [15.3 `exposure-path`: every trade's MtM on every path (the large input)](../../guides/EXPOSURE_GUIDE.md#153-exposure-path-every-trades-mtm-on-every-path-the-large-input)
 - [21. Validation, errors and data quality](../../guides/EXPOSURE_GUIDE.md#21-validation-errors-and-data-quality)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
-- [Counterparty credit risk](../../knowledge/counterparty-credit-risk.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

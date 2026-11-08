@@ -36,7 +36,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 /**
- * The sketches within their stated errors on known distributions (PIVOT_ENGINE.md section 20, {@code SketchErrorTest}), on seeded data of
+ * The sketches within their stated errors on known distributions (ARCHITECTURE.md section 26.13, {@code SketchErrorTest}), on seeded data of
  * the local test size: HyperLogLog within four standard errors (1.04/√m) for every estimate and within one and a half on average; KLL's rank error under
  * 1.65% at k = 200 on uniform, normal and log-normal values, merged in any split; Space-Saving finds the heavy values, never under-counts and
  * over-counts by at most its floor. Merges: HyperLogLog's and Space-Saving's are commutative and associative to the byte; KLL's repeat to

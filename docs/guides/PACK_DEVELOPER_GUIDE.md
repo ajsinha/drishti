@@ -28,7 +28,7 @@ Who reads what:
 | a user or administrator: which packs ship, turning them on and off, who sees which, the demo lakes | [Part V. Domain packs: the packs that ship, turning them on, who sees which](#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) |
 | writing a pack | this guide |
 | writing the Sutras of a pack | [Sutra guide](SUTRA_DEVELOPER_GUIDE.md), every key in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
-| connecting a pack to a database, a lake or a queue | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector pages they list |
+| connecting a pack to a database, a lake or a queue | [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector pages they list |
 | turning JSON files or a schema into a pack without writing files by hand | [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data), [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md), [Generating a pack from JSON Lines](#generating-a-pack-from-json-lines) |
 
 Contents:
@@ -1185,7 +1185,7 @@ connectors:                     # the connectors this pack reads through. Here a
     plugin: delta               # which source plugin: delta, jdbc, aerospike, kafka, s3, rest, file, feeds, derived, …
     enabled: ${DRISHTI_LAKE_ENABLED:true}    # ${VAR:default} is resolved from the environment
     kinds: [agreement, csa]
-    settings:                   # passed to the plugin as-is (each plugin's settings: CONNECTORS.md; credentials only as ${ENV})
+    settings:                   # passed to the plugin as-is (each plugin's settings: DATA_GUIDE.md section 8; credentials only as ${ENV})
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
       domain: legal             # reads <root>/legal/<kind>/
   credit-store:
@@ -1213,7 +1213,7 @@ roles:
 
 A connector is a **site resource**: one YAML file in `config/connectors/` (`drishti.sources.connectors-dir`), whose file name is the connector's name
 (`config/connectors/credit-store.yaml` is `credit-store`). A pack does not carry connection settings that bind a site; it **names** what it reads through
-and routes its kinds. The reference for the file is [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md).
+and routes its kinds. The reference for the file is [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors).
 
 ```yaml
 connectors: [credit-store, collateral-store]        # the form for a pack that only names connectors
@@ -1229,11 +1229,11 @@ routes: { netting-set: credit-store, margin-call: collateral-store }
   afterwards. The generated file starts with `# Generated at first start from the connector template of pack '<pack>'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.`,
   and the server notes what it generated in `<data>/connectors/generated/<name>.properties`. A file the site never edited follows your pack (its stamp line says so: a later version of
   the template replaces it). Once edited the file is the site's: it **replaces** the template, a later version of your pack never changes a value the site set
-  and only adds the keys it gained ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades)), and the site edits it in an editor or in
+  and only adds the keys it gained ([DATA_GUIDE.md section 9, Upgrades](DATA_GUIDE.md#upgrades)), and the site edits it in an editor or in
   Admin → Connectors, applied live to that one connector. *Reset to pack default* (or `drishti.py connector reset <name>`) writes the pack's current template
   over it, keeping the earlier text in `<data>/connectors/history/`.
 - **Kinds go through `routes:`.** You know which kind lives where, so you route it. How a connector file's `kinds:` adds to and narrows the
-  routes is stated once, in [CONNECTOR_FILES.md, How packs and files fit together](../connectors/CONNECTOR_FILES.md#6-how-packs-and-files-fit-together). A connector is therefore reusable by other packs.
+  routes is stated once, in [DATA_GUIDE.md section 9, How packs and files fit together](DATA_GUIDE.md#96-how-packs-and-files-fit-together). A connector is therefore reusable by other packs.
 - **Shared connectors.** Connectors are per data domain, not per pack: the lake is laid out as `<root>/<domain>/<kind>/`, and several packs may name the same
   connector. If two related packs (one `extends` the other) suggest different templates under one name, the more specific pack's template is the one written; two
   unrelated packs suggesting different definitions of one name is an error. Admin → Connectors shows which packs use a connector and asks before the site switches
@@ -2499,7 +2499,7 @@ connectors:
   bank-credit-db:
     plugin: jdbc
     kinds: [netting-set]
-    settings:                                                # table mode; see CONNECTORS.md for the jdbc settings
+    settings:                                                # table mode; see DATA_GUIDE.md section 8 for the jdbc settings
       url: ${BANK_CREDIT_JDBC_URL}                           # e.g. jdbc:postgresql://db:5432/credit
       user: ${BANK_CREDIT_DB_USER}
       password: ${BANK_CREDIT_DB_PASSWORD}
@@ -2952,7 +2952,7 @@ To change a shipped pack for your site without touching its files at all, use on
 |---|---|
 | A different layout for one kind | Put a Sutra with a higher `version` in the site Sutra folder (`./sutras`, `DRISHTI_SUTRAS`), or design it in the Build workbench ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)) |
 | Other mnemonics, labels, columns, connectors or routes | A small pack of your own that `extends` the shipped one ([Inheritance](#inheritance)) |
-| A connector pointed elsewhere, or switched off | Its connector file, `config/connectors/<name>.yaml` (edit it, or use Admin → Connectors or `drishti.py connector apply`): a file replaces the pack's template and is applied without a restart ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
+| A connector pointed elsewhere, or switched off | Its connector file, `config/connectors/<name>.yaml` (edit it, or use Admin → Connectors or `drishti.py connector apply`): a file replaces the pack's template and is applied without a restart ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
 | A pack hidden from everyone | *Admin → Packs* → **Switch off** ([Part V. Domain packs: the packs that ship, turning them on, who sees which](#switching-packs-off-and-on-admin--packs)) |
 
 The shipped packs' lakes are built from the committed test data with one command ([Part V. Domain packs: the packs that ship, turning them on, who sees which](#the-demo-lakes-where-the-seven-packs-read-their-data)):
@@ -3517,7 +3517,7 @@ screens read them with `nonblank`.
 `trade_murex`, partitioned by business date and `PRODUCT_TYPE`), read by its own connector (`trade-endur`, `trade-calypso`,
 `trade-murex`, each with `union: true` and its `table:`), all serving `trade`: opening a trade finds it in whichever system holds it, a
 search, a type-ahead, the search form's drop-downs and a BI table over `trade` read all three, and every row says its
-`SOURCE_SYSTEM` ([CONNECTORS.md](../connectors/CONNECTORS.md#several-connectors-for-one-kind-a-union)). On the demo lakes,
+`SOURCE_SYSTEM` ([DATA_GUIDE.md section 8](DATA_GUIDE.md#83-several-connectors-for-one-kind-a-union)). On the demo lakes,
 `TRD MX-200000 <GO>` finds 99 trades among the 15,000 of the three systems, with the pack's pick-list columns:
 
 ```text
@@ -3995,7 +3995,7 @@ The connector itself is a **site resource**: one YAML file per connector in `con
 the file name is the connector's name: `config/connectors/credit-store.yaml` is the connector `credit-store`. The file holds the plugin (a Delta lake, JSON Lines
 files, a database, Kafka...), the kinds it serves and its settings. It is edited by the administrator, in an editor or in **Admin → Connectors**, and applied to
 the running server without a restart; only that connector restarts. The model, the file format and an example for every store are in
-[CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md).
+[DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors).
 
 - **Templates and what gets generated.** A pack may carry a suggestion for each connector it names: the `connectors:` **mapping** of definitions that every pack
   shipped with Drishti uses (read as the pack's templates), or `connector-templates:` beside a plain list of names. At the first start, for each connector a pack
@@ -4005,7 +4005,7 @@ the running server without a restart; only that connector restarts. The model, t
   text's hash), and the server keeps a marker of what it generated in `<data>/connectors/generated/<name>.properties`. So a shipped pack works out of the box.
   A file nobody edited follows the pack: a new version of the template replaces it (the file before kept beside it). Once edited, the **file is the site's**: it
   replaces the template (its values are never overwritten), and an upgrade only adds the keys the template gained, at any depth
-  ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades)).
+  ([DATA_GUIDE.md section 9, Upgrades](DATA_GUIDE.md#upgrades)).
 - **Back to the pack's template.** *Reset to pack default* (Admin → Connectors, or `drishti.py connector reset <name>`) rewrites the file from the pack's current template,
   keeping the earlier text in `<data>/connectors/history/<name>.<timestamp>.yaml`:
 
@@ -4017,7 +4017,7 @@ the running server without a restart; only that connector restarts. The model, t
   The file then starts `# The default suggested by pack 'helpdesk'.` A deploy of a new pack version also refreshes a generated file nobody edited when the
   pack's kinds changed; an edited one is flagged with *Reset to pack default*.
 - **Kinds go through routes.** The pack's `routes:` say which connector answers each kind (then the default route, then any other connector serving the kind);
-  a connector file's `kinds:`, when set, is the exact list the connector serves (it adds and narrows; the rule is in [CONNECTOR_FILES.md, How packs and files fit together](../connectors/CONNECTOR_FILES.md#6-how-packs-and-files-fit-together)). The same connector can therefore serve several packs while each pack stays in charge of its own kinds.
+  a connector file's `kinds:`, when set, is the exact list the connector serves (it adds and narrows; the rule is in [DATA_GUIDE.md section 9, How packs and files fit together](DATA_GUIDE.md#96-how-packs-and-files-fit-together)). The same connector can therefore serve several packs while each pack stays in charge of its own kinds.
 - **Several connectors for one kind.** Connectors with `union: true` that serve the same kind are read together, each holding its own part: the trading pack's three
   source systems ([Trading](#trading)).
 - **Shared connectors.** Several packs may name the same connector. Admin → Connectors shows which packs use each one and for which kinds, and asks before you disable or delete a connector that
@@ -4029,7 +4029,7 @@ the running server without a restart; only that connector restarts. The model, t
   one shows the connectors it names that this site lacks, and a **Create connectors** step writes their files from the templates.
 - **Credentials** in a connector file are only `${ENV_VAR}` or `file:/path` references, never a literal.
 
-![Admin -> Packs -> Data source: the pack's connectors, one not configured, with Edit and Create links](../connectors/img/connector_files/07-pack-connectors.jpg)
+![Admin -> Packs -> Data source: the pack's connectors, one not configured, with Edit and Create links](img/connector_files/07-pack-connectors.jpg)
 
 The precedence for a connector's settings, highest first: environment variables and `drishti.sources.connectors.*` in the server's own configuration (deprecated; they
 override a file setting by setting), the connector file, the pack's template. `drishti.py connector list|get|apply|test|reset|...`
@@ -4087,7 +4087,7 @@ The same from the terminal: `drishti.py server packs deploy|history|rollback|dat
 
 Each pack title on **Admin → Packs** links to `/admin/packs/<name>` (the *Builds on*, *needed by* and *Connectors* cells link to the packs and connectors they name).
 
-![One pack: status, kinds with mnemonics, Sutras, connectors, loads and history](../connectors/img/connector_files/12-pack-detail.jpg)
+![One pack: status, kinds with mnemonics, Sutras, connectors, loads and history](img/connector_files/12-pack-detail.jpg)
 
 The page shows the title, version, code, description, the **Sample** badge, who changed the pack and when, and the status: **on**, **off**, **not loaded** or **refused**, with the
 reason and the retry state (*next retry in Ns (attempt k)*, **Retry now**) when the server is trying again. Under it: what the pack **builds on** and what **needs** it; the
@@ -4261,7 +4261,7 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 Each plugin is its own module under `plugins/`, depends on `drishti-api` only (plus `drishti-common` and `drishti-testkit` for
 tests), and registers itself in `src/main/resources/META-INF/services/com.ash.drishti.api.SourcePlugin`. The server depends on all of
 them, so they are on its class path; each starts only when enabled or used by a named connector, one YAML file per connector in
-`config/connectors/` ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md)).
+`config/connectors/` ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md)).
 
 | Module | Plugin name | Reads | Extra internal dependency |
 |---|---|---|---|
@@ -4327,7 +4327,7 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `drishti-console/` | The web console: `run_drishti_web.py` (entry point), `core/` (app factory, backend client, auth, business date, packs, config loader, `ai/` for the console's LLM clients, and one module per feature such as `forms.py`, `bi.py`, `controls.py`, `calc.py`, `retry.py`), `routes/` (one router per area), `web/templates/` (Jinja2, with `_macros/panels.html` holding one macro per panel kind), `web/embed/` and `web/elements/` (Drishti Elements, the `<drishti-view>` web component), `web/static/` (`js/`, `css/`, `img/`, and third-party code under `vendor/`), `web/guides/` (in-app guides), `config/` (`application.yaml`, `help.yaml`, `workspaces.yaml`), `tests/` (pytest, with a fake backend in `conftest.py`; 255 files, 89 of them Chromium tests named `*_browser.py`) |
 | `config/packs/<domain>/<name>/` | One domain pack: `pack.yaml`, `sutras/`, `samples/` (`catalog.jsonl` and one `<kind>.jsonl` per kind), `config/` (formats, semantics, help, workspaces), `guides/`, `python/` (Calc snippets) and `tests/`. Seven ship: `core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`. The trading pack's Sutras are organised `sutras/common/` (shared blocks), `sutras/endur/`, `sutras/calypso/`, `sutras/murex/` (one per product type) and `sutras/pages/` (cross-system pages); the folders are organisation only: each Sutra's `match` (`SOURCE_SYSTEM` and `PRODUCT_TYPE`) decides ([SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md)) |
 | `examples/packs/` | The retired packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`, `liquidity-risk`), kept as examples and as fixtures for tests written against them; loaded only with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` |
-| `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
+| `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
 | `config/bi/` | Shipped BI files: datasets, models, reports, boards |
 | `run-configs/` | The IntelliJ IDEA run configurations (IntelliJ opens the repository root; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)): **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**, **Drishti server (QA profile)**. The PyCharm ones (PyCharm opens `drishti-console/`, so the two IDEs never share one `.idea`) are in `drishti-console/run-configs/`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the QA console and the CLI tools |
 | `data/testdata/` | The committed test data: sixty business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
@@ -4336,7 +4336,7 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `tools/testdata/` | `make_testdata.py` (writes `data/testdata`, deterministic, `--check`), `universe.py` (the fictitious counterparties, books and legal entities), `test_testdata.py`, `test_deterministic.py` (the same bytes on every Python) |
 | `tools/packgen/` | Pack generators: `banking/` (the five banking packs from one taxonomy, `make_data.py` for their samples and `--lake`/`--jsonl`), `trades/` (the common trade schema every source system writes, `schema.py`, and the ENDUR, CALYPSO and MUREX generators), `common/` (`packbuild.py`, `packsamples.py`, `walks.py`, `upper.py`), `world/`, `economics/`, `politics/`, and the retired packs' generators |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (a pack's sample history as JSONL loader rows), `load_rows.py` (loads such rows into Delta), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for one source system: `--trades`, `--days`, `--system`), `stream.py` (Kafka ticker), `dates.py` (business-day calendars) |
-| `tools/load-*.sh` | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DEMO_DATA.md](../connectors/DEMO_DATA.md)) |
+| `tools/load-*.sh` | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)) |
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [BENCHMARK.md](../admin/BENCHMARK.md) |
 | `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see this document, [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md), [CLI_GUIDE.md](CLI_GUIDE.md)) |
 | `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](EXTERNAL_DATA.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows)); the map region builder |
@@ -4658,7 +4658,7 @@ that is the machine, not the drill.
 #### 2.7 One config, several instances of the same connector
 
 A connector is a *named instance* of a plugin, one file in `config/connectors/<name>.yaml` (the file name is its name;
-[CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). You may run as many instances of a plugin as you like; each has its own
+[DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)). You may run as many instances of a plugin as you like; each has its own
 settings, its own `source-name` (shown in provenance), its own entry in Admin → Health and in `GET /api/v1/sources`, and its own cache.
 
 **Several slices of one kind: a union.** The shipped trading pack is the example: three `delta` connectors, `trade-endur`,
@@ -4743,12 +4743,12 @@ GET /api/v1/entities/trade/MX-0/raw?asOf=2026-10-01  -> 404 DRS-1001 recent-file
 says `DEGRADED` and each connector's health is its own: a local folder or lake reads `UP`, a missing lake folder `DOWN: cannot reach
 <root>/<domain> (engine: native)`, a JDBC connector `DOWN: <driver message> (reconnecting)` until the database returns, a Kafka
 connector `UP` with no data (its consumer retries), and a connector that cannot even start (a Delta lake on an unreachable S3
-endpoint) is listed under `failedToStart` and retried by itself ([CONNECTOR_FILES.md, retries](../connectors/CONNECTOR_FILES.md#a-connector-that-fails-to-start-or-loses-its-connection-is-retried)).
+endpoint) is listed under `failedToStart` and retried by itself ([DATA_GUIDE.md section 9, retries](DATA_GUIDE.md#a-connector-that-fails-to-start-or-loses-its-connection-is-retried)).
 One `DOWN` connector does not take the others with it.
 
 The deprecated form, every connector under `drishti.sources.connectors` in a site file loaded with
 `--spring.config.additional-location`, still works (flagged in the log and on Admin → Connectors; it overrides a file setting by
-setting); move each block to its own file ([CONNECTOR_FILES.md, section 11](../connectors/CONNECTOR_FILES.md#11-moving-off-applicationyaml-and-the-old-data-source-override)).
+setting); move each block to its own file ([DATA_GUIDE.md section 9.11](DATA_GUIDE.md#911-moving-off-applicationyaml-and-the-old-data-source-override)).
 
 ---
 

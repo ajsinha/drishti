@@ -65,9 +65,8 @@ sections:
       - title: "Pivot"
         words: [PIVOT, MCUBE]
         guides:
-          - { slug: docs-guides-pivot-guide, pair: docs-tutorials-07-pivot-cubes-and-explain, doc: guides/PIVOT_GUIDE.md, title: "Pivot guide", icon: grid-3x3-gap, summary: "Any table of any pack, any entity document (its lists pivoted at their own grain by Rachana paths, a trade figure counted once per trade), or VaR, as a pivot computed by the server: the field list and four zones, nested rows opened lazily (only open nodes are computed), expand by a different field per member, top N with a correct Others, sorting per level, every total made from its own members (never a sum of the figures shown), exact or holistic marked, the provenance of every cell, the scan estimate, a chart of a selection that never stacks a non-additive measure, Excel with outline levels and formulas only where a figure adds up, CSV and Arrow, saved and shared views, cell references, custom functions in four languages with their harness, playground and approval, why did it move (steps that add up), what-if overlays, BI's totals on the engine, sketches (≈) with exact on request, rollups, progressive answers, the cluster's partial states, the screen's switches, live pivots, cell comments, the API, the CLI and the settings." }
+          - { slug: docs-guides-pivot-guide, pair: docs-tutorials-07-pivot-cubes-and-explain, doc: guides/PIVOT_GUIDE.md, title: "Pivot guide", icon: grid-3x3-gap, summary: "Any table of any pack, any entity document (its lists pivoted at their own grain by Rachana paths, a trade figure counted once per trade), or VaR, as a pivot computed by the server: the field list and four zones, nested rows opened lazily (only open nodes are computed), expand by a different field per member, top N with a correct Others, sorting per level, every total made from its own members (never a sum of the figures shown), exact or holistic marked, the provenance of every cell, the scan estimate, a chart of a selection that never stacks a non-additive measure, Excel with outline levels and formulas only where a figure adds up, CSV and Arrow, saved and shared views, cell references, custom functions in four languages with their harness, playground and approval, why did it move (steps that add up), what-if overlays, BI's totals on the engine, sketches (≈) with exact on request, rollups, progressive answers, the cluster's partial states, the screen's switches, live pivots, cell comments, the API, the CLI and the settings; and the MR cube preset (MCUBE): VaR, ES, component VaR, limits and sensitivities by any desk, book, risk class, position or trade, every cell the VaR engine's own figure, with the headline, time travel, the tail, the DV01 ladder and a what-if side by side." }
           - { slug: docs-tutorials-07-pivot-cubes-and-explain, doc: tutorials/07-pivot-cubes-and-explain.md, title: "Pivot, cubes and explain tutorial", icon: mortarboard, kind: tutorial, summary: "Twenty-six hands-on steps in three parts, each in the UI, on the command line and as the view's JSON or YAML. The pivot engine: a first pivot of the demo trades, rows opened lazily and expanded by a different field, the top N with its Others, a cell's provenance and rows, the legs with a document path, VaR by desk whose total is not the sum of the desks, a chart, a view saved and exported to Excel, Exact / Auto / ≈, rollups and Live, a comment on a cell. Custom functions: a formula, a function proven by its harness, an SQL macro, approval by someone else, why did it move, what-if, BI's totals from the engine. The MR cube: the landing checked against VAR BANK, a cell's tail, the lens, a re-pivot, components and the waterfall, the DV01 ladder and a what-if, a view shared and exported." }
-          - { slug: docs-guides-mr-cube-guide, engine: mr-cube, doc: guides/MR_CUBE_GUIDE.md, title: "MR cube guide", icon: grid-3x3-gap, summary: "Market risk as a pivot on the pivot engine (MCUBE): desks by risk class, books by currency, any hierarchy level, attribute, position or trade, where every cell and every total is the VaR of its own trades from their summed scenario P&L vectors, never a sum, with the diversification shown; component and incremental VaR, the limit and its use, stressed VaR, DV01, CS01 and SBM; the scope and the lens (horizon, confidence, stress set, currency) as the view's options; the landing (headline, slider, sparklines, a cell's tail and explain), tab B (components, waterfall, histogram, heat map), tab C (the DV01 ladder, the what-if side by side); the API, the settings, the engine switch." }
       - title: "Groupings and analytics"
         guides:
           - { slug: docs-guides-groupings-analytics-guide, pair: docs-tutorials-06-groupings-and-analytics, doc: guides/GROUPINGS_ANALYTICS_GUIDE.md, title: "Groupings and analytics guide", icon: diagram-3, summary: "LEIG, LEIC, SIC, ECG, CORR, an equity's beta (EQB), the USEQ ratios, FACT changes, IDX totals and the PXH analytics computed from the fundamental data when asked, never stored: each command with worked numbers; the data contract of every computed kind (every column, formula, input and error) and the reconciliation with the retired stored pages; how each is computed (the derived connector, the correlation engine, the price analytics) and where its inputs come from." }
@@ -84,11 +83,6 @@ sections:
           - { slug: docs-tutorials-14-public-sector-data, doc: tutorials/14-public-sector-data.md, title: "Public sector tutorial", icon: mortarboard, kind: tutorial, summary: "Nine hands-on steps, each in the UI, on the command line and in YAML: turn the packs on, run the six feeds, a country's development, a central bank, national statistics and the OECD, official press releases and what is internal only, GDELT's world events, scheduling the feeds daily, changing what a feed pulls." }
   - id: data
     groups:
-      - title: "Connect"
-        guides:
-          - { slug: connectors, doc: connectors/CONNECTORS.md, title: Connectors, icon: plug, summary: "One reference with a section per plugin (file, Delta, Iceberg, DuckDB, PostgreSQL, MongoDB, Redis, Aerospike, Cassandra, S3, REST, feeds, news, Kafka, ActiveMQ, RabbitMQ, demo): when to use it and a connector file." }
-          - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: file-earmark-code, summary: "One YAML file per connector in config/connectors: the format, how packs suggest templates, several connectors serving one kind (the union of trade connectors), precedence, live reload, the Admin page, the API and the CLI." }
-          - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS and proxy", icon: lock, summary: "The shared tls settings (private CA, PEM, PKCS12 and JKS, mutual TLS, expiry, rotation) and the outbound HTTP proxy for connectors, AI providers and MCP servers." }
       - title: "Loads and lakes"
         guides:
           - { slug: data-guide, pair: docs-tutorials-15-connect-your-data, doc: guides/DATA_GUIDE.md, title: "Data guide: connectors, the load signal, formats, external data, Export data", icon: cloud-arrow-down, summary: "Your ETL loads the data; {product} acts on it: one call (API or drishti.py data landed) marks a batch landed, the Data loads page, expectations and late data; JSON Lines as the standard and Arrow where it pays; every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, SEC, GLEIF ...) with its licence, the internal-only rule and one refresh script per pack; a pack from JSON Schema files or a folder of JSON Lines; and taking data out: Export data (EXPORT), every dataset with its dates, a simple selection and a day downloaded as .jsonl.gz, streamed and audited. Lakes, the data inbox and loading are the Data lake and data load guide." }
@@ -155,17 +149,12 @@ sections:
       - title: "Start here"
         words: [WHAT]
         guides:
-          - { slug: knowledge, doc: knowledge/README.md, title: "Knowledge home and glossary", icon: lightbulb, kind: knowledge, summary: "The eight Knowledge pages and every term of the glossary A to Z, each with its meaning and the page that explains it; WHAT <term> opens any of them from the command line." }
+          - { slug: knowledge, doc: knowledge/README.md, title: "Knowledge home and glossary", icon: lightbulb, kind: knowledge, summary: "The three Knowledge pages (Risk, Data, World) and every term of the glossary A to Z, each with its meaning and the page that explains it; WHAT <term> opens any of them from the command line." }
       - title: "The domains"
         guides:
-          - { slug: knowledge-market-risk, packs: [market-risk], doc: knowledge/market-risk.md, title: "Market risk", icon: graph-down-arrow, kind: knowledge, summary: "VaR and expected shortfall in plain words, P&L vectors and historical simulation, positions, portfolios and hierarchies, contributions and diversification, backtesting; how the data connects, the bank's VaR worked through on the demo data, questions to ask and common confusions." }
-          - { slug: knowledge-counterparty-credit-risk, packs: [counterparty-risk], doc: knowledge/counterparty-credit-risk.md, title: "Counterparty credit risk", icon: shield-exclamation, kind: knowledge, summary: "Counterparties, agreements, CSAs, netting sets and collateral; EE, PFE, EPE, EEPE and why PFE does not add up; limits, CVA, SA-CCR and SIMM in brief; CP-ALDERSHOT worked through on the demo data, questions to ask and common confusions." }
-          - { slug: knowledge-trades-and-products, packs: [trading], doc: knowledge/trades-and-products.md, title: "Trades and products", icon: receipt, kind: knowledge, summary: "A trade and its three booking systems, statuses, products, notional and MTM, legs and events, books, desks and traders, valuations; what links to a trade, on the demo data." }
-          - { slug: knowledge-entities-and-ownership, packs: [core, gleif], doc: knowledge/entities-and-ownership.md, title: "Entities and ownership", icon: diagram-3, kind: knowledge, summary: "The LEI and GLEIF, direct and ultimate parents, ownership groups and countries, the bank's legal entities, counterparties and their groups, issuers; who owns whom, on the demo data." }
-          - { slug: knowledge-market-data, packs: [market-data], doc: knowledge/market-data.md, title: "Market data", icon: graph-up, kind: knowledge, summary: "Curves, fixings, FX spot and forwards, volatility surfaces and cubes, credit curves, equities, indices and commodities, correlations and beta; how they link to what uses them." }
-          - { slug: knowledge-data-and-contracts, doc: knowledge/data-and-contracts.md, title: "Data and contracts", icon: file-earmark-ruled, kind: knowledge, summary: "Packs, kinds and commands; fundamental, engine input, {product}'s own and computed data; data contracts, business dates, links and ids; where the data comes from (with External data); DATAMAP draws it all, each join checked against the data." }
-          - { slug: knowledge-companies-funds-and-etfs, packs: [us-equities, funds, gleif], doc: knowledge/companies-funds-and-etfs.md, title: "Companies, funds and ETFs", icon: briefcase, kind: knowledge, summary: "Tickers, CIK, SIC codes and divisions, share classes (GOOG and GOOGL), EDGAR filings and XBRL facts; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index funds, computed index weights and active share, fund overlap; how the us-equities, funds and gleif packs connect, on the demo data." }
-          - { slug: knowledge-economies, packs: [world-economy], doc: knowledge/economies.md, title: "Economies", icon: globe, kind: knowledge, summary: "GDP, growth, inflation, unemployment, debt and the current account; IMF forecasts, country groups and governments; how a counterparty links to its economy, on the demo data." }
+          - { slug: knowledge-risk, packs: [market-risk, counterparty-risk, trading], doc: knowledge/risk.md, title: "Risk", icon: graph-down-arrow, kind: knowledge, summary: "Market risk: VaR and expected shortfall in plain words, P&L vectors and historical simulation, positions, portfolios and hierarchies, contributions and diversification, backtesting. Counterparty credit risk: counterparties, agreements, CSAs, netting sets and collateral; EE, PFE, EPE, EEPE and why PFE does not add up; limits, CVA, SA-CCR and SIMM in brief. Trades and products: a trade and its three booking systems, statuses, products, notional and MTM, legs and events, books, desks and traders, valuations. Each with how the data connects, a worked example on the demo data (the bank's VaR, CP-ALDERSHOT), questions to ask and common confusions." }
+          - { slug: knowledge-data, packs: [market-data, core, gleif], doc: knowledge/data.md, title: "Data", icon: file-earmark-ruled, kind: knowledge, summary: "Market data: curves, fixings, FX spot and forwards, volatility surfaces and cubes, credit curves, equities, indices and commodities, correlations and beta. Entities and ownership: the LEI and GLEIF, direct and ultimate parents, ownership groups and countries, the bank's legal entities, counterparties and their groups, issuers. Data and contracts: packs, kinds and commands; fundamental, engine input, {product}'s own and computed data; data contracts, business dates, links and ids; where the data comes from; DATAMAP draws it all. Each on the demo data." }
+          - { slug: knowledge-world, packs: [us-equities, funds, gleif, world-economy], doc: knowledge/world.md, title: "World", icon: globe, kind: knowledge, summary: "Companies, funds and ETFs: tickers, CIK, SIC codes and divisions, share classes (GOOG and GOOGL), EDGAR filings and XBRL facts; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index funds, computed index weights and active share, fund overlap. Economies: GDP, growth, inflation, unemployment, debt and the current account; IMF forecasts, country groups and governments; how a counterparty links to its economy. Each on the demo data." }
   - id: internal
     groups:
       - title: "Internal"
@@ -198,8 +187,8 @@ moved:
   docs-guides-flight-java: docs-guides-flight-reference#72-java   # java folded into docs/guides/FLIGHT_REFERENCE.md
   docs-guides-flight-jdbc: docs-guides-flight-reference#73-jdbc-dbeaver-datagrip-any-jdbc-program   # jdbc folded into docs/guides/FLIGHT_REFERENCE.md
   docs-guides-flight-odbc: docs-guides-flight-reference#74-odbc-excel-power-bi-tableau   # odbc folded into docs/guides/FLIGHT_REFERENCE.md
-  docs-connectors-news: connectors   # news folded into plugins/drishti-plugin-news/README.md
-  docs-connectors-yfinance: connectors   # yfinance folded into plugins/drishti-plugin-yfinance/README.md
+  docs-connectors-news: data-guide#8-connectors   # news folded into plugins/drishti-plugin-news/README.md
+  docs-connectors-yfinance: data-guide#8-connectors   # yfinance folded into plugins/drishti-plugin-yfinance/README.md
   docs-connectors-reactive-connector: docs-connectors-types-reactive-readme   # reactive connector folded into docs/connectors/types/reactive/README.md
   docs-architecture-parametric-var: docs-guides-var-guide   # parametric var folded into docs/guides/VAR_GUIDE.md
   docs-architecture-var-playground: docs-guides-var-guide   # var playground folded into docs/guides/VAR_GUIDE.md
@@ -214,24 +203,24 @@ moved:
   docs-lenses-ccr-cube-lens: lenses#7-ccr-cube-lens   # ccr cube lens folded into docs/lenses/README.md
   docs-lenses-cro-lens: lenses#8-cro-lens   # cro lens folded into docs/lenses/README.md
   docs-lenses-cio-lens: lenses#9-cio-lens   # cio lens folded into docs/lenses/README.md
-  docs-connectors-activemq-connector: connectors   # activemq connector folded into plugins/drishti-plugin-activemq/README.md
-  docs-connectors-aerospike-connector: connectors   # aerospike connector folded into plugins/drishti-plugin-aerospike/README.md
-  docs-connectors-cassandra-connector: connectors   # cassandra connector folded into plugins/drishti-plugin-cassandra/README.md
-  docs-connectors-delta-connector: connectors   # delta connector folded into plugins/drishti-plugin-delta/README.md
-  docs-connectors-demo-connector: connectors   # demo connector folded into plugins/drishti-plugin-demo/README.md
-  docs-connectors-duckdb-connector: connectors   # duckdb connector folded into plugins/drishti-plugin-duckdb/README.md
-  docs-connectors-feeds-connector: connectors   # feeds connector folded into plugins/drishti-plugin-feeds/README.md
-  docs-connectors-file-connector: connectors   # file connector folded into plugins/drishti-plugin-file/README.md
-  docs-connectors-redis-connector: connectors   # redis connector folded into plugins/drishti-plugin-redis/README.md
-  docs-connectors-mongodb-connector: connectors   # mongodb connector folded into plugins/drishti-plugin-mongodb/README.md
-  docs-connectors-postgres-connector: connectors   # postgres connector folded into plugins/drishti-plugin-jdbc/README.md
-  docs-connectors-jdbc-queries: connectors   # jdbc queries folded into plugins/drishti-plugin-jdbc/README.md
-  docs-connectors-iceberg-connector: connectors   # iceberg connector folded into plugins/drishti-plugin-iceberg/README.md
-  docs-connectors-iceberg-external-connector: connectors   # iceberg external connector folded into plugins/drishti-plugin-iceberg-external/README.md
-  docs-connectors-s3-connector: connectors   # s3 connector folded into plugins/drishti-plugin-s3/README.md
-  docs-connectors-kafka-connector: connectors   # kafka connector folded into plugins/drishti-plugin-kafka/README.md
-  docs-connectors-rabbitmq-connector: connectors   # rabbitmq connector folded into plugins/drishti-plugin-rabbitmq/README.md
-  docs-connectors-rest-connector: connectors   # rest connector folded into plugins/drishti-plugin-rest/README.md
+  docs-connectors-activemq-connector: data-guide#8-connectors   # activemq connector folded into plugins/drishti-plugin-activemq/README.md
+  docs-connectors-aerospike-connector: data-guide#8-connectors   # aerospike connector folded into plugins/drishti-plugin-aerospike/README.md
+  docs-connectors-cassandra-connector: data-guide#8-connectors   # cassandra connector folded into plugins/drishti-plugin-cassandra/README.md
+  docs-connectors-delta-connector: data-guide#8-connectors   # delta connector folded into plugins/drishti-plugin-delta/README.md
+  docs-connectors-demo-connector: data-guide#8-connectors   # demo connector folded into plugins/drishti-plugin-demo/README.md
+  docs-connectors-duckdb-connector: data-guide#8-connectors   # duckdb connector folded into plugins/drishti-plugin-duckdb/README.md
+  docs-connectors-feeds-connector: data-guide#8-connectors   # feeds connector folded into plugins/drishti-plugin-feeds/README.md
+  docs-connectors-file-connector: data-guide#8-connectors   # file connector folded into plugins/drishti-plugin-file/README.md
+  docs-connectors-redis-connector: data-guide#8-connectors   # redis connector folded into plugins/drishti-plugin-redis/README.md
+  docs-connectors-mongodb-connector: data-guide#8-connectors   # mongodb connector folded into plugins/drishti-plugin-mongodb/README.md
+  docs-connectors-postgres-connector: data-guide#8-connectors   # postgres connector folded into plugins/drishti-plugin-jdbc/README.md
+  docs-connectors-jdbc-queries: data-guide#8-connectors   # jdbc queries folded into plugins/drishti-plugin-jdbc/README.md
+  docs-connectors-iceberg-connector: data-guide#8-connectors   # iceberg connector folded into plugins/drishti-plugin-iceberg/README.md
+  docs-connectors-iceberg-external-connector: data-guide#8-connectors   # iceberg external connector folded into plugins/drishti-plugin-iceberg-external/README.md
+  docs-connectors-s3-connector: data-guide#8-connectors   # s3 connector folded into plugins/drishti-plugin-s3/README.md
+  docs-connectors-kafka-connector: data-guide#8-connectors   # kafka connector folded into plugins/drishti-plugin-kafka/README.md
+  docs-connectors-rabbitmq-connector: data-guide#8-connectors   # rabbitmq connector folded into plugins/drishti-plugin-rabbitmq/README.md
+  docs-connectors-rest-connector: data-guide#8-connectors   # rest connector folded into plugins/drishti-plugin-rest/README.md
   lake-guide: data-lake-guide   # docs/guides/DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
   docs-guides-lake-guide: data-lake-guide
   docs-architecture-data-load-rules: data-lake-guide#5-routing-business-dates-modes-repeats-and-undo   # DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md (2.9.11.d)
@@ -253,8 +242,8 @@ moved:
   var-horizon: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen   # 10-day VaR, √10 and the sum (2.9.7)
   ten-day-var: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen
   var-confidence: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen   # the confidence chosen (2.9.7)
-  template-updates: connector-files#upgrades                          # Admin -> Connectors -> Template updates, Use the pack's value (2.9.5)
   var-on-iceberg: docs-tutorials-16-load-your-own-data-into-a-new-lake#part-e--the-risk-lake-and-the-official-results-on-iceberg                        # tutorial 16, Part E: the risk lake and official results on Iceberg (2.9.5)
+  template-updates: data-guide#upgrades                          # Admin -> Connectors -> Template updates, Use the pack's value (2.9.5)
   in-memory-lake: data-lake-guide#13-the-in-memory-lake                                    # the in-memory lake (2.9.11)
   memory-lake: data-lake-guide#13-the-in-memory-lake
   in-memory-lake-guide: data-lake-guide#13-the-in-memory-lake   # docs/guides/DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md section 13
@@ -317,27 +306,27 @@ moved:
   live: docs-architecture-data-architecture#1-live-updates
   performance: docs-admin-performance
   scale-benchmark: benchmark#9-the-stores-compared-10000-to-50000-trades-a-day   # SCALE_BENCHMARK.md merged into BENCHMARK.md
-  connector-proxy: connector-tls#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers
-  connector-demo: connectors#demo
-  demo-data: connectors#demo-data
-  connector-file: connectors#file
-  connector-delta: connectors#delta-lake
-  connector-iceberg: connectors#apache-iceberg
-  connector-duckdb: connectors#duckdb
-  connector-postgres: connectors#postgresql-and-jdbc
-  jdbc-queries: connectors#postgresql-and-jdbc
-  connector-mongodb: connectors#mongodb
-  connector-redis: connectors#redis
-  connector-aerospike: connectors#aerospike
-  connector-cassandra: connectors#apache-cassandra
-  connector-s3: connectors#s3
-  connector-rest: connectors#rest
-  connector-feeds: connectors#public-feeds
-  connector-news: connectors#news
-  connector-yfinance: connectors#yahoo-finance
-  connector-kafka: connectors#kafka
-  connector-activemq: connectors#activemq
-  connector-rabbitmq: connectors#rabbitmq
+  connector-proxy: data-guide#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers
+  connector-demo: data-guide#82-which-connector
+  demo-data: data-guide#11-the-demo-data
+  connector-file: data-guide#82-which-connector
+  connector-delta: data-guide#82-which-connector
+  connector-iceberg: data-guide#82-which-connector
+  connector-duckdb: data-guide#82-which-connector
+  connector-postgres: data-guide#82-which-connector
+  jdbc-queries: data-guide#82-which-connector
+  connector-mongodb: data-guide#82-which-connector
+  connector-redis: data-guide#82-which-connector
+  connector-aerospike: data-guide#82-which-connector
+  connector-cassandra: data-guide#82-which-connector
+  connector-s3: data-guide#82-which-connector
+  connector-rest: data-guide#82-which-connector
+  connector-feeds: data-guide#82-which-connector
+  connector-news: data-guide#82-which-connector
+  connector-yfinance: data-guide#82-which-connector
+  connector-kafka: data-guide#82-which-connector
+  connector-activemq: data-guide#82-which-connector
+  connector-rabbitmq: data-guide#82-which-connector
   operationalising: deploy
   real-data: external-data#the-world-economy-data-in-detail
   runbook-source-down: operations#171-source-down-or-slow
@@ -363,13 +352,13 @@ moved:
   build-a-pack: pack-developer-guide
   sutra-studio: rachana-reference#screen-designer-and-the-build-workbench
   # The 2.9.6 documentation merge (one home per topic): a merged-away document's path slug opens the section that took it over.
-  docs-connectors-connector-recipes: connectors#combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into CONNECTORS.md
-  docs-connectors-connector-operations: connector-files#12-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into CONNECTOR_FILES.md section 12 and TROUBLESHOOTING
+  docs-connectors-connector-recipes: data-guide#84-combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into docs/guides/DATA_GUIDE.md section 8
+  docs-connectors-connector-operations: data-guide#912-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into docs/guides/DATA_GUIDE.md section 9.12 and TROUBLESHOOTING
   docs-architecture-how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6)
   docs-architecture-live-bi: docs-architecture-data-architecture#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is DATA_ARCHITECTURE.md
   docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # deleted (2.9.6); D1 to D6 now BI_DESIGN section 14
   docs-architecture-screen-builder: rachana-reference#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is RACHANA_REFERENCE › Screen designer, section 32
-  docs-architecture-cassandra-connector-design: connectors   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
+  docs-architecture-cassandra-connector-design: data-guide#8-connectors   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
   docs-admin-load-and-memory: docs-admin-performance#9-many-users-soak-runs-and-memory-profiling   # deleted (2.9.6); its method is PERFORMANCE method 9
   admin-artifacts: deploy#18-admin--artifacts-install-and-uninstall-safely   # Admin -> Artifacts' help link; docs/admin/ARTIFACTS.md merged into OPERATIONALISING.md section 18
   docs-guides-operationalising: deploy   # OPERATIONALISING.md is listed as Deploy, promote and roll back
@@ -500,30 +489,47 @@ moved:
   docs-tutorials-44-virtual-tables-and-models: docs-tutorials-18-tables-and-models
   docs-tutorials-45-load-your-own-data-into-a-new-lake: docs-tutorials-16-load-your-own-data-into-a-new-lake
   docs-tutorials-46-public-sector-data: docs-tutorials-14-public-sector-data
+  # h-docs (2.9.11.h), builder A (knowledge 9 -> 4, pivot, connector docs into DATA_GUIDE), moved: aliases:
+  knowledge-market-risk: knowledge-risk#1-market-risk   # docs/knowledge/market-risk.md folded into docs/knowledge/risk.md
+  knowledge-counterparty-credit-risk: knowledge-risk#2-counterparty-credit-risk   # docs/knowledge/counterparty-credit-risk.md folded into docs/knowledge/risk.md
+  knowledge-trades-and-products: knowledge-risk#3-trades-and-products   # docs/knowledge/trades-and-products.md folded into docs/knowledge/risk.md
+  knowledge-market-data: knowledge-data#1-market-data   # docs/knowledge/market-data.md folded into docs/knowledge/data.md
+  knowledge-entities-and-ownership: knowledge-data#2-entities-and-ownership   # docs/knowledge/entities-and-ownership.md folded into docs/knowledge/data.md
+  knowledge-data-and-contracts: knowledge-data#3-data-and-contracts   # docs/knowledge/data-and-contracts.md folded into docs/knowledge/data.md
+  knowledge-companies-funds-and-etfs: knowledge-world#1-companies-funds-and-etfs   # docs/knowledge/companies-funds-and-etfs.md folded into docs/knowledge/world.md
+  knowledge-economies: knowledge-world#2-economies   # docs/knowledge/economies.md folded into docs/knowledge/world.md
+  docs-guides-mr-cube-guide: docs-guides-pivot-guide#29-the-mr-cube-preset   # docs/guides/MR_CUBE_GUIDE.md folded into docs/guides/PIVOT_GUIDE.md (the MR cube preset)
+  docs-architecture-pivot-engine: docs-architecture-architecture#26-the-pivot-engine   # docs/architecture/PIVOT_ENGINE.md: use folded into PIVOT_GUIDE.md, design into ARCHITECTURE.md section 26
+  docs-architecture-computed-attributes: docs-architecture-data-architecture#12-computed-and-derived-attributes   # docs/architecture/COMPUTED_ATTRIBUTES.md: what is built into DATA_ARCHITECTURE.md section 12, open steps into IMPLEMENTATION_PLAN.md
+  docs-architecture-var-sharding: docs-architecture-data-architecture#13-var-sharding-how-it-is-built   # docs/architecture/VAR_SHARDING.md folded into DATA_ARCHITECTURE.md sections 13 and 14 (operators) and VAR_GUIDE.md section 28
+  connectors: data-guide#8-connectors   # docs/connectors/CONNECTORS.md folded into docs/guides/DATA_GUIDE.md section 8
+  connector-files: data-guide#9-connector-files-and-admin--connectors   # docs/connectors/CONNECTOR_FILES.md folded into DATA_GUIDE.md section 9
+  connector-tls: data-guide#10-tls-and-the-outbound-proxy   # docs/connectors/TLS.md folded into DATA_GUIDE.md section 10
+  docs-connectors-demo-data: data-guide#11-the-demo-data   # docs/connectors/DEMO_DATA.md folded into DATA_GUIDE.md section 11
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
 knowledge:
-  var: knowledge-market-risk                                            # the VaR explorer
-  var-result: knowledge-market-risk#term-var                            # VRES
-  smat: knowledge-market-risk#term-scenario-matrix                      # the scenario matrix, SMAT (2.9.7)
-  play: knowledge-market-risk#term-var-playground                       # the VaR Playground, PLAY VAR
-  desk: knowledge-market-risk#term-risk-hierarchy                       # DESK (a node of the risk hierarchies: its VaR and limits)
-  exposure: knowledge-counterparty-credit-risk                          # the exposure explorer
-  exposure-result: knowledge-counterparty-credit-risk#term-exposure-profile   # EXP as a kind
-  counterparty: knowledge-counterparty-credit-risk#term-counterparty    # CPTY
-  netting-set: knowledge-counterparty-credit-risk#term-netting-set      # NSET
-  csa: knowledge-counterparty-credit-risk#term-csa                      # CSA
-  us-company: knowledge-companies-funds-and-etfs#term-us-company        # USEQ
-  fund: knowledge-companies-funds-and-etfs#term-look-through            # FUND (the fact sheet and its Look-through tab)
-  fund-holder: knowledge-companies-funds-and-etfs#term-held-by-funds    # HELD
-  index-funds: knowledge-companies-funds-and-etfs#term-index-fund       # TRACK
+  var: knowledge-risk#1-market-risk                                            # the VaR explorer
+  var-result: knowledge-risk#term-var                            # VRES
+  smat: knowledge-risk#term-scenario-matrix                      # the scenario matrix, SMAT (2.9.7)
+  play: knowledge-risk#term-var-playground                       # the VaR Playground, PLAY VAR
+  desk: knowledge-risk#term-risk-hierarchy                       # DESK (a node of the risk hierarchies: its VaR and limits)
+  exposure: knowledge-risk#2-counterparty-credit-risk                          # the exposure explorer
+  exposure-result: knowledge-risk#term-exposure-profile   # EXP as a kind
+  counterparty: knowledge-risk#term-counterparty    # CPTY
+  netting-set: knowledge-risk#term-netting-set      # NSET
+  csa: knowledge-risk#term-csa                      # CSA
+  us-company: knowledge-world#term-us-company        # USEQ
+  fund: knowledge-world#term-look-through            # FUND (the fact sheet and its Look-through tab)
+  fund-holder: knowledge-world#term-held-by-funds    # HELD
+  index-funds: knowledge-world#term-index-fund       # TRACK
   keyboard: user-guide#keyboard                                   # the ? list's link: every key of the console (drishti_keys.js)
   global-search: user-guide#search-everything-altk                # the global search, Alt+K (drishti-insight's search)
 
 # F1 opens the guide for the current screen.
 contextual:
-  mcube: docs-guides-mr-cube-guide   # the MR cube, MCUBE, the Pivot's preset mr (F1 and its ?): the MR cube guide
+  mcube: docs-guides-pivot-guide#29-the-mr-cube-preset   # the MR cube, MCUBE, the Pivot's preset mr (F1 and its ?): its section of the pivot guide
   ccr-cube: docs-guides-pivot-guide#28-presets-the-risk-cubes   # the CCR cube, the Pivot's preset ccr (under construction): the presets section of the pivot guide
   landing: user-guide#home-the-fact-of-the-day
   bi: bi-guide
@@ -573,7 +579,6 @@ contextual:
   bi-transform: bi-guide#17-data-prep-the-transform-editor
   bi-notebook: user-guide#the-notebook
 
-  # h-docs (2.9.11.h), knowledge pages 9 -> 4:
 
 
   # h-docs (2.9.11.h), operate guides (OPERATIONS, CLUSTER, ADMIN, CLI reference):

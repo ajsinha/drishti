@@ -79,7 +79,7 @@ The banking module's engines run on the server in Java, for any scope; the conso
   beside historical VaR; never the official figure ([VAR_GUIDE.md section 3.12](docs/guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar),
   [tutorial 2, Part B](docs/tutorials/02-var-from-the-bank-to-a-trade.md#part-b--parametric-var-beside-historical-the-fat-tail-gap)).
 - **The market-risk cube** (`MCUBE`): VaR by desk and risk class as a Pivot preset, each cell equal to the VaR engine's answer for its
-  scope ([MR_CUBE_GUIDE.md](docs/guides/MR_CUBE_GUIDE.md), [tutorial 7, Part C](docs/tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals)).
+  scope ([PIVOT_GUIDE.md section 29](docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset), [tutorial 7, Part C](docs/tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals)).
 - **Counterparty exposure** (EE, PFE, EPE, EEPE) from the simulator's paths, with netting and collateral on each path
   ([EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [tutorial 3](docs/tutorials/03-exposure-from-the-bank-to-a-trade.md)).
 - **The pre-deal check** (`PREDEAL`, Counterparties → Pre-deal check, `POST /api/v1/risk/exposure/predeal`): a new trade copied from a
@@ -150,7 +150,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 
 - **Connectors**: Delta Lake and Apache Iceberg (Drishti's own engines, no Hadoop, local disk or S3), JDBC databases, DuckDB, MongoDB,
   Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds
-  ([CONNECTORS.md](docs/connectors/CONNECTORS.md), [tutorial 15](docs/tutorials/15-connect-your-data.md)). The plugins,
+  ([docs/guides/DATA_GUIDE.md section 8](docs/guides/DATA_GUIDE.md#8-connectors), [tutorial 15](docs/tutorials/15-connect-your-data.md)). The plugins,
   `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`, `feeds`, `news`, `yfinance`.
 - **Lakes, each in its own folder**, each described by one lake file (`config/lakes/<lake>.yaml`: where it is, every table's partitions,
   columns, load mode and retention):

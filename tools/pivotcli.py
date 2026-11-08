@@ -15,7 +15,7 @@
 """`drishti.py pivot ...`: the pivot engine from the command line (docs/guides/PIVOT_GUIDE.md; the API: /api/v1/pivot), as the token's user
 sees it: a view's answer (pivot run), its scan estimate (pivot estimate), an export (pivot export), the sources and a source's fields (pivot
 sources, pivot fields) and saved views (pivot views, pivot save); custom functions, explain and what-if are tools/pivotfncli.py's;
-the MR cube's lens on source var is pivot mr headline|cell|versions|explain|ladder|heat|whatif (docs/guides/MR_CUBE_GUIDE.md,
+the MR cube's lens on source var is pivot mr headline|cell|versions|explain|ladder|heat|whatif (docs/guides/PIVOT_GUIDE.md section 29,
 /api/v1/risk/mr). Every figure is the server's. Exit codes: 0, 1 (the server said no),
 2 (usage)."""
 from __future__ import annotations

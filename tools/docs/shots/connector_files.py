@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of Admin -> Connectors (docs/connectors/CONNECTOR_FILES.md), written to docs/connectors/img/connector_files/.
+"""The pictures of Admin -> Connectors (docs/guides/DATA_GUIDE.md section 9), written to docs/guides/img/connector_files/.
 
 The setup is its own: a scratch server and console (the ports of DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT) with the trading
 pack, whose connector templates are written out as files in a scratch connector folder at the first start, a site connector over a folder of
@@ -35,7 +35,7 @@ if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
 from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 
-OUT = ROOT / "docs" / "connectors" / "img" / "connector_files"
+OUT = ROOT / "docs" / "guides" / "img" / "connector_files"
 DEAD_DB = 59997                              # nothing listens here: the connector below is meant to be DOWN
 shot = register("connector_files", OUT)
 

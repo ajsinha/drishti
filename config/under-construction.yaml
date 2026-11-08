@@ -124,7 +124,7 @@ items:
     release: 2.9.14
     treatment: under-construction
     menus: [ccr-cube]
-    contracts: ["docs/guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes", "docs/architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later"]
+    contracts: ["docs/guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes", "docs/architecture/ARCHITECTURE.md#264-the-providers"]
 
 
   - id: approvals-access-kinds

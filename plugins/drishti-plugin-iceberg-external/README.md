@@ -124,7 +124,7 @@ name; tables in Azure, Google Cloud Storage or HDFS are not read; branches and t
 | `s3.secret-key` | string |  | S3 secret key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `s3.read-block-kb` | int | `1024` | The smallest ranged GET |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -315,6 +315,6 @@ pyiceberg's rows converted by the rules of [Data structure](#data-structure).
 
 ## See also
 
-- [The iceberg connector](../drishti-plugin-iceberg/README.md) (catalogs, `s3.*`, `relocate`, engines) and [Connector files](../../docs/connectors/CONNECTOR_FILES.md).
-- [Connectors](../../docs/connectors/CONNECTORS.md#apache-iceberg) (which connector when).
+- [The iceberg connector](../drishti-plugin-iceberg/README.md) (catalogs, `s3.*`, `relocate`, engines) and [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
+- [Connectors](../../docs/guides/DATA_GUIDE.md#82-which-connector) (which connector when).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

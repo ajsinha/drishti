@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * A database connection is borrowed for one unit of work and returned at once, so it can never leak and is never held long
- * (docs/connectors/CONNECTOR_FILES.md, Connection pools). In main code:
+ * (docs/guides/DATA_GUIDE.md section 9, Connection pools). In main code:
  *
  * <ul>
  *   <li>{@code getConnection(} (a {@code DataSource} or {@code DriverManager}) and {@code .borrow()} (a pool) appear only in the

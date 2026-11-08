@@ -241,7 +241,7 @@ class Demo:
         return rows
 
     def hierarchy_rows(self) -> list[dict]:
-        """The nodes without their limits: every VaR limit lives in var-limit (2.9.7, decision 8 of COMPUTED_ATTRIBUTES.md)."""
+        """The nodes without their limits: every VaR limit lives in var-limit (2.9.7, DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)."""
         return [{**{k: v for k, v in n.items() if k != "LIMIT_VAR"}, "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
                 for _, n in sorted(self.nodes.items())]
 

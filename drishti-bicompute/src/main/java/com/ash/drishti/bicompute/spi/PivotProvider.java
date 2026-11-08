@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * A measure provider (PIVOT_ENGINE.md section 6.1): turns cell keys and functions into partial states over the data it owns; one interface
+ * A measure provider (ARCHITECTURE.md section 26.4): turns cell keys and functions into partial states over the data it owns; one interface
  * for query-based providers (the tabular provider compiles cell sets to {@code GROUP BY GROUPING SETS}) and set-based ones (the VaR provider
  * maps each key to its members and computes each cell from its own members' vectors). The core never computes a figure itself.
  *
@@ -52,7 +52,7 @@ public interface PivotProvider {
      * among the built-ins (when {@link Capabilities#builtIns()}).
      */
     /**
-     * The view as this provider answers it, before anything is planned (PIVOT_ENGINE.md section 6.7): a document source turns Rachana
+     * The view as this provider answers it, before anything is planned (ARCHITECTURE.md section 26.4): a document source turns Rachana
      * paths ({@code $.LEGS[*].NOTIONAL}) into its field ids, takes the view's grain and counts a coarser figure once per parent. Refuses in
      * words ({@code DRS-5701}) what cannot be answered honestly (two separate lists crossed). The default: the view as it is.
      */
@@ -104,7 +104,7 @@ public interface PivotProvider {
      * @param type {@code string}, {@code date}, {@code number} or {@code hierarchy}
      * @param label what a chip says
      * @param note where its values come from
-     * @param unit what its values are (PIVOT_ENGINE.md section 5.4): {@code money} (an amount in the currency of the row's {@code currency}
+     * @param unit what its values are (ARCHITECTURE.md section 26.3): {@code money} (an amount in the currency of the row's {@code currency}
      *     field), {@code rate} or {@code pct} (never summed), {@code count}, {@code currency} (the field holding a row's currency), or blank
      */
     record Field(String name, String type, String label, String note, String unit) {

@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The direct lake route (PIVOT_ENGINE.md section 6.2): a table's Parquet files read by DuckDB's {@code read_parquet}, a masked column never
+ * The direct lake route (ARCHITECTURE.md section 26.4): a table's Parquet files read by DuckDB's {@code read_parquet}, a masked column never
  * named in the relation, the filters repeated on the raw column so the scan can skip row groups by their statistics; the figures equal the
  * same pivot over the staged table.
  */

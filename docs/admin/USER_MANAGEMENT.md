@@ -596,7 +596,7 @@ the current one), and choose their theme, clock zone, density and landing page.
 
 Admins also have:
 
-- **Connectors** (`/admin/connectors`): one YAML file per connector in `config/connectors/`; list, edit (a generated form or the YAML), test, save with a version history, enable or disable, reset to the pack's template, delete. Changes apply without a restart and are audited (`connector-saved`, `-deleted`, `-reset`, `-enabled`, `-disabled`, `-restored`, `-tested`, `-generated`, `-migrated`). See [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md);
+- **Connectors** (`/admin/connectors`): one YAML file per connector in `config/connectors/`; list, edit (a generated form or the YAML), test, save with a version history, enable or disable, reset to the pack's template, delete. Changes apply without a restart and are audited (`connector-saved`, `-deleted`, `-reset`, `-enabled`, `-disabled`, `-restored`, `-tested`, `-generated`, `-migrated`). See [../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors);
 - **Health** (`/admin/health`): connectors, packs, live streams and the server, refreshed every 5 seconds; a **Disk** section:
   every folder Drishti fills (`var/hot`, `ccr/hot`, `bi-store`, dumps, temp, connector caches) with its size against its cap and its oldest
   item, and the disk's free space against the guard (amber at 80% of a cap or under twice the guard, red at the cap or under the guard);

@@ -44,7 +44,7 @@ items:
         - { label: with it, value: at.ee, format: money, tone: alert }
     open: "EXP {hit.it.id}"
     what: Collateral effect
-    knowledge: counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data
+    knowledge: risk.md#counterparty-credit-risk-a-worked-example-on-the-demo-data
 
   - id: var-versus-peak-pfe
     domain: Counterparty credit
@@ -71,4 +71,4 @@ items:
         - { label: "Peak PFE ({cp.peakPfeTenor})", value: cp.peakPfe, format: money, tone: alert }
     open: "EXP {cp.id}"
     what: Peak PFE
-    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data
+    knowledge: risk.md#market-risk-a-worked-example-on-the-demo-data

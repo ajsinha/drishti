@@ -174,4 +174,4 @@ None: all 13 rows were read, and every field any of them has is in the record ab
 - Data contract: [GDELT in the gdelt-events pack's contracts](../packs/gdelt-events.md#gdelt-world-events-by-country-event-country) (`config/packs/economy/gdelt-events/contracts/event-country.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../guides/PUBLIC_SECTOR_GUIDE.md)
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

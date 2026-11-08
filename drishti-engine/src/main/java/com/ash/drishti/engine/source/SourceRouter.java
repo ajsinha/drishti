@@ -955,7 +955,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     /**
      * The kind's data files on a date when one source holds the whole kind and can hand them over (the pivot engine's direct lake route,
-     * docs/architecture/PIVOT_ENGINE.md section 6.2); empty otherwise. Reads no data file.
+     * docs/architecture/ARCHITECTURE.md section 26.4); empty otherwise. Reads no data file.
      */
     public Optional<com.ash.drishti.api.LakeFiles> lakeFiles(String kind, AsOf asOf) {
         List<SourcePlugin> sources = wholeKindSources(kind, asOf);
@@ -1174,7 +1174,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /**
-     * The same, for the rows whose key is in {@code range} (a VaR shard, VAR_SHARDING.md; null: the whole date): the source may skip the
+     * The same, for the rows whose key is in {@code range} (a VaR shard, DATA_ARCHITECTURE.md section 13; null: the whole date): the source may skip the
      * files its statistics show hold none; the caller checks every row it is given.
      */
     public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.KeyRange range,

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/engines/mr-cube.yaml: the market-risk cube (docs/guides/MR_CUBE_GUIDE.md): the pivot engine's VaR source with the MR lens. Read at
+# config/engines/mr-cube.yaml: the market-risk cube (docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset): the pivot engine's VaR source with the MR lens. Read at
 # start, imported by application.yaml after the jar's copy of this file, so a key here wins over the shipped one and application.local.yaml
 # and the environment win over both (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only;
 # every other key is edited here.
@@ -22,12 +22,12 @@ drishti:
       enabled: ${DRISHTI_MR_CUBE_ENABLED:true}   # run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
   cube:
-    mr:                              # the market-risk cube's settings (MR_CUBE_GUIDE.md section 9); the cell budget and cache are the pivot engine's (drishti.pivot.*)
+    mr:                              # the market-risk cube's settings (PIVOT_GUIDE.md section 29.9); the cell budget and cache are the pivot engine's (drishti.pivot.*)
       sbm-max-cells: 60              # the most cells whose FRTB-SA SBM one view computes (a run of the FRTB-SA engine per cell scope)
       stressed-max-cells: 100        # the most cells whose stressed VaR one view computes, scope by scope
       sparkline-dates: 20            # the open business dates a sparkline reads (a date not open here is not opened for one)
       sparkline-max-cells: 600       # the most cells of a view that get a sparkline
       what-if-rows: 40               # the most rows the what-if side by side computes (the total always added)
-      risk-classes: {}               # RISK_CLASS: a class to its product groups, in column order; empty: IR, CR, FX, EQ, CM of the demo's groups (MR_CUBE_GUIDE.md section 3)
+      risk-classes: {}               # RISK_CLASS: a class to its product groups, in column order; empty: IR, CR, FX, EQ, CM of the demo's groups (PIVOT_GUIDE.md section 29.3)
       grids: {}                      # the ladders' bucket grids, each bucket label: from-to in years ({ BANK-IR-TENOR: { 0-2Y: "0-2", 10Y+: "10-" } }); empty: BANK-IR-TENOR and FRTB-GIRR
       ladder-limits: {}              # two-sided DV01 limits per currency and bucket ({ "USD 2-5Y": 1500000 }); empty: no limit bars

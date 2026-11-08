@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Partial states of several shards (nodes, files, threads) merged into one answer in a fixed order (PIVOT_ENGINE.md section 9.1, step 5;
+ * Partial states of several shards (nodes, files, threads) merged into one answer in a fixed order (ARCHITECTURE.md section 26.6, step 5;
  * lifted from VaR sharding's ordered combine): shard order, then cell-key order. So the same question on the same data gives the same digits
  * on every run and every node count: floating-point addition is not associative, and a fixed order makes it repeatable.
  */

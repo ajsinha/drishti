@@ -19,15 +19,15 @@ This guide is for the person who connects Drishti to data: choosing among the ni
 and operating them, and, when none fits, writing a new one. It teaches. The exact settings, data layouts, health texts
 and limits of each connector live in that connector's own document (`docs/connectors/<NAME>_CONNECTOR.md`), and this
 guide links there instead of repeating them. Named connectors are **files**, one YAML file per connector in `config/connectors/`: the folder, the
-format, live reload and the Admin page are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md).
+format, live reload and the Admin page are in [../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
 
 | If you want to… | Go to |
 |---|---|
 | understand the words (entity, kind, connector, route, dated, live) and how a read picks a connector | [Concepts in plain words](#concepts-in-plain-words) |
 | pick a connector for your data | [Which connector should I use?](#which-connector-should-i-use) |
-| see each shipped connector in one screen, with a minimal configuration | [The shipped connectors](CONNECTORS.md#which-connector) |
+| see each shipped connector in one screen, with a minimal configuration | [The shipped connectors](../guides/DATA_GUIDE.md#82-which-connector) |
 | write your own connector | [The SourcePlugin SPI](#the-sourceplugin-spi) and [A worked example](#a-worked-example-the-dayfolder-plugin) |
-| run several connectors together, check them, fix them | [Combining connectors](CONNECTORS.md#combining-connectors), [Operating connectors](CONNECTOR_FILES.md#12-health-and-problems), [Troubleshooting](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix) |
+| run several connectors together, check them, fix them | [Combining connectors](../guides/DATA_GUIDE.md#84-combining-connectors), [Operating connectors](../guides/DATA_GUIDE.md#912-health-and-problems), [Troubleshooting](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix) |
 
 ## Contents
 
@@ -44,8 +44,8 @@ format, live reload and the Admin page are in [CONNECTOR_FILES.md](CONNECTOR_FIL
 11. [Testing with drishti-testkit](#testing-with-drishti-testkit)
 12. [A worked example: the dayfolder plugin](#a-worked-example-the-dayfolder-plugin)
 13. [The README standard](#the-readme-standard)
-14. [The shipped connectors](CONNECTORS.md#which-connector) and 15. [Combining connectors](CONNECTORS.md#combining-connectors): in [CONNECTORS.md](CONNECTORS.md)
-16. [Operating connectors](CONNECTOR_FILES.md#12-health-and-problems): in [CONNECTOR_FILES.md](CONNECTOR_FILES.md), and 17. [Troubleshooting](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix): in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md)
+14. [The shipped connectors](../guides/DATA_GUIDE.md#82-which-connector) and 15. [Combining connectors](../guides/DATA_GUIDE.md#84-combining-connectors): in [../guides/DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connectors)
+16. [Operating connectors](../guides/DATA_GUIDE.md#912-health-and-problems): in [../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors), and 17. [Troubleshooting](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix): in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md)
 
 ---
 
@@ -70,7 +70,7 @@ kind that some enabled pack gives a mnemonic (or an id pattern) to; through the 
 |---|---|---|
 | **plugin** | a piece of software that knows how to talk to one *type* of store | `jdbc` talks to databases, `kafka` to Kafka |
 | **connector** | one plugin pointed at one *particular* store, with a name and its own settings | `desk-db`: the `jdbc` plugin, pointed at `jdbc:postgresql://db.bank.example/desk` |
-| **connector file** | one YAML file, `config/connectors/<name>.yaml`; the file name is the connector's name. Connectors belong to the site, not to a pack ([CONNECTOR_FILES.md](CONNECTOR_FILES.md)) | `config/connectors/trade-endur.yaml` (Delta Lake) |
+| **connector file** | one YAML file, `config/connectors/<name>.yaml`; the file name is the connector's name. Connectors belong to the site, not to a pack ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)) | `config/connectors/trade-endur.yaml` (Delta Lake) |
 | **pack template** | what a pack suggests for a connector it names (its `pack.yaml` `connectors:` mapping or `connector-templates:`); the server writes it to the file once, at the first start, and never overwrites the file | the trading pack's templates for `trade-endur` (Delta Lake) and `trading-stream` (Kafka) |
 | **site connector** | a connector file no pack suggests | anything you add yourself |
 | **route** | "for this kind, ask this connector first" | `trade: trade-endur` |
@@ -183,7 +183,7 @@ You should see:
 A connector is configured by **one file**, `config/connectors/<name>.yaml`, edited in your editor, in **Admin → Connectors**, or with
 `drishti.py connector apply`, and applied to the running server without a restart. A pack does not carry connection settings: it **names** the connectors it
 reads through (`connectors: [trade-endur]` and `routes:` in its `pack.yaml`) and may **suggest** a template for each. Precedence, highest first
-(the full table and the rules are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md#precedence)):
+(the full table and the rules are in [../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#precedence)):
 
 | Source | Role |
 |---|---|
@@ -194,7 +194,7 @@ reads through (`connectors: [trade-endur]` and `routes:` in its `pack.yaml`) and
 A file with no template of that name is a new site connector. A connector file holds `plugin`, `enabled`, `kinds`, `description` and `settings`; nesting under
 `settings` is flattened to dotted keys. Values like `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}` are placeholders: the environment variable if set, else the default
 after the colon. A **credential** setting (`password`, `secret…`, `token`, `api-key`, `access-key`, `private-key`, `credential`) may only be an `${ENV_VAR}` or a
-`file:/path` reference ([CONNECTOR_FILES.md, Credentials and TLS](CONNECTOR_FILES.md#5-credentials-and-tls)). The server's own settings (`drishti.sources.fetch-timeout`,
+`file:/path` reference ([../guides/DATA_GUIDE.md section 9, Credentials and TLS](../guides/DATA_GUIDE.md#95-credentials-and-tls)). The server's own settings (`drishti.sources.fetch-timeout`,
 `routes`, `plugins.<plugin>`) stay in `application.yaml` and `application.local.yaml`.
 
 ---
@@ -209,20 +209,20 @@ Whichever you choose, it is configured as a connector file (`config/connectors/<
 
 | Your data is… | Use | Why | Watch out for |
 |---|---|---|---|
-| JSON or CSV files dropped in a folder by a nightly job | [`file`](CONNECTORS.md#file) | no infrastructure; one folder per business date gives history | search sees new files after `rescan-seconds`; no live updates |
-| behind an in-house HTTP/JSON API, one entity per GET | [`rest`](CONNECTORS.md#rest) | uses the API the owning system already has | undated, no search, no reverse lookups; every view is a request to that service |
-| in an existing database schema | [`jdbc` query mode](CONNECTORS.md#postgresql-and-jdbc) | one SQL statement per kind; your tables stay as they are | no search or reverse lookups; you write the SQL for dates |
-| loaded by you into PostgreSQL for Drishti | [`jdbc` table mode](CONNECTORS.md#postgresql-and-jdbc) | one table per data domain, dated, search and reverse lookups from SQL | you run the load; size the indexes |
-| in a data lake (Delta Lake on disk, S3, MinIO) | [`delta`](CONNECTORS.md#delta-lake) | the shipped default; years of history, *known at* time travel, search, reverse lookups, no Spark | partitions by `business_date`; keep it bounded with `tools/lake/maintain.py` |
-| in Aerospike | [`aerospike`](CONNECTORS.md#aerospike) | sub-millisecond key reads (two per view), millions of entities a day, retention by record TTL | searches and reverse lookups need the pack's promoted fields (`layout`) |
-| on Kafka topics (latest state per entity) | [`kafka`](CONNECTORS.md#kafka) | live views that tick; the topic is the state | undated: pair it with a lake for history |
-| on ActiveMQ queues or topics | [`activemq`](CONNECTORS.md#activemq) | live; the connector keeps the latest document per entity on local disk | a queue delivers once: the local state store is the only copy |
-| on RabbitMQ queues | [`rabbitmq`](CONNECTORS.md#rabbitmq) | as ActiveMQ, AMQP 0-9-1 | as ActiveMQ |
-| JSON objects in a bucket (S3, MinIO, Ceph) | [`s3`](CONNECTORS.md#s3) | the `file` layout in object storage, dated by folder | cost of listing large buckets; reads cached `cache-seconds` |
+| JSON or CSV files dropped in a folder by a nightly job | [`file`](../guides/DATA_GUIDE.md#82-which-connector) | no infrastructure; one folder per business date gives history | search sees new files after `rescan-seconds`; no live updates |
+| behind an in-house HTTP/JSON API, one entity per GET | [`rest`](../guides/DATA_GUIDE.md#82-which-connector) | uses the API the owning system already has | undated, no search, no reverse lookups; every view is a request to that service |
+| in an existing database schema | [`jdbc` query mode](../guides/DATA_GUIDE.md#82-which-connector) | one SQL statement per kind; your tables stay as they are | no search or reverse lookups; you write the SQL for dates |
+| loaded by you into PostgreSQL for Drishti | [`jdbc` table mode](../guides/DATA_GUIDE.md#82-which-connector) | one table per data domain, dated, search and reverse lookups from SQL | you run the load; size the indexes |
+| in a data lake (Delta Lake on disk, S3, MinIO) | [`delta`](../guides/DATA_GUIDE.md#82-which-connector) | the shipped default; years of history, *known at* time travel, search, reverse lookups, no Spark | partitions by `business_date`; keep it bounded with `tools/lake/maintain.py` |
+| in Aerospike | [`aerospike`](../guides/DATA_GUIDE.md#82-which-connector) | sub-millisecond key reads (two per view), millions of entities a day, retention by record TTL | searches and reverse lookups need the pack's promoted fields (`layout`) |
+| on Kafka topics (latest state per entity) | [`kafka`](../guides/DATA_GUIDE.md#82-which-connector) | live views that tick; the topic is the state | undated: pair it with a lake for history |
+| on ActiveMQ queues or topics | [`activemq`](../guides/DATA_GUIDE.md#82-which-connector) | live; the connector keeps the latest document per entity on local disk | a queue delivers once: the local state store is the only copy |
+| on RabbitMQ queues | [`rabbitmq`](../guides/DATA_GUIDE.md#82-which-connector) | as ActiveMQ, AMQP 0-9-1 | as ActiveMQ |
+| JSON objects in a bucket (S3, MinIO, Ceph) | [`s3`](../guides/DATA_GUIDE.md#82-which-connector) | the `file` layout in object storage, dated by folder | cost of listing large buckets; reads cached `cache-seconds` |
 | a total or summary of another kind (a book's P&L from its trades) | `derived` ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds)) | computed by the server from the other kind, through whichever connectors serve it | reads every member once per `refresh`; keep `max-scan` above the member count |
-| public rates and FX | [`feed`](CONNECTORS.md#public-feeds) | NY Fed SOFR, ECB €STR and FX, US Treasury curve, FRED; switched on by one variable each | needs internet (or a mirror); FRED needs a free key |
-| headlines about a named entity, computed on demand | [`news`](CONNECTORS.md#news) | Google News RSS, filtered, de-duplicated and cached per name; nothing stored | needs internet; names leave the network; off by default |
-| a quote and price history for a ticker, computed on demand | [`yfinance`](CONNECTORS.md#yahoo-finance) | Yahoo Finance's unofficial chart endpoint; samples and internal demos only | needs internet; unofficial and restricted; off by default |
+| public rates and FX | [`feed`](../guides/DATA_GUIDE.md#82-which-connector) | NY Fed SOFR, ECB €STR and FX, US Treasury curve, FRED; switched on by one variable each | needs internet (or a mirror); FRED needs a free key |
+| headlines about a named entity, computed on demand | [`news`](../guides/DATA_GUIDE.md#82-which-connector) | Google News RSS, filtered, de-duplicated and cached per name; nothing stored | needs internet; names leave the network; off by default |
+| a quote and price history for a ticker, computed on demand | [`yfinance`](../guides/DATA_GUIDE.md#82-which-connector) | Yahoo Finance's unofficial chart endpoint; samples and internal demos only | needs internet; unofficial and restricted; off by default |
 
 ### What each connector can do
 
@@ -253,7 +253,7 @@ Whichever you choose, it is configured as a connector file (`config/connectors/<
 
 - **History lives in a dated store; "now" can live in a stream.** The banking packs ship exactly this: a Delta Lake
   connector per data domain, plus a Kafka connector for live trades (off until switched on). See
-  [Combining connectors](CONNECTORS.md#combining-connectors).
+  [Combining connectors](../guides/DATA_GUIDE.md#84-combining-connectors).
 - **Reverse lookups** (the *Linked entities* panel, impact analysis with F8) need a connector that indexes references:
   Delta Lake, PostgreSQL table mode, Aerospike, or the demo samples.
 - **Cost.** `rest` and `jdbc` query mode put one request on your system per view opened (plus linked entities).
@@ -698,7 +698,7 @@ needs one, stays idle (see below). `GET /api/v1/sources` lists the running conne
 A plugin runs in one of two ways. **As itself**, under `drishti.sources.plugins.<plugin>`: one instance, one set of
 settings. **As named connectors**, each a **file** in `config/connectors/` (`config/connectors/<name>.yaml`; the file name is the connector's name): the
 same plugin several times, each with its own settings, name and, optionally, kinds. A pack names the connectors it reads through and may suggest a template for
-each, which the server writes to the file at the first start ([CONNECTOR_FILES.md](CONNECTOR_FILES.md)).
+each, which the server writes to the file at the first start ([../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 
 ```yaml
 # application.local.yaml: the server's own settings
@@ -751,7 +751,7 @@ Rules worth knowing when you write a plugin:
 A connector that connects to a server over the network gets TLS from one shared module in the plugin API,
 `com.ash.drishti.api.tls` in `drishti-api` (pure JDK; no Spring, no extra dependency), so that every connector offers the
 same settings, the same source forms and the same start-up messages. Operators learn the `tls.*` keys once:
-[TLS.md](TLS.md). A connector that opens a TLS connection should use it instead of the JVM-wide `javax.net.ssl.*` properties.
+[../guides/DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy). A connector that opens a TLS connection should use it instead of the JVM-wide `javax.net.ssl.*` properties.
 
 | Class | What it is |
 |---|---|
@@ -799,7 +799,7 @@ Rules the shipped connectors follow, which a new one should too:
    JDK alone, written as PEM in every key format, PKCS12 or JKS, with chosen validity), so tests need neither keytool nor
    openssl. The shipped connectors' tests (`KafkaSecureBrokerTest`, `ActiveMqTlsTest`, `RabbitMqTlsTest`) run a real
    broker in Docker with them; `TlsContextsTest` covers the module itself.
-7. **Document the keys** by pointing at [TLS.md](TLS.md) and showing a complete example for your protocol.
+7. **Document the keys** by pointing at [../guides/DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) and showing a complete example for your protocol.
 
 Where a client library builds its own TLS from properties (Kafka), translate from the `TlsMaterial` raw parts: see
 `KafkaSecurity` in `drishti-plugin-kafka`, which hands Kafka the PEM text it understands.
@@ -829,7 +829,7 @@ Other shapes the shipped connectors show, for a library that wants something oth
 
 A plugin that speaks HTTP should honour the site's forward proxy the same way every shipped one does. The settings (`proxy.url`, `proxy.username`, `proxy.password`,
 `proxy.password-file`, `proxy.no-proxy`, `proxy.enabled`, or the bare `proxy: none`), the site default `drishti.http.proxy.*` and the rules are in
-[TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers); the code is `com.ash.drishti.api.proxy.ProxySettings` in `drishti-api` (Spring-free, like the TLS module). In `start`:
+[../guides/DATA_GUIDE.md, the outbound proxy](../guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers); the code is `com.ash.drishti.api.proxy.ProxySettings` in `drishti-api` (Spring-free, like the TLS module). In `start`:
 
 ```java
 ProxySettings proxy = ProxySettings.resolve(ctx.settings(), baseUrl);   // connector block, else site default, else environment, else none
@@ -873,7 +873,7 @@ While a store is down its reads fail (views say which source failed) and `health
 
 **What the host adds.** A plugin that throws from `start` (other than `PluginNotConfigured`), or whose `health()` stays *down* after it was up, is retried by the
 server itself with the shared backoff `drishti.retry.connectors.*` (5 s doubling to 5 min, 20 % jitter; errors no retry can fix are retried only every `max`): see
-[CONNECTOR_FILES.md](CONNECTOR_FILES.md#a-connector-that-fails-to-start-or-loses-its-connection-is-retried). A plugin that retries inside (HTTP calls to a service)
+[../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#a-connector-that-fails-to-start-or-loses-its-connection-is-retried). A plugin that retries inside (HTTP calls to a service)
 uses `RetryPolicy` from `drishti-common` in the same shape (`RetryPolicy.of(lookup, area)`), as the `news` and `yfinance` plugins do with their `retry-*` settings.
 
 ---
@@ -1106,4 +1106,4 @@ structured page that links to them.
 
 ## The shipped connectors, combining them, operating them, troubleshooting
 
-These sections were part of this guide; each now has one home: the shipped connectors and combining connectors are in [CONNECTORS.md](CONNECTORS.md#combining-connectors); health, caches, disk state, timeouts and capacity are in [CONNECTOR_FILES.md section 12](CONNECTOR_FILES.md#12-health-and-problems); the symptom, check and fix table is in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix).
+These sections were part of this guide; each now has one home: the shipped connectors and combining connectors are in [../guides/DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#84-combining-connectors); health, caches, disk state, timeouts and capacity are in [../guides/DATA_GUIDE.md section 9.12](../guides/DATA_GUIDE.md#912-health-and-problems); the symptom, check and fix table is in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix).

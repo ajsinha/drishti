@@ -435,7 +435,7 @@ decisions taken while building. Built; decisions in section 16 (2026-10-19 and
 2026-10-20). Related: [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
 ), [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) (Sutra and the renderer), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
 [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#21-genui-screens-composed-for-an-ai-agent-design-not-built) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (review and proposals, reused
-here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives). **Additions:** forms
+here), [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors) (connector files, where `writes:` lives). **Additions:** forms
 save through connectors, an applied change can trigger a point-in-time calculation in a reactive connector, and updated records and
 results are pushed to the people watching them: [section 18](#18-saving-through-connectors-triggers-and-viewers), with
 [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives).

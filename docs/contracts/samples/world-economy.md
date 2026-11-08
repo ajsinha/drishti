@@ -210,8 +210,8 @@ None: all 213 rows were read, and every field any of them has is in the record a
 
 - Data contract: [ECON in the world-economy pack's contracts](../packs/world-economy.md#econ-economy-economy) (`config/packs/economy/world-economy/contracts/economy.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="macro-indicator"></a>
 
@@ -347,8 +347,8 @@ None: all 3,119 rows were read, and every field any of them has is in the record
 
 - Data contract: [MACRO in the world-economy pack's contracts](../packs/world-economy.md#macro-macro-indicator-macro-indicator) (`config/packs/economy/world-economy/contracts/macro-indicator.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="economic-forecast"></a>
 
@@ -493,8 +493,8 @@ None: all 192 rows were read, and every field any of them has is in the record a
 
 - Data contract: [FCST in the world-economy pack's contracts](../packs/world-economy.md#fcst-economic-forecast-economic-forecast) (`config/packs/economy/world-economy/contracts/economic-forecast.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="labour-market"></a>
 
@@ -631,8 +631,8 @@ None: all 185 rows were read, and every field any of them has is in the record a
 
 - Data contract: [LABR in the world-economy pack's contracts](../packs/world-economy.md#labr-labour-market-labour-market) (`config/packs/economy/world-economy/contracts/labour-market.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="fiscal-position"></a>
 
@@ -774,8 +774,8 @@ None: all 192 rows were read, and every field any of them has is in the record a
 
 - Data contract: [FISC in the world-economy pack's contracts](../packs/world-economy.md#fisc-fiscal-position-fiscal-position) (`config/packs/economy/world-economy/contracts/fiscal-position.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="region-economy"></a>
 
@@ -895,8 +895,8 @@ Fields no record above has, found by reading all 59 rows, with how many rows fil
 
 - Data contract: [REGE in the world-economy pack's contracts](../packs/world-economy.md#rege-region-economy-region-economy) (`config/packs/economy/world-economy/contracts/region-economy.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="jurisdiction"></a>
 
@@ -1097,8 +1097,8 @@ None: all 216 rows were read, and every field any of them has is in the record a
 
 - Data contract: [JUR in the world-economy pack's contracts](../packs/world-economy.md#jur-jurisdiction-jurisdiction) (`config/packs/economy/world-economy/contracts/jurisdiction.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="party"></a>
 
@@ -1219,8 +1219,8 @@ None: all 282 rows were read, and every field any of them has is in the record a
 
 - Data contract: [PARTY in the world-economy pack's contracts](../packs/world-economy.md#party-party-party) (`config/packs/economy/world-economy/contracts/party.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="office-holder"></a>
 
@@ -1343,8 +1343,8 @@ None: all 430 rows were read, and every field any of them has is in the record a
 
 - Data contract: [OFFC in the world-economy pack's contracts](../packs/world-economy.md#offc-office-holder-office-holder) (`config/packs/economy/world-economy/contracts/office-holder.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="election"></a>
 
@@ -1491,8 +1491,8 @@ Fields no record above has, found by reading all 378 rows, with how many rows fi
 
 - Data contract: [ELEC in the world-economy pack's contracts](../packs/world-economy.md#elec-election-election) (`config/packs/economy/world-economy/contracts/election.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="region"></a>
 
@@ -1642,8 +1642,8 @@ None: all 7 rows were read, and every field any of them has is in the record abo
 
 - Data contract: [REGN in the world-economy pack's contracts](../packs/world-economy.md#regn-world-region-region) (`config/packs/economy/world-economy/contracts/region.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="social-indicator"></a>
 
@@ -1790,5 +1790,5 @@ None: all 4,297 rows were read, and every field any of them has is in the record
 
 - Data contract: [SOCI in the world-economy pack's contracts](../packs/world-economy.md#soci-social-indicator-social-indicator) (`config/packs/economy/world-economy/contracts/social-indicator.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
-- [Economies](../../knowledge/economies.md)
-- [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+- [2. Economies](../../knowledge/world.md#2-economies)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

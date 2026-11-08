@@ -113,7 +113,7 @@ AREAS = [
          "(`tools/settings_schemas.yaml`), checked against what the shipped files use."),
     Area("connectors", "Connectors: every plugin's settings",
          "A connector's settings go under `settings:` in its file, `config/connectors/<name>.yaml` "
-         "([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)); the same catalogue builds the form in Admin → Connectors. A changed "
+         "([DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)); the same catalogue builds the form in Admin → Connectors. A changed "
          "file restarts that connector only. Every plugin takes the common settings; a plugin marked TLS or proxy also takes the shared "
          "`tls.*` or `proxy.*` settings."),
     Area("packs", "Packs: `pack.yaml`",

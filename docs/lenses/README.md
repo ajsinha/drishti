@@ -123,7 +123,7 @@ Sutras (a Sutra lays out one entity's view; these span the engines). **A: Risk d
 
 ### 1.3 Gaps and proposals
 
-The rules every proposal follows ([COMPUTED_ATTRIBUTES.md section 1.2](../architecture/COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)):
+The rules every proposal follows ([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which)):
 fundamental inputs under a **data contract** as JSON Lines; measures **computed on demand** from trade or position-grain inputs and
 **never stored**, except as an immutable capture or an official end-of-day record; governance records Drishti-owned and versioned; **BI
 is the report layer**; the engines are unchanged by a lens. Sizes: **S** days, **M** one to three weeks, **L** more than three weeks.
@@ -428,14 +428,14 @@ STR, SSPNL) and collateral operations (COLL, MC), left out by the lens file. **D
 | The scenario matrix (`SMAT`, "is this tail scenario new?") | **Built**, on in the lens (`SMAT BOOK BOOK-RATES-1 20`) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
 | VaR limit use per book and desk; limit use by book over 5 official dates; breaches and near limit | **Built** (`var-limit`; the server's `limitStatus` with `drishti.risk.limit-near` 0.8) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits) |
 | P&L against VaR: hypothetical P&L against the VaR before it, 60 days, exceptions circled | **Partly built**: Drishti's derived hypothetical P&L only (TL3); left out without official history | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
-| DV01 of my books | **Partly built**: Σ live trades' `DV01`; no bucketed sensitivities (TL7) | [COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb) |
+| DV01 of my books | **Partly built**: Σ live trades' `DV01`; no bucketed sensitivities (TL7) | [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](../architecture/IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps) |
 | Trades today (new, amended, cancelled), today's blotter, trade pages and history | **Built** ("new" reads 0 on the demo: TL1) | [trading pack README](../../config/packs/banking/trading/README.md), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
 | Counterparties: `CTRD`, `NSET`, `NSMTM`, `CPMTM`; pre-deal PFE against the credit limit | **Built** | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) |
 | The desk's largest counterparty | **Partly built**: by share of positive MtM, not exposure (TL2) | [EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes) |
 | Alerts on numbers and monitors | **Built**, each person sets their own (one-click watch: TL10) | [USER_GUIDE.md, Alerts on numbers](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | The bank's market data a trader reads (`CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`, `FXF`, `IRV`, `CPV`, `FIX`, `REPO`) | **Built**, in one Markets menu | [section 2.2.3](#223-the-lens-is-configuration) |
 | "My": user → trader or desk (lens file, console, a matching trader record, then View as); landing by trading role; never widening access (tested) | **Built**; from the directory: TL13; `lens.roles` not wired | [LENSES.md, "My": who a person is, configured](../admin/LENSES.md#my-who-a-person-is-configured) |
-| P&L explain (`PNL`) | **Partly built**: the stored explain is shown, its waterfall *under construction* (a generator's steps disagree with the bars); the engine is TL4 | [COMPUTED_ATTRIBUTES.md section 4.10](../architecture/COMPUTED_ATTRIBUTES.md#410-pnl-explain-pnl), [PNL.md](../contracts/PNL.md) |
+| P&L explain (`PNL`) | **Partly built**: the stored explain is shown, its waterfall *under construction* (a generator's steps disagree with the bars); the engine is TL4 | [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](../architecture/IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps), [PNL.md](../contracts/PNL.md) |
 | Actual P&L, month-to-date and year-to-date, intraday P&L, stop-loss, sensitivity and notional limits, breach records | **Not built**: TL3, TL9, TL11, TL7, TL6 | section 2.3 |
 
 What the data does not give is left out or labelled, never invented: [LENSES.md, What the data does not give](../admin/LENSES.md#what-the-data-does-not-give-left-out-or-labelled-never-invented).
@@ -476,7 +476,7 @@ What a trader sees is the lens file [`trading.yaml`](../../config/lenses/banking
 
 ### 2.3 Gaps and proposals
 
-Every design follows the rule of [COMPUTED_ATTRIBUTES.md section 1.2](../architecture/COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which):
+Every design follows the rule of [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which):
 fundamental inputs arrive under a data contract as JSON Lines; measures are computed on demand from trade-grain inputs, never stored
 (except an immutable capture or an official end-of-day record); Drishti-owned records (a comment, an acknowledgement) are versioned;
 BI is the report layer; a landing reads the engines' answers as the person, never widening access. Sizes: **S** days, **M** one to
@@ -619,7 +619,7 @@ The My VaR tile shows "−0.3m since morning": the intraday VaR against the day'
 
 | Data | Grain | Needed by | Source |
 |---|---|---|---|
-| Trade valuations (MtM, DV01, notional) on consecutive dates | trade × date | built tiles | the valuation system (`NOTIONAL`'s unit is disputed: [COMPUTED_ATTRIBUTES.md section 6](../architecture/COMPUTED_ATTRIBUTES.md#6-findings-duplicates-and-inconsistencies)) |
+| Trade valuations (MtM, DV01, notional) on consecutive dates | trade × date | built tiles | the valuation system (`NOTIONAL`'s unit is disputed: [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](../architecture/IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps)) |
 | Trades booked on their date with `SOURCE_UPDATE_TIME`, `TRADE_ACTION`, `TRADE_STATUS` | trade | Trades today, TL1, TL4a | booking systems |
 | Actual and hypothetical P&L | desk (better book or trade) × date | TL3, TL11 | product control and finance |
 | Position sensitivities (DV01 by currency and tenor, CS01, vega, FX delta, gamma) | trade × date | TL4b, TL7 | the bank's risk engine; aggregation per RO4 |
@@ -802,7 +802,7 @@ On the committed demo every check is clean; the checks are proved on crafted bad
 
 Market data is **fundamental** (delivered under the pack's contracts as JSON Lines); every check, move, impact and link is **computed on
 demand**, never stored; an acknowledgement or correction note is a versioned **Drishti-owned** record; BI is the report layer
-([COMPUTED_ATTRIBUTES.md section 1.2](../architecture/COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)). Sizes: **S** days, **M**
+([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which)). Sizes: **S** days, **M**
 one to three weeks, **L** more than three weeks.
 
 | Id | Gap | Size | Depends on | Status |
@@ -1225,7 +1225,7 @@ permission. Nothing World shows from Yahoo may be redistributed, screenshots in 
 
 Each source arrives through **one standalone refresh script per pack** (with `.sh` and `.ps1`) as JSON Lines, built into the lake; every
 document carries `PROVENANCE` (source, licence, retrieval date); group figures, changes and deltas are **computed on demand**, never
-stored as copies; BI is the report layer ([COMPUTED_ATTRIBUTES.md section 1.2](../architecture/COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)).
+stored as copies; BI is the report layer ([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which)).
 Sizes: **S** days, **M** one to three weeks.
 
 | Id | Gap | Size | Depends on | Status |
@@ -1453,8 +1453,8 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 | Backtesting (actual and hypothetical P&L, zone, multiplier, Kupiec, Christoffersen) | **Built, needs the bank's data** (`desk-pnl`) | [REGULATORY_VAR_REPORTING section 4.6](../guides/REGULATORY_VAR_REPORTING.md#46-backtesting), [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 | Period statistics; VaR by risk type (by hierarchy) | **Built** (risk types need the bank's hierarchy) | [REGULATORY_VAR_REPORTING sections 4.4, 4.5](../guides/REGULATORY_VAR_REPORTING.md#44-period-statistics) |
 | Report definitions, checks, frozen runs with lineage, maker-checker-approver sign-off | **Built** (the pilot pack) | [REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off) |
-| Position sensitivities by risk factor (`SENS`), the factor dictionary; FRTB standardised approach | **Built, needs the bank's data** | [MR_CUBE_GUIDE section 14.7](../guides/MR_CUBE_GUIDE.md#147-position-sensitivity-the-sensitivities), [FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
-| DV01 ladder by currency and tenor bucket against configured two-sided bucket limits | **Built** (MR cube tab C) | [MR_CUBE_GUIDE section 6](../guides/MR_CUBE_GUIDE.md#6-tab-b-tail-and-attribution-tab-c-sensitivities-and-what-if) |
+| Position sensitivities by risk factor (`SENS`), the factor dictionary; FRTB standardised approach | **Built, needs the bank's data** | [PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#279-position-sensitivity-the-sensitivities), [FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
+| DV01 ladder by currency and tenor bucket against configured two-sided bucket limits | **Built** (MR cube tab C) | [PIVOT_GUIDE section 29.6](../guides/PIVOT_GUIDE.md#296-tail-attribution-sensitivities-and-what-if) |
 | Intraday VaR from files and Kafka; the pre-deal what-if | **Built** | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes), [8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet) |
 | Data trust: load checks and rejections, late loads, proxied/failed vector status, market-data quality | **Partly** (each in its own place; completeness against the trades booked not checked) | [VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks), [DATA_GUIDE section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data), the [Market lens](#3-market-lens) |
 | Stress: stored definitions and results per desk; the bank's P&L per scenario and each desk's stress limit use (derived) | **Partly** (no stress engine for any scope) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived), [STR.md](../contracts/STR.md) |
@@ -1466,7 +1466,7 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 
 ### 5.3 Gaps and proposals
 
-**Design rules for every proposal** ([COMPUTED_ATTRIBUTES.md section 1.2](../architecture/COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)):
+**Design rules for every proposal** ([DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#121-three-classes-and-the-rule-for-deciding-which)):
 fundamental inputs (limits, sensitivities, P&L, volumes, RNIV amounts a quant supplies) arrive under a data contract as JSON Lines; measures
 are computed on demand and never stored, except as an immutable capture or official record; **governance records** (a breach's
 commentary and approval, an RNIV entry, a sign-off) are Drishti-owned, versioned, never edited in place, every step an audit entry, and
@@ -1653,7 +1653,7 @@ sides, the warning level, validity dates; a limit naming no node is reported, ne
 arbitrary scope with entitlements. Built: `SENS <scope>` sums `position-sensitivity` by factor or bucket; the MR cube's tab C draws the
 **DV01 ladder** by currency and bucket grid (`drishti.cube.mr.grids`: `BANK-IR-TENOR`, `FRTB-GIRR`) against two-sided bucket limits set in
 configuration (`ladder-limits`; `use = max(net / limit, −net / limit)`, near from 80%, breach over 100%)
-([MR_CUBE_GUIDE section 6](../guides/MR_CUBE_GUIDE.md#6-tab-b-tail-and-attribution-tab-c-sensitivities-and-what-if)). **Missing:** limits
+([PIVOT_GUIDE section 29.6](../guides/PIVOT_GUIDE.md#296-tail-attribution-sensitivities-and-what-if)). **Missing:** limits
 from the catalogue (RO3) instead of configuration; ladders for CS01 by rating × tenor, vega by underlying × expiry, FX delta by currency,
 equity delta by name; ladder breaches into RO2; a drill from a bucket to its trades. **Tests:** bucket sums equal trade sums; a bucket
 limit breached by a crafted trade; long and short netting within a bucket; two-sided limits.
@@ -1664,7 +1664,7 @@ limit breached by a crafted trade; long and short netting within a bucket; two-s
   per trade when delivered, so any scope). A sum over dates at desk grain; computed at trade grain for arbitrary scopes.
 - **Position and notional limits (RO6), proposed, S:** a position's quantity or market value, a scope's gross or net notional, from the
   derived positions ([VAR_GUIDE section 4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered)) and `trade-valuation.NOTIONAL`,
-  whose unit must be settled first (F10, [COMPUTED_ATTRIBUTES.md section 6](../architecture/COMPUTED_ATTRIBUTES.md#6-findings-duplicates-and-inconsistencies)).
+  whose unit must be settled first (F10, [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](../architecture/IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps)).
 
 #### 5.3.6 RO7: the RNIV register
 
@@ -1805,8 +1805,8 @@ retires), the grain and ids of the VaR inputs (`GRAIN`, `TRADE_ID` or `POSITION_
 optional `BUCKET`); Drishti's slash-separated **risk-factor naming standard** with a mapping from the bank's names (an unmapped name
 refused, never guessed) and the factor dictionary `risk-factor`; **both** the FRTB buckets and the bank's own limit grids, each limit
 naming its grid; an intraday record replaces a position's record whole. The contract and its load checks:
-[MR_CUBE_GUIDE sections 14.7](../guides/MR_CUBE_GUIDE.md#147-position-sensitivity-the-sensitivities) and
-[14.8](../guides/MR_CUBE_GUIDE.md#148-risk-factor-the-factor-dictionary), [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens);
+[PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#279-position-sensitivity-the-sensitivities) and
+[14.8](../guides/PIVOT_GUIDE.md#2710-risk-factor-the-factor-dictionary), [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens);
 the data-contract design (D8, D9) is in the [MR cube lens](#6-mr-cube-lens).
 
 | Risk type | Measure | Granularity oversight needs |
@@ -2001,7 +2001,7 @@ covers) with its rule that scoping never widens access. From the mechanism: one 
 **Built, as a Pivot preset.** The MR cube is the Pivot's preset `mr` (`MCUBE <GO>`, `/pivot?preset=mr`): the pivot engine on the VaR
 source with the MR lens around it (headline strip, time-travel slider, tabs B and C). It puts market risk on any rows and columns with
 **correct non-additive totals**: every cell, subtotal and total is the VaR (or ES, SBM …) of its own set of trades, re-aggregated from their
-scenario P&L vectors, never a sum of other cells. How to use it: [MR_CUBE_GUIDE.md](../guides/MR_CUBE_GUIDE.md) and
+scenario P&L vectors, never a sum of other cells. How to use it: [PIVOT_GUIDE.md section 29](../guides/PIVOT_GUIDE.md#29-the-mr-cube-preset) and
 [PIVOT_GUIDE.md › Presets](../guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes); the tutorial is
 [tutorial 7, Part C](../tutorials/07-pivot-cubes-and-explain.md#part-c--the-mr-cube-desks-by-risk-class-with-the-right-totals). This section keeps the product view: who it serves, what is still
 open, the build checklist, and the **shared cube core** and **data contracts** that the CCR cube ([section 7](#7-ccr-cube-lens)) reuses.
@@ -2035,16 +2035,16 @@ open, the build checklist, and the **shared cube core** and **data contracts** t
 
 | Need | Status | Where it is described |
 |---|---|---|
-| Any rows and columns over the VaR book (hierarchy levels, position and trade columns, the derived `RISK_CLASS`, members) | **Built** | [MR_CUBE_GUIDE.md section 4](../guides/MR_CUBE_GUIDE.md#4-the-view-dimensions-options-cells-and-totals) |
-| VaR, ES, PV, trades, component VaR and ES, incremental VaR, limit and limit use, stressed VaR, DV01, CS01, SBM per cell | **Built** | [MR_CUBE_GUIDE.md section 2](../guides/MR_CUBE_GUIDE.md#2-the-measures) |
-| Totals as the union's own figure, diversification beside each total | **Built** | [MR_CUBE_GUIDE.md section 4](../guides/MR_CUBE_GUIDE.md#4-the-view-dimensions-options-cells-and-totals) |
-| The landing (layout A): headline, lens controls, slider, pivot, rail | **Built** | [MR_CUBE_GUIDE.md section 5](../guides/MR_CUBE_GUIDE.md#5-the-landing-layout-a) |
-| Tab B (components, waterfall, histogram, DV01 heat map); tab C (DV01 ladder, what-if side by side, explain) | **Built** | [MR_CUBE_GUIDE.md section 6](../guides/MR_CUBE_GUIDE.md#6-tab-b-tail-and-attribution-tab-c-sensitivities-and-what-if) |
-| Explain the move, time travel, provenance per cell | **Built** (factor overlay not built) | [MR_CUBE_GUIDE.md section 7](../guides/MR_CUBE_GUIDE.md#7-explain-the-move-time-travel-and-provenance) |
-| Saved and shared views, export (Excel with outline and formulas, CSV, Arrow, JSON Lines, YAML) | **Built** | [MR_CUBE_GUIDE.md section 8](../guides/MR_CUBE_GUIDE.md#8-saved-views-sharing-and-export), [PIVOT_GUIDE.md section 10](../guides/PIVOT_GUIDE.md#10-export) |
-| The engine switch, cell budgets, refusals | **Built** | [MR_CUBE_GUIDE.md sections 9 and 11](../guides/MR_CUBE_GUIDE.md#9-settings-and-switching-the-cube-off) |
-| Sharded dates: one batched call per shard owner, equal to the bit | **Built** | [MR_CUBE_GUIDE.md section 12](../guides/MR_CUBE_GUIDE.md#12-how-it-is-computed), [6.5.11](#6511-cluster-execution-sharded-cube-views-bit-equal) |
-| What the guide lists as not built | open | [MR_CUBE_GUIDE.md section 13](../guides/MR_CUBE_GUIDE.md#13-what-is-not-built-yet), and [6.3](#63-gaps-and-proposals) below |
+| Any rows and columns over the VaR book (hierarchy levels, position and trade columns, the derived `RISK_CLASS`, members) | **Built** | [PIVOT_GUIDE.md section 29.4](../guides/PIVOT_GUIDE.md#294-the-view-dimensions-options-cells-and-totals) |
+| VaR, ES, PV, trades, component VaR and ES, incremental VaR, limit and limit use, stressed VaR, DV01, CS01, SBM per cell | **Built** | [PIVOT_GUIDE.md section 29.2](../guides/PIVOT_GUIDE.md#292-the-measures) |
+| Totals as the union's own figure, diversification beside each total | **Built** | [PIVOT_GUIDE.md section 29.4](../guides/PIVOT_GUIDE.md#294-the-view-dimensions-options-cells-and-totals) |
+| The landing (layout A): headline, lens controls, slider, pivot, rail | **Built** | [PIVOT_GUIDE.md section 29.5](../guides/PIVOT_GUIDE.md#295-the-landing) |
+| Tab B (components, waterfall, histogram, DV01 heat map); tab C (DV01 ladder, what-if side by side, explain) | **Built** | [PIVOT_GUIDE.md section 29.6](../guides/PIVOT_GUIDE.md#296-tail-attribution-sensitivities-and-what-if) |
+| Explain the move, time travel, provenance per cell | **Built** (factor overlay not built) | [PIVOT_GUIDE.md section 29.7](../guides/PIVOT_GUIDE.md#297-explain-the-move-time-travel-and-provenance) |
+| Saved and shared views, export (Excel with outline and formulas, CSV, Arrow, JSON Lines, YAML) | **Built** | [PIVOT_GUIDE.md section 29.8](../guides/PIVOT_GUIDE.md#298-saved-views-sharing-and-export), [PIVOT_GUIDE.md section 10](../guides/PIVOT_GUIDE.md#10-export) |
+| The engine switch, cell budgets, refusals | **Built** | [PIVOT_GUIDE.md sections 29.9 and 29.11](../guides/PIVOT_GUIDE.md#299-settings-and-switching-the-cube-off) |
+| Sharded dates: one batched call per shard owner, equal to the bit | **Built** | [PIVOT_GUIDE.md section 29.12](../guides/PIVOT_GUIDE.md#2912-how-it-is-computed), [6.5.11](#6511-cluster-execution-sharded-cube-views-bit-equal) |
+| What the guide lists as not built | open | [PIVOT_GUIDE.md section 29.13](../guides/PIVOT_GUIDE.md#2913-not-built-yet), and [6.3](#63-gaps-and-proposals) below |
 
 #### 6.2.1 The lens: a Pivot preset, not a lens file
 
@@ -2070,7 +2070,7 @@ cell budget refusing a view with its count, never truncating (P7, now the pivot 
 | Row | What | Status |
 |---|---|---|
 | MCP1 | The core: view model, planner, totals as the union's figure, batching per shard owner, provenance, saved views, cell budget | **Built** as the pivot engine plus the VaR provider ([PIVOT_GUIDE.md section 18](../guides/PIVOT_GUIDE.md#18-how-it-is-built)) |
-| MCP2 | MR endpoints: query, cell, explain, versions, sensitivities | **Built** under `/api/v1/pivot` and `/api/v1/risk/mr` ([MR_CUBE_GUIDE.md section 10](../guides/MR_CUBE_GUIDE.md#10-api-and-command-line)); explain is the one Explain |
+| MCP2 | MR endpoints: query, cell, explain, versions, sensitivities | **Built** under `/api/v1/pivot` and `/api/v1/risk/mr` ([PIVOT_GUIDE.md section 29.10](../guides/PIVOT_GUIDE.md#2910-api-and-command-line)); explain is the one Explain |
 | MCP3 | Synthetic data: sensitivities from the factor model, factor dictionary, limits, per-class vectors | **Partly built**: `position-sensitivity` and `risk-factor` demo data built; ladder limits are configuration; per-class vectors not built |
 | MCP4 | Console and lens: landing A with tabs B and C, phone tiers, renderer kind, help | **Partly built**: landing and tabs built; phone tiers beyond the pivot's narrow layout and a `cube-view` renderer kind not built |
 | MCP5 | Tests: totals never summed, explain adds up, shard equality | **Built**: `VarMrCubeShardTest`, `test_mcube.py`, `test_cube_presets.py`, `test_mr_cube_browser.py` |
@@ -2309,9 +2309,9 @@ seen only in aggregate shows the aggregate and says drill is not allowed); **sta
 ### 6.5 The shared cube core (MR and CCR)
 
 The machinery both cubes share; the CCR cube ([section 7](#7-ccr-cube-lens)) refers here and does not repeat it. As built it is the
-**pivot engine** ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md); design in [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md)) with one
+**pivot engine** ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md); design in [ARCHITECTURE.md section 26](../architecture/ARCHITECTURE.md#26-the-pivot-engine)) with one
 provider per source: the VaR vector provider (built), the FRTB-SA and SIMM formula providers (built), the CCR provider (to come with the
-CCR cube, [PIVOT_ENGINE.md section 6.5](../architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later)).
+CCR cube, [ARCHITECTURE.md section 26.4](../architecture/ARCHITECTURE.md#264-the-providers)).
 
 #### 6.5.1 The pivot model and the three measure classes
 
@@ -2330,7 +2330,7 @@ of the sensitivities, reference data joined by id (an issuer's sector, a counter
 
 **A cell or a total is always computed from the vectors or inputs of its members, never from other cells.** Row, column and grand totals
 are each one more scope; the cube shows the **diversification** (Σ cells − total) beside each total. A pivot of R × C cells is
-R × C + R + C + 1 scopes. As built: [MR_CUBE_GUIDE.md section 4](../guides/MR_CUBE_GUIDE.md#4-the-view-dimensions-options-cells-and-totals),
+R × C + R + C + 1 scopes. As built: [PIVOT_GUIDE.md section 29.4](../guides/PIVOT_GUIDE.md#294-the-view-dimensions-options-cells-and-totals),
 [PIVOT_GUIDE.md section 4](../guides/PIVOT_GUIDE.md#4-measures-and-how-each-total-is-made).
 
 #### 6.5.3 Drill-through, saved views and sharing
@@ -2420,7 +2420,7 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 data as gzipped JSON Lines in `data/testdata/<domain>/<kind>/` for the demo, loaded into Delta or Iceberg partitioned by `business_date`;
 trade fields in Endur-style UPPER_SNAKE names. The built contracts are documented field by field in
 [docs/contracts/packs/market-risk.md](../contracts/packs/market-risk.md) and in each engine guide's data chapter
-([MR_CUBE_GUIDE.md section 14](../guides/MR_CUBE_GUIDE.md#14-cube-data-every-dataset-the-cube-reads)); below are only what each contract
+([PIVOT_GUIDE.md section 27](../guides/PIVOT_GUIDE.md#27-pivot-data-the-sources-of-the-examples)); below are only what each contract
 means to the cube and the **proposed** extensions. Sizes are at 2.3M positions (about 10M trades), estimates. **In production every
 input is the bank's**; the demo's synthetic data is labelled as such.
 
@@ -2683,7 +2683,7 @@ section holds only what is specific to counterparty risk. Meanwhile every counte
 As the MR cube ([6.2.1](#621-the-lens-a-pivot-preset-not-a-lens-file)), the CCR cube is a **Pivot preset**, not a lens file: the
 proposed `ccrcube` lens file is not built; its doors are the preset's (`CCUBE`, **Counterparties → CCR cube**), its landing
 `limit-board`, its help `ccr-cube`. The grid will be the pivot engine's answer over a **CCR provider** (state per netting set: the path
-matrix netted and collateralised first; finish: EE, EPE, PFE, EEPE; [PIVOT_ENGINE.md section 6.5](../architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later)),
+matrix netted and collateralised first; finish: EE, EPE, PFE, EEPE; [ARCHITECTURE.md section 26.4](../architecture/ARCHITECTURE.md#264-the-providers)),
 plus CCR lens endpoints for the board, the allocation, the group tree and the waterfall.
 
 **Decided** (the proof-of-concept decisions, kept as the design): build on the MR cube's core (P1); regenerate the demo's credit limits by

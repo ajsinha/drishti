@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
- * A sharded date's rows on other members (VAR_SHARDING.md section 6): the coordinator's side of a partial sum and of a skeleton. A shard's
+ * A sharded date's rows on other members (DATA_ARCHITECTURE.md section 13): the coordinator's side of a partial sum and of a skeleton. A shard's
  * part of a set goes to one member, chosen in this order: its owners that have announced it ready (first owner first), then any other
  * member that announced it ready (an old owner during a handover), then its owners not ready yet (they build it from the lake when
  * asked, when the lake still holds that data). Readiness is per data version: a member counts only when it announced the shard at the data

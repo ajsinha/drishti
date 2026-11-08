@@ -205,7 +205,7 @@ public interface SourcePlugin extends AutoCloseable {
 
     /**
      * As {@link #vectors(String, String, java.util.List, AsOf, VectorSink)}, for a reader that needs only the rows whose key is in
-     * {@code range} (a VaR shard, VAR_SHARDING.md): a source may skip the files whose statistics show none inside; it may still give
+     * {@code range} (a VaR shard, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): a source may skip the files whose statistics show none inside; it may still give
      * rows outside (the reader checks each row). By default the whole date, as the plain read.
      */
     default boolean vectors(String kind, String column, java.util.List<String> texts, AsOf asOf, KeyRange range, VectorSink sink)

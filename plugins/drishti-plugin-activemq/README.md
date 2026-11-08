@@ -103,11 +103,11 @@ no reverse lookups; the client speaks OpenWire only (not Artemis AMQP).
 | `state.check-seconds` | int | `60` | How often the store's size is checked against the budget |
 | `max-redeliveries` | int | `-1` | Redeliveries of a message the state store could not keep before the broker dead-letters it; `-1`: without limit |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10).
 <!-- settings:end -->
 
 The summary of every connector's settings is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#connector-settings-plugin-by-plugin);
-the shared `tls.*` settings are in [TLS.md](../../docs/connectors/TLS.md#1-the-settings). Points worth knowing:
+the shared `tls.*` settings are in [DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#101-the-settings). Points worth knowing:
 
 - **`client-id`** names the durable subscriptions, so changing it creates new ones: they receive only messages sent after they are
   made, and the old ones keep filling on the broker until removed. Choose it once per server and keep it. ActiveMQ refuses a second
@@ -197,7 +197,7 @@ settings:
 
 A pack can suggest the same connector under `connectors:` in its `pack.yaml`; the server writes it to `config/connectors/<name>.yaml`
 at the first start, and the file is then the site's and replaces the template wholesale
-([CONNECTOR_FILES.md](../../docs/connectors/CONNECTOR_FILES.md)). Ready-made files in `config/connectors.examples/other/`:
+([../../docs/guides/DATA_GUIDE.md section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)). Ready-made files in `config/connectors.examples/other/`:
 `activemq-ssl.yaml` (`ssl://`, private CA) and `ops-events.yaml` (user and password from the environment, PKCS12 truststore).
 There is no loader: producers publish messages.
 
@@ -367,7 +367,7 @@ outage leaves the last document and stops ticking. A view on a picked date is st
 ## History from a lake
 
 The connector is undated. Serve the same kind from a dated connector as well and let the router choose
-([Combining connectors](../../docs/connectors/CONNECTORS.md#combining-connectors)):
+([Combining connectors](../../docs/guides/DATA_GUIDE.md#84-combining-connectors)):
 
 ```yaml
 # config/packs/banking/counterparty-risk/pack.yaml (sketch)
@@ -424,9 +424,9 @@ unreadable and acknowledged (messages the store failed to keep are not counted: 
 ### TLS
 
 A `broker-url` with `ssl://` endpoints (ActiveMQ's `ssl://…:61617` connector), alone or inside `failover:(…)`, connects over TLS with
-the shared [`tls.*` settings](../../docs/connectors/TLS.md#1-the-settings): a private CA as PEM or a PKCS12/JKS truststore, a client
+the shared [`tls.*` settings](../../docs/guides/DATA_GUIDE.md#101-the-settings): a private CA as PEM or a PKCS12/JKS truststore, a client
 certificate as PEM files or a keystore. The connector builds the TLS context at start and fails naming the file and the reason
-([start-up checks](../../docs/connectors/TLS.md#8-start-up-checks-and-their-messages)); uses `ActiveMQSslConnectionFactory` for every
+([start-up checks](../../docs/guides/DATA_GUIDE.md#108-start-up-checks-and-their-messages)); uses `ActiveMQSslConnectionFactory` for every
 endpoint; verifies the host name (with `tls.verify-hostname: false` it adds `socket.verifyHostName=false` to every endpoint and warns
 at each start); notes in health a certificate expiring within 30 days; and puts the cause chain in health while it cannot connect.
 `tls.enabled: true` against a `tcp://` URL is refused at start. `tls.protocols` and `tls.cipher-suites` are validated, but the OpenWire
@@ -482,5 +482,5 @@ connector at one plain `ssl://host:61617` URL for a minute.
 
 ## See also
 
-- [The RabbitMQ connector](../drishti-plugin-rabbitmq/README.md) (the same state store) and [TLS](../../docs/connectors/TLS.md).
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [the connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+- [The RabbitMQ connector](../drishti-plugin-rabbitmq/README.md) (the same state store) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [the connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md).

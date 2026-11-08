@@ -113,5 +113,5 @@ not merged) and is applied within seconds; with `trade-endur.yaml` on Cassandra,
 ## See also
 
 - [The cassandra connector README](../../../plugins/drishti-plugin-cassandra/README.md): layout, loading, retention, sizing, security.
-- [The cassandra connector's README](../../../plugins/drishti-plugin-cassandra/README.md) and [connector files](../../../docs/connectors/CONNECTOR_FILES.md).
-- [TLS](../../../docs/connectors/TLS.md) and [the demo data](../../../docs/connectors/DEMO_DATA.md).
+- [The cassandra connector's README](../../../plugins/drishti-plugin-cassandra/README.md) and [connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
+- [TLS](../../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) and [the demo data](../../../docs/guides/DATA_GUIDE.md#11-the-demo-data).

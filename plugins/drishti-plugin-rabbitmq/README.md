@@ -115,7 +115,7 @@ use is counted as `rejected` and **acknowledged all the same** (dropped, not req
 | `heartbeat-seconds` | int | `20` | The requested AMQP heartbeat |
 | `recovery-interval-ms` | int | `2000` | The automatic recovery's wait between reconnection attempts |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9). It takes the shared `tls.*` settings (docs/guides/DATA_GUIDE.md section 10).
 <!-- settings:end -->
 
 The site-wide summary is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#rabbitmq-tls). Running the plugin as itself
@@ -180,7 +180,7 @@ settings:
 Ready-made files in `config/connectors.examples/other/`: `orders-queue.yaml` (`amqps://`, PKCS12 truststore) and
 `rabbitmq-external.yaml` (the certificate is the log-in). There is no loader: producers publish messages. A connector file is applied
 within seconds without a restart, and edited in any editor, in **Admin → Connectors** or with `drishti.py connector apply`
-([CONNECTOR_FILES.md](../../docs/connectors/CONNECTOR_FILES.md)); a pack may suggest the same as a template in its `pack.yaml`, which
+([../../docs/guides/DATA_GUIDE.md section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)); a pack may suggest the same as a template in its `pack.yaml`, which
 the server writes to `config/connectors/<name>.yaml` at the first start.
 
 Queues owned by the platform team, one queue of envelopes, the store on a dedicated disk:
@@ -355,7 +355,7 @@ not counted).
 
 ### TLS and certificate log-in
 
-An `amqps://` URI (port 5671) connects over TLS with the shared settings ([TLS.md](../../docs/connectors/TLS.md#1-the-settings); keys
+An `amqps://` URI (port 5671) connects over TLS with the shared settings ([DATA_GUIDE.md section 10](../../docs/guides/DATA_GUIDE.md#101-the-settings); keys
 in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls)): `tls.ca-file` or `tls.truststore` for a private CA,
 `tls.cert-file` + `tls.key-file` (PKCS#8, PKCS#1, SEC1 or encrypted with `tls.key-password`) or `tls.keystore` (+ `tls.key-alias`)
 for mutual TLS, hostname verification on by default, `tls.protocols`, `tls.cipher-suites`. The TLS context is built at start (a wrong
@@ -409,7 +409,7 @@ client-pkcs8.key -verify_hostname rabbit.bank.example -verify_return_error </dev
 | `AuthenticationFailureException: ACCESS_REFUSED` | wrong user or password; with EXTERNAL no user named like the CN, or the plugin not enabled | check the URI; `rabbitmqctl list_users`; enable `rabbitmq_auth_mechanism_ssl` |
 | `Connection reset` / `Remote host terminated the handshake` | TLS to the plain port, or the reverse | `amqps://` with 5671; `amqp://` with 5672 |
 | `auth-mechanism 'x' is not plain or external` | a typo | `plain` or `external` |
-| start-up messages naming a file | a file or a password is wrong | [TLS.md, start-up checks](../../docs/connectors/TLS.md#8-start-up-checks-and-their-messages) |
+| start-up messages naming a file | a file or a password is wrong | [DATA_GUIDE.md section 10, start-up checks](../../docs/guides/DATA_GUIDE.md#108-start-up-checks-and-their-messages) |
 
 ## Troubleshooting
 
@@ -454,5 +454,5 @@ Admin → Health shows the connector's `health`, `reads` and `cache`; the Rabbit
 
 ## See also
 
-- [The activemq connector](../drishti-plugin-activemq/README.md) (the same state store) and [TLS](../../docs/connectors/TLS.md).
-- [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [the connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+- [The activemq connector](../drishti-plugin-activemq/README.md) (the same state store) and [TLS](../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
+- [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [the connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md).

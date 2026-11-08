@@ -41,7 +41,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 /**
- * The shared {@code tls.*} settings of the connectors ({@code docs/connectors/TLS.md}, {@code TlsHttp}) for every provider type, against fake HTTPS servers with a test CA
+ * The shared {@code tls.*} settings of the connectors ({@code docs/guides/DATA_GUIDE.md section 10}, {@code TlsHttp}) for every provider type, against fake HTTPS servers with a test CA
  * ({@link TestPki}): a private CA is trusted only when configured, mutual TLS is refused without the client certificate, the other trust and identity forms (PEM text, PKCS12
  * and JKS stores, an encrypted key with a password file), the expiry note, the plain-address error, and everything through an HTTP proxy that tunnels with CONNECT. The console
  * has the same tests in {@code tests/test_ai_tls.py}. No real network.

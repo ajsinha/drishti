@@ -3193,7 +3193,7 @@ The YAML behind it is the connector's own file (`config/connectors/orders-lake.y
 - [USER_GUIDE.md › Scheduled reports](../guides/BI_GUIDE.md#scheduled-reports) is the reference for the CSV reports.
 - Tutorial 1, Part C made the search; tutorial 12 told Drishti when the data lands, which is what `after-load` waits for.
 - [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5) is the live-table reference.
-- [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) and [DEMO_DATA.md](../connectors/DEMO_DATA.md) say exactly what ticks and how.
+- [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) and [DEMO_DATA.md](../guides/DATA_GUIDE.md#11-the-demo-data) say exactly what ticks and how.
 - [Tutorial 9](09-notebook-and-python.md): Python in a measure, a visual and a notebook.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
 - [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer): models, their contract and their versions.

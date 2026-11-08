@@ -28,7 +28,7 @@ import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 
 /**
- * The handover rule (VAR_SHARDING.md section 7) and the wire format of a partial sum (section 6), on their own: an old owner keeps a shard
+ * The handover rule (DATA_ARCHITECTURE.md section 13) and the wire format of a partial sum (section 6), on their own: an old owner keeps a shard
  * while its new owner is not ready and for the grace period after, so at every moment of a handover some member is ready for it; an older
  * version is kept while the newer is built; a partial's answer labelled for another shard, map, data version or number of rows is refused;
  * a member's announced state reads back as written.

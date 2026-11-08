@@ -188,7 +188,7 @@ loads under `--as-of` or the business today.
 The **mnemonic** (`TRD <GO>`) is the initials of a multi-word kind or its first three letters, made unique within the batch and **against the packs already on
 the server**. **Connectors**: a pack names its sources by a **logical connector name** only, never by a host or a path; those are the connector's own settings on the
 server. A kind with real, dated data gets a `file` or `delta` connector named `<pack>-store` (change it per kind); a kind without data needs none and serves its samples.
-The generated `pack.yaml` **names** its connectors and **suggests** their definitions, as [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) describes:
+The generated `pack.yaml` **names** its connectors and **suggests** their definitions, as [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors) describes:
 
 ```yaml
 connectors: [desk-pack-store]            # the logical names the pack reads through

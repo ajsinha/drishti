@@ -1371,7 +1371,7 @@ settings:
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
 
 **Further:** [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (the connector, sections 18 and 19),
-[DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage) (mixed storage).
+[DEMO_DATA.md](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage) (mixed storage).
 
 ## Step 31 · Publish the official results to Iceberg
 
@@ -1443,7 +1443,7 @@ $ drishti.py var official
 `data/iceberg/risk-results/var-official` with its JSON Lines beside it (`data/iceberg/risk-results/jsonl/var-official/2026-09-30/var-official-v1.jsonl`).
 `var-results` still says `delta`: step 34 is about it.
 
-**Further:** [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (Admin → Connectors).
+**Further:** [CONNECTOR_FILES.md](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (Admin → Connectors).
 
 ## Step 33 · Each table's format in Admin → Lakes
 
@@ -1500,7 +1500,7 @@ settings:
 **You should see** `var-results` on `iceberg` and running, and the official records read back: `VOFF HIERARCHY == 'LL'` on
 2026-09-30 finds 43 of the 131 rows.
 
-**Further:** [CONNECTOR_FILES.md "Upgrades"](../connectors/CONNECTOR_FILES.md#upgrades) (stamped files, edited files, Use the
+**Further:** [CONNECTOR_FILES.md "Upgrades"](../guides/DATA_GUIDE.md#upgrades) (stamped files, edited files, Use the
 pack's value).
 
 ## Step 35 · Back to Delta

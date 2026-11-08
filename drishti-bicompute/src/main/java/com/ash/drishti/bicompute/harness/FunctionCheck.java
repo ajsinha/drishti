@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The whole harness a custom function passes before it is saved, shared or used (PIVOT_ENGINE.md section 8.3), around the split-and-merge
+ * The whole harness a custom function passes before it is saved, shared or used (ARCHITECTURE.md section 26.5), around the split-and-merge
  * core of {@link FunctionHarness}:
  *
  * <ol>

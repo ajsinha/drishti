@@ -90,7 +90,7 @@ It never writes; `tools/load-files.sh` (`JsonlLoader`) does.
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/guides/DATA_GUIDE.md section 9).
 <!-- settings:end -->
 
 ## Data structure
@@ -324,7 +324,7 @@ fixing/X.csv --rows-document --out fixing.jsonl` writes the JSON Lines line that
 ## See also
 
 - [CONFIGURATION.md, the `file` connector](../../docs/admin/CONFIGURATION.md#file--json-or-csv-files-on-disk) and
-  [Connector files](../../docs/connectors/CONNECTOR_FILES.md); ready-made files in `config/connectors.examples/files/`.
-- [Demo data](../../docs/connectors/DEMO_DATA.md) (the rows the loaders write) and
+  [Connector files](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors); ready-made files in `config/connectors.examples/files/`.
+- [Demo data](../../docs/guides/DATA_GUIDE.md#11-the-demo-data) (the rows the loaders write) and
   [the data lake guide](../../docs/guides/DATA_LAKE_GUIDE.md) (the load rules).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

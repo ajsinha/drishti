@@ -686,7 +686,7 @@ The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE,
 
 ### NSMTM: Netting-set MtM totals (derived from the trade valuations) (`nset-mtm`)
 
-A netting set's MtM totals derived from the trade valuations of its live trades, once per business date, shown beside the netting set's stored figures (quick win Q1 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the netting-set engine computes them).
+A netting set's MtM totals derived from the trade valuations of its live trades, once per business date, shown beside the netting set's stored figures (docs/architecture/DATA_ARCHITECTURE.md section 12, until the netting-set engine computes them).
 
 **Class** computed · **Key** `NETTING_SET_ID` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `ccr-derived` (plugin `derived`).
 
@@ -702,7 +702,7 @@ A netting set's MtM totals derived from the trade valuations of its live trades,
 | `MTM_CURRENCIES` | text list |  | optional |  |  |  | The currencies of the members' MTM: USD alone means the sums are exact, otherwise not converted |
 | `VALUATION_DATES` | date list |  | optional |  |  |  | The members' valuation dates: the business date alone |
 | `TRADES` | record list |  | derived |  |  |  | Every member of a live status, with LIVE false for one past its maturity date, largest MTM first |
-| `TRADE_COUNT` | integer |  | derived |  |  |  | Live trades: Live (COMPUTED_ATTRIBUTES.md section 3): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the valuation date |
+| `TRADE_COUNT` | integer |  | derived |  |  |  | Live trades: Live (DATA_ARCHITECTURE.md section 12): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the valuation date |
 | `NET_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' MTM (each in USD; the sum currency is USD, section 3) |
 | `GROSS_POSITIVE_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' positive MTM |
 | `GROSS_NEGATIVE_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' negative MTM |
@@ -739,7 +739,7 @@ Nested `TRADES[]`:
 
 ### CPMTM: Counterparty MtM totals (derived from the trade valuations) (`cpty-mtm`)
 
-A counterparty's MtM totals derived from the trade valuations of its live trades in netting sets, once per business date, shown beside the counterparty's stored NET_MTM (quick win Q2 of docs/architecture/COMPUTED_ATTRIBUTES.md).
+A counterparty's MtM totals derived from the trade valuations of its live trades in netting sets, once per business date, shown beside the counterparty's stored NET_MTM (docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes).
 
 **Class** computed · **Key** `COUNTERPARTY` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `ccr-derived` (plugin `derived`).
 
@@ -753,7 +753,7 @@ A counterparty's MtM totals derived from the trade valuations of its live trades
 | `MTM_CURRENCIES` | text list |  | optional |  |  |  | The currencies of the members' MTM: USD alone means the sums are exact |
 | `VALUATION_DATES` | date list |  | optional |  |  |  | The members' valuation dates: the business date alone |
 | `TRADES` | record list |  | derived |  |  |  | Every member of a live status, with its netting set and LIVE |
-| `TRADE_COUNT` | integer |  | derived |  |  |  | Live trades: Live (COMPUTED_ATTRIBUTES.md section 3): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the valuation date |
+| `TRADE_COUNT` | integer |  | derived |  |  |  | Live trades: Live (DATA_ARCHITECTURE.md section 12): TRADE_STATUS NEW, VALIDATED or AMENDED and MATURITY_DATE not before the valuation date |
 | `NET_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' MTM over every netting set of the counterparty |
 | `GROSS_POSITIVE_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' positive MTM |
 | `GROSS_NEGATIVE_MTM` | amount |  | derived | USD |  |  | Sum of the live trades' negative MTM |
@@ -775,7 +775,7 @@ Nested `TRADES[]`:
 
 **Links:** `COUNTERPARTY` → `counterparty`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].NETTING_SET` → `netting-set`.
 
-- Derived, never stored: built from the trade valuations directly, not from nset-mtm (a derived kind cannot read another derived kind of its connector: COMPUTED_ATTRIBUTES.md section 8.1, check (a)); the per-set positive parts come from group() over its rows.
+- Derived, never stored: built from the trade valuations directly, not from nset-mtm (a derived kind cannot read another derived kind of its connector: DATA_ARCHITECTURE.md section 12, check (a)); the per-set positive parts come from group() over its rows.
 - Shown on the counterparty page beside the stored NET_MTM with the difference; retires when NSET computes counterparty scopes.
 
 ## Data retrieval
