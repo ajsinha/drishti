@@ -537,7 +537,7 @@ rows: 164
 ```
 
 **A tar of several tables and dates**, all or nothing: `<folder>/<YYYY-MM-DD>/part-0001.jsonl.gz` inside. A folder is a **table**
-(`trade_endur`, `trade_calypso`: the tables of the kind `trade`, one per source system) or a **kind** with one table (`var-limit`: [contract](../contracts/packs/market-risk.md#hier-var-limit-node-var-limit), [example](../contracts/samples/market-risk.md#var-limit),
+(`trade_endur`, `trade_calypso`: the tables of the kind `trade`, one per source system) or a **kind** with one table (`var-limit`: [contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit), [example](../contracts/samples/market-risk.md#var-limit),
 written `var_limit` too), so one archive may mix the trades of several systems with the limits:
 
 ```bash

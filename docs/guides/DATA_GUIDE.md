@@ -3536,7 +3536,7 @@ each value that **starts with** an old name followed by a comma (a branch keeps 
 | the retired example packs (`examples/packs/climate-risk`, `liquidity-risk`, `operational-risk`; `finance`) | `legalEntityName`, `legalEntity.name` | the legal entities |
 
 So after an edit rebuild those two datasets (`--only core/legal-entity,market-risk/pnl-history`, or a full `lake demo`); the VaR trees
-show each legal entity by its `legal-entity` record's `NAME`, so they follow at once. The
+show each legal entity by its `legal-entity` record's `NAME` ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity), [example](../contracts/samples/core.md#legal-entity)), so they follow at once. The
 packs' samples, served without a lake, follow the file when their generators are run again: `python3 tools/packgen/banking/make_data.py`
 (the core samples; the catalogue's subtitles too) and an example pack's `make.py`. The VaR tree's top node is named by a server setting
 of its own, the VaR root name (listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) under the VaR

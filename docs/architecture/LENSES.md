@@ -1466,7 +1466,7 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 | Backtesting (actual and hypothetical P&L, zone, multiplier, Kupiec, Christoffersen) | **Built, needs the bank's data** (`desk-pnl`) | [REGULATORY_VAR_REPORTING section 4.6](../guides/REGULATORY_VAR_REPORTING.md#46-backtesting), [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 | Period statistics; VaR by risk type (by hierarchy) | **Built** (risk types need the bank's hierarchy) | [REGULATORY_VAR_REPORTING sections 4.4, 4.5](../guides/REGULATORY_VAR_REPORTING.md#44-period-statistics) |
 | Report definitions, checks, frozen runs with lineage, maker-checker-approver sign-off | **Built** (the pilot pack) | [REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off) |
-| Position sensitivities by risk factor (`SENS`), the factor dictionary; FRTB standardised approach | **Built, needs the bank's data** | [PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#279-position-sensitivity-the-sensitivities), [FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
+| Position sensitivities by risk factor (`SENS`), the factor dictionary; FRTB standardised approach | **Built, needs the bank's data** | [PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#278-position-sensitivity-the-sensitivities), [FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
 | DV01 ladder by currency and tenor bucket against configured two-sided bucket limits | **Built** (MR cube tab C) | [PIVOT_GUIDE section 29.6](../guides/PIVOT_GUIDE.md#296-tail-attribution-sensitivities-and-what-if) |
 | Intraday VaR from files and Kafka; the pre-deal what-if | **Built** | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes), [8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet) |
 | Data trust: load checks and rejections, late loads, proxied/failed vector status, market-data quality | **Partly** (each in its own place; completeness against the trades booked not checked) | [VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks), [DATA_GUIDE section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data), the [Market lens](#3-market-lens) |
@@ -1813,8 +1813,8 @@ retires) at the grain and with the ids of the VaR inputs and a sparse list of fa
 [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens)); Drishti's slash-separated **risk-factor naming standard** with a mapping from the bank's names (an unmapped name
 refused, never guessed) and the factor dictionary `risk-factor`; **both** the FRTB buckets and the bank's own limit grids, each limit
 naming its grid; an intraday record replaces a position's record whole. The contract and its load checks:
-[PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#279-position-sensitivity-the-sensitivities) and
-[14.8](../guides/PIVOT_GUIDE.md#2710-risk-factor-the-factor-dictionary), [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens);
+[PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#278-position-sensitivity-the-sensitivities) and
+[14.8](../guides/PIVOT_GUIDE.md#279-risk-factor-the-factor-dictionary), [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens);
 the data-contract design (D8, D9) is in the [MR cube lens](#6-mr-cube-lens).
 
 | Risk type | Measure | Granularity oversight needs |

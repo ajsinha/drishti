@@ -33,7 +33,7 @@ policy) is made, checked and removed by [`deploy/aws/s3-tables/`](../../../deplo
 
 ## What it reads
 
-`risk-store.yaml` reads the market-risk pack's risk domain (P&L vectors, scenario PVs, the risk hierarchy, VaR limits, desk P&L) and
+`risk-store.yaml` reads the market-risk pack's risk domain (P&L vectors, scenario PVs, VaR limits, desk P&L) and
 `trade-endur.yaml` the Endur trades, each from one namespace of the table bucket: the domain (`risk`, `trading`) as an S3 Tables name.
 A kind is read from the table of its name with hyphens made underscores (`pnl-vector` is the table `pnl_vector`), because S3 Tables
 allows lower-case letters, digits and underscores only. Nothing is written by the server; the loaders write the same tables
@@ -62,7 +62,7 @@ partitioned by `identity(business_date)`, sorted by `id`; vectors as `list<doubl
 
 | Namespace | Tables (one per kind) |
 |---|---|
-| `risk` | `stress_scenario`, `stress_result`, `frtb_sensitivity`, `pnl_explain`, `trade_valuation`, `portfolio`, `pnl_vector`, `scenario_pv`, `fx_scenario`, `scenario_set`, `risk_hierarchy`, `var_limit`, `desk_pnl`, `pnl_history` |
+| `risk` | `stress_scenario`, `stress_result`, `frtb_sensitivity`, `pnl_explain`, `trade_valuation`, `portfolio`, `pnl_vector`, `scenario_pv`, `fx_scenario`, `scenario_set`, `var_limit`, `desk_pnl`, `pnl_history` |
 | `trading` | `trade` |
 
 ## Examples
