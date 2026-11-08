@@ -221,6 +221,16 @@ class Edition:
             return cards
         return _modules.lens_cards(self.name)
 
+    @property
+    def home_chips(self) -> list:
+        """Home's chips: the lens's (the registry's lens carries them, ``chips:``), else a site's ``edition: {home: {chips: ...}}``."""
+        if not self.active:
+            return []
+        chips = self._get("home.chips")
+        if isinstance(chips, list):
+            return chips
+        return _modules.lens_chips(self.name) or []
+
     def landings(self) -> list[str]:
         out = self._get("home.landings") if self.active else None
         return [str(x) for x in out] if isinstance(out, list) else []

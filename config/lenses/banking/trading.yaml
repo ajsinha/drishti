@@ -85,7 +85,6 @@ home:
   template: home/trading_landing.html    # the page that draws them (it names its script and style: drishti_trading-landing.js, drishti_trading-landing.css)
   titles: { trader: Trader desk, desk: Desk head, explorer: Explorer }
   landing-by-role: {}                    # {access role: landing}: wins over the person's choice when set (the RBAC hook, as the others)
-  chips: [TRD 1000001, BOOK BOOK-RATES-1, CTRD CP-ALDERSHOT, POS BOOK-RATES-1, VAR DESK DESK-RATES, EXP CPTY:CP-ALDERSHOT, CRV CRV-USD-OIS]   # C's chips
   sections: { stats: off, grammar: off, pipeline: off, capabilities: off, views: off }   # the product's Home (signed out, or landing=today)
 
 trading:                                 # the Trading landings (EDITIONS.md › The design as built, section 14); read-only, as the person, with their roles and masks

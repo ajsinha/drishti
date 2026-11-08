@@ -27,6 +27,7 @@ lenses:
       - { title: "A company: financials, filings, index membership", cmd: USEQ AAPL, icon: building }
       - { title: "A legal entity group: parent and children", cmd: LEIG HWUPKR0MPOU8FGXBT394, icon: diagram-3 }
       - { title: "A fund: holdings, the index it tracks", cmd: FUND SPY, icon: briefcase }
+    chips: [ECON USA, ECG ECG-WLD, REGE REGE-US-NY, USEQ MSFT, SIC 3674, IDX SP500, LEIC US, FUND QQQ, TOPIC RATES, NEWS rates, DATAMAP]   # Home's chips (shown only while their function is on)
   # the economy module's Public sector lens: development indicators, central banks, national statistics, the OECD, official news, world events
   - id: publicsector
     title: Public sector
@@ -42,6 +43,7 @@ lenses:
       - { title: "OECD members by inflation", cmd: OECD OECD-CAN, icon: map }
       - { title: "Official press releases", cmd: PRESS PRESS-FED, icon: newspaper }
       - { title: "The world's news by tone (GDELT)", cmd: GDELT GDELT-CAN, icon: broadcast }
+    chips: [WDI WDI-USA, CBANK CBANK-FED, OECD OECD-USA, PRESS PRESS-ECB]   # Home's chips (the same rule as the cards)
     help: [docs-guides-public-sector-guide, docs-tutorials-46-public-sector-data, world-development-pack, central-banks-pack,
       national-statistics-pack, oecd-pack, official-news-pack, gdelt-events-pack, external-data]
   - id: cio

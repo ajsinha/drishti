@@ -79,7 +79,7 @@ async def render_landing(request, ed: Edition, landing: str, cards: list):
     ``command``) and their recent commands of the edition (World's ``explorer``)."""
     titles = ed.landing_titles()
     offered = [{"id": x, "title": titles[x], "href": f"/home/landing/{x}"} for x in ed.landings()]
-    chips = [str(c) for c in (ed._get("home.chips") or []) if ed.typed_shown(str(c))]
+    chips = [str(c) for c in ed.home_chips if ed.typed_shown(str(c))]          # the lens's (registry), each only while its function is on
     monitors, recents = [], []
     backend, me = request.app.state.backend, ident(request)
     if landing == "command":                              # Risk's B: the person's monitors

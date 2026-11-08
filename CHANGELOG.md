@@ -222,7 +222,9 @@
     market: banking; world: economy), the feature presets `config/lenses/features.yaml`, the folder `drishti.lens-dir`
     (`DRISHTI_LENS_DIR`, was `DRISHTI_EDITIONS_DIR`; the console's `lens.dir`). A lens names its packs by module, so World is economy
     with capital markets: with capitalmarkets off, its packs, functions, cards and the World landing's companies, filings and funds are
-    gone. `drishti.edition` and `drishti.lenses` are unchanged. Upgrade: move a site's own edition file to `config/lenses/<module>/`.
+    gone. Home's cards and chips are the registry lens's (`cards:`, `chips:` in the module's `lenses.yaml`, answered per person by
+    `/api/v1/modules`), each shown only while its function is on; the Public sector lens has its eight cards and four chips.
+    `drishti.edition` and `drishti.lenses` are unchanged. Upgrade: move a site's own edition file to `config/lenses/<module>/`.
 - **Static assets by module**: each module's console part is `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words,
   pages, templates, static files, and the parts it adds to a core screen). An off module's scripts, styles and Elements library are not
   served (404), and neither to a person whose lens does not use the module (the World lens gets no banking file). The Elements manifest

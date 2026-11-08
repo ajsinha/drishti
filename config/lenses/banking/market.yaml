@@ -79,7 +79,6 @@ home:
   template: home/market_landing.html     # the page that draws them (it names its script and style: drishti_market-landing.js, drishti_market-landing.css)
   titles: { desk: Market desk, explorer: Explorer, quality: Quality }
   landing-by-role: {}                    # {role: landing}: read, wins over the person's choice when set; wired to role-based access later
-  chips: [CRV CRV-USD-OIS, CRV CRV-CAD-GOVT, FXF FXF-EURUSD, FXV FXV-USDJPY, IRV IRV-USD, CDS CDS-SOLARIS, INFC INFC-USCPI, CMDC CMDC-WTI, CORR CORR-G10FX, DATAMAP]   # B's chips
   sections: { stats: off, grammar: off, pipeline: off, capabilities: off, views: off }   # the product's Home (signed out, or landing=today)
 
 quality:                                 # the Quality landing's checks (EDITIONS.md › The design as built, section 13); read-only, from the pack's own answers

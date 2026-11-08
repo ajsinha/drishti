@@ -301,16 +301,19 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   `config/lenses/<module>/<lens>.yaml` (risk, trading, market: banking; world and public sector: economy), the feature presets
   `config/lenses/features.yaml` (`drishti.lens-dir`, `DRISHTI_LENS_DIR`; the console's `lens.dir`); a lens names its packs by module
   (`packs.enabled: {economy: [...], capitalmarkets: [...]}`), so World is economy with capital markets: while capitalmarkets is off its
-  packs, functions, cards and the World landing's company, filing and fund parts are gone (`module_on` in the templates). A lens carries its
-  Home (landing, cards, chips), menus, Help, Admin pages, BI lists and branding as the edition file did; `drishti.edition` (a lens for the
+  packs, functions, cards and the World landing's company, filing and fund parts are gone (`module_on` in the templates). The registry's lens
+  carries its Home cards and chips (`cards:`, `chips:` in its module's `META-INF/drishti/lenses.yaml`, answered per person by
+  `/api/v1/modules`; each shown only while its function is on), and the lens file its landing, menus, Help, Admin pages, BI lists and
+  branding; `drishti.edition` (a lens for the
   whole instance) and `drishti.lenses` are unchanged ([EDITIONS.md](../admin/EDITIONS.md), *Editions are lenses of modules*).
 
 **Phase 2, still to do:**
 
 1. **The thin jar and the plugins folder** (step 9): `drishti-app` builds the core jar alone; the banking module (drishti-banking with
    drishti-compute-banking) is a module jar in a site's modules folder on the launcher's `loader.path`, and the registry's *installed*
-   follows the jar. Designed, not built: every launcher (the scripts, Docker, ECS, the stack, the drill) gains the modules folder in the
-   same change, and the release ships both jars.
+   follows the jar. **Deferred out of this release** (a packaging change across every launcher: the scripts, Docker, ECS, the stack and
+   the drill gain the modules folder in the same change, and the release ships both jars); until then a module is installed with the one
+   jar and switched off with `config/modules/<module>.yaml`.
 2. **Python worker code**: none of banking's is left in `drishti-compute/src/main/python/drishti_compute`; the tools' banking scripts
    (`varcli.py`, `expcli.py`, `frtbcli.py`, `simmcli.py`, `tools/ccr/`) move with the module.
 3. **The drills**: one with the banking module absent (the core starts, serves BI, Pivot and the economy packs, and says *not

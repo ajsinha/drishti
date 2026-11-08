@@ -202,8 +202,19 @@ def _shape(answer: dict) -> dict:
                         "text": str(f.get("text") or f"{w} is not available to you: ask your administrator")}
     cards = {str(l.get("id")): [dict(c) for c in l.get("cards") or [] if isinstance(c, dict) and c.get("cmd")]
              for l in answer.get("lenses") or [] if isinstance(l, dict) and l.get("id") and l.get("cards")}
-    return {"off": off, "lenses": lenses, "functions": funcs, "cards": cards,
+    chips = {str(l.get("id")): [str(c) for c in l.get("chips") or [] if str(c).strip()]
+             for l in answer.get("lenses") or [] if isinstance(l, dict) and l.get("id") and l.get("chips")}
+    return {"off": off, "lenses": lenses, "functions": funcs, "cards": cards, "chips": chips,
             "loaded": frozenset(str(m.get("id")) for m in answer.get("modules") or [] if isinstance(m, dict) and m.get("id"))}
+
+
+def lens_chips(lens: str | None) -> list | None:
+    """A lens's Home chips, as the registry's lens carries them (``chips:``, in the person's answer); None when not said."""
+    p = person()
+    if not lens or p is None:
+        return None
+    got = (p.get("chips") or {}).get(lens)
+    return list(got) if got else None
 
 
 def lens_cards(lens: str | None) -> list | None:
