@@ -53,6 +53,19 @@ connectors:
 routes:                # the connector that answers each kind
   central-bank: centralbank-store
   rate-series: centralbank-store
+form:                          # FORM central-banks: the search form of each kind
+  central-bank:
+    - { path: BANK_ID, label: Bank id, type: id, group: Identity }
+    - { path: NAME, type: text, group: Identity }
+    - { path: POLICY_RATE, label: "Policy rate, %", type: number, group: Policy }
+    - { path: LAST_MOVE_DATE, label: Last move, type: date, group: Policy }
+  rate-series:
+    - { path: SERIES_ID, label: Series id, type: id, group: Identity }
+    - { path: TITLE, type: text, group: Identity }
+    - { path: SOURCE, type: enum, group: Identity }
+    - { path: CENTRAL_BANK, label: Central bank, type: id, group: Identity }
+    - { path: LATEST, type: number, group: Latest }
+    - { path: LATEST_DATE, label: Latest date, type: date, group: Latest }
 console:
   examples:
     - ["CBANK CBANK-FED", "The Federal Reserve · the target range, its last move, the Treasury curve and the balance sheet"]

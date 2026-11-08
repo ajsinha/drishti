@@ -50,6 +50,21 @@ connectors:
 routes:                # the connector that answers each kind
   development-profile: development-store
   development-series: development-store
+form:                          # FORM world-development: the search form of each kind
+  development-profile:
+    - { path: PROFILE_ID, label: Profile id, type: id, group: Identity, help: "One or many: paste a list (WDI-CAN, WDI-BRA)." }
+    - { path: COUNTRY_NAME, label: Country, type: text, group: Identity }
+    - { path: REGION, type: enum, group: Identity }
+    - { path: INCOME_GROUP, label: Income group, type: enum, group: Identity }
+    - { path: GDP_PER_CAPITA, label: "GDP per head, USD", type: amount, group: Latest }
+    - { path: INFLATION, label: "Inflation, %", type: number, group: Latest }
+    - { path: UNEMPLOYMENT, label: "Unemployment, %", type: number, group: Latest }
+  development-series:
+    - { path: SERIES_ID, label: Series id, type: id, group: Identity }
+    - { path: COUNTRY_NAME, label: Country, type: text, group: Identity }
+    - { path: INDICATOR, type: text, group: Indicator, help: "INDICATOR contains growth finds every growth series." }
+    - { path: INDICATOR_CODE, label: World Bank code, type: text, group: Indicator }
+    - { path: LATEST, type: number, group: Latest }
 console:
   examples:
     - ["WDI WDI-CAN", "Canada · the latest of every indicator, the world map by GDP per head"]

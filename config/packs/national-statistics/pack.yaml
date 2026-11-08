@@ -43,6 +43,14 @@ connectors:
       lake-tables: statistics.statistics-series
 routes:                # the connector that answers each kind
   statistics-series: statistics-store
+form:                          # FORM national-statistics: the search form of its kind
+  statistics-series:
+    - { path: SERIES_ID, label: Series id, type: id, group: Identity }
+    - { path: TITLE, type: text, group: Identity }
+    - { path: TOPIC, type: enum, group: Identity }
+    - { path: TABLE_ID, label: Table, type: text, group: Identity }
+    - { path: FREQUENCY, type: enum, group: Identity }
+    - { path: YEAR_ON_YEAR_PCT, label: "On the year, %", type: number, group: Latest }
 console:
   examples:
     - ["NSTAT NSTAT-V41690973", "Canada's consumer price index · the change on the month and the year"]

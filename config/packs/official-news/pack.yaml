@@ -52,6 +52,18 @@ connectors:
 routes:                # the connector that answers each kind
   release-source: officialnews-store
   press-release: officialnews-store
+form:                          # FORM official-news: the search form of each kind
+  release-source:
+    - { path: SOURCE_ID, label: Publisher id, type: id, group: Identity }
+    - { path: NAME, type: text, group: Identity }
+    - { path: PUBLISHER_TYPE, label: Publisher type, type: enum, group: Identity }
+    - { path: COUNTRY, type: enum, group: Identity }
+  press-release:
+    - { path: RELEASE_ID, label: Release id, type: id, group: Identity }
+    - { path: TITLE, type: text, group: Release, help: "TITLE contains rate finds every release about rates." }
+    - { path: PUBLISHER_NAME, label: Publisher, type: enum, group: Release }
+    - { path: PUBLISHED, type: date, group: Release }
+    - { path: CATEGORY, type: text, group: Release }
 console:
   examples:
     - ["PRESS PRESS-FED", "The Federal Reserve Board's latest press releases, each a link to the original"]

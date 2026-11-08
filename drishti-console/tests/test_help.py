@@ -230,7 +230,8 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 73: plus Schema to pack (docs/guides/SCHEMA_TO_PACK_GUIDE.md, 2.9.11.c), split from the data guide when it passed 1,500 lines.
     # 75: plus virtual tables' two (the tables guide and tutorial 44, 2.9.11.d), the same rule (a feature's guide and tutorial).
     # 76: plus the External data feeds guide (drishti-feeds, 2.9.11.g): its own page beside External data, which keeps the sources and licences.
-    assert 30 <= total <= 76, total
+    # 78: plus the public sector's two (the Public sector guide and tutorial 46, 2.9.11.g), the same rule (a domain's guide and tutorial).
+    assert 30 <= total <= 78, total
 
 
 def test_every_old_help_address_still_opens_something(client):

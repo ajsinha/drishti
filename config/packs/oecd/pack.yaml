@@ -50,6 +50,18 @@ connectors:
 routes:                # the connector that answers each kind
   oecd-country: oecd-store
   oecd-series: oecd-store
+form:                          # FORM oecd: the search form of each kind
+  oecd-country:
+    - { path: COUNTRY_ID, label: Country id, type: id, group: Identity }
+    - { path: COUNTRY_NAME, label: Country, type: text, group: Identity }
+    - { path: INFLATION, label: "Inflation, %", type: number, group: Latest }
+    - { path: UNEMPLOYMENT, label: "Unemployment, %", type: number, group: Latest }
+    - { path: LEADING_INDICATOR, label: Leading indicator, type: number, group: Latest }
+  oecd-series:
+    - { path: SERIES_ID, label: Series id, type: id, group: Identity }
+    - { path: COUNTRY_NAME, label: Country, type: text, group: Identity }
+    - { path: MEASURE, type: enum, group: Identity }
+    - { path: LATEST, type: number, group: Latest }
 console:
   examples:
     - ["OECD OECD-CAN", "Canada · leading indicator, unemployment, inflation, growth; the members on a map"]

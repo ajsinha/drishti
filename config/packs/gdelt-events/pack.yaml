@@ -44,6 +44,13 @@ connectors:
       lake-tables: gdelt.event-country
 routes:                # the connector that answers each kind
   event-country: gdelt-store
+form:                          # FORM gdelt-events: the search form of its kind
+  event-country:
+    - { path: EVENT_COUNTRY_ID, label: Country id, type: id, group: Identity }
+    - { path: COUNTRY_NAME, label: Country, type: text, group: Identity }
+    - { path: AVG_TONE, label: Average tone, type: number, group: The day }
+    - { path: CONFLICT_SHARE, label: "Conflict, %", type: number, group: The day }
+    - { path: EVENTS, type: number, group: The day }
 console:
   examples:
     - ["GDELT GDELT-USA", "The United States · yesterday's events, tone, the conflict share, by category, the top stories"]
