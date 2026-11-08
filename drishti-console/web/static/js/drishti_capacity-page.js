@@ -284,36 +284,52 @@
     return out.map(function (p) { return '<div class="cap-box a" data-cap-warning="' + esc(p[0].name) + '"><b>' + esc(p[0].label) + ':</b> ' + esc(p[1]) + '</div>'; }).join('');
   }
 
-  function buildInputs() {
-    var form = $('[data-cap-inputs]'), group = null, h = '';
+  // the plan's inputs: one drishti-inputs Form from the planner's own list (a fieldset per group; a list of choices a select; a number read
+  // loosely and shown grouped, its problem in words); each field's block carries data-cap-field (the name), marked "ch" when changed
+  var paths = {};
+  function inputSchema() {
+    var props = {}, groups = {};
     st.plan.inputs.forEach(function (i) {
-      if (i.group !== group) { h += (group ? '</fieldset>' : '') + '<fieldset class="cap-grp"><legend>' + esc(i.group) + '</legend>'; group = i.group; }
-      var cur = st.inputs[i.name] != null ? st.inputs[i.name] : i['default'], id = 'cap-in-' + i.name, ctl;
-      if (i.choices) {
-        ctl = '<select id="' + id + '" name="' + esc(i.name) + '">' + i.choices.map(function (c) { return '<option' + (String(c) === String(cur) ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select>';
-      } else {
-        ctl = '<input id="' + id + '" name="' + esc(i.name) + '" value="' + esc(i.kind === 'text' ? cur : F.formatNumber(Number(cur), { maxDecimals: 6, minus: '-' })) + '"' + (i.kind === 'text' ? '' : ' inputmode="decimal"') + ' spellcheck="false">';
-      }
-      h += '<div class="cap-fld" data-cap-field="' + esc(i.name) + '"><label for="' + id + '">' + esc(i.label) + '<small>' + esc(i.hint) + '</small></label>' + ctl + '<span class="cap-muted">' + esc(i.unit === 'text' ? '' : i.unit) + '</span></div>';
+      var g = groups[i.group] || (groups[i.group] = 'g' + Object.keys(groups).length);
+      if (!props[g]) { props[g] = { type: 'object', title: i.group, properties: {}, hook: { 'class': 'cap-grp' } }; }
+      var fs = { title: i.label + (i.unit && i.unit !== 'text' ? ' (' + i.unit + ')' : ''), description: i.hint, hook: { 'data-cap-in': i.name } };
+      if (i.choices) { Object.assign(fs, { type: 'string', widget: 'select', allowEmpty: false, 'enum': i.choices.map(String) }); }
+      else if (i.kind === 'text') { fs.type = 'string'; } else { fs.type = 'number'; }
+      props[g].properties[i.name] = fs;
+      paths[i.name] = g + '.' + i.name;
     });
-    form.innerHTML = h + '</fieldset>';
+    return { type: 'object', properties: props };
+  }
+  function inputValue() {
+    var v = {};
+    st.plan.inputs.forEach(function (i) {
+      var cur = st.inputs[i.name] != null ? st.inputs[i.name] : i['default'], p = paths[i.name].split('.');
+      (v[p[0]] = v[p[0]] || {})[p[1]] = i.choices ? String(cur) : cur;
+    });
+    return v;
+  }
+  function buildInputs() {
+    var host = $('[data-cap-inputs]');
+    if (!st.form) {
+      st.form = new window.Drishti.elements.inputs.Form(host, { schema: inputSchema(), value: inputValue(), live: true, label: 'Inputs', pathAttr: 'data-cap-path' });
+      st.form.on('change', onInput);
+    } else { st.form.setValue(inputValue()); }
     markChanged();
   }
 
   function markChanged() {
     st.plan.inputs.forEach(function (i) {
-      var f = page.querySelector('[data-cap-field="' + i.name + '"]');
-      if (f) { f.classList.toggle('ch', st.inputs[i.name] != null && String(typed(i.name, st.inputs[i.name])) !== String(i['default'])); }
+      var f = page.querySelector('[data-cap-path="' + paths[i.name] + '"]');
+      if (f) { f.setAttribute('data-cap-field', i.name); f.classList.toggle('ch', st.inputs[i.name] != null && String(typed(i.name, st.inputs[i.name])) !== String(i['default'])); }
     });
   }
 
   function onInput(e) {
-    var el = e.target, name = el.name, inp;
-    if (!name) { return; }
+    var name = String(e.path).split('.').pop(), inp;
     inp = st.plan.inputs.filter(function (i) { return i.name === name; })[0];
-    var v = typed(name, el.value);
-    el.setAttribute('aria-invalid', v === undefined ? 'true' : 'false');
-    if (v === undefined) { return; }
+    if (!inp) { return; }
+    var v = typed(name, e.value);
+    if (v === undefined) { return; }                                   // the field says what does not read
     if (String(v) === String(inp['default'])) { delete st.inputs[name]; } else { st.inputs[name] = v; }
     save();
     markChanged();
@@ -382,9 +398,6 @@
   }
 
   function wire() {
-    $('[data-cap-inputs]').addEventListener('submit', function (e) { e.preventDefault(); });
-    $('[data-cap-inputs]').addEventListener('input', onInput);
-    $('[data-cap-inputs]').addEventListener('change', onInput);
     $('[data-cap-edit]').addEventListener('click', function () { setView(page.querySelector('[data-cap-view="plan"]').hidden); });
     $('[data-cap-refresh]').addEventListener('click', loadLive);
     $('[data-cap-reset]').addEventListener('click', function () { st.inputs = {}; save(); buildInputs(); recompute(); });
@@ -412,13 +425,7 @@
       page.querySelectorAll('[data-factor]').forEach(function (x) { x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
       renderGrowth();
     });
-    page.querySelectorAll('[data-cap-grow]').forEach(function (r) {
-      r.addEventListener('input', function () {
-        st.grow[r.getAttribute('data-cap-grow')] = parseFloat(r.value);
-        page.querySelector('[data-cap-grow-out="' + r.getAttribute('data-cap-grow') + '"]').textContent = r.value + (r.getAttribute('data-cap-grow') === 'intraday' ? '%' : '');
-        renderGrowth();
-      });
-    });
+    growth().on('change', function (e) { st.grow[e.path] = Number(e.value); renderGrowth(); });
     page.addEventListener('click', function (e) {
       var w = e.target.closest('.cap-why');
       page.querySelectorAll('.cap-why.open').forEach(function (x) { if (x !== w) { x.classList.remove('open'); } });
@@ -439,12 +446,11 @@
     st.timer = setInterval(function () { if (!document.hidden) { loadLive(); } }, 60000);
   }
 
+  function growth() { return window.Drishti.elements.inputs.formOf(page.querySelector('[data-cap-growth-fields]')); }   // the sliders (core/admin_forms.py)
+
   function seedGrowth() {
     var t = value('Trades'), u = value('IntradayUpdatesDay');
-    var set = function (k, v) { var r = page.querySelector('[data-cap-grow="' + k + '"]'); r.value = v; page.querySelector('[data-cap-grow-out="' + k + '"]').textContent = v + (k === 'intraday' ? '%' : ''); };
-    set('intraday', t > 0 ? Math.round(u / t * 100) : 0);
-    set('HotDates', value('HotDates'));
-    set('Users', value('Users'));
+    growth().setValue({ intraday: t > 0 ? Math.round(u / t * 100) : 0, HotDates: value('HotDates'), Users: value('Users') });
   }
 
   try { st.inputs = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { st.inputs = {}; }

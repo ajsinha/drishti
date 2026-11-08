@@ -155,7 +155,44 @@ def busy_override(*, max_minutes: int = 240, **_) -> Markup:
                   attrs={"data-busy-fields": ""}, layout="inline", label="Operator override")
 
 
+def pack_signature(**_) -> Markup:
+    """Admin › Packs' Signed archive?: the publisher and the signature sent with the archive."""
+    props = {"publisher": K.text("Publisher", None, hook={"data-publisher": ""}, placeholder="acme",
+                                 description="The publisher's key must be listed in drishti.packs.registry.trusted-keys. Unsigned archives are accepted unless the server requires signatures."),
+             "signature": K.text("Signature (base64 Ed25519 of the archive)", None, mono=True, hook={"data-signature": ""})}
+    return K.host(K.schema(props), {"publisher": "", "signature": ""}, attrs={"data-signature-fields": ""}, label="Signed archive")
+
+
+def pack_data(**_) -> Markup:
+    """A pack's page, Load a data file: the file, the kind (when the pack loads several; the page's script fills the list) and the business
+    date of a snapshot kind."""
+    props = {"file": K.file("Data file", None, accept=".json,.jsonl,.ndjson", hook={"data-data-file": ""}),
+             "kind": K.select("Kind", None, [], hook={"data-data-kind": ""}, when={"field": "many", "equals": True}),
+             "date": K.date("Business date (snapshot)", None, hook={"data-data-date": ""}, when={"field": "snapshot", "equals": True})}
+    return K.host(K.schema(props), {"many": False, "snapshot": False}, attrs={"data-data-fields": ""}, label="Load a data file")
+
+
+def capacity_growth(**_) -> Markup:
+    """Admin › Capacity's Plan for growth: three sliders (the page's script seeds them from the plan and recomputes as they move)."""
+    props = {"intraday": K.slider("Intraday updated a day", 0, 100, unit="%", hook={"data-cap-grow": "intraday"}),
+             "HotDates": K.slider("Dates in memory", 1, 60, hook={"data-cap-grow": "HotDates"}),
+             "Users": K.slider("Concurrent users", 1, 1000, hook={"data-cap-grow": "Users"})}
+    return K.host(K.schema(props), {"intraday": 0, "HotDates": 10, "Users": 1}, attrs={"data-cap-growth-fields": ""}, layout="inline", label="Plan for growth")
+
+
+def capacity_download(**_) -> Markup:
+    """Admin › Capacity's Download the working: which inputs the workbook carries (submitted with the dialog as ``inputs``)."""
+    props = {"inputs": K.radios("Which inputs?", "inputs", [("plan", "What is on the screen"), ("live", "This server's live figures"), ("both", "Both, side by side")],
+                                description="What is on the screen: the inputs as set here. This server's live figures: the measured positions, trades, dates in "
+                                            "memory, users, requests a second and Java in the Inputs (the plan beside them), with the measured heap, RSS, disk and "
+                                            "load under them. Both: the plan's inputs drive Results; a Live column beside them holds the measured figures, "
+                                            "stamped with their time.")}
+    return K.host(K.schema(props), {"inputs": "plan"}, attrs={"data-cap-download-fields": ""}, label="Which inputs?")
+
+
 BUILDERS: dict[str, Callable[..., Markup]] = {
+    "capacity_growth": capacity_growth, "capacity_download": capacity_download,
+    "pack_signature": pack_signature, "pack_data": pack_data,
     "role": role, "user": user, "search": search, "field": field, "access_filter": access_filter, "config_search": config_search,
     "config_propose": config_propose, "connector_filters": connector_filters, "artifact_filters": artifact_filters, "artifact_bi_file": artifact_bi_file,
     "busy_override": busy_override}
