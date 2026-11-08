@@ -52,7 +52,7 @@ def predicate_for(day: str, names: list[str], values: tuple | None) -> str:
     """The SQL predicate of one business date (values None) or of one partition."""
     parts = [f"business_date = '{day}'"]
     for n, v in zip(names, values or ()):
-        parts.append(f"{n} IS NULL" if v is None else f"{n} = '" + v.replace("'", "''") + "'")
+        parts.append(f"{n} IS NULL" if v is None or v == "" else f"{n} = '" + v.replace("'", "''") + "'")
     return " AND ".join(parts)
 
 
@@ -253,7 +253,7 @@ def write_deltalake(t: Table, by_day: dict, progress=None) -> dict:
         cols = {"id": pa.array([r[0] for r in rows], pa.string()), "doc": pa.array([r[1] for r in rows], pa.string()),
                 "business_date": pa.array([day] * len(rows), pa.date32())}
         for n, v in zip(t.partition_names, part.values):
-            cols[n] = pa.array([v] * len(rows), pa.string())
+            cols[n] = pa.array([v if v != "" else None] * len(rows), pa.string())     # an empty value is null, as Spark writes it
         for name, kind in t.promoted.items():
             cols[name] = pa.array([_cell(r[2].get(name), kind) for r in rows],
                                   pa.float64() if kind == "double" else pa.list_(pa.float64()) if kind == "vector" else pa.string())

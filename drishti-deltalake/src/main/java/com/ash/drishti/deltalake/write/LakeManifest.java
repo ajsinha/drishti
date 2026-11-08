@@ -85,7 +85,8 @@ public record LakeManifest(String table, List<String> partitionColumns, List<Col
         List<Part> parts = new ArrayList<>();
         for (JsonNode p : n.path("parts")) {
             Map<String, String> values = new LinkedHashMap<>();
-            p.path("values").fields().forEachRemaining(e -> values.put(e.getKey(), e.getValue().isNull() ? null : e.getValue().asText()));
+            p.path("values").fields().forEachRemaining(e -> values.put(e.getKey(),        // an empty value is null, as Spark writes it
+                    e.getValue().isNull() || e.getValue().asText().isEmpty() ? null : e.getValue().asText()));
             parts.add(new Part(Path.of(p.path("file").asText()), p.path("rows").asLong(), values));
         }
         Map<String, String> properties = new LinkedHashMap<>();
