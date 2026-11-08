@@ -23,6 +23,13 @@
 #   help         the help address its ? opens (/help/context/<help>)
 #   engine       the compute engine it needs (config/engines.yaml): off on every server of the cluster, the preset is refused in words (DRS-1020)
 #   under_construction   the registry item (config/under-construction.yaml) while the preset's source is not built: its doors carry the chip
+#   mode         how the screen opens (PIVOT_GUIDE.md section 2): views (the View picker in front of the compact line, the default),
+#                compact (the compact line alone) or panes (the Fields and Build panes); a person moves between them with Customize › (\)
+#   view         the ready-made view it opens with (its id below); none: the source's own landing
+#   views        the ready-made views of the View picker (keys 1-9), each a partial view laid over the landing: id, name, detail (what it
+#                shows), rows, columns, values ([{measure, as}]), and optionally sort, top, expandTo, options. A view naming a field the
+#                source does not have (a hierarchy not configured) is left out of the picker. My views and Shared with me are the saved
+#                and shared views (PIVOT_GUIDE.md section 11): no store of their own.
 presets:
   mr:
     title: MR cube
@@ -32,6 +39,46 @@ presets:
     landing: source
     help: mcube
     engine: mr-cube
+    mode: views
+    views:
+      - id: by-risk-class-desk
+        name: By risk class × desk
+        detail: MGMT Desk › Book · Position › Trade × Risk class · VaR
+        landing: true                    # the source's own landing (desks by risk class, opened by level)
+      - id: by-desk
+        name: By desk
+        detail: MGMT Desk · VaR, ES, Limit use
+        rows: [MGMT.DESK]
+        columns: []
+        values: [{measure: "var()", as: VaR}, {measure: "es()", as: ES}, {measure: "limit_use()", as: Limit use}]
+      - id: by-book
+        name: By book
+        detail: MGMT Desk › Book · VaR, ES, Limit use
+        rows: [MGMT.DESK, MGMT.BOOK]
+        columns: []
+        values: [{measure: "var()", as: VaR}, {measure: "es()", as: ES}, {measure: "limit_use()", as: Limit use}]
+        expandTo: {rows: 2, columns: 1}
+      - id: by-limit-letter
+        name: By limit letter
+        detail: LL Limit letter › Desk · VaR, Limit, Limit use
+        rows: [LL.LIMIT-LETTER, LL.DESK]
+        columns: []
+        values: [{measure: "var()", as: VaR}, {measure: "limit()", as: Limit}, {measure: "limit_use()", as: Limit use}]
+      - id: top-contributors
+        name: Top contributors
+        detail: Positions by Comp VaR, top 20 · Comp VaR, Incr VaR, VaR
+        rows: [POSITION]
+        columns: []
+        values: [{measure: "comp_var()", as: Comp VaR}, {measure: "incr_var()", as: Incr VaR}, {measure: "var()", as: VaR}]
+        sort: {POSITION: {by: Comp VaR, desc: true}}
+        top: {POSITION: {n: 20, by: Comp VaR}}
+      - id: trades-in-scope
+        name: Trades in my scope
+        detail: Trade · VaR, Incr VaR, PV · sorted by Incr VaR
+        rows: [TRADE]
+        columns: []
+        values: [{measure: "var()", as: VaR}, {measure: "incr_var()", as: Incr VaR}, {measure: "pv()", as: PV}]
+        sort: {TRADE: {by: Incr VaR, desc: true}}
   ccr:
     title: CCR cube
     word: CCUBE
