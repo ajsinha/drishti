@@ -149,6 +149,11 @@ class VarStressApiTest {
     }
 
     static void write(LocalDate day, boolean withStress) throws Exception {
+        write(lake, day, withStress);
+    }
+
+    /** The date's tables in {@code lake} (VarMrCubeCapTest writes its own lake the same way). */
+    static void write(Path lake, LocalDate day, boolean withStress) throws Exception {
         VarLakeFixture.write(lake, day, 1.0, false, false);              // the hierarchy, the portfolios
         List<Map<String, Object>> rows = new ArrayList<>();
         for (String[] t : TRADES) {

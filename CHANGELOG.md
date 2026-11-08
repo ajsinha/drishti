@@ -1081,6 +1081,22 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
 
 ### Fixes (the train's bulk drill)
 
+- **The MR cube's capped measures are deterministic**: stressed VaR (`drishti.cube.mr.stressed-max-cells`, 100) and SBM
+  (`sbm-max-cells`, 60) were counted per evaluation, and cells already cached by an earlier view were not counted, so which cells got a
+  figure depended on what was asked before and in what order (desks × currency alone: stressed VaR on 100 of 186 cells; after the same
+  rows by nothing and by risk class: 131), and a row's diversification summed whatever parts had one. A provider now declares a capped
+  measure (`PivotProvider.cap`); the pivot engine lays the grid out without it, then computes it for the view's first N cells in the
+  grid's order (row by row as shown, each row's columns left to right), each cell asked alone through the cache; every other cell carries
+  the note, even when its figure is cached. Nothing is counted in shared state, so parallel queries get the same answer. A
+  diversification (`diversification`, `diversificationByColumn`) is `null` when the total or a part with members has no figure, never a
+  partial sum; a sort or a top N by a capped measure is refused in words. Every figure computed is the engine's own for the cell's scope,
+  as before (`CappedMeasureTest`, `VarMrCubeCapTest`; MR_CUBE_GUIDE section 2, PIVOT_GUIDE section 9).
+- **The old explain endpoints answer for one release**: `GET /api/v1/var/explain`, `/api/v1/var/explain/matrix` and
+  `/api/v1/pivot/mr/explain` (and their `/api/v1/risk/...` paths) answered `404` since the one Explain replaced them; like every other
+  moved path of this release they now answer with the 2.9.11.d body (the one Explain's `why.answer`, its `matrix`, and the MR cube's
+  `factorOverlay` note), `Deprecation: true` and a `Link` to `/api/v1/explain?kind=var&part=why` (`&view=matrix`)
+  (`VarExplainApiTest`, against the recorded 2.9.11.d shape; API_GUIDE, RELEASE_NOTES).
+
 - **Drishti's lake writer and a partition value with a space**: Kernel hands a partition's folder percent-encoded
   (`PRODUCT_GROUP=Fixed%20income`); the writer wrote the file there while every read looked in `Fixed income`, so a Calypso or Murex
   trade load by `PRODUCT_GROUP` failed with "the write failed, nothing was committed". The writer now decodes a `file:` URI exactly as the

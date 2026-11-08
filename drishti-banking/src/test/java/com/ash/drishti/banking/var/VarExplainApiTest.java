@@ -76,7 +76,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
         "drishti.security.roles.desk-y.kinds[0]=*", "drishti.security.roles.desk-y.raw=true",
         "drishti.var.access.desk-y[MGMT~DESK-Y]=positions", "drishti.under-construction.file=../config/under-construction.yaml",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
+        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.engines.mr-cube.enabled=true",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
@@ -364,9 +364,6 @@ class VarExplainApiTest {
                 .contains("waterfall");
         assertThat(ask("/api/v1/explain", status().isBadRequest(), "kind", "var", "scope", "BANK", "measure", "dv01").get("detail").asText())
                 .contains("pvar");
-        // the old addresses are gone: the one Explain answers them
-        mvc.perform(req("/api/v1/risk/var/explain", "scope", "BANK")).andExpect(status().is4xxClientError());
-        mvc.perform(req("/api/v1/risk/var/explain/matrix", "scope", "BANK")).andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -553,5 +550,65 @@ class VarExplainApiTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
         assertThat(yan.get("value").asDouble()).isEqualTo(head.get("var").asDouble());
         assertThat(yan.get("value").asDouble()).isNotEqualTo(rita.get("value").asDouble());
+    }
+
+    /** An answer without its timing (the one field two asks never share). */
+    private static JsonNode timeless(JsonNode a) {
+        com.fasterxml.jackson.databind.node.ObjectNode o = a.deepCopy();
+        o.remove("computeMs");
+        return o;
+    }
+
+    /** The answer has exactly the recorded 2.9.11.d fields, each of its recorded JSON type (or null). */
+    private static void shaped(JsonNode a, JsonNode shape, String what) {
+        List<String> fields = new ArrayList<>();
+        a.fieldNames().forEachRemaining(fields::add);
+        List<String> recorded = new ArrayList<>();
+        shape.fieldNames().forEachRemaining(recorded::add);
+        assertThat(fields).as(what).containsExactlyInAnyOrderElementsOf(recorded);
+        shape.fields().forEachRemaining(e -> {
+            JsonNode v = a.get(e.getKey());
+            String type = v.isObject() ? "object" : v.isArray() ? "array" : v.isNumber() ? "number" : v.isTextual() ? "string"
+                    : v.isBoolean() ? "boolean" : "null";
+            assertThat(type.equals(e.getValue().asText()) || v.isNull()).as(what + " " + e.getKey() + ": " + type).isTrue();
+        });
+    }
+
+    @Test
+    void theOldExplainPathsAnswerForOneReleaseWithTheirOldBody() throws Exception {
+        JsonNode shape = json.readTree(VarExplainApiTest.class.getResourceAsStream("/var-explain-d-shape.json"));
+        JsonNode why = ask("/api/v1/explain", status().isOk(), "kind", "var", "part", "why", "scope", "BANK").at("/why/answer");
+        JsonNode matrix = ask("/api/v1/explain", status().isOk(), "kind", "var", "part", "why", "view", "matrix", "scope", "BANK")
+                .at("/why/answer/matrix");
+        String link = "</api/v1/explain?kind=var&part=why>; rel=\"successor-version\"";
+        String linkMatrix = "</api/v1/explain?kind=var&part=why&view=matrix>; rel=\"successor-version\"";
+        for (String path : List.of("/api/v1/var/explain", "/api/v1/risk/var/explain", "/api/v1/var/explain/matrix",
+                "/api/v1/risk/var/explain/matrix", "/api/v1/pivot/mr/explain", "/api/v1/risk/mr/explain")) {
+            MvcResult r = mvc.perform(req(path, "scope", "BANK")).andExpect(status().isOk()).andReturn();
+            assertThat(r.getResponse().getHeader("Deprecation")).as(path).isEqualTo("true");
+            assertThat(r.getResponse().getHeaders("Link")).as(path).containsExactly(path.endsWith("matrix") ? linkMatrix : link);
+            JsonNode a = json.readTree(r.getResponse().getContentAsString());
+            if (path.endsWith("matrix")) {
+                shaped(a, shape.get("matrix"), path);
+                for (JsonNode row : a.get("rows")) {
+                    shaped(row, shape.get("matrixRow"), path + " row");
+                }
+                assertThat(a).as(path).isEqualTo(matrix);
+            } else if (path.contains("/mr/")) {
+                shaped(a, shape.get("mr"), path);
+                assertThat(a.at("/factorOverlay/available").asBoolean(true)).isFalse();
+                com.fasterxml.jackson.databind.node.ObjectNode rest = (com.fasterxml.jackson.databind.node.ObjectNode) timeless(a);
+                rest.remove("factorOverlay");
+                assertThat((JsonNode) rest).as(path).isEqualTo(timeless(why));
+            } else {
+                shaped(a, shape.get("var"), path);
+                assertThat(timeless(a)).as(path).isEqualTo(timeless(why));
+            }
+        }
+        JsonNode d1 = ask("/api/v1/var/explain", status().isOk(), "scope", "NODE:MGMT~DESK-X", "from", D1.toString(), "to", D2.toString());
+        assertThat(timeless(d1)).isEqualTo(timeless(explain("NODE:MGMT~DESK-X")));
+        assertThat(ask("/api/v1/var/explain", status().isBadRequest(), "scope", "BANK", "method", "shapley").get("detail").asText())
+                .contains("planned");
+        assertThat(ask("/api/v1/var/explain", status().isBadRequest()).get("detail").asText()).contains("give a scope");
     }
 }

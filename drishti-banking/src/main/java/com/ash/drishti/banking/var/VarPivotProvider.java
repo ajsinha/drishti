@@ -188,6 +188,22 @@ public final class VarPivotProvider implements PivotProvider {
         return out;
     }
 
+    /**
+     * Stressed VaR and SBM are computed scope by scope (a VaR run on the stress set, an FRTB-SA run), so a view gets them for its first
+     * {@code drishti.cube.mr.stressed-max-cells} and {@code sbm-max-cells} cells in the grid's order (row by row as shown, each row's columns
+     * left to right), whatever was asked before; the pivot engine asks this provider for those cells only (PivotCore, capped measures).
+     */
+    @Override
+    public Optional<Cap> cap(String function) {
+        return switch (function) {
+            case "svar" -> Optional.of(new Cap(props.stressedMaxCells(), "stressed VaR is computed for the first " + props.stressedMaxCells()
+                    + " cells of a view, row by row as the grid shows them (drishti.cube.mr.stressed-max-cells)"));
+            case "sbm" -> Optional.of(new Cap(props.sbmMaxCells(), "SBM is computed for the first " + props.sbmMaxCells()
+                    + " cells of a view, row by row as the grid shows them (drishti.cube.mr.sbm-max-cells)"));
+            default -> Optional.empty();
+        };
+    }
+
     @Override
     public Optional<AggFunction<Object>> nativeFunction(String name, List<String> args) {
         for (Native n : BASIC) {
