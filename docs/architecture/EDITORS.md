@@ -113,7 +113,8 @@ Mock-up: [g6-apikeys.html](mockups/editors/g6-apikeys.html); all three options.
 
 - **Nothing goes live without review**: a change is proposed and approved by another person (four eyes), versioned and audited.
 - **Impact before change**: every editor shows what uses the object (models, Sutras, reports, boards, keys) before it is changed.
-- **One grammar**: every formula, filter, row rule and computed column is Rachana, with the function catalogue as type-ahead.
+- **One grammar**: every formula, filter, row rule and computed column is Rachana, typed in drishti-inputs' code editor (one line for a
+  field, the whole text for the statement) with the function catalogue and the editor's names as its completion.
 - **One entitlement service**: row rules and masks are enforced on the server for every reader (BI, Pivot, VaR, Flight, the API).
 - **Computed on the server**: previews, totals and Python runs happen on the server; the console only displays.
 - **Under construction**: an editor or a part of one that depends on unbuilt work is hidden or marked from the registry

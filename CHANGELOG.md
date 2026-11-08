@@ -111,6 +111,16 @@
   field, visual-type and well drags, layout mode, screen arranging, workspaces and sliders on it or on drishti-designer's `DragHub` (their
   HTML5 drags deleted); drishti-inputs makes a page's `<textarea data-di-code>` a code editor (`upgradeCodeArea`) and the connector,
   net, theme, BI item, workspace, transform and Pivot code areas use it. The guard's allow-list went from 19 files to 3.
+- **No bespoke UI, the third pass**: the Sutra designer's Grid formula bar is drishti-inputs' `CodeEditor` (Rachana, growing with its
+  text; Enter keeps, Shift+Enter a new line, Esc goes back; the panels' events after `@`, fragments and kinds first in a line and
+  parameters after a bracket are its completion), its hand-made suggestion list deleted; the Outline mode's tree is drishti-designer's
+  `Outline` (keys, Alt+arrows, drags before, after or into an item; dropping a panel on a table nests it), the hand-made tree deleted;
+  the table and model editors' formula fields (computed columns, the filter, the look-up key, row rules, measures, hierarchies, the
+  statement) are the code editor, their hand-made completion list deleted. drishti-inputs: `<input data-di-code>` becomes a one-line
+  code editor (`singleLine`), `height: 'auto'` with `minHeight` and `maxHeight`, `insert()`, `setInvalid()`; a code area's "change" on
+  leaving comes only after a person's edit, never for the page's own text. drishti-designer's `Outline`: a node's `cls` and its own
+  `data-*` attributes. The guard's allow-list went from 3 files to 1 (the workbench's data-shape tree, moved onto drishti-tree on its
+  own branch).
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never

@@ -990,7 +990,10 @@ under 530 lines each, typed JSDoc, the bundle by `tools/elements/build.py`, `Dri
   F8 Impact, F9 Propose).
 - **drishti-inputs extended for it** (no code in the screens): `CodeEditor.updateValue` (the cursor and the scroll kept), `highlight`
   (the selected item's lines), `cursor` and its event, `completeAfter` (a YAML key's "kind: ", a path's "$."), entries that say where
-  their word starts, `lineWrapping`, `tabLeaves` (a small box Tab leaves), YAML's Enter keeping its indentation (`yamlIndentAfter`);
+  their word starts, `lineWrapping`, `tabLeaves` (a small box Tab leaves), YAML's Enter keeping its indentation (`yamlIndentAfter`),
+  `height: 'auto'` (it grows with its text between `minHeight` and `maxHeight`: a formula bar), `singleLine` (a formula field: Enter
+  adds no line, a pasted line break is a space), `insert` (text at the cursor, as typed), `setInvalid` (a host's own check), and
+  `upgradeCodeArea` for `<input data-di-code>` too (one line; the element holds the value; focus and blur forwarded);
   `Form`'s `live` (no Save or Reset: an inspector).
 - **Moved onto it, the old code deleted**: the Build workbench's canvas (`build/drishti_canvas.js`: a flow `LayoutCanvas`; the trash,
   grip and size badge are its decoration), its drags (`build/drishti_drag.js`: the kit's `DragHub` and `trackPointer`), its YAML tab
@@ -1176,11 +1179,11 @@ table editor, `/build/tables?new=table`; "the model designer" in two notes means
 |---|---|---|
 | Build workbench (`build/drishti_*.js`) | canvas (flow `LayoutCanvas`), drags (`DragHub`), YAML tab (`YamlPane`, schema assistant), about box (`CodeEditor`), the form and controls tabs' re-ordering (`sortableList`); undo stays the server's operation log | the inspector (`build/drishti_inspector.js` → `Inspector` from the Rachana schema), the palette (`build/drishti_palette.js` → `Palette`), the data-shape tree (`drishti_build-shape-tree.js` → `Outline`), the expression input (`build/drishti_expr.js` → `CodeEditor`) |
 | BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`) | the Fields and Visualizations panes (→ `Palette`), the Format pane (→ `Inspector`), the device orders' model (→ `LayoutModel` breakpoints), the expression editor (`drishti_bi-expr-editor.js` → `CodeEditor`) |
-| Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`) | the source and look-up rows, the columns checklist and computed columns (→ `Form`, drishti-grid editing), the formula input (`drishti_editor-formula.js` → `CodeEditor`) |
-| Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML | the tabs, measure cards and the access matrix (→ `Form`, drishti-grid), relationships |
+| Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`), the name, rows and look-up dialog (`Form`), every formula field and the statement (`CodeEditor`, one line or whole, through `drishti_editor-formula.js`) | the source and look-up rows, the columns checklist (→ `Form`, drishti-grid editing) |
+| Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML, the measures', hierarchies' and row rules' formulas (`CodeEditor`) | the tabs, measure cards and the access matrix (→ `Form`, drishti-grid), relationships |
 | Python table and model editor (`drishti_editor-python.js`) | the shell, the YAML | the code beside its contract (→ `CodeEditor` Python), the templates |
 | + New steps (`drishti_editor-new.js`) | the shell | the guided steps (→ `Form`) |
-| Sutra screen designer: Customize, Grid, Outline, Describe (`drishti_designer*.js`, `templates/designer/`) | | the panel handles and drags (→ `LayoutCanvas` flow), the Grid's cells and formula bar (→ `LayoutCanvas` grid, `CodeEditor`), the outline (→ `Outline`), the settings and forms panels (→ `Inspector`) |
+| Sutra screen designer: Customize, Grid, Outline, Describe (`drishti_designer*.js`, `templates/designer/`) | the drags (`trackPointer`, `DragHub`), the Grid's formula bar (`CodeEditor` with completion), the Outline mode's tree (`Outline`) | the panel handles (→ `LayoutCanvas` flow), the Grid's cells (→ `LayoutCanvas` grid), the settings and forms panels (→ `Inspector`) |
 | Form designer (the workbench's Form and Controls tabs) | the cards' order by drag (`sortableList`) | their fields (→ `Inspector`) |
 | BI Studio shell and theme designer (`drishti_bi-studio.js`, `drishti_bi-theme-designer.js`) | | the explorer, tabs and dock (→ `DesignerShell`), the theme YAML (→ `YamlPane`) |
 | BI items, workspaces, transforms (`templates/bi/item.html`, `workspace.html`, `transform.html`) | | the YAML and Python text areas (→ `CodeEditor`) |
@@ -1201,6 +1204,14 @@ designer's YAML, a BI item's and a workspace's YAML, the transform's Python and 
 `CodeEditor` in place. **Still on the allow-list**: the Sutra designer's Grid formula bar (its own suggestion list → `CodeEditor`
 completion), the Outline mode's tree and the workbench's data-shape tree (→ the kit's `Outline`). The editors' own panes in the table
 above (inspectors and forms) are not drags or code areas, so the guard does not see them; they move with the forms builder's `Form`.
+
+**Third pass (the allow-list from 3 to 1).** The Grid's formula bar is a `CodeEditor` (Rachana, `height: 'auto'`; Enter keeps, Shift+Enter
+a new line, Esc goes back; its suggestions are the editor's completion hook); the Outline mode draws its tree with the kit's `Outline`
+(sections and the "Drop a panel here" rows as fixed nodes, the host's `data-ol-*` attributes on the rows; a move becomes the server's
+step: move, un-nest, or nest after asking where it opens). The editors' formula fields are `CodeEditor`s through `<input data-di-code>`.
+**Still on the allow-list**: the workbench's data-shape tree, already on drishti-tree's `TreeOutline` on its own branch; once that branch
+is in, the kit's `Outline` and drishti-tree's `TreeOutline` fold into one component (never two implementations side by side) and the
+list is empty.
 
 ## 13. Risks
 
