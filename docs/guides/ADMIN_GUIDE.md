@@ -613,10 +613,9 @@ The console keeps a few answers for a moment so pages draw quickly. Nothing it k
 
 ### 10.2 The other Admin pages
 
-The pages for running the server (Admin → Connectors, Health, Caches, Capacity, Loads, Lakes, Net, Packs) are in
+The pages for running the server (Admin → Connectors, Health, Caches, Capacity, Loads, Lakes, Cluster, Packs) are in
 [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md); for example Admin → Capacity in
-[section 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan). Admin → Commands, Engines and Modules are sections 20 to
-22 below.
+[section 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan). Admin → Functions and Admin → Engines are sections 20 and 21 below; modules (no page: a file, a setting or the API) are section 22.
 
 ## 11. The users and roles API
 
@@ -701,7 +700,7 @@ licence  →  modules on  →  lenses offered  →  functions this person may us
 ```
 
 - **The module** decides whether the lens exists here. A lens names the modules it needs and is offered only while they are all on
-  (installed, licensed and enabled: Admin → Modules, [section 22](#22-modules-on-or-off)). A module that is off offers none of its lenses
+  (installed, licensed and enabled: [section 22](#22-modules-on-or-off)). A module that is off offers none of its lenses
   and none of its packs.
 - **The functions** are the command words the lens bundles (`VAR`, `TRD`, `CRV`, `ECON` ...). A card, chip, menu item or command whose
   function is off for the person (its module off, or an administrator's switch on Functions: [section 20](#20-functions-func-every-command-and-turning-one-on-or-off))
@@ -814,7 +813,7 @@ the same value.
 else you should see is in the lens's own section ([section 16](#16-the-shipped-lenses)).
 
 **The lens must be offered.** An instance lens whose modules are off (banking for Risk, Trading and Market; capitalmarkets too for Market;
-economy for World) has nothing to show: switch the module on first (Admin → Modules, then a restart).
+economy for World) has nothing to show: switch the module on first (`config/modules/<module>.yaml`, `DRISHTI_MODULES_<MODULE>_ENABLED` or `POST /api/v1/admin/modules`, then a restart).
 
 **Back to the full product.** Blank the setting (remove `drishti.edition` from `application.local.yaml`, unset `DRISHTI_EDITION`, or set it
 empty) and restart the server. `/public/about` then answers `"edition": null` and everything is the full product: the default packs
@@ -1230,7 +1229,7 @@ platform** lens (BI and Build without the risk packs) is one more file.
 
 **Every member runs the same instance lens**: set `DRISHTI_EDITION` on every node (the stack, ECS and Docker examples of
 [section 13](#13-run-a-whole-instance-as-one-lens) do); each reads the same file (it ships in every image under `config/lenses/`). Each
-member publishes its lens in its capability digest (the service `edition`); if they differ, **Admin → Net** shows the warning "the nodes
+member publishes its lens in its capability digest (the service `edition`); if they differ, **Admin → Cluster** shows the warning "the nodes
 run different editions" with the nodes of each, and each member shows and refuses what its own lens says until you fix it. Check each node:
 
 ```bash
@@ -1248,8 +1247,7 @@ hides commands from people, never a kind an engine reads. Lenses are per cluster
 grouped by pack, with what each does and an example; click one to open it. An administrator sees the same page with the switches: any
 command of the packs can be turned off for everyone (`FRTB`, `EQV`, `TRD` and every other mnemonic). The code stays; a command that is off
 is **not active** everywhere, and nothing about it leaks. Turn it back on at any time. Packs are switched on the same page and in the same
-record, so a cluster of servers always agrees on both. Admin → Commands in the Admin menu opens Functions (`/admin/commands` redirects to
-`/func`).
+record, so a cluster of servers always agrees on both. **Admin → Functions** is that page (`/func`; the old address `/admin/commands` redirects to it).
 
 ### 20.1 The page, for everyone
 
@@ -1575,7 +1573,7 @@ and the trading, market-data, market-risk and counterparty-risk packs), **capita
 data's functions) and **economy** (the world-economy, news-and-markets and public-sector packs, and the World and Public sector lenses). A
 module is **on** when it is installed, licensed and enabled, and every module it needs is on; the core is always on. A module that is off
 offers none of its lenses, functions, packs or engines (its engines show *not installed* on Admin → Engines), and its API answers
-`404 DRS-1025`; a function that is off answers `404 DRS-1026`. The switch is `config/modules/<module>.yaml` (Admin → Modules writes it) or
+`404 DRS-1025`; a function that is off answers `404 DRS-1026`. The switch is `config/modules/<module>.yaml` (`POST /api/v1/admin/modules` writes it, with a reason, audited) or
 `DRISHTI_MODULES_<MODULE>_ENABLED`, and a change takes effect at the next start. The how-to, the licence file and what each module brings
 to the console are in [OPERATIONS_GUIDE.md, Modules on or off](OPERATIONS_GUIDE.md#65-engines-modules-and-editions).
 
@@ -1601,7 +1599,7 @@ to the console are in [OPERATIONS_GUIDE.md, Modules on or off](OPERATIONS_GUIDE.
 | You see | Why | Do |
 |---|---|---|
 | The server does not start: `drishti.edition='x': no edition file …` | the name does not match a file in `drishti.lens-dir` or one of its module folders | check the name, or set `DRISHTI_LENS_DIR` to the folder of the lens files |
-| No "Open …" link for a lens named in `drishti.lenses` | its registry lens is not offered (a module it needs is off), it has no file, or the instance runs a lens itself | switch the module on (Admin → Modules, restart); the server's log says "lens … is not offered" with the reason |
+| No "Open …" link for a lens named in `drishti.lenses` | its registry lens is not offered (a module it needs is off), it has no file, or the instance runs a lens itself | switch the module on (`config/modules/<module>.yaml`, `DRISHTI_MODULES_<MODULE>_ENABLED` or `POST /api/v1/admin/modules`; restart); the server's log says "lens … is not offered" with the reason |
 | A command answers `DRS-4023` "is not part of the edition", or the type-ahead does not offer it | the lens hides it (`commands.allow`) | add it with `drishti.edition-spec.commands.also-allow` ([section 17](#17-customise-a-lens-without-forking-it-and-white-label-it)), or use `FUNC` to see what is offered |
 | A command answers `DRS-1026` or "not available to you" | its function is off (its module off, or Functions) | switch the module or the function on |
 | `FORM` (or another word) says "is not part of Drishti Risk" | the lens switches the word off (`commands.words`) | `edition.commands.words.FORM: on` in the console and `drishti.edition-spec.commands.words.form: on` on the server |
@@ -1609,10 +1607,10 @@ to the console are in [OPERATIONS_GUIDE.md, Modules on or off](OPERATIONS_GUIDE.
 | Loading a pack in Admin → Packs, Deploy archive or the registry answers `DRS-1017` | the lens's packs are allow-only | add the pack to `packs.enabled`, or set `drishti.edition-spec.packs.allow-only: false` |
 | A pack named in `DRISHTI_PACKS` did not load | allow-only drops it (the log names it), or its module is off | as above, or switch the module on |
 | A Home card or chip is missing | its function is off for the person | switch the function or its module on |
-| World shows no companies, filings or funds | the capitalmarkets module is off | switch it on (Admin → Modules, restart) |
+| World shows no companies, filings or funds | the capitalmarkets module is off | switch it on (`config/modules/<module>.yaml`, `DRISHTI_MODULES_<MODULE>_ENABLED` or `POST /api/v1/admin/modules`; restart) |
 | The console still shows the full product | it has not reached the server yet, or the server runs no lens | check `/public/about`; the console follows within `backend.check_seconds` |
 | A BI report is missing | its dataset or model is not in `bi.datasets` / `bi.models` | add it there |
-| Admin → Net warns "the nodes run different editions" | `DRISHTI_EDITION` differs between members | set the same value on every node and restart ([section 19](#19-lenses-in-a-cluster)) |
+| Admin → Cluster warns "the nodes run different editions" | `DRISHTI_EDITION` differs between members | set the same value on every node and restart ([section 19](#19-lenses-in-a-cluster)) |
 
 **Commands and engines**
 

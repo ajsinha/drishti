@@ -2826,7 +2826,7 @@ $ drishti.py net check
 
 Members advertise only a real address ([OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 2](CLUSTER_GUIDE.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
 `0.0.0.0` and `::` are refused in `advertise-url` and in a seed's URL, and the message names this machine's address. `advertise-url` may be
-left out: the node then advertises this machine's primary IPv4 address with the server's port (Admin → Net → Members shows it as *detected*).
+left out: the node then advertises this machine's primary IPv4 address with the server's port (Admin → Cluster → Members shows it as *detected*).
 
 The file `net set` wrote:
 

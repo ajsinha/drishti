@@ -248,8 +248,8 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 | measure risk | [VAR_GUIDE](docs/guides/VAR_GUIDE.md), [REGULATORY_VAR_REPORTING](docs/guides/REGULATORY_VAR_REPORTING.md), [EXPOSURE_GUIDE](docs/guides/EXPOSURE_GUIDE.md), [FRTB_SA_GUIDE](docs/guides/FRTB_SA_GUIDE.md), [SIMM_GUIDE](docs/guides/SIMM_GUIDE.md), [GROUPINGS_ANALYTICS_GUIDE](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | [2](docs/tutorials/02-var-from-the-bank-to-a-trade.md), [3](docs/tutorials/03-exposure-from-the-bank-to-a-trade.md), [4](docs/tutorials/04-frtb-sa.md), [5](docs/tutorials/05-simm.md), [6](docs/tutorials/06-groupings-and-analytics.md) |
 | work with bank, world and public data | [FUNDS_GUIDE](docs/guides/FUNDS_GUIDE.md), [PUBLIC_SECTOR_GUIDE](docs/guides/PUBLIC_SECTOR_GUIDE.md), [EXTERNAL_DATA](docs/guides/EXTERNAL_DATA.md) | [12](docs/tutorials/12-a-day-of-bank-data.md), [13](docs/tutorials/13-world-data.md), [14](docs/tutorials/14-public-sector-data.md) |
 | bring data in and take it out | [DATA_GUIDE](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE](docs/guides/DATA_LAKE_GUIDE.md), [FLIGHT_GUIDE](docs/guides/FLIGHT_GUIDE.md) | [15](docs/tutorials/15-connect-your-data.md), [16](docs/tutorials/16-load-your-own-data-into-a-new-lake.md), [17](docs/tutorials/17-data-out-with-arrow-flight.md) |
-| build tables, packs and screens; embed; extend | [TABLES_GUIDE](docs/guides/TABLES_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md), [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md) | [18](docs/tutorials/18-tables-and-models.md), [19](docs/tutorials/19-build-a-pack-and-a-screen.md), [20](docs/tutorials/20-embed-drishti.md) |
-| install, operate, scale, administer | [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md), [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) | [21](docs/tutorials/21-run-it-in-production.md), [22](docs/tutorials/22-a-cluster-of-three.md) |
+| build tables, packs and screens; embed; extend | [QUICKSTART_DEVELOPERS](docs/QUICKSTART_DEVELOPERS.md) ([PDF](docs/QUICKSTART_DEVELOPERS.pdf)), [TABLES_GUIDE](docs/guides/TABLES_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md), [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md) | [18](docs/tutorials/18-tables-and-models.md), [19](docs/tutorials/19-build-a-pack-and-a-screen.md), [20](docs/tutorials/20-embed-drishti.md) |
+| install, operate, scale, administer | [DEPLOYMENT_AND_QA_GUIDE](docs/DEPLOYMENT_AND_QA_GUIDE.md) ([PDF](docs/DEPLOYMENT_AND_QA_GUIDE.pdf)), [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md), [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) ([PDF](docs/guides/CLUSTER_GUIDE.pdf)), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) | [21](docs/tutorials/21-run-it-in-production.md), [22](docs/tutorials/22-a-cluster-of-three.md) |
 
 **References**, one home each: [CONFIGURATION](docs/admin/CONFIGURATION.md), [API_REFERENCE](docs/guides/API_REFERENCE.md),
 [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG](docs/guides/COMMAND_CATALOG.md), [FUNCTIONS](docs/guides/FUNCTIONS.md),
@@ -281,17 +281,17 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 | Language | Lines | Files |
 |---|---|---|
 | Java, product | 431k | 2,159 |
-| Java, tests | 164k | 1,032 |
-| Python, product (console, tools, loaders, feeds) | 142k | 727 |
-| Python, tests | 106k | 600 |
+| Java, tests | 164k | 1,034 |
+| Python, product (console, tools, loaders, feeds) | 142k | 729 |
+| Python, tests | 106k | 601 |
 | JavaScript, product (console and Elements) | 125k | 486 |
 | JavaScript, tests | 4k | 22 |
 | CSS | 19k | 114 |
 | HTML (templates and pages) | 34k | 328 |
 | YAML: configuration, Sutras, data contracts | 111k | 1,412 |
-| Markdown: guides, tutorials, design | 221k | 303 |
+| Markdown: guides, tutorials, design | 219k | 303 |
 
-About **750k lines of product code** and **274k lines of tests** (36% of the product code), with **221k lines of documentation**.
+About **751k lines of product code** and **274k lines of tests** (37% of the product code), with **219k lines of documentation**.
 
 | What | Count |
 |---|---|
@@ -300,15 +300,15 @@ About **750k lines of product code** and **274k lines of tests** (36% of the pro
 | Lenses | 10: risk, trading, market, cro, mr-cube, ccr-cube, world, publicsector, cio, oversight |
 | Functions a module declares | 106 (47 banking, 32 capitalmarkets, 27 economy); every other command word is the core's |
 | Console routes | 644 |
-| Server REST handlers | 751 |
+| Server REST handlers | 754 |
 | Drishti Elements | 11 libraries, 186 ES modules |
 | Domain packs | 17: banking 4, capitalmarkets 2, core 3, economy 8 |
 | Sutras in the shipped packs | 248 |
 | Connector plugins | 19 |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,515: Java 949, console 248, browser 177, tools 119, JavaScript 22 |
-| Documents under docs/ | 172 (32 guides, 22 tutorials) |
+| Test files | 1,518: Java 951, console 249, browser 177, tools 119, JavaScript 22 |
+| Documents under docs/ | 174 (32 guides, 22 tutorials) |
 
 <!-- code-volume:end -->
 

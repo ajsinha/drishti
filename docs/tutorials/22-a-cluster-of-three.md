@@ -46,7 +46,7 @@ See [drishti-stack/README.md](../../drishti-stack/README.md).
 ## What you will learn
 
 - the five files of `config/net/` and how the CLI, the UI and the server refuse a wrong one;
-- how three nodes find each other from one seed, and what Admin → Net → Members shows;
+- how three nodes find each other from one seed, and what Admin → Cluster → Members shows;
 - how a request for data held elsewhere is answered (forwarded, or the data fetched), and how **Explain** shows it;
 - the cluster key, nodes per role and peer-only packs;
 - a console with several servers: discovery, failover and recovery; draining a node for maintenance;
@@ -93,10 +93,10 @@ enabled: true
 Give node a tags (nodes per role, Step 6, use them): `drishti.py net set node.tags region:emea,tier:risk`. Every write keeps the previous text
 under `<data dir>/net/history/` (`node.20261019T125447821.yaml`, ...), as the server's own writes do.
 
-**In the UI** (once a server runs): **Admin → Net → Files**, open `node.yaml`, edit, **Check** (the problems with their line), **Save**. A save
+**In the UI** (once a server runs): **Admin → Cluster → Files**, open `node.yaml`, edit, **Check** (the problems with their line), **Save**. A save
 carries the version you read; if someone saved in between, it is refused and the page says so.
 
-![Admin → Net → Files on node a: node.yaml and gossip.yaml in force, routing.yaml and access.yaml not there (their defaults apply), gossip.yaml open in the editor with Check, Save, Delete and its history](img/t19/03-files-gossip.jpg)
+![Admin → Cluster → Files on node a: node.yaml and gossip.yaml in force, routing.yaml and access.yaml not there (their defaults apply), gossip.yaml open in the editor with Check, Save, Delete and its history](img/t19/03-files-gossip.jpg)
 
 **You should see:** a key in clear (`secret: abc...`) is refused by the CLI, the UI and the server alike; the key never appears in a file,
 a page, an answer or a log. So is a loopback address:
@@ -145,7 +145,7 @@ drishti: gossip.yaml was not written: 'lots' is not a duration (150ms, 5s, 10m, 
   error   gossip.yaml:2  interval: 'lots' is not a duration (150ms, 5s, 10m, 24h)
 ```
 
-**In the UI:** **Admin → Net → Members**, **Add a seed**, type `<this machine's IP>:18783` (here `192.168.1.20:18783`), **Add seed**: it is saved as a peer file and tried at once.
+**In the UI:** **Admin → Cluster → Members**, **Add a seed**, type `<this machine's IP>:18783` (here `192.168.1.20:18783`), **Add seed**: it is saved as a peer file and tried at once.
 
 **You should see:** `drishti.py net list` on b naming its seed `drishti-a` and `peers/drishti-a.yaml in force`; with the key unset, `net check`
 exits 1 and names `node.yaml:3`.
@@ -169,12 +169,12 @@ INFO ... NetService : net: member drishti-c joined
  A server already running picks a change of its folder up within `drishti.net.poll` (5 s): saving `enabled: true` joins it, saving
 `false` makes it leave cleanly.
 
-**In the UI:** **Admin → Net → Members** on any node lists the three, each `alive`, with its version, tags, packs, the latency this node
+**In the UI:** **Admin → Cluster → Members** on any node lists the three, each `alive`, with its version, tags, packs, the latency this node
 measured and when it last heard of it; the page refreshes by itself. Beside the table the **hash ring** draws one arc per member, green while
 it is alive (amber suspect, red dead, grey left), sized by the kinds whose data it holds; this node is outlined, the console's server has a
 dashed band, and the centre counts the members alive. Hover an arc for the kinds it holds; click it to select its row.
 
-![Admin → Net → Members on the tutorial's cluster (drishti-a, drishti-b and drishti-c): the table with each node's state, address, version, tags and packs, and beside it the hash ring, three green arcs sized by the kinds each holds, drishti-a outlined as this node and banded as the console's server, 3 / 3 alive](img/t19/01-members.jpg)
+![Admin → Cluster → Members on the tutorial's cluster (drishti-a, drishti-b and drishti-c): the table with each node's state, address, version, tags and packs, and beside it the hash ring, three green arcs sized by the kinds each holds, drishti-a outlined as this node and banded as the console's server, 3 / 3 alive](img/t19/01-members.jpg)
 
 **From the command line** (an administrator's token in `DRISHTI_TOKEN`, or sign-in off):
 
@@ -193,10 +193,10 @@ after it started ([OPERATIONS_GUIDE.md › Drishti*net: running several servers 
 and `dead` after `dead-after` more (gossip.yaml; with the 3 s and 10 s used here every node saw it in about 3 s), and its data is then asked of
 the other holders.
 
-**The capability map** (**Admin → Net → Capability map**) shows, for each kind, the nodes that render it with their pack's version, and the
+**The capability map** (**Admin → Cluster → Capability map**) shows, for each kind, the nodes that render it with their pack's version, and the
 nodes that hold its data with the connector and the table it reads:
 
-![Admin → Net → Capability map filtered to trade: the renderers with the finance pack's version, the newest marked, and the holders of trade data on each node with their connector and table](img/t19/06-capability-map.jpg)
+![Admin → Cluster → Capability map filtered to trade: the renderers with the finance pack's version, the newest marked, and the holders of trade data on each node with their connector and table](img/t19/06-capability-map.jpg)
 
 ## Step 4 · A trade only one node holds
 
@@ -208,7 +208,7 @@ answered.
 
 ![The trade MX-00003, held on c only, opened through the console on a: the deal fields of MUREX and, for an administrator only, the line Node: drishti-a · built here, data from drishti-c](img/t19/04-trade-on-c-through-a.jpg)
 
-**In the UI:** **Admin → Net → Routing**, **Explain a request**: kind `trade`, id `MX-00003`, a role. It names the route the server takes
+**In the UI:** **Admin → Cluster → Routing**, **Explain a request**: kind `trade`, id `MX-00003`, a role. It names the route the server takes
 (answered here, with the data fetched from drishti-c; or forwarded, to which nodes in which order; which nodes the role may not reach; which
 are down) and the reason. Below it: forwarded calls per peer and minute, the slowest peers and the latest calls.
 
@@ -247,7 +247,7 @@ backend:
   data_dir: ~/drishti/console              # keeps net/servers.json, so a restart knows the cluster even if the named server is down
 ```
 
-**In the UI:** **Admin → Net → Members**, the box **This console's servers**: every server it knows, configured or discovered, and whether it
+**In the UI:** **Admin → Cluster → Members**, the box **This console's servers**: every server it knows, configured or discovered, and whether it
 is healthy. **Admin → Health** shows the same list and the failovers.
 
 ![This console's servers: 18783 configured and in use, 18784 and 18785 discovered, all healthy](img/t19/02-console-servers.jpg)
@@ -265,21 +265,21 @@ roles:
     nodes: [region:emea]
 ```
 
-**In the UI:** **Admin → Net → Access** edits it and shows the members each role reaches now.
+**In the UI:** **Admin → Cluster → Access** edits it and shows the members each role reaches now.
 
-![Admin → Net → Access: the roles and the nodes each may reach, this node's tags and peer-only packs](img/t19/07-access.jpg) A forwarded request whose roles may not reach a
+![Admin → Cluster → Access: the roles and the nodes each may reach, this node's tags and peer-only packs](img/t19/07-access.jpg) A forwarded request whose roles may not reach a
 node is refused there (`403 DRS-5054`), whatever the forwarding node thought. A pack listed in `peer-only-packs` in node.yaml is served to the
-other nodes but hidden from the node's own users. **Admin → Net → Security** shows the key's state (never the key), the previous key during a
+other nodes but hidden from the node's own users. **Admin → Cluster → Security** shows the key's state (never the key), the previous key during a
 rotation and refused calls; the key rotates in three steps with no downtime ([OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 6](../guides/CLUSTER_GUIDE.md#16-security-the-key-mutual-tls-nodes-per-role)).
 
-![Admin → Net → Security: the cluster key set (never shown), no previous key, mutual TLS off, and no refused calls](img/t19/08-security.jpg)
+![Admin → Cluster → Security: the cluster key set (never shown), no previous key, mutual TLS off, and no refused calls](img/t19/08-security.jpg)
 
 **You should see:** a role limited to `region:emea` reaching drishti-a and drishti-b only; the Security tab saying the key is set and listing
 no refused calls.
 
 ## Step 7 · Drain a node, then stop one
 
-**Drain** (Admin → Net → Members, **Drain**, or `POST /api/v1/net/drain`): the node stops taking forwarded traffic and searches and the other
+**Drain** (Admin → Cluster → Members, **Drain**, or `POST /api/v1/net/drain`): the node stops taking forwarded traffic and searches and the other
 nodes see it within a gossip round; requests for data it shares with another node go to that node. **Undrain** brings it back. Drain before
 maintenance; then stop it, and it leaves the cluster cleanly.
 
@@ -327,11 +327,11 @@ $ drishti.py net members --server http://$IP:18784
   drishti-c              alive  http://192.168.1.20:18785  2.4.0    region:apac            6.7 ms   1
 ```
 
-![Admin → Net → Members on c after a stopped: drishti-a left, b and c alive; this console's servers: 18783 set aside, 18785 in use](img/t19/09-after-a-stopped.jpg)
+![Admin → Cluster → Members on c after a stopped: drishti-a left, b and c alive; this console's servers: 18783 set aside, 18785 in use](img/t19/09-after-a-stopped.jpg)
 
 At a phone's width (390 px) the page keeps its tabs and its summary: the cluster on, this node, three alive, the server the console is on.
 
-![Admin → Net at 390 px: the summary chips (cluster on, this node drishti-c, 3 alive, key set, console on 18785) and the six tabs](img/t19/10-members-phone.jpg)
+![Admin → Cluster at 390 px: the summary chips (cluster on, this node drishti-c, 3 alive, key set, console on 18785) and the six tabs](img/t19/10-members-phone.jpg)
 
 **You should see:** the next page within a second (0.8 s in the browser suite, 0.27 s in the soak with a killed server), no sign-in page, an
 open live view still ticking; **Admin → Health** counts the failover, and the server is told of it (audited).
@@ -354,7 +354,7 @@ $ curl -s -X POST http://$IP:18783/api/v1/admin/users -H "Authorization: Bearer 
 $ curl -s http://$IP:18785/api/v1/admin/users/rita -H "Authorization: Bearer $DRISHTI_TOKEN"   # on c, a second later: rita
 ```
 
-**You should see:** Admin → Net → Members on b counting the changes applied from a (*Users' saved searches, layouts, pivots and workspaces are
+**You should see:** Admin → Cluster → Members on b counting the changes applied from a (*Users' saved searches, layouts, pivots and workspaces are
 copied ...: N changes sent, M applied here*), your saved search in the list on b after the failover, and on b's **Admin → Audit** the user
 `rita` as `user-created` by `net:drishti-a`.
 
@@ -369,7 +369,7 @@ copied ...: N changes sent, M applied here*), your saved search in the list on b
 | You see | Why, and what to do |
 |---|---|
 | `node.yaml was not written: enabled: true needs the cluster key` | `DRISHTI_NET_SECRET` is not set (or shorter than 32 bytes) in the environment of the server or the CLI. |
-| A node never appears in Members | Its seed's address is wrong or not reachable from it, or its key differs: the other nodes refuse its calls (Admin → Net → Security, refused calls). |
+| A node never appears in Members | Its seed's address is wrong or not reachable from it, or its key differs: the other nodes refuse its calls (Admin → Cluster → Security, refused calls). |
 | `502 DRS-5052` naming a node | The node that holds the data is down or did not answer; the message names it. |
 | `403 DRS-5054` | Your role may not reach the node that holds the data (access.yaml). |
 | A search says partial | A node was late (`scatter-budget`, routing.yaml) or down; the answer names it. |

@@ -21,7 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * {@code 403 DRS-1016}: an administrator turned the command off (Admin → Commands). The answer names the command and when it was turned
+ * {@code 403 DRS-1016}: an administrator turned the command off (Admin → Functions). The answer names the command and when it was turned
  * off, never anything of its data: {@code {"code": "DRS-1016", "detail": "FRTB is not active on this server", "command": "FRTB", "since": ...}}.
  */
 public final class CommandOffException extends DrishtiException {

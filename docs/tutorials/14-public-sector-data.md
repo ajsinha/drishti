@@ -47,7 +47,7 @@ documents; the feeds write into your own `worldlake` and `newslake`. Every sourc
 
 ## Step 1 · Turn the packs on and see the module
 
-**UI.** Admin → Modules lists **economy** (*Economy and markets*, content only) as on, with its packs (the six public-sector ones
+**UI.** There is no page for modules; Home's lens links and Help follow them. `GET /api/v1/modules` lists **economy** (*Economy and markets*, content only) as on, with its packs (the six public-sector ones
 among them), its functions and the World and Public sector lenses. Start the server with the packs loaded:
 
 ```bash
@@ -67,7 +67,7 @@ curl -s "$DRISHTI_SERVER/api/v1/modules" -H "Authorization: Bearer $DRISHTI_TOKE
 enabled: true            # false, then a restart: the economy's packs, functions and lenses are gone; banking is untouched
 ```
 
-You should see the economy module on in Admin → Modules, and *Public sector* among the lenses in Views (the `curl` prints its
+You should see the economy module among `modules` (not under `off`) in `GET /api/v1/modules`, and *Public sector* among the lenses in Views (the `curl` prints its
 record with its ten functions).
 
 More: [PUBLIC_SECTOR_GUIDE.md sections 1 and 2](../guides/PUBLIC_SECTOR_GUIDE.md#1-the-module-its-lens-and-its-functions).

@@ -82,6 +82,24 @@ public interface PivotProvider {
     }
 
     /**
+     * A native measure figured for a fixed number of a view's cells only (a costly one, computed scope by scope: the MR cube's stressed VaR
+     * and SBM). The core computes it, once the grid is laid out, for the first {@link Cap#cells()} cells in the grid's order (row by row as
+     * shown, each row's columns left to right), whether or not they were cached; every other cell carries {@link Cap#note()} and no figure.
+     * So the same view always gets the same figures, whatever was asked before or at the same time. Empty: the measure is not capped.
+     */
+    default Optional<Cap> cap(String function) {
+        return Optional.empty();
+    }
+
+    /**
+     * A capped measure's limit.
+     *
+     * @param cells the cells of a view that get the figure (the first, in the grid's order)
+     * @param note what every other cell says instead of a figure
+     */
+    record Cap(int cells, String note) {}
+
+    /**
      * A source's catalogue.
      *
      * @param source the source's id

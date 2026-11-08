@@ -85,6 +85,31 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+### Deployment and QA guide, developer quickstart, PDFs
+
+- **[DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md)**, at the top of `docs/`: deploy and verify the server and the console on
+  Windows (nothing but Java and Python), Linux and macOS step by step: prerequisites, the release, configuration (the data folder, the lakes,
+  modules, lenses, secrets), the demo lake, starting both and running them as services (systemd, a Windows scheduled task in PowerShell,
+  launchd), thirteen verification steps with what you should see and real screenshots (health, modules, sign-in, the Home of each lens,
+  the demo lake, VaR for the bank and a desk, exposure and the pre-deal check, a BI report and the MR cube, the Elements gallery, the data
+  inbox and feeds, banking off and on, the phone layout, logs and metrics), a QA checklist per operating system, a complete cluster part
+  (layout and roles, ports and the gossip port, shared lake paths, configuration per node, secrets, start order, rolling upgrades and
+  draining, step-by-step verification with pictures, its checklist and troubleshooting) and the offline rehearsal with your own trade
+  files, moved here from TEST_HARNESS.md section 9 (which now links it). Help lists it under Operate → Run; the old Windows QA addresses
+  redirect to it.
+- **[QUICKSTART_DEVELOPERS.md](docs/QUICKSTART_DEVELOPERS.md)**: clone, the JDK and Python per operating system, the build, the server and
+  console on the demo lake, the repository map, the fast checks, the rules a change must follow and a first change end to end, linking the
+  developer, build and CLI guides. Help lists it under Build → Extend and embed.
+- **PDF copies** of the Deployment and QA guide, the developer quickstart and the cluster guide (`docs/*.pdf`,
+  `docs/guides/CLUSTER_GUIDE.pdf`), made by `tools/docs/md_to_pdf.py` with Playwright's Chromium (nothing fetched from the network), the
+  pictures inside and links to other documents shown with their path; `--check` and `test_docs_pdfs.py` fail when a PDF is older than its
+  Markdown or pictures.
+- **Page names as the console shows them.** Every document says **Admin → Cluster** (`/admin/net`), the tab's name, and the cluster
+  guide's section is "Admin → Cluster"; Admin → Health links it under that name. Modules are switched in `config/modules/<module>.yaml`,
+  with `DRISHTI_MODULES_<MODULE>_ENABLED` or `POST /api/v1/admin/modules`: the documents, the settings index, the module files' comments
+  and the messages (the API's `DRS-1025`, an engine's *not installed* reason, the console's *not available* line, the start log's
+  packs-not-loaded line) name those, and no longer a page.
+
 ### Drishti Elements, and one way for each job (2.9.11.e)
 
 - **Security: one name, one definition across the domain folders.** A table or model defined twice (`config/tables/bi/` and
@@ -1096,6 +1121,22 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   slides on the new guides; the AWS deck's footer sources; the roadmap with the documentation rewrite built.
 
 ### Fixes (the train's bulk drill)
+
+- **The MR cube's capped measures are deterministic**: stressed VaR (`drishti.cube.mr.stressed-max-cells`, 100) and SBM
+  (`sbm-max-cells`, 60) were counted per evaluation, and cells already cached by an earlier view were not counted, so which cells got a
+  figure depended on what was asked before and in what order (desks × currency alone: stressed VaR on 100 of 186 cells; after the same
+  rows by nothing and by risk class: 131), and a row's diversification summed whatever parts had one. A provider now declares a capped
+  measure (`PivotProvider.cap`); the pivot engine lays the grid out without it, then computes it for the view's first N cells in the
+  grid's order (row by row as shown, each row's columns left to right), each cell asked alone through the cache; every other cell carries
+  the note, even when its figure is cached. Nothing is counted in shared state, so parallel queries get the same answer. A
+  diversification (`diversification`, `diversificationByColumn`) is `null` when the total or a part with members has no figure, never a
+  partial sum; a sort or a top N by a capped measure is refused in words. Every figure computed is the engine's own for the cell's scope,
+  as before (`CappedMeasureTest`, `VarMrCubeCapTest`; PIVOT_GUIDE sections 9 and 29.2).
+- **The old explain endpoints answer for one release**: `GET /api/v1/var/explain`, `/api/v1/var/explain/matrix` and
+  `/api/v1/pivot/mr/explain` (and their `/api/v1/risk/...` paths) answered `404` since the one Explain replaced them; like every other
+  moved path of this release they now answer with the 2.9.11.d body (the one Explain's `why.answer`, its `matrix`, and the MR cube's
+  `factorOverlay` note), `Deprecation: true` and a `Link` to `/api/v1/explain?kind=var&part=why` (`&view=matrix`)
+  (`VarExplainApiTest`, against the recorded 2.9.11.d shape; API_GUIDE, RELEASE_NOTES).
 
 - **Drishti's lake writer and a partition value with a space**: Kernel hands a partition's folder percent-encoded
   (`PRODUCT_GROUP=Fixed%20income`); the writer wrote the file there while every read looked in `Fixed income`, so a Calypso or Murex

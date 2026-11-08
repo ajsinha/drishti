@@ -20,7 +20,8 @@ drishti-feeds; the pre-deal check as a service of the exposure engine; every scr
 also use in your own applications; the documentation rewritten, one guide and one tutorial for each major feature, Help grouped by
 domain and lens.** This release carries the work planned as 2.9.11.e, f, g and h, shipped as one tag.
 
-**VaR check against 2.9.11.d:** the figures are added when the comparison run ends.
+**VaR check against 2.9.11.d:** every figure bit-for-bit equal at the 509 and 250 windows (128,876,809 and 94,258,074
+numbers; 56,298,935 and 54,984,456 text fields); memory no higher than 2.9.11.d.
 
 ## What changes for risk users
 
@@ -39,6 +40,10 @@ domain and lens.** This release carries the work planned as 2.9.11.e, f, g and h
   lineage*, *Why it moved* and *Workbook*, and *Open as a page* to print. It replaces the VaR page's *How calculated* drawer and *Why it
   moved* tab, the parametric figures' pop-ups, the MR cube's *Explain the move* tables and the exposure page's *How this number was built*
   box (the table under "Removed" below).
+- **The MR cube's stressed VaR and SBM land on the same cells every time**: a view gets them for its first 100 and 60 cells in the
+  grid's order (row by row as shown, each row's columns left to right), whatever was asked before or at the same time; before, a view
+  asked after others could show them on more cells. A row's diversification of either is shown only when all its cells have the figure
+  ([PIVOT_GUIDE.md section 29.2](docs/guides/PIVOT_GUIDE.md#292-the-measures)).
 - **The FRTB-SA screen shows each class's Total again**, the server's figure.
 
 ## What changes for readers
@@ -65,6 +70,11 @@ domain and lens.** This release carries the work planned as 2.9.11.e, f, g and h
 - Pictures of steps that changed are retaken after the release's screenshot run; a step waiting for its picture says so.
 
 ## New
+
+- **A Deployment and QA guide, with a PDF** ([DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md)): install and verify the server
+  and the console on Windows, Linux and macOS step by step, with what you should see and a picture at every check, a QA checklist per
+  operating system, a cluster of three end to end and the offline rehearsal with your own trade files. Developers start from the new
+  [developer quickstart](docs/QUICKSTART_DEVELOPERS.md); the cluster guide has a PDF too.
 
 - **Domain modules and the access registry** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md),
   [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md), [OPERATIONS.md section 22](docs/guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). The
@@ -198,7 +208,7 @@ Follow these steps when upgrading an installation of 2.9.11.d. The runnable jar 
 | `POST /api/v1/var/reports/{report}/runs/{period}/signoff` | kind `var-report`, id `report:period:vN`; the maker's text is `POST …/runs/{period}/narrative` |
 | `drishti.py design approve\|reject`, `change approve\|reject\|withdraw`, `pivot functions approve`, `var stress-window --decide`, `var report sign` | `drishti.py approvals list\|show\|approve\|reject\|withdraw\|ask` |
 | `/api/v1/me/alerts`, `/api/v1/me/alerts/rules/**`, `/api/v1/me/measure-alerts/**`, `/api/v1/admin/measure-alerts/**` | `/api/v1/alerts`, `/api/v1/alerts/rules/**`, `/api/v1/admin/alerts`; the stream `/api/v1/alerts/stream` (an alert is a `notice` event of type `alert`) |
-| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix`, `GET /api/v1/pivot/mr/explain` | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`; the engine's answer is `why.answer`) |
+| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix`, `GET /api/v1/pivot/mr/explain` (deprecated, answer this release with the 2.9.11.d body, `Deprecation: true` and a `Link` to the successor) | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`; the engine's answer is `why.answer`) |
 | `POST /api/v1/pivot/explain` (deprecated, answers this release) | `POST /api/v1/explain` with `kind: pivot, measure: cell` |
 | the console's `GET /api/suggest` | `GET /api/search?in=command&q=…` (the same suggestions in `items`) |
 | the console's `POST /api/exposure/what-if` and the exposure explorer's Pre-deal tab | the pre-deal check (`/predeal`); the tab's address opens it |
@@ -1284,7 +1294,7 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
   2026-10-18) that `lake demo` builds into the lake. World economy data was already offline.
 - **Ids are text everywhere:** a numeric `TRADE_ID` in a file is read as its exact text; ids may hold letters, dashes and
   underscores; nothing expects a prefix. Older lakes with numeric id columns still read.
-- **[How to QA in Windows Environment using Custom Data](docs/architecture/TEST_HARNESS.md#9-manual-qa-on-windows-offline-with-your-own-trade-files):** an offline
+- **[How to QA in Windows Environment using Custom Data](docs/DEPLOYMENT_AND_QA_GUIDE.md#11-offline-qa-with-your-own-trade-files):** an offline
   Windows demo with your own ENDUR files replacing the synthetic ENDUR trades, with screenshots; a *Load ENDUR file into
   the lake* run configuration; every Python run configuration uses the project interpreter (works on Windows).
 - **Security fix:** field masks match whatever the case or naming style (a camelCase mask masks the UPPER_SNAKE field);

@@ -75,7 +75,7 @@ public interface AccessRegistry {
     Optional<String> functionOfApi(String path);
 
     /**
-     * True when the function is on here: its module is on and no administrator switched it off (the mnemonic switch, Admin → Commands,
+     * True when the function is on here: its module is on and no administrator switched it off (the mnemonic switch, Admin → Functions,
      * asked through {@link #functionSwitches}).
      */
     boolean functionOn(String word);
@@ -90,7 +90,7 @@ public interface AccessRegistry {
     boolean functionAllowed(Subject subject, String word);
 
     /**
-     * Where the administrator's installation-level function switches are kept (the switches ledger, Admin → Commands: gossiped across the
+     * Where the administrator's installation-level function switches are kept (the switches ledger, Admin → Functions: gossiped across the
      * cluster); the registry asks it and decides. {@code on(word)} is null when no switch was set.
      */
     void functionSwitches(FunctionSwitches switches);
