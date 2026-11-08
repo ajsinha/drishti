@@ -54,7 +54,7 @@ class DomainPacksTest {
         int opened = 0;
         for (String pack : com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED.split(",")) {
             JsonNode manifest = new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readTree(
-                    Files.readString(Path.of("../config/packs", pack, "pack.yaml")));
+                    Files.readString(com.ash.drishti.api.PackFolders.of(Path.of("../config/packs"), pack).resolve("pack.yaml")));
             for (JsonNode ex : manifest.path("console").path("examples")) {
                 String typed = ex.get(0).asText();
                 if (typed.startsWith("VAR ") || typed.startsWith("EXP ")) {
@@ -99,7 +99,7 @@ class DomainPacksTest {
 
     /** The pack's samples catalogue lists the kind, so this test's demo connector serves it (the VaR kinds keep reference samples only). */
     private static boolean demoServes(String pack, String kind) throws java.io.IOException {
-        for (JsonNode e : com.ash.drishti.common.PackSamples.catalogEntries(Path.of("../config/packs", pack, "samples"))) {   // catalog.jsonl
+        for (JsonNode e : com.ash.drishti.common.PackSamples.catalogEntries(com.ash.drishti.api.PackFolders.of(Path.of("../config/packs"), pack).resolve("samples"))) {   // catalog.jsonl
             if (kind.equals(e.path("kind").asText())) {
                 return true;
             }
