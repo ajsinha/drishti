@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * What a pack recommends for a kind's table (docs/architecture/LAKE_CONFIG.md section 3, decision L2), read from its {@code pack.yaml}:
+ * What a pack recommends for a kind's table (docs/architecture/DATA_ARCHITECTURE.md section 3, decision L2), read from its {@code pack.yaml}:
  * its {@code lake:} block first ({@code lake: {tables: {<domain>.<kind>: {...}}}}, the same entry a lake file holds), else, for a pack
  * not yet moved, its Delta or Iceberg connector template ({@code connector}, else the first that serves the kind): the domain and table,
  * the promoted columns ({@code layout.<kind>.columns}), the vector fields, the flattened fields, the sort, and the ingest key, date and

@@ -244,7 +244,9 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 73: plus Schema to pack (docs/guides/SCHEMA_TO_PACK_GUIDE.md, 2.9.11.c), split from the data guide when it passed 1,500 lines.
     # 75: plus virtual tables' two (the tables guide and tutorial 44, 2.9.11.d), the same rule (a feature's guide and tutorial).
     # 77: plus the public sector's two (the Public sector guide and tutorial 46, 2.9.11.g), the same rule (a domain's guide and tutorial).
-    assert 30 <= total <= 77, total
+    # 76: the docs fold (2.9.11.g): the in-memory lake guide became a section of the data lake guide; the cap is the count, so a new
+    # listed page needs a page folded first.
+    assert 30 <= total <= 76, total
 
 
 def test_every_old_help_address_still_opens_something(client):

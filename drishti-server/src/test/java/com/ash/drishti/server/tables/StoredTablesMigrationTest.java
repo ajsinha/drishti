@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The first-start migration of stored items (BI_FOUNDATION_2911E.md 4.3, Q16, Q17) over a real item store: every version rewritten in place
+ * The first-start migration of stored items (docs/architecture/BI_DESIGN.md 4.3, Q16, Q17) over a real item store: every version rewritten in place
  * under the item's id and number, the draft too, the text before kept as saved states, one audit line and one event per item, a refused item
  * left as it was with the reason on its page, and a second run that finds nothing; then the layer's catalogue reads the items.
  */

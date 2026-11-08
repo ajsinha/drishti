@@ -369,7 +369,7 @@ public final class TablesCli {
         return out;
     }
 
-    /** The flat virtual table offered for a new table (VIRTUAL_TABLES.md section 10, V8): printed, or written with --write. */
+    /** The flat virtual table offered for a new table (docs/architecture/ARCHITECTURE.md section 10, V8): printed, or written with --write. */
     private int offer(Args a) throws IOException {
         if (a.positional.isEmpty() || a.value("--sample", null) == null || a.value("--kind", null) == null && a.value("--table", null) == null) {
             err.println("tables offer: NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE)");

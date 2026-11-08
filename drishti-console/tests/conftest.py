@@ -1256,7 +1256,7 @@ def open_studio(client, url, **params):
     return client.post("/studio", data=form, follow_redirects=False)
 
 
-# The phone display (MOBILE_DISPLAY.md): below 640 px the console draws the phone page and static/js/drishti_phone.js reloads a page drawn for
+# The phone display (docs/guides/PACK_DEVELOPER_GUIDE.md): below 640 px the console draws the phone page and static/js/drishti_phone.js reloads a page drawn for
 # another device. A browser test that is not about the phone display reads the whole page at any width, as a person who chose *Show
 # everything* does (the drishti-phone-all cookie, set before the first navigation, so no reload happens under the test); the phone
 # display's own tests keep it.

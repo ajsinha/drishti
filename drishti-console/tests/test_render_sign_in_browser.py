@@ -240,7 +240,7 @@ def stack(tmp_path_factory):
             pytest.skip(f"port {port} is in use: this test starts its own server, console, host and provider there")
     jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     if not jars or not JAVA.exists():
-        pytest.skip("needs the built server (./mvnw -o -q package -DskipTests -pl drishti-server -am) and a JDK")
+        pytest.skip("needs the built server (./mvnw -o -q package -DskipTests -pl drishti-app -am) and a JDK")
     tmp = tmp_path_factory.mktemp("sign-in")
     idp, host, procs = Idp(IDP_PORT), Host(HOST_PORT), {}
     try:

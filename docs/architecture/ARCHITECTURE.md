@@ -720,7 +720,7 @@ platform a new capability, and then it serves every pack:
 |---|---|---|
 | A new panel kind | the enum entry with its required and allowed options; its binding; its macro; its client script if it draws anything; its help entry | `PanelKind` (`drishti-rachana`), `Binder` or `ChartBinder` (`drishti-engine`, package `bind`), `drishti-console/web/templates/_macros/panels.html` (`pbody` and a macro), `drishti-console/web/static/js/drishti_view.js` or `drishti_charts.js`; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide) |
 | A new kind of store (a source plugin) | a `SourcePlugin` (`fetch`, optionally `subscribe`, `search`, `reverse`) in a plugin module; after that each store is a connector file | `SourcePlugin` (`drishti-api`), a module under `plugins/` such as `drishti-plugin-file`; [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-sourceplugin-spi) |
-| A new computed measure | the computation: a Java engine (as VaR and exposure in `drishti-compute`, packages `var` and `ccr`) or a Python engine behind a `reactive` connector; its result is then an ordinary kind, drawn by the generic view | [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md), [VAR_GUIDE.md, Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) |
+| A new computed measure | the computation: a Java engine (as VaR and exposure in `drishti-compute`, packages `var` and `ccr`) or a Python engine behind a `reactive` connector; its result is then an ordinary kind, drawn by the generic view | [REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md), [VAR_GUIDE.md, Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) |
 
 ### The hand-built pages and why
 
@@ -907,7 +907,7 @@ Dated sources stamp `Provenance.businessDate` and are tried first for a picked d
 | `delta` | Delta Lake through Delta Kernel: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/`; `root` may be local or object storage (`s3a://…`, through `LakeStore`); time travel answers "as known at" |
 | `file`, `s3` | dated folders `<root or prefix>/<yyyy-MM-dd>/<kind>/<id>.json`, newest on or before the date |
 | `jdbc` | a query that uses `:asOf` |
-| `aerospike` | a record per entity per business date (`kind/id/yyyyMMdd`), found through the entity's index record listing its dates ([AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md)) |
+| `aerospike` | a record per entity per business date (`kind/id/yyyyMMdd`), found through the entity's index record listing its dates ([AEROSPIKE_CONNECTOR.md](../../plugins/drishti-plugin-aerospike/README.md)) |
 | `feeds` | keeps dated observations of public feeds |
 
 ```
@@ -981,11 +981,11 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-diskcache` | `DiskCache`: a size-bounded, daily-cleared RocksDB cache on local disk for live connectors | – |
 | `drishti-messaging` | `MessageStateSource`: the shared half of the ActiveMQ and RabbitMQ connectors (latest document per entity in a persistent RocksDB store plus a memory cache) | – |
 | `drishti-lakeio` | Lake file access without Hadoop, shared by the native Delta and Iceberg engines: local disk (Windows included) and S3, byte ranges, Parquet page codecs, the Parquet footer cache; other schemes through a registered `StorageProvider` (`StorageProviders`) | – |
-| `drishti-tables` | The table layer, plain Java ([TABLES_GUIDE.md](../guides/TABLES_GUIDE.md), [BI_FOUNDATION_2911E.md](BI_FOUNDATION_2911E.md#10-as-built-part-b-the-table-layer)): the catalogue of virtual tables and models (`config/tables`, stored items), their definitions and checks, preview, lineage, the materialisation's API, `tables migrate`; on Rachana and the pivot engine, never on BI | read by the server (`tables` on the command line); BI reads it with the switch |
-| `drishti-memlake` | The in-memory lake, plain Java ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md#16-the-module-drishti-memlake)): the `mem://` stores (the `mem` storage provider of `drishti-lakeio`), tables, replenish jobs, eviction, compaction, the owner binding, the guard (`Retention`), the host checks | wired by `server.memlake.MemoryLakeConfiguration` |
+| `drishti-tables` | The table layer, plain Java ([TABLES_GUIDE.md](../guides/TABLES_GUIDE.md), [section 24](#24-virtual-tables-the-central-table-layer)): the catalogue of virtual tables and models (`config/tables`, stored items), their definitions and checks, preview, lineage, the materialisation's API, `tables migrate`; on Rachana and the pivot engine, never on BI | read by the server (`tables` on the command line); BI reads it with the switch |
+| `drishti-memlake` | The in-memory lake, plain Java ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#98-the-module-drishti-memlake)): the `mem://` stores (the `mem` storage provider of `drishti-lakeio`), tables, replenish jobs, eviction, compaction, the owner binding, the guard (`Retention`), the host checks | wired by `server.memlake.MemoryLakeConfiguration` |
 | `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)) | – |
 | `drishti-deltalake` | A Delta Kernel engine without Hadoop (local disk, Windows included, and S3), used by the Delta connector | – |
-| `drishti-lakeload` | The parallel lake loader: JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](PARALLEL_LOADER.md)) | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
+| `drishti-lakeload` | The parallel lake loader: JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)) | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
 | `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
 | `drishti-registry` | The access registry, plain Java ([ACCESS_MODEL.md](ACCESS_MODEL.md)): licence → module → lens → function → permission decided in one place (`AccessRegistry`, `EmbeddedAccessRegistry`), over the YAML store (`AccessStore`, `YamlAccessStore`: the modules' manifests, `config/modules/`, `config/access/`); nothing else reads the access model | wired by `server.modules.ModuleConfiguration` |
 | `drishti-server` | **The** Spring Boot application, the core: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI; the SPIs a domain module fills (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`, `ApiAlias`, `@ConditionalOnModule`) | controllers, filters |
@@ -1368,6 +1368,221 @@ file, or it is split or listed with its reason (the drill flags any other); a pa
 its requests because the network changed (`net::ERR_NETWORK_CHANGED`); browser tests never run beside the Docker-based suites, whose
 containers change the network under Chrome. `test_browser_rules.py` checks the rules on the source. The full design, its
 measurements and the numbered rules: [TEST_HARNESS.md](TEST_HARNESS.md).
+
+## 23. One grammar, one engine
+
+Every expression in Drishti is **Rachana**, and every aggregation is the **pivot engine's**. A sum over a trade's legs has one
+implementation, one treatment of nulls, decimals, currencies, units and masks, and one spelling, whether a Sutra, a BI measure, a virtual
+table, an alert or the pivot screen asks for it. The server computes; the console displays.
+
+| Layer | Module | Owns | Never does |
+|---|---|---|---|
+| **The grammar** | `drishti-rachana` | the one expression language: paths, operators, filters, templates, links and the scalar functions (`fmt`, `upper`, `days`, `coalesce` …); the parser and the type checker (checked mode) every caller uses | implement an aggregate |
+| **The aggregation engine** | `drishti-bicompute` | every aggregate (built-in, once-per-parent, sketch, custom), grouping, pivots, totals, windows and the filter-context functions; the one function catalogue with each function's documentation | parse a language of its own |
+| **Measures with their own engines** | the compute engines (VaR, exposure, FRTB-SA, SIMM) | their figures, exactly; reached through their pivot providers and through `measure(...)` | be summed by anyone |
+| **Callers** | Sutras, BI, the table layer, the pivot screen, alerts, playgrounds, the API, the command line | write Rachana and ask the engine | carry their own parser or aggregate |
+
+### 23.1 How Rachana reaches the engine
+
+`drishti-rachana` keeps one function table (`rachana.el.Functions`) open to providers (`rachana.el.FunctionProvider`), found once by
+`ServiceLoader` when the table is built. `drishti-bicompute` provides every aggregate (`bicompute.rachana.EngineFunctions`, listed in
+`META-INF/services`): a list aggregate in an expression (`sum($.LEGS[*].NOTIONAL)`, `percentile(@.PNL, 0.99)`) turns the list's values into
+a `Batch` and runs the very `AggFunction` a pivot cell runs (`ListAggregates`); `group(list, key, aggregate)` is a Rachana form (it binds
+`@`) that hands the grouping to the engine (`ListGrouping`). The dependency is one way: the engine depends on Rachana for paths and
+expressions, never the reverse. Without the engine on the class path an aggregate compiles and is refused with the reason when evaluated
+(`DRS-2102`), never computed another way.
+
+| Function | Means | Example |
+|---|---|---|
+| `sum`, `count`, `avg`, `min`, `max`, `median`, `percentile`, `distinct` … over a list | the engine's built-ins on the list's values | `sum($.LEGS[*].NOTIONAL)`, `count($.EVENTS[?@.EVENT_TYPE == 'BOOKED'])` |
+| `group(list, key, aggregate)` | grouping inside one document | `group($.LEGS[*], @.CURRENCY, sum(@.NOTIONAL))` |
+| `measure(name, scope?, options?)` | a computed measure from its own engine, exactly (never summed); inside a model, a model measure | `measure('VAR', 'DESK:DESK-COMM')` |
+| `cell(view, field, member, ...)` | one cell of a saved pivot view, as the view computes it | `cell('ann/desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')` |
+| a Sutra **pivot panel** | groupings as Rachana paths, the value an engine aggregate | `by: "@.BOOK"`, `across: "@.CURRENCY"`, `value: sum(@.MTM)` |
+
+`measure` and `cell` go through the engine's SPI `bicompute.spi.FigureSource`, which the server implements (`server.pivot.RachanaFigures`):
+`measure` asks the compute engine whose pivot provider offers the name for one cell; `cell` opens a saved view the person may open. Both
+answer for the person of the request (entitlements and masks) and are refused with the reason when the pivot engine is switched off.
+
+### 23.2 One compiler: Java and SQL agree
+
+BI's measures, a virtual table's columns and filters, row rules and the pivot's formulas are Rachana, checked by Rachana's **checked
+mode** (the type checker run wherever types are known: a table's source contract, a model's tables, a typed pivot; it only refuses more,
+never means something else) and compiled by one compiler in the engine (`bicompute.lang`: `Compiler`, `SqlLowering` for scans,
+`RowsEvaluator` for rows in memory, `ScanEvaluator` for SQL over a scan). A row expression becomes the engine's row expression (DuckDB SQL
+for a scan); an aggregate an `AggFunction` call (a formula of built-ins the engine's `FormulaFunction`, mergeable when its parts are); a
+filter-context function (`calc`, `share_of`, `parent_of`, `as_of`) the engine's sub-plan (`bicompute.context.FilterContext`, with
+`Periods` for balances); a window, a window over the answer. A differential test runs every operator, every scalar function, the
+aggregates with and without `where =` and every shipped expression through the Java and the SQL forms on a table of edge cases (nulls,
+empty lists, masks, zero divisors, mixed currencies) and compares value for value. The pivot's custom formulas are read by the same parser
+(`bicompute.formula.FormulaLowering`). How BI uses it, the scopes and the filter-context algebra: [BI_DESIGN.md section
+18](BI_DESIGN.md#18-the-bi-foundation-bi-on-the-table-layer-and-rachana).
+
+### 23.3 The function catalogue
+
+Each function lands **once**: scalars in Rachana, aggregates, windows and context functions in the engine. The catalogue page (Help →
+Functions, [FUNCTIONS.md](../guides/FUNCTIONS.md)) is generated from the two registries (`FunctionCataloguePage`) and checked against
+[FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md), the list function by function with its Excel, SAS and MATLAB equivalents. Every function
+has typed arguments and result, a null rule, a mergeable form or the word *holistic* (so totals and the cluster stay right), currency and
+unit rules (a sum of two currencies is refused unless converted), masks respected, a worked example the docs test runs, and its Excel
+equivalent where one exists, so the pivot's Excel export writes a live formula. Excel and SAS names are documentation, never aliases.
+
+| Family | Examples | Runs in |
+|---|---|---|
+| Conditional aggregates | any aggregate with `where =`; paths with filters `sum($.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL)` (`SUMIFS`, `COUNTIFS`) | engine |
+| Descriptive and two-variable statistics | `nmiss`, `range`, `mode`, `stderr`, `cv`, `skewness`, `kurtosis`, `iqr`, `geomean`, `trimmean`, `corr`, `covar`, `slope`, `rsq` | engine (moments and sums of products are mergeable) |
+| Shares, ranks, windows, time | `pct_of_total`, `pct_of_row`, `pct_of_parent` (of the visible totals, Excel's "Show values as"), `rank`, `ntile`, `top_n`, `lag`, `lead`, `moving_*`, `running`, `ytd`, `prior_period`, `diff`, `pct_change` | engine |
+| Filter context and balances | `calc`, `share_of`, `parent_of` (they drop filters, DAX's `ALL`), `as_of`, `opening`, `closing`, `latest`, `earliest` | engine |
+| Text aggregate | `string_agg(x, sep, distinct?)` (`TEXTJOIN`) | engine |
+| Math, logic, text, lists, dates | `round`, `power`, `if`, `ifs`, `switch`, `let`, `left`, `split`, `regex_extract`, `sort`, `unique`, `map`, `reduce`, `edate`, `workday(d, n, calendar)`, `yearfrac(a, b, basis)`, `intck`, `intnx` | Rachana (no aggregation: `reduce` with `+` is refused in favour of `sum`) |
+| Finance on given flows, distributions | `npv`, `xnpv`, `irr`, `xirr`, `pmt`, `accrued`, `modified_duration`, `norm_dist`, `t_dist` | Rachana; `discount_factor` and `forward_rate` wait for a curve reader agreed with the quant engine |
+| MATLAB-style list analytics | `cumsum`, moving windows, `zscore`, `isoutlier`, `polyfit` | registered into Rachana, computed with the engine's `AggFunction`s |
+| Matrix functions | `mmult`, `solve`, `inverse`, `cov_matrix`, `eigen`, `pca(k)`, `cholesky` | planned, in the engine on [drishti-native](#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks)'s linear algebra ([HIGH_PERFORMANCE_NATIVE.md section 6](HIGH_PERFORMANCE_NATIVE.md#6-blas)); small matrices stay in plain Java |
+
+**The boundary.** Pricing a trade from market data is the quant engine's job, and VaR, ES, exposure, FRTB-SA and SIMM come only from their
+own engines through `measure(...)`: the catalogue never re-implements them (no `var(vector, p)`). Python custom functions (NumPy in the
+sandboxed pool) serve a person's own code and are not a second implementation of a catalogue function. Candidates decided one by one:
+frequency tables with chi-square, regression with several variables, `forecast` and `trend`, winsorising, histogram bins as a dimension.
+
+### 23.4 Guards, so it stays one
+
+- `OneGrammarRulesTest` (`drishti-it`, ArchUnit): no class outside `drishti-bicompute` implements `AggFunction` or `FunctionProvider`;
+  Rachana never depends on the engine; only `drishti-rachana` parses expressions. The listed exceptions are the VaR scope selector
+  (`ScopeExpr`) and the migration tool's reader of BI's old expression language (it reads the texts it rewrites, never evaluates them).
+- **The browser computes nothing.** `test_console_does_not_aggregate.py` finds every aggregation idiom in console Python and JavaScript
+  (strings and comments left out) and lets through plain counting, sizes and layout arithmetic only. A figure the console needs over rows
+  it read (a landing page's MtM and DV01 by book, a market median, a column filter's average) is asked of the pivot engine through
+  `POST /api/v1/pivot/inline` (`drishti-console/core/engine_figures.py`) and shown as the engine answers; with the engine switched off the
+  figure is left empty with the reason. `ConsoleFiguresTest` (`drishti-bicompute`) proves each on the console tests' fixtures.
+
+## 24. Virtual tables: the central table layer
+
+A **virtual table** is a named, typed table defined by configuration in Rachana over any kind any connector serves (a lake table, a
+database table, an in-memory table), over a SQL query, a Python transform, a model's answer or other virtual tables. A **model** relates
+virtual tables (keys, relationships, cardinality, direction) and defines **measures** over them once. Entity documents (a trade with its
+`LEGS`, `CASH_FLOWS` and `EVENTS` in one JSON `doc`) become rows and typed columns, joined where they relate, and every consumer reads them
+the same way. BI keeps what is BI's (reports, visuals, the designer, boards); its datasets and models are the layer's tables and models.
+Every key, check and command: [TABLES_GUIDE.md](../guides/TABLES_GUIDE.md); the walk-through: the
+[virtual tables tutorial](../tutorials/44-virtual-tables-and-models.md).
+
+```
+  reports · visuals · designer · boards · publishing        ← BI (Rūpaka): presentation only
+                         │ MQ
+  ┌──────────────────────┴───────────────────────────────┐
+  │ the table layer (drishti-tables)                     │  catalogue · virtual tables · models · checks · materialisation
+  │   expressions: Rachana (drishti-rachana, checked)    │  one parser, one checker, one lowering
+  │   aggregation: the pivot engine (drishti-bicompute)  │  one function catalogue
+  └──────────────────────┬───────────────────────────────┘
+        kinds through connectors · lake tables · the in-memory lake · other tables
+  consumers beside BI: the pivot · Sutras · Arrow Flight · alerts
+```
+
+**The module.** `drishti-tables` is plain Java on `drishti-rachana` and `drishti-bicompute`; `drishti-server` and BI depend on it, never the
+reverse (`ArchitectureRulesTest` holds both directions). Its packages: `def` and `yaml` (definitions read by key and written in one
+canonical form, `rachana: 3`), `lang` and `check` (Rachana's tree and checked mode with the fields a table's source paths or a model's
+`alias.COLUMN` give; `LateBound` turns `fx(...)` and `related(...)` into columns worked out before the expression runs), `catalog` (files
+under `config/tables/<domain>/` and the stored items of BI's item store, `was:` names, tables over tables, lineage; `PackTables` generates a
+pack's kinds and the lists it names as tables, `trading.trade` and `trading.trade_legs`), `read` (a read for one viewer on one business
+date), `answer` (`ModelAnswers`: a model query answered in memory, each table as the reader may see it, joined many-to-one from each
+measure's fact, every measure compiled by the one compiler of section 23.2), `materialize` (`LiveStore`: live by key from pushed entities;
+`ParquetOnLoad`: a date's rows as Parquet, each build its own file moved in and swept), `preview` and `migrate` (`tables migrate`).
+The server's `server.tables.TablesService` reads the files and BI's item store as one catalogue, so the pivot, Sutras and BI see the tables
+and models the editors publish.
+
+**How it is read.** Each column goes to the fastest route that holds it (a promoted column of a lake table, the materialised Parquet, a
+connector's column scan, else DuckDB's JSON over `doc`); a model's query compiles to the engine's grouping sets; the answer is Arrow
+batches. MQ (`mq: 1`, `mq: 2`) stays the one way to ask a model; a table's implicit model is `table:<name>`. The viewer travels with every
+call as one `ViewerContext` (user, roles, attributes, raw power, masks, kinds), never in a global, a shared cache or a thread-local.
+Materialised files are a cache: rebuilt at will, never the truth, never written into a lake's own tables.
+
+**Decided** (the numbers are cited in code comments):
+
+| # | Decided |
+|---|---|
+| V1 | A central layer of its own (`drishti-tables`, definitions under `config/tables/<domain>/`), not inside BI and not in the lake file: its sources are any kind any connector serves |
+| V2 | BI's datasets are flat virtual tables and BI's models the layer's models, migrated by one tool (`drishti.py tables migrate`, dry run and report); stored items migrate at the server's first start, every version rewritten in place with the text before kept in its history |
+| V3 | A flat table's columns are scalar Rachana paths or row expressions; aggregates exist only as a model's measures; a table that is not flat (SQL, Python, `keep: { latest }`) is allowed as a source, and the one way to aggregate into a table is a **summary table**, a model's answer (`from: { model, query }`) |
+| V4 | Materialisation is one mechanism: `none`, `on-load` (Parquet per business date), `{ live: { rows, age } }` (in memory by key); a model's `rollups:` keep partial states; a model's `history:` samples measures of a live table |
+| V5 | Every consumer reads the layer: BI, the pivot, Sutras, alerts and Arrow Flight; Flight's `table` form (a virtual table read as Arrow with its rules and masks, scope `data:read` or `data:read:<domain>`) and Flight SQL's `tables` and `models` catalogs are designed, as are Export data and the AI reading tables |
+| V6 | One migration and one parity proof for the move of BI's datasets and models and of BI's expressions into Rachana |
+| V7 | Many tables over one source (`trading.trade_summary` and `trading.trade_legs` both `from: { kind: trade }`); within one request the reads of one source for one business date are shared |
+| V8 | A table a data load creates is **offered** a flat virtual table in one click (`drishti.py tables offer`), never made automatically |
+| V9 | Administrators and BI authors define tables and models; reading is always as the source (the reader's row rules and masks on the source kind), then the table's own rules and masks, which apply to every reader (BI, the pivot, Flight), then a model's; nothing adds rights. Definitions are audited and versioned like BI items |
+| V10 | A model may relate tables from different connectors; the engine joins them, and the scan estimate warns when a side is larger than the model's `scan-warn-rows`, else `drishti.tables.scan-warn-rows` (1,000,000), and unfiltered |
+| V10a | Tables use look-ups (`related(…)`, many to one) and never multiply their rows; combining tables row by row is a model's relationships |
+| V11 | Dates as the source has them: every read names a business date (none: the source's latest); known-at time travel where the source keeps history; an undated source gives its current rows, dated today |
+| V12 | Names are `<domain>.<name>`, unique across virtual tables and stored tables |
+| V13 | A Sutra panel may name a virtual table as its source (`source: { table, where, limit, as-of }`), read for the page's viewer; a page built for nobody in particular reads no table |
+| V14 | DuckDB is the one SQL engine, required; the layer adds no new place that calls it |
+| V15 | Rachana is the layer's only expression language; whatever moved into it was moved, never copied |
+
+**Screens.** The editors (Build › Tables & models, [TABLES_GUIDE.md section 11](../guides/TABLES_GUIDE.md#11-the-editors)) follow the
+chosen mock-ups: tables as a visual view over a sample document with the columns and the rows a chosen role reads, switched with a YAML
+view ([BC](../lenses/mockups/virtual-tables/BC.html)); models as a diagram with a live answer and a measures-first sheet behind one switch
+([model-BC](../lenses/mockups/virtual-tables/model-BC.html)). Every view edits one draft; a live YAML panel below every visual view follows
+each edit; invalid YAML is marked at its line and the visual side keeps the last valid version.
+
+## 25. drishti-native: native maths behind abstractions, with Java fallbacks
+
+*Product owner: "Key is we maintain abstractions and have fallbacks so we can run on any environment."* Every native integration of the
+server sits behind a Drishti interface with a pure-Java implementation that always works, so Drishti runs anywhere. It realises the seam
+of [HIGH_PERFORMANCE_NATIVE.md section 2.8](HIGH_PERFORMANCE_NATIVE.md#28-two-builds-one-code-base-the-baseline-and-the-accelerated-path-side-by-side)
+on Java 21 (JNI through JavaCPP) and keeps room for the Java 25 paths of that design (FFM, the Vector API) as further implementations of
+the same interfaces.
+
+**What runs today.** Linear algebra: OpenBLAS (bundled through bytedeco for Linux and Windows x86-64) behind `LinearAlgebra` in
+`drishti-compute` (`compute.linalg`: `JavaBlas`, `NativeBlas`, `GuardedBlas`, `Canary`) and the server's `server.nativelib`
+(`NativeLibraries`, `OpenBlasEngine`), with the Java kernels as the fallback, `drishti.native.blas.mode` (`auto` or `java`), Health
+DEGRADED and an alert when it falls back ([HIGH_PERFORMANCE_NATIVE.md section 6](HIGH_PERFORMANCE_NATIVE.md#6-blas)). The module
+`drishti-native` below is the design that gathers every native capability into one home.
+
+**The rule.**
+
+1. Every native capability sits behind a Drishti interface; only `drishti-native` imports a native binding (an architecture rule).
+2. Every interface has a pure-Java implementation that always works; native code is an optimisation chosen at run time.
+3. A native library that is missing, built for another platform, fails its self-test or misbehaves later is replaced by the Java
+   implementation: a loud warning in the log, **DEGRADED** in Health, a banner in Admin; the server always starts.
+4. `drishti.native.mode` (planned: `auto`, `off`, `on`) for everything, and a mode per capability (`auto`, `java`, `native`; today
+   `drishti.native.blas.mode`), in configuration and live in Admin → Engines.
+5. Both paths are proven equal by tests and a canary; one drill lane runs with every native capability off.
+6. One version of everything: Maven Enforcer `dependencyConvergence`, `requireUpperBoundDeps` and `banDuplicateClasses`; only the
+   `linux-x86_64` and `windows-x86_64` classifiers, never the `-platform` artifacts.
+
+| Capability | Interface | Native | Java | Parity |
+|---|---|---|---|---|
+| Linear algebra, level 1–3 | `LinearAlgebra` (`dgemm`, `dgemv`, `ddot`, `daxpy`) | OpenBLAS (bytedeco) | Drishti's kernels (`JavaBlas`, `MultiSums`) | the near-tie rule makes VaR's order identical; sums within 1e-12 relative |
+| Decompositions and solvers | `Lapack` (Cholesky, LU, QR, symmetric eigen, SVD, least squares, solve) | LAPACK from the same OpenBLAS jar (no new dependency) | Hipparchus | within 1e-10 relative on reconstruction; eigenvalues sorted and compared |
+| Statistics and optimisation | `Stats`, `Optimise`, `Interpolate`, `Distributions` | none needed | Hipparchus, the one maths library of the server; Rachana's statistical functions call it through `drishti-native` | |
+| Compression | `Codecs` (zstd, Snappy, LZ4, gzip) | zstd-jni, snappy-java, lz4-java | aircompressor (the same formats) | byte-identical after a round trip |
+| Key-value disk store | `DiskStore` (get, put, remove, scan in key order) | RocksDB | H2's MVStore (on disk, keys in order; each keeps its own folder, so a switch starts the other's cache empty) | the same answers for every key |
+| Embedded SQL engine | `SqlEngine` (run a statement with memory, thread and time limits, answer in Arrow) | DuckDB | **none, by decision**: DuckDB is required like the JVM; if it cannot load the server says so in plain words and does not start | |
+
+SQLite, the default database of a single server, is required the same way (its driver registered for status and version; no third
+schema). LAPACK's first uses: Cholesky for correlated Monte Carlo paths and positive-definiteness checks, symmetric eigen for PCA of the
+scenario P&L matrix and repairing a non-PSD correlation matrix, SVD for low-rank views, least squares for hedge ratios and curve fitting.
+
+**The module.** `com.ash.drishti.nativ.core` (`Capability`, `Registry`, `Guard`, `Canary`, `NativeMode`, the status record), `.linalg`,
+`.maths`, `.codec`, `.store`, `.sql`; plain Java on `drishti-common` only, wired by the server from its settings. Its users:
+`drishti-compute` (VaR and exposure kernels), the lake modules and loaders (codecs), `drishti-diskcache` (the store), the server (Health,
+Admin, settings). The Java 25 sources (FFM, Vector API) compile only under a Maven profile active on JDK 25 and are found by
+`ServiceLoader`: one home for every native and accelerated implementation, no second seam.
+
+**The capability contract.** Every capability has the same parts: the interface in Drishti's types (Java arrays and buffers, never a
+native type); the Java implementation, always present and the reference for parity; the native implementation, loaded lazily once,
+declaring its OS, architecture, library file and Java version; a self-test at start (a mismatch keeps Java); a guard on each call's inputs
+(sizes, NaN and Inf, bounds), so a bad input is a Java exception, never a crash; a breaker (a native call that throws or answers a
+non-finite result where Java's is finite trips the capability to Java for the rest of the run); a canary every few hours; a switch; and
+a status in Health (`native.<capability>`), Admin → Engines, the start log and metrics (planned: `drishti_native{capability, impl}`
+and an admin endpoint). Native libraries unpack under `drishti.native.cache-dir` (`<data>/native-cache`).
+
+**Beyond: the Python worker and other capabilities.** What exists only in Python (statsmodels, scikit-learn, the quant engine's models) is
+reached through a Python worker beside the server over Arrow Flight (`DoExchange`), with its own switch, timeout, health and canary;
+designed, not built. QuantLib is parked: when it is revisited, it runs in single-threaded worker processes (its Java binding,
+`io.github.ralfkonrad.quantlib_for_maven:quantlib`, ships Linux, macOS and Windows natives and has no sessions, so its evaluation date is
+process-wide), with a pure-Java core as its fallback. Further capabilities are chosen by capability, not by industry, each on the same
+contract: adopted are ONNX Runtime for machine-learning inference (Tribuo as the Java side) and Google OR-Tools for optimisation
+(Hipparchus simplex and Timefold); pure Java only are JTransforms (FFT) and simdjson-java; candidates when a client asks are GDAL and PROJ
+(GeoTools, proj4j), H3, and libdeflate if a benchmark shows gzip as the bottleneck. Not taken: FAISS, CUDA, a second SQL engine.
 
 ---
 

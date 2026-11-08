@@ -172,7 +172,7 @@ fields:
 - name: PARAMETRIC_VAR
   type: amount
   presence: optional
-  description: 'Parametric VaR, a cross-check beside historical (PARAMETRIC_VAR.md): z·σ − μ at CONFIDENCE, positive for a loss; never official, never a limit''s measure.'
+  description: 'Parametric VaR, a cross-check beside historical (docs/guides/VAR_GUIDE.md): z·σ − μ at CONFIDENCE, positive for a loss; never official, never a limit''s measure.'
   unit: CURRENCY
 - name: PARAMETRIC_ES
   type: amount

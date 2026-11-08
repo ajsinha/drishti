@@ -294,7 +294,7 @@ public final class FrtbService {
             FrtbInput in = FrtbExamples.together();
             FrtbSa.Result r = FrtbSa.run(in, prm, choices);
             Map<String, Object> prov = provenance(null, List.of(), prm, choices, in, r);
-            prov.put("Inputs", "the design's hand-built cases 1 to 5 (SENSITIVITIES_AND_FRTB_SA.md section 13.1), no data read");
+            prov.put("Inputs", "the design's hand-built cases 1 to 5 (docs/guides/FRTB_SA_GUIDE.md section 13.1), no data read");
             return new Run(r, EXAMPLE, EXAMPLE, null, null, "USD", prov, digest(in), List.of());
         }
         AsOf asOf = new AsOf(date, knownAt);

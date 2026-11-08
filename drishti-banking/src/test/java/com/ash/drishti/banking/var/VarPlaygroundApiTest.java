@@ -49,7 +49,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * The VaR Playground through the server (VAR_PLAYGROUND.md section 12) on a lake of 611 trades over 509 scenarios: scenario PVs in EUR and
+ * The VaR Playground through the server (docs/guides/VAR_GUIDE.md section 12) on a lake of 611 trades over 509 scenarios: scenario PVs in EUR and
  * GBP and USD P&amp;L vectors; one position, a desk of 50 (in EUR) and a desk of 560 (500 shown and Rest of scope). The grid against the
  * VaR engine's own answer, the export recalculated by headless LibreOffice against it to the cent, the ids, the limits and the refusals,
  * the estimate and the empty template.

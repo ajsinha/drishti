@@ -21,6 +21,7 @@ the drill's every option is in [PACK_DEVELOPER_GUIDE.md section 2.6](../guides/P
 6. [Rules for browser tests](#6-rules-for-browser-tests)
 7. [Measuring a run](#7-measuring-a-run)
 8. [Next candidates](#8-next-candidates)
+9. [Manual QA on Windows: offline, with your own trade files](#9-manual-qa-on-windows-offline-with-your-own-trade-files)
 
 ## 1. The problem
 
@@ -337,6 +338,187 @@ old pauses and starts in the test's `BASELINE`, which may only go down.
   leave the lake as it found it.
 - The files that start the same signed-in server (`DRISHTI_SECURITY_ENABLED`, the test token secret) could ask with `shared=True` once
   each is shown to leave the server as it found it.
+
+## 9. Manual QA on Windows: offline, with your own trade files
+
+Beside the automated harness, one manual script is kept: a demo rehearsal on a **Windows** machine **without internet access** (pip and
+Maven through the company's internal mirror, no `.exe` placed on the machine), showing ENDUR trades from the bank's own JSON Lines
+files beside the synthetic CALYPSO and MUREX trades, the supporting data (curves, counterparties, netting sets, CSAs, collateral, FX,
+fixings, risk), the committed quotes-and-news snapshot (no website is contacted) and the world economy data. Do it in order, the day
+before the demo. Installing and running Drishti in general is [GETTING_STARTED.md](../guides/GETTING_STARTED.md) and its
+[Drishti on Windows](../guides/GETTING_STARTED.md#drishti-on-windows).
+
+**Your real trade files are confidential.** Keep them **outside** the project folder (below `<private>`, for example
+`C:\Users\<you>\drishti-private\endur\`); never copy them into the repository. Drishti reads them where they are. `<repo>` below is the
+project folder. Every command is one PowerShell line, after once:
+
+```powershell
+$py = "<repo>\drishti-console\.venv\Scripts\python.exe"; $tools = "<repo>\tools"
+```
+
+### 9.1 Set up once
+
+1. **The machine:** JDK 21 or newer, Python 3.13, IntelliJ IDEA and PyCharm, 8 GB free memory, 5 GB free disk
+   ([GETTING_STARTED.md step 1](../guides/GETTING_STARTED.md#step-1--install-the-prerequisites)). pip reads `%APPDATA%\pip\pip.ini`,
+   Maven `%USERPROFILE%\.m2\settings.xml` for the mirror.
+2. **The code:** clone (or extract the ZIP of) branch **main** into `<repo>`. Nothing needs unzipping: `data\testdata` is `.jsonl.gz`,
+   read directly. Your files go in `<private>`, **one per business date**, named by the load rules
+   ([DATA_LAKE_GUIDE.md section 5](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): `trade_endur.2026-10-16.jsonl`
+   (or `.jsonl.gz`, `.jsonl.zip`, or a tar of `trade_endur\2026-10-16\` folders). A file named only by its date is refused, with the name to give it.
+3. **Python:** `py -3.13 -m venv drishti-console\.venv`, then `drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements.txt`.
+4. **Two IDE projects, never one folder:** IntelliJ opens `<repo>` (run configurations in `run-configs\`: **Drishti build server jar**,
+   **Drishti server (demo lakes)**); PyCharm opens `<repo>\drishti-console` (`drishti-console\run-configs\`: **Drishti console**,
+   **Build demo lakes**, **Load ENDUR file into the lake**, the `drishti …` tools), with the `.venv` interpreter, `tools` a Sources root and
+   pytest the runner ([GETTING_STARTED.md › PyCharm](../guides/GETTING_STARTED.md#4-pycharm-run-and-debug-the-console)). Opened on the same
+   folder they overwrite each other's `.idea` (IntelliJ then says **module not specified**: close both, delete `<repo>\.idea`, reopen;
+   or **Maven → Reload All Maven Projects**). Every PyCharm configuration runs `tools\drishti.py` (or `run_drishti_web.py`) from `<repo>`
+   (`$PROJECT_DIR$/..`); a line such as `lake build …` below goes in its *Parameters* box, or after `& $py "$tools\drishti.py"` in a terminal.
+5. **The jar:** IntelliJ → **Drishti build server jar** → ▶ (Maven `package -DskipTests -pl drishti-app -am`): `BUILD SUCCESS`, and
+   `drishti-server\target\drishti-server-*-exec.jar` exists.
+
+### 9.2 Put the data in place
+
+**One command for everything** (stop the server first). `build_demo_lakes.py` builds every demo lake over the sixty business days of the
+committed test data, moved to end on the date of your newest file, then replaces the synthetic ENDUR trades with your files:
+
+```powershell
+& $py "$tools\build_demo_lakes.py" --endur-dir <private> --dry-run     # prints every step, changes nothing
+& $py "$tools\build_demo_lakes.py" --endur-dir <private>
+```
+
+You should see `1/3 the demo lakes …` (15 to 45 minutes; `data\delta` ends at about 3.4 GB, its folders `trading`, `reference`, `legal`,
+`collateral`, `credit`, `risk`, `market`, `macro`, `news`, `civic`, `us-equities`, `gleif` and `funds` (89 tables)), then
+`2/3 your ENDUR files (N: <first date> … <last date>)` with one `lake-build ok … rejected=0` line per file, then `3/3 done in … s`. A line
+every 30 seconds says which step runs, how large `data\delta` has grown and which table is being written; *nothing written for N s*
+means it is waiting (a slow disk, or antivirus scanning `data`).
+
+| You want | Add |
+|---|---|
+| synthetic data only, ending today | leave out `--endur-dir` |
+| the synthetic ENDUR trades kept beside yours | `--keep-synthetic-endur` |
+| your last date | `--as-of 2026-10-16` |
+| only your files loaded again | `--endur-dir <private> --files-only` (no server restart needed) |
+| another system's files | `--source-dir <folder> --system calypso --files-only` |
+| some datasets only | `--only trades/calypso,trades/murex --as-of <the lakes' last date>` (a folder of `data\testdata`, or a pack name) |
+| one system in Iceberg, the others in Delta | `--store endur=delta --store calypso=iceberg` (`--store all=iceberg` for every system; `--only trades/calypso --store calypso=delta --as-of <date>` moves it back). Needs the jar; the closing lines list each system's store and what changed in its connector file |
+| your bank's names instead of *Drishti Bank* | edit `config\demo\names.yaml`, then `--only core/legal-entity,market-risk/risk-hierarchy --as-of <date>` ([DEMO_DATA.md](../connectors/DEMO_DATA.md#your-banks-names)) |
+| a running server told at once | `--server http://<its address>:18480` with a `loads:write` token in `DRISHTI_TOKEN` (or `--token-file`); otherwise restart it, or wait about 10 s for a table's new version |
+
+**By hand, one file** (after deleting `data\delta\trading\trade_endur` so the synthetic table and its columns go):
+
+```powershell
+& $py "$tools\drishti.py" lake build --from <private>\trade_endur.2026-10-15.jsonl --pack <repo>\config\packs\banking\trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake <repo>\data\delta
+```
+
+The business date comes from the file name; the pack's schema checks each trade and writes the first leg's `NOTIONAL` and `INDEX_NAME`
+as columns; `--mode overwrite-dates` makes a repeat safe. The last line reads
+`lake-build ok exit=0 … domain=trading kind=trade engine=drishti mode=overwrite-dates rows=500 rejected=0 dates=1 partitions=5`; a
+non-zero `rejected` is explained, with the line, above it. Trade ids are text (`1000008` is read as `"1000008"`). Full paths matter:
+PyCharm's terminal opens in `drishti-console`, where a relative path makes a stray `drishti-console\data`.
+
+**With the Java loader** (every core, bounded memory; [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader)): add
+`--engine java` to the line above (the last line then says `engine=java-loader`; **without it `lake build` always uses Python**), or run
+the loader alone from a YAML file (`source: {files, pack, connector, partition-by}`, `target: {format: delta, lake, kind: trade, mode: replace}`,
+`memory: {budget-mb, spill-dir}`; single quotes keep Windows backslashes):
+
+```powershell
+$jar = (Get-ChildItem drishti-server\target\drishti-server-*-exec.jar | Sort-Object LastWriteTime | Select-Object -Last 1).FullName
+java -Xmx4g "-Djava.io.tmpdir=data\tmp\server" "-Dloader.main=com.ash.drishti.lakeload.LakeLoad" -jar $jar --config <private>\load-endur.yaml
+```
+
+The loader's checks, on the market-risk pack's scenario PVs into a scratch lake (`files: …\data\testdata\market-risk\scenario-pv\scenario-pv-2026-09-30.tar`,
+`kind: scenario-pv`, `lake: …\data\scratch-lake`, `memory.budget-mb: 512`):
+
+| # | Do | You should see |
+|---|---|---|
+| 1 | load it | `2026-09-30  2,678 rows (version 0, …)`, `rejected: 0`, a line per stage (read, decompress, parse, sortSpill, write, commit) with threads and rate, the memory line, `… lake-build ok exit=0 … engine=java-loader` |
+| 2 | load it again | `version 1`, still 2,678 rows: the date replaced in one commit |
+| 3 | add `--set memory.budget-mb=16` | the same rows, `spilled` above 0 MB |
+| 4 | add `--set target.format=iceberg --set target.lake=…\data\scratch-iceberg` | `…\risk\scenario-pv\metadata` exists, the same rows |
+| 5 | open `data\scratch-lake\_drishti-lake\runs\` | the run's summary (`throughput`, `memory`) and its manifest |
+| 6 | a copy with a line `{not json`, `--set rejects.file=data\tmp\rejects.jsonl` | exit 2, `rejected 1: not JSON (…)`, the line in the rejects file |
+
+Delete the scratch lakes afterwards.
+
+### 9.3 Start and check
+
+1. **The server:** IntelliJ → **Drishti server (demo lakes)** → ▶, or `powershell -ExecutionPolicy Bypass -File <repo>\tools\windows\start-server.ps1 -DemoLakes`
+   (the newest jar, the same settings). Either sets the ten packs of the lakes (`DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds`),
+   samples off, **offline mode** (`DRISHTI_OFFLINE=true`), sign-in on with `drishti-dev-admin`, port 18480, `-Xmx4g` and
+   `-Djava.io.tmpdir=<repo>\data\tmp\server`. Never start it from the ▶ in the margin of `DrishtiApplication.java`: that configuration has
+   none of these. You should see `Started DrishtiApplication in … seconds`, a line per large table and date as it loads, and
+   `derived pages trade-pages … built` (or *kept from the previous run*) for the grouped pages (`CTRD`, `PTRD`, `LTRD`, `ITRD`), kept on disk in
+   `data\derived\trade-pages` and counting every trade of the day.
+2. **The console:** PyCharm → **Drishti console** → ▶ (`Uvicorn running on http://0.0.0.0:17480`), then the browser at
+   `http://localhost:17480`, signed in as `drishti-dev-admin`. On a laptop whose F-keys are media keys, `Alt`+`Shift`+`2`…`9` are `F2`…`F9`.
+3. **Admin → Lakes** lists every table; `trading/trade_endur` has **your** rows and dates, and its page your dates, columns and runs.
+   **Admin → Connectors** shows `trade-endur`, `trade-calypso`, `trade-murex` and the stores RUNNING, the live quote and news connectors
+   disabled and `news-store` serving the snapshot. **Admin → Health** is green. **Admin → Packs → trading → Sutra coverage** gives every
+   SOURCE_SYSTEM × PRODUCT_TYPE of your data one Sutra (a row without one is a product type the pack does not know yet: laid out by inference).
+
+![Admin, Lakes: every table with rows, files, size, dates and the Maintain controls](img/qa-windows/01-admin-lakes.png)
+
+![Admin, Connectors: the trade connectors of the three systems RUNNING](img/qa-windows/02-admin-connectors.png)
+
+![Admin, Health](img/qa-windows/03-admin-health.png)
+
+![Admin, Packs, trading: the Sutra coverage table](img/qa-windows/04-pack-coverage.png)
+
+### 9.4 The demo, page by page
+
+| # | Show | How |
+|---|---|---|
+| 1 | An ENDUR deal from your file | type one of your trade ids → Enter: ticket, legs, cash flows, resets, events, charts |
+| 2 | Trades by system and product | **Forms → Trading**: Source system `ENDUR`, a product type → Search; then `CALYPSO`, `MUREX` |
+| 3 | A CALYPSO and a MUREX deal | `/v/trade/CLY-3000157`, `/v/trade/MX-20000001` |
+| 4 | Counterparty → netting set → CSA → collateral | `/v/counterparty-trades/CP-NORTHPLAINS`, then click through |
+| 5 | A curve | `/v/commodity-curve/CMDC-BRENT` |
+| 6 | An equity price and news | `/v/listed-company/CO-AAPL`; `/v/news-topic/TOPIC-FED` |
+| 7 | Compare two dates | on a trade, pick one of your dates → **Compare** → the other |
+| 8 | BI by source system | **BI → Catalogue → Trades overview → Open the report**; change a slicer |
+| 9 | How a screen is designed | *How this view was built* → the Sutra name: the designer opens with the trade as its sample |
+| 10 | A history | `TRD <your id> 60` (needs two or more of your files), `TRD 1000279 60` (amended ten times), **C** changes only, **D** the fields that changed, **Enter** the page as it stood that day; `EQ EQ-CSCA 3M` |
+
+| | |
+|---|---|
+| ![An ENDUR deal: ticket, payments, linked entities](img/qa-windows/05-endur-deal.png) **1. An ENDUR deal** | ![Forms: the trading form](img/qa-windows/06-trading-form.png) **2. Forms → Trading** |
+| ![A CALYPSO deal](img/qa-windows/07-calypso-deal.png) **3. A CALYPSO deal** | ![A MUREX deal](img/qa-windows/08-murex-deal.png) **3. A MUREX deal** |
+| ![A counterparty, its trades and netting sets](img/qa-windows/09-counterparty.png) **4. A counterparty** | ![A commodity curve](img/qa-windows/10-curve.png) **5. A curve** |
+| ![Compare a trade across two dates](img/qa-windows/13-compare.png) **7. Compare** | ![BI: Trades overview](img/qa-windows/14-bi-trades-overview.png) **8. BI, Trades overview** |
+| ![How this view was built: the Sutra link](img/qa-windows/15-view-built.png) **9. How this view was built** | ![The designer opened on the Sutra with the trade as its sample](img/qa-windows/16-designer.png) **9. The designer** |
+
+The pictures are of synthetic data loaded exactly as in 9.2.
+
+**Optional: two servers as one** ([tutorial 19](../tutorials/19-a-cluster-of-three.md)). Use the machine's real IPv4 address
+(`ipconfig`), never `127.0.0.1` or `localhost`. Set one key for both (`$env:DRISHTI_NET_SECRET`), `drishti.py net set node.secret` and
+`node.enabled true` on each, `net add-peer` the first from the second (its own `config` and `data` folders, `--server.port=18490`); **Admin →
+Net → Members** shows both `alive`. With the console's `DRISHTI_BACKEND_URLS` naming the first, stopping it moves the next page to the
+second within a second, still signed in.
+
+**Optional: the S3 tests**, against simulators that need no `.exe` and no Docker: `pip install "moto[server]==5.2.3"`, then
+`.\mvnw.cmd -q -pl drishti-identity,plugins/drishti-plugin-iceberg -am test "-Dtest=S3ContentStoreTest,S3MockContentStoreTest,MinioContentStoreTest,NativeOnS3SimulatorTest" "-Dsurefire.failIfNoSpecifiedTests=false"`
+and `& $py -m unittest -v tools\lake\test_s3_simulators.py`. The MinIO tests are skipped on Windows (they run a server binary).
+
+### 9.5 If something goes wrong
+
+| What you see | Do this |
+|---|---|
+| The Run tab says **DrishtiApplication**; quotes or news try the internet; sample trades appear | Stop it; start **Drishti server (demo lakes)** or the script. |
+| `start-server.ps1 … cannot be loaded because running scripts is disabled` | Use the line as given (`-ExecutionPolicy Bypass -File …`). |
+| PowerShell says `lake` is not recognized | `lake …` is a sub-command: `& $py "$tools\drishti.py" lake …`, or the PyCharm configuration. |
+| `lake build` says `no id` or `give --lake DIR` | `--key TRADE_ID` or `--lake` is missing: copy the line of 9.2 again. |
+| ENDUR pages still show synthetic trades | Stop the server, delete `data\delta\trading\trade_endur`, load your files again. |
+| ENDUR and CALYPSO/MUREX never on one date | Build the lakes again with `--as-of` your newest date. |
+| BI shows 0 trades, or a page is empty while Admin → Lakes has the table | Stop the server, delete `config\connectors` (the server writes it again from the packs), start it. |
+| A computed kind refuses a parameter its pack documents | **Admin → Connectors → Template updates**; a value under *changed* stays yours until **Use the pack's value**. |
+| `OutOfMemoryError` | `-Xmx4g` fits about 400,000 trades a day; give 8 GB for a million or more. |
+| A trade page says `DRS-1004 … timed out` | The first read of a date on a large table; open it again. If it repeats, exclude `data` from real-time antivirus scanning and keep it on a local disk. |
+| *documents are not cached on disk (…)* in the log | Right after a restart the old server was still stopping; otherwise a second server uses the same `data` folder. |
+| `Port 18480 (or 17480) is already in use` | Another copy is running: stop it. |
+| A counterparty or portfolio page lists 1,000 trades | By design: the count and every total cover all of them; search for the rest. |
+
+Afterwards stop both, and check that `git status` shows nothing new outside `data\` and that your files never left `<private>`. Temporary
+files (`data\tmp`), caches (`data\cache`) and the grouped pages (`data\derived`) may be deleted while both are stopped.
 
 ---
 

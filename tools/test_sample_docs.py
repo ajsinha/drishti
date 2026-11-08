@@ -50,7 +50,8 @@ def test_every_test_data_folder_has_its_page():
     folders = sorted(str(d.relative_to(S.TESTDATA)) for d in S.TESTDATA.glob("*/*/")          # its feed files: dated .jsonl.gz, or tars
                      if any(d.glob("*.jsonl.gz")) or any(d.glob("*.tar")))
     assert len(folders) >= 69
-    missing = [f for f in folders if not (S.OUT / f"{f}.md").is_file()]
+    pages = {d: (S.OUT / f"{d}.md").read_text(encoding="utf-8") if (S.OUT / f"{d}.md").is_file() else "" for d in {f.split("/")[0] for f in folders}}
+    missing = [f for f in folders if f'<a id="{f.split("/", 1)[1]}"></a>' not in pages[f.split("/")[0]]]
     assert not missing, f"no data-sample page for {missing}: run python3 tools/testdata/sample_docs.py"
 
 
@@ -60,13 +61,14 @@ def test_every_page_is_current():
 
 
 def test_no_page_lists_a_field_the_data_does_not_have():
-    for f, text in _files().items():
+    for f, page in _files().items():
         if f.name == "README.md":
             continue
-        name = str(f.relative_to(S.OUT).with_suffix(""))
-        known = set(_scans()[name].order)
-        named = set(re.findall(r"^\| `([A-Za-z_][\w.\[\]]*)` \|", text, re.M))
-        assert named and named <= known, f"{name}: fields the data does not have: {sorted(named - known)}"
+        for leaf, text in re.findall(r'<a id="([^"]+)"></a>(.*?)(?=<a id=|\Z)', page, re.S):
+            name = f"{f.stem}/{leaf}"
+            known = set(_scans()[name].order)
+            named = set(re.findall(r"^\| `([A-Za-z_][\w.\[\]]*)` \|", text, re.M))
+            assert named and named <= known, f"{name}: fields the data does not have: {sorted(named - known)}"
 
 
 def test_every_contract_matches_all_its_test_data():
@@ -77,7 +79,7 @@ def test_every_contract_matches_all_its_test_data():
 def test_the_index_lists_every_page_and_the_computed_kinds():
     index = _files()[S.OUT / "README.md"]
     for p in S.pages():
-        assert f"]({p['name']}.md)" in index, p["name"]
+        assert f"]({S.page_link(p)})" in index, p["name"]
     for x in S.computed():
         assert f"`{x['kind']}`" in index, x["kind"]
     assert "**VaR: required**" in index and "**Exposure: required**" in index
@@ -91,9 +93,10 @@ def test_the_pages_name_no_release():
 
 
 def test_the_forms_of_pv_and_pnl_are_all_shown():
-    spv = _files()[S.OUT / "market-risk/scenario-pv.md"]
-    pnl = _files()[S.OUT / "market-risk/pnl-vector.md"]
-    for text, what in ((spv, "Scenario PVs"), (pnl, "P&L vector")):
-        assert f"### {what} by trade, full run" in text and f"### {what} by position, full run" in text
-    assert "### Scenario PVs by trade, intraday update, cancel" in spv and "### Scenario PVs by trade, intraday update" in spv
+    page = _files()[S.OUT / "market-risk.md"]
+    spv = page.split('<a id="scenario-pv"></a>')[1].split("<a id=")[0]
+    pnl = page.split('<a id="pnl-vector"></a>')[1].split("<a id=")[0]
+    for text, what, leaf in ((spv, "Scenario PVs", "scenario-pv"), (pnl, "P&L vector", "pnl-vector")):
+        assert f"#### {leaf}: {what} by trade, full run" in text and f"#### {leaf}: {what} by position, full run" in text
+    assert "#### scenario-pv: Scenario PVs by trade, intraday update, cancel" in spv and "#### scenario-pv: Scenario PVs by trade, intraday update" in spv
     assert '"… 506 more numbers (one per scenario' in pnl

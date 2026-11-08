@@ -20,7 +20,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The in-memory lake, {@code drishti.lake.memory.*} (docs/architecture/IN_MEMORY_LAKE.md section 11; docs/guides/IN_MEMORY_LAKE_GUIDE.md):
+ * The in-memory lake, {@code drishti.lake.memory.*} (docs/architecture/DATA_ARCHITECTURE.md section 11; docs/guides/DATA_LAKE_GUIDE.md):
  * the memory stores (each a hard cap of off-heap memory), the tables their replenish jobs fill, and the automated compaction. Plain values:
  * the server binds {@code drishti.lake.memory.*} onto this record ({@code MemoryLakeConfiguration}); this module reads no configuration.
  *
@@ -46,7 +46,7 @@ public record MemoryLakeSettings(Map<String, Store> stores, List<TableSpec> tabl
     }
 
     /**
-     * These settings with the memory stores the lake files describe (decision L3, docs/guides/IN_MEMORY_LAKE_GUIDE.md): every lake whose
+     * These settings with the memory stores the lake files describe (decision L3, docs/guides/DATA_LAKE_GUIDE.md): every lake whose
      * root is {@code mem://<store>} is a store, its {@code memory:} block giving the cap, chunk size, contract, owner and idle trim, its
      * {@code format} the store's. A store still under {@code drishti.lake.memory.stores} (the engine file, the old place) is read with one
      * warning naming {@code drishti.py lake migrate-config}; a store named in both places is refused, naming both.

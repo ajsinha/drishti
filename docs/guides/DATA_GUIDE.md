@@ -867,7 +867,7 @@ The table, business date and mode of every file, for every loader: [DATA_LAKE_GU
 
 ## 3. Using Drishti with Databricks Delta Lake or Apache Iceberg
 
-Lakes (one file per lake, `config/lakes/<lake>.yaml`), Delta and Iceberg, and reading a lakehouse Databricks, Spark, Trino or Snowflake already writes (by storage path, or Iceberg through Unity Catalog's REST endpoint), with the Delta features read and what is planned: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [section 10](DATA_LAKE_GUIDE.md#10-connecting-to-an-existing-lakehouse-databricks-unity-catalog). The connector settings: [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md), [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md).
+Lakes (one file per lake, `config/lakes/<lake>.yaml`), Delta and Iceberg, and reading a lakehouse Databricks, Spark, Trino or Snowflake already writes (by storage path, or Iceberg through Unity Catalog's REST endpoint), with the Delta features read and what is planned: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [section 10](DATA_LAKE_GUIDE.md#10-connecting-to-an-existing-lakehouse-databricks-unity-catalog). The connector settings: [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md), [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md).
 
 ## 4. External data: where it comes from and how to refresh it
 

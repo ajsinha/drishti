@@ -18,7 +18,7 @@ package com.ash.drishti.flight;
 import java.time.Duration;
 
 /**
- * What one Flight request may take (docs/architecture/ARROW_FLIGHT.md Q8): rows and bytes sent, the time it runs, the Arrow memory it holds
+ * What one Flight request may take (docs/architecture/DATA_ARCHITECTURE.md Q8): rows and bytes sent, the time it runs, the Arrow memory it holds
  * at once. A live stream's time limit is its idle limit per batch, not its whole life (a subscription runs all day). Zero or less: no limit.
  */
 public record FlightLimits(long rows, long bytes, Duration time, long memory) {

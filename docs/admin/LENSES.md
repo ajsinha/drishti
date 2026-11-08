@@ -227,7 +227,7 @@ the terminal look with the theme's own variables in every theme, one column on a
 
 ## 5. Drishti Risk
 
-*The product view: [RISK_LENS.md](../lenses/RISK_LENS.md).*
+*The product view: [RISK_LENS.md](../lenses/README.md#1-risk-lens).*
 
 **Drishti Risk** (`risk`, banking module) is a one-stop shop to manage risk: VaR and exposure first; liquidity, climate and more join as
 more lines in the same file.
@@ -265,7 +265,7 @@ official capture (the feed names the date captured).
 
 ## 6. Drishti Trading
 
-*The product view: [TRADING_LENS.md](../lenses/TRADING_LENS.md).*
+*The product view: [TRADING_LENS.md](../lenses/README.md#2-trading-lens).*
 
 **Drishti Trading** (`trading`, banking module) is for traders and desk heads: my books, my P&L today, my VaR and limits, today's trades,
 my counterparties, and whether a new trade fits. It loads the same five packs as Drishti Risk and shows the blotter, books and positions,
@@ -383,7 +383,7 @@ without an official record; a trade's time of day other than its `SOURCE_UPDATE_
 
 ## 7. Drishti Market
 
-*The product view: [MARKET_LENS.md](../lenses/MARKET_LENS.md).*
+*The product view: [MARKET_LENS.md](../lenses/README.md#3-market-lens).*
 
 **Drishti Market** (`market`, banking module, needing capitalmarkets too) is the bank's own market data: curves, repo, fixings, FX spot,
 forwards and vols, swaption and cap vols, credit curves, bonds, equities, indexes, dividends, inflation, commodities and correlations (the
@@ -438,7 +438,7 @@ edition:
 
 ## 8. Drishti World
 
-*The product view: [WORLD_LENS.md](../lenses/WORLD_LENS.md).*
+*The product view: [WORLD_LENS.md](../lenses/README.md#4-world-lens).*
 
 **Drishti World** (`world`, economy module) is the public-data packs in one product: economies and regions (world-economy), news and quotes
 (news-and-markets), the public sector's free news (official-news: `PRESS`, `PREL`; gdelt-events: `GDELT`), legal entities (gleif), and, while
@@ -539,7 +539,7 @@ Any feature preset can be overridden by its own setting too (for example `DRISHT
 site's `config/access/lenses.yaml` adds a lens to the registry or replaces a shipped one by its id (its modules, functions, cards and
 chips).
 
-**On a phone** ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md), [USER_GUIDE.md, On a phone](../guides/USER_GUIDE.md#on-a-phone)).
+**On a phone** ([MOBILE_DISPLAY.md](../guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones), [USER_GUIDE.md, On a phone](../guides/USER_GUIDE.md#on-a-phone)).
 A lens's `phone:` block sets and caps the phone tier of panels over every Sutra, after the site's `ui.phone`; `max:` is a cap no Sutra can
 exceed. `pages:` does the same for the parts of the VaR and exposure pages, and `home.phone` for the lens's landing. Drishti Risk ships one
 rule: a VaR contribution panel waits under *More on this page*.
@@ -612,12 +612,12 @@ datasets in `bi.datasets`, its page in `menus.views`, its Knowledge pages in `he
 
 The same mechanism serves the proposed lenses without new engine code; each will be a lens file with its landings when built. **Drishti
 CRO** (`cro`: landings `appetite`, `brief` and `detail`, the command word `CRO`) is sketched in
-[CRO_LENS.md section 10](../lenses/CRO_LENS.md#10-the-lens-design); it needs new packs for the risk appetite catalogue, liquidity, capital
+[CRO_LENS.md section 10](../lenses/README.md#861-the-lens-design); it needs new packs for the risk appetite catalogue, liquidity, capital
 and climate inputs, and the governance actions Oversight proposes. **Drishti CIO** (`cio`: landings `status`, `brief` and `detail`, the
-command word `CIO`) is sketched in [CIO_LENS.md section 11](../lenses/CIO_LENS.md#11-the-lens-design); it needs one new `platform` pack of
+command word `CIO`) is sketched in [CIO_LENS.md section 11](../lenses/README.md#971-the-lens-design); it needs one new `platform` pack of
 captured records over the load, audit and access records Drishti keeps today. The **MR cube** and **CCR cube**
-([MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md), [CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md)) and **Oversight**
-([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md)) have registry entries and product documents. A **funds** lens (us-equities, gleif,
+([MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens), [CCR_CUBE_LENS.md](../lenses/README.md#7-ccr-cube-lens)) and **Oversight**
+([OVERSIGHT_LENS.md](../lenses/README.md#5-oversight-lens)) have registry entries and product documents. A **funds** lens (us-equities, gleif,
 funds) or a **data platform** lens (BI and Build without the risk packs) is one more file.
 
 ## 12. In a cluster

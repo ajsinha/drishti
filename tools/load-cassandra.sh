@@ -13,7 +13,7 @@
 
 # Loads the banking packs' data into Apache Cassandra (or ScyllaDB, Astra, Keyspaces) in the layout the connector reads
 # (CassandraLayout: a keyspace per data domain, a table per kind with a partition per business day, generation and bucket,
-# entity_days and kind_days; docs/connectors/CASSANDRA_CONNECTOR.md):
+# entity_days and kind_days; plugins/drishti-plugin-cassandra/README.md):
 #   tools/load-cassandra.sh [contact-points] [local-datacenter] [options]
 #   tools/load-cassandra.sh localhost:9042 datacenter1 --create --create-keyspace 1      a development node: the samples x 10 days
 #   tools/load-cassandra.sh localhost:9042 datacenter1 --create --trades 10000 --days 3  and a book of 10,000 trades a day

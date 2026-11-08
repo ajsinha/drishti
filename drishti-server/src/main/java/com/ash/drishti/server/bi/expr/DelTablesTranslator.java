@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * The migration's DEL step (BI_FOUNDATION_2911E.md section 4.1), from part A: DEL read by its own parser (read, never evaluated), mapped to
+ * The migration's DEL step (docs/architecture/BI_DESIGN.md section 4.1), from part A: DEL read by its own parser (read, never evaluated), mapped to
  * Rachana's tree by {@link DelToRachana} (section 2.4: the words, {@code a if c else b}, {@code not}, {@code **}, {@code //}, chains,
  * {@code is None}, the renamed functions) and printed in the one spelling by Rachana's {@link Printer}. The layer's own rewrites (columns
  * to paths, date parts, the null rule of Q1) run after it in drishti-tables. Lives with DEL so the table layer never reads DEL; deleted

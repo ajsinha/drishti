@@ -49,7 +49,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/counterparty/` |
 | Test data | data/testdata/core/counterparty |
-| Worked example | [core/counterparty](../samples/core/counterparty.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/counterparty](../samples/core.md#counterparty) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -168,7 +168,7 @@ Economic group of related counterparties (obligor group).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/counterparty-group/` |
 | Test data | data/testdata/core/counterparty-group |
-| Worked example | [core/counterparty-group](../samples/core/counterparty-group.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/counterparty-group](../samples/core.md#counterparty-group) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -224,7 +224,7 @@ Issuer of bonds and reference entity for CDS.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/issuer/` |
 | Test data | data/testdata/core/issuer |
-| Worked example | [core/issuer](../samples/core/issuer.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/issuer](../samples/core.md#issuer) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -286,7 +286,7 @@ A clearing house with its default fund and margin model.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/ccp/` |
 | Test data | data/testdata/core/ccp |
-| Worked example | [core/ccp](../samples/core/ccp.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/ccp](../samples/core.md#ccp) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -341,7 +341,7 @@ The bank's own booking entity.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/legal-entity/` |
 | Test data | data/testdata/core/legal-entity |
-| Worked example | [core/legal-entity](../samples/core/legal-entity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/legal-entity](../samples/core.md#legal-entity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -417,7 +417,7 @@ A trading book: owner desk, trades and risk.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/book/` |
 | Test data | data/testdata/core/book |
-| Worked example | [core/book](../samples/core/book.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/book](../samples/core.md#book) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -495,7 +495,7 @@ A trading desk: books, limits and risk results.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/desk/` |
 | Test data | data/testdata/core/desk |
-| Worked example | [core/desk](../samples/core/desk.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/desk](../samples/core.md#desk) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -571,7 +571,7 @@ A trader and their books.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/trader/` |
 | Test data | data/testdata/core/trader |
-| Worked example | [core/trader](../samples/core/trader.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/trader](../samples/core.md#trader) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -628,7 +628,7 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/calendar/` |
 | Test data | data/testdata/core/calendar |
-| Worked example | [core/calendar](../samples/core/calendar.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/calendar](../samples/core.md#calendar) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -688,7 +688,7 @@ An account at a CCP holding cleared trades and margin.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `reference-store` (plugin `delta`), table `<root>/reference/clearing-account/` |
 | Test data | data/testdata/core/clearing-account |
-| Worked example | [core/clearing-account](../samples/core/clearing-account.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [core/clearing-account](../samples/core.md#clearing-account) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

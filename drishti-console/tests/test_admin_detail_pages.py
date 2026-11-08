@@ -163,7 +163,7 @@ TYPE_README = {"connector": "delta", "source": "classpath",
                "meta": {"connector": "delta", "category": "plugin", "summary": "Reads Delta Lake tables.", "capabilities": ["fetch", "search", "history"],
                         "auth": "Cloud credentials", "licence": "Delta Kernel (Apache-2.0)", "windows": "Works"},
                "markdown": "# The delta connector\n\n## Data structure\n\n```sql\nCREATE TABLE t (id string)\n```\n\n| Setting | Type |\n|---|---|\n| `root` | path |\n\n"
-                           "<img src=x onerror=alert(1)> [Delta](../../docs/connectors/DELTA_CONNECTOR.md)\n"}
+                           "<img src=x onerror=alert(1)> [Delta](../../plugins/drishti-plugin-delta/README.md)\n"}
 
 
 def test_the_pack_page_shows_its_readme_with_data_structures_sources_and_safe_links(client, backend, monkeypatch):

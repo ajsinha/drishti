@@ -22,7 +22,7 @@ connectors:
 files:
 - risk-store.yaml
 - trade-endur.yaml
-doc: docs/connectors/DELTA_CONNECTOR.md
+doc: plugins/drishti-plugin-delta/README.md
 ---
 # Delta Lake on S3 connector templates
 
@@ -86,7 +86,7 @@ deploy/aws/delta-s3/delta-s3.sh check --table risk/pnl-vector
 
 ## See also
 
-- [The Delta connector, section 17](../../../docs/connectors/DELTA_CONNECTOR.md#17-delta-lake-on-aws-s3) and the [delta connector README](../../../plugins/drishti-plugin-delta/README.md).
+- [The delta connector README, Delta Lake on AWS S3](../../../plugins/drishti-plugin-delta/README.md#delta-lake-on-aws-s3).
 - [The tool scripts](../../../deploy/aws/delta-s3/README.md) and [Connector files](../../../docs/connectors/CONNECTOR_FILES.md).
 
 The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching

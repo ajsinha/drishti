@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the demo position sensitivities and the factor dictionary (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md, planned kinds
+"""Writes the demo position sensitivities and the factor dictionary (docs/guides/FRTB_SA_GUIDE.md, planned kinds
 ``position-sensitivity`` and ``risk-factor`` of the market-risk pack) into data/testdata/market-risk/, as a bank's sensitivity batch
 would deliver them:
 

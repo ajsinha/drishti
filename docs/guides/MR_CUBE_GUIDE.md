@@ -22,7 +22,7 @@ the server from those trades' scenario P&L vectors. A total is never the sum of 
 the gap as **diversification**. Around the pivot sit the headline of the view's scope, the time-travel slider, sparklines, a cell's tail
 histogram and why it moved, the components and their waterfall, the factor heat map, the DV01 ladder and a what-if side by side. The
 tutorial is [tutorial 38](../tutorials/38-the-mr-cube-on-the-pivot-engine.md); the lens design behind it is
-[MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md); the engine's design is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md).
+[MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens); the engine's design is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md).
 
 ## Contents
 

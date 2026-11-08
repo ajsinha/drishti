@@ -182,7 +182,7 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
     """Starts the scratch server and console; `extra_env` (a guide's SERVER_ENV) is added to the environment of both."""
     jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-server -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     for name in ("config",):
         if not (work / name).exists() and (ROOT / name).exists():

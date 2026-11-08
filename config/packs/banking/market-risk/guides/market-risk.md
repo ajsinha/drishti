@@ -756,7 +756,7 @@ Nested `SENSITIVITIES[]`:
 - Refusals, each counted per source: a factor name not in the dictionary or not mapped (the element); VALUE null, NaN or infinite (the element); a currency without FX on the date (the element); the same factor and measure twice (the record); a second full run of a source on a date (the run). Warnings: a curvature without SHOCK_SIZE or with a shock other than the bucket's; a position with vectors and no sensitivities, or the reverse (completeness, by desk); a bucket that differs from the dictionary's.
 - Decided (2026-11-01, decision 3): rates vega in lognormal volatility points by default; a source sending normal volatility declares VOL_CONVENTION NORMAL on its records (VEGA per basis point of normal volatility, IMPLIED_VOL in basis points) and is converted on load: the vega risk sensitivity is VEGA × IMPLIED_VOL.
 - Decided (2026-11-01 and 2026-11-02, decisions 2 and 7): curvature is revalued (CURVATURE_UP and CURVATURE_DOWN) where the source can; a source that cannot sends GAMMA and the curvature Drishti derives is an estimate, an analysis figure until the supervisor accepts it.
-- Conventions turned into the regulatory sensitivities by Drishti (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 2.3): FRTB s_k = DV01 × 10,000 (MAR21.8's per-unit definition), s_k = DELTA × 100, the vega risk sensitivity VEGA × 100 × IMPLIED_VOL; SIMM takes DV01 and CS01 per basis point and DELTA per one per cent as delivered.
+- Conventions turned into the regulatory sensitivities by Drishti (docs/guides/FRTB_SA_GUIDE.md section 2.3): FRTB s_k = DV01 × 10,000 (MAR21.8's per-unit definition), s_k = DELTA × 100, the vega risk sensitivity VEGA × 100 × IMPLIED_VOL; SIMM takes DV01 and CS01 per basis point and DELTA per one per cent as delivered.
 
 ### RFAC: Risk factor dictionary (`risk-factor`)
 
@@ -839,7 +839,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `CHILDREN_NOTE` | text |  | optional |  |  |  | When CHILDREN is limited: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567". |
 | `WORST` | record list |  | required |  |  |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |
 | `PNL` | vector |  | required | CURRENCY |  |  | The scope's P&L under each scenario day, oldest first (unrounded). |
-| `PARAMETRIC_VAR` | amount |  | optional | CURRENCY |  |  | Parametric VaR, a cross-check beside historical (PARAMETRIC_VAR.md): z·σ − μ at CONFIDENCE, positive for a loss; never official, never a limit's measure. |
+| `PARAMETRIC_VAR` | amount |  | optional | CURRENCY |  |  | Parametric VaR, a cross-check beside historical (docs/guides/VAR_GUIDE.md): z·σ − μ at CONFIDENCE, positive for a loss; never official, never a limit's measure. |
 | `PARAMETRIC_ES` | amount |  | optional | CURRENCY |  |  | Parametric ES: σ·φ(z_ES)/(1 − ES_CONFIDENCE) − μ. |
 | `PARAMETRIC_MU` | amount |  | optional | CURRENCY |  |  | μ of the lens's vector (the normal's mean). |
 | `PARAMETRIC_SIGMA` | amount |  | optional | CURRENCY |  |  | σ of the lens's vector (sample, N − 1, or EWMA-weighted). |

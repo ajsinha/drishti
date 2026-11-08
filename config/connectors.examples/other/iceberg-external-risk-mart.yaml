@@ -14,7 +14,7 @@
 
 # Example: copy to config/connectors/risk-mart.yaml to serve Iceberg tables a Spark pipeline writes to a REST catalog
 # (Apache Polaris, Snowflake Open Catalog, Glue's Iceberg endpoint) as Drishti kinds, read-only
-# (docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md). Credentials are ${ENV_VAR} references.
+# (plugins/drishti-plugin-iceberg-external/README.md). Credentials are ${ENV_VAR} references.
 plugin: iceberg-external
 kinds:
 - trade

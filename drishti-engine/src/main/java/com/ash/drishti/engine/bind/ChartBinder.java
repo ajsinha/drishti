@@ -422,7 +422,7 @@ final class ChartBinder {
 
     /**
      * The pivot engine's function of a pivot panel's {@code value} written as a Rachana aggregate over the row ({@code sum(@.MTM)},
-     * {@code percentile(@.PNL, 0.99)}; ONE_GRAMMAR.md part 3), over the value column {@code v}; refused in words for an aggregate of
+     * {@code percentile(@.PNL, 0.99)}; docs/architecture/ARCHITECTURE.md part 3), over the value column {@code v}; refused in words for an aggregate of
      * two inputs or of text, which a panel's one value column cannot carry.
      */
     private static String measure(com.ash.drishti.rachana.el.Functions.AggregateCall call) {

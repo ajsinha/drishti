@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Rachana's checked mode (BI_FOUNDATION_2911E.md 2.1 and 2.2; the type checker ported from DEL's {@code DelChecker}, which now calls
+ * Rachana's checked mode (docs/architecture/BI_DESIGN.md 2.1 and 2.2; the type checker ported from DEL's {@code DelChecker}, which now calls
  * this one): checks a parsed expression against the scope it is written in ({@link Scope}), the {@link Signatures} and (when known)
  * the fields, measures and parameters the caller may use. Types (no implicit casts, booleans only for conditions), aggregates where
  * they belong ({@code DRS-9127} "an aggregate belongs in a measure", "wrap it: sum(...)"), names that exist ({@code DRS-9152}), masked

@@ -882,7 +882,7 @@ uses `RetryPolicy` from `drishti-common` in the same shape (`RetryPolicy.of(look
 
 A connector does not have to sit in front of a store. `fetch(ref)` is Java code, and what it returns can be **worked out when it is asked
 for**: a web search, a calculation, a call to an in-house service, a join of several systems. Two shipped connectors are written this way
-and are the examples to read: [`news`](NEWS.md) (headlines for the name in the id, from Google News RSS) and [`yfinance`](YFINANCE.md) (a quote
+and are the examples to read: [`news`](../../plugins/drishti-plugin-news/README.md) (headlines for the name in the id, from Google News RSS) and [`yfinance`](../../plugins/drishti-plugin-yfinance/README.md) (a quote
 and price history for the ticker in the id, from Yahoo Finance). Neither has a database, a Delta table or a file behind it.
 
 The pattern, in six rules:

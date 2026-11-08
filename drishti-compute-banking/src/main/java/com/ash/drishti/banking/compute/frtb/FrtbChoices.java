@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * The method choices of FRTB-SA as named switches (SENSITIVITIES_AND_FRTB_SA.md section 12.1a, FRTB_SA_GUIDE.md section 8): each with its
+ * The method choices of FRTB-SA as named switches (docs/guides/FRTB_SA_GUIDE.md section 12.1a, FRTB_SA_GUIDE.md section 8): each with its
  * decided default (section 16), its alternatives, its rule and why the default was chosen. A run is the choices plus the overrides
  * ({@code param.<path>} of the parameter files); anything but the defaults and no overrides is an analysis, and a run with an override is
  * never a regulatory figure.

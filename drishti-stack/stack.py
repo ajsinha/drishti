@@ -138,7 +138,7 @@ def server_jar() -> Path:
         os.replace(part, JAR)                    # a server still running keeps the jar it opened
         say(f"server jar: {built[0].name} copied to {JAR.relative_to(ROOT)}")
     if not JAR.exists():
-        sys.exit("no server jar: build it first (./mvnw -o -q package -DskipTests -pl drishti-server -am), then run start.sh again")
+        sys.exit("no server jar: build it first (./mvnw -o -q package -DskipTests -pl drishti-app -am), then run start.sh again")
     return JAR
 
 

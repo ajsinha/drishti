@@ -53,7 +53,7 @@ settings:
 auth: Internal log-in (user + password as ${ENV} or file:), external (LDAP), or pki (the client certificate is the log-in); TLS through tls.* and tls-name (TLS needs Aerospike Enterprise Edition).
 licence: Aerospike Java client for JDK 21 (Apache-2.0), bundled; no native library.
 windows: Works the same on Windows (pure Java client); the server is yours to run, and tools/load-aerospike.sh needs bash.
-doc: docs/connectors/AEROSPIKE_CONNECTOR.md
+doc: plugins/drishti-plugin-aerospike/README.md
 ---
 # The aerospike connector
 
@@ -66,7 +66,9 @@ layout) fills.
 A data domain (`trading`) is three sets in one namespace: the day records, an index set (`<set>_ix`) and a kinds set
 (`<set>_kinds`). The kinds and their days come from the kinds set, never from scanning documents; the ids for type-ahead come from the
 index set, re-read every `refresh-seconds`. Retention is Aerospike's TTL (`--ttl-days` on the loader), not a maintenance job. It is
-read-only; it runs at most two scans at a time, to share the cluster's scan limits with other clients.
+read-only; it runs at most two scans at a time, to share the cluster's scan limits with other clients. The engine side (columns,
+searches, derived kinds, impact) is shared with Delta Lake ([the delta connector](../drishti-plugin-delta/README.md)); the settings are
+also summarised in [CONFIGURATION.md › Connector settings](../../docs/admin/CONFIGURATION.md#aerospike).
 
 ## Settings
 
@@ -116,7 +118,28 @@ Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `un
 - **Document:** the `doc` bin is the day's JSON document as text (about 7 KB a trade); nested lists stay inside it.
 - **Promoted bins:** a path becomes a bin by replacing dots with underscores (`counterparty.id` is `counterparty_id`). Bin names are at
   most 15 characters: a longer one is cut to 10, then `_` and the first 4 hex digits of the path's SHA-1 (`PRODUCT_SUB_TYPE` is
-  `PRODUCT_SU_cf84`). Numbers are doubles, everything else text. `kind`, `id`, `date`, `doc` and `dates` are reserved.
+  `PRODUCT_SU_cf84`, `counterparty.name` is `counterpar_f5fe`), so two long paths never share a bin; compute the hash part with
+  `python3 -c "import hashlib;print(hashlib.sha1(b'counterparty.name').hexdigest()[:4])"`. Numbers are doubles, everything else text.
+  `kind`, `id`, `date`, `doc` and `dates` are reserved. The loader and the connector share the rule (`AerospikeLayout.bin`).
+
+For one trade on one day:
+
+```text
+set trading, key "trade/MX-20000001/20260930"
+  kind "trade"   id "MX-20000001"   date 20260930   doc "{\"SOURCE_SYSTEM\":\"MUREX\",…,\"TRADE_ID\":\"MX-20000001\",…}"
+  TRADE_ID "MX-20000001"   PORTFOLIO "BOOK-RATES-3"   PRODUCT_SU_cf84 "Interest rate swap (fixed/float)"   QUANTITY 242000000.0
+set trading_ix, key "trade/MX-20000001"      kind "trade"   id "MX-20000001"   dates [20260928, 20260929, 20260930]
+set trading_kinds, key "trade"                kind "trade"   dates [20260917, …, 20260930]
+```
+
+Why it is shaped this way: each record is one document (about 7 KB) whatever the history, far below Aerospike's 8 MB record limit,
+and adding or expiring a day touches only that day's records. The index record answers "which days does this trade have?" in one key
+lookup (seven years of dates is about 1,760 numbers, 14 KB), and for an `effective` kind gives the entity's latest day on or before the
+one asked. The kind's dates name the business days without scanning a document. The date as a number bin lets Aerospike filter a scan
+by day on the server.
+
+**Which fields are bins** is declared by the pack on the connector that stores the kind, `layout.<kind>.columns`, exactly as for Delta
+Lake; the `sort-by`, `file-rows` and `row-group-rows` keys of a layout concern files and do not apply here.
 
 ## Examples
 
@@ -133,24 +156,242 @@ settings:
   # password: ${AS_PASSWORD}
 ```
 
-Ready-made files: `config/connectors.examples/aerospike/`. Load data with `tools/load-aerospike.sh localhost:3000 test` (add
-`--trades N --days D` for a generated book, `--ttl-days N` for retention).
+Ready-made files: `config/connectors.examples/aerospike/` (a connector for each of the six banking domains; `trade-endur.yaml` points
+the trading pack's `trade-endur` at Aerospike) and `config/connectors.examples/other/aerospike-tls.yaml` (mutual TLS). A connector file
+replaces the pack's template wholesale, so it names the kinds and the promoted bins it needs. The tuning keys (`refresh-seconds`,
+`scan-threads`, `columns-cache-mb`, `columns-seconds`) can stay at their defaults.
+
+**Walk-through:**
+
+```bash
+docker compose -f deploy/docker/compose.data.yaml up -d aerospike
+tools/load-aerospike.sh localhost:3000 test                                 # the samples x 10 business days
+tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days 30   # and a book, with retention
+cp config/connectors.examples/aerospike/*.yaml config/connectors/          # picked up without a restart
+```
+
+Then `TRD MX-20000001 <GO>`, dated. The first search of a day waits for its promoted bins unless the background read has them already;
+later ones read memory. A loader line looks like:
+
+```json
+{"domain": "trading", "kind": "trade", "id": "MX-20000001", "date": "2026-09-30", "doc": "{\"SOURCE_SYSTEM\": \"MUREX\", ...}",
+ "columns": {"TRADE_ID": "MX-20000001", "QUANTITY": 242000000.0, "PORTFOLIO": "BOOK-RATES-3", "COUNTERPARTY": "CP-MERIDIAN-RE", ...}}
+```
 
 ## Troubleshooting
 
-- `DOWN: not connected to Aerospike`: wrong `hosts`, a closed port or the cluster down (`nc -z <host> 3000`); with TLS, also a
-  certificate name different from `tls-name` or the plain port instead of the `tls-port`.
-- `tls.* (or tls-name) is set but tls.enabled is not true: set tls.enabled: true to connect over TLS`: switch TLS on.
-- `auth-mode: pki logs in with a client certificate: …`: `pki` needs TLS and a client certificate.
-- A snapshot kind shows *gone* for one entity: it has no record for the kind's newest date; write every entity each date, or use
-  `mode.<kind>: effective`.
-- Error 22 `operation not allowed at this time` in logs: too many concurrent scans on the cluster from other clients.
-- Searches say `partial: true`: the field is not a promoted bin; add it to `layout.<kind>.columns` and reload.
+`GET /api/v1/admin/health` shows the connector and its catalogue. The cache figures are `kinds`, `datesIndexed`, `ids` and
+`columnSets` (days of promoted bins held); a purge (Admin → Caches) forgets the promoted bins and refreshes the dates and ids now:
 
-Every health text is in the full document, section *Diagnosing*.
+```json
+{"name": "trade-endur", "health": "UP", "cache": {"ids": 1000000, "columnSets": 1, "datesIndexed": 10, "kinds": 1}}
+```
+
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| `DOWN: not connected to Aerospike` | wrong `hosts`, port closed, or the cluster is down. The client tends the cluster in the background and does not fail at start; reads fail (`DRS-1003`) until it reconnects. With TLS, also a certificate name different from `tls-name`, a CA missing from `tls.ca-file`, or the plain `service` port instead of the `tls-port` (the log has the handshake failure) | `nc -z <host> 3000`; check `hosts` and the TLS settings |
+| `tls.* (or tls-name) is set but tls.enabled is not true: …` | the TLS keys are there but TLS is not switched on | `tls.enabled: true` |
+| `auth-mode: pki logs in with a client certificate: …` | `pki` without TLS or a client certificate | set `tls.enabled: true` and `tls.cert-file` with `tls.key-file`, or `tls.keystore` |
+| `auth-mode 'ldap' is not internal, external or pki` | a mistyped mode | fix it |
+| `tls.ca-file '…': file not found` | a wrong path | fix it ([TLS.md, section 8](../../docs/connectors/TLS.md#8-start-up-checks-and-their-messages)) |
+| the container exits at start | too few file descriptors | `deploy/docker/compose.data.yaml` sets `nofile` to 15000; do the same |
+| a snapshot kind shows *gone* for one entity | it has no record `kind/id/yyyyMMdd` for the kind's newest date | write every entity each date, or use `mode.<kind>: effective` |
+| a trade is in type-ahead but does not open on a date | its record for that day expired (TTL) or was never loaded | check the index record's `dates`; with a lake connector behind, older days come from there |
+| searches say `partial: true` | a field the query reads is not a promoted bin | add it to `layout.<kind>.columns` and reload |
+| the first search after a load is slow | the newest day's columns are loading | they load in the background after each refresh (`refresh-seconds`) |
+| linked entities missing for a large kind | no promoted link bins, and the day exceeds `max-load-rows` | promote the link fields (`COUNTERPARTY`, `PORTFOLIO`, `LEGAL_ENTITY`) |
+| memory | the promoted bins of the days read and one id per entity; it does not grow with the days kept | lower `columns-cache-mb`, or promote fewer fields |
+| error 22 `operation not allowed at this time` in logs | too many concurrent scans on the cluster | the connector already limits itself to two; check other scanning clients |
+| `stop writes` / out of space while loading | the namespace's storage is too small | file or device storage, sized as in [Sizing and limits](#sizing-and-limits) |
+
+## How it reads
+
+- **The catalogue.** Every `refresh-seconds` (60) the connector scans two small things: the `<domain>_kinds` set (each kind's business
+  dates) and the `<domain>_ix` set, reading only the `kind` and `id` bins (every entity's id, for type-ahead). No document is read. A
+  million index records scan in a few seconds in the background; the sorted type-ahead index is then swapped in whole, and the newest
+  day's columns are loaded in the background.
+- **One entity** (`TRD MX-20000017` on 2026-09-30) is two key reads: the index record's `dates`, then, after choosing the day (a
+  `snapshot` kind: its newest day on or before the date asked, within `lookback-days`, if this trade has it; an `effective` kind: the
+  trade's own latest day on or before it), the day record's `doc` bin. Single reads are not cached (Aerospike answers in about a
+  millisecond).
+- **Type-ahead** uses the ids the last refresh read: a record written after it is readable at once but offered after `refresh-seconds`.
+- **A day's columns.** Searches, pick lists, derived kinds, impact and reverse lookups read a column set: a scan that Aerospike filters
+  on the server (`kind == "trade" and date == 20260930`), returning only the `id` and promoted bins, so no document leaves the server.
+  The set's 4,096 partitions are split into `scan-threads` ranges scanned at once. The set is kept within `columns-cache-mb` and read
+  again after `columns-seconds`, so a day being loaded is re-read. At most two scans run at a time per connector; a scan Aerospike
+  refuses (error 22) never becomes an error page: a reverse lookup finds no referrers, and a search reads documents instead (and says
+  `partial`).
+- **Reverse lookups** ("which trades reference netting set `NS-SUMMIT-NY`?") come from the day's promoted text bins. A kind without
+  promoted bins is answered by a server-filtered scan of that day's documents, at most `max-load-rows`; kinds the domain does not hold
+  are never scanned. `reverse-index: false` turns them off.
+- **Derived kinds and impact** (F8) work from the column set as on Delta Lake; desk P&L is computed in the background and kept,
+  recomputed every refresh.
+- **History** (`TRD 1000015 30`, [DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)):
+  the index record lists the entity's dates (one get), then one batch get reads their documents.
+
+## Loading
+
+`tools/load-aerospike.sh` loads the packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated book,
+through `AerospikeLoader` (in the plugin). It prints `aerospike: <n> rows (<s> s)` every 100,000 rows and ends with
+`aerospike: loaded 3,000,000 rows into namespace test in 147 s`.
+
+- **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`):
+  `make_data.py --jsonl FILE.tar` writes the samples and `bulk_trades.py --jsonl FILE.tar` a generated book, each a tar of
+  `<kind>/<YYYY-MM-DD>/rows.jsonl` folders. A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it.
+- **Business dates come from outside the row**, by the load rules every loader shares
+  ([DATA_LAKE_GUIDE.md, section 5](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): a tar's
+  folder date; for a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input), `--as-of`, else its `.ready` file, else
+  the date in its name, else the business today. A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar.
+- **Each line becomes two writes:** the day's record (a put of all its bins) and the entity's index record (an operation that sets
+  `kind` and `id` and appends the date to `dates`, sorted and unique). Each kind's dates record is written once at the end. Writes are
+  idempotent: loading a day again replaces its records.
+- **Up to 128 writes are in flight**, on virtual threads, within `--pool-size` connections per node (default 20); about 20,000 rows a
+  second against one local node.
+- **Dates are guarded:** a row dated after tomorrow in the business zone (`--future-days N`, 1; `--zone Z`) is not loaded; the load ends
+  with an error once the other rows are in.
+
+Count what was loaded with `asinfo` (`… exec aerospike asinfo -v sets/test/trading`: `objects=7500:…` after the sample load);
+`sets/test/trading_ix` counts the entities and `sets/test/trading_kinds` the kinds.
+
+**Your own loader** (a Kafka consumer, a batch job) writes the same three things with the Aerospike client: the day's record with its
+promoted bins, the index record's `dates` (`ListOperation.append` with an ordered, unique list policy) and, once per load, the kind's
+dates. `AerospikeLayout.write` and `AerospikeLayout.addDates` do exactly that and can be called from Java.
+
+**The namespace must be able to hold the data.** The Docker image's default namespace keeps data in memory with a small limit; use
+storage on a device or a file:
+
+```text
+namespace test {
+    replication-factor 1
+    default-ttl 0
+    storage-engine device { file /opt/aerospike/data/test.dat  filesize 64G }
+}
+```
+
+### Retention: TTL
+
+Aerospike expires records by itself. Load with `--ttl-days N` (or write with a `WritePolicy.expiration`; a namespace-wide
+`default-ttl` does the same for every set) and each day's records disappear N days after they were written, with no job to run. The
+index records get no TTL, so a trade's `dates` may list expired days: a read or a search for such a day answers "not held", and the
+next connector for the kind is asked.
+
+## Security
+
+TLS in the server is an **Aerospike Enterprise Edition** feature; it uses the shared `tls.*` settings
+([TLS.md](../../docs/connectors/TLS.md)) and can log in with the client certificate.
+
+| Setting | Meaning for Aerospike |
+|---|---|
+| `tls.enabled: true` | TLS on (an Aerospike address does not say whether TLS is used, so `tls.*` keys or `tls-name` without it are a start-up error) |
+| `tls.ca-file` / `tls.truststore` | trust the cluster's CA |
+| `tls.cert-file` + `tls.key-file`, or `tls.keystore` | the client certificate, for a server with `tls-authenticate-client` and for `pki` log-in |
+| `tls-name` | the name the server certificate carries (the server's `tls-name`); default each host's own name; a host can carry its own as `host:tls-name:port` |
+| `tls.verify-hostname: false` | no name is checked (a warning at every start) |
+| `auth-mode` | `internal` (default: `user` and `password`), `external` (LDAP), or `pki` (the certificate is the log-in: leave `user` and `password` out) |
+
+Mutual TLS with certificate log-in (`config/connectors/aerospike-tls.yaml`):
+
+```yaml
+plugin: aerospike
+kinds: [trade]
+settings:
+  hosts: as-1.example.com:4333,as-2.example.com:4333
+  namespace: drishti
+  tls-name: aerospike.example.com
+  auth-mode: pki
+  tls: { enabled: true, ca-file: /etc/drishti/tls/ca.pem, cert-file: /etc/drishti/tls/client.pem, key-file: /etc/drishti/tls/client.key }
+```
+
+With a password instead, drop `auth-mode`, `cert-file` and `key-file` and add `user: drishti`, `password: ${AEROSPIKE_PASSWORD}`.
+
+**Server side** (Aerospike's documented settings): on each node name the certificate and open a TLS port, and for `pki` enable security
+and create a user named by the certificate's common name with PKI authentication (`asadm`: `enable; manage acl create user drishti
+authentication PKI roles read`):
+
+```text
+network {
+    service { address any; tls-port 4333; tls-name aerospike.example.com; tls-authenticate-client any }
+    tls aerospike.example.com { cert-file /etc/aerospike/ssl/server.pem  key-file /etc/aerospike/ssl/server.key  ca-file /etc/aerospike/ssl/ca.pem }
+}
+security { }
+```
+
+Check from the Drishti host with `asadm --tls-enable --tls-cafile … --tls-certfile … --tls-keyfile … --tls-name aerospike.example.com
+-h as-1.example.com -p 4333 -e "info namespace"` or `openssl s_client -connect as-1.example.com:4333 -CAfile ca.pem -verify_return_error`.
+Health `UP` means the connector connected.
+
+### Connection pool
+
+The client keeps a pool of connections **per node**: `pool-size` (`maxConnsPerNode`, 20, or the site default `drishti.db.pool.size`),
+`pool-min-idle` (`minConnsPerNode`, 2), `pool-idle-timeout` (`maxSocketIdle`, 10m) and `statement-timeout` (the read and write
+`totalTimeout`, 5m). Admin adds the nodes up: open, in use and idle connections against `pool-size` times the number of nodes. The
+client does not time borrows and does not queue callers (a call finding the node's pool full fails at once), so
+`pool-connection-timeout`, `pool-max-lifetime` and `pool-leak-threshold` do not apply. See
+[CONNECTOR_FILES.md, section 14](../../docs/connectors/CONNECTOR_FILES.md#14-connection-pools).
+
+## Sizing and limits
+
+Aerospike keeps its **primary index in memory**: 64 bytes for every record (Community Edition; Enterprise Edition can keep it on
+flash). For a million trades a day:
+
+| History in Aerospike | Day records | Primary index in RAM | Data (about 7.5 KB a record, uncompressed) |
+|---|---|---|---|
+| 30 business days | 30 million | about 1.9 GB | about 225 GB |
+| 90 business days | 90 million | about 5.8 GB | about 675 GB |
+| 1 year (250 days) | 250 million | about 16 GB | about 1.9 TB |
+| 7 years (1,760 days) | 1.76 billion | about 113 GB | about 13 TB |
+
+**Recent history in Aerospike, the full seven years in a lake.** Configure both connectors for the kind, Aerospike first, with the
+same layout:
+
+```yaml
+# config/connectors/trade-endur.yaml: the last 90 business days, TTL-expired
+plugin: aerospike
+kinds: [trade]
+settings: { hosts: "aero1:3000,aero2:3000", namespace: risk, domain: trading, "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,…" }
+---
+# config/connectors/trading-history.yaml: every business day for seven years
+plugin: delta
+kinds: [trade]
+settings: { root: "s3a://risk-lake/banking", domain: trading, "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,…" }
+```
+
+A read tries the routed connector first, then every other connector serving the kind, until one holds the entity on that date: recent
+days come from Aerospike in milliseconds, older ones from the lake. A search, a pick list, a derived kind or impact takes the first
+connector that holds the business day as columns. Type-ahead merges both; the same id appears once.
+
+**Memory in the Drishti server**, per million trades: about 150 MB of type-ahead ids and about 230 MB per day's column set of 19 fields
+(within `columns-cache-mb`). Measured heap in use with a million trades a day: 2.75 GB; give the server at least 8 GB of heap per
+million entities a day.
+
+**Measured** at a million trades a day (one Aerospike Community Edition 8.1 node in Docker with file storage, three business days,
+3,017,910 day records, times over HTTP): load 3,000,000 trade-days 147 s; server start 8 s, the newest day's columns ready 14 s later;
+type-ahead 52 ms; open a trade 79–134 ms first, 49 ms again; a trade's document 30 ms today, 22 ms on a past day; searches over promoted
+columns 132–213 ms (2,041 to 70,649 matches of 1,000,000); a pick list 225 ms; desk P&L 29–42 ms; impact of a netting set with 143,842
+trades 1.6 s; a search on another business day 7.1 s first, 68 ms again. The scaling curve from 10,000 to 50,000 trades a day and
+the other stores side by side: [BENCHMARK.md, section 9](../../docs/admin/BENCHMARK.md#9-the-stores-compared-10000-to-50000-trades-a-day).
+
+Limits:
+
+- **The first search on a business day other than the newest** waits for that day's columns (7.1 s for a million trades on one node);
+  more nodes and `scan-threads` shorten it.
+- **Only promoted fields are fast**; searches on other fields read documents (20,000 at most, `partial`).
+- **Effective-mode kinds** are not read as columns; they are small and read as documents.
+- **The catalogue refresh scans the index set** every `refresh-seconds`; with tens of millions of entities raise it (new entities then
+  appear in type-ahead later; reading them by id always works).
+- **Aerospike's scan limits** are shared with every other client of the cluster.
+
+### Checklist for production
+
+1. Declare `layout.<kind>.columns` for every large kind; load with the `columns` in each row.
+2. Give the namespace device or file storage sized for the history you keep there.
+3. Choose the history Aerospike keeps and load with `--ttl-days` (or a namespace `default-ttl`).
+4. Put a lake connector behind it for the full history, with the same layout.
+5. Give the server at least 8 GB of heap per million entities a day.
+6. Check Admin → Health, then measure on your data (`elapsedMs`, `scanned` and `partial` of a search).
 
 ## See also
 
-- [The full Aerospike connector document](../../docs/connectors/AEROSPIKE_CONNECTOR.md): layout, loading, TTL retention, sizing, measured results.
 - [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
+- [The cassandra connector](../drishti-plugin-cassandra/README.md) (a similar design on disk) and [the delta connector](../drishti-plugin-delta/README.md) (the same engine side).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

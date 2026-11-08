@@ -150,7 +150,7 @@ drishti:
 ```
 
 ```yaml
-# config/engines/memory-lake.yaml: the in-memory lake (docs/guides/IN_MEMORY_LAKE_GUIDE.md).
+# config/engines/memory-lake.yaml: the in-memory lake (docs/guides/DATA_LAKE_GUIDE.md).
 drishti:
   engines:
     memory-lake:

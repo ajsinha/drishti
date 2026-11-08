@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The MR cube in a real browser (docs/guides/MR_CUBE_GUIDE.md; MR_CUBE_LENS.md section 6.7), over the market-risk pack's committed VaR data
+"""The MR cube in a real browser (docs/guides/MR_CUBE_GUIDE.md; docs/lenses/README.md section 6.7), over the market-risk pack's committed VaR data
 built into a scratch lake and served by its Delta connector, the demo connector off:
 
 - ``MCUBE <GO>`` opens the Pivot's preset mr, the pivot screen on source var with the MR lens: the landing view (desks by risk class), the headline strip, the

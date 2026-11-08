@@ -26,7 +26,7 @@
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_world-landing.css?v={{ ASSET_V }}">{% endblock %}
 {% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
 {% block content %}
-{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/PACK_DEVELOPER_GUIDE.md 8) #}
 {{ back(request) }}
 <div class="wl" data-world-landing="{{ landing }}" data-topics="{{ topics | join(',') }}">
   <nav class="wl-switch" aria-label="Choose your Home">

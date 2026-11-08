@@ -28,7 +28,7 @@ import java.util.Set;
 
 /**
  * Rachana's tree as BI's compiler tree ({@link Node}), the one the SQL emitter writes with bound parameters and the live tables evaluate
- * (BI_FOUNDATION_2911E.md section 2.6: one parser, Rachana's; BI's compiler keeps its plan). Named arguments become the compiler's
+ * (docs/architecture/BI_DESIGN.md section 2.6: one parser, Rachana's; BI's compiler keeps its plan). Named arguments become the compiler's
  * arguments ({@code sum(x, where = c)} is {@code sum(x, c)}; {@code rank(agg, desc = false, by = [f])} is {@code rank(agg, 'asc', f)}); the
  * filter-context, balance and time-travel functions keep theirs as pseudo-calls ({@link Node#keyword}); Rachana's names take the
  * compiler's ({@code len} is {@code length}, {@code starts_with} {@code startsWith}, {@code latest} {@code last}, {@code earliest}

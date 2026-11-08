@@ -31,7 +31,7 @@ Drishti's implementation and the regulatory side; other documents link here. Any
 one table what Drishti receives, what it computes, what it keeps only as a cache and what it records officially. The rest of the guide
 keeps to those four words.
 
-**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md).
+**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../lenses/README.md#5-oversight-lens) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens).
 
 On 2026-10-26 this guide replaced five documents (this guide's first version, the explorer's page, the data contract `VAR.md`, the
 engine design and the data model); they were deleted (in git at tag v2.9.5). Where a design said otherwise,
@@ -747,8 +747,8 @@ From the command line: `drishti.py var matrix <id> [--days N] [--by trade] [--cs
 The playground answers *how was this VaR worked out?* with the numbers themselves: every position's scenario P&L, the portfolio, its
 rank, VaR, ES, the components, incremental VaR and both 10-day methods, in a spreadsheet-like grid with the explanation beside it, and
 **exported as an Excel workbook of real formulas** whose figures equal the engine's to the cent. Change a PV in the workbook and every
-figure moves; the check cells say whether the sheet still equals the engine. The design, the workbook's tabs and every formula are in
-[VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md).
+figure moves; the check cells say whether the sheet still equals the engine. The workbook's tabs and every formula are in
+[section 3.13](#313-the-var-playgrounds-workbook-cell-by-cell); the frame every metric's playground shares is [section 3.14](#314-the-playground-frame-every-metrics-playground).
 
 **Open it.** `PLAY VAR <scope> <GO>` in the VaR explorer's words (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`,
 `PLAY VAR DESK:DESK-RATES-NY IN EUR`), or `PLAY VAR <id> <id> ...` with up to 50 positions or trades (`PLAY VAR POS-10442 MX-20000274`);
@@ -804,7 +804,7 @@ VaR moved from one business date to the next; **Why it moved** says why, in caus
 each one. It is the **Why it moved** tab of the VaR figure's Explain (the drawer, or the page `VAR EXPLAIN <scope> <GO>`, or
 `VAR <scope> EXPLAIN [from] [to]`, opens), in three views (**Waterfall**, **Matrix**: the scope and each child node, the steps across,
 and **Sentences**) with the two dates to compare; it answers any scope the page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
-newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation).
+newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/README.md#531-ro1-var-change-explanation).
 
 **In plain words.** Drishti moves **one thing at a time** from yesterday's state to today's (the corrections to yesterday's data, the
 books that moved, the trades that left, the oldest day leaving the scenario window, the market, the newest day entering it, the new
@@ -1011,6 +1011,215 @@ for you and in the link (`nc=0`). **Worked in the playground** (and the Explain 
 on the scope ([section 3.10](#310-the-var-playground-play-var)): the figures, the steps, each position's μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the
 Euler components that add up to the parametric VaR, and the workbook's Parametric tab. The MR cube and the pivot offer `pvar()` beside
 `var()` and `comp_var()`. [Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through it on the demo data.
+
+### 3.13 The VaR Playground's workbook, cell by cell
+
+**Inputs, as the person.** The playground's endpoint builds its inputs with the person's entitlements and masks, from the same date,
+batch, scenario window and scenario set the engine used, and says so in the Provenance tab: the **scenario PVs** of each position in its
+own currency (`scenario-pv`, the preferred input; [section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) or
+its **P&L vector** (`pnl-vector`, flagged *input form PnL*, base PV *n/a*); the **scenario FX** per currency and its base rate
+(`fx-scenario` as supplied, or derived from the FX history: each currency's column says *supplied* or *derived*); the scenario dates,
+window, set id and stress flag; the rank rule, component window, confidences, horizon and 10-day method (`drishti.var.*` and the
+pickers, written to Main as inputs); and the engine's own figures for the same scope and pickers (Main's check cells). A trade or position
+the engine refused (a missing PV, an unknown currency) is listed in Provenance with its DRS code and left out, as the engine leaves it
+out; never zero-filled. A position whose trades came in different currencies is shown in USD. Stressed VaR (USD only) shows every
+position as input form PnL on the stress set's scenarios; a date with no stress set says so, never zeros.
+
+**Which figures for which positions.** Standalone and component VaR and ES for every position (a sum over the scope's tail scenarios);
+**incremental VaR for the top 50 by |component VaR|** (`drishti.var.playground.incremental-positions`), because each needs its own
+re-ranked portfolio column (the others say *not computed (top 50 only)*); diversification for the scope.
+
+**Size and layout.** 500 positions × 509 scenarios is about 12 MB and recalculates in headless LibreOffice in about 10 seconds; 50
+positions about 1.3 MB; one position about 140 KB. The estimate the export states before the download comes from these measurements
+(about 11 bytes a value cell and 30 a formula cell, compressed); while it writes, the server holds the chosen positions' scenario values
+(about 8 bytes a cell), which `export-max-cells` caps. Positions are columns while the PnL tab's columns fit (label, positions, Rest of
+scope, nine series and the 50 incremental helpers within 16,384 columns: about 16,300 positions); beyond that positions are rows and
+scenarios columns, the same formulas through the other orientation.
+
+**The template: in git, built into each export.** The look and the words are a template kept in the repository as text, under
+`drishti-banking/src/main/resources/playground/var/template/`: `template.properties` (name, version, every cell format by name, the check
+colours), `xl/styles.xml` (the look), `docProps/core.xml` and `docProps/app.xml` (with `{{PRODUCT}}`, `{{COPYRIGHT}}`, `{{OWNER}}` and
+`{{TEMPLATE_VERSION}}` filled from the branding configuration) and `explain.txt` (the Explain tab's steps; `{Name}` a cell reference,
+`{Name:v}` its value). The sheets, the named cells and every formula are written by the generator (`VarPlaygroundBook`) for exactly the
+positions chosen, streamed row by row onto the response; each formula cell is checked against the common function set and carries its
+**cached result** from `VarPlaygroundModel` (the same arithmetic as the formulas), and the workbook asks to be recalculated on open
+(`fullCalcOnLoad`). A bank's own house style is a folder named by `drishti.var.playground.template` that keeps every style name of
+`template.properties` (checked at start: a missing name or file refuses it, listed). The **empty workbook**
+(`GET /api/v1/risk/var/playground/template?positions=10`) has every formula in place over blank Data, Config and FX: paste scenario PVs,
+fill the rates and it calculates offline. The template's version is in every tab's footer and the document properties.
+
+**The tabs.** Positions are columns and scenarios rows, oldest first, in every tab.
+
+| Tab | What it holds | Typed or formula |
+|---|---|---|
+| **Main** | the title band (product name, scope, date, currency, horizon, confidence); the named inputs (`Confidence`, `EsConfidence`, `Horizon`, `TenDayMethod`, `RankRule`, `ComponentWindow`, `ReportingCurrency`, `ScenarioCount`); the results (VaR, ES, the VaR scenario's rank and date, 10-day √10 and 10-day sum VaR and ES, every configured confidence and ES confidence, and per position standalone VaR and ES, component VaR and ES, % of VaR, incremental VaR, diversification), each beside the engine's figure with a check; the ALL CHECKS PASS band | inputs typed; results formulas |
+| **Config** | one row a position: id, kind, currency, base PV in its own currency, base FX (USD per unit), input form `PV` or `PnL`, its source, its value today in USD | typed; the last column a formula |
+| **Data** | values only, the one place data is pasted: each position's scenario PVs in its own currency (form PV) or its P&L vector as delivered (form PnL); Rest of scope's P&L in the reporting currency | values |
+| **FX** | one column a currency (not a position): each scenario's rate (USD per unit), the base rate and *supplied* or *derived* in header rows; USD is 1 throughout | values |
+| **PnL** | every cell a formula: each position's P&L in USD and then in the reporting currency, the portfolio, its tie-broken rank, the V and E marks, the 10-day sums, the incremental helper columns | formulas |
+| **Explain** | the calculation in plain language (what VaR answers, how to read the tabs, signs and units), then ten steps, each in plain words with its formula and cells, then every term of every tab: what it is, why it matters, what changing it does, its cell and value | text with references |
+| **Parametric** | the parametric cross-check ([section 18.16](#1816-parametric-var-signs-the-gap-the-decomposition-and-a-worked-example)): a row a scenario (its weight, the portfolio P&L, its deviation and square), a column a position (its deviation and the product with the portfolio's), under them μᵢ, cov(pᵢ, v), ρᵢ, component VaR and ES, standalone VaR; the sums and the checks | formulas |
+| **Provenance** | date, batch, data versions, scenario set id and dates, window, stress flag, source per position, refused items with DRS codes, engine and template versions, who exported it and when, the scope's full position count | values |
+
+**The formulas** mirror the engine (`ScenarioFx` and the ranking of [section 18](#18-the-computation)). A position's P&L in USD:
+`PV(s) × FX_c(s) − PV(base) × FX_c(base)` for input form PV (for a USD position `PV(s) − PV(base)`); the vector as delivered for form PnL
+in USD, converted at each scenario's rate otherwise. Into the reporting currency, with `p` the position's USD value today and `FX_r` the
+reporting currency's USD-per-unit rates: `P&L_r(s) = (p + P&L_USD(s)) / FX_r(s) − p / FX_r(base)`, every cross through USD. The Config
+flag switches the PnL formula, so a person can see and flip it. Positions as columns, item `i` in column `B + i` of Data and PnL, Config
+row `2 + i`, scenario `j` in row `4 + j`:
+
+| Cell | Formula |
+|---|---|
+| PnL, a position | `=(Config!$H$c+IF(Config!$F$c="PV",Data!Bj*INDEX(FX!$B$j:$X$j,Config!$I$c)-Config!$H$c,IF(Config!$C$c="USD",Data!Bj,Data!Bj*INDEX(FX!$B$j:$X$j,Config!$I$c))))/FX!$R$j-Config!$H$c/FX!$R$2` (`Config!H` the value today in USD, `= base PV × base FX`; `Config!I` the position's FX column, `=MATCH(currency, FX!$B$1:$X$1, 0)`; `FX!R` the reporting currency's rate) |
+| PnL, Rest of scope | `=Data!x` (already in the reporting currency) |
+| Portfolio `v(s)` | `=SUM(B j:… j)` across the positions and Rest of scope |
+| Rank, worst first, ties by index | `=SUMPRODUCT(($P$4:$P$512<Pj)*1)+SUMPRODUCT(($P$4:$P(j−1)=Pj)*1)+1` |
+| `k` (kth-worst) | `=MAX(1, MIN(N, ROUNDUP(N*(1-Confidence) - 1E-9, 0)))` |
+| Mark, VaR window, ES tail | `=IF(Rank=VarRank,"V",IF(Rank<=EsRank,"E",""))`; `=(Rank>=VarLo)*(Rank<=VarHi)`; `=(Rank<=EsRank)*1` |
+| VaR (`VaROneDay`) | `=IF(RankRule="interpolated",-((1-IW)*SMALL(PF,ILo)+IW*SMALL(PF,IHi)),-SMALL(PF,VarRank))` |
+| ES (`ESOneDay`) | `=-SUMPRODUCT(ES tail,PF)/EsRank` |
+| Tail window, scale | ranks `k−h … k+h`, `h = ROUNDDOWN(ComponentWindow/2, 0)`, clamped to 1..N; `Scale = VaR / S`, `S = −mean over the window of v` (1 when the scaling is off or `S` is 0) |
+| Component VaR, ES | `=-Scale*SUMPRODUCT(VaR window,p)/(VarHi-VarLo+1)`; `=-SUMPRODUCT(ES tail,p)/EsRank` |
+| Standalone ES, every ES confidence | with no rank column: `=-(SUMPRODUCT((x<SMALL(x,k))*x)+(k-SUMPRODUCT((x<SMALL(x,k))*1))*SMALL(x,k))/k` |
+| Incremental helpers (top 50) | `=Pj − position j`: the portfolio without the position, its own rank and kth-worst; incremental VaR `= VaR(v) − VaR(v − p)` |
+| Diversification | `Σ standalone VaR − VaR` |
+| 10-day sum, its rank | `=SUM(P(j−9):Pj)` from the 10th scenario (509 scenarios give 500 windows); ranked, VaR and ES as the 1-day figures |
+| 10-day weights | for each scenario, how many of the 10-day VaR window's (and ES tail's) windows contain it: `=SUMPRODUCT((R10 range>=TenLo)*(R10 range<=TenHi))` over the windows that end in `j … j+9`, so a position's 10-day component is `−TenScale × SUMPRODUCT(weights, its 1-day column) / (TenHi − TenLo + 1)` with no 10-day column per position |
+| Headline | `=IF(Horizon="1D",VaROneDay,IF(TenDayMethod="SUM",VaRTenSum,VaROneDay*SQRT(10)))` |
+
+Main's derived named cells (`VarRank`, `EsRank`, `VarLo`, `VarHi`, `IPos`, `ILo`, `IHi`, `IW`, `VaROneDay`, `ESOneDay`, `Smoothed`,
+`Scale` and their 10-day twins `TenCount`, `TenRank`, `TenEsRank`, `TenLo`, `TenHi`, `TenPos`, `TenILo`, `TenIHi`, `TenIW`, `VaRTenSum`,
+`ESTenSum`, `TenSmoothed`, `TenScale`) sit under the inputs with their formula in words; no name looks like a cell reference. Every
+confidence and ES confidence has its own row of results on Main (a different rank of the same ranked vector).
+
+**The Parametric tab's formulas** (`W` the weights, `PF` the portfolio column, `Pᵢ` a position's):
+
+| Cell | Formula |
+|---|---|
+| weight `w_j` | equal: `=1/N`; EWMA: `=(1-PLambda)*PLambda^(N-j)/(1-PLambda^N)` |
+| `PMu`, `PSigma` | `=SUMPRODUCT(W, PF)`; equal: `=SQRT(SUMPRODUCT((PF-PMu)^2)/(N-1))`, EWMA: `=SQRT(SUMPRODUCT(W,(PF-PMu)^2))` |
+| `PZ`, `PEsFactor` | `=NORM.S.INV(PConfidence)`; `=EXP(-(NORM.S.INV(PEsConfidence)^2)/2)/SQRT(2*PI())/(1-PEsConfidence)` (the brackets matter: without them a spreadsheet squares the negated value) |
+| `PVaR`, `PES` | `=PZ*PSigma-PMu`; `=PSigma*PEsFactor-PMu` |
+| μᵢ, cov(pᵢ, v), ρᵢ | `=SUMPRODUCT(W, Pᵢ)`; equal: `=SUMPRODUCT((Pᵢ-μᵢ)*(PF-PMu))/(N-1)`, EWMA: `=SUMPRODUCT(W,(Pᵢ-μᵢ)*(PF-PMu))`; `=covᵢ/(σᵢ*PSigma)` |
+| component VaR, ES; standalone | `=PZ*covᵢ/PSigma-μᵢ`; `=PEsFactor*covᵢ/PSigma-μᵢ`; `=PZ*σᵢ-μᵢ` |
+| 10-day | the lens's vector: √10 × the 1-day results (`sqrt10`), or μ and σ of the PnL tab's 10-day sum column (`sum`) |
+
+Main also holds the parametric inputs as named cells (`PConfidence`, `PEsConfidence`, `PWeighting`, `PLambda`) and results beside the
+engine's figures, historical VaR and the gap beside them. Rest of scope takes part as one more position, so the portfolio is the scope's.
+
+**Check cells.** Portfolio VaR and ES (every confidence, both 10-day methods) equal the engine's figure written beside them to the cent
+(`ABS(sheet − engine) < 0.005`); Σ component VaR = VaR, Σ component ES = ES and Σ 10-day-sum components = the 10-day sum VaR; every
+position's component VaR, component ES, 10-day component and incremental VaR equal the engine's; positions shown + Rest of scope = the
+scope's count; `COUNT` of each Data column = `ScenarioCount`; every position's currency has an FX column; on the Parametric tab `PVaR`,
+`PES` to the cent, `PMu`, `PSigma` to 10⁻⁶, Σ components = `PVaR` and `PES`, Σ weights = 1. The **ALL CHECKS PASS** band sits at the top
+of Main (row 3), green, or red naming the failed check. A person who changes a PV sees the engine checks turn red (the engine's figure is
+for the original inputs) while the *adds up* checks stay green. The engine's figures are its calculator's (`VarCalc`, `VarLens`) on its
+own scope vector and the positions' vectors.
+
+**The look.** One font family; a navy title band, light-blue headings, inputs light yellow with blue figures, formula figures black,
+losses red; colour-blind-safe markers as well (*V* on the VaR scenario, *E* on the ES tail); thousands separators and two decimals for
+money; frozen headers, set widths, landscape print fit to width. Copyright and product name in the footer of every tab and in the
+properties, **only from the branding configuration** (`drishti.branding.*`). The look's mock-ups:
+[Main](../architecture/mockups/var-playground/workbook-main.png), [Config](../architecture/mockups/var-playground/workbook-config.png),
+[Data](../architecture/mockups/var-playground/workbook-data.png), [FX](../architecture/mockups/var-playground/workbook-fx.png),
+[PnL](../architecture/mockups/var-playground/workbook-pnl.png), [Explain](../architecture/mockups/var-playground/workbook-explain.png),
+[Provenance](../architecture/mockups/var-playground/workbook-provenance.png); the screen: [option A](../architecture/mockups/var-playground/A.png).
+
+**Excel, LibreOffice and Google Sheets: one file.** Formulas use only the functions the three share: `SUM`, `SUMPRODUCT`, `SMALL`,
+`LARGE`, `AVERAGE`, `COUNT`, `INDEX`, `MATCH`, `ROUNDDOWN`, `ROUNDUP`, `SQRT`, `IF`, `ABS`, `MAX`, `MIN`, `AND`, `OR`, `ISNUMBER`,
+`EXP`, `SUMIF`, `SUMIFS`, `NORM.S.INV`, `PI` (the list is `XlsxFormulas.ALLOWED`; a formula naming anything else is refused when it is written). Never
+Excel-365-only dynamic arrays (`FILTER`, `SORT`, `SEQUENCE`, `LET`, `LAMBDA`, `XLOOKUP`), structured references, volatile `INDIRECT` or
+`OFFSET`, or macros. Cached values ride with every formula, so a viewer that never recalculates (a browser preview, a mail client) shows
+the right numbers.
+
+**Tests.** `VarPlaygroundWorkbookTest` writes the workbook without cached values, recalculates it with `soffice --headless` and compares
+every result row, every confidence row and every position's component VaR, component ES, 10-day component and incremental VaR to the
+engine's calculator to the cent: 1 position (USD), 50 (EUR reporting, the interpolated rank rule, the 10-day sum headline) and 500 with
+Rest of scope (USD, √10), PV and PnL input forms, positions as rows. `VarPlaygroundApiTest` does it through the server on a 611-trade lake
+(scenario PVs in EUR and GBP, USD P&L vectors); `PvarPlaygroundWorkbookTest` does the same for the Parametric tab (equal and EWMA, USD and
+EUR). A bank template missing a style is refused with the list; every formula is scanned for functions outside the common set. The
+LibreOffice harness skips where LibreOffice is absent and runs one LibreOffice at a time. The screen: `test_play.py` and
+`test_play_browser.py` (the windowed grid, the formula bar, the explanation, the arrow keys, the export's estimate, at 1280 and 390 px).
+
+### 3.14 The playground frame: every metric's playground
+
+**The rule: every metric calculation ships with its playground, in the same release as the metric.** A metric is not done without
+`PLAY <METRIC> <ids|scope>`; the screen (the inputs grid with the tall explanation panel and real numbers); the export from a
+version-controlled template with Main, Config, Data (values only), formula tabs, Explain and Provenance; every derived cell a formula;
+check cells (sheet = engine to the cent); the look of [section 3.13](#313-the-var-playgrounds-workbook-cell-by-cell); copyright from the
+branding configuration; one file for Excel, LibreOffice and Google Sheets; a test that recalculates it in headless LibreOffice. Where a
+metric's core is a large simulation (exposure paths, projected IM or capital), the simulation's output is **data** and everything after it
+is **formulas**, and the sheet says so on Main and in Explain; VaR's core is a sum and a rank, so every step after the scenario PVs is a
+formula. Critique and reproduce (a Choices panel of named method switches, compare, saved recipes) are part of the frame as the FRTB-SA
+and SIMM playgrounds use them ([FRTB_SA_GUIDE.md section 8](FRTB_SA_GUIDE.md#8-the-frtb-sa-playground-play-frtb)).
+
+**How a metric plugs in.** In `drishti-server`:
+
+| Piece | Where | What a metric does with it |
+|---|---|---|
+| `PlaygroundTemplate` | `server/playground` | `PlaygroundTemplate.builtIn("<metric>", STYLES)` reads `playground/<metric>/template/` (copy VaR's folder) and refuses a bank's folder missing a style |
+| `WorkbookStream`, `SheetStream` | `server/playground` | the zip written onto the response, sheet by sheet and row by row: `sheet`, `row`, `text`, `number`, `formula(col, f, cached, style)`, `formulaText`, `freeze`, `width`, `merge`, `checks`, the branding footer, `name(...)` for the named cells |
+| `SeriesLayout` | `server/playground` | items (positions, netting sets, trades) by points (scenarios, time steps) as columns or as rows: every formula reference comes from it, so one generator serves both orientations |
+| `ExportSizing` | `server/playground` | the estimate of a count: columns, rows, cells, size, recalculation time, the applications that open it, or why not |
+| `XlsxFormulas`, `XlsxWriter.formula` | `server/dist` | the common function set, the check of every formula written, the scan of a finished file |
+| `LibreOfficeRecalc` | the tests' `server/playground` | `recalc(xlsx, work)` and `cells(file, sheet)`: the headless recalculation, one LibreOffice at a time |
+| The screen | `drishti-console`: `play_routes.py`, `terminal/play.html`, `drishti_var-playground.js`, `drishti_var-playground.css` | `PLAY <METRIC>` (the word added to `METRICS`); the windowed grid, formula bar and explanation take the metric's columns, rows and steps |
+
+A metric adds its model (the formulas' arithmetic, for the cached values: VaR's `VarPlaygroundModel`), its generator (VaR's
+`VarPlaygroundBook`), its inputs as the person (VaR's `VarPlayground`), its endpoints (`/api/v1/risk/<metric>/playground`, `.xlsx`,
+`/estimate`, `/template`) and its recalculation test at its own sizes.
+
+| Playground | Metric | Status |
+|---|---|---|
+| VaR (`PLAY VAR`) | VaR, ES, components, incremental, 10-day, stressed; parametric on its Parametric tab | built |
+| FRTB SA (`PLAY FRTB`) | SBM, DRC, RRAO ([FRTB_SA_GUIDE.md section 8](FRTB_SA_GUIDE.md#8-the-frtb-sa-playground-play-frtb)) | built |
+| SIMM (`PLAY SIMM`) | IM per netting set and regime ([SIMM_GUIDE.md section 8](SIMM_GUIDE.md#8-the-simm-playground-play-simm)) | built |
+| Exposure | EE, EPE, PFE for one netting set (the paths as data) | proposed |
+| SA-CCR | EAD by CRE52 (replacement cost, add-ons, the multiplier) | proposed, with the engine |
+| FVA | EPE and ENE × funding spread | proposed |
+| CVA, BA-CVA, SA-CVA | CVA (EE × DF × ΔPD × LGD), its capital | proposed |
+| FRTB IMA | ES by liquidity horizon, stressed calibration | proposed |
+| MVA, KVA | from projected IM and capital (as data) | proposed |
+
+### 3.15 The parametric curve and the ? line by line
+
+**The curve on the P&L histogram.** The P&L path's histogram (`histogram {edges, counts}`, `drishti.var.histogram-bins` equal bins) gains
+an overlay that the server computes point by point; the browser draws the polyline it is given and computes nothing. `GET /scope/path`
+carries a `parametric` block with `mu`, `sigma`, `n`, `var`, `es`, `z`, `zSigma`, `gap`, `gapPct` as the headline's, and:
+
+| Field | Meaning |
+|---|---|
+| `curve {x, y}` | `curve-points` (121) points evenly from the first edge to the last; `y = n × binWidth × φ((x − μ)/σ)/σ`, the expected days per bin, so the curve sits on the bars' scale |
+| `expected` | days the normal expects in each bin, `n·(Φ((b − μ)/σ) − Φ((a − μ)/σ))` for bin [a, b) |
+| `markers {historical, parametric}` | the x of each VaR line: `−var` (historical) and `μ − z·σ` (parametric) |
+| `binWidth` | the width of one bin |
+
+The chart draws the bars (bins wholly beyond historical VaR in the loss colour), the fitted normal (blue, 2 px), the historical marker
+(solid, loss colour, *historical 158.5m*) and the parametric marker (dashed, *parametric 126.4m*), each tail lightly shaded in its colour,
+and the **fat-tail gap** bracket between the markers (*fat-tail gap 32.1m (+25%)*, in the warning colour). Hovering the curve reads
+*Fitted normal N(μ, σ²) · n · μ · σ · at P&L x: y days expected per bin · VaR = z·σ − μ*. With EWMA weights the bars stay unweighted counts
+and the curve is the weighted fit; the legend says so.
+
+**The ? on a parametric figure** (a tile, a tree cell, a component, the curve) opens on click (and on hover on a desktop), stays open
+until closed, and is a bottom sheet on a phone. Every number in it comes from the answer's `parametric` block and its `describe` lines,
+built in the server:
+
+| Line | Content (a desk of the worked example, [section 18.16](#1816-parametric-var-signs-the-gap-the-decomposition-and-a-worked-example)) |
+|---|---|
+| Title | *Parametric VaR 99% · 1 day · Rates (DESK-RATES)* |
+| Status | *A cross-check, not the official VaR. The official figure is historical: 84,051,284.* |
+| Method | *normal (variance–covariance) on this scope's own scenario P&L vector: the same 509 values historical VaR ranks* |
+| Window | *509 scenario days, the date's set HS-509, ending 2026-09-29* (stressed: the stress set and its period) |
+| Weighting | *equal (1/n each)*, or *EWMA, λ = 0.94: the newest day weighs 6.0%, half the weight in the newest 11 days* |
+| Confidence, horizon | *99% → z = 2.3263*; *1 day*, *10 days: σ and μ × √10*, or *10 days: 500 overlapping windows (about 50 independent periods)* |
+| n, μ, σ | *509 · 156,350 · 30,464,843 (sample, n − 1)* |
+| Formula | *VaR = z·σ − μ = 2.3263 × 30,464,843 − (156,350) = 70,871,822 − 156,350 = 70,715,472*; on an ES figure the ES formula with `esFactor` |
+| Component (on a component) | *z·cov(Pᵢ, P)/σ_P − μᵢ = z·ρ·σᵢ − μᵢ; cov = 1.3639·10¹⁵ USD², σ_P = 54,240,760, ρ = 0.8254 → 58,341,667 (46.2% of the bank); the five components add up to the bank's 126,394,284 exactly* |
+| Historical beside it, the gap | *Historical VaR (6th worst of 509): 84,051,284 · Fat-tail gap = historical − parametric = +13,335,812 (+18.9%): the real tail is heavier than a normal with the same σ (skew −1.00, excess kurtosis +5.78), so the normal understates the loss* |
+| Foot | *Computed in the server, never in the browser · provenance · Worked in the playground · Guide* |
+
+The screen options it was chosen from are mock-ups under [docs/lenses/mockups/parametric-var/](../lenses/mockups/parametric-var/A.html)
+(A, the toggle and columns on the explorer, is what the explorer shows; B and C are the options not taken; `phone.html` the phone sheet).
 
 ## 4. Positions: derived, never delivered
 
@@ -1367,7 +1576,7 @@ feed the regulatory backtest of [section 18.11](#1811-backtesting-for-regulation
 ## 8. What-if and VaR as a kind
 
 The **computed kind** `var-result` of the market-risk pack makes VaR an ordinary kind, served by a reactive connector (`plugin: reactive`,
-[REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)): by command (`VRES DESK:RATES <GO>`), link (`/v/var-result/DESK:RATES`),
+[REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)): by command (`VRES DESK:RATES <GO>`), link (`/v/var-result/DESK:RATES`),
 the entities and compute APIs, the CLI (`drishti.py compute run var-engine var-result DESK:RATES`), search and the AI tools, with the
 explorer's entitlements (computed as the person asking: their nodes, masks and audit entry; cached per view signature). Names decided
 (open question 12): `var-result`, fields `VAR` with `CONFIDENCE` (never `VAR_99`); the retired kind name `var` is not reused. The
@@ -1376,7 +1585,7 @@ worst scenarios and the vector, and the explorer and the API serve paths and his
 `config/packs/banking/market-risk/contracts/var-result.contract.yaml` (class `computed`). The **pre-deal what-if** is the same engine's, asked
 through the VaR API (`POST /api/v1/risk/var/what-if`, [section 8.2](#82-the-what-if-the-java-engine)), not a kind.
 
-**Ids.** The id is the scope text. Like every computed id ([ComputeRef](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)), a
+**Ids.** The id is the scope text. Like every computed id ([ComputeRef](../connectors/types/reactive/README.md#reading-a-computed-kind)), a
 `~` inside it is written `%7E` (`NODE:MGMT%7EDESK-RATES`; prefer `DESK:RATES`, which needs none), `=` `%3D` (a `WHERE:` rule's `==`),
 and parameters ride after a `~` (`DESK:RATES~ccy=EUR`). A scope with a `/` (a basket) is read through the compute API's body,
 not a link.
@@ -1603,7 +1812,7 @@ run.
 A pricing system may publish the same updates to a **PV topic** instead of writing files; the two channels mix on one date, the latest
 `COMPUTED_AT` per trade winning across both. The market-risk pack's connector **`pv-updates`** (plugin `var-pv-stream`, **off by
 default**: `DRISHTI_VAR_PV_STREAM=true`) reads it like the Kafka connector (every partition from the beginning, no consumer group, its
-`bootstrap-servers`, security and `client.*` settings; [KAFKA_CONNECTOR.md section 17](../connectors/KAFKA_CONNECTOR.md#17-the-var-pv-topic-var-pv-stream)).
+`bootstrap-servers`, security and `client.*` settings; [KAFKA_CONNECTOR.md section 17](../../plugins/drishti-plugin-kafka/README.md#the-var-pv-topic-var-pv-stream)).
 
 ```text
 pricing system ──► PV topic (each message's value JSONL text: one or more records; the key not read)
@@ -2019,6 +2228,47 @@ trades), `portfolios` `[{id, scope, name, type, owner}]`.
 tier, aggregateBytes, hotFile, loadMs, version, rejected, excluded, batchIds}]` (`vectorBytes`: float64 rows on the heap, or the hot
 file's float32 matrices; `hotFile`: the file under the tier folder) and `{businessDate, refused}` for a date that could not load. An
 example is in [section 26.7](#267-what-the-status-shows).
+
+### 11.5 The `parametric` block
+
+While parametric VaR is enabled ([section 18.15](#1815-parametric-var-and-es-a-cross-check)), every answer that carries historical
+figures carries a `parametric` block beside them, computed from the same vector in the same request; the historical fields are unchanged.
+There is no new endpoint and no new mode parameter (`method` is the 10-day method). `parametric=false` leaves the block out;
+`matrix=true` on contributions adds the correlation matrix.
+
+| Endpoint | What it gains |
+|---|---|
+| `GET /scope`, `/scopes/{scope}` | `parametric` (below); `provenance.parametric`: *normal, equal weights, z 2.3263, σ with N − 1, 1-day lens · cross-check, not official* |
+| `GET /tree` | per node `parametric {var, es, gap, gapPct}` |
+| `GET /scope/path` | `parametric` with `curve`, `expected`, `markers` and `binWidth` ([section 3.15](#315-the-parametric-curve-and-the--line-by-line)) |
+| `GET /scope/contributions` | per row `pComponentVar`, `pComponentEs`, `pStandaloneVar`, `pIncrementalVar`, `pMarginalPer1m`, `pPct`, `rho`, `sigma`, `mu`; totals `pSumComponent`, `pSumStandalone`, `pDiversification`; with `matrix=true`: `matrix {keys, labels, correlation, covariance, truncated, sigmaCheck, engine}`; Arrow: the same as columns |
+| `POST /captures`, `GET /captures/{id}` | the capture keeps its `parametric` block; `/compare` shows both |
+| `GET /status` | `parametric {enabled, weighting, lambda, confidences, esConfidences, horizonRule, curvePoints}` |
+| `GET /playground…` | `measure=parametric`: the Parametric tab's data |
+
+The block of a headline:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `var`, `es` | integer | parametric VaR at `confidence`, ES at `esConfidence`, positive for a loss |
+| `mu`, `sigma`, `n` | number, number, integer | μ and σ of the lens's vector; scenarios (or 10-day windows) used |
+| `z`, `zEs`, `esFactor`, `zSigma` | number | Φ⁻¹(c), Φ⁻¹(c_ES), φ(z_ES)/(1 − c_ES), z·σ (so the ? prints the formula without the browser multiplying) |
+| `weighting`, `lambda`, `horizonRule` | string, number or null, string | `equal` or `ewma` with λ; `lens` or `square-root-of-time` |
+| `skew`, `excessKurtosis` | number | the shape |
+| `gap`, `gapPct`, `esGap` | integer, number, integer | historical − parametric, against this answer's `var` and `es` |
+| `beyond`, `expectedBeyond` | integer, number | scenarios whose P&L is below −`var`; n·(1 − c) |
+| `sumStandalone`, `diversification` | integer or null | over the default parts |
+| `official` | boolean | always `false` |
+| `describe`, `notes` | list of strings | the ?'s lines, built in the server; *σ = 0: the normal is a point*, *10-day sum: 500 overlapping windows*, *ewma: the histogram is unweighted, the curve weighted* |
+
+**Errors.** Switched off: no block, and `parametric=true` answers `403 DRS-5002` in words (*parametric VaR is switched off on this
+server*); `matrix=true` on a scope without parts is `400`. Entitlements are historical VaR's (an aggregate-only viewer gets node-level
+figures, never positions or trades). The computed kind `VRES` (`POST /api/v1/compute/var-engine/var-result`) carries the same figures as
+the optional fields `PARAMETRIC_VAR`, `PARAMETRIC_ES`, `PARAMETRIC_MU`, `PARAMETRIC_SIGMA`, `PARAMETRIC_Z`, `PARAMETRIC_N`,
+`PARAMETRIC_WEIGHTING`, `PARAMETRIC_LAMBDA`, `PARAMETRIC_HORIZON_RULE`, `PARAMETRIC_SKEW`, `PARAMETRIC_EXCESS_KURTOSIS`, `FAT_TAIL_GAP`,
+`FAT_TAIL_GAP_PCT`, `FAT_TAIL_ES_GAP` and `PARAMETRIC_OFFICIAL` (always false) ([the generated contract](../contracts/packs/market-risk.md#vres-var-of-a-scope-computed-var-result));
+`"params": {"parametric": false}` leaves them out. The words: `VAR BANK PARAM`, `VAR DESK RATES PARAM 10D SUM 95`, `VAR BANK PARAM BY DESK`;
+`VRES BANK~parametric=true`.
 
 ## 12. Settings
 
@@ -3552,7 +3802,7 @@ and backtesting compare against; VaR by risk class and by Greek; quick what-if (
 
 **Its playground.** The VaR Playground's workbook gains a **Sensitivities** tab: each position's deltas, gammas and vegas, the factor
 shocks per scenario day, and every DGV P&L cell written as the expansion above in formulas, with a check cell against the engine's DGV
-VaR to the cent ([VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md)).
+VaR to the cent ([section 3.13](#313-the-var-playgrounds-workbook-cell-by-cell)).
 
 ### 18.13 Statistical factor VaR, estimated from scenario P&L (design, not built: parked)
 
@@ -3610,7 +3860,7 @@ approval (`VarReports`, `VarReportSignoff`; `VAR REPORT <report> <period>`, `dri
 
 For any scope, the server fits a normal distribution to the scope's own summed scenario P&L vector, the very vector historical VaR ranks
 (the lens's: 1-day, 10-day √10, or the 10-day windows), and reads VaR and ES from it (`ParametricVar` in drishti-compute;
-[PARAMETRIC_VAR.md](../architecture/PARAMETRIC_VAR.md) is the design with the worked example). **Not official**, never a limit's measure;
+the signs, the decomposition and a worked example are in [section 18.16](#1816-parametric-var-signs-the-gap-the-decomposition-and-a-worked-example)). **Not official**, never a limit's measure;
 no new input.
 
 | Figure | Formula |
@@ -3643,6 +3893,100 @@ a scenario, a row a position; recalculated by LibreOffice it equals the engine t
 no block, the toggle shows a notice, the playground's Parametric tab and `parametric=true` are refused in words), `weighting` (`equal` or `ewma`), `lambda` (0.94),
 `horizon-rule` (`lens` or `square-root-of-time`), `curve-points` (121), `matrix-max-parts` (60), `show-curve` (true). Not in the official
 end-of-day records (a capture keeps it on demand).
+
+### 18.16 Parametric VaR: signs, the gap, the decomposition and a worked example
+
+**What it is for.** A cross-check of the official historical figure (a large gap points to a few extreme scenario days carrying the VaR:
+fat tails, skew, a jump; a small one to a book whose P&L is close to normal); a smooth decomposition (covariance components are stable
+from day to day, where historical components depend on the scenarios around the VaR rank); the correlations between desks behind the
+diversification; and a teaching device. It is not factor-level parametric VaR (sensitivities × a factor covariance matrix, usable before
+a deal), which belongs with the parked delta-gamma-vega inputs ([section 18.12](#1812-delta-gamma-vega-var-on-request-design-not-built-parked)).
+
+**Signs.** `v` is P&L (a gain positive), so a loss is the left tail and the normal's c-quantile loss is `−(μ − z·σ) = z·σ − μ`. A scope
+that made money on average (μ > 0) has a lower VaR, one that lost on average a higher one; VaR is not floored at zero (a scope whose μ
+exceeds z·σ shows a negative VaR, and the answer says so). **σ = 0** (a constant vector): VaR = ES = −μ, every component is −μᵢ, and
+the ? says *no spread: the normal is a point*; an empty scope has no figure (*No trades*). **The shape**, shown to explain the gap and
+not used in the VaR: skewness `(1/N) Σ (v−μ)³ / ((1/N) Σ (v−μ)²)^{3/2}` and excess kurtosis `(1/N) Σ (v−μ)⁴ / ((1/N) Σ (v−μ)²)² − 3`
+(weighted the same way under EWMA).
+
+**The fat-tail gap** `= VaR_historical − VaR_parametric` (same scope, date, currency, lens and confidence), `gap % = gap / VaR_parametric`,
+and the ES gap likewise. Positive: the scenario tail is heavier than the normal predicts, so the normal understates the loss (the usual
+case for trading books); negative: the worst days were milder than a normal with that σ. The gap compares one order statistic (the 6th
+worst of 509) with a quantile of a fitted curve, so one extreme day moves it.
+
+**The lens.** Parametric reads the very vector historical VaR reads:
+
+| Lens | The vector | Effect |
+|---|---|---|
+| 1-day | the 1-day vector | as above |
+| 10-day `sqrt10` | the 1-day vector × √10 | μ and σ both × √10, so VaR and ES are the 1-day figures × √10 exactly |
+| 10-day `sum` | the N − 9 overlapping 10-day window sums (500 of 509) | μ and σ of the windows, estimated from about 50 independent periods |
+
+The textbook square-root-of-time rule scales μ by 10 and σ by √10; the `sqrt10` lens scales μ by √10 because it scales the whole vector.
+The difference, `(10 − √10)·μ`, is small next to z·σ√10 for a trading book (0.4% on the worked example below); `horizon-rule:
+square-root-of-time` chooses the textbook form (the `sum` lens is then not offered). Window, stressed set (μ and σ of the stress set's
+scenarios) and reporting currency apply unchanged. EWMA's λ = 0.94 puts 95% of the weight in the newest 49 days, so the curve can differ
+sharply from the bars.
+
+**The decomposition.** A scope's parts are historical VaR's parts ([section 18.3](#183-decomposition-of-a-scope-into-parts)). For part i
+with vector `pᵢ` (Σ pᵢ = v when the parts partition the scope), with the weights and normalisation of σ:
+
+```
+cov(pᵢ, v)       = (1/(N−1)) Σ_j (p_ij − μᵢ)(v_j − μ)     (equal)   or   Σ_j w_j (p_ij − μᵢ)(v_j − μ)   (EWMA)
+ρᵢ               = cov(pᵢ, v) / (σᵢ · σ)                  the part's correlation with the scope
+βᵢ               = cov(pᵢ, v) / σ²                        its share of the scope's variance (Σ βᵢ = 1)
+component VaRᵢ   = z · cov(pᵢ, v)/σ − μᵢ  = z·ρᵢ·σᵢ − μᵢ
+component ESᵢ    = (φ(z_ES)/(1 − c_ES)) · cov(pᵢ, v)/σ − μᵢ
+standalone VaRᵢ  = z·σᵢ − μᵢ
+incremental VaRᵢ = VaR(v) − VaR(v − pᵢ)                   (μ and σ of v − pᵢ recomputed)
+marginal VaRᵢ    = component VaRᵢ / |sᵢ| × 1,000,000      per million of market value or PV; null without a size
+diversification  = Σ standalone VaRᵢ − VaR(v)
+```
+
+Σ cov(pᵢ, v) = σ² and Σ μᵢ = μ, so the components add up to z·σ − μ exactly, and the same for ES; the **−μᵢ term is what makes them**
+(z·cov/σ alone adds up to z·σ). Parts that do not partition the scope (a selection) do not add up. For nodes and groups (no size) the
+marginal is shown *per +1% of the part*, `0.01 × component VaRᵢ`. The **correlation matrix** of up to `matrix-max-parts` (60) parts is
+`C = XᵀX` with X the centred N × k matrix (`X_ji = √w_j·(p_ij − μᵢ)`), one `dgemm` through the BLAS seam
+([HIGH_PERFORMANCE_NATIVE.md](../architecture/HIGH_PERFORMANCE_NATIVE.md)), `R_il = C_il / √(C_ii·C_ll)`, `σ² = Σ C` returned as a
+check; beyond 60 parts the largest by |component VaR|, `truncated: true`. The components never come from the matrix: each is one `ddot` of
+its centred vector with the scope's, in index order, so the figures never depend on which BLAS answered.
+
+**A worked example** (a synthetic bank of five desks over 509 scenario days, a fat-tailed sample):
+
+| Figure | Value |
+|---|---:|
+| μ; σ (sample, N − 1) | −211,407; 54,240,760 |
+| z (99%); z·σ | 2.326348; 126,182,877 |
+| **parametric VaR 99%** = z·σ − μ | **126,394,284** |
+| **parametric ES 97.5%** = 54,240,760 × 2.337803 + 211,407 | **127,015,607** |
+| historical VaR 99% (6th worst); historical ES 97.5% (mean of the 13 worst) | 158,495,340; 166,821,647 |
+| **fat-tail gap** | **+32,101,056 (+25.4%)** |
+| skew, excess kurtosis | −0.73, +3.20 |
+| scenario days beyond the parametric VaR | 9 (the normal expects 5.09) |
+
+| Desk | σᵢ | μᵢ | ρᵢ | Component VaR | Standalone VaR | Historical VaR |
+|---|---:|---:|---:|---:|---:|---:|
+| Rates | 30,464,843 | 156,350 | 0.8254 | 58,341,667 | 70,715,472 | 84,051,284 |
+| Credit | 13,729,034 | −630,809 | 0.7489 | 24,550,841 | 32,569,318 | 38,206,986 |
+| FX | 12,361,674 | 192,864 | 0.1354 | 3,699,951 | 28,564,691 | 32,992,760 |
+| Equity derivatives | 18,967,232 | −133,035 | 0.7347 | 32,550,423 | 44,257,414 | 55,876,274 |
+| Commodities | 8,808,345 | 203,223 | 0.3638 | 7,251,401 | 20,288,052 | 24,216,953 |
+| **Σ** | | **−211,407** | | **126,394,284** = the bank | 196,394,947 | |
+
+Rates in full: cov(Rates, bank) = 1.3639·10¹⁵ USD², so z·cov/σ = 2.326348 × 1.3639·10¹⁵ / 54,240,760 = 58,498,017; minus μ_Rates 156,350
+gives **58,341,667**, 46.2% of the bank. Diversification: 196,394,947 − 126,394,284 = 70,000,663.
+
+**Where it runs, cost and precision.** In the server's VaR engine (`ParametricVar` in drishti-compute, pure functions on `double[]`,
+called by the request path that ranks the vector); sharded dates need nothing new, as it reads the scope's assembled vector. μ and σ cost
+2N operations on a vector already in hand; the tree one more pass a node; contributions one `ddot` a part; the matrix one `dgemm` of N × k
+(509 × 60 × 60, under a millisecond); nothing is stored beyond the answer cache. Two passes in float64 in scenario order give the same
+bits on any number of threads or shards; Σ components equals the VaR to about 10⁻⁶ USD. Φ⁻¹ is Acklam's rational approximation refined by
+one Halley step (relative error under 10⁻¹⁵); φ and Φ by the standard series and `erfc`. Tests: `ParametricVarTest` (μ, σ, VaR, ES by
+hand and against BigDecimal; z at 95, 97.5, 99 and 99.5% against tables to 10⁻¹²; EWMA weights; the shape), `ParametricEulerTest`
+(components add up to the cent on desks, 1,000 positions, a basket, `by=attribute:TRADER_ID`, μ ≠ 0, EWMA), `ParametricLensTest`,
+`ParametricDeterminismTest` (1 to 24 threads, six shards), `ParametricMatrixTest` (Java and native BLAS against a plain loop),
+`ParametricCurveTest`, `VarParametricApiTest` (every endpoint, off, entitlements, historical fields byte-identical with and without the
+block) and `PvarPlaygroundWorkbookTest`.
 
 ## 19. Official end-of-day results
 
@@ -4884,7 +5228,7 @@ Everything in this list is **design, not built**; the plan row that builds it is
 | The lake layout at bank scale: the sort by hierarchy, the partition by scenario set, file and row-group sizes, `BYTE_STREAM_SPLIT` + ZSTD | open question 7, [section 29.2](#292-the-layout-the-design-chose-and-what-is-built) |
 | Age-weighted and filtered methods; ES backtests (Acerbi–Székely) | [section 18.3](#183-decomposition-of-a-scope-into-parts), [section 18.4](#184-history-and-backtest) |
 | The batch's due time and completeness rule; the load checks still not made | open question 4, [section 20.3](#203-what-the-load-checks) |
-| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) |
+| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens) |
 | The common risk lake for every risk pack; the scope words `GROUP:` and `NSET:` | parked, [section 15.1](#151-where-they-live) |
 
 Built since this list was first written: regulatory backtesting, period statistics and the report framework with its pilot pack
@@ -4908,16 +5252,16 @@ annual report's trading VaR table (built); the US needs 10-day VaR and stressed 
 | Where | Status | What it shows of VaR |
 |---|---|---|
 | **The full product** (no edition) | built | the VaR explorer (`VAR BANK <GO>`, [section 3](#3-the-explorer-screen-by-screen)) with the Horizon, Confidence, ES and Reporting currency pickers; the position and portfolio pages; the computed kind `VRES` and the what-if under the basket's sheet; the scenario matrix `SMAT`; the official records (`VOFF`); BI's VaR datasets; the API and the CLI |
-| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([LENSES.md](../admin/LENSES.md#5-drishti-risk), [RISK_LENS.md](../lenses/RISK_LENS.md#31-var)) |
-| **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/TRADING_LENS.md#44-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
+| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([LENSES.md](../admin/LENSES.md#5-drishti-risk), [RISK_LENS.md](../lenses/README.md#12-what-it-answers-today)) |
+| **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/README.md#222-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
 | **Drishti Market** and **Drishti World** | built | no VaR (`VAR` and `SMAT` off) |
-| A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md)) |
-| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md)); the CRO's VaR against risk appetite ([CRO_LENS.md](../lenses/CRO_LENS.md)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../lenses/CIO_LENS.md)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md)) |
+| A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)) |
+| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../lenses/README.md#5-oversight-lens)); the CRO's VaR against risk appetite ([CRO_LENS.md](../lenses/README.md#8-cro-lens)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../lenses/README.md#9-cio-lens)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens)) |
 
 Under every edition the engine is the same: any scope, any currency, intraday, official records, the what-if, the API and the CLI. The
 lens gaps that concern VaR (stressed VaR on the landings, horizon and confidence there, backtesting on the bank's P&L, why it moved) are
-listed in [RISK_LENS.md section 5](../lenses/RISK_LENS.md#5-gaps-with-design-sketches) and
-[TRADING_LENS.md section 5](../lenses/TRADING_LENS.md#5-gaps-with-design-sketches).
+listed in [RISK_LENS.md section 5](../lenses/README.md#13-gaps-and-proposals) and
+[TRADING_LENS.md section 5](../lenses/README.md#23-gaps-and-proposals).
 
 ## 34. Configuration keys
 

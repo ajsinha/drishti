@@ -29,7 +29,7 @@ VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
 
 For the proposed counterparty credit risk cube on this engine (allocated exposure, the GLEIF group roll-up, limits by tenor with
 headroom, CVA, SA-CCR, SIMM, wrong-way risk, pre-deal pricing on paths, every data contract), see the design:
-[CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md).
+[CCR_CUBE_LENS.md](../lenses/README.md#7-ccr-cube-lens).
 
 Every number below that is not a hand-made example is the engine's on the demo lake that `drishti.py lake demo` builds by default
 (`--exposure demo`): the run `XR-2026-09-30-01` (business date 2026-09-30, 200 paths, 24 grid dates of which 13 primary) generated for

@@ -26,7 +26,7 @@ import java.util.Set;
  * Lists, Excel's dynamic arrays over {@code [*]} (FUNCTION_CATALOGUE.md section 6): {@code size}, {@code first},
  * {@code last}, {@code flatten}, {@code sort}, {@code unique}, {@code take}, {@code drop}, {@code sequence}, {@code map},
  * {@code reduce}; and {@code group} ({@link GroupForm}: Rachana binds the key and the inputs, the pivot engine groups and
- * aggregates). Aggregates over a list ({@code sum} …) are the engine's (ONE_GRAMMAR.md part 2). {@code map}, {@code sort} and
+ * aggregates). Aggregates over a list ({@code sum} …) are the engine's (docs/architecture/ARCHITECTURE.md part 2). {@code map}, {@code sort} and
  * {@code reduce} evaluate their expression once per element with {@code @} the element ({@code @acc} the running value
  * of {@code reduce}). A masked list, or a masked value a result depends on, makes the result masked.
  */
@@ -248,7 +248,7 @@ final class ListFunctions {
     /**
      * {@code reduce(list, init, expr)}: the list folded from {@code init}: {@code expr} for each element in turn, with {@code @}
      * the element and {@code @acc} the value so far; the last value. Adding up with {@code +} or {@code -} is refused when the
-     * expression compiles: {@code sum(...)} is the aggregate (ONE_GRAMMAR.md), {@code concat(...)} joins text.
+     * expression compiles: {@code sum(...)} is the aggregate (docs/architecture/ARCHITECTURE.md), {@code concat(...)} joins text.
      */
     private static Object reduce(List<Expr> args, EvalContext c) {
         Object v = listOf("reduce", args.get(0), c);

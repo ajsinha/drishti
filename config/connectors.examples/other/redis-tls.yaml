@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: Redis over TLS with a client certificate (the server runs with tls-auth-clients yes). A rediss:// address turns TLS on.
-# Copy to config/connectors/redis-tls.yaml. See docs/connectors/REDIS_CONNECTOR.md, section Security.
+# Copy to config/connectors/redis-tls.yaml. See plugins/drishti-plugin-redis/README.md, section Security.
 plugin: redis
 kinds: [trade]
 description: Trades in Redis over mutual TLS

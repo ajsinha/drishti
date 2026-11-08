@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: PostgreSQL over verified TLS with a private CA, logging in by password. The driver is configured through the shared
 # tls.* settings (sslmode becomes verify-full, so the server name is checked). Copy to config/connectors/postgres-tls.yaml.
-# See docs/connectors/POSTGRES_CONNECTOR.md, section Security.
+# See plugins/drishti-plugin-jdbc/README.md, section Security.
 plugin: jdbc
 kinds: [trade]
 description: Trades in PostgreSQL, verified TLS

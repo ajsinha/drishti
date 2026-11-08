@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 
 /**
  * A business date's sensitivity inputs as the connectors serve them (FRTB_SA_GUIDE.md section 3): the factor dictionary
- * ({@code risk-factor}), the position sensitivities ({@code position-sensitivity}) with the load checks of SENSITIVITIES_AND_FRTB_SA.md
+ * ({@code risk-factor}), the position sensitivities ({@code position-sensitivity}) with the load checks of docs/guides/FRTB_SA_GUIDE.md
  * section 2.4, the optional DRC and RRAO inputs, and the FX of the date. Read once per date and kept a few minutes (a data load of one of
  * the kinds forgets the date).
  */

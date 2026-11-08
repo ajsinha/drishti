@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Admin -> Health, "In-memory lake" (docs/guides/IN_MEMORY_LAKE_GUIDE.md section 9): amber when a store is above 85% of its cap or a write
+{# Admin -> Health, "In-memory lake" (docs/guides/DATA_LAKE_GUIDE.md section 9): amber when a store is above 85% of its cap or a write
    was refused, red when a pinned table is empty or the direct-memory limit is below the stores' caps; the host checks. Drawn from the
    memoryLake part of GET /api/v1/admin/health only when the server has memory stores. #}
 {% set ml = h.get('memoryLake') %}

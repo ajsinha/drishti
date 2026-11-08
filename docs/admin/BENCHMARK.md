@@ -811,7 +811,7 @@ set `DRISHTI_LAKE_HEAP` (4g here) for loads of 200,000 positions and more: the w
 `ThroughputTest`, 10,000 positions × 510 scenarios, 53.7 MB of JSON Lines in eight gzip files (22.3 MB), into Delta on local disk. The
 first load in a JVM is cold (1.3 s, 7,700 rows/s); a warm one (what a long load runs at after its first seconds): **0.19 to 0.29 s, 34,000
 to 52,000 rows/s, 180 to 280 MB/s of JSON** end to end. Iceberg warm: 0.25 to 0.27 s (37,000 to 40,000 rows/s). With a 24 MB budget the
-same load spilled 37 MB and wrote the identical table. The design is [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md).
+same load spilled 37 MB and wrote the identical table. The design is [PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload).
 
 | Stage | Per thread, warm | Note |
 |---|---|---|
@@ -1252,10 +1252,10 @@ Measured on 2026-10-01 on the same workstation with larger limits; each connecto
 
 | Store | Book | Server heap, container | Where |
 |---|---|---|---|
-| Delta Lake | 1,000,000 trades a day × 3 days | heap limit 15.6 GB | [8.1](#81-a-million-trades-a-day-on-delta); [DELTA_CONNECTOR.md › Measured results](../connectors/DELTA_CONNECTOR.md#11-measured-results) |
-| PostgreSQL | 1,000,000 × 3 | `-Xmx8g`; PostgreSQL 18 in 12 GB, `shared_buffers` 3 GB | [POSTGRES_CONNECTOR.md › Measured results](../connectors/POSTGRES_CONNECTOR.md#9-measured-results) |
-| Aerospike | 1,000,000 × 3 | one CE 8.1 node, file storage | [AEROSPIKE_CONNECTOR.md › Measured results](../connectors/AEROSPIKE_CONNECTOR.md#9-measured-results) |
-| Redis | 1,000,000 × 2 | `-Xmx8g`; Redis 8.2, `maxmemory 11gb` | [REDIS_CONNECTOR.md › Measured results](../connectors/REDIS_CONNECTOR.md#9-measured-results) |
+| Delta Lake | 1,000,000 trades a day × 3 days | heap limit 15.6 GB | [8.1](#81-a-million-trades-a-day-on-delta); [DELTA_CONNECTOR.md › Measured results](#81-a-million-trades-a-day-on-delta) |
+| PostgreSQL | 1,000,000 × 3 | `-Xmx8g`; PostgreSQL 18 in 12 GB, `shared_buffers` 3 GB | [POSTGRES_CONNECTOR.md › Measured results](../../plugins/drishti-plugin-jdbc/README.md#measured-results) |
+| Aerospike | 1,000,000 × 3 | one CE 8.1 node, file storage | [AEROSPIKE_CONNECTOR.md › Measured results](../../plugins/drishti-plugin-aerospike/README.md#sizing-and-limits) |
+| Redis | 1,000,000 × 2 | `-Xmx8g`; Redis 8.2, `maxmemory 11gb` | [REDIS_CONNECTOR.md › Measured results](../../plugins/drishti-plugin-redis/README.md#measured-results) |
 
 DuckDB, the JSON-lines files, MongoDB and Iceberg have not been measured at a million trades a day; their million figures are
 extrapolations or estimates and say so.

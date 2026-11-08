@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /**
- * Why VaR moved as a workbook (VAR_GUIDE.md section 3.11; OVERSIGHT_LENS.md section 4.1, RO1), as the person (the same entitlements as the scope's VaR:
+ * Why VaR moved as a workbook (VAR_GUIDE.md section 3.11; docs/lenses/README.md section 4.1, RO1), as the person (the same entitlements as the scope's VaR:
  * a scope is resolved as the caller on each date). Reads only: every endpoint is a GET.
  * <pre>
  *   GET /api/v1/risk/var/explain.xlsx?scope=&amp;from=&amp;to=              the explanation as a workbook of formulas, checked against the engine

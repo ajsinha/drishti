@@ -14,7 +14,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-<!-- The playground workbook's look (VAR_PLAYGROUND.md section 9): navy title band, light-blue headings, amber inputs with blue figures,
+<!-- The playground workbook's look (docs/guides/VAR_GUIDE.md section 9): navy title band, light-blue headings, amber inputs with blue figures,
      black formula figures, losses red; template.properties names each cellXfs entry. Comments are dropped when the part is written. -->
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
 <numFmts count="6">

@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The editors' API (EDITORS.md sections 1 to 4; TABLES_GUIDE.md section 11): {@code /api/v1/tables/editor}. Every answer is worked out on
+ * The editors' API (docs/architecture/SHARED_SCREENS.md sections 1 to 4; TABLES_GUIDE.md section 11): {@code /api/v1/tables/editor}. Every answer is worked out on
  * the server for the person who asks; the console only draws it.
  */
 @RestController

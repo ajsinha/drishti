@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The FRTB-SA Playground's workbook against the engine (SENSITIVITIES_AND_FRTB_SA.md sections 12.1a and 13.2): written <b>without cached
+ * The FRTB-SA Playground's workbook against the engine (docs/guides/FRTB_SA_GUIDE.md sections 12.1a and 13.2): written <b>without cached
  * values</b> and recalculated by headless LibreOffice, so every figure read back is LibreOffice's; each must equal the engine's to the
  * cent. The demo's sensitivities of six books (every risk class, delta, vega and curvature) with the default switches and with each switch
  * flipped; the hand-built cases with DRC, RRAO and a delivered gamma (the curvature-source switch both ways).

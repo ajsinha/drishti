@@ -33,7 +33,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
- * Checks one model against the tables it reads (BI_FOUNDATION_2911E.md section 3.3; Q10, Q21, Q29): aliases, tables found at the major
+ * Checks one model against the tables it reads (docs/architecture/BI_DESIGN.md section 3.3; Q10, Q21, Q29): aliases, tables found at the major
  * asked, relationships between real columns of the same type, measures in aggregate scope over {@code alias.COLUMN}, hierarchies of real
  * fields, and model security over real aliases. The fan-out refusal, grain safety and the security safeguards ({@code DRS-9130},
  * {@code DRS-9131}) stay the query compiler's, which applies them per query.

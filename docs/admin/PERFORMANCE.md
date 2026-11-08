@@ -75,7 +75,7 @@ Sutra irs-fixfloat v1 + inference
 
 | Stage | What it covers | If it is the big one |
 |---|---|---|
-| `fetch` | Reading the entity from its source. | The source is slow. Check the source itself; see [runbooks/source-down.md](runbooks/source-down.md). A disk cache or a larger `cache-mb` helps lake and stream connectors. |
+| `fetch` | Reading the entity from its source. | The source is slow. Check the source itself; see [runbooks/source-down.md](OPERATIONS.md#171-source-down-or-slow). A disk cache or a larger `cache-mb` helps lake and stream connectors. |
 | `layout` | Finding the Sutra and merging it with inference. Cached by (Sutra version, kind, data shape), so normally a few microseconds. | High on every request: the layout cache is too small for the number of shapes, or Sutras are being edited (each edit is a new version). Raise `drishti.engine.layout-cache-size`. |
 | `links` | Fetching linked entities (counterparty, curves) in parallel, up to `drishti.graph.link-budget`. | At most the link budget (40 ms). Links that miss it render as *pending*. |
 | `bind` | Evaluating every panel's expressions, in parallel. | A Sutra with very large tables or heavy expressions. |

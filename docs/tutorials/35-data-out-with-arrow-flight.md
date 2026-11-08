@@ -143,7 +143,7 @@ VaR screen and `drishti.var` in the metadata, and the 1,358 positions' vectors s
 
 ## Step 5 · The same in Java
 
-The program of the [Java page](../guides/flight/JAVA.md) with the request
+The program of the [Java page](../guides/FLIGHT_REFERENCE.md#72-java) with the request
 `{"form": "measure", "request": {"measure": "var.scenarios", "scope": "DESK:DESK-RATES"}}`, sorting the rows and printing the six worst.
 Run it on Java 17 to 21: with Arrow 19 on Java 25 the memory module fails to start (`ExceptionInInitializerError` in
 `DefaultAllocationManagerFactory`).
@@ -163,7 +163,7 @@ schema: Schema<SCENARIO: Int(64, true), SCENARIO_DATE: Utf8, PNL: FloatingPoint(
 
 ## Step 6 · Through JDBC
 
-Any JDBC client takes the Flight SQL JDBC driver and the URL of the [JDBC page](../guides/flight/JDBC.md) with your token and `model=` a
+Any JDBC client takes the Flight SQL JDBC driver and the URL of the [JDBC page](../guides/FLIGHT_REFERENCE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program) with your token and `model=` a
 BI model you may read. Below is a JDBC client's result: the example program
 [`JdbcFlightSql.java`](../../examples/clients/java/JdbcFlightSql.java) on the same driver. A tool such as DBeaver takes the same jar and URL
 (Database → New connection → Arrow Flight SQL, or a generic JDBC connection), shows the model's aliases as tables in its navigator, and
@@ -262,5 +262,5 @@ numbers, computed when asked; a stream resumes where it stopped; every read is l
 
 - [FLIGHT_GUIDE.md](../guides/FLIGHT_GUIDE.md): turning Flight on, tokens and scopes, what can be read, the cluster, limits and troubleshooting.
 - [FLIGHT_REFERENCE.md](../guides/FLIGHT_REFERENCE.md): every ticket form, its schema, its errors and the scopes it needs.
-- The client pages: [Python](../guides/flight/PYTHON.md), [Java](../guides/flight/JAVA.md), [JDBC](../guides/flight/JDBC.md) and [ODBC](../guides/flight/ODBC.md).
+- The client pages: [Python](../guides/FLIGHT_REFERENCE.md#71-python), [Java](../guides/FLIGHT_REFERENCE.md#72-java), [JDBC](../guides/FLIGHT_REFERENCE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program) and [ODBC](../guides/FLIGHT_REFERENCE.md#74-odbc-excel-power-bi-tableau).
 - The [client examples](../../examples/clients/README.md), notebooks and programs to start your own from (a pivot over trade legs, the VaR scenario and ES tail plotted, a join in DuckDB, the in-memory lake, Excel through Python).

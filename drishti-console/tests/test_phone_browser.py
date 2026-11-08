@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The phone display and the lens menus' phone form in a real browser (MOBILE_DISPLAY.md, LX1 option C), at 390 px and 1280 px, in the
+"""The phone display and the lens menus' phone form in a real browser (docs/guides/PACK_DEVELOPER_GUIDE.md, LX1 option C), at 390 px and 1280 px, in the
 dark (terminal) and light themes:
 
 * a phone gets the phone page (must, then glance in its compact form, More on this page, On desktop) without scrolling sideways, each

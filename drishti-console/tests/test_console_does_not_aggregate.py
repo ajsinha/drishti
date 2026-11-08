@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One grammar, one engine (docs/architecture/ONE_GRAMMAR.md section 5): the server computes, the console displays. No console Python or
+"""One grammar, one engine (docs/architecture/ARCHITECTURE.md section 5): the server computes, the console displays. No console Python or
 JavaScript sums, averages or groups risk or BI figures: every figure (totals, medians, averages, deviations, risk) is the server's, in Java,
 through the one engine (the console sends rows it read to the pivot engine, POST /api/v1/pivot/inline, core/engine_figures.py, and shows
 its cells). The check finds every aggregation idiom in the console's own code (Python: sum, statistics, a groupby, a division by len;

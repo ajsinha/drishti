@@ -196,7 +196,7 @@ public final class ShareService {
         if (picture) {
             snapshots.require(kind, gate);
         }
-        // data held in memory only (IN_MEMORY_LAKE.md section 8): a share is a link, never its rows: no picture, no e-mail, no copied values
+        // data held in memory only (docs/architecture/DATA_ARCHITECTURE.md section 8): a share is a link, never its rows: no picture, no e-mail, no copied values
         List<String> kinds = gate == null ? List.of(kind) : List.of(kind, gate);
         com.ash.drishti.memlake.Retention retention = com.ash.drishti.memlake.Retention.current();
         if (picture) {

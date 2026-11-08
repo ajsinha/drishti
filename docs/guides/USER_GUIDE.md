@@ -2752,7 +2752,7 @@ Worked example: check that every data source is up.
 
 A connector whose plugin is installed but has no settings (a Kafka connector without `topics`, a feed without
 `feed`) stays **idle**: it is not started and is not counted as failed. Anything else that is not **UP** is
-explained in [runbooks/source-down.md](../admin/runbooks/source-down.md). A connector a pack names but that has no file shows as *not configured* (its kinds answer `DRS-1011`);
+explained in [runbooks/source-down.md](../admin/OPERATIONS.md#171-source-down-or-slow). A connector a pack names but that has no file shows as *not configured* (its kinds answer `DRS-1011`);
 an administrator creates it in *Admin → Connectors*, and a connector file with a mistake is listed on Health as a bad file while the last good configuration keeps running.
 
 Managing users and roles is explained in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).

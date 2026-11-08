@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The one function catalogue page (Help → Functions; ONE_GRAMMAR.md section 5), generated from the two registries: Rachana's function
+ * The one function catalogue page (Help → Functions; docs/architecture/ARCHITECTURE.md section 5), generated from the two registries: Rachana's function
  * table ({@link Functions#catalogue()}) and the pivot engine's functions registered into it ({@link EngineFunctions}). Written to
  * {@code docs/guides/FUNCTIONS.md}; {@code FunctionCataloguePageTest} fails when the committed page differs from what the registries
  * give (regenerate it with {@code -Ddrishti.functions.write=true} on that test, or by running this class with the file's path), and

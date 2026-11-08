@@ -96,7 +96,7 @@
   .pg-gridcard, .pg-fbar, .pg-actions, .pg-estimate, .pg-note { display: none; }
   .pg-input { min-width: 0; width: 100%; }
 }
-/* the playground's tabs: VaR (the grid) and Parametric (PARAMETRIC_VAR.md section 10: the panel in place of the grid) */
+/* the playground's tabs: VaR (the grid) and Parametric (docs/guides/VAR_GUIDE.md section 10: the panel in place of the grid) */
 .pg-tabs { display: inline-flex; gap: var(--d-sp-2); border-bottom: 1px solid var(--d-border); }
 .pg-tab { padding: var(--d-sp-2) var(--d-sp-10); font-size: var(--d-fs-13); color: var(--d-muted); text-decoration: none; border-bottom: 2px solid transparent; }
 .pg-tab[aria-selected="true"] { color: var(--d-ink); border-bottom-color: var(--d-link); }

@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Aerospike TLS wiring: what the settings become in the client policy and the seed hosts, and the start-up errors. The server
  * side needs Aerospike Enterprise Edition (the repository's container is the Community Edition, which has no TLS), so the
- * live check is a manual procedure: {@code docs/connectors/AEROSPIKE_CONNECTOR.md}, section Security.
+ * live check is a manual procedure: {@code plugins/drishti-plugin-aerospike/README.md}, section Security.
  */
 class AerospikeTlsTest {
 

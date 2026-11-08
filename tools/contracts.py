@@ -1017,7 +1017,7 @@ def _v(x) -> str:
 
 
 def sample_pages(c: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) -> list[str]:
-    """The data-sample pages of a contract's kind (docs/contracts/samples/<name>.md, written by tools/testdata/sample_docs.py): one per
+    """The data-sample pages of a contract's kind (sections of docs/contracts/samples/<domain>.md, written by tools/testdata/sample_docs.py): one per
     test-data folder of the kind, else one from the pack's samples for a kind a bank or a public source produces."""
     folders = [d["folder"] for d in testdata_sets(c["pack"], c["kind"], testdata) if d.get("folder")]
     if folders:
@@ -1063,7 +1063,7 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
         rows.append(["Test data", ", ".join(st["test-data"])])
     worked = sample_pages(c)
     if worked:
-        rows.append(["Worked example", " · ".join(f"[{name}](../samples/{name}.md)" for name in worked)
+        rows.append(["Worked example", " · ".join(f"[{name}](../samples/{name.split('/', 1)[0]}.md#{name.split('/', 1)[1]})" for name in worked)
                      + " (a real record, every field explained, for the production query; tools/testdata/sample_docs.py)"])
     out += R._table(["", ""], rows)
 

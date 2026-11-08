@@ -47,7 +47,7 @@ settings:
 auth: The AWS default credential chain (instance role, web identity, profile, environment), or static access-key and secret-key as ${ENV} or file:; a private CA through tls.*; an outbound proxy through proxy.*. Needs s3:ListBucket and s3:GetObject only.
 licence: AWS SDK for Java v2, S3 with the URL-connection and Apache 5 HTTP clients (Apache-2.0), bundled; no native library.
 windows: Works the same on Windows (pure Java SDK); no loader is needed, anything that can PUT an object feeds it.
-doc: docs/connectors/S3_CONNECTOR.md
+doc: plugins/drishti-plugin-s3/README.md
 ---
 # The s3 connector
 
@@ -129,20 +129,264 @@ settings:
 On AWS leave out `endpoint` and the keys, set `region` to the bucket's region and give the server an instance role. Write objects
 with any tool (`aws s3 cp`), into `<prefix><yyyy-MM-dd>/<kind>/<id>.json`; a lifecycle rule keeps the prefix small.
 
+A pack suggests the connector as a template in its `pack.yaml`, off until switched on (the server writes it to
+`config/connectors/risk-docs.yaml` at the first start if the site has none):
+
+```yaml
+# config/packs/<domain>/<pack>/pack.yaml
+connectors:
+  risk-docs:
+    plugin: s3
+    enabled: ${DRISHTI_RISK_DOCS:false}
+    kinds: [stress-result]
+    settings: { bucket: '${RISK_DOCS_BUCKET:risk-docs}', prefix: eod/, region: us-east-1, lookback-days: 10 }
+routes:
+  stress-result: risk-docs
+```
+
+The shipped `application.yaml` also lists the plugin as itself, off (`drishti.sources.plugins.s3`, switched on by
+`DRISHTI_S3_ENABLED`); use named connector files for anything more than one bucket. Every setting with its environment variable is
+in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#s3-tls-proxy); the file format, live reload and Admin → Connectors are in
+[Connector files](../../docs/connectors/CONNECTOR_FILES.md).
+
+### Try it on a laptop
+
+```bash
+docker run -d --name minio -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address :9001
+export AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin
+aws --endpoint-url http://localhost:9000 s3 mb s3://risk-docs
+aws --endpoint-url http://localhost:9000 s3 cp STR-CLIMATE-2026Q3.json \
+    s3://risk-docs/eod/2026-09-30/stress-result/STR-CLIMATE-2026Q3.json
+# connector settings: endpoint: http://localhost:9000 (credentials from the same environment variables)
+DRISHTI_RISK_DOCS=true java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+Then `STR STR-CLIMATE-2026Q3 <GO>` in the terminal, dated by folder; the generation is the object's last-modified time.
+
+## Dates
+
+The connector is dated, with one behaviour for every kind (there is no `mode.<kind>`):
+
+| The date asked | Answer |
+|---|---|
+| a date with a folder that holds the entity | that folder's object; `businessDate` is that date |
+| a date whose folder lacks the entity (or with no folder) | the newest **older** folder that holds it, within `lookback-days`; `businessDate` is that older date |
+| a date older than every folder in range, or beyond the lookback | the undated object, if any (`businessDate` null) |
+| none of these | not held: the next connector is asked |
+
+This is not the `file` connector's `snapshot` mode: an entity missing from a date's folder is shown from an earlier folder until it
+falls out of the `lookback-days` window, and an undated object answers every date. To make an entity disappear from a date onward,
+delete its undated object and stop writing it into date folders. A folder named like a date that is not one (`2026-13-01/`) is
+ignored as a date. Live asks for the current business date; an internal read with no date tries every folder, newest first, then the
+undated object. A new date folder is used after the next rescan.
+
+## How it reads
+
+**Opening one entity.** The kind and id are checked first (an empty value, `/`, `\`, `.` or `..` answers "not held", so an id
+cannot reach outside its folder). The connector then walks its date folders newest first, skipping folders after the date asked and
+older than the lookback, reading `<prefix><date>/<kind>/<id>.json`; the first that exists answers, else the undated
+`<prefix><kind>/<id>.json`, else "not held". Every read goes through a cache keyed by the object key (`cache-seconds`,
+`cache-entries`) that keeps **misses as well as hits**; concurrent reads of one key share one `GET`.
+
+| Situation | S3 requests |
+|---|---|
+| the entity is in the newest date folder in range | 1 `GET` |
+| only in an older folder, `n` folders back | `n + 1` `GET`s (the misses are `404`s) |
+| only undated, or held nowhere | one `GET` per date folder in range, plus one |
+| any of these again within `cache-seconds` | none |
+
+With daily folders and `lookback-days` 10, a miss costs about 9 `GET`s. The whole read, across every connector tried, must finish
+within `drishti.sources.fetch-timeout` (10 s), so keep the bucket close to the server.
+
+**Type-ahead** is from memory: every `rescan-seconds` the connector lists the whole prefix and keeps one entry per distinct
+`(kind, id)`, dated or undated; matching is by id prefix, then substring, then the subtitle `<kind> · <source-name>`. It does not
+look at the business date unless `index.days` keeps several days, in which case a past date answers from that date's own ids
+([ARCHITECTURE.md section 9.1](../../docs/architecture/ARCHITECTURE.md#91-several-business-days)); the regular listing fills the kept
+days (on the heap), and each past day is re-listed every `index.reload-every` (S3 gives a day no version). **Admin → Connectors →
+this connector → Index** reloads a day by hand ([OPERATIONS.md section 12.2](../../docs/admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+
+**Searches, derived kinds.** With no promoted columns, a structured search (`STR where pnl < -50m`) is answered by the engine reading
+each id of the kind (at most `drishti.search.max-scan`) one read each, within `drishti.search.budget`; documents not read in time are
+left out (`partial: true`). Fine for a few hundred entities; for more, keep the kind in a store with columns.
+
+**No reverse lookups, no live push.** *Linked entities* still shows the links a document itself names. For ticks on an S3 kind, add a
+Kafka connector in `ticks` mode for the same kind ([the kafka connector](../drishti-plugin-kafka/README.md)).
+
+## Writing objects
+
+The connector never writes; any S3 client does:
+
+```bash
+aws s3 cp STR-COVID2020-COMM.json s3://risk-docs/eod/2026-09-30/stress-result/STR-COVID2020-COMM.json
+aws s3 sync ./out/2026-09-30/ s3://risk-docs/eod/2026-09-30/        # a whole day, from a local folder
+aws --endpoint-url https://minio.bank.example s3 cp …              # an S3-compatible store
+```
+
+- **A day is not atomic.** While a day's folder is being written, entities already written answer from it and the others from the
+  previous folder. Write the day under a staging prefix outside the connector's prefix and copy it in, or write outside reading hours.
+- **When a change is seen.** New date folders and ids after the next listing (`rescan-seconds`); a rewritten or newly created object
+  once its cached read or miss expires (`cache-seconds`). A purge (Admin → Caches) drops cached reads at once; it does not relist.
+- **Clean up with a lifecycle rule.** The listing covers every date ever kept under the prefix; expire old date folders (an AWS
+  expiration rule on the prefix; on MinIO `mc ilm rule add`).
+
+## Scale and request cost
+
+Estimates from the code. Each rescan sends one delimited `ListObjectsV2` for the first-level folders, then lists **every object
+under the prefix**, one request per 1,000 keys; the first listing runs inside start, and rescans never overlap.
+
+| Objects under the prefix | List requests per rescan | Per day at `rescan-seconds` 60 |
+|---|---|---|
+| 10,000 | 11 | about 16,000 |
+| 100,000 | 101 | about 145,000 |
+| 1,000,000 | 1,001 | about 1.44 million, and a rescan of minutes |
+
+The type-ahead index holds a few hundred bytes per distinct `(kind, id)` (briefly twice during a rescan's swap). The read cache holds
+up to `cache-entries` parsed documents, several times their JSON size each: lower it for large documents. A million entities a day is
+not this connector's job: keep such a book in Delta Lake or Iceberg (which can live in S3) and use this connector for the documents
+around it. Reads are independent `GET`s from virtual threads; the bound is the round trip per `GET` times the misses per read.
+
+## S3 with a lake for history
+
+A connector that does not hold a date answers "not held" and the router asks the next one, so S3 can serve recent days and a lake
+every older one:
+
+```yaml
+# config/connectors/risk-docs.yaml: recent result documents, as the stress engine writes them
+plugin: s3
+kinds: [stress-result]
+settings: { bucket: risk-docs, prefix: eod/, lookback-days: 10 }
+# routes: { stress-result: risk-docs }   asked first; the pack's lake connector after it
+```
+
+| The user asks for | Who answers |
+|---|---|
+| Live, or a picked date within the lookback | S3, if that date's folder or an older one within 10 days holds it |
+| a date older than the lookback | the lake (S3 holds nothing in range) |
+
+An undated object answers every date, so the lake is never asked for that entity: keep undated objects only for kinds that do not
+change by date. Set `lookback-days` to the history S3 keeps (and the lifecycle rule to match). General rules:
+[Combining connectors](../../docs/connectors/CONNECTORS.md#combining-connectors).
+
+## Failure and recovery
+
+Nothing is long-lived: each call is a separate HTTPS request (5 s connect, 20 s socket), so there is nothing to reconnect, and the
+connector starts even when the store is unreachable.
+
+| What fails | Effect | Health |
+|---|---|---|
+| a listing (at start, or a rescan) | the last good listing is kept (empty if none ever succeeded) | `DOWN: <Exception>: <message> (retrying)` |
+| a `GET` (other than "no such key") | that read fails with `DRS-1003`; the router does **not** fall through | `DOWN: … (retrying)` |
+| a `GET` slower than the fetch timeout | `DRS-1004 timed out reading <kind>/<id>` | unchanged |
+| an object that is not valid JSON | that read fails (`DRS-1003`) | unchanged |
+
+Two errors are kept apart: the last listing error (cleared by the next good listing, and reported first) and the last read error
+(cleared by the next good `GET`). Recovery needs nothing. Cache figures (Admin → Caches, `cache` in `GET /api/v1/admin/health`):
+`cachedObjects` (reads and misses cached), `indexed` (distinct ids), `datedFolders` (from the last good listing).
+
+## Security
+
+**Permissions.** Read only: `s3:ListBucket` on the bucket (optionally limited to the prefix) and `s3:GetObject` on `<bucket>/<prefix>*`:
+
+```json
+{"Version": "2012-10-17", "Statement": [
+  {"Effect": "Allow", "Action": "s3:ListBucket", "Resource": "arn:aws:s3:::risk-docs",
+   "Condition": {"StringLike": {"s3:prefix": ["eod/*"]}}},
+  {"Effect": "Allow", "Action": "s3:GetObject", "Resource": "arn:aws:s3:::risk-docs/eod/*"}]}
+```
+
+SSE-S3 and SSE-KMS objects are read transparently (SSE-KMS also needs `kms:Decrypt`); SSE-C objects cannot be read.
+
+**Credentials.** Blank `access-key` uses the AWS default chain (system properties, `AWS_*` environment variables, web identity,
+`~/.aws` profile, container credentials, the EC2 instance role); prefer a role or web identity. A set `access-key` and `secret-key`
+are static credentials with no session token. Never write a key in YAML: `${S3_ACCESS_KEY}` or `file:` only
+([Secrets](../../docs/connectors/CONNECTORS.md#secrets)).
+
+**Addressing.** With `endpoint`, path-style (`https://minio.bank.example/risk-docs/eod/…`) unless `path-style: false`; without it,
+AWS's virtual-hosted style. Entitlements and redaction apply to S3 documents like any other.
+
+### TLS for the S3 connector
+
+AWS endpoints are HTTPS against the JVM's authorities. With `endpoint` write `https://` in production (`http://localhost:9000` is for a
+local MinIO). A private CA (MinIO, Ceph, an internal gateway) goes on the connector with the shared `tls.*` settings
+([TLS.md](../../docs/connectors/TLS.md), [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-tls)):
+
+| Setting | Meaning |
+|---|---|
+| `tls.ca-file` / `tls.truststore` (+ password) | trust a private CA (`tls.trust-jvm-default: true` keeps the public ones too) |
+| `tls.cert-file` + `tls.key-file`, or `tls.keystore` | a client certificate, for a gateway that asks for one |
+| `tls.verify-hostname: false` | **not supported**: the AWS client always checks the host name; refused at start |
+| `tls.protocols`, `tls.cipher-suites` | checked at start; the client takes the JVM's protocol versions |
+
+`tls.*` against an `http://` endpoint is a start-up error, never a silent downgrade. A complete file
+(`config/connectors/s3-private-ca.yaml`):
+
+```yaml
+plugin: s3
+kinds: [trade]
+description: Documents in MinIO over TLS
+settings:
+  bucket: drishti
+  prefix: risk
+  endpoint: https://minio.example.com:9000
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+  tls:
+    ca-file: /etc/drishti/tls/ca.pem
+```
+
+Check from the command line: `curl --cacert /etc/drishti/tls/ca.pem https://minio.example.com:9000/minio/health/live`, or
+`aws --endpoint-url https://minio.example.com:9000 --ca-bundle /etc/drishti/tls/ca.pem s3 ls s3://drishti/risk/`. A certificate under
+30 days from expiry shows in health: `UP (TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))`.
+
+## Outbound proxy
+
+The shared `proxy.*` settings ([TLS.md, proxy](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers),
+[CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#shared-proxy)): a `proxy:` block in `settings:` (or `proxy: none`) overrides the
+site default `drishti.http.proxy.*`. The AWS SDK's proxy configuration is used for AWS and for an S3-compatible `endpoint`; with a
+proxy the connector uses the Apache HTTP client (it answers a proxy's login when tunnelling `https://` with `CONNECT`), and
+`https://` endpoints keep their `tls.*` settings. When Drishti has a proxy decision for the connector, the SDK's own reading of the
+JVM's `https.proxyHost` properties and of the environment is switched off so the decision stands.
+
+## Limits and production checklist
+
+- No searches over fields, no reverse lookups, no live push, no *known at* (bucket versioning is not used); type-ahead by id only.
+- The listing covers the whole prefix, all dates ever kept; misses are cached for `cache-seconds`.
+- Only `.json` objects, one document each: no `.json.gz`, CSV or JSON lines. Timeouts are fixed (5 s connect, 20 s socket).
+
+1. Give the connector `kinds:`, and a route if it should be asked first for them.
+2. Use an instance role or web identity; static keys only through placeholders; grant only `s3:ListBucket` and `s3:GetObject`.
+3. `https://` for any `endpoint`, with `tls.*` for a private CA; keep the bucket in the server's region and set `region`.
+4. A lifecycle rule expiring date folders beyond `lookback-days`, and a dedicated prefix.
+5. Write each day to a staging prefix and copy it in; write every entity into every day's folder.
+6. Size `cache-entries` for the documents and the heap for the type-ahead index.
+7. For history beyond the lookback, a lake connector for the same kinds after this one.
+8. Check Admin → Health (`UP`, `datedFolders`, `indexed`), then open an entity Live and on a picked date.
+
 ## Troubleshooting
 
-- `failedToStart`: `s3 plugin needs settings.bucket`: set `bucket`.
-- `DOWN: SdkClientException: Unable to execute HTTP request: … (retrying)`: the endpoint is unreachable (DNS, firewall, proxy).
-- `DOWN: S3Exception: Access Denied (… Status Code: 403 …) (retrying)`: credentials or bucket policy; check `s3:ListBucket` and
-  `s3:GetObject`.
-- `DOWN: NoSuchBucketException: … (retrying)`: a wrong `bucket` or `endpoint`. `… Status Code: 301 …`: set `region`.
-- A new object is not found: its miss is cached (`cache-seconds`), or the next rescan has not run.
-- A picked date shows an older `businessDate`: that date's folder lacks the entity; an older folder within `lookback-days` answers.
-
-Every health text is in the full document, section *Diagnosing*.
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| `failedToStart`: `s3 plugin needs settings.bucket` | no `bucket` | set `bucket` |
+| `failedToStart`: `NumberFormatException …` | a non-numeric `rescan-seconds`, `cache-seconds`, `cache-entries` or `lookback-days` | fix the value |
+| `DOWN: SdkClientException: Unable to execute HTTP request: … (retrying)` | the endpoint is unreachable (DNS, firewall, proxy) | `curl -sI <endpoint>` from the server host; recovers by itself |
+| `DOWN: S3Exception: Access Denied (… Status Code: 403 …) (retrying)` | credentials or bucket policy | `aws s3 ls s3://<bucket>/<prefix>` with the same credentials |
+| `DOWN: NoSuchBucketException: … (retrying)` | a wrong `bucket` or `endpoint` | fix them |
+| `DOWN: S3Exception: … Status Code: 301 …` | `region` is not the bucket's | set `region` |
+| `DOWN: ... PKIX path building failed ... (retrying)` | the endpoint's certificate is not signed by a CA in `tls.ca-file` | give the right CA |
+| `DOWN: ... (retrying)` with a handshake or connection-reset reason | the endpoint requires a client certificate | set `tls.cert-file`, `tls.key-file` |
+| `tls.verify-hostname: false is not supported by the s3 connector …` | a host-name mismatch cannot be switched off | re-issue the certificate with the endpoint's name as a SAN |
+| `tls.enabled is true but endpoint is not https:// (http://minio:9000)` | TLS against a plain endpoint | use the `https://` address |
+| a new object is not found | its miss is cached, or the next rescan has not run | wait, or purge the connector's cache |
+| a picked date shows an older `businessDate` | that date's folder lacks the entity | expected ([Dates](#dates)); write every entity into every day |
+| the lake is never asked for an old date | an undated object exists for the entity | remove it, or accept it serves every date |
+| `notHeld` grows for kinds it does not hold | no `kinds:` and an empty listing: it serves every kind | give the connector `kinds:` |
+| `DRS-1003` but health `UP` | the object is not valid JSON | check the object |
+| `DRS-1004 timed out reading …` | far `GET`s, or many misses per read | keep the bucket in-region; lower `lookback-days` |
+| server start is slow | the first listing runs inside start | shrink the prefix |
 
 ## See also
 
-- [The full S3 connector document](../../docs/connectors/S3_CONNECTOR.md): layout, dates, request cost, security, TLS, proxy.
-- [The file connector](../../docs/connectors/FILE_CONNECTOR.md) (the same layout on disk) and [Connector files](../../docs/connectors/CONNECTOR_FILES.md).
+- [Connectors](../../docs/connectors/CONNECTORS.md#s3) (which connector when), [Connector files](../../docs/connectors/CONNECTOR_FILES.md),
+  [TLS and proxy](../../docs/connectors/TLS.md).
+- [The S3 settings in CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#s3-tls-proxy).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

@@ -22,7 +22,7 @@ bank's own data: trades, positions, the scenario PVs that VaR is computed from, 
 The hands-on walk-through of the same, every step in the UI, on the command line and in YAML, is
 [tutorial 45, Load your own data into a new lake](../tutorials/45-load-your-own-data-into-a-new-lake.md). Connecting a source that is
 not a lake (a database, a file folder, Kafka) is the [data guide](DATA_GUIDE.md); telling Drishti that an outside job has loaded data is
-its section 1. The in-memory lake (feeds that may never touch a disk) has [its own guide](IN_MEMORY_LAKE_GUIDE.md).
+its section 1. The in-memory lake (feeds that may never touch a disk) is [section 13](#13-the-in-memory-lake).
 
 Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`, `DESK`, `BOOK`, `COUNTERPARTY_ID`); outputs marked
 *captured* were produced on a scratch data folder with 2,000 trades, 300 positions of 509 scenarios and 26 hierarchy nodes.
@@ -41,6 +41,7 @@ Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`,
 10. [Connecting to an existing lakehouse (Databricks, Unity Catalog)](#10-connecting-to-an-existing-lakehouse-databricks-unity-catalog)
 11. [Archives: zip and tar](#11-archives-zip-and-tar)
 12. [Other lakes, packs and older installations](#12-other-lakes-packs-and-older-installations)
+13. [The in-memory lake](#13-the-in-memory-lake)
 
 ## 1. What a lake is
 
@@ -89,7 +90,7 @@ answers, VaR equal to the cent ([tutorial 29](../tutorials/29-var-on-iceberg.md)
 business date alone.
 
 **In memory.** A lake whose root is `mem://<store>` lives in the server's memory under a hard cap, for feeds that may never be written
-to disk: [IN_MEMORY_LAKE_GUIDE.md](IN_MEMORY_LAKE_GUIDE.md).
+to disk: [section 13](#13-the-in-memory-lake).
 
 **Where the files are read from.** `config/lakes/` (the system property `drishti.lakes.dir` or `DRISHTI_LAKES_DIR` say otherwise). The
 demo lake's file also ships inside the server, so a server started in another folder, a container or a cluster node knows it; a
@@ -99,6 +100,8 @@ in-memory store are in `config/lakes.examples/`, each beside its connectors in `
 **The lakes Drishti ships.** `demo` (the demo data, built from the committed test data in `data/testdata/`) and six lakes that ship empty, as definitions only: `risklake` (the bank's own risk data), `newslake` (news), `worldlake` (the World Bank, the IMF, the United Nations), `regulators` (the SEC, the Federal Reserve, OSFI and other central banks), `capitalmarket` (prices, curves, volatility surfaces, funds) and `referencelake` (core reference data: GLEIF legal entities, ownership, identifier mappings). Each has its lake file in `config/lakes/` with no tables and its folder `data/delta/<lake>/` holding only a README.md; what a build or a load writes there is never committed. Nothing shipped points at the six: every connector reads `demo` until you point it elsewhere (section 6); only the data feeds (`config/feeds/`, [EXTERNAL_DATA.md](EXTERNAL_DATA.md)) name them, as the lakes they load.
 
 ## 2. The lake file, every key
+
+Why one file per lake, who reads it and how it is built: [DATA_ARCHITECTURE.md section 8](../architecture/DATA_ARCHITECTURE.md#8-the-lake-file-one-description-of-every-lake).
 
 ### 2.1 A worked example: `config/lakes/risklake.yaml`
 
@@ -174,7 +177,7 @@ Check the file before you load: `drishti.py lake show` lists it as the server re
 | `catalog` | Iceberg only: `none` (path tables, the default), `rest`, `glue`, `s3tables`, `hadoop`, with their settings (`uri`, `warehouse`, `token: ${…}`) |
 | `defaults` | any table key, for every table that does not set it |
 | `tables` | the tables, each `<domain>.<table>: {…}` (below) |
-| `memory` | an in-memory lake only: `max-mb`, `chunk-kb`, `contract`, `owner`, `idle-trim-minutes` ([IN_MEMORY_LAKE_GUIDE.md](IN_MEMORY_LAKE_GUIDE.md)) |
+| `memory` | an in-memory lake only: `max-mb`, `chunk-kb`, `contract`, `owner`, `idle-trim-minutes` ([section 13](#13-the-in-memory-lake)) |
 | `description` | free text, shown on Admin → Lakes |
 
 Values may name environment variables or server settings: `${NAME}`, `${NAME:default}`, nested
@@ -483,7 +486,7 @@ documents read: 300, rows written: 300, rejected: 0
 On Windows, the same command in PowerShell with the jar's path; nothing else is needed. Command-line options over the file: `--as-of`,
 `--table`, `--pack`, `--kind`, `--mode append|replace`, `--key`, `--date-from`, `--plan`, `--set key.path=value`. Every key of a load
 file, with S3 and Iceberg examples, is [TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader); the design and the memory model
-are [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md).
+are [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload).
 
 ## 4. The `.ready` file, every key
 
@@ -911,14 +914,14 @@ each) starts to earn its folders.
 When the bank's tables already sit in a lakehouse that Databricks, Spark, Trino or Snowflake writes, Drishti reads them in place, with its
 own readers inside the server (Delta Kernel and drishti-iceberg): **no Databricks cluster, Spark or warehouse is needed to read**. The
 tables need the shape of section 1 (`id`, `doc`, `business_date`, promoted columns); a Spark job that writes it is in
-[DELTA_CONNECTOR.md section 5](../connectors/DELTA_CONNECTOR.md#5-writing-the-lake). Each day sorted by `id` (on Databricks,
+[DELTA_CONNECTOR.md section 5](../../plugins/drishti-plugin-delta/README.md#writing-the-lake). Each day sorted by `id` (on Databricks,
 `OPTIMIZE … ZORDER BY (id)` or liquid clustering on `id`) reads fastest.
 
 ### 10.1 Built
 
 **Delta by storage path.** The lake file's `root` is the folder above the domains: `s3://bucket/prefix` (the default `native` engine),
 or `abfs://…` (Azure) and `gs://…` (Google Cloud) with the connector setting `engine: hadoop`
-([DELTA_CONNECTOR.md section 16](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop)). Credentials: S3 from the AWS default
+([DELTA_CONNECTOR.md section 16](../../plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop)). Credentials: S3 from the AWS default
 chain (a task or instance role) or `${ENV}` references; Azure and Google Cloud through `hadoop.<key>` settings; a private CA through
 `tls.*`. With Unity Catalog, point the root at an external table's location and give the server read access to that storage.
 
@@ -947,7 +950,7 @@ settings:
 Catalog's Iceberg REST catalog, with **vended credentials**: the catalog hands the server each table's own temporary credentials
 (`vended-credentials: true`, the default), so the server needs no storage keys of its own. Apache Polaris, Snowflake Open Catalog, AWS
 Glue's Iceberg REST endpoint, Nessie, Lakekeeper and Gravitino are read the same way
-([ICEBERG_CONNECTOR.md section 4](../connectors/ICEBERG_CONNECTOR.md#4-catalogs-path-based-tables-and-rest-catalogs)):
+([ICEBERG_CONNECTOR.md section 4](../../plugins/drishti-plugin-iceberg/README.md#catalogs-and-storage)):
 
 ```yaml
 # config/lakes/uc-risk.yaml
@@ -963,7 +966,7 @@ tables:
 ```
 
 AWS Glue and S3 Tables through their REST endpoints with SigV4 are built and **not yet run on AWS**
-([ICEBERG_CONNECTOR.md section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need)). Iceberg format
+([ICEBERG_CONNECTOR.md section 19](../../plugins/drishti-plugin-iceberg/README.md#aws-glue)). Iceberg format
 version 3 is refused by name: write format version 2.
 
 **Delta features.** Delta Kernel 4.4 checks a table's protocol before reading; a reader feature it does not support is **refused by
@@ -980,8 +983,8 @@ name** (the table and the feature named), never read wrongly.
 | Parquet codecs BROTLI, LZO | refused, naming the table, the file and the codec | rewrite as Snappy, ZSTD or LZ4_RAW |
 
 Check a connector against the real store before it serves anyone: `drishti.py connector test <file>` tries it and says what failed, in
-words. Every setting: [DELTA_CONNECTOR.md section 14](../connectors/DELTA_CONNECTOR.md#14-settings),
-[ICEBERG_CONNECTOR.md section 15](../connectors/ICEBERG_CONNECTOR.md#15-settings).
+words. Every setting: [DELTA_CONNECTOR.md section 14](../../plugins/drishti-plugin-delta/README.md#settings),
+[ICEBERG_CONNECTOR.md section 15](../../plugins/drishti-plugin-iceberg/README.md#settings).
 
 ### 10.2 Planned (not built)
 
@@ -991,7 +994,7 @@ words. Every setting: [DELTA_CONNECTOR.md section 14](../connectors/DELTA_CONNEC
 |---|---|---|
 | **Unity Catalog for Delta** | a table found by its name, `catalog.schema.table`; Unity Catalog's credential vending; Unity Catalog's grants as the permissions | read Delta by storage path (external tables), or the same table as Iceberg through Unity's REST endpoint (UniForm) |
 | **Delta Sharing** | read tables a provider shares through the Delta Sharing protocol | not supported |
-| **Plain tables without the `id`/`doc` shape** | read a table of ordinary columns directly, driven by per-table configuration | a small job writes a Drishti-shaped copy beside it ([DELTA_CONNECTOR.md section 5](../connectors/DELTA_CONNECTOR.md#5-writing-the-lake)) |
+| **Plain tables without the `id`/`doc` shape** | read a table of ordinary columns directly, driven by per-table configuration | a small job writes a Drishti-shaped copy beside it ([DELTA_CONNECTOR.md section 5](../../plugins/drishti-plugin-delta/README.md#writing-the-lake)) |
 
 ## 11. Archives: zip and tar
 
@@ -1067,3 +1070,232 @@ lake file of their own:
 2. `python3 tools/drishti.py lake migrate-config --write` writes them (an existing lake file is never overwritten).
 3. `python3 tools/drishti.py lake check` compares each lake file with its tables on disk.
 4. Restart the server. Nothing under the data folder changes.
+
+## 13. The in-memory lake
+
+Some feeds may not, by contract, be saved on a disk. Drishti holds them in an **in-memory lake**: ordinary Delta tables (a `_delta_log`
+and Parquet files) whose files live in the server's memory, off the Java heap, under a hard cap. A server job, the **replenish job**,
+fills each table from its feed; every page, search, BI dataset and Export data read it exactly as they read a lake on a disk; a guard
+refuses every way the data could reach a disk. Only a user's download leaves the server. How it is built:
+[DATA_ARCHITECTURE.md section 9](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk); a
+worked example: [tutorial 31](../tutorials/31-news-in-memory-only.md).
+
+### 13.1 How it works
+
+```
+ feed (URL, file, connector) ──► replenish job ──► lake writer ──► mem://<store>/<table>   (Delta: _delta_log + Parquet, zstd)
+                                     (server)                              │ off-heap chunks, hard cap
+ pages, search, BI, Export data ◄── Delta connector (root: mem://<store>) ◄──┘
+```
+
+- A **memory store** (`mem://<store>`) is one pool of memory with its own cap: files are lists of fixed-size chunks taken from the pool
+  and given back the moment a file is deleted, so the cap is exact.
+- A **memory table** is a Delta table at `mem://<store>/<folder>`; a run of its job is one Delta commit, so a reader sees the whole run
+  or none of it, and a read in progress finishes on the version it started on.
+- A **restart empties** the stores, by design. The jobs refill them at start, in warm-up order; meanwhile the connector's health says
+  *held in memory only and is empty now* rather than a blank.
+
+### 13.2 Setting up a memory-only feed
+
+Three files. The store is a lake like any other: its own lake file, its root `mem://<store>`, its cap and contract under `memory:`:
+
+```yaml
+# config/lakes/news.yaml (config/lakes.examples/memory/news.yaml)
+lake: news
+root: mem://news
+memory:
+  max-mb: 256                 # the hard cap
+  chunk-kb: 64                # small tables: every file holds at least one chunk
+  contract: VX-2026-07        # shown on every refusal and on Admin -> Lakes
+tables:                       # the tables sit at mem://news/<kind>
+  news.news-topic: {path: news-topic}
+  news.listed-company: {path: listed-company}
+  news.news: {path: news}
+  news.quote: {path: quote}
+```
+
+The connector reads it like any lake:
+
+```yaml
+# config/connectors/news-store.yaml (config/connectors.examples/memory/news-store.yaml)
+plugin: delta
+kinds: [news-topic, listed-company, news, quote]
+settings:
+  lake: news
+  lake-tables: news.news-topic,news.listed-company,news.news,news.quote
+```
+
+The tables' replenish jobs live in the in-memory lake's engine file `config/engines/memory-lake.yaml`, with its switch
+`drishti.engines.memory-lake.enabled` (off as shipped: set it to `true` or turn it on in Admin → Engines, then restart, since the stores'
+caps size the direct memory at start; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)), or in
+`application.local.yaml` or the environment:
+
+```yaml
+# config/examples/in-memory-lake.yaml
+drishti:
+  lake:
+    memory:
+      tables:
+        - name: news
+          store: news
+          source: { url: "https://feeds.example.com/news.jsonl", headers: { Authorization: "Bearer ${VENDOR_TOKEN}" } }
+          key: [NEWS_ID]
+          every: 15m
+          warm-up: 1
+          pin: true
+```
+
+Restart the server with the shipped start scripts (they raise the JVM's direct-memory limit by the stores' caps, 13.7), then check it:
+
+```bash
+python3 tools/drishti.py lake memory status
+python3 tools/drishti.py lake memory jobs --table news
+```
+
+UI: **Admin → Lakes** lists the store (cap, use, contract) and each table (state, bytes, rows, version, last and next refill). Switching
+back: remove the files and restart; the pack's own connector reads the disk lake again.
+
+### 13.3 Replenish jobs: sources, modes, when they run
+
+| Source (`source:`) | What the job reads |
+|---|---|
+| `url` (and `headers`) | an HTTP(S) feed answering JSON Lines or one JSON array; headers name secrets as `${ENV}` |
+| `file` | a JSON Lines file, plain or `.jsonl.gz` |
+| `connector` and `kind` | every document of a kind from any connector that can list them (Kafka's topic state, JDBC, files, the vendor feeds) |
+| `connector`, `kind` and `ids` or `ids-from` | a connector that computes a document when asked (the news connector), entity by entity: `ids: [NEWS-Apple]`, or `ids-from: listed-company.NEWS_ID` (that field of every row of another memory table) |
+
+A connector whose own lake is in memory is never a source.
+
+**Rows.** Each document becomes a row: `id` from `key` (fields joined with `|`), `doc` the document, `business_date` from
+`business-date` (`today`, a date, or `field:AS_OF`: the first ten characters of a field), and the `columns` promoted beside it, sorted
+by `sort-by` (the key when empty) before they are written.
+
+| Mode | A run | Use for |
+|---|---|---|
+| `replace` (default) | is the whole table: one commit removes every earlier file and adds the new | snapshots: prices, reference lists |
+| `append` | adds its rows | ticks, events |
+| `merge` | replaces rows by key on the dates the run touches | a feed of changes |
+
+**When.** `every: 15m` (or `30s`, `1h`), or `cron: "0 0/15 * * * *"`; on the source's signal (`signal: true`, the default: a file's time
+or size, a connector's last update, checked every 10 s); at start in `warm-up` order; 30 s after an eviction; and on demand
+(`drishti.py lake memory refill <table>`, audited). One run of a table at a time; `job-threads` tables at once. Every run is recorded in
+memory (when, why, `ok` / `failed` / `refused`, rows, bytes, the version, the time taken), without any value of the data.
+
+### 13.4 The hard cap and the eviction ladder
+
+`max-mb` is a hard limit. When a write needs room the store frees memory in this order and stops as soon as there is enough:
+
+1. **Old versions** past `keep-versions` (2 by default: the current and the one a reader may still be on).
+2. **Whole tables, least recently read first**: never a pinned table (`pin: true`), never the table being written. A table goes whole;
+   it becomes *evicted, refill queued*, and its pages say so.
+3. **Refuse the write.** The commit fails, the table stays whole at its previous version; the run records *refused: the store is full*;
+   Health turns amber.
+
+### 13.5 Automated compaction
+
+After every commit and every `every-seconds`, each store's tables are scored by the memory a rewrite would save, and the best is
+rewritten as one commit: more small files (below `small-file-mb`) than dates are merged per date; replaced rows past `dead-rows` are
+dropped (merge mode); after `resort-after` appends the table is rewritten sorted by `sort-by`. A rewrite starts only when `headroom-mb`
+(at most a quarter of the store) plus the table's size is free under the cap, so compaction never causes an eviction; `idle-only: true`
+keeps it to quiet periods. Admin → Lakes shows the memory saved today and in total.
+
+### 13.6 Never on disk: what is refused and what is allowed
+
+A connector whose root is `mem://` is **memory-only**, and so is what is read from it. One check sits in front of every place Drishti
+writes:
+
+| Where Drishti writes | Memory-only data |
+|---|---|
+| The connector's disk caches: documents (RocksDB), id-map files, index segments | **off** for that connector, whatever its settings |
+| A scheduled report (`/me/reports`) | **refused** (`DRS-5219`) when saved and when run |
+| A share's picture, its e-mail, a note copying the page's values | **refused** (`DRS-5219`); a share as a link is allowed |
+| A BI run's stored result | not stored: the definition is kept, the rows are recomputed when opened |
+| DuckDB's temporary spill | **off** on a server with memory stores (a query past `memory-limit` fails instead of spilling) |
+| Ask about this page (an outside AI provider) | **refused** (`DRS-5219`) |
+| **A user's download** (Export data) | **allowed**: streamed from memory with no temporary file, audited (the audit line keeps the selection's shape, not its values) |
+| Another node of the cluster | answers over Drishti\*net only (13.8) |
+| Logs and audit | ids and counts only |
+
+A refusal says why, in words: *"This report uses news data held in memory only (contract VX-2026-07); it cannot be delivered by a
+scheduled report. Only a download by you may leave the server."*
+
+### 13.7 Memory, the JVM and the host
+
+- **Direct memory.** The stores live in direct buffers. The JVM's limit must be 256 MB (the server's own I/O) plus the stores' caps.
+  `tools/windows/start-server.ps1` computes it from the configuration (`tools/lake/memory_caps.py`); the Docker image and the ECS
+  entrypoint take `DRISHTI_LAKE_MEMORY_MB` (the caps added up); a systemd unit or a run configuration adds
+  `-XX:MaxDirectMemorySize=<256 + caps>m` after the existing flag (the later one wins). Admin → Health turns **red** when the running
+  limit is below it.
+- **Memory is given back.** A deleted or evicted file's chunks return to the pool at once; free chunks are released to the operating
+  system after `idle-trim-minutes` of quiet, and at once when a cap is lowered.
+- **Host checks** (Admin → Health, *In-memory lake*): no swap (or encrypted swap), no heap dump on out-of-memory unless to a RAM disk, no
+  JFR recording at launch, the temporary folder on a RAM disk. Each is amber when not met.
+- **Sizing.** Memory per table is close to its Parquet size with zstd, plus at most one partly filled chunk per file. Measured on the demo
+  tables ([RESOURCES_AND_SCALE.md](../architecture/RESOURCES_AND_SCALE.md#58-the-in-memory-lake-measured)): the in-memory files are 4 to
+  42 times smaller than the decoded JSON and 1.6 to 3.9 times smaller than the disk lake's Snappy files. Small tables want small chunks
+  (`chunk-kb: 64`).
+
+### 13.8 A cluster: the owner node binds the pack
+
+A memory store is owned by one node, which fills it and serves the pack whose connectors read it; the others reach the pack through
+Drishti\*net as they reach any pack a peer holds, and keep nothing of it.
+
+```yaml
+# config/net/node.yaml on the owner
+memory-stores: [news]
+```
+
+On the other nodes a store not named in their `memory-stores` is not loaded, its tables show as *held by its owner node*, the kinds are
+not offered in their digest, and a request for them is forwarded to the owner. Without `memory-stores`, each store's `owner:` setting
+(true by default) decides.
+
+### 13.9 What an administrator sees
+
+| Where | What |
+|---|---|
+| Admin → Lakes (`GET /api/v1/admin/lakes/memory`) | each store: cap, used, allocated, contract, refusals; each table: state in words, bytes in memory, the files' bytes, the decoded bytes and their ratio, rows, version, last and next refill, pinned, evictions, refusals, compactions, memory saved |
+| `drishti.py lake memory status` / `jobs` / `refill` | the same from the terminal; `--json` for scripts |
+| Admin → Health, *In-memory lake* | amber: a store over 85% of its cap, a refused write, a host check; red: a pinned table empty after warm-up, the direct-memory limit below the caps |
+| Admin → Health, *Busy protection* | a gauge per memory store (its use against its cap) |
+| Admin → Caches, memory budget | the stores as the off-heap pool `memory-lake` |
+
+### 13.10 Every setting
+
+The store's own keys (`max-mb`, `chunk-kb`, `contract`, `owner`, `idle-trim-minutes`) are in its lake file's `memory:` block (section
+2.2). The jobs and compaction are under `drishti.lake.memory` (environment `DRISHTI_LAKE_MEMORY_…`; command line
+`--drishti.lake.memory.…`); the full table is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `max-mb` | 0 | the hard cap; 0 holds nothing |
+| `chunk-kb` | 1024 | the chunk size (64 for stores of small tables) |
+| `contract` | | shown on every refusal and on Admin → Lakes |
+| `owner` | true | this node owns the store (node.yaml `memory-stores` wins when set) |
+| `idle-trim-minutes` | 10 | free chunks go back to the operating system after this much quiet |
+| `tables[].name`, `.store`, `.folder` | | the table, its store, its folder (the name) |
+| `tables[].source` | | `url` (+ `headers`), `file`, `connector` + `kind` (+ `ids` or `ids-from`) |
+| `tables[].mode` | replace | `replace`, `append`, `merge` |
+| `tables[].key`, `.sort-by` | | the id's fields; the sort (the key) |
+| `tables[].business-date` | today | `today`, a date, `field:<NAME>` |
+| `tables[].columns` | | fields promoted beside the document |
+| `tables[].every`, `.cron`, `.signal`, `.warm-up` | , , true, | when it runs |
+| `tables[].pin`, `.keep-versions`, `.codec` | false, 2, zstd | never evicted; versions kept; `zstd`, `lz4`, `snappy` |
+| `history-keep`, `job-threads` | 50, 2 | runs kept per table; jobs at once |
+| `compaction.*` | enabled, 30 s idle, 512 MB headroom, 8 MB small files, 0.2 dead rows, 20 appends, 60 s | 13.5 |
+
+**A memory table's layout** is the Delta connector's: `id` (string, the key), `doc` (string, the document as JSON), `business_date`
+(date, the partition), one string column per `columns` entry; Parquet with zstd level 3 (`codec: snappy` gives byte-equal files to the
+disk lake's), row groups of 256 KB, a checkpoint every 10 commits. The pack's data contracts describe the documents; holding them in
+memory changes nothing in them. The Iceberg engine reads and writes through the same store (`warehouse: mem://<store>/…`); the replenish
+jobs write Delta.
+
+### 13.11 Troubleshooting the in-memory lake
+
+| What you see | Why, and what to do |
+|---|---|
+| `UP: mem://news is held in memory only and is empty now` | the warm-up has not reached it, or its job failed: `drishti.py lake memory jobs --table <t>` gives the reason |
+| a run `refused: the store is full` | raise `max-mb` (and restart, so the launcher raises the direct-memory limit), unpin a table, or lower `keep-versions` |
+| Health red, *direct-memory limit* | the server was started without the caps in `-XX:MaxDirectMemorySize`: use the shipped scripts or add the flag |
+| `DRS-5219` on a report, a share, an Ask | as the contract asks; download the rows from Export data instead |
+| a table *evicted, a refill is queued* | the store needed room for another table; pin the tables that must stay |
+| a run `failed: … connector cannot list its documents` | that connector computes documents when asked: give `ids` or `ids-from`, or read its feed by `url` |

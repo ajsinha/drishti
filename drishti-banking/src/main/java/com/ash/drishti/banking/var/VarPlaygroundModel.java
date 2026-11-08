@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The VaR Playground's calculation as its workbook writes it (docs/architecture/VAR_PLAYGROUND.md section 7), operation for operation, so
+ * The VaR Playground's calculation as its workbook writes it (docs/guides/VAR_GUIDE.md section 7), operation for operation, so
  * the cached value of every formula cell is the number the formula gives and the screen shows the same figures: each position's P&amp;L
  * from its scenario PVs (or P&amp;L vector) and the scenario FX, into the reporting currency, the portfolio, its tie-broken rank, VaR, ES,
  * the component window and scale, every position's standalone, component and incremental figures, every confidence and both 10-day

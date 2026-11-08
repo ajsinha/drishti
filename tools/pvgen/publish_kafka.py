@@ -28,7 +28,7 @@ or a pnl-vector row for a system sent as P&L vectors), ``RUN_KIND: INTRADAY``, i
 prices again). A cancel is a cancel line, as in the files: ``TRADE_STATUS: CANCELLED``, the vector null. The message's key names the
 message (``P-<date>-<n>``), never a trade: Drishti reads each line's ``TRADE_ID``. Drishti's market-risk connector ``pv-updates`` (off
 by default) collects the messages over a window and appends the window to the lake as one intraday batch. ``--save`` also writes every
-record sent, as JSONL, for tools/pvgen/check.py. Guide: docs/guides/VAR_GUIDE.md section 15.12; docs/connectors/KAFKA_CONNECTOR.md."""
+record sent, as JSONL, for tools/pvgen/check.py. Guide: docs/guides/VAR_GUIDE.md section 15.12; plugins/drishti-plugin-kafka/README.md."""
 from __future__ import annotations
 
 import argparse
