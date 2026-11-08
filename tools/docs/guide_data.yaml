@@ -97,11 +97,12 @@ guides:
         title: VaR limits
         sample: market-risk/var-limit/var-limit.*.jsonl.gz
         required: optional
-        for: a node's VaR limit (the Limit column, limit use)
+        for: a node's or a system basket's VaR limit (the Limit column, limit use)
         guide: "[15.15](#1515-var-limit-the-nodes-var-limits)"
         about: |
           A node's VaR limit with its horizon and confidence: the **Limit** column and limit use on the VaR screen. A limit is compared only at its
-          own horizon and confidence (the screen says *not comparable* otherwise).
+          own horizon and confidence (the screen says *not comparable* otherwise). A system basket's limit is a row of `HIERARCHY` `PORTFOLIO`
+          whose `NODE_ID` is the basket's id ([5.7](#57-system-baskets)): the system baskets themselves are kept in Drishti, not data.
       - kind: desk-pnl
         title: actual and hypothetical P&L for backtesting
         sample: market-risk/desk-pnl/desk-pnl.tar

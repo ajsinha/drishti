@@ -92,7 +92,6 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
     ├── position/                             one Delta table per kind
     ├── pnl-vector/
     ├── scenario-set/
-    ├── portfolio/
     ├── position-sensitivity/
     ├── risk-factor/
     ├── scenario-pnl/                        
@@ -115,7 +114,7 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
 |---|---|---|---|
 | **Fundamental: masters and terms** | Source systems, through their packs | Their own connectors | trades, counterparties, books, desks, legal entities, CSAs and agreements, market data, GLEIF |
 | **Fundamental: engine inputs** | Upstream engines, once per business date | The common risk lake | P&L vectors, sensitivities, scenario P&L, exposure paths, cash flows |
-| **Drishti-owned** | Drishti, from users' actions | The Drishti database and the content store ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) | derived positions, portfolio definitions, baskets, captures, official end-of-day captures |
+| **Drishti-owned** | Drishti, from users' actions | The Drishti database and the content store ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) | derived positions, the system baskets (the bank's own, `system-basket`, [VAR_GUIDE.md section 5.7](../guides/VAR_GUIDE.md#57-system-baskets)), people's baskets, captures, official end-of-day captures |
 | **Computed answers** | Drishti, when asked | Nowhere: computed, cached in memory, and stored only as a capture | VaR, FRTB charge, EAD, EE/PFE, LCR … |
 
 **The rule:** a computed figure is never stored in a fundamental or input table. A guard test fails the build when a table carries a
@@ -144,7 +143,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 | `SCENARIO_ID` | A stress scenario | `SCN-…` | `stress-scenario` (SCN) |
 | `BUSINESS_DATE` | The close of business a row describes | `YYYY-MM-DD` | |
 
-**Scopes.** The scope grammar ([VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets)) addresses any set of trades through these keys: `BANK`, `DESK:`, `BOOK:`,
+**Scopes.** The scope grammar ([VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets)) addresses any set of trades through these keys: `BANK`, `DESK:`, `BOOK:`,
 `POS:`, `TRD:`, `PORT:`, `BASKET:`, `CAPTURE:`, `WHERE:`, and `CPTY:`, `GROUP:` (a connected group, through GLEIF parents),
 `NSET:` and `LE:`. Terms combine with `+` (union), `-` (difference) and `&` (intersection). Every measure takes the same scope text.
 

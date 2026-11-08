@@ -246,7 +246,7 @@ Trades of A ∪ B share one ordinal space for the pair (the T index plus the end
 
 ## 8. Scopes
 
-Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets) and its planned words, plus `INDEX:` and `TRDR:`. Resolved on T; an ended trade is
+Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets) and its planned words, plus `INDEX:` and `TRDR:`. Resolved on T; an ended trade is
 in a scope when it was in it on T−1. Fully additive: answered exactly from node aggregates and runs.
 
 ## 9. What Drishti answers

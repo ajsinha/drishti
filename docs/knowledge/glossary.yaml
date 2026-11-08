@@ -127,10 +127,10 @@ terms:
     domain: risk
     meaning: "One security held in one book (or one OTC trade): the trades that build or reduce it, netted. Drishti derives positions from trades; nobody delivers them."
     command: POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01
-  - term: Portfolio
-    synonyms: [port, stored portfolio]
+  - term: System basket
+    synonyms: [port, portfolio, stored portfolio]
     domain: risk
-    meaning: "A named, stored set of positions: a hierarchy node, a rule (every short EUR position) or a basket of chosen positions, with its own VaR limit."
+    meaning: "One of the bank's own baskets, kept in Drishti (never a data feed): a hierarchy node, a rule (every short EUR position) or a basket of chosen positions and trades, the same for everyone, changed only with the permission var:system-baskets; its VaR limit is a var-limit row."
     command: PORT PF-USD-RATES
   - term: Basket
     synonyms: [saved basket]

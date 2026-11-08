@@ -50,7 +50,7 @@ Drishti answers it the way most banks' internal models do, by **historical simul
    the average of the 13 worst is the **expected shortfall** at 97.5%.
 
 Because it only adds and sorts, Drishti can answer for **any set of trades** in milliseconds: the bank, a legal entity, a desk, a book,
-a position, one trade, a stored portfolio, a rule such as *every short EUR position*, or any union or difference of these. It never
+a position, one trade, a system basket, a rule such as *every short EUR position*, or any union or difference of these. It never
 reprices a trade; it never stores a VaR except when asked to keep one (a capture or the official end-of-day record).
 
 Why a bank cares:
@@ -98,7 +98,7 @@ The links are the packs' contract link columns (`config/packs/banking/market-ris
 
 **Id conventions.** Desks `DESK-<name>` (`DESK-RATES`; a scope may say `DESK:RATES`), books `BOOK-<desk>-<n>`, legal entities
 `LE-<city>` (`LE:NY` means `LE-NY`), hierarchy nodes `<tree>~<id>` (`MGMT~DESK-RATES`, `LEGAL~LE-NY`), positions
-`POS-<book>~<security>` (`POS-BOOK-EQD-2~SEC-WARRANT-USD-01`), vectors `PV-<trade>-<scenario set>`, portfolios `PF-<name>`, baskets
+`POS-<book>~<security>` (`POS-BOOK-EQD-2~SEC-WARRANT-USD-01`), vectors `PV-<trade>-<scenario set>`, system baskets `PF-<name>`, baskets
 `BASKET:<owner>/<name>`. Trade ids are the booking system's: numbers (ENDUR), `MX-` (MUREX), `CLY-` (CALYPSO).
 
 #### From scenario PV to the P&L vector
@@ -632,7 +632,7 @@ booked the trade. See [Entities and ownership](data.md#2-entities-and-ownership)
 | <a id="term-diversification"></a>**Diversification** | The sum of the parts' standalone VaRs minus the whole's VaR: what holding them together saves, because they do not lose on the same days. | `VAR BANK <GO>` |
 | <a id="term-scope"></a>**Scope** | Any set of trades written as text: BANK, LE:LE-NY, DESK:RATES, CPTY:CP-ALDERSHOT, a portfolio, a rule, joined with + (union), - (difference) and & (intersection). VaR and exposure use the same grammar. | `VAR SCOPE BANK - DESK:CREDIT <GO>` |
 | <a id="term-position"></a>**Position** | One security held in one book (or one OTC trade): the trades that build or reduce it, netted. Drishti derives positions from trades; nobody delivers them. | `POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01 <GO>` |
-| <a id="term-portfolio"></a>**Portfolio** | A named, stored set of positions: a hierarchy node, a rule (every short EUR position) or a basket of chosen positions, with its own VaR limit. | `PORT PF-USD-RATES <GO>` |
+| <a id="term-system-basket"></a>**System basket** | One of the bank's own baskets, kept in Drishti (never a data feed): a hierarchy node, a rule (every short EUR position) or a basket of chosen positions and trades, the same for everyone, changed only with the permission var:system-baskets; its VaR limit is a var-limit row. | `PORT PF-USD-RATES <GO>` |
 | <a id="term-basket"></a>**Basket** | A scope you saved under a name in the VaR explorer (`BASKET:<owner>/<name>`), so you can open it again or compare it over time. | `drishti.py var baskets` |
 | <a id="term-hierarchy"></a>**Hierarchy** | A tree VaR and exposure roll up, built from the trades' promoted columns as configured (any number): MGMT (DIVISION > DESK > TT_BOOK), LEGAL (LEGAL_ENTITY > DESK > TT_BOOK), LL (LIMIT_LETTER > DESK). A row with an empty level value sits under a (Blank) node. A node's VaR limit is its var-limit row. | `VAR NODE:LEGAL~LE-NY <GO>` · `drishti.py var tree --hierarchy LEGAL` |
 | <a id="term-var-limit"></a>**VaR limit** | The most VaR a node or portfolio may take. Limit use is VaR divided by the limit; above 100% is a breach. | `drishti.py var tree` |

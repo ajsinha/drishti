@@ -376,7 +376,7 @@ they are served by ordinary packs (records, workflows, write-back).
 - **Counterparty terms:** agreements and CSAs.
 - **GLEIF:** entities, relationships and mappings.
 - **Market data:** curves, surfaces, cubes, fixings, bonds, equities, indices, correlation inputs.
-- **Engine inputs:** P&L vectors (PNLV), scenario sets (SSET), stress scenario definitions (SCN), portfolio definitions (PORT), VaR limits (VLIM; the hierarchies are built from the trades' promoted columns), trades (TRD).
+- **Engine inputs:** P&L vectors (PNLV), scenario sets (SSET), stress scenario definitions (SCN), VaR limits (VLIM, also of the system baskets: the system baskets themselves, PORT, are kept in Drishti, not data; the hierarchies are built from the trades' promoted columns), trades (TRD).
 - **Public data:** SEC filings and facts, IMF macro and forecasts, regional figures, elections, news.
 
 ### 2.12.0: AI and generated UI (parked until 2.11.0 is done)

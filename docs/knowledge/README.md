@@ -182,7 +182,6 @@ link beside the help **?** opens the page that explains it: the VaR explorer, `V
 | [Pack](data.md#term-pack) | A folder that teaches Drishti one domain: its kinds, commands, links, screens, connectors and contracts (trading, counterparty-risk, market-risk ...). | [Data](data.md) |
 | [Peak PFE](risk.md#term-peak-pfe) | The largest PFE over the future dates, and when it happens: the single number most credit limits use. | [Risk](risk.md) |
 | [PFE](risk.md#term-pfe) (potential future exposure) | The bad case: the exposure at a future date that only 5% (or 1%) of paths exceed. Credit limits are set on it. It does not add up. | [Risk](risk.md) |
-| [Portfolio](risk.md#term-portfolio) | A named, stored set of positions: a hierarchy node, a rule (every short EUR position) or a basket of chosen positions, with its own VaR limit. | [Risk](risk.md) |
 | [Position](risk.md#term-position) | One security held in one book (or one OTC trade): the trades that build or reduce it, netted. Drishti derives positions from trades; nobody delivers them. | [Risk](risk.md) |
 | [Product type](risk.md#term-product-type) | What the trade is: a product type as the system names it (ComSwap, IRS, FXFwd) in a product group (Rates, FX, Credit, Equity, Commodity). | [Risk](risk.md) |
 | [Provenance](data.md#term-provenance) | What an answer was made from: the data version, the batch, the run, the rules. Every computed answer names its inputs. | [Data](data.md) |
@@ -204,6 +203,7 @@ link beside the help **?** opens the page that explains it: the VaR explorer, `V
 | [Standalone VaR](risk.md#term-standalone-var) | The VaR of a part (a desk, a book, a position) measured alone, with its own worst days. Standalone VaRs do not add up to the whole. | [Risk](risk.md) |
 | [Stress test](risk.md#term-stress-test) | The P&L of a desk under a named shock, historical (COVID-19 March 2020) or hypothetical, against a stress limit. Stored results from the upstream risk engine. | [Risk](risk.md) |
 | [Swaption cube](data.md#term-swaption-cube) | Interest-rate option volatilities by expiry, swap tenor and strike; cap and floor volatilities are a surface beside it. | [Data](data.md) |
+| [System basket](risk.md#term-system-basket) | One of the bank's own baskets, kept in Drishti (never a data feed): a hierarchy node, a rule (every short EUR position) or a basket of chosen positions and trades, the same for everyone, changed only with the permission var:system-baskets; its VaR limit is a var-limit row. | [Risk](risk.md) |
 | [Threshold](risk.md#term-threshold) | The exposure one side may run before the other may call collateral. Exposure up to the threshold stays uncollateralised. | [Risk](risk.md) |
 | [Ticker](world.md#term-ticker) | The short code a security trades under (AAPL, QQQ, VFIAX). One company or fund can have several, one per share class; Drishti keys each by one of them. | [World](world.md) |
 | [Trade](risk.md#term-trade) | One deal as the booking system holds it: who, what, how much, when, in which book and legal entity, with its legs and cash-flow events. | [Risk](risk.md) |

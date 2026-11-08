@@ -338,7 +338,7 @@ three netting sets of CP-SUMMIT and CP-NORTHPLAINS have no paths; with `lake dem
 ## 4. Scopes
 
 A scope is text: one word or several joined with `+` (union), `-` (difference) and `&` (intersection), the grammar of VaR's scopes
-([VAR_GUIDE.md section 5](VAR_GUIDE.md#5-scopes-portfolios-and-baskets)) with the counterparty words added.
+([VAR_GUIDE.md section 5](VAR_GUIDE.md#5-scopes-system-baskets-and-baskets)) with the counterparty words added.
 
 | Word | Means | Example on the test data |
 |---|---|---|

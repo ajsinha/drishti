@@ -278,7 +278,7 @@ Three hot dates of a 1 M-trade bank hold about 330 MB. No memory tiering is need
 
 ## 8. Scopes
 
-Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets), including the planned `CPTY:`, `GROUP:`, `NSET:`, `LE:` (the trade's booking
+Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets), including the planned `CPTY:`, `GROUP:`, `NSET:`, `LE:` (the trade's booking
 `LEGAL_ENTITY`, product owner 2026-10-25), and the words [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md#8-scopes) adds (`INDEX:`,
 `TRDR:`). **Everything is additive**, so every scope is answered exactly from node aggregates and runs. `WHERE:` rules see the
 position columns (VaR's) and, for TVAL, the trade columns of §7.1 (`MTM`, `NOTIONAL`, `MATURITY_BUCKET`, …) through `TWHERE:` (open

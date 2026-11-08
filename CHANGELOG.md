@@ -29,8 +29,33 @@
   refused saying what replaces it. With no hierarchy configured the engines build no tree. A connector file written before still naming
   the kind is kept as it is, the kind listed as obsolete. The demo lake needs a rebuild (it holds a `risk-hierarchy` table no connector reads).
   [VAR_GUIDE.md section 15.14](docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns).
+- **The `portfolio` kind is removed: the system baskets are managed in Drishti.** The bank's own baskets (`PORT:<id>`, the *System
+  baskets* list) no longer come from a data feed: they are kept in the basket store beside people's baskets, under the system scope
+  (`var/system-baskets/<ID>.json` in the content store; the one Drishti database later, with people's baskets), created, edited and
+  retired in the basket sheet by the holders of the new permission `var:system-baskets`, and imported or exported as YAML
+  (`drishti.py var baskets export [--scope system]`, `drishti.py var baskets import FILE [--apply]`). The demo's 28 (the same ids, names,
+  owners and definitions) are the market-risk pack's seed (`seeds/system-baskets.yaml`), imported once into an empty system scope at the
+  first start (`drishti.var.system-baskets.seed`, following `DRISHTI_DEMO_ENABLED`); their VaR, ES and limit use on the demo date, and
+  `PORT PF-RATES-DESK`'s page, are unchanged (golden test). Gone: the contract, the test data (`data/testdata/market-risk/portfolio/`),
+  the sample, the lake tables and connector kinds, the route and `drishti.var.kinds.portfolio`; a data-load file of the kind is refused
+  saying what replaces it. `PORT <id> <GO>`, `PORT <GO>`, `PORT:<id>` and `VAR PORT <id>` work as before, served from the store (the kind
+  `system-basket`, the `var-system-baskets` connector; an old `/v/portfolio/<id>` link opens it); an unknown id is `404 DRS-5221`. Limits
+  stay `var-limit` rows (`HIERARCHY` `PORTFOLIO`). People's baskets (`BASKET:<owner>/<name>`) are unchanged. A site that loaded
+  `portfolio` rows exports them as the import file once and imports it.
+  [VAR_GUIDE.md section 5.7](docs/guides/VAR_GUIDE.md#57-system-baskets).
 
 ### Features
+
+- **System baskets in the basket sheet:** a holder of `var:system-baskets` sees *System basket* under *Construct your basket* (a
+  drishti-inputs form: id, name, description, owner, type with its node or rule, rolls up to, valid from and to): **Save system basket**
+  (a basket from the sheet's positions and trades, a hierarchy from its node, a rule from its condition; the next version when it exists),
+  **Retire**; *Edit a copy* on a system basket fills it. Checked on save (`422 DRS-5220`: an unknown node, a rule that does not read, a
+  position the date does not hold, an id that exists); every change audited (`var-system-basket-create`, `-edit`, `-retire`, `-import`)
+  and its owner told in their inbox. The server has no reusable four-eyes flow for content-store records, so audit and the owner's
+  notice are the control. API: `/api/v1/risk/var/system-baskets` (list, one, save, retire, export, import).
+- **Module permissions on roles:** a role carries `permissions` (today `var:system-baskets`): in configuration and packs
+  (`permissions: [var:system-baskets]`), in Admin → Roles (*Permissions*) and the role API; kept as a power row (no schema change);
+  every administrator holds them ([ACCESS_MODEL.md section 8](docs/architecture/ACCESS_MODEL.md#8-as-built-the-backend-phase-1-of-the-split)).
 
 - **(Blank) nodes:** a row whose level column is empty, or whose source does not promote it, sits under a **(Blank)** node at that level,
   under its real parent, the deeper levels beneath it (Power BI's convention): never refused, never dropped, the totals complete. The
