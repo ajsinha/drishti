@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import tempfile
 import unittest
 import urllib.parse
@@ -89,6 +90,16 @@ class FakeApi:
                     "items": [{"label": "new swap", "standaloneVar": 3, "incrementalVar": 2, "componentVar": 2}]}
         return {"ok": True}
 
+    def request(self, method, path, body=None, data=None, ctype=None, extra=None):
+        FakeApi.calls.append((method, path, data))
+        if path.endswith("/system-baskets/export"):
+            return 200, b"system-baskets:\n  - id: PF-A\n"
+        return 200, json.dumps({"applied": "apply=true" in path, "add": 1, "change": 1, "same": 0, "invalid": 1, "keptNotInFile": ["PF-OLD"],
+                                "checkedOn": "2026-09-30", "baskets": [
+                                    {"id": "PF-NEW", "action": "add"},
+                                    {"id": "PF-A", "action": "change", "changes": {"name": {"from": "A", "to": "Aa"}}},
+                                    {"id": "PF-BAD", "action": "invalid", "reason": "PF-BAD: the node MGMT~X is not a node"}]}).encode()
+
 
 def parser():
     srv = argparse.ArgumentParser(add_help=False)
@@ -147,6 +158,37 @@ class VarCli(unittest.TestCase):
         self.assertEqual(FakeApi.calls[-1][1], "/api/v1/risk/var/admin/baskets")
         run("baskets", "--all", "--owner", "asha")
         self.assertEqual(FakeApi.calls[-1][1], "/api/v1/risk/var/admin/baskets?owner=asha")
+
+    def test_system_baskets_export_and_import_with_a_diff_first(self):
+        """VAR_GUIDE.md section 5.7: export writes the server's YAML as it is; import sends the file, shows the diff and writes only with
+        --apply; an invalid entry fails the command."""
+        import contextlib
+        import io
+        import tempfile
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(run("baskets", "export", "--scope", "system"), 0)
+        self.assertEqual(FakeApi.calls[-1][:2], ("GET", "/api/v1/risk/var/system-baskets/export"))
+        self.assertIn("id: PF-A", out.getvalue())
+        with tempfile.TemporaryDirectory() as d:
+            f = os.path.join(d, "baskets.yaml")
+            with open(f, "w", encoding="utf-8") as h:
+                h.write("system-baskets: []\n")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(run("baskets", "import", f), 1)
+            self.assertEqual(self.query()[0:3], ("POST", "/api/v1/risk/var/system-baskets/import", {"apply": "false"}))
+            self.assertEqual(FakeApi.calls[-1][2], b"system-baskets: []\n")
+            text = out.getvalue()
+            self.assertIn("add     PF-NEW", text)
+            self.assertIn('name: "A" -> "Aa"', text)
+            self.assertIn("the node MGMT~X is not a node", text)
+            self.assertIn("nothing written: --apply writes the changes", text)
+            with contextlib.redirect_stdout(io.StringIO()):
+                run("baskets", "import", f, "--apply", "--date", "2026-09-30")
+            self.assertEqual(self.query()[2], {"apply": "true", "asOf": "2026-09-30"})
+        with self.assertRaises(Err):
+            run("baskets", "import")
 
     def test_shards_lists_the_map_and_drains(self):
         run("shards", "--date", "2026-09-30", "--json")

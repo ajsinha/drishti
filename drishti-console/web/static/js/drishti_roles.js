@@ -107,6 +107,7 @@
   var dmsg = root.querySelector('[data-dlg-msg]'), editing = null;
   var F = window.Drishti.elements.inputs.formOf(root.querySelector('[data-role-fields]'));   // the server's schema (core/admin_forms.py)
   var POWERS = ['raw', 'author', 'approve', 'admin', 'calc', 'edit', 'layout'];
+  var PERMISSIONS = Object.keys((F.schema.properties.permissions || {}).properties || {});   // the module permissions (core/admin_forms.py)
 
   function post(url, body) {
     return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
@@ -123,7 +124,8 @@
     var powers = {};
     POWERS.forEach(function (k) { powers[k] = role ? (k === 'layout' ? role.layout !== false : !!role[k]) : k === 'layout'; });   // layouts: on unless the role says otherwise
     F.setValue({ name: role ? role.name : '', description: role ? role.description || '' : '', all: !!role && role.kinds.indexOf('*') >= 0,
-      kinds: role ? role.kinds.filter(function (k) { return k !== '*'; }).join('\n') : '', powers: powers });
+      kinds: role ? role.kinds.filter(function (k) { return k !== '*'; }).join('\n') : '', powers: powers,
+      permissions: PERMISSIONS.reduce(function (m, k) { m[k] = !!role && (role.permissions || []).indexOf(k) >= 0; return m; }, {}) });
     kindsVisible();
     dlg.showModal();
   }
@@ -144,6 +146,7 @@
     var body = { description: String(F.getField('description') || '').trim(),
       kinds: F.getField('all') ? ['*'] : String(F.getField('kinds') || '').split(/[\s,]+/).filter(Boolean) };
     POWERS.forEach(function (k) { body[k] = F.getField('powers.' + k) === true; });     // an unticked power is false, never left out
+    body.permissions = PERMISSIONS.filter(function (k) { return (F.getField('permissions') || {})[k] === true; });   // every one said: unticked is gone
     post('/admin/api/roles/' + encodeURIComponent(String(F.getField('name') || '').trim()), body).then(function (res) {
       if (res.ok) { dlg.close(); say(msg, (editing ? 'Saved ' : 'Created ') + res.body.name + '.'); setTimeout(function () { location.reload(); }, 400); }
       else { say(dmsg, Drishti.drsMessage(res.body), true); }

@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-RISK = ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "portfolio")
+RISK = ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set")   # the system baskets are no data: seeded (DRISHTI_VAR_SYSTEM_BASKETS_SEED)
 
 
 #: the trades every VaR browser file's lake holds, so one lake is built per run and shared by all of them
@@ -87,7 +87,7 @@ def var_server(tmp_path_factory, lake: Path, **env: str):
 
     hot = tmp_path_factory.mktemp("var-hot")
     official = tmp_path_factory.mktemp("var-official")
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
+    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
                                         "DRISHTI_VAR_HOT_DIR": str(hot), "DRISHTI_VAR_OFFICIAL_ROOT": str(official), **env}, heap=VAR_HEAP):
         _engine_ready(str(st))
         yield st

@@ -34,7 +34,7 @@ from test_live_tabs_browser import _free_port  # noqa: E402
 from test_workbench_browser import wait  # noqa: E402
 import engine_fakes  # noqa: E402
 
-COLS = [{"key": k, "title": t} for k, t in (("TRD", "Trade"), ("POS", "Position"), ("PORT", "Portfolio"), ("BOOK", "Book"),
+COLS = [{"key": k, "title": t} for k, t in (("TRD", "Trade"), ("POS", "Position"), ("PORT", "System basket"), ("BOOK", "Book"),
                                             ("DESK", "Desk"), ("LL", "Limit letter"), ("CPTY", "Counterparty"))]
 
 
@@ -44,6 +44,7 @@ class SheetBackend(FakeBackend):
     def __init__(self):
         super().__init__()
         self.kept, self.checked, self.saves, self.deleted = {}, [], [], []
+        self.system, self.retired = [], []        # the system baskets' saves and retires (VAR_GUIDE.md section 5.7)
 
     def answer(self, sheet):
         cells, found, nf = [], 0, 0
@@ -85,7 +86,11 @@ class SheetBackend(FakeBackend):
                         "basket": {k: b[k] for k in ("id", "name", "owner", "version", "sharedWith")} | {"editable": True, "own": True, "fromSheet": True}}
             if scope == "PORT:PF-USD-RATES":
                 return {"columns": COLS, "sheet": {"wholeBank": False, "op": ["+", "+"], "POS": ["POS-A", "POS-B"]}, "unplaced": [],
-                        "portfolio": {"id": "PF-USD-RATES", "name": "USD rates", "note": "a portfolio is the bank's (its feed): never edited, amended or deleted in Drishti; this is a copy you save as your own basket"}}
+                        "portfolio": {"id": "PF-USD-RATES", "name": "USD rates", "note": "a system basket is the bank's (VAR_GUIDE.md section 5.7): this is a copy you save as your own basket",
+                                      "mayManage": True, "systemBasket": {"id": "PF-USD-RATES", "name": "USD rates", "owner": "group-risk",
+                                                                         "type": "basket", "members": [{"position": "POS-A"}, {"position": "POS-B"}],
+                                                                         "rollsUpTo": {"kind": "division", "id": "DIV-MARKETS"}, "validFrom": "2026-01-02",
+                                                                         "validTo": None, "version": 3}}}
             return {"columns": COLS, "sheet": {"wholeBank": False, "op": ["+"], "DESK": ["DESK-X"]}, "unplaced": []}
         if path == "/baskets" and method == "POST":
             self.saves.append(body)
@@ -104,6 +109,15 @@ class SheetBackend(FakeBackend):
             self.deleted.append(bid)
             self.kept.pop(bid, None)
             return None
+        if path == "/system-baskets/fields":
+            return {"mayManage": True, "types": ["hierarchy", "rule", "basket"], "permission": "var:system-baskets"}
+        if path == "/system-baskets" and method == "POST":
+            self.system.append(body)
+            version = (body.get("version") or 0) + 1
+            return {**{k: v for k, v in body.items() if k != "sheet"}, "version": version, "scope": "POS:" + ",".join(body.get("sheet", {}).get("POS", []))}
+        if path.startswith("/system-baskets/") and path.endswith("/retire") and method == "POST":
+            self.retired.append((path, body))
+            return {"id": path.split("/")[2], "validTo": body.get("validTo") or "2026-09-29", "version": (body.get("version") or 0) + 1}
         if path == "/tree":
             return {"nodes": [], "portfolios": [{"name": "USD rates", "type": "BASKET", "scope": "PORT:PF-USD-RATES"}], "businessDate": "2026-09-30"}
         if path == "/hints":
@@ -177,6 +191,49 @@ def answered(pg):
 
 def cell(pg, key, row):
     return pg.locator(f'[data-vb-cell="{key}:{row}"]')
+
+
+def test_a_holder_of_the_permission_saves_edits_and_retires_a_system_basket_under_the_sheet(served, browser):
+    """VAR_GUIDE.md section 5.7: the server says the viewer holds var:system-baskets, so System basket shows under the sheet (a
+    drishti-inputs Form); Save system basket sends its fields and, for a basket, the sheet's positions and trades; Edit a copy of a system
+    basket fills the form with it, and Save sends the version opened; Retire asks first, then says until when."""
+    url, be = served
+    ctx = browser.new_context(viewport={"width": 1500, "height": 1100})
+    pg = ctx.new_page()
+    pg.on("dialog", lambda d: d.accept())
+    try:
+        pg.goto(url + "/var?scope=BANK")
+        pg.wait_for_selector("[data-vx-basket-open]")
+        pg.click("[data-vx-basket-open]")
+        pg.wait_for_selector("[data-vb-sys]:not([hidden])")
+        assert "var:system-baskets" in pg.inner_text("[data-vb-sys]")
+        cell(pg, "POS", 0).click()
+        paste(pg, "POS-A\nPOS-B\n")
+        answered(pg)
+        pg.fill("[data-vb-sys-id]", "PF-NEW")
+        pg.fill("[data-vb-sys-name]", "New basket")
+        pg.fill("[data-vb-sys-description]", "Two positions")
+        pg.click("[data-vb-sys-save]")
+        wait(pg, "document.querySelector('[data-vb-sys-msg]').textContent.indexOf('Saved the system basket PF-NEW') >= 0", 15)
+        sent = be.system[-1]
+        assert sent["id"] == "PF-NEW" and sent["type"] == "basket" and "version" not in sent
+        assert sent["sheet"]["POS"][:2] == ["POS-A", "POS-B"]                    # a basket's members: the sheet's positions and trades
+        shot(pg, "system-basket-form")
+        # Edit a copy of a system basket: the form holds it, and Save sends the version opened
+        pg.click('[data-vx-pick="system"] [data-vx-pick-btn]')
+        pg.click('[data-vx-edit="PORT:PF-USD-RATES"]')
+        wait(pg, "window.Drishti.VarBasket.state.copyOf === 'PF-USD-RATES'", 15)
+        wait(pg, "document.querySelector('[data-vb-sys-id]').value === 'PF-USD-RATES'", 15)
+        assert "Editing the system basket PF-USD-RATES (version 3)" in pg.inner_text("[data-vb-sys-msg]")
+        pg.click("[data-vb-sys-save]")
+        wait(pg, "document.querySelector('[data-vb-sys-msg]').textContent.indexOf('version 4') >= 0", 15)
+        assert be.system[-1]["version"] == 3 and be.system[-1]["owner"] == "group-risk"
+        # Retire: asked first, then said
+        pg.click("[data-vb-sys-retire]")
+        wait(pg, "document.querySelector('[data-vb-sys-msg]').textContent.indexOf('Retired the system basket PF-USD-RATES') >= 0", 15)
+        assert be.retired[-1][0] == "/system-baskets/PF-USD-RATES/retire" and be.retired[-1][1]["version"] == 4
+    finally:
+        ctx.close()
 
 
 def test_paste_check_save_reopen_edit_and_delete(served, browser):
@@ -279,8 +336,8 @@ def test_paste_check_save_reopen_edit_and_delete(served, browser):
         wait(pg, "document.querySelector('[data-vb-msg]').textContent.indexOf('version 2') >= 0", 15)
         assert be.saves[-1]["version"] == 1 and be.saves[-1]["name"] == "mix"
         assert be.kept["ash/mix"]["version"] == 2 and be.kept["ash/mix"]["sheet"]["TRD"][1] == ""
-        # a portfolio is the bank's: Edit a copy opens its parts as your own unsaved basket
-        pg.click('[data-vx-pick="system"] [data-vx-pick-btn]')                 # System baskets: the bank's portfolios
+        # a system basket is the bank's: Edit a copy opens its parts as your own unsaved basket
+        pg.click('[data-vx-pick="system"] [data-vx-pick-btn]')                 # System baskets: the bank's, kept in Drishti
         pg.click('[data-vx-edit="PORT:PF-USD-RATES"]')
         wait(pg, "window.Drishti.VarBasket.state.copyOf === 'PF-USD-RATES'", 15)
         assert cell(pg, "POS", 1).inner_text() == "POS-B"
