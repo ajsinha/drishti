@@ -17,6 +17,7 @@ complete example names exactly the keys the inbox and the command-line loaders a
 same list), with values those parsers take; the Python and Java push programs shown in the guide are the checked-in, tested files."""
 import importlib.util
 import re
+import sys
 
 import pytest
 import yaml
@@ -34,6 +35,7 @@ JAVA_KEYS = ROOT / "drishti-dataload" / "src" / "main" / "java" / "com" / "ash" 
 def _feedroute():
     spec = importlib.util.spec_from_file_location("drishti_feedroute", ROOT / "tools" / "lake" / "feedroute.py")
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod                     # its dataclasses look their module up while it loads
     spec.loader.exec_module(mod)
     return mod
 
