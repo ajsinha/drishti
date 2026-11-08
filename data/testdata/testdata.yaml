@@ -20159,20 +20159,6 @@ datasets:
   files:
   - fx-scenario.tar
   bytes: 61440
-- folder: market-risk/portfolio
-  pack: market-risk
-  kind: portfolio
-  connector: risk-store
-  key: PORTFOLIO_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-28'
-  last-date: '2026-09-30'
-  documents: 84
-  files:
-  - portfolio.2026-09-28.jsonl.gz
-  - portfolio.2026-09-29.jsonl.gz
-  - portfolio.2026-09-30.jsonl.gz
-  bytes: 4934
 - folder: market-risk/var-limit
   pack: market-risk
   kind: var-limit

@@ -32,8 +32,8 @@
 #   review       kind -> questions copied into the draft's review list
 
 classes:
-  input: [pnl-vector, scenario-pv, fx-scenario, scenario-set, portfolio, pnl-history, path-book, path-strip, simulation-run, exposure-path]
-  drishti-owned: [position]
+  input: [pnl-vector, scenario-pv, fx-scenario, scenario-set, pnl-history, path-book, path-strip, simulation-run, exposure-path]
+  drishti-owned: [position, system-basket]   # system-basket: the system baskets of the basket store (VAR_GUIDE.md section 5.7)
   computed: [path-sum, path-sum-java, var-result, exposure-result, var-official, exposure-official-cpty,   # var-official, exposure-official-cpty: the published official VaR and exposure (read only)
              lei-group, lei-country, sic-sector, country-group, correlation-result, equity-beta,   # the groupings and analytics (2.9.2)
              nset-mtm, cpty-mtm, stress-scenario-pnl]   # the derived quick wins of DATA_ARCHITECTURE.md section 12 (2.9.7)
@@ -58,6 +58,11 @@ retired:
     contract: ../guides/EXPOSURE_GUIDE.md
     measure: the exposure engine (exposure-result)
     note: "EXP EXP-<cp>-<le> and /v/exposure-profile/EXP-<cp>-<le> open EXP NSET:NS-<cp>-<le> (the computed kind exposure-result)"
+  portfolio:
+    release: 2.9.11.g
+    contract: ../guides/VAR_GUIDE.md
+    measure: the system baskets of the basket store (VAR_GUIDE.md section 5.7), not data
+    note: "PORT <id>, PORT:<id> and /v/portfolio/<id> open the same system basket, served as the kind system-basket from the basket store"
 
 # The groupings and analytics (2.9.2, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): the stored pages retired, the same commands and ids
 # computed from the fundamental data when asked.
@@ -88,10 +93,6 @@ removed:
     release: 2.9.7
     contract: ../architecture/DATA_ARCHITECTURE.md section 12
     figures: [UTILISATION]
-  portfolio:                # decision 8: a portfolio's limit is the var-limit row of hierarchy PORTFOLIO
-    release: 2.9.7
-    contract: ../architecture/DATA_ARCHITECTURE.md section 12
-    figures: [LIMIT_VAR]
   us-company:
     release: 2.9.2
     contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
@@ -125,7 +126,7 @@ removed:
     release: 2.9.2
     contract: ../guides/VAR_GUIDE.md
     figures: ["BOOKS[].VAR"]
-  portfolio:
+  system-basket:            # the figures the portfolio record stored before 2.8.0: the engine's, as the page opens (VAR_ENGINE)
     release: 2.8.0
     contract: ../guides/VAR_GUIDE.md
     figures: [VAR_99, ES_975, LIMIT_USE, POSITION_COUNT, TRADE_COUNT, LONG_COUNT, SHORT_COUNT, GROSS_MV, NET_MV, POSITIONS, BY_PRODUCT,
@@ -152,8 +153,8 @@ notes:
     - "Actual calls and their events are kept (workflow); the expected call (MtM minus collateral minus threshold, then minimum transfer and rounding) is computed and shown beside the call. No stored field is the expected call today."
   position:
     - "Positions are derived by Drishti when a date loads (docs/guides/VAR_GUIDE.md section 15.6), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored."
-  portfolio:
-    - "The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored."
+  system-basket:
+    - "The system baskets are kept in Drishti's basket store (VAR_GUIDE.md section 5.7), never read from data: a holder of the permission var:system-baskets creates, edits and retires them in Construct your basket or imports them as YAML; the demo's are the market-risk pack's seed (seeds/system-baskets.yaml). Their VaR limits are var-limit rows (HIERARCHY PORTFOLIO), their figures the engine's as the page opens (VAR_ENGINE), never stored."
   desk:
     - "The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT left the record in 2.8.0."
   legal-entity:

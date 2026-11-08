@@ -147,8 +147,8 @@ def overview(name: str, docs: dict) -> str:
                   "The pack's VaR is computed, never stored: the server adds up one P&L vector per live trade (`pnl-vector`, 509 historical "
                   "scenario days) for any set of trades you name, from the bank down to a trade, with ES, component, incremental and marginal "
                   "VaR, history and backtests. `VAR BANK <GO>`, `VAR DESK DESK-RATES <GO>` and `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` "
-                  "open the explorer (F1 there opens the VaR guide); positions (`POS`) are derived by the pack's `positions:` rules; portfolios "
-                  "(`PORT`) are definitions whose figures are computed as their page opens; `VRES <scope> <GO>` reads a scope's VaR as an "
+                  "open the explorer (F1 there opens the VaR guide); positions (`POS`) are derived by the pack's `positions:` rules; system "
+                  "baskets (`PORT`) are definitions kept in Drishti's basket store (not data) whose figures are computed as their page opens; `VRES <scope> <GO>` reads a scope's VaR as an "
                   "ordinary kind (`var-result`); the explorer's basket tray asks the same engine for a pre-deal what-if. Each loaded date lives in a "
                   "memory-mapped hot file under the data folder (`drishti.var.tier`). From the command line: `drishti.py var show 'DESK:RATES'`.", "",
                   "The VaR guide (`docs/guides/VAR_GUIDE.md`) explains every number with worked examples, the data flow, the scope grammar, the "

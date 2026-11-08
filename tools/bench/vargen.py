@@ -18,8 +18,9 @@ pack's contract rows of N positions (one OTC trade each, so N positions) over D 
     python3 tools/bench/vargen.py --out <scratch>/vargen --positions 200000 --portfolios 1500 --dates 2026-09-29,2026-09-30
 
 Per date, under <out>/<kind>/: ``pnl-vector`` (509 USD P&Ls a trade from a 40-factor model, split into --parts gzip files),
-``scenario-set`` (HS-509), ``portfolio`` (--portfolios: a HIERARCHY portfolio per book and desk, RULE portfolios, and BASKET portfolios, --big-baskets of them with
---basket-size positions) and ``var-limit`` (the bank, divisions and desks). Every vector row carries DIVISION, LEGAL_ENTITY, DESK,
+``scenario-set`` (HS-509) and ``var-limit`` (the bank, divisions and desks); and once, <out>/system-baskets.yaml (--portfolios: a hierarchy
+system basket per book and desk, rule baskets, and baskets of positions, --big-baskets of them with --basket-size positions): the system
+baskets are no data (VAR_GUIDE.md section 5.7), imported with ``drishti.py var baskets import <out>/system-baskets.yaml --apply``. Every vector row carries DIVISION, LEGAL_ENTITY, DESK,
 TT_BOOK and LIMIT_LETTER: the market-risk pack's hierarchies (MGMT: bank, --divisions, --desks, --books; LEGAL: bank, --les, desks, books)
 are built from them by the server. The trade ids are the same on every date (the second date's
 vectors move a little), so two open dates hold the same positions. Deterministic for a --seed. Never writes into the repository.
@@ -136,31 +137,31 @@ def vectors(a, bank: Bank, day: date, d_index: int):
         yield part, lines()
 
 
-def portfolios(a, bank: Bank, bd: str) -> list[dict]:
-    common = {"BUSINESS_DATE": bd, "VALID_FROM": "2026-01-02", "VALID_TO": None}
+def system_baskets(a, bank: Bank) -> list[dict]:
+    """The benchmark's system baskets, in the import file's form (drishti.py var baskets import, VAR_GUIDE.md section 5.7)."""
     rng = np.random.default_rng(a.seed + 7)
     out = []
 
-    def add(pid, name, typ, definition, rolls):
+    def add(pid, name, typ, rolls, **definition):
         if len(out) < a.portfolios:
-            out.append({"PORTFOLIO_ID": pid, "NAME": name, "OWNER": "bench", "TYPE": typ, "DEFINITION": definition, "ROLLS_UP_TO": rolls, **common})
+            out.append({"id": pid, "name": name, "owner": "bench", "type": typ, **definition, "rolls-up-to": rolls, "valid-from": "2026-01-02"})
 
     for i in range(a.big_baskets):                                            # the 50,000-position baskets of the VaR mix first
         members = rng.choice(a.positions, size=min(a.basket_size, a.positions), replace=False)
-        add(f"PF-BASKET-BIG-{i:02d}", f"Large basket {i}", "BASKET", {"MEMBERS": [{"POSITION_ID": bank.position_id(int(m))} for m in members]},
-            {"KIND": "bank", "ID": "BANK"})
+        add(f"PF-BASKET-BIG-{i:02d}", f"Large basket {i}", "basket", {"kind": "bank", "id": "BANK"},
+            members=[{"position": bank.position_id(int(m))} for m in members])
     for i in range(a.small_baskets):
         members = rng.choice(a.positions, size=int(rng.integers(50, 2000)), replace=False)
-        add(f"PF-BASKET-{i:03d}", f"Basket {i}", "BASKET", {"MEMBERS": [{"POSITION_ID": bank.position_id(int(m))} for m in members]},
-            {"KIND": "bank", "ID": "BANK"})
+        add(f"PF-BASKET-{i:03d}", f"Basket {i}", "basket", {"kind": "bank", "id": "BANK"},
+            members=[{"position": bank.position_id(int(m))} for m in members])
     for i in range(a.rules):
         ccy, grp = CCYS[i % len(CCYS)], PRODUCTS[i % len(PRODUCTS)][0]
-        add(f"PF-RULE-{i:03d}", f"{grp} in {ccy} ({i})", "RULE", {"RULE": f"TRADE_CURRENCY == '{ccy}' and PRODUCT_GROUP == '{grp}'"},
-            {"KIND": "bank", "ID": "BANK"})
+        add(f"PF-RULE-{i:03d}", f"{grp} in {ccy} ({i})", "rule", {"kind": "bank", "id": "BANK"},
+            rule=f"TRADE_CURRENCY == '{ccy}' and PRODUCT_GROUP == '{grp}'")
     for d in bank.desks:
-        add(f"PF-{d}", f"Desk {d}", "HIERARCHY", {"NODE": f"MGMT~{d}"}, {"KIND": "desk", "ID": d})
+        add(f"PF-{d}", f"Desk {d}", "hierarchy", {"kind": "desk", "id": d}, node=f"MGMT~{d}")
     for b in bank.books:
-        add(f"PF-{b}", f"Book {b}", "HIERARCHY", {"NODE": f"MGMT~{b}"}, {"KIND": "book", "ID": b})
+        add(f"PF-{b}", f"Book {b}", "hierarchy", {"kind": "book", "id": b}, node=f"MGMT~{b}")
     return out
 
 
@@ -182,19 +183,25 @@ def main(argv=None) -> int:
     ap.add_argument("--desks", type=int, default=100)
     ap.add_argument("--books", type=int, default=1000)
     ap.add_argument("--counterparties", type=int, default=10_000)
-    ap.add_argument("--big-baskets", type=int, default=10, help="BASKET portfolios of --basket-size positions")
+    ap.add_argument("--big-baskets", type=int, default=10, help="system baskets of --basket-size positions")
     ap.add_argument("--basket-size", type=int, default=50_000)
     ap.add_argument("--small-baskets", type=int, default=90)
     ap.add_argument("--rules", type=int, default=300)
     ap.add_argument("--parts", type=int, default=20, help="pnl-vector files a date")
     ap.add_argument("--seed", type=int, default=20261031)
-    ap.add_argument("--kinds", default="pnl-vector,scenario-set,portfolio,var-limit")
+    ap.add_argument("--kinds", default="pnl-vector,scenario-set,var-limit,system-baskets",
+                    help="what to write; system-baskets: <out>/system-baskets.yaml, to import (not data)")
     a = ap.parse_args(argv)
     out = Path(a.out).resolve()
     if (Path(__file__).resolve().parents[2] / "data") in [out, *out.parents]:
         ap.error("--out must not be inside the repository's data/")
     kinds = set(a.kinds.split(","))
     bank = Bank(a)
+    if "system-baskets" in kinds:                    # not data: the import file (drishti.py var baskets import <file> --apply)
+        out.mkdir(parents=True, exist_ok=True)
+        sb = system_baskets(a, bank)
+        (out / "system-baskets.yaml").write_text(json.dumps({"system-baskets": sb}), encoding="utf-8")   # JSON is YAML
+        print(f"system-baskets.yaml: {len(sb):,}", flush=True)
     for d_index, d in enumerate(a.dates.split(",")):
         day = date.fromisoformat(d)
         stem = f"{{kind}}.{d}"                       # the load rules' name, <table>.<YYYY-MM-DD>.jsonl.gz (DATA_LAKE_GUIDE.md section 5.2)
@@ -204,9 +211,6 @@ def main(argv=None) -> int:
                 "SCENARIO_SET_ID": "HS-509", "BUSINESS_DATE": d, "SCENARIO_DATES": ds, "SCENARIO_COUNT": N_SCEN, "WINDOW_START": ds[0],
                 "WINDOW_END": ds[-1], "HORIZON_DAYS": 1, "REVALUATION": "full", "WEIGHTS": None, "SOURCE_BATCH": f"B-{d}-01",
                 "DESCRIPTION": "Historical simulation, 509 business days, equal weights (benchmark)"})])
-        if "portfolio" in kinds:
-            n = write_lines(out / "portfolio" / f"{stem.format(kind='portfolio')}.jsonl.gz", (json.dumps(r) for r in portfolios(a, bank, d)))
-            print(f"{d}: portfolio {n:,}", flush=True)
         if "var-limit" in kinds:
             write_lines(out / "var-limit" / f"{stem.format(kind='var-limit')}.jsonl.gz", (json.dumps(r) for r in limits(bank, d)))
         if "pnl-vector" in kinds:

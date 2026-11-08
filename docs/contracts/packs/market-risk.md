@@ -27,7 +27,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [PNL](#pnl-pl-explain-pnl-explain) | `pnl-explain` | fundamental | active | 8 | 5 |
 | [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | fundamental | active | 21 | 6 |
 | [POS](#pos-position-position) | `position` | drishti-owned | active | 32 | 5 |
-| [PORT](#port-portfolio-portfolio) | `portfolio` | input | active | 9 | 4 |
+| [PORT](#port-system-basket-the-banks-baskets-kept-in-drishti-system-basket) | `system-basket` | drishti-owned | active | 11 | 0 |
 | [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 39 | 5 |
 | [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 39 | 5 |
 | [FXS](#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | `fx-scenario` | input | active | 9 | 3 |
@@ -471,84 +471,74 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 - number types decided by the field's name: NOTIONAL amount, TRADES[].PV amount: confirm amount, rate or integer.
 - no unit stated for the amounts QUANTITY, GROSS_QUANTITY, NOTIONAL, TRADES[].QUANTITY, TRADES[].PV (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
-## PORT: Portfolio (`portfolio`)
+## PORT: System basket (the bank's baskets, kept in Drishti) (`system-basket`)
 
-A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution.
+A system basket in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution.
 
 |  |  |
 |---|---|
-| Contract | [portfolio.contract.yaml](../../../config/packs/banking/market-risk/contracts/portfolio.contract.yaml) · version 1.0 |
-| Class | input |
+| Contract | [system-basket.contract.yaml](../../../config/packs/banking/market-risk/contracts/system-basket.contract.yaml) · version 1.0 |
+| Class | drishti-owned |
 | Status | active |
-| Source | Synthetic sample data (tools/packgen/banking) |
-| Grain | One row per portfolio per BUSINESS_DATE, keyed by PORTFOLIO_ID. |
+| Source | Drishti (the basket store's system scope, var/system-baskets/, docs/guides/VAR_GUIDE.md section 5.7; the demo's from the market-risk pack's seed) |
+| Grain | One system basket per business date it is valid on (VALID_FROM to VALID_TO), served from the basket store, never stored as data. |
 | Key | `PORTFOLIO_ID` |
 | Id pattern | `^PF-` |
 | Dated by | `BUSINESS_DATE` |
-| Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/portfolio/` |
-| Columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` |
-| Test data | data/testdata/market-risk/portfolio |
-| Worked example | [market-risk/portfolio](../samples/market-risk.md#portfolio) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Cadence | on change (due: at once (a save in Drishti is read at the next request on every server)) |
+| Storage | connector `var-system-baskets` (plugin `var-system-baskets`) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `PORTFOLIO_ID` | id | required |  | The record's id (the business key) | `PF-ASHA-UNWIND` (pattern `^PF-`) | `portfolio` |
-| `NAME` | text | required |  | The portfolio's display name. | `Unwind candidates (Asha)` |  |
-| `OWNER` | text | required |  | Who keeps the portfolio's definition. | `asha` |  |
+| `PORTFOLIO_ID` | id | required |  | The system basket's id, PORT:<id> in a scope: 1-64 upper-case letters, digits, dots, dashes or underscores. | `PF-ASHA-UNWIND` (pattern `^PF-`) |  |
+| `NAME` | text | required |  | The system basket's display name. | `Unwind candidates (Asha)` |  |
+| `DESCRIPTION` | text | optional |  | What the system basket is for, in its owner's words. |  |  |
+| `OWNER` | text | required |  | Who keeps the system basket's definition; told in their inbox when someone else changes it. | `asha` |  |
 | `TYPE` | text | required |  | HIERARCHY: a node of the bank's hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked. | `BASKET`, `HIERARCHY`, `RULE` |  |
-| `DEFINITION` | record | required |  | What the portfolio holds, one object whose shape follows TYPE: a BASKET lists MEMBERS (POSITION_ID or TRADE_ID each), a HIERARCHY names a NODE (a NODE_ID such as MGMT~BOOK-COMM-1), a RULE gives a RULE expression over the trades' columns (CURRENCY == 'EUR'). |  |  |
-| `ROLLS_UP_TO` | record | required |  | The hierarchy node the portfolio reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID (BANK, DIV-…, LE-…, DESK-…, BOOK-…). |  |  |
-| `BUSINESS_DATE` | date | required |  | The close of business the definition belongs to (YYYY-MM-DD). | `2026-09-30` |  |
-| `VALID_FROM` | date | required |  | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. | `2026-01-02` |  |
-| `VALID_TO` | unknown | optional |  | The last date the definition is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
+| `DEFINITION` | record | required |  | What the system basket holds, one object whose shape follows TYPE: a BASKET lists MEMBERS (POSITION_ID or TRADE_ID each), a HIERARCHY names a NODE, a RULE gives a RULE over the positions' columns. |  |  |
+| `ROLLS_UP_TO` | record | required |  | The node the system basket reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID. |  |  |
+| `BUSINESS_DATE` | date | required |  | The business date the system basket is read on (YYYY-MM-DD): the date asked, else the VaR engine's newest date. | `2026-09-30` |  |
+| `VALID_FROM` | date | required |  | The first business date the system basket applies to. | `2026-01-02` |  |
+| `VALID_TO` | date | optional |  | The last business date the system basket applies to (empty while it is open-ended; set when it is retired). |  |  |
+| `VERSION` | integer | required |  | The basket store's version of the definition: every change is the next version, audited. | `1` |  |
 
 **Nested `DEFINITION`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `MEMBERS` | record list | optional |  | For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position). |  |  |
-| `NODE` | text | optional |  | For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it). | `MGMT~DESK-RATES` |  |
-| `RULE` | text | optional |  | For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date. | `PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money market') …` |  |
+| `MEMBERS` | record list | optional |  | For a BASKET system basket: the positions and trades someone picked (a trade brings that part of its position). |  |  |
+| `NODE` | text | optional |  | For a HIERARCHY system basket: the node of the bank's hierarchy whose positions it holds (every book under it). | `MGMT~DESK-RATES` |  |
+| `RULE` | text | optional |  | For a RULE system basket: the condition a position's columns must meet to be in it, checked on each business date. | `PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money market') …` |  |
 
 **Nested `DEFINITION.MEMBERS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `POSITION_ID` | id | optional |  | A position in a BASKET: a position id as Drishti derives it (POS-<book>~<trade or security>); give it or TRADE_ID. | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
-| `TRADE_ID` | id | optional |  | A trade in a BASKET: a TRADE_ID of the trading pack's trade kind, as text; it brings its part of its position. | `CLY-3000087` | `trade` |
+| `POSITION_ID` | id | optional |  | Position: the position it refers to | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
+| `TRADE_ID` | id | optional |  | Trade: the trade it refers to | `CLY-3000087` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
 
 **Nested `ROLLS_UP_TO`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `KIND` | text | required |  | The kind of the node the portfolio reports under (bank, division, desk, legal-entity, book). | `division` |  |
-| `ID` | id | required |  | The desk or book the portfolio reports under. | `DIV-MARKETS` |  |
+| `KIND` | text | required |  | The kind of the node it reports under: bank, division, legal-entity, desk or book. | `division` |  |
+| `ID` | id | required |  | The node the system basket reports under (the bank, a division, a legal entity, a desk or a book). | `DIV-MARKETS` |  |
 
-**Links:** `PORTFOLIO_ID` → `portfolio`, `DEFINITION.MEMBERS[].POSITION_ID` → `position`, `DEFINITION.MEMBERS[].TRADE_ID` → `trade`.
+**Links:** `DEFINITION.MEMBERS[].POSITION_ID` → `position`, `DEFINITION.MEMBERS[].TRADE_ID` → `trade`.
 
 **Validation**
 
-- required: fields `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `BUSINESS_DATE`, `VALID_FROM`
 - unique: key `PORTFOLIO_ID`; per BUSINESS_DATE
-- pattern: field PORTFOLIO_ID; pattern ^PF-
-- link: field PORTFOLIO_ID; kind portfolio
 - enum: field TYPE; values `BASKET`, `HIERARCHY`, `RULE`
+- required: fields `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `BUSINESS_DATE`, `VALID_FROM`, `VERSION`
 - link: field DEFINITION.MEMBERS[].POSITION_ID; kind position
 - link: field DEFINITION.MEMBERS[].TRADE_ID; kind trade
 
 **Notes**
 
-- The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored.
-
-**To review (4)**
-
-- required inferred from 100% coverage in 31 documents (3 samples and 28 test-data documents (data/testdata/market-risk/portfolio/portfolio.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- source is the pack's first listed source (its README): confirm.
-- due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- enum values inferred from the data, not from a glossary: TYPE: confirm they are closed lists.
+- The system baskets are kept in Drishti's basket store (VAR_GUIDE.md section 5.7), never read from data: a holder of the permission var:system-baskets creates, edits and retires them in Construct your basket or imports them as YAML; the demo's are the market-risk pack's seed (seeds/system-baskets.yaml). Their VaR limits are var-limit rows (HIERARCHY PORTFOLIO), their figures the engine's as the page opens (VAR_ENGINE), never stored.
 
 ## PNLV: P&L vector (509 scenarios) (`pnl-vector`)
 
