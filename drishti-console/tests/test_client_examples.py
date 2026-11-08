@@ -143,7 +143,7 @@ def _model_queries():
     out = []
     sources = [(p.name, p.read_text(encoding="utf-8")) for p in [EXAMPLES / "excel" / "flight_to_excel.py",
                                                                     REPO / "clients" / "python" / "drishti_flight.py",
-                                                                    REPO / "docs" / "guides" / "flight" / "docs/guides/FLIGHT_REFERENCE.md"]]
+                                                                    REPO / "docs" / "guides" / "FLIGHT_REFERENCE.md"]]   # the Python client section (§7) of the one Flight reference
     sources += [(nb.name, "\n".join("".join(c["source"]) for c in json.loads(nb.read_text(encoding="utf-8"))["cells"])) for nb in NOTEBOOKS]
     for where, text in sources:
         for m in re.finditer(r'\.model\("[\w@.-]+", (\{.*?\})\)', text, re.S):
@@ -161,7 +161,7 @@ def test_every_model_query_uses_the_servers_keys():
     keys, queries = _mq_keys(), _model_queries()
     assert {"select", "where", "sort", "limit"} <= keys
     found = {w for w, _ in queries}
-    assert {"03_bi_model_query.ipynb", "flight_to_excel.py", "drishti_flight.py", "docs/guides/FLIGHT_REFERENCE.md", "FLIGHT_REFERENCE.md"} <= found, found
+    assert {"03_bi_model_query.ipynb", "flight_to_excel.py", "drishti_flight.py", "FLIGHT_REFERENCE.md"} <= found, found
     for where, q in queries:
         assert set(q) <= keys, f"{where}: unknown key(s) {sorted(set(q) - keys)} in {q}"
         assert set(q.get("select") or {}) <= {"fields", "measures"}, (where, q)
