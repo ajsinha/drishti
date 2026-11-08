@@ -68,7 +68,9 @@ public class EngineConfiguration {
         if (access != null) {                        // an engine of a module that is off: not installed, and why
             for (EngineCatalogue.Entry e : catalogue.all()) {
                 access.moduleOfEngine(e.id()).filter(m -> !access.moduleOn(m)).ifPresent(m -> r.notInstalledBecause(e.id(),
-                        "the module '" + m + "' is off: " + access.module(m).map(com.ash.drishti.registry.ModuleState::reason).orElse("") + " (Admin -> Modules)"));
+                        "the module '" + m + "' is off: " + access.module(m).map(com.ash.drishti.registry.ModuleState::reason).orElse("")
+                                + " (config/modules/" + m + ".yaml or DRISHTI_MODULES_" + m.toUpperCase(java.util.Locale.ROOT).replace('-', '_')
+                                + "_ENABLED, then a restart)"));
             }
         }
         return r;

@@ -148,7 +148,7 @@ public class CatalogController {
         }).toList();
     }
 
-    /** The pack's console settings without the example commands whose command an administrator turned off (Admin → Commands). */
+    /** The pack's console settings without the example commands whose command an administrator turned off (Admin → Functions). */
     private Object withoutInactive(Object console) {
         if (!(console instanceof Map<?, ?> c) || !(c.get("examples") instanceof List<?> examples) || packAccess.commands() == null && !edition.edition().active()) {
             return console;

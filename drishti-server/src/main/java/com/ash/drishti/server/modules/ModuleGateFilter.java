@@ -87,7 +87,9 @@ public final class ModuleGateFilter extends OncePerRequestFilter {
         String id = module.get();
         String why = registry.module(id).map(s -> s.on() ? "it was off when this server started; it loads at the next start" : s.reason())
                 .orElse("it is not installed");
-        problem(res, 404, "DRS-1025", "module off", "the module '" + id + "' is not on here: " + why + " (Admin -> Modules)", "module", id);
+        String how = " (config/modules/" + id + ".yaml or DRISHTI_MODULES_" + id.toUpperCase(java.util.Locale.ROOT).replace('-', '_')
+                + "_ENABLED, then a restart)";
+        problem(res, 404, "DRS-1025", "module off", "the module '" + id + "' is not on here: " + why + how, "module", id);
     }
 
     private static void problem(HttpServletResponse res, int status, String code, String title, String detail, String key, String value)

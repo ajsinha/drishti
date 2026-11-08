@@ -874,7 +874,7 @@ def cmd_server_packs(a, extra) -> int:
 
 
 def cmd_server_commands(a, extra) -> int:
-    """Admin -> Commands (docs/guides/ADMIN_GUIDE.md): list the commands with their state, turn some off or on with a reason, or the history."""
+    """Admin -> Functions (docs/guides/ADMIN_GUIDE.md): list the commands with their state, turn some off or on with a reason, or the history."""
     api = Api.from_args(a)
     if a.commands_cmd in ("on", "off"):
         changes = [{"scope": "pack" if a.pack else "command", "name": n if a.pack else n.upper(), "on": a.commands_cmd == "on"} for n in a.names]

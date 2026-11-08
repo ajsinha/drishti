@@ -74,6 +74,11 @@ also use in your own applications.** This release carries the work planned as 2.
 
 ## New
 
+- **A Deployment and QA guide, with a PDF** ([DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md)): install and verify the server
+  and the console on Windows, Linux and macOS step by step, with what you should see and a picture at every check, a QA checklist per
+  operating system, a cluster of three end to end and the offline rehearsal with your own trade files. Developers start from the new
+  [developer quickstart](docs/QUICKSTART_DEVELOPERS.md); the cluster guide has a PDF too.
+
 - **Domain modules and the access registry** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md),
   [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md), [OPERATIONS.md section 22](docs/guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). The
   core knows no industry: **banking**, **capital markets** and **economy** are modules, each on when installed, licensed and enabled
@@ -1295,7 +1300,7 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
   2026-10-18) that `lake demo` builds into the lake. World economy data was already offline.
 - **Ids are text everywhere:** a numeric `TRADE_ID` in a file is read as its exact text; ids may hold letters, dashes and
   underscores; nothing expects a prefix. Older lakes with numeric id columns still read.
-- **[How to QA in Windows Environment using Custom Data](docs/architecture/TEST_HARNESS.md#9-manual-qa-on-windows-offline-with-your-own-trade-files):** an offline
+- **[How to QA in Windows Environment using Custom Data](docs/DEPLOYMENT_AND_QA_GUIDE.md#11-offline-qa-with-your-own-trade-files):** an offline
   Windows demo with your own ENDUR files replacing the synthetic ENDUR trades, with screenshots; a *Load ENDUR file into
   the lake* run configuration; every Python run configuration uses the project interpreter (works on Windows).
 - **Security fix:** field masks match whatever the case or naming style (a camelCase mask masks the UPPER_SNAKE field);

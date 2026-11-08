@@ -292,11 +292,11 @@ schemas:
     applies: the module, on this server
     change: restart (a module's beans, engines, jobs and API load at start)
     keys:
-      - { key: enabled, type: boolean, default: "the manifest's (true)", meaning: "false: the module is off here (Admin -> Modules writes it); drishti.modules.<id>.enabled wins over it" }
+      - { key: enabled, type: boolean, default: "the manifest's (true)", meaning: "false: the module is off here (POST /api/v1/admin/modules writes it); drishti.modules.<id>.enabled wins over it" }
       - { key: module, type: map, default: "none", meaning: "The module named at this site: a server without the module's jar knows it and leaves it off as not installed (its packs, lakes, tables, models and reports in its domain folders are not read); with the jar, the jar's manifest wins and this is ignored" }
       - { key: module.id, type: string, default: "none", meaning: "The module's id (banking)" }
       - { key: module.domain, type: string, default: "none", meaning: "Its domain: the folder name of its packs, lakes, tables and reports (config/packs/banking/)" }
-      - { key: module.title, type: string, default: "none", meaning: "Its name on Admin -> Modules" }
+      - { key: module.title, type: string, default: "none", meaning: "Its name in GET /api/v1/admin/modules and in messages" }
   lake-file:
     area: connectors
     title: "A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)"
@@ -561,6 +561,8 @@ env:
   - { name: DRISHTI_JAR_DIR, by: tools, default: drishti-server/target, sets: "screenshot tools", meaning: "Where the screenshot tools find the server jar" }
   - { name: DRISHTI_SHOTS_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "The screenshot tools' working folder" }
   - { name: DRISHTI_SHOTS_SERVER_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The port of the server the screenshot tools start" }
+  - { name: DRISHTI_SHOTS_DRAIN, by: tools, default: ~, sets: "screenshot tools", meaning: "The Deployment and QA guide's cluster pictures: the server URL of the node drained while they are taken" }
+  - { name: DRISHTI_SHOTS_DRAIN_TOKEN, by: tools, default: ~, sets: "screenshot tools", meaning: "An administrator's token for that drain" }
   - { name: DRISHTI_SHOTS_CONSOLE_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The port of the console they start" }
   - { name: DRISHTI_SHOTS_HOST_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The port of the embedding host page they start" }
   - { name: DRISHTI_SHOTS_SERVER_JAR, by: tools, default: ~, sets: "screenshot tools", meaning: "The server jar they run" }

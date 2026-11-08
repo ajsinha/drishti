@@ -39,7 +39,7 @@ public enum ErrorCode {
     /** The connector a kind is routed to is being restarted (its file changed, a retry) and was not back within the read's wait. */
     CONNECTOR_RESTARTING("DRS-1015", 503),
     /**
-     * An administrator turned the command off (Admin → Commands): its kind is not active on this server, by command, link, API, export, BI
+     * An administrator turned the command off (Admin → Functions): its kind is not active on this server, by command, link, API, export, BI
      * or AI alike, and nothing of it is shown.
      */
     COMMAND_OFF("DRS-1016", 403),

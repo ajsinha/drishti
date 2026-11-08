@@ -109,7 +109,7 @@ url: http://192.168.1.20:18480
 ```
 
 With `DRISHTI_NET_SECRET` the same on both (`openssl rand -hex 32`), node b opens a trade only node a holds as if it were local; the
-view's provenance names the node for administrators, and Admin → Net → *Routing* explains where a request would go.
+view's provenance names the node for administrators, and Admin → Cluster → *Routing* explains where a request would go.
 
 ## Troubleshooting
 
@@ -119,10 +119,10 @@ view's provenance names the node for administrators, and Admin → Net → *Rout
 - `401 DRS-5051 cluster credential refused: bad signature`: the nodes' `DRISHTI_NET_SECRET` differ; `… signed 75 s away`: fix NTP.
 - `node.yaml was not written: 'http://127.0.0.1:…' is a loopback or wildcard address`: use the machine's real address the message names.
 - Links *pending* on one node only: the peer answers slower than `link-budget`.
-- Health of a peer source is always `UP (Drishti*net peer <node>)`; the cluster's state is in Admin → Net and Admin → Health.
+- Health of a peer source is always `UP (Drishti*net peer <node>)`; the cluster's state is in Admin → Cluster and Admin → Health.
 
 ## See also
 
-- [Drishti*net: the operator's guide](../../../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet): a cluster of three, the files, security, routing, Admin → Net.
+- [Drishti*net: the operator's guide](../../../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet): a cluster of three, the files, security, routing, Admin → Cluster.
 - [Drishti*net: the design](../../../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) and [history queries](../../../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time).
 - [Connector files](../../../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (the net files are managed the same way) and [TLS](../../../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
