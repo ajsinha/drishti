@@ -120,7 +120,7 @@ Screens (Sutras):
 |---|---|---|---|
 | Statistics Canada Web Data Service (WDS) | Statistics Canada Open Licence | no | statistics-series |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/national-statistics.md](guides/national-statistics.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/national-statistics.md](guides/national-statistics.md): *Data contracts* and *Data retrieval*.
 
 External data: Statistics Canada Web Data Service (WDS). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 

@@ -14,7 +14,7 @@
 
 """Every pack guide is complete (the product owner's request of 2026-10-26: data contract, data retrieval and details for all packs):
 each pack with contracts has a guide listed in its help entry that ends with the generated Data contracts and Data retrieval sections,
-naming every kind and every column of its contracts; every stored kind has an origin in data_retrieval.yaml (an external source or a
+naming every kind with links to its contract and its example (never its columns); every stored kind has an origin in data_retrieval.yaml (an external source or a
 generator); every external source names its data feed (or the generator it is typed into) and a licence; the packs without a guide generator are current
 (guide_data.py --check); every pack README points to its guide's two sections and to the External data page when it has external
 sources."""
@@ -50,7 +50,7 @@ def test_the_ten_packs_with_contracts_are_all_here():
 
 
 @pytest.mark.parametrize("pack", PACKS, ids=lambda d: d.name)
-def test_the_guide_has_both_sections_with_every_kind_and_column(pack):
+def test_the_guide_has_both_sections_and_links_every_kind(pack):
     guide = pack / "guides" / f"{pack.name}.md"
     assert guide.is_file(), f"{pack.name}: no guide"
     helps = yaml.safe_load((pack / "config" / "help.yaml").read_text()) or {}
@@ -60,10 +60,15 @@ def test_the_guide_has_both_sections_with_every_kind_and_column(pack):
     assert text.index("## Data contracts") < text.index("## Data retrieval")
     contracts = text[text.index("## Data contracts"):text.index("## Data retrieval")]
     retrieval = text[text.index("## Data retrieval"):]
+    examples = GD.sample_anchors()
     for c in GD.contracts(pack):
-        assert f"### {c['mnemonic']}: " in contracts and f"(`{c['kind']}`)" in contracts, f"{pack.name}: {c['kind']}"
-        for f in c.get("fields") or []:
-            assert f"| `{f['name']}` |" in contracts, f"{pack.name}/{c['kind']}: column {f['name']}"
+        assert f"| `{c['mnemonic']}` | `{c['kind']}` |" in contracts, f"{pack.name}: {c['kind']}"
+        assert f"docs/contracts/packs/{pack.name}.md#" in contracts and f"(`contracts/{c['_file']}`)" in contracts, f"{pack.name}: {c['kind']}"
+        if c["kind"] in examples:
+            page, anchor = examples[c["kind"]]
+            assert f"docs/contracts/samples/{page}.md#{anchor})" in contracts, f"{pack.name}: {c['kind']} does not link its example"
+    assert "| Column | Type |" not in contracts and "\nNested `" not in contracts, f"{pack.name}: a copied field table"
+    for c in GD.contracts(pack):
         assert f"| `{c['mnemonic']}` | `{c['kind']}` |" in retrieval, f"{pack.name}: {c['kind']} has no origin row"
     assert "EXTERNAL_DATA.md" in retrieval and "lake demo" in retrieval and "Offline" in retrieval
 

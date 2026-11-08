@@ -119,7 +119,7 @@ Screens (Sutras):
 |---|---|---|---|
 | GDELT 1.0 daily event files | GDELT terms of use: free and open for any use, commercial included, with a citation of the GDELT Project and a link to it | no | event-country |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gdelt-events.md](guides/gdelt-events.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gdelt-events.md](guides/gdelt-events.md): *Data contracts* and *Data retrieval*.
 
 External data: GDELT 1.0 daily event files. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 

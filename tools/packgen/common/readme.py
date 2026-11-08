@@ -552,7 +552,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     guide_files = [g.get("file") for g in (yaml.safe_load(F.text("config/help.yaml") or "{}") or {}).get("guides") or [] if g.get("file")]
     if F.glob("contracts/*.contract.yaml"):
         where = f"[{guide_files[0]}]({guide_files[0]})" if guide_files else "the pack's guide"
-        out += [f"Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and "
+        out += [f"Every kind's links to its data contract and its example and where its data comes from (an external source and "
                 f"the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, {where}: *Data contracts* and "
                 "*Data retrieval*.", ""]
     ext = [s for s in sources if (s.get("name") or "").strip() and not str(s.get("licence", "")).startswith("Proprietary")]

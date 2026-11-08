@@ -39,84 +39,16 @@ A book's page asks both engines for the sum of its strips' paths: the Python eng
 
 ## Data contracts
 
-Every kind of the pack has a data contract: a YAML file beside the pack (`config/packs/core/compute-demo/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every column. This section is generated from those files; the same files give the contract pages ([docs/contracts/packs/compute-demo.md](../../../../../docs/contracts/packs/compute-demo.md), with each kind's validation rules and the points still to review). Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+Every kind of the pack has a data contract: a YAML file beside the pack (`config/packs/core/compute-demo/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/compute-demo.md](../../../../../docs/contracts/packs/compute-demo.md) and each kind's example (a real record of the test data, every field explained) on [docs/contracts/samples](../../../../../docs/contracts/samples/README.md); this guide links them and copies neither. Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
 
-| Command | Kind | Class | Key | Grain | Columns |
-|---|---|---|---|---|---|
-| `PBOOK` | `path-book` | input | `BOOK_ID` | One row per path book, keyed by BOOK_ID. | 6 |
-| `PSTRIP` | `path-strip` | input | `STRIP_ID` | One row per p&l strip, keyed by STRIP_ID. | 6 |
-| `PSUM` | `path-sum` | computed | — | One answer per question (the id asked for and its parameters), computed when asked. | 2 |
-| `PSUMJ` | `path-sum-java` | computed | — | One answer per question (the id asked for and its parameters), computed when asked. | 2 |
+| Command | Kind | Class | Key | Grain | Contract | Example |
+|---|---|---|---|---|---|---|
+| `PBOOK` | `path-book` | input | `BOOK_ID` | One row per path book, keyed by BOOK_ID. | [PBOOK: Path book](../../../../../docs/contracts/packs/compute-demo.md#pbook-path-book-path-book) (`contracts/path-book.contract.yaml`) | [example](../../../../../docs/contracts/samples/compute-demo.md#path-book) |
+| `PSTRIP` | `path-strip` | input | `STRIP_ID` | One row per p&l strip, keyed by STRIP_ID. | [PSTRIP: P&L strip](../../../../../docs/contracts/packs/compute-demo.md#pstrip-pl-strip-path-strip) (`contracts/path-strip.contract.yaml`) | [example](../../../../../docs/contracts/samples/compute-demo.md#path-strip) |
+| `PSUM` | `path-sum` | computed | — | One answer per question (the id asked for and its parameters), computed when asked. | [PSUM: Book path (Python)](../../../../../docs/contracts/packs/compute-demo.md#psum-book-path-python-path-sum) (`contracts/path-sum.contract.yaml`) | — (computed when asked) |
+| `PSUMJ` | `path-sum-java` | computed | — | One answer per question (the id asked for and its parameters), computed when asked. | [PSUMJ: Book path (Java)](../../../../../docs/contracts/packs/compute-demo.md#psumj-book-path-java-path-sum-java) (`contracts/path-sum-java.contract.yaml`) | — (computed when asked) |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
-
-### PBOOK: Path book (`path-book`)
-
-A book of synthetic P&L strips, and the sum of their paths computed when the page asks: by a Python engine and by its Java twin.
-
-**Class** input · **Key** `BOOK_ID` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-book/` · **Ids** `^BOOK-(RATES|FX|CREDIT)$`.
-
-**Grain:** One row per path book, keyed by BOOK_ID. **Contract:** `contracts/path-book.contract.yaml` ([full contract page](../../../../../docs/contracts/packs/compute-demo.md#pbook-path-book-path-book)).
-
-| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
-|---|---|---|---|---|---|---|---|
-| `BOOK_ID` | id | key | required |  | `BOOK-CREDIT` (pattern `^BOOK-(RATES\|FX\|CREDIT)$`) | `path-book` | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Credit book` |  | The book's display name. |
-| `DESK` | id |  | required |  | `CREDIT` | `desk` | The desk that owns the book, a plain desk code of the demo (CREDIT, RATES …); not a core desk id. |
-| `STRIP_COUNT` | integer |  | required |  | `30` |  | How many path strips (path-strip rows) the book holds. |
-| `MEMBERS` | text list |  | required |  |  |  | The ids of the book's P&L strips (path-strip records). |
-| `PATH_ID` | id |  | required |  | `BOOK-CREDIT` |  | The id the book's computed path is asked under (PSUM or PSUMJ <PATH_ID>). |
-
-**Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`.
-
-### PSTRIP: P&L strip (`path-strip`)
-
-A synthetic P&L strip of the compute-demo pack: one path vector in a path book, summed by the demo engines.
-
-**Class** input · **Key** `STRIP_ID` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-strip/` · **Ids** `^STRIP-`.
-
-**Grain:** One row per p&l strip, keyed by STRIP_ID. **Contract:** `contracts/path-strip.contract.yaml` ([full contract page](../../../../../docs/contracts/packs/compute-demo.md#pstrip-pl-strip-path-strip)).
-
-| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
-|---|---|---|---|---|---|---|---|
-| `STRIP_ID` | id | key | required |  | `STRIP-RATES-001` (pattern `^STRIP-`) |  | The record's id (the business key) |
-| `BOOK_ID` | id |  | required |  | `BOOK-RATES` (pattern `^BOOK-(RATES\|FX\|CREDIT)$`) | `path-book` | The book the strip belongs to: a BOOK_ID of the compute-demo pack's path-book kind (BOOK-…). |
-| `DESK` | id |  | required |  | `RATES` | `desk` | The desk of the strip's book, a plain desk code of the demo (RATES, CREDIT …); not a core desk id. |
-| `INSTRUMENT` | text |  | required |  | `SWAPTION` |  | The instrument type the strip stands for (synthetic). |
-| `DAYS` | integer |  | required |  | `250` |  | The number of scenario days in PNL (250). |
-| `PNL` | vector |  | required |  |  |  | The strip's synthetic P&L, one number per scenario day, in day order. *250 values in the test data* |
-
-**Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`.
-
-### PSUM: Book path (Python) (`path-sum`)
-
-Book path (Python) (the path-sum kind of the compute-demo pack)
-
-**Class** computed · **Key** — · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `path-sum-python` (plugin `reactive`).
-
-**Grain:** One answer per question (the id asked for and its parameters), computed when asked. **Contract:** `contracts/path-sum.contract.yaml` ([full contract page](../../../../../docs/contracts/packs/compute-demo.md#psum-book-path-python-path-sum)).
-
-| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
-|---|---|---|---|---|---|---|---|
-| `SUM` | amount |  | required |  |  |  | The sum over every scenario day of the book's total path (the members' P&L added day by day). |
-| `WORST` | amount |  | required |  |  |  | The lowest day of the book's total path. |
-
-- No stored key: an answer's id is the question asked (the id in the request), the id of the path-book it reads.
-
-### PSUMJ: Book path (Java) (`path-sum-java`)
-
-Book path (Java) (the path-sum-java kind of the compute-demo pack)
-
-**Class** computed · **Key** — · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `path-sum-java` (plugin `reactive`).
-
-**Grain:** One answer per question (the id asked for and its parameters), computed when asked. **Contract:** `contracts/path-sum-java.contract.yaml` ([full contract page](../../../../../docs/contracts/packs/compute-demo.md#psumj-book-path-java-path-sum-java)).
-
-| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
-|---|---|---|---|---|---|---|---|
-| `SUM` | amount |  | required |  |  |  | The sum over every scenario day of the book's total path (the members' P&L added day by day). |
-| `WORST` | amount |  | required |  |  |  | The lowest day of the book's total path. |
-
-- No stored key: an answer's id is the question asked (the id in the request), the id of the path-book it reads.
 
 ## Data retrieval
 

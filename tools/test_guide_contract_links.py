@@ -40,7 +40,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLES = ROOT / "docs" / "contracts" / "samples"
-PAGES = ("docs/guides/*.md", "docs/tutorials/*.md")
+PAGES = ("docs/guides/*.md", "docs/tutorials/*.md", "config/packs/*/*/guides/*.md")
 FENCE = re.compile(r"^```.*?^```[ \t]*$", re.S | re.M)
 JSON_BLOCK = re.compile(r"^```jsonc?[ \t]*\n(.*?)^```", re.S | re.M)
 KEY = re.compile(r'"([A-Za-z_][A-Za-z0-9_]*)"\s*:')

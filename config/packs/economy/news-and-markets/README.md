@@ -202,7 +202,7 @@ Screens (Sutras):
 | Yahoo Finance (yfinance connector) | Unofficial endpoint; terms restrict use and forbid redistribution | yes | quote, read live when the yfinance connector is on |
 | Captured snapshot of the same quotes and headlines (data/testdata) | As above; committed for the offline demo machine by the owner's choice | yes | the offline demo lake |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/news-and-markets.md](guides/news-and-markets.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/news-and-markets.md](guides/news-and-markets.md): *Data contracts* and *Data retrieval*.
 
 External data: Google News RSS (news connector) (**internal only**); Yahoo Finance (yfinance connector) (**internal only**); Captured snapshot of the same quotes and headlines (data/testdata) (**internal only**). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 

@@ -288,7 +288,7 @@ The groups use the consolidation relationships only; fund management, sub-fund, 
 | GLEIF mapping files (BIC, ISIN, MIC, OpenCorporates to LEI) | CC0 1.0 (the BIC file with SWIFT, the ISIN file with ANNA) | no | the identifiers of the entities |
 | GLEIF golden copy, level 1 bulk file | CC0 1.0 | no | full-country pulls into the data folder only (golden-lei source; never committed, for its size) |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gleif.md](guides/gleif.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gleif.md](guides/gleif.md): *Data contracts* and *Data retrieval*.
 
 External data: GLEIF golden copy, level 2 (relationship records, reporting exceptions); GLEIF LEI API (lei-records, entity-legal-forms, countries, lei-issuers); GLEIF mapping files (BIC, ISIN, MIC, OpenCorporates to LEI); GLEIF golden copy, level 1 bulk file. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 

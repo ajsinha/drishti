@@ -762,7 +762,7 @@ holding the news in memory only is [tutorial 16, Part D](16-load-your-own-data-i
 
 - [Tutorial 14](14-public-sector-data.md): the World Bank's development indicators, central banks, national statistics and official news, refreshed daily.
 - [Tutorial 6](06-groupings-and-analytics.md): a SIC sector's totals, a company's margin and growth, an equity's beta.
-- [The funds guide](../guides/FUNDS_GUIDE.md): every column of every kind (Part II) and every source (Part III).
+- [The funds guide](../guides/FUNDS_GUIDE.md): each kind's contract and example (Part II) and every source (Part III).
 - [External data](../guides/EXTERNAL_DATA.md): every public-data pack and its refresh script.
 - [Tutorial 3](03-exposure-from-the-bank-to-a-trade.md): a counterparty group's exposure, from the bank's side.
 

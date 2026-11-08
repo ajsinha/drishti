@@ -386,7 +386,7 @@ on sec.gov.
 | Nasdaq Trader symbol directory | Public directory, attribution | no | the listing market |
 | Yahoo Finance (us-equities-prices connector, yfinance plugin) | Terms forbid redistribution; nothing committed | yes | price-history, read live only when the connector is on |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/us-equities.md](guides/us-equities.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/us-equities.md](guides/us-equities.md): *Data contracts* and *Data retrieval*.
 
 External data: SEC EDGAR (submissions, company facts XBRL); Wikidata; GLEIF LEI records; Nasdaq Trader symbol directory; Yahoo Finance (us-equities-prices connector, yfinance plugin) (**internal only**). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 

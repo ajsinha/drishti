@@ -295,7 +295,7 @@ folder, never in git; `drishti.py feed run funds` fetches them with the User-Age
 | Nasdaq Trader symbol directory | Public directory, attribution | no | which tickers are ETFs and where they list |
 | GLEIF golden copy, level 2 relationships | CC0 | no | a fund's manager, umbrella and master fund (managed by, sub-fund of, feeder to) |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/funds.md](guides/funds.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/funds.md](guides/funds.md): *Data contracts* and *Data retrieval*.
 
 External data: SEC Form N-PORT data sets; SEC Form N-CEN data sets; SEC mutual fund prospectus risk/return summary data sets; SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json); Nasdaq Trader symbol directory; GLEIF golden copy, level 2 relationships. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 

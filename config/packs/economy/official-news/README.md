@@ -192,7 +192,7 @@ Screens (Sutras):
 | Canada Gazette, Part II (RSS) | Government of Canada terms: non-commercial reproduction permitted; commercial reproduction needs permission | yes | release-source, press-release |
 | Canada Gazette, Part I (RSS) | Government of Canada terms: non-commercial reproduction permitted; commercial reproduction needs permission | yes | release-source, press-release |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/official-news.md](guides/official-news.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/official-news.md](guides/official-news.md): *Data contracts* and *Data retrieval*.
 
 External data: Federal Reserve Board press releases (RSS); European Central Bank press releases (RSS); Bank of Canada press releases (RSS); Bank of England news (RSS) (**internal only**); US Securities and Exchange Commission press releases (RSS); Office of the Superintendent of Financial Institutions news (RSS) (**internal only**); US Federal Register documents (API); Canada Gazette, Part II (RSS) (**internal only**); Canada Gazette, Part I (RSS) (**internal only**). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 

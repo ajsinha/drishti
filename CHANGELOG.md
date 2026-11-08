@@ -74,6 +74,12 @@
   the kind in backticks) links its sample section and its contract, every sample link exists, and no ```json block copies a contract
   record (three or more of one contract's fields, half the block's keys); three Sutra walk-throughs of `GET …/raw` answers are allowed,
   each with its reason, and the list only shrinks.
+- **The pack guides too** (`config/packs/*/*/guides/`, the product owner's decision): the generated *Data contracts* section
+  (`tools/packgen/common/guide_data.py`) no longer writes every column of every contract; it is one table, a row per kind with its class,
+  key and grain and links to its contract section and its example. 17 pack guides lose about 5,500 lines; their prose and *Data
+  retrieval* stay. The banking pack guides (`make_docs.py`) link each input kind they name (`link_kinds`); the pack READMEs and the
+  contract pages say so; `tools/test_guide_contract_links.py` now covers the pack guides and `tools/test_pack_guides.py` checks the links
+  (and that no column is copied). Every generator's `--check` passes (banking, funds, us-equities, gleif, world-economy, guide_data).
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
