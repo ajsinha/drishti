@@ -514,7 +514,7 @@
         let group = null;
         this.items.forEach((it, i) => {
           if (it.group && it.group !== group) { group = it.group; el.appendChild(h(this.doc, 'div', { cls: 'di-option-group', text: group, attrs: { role: 'presentation' } })); }
-          const sel = !!selected(it);
+          const sel = this.o.followActive ? i === this.active : !!selected(it);
           const opt = h(this.doc, 'div', { cls: 'di-option' + (sel ? ' di-selected' : '') + (it.disabled ? ' di-disabled' : '') + (i === this.active ? ' di-active' : ''),
             attrs: { role: 'option', id: this.id + '-' + i, 'aria-selected': String(sel), 'aria-disabled': it.disabled ? 'true' : null }, data: { i: String(i) } });
           if (this.o.multiple) { opt.appendChild(h(this.doc, 'span', { cls: 'di-tick', text: sel ? '☑' : '☐', attrs: { 'aria-hidden': 'true' } })); }
@@ -532,7 +532,10 @@
       }
       setActive(i, owner) {
         this.active = Math.max(-1, Math.min(this.items.length - 1, i));
-        Array.prototype.forEach.call(this.el.querySelectorAll('.di-option'), (o) => o.classList.toggle('di-active', +o.dataset.i === this.active));
+        Array.prototype.forEach.call(this.el.querySelectorAll('.di-option'), (o) => {
+          o.classList.toggle('di-active', +o.dataset.i === this.active);
+          if (this.o.followActive) { o.setAttribute('aria-selected', String(+o.dataset.i === this.active)); }
+        });
         const cur = this.active >= 0 ? this.doc.getElementById(this.id + '-' + this.active) : null;
         if (cur && cur.scrollIntoView) { cur.scrollIntoView({ block: 'nearest' }); }
         if (owner) { if (cur) { owner.setAttribute('aria-activedescendant', cur.id); } else { owner.removeAttribute('aria-activedescendant'); } }
@@ -568,7 +571,7 @@
         const l = it.label.toLowerCase(), d = (it.detail || '').toLowerCase();
         let score = 0;
         for (const w of words) {
-          if (l.indexOf(w) === 0) { score += 4; } else if (new RegExp('[\\s\\-_./(]' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(l)) { score += 3; } else if (l.indexOf(w) >= 0) { score += 2; } else if (d.indexOf(w) >= 0) { score += 1; } else { return; }
+          if (l === w) { score += 5; } else if (l.indexOf(w) === 0) { score += 4; } else if (new RegExp('[\\s\\-_./(]' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(l)) { score += 3; } else if (l.indexOf(w) >= 0) { score += 2; } else if (d.indexOf(w) >= 0) { score += 1; } else { return; }
         }
         scored.push({ it: it, score: score, i: i });
       });

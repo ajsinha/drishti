@@ -6563,7 +6563,7 @@ Options in a list (role listbox): drawn up to a cap, the active one kept by aria
 | Parameter | Type | Meaning |
 |---|---|---|
 | `doc` | `Document` |  |
-| `o` | `{multiple: boolean, cap: number, label: string, render: function(Object, HTMLElement): void, onPick: function(Object, Event): void}` | cap: options drawn at most (default 300); render: draws an option's content into its element (default: its label and detail) |
+| `o` | `{multiple: boolean, cap: number, label: string, render: function(Object, HTMLElement): void, onPick: function(Object, Event): void, followActive: boolean}` | cap: options drawn at most (default 300); render: draws an option's content into its element (default: its label and detail); followActive: the active option is the selected one (a menu or a command list: aria-selected follows the keys) |
 
 ##### `Listbox.render(items, selected, o)`
 
@@ -6611,7 +6611,7 @@ Returns `Array&lt;{value: *, label: string, detail: string, disabled: boolean, g
 
 #### `searchOptions(items, q)`
 
-Options that match a search, best first: the label starting with it, then a word of it starting with it, then containing it; the detail last. Every word of the search must match.
+Options that match a search, best first: the label that is the word, then the label starting with it, then a word of it starting with it, then containing it; the detail last. Every word of the search must match.
 
 | Parameter | Type | Meaning |
 |---|---|---|
