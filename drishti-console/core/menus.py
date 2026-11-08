@@ -398,7 +398,8 @@ def bi_rail(request, ctx: dict) -> list[dict]:
 
 def help_sections(console_dir: Path) -> list[dict]:
     """Help's sections in order (``help-sections:``): ``{id, name, icon, blurb, roles, domain}``."""
-    return [dict(s) for s in _spec(console_dir).get("help-sections") or [] if isinstance(s, dict) and s.get("id")]
+    from core import modules
+    return modules.help_heads([dict(s) for s in _spec(console_dir).get("help-sections") or [] if isinstance(s, dict) and s.get("id")])
 
 
 def spec_of(console_dir: Path) -> dict:

@@ -382,7 +382,6 @@ placeholder: "TRD MX-20000001, CPTY north, TRD PRODUCT_TYPE=FX_QUANTO …  then 
 # for a menu item. An edition's (or lens's) help.categories names the sections it keeps.
 help-sections:
   - { id: get-started, name: Get started, icon: flag, blurb: "Install, the first tour, sharing, and the tutorials" }
-  - { id: risk, name: Risk measures, icon: shield-check, domain: banking, blurb: "VaR, regulatory VaR, exposure, FRTB-SA and SIMM: a guide and a tutorial each" }
   - { id: analytics, name: Analytics and BI, icon: bar-chart-line, blurb: "Rupaka BI and its languages, groupings and analytics, funds and ETFs" }
   - { id: data, name: Data, icon: plug, blurb: "Connectors, loads and lakes, external data, the in-memory lake" }
   - { id: build, name: Build, icon: braces, blurb: "Packs, Sutras, write-back, connectors, views in any web page" }

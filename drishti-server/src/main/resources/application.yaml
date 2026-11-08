@@ -368,12 +368,6 @@ drishti:
       - /api/v1/pivot/explain            # DEPRECATED alias of /api/v1/explain (kind pivot) for one release: computed as the caller, stored nowhere
       - /api/v1/pivot/whatif             # a view with an overlay beside the original, computed as the caller, stored nowhere
       - /api/v1/pivot/functions/test     # the custom-function playground: the harness on a sample, nothing saved
-      - /api/v1/risk/mr/headline        # the MR cube's lens (MR_CUBE_GUIDE.md): a view's headline, a cell's detail and history and the
-      - /api/v1/risk/mr/detail          # what-if side by side, each computed by the VaR engine as the caller, written nowhere
-      - /api/v1/risk/mr/history
-      - /api/v1/risk/mr/what-if
-      - /api/v1/risk/var/basket/sheet        # the basket sheet's checks and figures, computed as the caller, saved nowhere
-      - /api/v1/risk/var/basket/sheet.xlsx   # the sheet as a workbook, written nowhere on the server
       - /api/v1/command
       - /api/v1/forms/*/*/compile        # query by form: writes the criteria out as a search command, nothing else
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
@@ -412,26 +406,16 @@ drishti:
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
       - /api/v1/compute/*/*             # a reactive connector's answer for the caller (DATA_ARCHITECTURE.md): computed and cached, changes no data
-      - /api/v1/risk/exposure/what-if        # incremental exposure before dealing (EXPOSURE_GUIDE.md section 18.7) for the caller: computed, stores nothing
-      - /api/v1/risk/exposure/predeal        # the pre-deal check (EXPOSURE_GUIDE.md section 18.9) for the caller: computed, audited, stores nothing else
-      - /api/v1/risk/var/what-if             # VaR before and after hypothetical trades (VAR_GUIDE.md section 8.5) for the caller: computed by the Python engine, stores nothing
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
     # its user. A write that no scope opens, and nothing in token-never, is refused. Every non-GET endpoint must be declared in
-    # token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise).
+    # token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise). A module adds its own read-only POSTs and
+    # scopes in its jar (META-INF/drishti/token-scopes.yaml: the banking module's risk:write and its read POSTs), offered only while it is on.
     token-scopes:
-      "[risk:write]":
-        description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only (an administrator's token may also delete anyone's basket, as its user may); the bank's data is never changed."
+      "[compute:write]":
+        description: "Keep your what-if sandboxes and cancel your own computations (DATA_ARCHITECTURE.md). Your own items only."
         allow:
-          - POST /api/v1/risk/var/baskets
-          - POST /api/v1/risk/frtb/playground/recipes   # save a FRTB-SA playground recipe (yours, replayable)
-          - POST /api/v1/risk/simm/playground/recipes   # save a SIMM playground recipe
-          - DELETE /api/v1/risk/var/baskets/*/*
-          - DELETE /api/v1/risk/var/baskets/*
-          - POST /api/v1/risk/var/captures
-          - POST /api/v1/risk/var/reports/*/runs           # generate a regulatory report run (frozen, versioned); its sign-off is never a token's
-          - POST /api/v1/risk/exposure/captures
           - POST /api/v1/compute/sandboxes
           - PUT /api/v1/compute/sandboxes/*
           - DELETE /api/v1/compute/sandboxes/*

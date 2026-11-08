@@ -62,6 +62,7 @@ class Plugin:
     assets: tuple[str, ...] = ()
     templates: tuple[str, ...] = ()
     screens: dict = field(default_factory=dict, hash=False, compare=False)
+    help: dict = field(default_factory=dict, hash=False, compare=False)   # its Help: help-sections (heads) and sections (pages)
 
 
 _plugins: list[Plugin] | None = None
@@ -69,6 +70,37 @@ _plugins: list[Plugin] | None = None
 
 def _tuple(v) -> tuple[str, ...]:
     return tuple(str(x) for x in (v or []))
+
+
+def _help(folder: Path, name) -> dict:
+    """A plugin's Help file (``help:`` in its plugin.yaml, beside it): ``help-sections`` (heads, each with ``after:``) and ``sections``."""
+    if not name:
+        return {}
+    try:
+        return dict(yaml.safe_load((folder / str(name)).read_text(encoding="utf-8")) or {})
+    except (OSError, yaml.YAMLError) as e:
+        LOG.warning("modules: cannot read %s's Help %s (%s)", folder.name, name, e)
+        return {}
+
+
+def help_heads(heads: list[dict]) -> list[dict]:
+    """Help's section heads with every module's added, each after the section its ``after:`` names (else at the end), its
+    ``domain:`` the module's."""
+    out = [dict(h) for h in heads]
+    for p in plugins():
+        for h in p.help.get("help-sections") or []:
+            if not isinstance(h, dict) or not h.get("id") or any(x.get("id") == h["id"] for x in out):
+                continue
+            head = {k: v for k, v in h.items() if k != "after"}
+            head.setdefault("domain", p.id)
+            at = next((i + 1 for i, x in enumerate(out) if x.get("id") == h.get("after")), len(out))
+            out.insert(at, head)
+    return out
+
+
+def help_pages() -> list[dict]:
+    """Every module's Help pages (``sections:`` of its Help file)."""
+    return [dict(s) for p in plugins() for s in p.help.get("sections") or [] if isinstance(s, dict) and s.get("id")]
 
 
 def plugins() -> list[Plugin]:
@@ -86,7 +118,7 @@ def plugins() -> list[Plugin]:
             out.append(Plugin(mid, str(raw.get("title") or mid), _tuple(raw.get("routers")), _tuple(raw.get("registers")),
                               _tuple(raw.get("code")), _tuple(raw.get("engines")), tuple(w.upper() for w in _tuple(raw.get("words"))), _tuple(raw.get("paths")),
                               _tuple(raw.get("assets")), _tuple(raw.get("templates")),
-                              dict(raw.get("screens") or {})))
+                              dict(raw.get("screens") or {}), _help(f.parent, raw.get("help"))))
         _plugins = out
     return _plugins
 

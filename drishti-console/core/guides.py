@@ -139,7 +139,8 @@ class Library:
         if sections is None:
             from core.menus import help_sections
             sections = help_sections(console_dir)
-        pages = {str(sec.get("id")): sec for sec in data.get("sections") or []}
+        from core import modules
+        pages = {str(sec.get("id")): sec for sec in [*(data.get("sections") or []), *modules.help_pages()]}
         self.categories = []
         self.guides: dict[str, Guide] = {}
         self.aliases = {str(k): str(v) for k, v in (data.get("aliases") or {}).items()}

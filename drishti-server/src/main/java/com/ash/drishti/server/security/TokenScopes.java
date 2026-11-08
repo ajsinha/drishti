@@ -47,6 +47,16 @@ public final class TokenScopes {
                 || "POST".equals(method) && props.tokenMayPost(path);
     }
 
+    /** The settings these decisions read (with the modules' declarations when made by the server's bean). */
+    public SecurityProperties props() {
+        return props;
+    }
+
+    /** The scopes a token may be given, by name (the core's and those of the modules that are on, when made by the server's bean). */
+    public java.util.Map<String, SecurityProperties.TokenScope> all() {
+        return props.tokenScopes();
+    }
+
     /** Whether a scope name is one an administrator has defined, or {@code read}. */
     public boolean known(String scope) {
         return READ.equals(scope) || props.tokenScopes().containsKey(scope)

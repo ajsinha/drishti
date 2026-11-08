@@ -23,13 +23,21 @@ from conftest import help_pages
 CONSOLE = Path(__file__).resolve().parent.parent
 
 
+def _catalogue() -> dict:
+    """help.yaml with every module's Help sections (plugins/<module>/help.yaml) in Help's order: what the help centre is built from."""
+    from core import menus, modules
+    data = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
+    by_id = {s["id"]: s for s in [*data["sections"], *modules.help_pages()]}
+    return {**data, "sections": [by_id[h["id"]] for h in menus.help_sections(CONSOLE) if h["id"] in by_id]}
+
+
 def _pages(catalogue: dict) -> list:
     """Every page entry of help.yaml, in order: sections, then groups, then pages (2.9.11.a)."""
     return [g for s in catalogue["sections"] for grp in s["groups"] for g in grp["guides"]]
 
 
 def test_every_catalogued_guide_exists_and_renders(client):
-    catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
+    catalogue = _catalogue()
     slugs = [g["slug"] for g in _pages(catalogue)]
     index = client.get("/help")
     assert index.status_code == 200 and "data-help-hub" in index.text and "data-help-tiles" in index.text
@@ -204,10 +212,15 @@ decisions plan release-notes changelog notices sutra-guide rachana-guide plugins
 
 
 def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages():
-    """The decided structure (2.9.11.a, mock-up help-hub/A): eight sections and Internal for administrators."""
-    catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
-    heads = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text())["help-sections"]   # the sections: the sitemap's (2.9.11.e)
-    assert [c["id"] for c in catalogue["sections"]] == [h["id"] for h in heads]
+    """The decided structure (2.9.11.a, mock-up help-hub/A): eight sections and Internal for administrators; Risk measures is the banking
+    module's (plugins/banking/help.yaml, placed after Get started)."""
+    from core import menus, modules
+    core_catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
+    by_id = {s["id"]: s for s in [*core_catalogue["sections"], *modules.help_pages()]}
+    heads = menus.help_sections(CONSOLE)                       # the sections: the sitemap's and the modules' (2.9.11.f)
+    catalogue = {**core_catalogue, "sections": [by_id[h["id"]] for h in heads]}
+    assert "risk" not in [c["id"] for c in core_catalogue["sections"]], "the risk section is the banking module's"
+    assert next(h for h in heads if h["id"] == "risk")["domain"] == "banking"
     assert [c["id"] for c in catalogue["sections"]] == ["get-started", "risk", "analytics", "data", "build", "operate", "reference",
                                                          "knowledge", "internal"]
     assert [c["name"] for c in heads] == ["Get started", "Risk measures", "Analytics and BI", "Data", "Build", "Operate",
@@ -235,7 +248,7 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
 
 def test_every_old_help_address_still_opens_something(client):
     """A retired slug answers 301 to the page, and the section of it, that took the subject over; a slug still listed answers 200."""
-    catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
+    catalogue = _catalogue()
     listed = {g["slug"] for g in _pages(catalogue)}
     moved = 0
     for slug in OLD_SLUGS:
@@ -274,7 +287,7 @@ def test_an_admin_only_page_is_shown_to_administrators_and_hidden_from_everyone_
     import routes.help_routes as hr
     from core.auth import Identity
 
-    entry = next(g for g in _pages(yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text()))
+    entry = next(g for g in _pages(_catalogue())
                  if g["slug"] == "competitive-analysis")
     assert entry["roles"] == ["admin"]
     page = client.get("/help/competitive-analysis")                  # security off: the acting user is an administrator
@@ -317,7 +330,7 @@ def test_a_guide_without_roles_permits_everyone_and_with_roles_only_those(tmp_pa
 def test_every_help_page_belongs_to_exactly_one_section():
     """help.yaml: each page once, in one section and one group; a pair names a tutorial of the same group; a section's id is unique
     and every alias and document folder names a section."""
-    catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
+    catalogue = _catalogue()
     ids = [s["id"] for s in catalogue["sections"]]
     assert len(ids) == len(set(ids))
     seen: dict[str, str] = {}
@@ -374,7 +387,7 @@ def test_a_section_page_pairs_each_guide_with_its_tutorial_and_searches_only_its
     assert 'name="section" value="risk"' in page and "each guide beside its tutorial" in page
     hits = client.get("/help/search", params={"q": "backtesting", "section": "risk"}).text
     found = set(re.findall(r'<li><a href="/help/([\w-]+)"', hits))
-    risk = {g["slug"] for g in _pages({"sections": [s for s in yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())["sections"]
+    risk = {g["slug"] for g in _pages({"sections": [s for s in _catalogue()["sections"]
                                                     if s["id"] == "risk"]})}
     assert found and found <= risk, found
     assert "data-section-search" in hits and 'href="/help/section/risk"' in hits

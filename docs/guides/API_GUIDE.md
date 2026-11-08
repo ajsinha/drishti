@@ -199,7 +199,8 @@ that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](C
 | `approve` | `POST /approvals/{kind}/{id}/approve`, `/reject` and `/withdraw`: every kind your roles let you decide in the one queue (report sign-offs, stress windows, compute packages and questions stay a person's, in the console) | the kind's own rules (never your own) |
 | `design:approve` | approve or reject proposed Sutras | the approver or admin role |
 | `packs:admin` | load, unload, deploy and roll back packs; create, change, test and delete connectors; Retry now | the admin role |
-| `risk:write` | save and delete your VaR baskets, capture VaR results, keep sandboxes, cancel your own computations | any user who can open the scope |
+| `risk:write` | the banking module's (offered while it is on): save and delete your VaR baskets, capture VaR results, keep sandboxes, cancel your own computations | any user who can open the scope |
+| `compute:write` | keep your what-if sandboxes, cancel your own computations | any user |
 | `loads:write` | announce that a batch of data has landed ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) | the owner's roles open the kind |
 | `bi:write` | create, edit, propose, publish and delete BI items; restore versions ([BI_GUIDE.md](BI_GUIDE.md)) | the `bi-author` power and a workspace role |
 | `bi:approve` | approve or reject proposed BI items, endorse, import a bundle | the approve power or `bi-steward` |

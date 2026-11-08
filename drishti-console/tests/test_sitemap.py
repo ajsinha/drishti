@@ -130,7 +130,9 @@ def test_banking_entries_are_tagged_for_the_domain_split():
         needs = {str(r).split(":", 1)[1] for r in it.get("requires") or [] if str(r).startswith(("word:", "cmd:"))}
         if needs & BANKING_WORDS or c.get("engine"):
             assert _domain(m, c, it) == "banking", f"{it['id']}: a banking entry without domain: banking"
-    assert next(s for s in SPEC["help-sections"] if s["id"] == "risk").get("domain") == "banking"
+    from core import menus
+    assert "risk" not in {s["id"] for s in SPEC["help-sections"]}, "the risk section is the banking module's (plugins/banking/help.yaml)"
+    assert next(s for s in menus.help_sections(CONSOLE) if s["id"] == "risk").get("domain") == "banking"
 
 
 def test_the_build_registry_is_one_list_by_domain(pages):
