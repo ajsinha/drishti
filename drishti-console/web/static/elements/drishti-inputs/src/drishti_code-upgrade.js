@@ -18,7 +18,7 @@
    element stays in the page as the value's holder, so the form it sits in submits it and the page's own script reads and writes it as
    before: reading its value reads the editor, setting it sets the editor, each edit is an "input" event on it, leaving the editor after
    an edit a "change", and the editor's focus and blur are its focus, focusin, blur and focusout. Optional attributes: data-di-code-height
-   (px), readonly, aria-label, placeholder; options the page's script puts on the element (drishtiCodeOptions: complete, lint, keys)
+   (px), readonly, aria-label, placeholder; options the page's script puts on the element (drishtiCodeOptions: complete, completeAfter, lint, keys)
    join the call's. An element not yet in the page is made an editor when it arrives (install's observer). */
 import { CodeEditor } from './drishti_code-editor.js';
 
@@ -33,7 +33,7 @@ function nativeValue(ta) {
 /**
  * Makes one text area (or one-line input) a code editor (once); answers the editor.
  * @param {(HTMLTextAreaElement|HTMLInputElement)} ta
- * @param {{mode: string, height: number, complete: Function, lint: Function, keys: Object}} [o] beside the element's own attributes and
+ * @param {{mode: string, height: number, complete: Function, completeAfter: Function, lint: Function, keys: Object}} [o] beside the element's own attributes and
  *   drishtiCodeOptions
  * @returns {CodeEditor}
  */
@@ -46,7 +46,7 @@ export function upgradeCodeArea(ta, o) {
   const native = nativeValue(ta);
   const editor = new CodeEditor(host, { mode: o.mode || ta.getAttribute('data-di-code') || 'text', value: native.get.call(ta), label: ta.getAttribute('aria-label') || o.label || ta.getAttribute('placeholder') || 'Code',
     height: one ? 'auto' : o.height || Number(ta.getAttribute('data-di-code-height')) || Math.max(120, (Number(ta.getAttribute('rows')) || 8) * 19), readOnly: ta.readOnly, lineWrapping: true,
-    singleLine: one, lineNumbers: !one, tabLeaves: one || !!o.tabLeaves, complete: o.complete, catalogue: o.catalogue, lint: o.lint, keys: o.keys });
+    singleLine: one, lineNumbers: !one, tabLeaves: one || !!o.tabLeaves, complete: o.complete, completeAfter: o.completeAfter, catalogue: o.catalogue, lint: o.lint, keys: o.keys });
   ta.hidden = true;
   ta.setAttribute('data-di-code-upgraded', '');
   let quiet = false, committed = editor.getValue();           // committed: the text as the page last set it or the person last left it

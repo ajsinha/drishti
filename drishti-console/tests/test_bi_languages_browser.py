@@ -115,11 +115,11 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
     # a measure of this report only, in the ExpressionEditor over the model's measures
     page.click("[data-local-measure] summary")
     page.fill("[data-lm-name]", "MTM in thousands")
-    lm = page.locator("[data-lm-expr]")
+    lm = page.locator("[data-local-measure] .bi-xe .CodeMirror")                                 # the formula: drishti-inputs' one-line CodeEditor
     lm.click()
-    lm.type("Sum")
-    page.click('[data-xe-opt="Sum of MTM"]')
-    lm.type(" / 1000")
+    page.keyboard.type("Sum")
+    page.locator(".di-complete-pop .di-option-label", has_text="Sum of MTM").first.click()        # its completion writes measure('Sum of MTM')
+    page.keyboard.type(" / 1000")
     page.click("[data-lm-add]")
     expect(page.locator('[data-field="MTM in thousands"] [data-origin="report"], [data-field="MTM in thousands"]').first).to_be_visible(timeout=15000)
     page.click("[data-local-measure] summary")                                                   # close the form: the Fields pane stops moving under the pointer

@@ -16,18 +16,10 @@
 /* The ExpressionEditor (drishti_bi-expr-editor.js), the Query panel's MQ / SQL views and the SQL editor (BI_DESIGN.md sections 3.3.8, 3.4 and 8.1). */
 .bi-xe { position: relative; display: flex; flex-direction: column; gap: var(--d-sp-4); min-width: 0; flex: 1 1 18rem; }
 .bi-xe-row { display: flex; align-items: flex-start; gap: var(--d-sp-4_8); }
-.bi-xe-row .bi-xe-in { flex: 1 1 auto; min-width: 0; }
-textarea.bi-xe-in { resize: vertical; min-height: 2.4rem; }
+.bi-xe-row .di-code-host { flex: 1 1 auto; min-width: 0; }
 .bi-xe-help { display: inline-flex; align-items: center; justify-content: center; min-width: 2.2rem; min-height: 2.2rem; color: var(--d-muted); }
 .bi-xe-help:hover { color: var(--d-link); }
-.bi-xe-list { position: absolute; top: 2.6rem; left: 0; right: 0; z-index: 40; max-height: 16rem; overflow: auto; margin: 0; padding: var(--d-sp-3_2) 0; list-style: none;
-  background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); box-shadow: var(--d-shadow); }
-.bi-xe-opt { display: grid; grid-template-columns: 1.2rem auto 1fr; align-items: baseline; gap: var(--d-sp-1_6) var(--d-sp-7_2); padding: var(--d-sp-4_8) var(--d-sp-9_6); cursor: pointer; color: var(--d-ink); }
-.bi-xe-opt[aria-selected="true"] { background: var(--d-accent-tint); }
-.bi-xe-opt .bi { color: var(--d-muted); }
-.bi-xe-measure .bi, .bi-xe-chip .bi { color: var(--d-accent); }
-.bi-xe-label { font-size: var(--d-fs-13_6); white-space: nowrap; }
-.bi-xe-detail { color: var(--d-muted); font-size: var(--d-fs-12_16); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.bi-xe-chip .bi { color: var(--d-accent); }
 .bi-xe-card { border: 1px solid var(--d-border); border-left: 3px solid var(--d-accent); border-radius: var(--d-radius); background: var(--d-bg-2); padding: var(--d-sp-5_6) var(--d-sp-9_6); font-size: var(--d-fs-13_12); }
 .bi-xe-card p { margin: var(--d-sp-2_4) 0; }
 .bi-xe-sig { font-family: var(--d-font-mono); font-weight: 600; }
@@ -39,7 +31,6 @@ textarea.bi-xe-in { resize: vertical; min-height: 2.4rem; }
 .bi-xe-problems .bi-ok { list-style: none; margin-left: -1rem; color: var(--d-ok); font-size: var(--d-fs-13_12); }
 .bi-xe-problems .btn-pill code { font-size: var(--d-fs-12_48); color: inherit; background: transparent; }
 .bi-xe-try { white-space: nowrap; }
-.bi-xe-in[aria-invalid="true"] { border-color: var(--d-bad); }
 .bi-xe-tryout:empty { display: none; }
 .bi-xe-tryout { overflow-x: auto; }
 /* the Query panel: one question as a model query (MQ) or as SQL */
@@ -49,13 +40,12 @@ textarea.bi-xe-in { resize: vertical; min-height: 2.4rem; }
 .bi-md-query pre { white-space: pre; overflow-x: auto; }
 .bi-sql-meta { color: var(--d-muted); font-size: var(--d-fs-12_8); }
 @media (pointer: coarse), (max-width: 640px) {
-  .bi-xe-opt, .bi-xe-help, .bi-xe .btn-pill.bi-xe-try, .bi-xe-chip, .bi-qp-view, .bi-xe-problems .btn-pill, .bi-md-query .btn-pill { min-height: 44px; }
+  .bi-xe-help, .bi-xe .btn-pill.bi-xe-try, .bi-xe-chip, .bi-qp-view, .bi-xe-problems .btn-pill, .bi-md-query .btn-pill { min-height: 44px; }
   .bi-xe-help { min-width: 44px; }
   .bi-xe-row { flex-wrap: wrap; }
 }
 /* a report's own measure (the Fields pane): the label above, the editor and its list, card and problems across the whole pane */
 .bi-md-localm .bi-frow { display: flex; flex-direction: column; align-items: stretch; gap: var(--d-sp-3_2); }
 .bi-md-localm .bi-xe { flex: 1 1 auto; width: 100%; }
-.bi-md-localm .bi-xe-in, .bi-md-localm input.studio-in { width: 100%; box-sizing: border-box; }
-.bi-md-localm .bi-xe-list, .bi-md-localm .bi-xe-card { left: 0; right: 0; max-width: none; }
+.bi-md-localm input.studio-in { width: 100%; box-sizing: border-box; }
 .bi-md-localm[open] { grid-column: 1 / -1; }
