@@ -74,8 +74,6 @@ public final class EditorService {
     static final String PREFS = "editors";
     static final String VIEW = "view";
     static final Set<String> MODES = Set.of("visual", "yaml", "both");
-    /** drishti-designer's DesignerShell layouts (SHELL_LAYOUTS): the docked studio, side by side, the terminal. */
-    static final Set<String> LAYOUTS = Set.of("studio", "side-by-side", "terminal");
     /** The rows a preview shows; its totals and checks are over every row read. */
     static final int SHOWN = 20;
     /** The documents a + New suggestion reads to propose columns. */
@@ -147,12 +145,9 @@ public final class EditorService {
 
     // ---- preferences -------------------------------------------------------------------------------------------------------------
 
-    /** The person's view: {@code {mode: visual|yaml|both, yamlOpen: true|false, layout: studio|side-by-side|terminal}}. */
+    /** The person's view: {@code {mode: visual|yaml|both, yamlOpen: true|false}}. */
     public Map<String, Object> prefs(Principal p) {
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("mode", "both");
-        out.put("yamlOpen", true);
-        out.put("layout", "studio");
+        Map<String, Object> out = new LinkedHashMap<>(Map.of("mode", "both", "yamlOpen", true));
         Optional<JsonNode> got = preferences.get(p.user(), PREFS, VIEW);
         got.ifPresent(n -> {
             if (MODES.contains(n.path("mode").asText())) {
@@ -160,9 +155,6 @@ public final class EditorService {
             }
             if (n.has("yamlOpen")) {
                 out.put("yamlOpen", n.path("yamlOpen").asBoolean(true));
-            }
-            if (LAYOUTS.contains(n.path("layout").asText())) {
-                out.put("layout", n.path("layout").asText());
             }
         });
         return out;
@@ -179,13 +171,6 @@ public final class EditorService {
         }
         if (body.get("yamlOpen") instanceof Boolean b) {
             now.put("yamlOpen", b);
-        }
-        Object layout = body.get("layout");
-        if (layout != null) {
-            if (!LAYOUTS.contains(String.valueOf(layout))) {
-                throw new DrishtiException(ErrorCode.BI_INVALID, "layout is studio, side-by-side or terminal");
-            }
-            now.put("layout", String.valueOf(layout));
         }
         preferences.put(p.user(), PREFS, VIEW, JSON.valueToTree(now));
         return now;

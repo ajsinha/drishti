@@ -278,19 +278,6 @@ class EditorApiTest {
         assertThat(call("ann", "writer", put("/api/v1/tables/editor/prefs"), Map.of("mode", "diagram")).getResponse().getStatus()).isEqualTo(422);
     }
 
-    /** DesignerShell's layout is the person's too: kept with the mode, the default studio, an unknown layout refused. */
-    @Test
-    void theDesignerLayoutIsRememberedPerPerson() throws Exception {
-        assertThat(ann(get("/api/v1/tables/editor/prefs"), null).path("layout").asText()).isEqualTo("studio");
-        ann(put("/api/v1/tables/editor/prefs"), Map.of("layout", "terminal"));
-        ann(put("/api/v1/tables/editor/prefs"), Map.of("mode", "visual"));                  // a later change of mode keeps the layout
-        JsonNode mine = ann(get("/api/v1/tables/editor/prefs"), null);
-        assertThat(mine.path("layout").asText()).isEqualTo("terminal");
-        assertThat(mine.path("mode").asText()).isEqualTo("visual");
-        assertThat(ok("cat", "reader", get("/api/v1/tables/editor/prefs"), null).path("layout").asText()).isEqualTo("studio");
-        assertThat(call("ann", "writer", put("/api/v1/tables/editor/prefs"), Map.of("layout", "floating")).getResponse().getStatus()).isEqualTo(422);
-    }
-
     @Test
     void newTableStepsSuggestColumnsFromASampleOfTheKind() throws Exception {
         JsonNode s = ann(post("/api/v1/tables/editor/suggest"), Map.of("kind", "trade", "name", "mine.trades"));
