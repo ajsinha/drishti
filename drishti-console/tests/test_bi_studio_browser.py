@@ -98,7 +98,7 @@ def designed(page):
 
 def deselect(page):
     """Nothing selected (Escape, with the focus off any field): the next type chosen in Visualizations adds a visual, and Format shows the page and the report."""
-    page.click("[data-design-root] [data-title]")
+    page.click("[data-studio] [data-title]")
     page.keyboard.press("Escape")
     page.wait_for_function("() => window.drishtiBi.design.selected === null")
 

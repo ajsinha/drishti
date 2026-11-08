@@ -341,7 +341,7 @@ def test_a_board_page_lists_a_draft_report_draws_its_tile_and_refuses_to_publish
     page.goto(f"{CONSOLE_URL}/bi/design/board/{brd}")                                                    # the 2.3 address opens the report designer
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     assert "/bi/design/board/" not in page.url
-    page.click("[data-design-root] [data-title]")
+    page.click("[data-studio] [data-title]")
     page.keyboard.press("Escape")
     page.click('[data-types] [data-type="tile"]')
     page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'tile'; }")
