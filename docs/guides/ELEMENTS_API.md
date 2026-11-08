@@ -8542,6 +8542,7 @@ A custom widget: draws a field's control. Returns its element and, as it can, se
 | `[check]` | `function(Object): Promise&lt;Object&lt;string, string&gt;&gt;` | the server's checks: problems by path |
 | `[fourEyes]` | `FourEyes` |  |
 | `[submitLabel='Save']` | `string` |  |
+| `[doneText='Saved']` | `string` | what the form says once onSubmit answered ('': nothing, for a page that shows the answer itself, such as a check) |
 | `[readOnly=false]` | `boolean` |  |
 | `[layout='stacked']` | `('stacked'\|'columns')` |  |
 | `[locale]` | `string` | how numbers are read and shown |
@@ -9721,6 +9722,16 @@ The entries in their categories, in the order the categories first appear.
 
 Returns `Array&lt;{category: string, entries: PaletteEntry[]}&gt;`.
 
+#### `entryAttrs(attrs)`
+
+The host's data attributes of an entry: data-* names only, values as text (anything else is left out).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `attrs` | `Object&lt;string, *&gt;` |  |
+
+Returns `Object&lt;string, string&gt;`.
+
 #### class `Palette`
 
 The palette. Events: add {entry, payload}, search {query, count}.
@@ -9730,7 +9741,7 @@ The palette. Events: add {entry, payload}, search {query, count}.
 | Parameter | Type | Meaning |
 |---|---|---|
 | `el` | `HTMLElement` |  |
-| `o` | `{entries: PaletteEntry[], hub: import('./drishti_pointer.js').DragHub, dragType: string, label: string, placeholder: string, search: boolean}` | hub: drags go through it; dragType: also an HTML5 drag of this type (JSON payload); search: a search field (default true) |
+| `o` | `{entries: PaletteEntry[], hub: import('./drishti_pointer.js').DragHub, dragType: string, label: string, placeholder: string, search: boolean, searchAttrs: Object}` | hub: drags go through it; dragType: also an HTML5 drag of this type (JSON payload); search: a search field (default true); searchAttrs: the host's data attributes on the search field |
 
 ##### `Palette.on(name, fn)`
 
@@ -10774,6 +10785,7 @@ An entry of the palette.
 | `[disabled]` | `boolean` |  |
 | `[why]` | `string` | why it is disabled, in words |
 | `[payload]` | `Object` | what a drag or an add carries (default: {palette: id}) |
+| `[attrs]` | `Object&lt;string, string&gt;` | the host's own data attributes on the entry's row (data-* only; tutorials and tests find it by them) |
 
 #### `DropTarget` : `Object`
 
@@ -12975,7 +12987,7 @@ The exposure profile: EE and PFE over the tenors (a log axis by default), EEPE o
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | x (tenor in years), ee, pfe, eepe (the server's), limit, log (default true), more (further series drawn as given: the uncollateralised EE, the paths' fan) |
+| `spec` | `Object` | x (tenor in years), ee, pfe, eepe (the server's; false: none drawn, for an answer that has none, e.g. a proxy), limit, log (default true), more (further series drawn as given: the uncollateralised EE, the paths' fan, a profile before a change) |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 

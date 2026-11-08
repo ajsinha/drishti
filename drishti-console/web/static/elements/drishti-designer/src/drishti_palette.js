@@ -31,7 +31,19 @@ import { EventBus, announce, h } from '../../drishti-core/src/drishti_index.js';
  * @property {boolean} [disabled]
  * @property {string} [why] why it is disabled, in words
  * @property {Object} [payload] what a drag or an add carries (default: {palette: id})
+ * @property {Object<string, string>} [attrs] the host's own data attributes on the entry's row (data-* only; tutorials and tests find it by them)
  */
+
+/**
+ * The host's data attributes of an entry: data-* names only, values as text (anything else is left out).
+ * @param {Object<string, *>} attrs
+ * @returns {Object<string, string>}
+ */
+export function entryAttrs(attrs) {
+  const out = {};
+  Object.keys(attrs || {}).forEach((k) => { if (/^data-[a-z0-9-]+$/.test(k) && k !== 'data-dd-entry' && attrs[k] !== null && attrs[k] !== undefined) { out[k] = String(attrs[k]); } });
+  return out;
+}
 
 /**
  * Entries matching a search: every word of the query in the label, the detail, the category or the keywords.
@@ -71,8 +83,8 @@ export class Palette {
   /**
    * @param {HTMLElement} el
    * @param {{entries: PaletteEntry[], hub: import('./drishti_pointer.js').DragHub, dragType: string, label: string, placeholder: string,
-   *   search: boolean}} o hub: drags go through it; dragType: also an HTML5 drag of this type (JSON payload); search: a search field
-   *   (default true)
+   *   search: boolean, searchAttrs: Object}} o hub: drags go through it; dragType: also an HTML5 drag of this type (JSON payload); search: a
+   *   search field (default true); searchAttrs: the host's data attributes on the search field
    */
   constructor(el, o) {
     this.el = el;
@@ -83,6 +95,7 @@ export class Palette {
     el.classList.add('dd-palette');
     const doc = this.doc;
     this.input = this.o.search ? h(doc, 'input', { cls: 'dd-palette-search', attrs: { type: 'search', placeholder: this.o.placeholder, 'aria-label': 'Search ' + this.o.label.toLowerCase(), 'data-dd-palette-search': '' } }) : null;
+    if (this.input) { Object.entries(entryAttrs(this.o.searchAttrs)).forEach(([k, v]) => this.input.setAttribute(k, v)); }
     this.list = h(doc, 'div', { cls: 'dd-palette-list', attrs: { role: 'listbox', 'aria-label': this.o.label, tabindex: '0' } });
     this.empty = h(doc, 'p', { cls: 'dd-palette-empty', text: 'Nothing matches.', attrs: { hidden: true } });
     el.append(...[this.input, this.list, this.empty].filter(Boolean));
@@ -141,8 +154,8 @@ export class Palette {
       const box = h(doc, 'div', { cls: 'dd-palette-group', attrs: { role: 'group', 'aria-label': g.category || this.o.label } });
       if (g.category) { box.appendChild(h(doc, 'div', { cls: 'dd-palette-cat', text: g.category, attrs: { 'aria-hidden': 'true' } })); }
       g.entries.forEach((e) => {
-        const opt = h(doc, 'div', { cls: 'dd-palette-entry', attrs: { role: 'option', id: 'dd-pal-' + e.id.replace(/[^\w-]/g, '_'), 'data-dd-entry': e.id, 'aria-disabled': e.disabled ? 'true' : null,
-          title: e.disabled ? e.why || '' : e.detail || '', draggable: this.o.dragType && !e.disabled ? 'true' : null } }, [
+        const opt = h(doc, 'div', { cls: 'dd-palette-entry', attrs: Object.assign({ role: 'option', id: 'dd-pal-' + e.id.replace(/[^\w-]/g, '_'), 'data-dd-entry': e.id, 'aria-disabled': e.disabled ? 'true' : null,
+          title: e.disabled ? e.why || '' : e.detail || '', draggable: this.o.dragType && !e.disabled ? 'true' : null }, entryAttrs(e.attrs)) }, [
           e.icon ? h(doc, 'i', { cls: e.icon, attrs: { 'aria-hidden': 'true' } }) : null,
           h(doc, 'span', { cls: 'dd-palette-label', text: e.label }),
           e.detail ? h(doc, 'span', { cls: 'dd-palette-detail', text: e.detail }) : null]);

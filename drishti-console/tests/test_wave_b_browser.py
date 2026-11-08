@@ -53,7 +53,7 @@ def design_board(page, title="Wave B wall"):
 def add_tile(page, visual="desk/mtm"):
     page.click("[data-design-root] [data-title]")
     page.keyboard.press("Escape")
-    page.click('.bi-vtype[data-type="tile"]')
+    page.click('[data-types] [data-type="tile"]')
     page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'tile'; }")
     tile = page.evaluate("window.drishtiBi.design.sel().id")
     page.click("[data-ptab='format']")

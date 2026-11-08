@@ -50,6 +50,12 @@ SMALL_SETS = {
     "official-news": {"keep-per-source": 3},
     "gdelt-events": {"backfill-days": 1, "rows-per-day": 5000},
 }
+# per feed: the feeds whose output it reads, run first with these options (world-economy reads WDI from world-development, its one
+# fetcher: two countries, the gdp code the smoke's build needs)
+BEFORE = {
+    "world-economy": {"world-development": {"countries": ["IND", "USA"], "years": 3, "series-from": "", "aggregates": ["WLD"],
+                                            "indicators": [{"code": "NY.GDP.MKTP.CD", "field": "GDP", "unit": "current USD"}]}},
+}
 
 
 @pytest.mark.live
@@ -57,9 +63,13 @@ SMALL_SETS = {
 def test_live_smoke(feed, tmp_path, monkeypatch):
     monkeypatch.setenv("DRISHTI_DATA_DIR", str(tmp_path / "data"))
     spec = FB.load_spec(feed)
+    logs: list[str] = []
+    for before, sets in BEFORE.get(feed, {}).items():     # a feed that reads another's output: that one first, small
+        rc, _ = R.run_feed(FB.load_spec(before), R.RunOptions(business_date=date.today() - timedelta(days=1), load="none", sets=sets),
+                           log=logs.append)
+        assert rc == 0, "\n".join(logs[-30:])
     o = R.RunOptions(business_date=date.today() - timedelta(days=1), load="none", extra_args=SMALL.get(feed, []),
                      sets=SMALL_SETS.get(feed, {}))
-    logs: list[str] = []
     rc, entry = R.run_feed(spec, o, log=logs.append)
     assert rc == 0, "\n".join(logs[-30:])
     assert entry["files"] >= 1 and entry["rows"] > 0, entry

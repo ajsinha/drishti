@@ -136,8 +136,8 @@ One World Development Indicator of one country by year: the history, the latest 
 |---|---|---|---|---|---|---|
 | `SERIES_ID` | id | required |  | WDIS-, the country's ISO alpha-3 code and the indicator's code with its dots as underscores. | `WDIS-CAN-EG_ELC_ACCS_ZS` (pattern `^WDIS-`) |  |
 | `NAME` | text | required |  | The country and the indicator, as one name. | `Canada · Access to electricity (% of population)` |  |
-| `WDI_PROFILE` | id | required |  | The country's development-profile page (WDI-<ISO3>). | `WDI-CAN` (pattern `^WDI-`) | `development-profile` |
-| `ISO3` | text | required |  | The country's ISO 3166-1 alpha-3 code. | `CAN` |  |
+| `WDI_PROFILE` | id | optional |  | The country's development-profile page (WDI-<ISO3>); empty for a World Bank aggregate (the world, a region, an income group), which has series but no profile. | `WDI-CAN` (pattern `^WDI-`) | `development-profile` |
+| `ISO3` | text | required |  | The country's ISO 3166-1 alpha-3 code, or the World Bank aggregate's code (WLD the world, EAS ... SSF the regions, HIC ... LIC the income groups). | `CAN` |  |
 | `COUNTRY_NAME` | text | optional |  | The economy's name as the World Bank writes it. | `Canada` |  |
 | `INDICATOR_CODE` | text | required |  | The indicator's code in the World Bank API. | `EG.ELC.ACCS.ZS` |  |
 | `INDICATOR` | text | required |  | The indicator's name as the World Bank publishes it. | `Access to electricity (% of population)` |  |
@@ -174,7 +174,7 @@ One World Development Indicator of one country by year: the history, the latest 
 
 **Validation**
 
-- required: fields `SERIES_ID`, `NAME`, `WDI_PROFILE`, `ISO3`, `INDICATOR_CODE`, `INDICATOR`, `UNIT`, `LATEST`, `LATEST_YEAR`, `HISTORY`, `PROVENANCE`
+- required: fields `SERIES_ID`, `NAME`, `ISO3`, `INDICATOR_CODE`, `INDICATOR`, `UNIT`, `LATEST`, `LATEST_YEAR`, `HISTORY`, `PROVENANCE`
 - unique: key `SERIES_ID`; per snapshot
 - pattern: field SERIES_ID; pattern ^WDIS-
 - link: field WDI_PROFILE; kind development-profile

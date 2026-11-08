@@ -84,6 +84,16 @@ def painted(c: Ctx, scope: str, seconds: int = 120) -> None:
     c.page.wait_for_timeout(800)                                       # the chart and the fan finish drawing
 
 
+def predeal_check(c: Ctx, command: str, name: str, width: int = WIDE, height: int = HIGH) -> None:
+    """Counterparties → Pre-deal check made by a typed command (EXPOSURE_GUIDE.md section 18.9): the server's verdict and the what-if."""
+    from urllib.parse import quote
+
+    open_exp(c, "/predeal?command=" + quote(command), width, height)
+    c.until("document.querySelector('[data-predeal]') && !!document.querySelector('[data-predeal]').dataset.decision", 180)
+    c.page.wait_for_timeout(900)                                       # the overlay and the bars finish drawing
+    c.save(name)
+
+
 def tab(c: Ctx, name: str) -> None:
     c.page.locator(f'.xx-tab[data-tab="{name}"]').click()
     c.until("document.querySelector('[data-exposure]').dataset.tabPainted === %r" % name, 90)
