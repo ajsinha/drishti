@@ -78,7 +78,7 @@ def stack(tmp_path_factory):
     loaded = subprocess.run([sys.executable, "-c", LOADER, str(ROOT), ",".join(FEEDS)], env=env, capture_output=True, text=True, timeout=900)
     assert loaded.returncode == 0, loaded.stdout[-3000:] + loaded.stderr[-3000:]
     senv = dict(os.environ, DRISHTI_PACKS=PACKS, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_DEMO_ENABLED="false",
-                DRISHTI_SECURITY_ENABLED="false", DRISHTI_DATA_DIR=str(data),
+                DRISHTI_SECURITY_ENABLED="false", DRISHTI_DATA_DIR=str(data), DRISHTI_LAKES_DIR=str(ROOT / "config" / "lakes"),
                 DRISHTI_OFFLINE="true", DRISHTI_LENSES="world,publicsector")
     procs = [subprocess.Popen(java_cmd(java, ["-Xmx1500m", "-jar", jars[0], f"--server.port={SERVER_PORT}"],
                                        tmp=tmp / "jvm-tmp"), cwd=work, env=senv, stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)]
@@ -148,7 +148,8 @@ def test_a_central_bank_with_its_policy_rate_and_its_series(stack, browser):
     expect(rows).to_have_count(5)
     expect(rows.first.locator("a")).to_have_attribute("href", "/v/rate-series/CBSER-BOC-V39079")
     page.goto(CONSOLE + "/v/rate-series/CBSER-FRED-DGS10")
-    expect(page.locator(".strip")).to_contain_text("10-year")
+    expect(page.locator("main")).to_contain_text("10-year")
+    expect(page.locator(".strip")).to_contain_text("On the year")
     page.close()
 
 

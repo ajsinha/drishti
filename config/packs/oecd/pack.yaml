@@ -47,6 +47,29 @@ connectors:
     settings:
       lake: worldlake
       lake-tables: oecd.oecd-country,oecd.oecd-series
+lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
+  tables:
+    oecd.oecd-country:
+      id: COUNTRY_ID
+      promote:
+      - ISO3
+      - COUNTRY_NAME
+      - LEADING_INDICATOR
+      - UNEMPLOYMENT
+      - INFLATION
+      - GDP_GROWTH
+      retention: 260
+    oecd.oecd-series:
+      id: SERIES_ID
+      promote:
+      - ISO3
+      - COUNTRY_NAME
+      - MEASURE
+      - TITLE
+      - UNIT
+      - LATEST
+      - LATEST_PERIOD
+      retention: 260
 routes:                # the connector that answers each kind
   oecd-country: oecd-store
   oecd-series: oecd-store

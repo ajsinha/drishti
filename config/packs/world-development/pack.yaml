@@ -47,6 +47,33 @@ connectors:
     settings:
       lake: worldlake
       lake-tables: development.development-profile,development.development-series
+lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
+  tables:
+    development.development-profile:
+      id: PROFILE_ID
+      promote:
+      - ISO3
+      - COUNTRY_NAME
+      - REGION
+      - INCOME_GROUP
+      - POPULATION
+      - GDP_PER_CAPITA
+      - GDP_GROWTH
+      - INFLATION
+      - UNEMPLOYMENT
+      - LIFE_EXPECTANCY
+      retention: 260
+    development.development-series:
+      id: SERIES_ID
+      promote:
+      - ISO3
+      - COUNTRY_NAME
+      - INDICATOR_CODE
+      - INDICATOR
+      - UNIT
+      - LATEST
+      - LATEST_YEAR
+      retention: 260
 routes:                # the connector that answers each kind
   development-profile: development-store
   development-series: development-store

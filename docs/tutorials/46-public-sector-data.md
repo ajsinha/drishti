@@ -112,6 +112,8 @@ More: [section 5](../guides/PUBLIC_SECTOR_GUIDE.md#5-the-feeds) and the [Externa
 every indicator with its latest year; click *GDP growth (annual %)* to open its history (`WDIS WDIS-CAN-NY_GDP_MKTP_KD_ZG`). The world
 map is shaded by GDP per head; click Brazil to open `WDI-BRA`.
 
+![WDI WDI-CAN: Canada's development profile, its indicators and the world map by GDP per head (the feed's recorded data for 2026-11-06)](img/t46/03-wdi-canada.png)
+
 **Command line.**
 
 ```bash
@@ -181,6 +183,8 @@ More: [section 7](../guides/PUBLIC_SECTOR_GUIDE.md#7-changing-what-is-pulled).
 (`PREL ...`: its date, category and summary); the address opens the original on federalreserve.gov in a new tab. Type `PRESS PRESS-BOE
 <GO>`: the strip says *Internal only: yes* and why (the Bank of England allows no commercial reuse). In the World lens, `PRESS` and
 `GDELT` are there too.
+
+![PRESS PRESS-FED: the Federal Reserve Board's latest releases, each title a release in Drishti and each address the original](img/t46/06-press-fed.png)
 
 **Command line.**
 

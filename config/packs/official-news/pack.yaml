@@ -49,6 +49,31 @@ connectors:
     settings:
       lake: newslake
       lake-tables: officialnews.release-source,officialnews.press-release
+lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
+  tables:
+    officialnews.release-source:
+      id: SOURCE_ID
+      promote:
+      - NAME
+      - PUBLISHER_TYPE
+      - COUNTRY
+      - INTERNAL_ONLY
+      - RELEASES
+      - LAST_PUBLISHED
+      retention: 90
+    officialnews.press-release:
+      id: RELEASE_ID
+      promote:
+      - TITLE
+      - PUBLISHED
+      - DATE
+      - URL
+      - CATEGORY
+      - RELEASE_SOURCE
+      - PUBLISHER_NAME
+      - COUNTRY
+      - INTERNAL_ONLY
+      retention: 90
 routes:                # the connector that answers each kind
   release-source: officialnews-store
   press-release: officialnews-store

@@ -41,6 +41,22 @@ connectors:
     settings:
       lake: worldlake
       lake-tables: statistics.statistics-series
+lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
+  tables:
+    statistics.statistics-series:
+      id: SERIES_ID
+      promote:
+      - VECTOR
+      - TITLE
+      - TABLE_ID
+      - TOPIC
+      - UNIT
+      - LATEST
+      - LATEST_PERIOD
+      - CHANGE_PCT
+      - YEAR_ON_YEAR_PCT
+      - RELEASED
+      retention: 260
 routes:                # the connector that answers each kind
   statistics-series: statistics-store
 form:                          # FORM national-statistics: the search form of its kind

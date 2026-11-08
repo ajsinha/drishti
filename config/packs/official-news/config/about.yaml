@@ -23,7 +23,7 @@ vocabulary:
   attribution: { term: Attribution, means: "The credit line to repeat when the release is shown or republished." }
   url: { term: Address, means: "The original on the publisher's site." }
   internal: { term: Internal only, means: "True when the publisher's terms allow no commercial reuse: the record stays inside the organisation (Export data refuses it)." }
-  publisher-type: { term: Publisher type, means: "What the publisher is.", values: { central bank: "A central bank", regulator: "A financial regulator", government: "A government's official journal or register" } }
+  publisher_type: { term: Publisher type, means: "What the publisher is.", values: { central bank: "A central bank", regulator: "A financial regulator", government: "A government's official journal or register" } }
 kinds:
   release-source:
     title: Official press releases
@@ -32,7 +32,7 @@ kinds:
     glossary:
       SOURCE_ID: { term: Publisher id, means: "PRESS- and the publisher's id in the feed's YAML (FED, ECB, BOC, BOE, SEC, OSFI, FEDREG, GAZETTE1, GAZETTE2)." }
       NAME: { term: Name, means: "The publisher's name." }
-      PUBLISHER_TYPE: { use: publisher-type }
+      PUBLISHER_TYPE: { use: publisher_type }
       COUNTRY: { term: Country, means: "The ISO 3166-1 alpha-3 code of the publisher's country (EMU for the euro area)." }
       WEBSITE: { term: Website, means: "The publisher's page of releases." }
       FEED_URL: { term: Feed, means: "The address the feed reads (RSS, Atom, or the Federal Register's API)." }
@@ -74,7 +74,7 @@ kinds:
       CATEGORY: { term: Category, means: "The publisher's category (the Federal Register: the document type and agencies)." }
       RELEASE_SOURCE: { term: Publisher, means: "The publisher's page (PRESS-<id>)." }
       PUBLISHER_NAME: { term: Publisher name, means: "The publisher's name." }
-      PUBLISHER_TYPE: { use: publisher-type }
+      PUBLISHER_TYPE: { use: publisher_type }
       COUNTRY: { term: Country, means: "The ISO 3166-1 alpha-3 code of the publisher's country (EMU for the euro area)." }
       INTERNAL_ONLY: { use: internal }
       PROVENANCE: { use: provenance }

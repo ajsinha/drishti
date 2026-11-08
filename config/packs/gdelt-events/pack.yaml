@@ -42,6 +42,20 @@ connectors:
     settings:
       lake: newslake
       lake-tables: gdelt.event-country
+lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
+  tables:
+    gdelt.event-country:
+      id: EVENT_COUNTRY_ID
+      promote:
+      - ISO3
+      - COUNTRY_NAME
+      - DATE
+      - EVENTS
+      - MENTIONS
+      - AVG_TONE
+      - AVG_GOLDSTEIN
+      - CONFLICT_SHARE
+      retention: 90
 routes:                # the connector that answers each kind
   event-country: gdelt-store
 form:                          # FORM gdelt-events: the search form of its kind

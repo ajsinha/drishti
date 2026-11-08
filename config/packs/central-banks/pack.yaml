@@ -50,6 +50,30 @@ connectors:
     settings:
       lake: worldlake
       lake-tables: centralbank.central-bank,centralbank.rate-series
+lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
+  tables:
+    centralbank.central-bank:
+      id: BANK_ID
+      promote:
+      - NAME
+      - COUNTRY
+      - POLICY_RATE
+      - POLICY_RATE_DATE
+      - LAST_MOVE_DATE
+      - LAST_MOVE_BP
+      retention: 260
+    centralbank.rate-series:
+      id: SERIES_ID
+      promote:
+      - SOURCE
+      - CODE
+      - CENTRAL_BANK
+      - TITLE
+      - UNIT
+      - LATEST
+      - LATEST_DATE
+      - CHANGE
+      retention: 260
 routes:                # the connector that answers each kind
   central-bank: centralbank-store
   rate-series: centralbank-store
