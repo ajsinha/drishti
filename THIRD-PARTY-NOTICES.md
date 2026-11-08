@@ -33,7 +33,6 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | Natural Earth 10m admin-1 states and provinces (console, vendored per country for the maps' regions; simplified, `tools/maps/build_regions.py`) | Public domain |
 | FastAPI, Starlette, Jinja2, Uvicorn, httpx, PyYAML (console) | MIT / BSD |
 | CodeMirror 5 and its Python mode (console, vendored) | MIT |
-| Vega, Vega-Lite, vega-embed, vega-interpreter (console; the `vega-lite` visual and Python's Vega-Lite output; `drishti-console/web/static/vendor/vega/`) | BSD-3-Clause |
 | Apache Arrow JS (console, vendored bundle) and `arrow-format` with flatbuffers-java (server, Arrow IPC messages) | Apache-2.0 |
 | Pyodide (console, Calc; installed by `tools/fetch-pyodide.sh`, not in the repository) | MPL-2.0 |
 | CPython, numpy, pandas, scipy, statsmodels, matplotlib and their dependencies (inside Pyodide) | PSF-2.0, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, PSF-based (matplotlib); see each package |

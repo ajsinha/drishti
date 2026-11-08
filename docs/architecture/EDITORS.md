@@ -37,6 +37,14 @@ Mock-up: [g1-editor-shell.html](mockups/editors/g1-editor-shell.html), option **
 - **The header**: where you are, the name, the status with versions (*draft v4*, *approved v3*), and Validate, Preview, History,
   Impact and **Propose for review**.
 - **+ New** opens guided steps in plain language (option B); when the object exists it opens in the three-pane editor.
+- **As built**: the shell is drishti-designer's `DesignerShell` and the YAML its `YamlPane` over drishti-inputs' `CodeEditor`
+  ([ELEMENTS.md section 8.9](ELEMENTS.md#89-as-built-drishti-designer-the-designer-kit)), the same for every designer: the table,
+  model and Python editors, the Build workbench's canvas and YAML, the BI report designer's canvas, undo and YAML. Its look is mock-up
+  g7's: **studio** (option A, the default: the left rail's tabs, the canvas with the YAML docked under it, the inspector, the preview),
+  **side by side** (B: the canvas and the YAML side by side, the inspector a card by the selection) and **terminal** (C: a command line
+  on Ctrl+K and the function keys F3 Validate, F4 YAML, F5 Preview, F7 History, F8 Impact, F9 Propose); each person's layout, mode and
+  whether the YAML is open are kept by the server. A YAML edit is read on the server after a pause and each problem is marked at its
+  line (a sign in the gutter, the list under the editor); the visual side keeps the last valid version.
 
 ## 2. Tables and virtual tables
 
@@ -119,6 +127,7 @@ its help entry.
 | # | Editor | Built in | Done |
 |---|---|---|---|
 | 1 | The three-pane shell, the Visual / YAML / Both toggle, the header, + New steps | BI foundation | ☑ |
+| 1a | The shell on the designer kit (DesignerShell, YamlPane) in g7's three layouts; every designer on the kit (ELEMENTS.md 12.3) | Drishti Elements | ☑ shell, YAML; ☐ the editors' own panes |
 | 2 | Tables and virtual tables (grid, Text toggle, cross-connector cost) | BI foundation | ☑ |
 | 3 | Semantic models (tabs, Overview, measure cards, Access matrix) | BI foundation | ☑ |
 | 4 | Python-driven tables and models (code and contract, Notebook → table, templates, the sample run on the compute pool) | BI foundation | ☑ |

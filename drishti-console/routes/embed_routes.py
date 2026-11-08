@@ -180,7 +180,8 @@ async def versioned_css(request: Request, version: str):
 
 # Drishti Elements' bundles that the console's scripts draw with in an embed (static/elements/; ELEMENTS.md section 8): the nested pivot of tree rows
 # and Chart any table's table draw with drishti-grid, which needs drishti-core. Each library's own bundle and style sheet, nothing else.
-ELEMENT_BUNDLES = {("drishti-core", "drishti_core.js"), ("drishti-grid", "drishti_grid.js"), ("drishti-grid", "drishti_grid.css")}
+ELEMENT_BUNDLES = {("drishti-core", "drishti_core.js"), ("drishti-grid", "drishti_grid.js"), ("drishti-grid", "drishti_grid.css"),
+                   ("drishti-inputs", "drishti_inputs.js"), ("drishti-inputs", "drishti_inputs.css")}   # the controls' pickers (and the 1.2.0 loader js/multiselect.js)
 
 
 async def element_bundle(request: Request, library: str, name: str):
@@ -262,7 +263,7 @@ async def echarts_js(request: Request):
 
 # The console's own enhancer scripts, root-scoped (static/js; CLIENT_RENDERER.md › Drishti Elements: the design, section 12): the element loads these, with
 # data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
-ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot-engine", "elements-core", "elements-grid", "elements-chart", "elements-graph", "elements-tree", "about", "about-hints", "zoom", "multiselect", "controls",
+ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot-engine", "elements-core", "elements-grid", "elements-chart", "elements-graph", "elements-tree", "about", "about-hints", "zoom", "elements-inputs", "controls",
              "bi-lib", "bi-visuals", "bi-visuals-format", "bi-grids", "bi-matrix", "bi-multiples", "bi-frame", "bi-live", "bi-phone")
 
 

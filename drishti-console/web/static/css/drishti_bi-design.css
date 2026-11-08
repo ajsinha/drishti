@@ -102,9 +102,7 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-feditor { display: flex; flex-direction: column; gap: var(--d-sp-4_8); border: 1px solid var(--d-accent); border-radius: var(--d-radius-6); padding: var(--d-sp-7_2); margin-top: var(--d-sp-4); }
 .bi-picklist { max-height: 9rem; overflow: auto; border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-3_2) var(--d-sp-4_8); margin-top: var(--d-sp-4); }
 .bi-picklist label { display: flex; align-items: center; gap: var(--d-sp-6_4); font-size: var(--d-fs-12_8); }
-.bi-suggestions { display: flex; flex-wrap: wrap; gap: var(--d-sp-4); margin: 0 0 var(--d-sp-6_4); min-height: 1.8rem; }
 .bi-suggest { background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius-pill); color: var(--d-ink); font-family: var(--d-font-mono); font-size: var(--d-fs-12); padding: var(--d-sp-1_6) var(--d-sp-8_8); cursor: pointer; }
-.bi-suggest:hover { border-color: var(--d-accent); }
 .bi-problem { list-style: disc; margin-bottom: var(--d-sp-3_2); font-size: var(--d-fs-13_6); color: var(--d-ink); }
 .bi-problem-error strong { color: var(--d-bad); }
 .bi-problem-warning strong { color: var(--d-warn); }

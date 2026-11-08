@@ -29,6 +29,37 @@
   nothing modified in `config/lakes`.
 
 
+## Upgrade: Vega-Lite specifications are translated (Vega is retired)
+
+- **One drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite` are now translated by drishti-chart
+  (`fromVegaLite`) and drawn by drishti-chart, like every other chart: the theme's colours, its tooltip, data table, export and Explain.
+  The vendored Vega, Vega-Lite, vega-embed and vega-interpreter are deleted (about 0.85 MB less per first draw). The shipped
+  specifications (the `python-desk-risk` report's *Net MTM by desk* and the `pnl-vega` Python sample) draw the same data and encodings.
+- **What translates:** marks bar, line, area, point, circle, square, tick, rule, rect, arc and boxplot; encodings x, y, color (field,
+  value or condition), size, theta, tooltip, opacity; aggregate, bin, sort, stack, scale (log, zero, domain), axis titles and d3 formats;
+  inline data; layers; filter and calculate transforms; titles. `width` and `height` are ignored (the chart fills its frame).
+- **Not translated, so refused in words (never drawn wrong):** facets, `row` and `column`; `repeat` and `concat`; `params` and
+  `selection`; `projection` and `geoshape`; other transforms (aggregate, window, fold, pivot, lookup, ...); `text` marks and encodings
+  and the other channels (`shape`, `detail`, `href`, ...); `resolve`. The visual's frame names each feature with what to use instead
+  (a split well, one visual per chart, the report's cross-filtering, the map, a calculated column or measure, a table or card).
+  Check a report with such a visual after upgrading: [BI_GUIDE.md](docs/guides/BI_GUIDE.md#35-vega-lite-visuals).
+- **New, and the preferred form for Python:** a Python visual whose manifest says `output: drishti-chart` returns a drishti-chart spec
+  with its rows inline, drawn as it is, every kind the library has ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#14-vega-lite-output)).
+
+## Upgrade: the pivot cell's Explain, the Elements 1.x package, the FRTB-SA totals
+
+- **`POST /api/v1/pivot/explain` is deprecated** and is removed in the next release: ask `POST /api/v1/explain` with `kind: pivot,
+  measure: cell` and the same body (the old `measure`, the value's label, is now `value`); the engine's steps are under `why.answer`.
+  Until then the old address answers as before, with `Deprecation: true` and a `Link` to its successor. `drishti.py pivot explain`
+  already uses the new address.
+- **Explain › Open as a page** from a pivot cell now opens the same explanation the drawer showed (the view travels in the link).
+- **The `@drishti/elements` 1.x npm package is no longer built** (its tool `tools/elements_package.py` is deleted). Pages that embed the
+  1.x elements from the console are unaffected: `/embed/v1/elements/1.4.5/` serves the same bytes, as do the renderer 1.2.0 files. New
+  work takes the per-library packages (`drishti.py elements dist`, ELEMENTS_IN_YOUR_APP.md).
+- **The FRTB-SA screen shows each class's Total again**, the server's figure (`classTotals` in `GET /api/v1/frtb/sa`).
+- **Generated connector files stay unedited across the demo lake's move**: a file nobody edited keeps following its pack's template at
+  later upgrades.
+
 ## Upgrade: one search (the console's `/api/suggest` is removed)
 
 - **BI's keys** are the keymap's: `?` (and the rail's Keys button) lists them with the rest of the screen's, and BI's own keys dialog is
@@ -118,6 +149,27 @@
   server or engine key is written to the server's `application.local.yaml`, a console key to the console's, each read at the next start.
   New endpoints `/api/v1/admin/settings/proposals` (list, propose, approve, reject, withdraw, applied); a new add-on admin page id
   `configuration` (editions that list `admin.pages` name it to keep it).
+
+## The pickers and fields have a new look
+
+The product owner approved (2026-11-07) that every form's look changes: the console's pickers are now **drishti-inputs**, the same
+components the gallery shows, on every page. What people see:
+
+- **The as-of date in the top bar** is a business-date picker: type `T-1`, `ME` or `6 Nov 2026`, or open the calendar (weekends dimmed,
+  the server's holidays named, the shortcuts *Business date*, *T-1* and *Month-end*). A weekend or a holiday is refused in words that
+  name the business day before it, instead of being rolled back after the page loads. *Known at* keeps the browser's date-and-time field.
+- **Every date field** (search, compare, the query forms, BI's report, notebook, statement and designer dates, the record forms and their
+  cells, Explain's two dates, the Admin pages for loads, lakes, caches, access, collaboration and pack data) is the same picker; the
+  field still sends `2026-11-06`, so links, bookmarks and scripts are unchanged.
+- **Long lists of values** (a query form's enum with more than six values, a Sutra's multi-select control, BI's drop-down slicer) are a
+  multi-select with chips and a search field: type to narrow, Enter or a click picks and keeps the list open, *Select all* takes what the
+  search matches, *Clear*, Backspace removes the last chip. The criteria in the address are unchanged (`v.productType=BOND&v.productType=REPO`).
+- **A Sutra's date-range control** opens the range picker: the server's presets (*This month*, *Next 90 days* …) beside two months, the
+  ends typed; one end may stay open. **The history page's range** has the same picker beside its keys (1, 3, 6, Y, T); a preset opens the
+  server's own range (`?range=3M`), a picked span `?from=…&to=…`.
+- **The people pickers** (Share, Subscribe, a workspace's members, sharing a run) and the comment box's `@` and `{` lists are the
+  combobox: the list floats over the page, names, ids and desks as before; typed names still work.
+- On a phone every field, option and button of these pickers is at least 44 px high.
 
 ## Upgrade: one Explain for every number
 

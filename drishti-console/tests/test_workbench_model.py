@@ -23,15 +23,16 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 JS = ROOT / "drishti-console" / "web" / "static" / "js"
+DESIGNER = ROOT / "drishti-console" / "web" / "static" / "elements" / "drishti-designer" / "drishti_designer.js"   # the YAML reader is drishti-designer's
 EXAMPLES = ROOT / "docs" / "guides" / "examples"
 NODE = shutil.which("node")
 pytestmark = pytest.mark.skipif(NODE is None, reason="needs node")
 
 
 def model(text: str) -> dict:
-    code = ("global.window=global;const fs=require('fs');eval(fs.readFileSync(process.argv[1],'utf8'));eval(fs.readFileSync(process.argv[2],'utf8'));"
+    code = ("global.window=global;const fs=require('fs');require(process.argv[1]);eval(fs.readFileSync(process.argv[2],'utf8'));"
             "console.log(JSON.stringify(window.Drishti.WB.model(process.argv[3])))")
-    out = subprocess.run([NODE, "-e", code, str(JS / "drishti_studio-yaml.js"), str(JS / "build" / "drishti_yamlmodel.js"), text], capture_output=True, text=True, check=True, timeout=30)
+    out = subprocess.run([NODE, "-e", code, str(DESIGNER), str(JS / "build" / "drishti_yamlmodel.js"), text], capture_output=True, text=True, check=True, timeout=30)
     return json.loads(out.stdout)
 
 

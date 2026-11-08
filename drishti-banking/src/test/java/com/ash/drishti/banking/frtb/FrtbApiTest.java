@@ -73,6 +73,21 @@ class FrtbApiTest {
         assertThat(a.get("DRC").asDouble()).isBetween(126_177.315, 126_177.325);
         assertThat(a.get("regulatory").asBoolean()).isTrue();
         assertThat(a.get("stack")).hasSize(6);
+        // each class's total is the server's: its measures added in each scenario, and the classes' totals add up to SBM
+        double classes = 0;
+        for (JsonNode t : a.get("classTotals")) {
+            double sum = 0;
+            for (JsonNode c : a.get("classes")) {
+                if (c.get("class").asText().equals(t.get("class").asText())) {
+                    sum += c.get("low").asDouble();
+                }
+            }
+            assertThat(t.get("low").asDouble()).isCloseTo(sum, org.assertj.core.data.Offset.offset(1e-6));
+            assertThat(t.get("reported").asDouble()).isEqualTo(t.get(a.get("reported").asText()).asDouble());
+            classes += t.get("reported").asDouble();
+        }
+        assertThat(a.get("classTotals").size()).isPositive();
+        assertThat(classes).isCloseTo(a.get("SBM").asDouble(), org.assertj.core.data.Offset.offset(1e-6 * Math.max(1, a.get("SBM").asDouble())));
         JsonNode exact = ask("/api/v1/risk/frtb/sa", 200, "scope", "EXAMPLE", "girrCorrelation", "exact");
         assertThat(exact.get("total").asDouble()).isBetween(566_757.105, 566_757.115);
         assertThat(exact.get("regulatory").asBoolean()).isFalse();

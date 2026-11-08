@@ -14,7 +14,7 @@
 
 """The one Approvals queue (docs/architecture/SHARED_SCREENS.md section 2; USER_GUIDE.md "Approvals"): every four-eyes item waiting for
 the signed-in person in one inbox, due-soon items pinned on top, the chosen item's diff, effect and rules, and approve, reject, withdraw or
-ask a question. A shell: static/js/drishti_approvals.js fills it from ``/approvals/api/...``, which passes each call to the server's
+ask a question. A shell: drishti-insight's Approvals queue (static/elements/drishti-insight/) fills it from ``/approvals/api/...``, which passes each call to the server's
 ``/api/v1/approvals`` as the signed-in person. The rules are the server's (who may decide, four eyes); this only draws them.
 
 The per-kind review pages it replaced redirect here: Build → Reviews (Sutra proposals) and Review → Changes (corrections)."""

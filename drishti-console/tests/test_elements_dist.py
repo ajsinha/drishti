@@ -191,8 +191,9 @@ def test_dependencies_resolve_deepest_first_each_once():
     assert r[-1] == "drishti-renderer" and set(r) == {"drishti-core", "drishti-grid", "drishti-chart", "drishti-data", "drishti-graph", "drishti-tree", "drishti-renderer"}
     assert r.index("drishti-core") == 0
     assert TRAIN.resolve(["all"]) == GENERAL
-    with pytest.raises(dist.DistError, match="no library insight"):
-        TRAIN.resolve(["insight"])
+    assert TRAIN.resolve(["insight"]) == ["drishti-core", "drishti-insight"]           # library 6 is in the manifest: packing includes it
+    with pytest.raises(dist.DistError, match="no library nope"):
+        TRAIN.resolve(["nope"])
 
 
 def test_drishti_risk_is_refused_without_the_banking_domain(tmp_path, capsys):

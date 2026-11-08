@@ -14,7 +14,7 @@
 """The guards of Drishti Elements (docs/architecture/ELEMENTS.md section 11, "No second implementation"): one implementation of each
 thing, in the libraries under static/elements/. No console script (static/js, the pages' own scripts in templates):
 
-* calls ECharts (or Vega) itself: charts are drishti-chart's (its Chart, its panel charts, its maps);
+* calls ECharts itself: charts are drishti-chart's (its Chart, its panel charts, its maps);
 * builds its own grid: sorting a table's rows by its headings (aria-sort) is drishti-grid's (the grid, or its document tables);
 * formats numbers on its own (Intl.NumberFormat, toFixed, toPrecision, a number's toLocaleString): numbers are drishti-core's
   (formatNumber, formatCompact, formatPercent, formatNamed: the server's rules, half up);
@@ -34,14 +34,16 @@ pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it
 WEB = CONSOLE / "web"
 
 RULES = {
-    "echarts": (re.compile(r"\becharts\s*\.\s*(?:init|getInstanceByDom|registerMap|connect|dispose|use)\b|\.setOption\s*\(|\bvegaEmbed\b"),
-                "calls ECharts or Vega itself: draw it with drishti-chart"),
+    "echarts": (re.compile(r"\becharts\s*\.\s*(?:init|getInstanceByDom|registerMap|connect|dispose|use)\b|\.setOption\s*\("),
+                "calls ECharts itself: draw it with drishti-chart"),
     "grid": (re.compile(r"aria-sort|\bariaSort\b"),
              "sorts a table by its headings itself: use drishti-grid (the grid, or its document tables)"),
     "numbers": (re.compile(r"Intl\.NumberFormat|\.toFixed\s*\(|\.toPrecision\s*\(|\.toLocaleString\s*\("),
                 "formats numbers itself: use drishti-core's formatNumber, formatCompact, formatPercent or formatNamed"),
     "live": (re.compile(r"\bnew\s+(?:[\w$.]*\.)?(?:EventSource|WebSocket)\b|\b(?:window|self|globalThis)\.(?:EventSource|WebSocket)\s*="),
              "opens its own EventSource or WebSocket: use drishti-data's LiveClient"),
+    "inputs": (re.compile(r"drishtiModules\.multiselect|\bms-(?:box|pop|sum|q)\b|Drishti\.People\.attach\(\s*[\w$.]+\s*,\s*[^{\s][^,{]*,"),
+               "draws its own multi-select or picker list: use drishti-inputs (MultiSelect, upgradeCheckboxes, Combobox; Drishti.People.attach(input, opts))"),
 }
 
 # A date's or a time's toLocaleString is a date, not a number (drishti-core's formatDate has no clock yet).
@@ -62,7 +64,6 @@ ALLOWED = {
     "static/js/drishti_bi-runs.js": {"numbers": BI},
     "static/js/drishti_bi-transform-view.js": {"numbers": BI},
     "static/js/drishti_bi-transform.js": {"numbers": BI},
-    "static/js/drishti_bi-vega.js": {"echarts": BI},
     "static/js/drishti_bi-visuals.js": {"echarts": BI},
     "static/js/drishti_geomap.js": {"echarts": BI},
     "static/js/drishti_mr-lens.js": {"numbers": BI},

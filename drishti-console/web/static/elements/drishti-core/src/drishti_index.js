@@ -33,6 +33,7 @@ export { EventBus, createBus, bus } from './drishti_events.js';
 export { SELECTION_EVENT, linkGrid, publishSelection } from './drishti_link.js';
 export { FOCUSABLE, focusable, trapFocus, announce, rovingIndex, rovingTabindex } from './drishti_a11y.js';
 export { installResize, scanResize, resizeHandle, resetResize } from './drishti_resize.js';
+export { trackPointer } from './drishti_pointer.js';
 export { WORKBENCH, LAYOUT, interpretPanelKey, GridKeys, keyName, normalizeKey, keymap } from './drishti_keys.js';
 export { openDialog, closeDialog, openDrawer, ToastTray, toast } from './drishti_overlay.js';
 export { configure, manifest, libraryVersion, requirements, loaded, load, staticUrl, loadScript, loadStyle } from './drishti_loader.js';

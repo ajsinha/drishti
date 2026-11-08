@@ -40,11 +40,11 @@ def form(c: Ctx):
     open_form(c, "/form/trading?kind=trade", height=1150)
     c.page.fill('[name="v.TRADE_ID"]', "MX-2*")
     c.page.locator('[name="v.SOURCE_SYSTEM"][value="MUREX"]').check()
-    cur = c.page.locator("details.ms-box", has=c.page.locator('[name="v.CURRENCY"]'))
-    cur.locator("summary").click()                       # a long list of values is one dropdown: search, Select all, Clear, a box per value
-    cur.locator('[name="v.CURRENCY"][value="EUR"]').check()
-    cur.locator('[name="v.CURRENCY"][value="USD"]').check()
-    cur.locator("summary").click()
+    cur = c.page.locator('.qf-field:has([name="v.CURRENCY"]) .di-upgraded-checks')
+    cur.locator(".di-ms-control").click()                # a long list of values is one multi-select: search, chips, Select all, Clear
+    c.page.locator(".di-ms-pop .di-option", has_text="EUR").first.click()
+    c.page.locator(".di-ms-pop .di-option", has_text="USD").first.click()
+    c.page.keyboard.press("Escape")
     c.page.locator('[name="op.QUANTITY"]').select_option(">=")
     c.page.fill('[name="v.QUANTITY"]', "100m")
     c.page.locator('[name="op.MATURITY_DATE"]').select_option("relative")

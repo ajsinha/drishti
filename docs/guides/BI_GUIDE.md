@@ -3338,8 +3338,10 @@ A `vega-lite` visual draws a [Vega-Lite](https://vega.github.io/vega-lite/) spec
 
 * **Field names.** A row is an object keyed by the well's item: a field by the text after the table's dot (`trade.DESK` is `DESK`), the table put back with an underscore when two fields share a name (`trade_DESK`, `desks_DESK`); a measure by its name (`MTM`, `Exposure (EE peak)`). Check warns about a field the specification names that no well supplies, unless the specification has a `transform` (which can make fields of its own).
 * **Nothing is loaded.** `data.url` and `url` or `loader` as a plain value anywhere in the specification are refused (`DRS-9032`, with the path); the page's loader refuses every URL too. The specification is limited to 200,000 characters.
-* **No `eval`.** The page draws it with the vendored Vega, Vega-Lite and vega-embed and the **vega-interpreter**: vega-embed builds the expression tree and the interpreter walks it, so `test: "datum.MTM < 0"`, `calculate`, `filter` and the like run without `eval`, and the page keeps the **strict content security policy** (a Chromium test asserts the header has no `unsafe-eval` and no violation is reported). The libraries (about 0.9 MB) load the first time a page draws one. vega-embed is told not to write its own `<style>`, to draw on a canvas, to show no actions menu and no tooltip plug-in.
-* The theme's colours and the report's palette go underneath the specification's own `config`; `width` and `height` default to `container`, so the chart fills its frame. A Vega-Lite visual has the chart buttons (alert, show the rows, as a table) but no marks to click: a selection does not filter the page.
+* **Drawn by drishti-chart.** The page has no Vega: drishti-chart's `fromVegaLite` translates the specification into a drishti-chart spec and drishti-chart draws it, like every other chart (its card, tooltip, data table, export and Explain; the theme's colours). Conditions and calculations (`test: "datum.MTM < 0"`, `calculate`, `filter`) are read by drishti-chart's small expression language, never `eval`, so the page keeps the **strict content security policy**.
+* **What translates.** Marks `bar`, `line`, `area`, `point`, `circle`, `square`, `tick`, `rule`, `rect`, `arc` (a donut with `innerRadius`) and `boxplot`; encodings `x`, `y`, `color` (a field, a value, or a `condition` with a default value), `size`, `theta`, `tooltip`, `opacity`; `field`, `type`, `title`, `sort`, `scale` (`type: log`, `zero`, `domain`), `axis` (`title`, `format`: d3 formats become Drishti's), `aggregate` (`sum`, `mean`, `count`, `min`, `max`, `median`), `bin`, `stack`; inline `data.values`; `layer` (a `rule` at a constant becomes a line across the chart); `transform` `filter` and `calculate`; `title` with a subtitle. Colours become tones: a red is bad, a green good, an orange the accent, a grey muted.
+* **What is refused, in words.** Anything else is **not drawn** (never drawn wrong): the frame says which features and what to use instead. Facets, `row` and `column` (use a BI chart's split well for small multiples), `repeat` and `concat` (one visual per chart), `params` and `selection` (the report's own cross-filtering), `projection` and `geoshape` (the map visual, or drishti-chart's `kind: map`), other transforms (a calculated column or measure, or Python), `text` marks and encodings (a table or card visual), `resolve`. For full control from Python, return a drishti-chart spec ([section 34, its section 14](#14-vega-lite-output)).
+* `width` and `height` are ignored: the chart fills its frame. A Vega-Lite visual has the chart buttons (alert, show the rows, as a table).
 * The designer's preview draws it (with the preview's rows); `<drishti-report>` (the embedded element) does **not** draw a `vega-lite` visual (it shows the note a visual it cannot draw shows). A visual **drawn by Python** instead is [section 34, its section 14](#14-vega-lite-output).
 
 #### 3.2 True totals
@@ -6057,7 +6059,7 @@ Run and the table editor's Sample run are off and say why. Nothing falls back to
 | `DRS-9075` | 422 | a Transform's result is not usable | a column the derived dataset declares is missing from the frame, or the Transform's `inputs` are not the derived dataset's inputs (a Transform only: section 13) |
 | `DRS-9074` | 503 | Python does not run here now | compute off, the pool `python` missing or not strict, the strict sandbox not available on this platform (Windows), the interpreter not carrying the pinned versions, the pool's queue full |
 | `DRS-9076` | 422 | a test the item ships with fails, so it is not published | a publish (or approve) of a Python item whose `tests:` do not all pass; a bi-admin may publish with `force: true` (section 15) |
-| `DRS-9077` | 422 | a Vega-Lite specification could not be drawn (shown in the visual's frame; no HTTP call) | a `url` or `loader` in the specification, a library that did not load, an invalid specification (section 14) |
+| `DRS-9077` | 422 | a Vega-Lite specification could not be drawn (shown in the visual's frame; no HTTP call) | a `url` or `loader` in the specification, a feature drishti-chart does not translate (named with what to use instead), an invalid specification (section 14) |
 
 Real answers of the pool's engine in its strict sandbox (a measure on three rows, then a read the hook refuses and one only the kernel can, from the
 SDK's tests, `drishti-compute/src/test/python/test_items.py`):
@@ -6163,11 +6165,21 @@ def render(table, params):
 
 ![The sample Python visual that returns Vega-Lite: a dot for each trade, a tick for each desk's median](../tutorials/img/t14/17-python-vega.jpg)
 
-What comes back from the worker is data, as with ECharts: `{"kind": "vega-lite", "spec": {...}, "ms": 258}`. The rules:
+What comes back from the worker is data, as with ECharts: `{"kind": "vega-lite", "spec": {...}, "ms": 258}`. The page has no Vega: drishti-chart translates the specification (`fromVegaLite`) and draws it, and a feature it does not translate is refused in words with what to use instead (the list is in [section 31](#35-vega-lite-visuals)). The rules:
 
-* **The data is inside the specification** (`data.values`). A `url` or a `loader` anywhere in it is refused, in the sandbox (`DRS-9073`: "a Vega-Lite specification may not load anything from a URL or name a loader") and again in the page. The page draws it with the vendored Vega, Vega-Lite, vega-embed and **vega-interpreter**
-  ([VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)): the interpreter walks the expression tree instead of compiling it to a function, so an expression such as `datum.MTM < 0` is evaluated **without `eval`** and the page keeps the strict content security policy (no `unsafe-eval`, no inline style: vega-embed is told not to write its own `<style>`). The loader refuses every URL, there is no actions menu, no editor link and no tooltip plug-in.
-* The page puts the theme's colours and the report's palette under whatever the specification's own `config` says, sizes the chart to its frame (`width` and `height` as `container`) and draws it on a canvas.
+* **The data is inside the specification** (`data.values`). A `url` or a `loader` anywhere in it is refused, in the sandbox (`DRS-9073`: "a Vega-Lite specification may not load anything from a URL or name a loader") and again in the page.
+  An expression such as `datum.MTM < 0` is read by drishti-chart's expression language, **without `eval`**, so the page keeps the strict content security policy.
+* The chart takes the theme's colours and fills its frame (`width` and `height` are ignored).
+
+**The preferred form: a drishti-chart spec.** A visual whose manifest says `output: drishti-chart` returns a drishti-chart spec (a dict) with its rows inline, and the page draws it as it is: every kind drishti-chart has (bar, line, area, scatter, bubble, histogram, boxplot, heatmap, pie, donut, waterfall, treemap, sankey, gauge, candlestick, map, layers), its annotations and conditional marks, nothing to translate and nothing refused. The answer is `{"kind": "drishti-chart", "spec": {...}}`; a spec without `kind` is a `TypeError`, and `data.source` (an address to load) is refused in the sandbox (`DRS-9073`): put the rows in `data.rows`. The spec's language is in [ELEMENTS_API.md](ELEMENTS_API.md) (drishti-chart).
+
+```python
+def render(table, params):
+    by_desk = table.groupby("DESK", as_index=False)["PNL_1D"].sum()
+    return {"kind": "bar", "title": "One-day P&L by desk", "data": {"rows": by_desk.to_dict("records")},
+            "x": {"field": "DESK"}, "y": {"field": "PNL_1D", "format": "amount0"},
+            "colourWhen": [{"when": "datum.PNL_1D < 0", "tone": "bad"}]}
+```
 * The answer is at most 4 MB. (`target: browser` items run on the server's pool and answer the same.)
 * A **report** can also hold a Vega-Lite visual with **no Python at all**: `type: vega-lite` ([section 31](#35-vega-lite-visuals)).
 

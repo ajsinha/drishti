@@ -40,10 +40,11 @@
 .shr-chip-x:hover, .shr-chip-x:focus-visible { color: var(--d-ink); outline: 2px solid var(--d-accent); border-radius: var(--d-radius-pill); }
 .shr-pick { position: relative; }
 .shr-pick input { width: 100%; }
-.shr-list { position: absolute; left: 0; right: 0; top: 100%; z-index: 5; list-style: none; margin: var(--d-sp-2) 0 0; padding: var(--d-sp-3_2); max-height: 14rem; overflow: auto;
-  background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); box-shadow: var(--d-shadow); }
+/* the people picker and the comment box's @ and { pickers: drishti-inputs' combobox list (floating in the page's body), drawn as these options */
+.ppl-pick { display: block; }
+.ppl-pick > input { width: 100%; }
 .shr-opt { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--d-sp-1_6) var(--d-sp-9_6); padding: var(--d-sp-4_8) var(--d-sp-8); border-radius: var(--d-radius-4); cursor: pointer; }
-.shr-opt.on, .shr-opt:hover { background: var(--d-accent-tint); }
+.shr-opt.di-active, .shr-opt:hover { background: var(--d-accent-tint); }
 .shr-opt-main { font-weight: 600; }
 .shr-opt-sub, .shr-opt-extra { color: var(--d-muted); font-size: var(--d-fs-12_8); }
 .shr-opt-no { color: var(--d-warn); font-size: var(--d-fs-12_8); }
@@ -162,7 +163,6 @@ body.shr-open { overflow: hidden; }
 .disc-badge .disc-n { margin-left: var(--d-sp-2_4); font-size: var(--d-fs-12); color: var(--d-accent); }
 .disc-badge.has { color: var(--d-accent); }
 .disc-badge:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
-.disc-opts { z-index: 6; top: auto; bottom: 100%; }
 .disc-flash { outline: 2px solid var(--d-accent); outline-offset: 2px; }
 @media (max-width: 640px) {
   .disc-b, .side-tabs [role="tab"] { min-height: 36px; }

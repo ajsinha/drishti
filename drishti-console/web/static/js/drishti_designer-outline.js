@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The Sutra designer's Outline mode (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31; core/designer_outline.py). The screen as a list: its
    sections, the panels in each and what a click opens under a table, each in plain words. Drag an item to reorder it or move it to
    another section; drop it on a table's "opens on a click" line to nest it (a short sentence asks where it opens); drag a child out
@@ -25,7 +26,8 @@
   var draft = root.dataset.draft, kind = root.dataset.kind, id = root.dataset.id;
   var tree = root.querySelector('[data-ol-tree]'), detail = root.querySelector('[data-ol-detail]'), msg = root.querySelector('[data-ol-msg]');
   var frame = root.querySelector('[data-ol-preview]'), sutra = root.querySelector('[data-ol-sutra]');
-  var state = null, picked = null, rev = 0, dragging = null;
+  var state = null, picked = null, rev = 0;
+  var hub = new window.Drishti.elements.designer.DragHub();          // an item dragged onto another, a section or a nest line (drishti-designer)
 
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -71,20 +73,11 @@
   /* the tree */
   function isChild(d) { return d && d.parent != null; }
   function drag(li, data) {
-    li.setAttribute('draggable', 'true');
-    li.addEventListener('dragstart', function (e) { dragging = data; e.dataTransfer.setData('text/x-ol', JSON.stringify(data)); e.dataTransfer.effectAllowed = 'move'; root.classList.add('ol-dragging'); e.stopPropagation(); });
-    li.addEventListener('dragend', function () { dragging = null; root.classList.remove('ol-dragging'); });
+    hub.draggable(li, { payload: function (e) { return e.target.closest('.ol-item') === li ? { ol: data } : null; }, label: function () { return (data.child && data.child.title) || ''; } });
   }
   function target(node, onDrop) {
-    node.addEventListener('dragover', function (e) { if (dragging) { e.preventDefault(); e.stopPropagation(); node.classList.add('ol-over'); } });
-    node.addEventListener('dragleave', function () { node.classList.remove('ol-over'); });
-    node.addEventListener('drop', function (e) {
-      node.classList.remove('ol-over');
-      if (!dragging) { return; }
-      e.preventDefault(); e.stopPropagation();
-      var d = dragging; dragging = null; root.classList.remove('ol-dragging');
-      onDrop(d);
-    });
+    hub.target({ el: node, over: function () { node.classList.add('ol-over'); root.classList.add('ol-dragging'); }, leave: function () { node.classList.remove('ol-over'); },
+      drop: function (x, y, d) { node.classList.remove('ol-over'); root.classList.remove('ol-dragging'); onDrop(d.ol); } });
   }
   function moveTo(d, to, section) {
     if (isChild(d)) { return step({ op: 'unnest', parent: d.parentId }); }          // a child dragged onto the page: back on the page

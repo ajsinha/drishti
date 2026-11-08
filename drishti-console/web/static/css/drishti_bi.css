@@ -79,7 +79,6 @@ h1 .bi-soon, h2 .bi-soon { margin-left: var(--d-sp-8); vertical-align: middle; }
 .bi-ask { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-6_4); margin-left: var(--d-sp-8); }
 .bi-stale { padding: var(--d-sp-6_4) var(--d-sp-9_6); border: 1px solid var(--d-bad); border-radius: var(--d-radius); background: var(--d-surface-2); }
 .bi-form input:not([type="checkbox"]):not([type="color"]), .bi-form select { min-width: min(24rem, 100%); }
-.bi-people .shr-list { z-index: 20; min-width: 100%; }
 .bi-approvers { flex: 1 1 100%; margin: 0; }
 .bi-count { font-size: var(--d-fs-12); color: var(--d-muted); }
 .bi-empty, .bi-placeholder { color: var(--d-muted); padding: var(--d-sp-12) 0; }

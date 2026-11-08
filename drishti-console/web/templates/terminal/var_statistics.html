@@ -20,7 +20,7 @@
 {% block title %}Period statistics · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var-statistics{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="rg" data-statistics data-scope="{{ scope }}" data-period="{{ period }}" data-measure="{{ measure }}">
@@ -33,7 +33,7 @@
   <form class="rg-ask" method="get" action="/var/statistics">
     <label>Scope <input name="scope" value="{{ scope }}" class="mono"></label>
     <label>Period <input name="period" value="{{ period }}" placeholder="FY2026, FY2026Q1, 2026-01-01..2026-03-31" class="mono"></label>
-    <label>Measure <select name="measure">{% for m in ['var', 'es', 'svar', 'ses'] %}<option value="{{ m }}"{% if m == measure %} selected{% endif %}>{{ m|upper }}</option>{% endfor %}</select></label>
+    <label>Measure <drishti-select name="measure" label="Measure">{% for m in ['var', 'es', 'svar', 'ses'] %}<option value="{{ m }}"{% if m == measure %} selected{% endif %}>{{ m|upper }}</option>{% endfor %}</drishti-select></label>
     <button type="submit" class="rg-btn primary">Show</button>
   </form>
   <p class="rg-notice" data-st-notice role="status" hidden></p>
@@ -41,4 +41,4 @@
   <p class="rg-note" data-st-missing></p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}

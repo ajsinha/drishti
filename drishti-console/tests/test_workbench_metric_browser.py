@@ -36,8 +36,8 @@ def test_a_metric_is_added_from_the_palette_drawn_as_a_named_figure_and_edited_i
     rev = state(page, "rev")
     page.get_by_role("button", name="Add a metric panel").click()
     settle(page, rev)
-    wait(page, "!!document.querySelector('[data-preview] .wb-sel[data-panel]')")
-    new = page.evaluate("document.querySelector('[data-preview] .wb-sel[data-panel]').dataset.panel")
+    wait(page, "!!document.querySelector('[data-preview] .dd-selected[data-panel]')")
+    new = page.evaluate("document.querySelector('[data-preview] .dd-selected[data-panel]').dataset.panel")
     assert option(page, new, "value") == "$.mtm"                              # seeded with the first number of the samples
     box = page.locator(f'[data-preview] [data-panel="{new}"] .metric')
     box.wait_for()

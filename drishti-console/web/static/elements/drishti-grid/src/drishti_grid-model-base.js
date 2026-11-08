@@ -21,6 +21,8 @@ import { getValue } from './drishti_columns.js';
 import { PivotState, pivotLocal, serverRequest } from './drishti_pivot.js';
 import { pivotApplyUpdates, mergeAnswer, applyValueFilters } from './drishti_pivot-answer.js';
 import { toXlsx } from './drishti_export.js';
+import { ClientRowModel } from './drishti_client-rows.js';
+import { ServerRowModel } from './drishti_server-rows.js';
 
 /** The layouts a grid is drawn in (the visual shell; the model is the same). */
 export const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
@@ -38,6 +40,20 @@ export function placeGrandRow(answer, where) {
   if (!answer || !answer.rows || ['top', 'bottom', 'none'].indexOf(where) < 0) { return; }
   const grand = answer.rows.filter((r) => r.kind === 'grand'), rest = answer.rows.filter((r) => r.kind !== 'grand');
   answer.rows = where === 'none' ? rest : where === 'top' ? grand.concat(rest) : rest.concat(grand);
+}
+
+/**
+ * A grid's row model from its options: server-side rows when there is a datasource (with tree data a level at a time), else the rows in
+ * the page (with their tree by getDataPath).
+ * @param {Object} o the grid's options (GridOptions)
+ * @param {import('./drishti_columns.js').ColumnModel} columns
+ * @returns {(ClientRowModel|ServerRowModel)}
+ */
+export function rowModelFor(o, columns) {
+  const tree = { treeData: o.treeData, groupDefaultExpanded: o.groupDefaultExpanded, getRowId: o.getRowId };
+  return o.datasource ? new ServerRowModel(Object.assign({ datasource: o.datasource, blockSize: o.blockSize, isServerSideGroup: o.isServerSideGroup,
+    getServerSideGroupKey: o.getServerSideGroupKey }, tree))
+    : new ClientRowModel(Object.assign({ columns: columns, rows: o.rows || [], clientAggregation: o.clientAggregation, getDataPath: o.getDataPath }, tree));
 }
 
 /** The pivot, the export and the kept state of a grid model; GridModel adds the rest (rows, columns, selection, keys, editing). */

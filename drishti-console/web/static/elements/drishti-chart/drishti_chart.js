@@ -1737,7 +1737,25 @@
       reg.define(CHART_ELEMENT, DrishtiChartElement);
       return true;
     }
-    return { "CHART_ELEMENT": CHART_ELEMENT, "defineChartElement": defineChartElement };
+    function chartIn(host, spec, o) {
+      o = Object.assign({}, o);
+      const doc = host.ownerDocument, win = doc.defaultView;
+      if (win && win.customElements) { defineChartElement(win.customElements, win); }
+      let el = host.querySelector(':scope > ' + CHART_ELEMENT);
+      if (!el) {
+        host.textContent = '';
+        el = doc.createElement(CHART_ELEMENT);
+        el.setAttribute('density', o.density || 'compact');
+        el.style.display = 'block';
+        host.appendChild(el);
+      }
+      if (!o.height) { o.height = Math.max(140, (host.clientHeight || 0) - 64); }
+      delete o.density;
+      el.options = o;
+      el.spec = spec;
+      return el.chart;
+    }
+    return { "CHART_ELEMENT": CHART_ELEMENT, "defineChartElement": defineChartElement, "chartIn": chartIn };
   })();
   /* ---- src/drishti_chart-kinds2.js ---- */
   __m["src/drishti_chart-kinds2.js"] = (function () {
@@ -2217,6 +2235,7 @@
   /* ---- src/drishti_chart-vega.js ---- */
   __m["src/drishti_chart-vega.js"] = (function () {
     var compileCondition = __m["src/drishti_chart-data.js"].compileCondition, rowsOf = __m["src/drishti_chart-data.js"].rowsOf, num = __m["src/drishti_chart-data.js"].num;
+    var chartIn = __m["src/drishti_chart-element.js"].chartIn;
     const AGG = { sum: (a) => a.reduce((s, x) => s + x, 0), mean: (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : null), count: (a) => a.length,
       min: (a) => (a.length ? Math.min.apply(null, a) : null), max: (a) => (a.length ? Math.max.apply(null, a) : null),
       median: (a) => { if (!a.length) { return null; } const s = a.slice().sort((x, y) => x - y), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; } };
@@ -2224,6 +2243,28 @@
     const KNOWN_TOP = ['$schema', 'data', 'mark', 'encoding', 'layer', 'transform', 'title', 'width', 'height', 'autosize', 'config', 'description', 'name', 'background', 'padding'];
     const KNOWN_ENC = ['x', 'y', 'color', 'fill', 'stroke', 'size', 'theta', 'tooltip', 'opacity', 'x2', 'y2'];
     const MARKS = { bar: 1, line: 1, area: 1, point: 1, circle: 1, square: 1, tick: 1, rule: 1, rect: 1, arc: 1, boxplot: 1 };
+    const INSTEAD = [
+      [/^(facet|row|column)$/, 'small multiples: a BI chart\'s split well, or one visual per member'],
+      [/^(repeat|concat|hconcat|vconcat|spec)$/, 'one visual per chart on the report page'],
+      [/^(params|selection)$/, 'the report\'s own cross-filtering: a click on a mark filters the page'],
+      [/^(projection|geoshape)$/, 'drishti-chart\'s map kind (kind: map), or the BI map visual'],
+      [/^resolve$/, 'one axis per chart: put a second scale in its own visual, or a combo chart\'s secondary axis'],
+      [/^transform$/, 'a calculated column or measure in the model, or compute the rows in Python'],
+      [/^(text|shape|strokeDash|href|url|key|order|detail|angle|radius|description|latitude|longitude|xOffset|yOffset)$/, 'a table or card visual for text, a series (color field) for detail; or return a drishti-chart spec from Python'],
+      [/^mark$/, 'a BI visual of that kind (table, card, map) or a mark drishti-chart draws: bar, line, area, point, circle, square, tick, rule, rect, arc, boxplot']
+    ];
+    function vegaLiteAlternative(path) {
+      const parts = String(path || '').replace(/\s.*$/, '').split('.').map((p) => p.replace(/\[\d+\]$/, '')).filter((p) => p && p !== '$');
+      for (let i = parts.length - 1; i >= 0; i--) {
+        for (const [re, text] of INSTEAD) { if (re.test(parts[i])) { return text; } }
+      }
+      return 'return a drishti-chart spec from Python (output: drishti-chart), which draws every kind the library has';
+    }
+    function vegaLiteRefusal(unsupported) {
+      const seen = Array.from(new Set(unsupported || []));
+      return 'Not drawn: this Vega-Lite specification uses what drishti-chart does not draw, and Drishti never draws a chart wrong. '
+        + seen.map((p) => p + ': use ' + vegaLiteAlternative(p)).join('; ') + '.';
+    }
     function colourTone(c) {
       const named = { red: 'bad', crimson: 'bad', firebrick: 'bad', green: 'good', seagreen: 'good', orange: 'accent', gold: 'accent', grey: 'muted', gray: 'muted', black: 'ink', steelblue: 'link', blue: 'link' };
       const s = String(c || '').trim().toLowerCase();
@@ -2404,19 +2445,20 @@
           if (got.rule) { rules.push.apply(rules, got.rule); return; }
           layers.push(got);
         });
-        if (!layers.length) { return { spec: null, unsupported: unsupported, refused: 'no layer this library draws' }; }
+        if (!layers.length) { return { spec: null, unsupported: Array.from(new Set(unsupported)), refused: unsupported.length ? vegaLiteRefusal(unsupported) : 'no layer this library draws' }; }
         spec = layers.length === 1 ? layers[0] : { kind: 'layer', layers: layers };
         if (rules.length) { (spec.layers ? spec.layers[0] : spec).annotations = rules; }
       } else {
         if (!vl.mark) { return { spec: null, unsupported: unsupported, refused: 'a Vega-Lite specification needs a mark or layers' }; }
         spec = view(vl, top, '$', unsupported);
-        if (!spec) { return { spec: null, unsupported: unsupported, refused: 'the mark ' + JSON.stringify(vl.mark) + ' is not drawn by this library' }; }
+        if (!spec) { return { spec: null, unsupported: Array.from(new Set(unsupported)), refused: vegaLiteRefusal(unsupported.length ? unsupported : ['$.mark']) }; }
         if (spec.rule) { return { spec: null, unsupported: unsupported, refused: 'a lone rule has nothing to sit on' }; }
       }
+      if (unsupported.length) { return { spec: null, unsupported: Array.from(new Set(unsupported)), refused: vegaLiteRefusal(unsupported) }; }
       if (title) { spec.title = title; }
       if (subtitle) { spec.subtitle = subtitle; }
       spec.from = 'vega-lite';
-      return { spec: spec, unsupported: unsupported, refused: null };
+      return { spec: spec, unsupported: [], refused: null };
     }
     function urlIn(node, path) {
       if (Array.isArray(node)) { for (let i = 0; i < node.length; i++) { const f = urlIn(node[i], path + '[' + i + ']'); if (f) { return f; } } return null; }
@@ -2429,7 +2471,23 @@
       }
       return null;
     }
-    return { "colourTone": colourTone, "d3Format": d3Format, "fromVegaLite": fromVegaLite };
+    function vegaLiteIn(host, vl, o) {
+      o = Object.assign({}, o);
+      const t = fromVegaLite(vl, { rows: o.rows, title: o.title });
+      delete o.rows; delete o.title;
+      if (!t.spec) {
+        const doc = host.ownerDocument, p = doc.createElement('p');
+        p.className = 'dc-refused';
+        p.setAttribute('role', 'status');
+        p.setAttribute('data-refused', t.unsupported.join(' '));
+        p.textContent = t.refused;
+        host.textContent = '';
+        host.appendChild(p);
+        return { chart: null, refused: t.refused, unsupported: t.unsupported, spec: null };
+      }
+      return { chart: chartIn(host, t.spec, o), refused: null, unsupported: [], spec: t.spec };
+    }
+    return { "vegaLiteAlternative": vegaLiteAlternative, "vegaLiteRefusal": vegaLiteRefusal, "colourTone": colourTone, "d3Format": d3Format, "fromVegaLite": fromVegaLite, "vegaLiteIn": vegaLiteIn };
   })();
   /* ---- src/drishti_index.js ---- */
   __m["src/drishti_index.js"] = (function () {
@@ -2444,7 +2502,7 @@
     registerMapKind();
     registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });
     function install(root) { if (root && root.document && root.customElements) { defineChartElement(root.customElements, root); } }
-    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "SELECTION_EVENT": __lib("drishti-core").SELECTION_EVENT, "linkGrid": __lib("drishti-core").linkGrid, "publishSelection": __lib("drishti-core").publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement };
+    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "vegaLiteAlternative": __m["src/drishti_chart-vega.js"].vegaLiteAlternative, "vegaLiteRefusal": __m["src/drishti_chart-vega.js"].vegaLiteRefusal, "vegaLiteIn": __m["src/drishti_chart-vega.js"].vegaLiteIn, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "SELECTION_EVENT": __lib("drishti-core").SELECTION_EVENT, "linkGrid": __lib("drishti-core").linkGrid, "publishSelection": __lib("drishti-core").publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement, "chartIn": __m["src/drishti_chart-element.js"].chartIn };
   })();
   return Object.freeze(Object.assign({ library: "drishti-chart", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

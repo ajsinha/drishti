@@ -72,6 +72,18 @@ final class FrtbAnswer {
             classes.add(x);
         }
         m.put("classes", classes);
+        // each class's own total (its measures added, per scenario and in the reported one): the engine's figure, never summed by the page
+        List<Map<String, Object>> classTotals = new ArrayList<>();
+        for (String cls : s.classes()) {
+            Map<String, Object> x = new LinkedHashMap<>();
+            x.put("class", cls);
+            x.put("low", s.classTotal(cls, 0));
+            x.put("medium", s.classTotal(cls, 1));
+            x.put("high", s.classTotal(cls, 2));
+            x.put("reported", s.classTotal(cls, s.reported));
+            classTotals.add(x);
+        }
+        m.put("classTotals", classTotals);
         m.put("sbm", Map.of("low", s.total[0], "medium", s.total[1], "high", s.total[2]));
         m.put("binding", Sbm.SCENARIOS[s.binding]);
         m.put("reported", Sbm.SCENARIOS[s.reported]);

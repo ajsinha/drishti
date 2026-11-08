@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Query by form (FORM <pack>). The page works without this script (a plain GET form); the script only makes it pleasanter:
-   the second box appears for "between", a date field becomes free text for a relative range, Esc clears every field,
+   the second box appears for "between", a date field gives way to words for a relative range, Esc clears every field,
    Ctrl+Enter submits from a list box, and the result's buttons copy, save and share. The criteria live in the address. */
 (function () {
   'use strict';
@@ -36,12 +36,13 @@
   function each(list, fn) { Array.prototype.forEach.call(list, fn); }
 
   /* A dependent enum (data-depends="PRODUCT_TYPE"): only its values that occur with the chosen values of the field it depends on are
-     offered (each label says which with data-parents); nothing chosen there offers them all. A value hidden this way is unticked. */
+     offered (each label says which with data-parents); nothing chosen there offers them all. A value hidden this way is unticked (a
+     long list's multi-select, drishti-inputs, follows its checkboxes: it offers what is not qf-dep-off). */
   function dependents() {
     if (!form) { return; }
-    each(form.querySelectorAll('.qf-enum[data-depends], .ms-box[data-depends]'), function (group) {
+    each(form.querySelectorAll('.qf-enum[data-depends]'), function (group) {
       var parent = form.querySelector('.qf-field[data-field="' + group.getAttribute('data-depends') + '"]');
-      var child = group.closest('.qf-field');           // the field, not the group: a long list's labels move into its drop-down
+      var child = group.closest('.qf-field');
       if (!parent || !child) { return; }
       function apply() {
         var chosen = [];
@@ -92,23 +93,22 @@
   });
 
   function syncField(box) {
-    var op = box.querySelector('.qf-op'), type = box.getAttribute('data-type');
-    var v = box.querySelector('.qf-v'), v2 = box.querySelector('.qf-v2');
+    var op = box.querySelector('.qf-op');
+    var v = box.querySelector('.qf-v'), v2 = box.querySelector('.qf-v2'), rel = box.querySelector('.qf-vrel');
     var kind = op ? op.value : '';
     if (v2) { v2.hidden = kind !== 'between'; }
-    if (type === 'date' && v) {
-      var rel = kind === 'relative';
-      if ((v.type === 'text') !== rel) { v.value = ''; v.type = rel ? 'text' : 'date'; }
-      v.placeholder = rel ? 'last 5 business days' : '';
-      v.setAttribute('list', rel ? 'qf-presets' : '');
-      if (!rel) { v.removeAttribute('list'); }
+    if (rel && v) {                                   // a date: the picker, or words for a relative range (only the one shown is sent)
+      var words = kind === 'relative';
+      v.hidden = words; v.disabled = words; rel.hidden = !words; rel.disabled = !words;
     }
   }
+  /** The value box a field sends: the relative words or the date (or the text, number, ids). */
+  function valueBox(box) { var rel = box.querySelector('.qf-vrel'); return rel && !rel.hidden ? rel : box.querySelector('.qf-v'); }
 
   function clearAll() {
     each(form.querySelectorAll('input, textarea, select'), function (e) {
-      if (e.type === 'hidden') { return; }
-      if (e.type === 'checkbox') { e.checked = false; }
+      if (e.type === 'hidden' && !e.diPicker) { return; }
+      if (e.type === 'checkbox') { if (e.checked) { e.checked = false; e.dispatchEvent(new Event('change', { bubbles: true })); } }
       else if (e.type === 'radio') { e.checked = e.value === 'any'; }
       else if (e.tagName === 'SELECT') { e.selectedIndex = e.name.indexOf('op.') === 0 || e.name === 'limit' ? e.selectedIndex : 0; }
       else { e.value = ''; }
@@ -163,16 +163,16 @@
     if (clear) { clear.addEventListener('click', clearAll); }
     form.addEventListener('submit', function () {
       // empty boxes stay out of the address: only what was filled in is a criterion
-      each(form.querySelectorAll('.qf-v, .qf-v2'), function (e) { if (!e.value.trim()) { e.disabled = true; } });
+      each(form.querySelectorAll('.qf-v, .qf-v2, .qf-vrel'), function (e) { if (!e.value.trim()) { e.disabled = true; } });
       each(form.querySelectorAll('.qf-field'), function (box) {
-        var v = box.querySelector('.qf-v'), op = box.querySelector('.qf-op');
+        var v = valueBox(box), op = box.querySelector('.qf-op');
         if (op && v && v.disabled) { op.disabled = true; }
         if (box.getAttribute('data-type') === 'text' && v && v.disabled) {
           var cs = box.querySelector('[name^="cs."]'); if (cs) { cs.disabled = true; }
         }
       });
     });
-    window.addEventListener('pageshow', function () { each(form.querySelectorAll(':disabled'), function (e) { e.disabled = false; }); });
+    window.addEventListener('pageshow', function () { each(form.querySelectorAll(':disabled'), function (e) { e.disabled = false; }); each(form.querySelectorAll('.qf-field'), syncField); });
   }
 
   function copy(text, button) {

@@ -39,7 +39,7 @@
 .di-btn { background: transparent; border: 1px solid var(--d-border); border-radius: 7px; padding: 3px 10px; cursor: pointer; color: var(--d-muted); white-space: nowrap; }
 .di-btn:hover { color: var(--d-ink); border-color: var(--d-faint); }
 .di-btn[disabled] { opacity: 0.5; cursor: default; }
-.di-btn.di-primary { background: var(--d-accent); border-color: var(--d-accent); color: var(--d-on-accent); }
+.di-btn.di-primary { background: var(--d-fill); border-color: var(--d-fill); color: var(--d-on-fill); }
 .di-link { background: none; border: 0; padding: 0; color: var(--d-link); cursor: pointer; text-align: left; }
 .di-count { color: var(--d-faint); font-size: 0.9em; }
 
@@ -178,6 +178,7 @@
 .di-code .CodeMirror-selected, .di-code .CodeMirror-focused .CodeMirror-selected { background: var(--d-accent-tint); }
 .di-code[data-readonly] .CodeMirror { background: var(--d-surface-2); }
 .di-lint-gutter { width: 16px; }
+.di-code .di-code-hl { background: var(--d-accent-tint); box-shadow: inset 3px 0 0 var(--d-accent); }
 .di-lint-sign { display: inline-block; width: 14px; text-align: center; cursor: help; }
 .di-lint-error { text-decoration: underline wavy var(--d-bad); text-underline-offset: 3px; }
 .di-lint-warning { text-decoration: underline wavy var(--d-warn); text-underline-offset: 3px; }
@@ -213,3 +214,20 @@
 .di-k-delete, .di-k-changed:first-child { background: color-mix(in srgb, var(--d-bad) 12%, var(--d-surface)); }
 .di-k-insert, .di-k-changed + .di-k-changed { background: color-mix(in srgb, var(--d-ok) 12%, var(--d-surface)); }
 .di-k-none { background: var(--d-surface-2); }
+
+/* the single-choice select (drishti_select.js): the control sizes to its value like a native select; a long list has its search on top */
+.di-select { display: inline-block; vertical-align: middle; min-width: 6em; }
+.di-select-control { cursor: pointer; padding: 0 0 0 8px; user-select: none; white-space: nowrap; }
+.di-select-control:focus { outline: none; border-color: var(--d-accent); box-shadow: 0 0 0 2px var(--d-accent-tint); }
+.di-select-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.di-select-control.di-placeholder .di-select-text { color: var(--d-faint); }
+.di-select.di-disabled .di-select-control { opacity: 0.55; cursor: default; }
+.di-select-search { width: 100%; }
+.di-select-status { color: var(--d-faint); font-size: 0.88em; padding: 4px 8px 0; }
+.di-select-status:empty { display: none; }
+/* a page's own fields upgraded in place (drishti_native.js): the picker where the field was */
+.di-upgraded { display: inline-block; vertical-align: middle; min-width: 11rem; }
+.di-upgraded[hidden] { display: none; }
+.di-upgraded-checks { display: block; max-width: 24rem; width: 100%; }
+/* a finger's size on a touch screen: every field, button and option at least 44 px high */
+@media (pointer: coarse) { .di-control, .di-field, .di-inline-field, .di-btn, .di-chip-btn, .di-option, .di-preset, .di-icon-btn, .di-chip-x { min-height: 44px; } }

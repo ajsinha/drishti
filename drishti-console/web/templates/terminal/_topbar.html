@@ -45,7 +45,7 @@
       <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Suggestions" hidden></ul>
     </div>
   </form>
-  <button type="button" class="tbar-find-btn" data-find-open title="Search everything (Alt+K)" aria-label="Search everything (Alt+K)"><i class="bi bi-search" aria-hidden="true"></i></button>{# the global search: drishti_search-box.js #}
+  <button type="button" class="tbar-find-btn" data-find-open title="Search everything (Alt+K)" aria-label="Search everything (Alt+K)"><i class="bi bi-search" aria-hidden="true"></i></button>{# the global search: drishti-insight's search box #}
 
   {% set bd = business_date or {} %}
   <form class="asof{% if asof != 'live' %} asof-past{% endif %}" action="/asof" method="get" data-asof
@@ -54,7 +54,7 @@
     <label for="asofDate" class="visually-hidden">Business date</label>
     <input id="asofDate" class="asof-date mono" type="date" name="d" value="{{ bd.selected or (asof if asof != 'live' else bd.current) or '' }}"
            {% if bd.earliest %}min="{{ bd.earliest }}"{% endif %} {% if bd.current %}max="{{ bd.current }}"{% endif %}
-           data-holidays="{{ (bd.holidays or []) | join(',') }}" data-current="{{ bd.current or '' }}">
+           data-holidays="{{ (bd.holidays or []) | join(',') }}" data-calendar-name="{{ bd.calendar or 'NY' }}" data-current="{{ bd.current or '' }}" data-business>
     {% set live_on = asof == 'live' %}{% set live_tip = 'Live updates on — click to pause' if live_on else 'Live updates paused — click to resume' %}
     {% if asof != 'live' %}
     <label for="asofKnown" class="visually-hidden">Known at</label>

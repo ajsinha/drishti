@@ -1111,16 +1111,9 @@ The console serves the library at an **exact semantic version**, immutably, and 
 A version this console does not hold is `410 DRS-8006` (the answer says which one it serves): after a console upgrade, a page pinned to the old version tells you to move the pin, and a version always names **the same bytes**. Put the entry's `integrity` on the script line, and, because a module's own imports are not
 covered by it, pin the rest with an import map's `integrity` (Chrome 127 and later) listing the `m/…` files of `integrity.json`.
 
-**npm.** `@drishti/elements` is the same files (`drishti-console/web/elements/package/`, made by `python3 tools/elements_package.py`; publishing is the release build's `npm publish`): `import '@drishti/elements'` defines the elements, `types/index.d.ts` declares them and their events, `types/react.d.ts` adds the React `JSX.IntrinsicElements`.
-From `node_modules` the module's own origin is not the console, so **set `server`**: `DrishtiElements.configure({ server: 'https://drishti.bank.example', tokenProvider })`. The sheets, the icon font and the chart code are fetched from that console, so they always match the data it serves.
-
-```ts
-import '@drishti/elements';
-import type { DrishtiReport, ReportFilterChangedDetail } from '@drishti/elements';
-
-const rep = document.querySelector('drishti-report')!;            // typed: HTMLElementTagNameMap knows the tag
-rep.addEventListener('drishti:filter-changed', (e) => console.log(e.detail.selections));   // typed: HTMLElementEventMap knows the event
-```
+**npm.** The 1.x elements have no npm package any more (`@drishti/elements` 1.x and the tool that built it are retired): the 1.x line is
+frozen and served from the console for the pages that embed it. New work uses the per-library packages, `@drishti/elements-<name>`, with
+their `.d.ts` declarations ([ELEMENTS_IN_YOUR_APP.md](../guides/ELEMENTS_IN_YOUR_APP.md), `drishti.py elements dist`).
 
 **Two contracts, both semver.** The **element API** (this guide's tables: attributes, properties, methods, events and their `detail`) changes only in a major version of the library. The **embed API** (`/embed/v1`) changes additively within `v1`; a major is announced with `Deprecation` and `Sunset`
 headers (the console's `embed.lifecycle`), served beside its successor for two releases, and then `410 DRS-8006`. The element sends `Drishti-Embed-Api: 1.0` and the console answers in the newest compatible shape.
@@ -1743,8 +1736,7 @@ Three rules hold the design together:
         integrity="sha384-…" crossorigin="anonymous"></script>
 ```
 
-or from npm (`npm i @drishti/elements`, `import '@drishti/elements'`; set `server`, because the module's own origin is then not the console); the npm package and the console serve the same
-build ([section 13](#13-distribution-and-versioning)). The path is `/embed/v1/elements/<version>/drishti-elements.js`; `…/1/…` and `…/1.1/…` redirect to the exact version, whose SRI value is in `…/integrity.json`. Importing defines the elements (`customElements.define`) once;
+from the console only (the 1.x npm package is retired: [section 13](#13-distribution-and-versioning)). The path is `/embed/v1/elements/<version>/drishti-elements.js`; `…/1/…` and `…/1.1/…` redirect to the exact version, whose SRI value is in `…/integrity.json`. Importing defines the elements (`customElements.define`) once;
 importing twice is harmless.
 
 #### 5.2 `<drishti-view>` attributes
@@ -2457,9 +2449,8 @@ embedded views again, because `drishti_about-hints.js` wires its popover to it.
   `/elements/<semver>/integrity.json` (`{"drishti-elements.js": "sha384-…", …}`). Immutable. `/elements/1/…` and
   `/elements/1.2/…` are aliases answering `302` to the newest matching version (short cache) for hosts that accept
   updates; SRI needs the exact version.
-- **npm**: `@drishti/elements` with the same files and an `exports` map; TypeScript declarations (`HTMLElementTagNameMap`
-  entries, event detail types, a `JSX.IntrinsicElements` augmentation for React) generated from one source. Published
-  from the release build; the package is the same bytes as the console's path for that version.
+- **npm**: retired for 1.x (the line is frozen and served by the console); the per-library packages `@drishti/elements-<name>`
+  carry their own declarations (ELEMENTS.md, the distribution).
 - **Two contracts, both semver**:
   1. the **element API** (attributes, properties, methods, events and their `detail`, CSS custom properties, parts,
      slots): a removal or meaning change is a major version;
@@ -2469,7 +2460,7 @@ embedded views again, because `drishti_about-hints.js` wires its popover to it.
   The element sends `Drishti-Embed-Api: 1.<minor>`; the console answers in the newest compatible shape.
 - Panel **HTML is not a contract**: hosts style it only through custom properties and parts; a test lists the parts.
 
-**Implementation (step 12):** see [Steps 11 to 15: implementation](#steps-11-to-15-implementation). The paths are `/embed/v1/elements/<version>/...` (under the embed API's own prefix, not `/elements/...`), the package is a folder made by `tools/elements_package.py`, and `Deprecation`/`Sunset` are configured by `embed.lifecycle`.
+**Implementation (step 12):** see [Steps 11 to 15: implementation](#steps-11-to-15-implementation). The paths are `/embed/v1/elements/<version>/...` (under the embed API's own prefix, not `/elements/...`), the 1.x npm package is retired (the per-library packages replace it), and `Deprecation`/`Sunset` are configured by `embed.lifecycle`.
 
 **Decision 7:** the console serves the library and the npm package mirrors it (rather than npm only). Recommended:
 a host on a locked-down network fetches from Drishti, which it must reach anyway, and the version always matches the
@@ -2851,10 +2842,8 @@ page keeps its one connection.
 
 **Step 12, distribution.** `core/element_dist.py` holds the library's **semantic version** (`VERSION`, `1.3.0`; the entry reports it as `DrishtiElements.version`). The console serves it **exactly and immutably** at `/embed/v1/elements/1.3.0/drishti-elements.js` and `.../m/<name>.js`
 (`Cache-Control: public, max-age=31536000, immutable`, `ETag` = the file's SRI value) with `.../integrity.json` (`{"name", "version", "api", "files": {<path>: {"integrity": "sha384-…", "bytes"}}}`); a partial version (`/embed/v1/elements/1/…`, `/1.1/…`) answers `302` to the exact one (`max-age=60`, with CORS, so a module graph follows it);
-a version this console does not hold is `410 DRS-8006` (it says which one it serves), a malformed one `404`. `web/elements/integrity.json` is the committed record and `tests/test_element_package.py` fails when a module changed and `VERSION` did not, so **a version names the same bytes for ever**. The unversioned
-`/embed/v1/drishti-elements.js` (revalidated each time) stays for hosts that follow the console. **The npm package** `@drishti/elements` is a folder, `drishti-console/web/elements/package/`, made by `python3 tools/elements_package.py` (no network, no Node): `package.json` (an `exports` map, `type: module`), `dist/` (the same modules byte for byte,
-in the layout the console serves), `types/index.d.ts` and `types/react.d.ts` (**generated from one source**, `core/element_api.py`, which also generates the reference tables and the package README, and is checked against the real elements by a test), `integrity.json` and `README.md`. The sheets, the icon font and the chart code are not in
-the package: they are versioned with the console that serves the data and the library fetches them from `server`. Publishing to a registry (`npm pack`, `npm publish`) is the release build's job and is not done here. **`Deprecation` and `Sunset`**: `embed.lifecycle` in the console's settings (`{"1": {deprecation, sunset, link}}`) adds
+a version this console does not hold is `410 DRS-8006` (it says which one it serves), a malformed one `404`. `web/elements/integrity.json` is the committed record and `tests/test_element_package.py` fails when a byte under `web/embed/` changes: the 1.x line is **frozen**, so **a version names the same bytes for ever**. The unversioned
+`/embed/v1/drishti-elements.js` (revalidated each time) stays for hosts that follow the console. The 1.x npm package and its tool are retired (the per-library packages replace them); `core/element_api.py` still holds the element API as data, the source of this guide's reference tables, checked against the real elements by a test. **`Deprecation` and `Sunset`**: `embed.lifecycle` in the console's settings (`{"1": {deprecation, sunset, link}}`) adds
 `Deprecation: @<epoch>` (RFC 9745), `Sunset: <HTTP date>` (RFC 8594) and a `Link` to every `/embed/v1` answer from the day it is announced, and from the sunset day the embed calls are `410 DRS-8006`. Nothing is announced by default; there is no `/embed/v2/` yet, so the mechanism is tested with a configured date, not in use.
 
 **Step 13, documentation.** The developer guide [section 19](#19-drishti-elements-developer-guide) (also in the help centre): the five-minute start, the element reference (generated tables), the token exchange for the host backend, CSP and SRI, theming, a cookbook, troubleshooting by DRS code; `CONFIGURATION.md` (`embed.lifecycle`, the scope),
@@ -3103,7 +3092,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
 | Time travel | `AsOf(businessDate, knownAt, live)`, `AsOfResolver` | `asOf` and `knownAt` on a GenUI URL | none |
 | Live views | `StreamController` (`GET /api/v1/views/{kind}/{id}/stream`, SSE: `view`, `frame`, `: hb`), `ViewStream`, `TopicHub`, `FrameMailbox`, `LiveStreamSlots` | ticks on a composed screen | `ViewStream` rebuilds with `pipeline.view(ref, …)` or `pipeline.build(main, …)`, i.e. with the *registered* Sutra (`ViewStream.java` line 144): a composed Sutra needs a rebuild that keeps it |
 | Console channel | `drishti-console/core/channel.py` (`view:kind/id?ctl.…` keys), `routes/api_routes.py` `channel()`, `_panel_html` | one connection per page; panels as HTML | only `view:` keys |
-| Elements | `drishti-console/web/embed/element.js`, `panel.js`, `report.js`, `search.js`, `about.js`; `routes/embed_routes.py` (`/embed/v1/views/{kind}/{id}`, `/embed/v1/channel`); library 1.4.5 (`web/elements/package/package.json`) | the host-side renderer, styles (`web/static/css/drishti_tokens.css`, `drishti_theme.css`, `--d-*` properties), charts, CSP and SRI story | no element for a composed screen |
+| Elements | `drishti-console/web/embed/element.js`, `panel.js`, `report.js`, `search.js`, `about.js`; `routes/embed_routes.py` (`/embed/v1/views/{kind}/{id}`, `/embed/v1/channel`); library 1.4.5, frozen (`web/elements/integrity.json`) | the host-side renderer, styles (`web/static/css/drishti_tokens.css`, `drishti_theme.css`, `--d-*` properties), charts, CSP and SRI story | no element for a composed screen |
 | Embed tokens | `EmbedTokenService`, `EmbedController` (`POST /api/v1/embed/token`, RFC 8693), `EmbedProperties` (scopes to `METHOD path` patterns), `RateWindows`, `EmbedUsage`; console `core/embed_auth.py`, `core/embed_limits.py` | scoping a host application | no `embed:genui` scope |
 | Query by form | `FormController` (`GET /api/v1/forms/{pack}`, `POST /api/v1/forms/{pack}/{kind}/compile`), `FormSpec`, `FormField`, `FormCompiler`; the pack's `form:` section; console `core/forms.py`, `routes/form_routes.py`, `css/drishti_form.css` | form fragments compile to the same search command | the form is a page, not a panel |
 | Search | `SearchController` (`GET /api/v1/search`, `/csv`, `/compare`) | result rows for a search binding | rows are not an `EntityDocument` |

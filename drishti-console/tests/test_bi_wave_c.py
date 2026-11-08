@@ -12,33 +12,60 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (docs/guides/BI_GUIDE.md, BI_GUIDE.md): Vega-Lite as the output of a Python visual and as a report visual type, the vendored libraries the page draws it with,
-and the page's policy."""
+"""Vega-Lite without Vega (the product owner's decision O1: one drawing engine). A report's `vega-lite` visual and a Python visual's
+`output: vega-lite` are translated by drishti-chart's fromVegaLite and drawn by drishti-chart; a feature it does not translate is refused
+in words with what to use instead. Here, quick file checks: no file references the Vega library any more, and the BI pages load
+drishti-chart. The translation of the two shipped specifications and a refused feature's message: test_vega_translate.py (Node)."""
 import re
 
+import pytest
 
-from conftest import CONSOLE  # noqa: E402
+from conftest import CONSOLE
 
-VENDOR = CONSOLE / "web" / "static" / "vendor" / "vega" / "6.4.0"
-# What a Python visual's Vega-Lite answer holds, and that one loading a URL is refused, is tested where it runs: drishti-compute/src/test/python/test_items.py.
+ROOT = CONSOLE.parent
 
-
-def test_the_vega_libraries_are_vendored_with_their_licences():
-    for f in ("vega.min.js", "vega-lite.min.js", "vega-embed.min.js", "vega-interpreter.min.js", "LICENSE-vega", "LICENSE-vega-lite", "LICENSE-vega-embed", "LICENSE-vega-interpreter"):
-        assert (VENDOR / f).is_file(), f
-    assert "BSD 3-Clause" in (VENDOR / "LICENSE-vega").read_text() or "Redistribution" in (VENDOR / "LICENSE-vega").read_text()
-
-
-def test_the_page_script_draws_with_the_interpreter_and_a_loader_that_refuses_urls():
-    """The strict policy holds because the expression syntax tree is built by vega-embed and walked by the interpreter, and because nothing may be loaded."""
-    js = (CONSOLE / "web/static/js/drishti_bi-vega.js").read_text(encoding="utf-8")
-    assert "ast: true" in js and "expr: window.vegaInterpreter" in js
-    assert "loader.load = refuse" in js and "loader.sanitize = refuse" in js and "actions: false" in js
-    assert not re.search(r"\beval\(|new Function", js)
+# The Vega library by its own names: the vendored folder and files, its globals and the console script that loaded it. "Vega-Lite" the
+# specification format is not here (it stays an input), nor "vega" the option Greek.
+LIBRARY = re.compile(r"vendor/vega\b|vega-embed|vegaEmbed|vega-interpreter|vegaInterpreter|\bvega(?:-lite)?\.min\.js|drishti_bi-vega|\bbi-vega\b|"
+                     r"\bB\.vega\b|window\.vega\b|\bvega@\d")
+# the history keeps its record of what was vendored; this file names what it forbids
+HISTORY = {"CHANGELOG.md", "RELEASE_NOTES.md", "drishti-console/tests/test_bi_wave_c.py"}
+SKIP_DIRS = {".git", "node_modules", "target", ".venv", "data", "dist", "__pycache__", ".claude"}
+TEXT = {".js", ".mjs", ".py", ".html", ".css", ".md", ".yaml", ".yml", ".json", ".java", ".txt", ".sh", ".ps1", ".toml", ".xml", ".properties"}
 
 
-def test_the_report_and_designer_pages_load_the_vega_script_but_not_the_libraries():
-    for page in ("report", "design"):                    # a board is a report layout (2.4.0): it opens in report.html
+def _files():
+    stack = [ROOT]
+    while stack:
+        d = stack.pop()
+        for p in d.iterdir():
+            if p.is_dir():
+                if p.name not in SKIP_DIRS and not p.is_symlink():
+                    stack.append(p)
+            elif p.suffix in TEXT:
+                yield p
+
+
+@pytest.mark.static
+def test_no_file_references_the_vega_library():
+    hits = []
+    for p in _files():
+        rel = p.relative_to(ROOT).as_posix()
+        if rel in HISTORY:
+            continue
+        try:
+            text = p.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        for i, line in enumerate(text.splitlines(), 1):
+            if LIBRARY.search(line):
+                hits.append(f"{rel}:{i}: {line.strip()[:140]}")
+    assert not hits, "the Vega library is retired (O1): draw with drishti-chart (fromVegaLite)\n" + "\n".join(hits[:40])
+    assert not (CONSOLE / "web/static/vendor/vega").exists()
+
+
+@pytest.mark.static
+def test_the_report_and_designer_pages_load_drishti_chart():
+    for page in ("report", "design", "notebook", "design_theme"):
         html = (CONSOLE / f"web/templates/bi/{page}.html").read_text(encoding="utf-8")
-        assert "/static/js/drishti_bi-vega.js" in html, page
-        assert "vendor/vega/" not in html, page      # the libraries load the first time a vega-lite visual is drawn
+        assert "/static/elements/drishti-chart/drishti_chart.js" in html and "/static/elements/drishti-chart/drishti_chart.css" in html, page

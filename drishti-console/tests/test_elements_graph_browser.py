@@ -176,7 +176,7 @@ def test_canvas_zoom_pan_fit_minimap_click_lasso_drag_pin_tooltip_keys_and_the_t
         assert abs(p[0] - x - 60) < 2 and abs(p[1] - y - 30) < 2
         await pg.click("#g-inspector .dn-seg-b[data-layout='circular']")
         await pg.wait_for_function(f"() => {G}.state().layout === 'circular' && {G}.layoutMs !== null")
-        await pg.wait_for_timeout(500)
+        await pg.wait_for_timeout(500)                                                            # wait-ok: the layout's animation runs; a pinned node must not move through it
         p2 = await pg.evaluate(f"() => {G}.positionOf('GRP-1')")
         p1 = await pg.evaluate(f"() => {G}.positionOf('GRP-1')")
         assert p1 == p2                                                                           # a pinned node keeps its place through the layout

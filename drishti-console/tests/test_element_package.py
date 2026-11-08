@@ -12,8 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Distribution of Drishti Elements (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 13; build step 12): a version names the same bytes for ever (the committed integrity record
-and the npm package folder are what the sources make), the console serves an exact version immutably with its integrity.json and answers a partial one with a 302,
+"""Distribution of the Drishti Elements 1.x embedding elements (docs/architecture/CLIENT_RENDERER.md › Drishti Elements: the design, section 13): the 1.x line is
+frozen for the embedders that use it (the committed integrity record is what web/embed/ holds, byte for byte; its npm package and tool are retired, the
+per-library packages replace them), the console serves an exact version immutably with its integrity.json and answers a partial one with a 302,
 a version it does not hold is 410, the element API data the TypeScript declarations are generated from matches the real elements, and the embed API's lifecycle
 (Deprecation and Sunset headers, then 410 DRS-8006) follows its configuration."""
 import hashlib
@@ -22,33 +23,26 @@ from datetime import date
 
 from core import element_api as api
 from core import element_dist as dist
-from core import element_package as pkg
 from test_embed import HOST, make_client, token
 
-RETIRE = "bump VERSION in core/element_dist.py and `version` in web/embed/drishti-elements.js, then: python3 tools/elements_package.py"
+FROZEN = "the Drishti Elements 1.x embedding elements are frozen for existing embedders: put the change in a per-library package (drishti-console/web/static/elements/) instead"
 
 
 def test_a_version_names_the_same_bytes_the_integrity_record_is_committed():
     now = dist.lock_text()
     have = dist.LOCK.read_text(encoding="utf-8")
-    assert have == now, f"a module under web/embed/ changed (or the version did): {RETIRE}"
+    assert have == now, f"a module under web/embed/ changed (or the version did): {FROZEN}"
 
 
-def test_the_npm_package_folder_is_what_the_sources_make():
-    for rel, data in pkg.build().items():
-        path = dist.PACKAGE / rel
-        assert path.is_file() and path.read_bytes() == data, f"{rel} is stale: python3 tools/elements_package.py"
-    on_disk = {str(p.relative_to(dist.PACKAGE)) for p in dist.PACKAGE.rglob("*") if p.is_file()}
-    assert on_disk == set(pkg.build()), "the package folder holds files the build does not make"
+def test_the_retired_package_and_its_tool_are_gone():
+    root = dist.WEB.parent.parent
+    assert not (dist.OUT / "package").exists() and not (root / "tools" / "elements_package.py").exists() and not (dist.WEB.parent / "core" / "element_package.py").exists()
 
 
 def test_the_entry_reports_the_version_the_console_serves():
     entry = (dist.EMBED / dist.ENTRY).read_text(encoding="utf-8")
     assert f"version: '{dist.VERSION}'" in entry
     assert re.fullmatch(r"\d+\.\d+\.\d+", dist.VERSION)
-    import json
-
-    assert json.loads((dist.PACKAGE / "package.json").read_text())["version"] == dist.VERSION
 
 
 def test_every_module_is_in_the_package_with_its_integrity_and_nothing_else_is_published():
@@ -121,18 +115,6 @@ def test_the_element_api_data_matches_the_real_elements():
     assert all(f"./m/{m}.js" in entry for m in ("element", "report", "panel", "about", "search"))
 
 
-def test_the_declarations_name_every_element_and_event():
-    ts = api.typescript()
-    for el, spec in api.ELEMENTS.items():
-        assert f"'{el}': {spec['cls']};" in ts and f"export class {spec['cls']} extends" in ts
-    for ev in ("loaded", "filter-changed", "page-changed", "navigate", "error", "token-needed"):
-        assert f"'drishti:{ev}': CustomEvent<" in ts
-    assert "interface HTMLElementTagNameMap" in ts and "interface Window { DrishtiElements" in ts
-    react = api.react_types()
-    assert "'drishti-report': Attrs<DrishtiReport" in react and "'report'?: string" in react
-    assert ts.count("{") == ts.count("}") and react.count("{") == react.count("}")
-
-
 def test_the_lifecycle_announces_a_deprecation_and_a_sunset_and_then_retires_the_major(backend):
     today = date(2026, 10, 11)
     assert dist.lifecycle({}, "1", today) == {"deprecated": False, "sunset": None, "retired": False, "headers": {}, "link": ""}
@@ -157,7 +139,7 @@ def test_the_lifecycle_announces_a_deprecation_and_a_sunset_and_then_retires_the
 def test_the_developer_guide_holds_the_generated_reference_tables_and_names_every_attribute_and_event():
     guide = (dist.WEB.parent.parent / "docs" / "architecture" / "CLIENT_RENDERER.md").read_text(encoding="utf-8")
     for el in api.ELEMENTS:
-        assert api.markdown_tables(el) in guide, f"the guide's table of <{el}> is stale: regenerate it with python3 tools/elements_package.py --docs"
+        assert api.markdown_tables(el) in guide, f"the guide's table of <{el}> is not the element API's: copy core/element_api.py markdown_tables('{el}') into it"
     for name in {n for spec in api.ELEMENTS.values() for n, _t, _d in spec["attributes"]}:
         assert f"`{name}`" in guide, name
     for ev in {e for spec in api.ELEMENTS.values() for e in spec["events"]}:

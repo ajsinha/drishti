@@ -41,8 +41,8 @@
   function status(text, bad) { statusEl.textContent = text; statusEl.classList.toggle('t-bad', !!bad); }
   function say(text, bad) { msg.textContent = text || ''; msg.classList.toggle('t-bad', !!bad); }
   function secs(ms) { return window.Drishti.elements.core.formatDuration(ms); }
-  function code() { return editor ? editor.getValue() : ta.value; }
-  function setCode(text) { if (editor) { editor.setValue(text); editor.focus(); } else { ta.value = text; } }
+  function code() { return editor ? editor.getValue() : ''; }
+  function setCode(text) { if (editor) { editor.setValue(text); editor.focus(); } }
   var I = window.Drishti.elements.libs && window.Drishti.elements.libs['drishti-inputs'];   // the code editor (Drishti Elements)
   function json(r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, b: b }; }); }
 
@@ -65,13 +65,12 @@
 
   function setup() {
     var draft = load(DKEY);
-    ta.value = draft != null ? draft : '# ' + kind + ' ' + id + ': Python in your browser. Ctrl+Enter runs.\n'
+    var start = draft != null ? draft : '# ' + kind + ' ' + id + ': Python in your browser. Ctrl+Enter runs.\n'
       + '# view is this screen: view.doc (the document), view.tables (its tables as DataFrames).\n'
       + 'print(view)\nlist(view.tables)\n';
-    if (I) {
-      var host = el('div', 'calc-code');
-      ta.parentNode.replaceChild(host, ta);
-      editor = new I.CodeEditor(host, { mode: 'python', value: ta.value, indentUnit: 4, height: Math.max(150, Math.round(window.innerHeight * 0.34)),
+    {                                                   // drishti-inputs' code editor, drawn where the page keeps its place
+      ta.classList.add('calc-code');
+      editor = new I.CodeEditor(ta, { mode: 'python', value: start, indentUnit: 4, height: Math.max(150, Math.round(window.innerHeight * 0.34)),
         label: 'Python code', keys: { 'Ctrl-Enter': run, 'Cmd-Enter': run, Esc: close } });
       var t = null;
       editor.events.on('change', function () {
@@ -79,9 +78,6 @@
         t = setTimeout(function () { store(DKEY, editor.getValue()); }, 400);
         if (errLine != null) { editor.setProblems([]); errLine = null; }
       });
-    } else {
-      ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); } });
-      ta.addEventListener('input', function () { store(DKEY, ta.value); });
     }
     loadSnippets();
     drawHistory();

@@ -47,6 +47,7 @@ import pytest
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
+from select_helpers import choose, labels  # <drishti-select>: drishti-inputs' Select
 
 ROOT = Path(__file__).resolve().parents[2]
 VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit")] + ["trades/murex"])
@@ -187,10 +188,10 @@ def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(stack, browser):
     place; LL:<letter> in the scope box is the letter's node."""
     pg = open_var(browser, str(stack), "/var?scope=BANK")
     painted(pg, "BANK")
-    wait(pg, "document.querySelectorAll('[data-vx-hierarchy] option').length >= 3")
-    titles = pg.locator("[data-vx-hierarchy] option").all_inner_texts()
+    wait(pg, "(document.querySelector('[data-vx-hierarchy]').component || {options: []}).options.length >= 3")
+    titles = labels(pg, "[data-vx-hierarchy]")
     assert {"Management", "Legal entities", "Limit letters"} <= set(titles)
-    pg.select_option("[data-vx-hierarchy]", "LL")
+    choose(pg, "[data-vx-hierarchy]", "LL")
     wait(pg, "document.querySelectorAll('.vx-tree .dg-row[data-scope^=\"NODE:LL~LL-\"]').length > 3")
     assert "hierarchy=LL" in pg.url
     letter = pg.locator('.vx-tree .dg-row[data-scope^="NODE:LL~LL-"]').first.get_attribute("data-scope")
@@ -396,6 +397,12 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     assert cell(pg, "TRD", 2).inner_text() == "-" + trades[2] and cell(pg, "PORT", 0).inner_text() == "PF-USD-RATES"
     assert "saved basket · " + basket in pg.locator("[data-vb-state]").inner_text()
     assert pg.locator("[data-vb-name]").input_value() == "rates-mix"
+    # the sheet's saved-basket picker (drishti-inputs' Select, searchable) asks the server when it opens: the basket is listed
+    pg.locator("[data-vb-pick] .di-select-control").click()
+    wait(pg, "document.querySelector('[data-vb-pick]').component.options.some(o => o.value === 'BASKET:%s')" % basket)
+    assert pg.evaluate("document.activeElement.classList.contains('di-select-search')")
+    pg.keyboard.press("Escape")
+    assert pg.evaluate("document.querySelector('[data-vb-pick]').value") is None      # opening one does not change the sheet
     # Edit: a change, and Save keeps the name as a new version
     assert "Save as version 2" in pg.locator("[data-vb-save]").inner_text()
     cell(pg, "DESK", 0).click()

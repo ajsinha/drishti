@@ -49,8 +49,8 @@ export const MANIFEST = Object.freeze({
       "scripts": []
     },
     "drishti-inputs": {
-      "version": "0.1.0",
-      "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror",
+      "version": "0.2.0",
+      "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place",
       "bundle": "drishti-inputs/drishti_inputs.js",
       "entry": "drishti-inputs/src/drishti_index.js",
       "global": "inputs",
@@ -59,6 +59,21 @@ export const MANIFEST = Object.freeze({
       ],
       "css": [
         "elements/drishti-inputs/drishti_inputs.css"
+      ],
+      "scripts": []
+    },
+    "drishti-designer": {
+      "version": "0.1.0",
+      "title": "The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review)",
+      "bundle": "drishti-designer/drishti_designer.js",
+      "entry": "drishti-designer/src/drishti_index.js",
+      "global": "designer",
+      "requires": [
+        "drishti-core",
+        "drishti-inputs"
+      ],
+      "css": [
+        "elements/drishti-designer/drishti_designer.css"
       ],
       "scripts": []
     },
@@ -119,6 +134,21 @@ export const MANIFEST = Object.freeze({
       "css": [
         "elements/drishti-tree/drishti_tree.css",
         "elements/drishti-grid/drishti_grid.css"
+      ],
+      "scripts": []
+    },
+    "drishti-insight": {
+      "version": "0.1.0",
+      "title": "Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export",
+      "bundle": "drishti-insight/drishti_insight.js",
+      "entry": "drishti-insight/src/drishti_index.js",
+      "global": "insight",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": [
+        "css/drishti_explain.css",
+        "css/drishti_approvals.css"
       ],
       "scripts": []
     },

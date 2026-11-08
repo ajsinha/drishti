@@ -266,9 +266,29 @@ test('tree data: paths, the group column headed by autoGroupColumnDef, levels op
   assert.equal(m.shownColumns()[0].header, 'Organisation');
   assert.deepEqual(texts(m), ['Bank | 31', 'Rates | 1', 'IRS-1 | 10', 'FX | 20', 'FXF-1 | 20']);
   assert.throws(() => make({ treeData: true, columnDefs: [{ field: 'mtm' }], rowData: rows }), /getDataPath/);
+  assert.throws(() => make({ treeData: true, rowModelType: 'serverSide', serverSideDatasource: agServer([]), columnDefs: [{ field: 'mtm' }] }), /isServerSideGroup/);
+});
+
+test('server-side tree data: isServerSideGroup and getServerSideGroupKey; each node\'s level asked with groupKeys its path', async () => {
+  const levels = { '': [{ id: 'bank', key: 'Bank', group: true, mtm: 31 }], Bank: [{ id: 'rates', key: 'Rates', group: true, mtm: 11 }, { id: 'c', key: 'FXF-1', group: false, mtm: 20 }],
+    'Bank/Rates': [{ id: 'a', key: 'IRS-1', group: false, mtm: 10 }, { id: 'b', key: 'IRS-2', group: false, mtm: 1 }] };
+  const asked = [];
   const q = quiet();
-  make({ treeData: true, getDataPath: (d) => d.path, rowModelType: 'serverSide', serverSideDatasource: agServer([]), isServerSideGroup: () => true, columnDefs: [{ field: 'mtm' }] }, q);
-  assert.ok(q.said.some((s) => /isServerSideGroup is not supported/.test(s)) && q.said.some((s) => /treeData with rowModelType serverSide/.test(s)));
+  const api = make({ treeData: true, rowModelType: 'serverSide', isServerSideGroup: (d) => d.group, getServerSideGroupKey: (d) => d.key, getRowId: (p) => p.data.id,
+    autoGroupColumnDef: { headerName: 'Organisation' }, columnDefs: [{ field: 'mtm' }],
+    serverSideDatasource: { getRows(p) { asked.push(p.request.groupKeys.slice()); const rows = levels[p.request.groupKeys.join('/')] || []; p.success({ rowData: rows, rowCount: rows.length }); } } }, q);
+  const m = api.model;
+  const settle = async () => { for (let i = 0; i < 5; i++) { await m.rowModel.ensureRange(0, m.rowCount() + 5); await tick(); } };
+  await settle();
+  assert.equal(m.shownColumns()[0].header, 'Organisation');
+  assert.deepEqual(texts(m), ['Bank | 31']);
+  m.toggleRow(0, true);
+  await settle();
+  m.toggleRow(1, true);
+  await settle();
+  assert.deepEqual(texts(m), ['Bank | 31', 'Rates | 11', 'IRS-1 | 10', 'IRS-2 | 1', 'FXF-1 | 20']);
+  assert.deepEqual(asked, [[], ['Bank'], ['Bank', 'Rates']]);
+  assert.ok(!q.said.some((s) => /isServerSideGroup|getServerSideGroupKey|treeData/.test(s)), q.said.join('\n'));
 });
 
 test('events: AG names with AG-shaped parameters, from drishti-grid\'s own; gridReady and firstDataRendered once', async () => {
