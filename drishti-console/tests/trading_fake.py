@@ -73,6 +73,7 @@ class TradingBackend(FakeBackend):
         self.previous, self.paths, self.history = previous, paths, history
         self.carried = carried                    # every date's valuations are of this day (a lake not loaded since)
         self.asked: list = []
+        self.limit_status = "near"                # the pre-deal answer's limit status, as the server says it (97% of 420m: near from its 0.8)
 
     @staticmethod
     def _raw_role(ident) -> bool:
@@ -202,7 +203,8 @@ class TradingBackend(FakeBackend):
             base = 401_500_000 if cp == "CP-ALDERSHOT" else 50_000_000
             exact = bool(body.get("like"))
             lim = {"id": "LIM-ALDERSHOT", "limit": 420_000_000, "confidence": 0.95, "before": base, "after": base + 7_700_000,
-                   "useBefore": base / 420_000_000, "useAfter": (base + 7_700_000) / 420_000_000} if cp == "CP-ALDERSHOT" else None
+                   "useBefore": base / 420_000_000, "useAfter": (base + 7_700_000) / 420_000_000, "near": 0.8,
+                   "status": self.limit_status} if cp == "CP-ALDERSHOT" else None
             reasons = ([] if exact else ["a proxy answer only refers, never approves"]) + ([] if lim else ["no credit limit on record for " + cp])
             decision = "refer" if reasons else "approve"
             reasons = reasons or ["exact: within the limit"]
