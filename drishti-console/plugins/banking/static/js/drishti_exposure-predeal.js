@@ -183,7 +183,7 @@
     $("[data-pd-word]").textContent = a.command || "PREDEAL";
     history.replaceState(null, "", "/predeal?command=" + encodeURIComponent(a.command || "") + (asOf ? "&asOf=" + encodeURIComponent(asOf) : ""));
     $("[data-pd-source]").textContent = [a.businessDate ? "business date " + a.businessDate : "", a.runId ? "run " + a.runId : "",
-      a.confidence ? "PFE " + pct(a.confidence).replace(".0%", "%") : "", a.checkId ? a.checkId + " (audited)" : "", secs ? secs.toFixed(1) + " s" : ""]
+      a.confidence ? "PFE " + pct(a.confidence).replace(".0%", "%") : "", a.checkId ? a.checkId + " (audited)" : "", secs ? window.Drishti.elements.core.formatNumber(secs, { maxDecimals: 1 }) + " s" : ""]
       .filter(Boolean).join(" · ");
     $("[data-pd-verdict-card]").hidden = false;
     $("[data-pd-verdict-title]").textContent = (a.label || a.counterparty || "") + " · verdict";
