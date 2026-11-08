@@ -331,7 +331,10 @@ VaR sharding, the exposure engine and every other cluster service work the same 
 *The product view of Drishti World (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [WORLD_LENS.md](../lenses/WORLD_LENS.md).*
 
 **Drishti World** (`world`, `config/editions/world.yaml`) is the public-data packs in one product: economies and regions (world-economy),
-news and quotes (news-and-markets), US companies and filings (us-equities), legal entities (gleif), funds and ETFs (funds). Run it as
+news and quotes (news-and-markets), US companies and filings (us-equities), legal entities (gleif), funds and ETFs (funds), and the
+public-sector module's free news (official-news: `PRESS`, `PREL`; gdelt-events: `GDELT`) while that module is on. The module's own lens
+and edition, **Drishti Public Sector** (`publicsector`, `config/editions/publicsector.yaml`), is in
+[PUBLIC_SECTOR_GUIDE.md](../guides/PUBLIC_SECTOR_GUIDE.md) section 2. Run it as
 section 1 says with `world` in place of `risk`:
 
 ```bash
