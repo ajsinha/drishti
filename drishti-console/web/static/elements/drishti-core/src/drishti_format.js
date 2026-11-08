@@ -325,6 +325,35 @@ export function formatter(kind, options) {
   }
 }
 
+/**
+ * One unit for a whole column of figures (a pivot's measure): the largest compact unit the column's largest figure reaches, so every
+ * figure of the column reads in it ("74.63 m" beside "0.84 m", never "938,400.00" beside "1.12 m"), the unit said once.
+ * @param {Array<*>} values the column's figures (non-numbers ignored)
+ * @param {Array<Array<*>>} [units] [suffix, size] largest first (default COMPACT_UNITS without k: a thousand reads in full)
+ * @returns {{unit: string, size: number}} unit '' and size 1 when no figure reaches a unit
+ */
+export function columnScale(values, units) {
+  let a = 0;
+  (values || []).forEach((v) => { if (typeof v === 'number' && isFinite(v) && Math.abs(v) > a) { a = Math.abs(v); } });
+  const list = units || COMPACT_UNITS.filter((u) => u[0] !== 'k');
+  for (let i = 0; i < list.length; i++) { if (a >= list[i][1]) { return { unit: list[i][0], size: list[i][1] }; } }
+  return { unit: '', size: 1 };
+}
+
+/**
+ * A figure in a column's unit (columnScale): two decimals, grouped, the unit after a space; a missing figure is blank, never 0.00.
+ * @param {*} v
+ * @param {{unit: string, size: number}} scale
+ * @param {NumberOptions} [o] decimals default 2; empty default ''
+ * @returns {string}
+ */
+export function formatScaled(v, scale, o) {
+  const s = scale || { unit: '', size: 1 };
+  const n = typeof v === 'number' ? v : null;
+  if (n === null || !isFinite(n)) { return v === MASK ? MASK : ''; }
+  return formatNumber(n / s.size, Object.assign({ decimals: 2, empty: '', suffix: s.unit ? ' ' + s.unit : '' }, o));
+}
+
 /** The binary sizes of formatBytes, largest first: a kibibyte is 1,024 bytes, as the server and the operating system count files. */
 export const BYTE_UNITS = Object.freeze([[' TB', 1099511627776], [' GB', 1073741824], [' MB', 1048576], [' KB', 1024]]);
 

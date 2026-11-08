@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
  *   filters: [currency]                                          # or { field, values: [..] } / { field, min, max }
  *   heat: true
  *   chart: bar
+ *   mode: views                                                  # the pivot screen's field handling: views (default), compact or panes
  * </pre>
  *
  * The same object, with document paths for fields, opts a kind's search results in ({@code pivot:} in pack.yaml). Parsing
@@ -44,9 +45,11 @@ import java.util.regex.Pattern;
  *
  * @param fields the fields offered, in order (for {@code pivot: true}, the panel's columns or the kind's key fields)
  * @param explicit true when the Sutra (or pack) listed {@code fields} itself
+ * @param mode how the pivot screen opens it (PIVOT_GUIDE.md section 2): {@code views} (the View picker and the compact line, the default),
+ *     {@code compact} (the compact line alone) or {@code panes} (the Fields and Build panes); null: the screen's default
  */
 public record PivotSpec(List<Field> fields, boolean explicit, List<String> rows, List<String> columns, List<Value> values, List<Filter> filters,
-        boolean heat, String chart, boolean totals) {
+        boolean heat, String chart, boolean totals, String mode) {
 
     /** A field: its name (used by rows, columns, values and filters), the expression it reads, and how it is shown. */
     public record Field(String name, String bind, String label, String fmt) {}
@@ -66,11 +69,13 @@ public record PivotSpec(List<Field> fields, boolean explicit, List<String> rows,
     public static final List<String> AGGREGATIONS = List.of("sum", "count", "avg", "min", "max", "distinct");
     public static final List<String> SHOWS = List.of("value", "pctRow", "pctColumn", "pctTotal");
     public static final List<String> CHARTS = List.of("bar", "line", "heatmap");
+    /** How the pivot screen opens a spec: the View picker in front of the compact line, the compact line alone, or the panes. */
+    public static final List<String> MODES = List.of("views", "compact", "panes");
     public static final int MAX_LEVELS = 4;
     public static final int MAX_VALUES = 6;
     public static final int MAX_FIELDS = 40;
-    static final List<String> KEYS = List.of("fields", "rows", "columns", "values", "filters", "heat", "chart", "totals");
-    private static final List<String> ARRANGEMENT = List.of("rows", "columns", "values", "filters", "heat", "chart");
+    static final List<String> KEYS = List.of("fields", "rows", "columns", "values", "filters", "heat", "chart", "totals", "mode");
+    private static final List<String> ARRANGEMENT = List.of("rows", "columns", "values", "filters", "heat", "chart", "mode");
     private static final Pattern PATH = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*");
     private static final Pattern NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_.-]{0,63}");
     private static final Pattern ROW_PATH = Pattern.compile("@\\.(" + PATH.pattern() + ")");
@@ -96,7 +101,7 @@ public record PivotSpec(List<Field> fields, boolean explicit, List<String> rows,
     /** The same fields with another arrangement. */
     public PivotSpec with(PivotSpec arrangement) {
         return new PivotSpec(fields, explicit, arrangement.rows, arrangement.columns, arrangement.values, arrangement.filters,
-                arrangement.heat, arrangement.chart, totals);
+                arrangement.heat, arrangement.chart, totals, arrangement.mode);
     }
 
     // ---- parsing ------------------------------------------------------------------------------------------------
@@ -114,7 +119,7 @@ public record PivotSpec(List<Field> fields, boolean explicit, List<String> rows,
             return new Parsed(null, problems);
         }
         if (Boolean.TRUE.equals(raw)) {
-            return new Parsed(new PivotSpec(implicit, false, List.of(), List.of(), List.of(), List.of(), false, null, true), problems);
+            return new Parsed(new PivotSpec(implicit, false, List.of(), List.of(), List.of(), List.of(), false, null, true, null), problems);
         }
         if (!(raw instanceof Map<?, ?> m)) {
             problems.add("'pivot' is true, false, or a mapping of " + String.join(", ", KEYS) + "; not '" + raw + "'");
@@ -150,7 +155,7 @@ public record PivotSpec(List<Field> fields, boolean explicit, List<String> rows,
         }
         PivotSpec spec = arrangement(m, offered.fields, offered.explicit, new HashSet<>(offered.names()), false, problems);
         return new Parsed(problems.isEmpty() ? new PivotSpec(offered.fields, offered.explicit, spec.rows, spec.columns, spec.values,
-                spec.filters, spec.heat, spec.chart, offered.totals) : null, problems);
+                spec.filters, spec.heat, spec.chart, offered.totals, spec.mode) : null, problems);
     }
 
     private static PivotSpec arrangement(Map<?, ?> m, List<Field> fields, boolean explicit, Set<String> known, boolean unknownFields,
@@ -179,8 +184,12 @@ public record PivotSpec(List<Field> fields, boolean explicit, List<String> rows,
         if (chart != null && !CHARTS.contains(String.valueOf(chart))) {
             problems.add("pivot 'chart' must be one of " + String.join(", ", CHARTS) + ", not '" + chart + "'");
         }
+        Object mode = m.get("mode");
+        if (mode != null && !MODES.contains(String.valueOf(mode))) {
+            problems.add("pivot 'mode' must be one of " + String.join(", ", MODES) + ", not '" + mode + "'");
+        }
         return new PivotSpec(fields, explicit, rows, columns, values, filters, Boolean.TRUE.equals(heat),
-                chart == null ? null : String.valueOf(chart), !Boolean.FALSE.equals(totals));
+                chart == null ? null : String.valueOf(chart), !Boolean.FALSE.equals(totals), mode == null ? null : String.valueOf(mode));
     }
 
     private static List<Field> fields(Object raw, Mode mode, List<String> problems) {
@@ -480,6 +489,9 @@ public record PivotSpec(List<Field> fields, boolean explicit, List<String> rows,
         out.put("filters", fs);
         out.put("heat", heat);
         out.put("chart", chart);
+        if (mode != null) {
+            out.put("mode", mode);
+        }
         return out;
     }
 }

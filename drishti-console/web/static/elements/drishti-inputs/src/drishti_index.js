@@ -26,6 +26,7 @@ export { DateRangePicker } from './drishti_date-range.js';
 export { parseTime, parseDateTime, timeSlots, TimePicker, DateTimePicker } from './drishti_time-picker.js';
 export { TreeModel } from './drishti_tree.js';
 export { TreePicker } from './drishti_tree-picker.js';
+export { FieldPicker } from './drishti_field-picker.js';
 export { MultiSelect } from './drishti_multiselect.js';
 export { TypeAhead, Combobox } from './drishti_combobox.js';
 export { Select, selectElement, selectProperties } from './drishti_select.js';

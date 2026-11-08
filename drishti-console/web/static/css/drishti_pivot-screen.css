@@ -31,7 +31,22 @@
 .pv-notice { margin: 0; padding: var(--d-sp-6) var(--d-sp-10); border: 1px solid var(--d-warn); border-radius: var(--d-radius-4); background: var(--d-surface); font-size: var(--d-fs-12_5); }
 .pv .mono { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
 .pv-main { display: flex; flex-direction: column; gap: var(--d-sp-12); }
-.pv-grid { height: min(70vh, 720px); min-height: 360px; }
+.pv-grid { height: max(420px, calc(100vh - 250px)); min-height: 360px; }   /* the grid gets the screen: the line above it is one row */
+.pv-info { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--d-border); background: none; color: var(--d-muted); font-style: italic;
+  font-size: var(--d-fs-11); line-height: 1; cursor: pointer; padding: 0; }
+.pv-info[aria-expanded="true"] { color: var(--d-accent); border-color: var(--d-accent); }
+.pv-titlectx { color: var(--d-muted); font-size: var(--d-fs-12_5); }
+.pv-titlectx:empty { display: none; }
+.pv-headline { display: flex; flex-wrap: wrap; gap: var(--d-sp-4) var(--d-sp-14); align-items: baseline; min-width: 0; }
+.pv-headline:empty { display: none; }
+.pv-infobox { padding: var(--d-sp-5) var(--d-sp-10); border-left: 3px solid var(--d-link); background: var(--d-surface); border-radius: var(--d-radius-4); }
+.pv-infobox[hidden] { display: none; }
+.pv-gridtitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }   /* said to readers; the line above shows it */
+.pv-dialog { border: 1px solid var(--d-border); border-radius: var(--d-radius-6); background: var(--d-surface); color: var(--d-ink); padding: var(--d-sp-14); width: min(560px, 94vw); }
+.pv-dialog::backdrop { background: color-mix(in srgb, var(--d-bg) 60%, transparent); }
+.pv-formula { display: flex; flex-direction: column; gap: var(--d-sp-8); }
+.pv-formula h2 { margin: 0; font-size: var(--d-fs-13_5); }
+.pv-formula-b { display: flex; gap: var(--d-sp-6); }
 .pv-grid .pv-delta-up .dg-after::before { content: "▲"; }
 .pv-grid .pv-delta-down .dg-after::before { content: "▼"; }
 .pv-grid .dg-after { margin-left: var(--d-sp-6); font-size: var(--d-fs-10_5); color: var(--d-muted); }

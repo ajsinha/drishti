@@ -45,6 +45,32 @@
   (`limitsNoPositions` of the tree); one its hierarchy cannot build is said with the reason (`DRS-5212`). The exposure paths carry
   `DIVISION`.
 
+### Pivot: the fields made manageable
+
+- **The View picker in front of one compact line is how every pivot opens** (Views → Pivot, the MR and CCR cubes, the Pivot under a page's
+  table and above search results; the mock-ups and their build checklist: [LENSES.md section 6.4.4](docs/architecture/LENSES.md#644-pivot-fields-the-view-picker-the-compact-line-and-the-panes)).
+  No field list on screen: Rows · Columns · Filters · Values on one line, a picker behind each (`R`, `C`, `V`, `F`), a hierarchy as one chip
+  (`⋔ MGMT ▾ Desk › Book`) with a level stepper (`Alt+↑`, `Alt+↓`), the lit measure toggles as the values; the grid gets the screen.
+  **Customize ›** (`\`) opens the Fields and Build panes (Power BI's), which close to a rail; the BI designer keeps its panes. A preset, a
+  Sutra's `pivot: { mode: … }` or the address (`mode=views|compact|panes`) chooses; old addresses and saved views open as they were.
+- **Views:** ready-made layouts per preset (`views:` in `pivot-presets.yaml`; the MR cube's six: by risk class × desk, desk, book, limit
+  letter, top contributors, trades in my scope; keys `1`–`9`), *My views*, *Shared with me* and **Save view as…** Personal or Shared
+  (`Shift+V`, `Ctrl+S`), a changed layout marked with Revert; the saved and shared views of before, no new store.
+- **A value's function in plain words, only those valid for its field** (Sum, Count, Distinct count, Average, Weighted average… with its
+  weight, Min, Max, Median, Percentile… with its q, Variance, Std dev, the custom functions you may use, Custom ƒ… in the Rachana editor,
+  checked by the server); a rate is never summed and a text is counted (shown off with the reason); VaR and ES say they are computed per
+  cell and offer the VaR options; **Show value as** with the forms the engine computes (% of grand, row, column or parent total, rank,
+  quartile, difference and % change along a field); several values of one field side by side.
+- **The catalogue says it** (`GET /api/v1/pivot/catalogue`): each field's group, display folder, hidden flag (More fields), hierarchy and
+  valid functions, each measure's folder and per-cell flag, the source's hierarchies (VaR: MGMT, LEGAL, LL and any configured, their level
+  columns hidden; Positions › Trade) and the show-as forms.
+- **The cleanups:** full row labels (the row-header column as wide as its labels, the path in the tooltip), one number format per column
+  (`74.63 m` beside `0.84 m`), blank cells never 0.00, the diversification only where it means something, `(Blank)` muted with its **?**,
+  the scan estimate behind an **i**, the short title with the MR lens's headline figures on its line.
+- **Drishti Elements:** drishti-grid's WellsModel (hierarchies, functions per field, arguments, formulas, show-as), the compact line, the
+  panes and the View picker; drishti-inputs' FieldPicker; drishti-core's `columnScale` and `formatScaled`. Docs: PIVOT_GUIDE sections 2, 4,
+  11 and 29, tutorial 7 (a new step 21 with new pictures), REPORTS_GUIDE 8.2, RACHANA_REFERENCE (`mode`), USER_GUIDE, Help.
+
 ### Docs
 
 - **Kernel and modules, the console tier (design):** [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) opens with the

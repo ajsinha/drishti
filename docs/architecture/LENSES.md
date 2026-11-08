@@ -2281,7 +2281,7 @@ seen only in aggregate shows the aggregate and says drill is not allowed); **sta
 |---|---|---|---|---|---|
 | A1 | Command line and key strip | `MCUBE BANK BY DESK,RISK_CLASS MEASURE VAR <GO>`; keys R C F, M, H, [ ], E, P, W, ? | the view | must (field) | **Partly built**: the `MCUBE` form and keys H, [ ], W, E (expand), Enter; R C F M P S ? not built |
 | A2 | Headline strip (six tiles) | VaR (rank of N), ES, limit use with its bar, Σ desks − bank, stressed VaR or its reason, the data (batches, intraday, data version, trades) | `POST /api/v1/risk/mr/headline` | must (VaR, ES, limit use), glance | **Built** |
-| A3 | Lens controls | rows, columns and filter zones; measure VaR · ES · Comp VaR · DV01 · SBM; horizon 1D · 10D √10 · 10D sum; confidence; Normal · Stressed; currency | the view's options | desk | **Built** (the zones are the pivot's field list) |
+| A3 | Lens controls | rows, columns and filter zones; measure VaR · ES · Comp VaR · DV01 · SBM; horizon 1D · 10D √10 · 10D sum; confidence; Normal · Stressed; currency | the view's options | desk | **Built** (the zones are the pivot's compact line, [6.4.4](#644-pivot-fields-the-view-picker-the-compact-line-and-the-panes)) |
 | A4 | Time-travel slider | dates with official runs and batches; as-of and compare handles; `[` `]` step; brush a sparkline window | `GET /api/v1/risk/mr/versions` | more | **Partly built**: dates as stops, shift-click compare, `[` `]`; batches as stops and the brush not built |
 | A5 | Pivot grid | desks × risk classes, each cell its figure and a 20-day sparkline, the Limit column with use and bar, total row re-aggregated, Σ cells − total | `POST /api/v1/pivot/query`, `/api/v1/risk/mr/history` | must (first five rows, totals pinned), glance (sparklines) | **Partly built**: grid, drill, totals, diversification, sparklines; in-cell limit bars and shift-click compare not built ([6.3.3](#633-mc3-and-mc4-the-remaining-visuals)) |
 | A6 | Tail histogram (rail) | the cell's scenario P&Ls in bins, ES tail marked **E**, VaR bin **V** | `POST /api/v1/risk/mr/detail` | glance | **Built**; bin hover, click to `SMAT` and drag-to-compare not built |
@@ -2313,6 +2313,29 @@ seen only in aggregate shows the aggregate and says drill is not allowed); **sta
 
 **In the design, not on the mock-ups:** saved views and export (**built**); the embed of a saved view and the phone tiers
 ([6.3.9](#639-front-ends-embedding-and-phone)); the SBM pivot (**built** as `sbm()`); corrections' markers (MC11).
+
+#### 6.4.4 Pivot fields: the View picker, the compact line and the panes
+
+The MR cube's field list (about 45 chips in four rows: every hierarchy level and every column it is built from) left the grid a quarter of
+the screen. Three mock-ups ([README](../lenses/mockups/pivot-fields/README.md)): [A · Power BI panes](../lenses/mockups/pivot-fields/A-powerbi-panes.html),
+[B · trader view first](../lenses/mockups/pivot-fields/B-trader-view.html), [C · saved views + B](../lenses/mockups/pivot-fields/C-saved-views.html).
+**Decided (owner, 2026-11-08): C + B is the default** (the View picker in front of B's compact line) **everywhere a pivot opens; A is behind
+Customize ›** (`\`); the BI designer, an authoring tool, keeps its panes. A preset names the view it opens with; any number of rows and
+columns; every value's function chosen in plain words from those valid for its field, show-as where the engine computes it. The guide is
+[PIVOT_GUIDE.md section 2](../guides/PIVOT_GUIDE.md#2-the-screen); the component is drishti-grid's wells (one model, three arrangements).
+
+![C, the View picker open: the default](../lenses/mockups/pivot-fields/C-open-desk.png)
+
+| Panel | Contents | Data | Interaction | Status |
+|---|---|---|---|---|
+| Header line | short title (scope, date, lens, currency), **i** (the scan estimate, how computed, the figures' unit), the lens's headline figures on the same line, tools | the lens's headline, the scan estimate | click **i** | **Built** (the MR lens's tiles move onto the title's line; the change since the previous date stays in its tile) |
+| View picker (C) | ready-made (the preset's `views:`), My views, Shared with me, Save view as… Personal or Shared, the changed-layout dot and Revert | `pivot-presets.yaml` `views:`, the saved views (`/api/v1/pivot/views`) | `Shift+V`, `1`–`9`, `Enter`, `Ctrl+S` | **Built** |
+| Compact line (B) | the hierarchy chip with its stepper, other row fields, Columns, Filters (with value filters), the Values toggle strip with ▾, ⋯, Customize › | WellsModel | `R C V F`, `Alt+↑ ↓` (the mock-up's `[` `]` stay the MR lens's dates), `\` | **Built** |
+| Field picker (B) | search, Hierarchies with level check-boxes, the fields by folder, the measures by folder (Values), More fields collapsed, Customize › | the catalogue's metadata | `/ ↑↓ → Space Enter Esc` | **Built** ("above the scope" greying of a level not built: the scope is a lens option the picker does not read) |
+| Value menu | the functions valid for the field in plain words, off ones with the reason, Weighted average… and Percentile… arguments, Custom ƒ… (Rachana editor, checked by the server), the custom functions, Show value as, another value of the field; a per-cell measure's note and VaR options | the catalogue's `functions`, `showAs`, `/api/v1/pivot/functions` | ▾ on a value | **Built** |
+| Panes (A) | Build (the wells as lists, the switches, Close), Fields (search, Hierarchies, folders, More fields), a rail | WellsModel + catalogue | drag, check, `\`, `»` | **Built** (filter scopes *on this view / on every view of the cube* not built: one filter scope) |
+| Grid | full labels (width to fit, path tooltip), indent, (Blank) with ?, diversification only where it means something, one number format per column, blank cells | the pivot answer | `→ ← 1–9 Enter E` | **Built** (the diversification is on the node's line, not a row of its own; the mock-up's drill arrows on the grid's corner are the stepper and `1`–`9`) |
+| Catalogue metadata | group, folder, hidden, a hierarchy's levels and columns, the functions valid per field, show-as | `GET /api/v1/pivot/catalogue` | none | **Built** |
 
 ### 6.5 The shared cube core (MR and CCR)
 

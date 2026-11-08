@@ -23,7 +23,7 @@ import { load } from './drishti_loader.js';
 
 export { MINUS, EMPTY, MASK, COMPACT_UNITS, plainDigits, roundHalfUp, group, formatNumber, formatPercent, formatBasisPoints, formatCurrency,
   formatCompact, defineFormats, hasFormat, namedFormat, formatNames, formatSpec, formatNamed, formatter, formatPythonFloat, BYTE_UNITS,
-  formatBytes, formatDuration } from './drishti_format.js';
+  formatBytes, formatDuration, columnScale, formatScaled } from './drishti_format.js';
 export { parseDate, daysInMonth, isoDate, today, formatDate, formatDateRange, isBusinessDay, addBusinessDays, previousBusinessDay,
   businessDaysBetween } from './drishti_dates.js';
 export { DEFAULT_THEME, THEME_STORAGE_KEY, TEXT_TOKENS, GROUND_TOKENS, themes, scheme, currentTheme, setTheme, token, tokens, parseColor,

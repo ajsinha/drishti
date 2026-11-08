@@ -87,6 +87,9 @@ public final class SpecViews {
             }
         }
         v.put("filters", filters);
+        if (arrangement.get("mode") != null) {
+            v.put("mode", String.valueOf(arrangement.get("mode")));      // how the pivot screen opens it: views, compact or panes
+        }
         return v;
     }
 
@@ -151,6 +154,9 @@ public final class SpecViews {
             });
         }
         a.put("filters", filters);
+        if (view.get("mode") != null && com.ash.drishti.rachana.model.PivotSpec.MODES.contains(String.valueOf(view.get("mode")))) {
+            a.put("mode", String.valueOf(view.get("mode")));
+        }
         return a;
     }
 

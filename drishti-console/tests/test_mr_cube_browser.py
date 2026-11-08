@@ -126,6 +126,48 @@ def test_mcube_opens_the_pivot_screen_with_the_mr_lens_and_every_cell_is_the_eng
     pg.close()
 
 
+def test_the_fields_the_view_picker_a_hierarchy_as_one_chip_var_per_cell_and_the_panes(stack, browser):
+    """PIVOT_GUIDE.md section 2 on the real cube: it opens as the View picker in front of the compact line; MGMT is one chip; the Rows picker
+    lists each hierarchy once with its level columns under More fields; VaR's ▾ says it is computed per cell and offers the VaR options,
+    never a function; a ready-made view opens; \\ opens the panes."""
+    pg = open_cube(browser, str(stack))
+    assert pg.evaluate("window.Drishti.PivotScreen.mode()") == "views"
+    assert pg.locator("[data-pv-grid] .dg-viewbtn").count() == 1 and pg.locator("[data-pv-grid] .dg-fields").count() == 0
+    assert pg.locator(".dg-zone[data-well='rows'] .dg-hchip[data-hier='MGMT']").count() == 1
+    assert pg.locator("[data-pv-headline] [data-mr-tiles]").count() == 1                         # the headline figures on the title's line
+    shot(pg, "mr-cube-fields-landing")
+    pg.locator("[data-pv-title]").click()
+    pg.keyboard.press("r")
+    pick = pg.locator(".di-fp-pop")
+    pick.wait_for()
+    assert pick.locator(".di-fp-item[data-key='h:MGMT']").count() == 1
+    assert pick.locator(".di-fp-item[data-key='MGMT.DESK']").count() == 0                       # a level only under its hierarchy
+    assert any(g.startswith("▸More fields") for g in pick.locator(".di-fp-group").all_text_contents())
+    shot(pg, "mr-cube-rows-picker")
+    pg.keyboard.press("Escape")
+    pg.click(".dg-zone[data-well='values'] .dg-vchip[data-field='m:var'] .dg-chip-menu")
+    assert "computed per cell by the var engine" in pg.locator(".dg-menu .dg-menu-note").text_content().lower()
+    assert pg.locator(".dg-menu [data-action^='agg:']").count() == 0                             # VaR is never summed: no function
+    assert pg.locator(".dg-menu [data-action='opt:horizon:10d']").count() == 1
+    shot(pg, "mr-cube-var-menu")
+    pg.keyboard.press("Escape")
+    pg.locator("[data-pv-title]").click()
+    pg.keyboard.press("Shift+V")
+    pg.wait_for_selector(".dg-views-pop .di-option")
+    assert pg.locator(".dg-views-pop .di-option", has_text="By book").count() == 1
+    shot(pg, "mr-cube-view-picker")
+    pg.locator(".dg-views-pop .di-option", has_text="By book").click()
+    wait(pg, "window.Drishti.PivotScreen.view().rows.join() === 'MGMT.DESK,MGMT.BOOK'", 60)
+    opened(pg)
+    assert pg.locator(".dg-hchip[data-hier='MGMT'] .dg-chip-label").text_content() == "Desk › Book"
+    pg.locator("[data-pv-title]").click()
+    pg.keyboard.press("\\")
+    pg.wait_for_selector("[data-pv-grid] .dg-fieldpane")
+    shot(pg, "mr-cube-panes")
+    assert not pg.errors, pg.errors
+    pg.close()
+
+
 def test_the_doors_open_the_same_preset_the_var_explorer_link_and_the_older_address(stack, browser):
     """One grid, several doors: the VaR explorer's MR cube link opens its scope in the preset, and /mcube (the older address) lands on it too."""
     base = str(stack)

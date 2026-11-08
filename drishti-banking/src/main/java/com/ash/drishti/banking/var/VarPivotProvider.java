@@ -301,7 +301,65 @@ public final class VarPivotProvider implements PivotProvider {
             notes.put("lens", "the MR cube: options scope, horizon, method, confidence, esConfidence, set and ccy (PIVOT_GUIDE.md section 29.4)");
             notes.put("defaultView", defaultView(o));
         }
+        notes.put("folders", FOLDERS);
+        notes.put("hierarchies", hierarchies(o, fields));
+        notes.put("hidden", fields.stream().map(Field::name).filter(n -> n.endsWith("." + com.ash.drishti.banking.compute.var.HierarchySpec.ROOT_LEVEL
+                .toUpperCase(Locale.ROOT))).toList());          // a hierarchy's root level: the grand total, under More fields
         return new Catalogue(SOURCE, mr() ? "VaR · MR cube" : "VaR", fields, natives(), o.date().toString(), dates, version(v, source, date), 0, notes);
+    }
+
+    /** The measures' display folders in the field pickers and panes (PIVOT_GUIDE.md section 29.2). */
+    static final Map<String, String> FOLDERS = Map.ofEntries(Map.entry("var", "VaR"), Map.entry("es", "VaR"), Map.entry("pvar", "VaR"),
+            Map.entry("svar", "VaR"), Map.entry("comp_var", "Contribution"), Map.entry("comp_es", "Contribution"), Map.entry("incr_var", "Contribution"),
+            Map.entry("limit", "Limits"), Map.entry("limit_use", "Limits"), Map.entry("dv01", "Sensitivities"), Map.entry("cs01", "Sensitivities"),
+            Map.entry("sbm", "Sensitivities"), Map.entry("pv", "Book"), Map.entry("trades", "Book"));
+
+    /**
+     * The source's hierarchies as one item each (the field pickers draw them so): every configured hierarchy the book has (MGMT, LEGAL, LL
+     * and any other the VaR configuration names), its levels top first as pivot fields (MGMT.DESK) and the promoted columns its levels are
+     * built from (DIVISION, DESK, TT_BOOK: hidden from the plain field list, the hierarchy says them once); then the members' drill,
+     * Positions › Trade, when the person sees positions.
+     */
+    List<Map<String, Object>> hierarchies(VarPivotLens o, List<Field> fields) {
+        Set<String> offered = new java.util.HashSet<>();
+        fields.forEach(f -> offered.add(f.name()));
+        Map<String, com.ash.drishti.banking.compute.var.HierarchySpec> specs = new LinkedHashMap<>();
+        try {
+            svc.hierarchies().specs().forEach(s -> specs.put(s.id(), s));
+        } catch (RuntimeException e) {
+            // no configuration readable: the hierarchies are named by their ids, nothing is hidden
+        }
+        Map<String, List<Map<String, Object>>> levels = new LinkedHashMap<>();
+        for (String l : VarPivotCodes.levels(o.book)) {
+            if (!offered.contains(l)) {
+                continue;
+            }
+            String h = l.substring(0, l.indexOf('.'));
+            if (l.substring(l.indexOf('.') + 1).equalsIgnoreCase(com.ash.drishti.banking.compute.var.HierarchySpec.ROOT_LEVEL)) {
+                continue;                                                  // the root (the bank): every view's total already, no level to pick
+            }
+            String word = l.substring(l.indexOf('.') + 1).toLowerCase(Locale.ROOT).replace('_', ' ').replace('-', ' ');
+            levels.computeIfAbsent(h, k -> new ArrayList<>()).add(Map.of("field", l, "label", Character.toUpperCase(word.charAt(0)) + word.substring(1)));
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        levels.forEach((h, ls) -> {
+            var spec = specs.get(h);
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", h);
+            m.put("title", spec == null ? h : spec.title());
+            m.put("levels", ls);
+            m.put("columns", spec == null ? List.of() : spec.levels().stream().filter(offered::contains).toList());
+            out.add(m);
+        });
+        if (offered.contains(VarPivotCodes.POSITION) && offered.contains(VarPivotCodes.TRADE)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", "POSITIONS");
+            m.put("title", "Positions");
+            m.put("levels", List.of(Map.of("field", VarPivotCodes.POSITION, "label", "Position"), Map.of("field", VarPivotCodes.TRADE, "label", "Trade")));
+            m.put("columns", List.of());
+            out.add(m);
+        }
+        return out;
     }
 
     private static String label(String c) {

@@ -112,7 +112,7 @@ def test_each_layout_and_density_draws_the_pivot_in_both_themes(browsers):
             assert await pg.locator(".dg-hcell.dg-right").count() >= 2                    # the grand totals pinned right
             assert await pg.locator(".dg-cell.dg-nadd").count() > 0                       # non-additive totals, the server's
             assert await pg.locator(".dg-cf").count() > 0                                 # colour scale and data bars
-            assert await pg.locator(".dg-ctoggle").count() >= 2                           # collapsible column groups
+            assert await pg.locator(".dg-ctoggle").count() >= (1 if layout == "panel" else 2)   # collapsible column groups (the panes take width)
             if SHOTS:
                 Path(SHOTS).mkdir(parents=True, exist_ok=True)
                 await pg.screenshot(path=str(Path(SHOTS) / f"drishti-grid-{layout}.png"))
@@ -157,7 +157,7 @@ def test_drag_between_wells_refusals_the_field_list_and_the_keyboard(browsers):
         await pg.drag_and_drop(".dg-zone[data-well='values'] .dg-chip[data-field='VAR']", ".dg-zone[data-well='rows']")
         assert "cannot group rows" in await pg.text_content(".dg-toast")                 # refused, and why
         assert (await wells(pg))["rows"] == ["DESK", "BOOK", "CCY"]
-        await pg.drag_and_drop(".dg-fields .dg-chip[data-field='TRADES']", ".dg-zone[data-well='values']")
+        await pg.click(".dg-zone[data-well='values'] .dg-vtoggle[data-field='TRADES']")    # an unlit measure toggle: a click lights it
         await settle(pg)
         assert [v["colId"] for v in (await wells(pg))["values"]] == ["MTM", "VAR", "TRADES"]
         await pg.drag_and_drop(".dg-zone[data-well='rows'] .dg-chip[data-field='BOOK']", ".dg-zone[data-well='rows'] .dg-chip[data-field='DESK']")
@@ -165,9 +165,10 @@ def test_drag_between_wells_refusals_the_field_list_and_the_keyboard(browsers):
         await pg.click(".dg-zone[data-well='rows'] .dg-chip[data-field='CCY'] .dg-chip-x")
         await settle(pg)
         assert (await wells(pg))["rows"] == ["BOOK", "DESK"]
-        await pg.fill(".dg-field-search", "curr")
-        assert await pg.locator(".dg-fields .dg-chip").count() == 1                       # the field search
-        await pg.fill(".dg-field-search", "")
+        await pg.click(".dg-zone[data-well='rows'] .dg-pick")                             # the Rows picker: no field list on the line
+        await pg.keyboard.type("curr")
+        assert await pg.locator(".di-fp-pop .di-fp-item").count() == 1                    # the field search
+        await pg.keyboard.press("Escape")
         await pg.focus(".dg-zone[data-well='rows'] .dg-chip[data-field='DESK']")
         await pg.keyboard.press("Enter")
         await pg.wait_for_selector(".dg-menu")
@@ -181,7 +182,8 @@ def test_drag_between_wells_refusals_the_field_list_and_the_keyboard(browsers):
         assert len((await wells(pg))["values"]) == 2
         await pg.click(".dg-zone[data-well='values'] .dg-chip[data-field='VAR'] .dg-chip-menu")
         items = await menu_items(pg)
-        assert ("to:rows", True) in items and ("agg-server", True) in items               # VaR cannot group rows; its aggregation is the server's
+        assert ("again", False) not in items and not any(a.startswith("agg:") for a, _ in items)   # VaR: computed per cell, no function
+        assert "computed per cell" in (await pg.text_content(".dg-menu .dg-menu-note")).lower()
         await pg.keyboard.press("Escape")
     run(browsers, body)
 

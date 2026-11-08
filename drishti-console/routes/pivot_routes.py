@@ -64,13 +64,15 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("/pivot")
-async def page(request: Request, source: str = "", view: str = "", date: str = "", preset: str = "", text: str = ""):
-    """PIVOT: the pivot screen; with ``preset`` (and its word's ``text``), one of its presets: the MR cube, the CCR cube."""
+async def page(request: Request, source: str = "", view: str = "", date: str = "", preset: str = "", text: str = "", mode: str = ""):
+    """PIVOT: the pivot screen; with ``preset`` (and its word's ``text``), one of its presets: the MR cube, the CCR cube. ``mode`` opens it
+    as views (the View picker in front of the compact line, the default), compact or panes (PIVOT_GUIDE.md section 2); a saved view and an
+    address of before open the same, the old field list now behind Customize ›."""
     cube = pivot_presets.get(preset) if preset else None
     if cube is None:
         typed = f"{WORD} @{view}" if view else f"{WORD} {source} {date}".strip()
         return render(request, "terminal/pivot.html", screen="pivot", source=source.strip(), view_id=view.strip(), date=date.strip(),
-                      command_text=typed)
+                      command_text=typed, mode=pivot_presets.mode_of(mode) if mode else "", views_json="[]", open_view="")
     from core import engines
     if cube.engine and not engines.engine_available(cube.engine):          # its engine runs on no server of the cluster: said in the server's words
         return RedirectResponse("/t?error=" + quote(engines.refusal(engines.entry(cube.engine) or {"id": cube.engine})), status_code=303)
@@ -82,7 +84,8 @@ async def page(request: Request, source: str = "", view: str = "", date: str = "
     typed = f"{cube.word} @{view}" if view else f"{cube.word} {text}".strip()
     building = bool(cube.under_construction) and under_construction.of(request).marked(cube.under_construction)
     return render(request, "terminal/pivot.html", screen=cube.help, source=cube.source, view_id=view.strip(), date=laid.get("date", ""),
-                  command_text=typed, lens=cube.lens, preset=json.dumps(laid) if laid else "", cube=cube, cube_building=building)
+                  command_text=typed, lens=cube.lens, preset=json.dumps(laid) if laid else "", cube=cube, cube_building=building,
+                  mode=pivot_presets.mode_of(mode) if mode else cube.mode, views_json=json.dumps(list(cube.views)), open_view=cube.view)
 
 
 async def _call(request: Request, method: str, path: str, body=None, **params):

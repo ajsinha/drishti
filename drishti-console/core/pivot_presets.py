@@ -36,6 +36,9 @@ class Preset:
     help: str
     engine: str = ""
     under_construction: str = ""
+    mode: str = "views"
+    view: str = ""
+    views: tuple = ()
 
 
 @lru_cache(maxsize=1)
@@ -45,7 +48,29 @@ def presets() -> dict[str, Preset]:
     for name, p in (data.get("presets") or {}).items():
         out[str(name)] = Preset(name=str(name), title=str(p.get("title") or name), word=str(p.get("word") or "").upper(), source=str(p.get("source") or ""),
                                 lens=str(p.get("lens") or ""), landing=str(p.get("landing") or "source"), help=str(p.get("help") or "pivot"),
-                                engine=str(p.get("engine") or ""), under_construction=str(p.get("under_construction") or ""))
+                                engine=str(p.get("engine") or ""), under_construction=str(p.get("under_construction") or ""),
+                                mode=mode_of(p.get("mode")), view=str(p.get("view") or ""), views=tuple(_view(v) for v in (p.get("views") or [])))
+    return out
+
+
+MODES = ("views", "compact", "panes")
+
+
+def mode_of(word) -> str:
+    """How the pivot screen opens (PIVOT_GUIDE.md section 2): views (the View picker in front of the compact line, the default), compact
+    (the compact line alone) or panes (the Fields and Build panes); anything else is the default."""
+    w = str(word or "").strip().lower()
+    return w if w in MODES else "views"
+
+
+def _view(v: dict) -> dict:
+    """A ready-made view as the View picker takes it: id, name, detail and the partial view laid over the landing."""
+    out = {"id": str(v.get("id") or v.get("name") or ""), "name": str(v.get("name") or v.get("id") or ""), "detail": str(v.get("detail") or "")}
+    if v.get("landing"):
+        out["landing"] = True
+    for k in ("rows", "columns", "values", "sort", "top", "expandTo", "options", "filters"):
+        if k in v:
+            out[k] = v[k]
     return out
 
 

@@ -20,8 +20,10 @@
 export { ADDITIVE_FUNCS, normalizeColumn, getValue, formatValue, ColumnModel } from './drishti_columns.js';
 export { AGG_FUNCS, aggFunc, registerAggFunc, unregisterAggFunc, parseMeasure, isServerMeasure, aggregate } from './drishti_aggregate.js';
 export { SEP, BLANK, memberText, valueLabel, normalizeView, serverRequest, memberFilters, PivotState, pivotLocal } from './drishti_pivot.js';
-export { pivotApplyUpdates, mergeAnswer, applyValueFilters, resultColumns, cellValue, measureText, answerFormat } from './drishti_pivot-answer.js';
-export { WELLS, VALUE_FUNCS, WellsModel } from './drishti_wells.js';
+export { pivotApplyUpdates, mergeAnswer, applyValueFilters, resultColumns, cellValue, measureText, answerFormat, answerScales } from './drishti_pivot-answer.js';
+export { WELLS, VALUE_FUNCS, FUNC_LABELS, FUNC_ARGS, funcLabel, WellsModel } from './drishti_wells.js';
+export { fieldIcon, fieldGroups, pickField, openPicker } from './drishti_grid-fields.js';
+export { ViewPicker } from './drishti_grid-views.js';
 export { ClientRowModel } from './drishti_client-rows.js';
 export { ServerRowModel, memoryDatasource } from './drishti_server-rows.js';
 export { MAX_SCROLL_HEIGHT, columnAt, Viewport } from './drishti_viewport.js';

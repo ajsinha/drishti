@@ -21,11 +21,11 @@ engine: desks by risk class, with the right totals and the diversification. Ever
 
 ## Time to complete
 
-About 1 h 20 min in all; each part can be done on its own day.
+About 1 h 25 min in all; each part can be done on its own day.
 
 - Part A · The pivot engine: trades by product, legs by desk, then VaR by desk: About 30 minutes.
 - Part B · Custom functions, why did it move and what-if: About 25 minutes.
-- Part C · The MR cube: desks by risk class, with the right totals: About 25 minutes.
+- Part C · The MR cube: desks by risk class, with the right totals: About 30 minutes.
 
 ## Before you start
 
@@ -44,13 +44,14 @@ About 1 h 20 min in all; each part can be done on its own day.
 **Part C · The MR cube: desks by risk class, with the right totals.**
 
 - The server and console running with the demo risk lake ([tutorial 2, Part A](02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade)): `VAR BANK <GO>` answers.
-- The engines `var`, `pivot` and `mr-cube` on (Admin → Engines; `mr-cube` is on by default). For step 25, `sensitivities` and `frtb-sa` on too.
+- The engines `var`, `pivot` and `mr-cube` on (Admin → Engines; `mr-cube` is on by default). For step 26, `sensitivities` and `frtb-sa` on too.
 
 ## What you will learn
 
 **Part A · The pivot engine: trades by product, legs by desk, then VaR by desk**
 
-- how a view is built from the field list and its four zones, and what the server computes;
+- how a view is built from the View picker and the compact line (Rows, Columns, Filters, Values, a picker behind each) or the panes
+  behind Customize, how a value's function is chosen from those valid for its field, and what the server computes;
 - why only open rows are computed, and how "expand by" breaks one member down by another field;
 - why Others and every total are made from their own members;
 - where a cell's figures come from (provenance, rows, a reference);
@@ -86,9 +87,13 @@ and export a view to Excel. Each step shows the UI, the command line and the vie
 
 ## Step 1 · A first pivot of the trades
 
-**UI.** Type `PIVOT trade <GO>`. The screen opens with the first text field on Rows and `count()` in Values. Put `PRODUCT_TYPE` on Rows
-(double-click it), and drop `COUNTERPARTY` on Values: a text field arrives as a count; change its function to `count_distinct`. The
-estimate bar says what the view reads; the grid shows one row per product type and the grand total.
+**UI.** Type `PIVOT trade <GO>`. The screen opens as the **View** picker (*Default layout*) in front of one line, Rows · Columns ·
+Filters · Values, with the first text field on Rows and `count()` in Values; there is no field list on screen. Press `R`: the Rows picker
+opens with its search; type `product`, press `Enter` on *Product type*, then uncheck the first field. Press `V` and check *Counterparty*: a
+text field arrives as a count; on its chip's **▾** choose **Distinct count** (a text offers only Count and Distinct count; *Sum* is shown
+off, "not a number"). The **i** beside the title says what the view reads; the grid shows one row per product type and the grand total.
+
+![The trader view: the View picker, the compact line and the grid](../guides/img/pivot/pivot-fields-views.png)
 
 ![The trades by product type: a count and the distinct counterparties](img/t33/01-first-pivot.jpg)
 
@@ -111,7 +116,7 @@ Check: the grand total's `count()` equals Export data's row count (`EXPORT trade
 
 ## Step 2 · Open a row, then expand another by a different field
 
-**UI.** Add `PORTFOLIO` to Rows (after `PRODUCT_TYPE`). Nothing below level one is computed yet: the grid shows product types with **+**.
+**UI.** Add `PORTFOLIO` to Rows (`R`, type `portf`, `Enter`: it goes after `PRODUCT_TYPE`; any number of fields may be nested). Nothing below level one is computed yet: the grid shows product types with **+**.
 Press **+** on a product (or select its first cell and press `→`): it becomes a header with its portfolios and a total below them. The meta
 line says how many sets were computed and how many came from the cache: only that product's children were asked. Now select another
 product's row, press `E` and type `TRADE_DATE`: that product opens by date while the first stays by portfolio.
@@ -163,8 +168,9 @@ You should see the cell's count equal to the number of rows listed.
 
 ## Step 5 · The legs of the trades: a document path
 
-**UI.** A trade's record holds its legs. In the field list, under **Each leg (one row per leg)**, are the legs' fields (*Legs › Notional*,
-*Legs › Leg type* …); type `$.LEGS[0].CURRENCY` into the search box and it is offered as *Your path*.
+**UI.** A trade's record holds its legs. In the Rows picker (`R`; or the Fields pane behind **Customize ›**), under **Each leg (one row
+per leg)**, are the legs' fields (*Legs › Notional*, *Legs › Leg type* …); type `$.LEGS[0].CURRENCY` into the **Path** box under the grid
+and it joins Rows as *Your path*.
 
 ![The field list: the trade's fields, then each leg's, each cash flow's and each event's](img/t33/03-documents-field-list.jpg)
 
@@ -200,8 +206,8 @@ More worked examples, each with its real figures: [PIVOT_GUIDE.md, Documents](..
 
 **UI.** Choose the source **VaR** (or type `PIVOT var <GO>`). The view opens with `var()` and `es()`; put `DESK` on Rows. Each cell's
 popover shows its **scope** (`WHERE:DESK == 'DESK-X'`) and **Ask the VaR engine** opens it in VAR: the figure is the same to the cent. The
-grand total is the bank's own VaR; the desks' VaRs add up to more, and the grand total row shows the gap as **Σ−total** (the
-diversification).
+grand total is the bank's own VaR; the desks' VaRs add up to more, and the grand total row shows the gap as **diversification**
+(total − Σ desks). VaR's **▾** offers no function: it is computed per cell by the VaR engine.
 
 ![VaR and ES by desk: the bank's total is not their sum](img/t33/05-var-by-desk.jpg)
 
@@ -547,9 +553,11 @@ what-if side by side, and save, share and export a view. Each step shows the UI,
 
 ## Step 20 · The landing: desks by risk class
 
-**UI.** Type `MCUBE <GO>` (or **VaR → MR cube**). The pivot screen opens with the MR lens: the headline strip (VaR, ES, limit use, Σ desks −
-total, stressed VaR, the data), the lens controls, the slider, tabs A, B and C, and the pivot: one row per desk of the management hierarchy,
-one column per risk class, each cell its VaR with a sparkline when earlier dates are open.
+**UI.** Type `MCUBE <GO>` (or **VaR → MR cube**). The pivot screen opens with the MR lens: the short title (`MR cube · BANK 2026-09-30 ·
+1d 99% · USD`) with the headline figures on its line (VaR, ES, limit use, Σ desks − total, stressed VaR, the data), the lens controls, the
+slider, tabs A, B and C, and the pivot under one line: **VIEW By risk class × desk ▾**, then `Rows ⋔ MGMT ▾ Desk ▲▼ · Columns Risk class ·
+Values VaR ▾` and the measure toggles. One row per desk of the management hierarchy, one column per risk class, each cell its VaR with a
+sparkline when earlier dates are open.
 
 **CLI.**
 
@@ -566,11 +574,57 @@ drishti.py pivot mr headline --source var
  "values": [{"measure": "var()", "as": "VaR"}], "options": {"scope": "BANK"}, "expandTo": {"rows": 1, "columns": 1}}
 ```
 
-![The MR cube's landing: desks by risk class, the headline strip and the lens controls](img/t38/01-landing.jpg)
+![The MR cube's landing: desks by risk class, the headline strip and the lens controls](img/t38/01-landing.png)
 
 **You should see** desks by risk class with a grand total; the grand total equals `VAR BANK` to the cent, and the headline's VaR is the same number.
 
-## Step 21 · Totals are never sums: the diversification
+## Step 21 · The fields: the View picker, the Rows picker, VaR's menu and the panes
+
+**UI.** Press `Shift+V`: the **View** picker lists the cube's ready-made views (*By risk class × desk*, *By desk*, *By book*, *By limit
+letter* where the LL hierarchy is configured, *Top contributors*, *Trades in my scope*; keys `1`–`9`), then *My views* and *Shared with me*.
+Press `3` (or click *By book*): rows `MGMT Desk › Book`, values VaR, ES and Limit use. Press `R`: the Rows picker shows **Hierarchies**
+first, each one item (`MGMT Division › Desk › Book`, `LEGAL Legal entity › Desk › Book`, `Positions Position › Trade`); open MGMT with `→`
+for its levels. The columns the levels are built from (`DIVISION`, `DESK`, `TT_BOOK`, `LEGAL_ENTITY`) are under **More fields**, closed.
+`Esc`, then `Alt+↑`: MGMT goes up a level (Desk alone, the stepper's ▲); `Alt+↓` brings Book back (▼). Open VaR's **▾**: *computed per cell by the VaR engine*, no Sum, the VaR options (horizon,
+confidence, scenario set) instead. Press `\`: the **Build** and **Fields** panes open beside the grid; drag *Currency* from Fields to
+Columns; `\` again closes them.
+
+![The View picker on the MR cube: ready-made, my and shared views](img/t38/09-view-picker.png)
+
+![The Rows picker: each hierarchy one item, the level columns under More fields](img/t38/10-rows-picker.png)
+
+![VaR's menu: computed per cell, the VaR options](img/t38/11-var-menu.png)
+
+![The panes behind Customize: Build and Fields](img/t38/12-panes.png)
+
+**CLI.**
+
+```
+drishti.py pivot fields var
+drishti.py pivot run --source var --rows MGMT.DESK,MGMT.BOOK --values "var()" --values "es()" --values "limit_use()"
+```
+
+**YAML** (the ready-made view in `drishti-console/config/pivot-presets.yaml`, and a Sutra's pivot that opens in the panes):
+
+```yaml
+presets:
+  mr:
+    mode: views
+    views:
+      - id: by-book
+        name: By book
+        rows: [MGMT.DESK, MGMT.BOOK]
+        values: [{measure: "var()", as: VaR}, {measure: "es()", as: ES}, {measure: "limit_use()", as: Limit use}]
+```
+
+```yaml
+pivot: { rows: [CURRENCY], values: [{ field: NOTIONAL, agg: sum }], mode: panes }
+```
+
+**You should see** the books of each desk under it; the catalogue (`drishti.py pivot fields var`) lists MGMT once under `hierarchies`, its
+levels hidden from the plain fields, and every VaR measure with `perCell: true` and no functions.
+
+## Step 22 · Totals are never sums: the diversification
 
 **UI.** Add up the desks' VaR in the *Grand total* column by hand: it is more than the bank's. The headline's **Σ desks − total** tile is
 that difference, in money; the grand total row carries it too (`Σ−total` beside it).
@@ -587,7 +641,7 @@ drishti.py pivot run --source var --rows MGMT.DESK --values "var()" --json | jq 
 
 **You should see** a grand total below the desks' sum and the difference in the Σ desks − total tile; pick one desk's cell and run `VAR <its scope>` (the scope is in the cell's provenance, step 22): the same VaR to the cent.
 
-## Step 22 · A cell's tail, provenance and why it moved
+## Step 23 · A cell's tail, provenance and why it moved
 
 **UI.** Click the RATES × IR cell. The provenance popover shows its scope (`(NODE:MGMT~DESK-RATES) & (WHERE:PRODUCT_GROUP in (…))`), its
 trades and how the figure is made. The rail under the pivot shows its scenario P&L histogram (the VaR scenario marked **V**, the ES tail
@@ -612,7 +666,7 @@ drishti.py pivot mr explain --scope "(NODE:MGMT~DESK-RATES) & (WHERE:PRODUCT_GRO
 
 **You should see** the cell's scope, its scenario P&L histogram with V and E marked and its steps; the detail's `var` equals the cell's VaR, and its `k` says which worst loss it is (the 6th of 509 at 99%).
 
-## Step 23 · The lens: 10 days, 97.5%, stressed, another currency
+## Step 24 · The lens: 10 days, 97.5%, stressed, another currency
 
 **UI.** Press **H** (or click *10D √10*): every cell is computed again at 10 days. Click *97.5%*, then *Stressed*: the stress set's VaR
 (USD). Click *Normal* and *EUR*: the bank in euros. Type `DESK:RATES` in *Scope* and press Enter: the view starts from the rates desk.
@@ -630,9 +684,9 @@ drishti.py pivot run --source var --rows MGMT.BOOK --values "var()" --option sco
 
 **You should see** every cell computed again for the lens; `VAR DESK:RATES H 10D` on the VaR explorer gives the total of the 10-day view.
 
-## Step 24 · Re-pivot and open a desk down to its trades
+## Step 25 · Re-pivot and open a desk down to its trades
 
-**UI.** Drag `CURRENCY` onto Columns in place of `RISK_CLASS`. Open RATES with →: its books are computed, nothing else. Open a book: its
+**UI.** Press `C`, uncheck *Risk class* and check *Currency* (or drag it in the panes). Open RATES with →: its books are computed, nothing else. Open a book: its
 positions; a position: its trades. Select a book and press **E**, type `COUNTERPARTY`: that book alone is broken down by counterparty.
 Press Enter on a cell: its trades, as the VaR engine holds them.
 
@@ -649,7 +703,7 @@ drishti.py pivot export --source var --rows MGMT.DESK --values "var()" --what ro
 
 **You should see** RATES's books and nothing else computed; each book's VaR is its own (`VAR BOOK:<book>`), and the desk's subtotal is not their sum.
 
-## Step 25 · Components, the waterfall, the ladder and a what-if
+## Step 26 · Components, the waterfall, the ladder and a what-if
 
 **UI.** Open tab **B**: each desk's component VaR and its share; a negative one is a hedge; they add up to the bank's VaR exactly. The
 waterfall draws them, the total last; the histogram is the bank's; the heat map is DV01 by currency × tenor. Open tab **C**: the DV01 ladder
@@ -672,9 +726,9 @@ drishti.py pivot mr whatif --source var --rows MGMT.DESK --copy <a trade id> --f
 
 **You should see** the components with the hedges negative, the ladder and the what-if before and after; the components' sum equals the bank's VaR to the cent; the what-if's *Total* row's *before* equals the grand total.
 
-## Step 26 · Save, share and export
+## Step 27 · Save, share and export
 
-**UI.** **Save view** (name it `morning`), **Share** with `role:risk`. A colleague opens `MCUBE @you/morning <GO>` with their own rights.
+**UI.** `Shift+V`, **Save view as…** `morning`, **Shared** with `role:risk`, `Ctrl+S` (or **Save view**, then **Share**). A colleague opens `MCUBE @you/morning <GO>` with their own rights.
 **Export → Excel**: the outline of the rows, `SUM` formulas only for the measures that add up (`comp_var()`, `pv()`, `trades()`), the server's
 values for VaR and ES, a Provenance sheet.
 
@@ -693,7 +747,8 @@ drishti.py pivot export --view you/morning --format xlsx -o morning.xlsx
 
 ## Next steps
 
-- [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) sections 24 to 26: the switches, live pivots and cell comments in full.
+- [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) section 2 (the screen: the View picker, the compact line, the panes and every key) and
+  sections 24 to 26: the switches, live pivots and cell comments in full.
 
 - The worked examples over documents, each with its figures, picture, command and saved view:
   [PIVOT_GUIDE.md, Documents](../guides/PIVOT_GUIDE.md#documents-paths-lists-and-grains).

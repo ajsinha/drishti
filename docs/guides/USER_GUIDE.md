@@ -1470,8 +1470,10 @@ work only while the focus is inside the element ([Drishti Elements, keyboard](EM
 A table or ladder whose Sutra says `pivot:`, and the results of a search whose kind's pack says `pivot:`, carry a **Pivot** button. It opens
 the **pivot screen** (`PIVOT <GO>`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md), [tutorial 7, Part A](../tutorials/07-pivot-cubes-and-explain.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk)) on the table's own
 rows (the same document, Sutra and business date as the page) or on every row of the kind, with the Sutra's or the pack's arrangement as the
-view it opens with. Everything is computed by the server's pivot engine: rows, columns, values and filters by drag or by key (`R`, `C`, `V`,
-`F`), nested rows opened lazily with + and −, totals made from their own rows (an average of a total is never an average of averages),
+view it opens with. It opens as the **View** picker in front of one compact line (Rows, Columns, Filters and Values, a picker behind each; a
+hierarchy is one chip with a level stepper), with the Fields and Build panes behind **Customize ›** (`\`). Everything is computed by the
+server's pivot engine: rows, columns, values and filters from their pickers (`R`, `C`, `V`, `F`) or by drag in the panes, each value's
+function in plain words (only those valid for its field) and its show-as, nested rows opened lazily with + and −, totals made from their own rows (an average of a total is never an average of averages),
 the provenance of every cell and its rows, a chart of a selection, Excel with outline levels and formulas only where a figure adds up, CSV
 and Arrow.
 
@@ -1590,7 +1592,7 @@ editor: typing `?` or `n` there types it (the few exceptions are named in the ta
 | `Alt+S` | Share this view (or panel) with people with a note; `Ctrl+Enter` sends, `Esc` closes |
 | `Alt+N` | Discussion: the second tab of the side drawer ([Discussion](#discussion)) |
 | `Alt+I` | Your inbox: what people sent you |
-| `R` `C` `V` `F` | On a field of the [pivot screen](#pivot-slice-a-table-your-way): move it to Rows, Columns, Values or Filters, remove it, reorder it ([all its keys](#pivot-slice-a-table-your-way)) |
+| `R` `C` `V` `F` | On the [pivot screen](#pivot-slice-a-table-your-way): open the Rows, Columns, Values or Filters picker; `Shift+V` the View picker; `Alt+↑` `Alt+↓` a hierarchy a level up or down; `\` the panes ([all its keys](PIVOT_GUIDE.md#2-the-screen)) |
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
 | `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4, also while the focus is inside a pane |
 | `Alt+0` | In a workspace: from a pane back to the workspace's bar |
