@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 19 · A cluster of three (Drishti*net)
+# Tutorial 22 · A cluster of three (Drishti\*net)
 
 One Drishti server answers everything it holds. **Drishti*net** joins several servers into one: each keeps its own packs, connectors and data,
 they find each other by gossip, and any of them answers any request, forwarding it to the node that holds the data and applying the caller's
@@ -28,7 +28,7 @@ About 45 minutes.
 
 ## Before you start
 
-- Tutorial 1 done: the built server jar (`./mvnw -o -q package -DskipTests -pl drishti-app -am`), the console's Python, the demo lakes.
+- Tutorial 1, Part A done: the built server jar (`./mvnw -o -q package -DskipTests -pl drishti-app -am`), the console's Python, the demo lakes.
 - Three free ports for the servers (here 18783, 18784, 18785) and one for the console (17784). On three machines, use each machine's address.
 - A cluster key: one secret of at least 32 bytes, the same on every node, given to each server as `DRISHTI_NET_SECRET`. Generate it, never
   invent it: `openssl rand -hex 32`.
