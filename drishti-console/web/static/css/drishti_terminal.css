@@ -620,6 +620,7 @@ table.tbl tbody tr.tbl-sel > td:first-child { box-shadow: inset 3px 0 0 var(--d-
 .tbl-check-in { width: 16px; height: 16px; margin: 0; accent-color: var(--d-accent); cursor: inherit; }
 .tbl-check-off { cursor: not-allowed; }
 table.tbl tbody tr.tbl-picked > td, table.tbl tbody tr.tbl-picked > th { background: var(--d-accent-tint); }
+@media (max-width: 640px), (pointer: coarse) { .tbl-check { min-width: 44px; min-height: 44px; } .tbl-check-in { width: 22px; height: 22px; } }
 @media print { .tbl-pg { display: none; } table.tbl tbody tr[hidden] { display: table-row !important; } }
 
 /* Sortable headings and filters (drishti_tables.js) */
