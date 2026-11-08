@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Reports bound to a model (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 3, 4.1 and 9.4), in the report designer and the report page. A report whose YAML
    says `model: <name>@<major>` or `model: dataset:<name>` reads that model only: the Fields pane is the model as the person sees it (/models/{id}/describe,
    with the field properties, the perspective and the report's own measures), a filter's value picker asks the model, the header of the Fields pane says

@@ -327,13 +327,6 @@
 
     // ---- Format --------------------------------------------------------------------------------------------------------
     const fmt = q('[data-format]');
-    function frow(label, input, hint) { return h('label', { class: 'bi-frow' }, h('span', { text: label }), input, hint ? h('small', { class: 'text-muted-d', text: hint }) : null); }
-    function selectInput(options, value, onChange, attrs) {
-      const s = h('select', Object.assign({ class: 'studio-select' }, attrs || {}), options.map((o) => h('option', { value: o[0], text: o[1] })));
-      s.value = value == null ? '' : value;
-      s.addEventListener('change', () => onChange(s.value));
-      return s;
-    }
     // a format key with '' or null is removed; `false` is kept (a setting whose default is on, such as a matrix's stepped layout, is turned off by it)
     const setFmt = (v, key, val) => D.change('Format ' + key, () => { v.format = v.format || {}; if (val === '' || val == null) { delete v.format[key]; } else { v.format[key] = val; } if (!Object.keys(v.format).length) { delete v.format; } });
     const openSections = {};                                   // section name -> open, kept while the designer is open (the pane is drawn again after every change)
@@ -419,11 +412,14 @@
       acts.appendChild(mk('Delete the page', () => { B.confirm(B.q('[data-delete-page]'), 'Delete the page "' + p.title + '" and its visuals?', 'Delete the page').then((yes) => { if (yes) { D.change('Delete the page', () => { m.pages.splice(ix, 1); }); D.setPage(m.pages[0].id); } }); }, m.pages.length < 2, { 'data-delete-page': '' }));
       fmt.appendChild(acts);
       const dt = (p.drillthrough || {}).fields || [];
-      const fieldSel = h('select', { class: 'studio-select', 'aria-label': 'Take this field as a drill-through filter', 'data-page-drill': '' }, h('option', { value: '', text: 'Add a drill-through field…' }), optionsFor('field'));
-      fieldSel.addEventListener('change', () => { if (fieldSel.value) { D.change('Drill-through page', () => { p.drillthrough = { fields: dt.concat([fieldSel.value]).filter((x, i, a) => a.indexOf(x) === i) }; }); } });
-      const ul = h('ul', { class: 'bi-chiplist' });
-      dt.forEach((x) => { const li = h('li', { class: 'bi-wchip' }, h('span', { text: x })); const b = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove ' + x }, B.icon('x-lg')); b.addEventListener('click', () => D.change('Drill-through page', () => { const l = dt.filter((y) => y !== x); if (l.length) { p.drillthrough = { fields: l }; } else { delete p.drillthrough; } })); li.appendChild(b); ul.appendChild(li); });
-      fmt.appendChild(h('fieldset', { class: 'bi-fieldset' }, h('legend', { text: 'This page is a drill-through target for' }), ul, fieldSel));
+      const allFields = (D.dataset.tables || []).flatMap((t) => t.columns.map((c) => t.name + '.' + c.name));
+      const setDrill = (l) => D.change('Drill-through page', () => { if (l.length) { p.drillthrough = { fields: l }; } else { delete p.drillthrough; } });
+      settings('This page is a drill-through target for', [
+        dt.length ? ['fields', { type: 'array', title: 'This page is a drill-through target for', items: { type: 'string', enum: dt }, widget: 'checkboxes', optionHook: 'page-drill-field',
+          description: 'Untick a field to stop taking it.' }, dt, (l) => setDrill(dt.filter((x) => (l || []).indexOf(x) >= 0))] : null,
+        ['add', { type: 'string', title: 'Take this field as a drill-through filter', enum: allFields.filter((x) => dt.indexOf(x) < 0), widget: 'select', emptyLabel: 'Add a drill-through field…', hook: 'data-page-drill' }, undefined,
+          (x) => { if (x) { setDrill(dt.concat([x])); } }]
+      ], 'bi-drill-target');
       D.pageV2(fmt, p);
       fmt.appendChild(h('h4', { class: 'bi-fhead', text: 'Report' }));
       settings('The report', [
@@ -438,64 +434,58 @@
         ['from', { type: 'date', title: 'Business date from', hook: 'data-dates-from' }, dates.from, (x) => setDates({ from: x })],
         ['to', { type: 'date', title: 'Business date to', hook: 'data-dates-to' }, dates.to, (x) => setDates({ to: x })]
       ]);
-      fmt.appendChild(frow('Dataset', h('code', { text: m.dataset })));
-      const lk = h('fieldset', { class: 'bi-fieldset', 'data-links': '' }, h('legend', { text: 'Links between datasets' }));
-      (m.links || []).forEach((l, i) => {
-        const li = h('div', { class: 'bi-cond' }, h('code', { text: l.fields.join(' = ') }));
-        const x = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove the link ' + l.fields.join(', ') }, B.icon('x-lg'));
-        x.addEventListener('click', () => D.change('Remove a link', () => { m.links.splice(i, 1); if (!m.links.length) { delete m.links; } }));
-        li.appendChild(x);
-        lk.appendChild(li);
-      });
-      const lf = h('input', { type: 'text', class: 'studio-in', placeholder: 'counterparties.sector, joined.sector', 'aria-label': 'Fields that mean the same, separated by commas', 'data-link-fields': '' });
-      const addL = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Link these fields', 'data-add-link': '' });
-      addL.addEventListener('click', () => {
-        const fields = lf.value.split(',').map((x) => x.trim()).filter(Boolean);
-        if (fields.length >= 2) { D.change('Add a link', () => { (m.links = m.links || []).push({ fields }); }); } else { D.say('A link names two or more fields (table.column), separated by commas.', true); }
-      });
-      lk.appendChild(lf);
-      lk.appendChild(addL);
-      lk.appendChild(h('small', { class: 'text-muted-d', text: 'Fields of different datasets that mean the same thing: a slicer or a click on one filters the visuals of the other.' }));
-      fmt.appendChild(lk);
+      fmt.appendChild(h('p', { class: 'bi-frow' }, h('span', { text: 'Dataset' }), h('code', { text: m.dataset })));
+      const linkRows = (m.links || []).map((l) => ({ fields: l.fields.join(', ') }));
+      settings('Links between datasets', [['links', { type: 'array', title: 'Links between datasets', addLabel: 'Link fields', hook: 'data-links',
+        description: 'Fields of different datasets that mean the same thing (table.column, separated by commas): a slicer or a click on one filters the visuals of the other.',
+        items: { type: 'object', title: 'Link', properties: { fields: { type: 'string', title: 'Fields that mean the same', placeholder: 'counterparties.sector, joined.sector', lazy: true, hook: 'data-link-fields' } } } },
+      linkRows, (rows) => {
+        const next = (rows || []).map((r) => String((r && r.fields) || '').split(',').map((x) => x.trim()).filter(Boolean)).filter((f) => f.length >= 2).map((f) => ({ fields: f }));
+        if (JSON.stringify(next) !== JSON.stringify(m.links || [])) { D.change(next.length < (m.links || []).length ? 'Remove a link' : 'Link fields', () => { if (next.length) { m.links = next; } else { delete m.links; } }); }
+      }]]);
       const bm = h('fieldset', { class: 'bi-fieldset', 'data-bookmarks': '' }, h('legend', { text: 'Bookmarks' }));
       const pageOf = (id) => D.model.pages.find((x) => x.id === id) || p;
       const snapshot = (pg) => (pg.filters || []).map((f) => B.clone(f));
       const summary = (b) => ((b.filters || []).length ? (b.filters || []).length + ' filter' + (b.filters.length === 1 ? '' : 's') : 'no filters') + (Object.keys(b.slicers || {}).length ? ', ' + Object.keys(b.slicers).length + ' slicer choice' + (Object.keys(b.slicers).length === 1 ? '' : 's') : '');
       (m.bookmarks || []).forEach((b, i) => {
-        const nm = h('input', { type: 'text', class: 'studio-in', value: b.name, 'aria-label': 'Name of bookmark ' + b.name, 'data-bookmark-rename': String(i) });
-        nm.addEventListener('change', () => { const n = nm.value.trim(); if (n && n !== b.name) { D.change('Rename a bookmark', () => { const was = b.name; b.name = n; D.model.pages.forEach((pg) => pg.visuals.forEach((v) => { if (v.action && v.action.bookmark === was) { v.action.bookmark = n; } })); }); } });
         const upd = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-bookmark-update': String(i), 'aria-label': 'Update bookmark ' + b.name + ' from the filters of ' + b.page }, 'Update from the page\'s filters');
         upd.addEventListener('click', () => D.change('Update a bookmark', () => { const f = snapshot(pageOf(b.page)); if (f.length) { b.filters = f; } else { delete b.filters; } }));
         const x = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove bookmark ' + b.name }, B.icon('x-lg'));
         x.addEventListener('click', () => D.change('Remove a bookmark', () => { m.bookmarks.splice(i, 1); if (!m.bookmarks.length) { delete m.bookmarks; } }));
-        bm.appendChild(h('div', { class: 'bi-cond', 'data-bookmark': b.name }, nm, h('span', { class: 'text-muted-d', text: ' on ' + b.page + ': ' + summary(b) + ' ' }), upd, x));
+        const nameBox = h('div', { class: 'bi-fform' });
+        bm.appendChild(h('div', { class: 'bi-cond', 'data-bookmark': b.name }, nameBox, h('span', { class: 'text-muted-d', text: ' on ' + b.page + ': ' + summary(b) + ' ' }), upd, x));
+        B.formatPane.form(nameBox, { label: 'Bookmark ' + b.name, value: { name: b.name },
+          fields: { name: { type: 'string', title: 'Name of bookmark ' + b.name, lazy: true, hook: { 'data-bookmark-rename': String(i) } } },
+          on: { name: (v) => { const n = String(v || '').trim(); if (n && n !== b.name) { D.change('Rename a bookmark', () => { const was = b.name; b.name = n; D.model.pages.forEach((pg) => pg.visuals.forEach((vv) => { if (vv.action && vv.action.bookmark === was) { vv.action.bookmark = n; } })); }); } } } });
       });
-      const name = h('input', { type: 'text', class: 'studio-in', placeholder: 'Bookmark name', 'aria-label': 'Bookmark name', 'data-bookmark-name': '' });
-      const choices = {};
       const slicers = p.visuals.filter((v) => v.type === 'slicer');
-      const picks = h('div', { 'data-bookmark-slicers': '' });
-      slicers.forEach((v) => {
-        const rel = (v.format || {}).mode === 'relative-date', label = v.title || B.label((v.wells.field || [''])[0]);
-        const inp = rel ? selectInput([['', 'not set']].concat(((v.format || {}).options || B.visuals.RELATIVE).map((o) => [o, B.visuals.relativeLabel(o)])), '', (val) => { choices[v.id] = val ? { relative: val } : null; }, { 'data-bookmark-slicer': v.id })
-          : h('input', { type: 'text', class: 'studio-in', 'aria-label': 'Values of ' + label + ', separated by commas', 'data-bookmark-slicer': v.id });
-        if (!rel) { inp.addEventListener('change', () => { const vals = inp.value.split(',').map((t) => t.trim()).filter(Boolean); choices[v.id] = vals.length ? vals : null; }); }
-        picks.appendChild(frow('Slicer ' + label, inp));
+      const fresh = { name: { type: 'string', title: 'Bookmark name', placeholder: 'Bookmark name', hook: 'data-bookmark-name' } };
+      slicers.forEach((v, k) => {
+        const rel = (v.format || {}).mode === 'relative-date', label = v.title || B.label((v.wells.field || [''])[0]), offered = (v.format || {}).options || B.visuals.RELATIVE;
+        fresh['s' + k] = rel ? { type: 'string', title: 'Slicer ' + label, enum: offered, enumLabels: offered.map(B.visuals.relativeLabel), widget: 'select', emptyLabel: 'not set', hook: { 'data-bookmark-slicer': v.id } }
+          : { type: 'string', title: 'Slicer ' + label, placeholder: 'Values, separated by commas', hook: { 'data-bookmark-slicer': v.id } };
       });
+      const newBox = h('div', { class: 'bi-fform', 'data-bookmark-slicers': '' });
+      bm.appendChild(newBox);
+      const newForm = B.formatPane.form(newBox, { label: 'A new bookmark', fields: fresh, value: {} });
       const addB = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Save this page as a bookmark', 'data-add-bookmark': '' });
       addB.addEventListener('click', () => {
-        const n = name.value.trim();
+        const n = String(newForm.getField('name') || '').trim();
         if (!n) { D.say('Name the bookmark first.', true); return; }
         if ((m.bookmarks || []).some((b) => b.name === n)) { D.say('There is a bookmark called ' + n + ' already.', true); return; }
         D.change('Add a bookmark', () => {
           const b = { name: n, page: p.id }, f = snapshot(p), sl = {};
-          Object.keys(choices).forEach((k) => { if (choices[k]) { sl[k] = choices[k]; } });
+          slicers.forEach((v, k) => {
+            const x = newForm.getField('s' + k);
+            if ((v.format || {}).mode === 'relative-date') { if (x) { sl[v.id] = { relative: x }; } return; }
+            const list = String(x || '').split(',').map((t) => t.trim()).filter(Boolean);
+            if (list.length) { sl[v.id] = list; }
+          });
           if (Object.keys(sl).length) { b.slicers = sl; }
           if (f.length) { b.filters = f; }
           (m.bookmarks = m.bookmarks || []).push(b);
         });
       });
-      bm.appendChild(name);
-      bm.appendChild(picks);
       bm.appendChild(addB);
       bm.appendChild(h('small', { class: 'text-muted-d', text: 'A bookmark keeps this page, its filters (the Filters pane) and the slicer choices you set here. Choosing it in the viewer applies them.' }));
       fmt.appendChild(bm);
@@ -552,106 +542,90 @@
       });
     }
 
+    /** A filter being added or changed: drishti-inputs' Form, its fields following the kind of filter (when), every control named as
+     *  before (field, mode, op, values, v1, v2, n, dir, by); Pick from the data loads the field's values as a row of checkboxes. */
     function filterEditor(scope, index) {
       const cur = index >= 0 ? scopeFilters(scope, false)[index] : null;
-      const form = h('form', { class: 'bi-feditor', 'data-filter-editor': '', autocomplete: 'off' });
-      const field = h('select', { class: 'studio-select', 'aria-label': 'Field to filter', name: 'field' }, optionsFor('any'));
+      const host = h('div', { class: 'bi-feditor', 'data-filter-editor': '' });
+      const all = (D.dataset.tables || []).flatMap((t) => t.columns.map((c) => t.name + '.' + c.name));
+      const first = all[0] || '';
       const sv = D.sel(), svField = sv && Object.keys(sv.wells || {}).reduce((a, k) => a.concat(sv.wells[k]), []).find((x) => D.kindOf(x) === 'field');           // a new filter starts on the selected visual's own field
-      field.value = cur ? cur.field : svField || (D.dataset.tables[0] ? D.dataset.tables[0].name + '.' + D.dataset.tables[0].columns[0].name : '');
-      if (!cur && svField && field.value !== svField) { field.value = D.dataset.tables[0] ? D.dataset.tables[0].name + '.' + D.dataset.tables[0].columns[0].name : ''; }
-      const mode = h('select', { class: 'studio-select', 'aria-label': 'Kind of filter', name: 'mode' }, h('option', { value: 'basic', text: 'Basic: pick values' }), h('option', { value: 'advanced', text: 'Advanced: a condition' }), h('option', { value: 'top', text: 'Top N' }));
-      mode.value = !cur ? 'basic' : cur.op === 'top' ? 'top' : (cur.op === 'in' || cur.op === 'not-in') ? 'basic' : 'advanced';
-      const body = h('div', { class: 'bi-fbody' });
-      form.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'Field' }), field));
-      form.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'Filter type' }), mode));
-      form.appendChild(body);
-      const state = { op: cur ? cur.op : 'in', values: cur ? (cur.values || []).slice() : [], n: cur ? cur.n || 5 : 5, by: cur ? cur.by : '', dir: cur ? cur.dir || 'desc' : 'desc' };
-
-      function paint() {
-        B.clear(body);
-        if (mode.value === 'basic') {
-          const op = selectInput([['in', 'is one of'], ['not-in', 'is not one of']], state.op === 'not-in' ? 'not-in' : 'in', (x) => { state.op = x; }, { name: 'op' });
-          const txt = h('input', { type: 'text', class: 'studio-in', name: 'values', 'aria-label': 'Values, separated by commas', placeholder: 'Values, separated by commas', value: state.values.join(', ') });
-          txt.addEventListener('input', () => { state.values = txt.value.split(',').map((s) => s.trim()).filter(Boolean); });
-          const load = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-load-values': '', text: 'Pick from the data' });
-          const pick = h('div', { class: 'bi-pick', 'data-pick': '' });
-          load.addEventListener('click', () => loadValues(field.value, pick, state, txt));
-          body.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'Condition' }), op));
-          body.appendChild(txt);
-          body.appendChild(load);
-          body.appendChild(pick);
-        } else if (mode.value === 'advanced') {
-          const op = selectInput(Object.keys(OPS).map((k) => [k, OPS[k]]), Object.keys(OPS).indexOf(state.op) >= 0 ? state.op : 'eq', (x) => { state.op = x; paint(); }, { name: 'op' });
-          body.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'Condition' }), op));
-          if (op.value !== 'is-null' && op.value !== 'not-null') {
-            const a = h('input', { type: 'text', class: 'studio-in', name: 'v1', 'aria-label': 'Value', value: state.values[0] == null ? '' : String(state.values[0]) });
-            a.addEventListener('input', () => { state.values[0] = a.value; });
-            body.appendChild(a);
-            if (op.value === 'between') {
-              const b = h('input', { type: 'text', class: 'studio-in', name: 'v2', 'aria-label': 'and', value: state.values[1] == null ? '' : String(state.values[1]) });
-              b.addEventListener('input', () => { state.values[1] = b.value; });
-              body.appendChild(b);
-            }
-          }
-        } else {
-          const n = h('input', { type: 'number', min: '1', class: 'studio-in', name: 'n', 'aria-label': 'How many', value: String(state.n) });
-          n.addEventListener('input', () => { state.n = parseInt(n.value, 10) || 1; });
-          const by = selectInput((D.dataset.measures || []).map((m) => [m.name, m.name]), state.by || (D.dataset.measures[0] || {}).name, (x) => { state.by = x; }, { name: 'by' });
-          state.by = by.value;
-          const dir = selectInput([['desc', 'highest'], ['asc', 'lowest']], state.dir, (x) => { state.dir = x; }, { name: 'dir' });
-          body.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'Keep the top' }), n));
-          body.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'with the' }), dir));
-          body.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'by measure' }), by));
-        }
-      }
-      mode.addEventListener('change', () => { state.values = []; state.op = mode.value === 'top' ? 'top' : mode.value === 'basic' ? 'in' : 'eq'; paint(); });
-      field.addEventListener('change', () => { state.values = []; paint(); });
-      paint();
-      const ok = h('button', { type: 'submit', class: 'btn-pill btn-accent bi-small', text: cur ? 'Update the filter' : 'Add the filter' });
-      const cancel = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Cancel' });
-      cancel.addEventListener('click', () => { editing = null; drawFilters(); });
-      form.appendChild(h('div', { class: 'bi-actions' }, ok, cancel));
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const f = { field: field.value, op: state.op };
-        const type = (B.column(D.idx, field.value) || {}).type;
-        const num = (x) => (['integer', 'decimal'].indexOf(type) >= 0 && x !== '' && isFinite(Number(x)) ? Number(x) : x);
-        if (mode.value === 'top') { f.op = 'top'; f.n = state.n; f.by = state.by; f.dir = state.dir; }
-        else if (f.op === 'is-null' || f.op === 'not-null') { f.values = []; }
-        else { f.values = state.values.filter((x) => x !== '' && x != null).map(num); if (!f.values.length) { D.say('Give the filter a value.', true); return; } }
-        if (f.op === 'between' && f.values.length < 2) { D.say('between needs two values.', true); return; }
-        D.change(cur ? 'Change a filter' : 'Add a filter', () => { const l = scopeFilters(scope, true); if (cur) { l[index] = f; } else { l.push(f); } });
-        editing = null;
-        drawFilters();
-      });
-      return form;
-    }
-
-    /** Distinct values of the field, from the report's model (as the author: the author's rows and masks apply). */
-    function loadValues(field, box, state, txt) {
-      B.clear(box).appendChild(h('p', { class: 'bi-vis-note', text: 'Reading values…' }));
-      const ref = (B.modelBinding && B.modelBinding.ref) || B.layer.refOf(D.model.model || D.model.dataset || D.dataset.id);
-      B.enqueue(() => B.mq.values(ref, field, 200)).then((res) => {
-        B.clear(box);
-        const search = h('input', { type: 'search', class: 'studio-in', placeholder: 'Search', 'aria-label': 'Search the values' });
-        const list = h('div', { class: 'bi-picklist', role: 'group', 'aria-label': 'Values' });
-        res.rows.forEach((r) => {
-          const val = r[0];
-          if (val == null) { return; }
-          const c = h('input', { type: 'checkbox', value: String(val), 'data-pick-value': String(val) });
-          c.checked = state.values.map(String).indexOf(String(val)) >= 0;
-          c.addEventListener('change', () => {
-            state.values = state.values.filter((x) => String(x) !== String(val));
-            if (c.checked) { state.values.push(val); }
-            txt.value = state.values.join(', ');
-          });
-          list.appendChild(h('label', { class: 'bi-checkrow' }, c, ' ' + String(val)));
+      const startField = cur ? cur.field : svField && all.indexOf(svField) >= 0 ? svField : first;
+      const mode0 = !cur ? 'basic' : cur.op === 'top' ? 'top' : (cur.op === 'in' || cur.op === 'not-in') ? 'basic' : 'advanced';
+      const ops = ['in', 'not-in'].concat(Object.keys(OPS)), parents = {};
+      ops.forEach((o) => { parents[o] = o === 'in' || o === 'not-in' ? ['basic'] : ['advanced']; });
+      const ms = (D.dataset.measures || []).map((m) => m.name);
+      const nulls = ['is-null', 'not-null'];
+      const vals = cur ? (cur.values || []) : [];
+      let picked = null;                                   // the values read from the data, once Pick from the data was pressed
+      const schema = { type: 'object', properties: {
+        field: { type: 'string', title: 'Field', enum: all, widget: 'select', allowEmpty: false, name: 'field' },
+        mode: { type: 'string', title: 'Filter type', enum: ['basic', 'advanced', 'top'], enumLabels: ['Basic: pick values', 'Advanced: a condition', 'Top N'], widget: 'select', allowEmpty: false, name: 'mode' },
+        op: { type: 'string', title: 'Condition', enum: ops, enumLabels: ['is one of', 'is not one of'].concat(Object.keys(OPS).map((k) => OPS[k])), widget: 'select', allowEmpty: false, name: 'op',
+          dependsOn: 'mode', parents, when: { field: 'mode', notEquals: 'top' } },
+        values: { type: 'string', title: 'Values', placeholder: 'Values, separated by commas', name: 'values', when: { field: 'mode', equals: 'basic' } },
+        pick: { type: 'string', title: 'Pick from the data', widget: 'pick', noLabel: true, when: { field: 'mode', equals: 'basic' } },
+        v1: { type: 'string', title: 'Value', name: 'v1', when: { all: [{ field: 'mode', equals: 'advanced' }, { field: 'op', notIn: nulls }] } },
+        v2: { type: 'string', title: 'and', name: 'v2', when: { all: [{ field: 'mode', equals: 'advanced' }, { field: 'op', equals: 'between' }] } },
+        n: { type: 'integer', title: 'Keep the top', minimum: 1, name: 'n', when: { field: 'mode', equals: 'top' } },
+        dir: { type: 'string', title: 'with the', enum: ['desc', 'asc'], enumLabels: ['highest', 'lowest'], widget: 'select', allowEmpty: false, name: 'dir', when: { field: 'mode', equals: 'top' } },
+        by: { type: 'string', title: 'by measure', enum: ms, widget: 'select', allowEmpty: false, name: 'by', when: { field: 'mode', equals: 'top' } }
+      } };
+      const value = { field: startField, mode: mode0, op: mode0 === 'top' ? undefined : cur ? cur.op : 'in', values: mode0 === 'basic' && vals.length ? vals.join(', ') : undefined,
+        v1: mode0 === 'advanced' && vals[0] != null ? String(vals[0]) : undefined, v2: mode0 === 'advanced' && vals[1] != null ? String(vals[1]) : undefined,
+        n: cur ? cur.n || 5 : 5, dir: cur ? cur.dir || 'desc' : 'desc', by: cur && cur.by ? cur.by : ms[0] };
+      const typed = () => String(form.getField('values') || '').split(',').map((x) => x.trim()).filter(Boolean);
+      const widgets = { pick: (w) => {
+        const box = h('div', { class: 'bi-pick', 'data-pick': '' });
+        const load = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-load-values': '', text: 'Pick from the data' });
+        const list = h('div', { class: 'bi-fform' });
+        const draw = () => {
+          B.clear(list);
+          if (!picked) { return; }
+          const chosen = typed();
+          const sub = new window.Drishti.elements.inputs.Form(list, { embedded: true, label: 'Values', schema: { type: 'object', properties: {
+            chosen: { type: 'array', title: 'Values', items: { type: 'string', enum: picked }, widget: 'checkboxes', optionHook: 'pick-value' } } }, value: { chosen: picked.filter((x) => chosen.indexOf(x) >= 0) } });
+          sub.on('change', () => { const keep = typed().filter((x) => picked.indexOf(x) < 0); form.setField('values', keep.concat(sub.getField('chosen') || []).join(', ') || undefined); });
+        };
+        load.addEventListener('click', () => {
+          B.clear(list).appendChild(h('p', { class: 'bi-vis-note', text: 'Reading values…' }));
+          const ref = (B.modelBinding && B.modelBinding.ref) || B.layer.refOf(D.model.model || D.model.dataset || D.dataset.id);
+          B.enqueue(() => B.mq.values(ref, form.getField('field'), 200)).then((res) => {
+            picked = res.rows.map((r) => r[0]).filter((x) => x != null).map(String);
+            draw();
+            if (res.rowCount >= 200) { list.appendChild(h('p', { class: 'bi-vis-note', text: 'The first 200 values; type the others above.' })); }
+          }, (e) => { B.clear(list).appendChild(h('p', { class: 'bi-vis-note', text: e.message })); });
         });
-        search.addEventListener('input', () => { const t = search.value.toLowerCase(); B.qa('label', list).forEach((l) => { l.hidden = !!t && l.textContent.toLowerCase().indexOf(t) < 0; }); });
-        box.appendChild(search);
-        box.appendChild(list);
-        if (res.rowCount >= 200) { box.appendChild(h('p', { class: 'bi-vis-note', text: 'The first 200 values; type the others above.' })); }
-      }, (e) => { B.clear(box).appendChild(h('p', { class: 'bi-vis-note', text: e.message })); });
+        box.append(load, list);
+        draw();
+        return { el: box };
+      } };
+      const form = new window.Drishti.elements.inputs.Form(host, { schema, value, widgets, submitLabel: cur ? 'Update the filter' : 'Add the filter', resetButton: false, label: 'Filter',
+        onSubmit: (v) => {
+          const f = { field: v.field, op: v.op };
+          const type = (B.column(D.idx, v.field) || {}).type;
+          const num = (x) => (['integer', 'decimal'].indexOf(type) >= 0 && x !== '' && isFinite(Number(x)) ? Number(x) : x);
+          if (v.mode === 'top') { f.op = 'top'; f.n = v.n || 1; f.by = v.by; f.dir = v.dir; }
+          else if (nulls.indexOf(f.op) >= 0) { f.values = []; }
+          else {
+            const raw = v.mode === 'basic' ? typed() : [v.v1, v.v2].filter((x) => x !== undefined);
+            f.values = raw.filter((x) => x !== '' && x != null).map(num);
+            if (!f.values.length) { D.say('Give the filter a value.', true); return Promise.reject(new Error('Give the filter a value.')); }
+          }
+          if (f.op === 'between' && f.values.length < 2) { D.say('between needs two values.', true); return Promise.reject(new Error('between needs two values.')); }
+          D.change(cur ? 'Change a filter' : 'Add a filter', () => { const l = scopeFilters(scope, true); if (cur) { l[index] = f; } else { l.push(f); } });
+          editing = null;
+          drawFilters();
+          return null;
+        } });
+      form.on('change', (e) => {
+        if (e.path === 'field') { picked = null; form.setField('values', undefined); form.setField('pick', undefined); }
+        if (e.path === 'mode') { form.setField('values', undefined); form.setField('v1', undefined); form.setField('v2', undefined); form.setField('op', e.value === 'basic' ? 'in' : e.value === 'advanced' ? 'eq' : undefined); }
+      });
+      const cancel = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Cancel', 'data-filter-cancel': '' });
+      cancel.addEventListener('click', () => { editing = null; drawFilters(); });
+      host.appendChild(cancel);
+      return host;
     }
 
     // ---- the tabs of the middle pane and redrawing ---------------------------------------------------------------------

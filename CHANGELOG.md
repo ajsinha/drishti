@@ -166,6 +166,10 @@
   completion hook offers the fields, measures, functions and keywords (also after `(`, `,` and `=` in a call); its own suggestion list
   and CSS deleted. Deleted: the Format pane's small controls (`row`, `select`, `text`, `checkbox`, `colour`) and the designer's own
   text, date and checkbox helpers. drishti-inputs: `upgradeCodeArea` passes `completeAfter`. Saved reports are unchanged.
+  The second pass: the Filters pane's editor (a `Form` whose fields follow the kind of filter; Pick from the data a row of checkboxes),
+  the drill-through target, the links between datasets, the bookmarks, the Phone and Tablet rows, a report measure's name, the
+  Copilot's question and a transform step's parameters are `Form`s too; the designer's `frow` and `selectInput` deleted; the form
+  guard's allow-list from 2 files to 1.
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never
