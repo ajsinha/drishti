@@ -15,6 +15,7 @@
 """Layout mode and personal layouts (USER_GUIDE.md, Layout mode): the overlay applied to a view (order, column, width,
 height, hidden; a changed Sutra), the key and its reasons, the JSON routes, promotion's diff, the Admin roles power,
 the review page's diff of a new version, and workspaces keeping their divider sizes."""
+import html as html_mod
 import re
 
 import pytest
@@ -176,8 +177,8 @@ def test_promotion_shows_the_diff_and_proposes_through_review(client, backend, l
 # ---- around it ---------------------------------------------------------------------------------------------------
 
 def test_admin_roles_has_the_layout_power_on_by_default(client, backend):
-    page = client.get("/admin/roles").text
-    assert '<input type="checkbox" name="layout" checked>' in page and "Customise layouts" in page
+    page = html_mod.unescape(client.get("/admin/roles").text)  # the role form is drishti-inputs' Form from the server's schema
+    assert '"name":"layout"' in page and "Customise layouts" in page and '"layout":true' in page
     client.post("/admin/api/roles/kiosk", json={"kinds": ["*"], "layout": False})
     assert ("admin", "PUT", "/role-definitions/kiosk", {"kinds": ["*"], "layout": False}) in backend.calls
 
