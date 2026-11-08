@@ -1,0 +1,58 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
+rachana: 1
+sutra: rate-series
+version: 1
+description: "One central-bank or market series from FRED or the Bank of Canada: the history, the latest value, the change on the day and on the year."
+doc:
+  summary: "A policy-rate or market series: its history over the window, the latest value, the change on the day and the year, the range."
+  description: >-
+    One page per series of the central-banks feed (FRED: the Fed's target range and effective rate, Treasury yields, inflation,
+    unemployment, the balance sheet; the Bank of Canada: the target rate, CORRA, Canada's yields, USD/CAD): the strip gives the latest
+    value with its date and unit, the change on the previous observation and on the year, and the window's high and low; the chart draws
+    the history; F7 opens the bank.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/rate-series/CBSER-FRED-DGS10"
+    - "CBSER CBSER-FRED-DGS10"
+  since: "2.9.11"
+match: { kind: rate-series, priority: 10 }
+title: { pill: Public sector · Central bank series, id: $.SERIES_ID, with: $.TITLE }
+strip:
+  - { label: Latest, bind: $.LATEST, fmt: amount2, emphasis: true }
+  - { label: Unit, bind: $.UNIT }
+  - { label: Date, bind: $.LATEST_DATE, fmt: date }
+  - { label: Change, bind: $.CHANGE, fmt: signed2 }
+  - { label: On the year, bind: $.CHANGE_1Y, fmt: signed2 }
+  - { label: High, bind: $.HIGH, fmt: amount2 }
+  - { label: Low, bind: $.LOW, fmt: amount2 }
+panels:
+  - { use: series-line@1, with: { id: history, title: History, key: F2, rows: $.HISTORY, x: DATE, y: VALUE, fmt: amount2 } }
+  - id: about
+    kind: kv
+    title: About this series
+    area: right
+    columns:
+      - { label: Bank, bind: "link($.CENTRAL_BANK, 'central-bank')" }
+      - { label: Source, bind: $.SOURCE }
+      - { label: Code, bind: $.CODE }
+      - { label: Frequency, bind: $.FREQUENCY }
+      - { label: Observations, bind: $.OBSERVATIONS, fmt: amount0 }
+      - { label: What it is, bind: $.DESCRIPTION }
+  - { use: source-footer@1 }
+keys: { F7: "link($.CENTRAL_BANK, 'central-bank')", F9: raw }

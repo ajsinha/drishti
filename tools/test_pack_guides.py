@@ -83,9 +83,10 @@ def test_every_stored_kind_has_an_origin_and_every_source_a_script(pack):
             assert o["generator"] in SPEC["generators"], o
 
 
-def test_internal_only_sources_are_the_imf_and_yahoo_and_google_news():
+def test_internal_only_sources_are_the_imf_and_yahoo_and_google_news_and_the_non_commercial_publishers():
     internal = sorted(i for i, e in SPEC["external"].items() if e.get("internal"))
-    assert internal == ["google-news", "imf", "yahoo-prices", "yahoo-quote"]
+    # press-noncommercial: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse (config/feeds/official-news.yaml)
+    assert internal == ["google-news", "imf", "press-noncommercial", "yahoo-prices", "yahoo-quote"]
 
 
 def test_the_packs_without_a_guide_generator_are_current():

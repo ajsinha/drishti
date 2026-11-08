@@ -1,0 +1,68 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this page: what the gdelt-events pack's kind and fields mean (the README, the contracts and the About card read it).
+about: 1
+vocabulary:
+  provenance: { term: Provenance, means: "Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY." }
+  source: { term: Source, means: "The GDELT Project." }
+  dataset: { term: Dataset, means: "The GDELT 1.0 daily event file of the latest day." }
+  retrieved: { term: Retrieved, means: "The business date of the feed's pull that wrote the record." }
+  licence: { term: Licence, means: "GDELT's terms of use, as recorded in the feed's YAML." }
+  attribution: { term: Attribution, means: "The credit line to repeat when the data is shown or republished." }
+  url: { term: Address, means: "GDELT's data page." }
+  internal: { term: Internal only, means: "True when the source's terms forbid redistribution outside the organisation (false for GDELT)." }
+  tone: { term: Average tone, means: "GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by mentions." }
+kinds:
+  event-country:
+    title: World events by country
+    about: On ${$.DATE} the news reported ${$.EVENTS} events whose first actor is ${$.COUNTRY_NAME}, with an average tone of ${fmt($.AVG_TONE, 'signed2')}.
+    guide: gdelt-events
+    glossary:
+      EVENT_COUNTRY_ID: { term: Country id, means: "GDELT- and the country's ISO 3166-1 alpha-3 code (the CAMEO country code of the event's first actor)." }
+      NAME: { term: Name, means: "The country's name (Natural Earth)." }
+      ISO3: { term: ISO alpha-3, means: "The country's ISO 3166-1 alpha-3 code, the key the map shades by." }
+      COUNTRY_NAME: { term: Country, means: "The country's name (Natural Earth)." }
+      DATE: { term: Day, means: "The latest day the feed read (the events added to GDELT that day)." }
+      EVENTS: { term: Events, means: "The day's events whose first actor is the country." }
+      MENTIONS: { term: Mentions, means: "How many times those events were mentioned across the day's coverage." }
+      AVG_TONE: { use: tone }
+      AVG_GOLDSTEIN: { term: Goldstein scale, means: "The average Goldstein scale of the day's events: the theoretical impact of the event type on a country's stability, -10 (most conflictual) to +10 (most cooperative)." }
+      CONFLICT_SHARE: { term: "Conflict, %", means: "The share of the day's events in CAMEO's quad classes 3 and 4 (verbal and material conflict).", unit: "%" }
+      COOPERATION_SHARE: { term: "Cooperation, %", means: "The share in quad classes 1 and 2 (verbal and material cooperation).", unit: "%" }
+      EVENTS_WINDOW: { term: Events in the window, means: "The events over the days the history holds." }
+      AVG_TONE_WINDOW: { term: Window tone, means: "The mention-weighted average tone over the window." }
+      TONE_CHANGE: { term: Tone vs window, means: "The day's average tone less the window's: below zero, coverage turned more negative." }
+      WINDOW_DAYS: { term: Days, means: "How many days of the window have events for the country." }
+      BY_CATEGORY: { term: By category, means: "The day's events by CAMEO root category, the most first (CODE, CATEGORY, EVENTS, AVG_TONE)." }
+      BY_CATEGORY.CODE: { term: CAMEO root, means: "The CAMEO root event code (01 to 20)." }
+      BY_CATEGORY.CATEGORY: { term: Category, means: "The CAMEO root category's name (Consult, Protest, Fight ...)." }
+      BY_CATEGORY.EVENTS: { term: Events, means: "The day's events in that category." }
+      BY_CATEGORY.AVG_TONE: { use: tone }
+      HISTORY: { term: History, means: "The country's events and average tone by day over the window, oldest first (DATE, EVENTS, AVG_TONE)." }
+      HISTORY.DATE: { term: Day, means: "The day." }
+      HISTORY.EVENTS: { term: Events, means: "That day's events whose first actor is the country." }
+      HISTORY.AVG_TONE: { use: tone }
+      TOP_STORIES: { term: Top stories, means: "The day's most-mentioned events' source articles (MENTIONS, URL, CATEGORY), links to the originals." }
+      TOP_STORIES.MENTIONS: { term: Mentions, means: "How often the event was mentioned." }
+      TOP_STORIES.URL: { term: Story, means: "The first article GDELT found reporting the event: a link to the publisher's site." }
+      TOP_STORIES.CATEGORY: { term: Category, means: "The event's CAMEO root category." }
+      PROVENANCE: { use: provenance }
+      PROVENANCE.SOURCE: { use: source }
+      PROVENANCE.DATASET: { use: dataset }
+      PROVENANCE.RETRIEVED_AT: { use: retrieved }
+      PROVENANCE.LICENCE: { use: licence }
+      PROVENANCE.ATTRIBUTION: { use: attribution }
+      PROVENANCE.URL: { use: url }
+      PROVENANCE.INTERNAL_ONLY: { use: internal }

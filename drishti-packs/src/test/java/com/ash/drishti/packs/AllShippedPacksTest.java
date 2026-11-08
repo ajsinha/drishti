@@ -35,7 +35,9 @@ class AllShippedPacksTest {
     static final Path EXAMPLES = Path.of("..", "examples", "packs").toAbsolutePath().normalize();
 
     /** Shipped but not on by default: switched on with DRISHTI_PACKS (their READMEs say how). */
-    static final List<String> OPT_IN = List.of("us-equities", "gleif", "funds", "compute-demo");
+    static final List<String> OPT_IN = List.of("us-equities", "gleif", "funds", "compute-demo",
+            // the public-sector module's packs, filled by their daily feeds (docs/guides/PUBLIC_SECTOR_GUIDE.md)
+            "world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events");
 
     @Test
     void theShippedPacksAreTheDefaultOnesPlusTheOptInOnesAndLoadTogether() {

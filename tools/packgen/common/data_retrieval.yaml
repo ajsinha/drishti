@@ -83,6 +83,26 @@ external:
                   licence: "public symbol directory files", internal: false, feed: funds, source: nasdaq }
   gleif-funds: { title: "GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to)", url: "https://goldencopy.gleif.org",
                  licence: "CC0 1.0", internal: false, feed: funds, source: gleif }
+  # the public-sector module's feeds (config/feeds/<feed>.yaml; `source` is the feed): daily, incremental, into worldlake or newslake
+  wdi: { title: "World Bank World Development Indicators API (v2)", url: "https://api.worldbank.org/v2", licence: "CC BY 4.0",
+         internal: false, feed: world-development }
+  fred: { title: "FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY)", url: "https://api.stlouisfed.org/fred",
+          licence: "FRED API terms; the default series are US government works (public domain)", internal: false,
+          feed: central-banks }
+  boc-valet: { title: "Bank of Canada Valet API", url: "https://www.bankofcanada.ca/valet", licence: "Bank of Canada terms: free use with attribution",
+               internal: false, feed: central-banks }
+  statcan-wds: { title: "Statistics Canada Web Data Service", url: "https://www150.statcan.gc.ca/t1/wds/rest", licence: "Statistics Canada Open Licence",
+                 internal: false, feed: national-statistics }
+  oecd-sdmx: { title: "OECD Data Explorer SDMX API", url: "https://sdmx.oecd.org/public/rest", licence: "OECD terms: reuse with the source acknowledged (CC BY 4.0)",
+               internal: false, feed: oecd }
+  press-public: { title: "Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API)", url: "https://www.federalreserve.gov/feeds/press_all.xml",
+                  licence: "public domain (US Government works)", internal: false, feed: official-news }
+  press-attributed: { title: "Press releases of the European Central Bank and the Bank of Canada (RSS)", url: "https://www.ecb.europa.eu/rss/press.html",
+                      licence: "free reuse with the source acknowledged", internal: false, feed: official-news }
+  press-noncommercial: { title: "News of the Bank of England and OSFI, the Canada Gazette (RSS)", url: "https://www.bankofengland.co.uk/rss/news",
+                         licence: "non-commercial or internal use only without permission", internal: true, feed: official-news }
+  gdelt: { title: "GDELT 1.0 daily event files", url: "https://data.gdeltproject.org/events/", licence: "GDELT terms: free for any use with a citation",
+           internal: false, feed: gdelt-events }
 
 # The data feeds (config/feeds/<feed>.yaml, docs/guides/EXTERNAL_DATA.md): the examples each guide shows besides status, --dry-run and a
 # plain run (pull and load into the feed's lake). Arguments after -- go to the source.
@@ -113,6 +133,26 @@ feeds:
       - ["--snapshot", "refresh the committed pack instead: data/testdata/funds, samples/, the README and this guide, then make.py --check"]
       - ["--snapshot --offline", "the same from the downloads only (about 700 MB in <data>/datafeeds/sources/cache/funds)"]
       - ["-- --scope FUNDS:300,HOLDINGS:1000", "a widened pull of more funds and holdings"]
+  # the public-sector module's feeds (PUBLIC_SECTOR_GUIDE.md section 5)
+  world-development:
+    examples:
+      - ["--load inbox", "the same through the data inbox: the server loads it"]
+      - ["--since 2026-01-01", "pull again although the World Bank has not changed (after editing the indicators)"]
+  central-banks:
+    examples:
+      - ["--load inbox", "the same through the data inbox (FRED needs DRISHTI_FRED_API_KEY; without it the Bank of Canada still loads)"]
+  national-statistics:
+    examples:
+      - ["--load inbox", "the same through the data inbox: the server loads it"]
+  oecd:
+    examples:
+      - ["--load inbox", "the same through the data inbox: the server loads it"]
+  official-news:
+    examples:
+      - ["--load inbox", "the same through the data inbox: the server loads it"]
+  gdelt-events:
+    examples:
+      - ["--since 2026-11-01", "read the GDELT days from this date (a run reads at most a week by default)"]
 
 # Generators of synthetic (or hand-written) data: id -> the command, what it writes, its check and the origin it is shown as (label,
 # default "synthetic").
@@ -213,3 +253,17 @@ packs:
       index-funds: { external: [sec-nport, sec-rr] }
   compute-demo:
     default: { generator: compute-demo }
+  # the public-sector module's packs: filled by their feeds (`feed`) into worldlake or newslake; samples/ holds a few documents for the
+  # renderer's tests, never served beside the lake (demo and real never mix)
+  world-development:
+    default: { external: [wdi], feed: world-development }
+  central-banks:
+    default: { external: [fred, boc-valet], feed: central-banks }
+  national-statistics:
+    default: { external: [statcan-wds], feed: national-statistics }
+  oecd:
+    default: { external: [oecd-sdmx], feed: oecd }
+  official-news:
+    default: { external: [press-public, press-attributed, press-noncommercial], feed: official-news }
+  gdelt-events:
+    default: { external: [gdelt], feed: gdelt-events }

@@ -524,6 +524,15 @@ python3 -m pytest tools/feeds/tests/test_live.py --live -k gleif        # the re
 | funds | `ncen` | SEC Form N-CEN data sets (ETF facts, service providers, authorised participants), `https://www.sec.gov/data-research/sec-markets-data/form-n-cen-data-sets` | public domain (US Government work) | committable |
 | funds | `rr` | SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns), `https://www.sec.gov/data-research/sec-markets-data/mutual-fund-prospectus-riskreturn-summary-data-sets` | public domain (US Government work) | committable |
 | funds | `gleif` | GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to), `https://goldencopy.gleif.org` | CC0 1.0 | committable |
+| world-development | `wdi` | World Bank World Development Indicators, `https://api.worldbank.org/v2` (the world-development feed) | CC BY 4.0 | redistributable, with attribution |
+| central-banks | `fred` | FRED, Federal Reserve Bank of St. Louis, `https://api.stlouisfed.org/fred` (key: `DRISHTI_FRED_API_KEY`) | FRED API terms; the default series are US government works | redistributable (default series) |
+| central-banks | `boc` | Bank of Canada Valet API, `https://www.bankofcanada.ca/valet` | Bank of Canada terms: free use with attribution | redistributable, with attribution |
+| national-statistics | `statcan` | Statistics Canada Web Data Service, `https://www150.statcan.gc.ca/t1/wds/rest` | Statistics Canada Open Licence | redistributable, with attribution |
+| oecd | `oecd` | OECD Data Explorer SDMX API, `https://sdmx.oecd.org/public/rest` | OECD terms (CC BY 4.0) | redistributable, with attribution |
+| official-news | `FED`, `SEC`, `FEDREG` | the Federal Reserve Board's and the SEC's press releases (RSS), the US Federal Register's API | public domain (US government works) | redistributable |
+| official-news | `ECB`, `BOC` | the ECB's and the Bank of Canada's press releases (RSS) | free use with the source acknowledged | redistributable, with attribution |
+| official-news | `BOE`, `OSFI`, `GAZETTE1`, `GAZETTE2` | the Bank of England's and OSFI's news, the Canada Gazette Parts I and II (RSS) | non-commercial or internal use only without permission | **internal only** |
+| gdelt-events | `gdelt` | GDELT 1.0 daily event files, `https://data.gdeltproject.org/events/` | GDELT terms: free for any use with a citation | redistributable, with attribution |
 
 A new pack built on external data adds its rows here and a section of its own in section 15 (the funds pack, SEC N-PORT and N-CEN, came
 this way). The market-data pack's committed samples and test data are synthetic: its official sources are optional and
@@ -1160,6 +1169,35 @@ On Windows the same through `.\tools\windows\feed.ps1` (`.\tools\windows\feed.ps
 **Check it:** `make.py --check` (run by the feed); `FUND QQQ <GO>` opens a fund, `HELD AAPL <GO>` the funds holding Apple.
 **Offline:** `feed run funds --snapshot --offline` rebuilds the committed data from the downloads; without them `make.py --check` checks the committed
 snapshot against what it derives. The guide is [FUNDS_GUIDE.md](FUNDS_GUIDE.md) (Part III: where the data comes from).
+
+### The public-sector packs
+
+Six public-sector packs of the economy module, each filled every day by its own feed into the bank's own `worldlake` or `newslake`; nothing is
+committed but a few sample documents (from the feeds' recorded fixtures). The guide is [PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md)
+(the default selection of each source, the licences, changing what is pulled); the tutorial is
+[Tutorial 46](../tutorials/46-public-sector-data.md).
+
+| Feed (pack) | Sources | Key | Writes |
+|---|---|---|---|
+| `world-development` | World Bank WDI | none | `development-profile`, `development-series` into worldlake |
+| `central-banks` | FRED; Bank of Canada Valet | `DRISHTI_FRED_API_KEY` (FRED only: without it the Bank of Canada's series still load) | `central-bank`, `rate-series` into worldlake |
+| `national-statistics` | Statistics Canada WDS | none | `statistics-series` into worldlake |
+| `oecd` | OECD Data Explorer (SDMX) | none | `oecd-country`, `oecd-series` into worldlake |
+| `official-news` | the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, Federal Register, Canada Gazette | none | `release-source`, `press-release` into newslake |
+| `gdelt-events` | GDELT 1.0 daily event files | none | `event-country` into newslake |
+
+```bash
+python3 tools/drishti.py feed run world-development --dry-run    # what it would ask; nothing changes
+python3 tools/drishti.py feed run world-development              # pull what is new, load into worldlake
+python3 tools/drishti.py feed run official-news --load inbox     # through the data inbox
+.\tools\windows\feed.ps1 run oecd                                 # Windows (PowerShell)
+```
+
+Each feed file (`config/feeds/<pack>.yaml`) records every source's licence and terms in `options.sources`; the Bank of England, OSFI and
+the Canada Gazette allow no commercial reuse, so their releases carry `INTERNAL_ONLY: true` and Export data refuses them.
+
+**Check it:** `drishti.py feed status <feed>`; `WDI WDI-CAN <GO>`, `PRESS PRESS-FED <GO>`. **Offline:** the feeds need their sources; a
+run without the network fails in words and the lake keeps its latest date.
 
 ## 16. Not covered
 

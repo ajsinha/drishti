@@ -1,0 +1,92 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this page: what the oecd pack's kinds and fields mean (the README, the contracts and the About card read it).
+about: 1
+vocabulary:
+  provenance: { term: Provenance, means: "Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY." }
+  source: { term: Source, means: "The organisation whose published data the record holds." }
+  dataset: { term: Dataset, means: "The OECD dataflow the record was built from." }
+  retrieved: { term: Retrieved, means: "The business date of the feed's pull that wrote the record." }
+  licence: { term: Licence, means: "The terms under which the source allows reuse, as recorded in the feed's YAML." }
+  attribution: { term: Attribution, means: "The credit line to repeat when the data is shown or republished." }
+  url: { term: Address, means: "The OECD Data Explorer's page for the dataflow." }
+  internal: { term: Internal only, means: "True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)." }
+  period: { term: Period, means: "The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter)." }
+kinds:
+  oecd-country:
+    title: OECD country
+    about: ${$.COUNTRY_NAME}'s consumer price inflation was ${fmt($.INFLATION, 'price2')}% in ${$.INFLATION_PERIOD}.
+    guide: oecd
+    glossary:
+      COUNTRY_ID: { term: Country id, means: "OECD- and the member's ISO 3166-1 alpha-3 code." }
+      NAME: { term: Name, means: "The member's name as the OECD writes it." }
+      ISO3: { term: ISO alpha-3, means: "The member's ISO 3166-1 alpha-3 code (the OECD's REF_AREA), the key the map shades by." }
+      COUNTRY_NAME: { term: Country, means: "The member's name as the OECD writes it." }
+      LEADING_INDICATOR: { term: Leading indicator, means: "The composite leading indicator, amplitude adjusted: above 100 and rising, growth above trend ahead.", unit: "index, long-term average = 100" }
+      LEADING_INDICATOR_PERIOD: { use: period }
+      UNEMPLOYMENT: { term: Unemployment, means: "The harmonised unemployment rate, seasonally adjusted, ages 15 and over.", unit: "% of labour force" }
+      UNEMPLOYMENT_PERIOD: { use: period }
+      INFLATION: { term: Inflation, means: "Consumer price inflation, all items, on the same month a year before.", unit: "% a year" }
+      INFLATION_PERIOD: { use: period }
+      GDP_GROWTH: { term: GDP growth, means: "Real GDP growth on the previous quarter, seasonally adjusted.", unit: "%" }
+      GDP_GROWTH_PERIOD: { use: period }
+      MEASURES: { term: Measures, means: "Every measure the feed pulled for the member, one row each: MEASURE, TITLE, UNIT, LATEST, PERIOD, CHANGE and OECD_SERIES." }
+      MEASURES.MEASURE: { term: Measure, means: "The measure's id in the feed's YAML (CLI, UNEMPLOYMENT, INFLATION, GDP_GROWTH)." }
+      MEASURES.TITLE: { term: Title, means: "The measure's title in the feed's YAML." }
+      MEASURES.UNIT: { term: Unit, means: "What the measure is in." }
+      MEASURES.LATEST: { term: Latest, means: "The latest value." }
+      MEASURES.PERIOD: { use: period }
+      MEASURES.CHANGE: { term: Change, means: "The latest value less the previous period's." }
+      MEASURES.OECD_SERIES: { term: Series, means: "The oecd-series page with the history (OECDS-<ISO3>-<measure>)." }
+      MEASURE_COUNT: { term: Measures, means: "How many measures have a value for the member." }
+      PROVENANCE: { use: provenance }
+      PROVENANCE.SOURCE: { use: source }
+      PROVENANCE.DATASET: { use: dataset }
+      PROVENANCE.RETRIEVED_AT: { use: retrieved }
+      PROVENANCE.LICENCE: { use: licence }
+      PROVENANCE.ATTRIBUTION: { use: attribution }
+      PROVENANCE.URL: { use: url }
+      PROVENANCE.INTERNAL_ONLY: { use: internal }
+  oecd-series:
+    title: OECD series
+    about: ${$.TITLE} for ${$.COUNTRY_NAME} was ${fmt($.LATEST, 'amount2')} (${$.UNIT}) in ${$.LATEST_PERIOD}.
+    guide: oecd
+    glossary:
+      SERIES_ID: { term: Series id, means: "OECDS-, the member's ISO alpha-3 code and the measure's id." }
+      NAME: { term: Name, means: "The member and the measure, as one name." }
+      OECD_COUNTRY: { term: OECD country, means: "The member's oecd-country page (OECD-<ISO3>)." }
+      ISO3: { term: ISO alpha-3, means: "The member's ISO 3166-1 alpha-3 code." }
+      COUNTRY_NAME: { term: Country, means: "The member's name as the OECD writes it." }
+      MEASURE: { term: Measure, means: "The measure's id in the feed's YAML." }
+      TITLE: { term: Title, means: "The measure's title in the feed's YAML." }
+      UNIT: { term: Unit, means: "What the measure is in." }
+      DATAFLOW: { term: Dataflow, means: "The OECD dataflow (agency, id, version) the series is read from." }
+      FREQUENCY: { term: Frequency, means: "Monthly or quarterly, from the feed's YAML." }
+      LATEST: { term: Latest, means: "The latest value, in the unit shown." }
+      LATEST_PERIOD: { use: period }
+      PREVIOUS: { term: Previous, means: "The previous period's value." }
+      PREVIOUS_PERIOD: { use: period }
+      CHANGE: { term: Change, means: "The latest value less the previous one." }
+      HISTORY: { term: History, means: "The value by period, oldest first, over the feed's history-periods (PERIOD, VALUE)." }
+      HISTORY.PERIOD: { use: period }
+      HISTORY.VALUE: { term: Value, means: "The value for that period, in the unit shown." }
+      PROVENANCE: { use: provenance }
+      PROVENANCE.SOURCE: { use: source }
+      PROVENANCE.DATASET: { use: dataset }
+      PROVENANCE.RETRIEVED_AT: { use: retrieved }
+      PROVENANCE.LICENCE: { use: licence }
+      PROVENANCE.ATTRIBUTION: { use: attribution }
+      PROVENANCE.URL: { use: url }
+      PROVENANCE.INTERNAL_ONLY: { use: internal }
