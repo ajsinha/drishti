@@ -44,7 +44,7 @@ public final class GossipPath extends OncePerRequestFilter {
     static final String GOSSIP = "/api/v1/net/gossip";
     static final String PING = "/api/v1/net/ping";
     static final String DIGEST = "/api/v1/net/digest";
-    /** The switches ledger (Admin → Commands), pulled by a peer whose gossip showed a different hash: on the control lane, so here. */
+    /** The switches ledger (Admin → Functions), pulled by a peer whose gossip showed a different hash: on the control lane, so here. */
     static final String SWITCHES = "/api/v1/net/switches";
     /** A member table is small; this is the cap of any call between nodes. */
     private static final int MAX_BODY = 16 * 1024 * 1024;

@@ -974,7 +974,7 @@ and secrets and embedded applications declared in configuration; Python and Java
   wins), and every module it needs is on. **A change takes effect at the next start** (`GET /api/v1/admin/modules` says `restartNeeded: true` until then). A module that is
   off is gone on the server and in the console: its API answers `404 DRS-1025`, its engines show *not installed*, its packs, connectors, BI
   folders (`config/bi/reports/banking/`, `config/tables/banking/`), lenses, help, pages, menus, words and static files are not offered. A single
-  function (command word) is turned off for everyone in Admin → Commands (`404 DRS-1026`). Check and switch:
+  function (command word) is turned off for everyone in Admin → Functions (`404 DRS-1026`). Check and switch:
 
   ```bash
   curl -s -H "Authorization: Bearer $TOKEN" http://localhost:18480/api/v1/admin/modules | jq '.modules[] | {id, on, reason, loaded}'

@@ -41,7 +41,7 @@ def _answer(off_modules=(), functions=(), lenses=None):
     return {"modules": [{"id": m, "title": m, "domain": m} for m in loaded],
             "off": [{"id": m, "title": m, "domain": m, "reason": "switched off (setting drishti.modules.%s.enabled)" % m} for m in off_modules],
             "lenses": lenses if lenses is not None else [{"id": "world", "title": "World", "modules": ["economy"], "functions": []}],
-            "functions": {"off": [{"word": w, "module": mod, "reason": "an administrator switched it off (Admin -> Commands)",
+            "functions": {"off": [{"word": w, "module": mod, "reason": "an administrator switched it off (Admin -> Functions)",
                                    "text": f"{w} is not available to you: ask your administrator"} for w, mod in functions]}}
 
 

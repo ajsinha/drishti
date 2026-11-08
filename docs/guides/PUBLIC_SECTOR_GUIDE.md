@@ -80,7 +80,7 @@ and a person opens the Public sector lens from Views (`drishti.lenses: risk,worl
 `DRISHTI_MODULES_ECONOMY_ENABLED=false`, then a restart): all eight of its packs and their connectors do not load, its functions (these
 ten and the economy's own) are gone everywhere (command line, type-ahead, search, menus, the APIs behind them, `404 DRS-1026`), and the
 World and Public sector lenses are not offered. Banking, capital markets and GLEIF are unaffected. A single function is switched off on
-Admin → Commands. The guarantees are `EconomyModuleOffTest` and `PublicSectorLensTest`.
+Admin → Functions. The guarantees are `EconomyModuleOffTest` and `PublicSectorLensTest`.
 
 ## 3. The screens
 

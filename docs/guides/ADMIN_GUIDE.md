@@ -613,10 +613,9 @@ The console keeps a few answers for a moment so pages draw quickly. Nothing it k
 
 ### 10.2 The other Admin pages
 
-The pages for running the server (Admin → Connectors, Health, Caches, Capacity, Loads, Lakes, Net, Packs) are in
+The pages for running the server (Admin → Connectors, Health, Caches, Capacity, Loads, Lakes, Cluster, Packs) are in
 [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md); for example Admin → Capacity in
-[section 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan). Admin → Commands, Engines and Modules are sections 20 to
-22 below.
+[section 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan). Admin → Functions and Admin → Engines are sections 20 and 21 below; modules (no page: a file, a setting or the API) are section 22.
 
 ## 11. The users and roles API
 
@@ -1248,8 +1247,7 @@ hides commands from people, never a kind an engine reads. Lenses are per cluster
 grouped by pack, with what each does and an example; click one to open it. An administrator sees the same page with the switches: any
 command of the packs can be turned off for everyone (`FRTB`, `EQV`, `TRD` and every other mnemonic). The code stays; a command that is off
 is **not active** everywhere, and nothing about it leaks. Turn it back on at any time. Packs are switched on the same page and in the same
-record, so a cluster of servers always agrees on both. Admin → Commands in the Admin menu opens Functions (`/admin/commands` redirects to
-`/func`).
+record, so a cluster of servers always agrees on both. **Admin → Functions** is that page (`/func`; the old address `/admin/commands` redirects to it).
 
 ### 20.1 The page, for everyone
 

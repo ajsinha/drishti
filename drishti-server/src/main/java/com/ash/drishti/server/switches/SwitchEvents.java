@@ -20,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
- * Tells open consoles that the switches moved (Admin → Commands): every user's live stream ({@code /api/v1/alerts/stream}) carries a
+ * Tells open consoles that the switches moved (Admin → Functions): every user's live stream ({@code /api/v1/alerts/stream}) carries a
  * {@code switches} event, so a page of a kind just turned off is left at once and links and menus are drawn again. The event names only
  * the commands and kinds that are off, which every signed-in user is told anyway ("not active").
  */

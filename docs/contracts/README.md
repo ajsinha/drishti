@@ -306,7 +306,7 @@ engine answers.
   (`drishti.var.access` for VaR; each measure has the same setting under its own name).
 - **Masked fields** stay masked in every answer, every export and every capture.
 - **Audit:** computations of large scopes, captures, basket changes and reloads are audited with the user, the scope and the time.
-- **Command switches:** an administrator can switch any command off (Admin → Commands). It then answers "not active" everywhere: command,
+- **Command switches:** an administrator can switch any command off (Admin → Functions). It then answers "not active" everywhere: command,
   link, API, CLI, search, exports and AI.
 
 ## 13. Versioning a contract

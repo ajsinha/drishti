@@ -58,7 +58,7 @@ public final class CommandCatalog {
         this(registry, mnemonics, com.ash.drishti.packs.edition.Edition.NONE);
     }
 
-    /** With an edition: the commands it hides are not in the catalogue (FUNC, Admin → Commands). */
+    /** With an edition: the commands it hides are not in the catalogue (FUNC, Admin → Functions). */
     public CommandCatalog(PackRegistry registry, Mnemonics mnemonics, com.ash.drishti.packs.edition.Edition edition) {
         this.registry = registry;
         this.mnemonics = mnemonics;

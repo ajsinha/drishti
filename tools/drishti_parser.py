@@ -237,9 +237,9 @@ def build_parser(h) -> argparse.ArgumentParser:
         if act != "list":
             p.add_argument("name", help="the pack's name")
     load_module("serverpacks", "serverpacks.py").register(h, ps, srv)
-    scm = sv.add_parser("commands", help="server commands list|off|on|history: Admin -> Commands (commands on or off for everyone, with a reason)",
+    scm = sv.add_parser("commands", help="server commands list|off|on|history: Admin -> Functions (commands on or off for everyone, with a reason)",
                         description="Commands on or off for everyone (docs/guides/ADMIN_GUIDE.md). An administrator; a personal API token is refused "
-                                    "(token-never): use it where sign-in is off, as --user, or use Admin -> Commands.")
+                                    "(token-never): use it where sign-in is off, as --user, or use Admin -> Functions.")
     cms = scm.add_subparsers(dest="commands_cmd", metavar="ACTION", required=True)
     for act, what in (("list", "every command by pack: on or off, and what it does"), ("off", "turn commands (or, with --pack, packs) off for everyone"),
                       ("on", "turn commands (or, with --pack, packs) on again"), ("history", "the changes, newest first: who, when, why, on which server")):
