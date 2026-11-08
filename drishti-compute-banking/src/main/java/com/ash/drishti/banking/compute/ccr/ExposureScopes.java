@@ -60,14 +60,17 @@ public final class ExposureScopes {
 
     private final ExposureBook book;
     private final Groups groups;
-    /** The configured column hierarchies with a scope word (2.9.5): word to its hierarchy ({@code LL:LL-0003/DESK-RATES}). */
+    /**
+     * The configured hierarchies by scope word ({@code LL:LL-0003/DESK-RATES}) and by id ({@code MGMT:DIV-MARKETS/~}: the path of a node,
+     * {@code ~} an empty value, so a (Blank) node has a scope of its own): word or id to its hierarchy.
+     */
     private final Map<String, com.ash.drishti.banking.compute.var.HierarchySpec> words = new java.util.LinkedHashMap<>();
 
     public ExposureScopes(ExposureBook book, Groups groups) {
         this(book, groups, List.of());
     }
 
-    /** A resolver that also knows the configured column hierarchies' words ({@code LL:<letter>[/<desk>]}). */
+    /** A resolver that also knows the configured hierarchies' words and ids ({@code LL:<letter>[/<desk>]}). */
     public ExposureScopes(ExposureBook book, Groups groups, List<com.ash.drishti.banking.compute.var.HierarchySpec> hierarchies) {
         this.book = book;
         this.groups = groups == null ? g -> Optional.empty() : groups;
@@ -75,6 +78,9 @@ public final class ExposureScopes {
             if (s.word() != null) {
                 words.put(s.word(), s);
             }
+        }
+        for (com.ash.drishti.banking.compute.var.HierarchySpec s : hierarchies == null ? List.<com.ash.drishti.banking.compute.var.HierarchySpec>of() : hierarchies) {
+            words.putIfAbsent(s.id(), s);
         }
     }
 
@@ -244,7 +250,7 @@ public final class ExposureScopes {
     private OrdinalSet node(com.ash.drishti.banking.compute.var.HierarchySpec h, String arg) {
         String[] parts = arg.split("/");
         OrdinalSet.Builder b = new OrdinalSet.Builder();
-        if (h.leafIds() && parts.length == 1) {
+        if (h.leafIds() && parts.length == 1 && !arg.equals(com.ash.drishti.banking.compute.var.HierarchySpec.BLANK)) {
             addWhere(b, t -> h.levels().stream().anyMatch(c -> arg.equalsIgnoreCase(String.valueOf(column(t, c)))));
             return b.build();
         }
@@ -253,7 +259,9 @@ public final class ExposureScopes {
         }
         addWhere(b, t -> {
             for (int i = 0; i < parts.length; i++) {
-                if (!parts[i].equalsIgnoreCase(String.valueOf(column(t, h.levels().get(i))))) {
+                Object v = column(t, h.levels().get(i));
+                boolean blank = com.ash.drishti.banking.compute.var.HierarchySpec.blank(v == null ? null : String.valueOf(v));
+                if (parts[i].equals(com.ash.drishti.banking.compute.var.HierarchySpec.BLANK) ? !blank : blank || !parts[i].equalsIgnoreCase(String.valueOf(v))) {
                     return false;
                 }
             }
