@@ -63,6 +63,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     a tenth of the heap); over it the least recently used dates leave, never a protected one
  * @param fiscalYearEnd the bank's fiscal year-end, {@code MM-DD}; blank: none
  * @param pinned the pinned dates, as VaR's (VAR_GUIDE.md section 26.8)
+ * @param limitNear the share of a credit limit (and of a tenor bucket's) from which the pre-deal check says a trade takes the counterparty
+ *     <b>near</b> it (0.8): within the limit, said in amber; over 100% a breach (EXPOSURE_GUIDE.md section 18.9)
  */
 @ConfigurationProperties("drishti.ccr.exposure")
 public record ExposureProperties(Boolean enabled, List<Double> confidence, Double limitConfidence, String rankRule, String collateralModel,
@@ -70,7 +72,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
         Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds, Integer maxScopeNettingSets, Integer maxParts, Integer histogramBins,
         Double t0Tolerance, Kinds kinds, Map<String, Map<String, String>> access, Official official, Retention retention, Integer viewCacheMb,
         java.time.Duration versionCheck, Double maxDiskGb, Integer loadThreads, Integer refusalTtlSeconds, Long openHeapMb, String fiscalYearEnd,
-        com.ash.drishti.server.caches.PinnedDates.Settings pinned) {
+        com.ash.drishti.server.caches.PinnedDates.Settings pinned, Double limitNear) {
 
     /** The kinds the engine reads, as the counterparty-risk pack names them. */
     public record Kinds(String run, String paths, String nettingSet, String csa, String collateral, String counterparty, String group,
@@ -180,6 +182,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
         fiscalYearEnd = fiscalYearEnd == null ? "" : fiscalYearEnd.trim();
         com.ash.drishti.server.caches.PinnedDates.fiscalYearEnd(fiscalYearEnd);       // a bad value refuses the start
         pinned = pinned == null ? com.ash.drishti.server.caches.PinnedDates.Settings.none() : pinned;
+        limitNear = limitNear == null || limitNear <= 0 || limitNear > 1 ? 0.8 : limitNear;
     }
 
     /** The heap the open dates may take before the safety net closes some (bytes): {@code open-heap-mb}, or the automatic net. */

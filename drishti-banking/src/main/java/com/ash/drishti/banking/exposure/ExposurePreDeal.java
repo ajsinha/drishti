@@ -47,8 +47,10 @@ import java.util.regex.Pattern;
  *       no exposure for the counterparty on the date. Each reason is said.
  * </ul>
  *
- * Every answer shows the method and the template, and is audited ({@code ccr-predeal}, with its check id and the decision). SA-CCR's
- * incremental EAD is release 2.9.11.k: the answer says it is under construction.
+ * Every answer shows the method and the template, and is audited ({@code ccr-predeal}, with its check id and the decision). The limit and
+ * each bucket say {@code within}, {@code near} (from {@code limit-near} of the limit, 80% by default: still within, said in amber) or
+ * {@code breach}. With EEPE in the answer (the exact method) the exposure also carries the IMM EAD, alpha x EEPE, before, with and
+ * incremental. SA-CCR's incremental EAD is release 2.9.11.k: the answer says it is under construction.
  */
 final class ExposurePreDeal {
 
@@ -96,8 +98,16 @@ final class ExposurePreDeal {
         }
     }
 
-    /** One check, as the asker. */
+    /** One check, as the asker (audited). */
     Map<String, Object> check(Principal p, Map<String, Object> body, LocalDate date) {
+        return check(p, body, date, true);
+    }
+
+    /**
+     * One check, as the asker; {@code audit} false only for the one Explain, which shows how a check the screen made was computed (the
+     * same request, the same numbers: the check itself was audited when it was made).
+     */
+    Map<String, Object> check(Principal p, Map<String, Object> body, LocalDate date, boolean audit) {
         ExposurePreDealCommand cmd = ExposurePreDealCommand.of(body);
         String checkId = "PDC-" + UUID.randomUUID().toString().substring(0, 13).toUpperCase(Locale.ROOT);
         String scope = "CPTY:" + cmd.counterparty();
@@ -118,8 +128,10 @@ final class ExposurePreDeal {
             out.put("method", method(cmd.exact() ? "paths" : "addon", null));
             out.put("template", cmd.exact() ? Map.of("tradeId", cmd.like()) : proxyTemplate(cmd, null));
             out.put("saCcr", saCcr());
-            svc.audit(p == null ? ExposureOfficialStore.OWNER : p.user(), "ccr-predeal", scope, "check=" + checkId + " decision=refer command=\""
-                    + cmd.text() + "\" reason=no-exposure");
+            if (audit) {
+                svc.audit(p == null ? ExposureOfficialStore.OWNER : p.user(), "ccr-predeal", scope, "check=" + checkId + " decision=refer command=\""
+                        + cmd.text() + "\" reason=no-exposure");
+            }
             return out;
         }
         ExposureDate d = first.date();
@@ -245,7 +257,8 @@ final class ExposurePreDeal {
         if (flags.contains("stale-run")) {
             reasons.add("the date's run is stale (" + String.join("; ", d.warnings()) + "): the check is not made on it");
         }
-        Map<String, Object> lim = limit == null || measure == null ? null : limitUse(limit, measure, w);
+        double near = svc.props().limitNear();
+        Map<String, Object> lim = limit == null || measure == null ? null : limitUse(limit, measure, w, near);
         String decision;
         if (!reasons.isEmpty()) {
             decision = REFER;
@@ -255,10 +268,13 @@ final class ExposurePreDeal {
         } else {
             decision = APPROVE;
             reasons.add("exact: with the trade, " + measure.text() + " is " + Math.round(num(lim.get("after"))) + " of the limit "
-                    + Math.round(limit.amount()) + " (" + pct(num(lim.get("useAfter"))) + ")" + (limit.buckets().isEmpty() ? "" : ", every tenor bucket within its limit"));
+                    + Math.round(limit.amount()) + " (" + pct(num(lim.get("useAfter"))) + ")" + (limit.buckets().isEmpty() ? "" : ", every tenor bucket within its limit")
+                    + ("near".equals(lim.get("status")) ? "; near the limit (" + pct(near) + " or more of it" + (lim.get("nearText") == null ? ""
+                    : ": " + lim.get("nearText")) + ")" : ""));
         }
         if (lim != null) {
             lim.remove("breachText");
+            lim.remove("nearText");
         }
         Map<String, Object> out = head(checkId, cmd, base);
         out.put("decision", decision);
@@ -276,6 +292,7 @@ final class ExposurePreDeal {
         exp.put("base", w.get("base"));
         exp.put("with", w.get("with"));
         exp.put("incremental", w.get("incremental"));
+        ead(exp, svc.props().alpha());
         out.put("exposure", exp);
         out.put("saCcr", saCcr());
         List<Object> fl = new ArrayList<>(flags);
@@ -284,8 +301,10 @@ final class ExposurePreDeal {
         }
         out.put("flags", fl);
         out.put("engine", "exposure (Java)");
-        svc.audit(p, "ccr-predeal", base, "check=" + checkId + " decision=" + decision + " method=" + method + " command=\"" + cmd.text() + "\""
+        if (audit) {
+            svc.audit(p, "ccr-predeal", base, "check=" + checkId + " decision=" + decision + " method=" + method + " command=\"" + cmd.text() + "\""
                 + (lim == null ? " limit=none" : " limit=" + limit.id() + " after=" + Math.round(num(lim.get("after"))) + " use=" + pct(num(lim.get("useAfter")))));
+        }
         return out;
     }
 
@@ -328,8 +347,42 @@ final class ExposurePreDeal {
         return m;
     }
 
-    /** The limit's use before and after, and each tenor bucket's (the profile's peak within the bucket against the bucket's limit). */
-    private static Map<String, Object> limitUse(ExposureDate.Limit limit, Measure m, Map<String, Object> w) {
+    /**
+     * The IMM EAD (alpha x EEPE) before, with the trade and incremental, where the answer has EEPE (the exact method's); the proxy has none
+     * and says so by leaving it out.
+     */
+    @SuppressWarnings("unchecked")
+    static void ead(Map<String, Object> exp, double alpha) {
+        if (!(exp.get("base") instanceof Map<?, ?> b && b.get("eepe") instanceof Number b0 && exp.get("with") instanceof Map<?, ?> wi
+                && wi.get("eepe") instanceof Number w0)) {
+            return;
+        }
+        long before = Math.round(alpha * b0.doubleValue());
+        long after = Math.round(alpha * w0.doubleValue());
+        Map<String, Object> base = new LinkedHashMap<>((Map<String, Object>) b);
+        Map<String, Object> with = new LinkedHashMap<>((Map<String, Object>) wi);
+        base.put("ead", before);
+        with.put("ead", after);
+        exp.put("base", base);
+        exp.put("with", with);
+        if (exp.get("incremental") instanceof Map<?, ?> in) {
+            Map<String, Object> inc = new LinkedHashMap<>((Map<String, Object>) in);
+            inc.put("ead", after - before);
+            exp.put("incremental", inc);
+        }
+        exp.put("alpha", alpha);
+    }
+
+    /** {@code breach} over 100%, {@code near} from the near share, else {@code within}. */
+    static String status(double use, double near) {
+        return use > 1 ? "breach" : use >= near ? "near" : "within";
+    }
+
+    /**
+     * The limit's use before and after, and each tenor bucket's (the profile's peak within the bucket against the bucket's limit), each
+     * {@code within}, {@code near} (from {@code near} of its limit) or {@code breach}.
+     */
+    static Map<String, Object> limitUse(ExposureDate.Limit limit, Measure m, Map<String, Object> w, double near) {
         Map<?, ?> base = (Map<?, ?>) w.get("base");
         Map<?, ?> with = (Map<?, ?>) w.get("with");
         double before = num(base.get(m.figure()));
@@ -344,8 +397,12 @@ final class ExposurePreDeal {
         l.put("increment", Math.round(after - before));
         l.put("useBefore", before / limit.amount());
         l.put("useAfter", after / limit.amount());
+        l.put("headroomBefore", Math.round(limit.amount() - before));
         l.put("headroomAfter", Math.round(limit.amount() - after));
+        l.put("near", near);
         boolean breach = after > limit.amount();
+        boolean nearAny = !breach && after / limit.amount() >= near;
+        String nearText = null;
         String breachText = breach ? "exact: with the trade, " + m.text() + " is " + Math.round(after) + ", over the limit " + Math.round(limit.amount())
                 + " (" + pct(after / limit.amount()) + ")" : null;
         List<Map<String, Object>> buckets = new ArrayList<>();
@@ -369,9 +426,17 @@ final class ExposurePreDeal {
                 x.put("limit", Math.round(bk.limit()));
                 x.put("before", points == 0 ? null : Math.round(b0));
                 x.put("after", points == 0 ? null : Math.round(b1));
+                x.put("increment", points == 0 ? null : Math.round(b1 - b0));
+                x.put("useBefore", points == 0 ? null : b0 / bk.limit());
                 x.put("useAfter", points == 0 ? null : b1 / bk.limit());
+                x.put("headroomAfter", points == 0 ? null : Math.round(bk.limit() - b1));
                 boolean over = points > 0 && b1 > bk.limit();
-                x.put("status", points == 0 ? "no-dates" : over ? "breach" : "within");
+                String st = points == 0 ? "no-dates" : status(b1 / bk.limit(), near);
+                x.put("status", st);
+                if (st.equals("near") && nearText == null) {
+                    nearText = "the " + bk.name() + " bucket at " + pct(b1 / bk.limit()) + " of its limit";
+                }
+                nearAny |= st.equals("near");
                 if (over && breachText == null) {
                     breachText = "exact: with the trade, the " + bk.name() + " bucket's peak is " + Math.round(b1) + ", over its limit " + Math.round(bk.limit());
                 }
@@ -380,8 +445,9 @@ final class ExposurePreDeal {
             }
         }
         l.put("buckets", buckets);
-        l.put("status", breach ? "breach" : "within");
+        l.put("status", breach ? "breach" : nearAny ? "near" : "within");
         l.put("breachText", breachText);
+        l.put("nearText", nearText);
         return l;
     }
 
