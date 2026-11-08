@@ -111,6 +111,17 @@ class PivotOptionTest {
     }
 
     @Test
+    void aSpecMayNameHowThePivotScreenOpensIt() {
+        String head = "- id: trades\n  kind: table\n  rows: $.trades\n";
+        PivotSpec p = panel(head + "  pivot: { rows: [currency], mode: panes }\n" + COLUMNS).pivot().orElseThrow();
+        assertThat(p.mode()).isEqualTo("panes");
+        assertThat(p.arrangementMap()).containsEntry("mode", "panes");
+        assertThat(panel(head + "  pivot: { rows: [currency] }\n" + COLUMNS).pivot().orElseThrow().arrangementMap()).doesNotContainKey("mode");
+        assertThat(problems(head + "  pivot: { rows: [currency], mode: wide }\n" + COLUMNS))
+                .anySatisfy(m -> assertThat(m).contains("pivot 'mode' must be one of views, compact, panes, not 'wide'"));
+    }
+
+    @Test
     void mistakesAreDrs2031WithTheirReasons() {
         String head = "- id: trades\n  kind: table\n  rows: $.trades\n";
         assertThat(problems(head + "  pivot: yes please\n" + COLUMNS))
