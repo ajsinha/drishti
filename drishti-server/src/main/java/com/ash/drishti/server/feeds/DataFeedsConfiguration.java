@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * The server's view of the data feeds (docs/guides/FEEDS_GUIDE.md): {@code drishti.feeds.config} (the feed files, default
+ * The server's view of the data feeds (docs/guides/EXTERNAL_DATA.md): {@code drishti.feeds.config} (the feed files, default
  * {@code ./config/feeds}), {@code drishti.feeds.root} (where {@code tools/drishti.py} is, for Run now; default {@code .}),
  * {@code drishti.feeds.python} (the Python Run now starts; default the console's environment, else python3) and
  * {@code drishti.feeds.sample-seconds} (how often the ledger is read for the gauge {@code drishti.datafeed.failed}; default 60).

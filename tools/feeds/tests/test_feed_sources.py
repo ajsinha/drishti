@@ -125,11 +125,11 @@ def test_world_economy_feed_emits_each_kind_of_the_built_pack(tmp_path, data):
     r = feedbase.FeedRun(spec, DAY, log=lambda *_: None)
     samples = tmp_path / "samples"
     samples.mkdir()
-    (samples / "economy.jsonl").write_text('{"ECONOMY_ID": "ECON-ABW", "NAME": "Aruba"}\n')
+    (samples / "party.jsonl").write_text('{"PARTY_ID": "PARTY-ARG-01", "NAME": "Union for the Homeland"}\n')
     (samples / "catalog.jsonl").write_text('{"x": 1}\n')                                      # not a dataset: left out
     feed.emit_undated(r, samples)
     files = r.finish()
-    assert [(f["table"], f["rows"], f["businessDate"]) for f in files] == [("economy", 1, "2026-11-07")]
+    assert [(f["table"], f["rows"], f["businessDate"]) for f in files] == [("party", 1, "2026-11-07")]
     assert spec.internal_only and spec.lake == "worldlake"
 
 
@@ -142,3 +142,16 @@ def test_news_and_markets_dry_run_names_its_sources(data):
     rc, entry, logs = run("news-and-markets", dry_run=True)
     assert rc == 0 and entry["status"] == "dry-run"
     assert any("internal only" in x for x in logs)
+
+
+def test_market_data_is_incremental_by_day(tmp_path, data):
+    """The second run loads nothing it loaded before: only business dates after the state's last one; --since loads them again."""
+    cache = _market_cache(tmp_path)
+    rc, first, logs = run("market-data", "--cache", str(cache))
+    assert rc == 0 and first["files"] >= 1, logs
+    state = json.loads((data / "datafeeds" / "market-data" / "state.json").read_text())
+    assert {d: state["datasets"][d]["last"] for d in ("fx-spot", "ir-curve", "rate-fixing")} and max(first["dates"]) in {v["last"] for v in state["datasets"].values()}
+    rc, again, logs = run("market-data", "--cache", str(cache))
+    assert rc == 0 and again["files"] == 0 and again["rows"] == 0, logs
+    rc, back, _ = run("market-data", "--cache", str(cache), since=date(2026, 1, 1))
+    assert rc == 0 and back["files"] == first["files"]

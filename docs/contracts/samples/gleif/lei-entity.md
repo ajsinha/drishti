@@ -474,7 +474,7 @@ Fields no record above has, found by reading all 9,937 rows, with how many rows 
 ## See also
 
 - Data contract: [LEI in the gleif pack's contracts](../../packs/gleif.md#lei-lei-legal-entity-lei-entity) (`config/packs/gleif/contracts/lei-entity.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [Entities and ownership](../../../knowledge/entities-and-ownership.md)
 - [Tutorial 27 · Groupings and analytics, computed](../../../tutorials/27-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

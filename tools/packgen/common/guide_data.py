@@ -244,7 +244,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             out += ["```bash"] + [f"python3 tools/drishti.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
                     f"The same through the wrappers: `tools/feeds/feed.sh run {fd}` on Linux and macOS, `.\\tools\\windows\\feed.ps1 run {fd}` "
                     "on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or "
-                    "`--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).", ""]
+                    "`--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).", ""]
     if used_gen:
         out += ["### Generators", ""]
         out += table(["Generator", "Writes", "Check"], [[f"`{s['generators'][g]['run']}`", s["generators"][g]["what"],

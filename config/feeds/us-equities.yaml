@@ -12,13 +12,14 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/feeds/us-equities.yaml: the US equities feed (docs/guides/FEEDS_GUIDE.md; every key in its section "The feed file").
+# config/feeds/us-equities.yaml: the US equities feed (docs/guides/EXTERNAL_DATA.md; every key in its section "The feed file").
 #   python3 tools/drishti.py feed run us-equities                pull, write data/datafeeds/us-equities/<date>/, load into capitalmarket
 #   python3 tools/drishti.py feed run us-equities --snapshot     refresh the committed pack and data/testdata/us-equities instead
 #   python3 tools/drishti.py feed run us-equities -- --scope TSLA,YEARS:15        arguments after -- go to the source
 # Index membership comes from the tracking ETFs' Form N-PORT holdings (Dow 30 via DIA, S&P 500 via SPY, Nasdaq-100 via QQQ,
 # Russell 2000 via IWM), read from the funds feed's download cache: run the funds feed first (its schedule is earlier).
-# The SEC asks for a contact in the User-Agent: set DRISHTI_FEEDS_USER_AGENT to your organisation and a team mailbox.
+# Every request carries the feeds' User-Agent with a contact, as the SEC asks ("Drishti ajsinha@gmail.com"; set DRISHTI_FEEDS_USER_AGENT to
+# your organisation's contact in production).
 feed: us-equities
 title: US equities from SEC EDGAR (companies, filings, financials, index membership)
 description: >-

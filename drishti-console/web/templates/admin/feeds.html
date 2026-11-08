@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Admin → Data loads → Feeds (docs/guides/FEEDS_GUIDE.md section 6), from GET /api/v1/admin/feeds as `st`: the feed files and the run
+{# Admin → Data loads → Feeds (docs/guides/EXTERNAL_DATA.md section 6), from GET /api/v1/admin/feeds as `st`: the feed files and the run
    ledger as the server read them; this template only places them. Both tables are console tables (drishti-grid, Drishti Elements: sort,
    filter, pages, keyboard); Run now is drishti_admin-feeds.js. #}
 {% extends "base.html" %}
@@ -31,7 +31,7 @@
   <p class="text-muted-d ib-intro">The data feeds pull external data (GLEIF, the SEC, the World Bank, the IMF, central banks, news) every day and load
     it into their lakes. They run from cron, systemd or Task Scheduler (<span class="mono">drishti.py feed schedule</span>) or from here; every run,
     whoever started it, is a line of the ledger <span class="mono">{{ st.ledger or 'data/datafeeds/ledger.jsonl' }}</span>. A failed run opens an alert
-    (<span class="mono">data-feed-failed</span>). See the <a href="/help/feeds-guide">External data feeds guide</a>.</p>
+    (<span class="mono">data-feed-failed</span>). See the <a href="/help/external-data">External data feeds guide</a>.</p>
   <p class="ib-said" data-feeds-said role="status" aria-live="polite"></p>
 {% if error %}
   <p class="adm-warn" role="alert" data-feeds-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
@@ -40,7 +40,7 @@
   <section class="ib-sec" aria-labelledby="fd-h">
     <h2 class="ib-h2" id="fd-h">Feeds</h2>
     {% if not st.feeds %}<p class="text-muted-d" data-feeds-none>No feed files in <span class="mono">{{ st.config }}</span>.</p>{% else %}
-    <table class="table adm-table" data-feeds-table>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-feeds-table>
       <caption class="visually-hidden">Every data feed: its lake, schedule, last run and last success</caption>
       <thead><tr><th scope="col">Feed</th><th scope="col">Lake</th><th scope="col">Schedule</th><th scope="col">Last run</th><th scope="col">Status</th><th scope="col">Last success</th><th scope="col">Business date</th>
         <th scope="col" class="num">Rows</th><th scope="col" class="num">Seconds</th><th scope="col" class="num">Failures</th><th scope="col">Licence</th><th scope="col"><span class="visually-hidden">Run now</span></th></tr></thead>
@@ -65,13 +65,13 @@
         </tr>
       {% endfor %}
       </tbody>
-    </table>
+    </table></div>
     {% endif %}
   </section>
   <section class="ib-sec" aria-labelledby="fd-runs-h">
     <h2 class="ib-h2" id="fd-runs-h">Latest runs</h2>
     {% if not st.runs %}<p class="text-muted-d">No run yet: the ledger is empty.</p>{% else %}
-    <table class="table adm-table" data-feeds-runs>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-feeds-runs>
       <caption class="visually-hidden">The latest runs of the ledger, newest first</caption>
       <thead><tr><th scope="col">At</th><th scope="col">Feed</th><th scope="col">Status</th><th scope="col">Exit</th><th scope="col">Business date</th><th scope="col" class="num">Rows</th><th scope="col">Load</th><th scope="col" class="num">Seconds</th><th scope="col">By</th><th scope="col">Error</th></tr></thead>
       <tbody>
@@ -82,7 +82,7 @@
           <td class="num mono">{{ r.seconds }}</td><td>{{ r.trigger }}</td><td class="ib-warn">{{ r.error or '' }}</td></tr>
       {% endfor %}
       </tbody>
-    </table>
+    </table></div>
     {% endif %}
   </section>
 {% endif %}

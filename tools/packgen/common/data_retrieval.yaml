@@ -84,7 +84,7 @@ external:
   gleif-funds: { title: "GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to)", url: "https://goldencopy.gleif.org",
                  licence: "CC0 1.0", internal: false, feed: funds, source: gleif }
 
-# The data feeds (config/feeds/<feed>.yaml, docs/guides/FEEDS_GUIDE.md): the examples each guide shows besides status, --dry-run and a
+# The data feeds (config/feeds/<feed>.yaml, docs/guides/EXTERNAL_DATA.md): the examples each guide shows besides status, --dry-run and a
 # plain run (pull and load into the feed's lake). Arguments after -- go to the source.
 feeds:
   world-economy:

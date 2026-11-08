@@ -92,7 +92,7 @@ GLEIF publishes the LEI data free of charge under CC0 1.0: anyone may use it wit
 
 ## Refreshing the data
 
-The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guides: `docs/guides/FEEDS_GUIDE.md`; `docs/guides/EXTERNAL_DATA.md`, gleif):
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/EXTERNAL_DATA.md`, gleif):
 
 ```bash
 python3 tools/drishti.py feed status gleif                       # its last runs: last success, rows, failures
@@ -431,7 +431,7 @@ python3 tools/drishti.py feed run gleif --snapshot --offline             # the s
 python3 tools/drishti.py feed run gleif -- --scope NAME:allianz,CAP:200  # a widened pull of more entities
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run gleif` on Linux and macOS, `.\tools\windows\feed.ps1 run gleif` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run gleif` on Linux and macOS, `.\tools\windows\feed.ps1 run gleif` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

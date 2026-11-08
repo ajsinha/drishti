@@ -58,8 +58,8 @@
 
 ### drishti-feeds: external data into the lakes, every day
 
-- **drishti-feeds: one module to pull external data into the lakes every day** ([FEEDS_GUIDE.md](docs/guides/FEEDS_GUIDE.md), Help → Data
-  → External data feeds). A feed is a feed file (`config/feeds/<feed>.yaml`: the source, its datasets and the pack, kind and table
+- **drishti-feeds: one module to pull external data into the lakes every day** ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md), Help → Data
+  → External data feeds: one guide for the feeds and their sources). A feed is a feed file (`config/feeds/<feed>.yaml`: the source, its datasets and the pack, kind and table
   each loads, the target lake, the daily schedule, the licence with its redistribution and internal-only flag, API keys as `${ENV}`
   names only) and a `Feed` class in `tools/feeds/sources/` that pulls. The base class (`tools/feeds/feedbase.py`) does the rest:
   incremental pulls from a state file (`data/datafeeds/<feed>/state.json`, saved only when the whole run succeeds), the polite client
@@ -83,7 +83,9 @@
   `data/delta/referencelake/`, shipped empty like the other lakes), `us-equities` and `funds` (into `capitalmarket`; the index
   members now include the **Russell 2000 from IWM's** N-PORT holdings beside the Dow 30 from DIA and the S&P 500 from SPY),
   `yahoo-prices` (internal only, off as shipped), `world-economy` (internal only for the IMF forecasts, into `worldlake`),
-  `news-and-markets` (internal only, into `newslake`) and `market-data` (each document under its own date, into `capitalmarket`).
+  `news-and-markets` (internal only, into `newslake`) and `market-data` (incremental by day from its state, each document under its own
+  date, `--since` for a backfill, into `capitalmarket`). The World Bank's WDI belongs to the public sector's world-development feed:
+  world-economy runs with `--no-wdi` (its kinds keyed on WDI series wait until the pack reads them from there).
   Refreshing a pack's committed demo snapshot in `data/testdata` is `feed run <feed> --snapshot` (with `--internal-ok` for
   internal-only data), writing exactly where the scripts wrote. Their per-pack `.sh` and `.ps1` wrappers are replaced by the one
   wrapper per system; `DRISHTI_SEC_USER_AGENT` and `DRISHTI_GLEIF_USER_AGENT` are replaced by `DRISHTI_FEEDS_USER_AGENT`; the

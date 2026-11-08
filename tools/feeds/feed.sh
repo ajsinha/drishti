@@ -19,7 +19,7 @@
 #   tools/feeds/feed.sh run gleif
 #   tools/feeds/feed.sh run --all --load inbox
 #   tools/feeds/feed.sh status
-# The exit code is the command's: 0 ok, 1 failed, 2 refused, 3 locked, 4 partial. Guide: docs/guides/FEEDS_GUIDE.md
+# The exit code is the command's: 0 ok, 1 failed, 2 refused, 3 locked, 4 partial. Guide: docs/guides/EXTERNAL_DATA.md
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 PY=drishti-console/.venv/bin/python

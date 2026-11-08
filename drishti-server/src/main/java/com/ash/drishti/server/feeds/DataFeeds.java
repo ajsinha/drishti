@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * The data feeds as the server sees them (docs/guides/FEEDS_GUIDE.md section 6): the feed files of {@code config/feeds/} and the run
+ * The data feeds as the server sees them (docs/guides/EXTERNAL_DATA.md section 6): the feed files of {@code config/feeds/} and the run
  * ledger {@code <data>/datafeeds/ledger.jsonl} that every run appends to, whoever started it (cron, systemd, Task Scheduler, the command line or
  * Run now). The feeds themselves run in Python ({@code tools/drishti.py feed run}); the server only reads what they wrote, starts a run on
  * an administrator's Run now, and keeps the gauge {@code drishti.datafeed.failed} (tag {@code feed}: 1 when the feed's last run failed or

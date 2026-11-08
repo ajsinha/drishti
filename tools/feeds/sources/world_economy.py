@@ -221,6 +221,8 @@ def plan_cfg(run: B.Run, selected: list[B.Source], dry: bool) -> tuple[dict, boo
     y = cfg["years"]
     y["first"] = run.first_year(y["first"], y["last"])
     cfg["imf_years"]["first"] = min(cfg["imf_years"]["first"], y["first"])
+    if getattr(run.a, "no_wdi", False):            # the world-development feed owns WDI: the country list and WGI stay here
+        cfg["indicators"] = [i for i in cfg["indicators"] if i["kind"] != "wdi"]
     if run.scope and not dry:
         for s in selected:
             if hasattr(s, "widen"):
@@ -338,9 +340,15 @@ def write_build(run: B.Run, a, cfg: dict, no_imf: bool) -> int:
     return rc
 
 
+def extra_args(r) -> None:
+    r.add_argument("--no-imf", action="store_true", help="no IMF data at all (fetch, dataset, pack); always the data folder")
+    r.add_argument("--no-wdi", action="store_true", help="leave out the World Bank's WDI indicators (the world-development feed owns "
+                                                          "them; the country list and the governance indicators WGI stay); the data folder")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = B.parser("world_economy.py", __doc__, SOURCES,
-                  extra=lambda r: r.add_argument("--no-imf", action="store_true", help="no IMF data at all (fetch, dataset, pack); always the data folder"))
+                  extra=extra_args)
     a = ap.parse_args(argv)
     try:
         if a.command == "status":

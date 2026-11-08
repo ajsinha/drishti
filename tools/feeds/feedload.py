@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The three load routes of drishti-feeds (docs/guides/FEEDS_GUIDE.md section "Loading"). None of them writes a lake itself: each hands
+"""The three load routes of drishti-feeds (docs/guides/EXTERNAL_DATA.md section "Loading"). None of them writes a lake itself: each hands
 the feed's files to what Drishti already has (docs/guides/DATA_LAKE_GUIDE.md section 3), and every one replaces the business date it
 loads (a re-run of the same date leaves the same rows: idempotent).
 

@@ -14,7 +14,7 @@
 
 """One live smoke per shipped feed, against its real source, for a person to run by hand (`--live`; never in a drill): a small pull into a
 scratch data folder (DRISHTI_DATA_DIR under pytest's temporary folder), written as dated JSONL.gz, nothing loaded. Set
-DRISHTI_FEEDS_USER_AGENT to your organisation and a team mailbox first (the SEC asks for a contact).
+DRISHTI_FEEDS_USER_AGENT to your organisation's contact if you run them in production (the default names the owner's).
 
     python3 -m pytest tools/feeds/tests/test_live.py --live -k market-data
 """

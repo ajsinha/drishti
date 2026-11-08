@@ -242,15 +242,15 @@ def test_the_api_key_header_is_sent_and_never_written(spec, data, monkeypatch):
     rec = Recorded()
     assert run(spec, rec, business_date=date(2026, 11, 7), since=date(2026, 11, 7))[0] == 0
     assert rec.headers[0].get("Authorization") == "Bearer tok-123"
-    assert "Drishti-feeds" in rec.headers[0].get("User-agent", "")
+    assert rec.headers[0].get("User-agent", "").startswith("Drishti ")
     for f in (data / "datafeeds").rglob("*"):
         if f.is_file() and not f.name.endswith(".gz"):
             assert b"tok-123" not in f.read_bytes(), f
 
 
-def test_the_user_agent_is_configurable_and_carries_no_personal_address(monkeypatch):
+def test_the_user_agent_has_a_contact_and_is_configurable(monkeypatch):
     import pullkit
-    assert "@" not in pullkit.DEFAULT_UA and "Drishti" in pullkit.DEFAULT_UA
+    assert pullkit.DEFAULT_UA == "Drishti ajsinha@gmail.com"                    # the owner's contact, as the SEC asks (owner, 2026-11-07)
     monkeypatch.setenv("DRISHTI_FEEDS_USER_AGENT", "Bank data team data@bank.example")
     assert pullkit.user_agent() == "Bank data team data@bank.example"
 

@@ -1957,7 +1957,7 @@ shipped example is `config/packs/market-risk/config/about.fr.yaml` (the VaR page
 
 A pack built on **public data** (world-economy, news-and-markets, market-data) has its own refresh script in
 `tools/feeds/` (one a pack: fetch with a polite cached client, normalise, write, then the pack's check; licences and the
-internal-only rule in each source class). To add a source or a script for a new pack, see [EXTERNAL_DATA.md](EXTERNAL_DATA.md#adding-a-source).
+internal-only rule in each source class). To add a source or a script for a new pack, see [EXTERNAL_DATA.md](EXTERNAL_DATA.md#8-writing-a-feed).
 
 The shipped packs are generated (see [How the shipped packs are generated](#how-the-shipped-packs-are-generated)).
 Their `config/about.yaml` (and any `about.<lang>.yaml`) is copied from a hand-kept source in the generator folder

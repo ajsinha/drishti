@@ -5926,7 +5926,7 @@ The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATI
 
 ### Data feeds: `config/feeds/<feed>.yaml`
 
-One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys (environment variables only) ([FEEDS_GUIDE.md section 7](../guides/FEEDS_GUIDE.md#7-the-feed-file-every-key)); read by `drishti.py feed` at every run. The keys below are those of the annotated `gleif.yaml`; `keys:` names API keys as `${ENV}`.
+One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys (environment variables only) ([EXTERNAL_DATA.md section 7](../guides/EXTERNAL_DATA.md#7-the-feed-file-every-key)); read by `drishti.py feed` at every run. The keys below are those of the annotated `gleif.yaml`; `keys:` names API keys as `${ENV}`.
 
 #### A feed file: `config/feeds/<feed>.yaml`
 
@@ -6244,7 +6244,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FEEDS_DEBUG` | drishti.py feed | none | tools | Set (any value): a feed's own error prints its Python stack trace too (the ledger keeps the one line either way) |
 | `DRISHTI_FEEDS_PYTHON` | `drishti.feeds.python` | empty | server | the Python Run now starts (blank: the console's drishti-console/.venv, else python3, python on Windows) |
 | `DRISHTI_FEEDS_ROOT` | `drishti.feeds.root` | `.` | server | the installation's folder, where tools/drishti.py is: Run now starts `tools/drishti.py feed run <feed>` there |
-| `DRISHTI_FEEDS_USER_AGENT` | drishti.py feed | `Drishti-feeds/1.0 (Drishti data feeds)` | tools | The User-Agent every data feed sends (the SEC asks for a contact in it: your organisation and a team mailbox) |
+| `DRISHTI_FEEDS_USER_AGENT` | drishti.py feed | `Drishti ajsinha@gmail.com` | tools | The User-Agent every data feed sends (SEC EDGAR, GLEIF and the rest; the SEC asks for a contact in it): set it to your organisation's contact in production |
 | `DRISHTI_FEED_ECB_ESTR` | ecb-estr-feed enabled | `false` | packs | The ECB euro short-term rate feed on |
 | `DRISHTI_FEED_ECB_FX` | ecb-fx-feed enabled | `false` | packs | The ECB reference FX rates feed on |
 | `DRISHTI_FEED_FRED` | fred-feed enabled | `false` | packs | The FRED feed on (needs FRED\_API\_KEY) |

@@ -12,10 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/feeds/market-data.yaml: official public market data (docs/guides/FEEDS_GUIDE.md; every key in its section "The feed file").
+# config/feeds/market-data.yaml: official public market data (docs/guides/EXTERNAL_DATA.md; every key in its section "The feed file").
 #   python3 tools/drishti.py feed run market-data                                   a year of history, loaded into capitalmarket
 #   python3 tools/drishti.py feed run market-data -- ecb-fx --years 5 --scope USDMXN,EURSEK   arguments after -- go to the source
-# Each document is loaded under its own business date (its AS_OF), so a run replaces exactly the dates it brings.
+# Each document is loaded under its own business date (its AS_OF); a daily run loads only the dates after its state's last one
+# (incremental by day), --since YYYY-MM-DD backfills.
 feed: market-data
 title: Official market data (ECB FX reference rates, US Treasury par curve, SOFR, euro short-term rate)
 description: >-
@@ -42,3 +43,4 @@ datasets:
   rate-fixing: {pack: market-data, kind: rate-fixing, key: INDEX_ID, dated: source, description: "SOFR and the euro short-term rate"}
 options:
   args: []
+  history-days: 365                    # each series document's HISTORY reaches this far back before the first new day

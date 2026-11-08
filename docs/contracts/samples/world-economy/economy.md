@@ -190,6 +190,6 @@ None: all 213 rows were read, and every field any of them has is in the record a
 ## See also
 
 - Data contract: [ECON in the world-economy pack's contracts](../../packs/world-economy.md#econ-economy-economy) (`config/packs/world-economy/contracts/economy.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [Economies](../../../knowledge/economies.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

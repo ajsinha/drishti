@@ -101,7 +101,7 @@ tracking ETF holds stay in the pack, in no index.
 
 ## Refreshing the data
 
-The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guides: `docs/guides/FEEDS_GUIDE.md`; `docs/guides/EXTERNAL_DATA.md`, us-equities):
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/EXTERNAL_DATA.md`, us-equities):
 
 ```bash
 python3 tools/drishti.py feed status us-equities                 # its last runs: last success, rows, failures
@@ -543,7 +543,7 @@ python3 tools/drishti.py feed run us-equities --snapshot --offline        # the 
 python3 tools/drishti.py feed run us-equities -- --scope TSLA,FILINGS:40  # a widened pull of more companies and filings
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run us-equities` on Linux and macOS, `.\tools\windows\feed.ps1 run us-equities` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run us-equities` on Linux and macOS, `.\tools\windows\feed.ps1 run us-equities` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

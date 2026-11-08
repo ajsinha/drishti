@@ -37,7 +37,6 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
-import os
 import re
 import sys
 import time
@@ -48,7 +47,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CACHE = ROOT / "data" / "cache" / "us-equities"
-USER_AGENT = os.environ.get("DRISHTI_FEEDS_USER_AGENT") or "Drishti-feeds/1.0 (Drishti data feeds)"   # the one User-Agent of every feed (docs/guides/FEEDS_GUIDE.md)
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "feeds"))
+from pullkit import user_agent  # noqa: E402  (the one User-Agent of every feed: tools/feeds/pullkit.py)
+USER_AGENT = user_agent()   # DRISHTI_FEEDS_USER_AGENT, else the feeds' default
 INDEXES = {"DJIA": "Q180816", "NDX": "Q507306", "SP500": "Q242345"}
 # curated lists, kept here (not in Wikidata): code -> (name, tickers as the SEC ticker file lists them). Only SEC filers can be in this
 # pack; banks with no SEC filings (National Bank of Canada, Standard Chartered, Nationwide...) are in the gleif pack's bank groups.

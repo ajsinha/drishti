@@ -14,7 +14,7 @@
 
 """A test feed (never shipped in config/feeds): a recorded JSON API of identifier mappings, one page per day, pulled incrementally.
 The tests serve its responses from recorded files (tests/fixtures/feeds/responses/); it is also the worked example of
-docs/guides/FEEDS_GUIDE.md "Writing a feed"."""
+docs/guides/EXTERNAL_DATA.md "Writing a feed"."""
 from __future__ import annotations
 
 from datetime import timedelta

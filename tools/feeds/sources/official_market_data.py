@@ -34,7 +34,7 @@ import json
 import math
 import sys
 import zipfile
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -146,6 +146,8 @@ class MarketSource(B.Source):
     pack, kind, default_years = PACK, "", 1
 
     def first(self, run: B.Run) -> date:
+        if getattr(run.a, "start", None):                 # --start: the feed's window (the day after its last load, less the history kept)
+            return date.fromisoformat(run.a.start)
         today = date.today()
         y = run.first_year(today.year - self.default_years + 1, today.year)
         return date(y, 1, 1) if (run.a.since or run.a.years) else date(today.year - 1, today.month, min(today.day, 28))
@@ -327,8 +329,12 @@ def refresh(a, log=print) -> int:
     return 1 if not files else 2 if (problems or run.http.failed or len(done) < len(selected)) else 0
 
 
+def extra_args(r) -> None:
+    r.add_argument("--start", metavar="YYYY-MM-DD", help="observations from this day (over --years and --since; the feed gives it)")
+
+
 def main(argv: list[str] | None = None) -> int:
-    a = B.parser("official_market_data.py", __doc__, SOURCES).parse_args(argv)
+    a = B.parser("official_market_data.py", __doc__, SOURCES, extra=extra_args).parse_args(argv)
     try:
         if a.command == "status":
             return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "datafeeds" / "sources" / "cache" / PACK,
@@ -352,6 +358,43 @@ class MarketDataFeed(PS.PackFeed):
 
     def built(self, out):
         return out
+
+    def start(self, run) -> date:
+        """Where the pull starts: --since for a backfill; else the day after the last date loaded (the state), less the history each
+        series document carries (options.history-days, 365), so a document's HISTORY stays whole."""
+        if run.since:
+            return run.since
+        first = min(run.window(ds)[0] for ds in self.spec.datasets)
+        return first - timedelta(days=int(run.option("history-days", 365)))
+
+    def argv(self, run, out):
+        args = super().argv(run, out)
+        if "--start" not in args and not any(a in args for a in ("--since", "--years")):
+            args += ["--start", self.start(run).isoformat()]
+        return args
+
+    def pull(self, run):
+        """Incremental by day: only the business dates after the last one loaded (the state) are written and loaded; a run with
+        nothing newer (a holiday) succeeds with no files. --since loads every date the pull brings (a backfill)."""
+        out = run.work / "build"
+        rc = self.call(run, self.namespace(run, self.argv(run, out)))
+        if rc not in (0, 2) or not out.is_dir():
+            raise PS.FB.FeedError(f"the {PACK} build exited {rc}")
+        done = {ds: (run.state["datasets"].get(ds) or {}).get("last") for ds in self.spec.datasets}
+        for f in sorted(out.glob("*.jsonl")):
+            kind, _, rest = f.name.partition(".")
+            day = rest[:10]
+            ds = self.spec.dataset_for_kind(kind)
+            if ds is None or len(day) != 10:
+                continue
+            if not run.since and done.get(ds.name) and day <= done[ds.name]:
+                continue
+            with open(f, encoding="utf-8") as fh:
+                run.emit(ds.name, (json.loads(x) for x in fh if x.strip()), business_date=day)
+            if day > (run.state["datasets"].get(ds.name) or {}).get("last", ""):
+                run.mark(ds.name, day)
+        if rc == 2:
+            run.log("  some sources failed or had check problems: the others were loaded (the next run tries again)")
 
     def snapshot(self, run):
         raise PS.FB.FeedRefused("market-data keeps no committed snapshot (its samples are synthetic); run the feed to load the lake")
