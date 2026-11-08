@@ -2086,6 +2086,10 @@ or Iceberg, from a folder or `s3://`, **one commit per business date**. It write
 documents byte for byte, columns and vectors; the connectors and the VaR loader read them unchanged). The design, the memory model and
 the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload). `tools/lake/javaload.py` is `lake build`'s side of it.
 
+`tools/lake/deltaread.py` is how the Python tools read a Delta table's rows: by delta-rs, or by the server's own Delta Kernel reader for
+a table delta-rs would read only in part (column mapping, deletion vectors, v2 checkpoints), never a half-read
+([DATA_LAKE_GUIDE.md section 14](DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
+
 **Through lake build** (the lock, the run log, the summary, the signal as always):
 
 ```bash
