@@ -180,7 +180,7 @@ final class IcebergTarget implements TableTarget {
             } else if (!(f.transform() instanceof Transform.Void)) {
                 // every file's partition tuple must hold each field's value (the Iceberg spec); only the date's is known here
                 throw new IllegalStateException(t.name() + " is not in the layout: its partition spec " + spec.specId() + " has the field '" + f.name()
-                        + "' (" + f.transform() + ") beside the identity partition on business_date; Drishti writes only tables partitioned by "
+                        + "' (" + f.transform() + ") beside the identity partition on business_date; this writer writes only tables partitioned by "
                         + "business_date alone (write this table with engine: library, or restore its spec)");
             }
         }

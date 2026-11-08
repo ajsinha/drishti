@@ -217,7 +217,7 @@ export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
 export DRISHTI_SEED_ADMIN=true
 mkdir -p data/tmp/server        # Java's temp folder for the server: native libraries unpack here, not in /tmp
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
 The console, in the second (the same token secret, so the two trust each other):
