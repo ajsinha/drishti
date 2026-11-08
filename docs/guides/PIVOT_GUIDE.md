@@ -405,7 +405,7 @@ own gap of the charted column (each open row's `diversificationByColumn` in the 
 browser adds up nothing. The gap is given only when the row's total and every one of its parts have the figure; when one has none (a
 measure computed for a view's first cells only, such as the MR cube's stressed VaR and SBM, or a hidden cell) it is `null` and no bar is
 drawn: never a sum of some of the parts. Which cells get such a capped measure is fixed by the view: its first N cells in the grid's
-order, row by row as shown, each row's columns left to right ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md) section 2). A bar's click opens that member in the
+order, row by row as shown, each row's columns left to right ([section 29.2](#292-the-measures) section 2). A bar's click opens that member in the
 grid. ECharts is vendored; nothing comes from a CDN.
 
 ## 10. Export

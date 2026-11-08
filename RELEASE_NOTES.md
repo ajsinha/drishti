@@ -69,7 +69,7 @@ also use in your own applications.** This release carries the work planned as 2.
 - **The MR cube's stressed VaR and SBM land on the same cells every time**: a view gets them for its first 100 and 60 cells in the
   grid's order (row by row as shown, each row's columns left to right), whatever was asked before or at the same time; before, a view
   asked after others could show them on more cells. A row's diversification of either is shown only when all its cells have the figure
-  ([MR_CUBE_GUIDE.md section 2](docs/guides/MR_CUBE_GUIDE.md#2-the-measures)).
+  ([PIVOT_GUIDE.md section 29.2](docs/guides/PIVOT_GUIDE.md#292-the-measures)).
 - **The FRTB-SA screen shows each class's Total again**, the server's figure.
 
 ## New
