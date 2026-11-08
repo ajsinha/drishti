@@ -801,8 +801,8 @@ pack's template is written again at the next start), and restart. Nothing in eit
 
 ## 7. The demo lake's one-time move
 
-Until 2.9.11.d the demo lake's tables sat directly in `<data>/delta/<domain>/`; now the demo lake is `<data>/delta/demo/`. A demo lake
-built in the older layout is **moved once, safely, at the server's first start** (`drishti.lakes.relocate-on-start`, on), or by hand with
+The demo lake is `<data>/delta/demo/`. A demo lake built in the older layout, its tables directly in `<data>/delta/<domain>/`, is
+**moved once, safely, at the server's first start** (`drishti.lakes.relocate-on-start`, on), or by hand with
 the server stopped:
 
 ```bash
