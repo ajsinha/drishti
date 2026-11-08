@@ -509,7 +509,7 @@ logistics, genomics, climate risk, liquidity risk and operational risk. This sec
   November 2024 and by late 2025 a family of agents (Spotter 3, SpotterViz, SpotterModel, SpotterCode) and industry agents including
   financial services. Tableau Pulse is included in some Tableau plans (sources conflict on which). Looker's conversational analytics
   uses Gemini over LookML, up to 5,000 rows a query.
-- **Drishti's angle.** AI off by default; any of seventeen provider types including on-premises models ([AI](../admin/AI.md)); masks
+- **Drishti's angle.** AI off by default; any of seventeen provider types including on-premises models ([AI](../guides/AI_GUIDE.md)); masks
   applied to prompts; numbers come from the engine, never from the model; a deterministic plain-words parser that needs no AI at all.
 - **Gap.** Polish and breadth: their assistants are agents with planning; Drishti's AI answers single questions, with no memory of the
   last and no streaming (BI guide, "not built"). **Position.** Lead with control and determinism for regulated users; do not race on
@@ -626,7 +626,7 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
   [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [REPORTS_GUIDE](../guides/REPORTS_GUIDE.md);
   [ARCHITECTURE](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) (gap check against Power BI); [EDITIONS](../guides/ADMIN_GUIDE.md#12-what-a-lens-is);
   [MOBILE_DISPLAY](../guides/BUILD_GUIDE.md#32-designing-for-phones); [RESOURCES_AND_SCALE](../guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk);
-  [BENCHMARK](../admin/BENCHMARK.md); [AI](../admin/AI.md); [lenses](../architecture/LENSES.md); [connectors](../guides/DATA_GUIDE.md#8-connectors).
+  [BENCHMARK](../admin/BENCHMARK.md); [AI](../guides/AI_GUIDE.md); [lenses](../architecture/LENSES.md); [connectors](../guides/DATA_GUIDE.md#8-connectors).
 
 **Risk aggregation cubes**
 

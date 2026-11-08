@@ -2339,7 +2339,7 @@ The codes `DRS-9080` to `DRS-9089` are listed with their fixes in [OPERATIONS_GU
 ## 16. AI in BI: report from words, ask the data, explain this number
 
 A language model sits beside reports in a few places and no more. It is **off by default**, it is the AI layer's
-([AI.md](../admin/AI.md#1-model-providers)), and the model is never trusted with anything a person could not do by hand: **it writes a draft or a
+([AI_GUIDE.md](AI_GUIDE.md#1-model-providers)), and the model is never trusted with anything a person could not do by hand: **it writes a draft or a
 query, and Drishti checks it, runs it as the reader, and shows it.** With the AI layer off, the buttons are hidden and every call answers
 `404 DRS-4015`.
 

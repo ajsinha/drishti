@@ -28,8 +28,8 @@ the design of **server-side pricing**, the quant service (section 4).
 | 4. The quant service | proposed, not built (section 4; pricing in Python items: its section 16) |
 
 Each part keeps its own section numbers (part 1's "section 4" is *4. Policy* inside part 1). The pages that use the layer are
-[*Ask about this page*](../guides/USER_GUIDE.md#about-this-page) and BI's AI hooks ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number));
-the settings are in [CONFIGURATION.md](CONFIGURATION.md).
+[*Ask about this page*](USER_GUIDE.md#about-this-page) and BI's AI hooks ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number));
+the settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 ## Contents
 
@@ -158,7 +158,7 @@ A site that reaches the model endpoint only through a forward proxy puts a `prox
 sets the site default once: `drishti.http.proxy.*` on the server, `DRISHTI_HTTP_PROXY_URL` and friends in the console. `proxy: none` in a file goes direct whatever the site says.
 `http://` and `https://` endpoints both go through an `http://` proxy; an https endpoint is tunnelled with `CONNECT`, so `tls.*` (a private CA, a client certificate) still applies to the
 endpoint itself. OpenAI-compatible and Anthropic providers use it on the server (the JDK HTTP client) and in the console (`httpx`). A literal `proxy.password` refuses the file without
-repeating it; a wrong proxy login is reported as a failure of the call without the password. Everything is in [DATA_GUIDE.md, the outbound proxy](../guides/DATA_GUIDE.md#proxy-9-the-console-ai-and-mcp-clients). Tested in
+repeating it; a wrong proxy login is reported as a failure of the call without the password. Everything is in [DATA_GUIDE.md, the outbound proxy](DATA_GUIDE.md#proxy-9-the-console-ai-and-mcp-clients). Tested in
 `AiProxyTest` (Java) and `tests/test_ai_proxy.py` (console) against a fake proxy on loopback. Admin -> AI does not display the proxy yet.
 
 #### A provider that cannot be set up is retried
@@ -172,7 +172,7 @@ shows **DOWN** until the next call goes through (every call is attempted afresh;
 A file that cannot be read (bad YAML, a literal key) is read again at every look at the folder (`drishti.ai.poll-ms`), so it clears the moment it is fixed.
 **Retry now** (Admin -> AI, `POST /api/v1/admin/retry/ai`, admin, audited as `ai-retry-now`; an API token needs the `packs:admin` scope) builds
 every failing provider at once. Failures are logged and audited on attempts 1, 2, 4, 8, ... (`ai-retry-failed`) and a recovery always
-(`ai-recovered`). Settings: [CONFIGURATION.md](CONFIGURATION.md#retry-settings), `drishti.retry.*` and `drishti.retry.ai.*`.
+(`ai-recovered`). Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings), `drishti.retry.*` and `drishti.retry.ai.*`.
 
 #### Types shipped
 
@@ -265,7 +265,7 @@ under `mock:`: `reply` (fixed text; omit to echo `echo: <last user message>`), `
 
 ### 7. Ask on the AI layer
 
-Ask about this page ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)) builds its prompt and calls the gateway with feature `ask`.
+Ask about this page ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)) builds its prompt and calls the gateway with feature `ask`.
 Point it at a model with `drishti.explain.ask.model: <provider>/<model>`. The original settings (`endpoint`, `api`, `api-key`) are
 **deprecated but unchanged in behaviour**: they become provider `ask` (with the endpoint split into `base-url` and path), work even
 when `drishti.ai.enabled` is false, and log a warning at start. A provider file may not be named `ask` while they are set.
@@ -277,7 +277,7 @@ Seven features use the layer through `LLMFactory.model(...)` ([section 10](#10-o
 **`bi-explain-checks`** (the Check panel's problems in plain words), **`bi-helper`** (the dataset helper's relationships, measures and column descriptions) and **`subscription-narrative`** (the written
 summary at the top of a subscription's email, made **as the recipient** from their own unmasked figures, only in `aggregates` mode). Each is a feature name for the policy (section 4), so masks,
 per-feature roles and limits, the cost limit and the audit row apply; each runs under the caller's identity and sends the dataset **model** (names, types, descriptions) and the person's words,
-never a row. Point them at a model with `drishti.bi.ai.model`. Details, settings, errors (`DRS-4020`: an answer that cannot be used) and tests: [REPORTS_GUIDE.md section 29](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number).
+never a row. Point them at a model with `drishti.bi.ai.model`. Details, settings, errors (`DRS-4020`: an answer that cannot be used) and tests: [REPORTS_GUIDE.md section 29](REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number).
 
 ### 8. The console
 
@@ -383,12 +383,12 @@ limits, roles, labels-only: section 4). **Every one is off until you copy its ex
   `ListFoundationModels` for Bedrock. A vendor's new model id is a line in `models:`, never a code change. A logical name is the id with characters outside `A-Za-z0-9._-` replaced by `_`
   (`openai/gpt-oss-20b` is `openai_gpt-oss-20b`); `groq/llama-3.3-70b-versatile` addresses a model as `<provider>/<logical name>`.
 * **Health.** `health()` never calls the network: it is *down* for `enabled: false` and for a missing key, credential or region (with the variable to set), else *ok*; once a certificate given by `tls.*` is
-  less than 30 days from expiry the text carries the sentence of [DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#109-certificate-expiry). `probe()` (Python also `aprobe()`) makes one cheap live call (the model list; Ollama
+  less than 30 days from expiry the text carries the sentence of [DATA_GUIDE.md section 10](DATA_GUIDE.md#109-certificate-expiry). `probe()` (Python also `aprobe()`) makes one cheap live call (the model list; Ollama
   `/api/tags`) and answers the same shape; Admin shows both.
 * **`describe_config()`** shows the file with every secret as `********` (the key, `header.*` credentials, `proxy.password`, `aws-*`, `client-secret`, `tls.*` passwords); the file's other settings are shown as written.
 * **Keys only as `${ENV}`.** `api-key`, `aws-access-key-id`, `aws-secret-access-key`, `aws-session-token`, `client-secret` and the `tls.*` passwords accept an `${ENV_NAME}` placeholder or nothing; a literal is
   refused at load, naming the setting. When `api-key` is left out, a preset reads the vendor's own variable (the table below).
-* **Proxy.** The shared `proxy.*` block (or the site default) applies to every call, an `https://` target tunnelled with CONNECT: [DATA_GUIDE.md, the outbound proxy](../guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
+* **Proxy.** The shared `proxy.*` block (or the site default) applies to every call, an `https://` target tunnelled with CONNECT: [DATA_GUIDE.md, the outbound proxy](DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
 * **TLS.** The shared `tls.*` block of the connectors applies to every provider type (section 11.9).
 * **Errors** name the cause and never carry the response body: HTTP 401/403 `(authentication failed ...)`, 404 `(not found: check base-url, the path and the model id)`, 429 kind `RATE_LIMITED`, a slow
   endpoint kind `TIMEOUT`, anything else `FAILED`. `retries: n` tries again after a 5xx, a 429 or a connection failure.
@@ -542,7 +542,7 @@ With the key variable unset, `health()` says `down` and what to set (captured): 
 
 #### 11.9 TLS: the same block as the connectors
 
-Every provider type (and the console's MCP client) reads the connectors' `tls:` block ([DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) is the reference; in a provider file `tls:` is flattened to `tls.*` as everywhere):
+Every provider type (and the console's MCP client) reads the connectors' `tls:` block ([DATA_GUIDE.md section 10](DATA_GUIDE.md#10-tls-and-the-outbound-proxy) is the reference; in a provider file `tls:` is flattened to `tls.*` as everywhere):
 trust (`ca-file` as a PEM file or the PEM text, `truststore`, `trust-jvm-default`), a client identity for mutual TLS (`cert-file` + `key-file` + `key-password`, or `keystore`), `protocols`, `cipher-suites`,
 `verify-hostname` (on by default), `insecure-trust-all` (refused unless `DRISHTI_ALLOW_INSECURE_TLS=true`). Passwords are `${ENV}` placeholders or `...-password-file`, never literals. A `tls.*` key against an
 `http://` address is an error at load, never a silent downgrade. Through an HTTP proxy the same settings hold (CONNECT tunnel, TLS end to end). The expiry of every certificate given is read at start and shown in
@@ -622,7 +622,7 @@ proxy: {url: http://proxy.corp.example:3128, username: svc-drishti, password: ${
 A Streamable HTTP server is reached through the file's `proxy:` block, the site default (`drishti.http.proxy.*`; in the console the `DRISHTI_HTTP_PROXY_*` environment
 variables) or directly, exactly as an AI provider and a connector are: `http://` proxy, https servers tunnelled with `CONNECT` and keeping `tls.*`, the password an `${ENV}` placeholder
 (a literal refuses the file), a wrong login reported without the password. The initialize handshake, `tools/list`, calls and the closing DELETE all use it. Reference:
-[DATA_GUIDE.md, the outbound proxy](../guides/DATA_GUIDE.md#proxy-9-the-console-ai-and-mcp-clients). The `mock` transport has no network and ignores it.
+[DATA_GUIDE.md, the outbound proxy](DATA_GUIDE.md#proxy-9-the-console-ai-and-mcp-clients). The `mock` transport has no network and ignores it.
 
 A server is **connected on first use**. Two things can go wrong, and both are retried by themselves (`drishti.retry.mcp.*`, defaults: 5 s,
 doubling, up to 5 min, jitter; the console has `retry.mcp.*`):
@@ -788,10 +788,10 @@ budget and alert path.
 **Status: proposed; not in a planned release, a later candidate in [IMPLEMENTATION_PLAN.md › Roadmap](../architecture/IMPLEMENTATION_PLAN.md#roadmap); the decision is
 [ADR-019](../architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md).** Nothing here is built yet (there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
 
-**Read [NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md) first.** The product owner decided that computations,
+**Read [NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md) first.** The product owner decided that computations,
 pricing included, run in **compute workers supervised by the Drishti server** (out-of-process Python workers with QLRisk as the
 default pricer, and an isolated Java worker for QuantLib's own Java binding), used by **reactive connectors**
-([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)); the first user is the VaR engine ([VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives)). That replaces the
+([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)); the first user is the VaR engine ([VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives)). That replaces the
 *deployment shape* proposed below (a separate `drishti-quant` HTTP service); the rest of this part still stands and is reused:
 pricing stays outside the server's JVM, the `quant` power, the packs' pricer mappings (section 6), market data assembled by the server
 for a business date (section 7), caching by trade version and date (section 11). The QuantLib-SWIG Java option rejected in section 3
@@ -799,7 +799,7 @@ for a business date (section 7), caching by trade version and date (section 11).
 
 **Relation to Rūpaka (BI).** This is the server-side pricing service for the terminal and Calc. Python in BI prices nothing of its own; QLRisk would join it as a pinned library of the compute pool `python` (section 16).
 
-Drishti shows trades, market data and risk, and Calc ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) lets a user compute
+Drishti shows trades, market data and risk, and Calc ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)) lets a user compute
 on them in the browser with numpy, pandas and the small `drishti.quant` library. What Calc cannot do well is
 *proper* pricing: building curves from instruments, pricing swaptions or callable bonds, calibrating models. That
 needs QuantLib, and QuantLib belongs on a server, not in a browser. This document describes how a pricing service
@@ -845,7 +845,7 @@ user's credentials; it is given a trade, market data and a model, and it returns
 |---|---|---|---|
 | **A separate Python service with QuantLib-Python** | QuantLib publishes ready-made wheels for Linux, macOS and Windows (QuantLib 1.43 today); a crash in native code cannot take the Drishti server down; it scales on its own; the same interface can front ORE or a bank's pricers later | one more process to run | **chosen** ([ADR-019](../architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md)) |
 | QuantLib's Java (SWIG) bindings inside the server | one process | native libraries to build for every platform, and a crash or a long calibration inside the server everyone uses | rejected |
-| QuantLib compiled to WebAssembly, in Calc | no server | no build exists; tens of MB more to download; a laptop's CPU for calibrations; rebuilt for every Pyodide version | rejected ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) |
+| QuantLib compiled to WebAssembly, in Calc | no server | no build exists; tens of MB more to download; a laptop's CPU for calibrations; rebuilt for every Pyodide version | rejected ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)) |
 | ORE (Open Source Risk Engine) as the service | portfolio analytics (XVA, simulation) | larger to adopt, XML-configured | later, behind the same API |
 
 ### 4. What the Drishti server does
@@ -1018,14 +1018,14 @@ Python items, Python-driven tables and Notebook cells run on the server's comput
 
 ### 17. Reconciled with the compute workers
 
-Decided 2026-10-24 (product owner); the design is [NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md).
+Decided 2026-10-24 (product owner); the design is [NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md).
 
 | This document proposed | The compute workers decide |
 |---|---|
 | a separate Python service, `drishti-quant`, reached over HTTP (sections 2, 5, 12) | **compute workers** started and supervised by the server: a pool of out-of-process Python workers, data passed as Arrow, from a locked, administrator-approved environment ([NOTEBOOK_GUIDE.md sections 4 to 7](../architecture/ARCHITECTURE.md#296-requirements-and-approval)); a remote pool on other machines remains a later option and would look much like the service |
 | QuantLib-Python adapters written in the service (section 5) | a **pricer SPI** with **QLRisk as the default provider** (design only until its API is declared stable) and a stand-in for tests ([NOTEBOOK_GUIDE.md section 9](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)) |
 | QuantLib's Java (SWIG) binding rejected inside the server (section 3) | **accepted in an isolated Java worker**: built per OS (Linux first), packaged in a versioned jar, extracted under the data folder, never loaded in the server; its tests skip on Windows; a parity test against QLRisk |
-| `/api/v1/quant/...` endpoints (section 9) | pricing reaches screens through **reactive connectors** and their kinds (a what-if is a computed kind, [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); dedicated endpoints for single-trade pricing may still be added on the same workers |
+| `/api/v1/quant/...` endpoints (section 9) | pricing reaches screens through **reactive connectors** and their kinds (a what-if is a computed kind, [VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); dedicated endpoints for single-trade pricing may still be added on the same workers |
 | packs' `quant: pricers:` mappings (section 6) | **kept**, shared by every pricer provider |
 | market data for a business date assembled by the server (section 7) | **kept** |
 | the `quant` power, limits, caching, audit (sections 4, 10, 11) | **kept**, joined by the `compute` power and the compute audit ([DATA_ARCHITECTURE.md › Reactive connectors, section 15](../architecture/DATA_ARCHITECTURE.md#15-observability-and-audit)) |

@@ -4833,7 +4833,7 @@ and a 304 for a matching `If-None-Match`; the URL the listing gives carries the 
 (`immutable`), any other URL for five minutes. A path with `..`, a hidden name, a backslash or a link out of the folder is a 404; an
 SVG is served with a sandboxing Content-Security-Policy. `GET /api/v1/sutras/library` stays as the fragments-only alias.
 
-**Gen UI streaming (later).** A Gen UI answer (AI.md) will stream screens as fragment uses (`{ use: key-figure@1,
+**Gen UI streaming (later).** A Gen UI answer (AI_GUIDE.md) will stream screens as fragment uses (`{ use: key-figure@1,
 with: {...} }`) checked by the same lint and masks, decorated with the kit's brand and assets by URL; the kit is what the model is
 told it may use (the docstrings), and `streaming: false` in the summary says it is not yet on.
 
@@ -8797,7 +8797,7 @@ drishti:
   explain:
     ask:
       enabled: false
-      model: local/local-model   # a provider/model of the AI layer: config/ai/local.yaml (docs/admin/AI.md)
+      model: local/local-model   # a provider/model of the AI layer: config/ai/local.yaml (docs/guides/AI_GUIDE.md)
       packs: []              # packs where it is on; empty = none
       values: labels-only    # labels-only | shown   (whether rendered values go into the prompt)
       max-question-chars: 500
@@ -8809,7 +8809,7 @@ drishti:
 ```
 
 - **Where it runs.** On the server (`AskService` in `com.ash.drishti.server.explain`), so credentials stay in the
-  server's configuration and the console stays a thin proxy. **Ask runs on the AI layer** ([AI.md](../admin/AI.md#1-model-providers)):
+  server's configuration and the console stays a thin proxy. **Ask runs on the AI layer** ([AI_GUIDE.md](AI_GUIDE.md#1-model-providers)):
   `AskService` builds the prompt and calls the `LlmGateway` with feature `ask`; which provider, model and client library
   answers is a provider file in `config/ai`, not Ask's concern. Set `drishti.ai.enabled: true`, write
   `config/ai/<name>.yaml`, and point Ask at it with `drishti.explain.ask.model: <provider>/<model>`; the policy (masking of

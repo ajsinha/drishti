@@ -1784,7 +1784,7 @@ Check from outside: `curl -sI https://drishti.bank.example/healthz | head -1` sh
   prompt holds the page's labels, the glossary, the pack's guide text and the question, no value; with `values: shown` also the page's sentence
   with the figures the asking user may see. A masked field is never in it. The model gets no tools; document values are marked untrusted data.
   The question is written to the access log (action `ask`) unless `log-questions: false`; answers only with `log-answers: true`. The model, endpoint
-  and key are a provider file (`config/ai/<name>.yaml`, the key as `${ENV}`; [AI.md](../admin/AI.md)); an endpoint you do not control sees every
+  and key are a provider file (`config/ai/<name>.yaml`, the key as `${ENV}`; [AI_GUIDE.md](AI_GUIDE.md)); an endpoint you do not control sees every
   question. If it is down the drawer says so (`DRS-4008`).
 
 ## 12. Collaboration, reports and people's data
@@ -3297,7 +3297,7 @@ so most problems clear once the cause is fixed.
 | `connection leak suspected in the … pool` | a connection held longer than `pool-leak-threshold` (60 s); the line carries the borrower's stack. A legitimately long statement: raise the threshold for that connector; the same line for short work: the code leaks, report it with the stack |
 | An AI provider shows ERROR, an MCP server DOWN | ERROR: it could not be set up (type not installed, an `${ENV}` unset): fix it, or **Retry now** on Admin → AI. DOWN: the last call failed; it is reconnected on the schedule. With `drishti.ai.watch: off` nothing is retried |
 | An AI provider answers `HTTP 401 (authentication failed …)` or 403 | in order: the variable the file names is set **in the server's process** (Admin → AI says `no api key: set GROQ_API_KEY`); the key belongs to the vendor and `base-url`; Azure `auth: entra`: tenant, client id, secret; Bedrock 403: credentials, region or the account's model access; `no AWS credentials`: the SDK's chain found none |
-| `rate limited` (HTTP 429) | the vendor's limit for the key: raise it, spread features over two providers, add `retries: 2` to the provider file, or lower Drishti's per-user limits ([AI.md](../admin/AI.md#4-policy)); Bedrock `ThrottlingException` is the account's quota |
+| `rate limited` (HTTP 429) | the vendor's limit for the key: raise it, spread features over two providers, add `retries: 2` to the provider file, or lower Drishti's per-user limits ([AI_GUIDE.md](AI_GUIDE.md#4-policy)); Bedrock `ThrottlingException` is the account's quota |
 | "could not be reached" with a private CA, or "the proxy refused the request" | `tls.ca-file` names the CA of the **server's** certificate; mutual TLS adds `tls.cert-file`/`tls.key-file`; a certificate with only a Common Name fails (re-issue with a SAN); behind a proxy `proxy.url`, `proxy.username`, `proxy.password` and `CONNECT` allowed ([DATA_GUIDE.md section 10](DATA_GUIDE.md#1011-troubleshooting)) |
 | Too many retry lines in the log | the log has failures 1, 2, 4, 8…; raise `drishti.retry.max` (or per area), or `drishti.retry.enabled: false` |
 
@@ -3536,7 +3536,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-2057` | an event or source reference is wrong (a panel named in `@panel.event` or a `source:` that does not exist, a cycle, a panel called `parent`, a trigger not supported): `sutra lint` names the panel and line |
 | `DRS-2059` | a Sutra's `layout:` does not read (an unknown key, columns off the 12-unit grid, an area or section the picture lacks): [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections) |
 | `DRS-2061` | a pack's `history:` block is wrong (the message names the key); the kind keeps the default history meanwhile: fix it and run `sutra lint <pack-dir>` |
-| `DRS-4015` | the AI layer or the MCP client is off: `drishti.ai.enabled` / `drishti.mcp.enabled` and a provider ([AI.md](../admin/AI.md#1-model-providers)) |
+| `DRS-4015` | the AI layer or the MCP client is off: `drishti.ai.enabled` / `drishti.mcp.enabled` and a provider ([AI_GUIDE.md](AI_GUIDE.md#1-model-providers)) |
 | `DRS-4016` | the AI provider or MCP server failed or timed out: Admin → AI shows its health; check its URL, key variable and TLS |
 | `DRS-4017` | over the AI rate or cost limit for your user: wait, or an administrator raises the policy limit |
 | `DRS-4019` | the model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |

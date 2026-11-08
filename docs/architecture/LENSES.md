@@ -3246,7 +3246,7 @@ hardest families from trade-grain data (VaR at any scope; PFE by counterparty an
 | News, market moves, macro signals | **Built** (World and Market lenses; IMF data internal only) | [ADMIN_GUIDE 16.4](../guides/ADMIN_GUIDE.md#164-drishti-world) |
 | News relevance to the book; VaR at stake of a move | **Not built** (WL9, [section 4.3](#43-gaps-and-proposals); ML1, [section 3.3](#33-gaps-and-proposals)) | — |
 | Data health: late loads by expectation | **Partly**: late loads built; the safe-to-quote rule not built | [DATA_GUIDE 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data) |
-| Ask in words | **Partly**: *Ask about this page* and BI's *ask the data*; an answer across engines not built; AI off in every lens today | [AI 7](../admin/AI.md#7-ask-on-the-ai-layer) |
+| Ask in words | **Partly**: *Ask about this page* and BI's *ask the data*; an answer across engines not built; AI off in every lens today | [AI 7](../guides/AI_GUIDE.md#7-ask-on-the-ai-layer) |
 | Time travel | **Partly**: official records per date; "as at the last board" across every metric not built | [VAR_GUIDE 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 
 The demo's connected group `GRP-NORTHBRIDGE` has one member and a stored group limit; nothing in the code names a risk appetite, an
@@ -3313,7 +3313,7 @@ The Brief's paragraphs come from a **template** filled with the figures (*"The b
 metrics, with {breached} breach…"*), so every word is reproducible; the AI layer may rephrase with the figures fixed and checked after
 (a number not in the input is refused). **Ask** sends the question to the AI layer with **tools** that call the engines (VaR and its
 explanation, exposure, appetite status, the breach queue), never rows; each figure is cited and linked; an answer with a figure no tool
-returned is refused; the AI layer's policy, masks and audit apply ([AI 7](../admin/AI.md#7-ask-on-the-ai-layer)). On only when the
+returned is refused; the AI layer's policy, masks and audit apply ([AI 7](../guides/AI_GUIDE.md#7-ask-on-the-ai-layer)). On only when the
 site has a model provider.
 
 #### 8.3.6 Approve and reject
@@ -3751,7 +3751,7 @@ change and incidents, Ask, and an **evidence pack** for a supervisor or audit.
 | Readiness, drain, the rolling upgrade runner; the N and N−1 rule | **Built**; N and N−1 planned (CD4) | [CLUSTER_DEPLOYMENT 18](../guides/CLUSTER_GUIDE.md) |
 | A history of releases and upgrades per node | **Partly**: each server reports its version; no history | [OPERATIONS 15](../guides/OPERATIONS_GUIDE.md#18-upgrades-and-rollback) |
 | Incidents; cloud cost; a BCBS 239 scorecard | **Not built** | — |
-| Ask | **Partly**: *Ask about this page* and BI's *ask the data*, off by default; across loads, checks, audit and incidents not built | [AI 7](../admin/AI.md#7-ask-on-the-ai-layer) |
+| Ask | **Partly**: *Ask about this page* and BI's *ask the data*, off by default; across loads, checks, audit and incidents not built | [AI 7](../guides/AI_GUIDE.md#7-ask-on-the-ai-layer) |
 
 ### 9.3 Gaps and proposals
 

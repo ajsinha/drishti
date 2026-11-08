@@ -446,3 +446,16 @@ def test_old_section_names_and_addresses_keep_working(client):
     guide = client.get("/help/docs-guides-var-guide").text
     assert 'href="/help/section/risk">Risk measures</a>' in guide                          # the breadcrumb opens its section
     assert client.get("/help/context/var", follow_redirects=False).headers["location"] == "/help/docs-guides-var-guide"   # F1
+
+
+def test_a_page_with_lenses_shows_only_in_those_lenses_and_in_the_full_product():
+    """help.yaml lenses: a page lists the lenses that show it; outside any lens (the full product) every page shows."""
+    from pathlib import Path as _P
+    from core.edition import Edition
+    from core.guides import Guide
+    from routes.help_routes import shown
+    page = Guide("p", "P", "", "x", "guide", "analytics", _P("x.md"), lenses=("risk",))
+    assert shown(Edition(), page)
+    assert shown(Edition("risk", {}, lens=True), page)
+    assert not shown(Edition("world", {}, lens=True), page)
+    assert shown(Edition("world", {}, lens=True), Guide("q", "Q", "", "x", "guide", "analytics", _P("x.md")))

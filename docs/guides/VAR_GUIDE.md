@@ -1706,7 +1706,7 @@ systems are built** (the subsection *Intraday updates* below).
 | **Move** a position to another book | no vector change; the scopes it belongs to change | **no** |
 
 **Pricing over the scenario days.** The pricer receives the trade, the base market of the business date (assembled by the server as
-AI.md › Server-side pricing: the quant service (proposed), section 7 describes) and the scenario set's market moves, and returns the 509 P&Ls. QLRisk's
+AI_GUIDE.md › Server-side pricing: the quant service (proposed), section 7 describes) and the scenario set's market moves, and returns the 509 P&Ls. QLRisk's
 `MarketRiskEngine.scenario_pnl` is the default path ([NOTEBOOK_GUIDE.md section 9.2](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)),
 QuantLib-Java the Java alternative. The pricer's scenario moves must be the **same moves the batch used**; a **reprice check** proves it:
 for a sample of existing trades in the scope the engine reprices them and compares with their stored vectors, and shows the agreement on

@@ -421,10 +421,10 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_ASK_ENDPOINT` | `drishti.explain.ask.endpoint` | empty | **Deprecated** (a provider file in `config/ai` replaces it; it still works, as provider `ask`, with a start-up warning). The model endpoint URL for Ask. |
 | `DRISHTI_ASK_MODEL` | `drishti.explain.ask.model` | empty | The model Ask uses: a logical model of the AI layer (`provider/model`); with the deprecated `endpoint`, the model id sent to it. |
 | `DRISHTI_ASK_KEY` | `drishti.explain.ask.api-key` | empty | **Deprecated** with `endpoint`: put `api-key: ${ENV}` in the provider file. The model endpoint credential (environment only; never logged). |
-| `DRISHTI_AI_ENABLED` | `drishti.ai.enabled` | `false` | Turn on the LLM provider layer ([AI.md](AI.md#1-model-providers)): provider files in `drishti.ai.dir` are read and models become callable. Off: no file is read and no model is called. |
-| `DRISHTI_AI_DIR` | `drishti.ai.dir` | `./config/ai` | The folder of provider files, one YAML per provider (type, `base-url`, `api-key: ${ENV}`, models with logical names). Watched and reloaded live (`drishti.ai.watch`: `auto` / `poll` / `off`, `poll-ms`). Provider types, their keys and one copy-paste file each: [AI.md › Model providers, section 11](AI.md#11-more-providers-the-way-sajhamcpserver-has-them); examples `config/ai/<type>.yaml.example`, all `enabled: false`. |
+| `DRISHTI_AI_ENABLED` | `drishti.ai.enabled` | `false` | Turn on the LLM provider layer ([AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers)): provider files in `drishti.ai.dir` are read and models become callable. Off: no file is read and no model is called. |
+| `DRISHTI_AI_DIR` | `drishti.ai.dir` | `./config/ai` | The folder of provider files, one YAML per provider (type, `base-url`, `api-key: ${ENV}`, models with logical names). Watched and reloaded live (`drishti.ai.watch`: `auto` / `poll` / `off`, `poll-ms`). Provider types, their keys and one copy-paste file each: [AI_GUIDE.md › Model providers, section 11](../guides/AI_GUIDE.md#11-more-providers-the-way-sajhamcpserver-has-them); examples `config/ai/<type>.yaml.example`, all `enabled: false`. |
 | `DRISHTI_AI_DEFAULT_MODEL` | `drishti.ai.default-model` | empty | The model used when a call names none: `provider/model`, or a model name only one provider has. |
-| `DRISHTI_MCP_ENABLED` | `drishti.mcp.enabled` | `false` | Turn on the MCP client ([AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)): server files in `drishti.mcp.dir` are read and their tools become callable through the policy. |
+| `DRISHTI_MCP_ENABLED` | `drishti.mcp.enabled` | `false` | Turn on the MCP client ([AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)): server files in `drishti.mcp.dir` are read and their tools become callable through the policy. |
 | `DRISHTI_MCP_DIR` | `drishti.mcp.dir` | `./config/mcp` | The folder of MCP server files, one YAML per server (transport, `url`, `headers` as `${ENV}`, `allowed-tools`). Watched and reloaded live. |
 | `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:./data/identity/drishti.db` | The identity database (users, roles, workspaces, audit); SQLite by default, or `jdbc:postgresql://…`. |
 | `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | Its user. |
@@ -691,8 +691,8 @@ carries over. Without Drishti*net, `backend.urls` still works as a list of ident
 
 The server's `drishti.ai.policy.*` and `drishti.mcp.*` settings and the console's `ai.policy.*` and `mcp.*` settings
 (server names with hyphens, console names with underscores). Everything is off unless `drishti.ai.enabled` /
-`drishti.mcp.enabled` (console `ai.enabled` / `mcp.enabled`) is true; see [AI.md](AI.md#1-model-providers)
-and [AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
+`drishti.mcp.enabled` (console `ai.enabled` / `mcp.enabled`) is true; see [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers)
+and [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
 
 | Server | Console | Default | Meaning |
 |---|---|---|---|
@@ -1269,7 +1269,7 @@ comes from the environment only, and the model gets no tools. See [the privacy n
 |---|---|---|
 | `enabled` | `false` (`DRISHTI_ASK_ENABLED`) | The global switch. While `false` no network call is ever attempted and `POST …/ask` answers `404 DRS-4007`. |
 | `packs` | `[]` | The packs where the box is drawn (per-pack opt-in); empty means none. `DRISHTI_EXPLAIN_ASK_PACKS=market-risk,counterparty-risk`. |
-| `model` | empty (`DRISHTI_ASK_MODEL`) | The model Ask uses: a logical model of the AI layer, `<provider>/<model>` (a provider file in `drishti.ai.dir` with its `type`, `base-url` and `api-key: ${ENV}`; [AI.md](AI.md)). |
+| `model` | empty (`DRISHTI_ASK_MODEL`) | The model Ask uses: a logical model of the AI layer, `<provider>/<model>` (a provider file in `drishti.ai.dir` with its `type`, `base-url` and `api-key: ${ENV}`; [AI_GUIDE.md](../guides/AI_GUIDE.md)). |
 | `values` | `labels-only` | `labels-only` sends labels, definitions and structure, never a rendered value of the page. `shown` also sends the page's rendered sentence (its figures, as the asking user may see them). A value masked for the user is never sent in either mode. |
 | `max-question-chars` | `500` | Longer questions are refused (`400`). |
 | `max-prompt-kb` | `24` | The whole prompt; the pack guide text is cut first, then glossary entries. |
@@ -1771,7 +1771,7 @@ Times are in `drishti.business-date.zone`, business days by `drishti.business-da
 
 ### `drishti.bi.ai` — BI with AI (stage 2)
 
-The BI hooks on the AI layer ([REPORTS_GUIDE.md section 29](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI.md](AI.md#1-model-providers));
+The BI hooks on the AI layer ([REPORTS_GUIDE.md section 29](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers));
 the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring helpers `bi-suggest`, `bi-explain-checks` and `bi-helper`, and a subscription's narrative summary `subscription-narrative` (`drishti.ai.policy.features`, above).
 
 | Setting | Default | Meaning |
@@ -3452,7 +3452,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
 | `drishti.explain.ask.enabled` | boolean | `false` | `DRISHTI_ASK_ENABLED` | server | turn on Ask about this page (also list packs in drishti.explain.ask.packs) | restart |  | admin |
-| `drishti.explain.ask.model` | string | empty | `DRISHTI_ASK_MODEL` | server | the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/admin/AI.md) | restart |  | admin |
+| `drishti.explain.ask.model` | string | empty | `DRISHTI_ASK_MODEL` | server | the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/AI\_GUIDE.md) | restart |  | admin |
 | `drishti.explain.ask.packs` | list | `[]` |  | server | packs where the Ask box is on; empty = none (per-pack opt-in) | restart |  | admin |
 | `drishti.explain.ask.values` | string | `labels-only` |  | server | labels-only \| shown: whether the page's rendered text (values) goes into the prompt; masked values never do | restart |  | admin |
 | `drishti.explain.ask.max-question-chars` | integer | `500` |  | server | longer questions are refused (400) | restart |  | admin |
@@ -6084,7 +6084,7 @@ The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`).
 
 ### AI providers and MCP servers: `config/ai/`, `config/mcp/`
 
-One YAML per provider in `config/ai/` and per MCP server in `config/mcp/`, for the server (`drishti.ai.dir`, `drishti.mcp.dir`) and the console (`ai.dir`, `mcp.dir`); the folders are looked at every few seconds, so a changed file needs no restart. Every key a shipped example (`*.yaml.example`) uses ([AI.md › Model providers](AI.md#1-model-providers), [AI.md › The MCP client](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)).
+One YAML per provider in `config/ai/` and per MCP server in `config/mcp/`, for the server (`drishti.ai.dir`, `drishti.mcp.dir`) and the console (`ai.dir`, `mcp.dir`); the folders are looked at every few seconds, so a changed file needs no restart. Every key a shipped example (`*.yaml.example`) uses ([AI_GUIDE.md › Model providers](../guides/AI_GUIDE.md#1-model-providers), [AI_GUIDE.md › The MCP client](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)).
 
 #### A provider file: `config/ai/<name>.yaml`
 
@@ -6164,7 +6164,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_ARTIFACTS_CONSOLE_PORT` | screenshot tools | none | tools | The console port of the artifacts screenshots |
 | `DRISHTI_ARTIFACTS_SERVER_PORT` | screenshot tools | none | tools | The server port of the artifacts screenshots |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | server | turn on Ask about this page (also list packs in drishti.explain.ask.packs) |
-| `DRISHTI_ASK_MODEL` | `drishti.explain.ask.model` | empty | server | the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/admin/AI.md) |
+| `DRISHTI_ASK_MODEL` | `drishti.explain.ask.model` | empty | server | the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/AI\_GUIDE.md) |
 | `DRISHTI_ASYNC_TIMEOUT` | `spring.mvc.async.request-timeout` | `30m` | server | how long a streamed answer may take: a workbook download (the VaR Playground, the Why it moved working, the capacity workbook), a BI export; an answer cut at this limit arrives incomplete |
 | `DRISHTI_AUDIT_FILE` | `drishti.identity.audit-file` | `./data/identity/audit.jsonl` | server | the pre-1.10 audit file, imported into the database once |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | console | off for local development |

@@ -203,7 +203,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   ([OPERATIONS_GUIDE.md section 2.1](docs/guides/OPERATIONS_GUIDE.md#149-native-libraries-blas)).
 - **Deployment** by hand, with systemd, Docker Compose ([deploy/docker/compose.yaml](deploy/docker/compose.yaml)), AWS ECS, and on
   Windows with Java and Python only ([OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md)). Prometheus metrics; an **AI layer** and an **MCP
-  client**, both off by default, with masking and audit of every call ([AI.md](docs/admin/AI.md)).
+  client**, both off by default, with masking and audit of every call ([AI_GUIDE.md](docs/guides/AI_GUIDE.md)).
 
 ## Run it
 

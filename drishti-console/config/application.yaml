@@ -35,7 +35,7 @@ backend:
   check_every: 5s                            # how often each listed server's health is looked at
   fail_after: 2                              # failed requests (or health checks) in a row before a server is set aside
   data_dir: ${DRISHTI_CONSOLE_DATA_DIR:}     # what the console keeps between runs (net/servers.json); blank: <data dir>/console
-ai:                                  # LLM provider layer (docs/admin/AI.md): OFF by default; no file is read and no model is called while off
+ai:                                  # LLM provider layer (docs/guides/AI_GUIDE.md): OFF by default; no file is read and no model is called while off
   enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the console's own LLM provider layer
   dir: ${DRISHTI_AI_DIR:./config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
   default_model: ${DRISHTI_AI_DEFAULT_MODEL:} # provider/model, or a model name only one provider has
@@ -44,7 +44,7 @@ ai:                                  # LLM provider layer (docs/admin/AI.md): OF
   # the console's AI policy, as the server's drishti.ai.policy: mask_redacted, audit, per-user and cost limits, mask_patterns, per-feature
   # roles
   policy: {mask_redacted: true, audit: true, per_user_per_minute: 0, per_user_per_day: 0, cost_per_user_per_day: 0, mask_patterns: [], features: {}}
-mcp:                                 # MCP client (docs/admin/AI.md): OFF by default
+mcp:                                 # MCP client (docs/guides/AI_GUIDE.md): OFF by default
   enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the console's MCP client
   dir: ${DRISHTI_MCP_DIR:./config/mcp}  # the folder of MCP server files (one YAML per server)
   server_roles: {}                   # server -> roles allowed

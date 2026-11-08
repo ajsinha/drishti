@@ -316,7 +316,7 @@ api-key: ${GROQ_API_KEY}              # an ${ENV_NAME} placeholder; export GROQ_
 default-model: llama-3.3-70b-versatile
 ```
 
-Everything about each type (settings, model catalogue, proxy, TLS, retries, errors that never carry a response body) is in [AI.md](../admin/AI.md#1-model-providers) section 11; the BI side (what the hooks send, `aggregates` mode, limits) is [REPORTS_GUIDE.md section 29](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number). Then use **Test connection** on the new row: the first honest answer tells you whether the key, the address and the network are right,
+Everything about each type (settings, model catalogue, proxy, TLS, retries, errors that never carry a response body) is in [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers) section 11; the BI side (what the hooks send, `aggregates` mode, limits) is [REPORTS_GUIDE.md section 29](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number). Then use **Test connection** on the new row: the first honest answer tells you whether the key, the address and the network are right,
 before anyone asks the data a question. You should see `OK` or the reason on the new row.
 
 ## Step 8 · Suggestions, plain-words checks and the dataset helper
@@ -406,7 +406,7 @@ edit. Asked of a version 1 dataset by its id, the helper still answers in that d
 ## Next steps
 
 - [Tutorial 16](20-embed-drishti.md): put a view or a report on another web page.
-- [REPORTS_GUIDE.md section 29](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [AI.md](../admin/AI.md#1-model-providers) and the policy settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings).
+- [REPORTS_GUIDE.md section 29](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers) and the policy settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings).
 
 ## If something goes wrong
 

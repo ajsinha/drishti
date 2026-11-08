@@ -163,8 +163,8 @@ AREAS = [
     Area("ai", "AI providers and MCP servers: `config/ai/`, `config/mcp/`",
          "One YAML per provider in `config/ai/` and per MCP server in `config/mcp/`, for the server (`drishti.ai.dir`, `drishti.mcp.dir`) "
          "and the console (`ai.dir`, `mcp.dir`); the folders are looked at every few seconds, so a changed file needs no restart. Every key "
-         "a shipped example (`*.yaml.example`) uses ([AI.md › Model providers](AI.md#1-model-providers), "
-         "[AI.md › The MCP client](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy))."),
+         "a shipped example (`*.yaml.example`) uses ([AI_GUIDE.md › Model providers](../guides/AI_GUIDE.md#1-model-providers), "
+         "[AI_GUIDE.md › The MCP client](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy))."),
 ]
 AREA_IDS = {a.id for a in AREAS}
 
