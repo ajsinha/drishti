@@ -146,7 +146,7 @@ final class NativeLayout {
                 // a file's partition tuple must hold every field's value (the spec): this writer computes only the date's, so a
                 // table another engine re-partitioned is refused rather than given files whose other values read as null
                 throw new IllegalStateException("not in the layout: the partition spec " + spec.specId() + " has the field '" + f.name() + "' ("
-                        + f.transform() + ") beside the identity partition on " + IcebergLayout.DATE + "; Drishti writes only tables partitioned by "
+                        + f.transform() + ") beside the identity partition on " + IcebergLayout.DATE + "; this writer writes only tables partitioned by "
                         + IcebergLayout.DATE + " alone (write this table with engine: library, or restore its spec)");
             }
         }

@@ -1509,7 +1509,7 @@ A load into a table another engine re-partitioned stops before any file is writt
 
 ```text
 <table> is not in the layout: its partition spec 1 has the field 'id_bucket_8' (bucket[8]) beside the identity partition on
-business_date; Drishti writes only tables partitioned by business_date alone (write this table with engine: library, or restore its spec)
+business_date; this writer writes only tables partitioned by business_date alone (write this table with engine: library, or restore its spec)
 ```
 
 ### 15.5 Check it yourself
