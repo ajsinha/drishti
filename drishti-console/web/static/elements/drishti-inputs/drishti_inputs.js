@@ -2594,7 +2594,9 @@
             ['input', 'change'].forEach((t) => box.dispatchEvent(new form.win.Event(t, { bubbles: true })));
           });
           part.input = sel.control;
-          applyHook(box, fs.hook);
+          const named = fs.hook && typeof fs.hook === 'object' && fs.hook['aria-label'] !== undefined;
+          if (named) { sel.control.setAttribute('aria-label', String(fs.hook['aria-label'])); }
+          applyHook(box, named ? Object.fromEntries(Object.entries(fs.hook).filter(([k]) => k !== 'aria-label')) : fs.hook);
           wrap.append(label(id), box, help || '', msg);
           if (part.names) { wrap.appendChild(part.names); }
           return wrap;

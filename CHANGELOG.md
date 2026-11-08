@@ -25,6 +25,8 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
 
 ### Drishti Elements, and one way for each job (2.9.11.e)
 
+- **Fixed: a Form's Select with an `aria-label` hook names its combobox** (drishti-inputs): the label went onto the `<drishti-select>`
+  element as well, so one field was two labelled things (the Build workbench's enumerated options, the BI tile pickers).
 - **The terminal's query form on the one server-drawn form** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
   `core/forms.py`'s `form_host` sends the criteria through `core/form_kit.host` (`data-di-form` + `data-schema`), and `drishti_form.js`
   finds the `Form` with `formOf(host, {widgets})`; its own `new Form` path and the `data-qf-schema` attribute are deleted. `formOf`
