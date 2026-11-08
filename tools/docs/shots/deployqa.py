@@ -38,24 +38,30 @@ shot = register("deployqa", ROOT / "docs" / "img" / "deploy")
 WIDE, HIGH = 1440, 900
 
 
-def page(c: Ctx, name: str, path: str, wait: str = "main", settle: int = 2500, height: int = HIGH, width: int = WIDE):
+def page(c: Ctx, name: str, path: str, wait: str = "body", settle: int = 2500, height: int = HIGH, width: int = WIDE):
     go(c, path, width=width, height=height, wait=wait, settle=settle)
     c.save(name)
 
 
-def typed(c: Ctx, name: str, text: str, wait: str = "main", settle: int = 4000, height: int = HIGH):
+def typed(c: Ctx, name: str, text: str, wait: str = "body", settle: int = 4000, height: int = HIGH):
     go(c, "/t", height=height, wait=".cmd-input", settle=800)
     command(c, text)
-    c.page.wait_for_load_state("networkidle")
     c.page.locator(wait).first.wait_for(timeout=60000)
     c.page.wait_for_timeout(settle)
     c.save(name)
 
 
+def signin(c: Ctx, width: int = WIDE, height: int = HIGH):
+    """Signs in as the development administrator and leaves any lens (a lens is kept in the person's settings), so the page is the full product."""
+    login(c, width=width, height=height)
+    lens(c, "leave")
+
+
 def lens(c: Ctx, name: str):
+    """Opens a lens for this person (or leaves it: name 'leave'), through the confirm form the console shows."""
     c.page.goto(c.base + f"/lens/{name}")
-    c.page.locator("form button[type=submit]").first.click()
-    c.page.wait_for_load_state("networkidle")
+    c.page.locator(f"form[action=\"/lens/{name}\"] button[type=submit]").first.click()
+    c.page.wait_for_timeout(2500)
 
 
 # ---- one node --------------------------------------------------------------------------------------------------------------------------------
@@ -73,78 +79,76 @@ def sign_in(c: Ctx):
 
 @shot("02-home-risk.jpg", also=("03-home-world.jpg",))
 def homes(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     lens(c, "risk")
-    go(c, "/", width=WIDE, height=HIGH, wait="main", settle=3500)
+    go(c, "/", width=WIDE, height=HIGH, wait="body", settle=3500)
     c.save("02-home-risk.jpg")
     lens(c, "world")
-    go(c, "/", width=WIDE, height=HIGH, wait="main", settle=3500)
+    go(c, "/", width=WIDE, height=HIGH, wait="body", settle=3500)
     c.save("03-home-world.jpg")
-    c.page.goto(c.base + "/lens/leave")
-    c.page.wait_for_load_state("networkidle")
+    lens(c, "leave")
 
 
 @shot("04-admin-health.jpg")
 def health(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     page(c, "04-admin-health.jpg", "/admin/health", height=1300, settle=3000)
 
 
 @shot("05-admin-lakes.jpg")
 def lakes(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     page(c, "05-admin-lakes.jpg", "/admin/lakes", wait="table", height=1100)
 
 
 @shot("06-var-bank.jpg", also=("07-var-desk.jpg",))
 def var(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     typed(c, "06-var-bank.jpg", "VAR BANK", settle=6000, height=1000)
-    typed(c, "07-var-desk.jpg", "VAR VAR-RATES", settle=6000, height=1000)
+    typed(c, "07-var-desk.jpg", "VAR DESK RATES", settle=6000, height=1000)
 
 
 @shot("08-exposure.jpg", also=("09-predeal.jpg",))
 def exposure(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     typed(c, "08-exposure.jpg", "EXP BANK", settle=6000, height=1000)
     page(c, "09-predeal.jpg", "/predeal", height=1000, settle=4000)
 
 
 @shot("10-bi-report.jpg", also=("11-mr-cube.jpg",))
 def bi(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     page(c, "10-bi-report.jpg", "/bi/r/trades-overview", height=1000, settle=8000)
     typed(c, "11-mr-cube.jpg", "MCUBE", settle=8000, height=1000)
 
 
 @shot("12-elements-gallery.jpg")
 def gallery(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     page(c, "12-elements-gallery.jpg", "/elements/gallery", settle=4000)
 
 
 @shot("13-inbox.jpg", also=("14-feeds.jpg",))
 def loads(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     page(c, "13-inbox.jpg", "/admin/loads/inbox", height=1000)
     page(c, "14-feeds.jpg", "/admin/loads/feeds", height=1000)
 
 
 @shot("16-phone-home.jpg", also=("17-phone-var.jpg",))
 def phone(c: Ctx):
-    login(c, width=390, height=844)
-    go(c, "/t", width=390, height=844, wait="main", settle=2500)
+    signin(c, 390, 844)
+    go(c, "/t", width=390, height=844, wait="body", settle=2500)
     c.save("16-phone-home.jpg")
     go(c, "/t", width=390, height=844, wait=".cmd-input", settle=800)
     command(c, "VAR BANK")
-    c.page.wait_for_load_state("networkidle")
     c.page.wait_for_timeout(6000)
     c.save("17-phone-var.jpg")
 
 
 @shot("18-engines.jpg")
 def engines(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     page(c, "18-engines.jpg", "/admin/engines", height=1100)
 
 
@@ -152,7 +156,7 @@ def engines(c: Ctx):
 
 @shot("30-admin-connectors.jpg", also=("31-pack-coverage.jpg",))
 def rehearsal_admin(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     page(c, "30-admin-connectors.jpg", "/admin/connectors", wait="table", height=1100)
     go(c, "/admin/packs/trading", width=WIDE, height=HIGH, wait="[data-coverage]", settle=2000)
     c.page.locator("#pdCover").scroll_into_view_if_needed()
@@ -162,17 +166,17 @@ def rehearsal_admin(c: Ctx):
 
 @shot("32-endur-deal.jpg", also=("33-trading-form.jpg", "34-counterparty.jpg"))
 def rehearsal_pages(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
-    page(c, "32-endur-deal.jpg", "/v/trade/1000001", wait="[data-panel]", height=1000, settle=3000)
+    signin(c)
+    page(c, "32-endur-deal.jpg", "/v/trade/1000001", wait="body", height=1000, settle=5000)
     page(c, "33-trading-form.jpg", "/form/trading", height=1000, settle=2500)
-    page(c, "34-counterparty.jpg", "/v/counterparty-trades/CP-NORTHPLAINS", wait="[data-panel]", height=1000, settle=3000)
+    page(c, "34-counterparty.jpg", "/v/counterparty-trades/CP-NORTHPLAINS", wait="body", height=1000, settle=5000)
 
 
 # ---- the banking module off (the server restarted with DRISHTI_MODULES_BANKING_ENABLED=false) ---------------------------------------------------
 
 @shot("15-banking-off.jpg")
 def banking_off(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     typed(c, "15-banking-off.jpg", "VAR BANK", settle=3000, height=700)
 
 
@@ -180,7 +184,7 @@ def banking_off(c: Ctx):
 
 @shot("20-net-members.jpg", also=("21-net-drained.jpg", "22-var-while-drained.jpg", "23-health-net.jpg", "24-inbox-owner.jpg"))
 def cluster(c: Ctx):
-    login(c, width=WIDE, height=HIGH)
+    signin(c)
     page(c, "20-net-members.jpg", "/admin/net", height=1100, settle=4000)
     node = os.environ.get("DRISHTI_SHOTS_DRAIN", "")
     token = os.environ.get("DRISHTI_SHOTS_DRAIN_TOKEN", "")
