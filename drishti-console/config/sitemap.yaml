@@ -337,7 +337,7 @@ menus:
       - title: Platform
         items:
           - { id: configuration, href: /admin/configuration, icon: sliders2, label: Configuration, desc: "Every setting in three tiers (everyday, admin, expert): the value in effect, where it came from, and a change proposed for a second administrator to approve", match: /admin/configuration, requires: [admin, admin-page:configuration] }
-          - { id: engines, href: /admin/engines, icon: gear-wide-connected, label: Engines, desc: "Compute engines on or off on this server (VaR, exposure, FRTB-SA, SIMM, the in-memory lake), each with its own file", match: /admin/engines, requires: [admin, admin-page:engines] }
+          - { id: engines, href: /admin/engines, icon: gear-wide-connected, label: Engines, desc: "Compute engines on or off on this server (the pivot engine, the in-memory lake and each module's own), each with its own file", match: /admin/engines, requires: [admin, admin-page:engines] }
           - { id: compute, href: /admin/compute, icon: cpu, label: Python workers, desc: "The Python worker pools, their environments and the requirements waiting for approval", match: /admin/compute, requires: [admin, admin-page:compute] }
           - { id: net, href: /admin/net, icon: diagram-3, label: Cluster, desc: "{product}*net: the servers acting as one, their packs and data, routing, access", match: /admin/net, requires: [admin, admin-page:net] }
           - { id: ai, href: /admin/ai, icon: stars, label: AI, desc: "Model providers, MCP servers and what the assistant may do", match: /admin/ai, requires: [admin, admin-page:ai] }

@@ -291,6 +291,10 @@ schemas:
     change: restart (a module's beans, engines, jobs and API load at start)
     keys:
       - { key: enabled, type: boolean, default: "the manifest's (true)", meaning: "false: the module is off here (Admin -> Modules writes it); drishti.modules.<id>.enabled wins over it" }
+      - { key: module, type: map, default: "none", meaning: "The module named at this site: a server without the module's jar knows it and leaves it off as not installed (its packs, lakes, tables, models and reports in its domain folders are not read); with the jar, the jar's manifest wins and this is ignored" }
+      - { key: module.id, type: string, default: "none", meaning: "The module's id (banking)" }
+      - { key: module.domain, type: string, default: "none", meaning: "Its domain: the folder name of its packs, lakes, tables and reports (config/packs/banking/)" }
+      - { key: module.title, type: string, default: "none", meaning: "Its name on Admin -> Modules" }
   lake-file:
     area: connectors
     title: "A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)"

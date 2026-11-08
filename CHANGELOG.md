@@ -245,6 +245,12 @@
     The guide is now the lenses guide, [LENSES.md](docs/admin/LENSES.md) (was LENSES.md; Help → Lenses guide, the old address
     `editions` redirects): what a lens is, an instance lens and people's lenses, each shipped lens (Risk, Trading, Market, World,
     Public sector) with its modules, packs, cards and chips, customising, your own lens, clusters, troubleshooting, upgrading, the design.
+  - **A server without the banking jar**: `config/modules/banking.yaml` names the module (`module: {id, domain, title}`), so a server
+    built or started without drishti-banking knows it and shows it off as *not installed*: none of its packs, lakes, tables, models or
+    reports load (they used to load, and their engine connectors failed). With the jar, the jar's manifest is the module, as before.
+  - **The command line's examples follow the person**: the placeholder (`TRD MX-20000001, CPTY north …`, a lens's `menus.placeholder`)
+    keeps only the examples whose function the person may use; with banking off its examples go, with capitalmarkets off World's `USEQ`
+    and `FUND` ones (none left: blank). Admin -> Engines' menu line no longer names banking's engines.
 - **Static assets by module**: each module's console part is `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words,
   pages, templates, static files, and the parts it adds to a core screen). An off module's scripts, styles and Elements library are not
   served (404), and neither to a person whose lens does not use the module (the World lens gets no banking file). The Elements manifest

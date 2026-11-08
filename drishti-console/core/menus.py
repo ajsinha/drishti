@@ -410,8 +410,21 @@ def spec_of(console_dir: Path) -> dict:
 def placeholder(request) -> str:
     edition = _edition(request)
     if edition.lens and edition.placeholder:
-        return edition.placeholder
-    return str(request.app.state.settings.get("ui.placeholder") or _spec(_console_dir(request)).get("placeholder") or "")
+        text = edition.placeholder
+    else:
+        text = str(request.app.state.settings.get("ui.placeholder") or _spec(_console_dir(request)).get("placeholder") or "")
+    return shown_examples(text, edition.typed_shown)
+
+
+def shown_examples(text: str, shown) -> str:
+    """The command line's placeholder with only the examples this person may type (``TRD MX-1, ECON CAN …  then <GO>`` with banking
+    off: ``ECON CAN …  then <GO>``); none left: blank."""
+    head, dots, tail = text.partition("…")
+    items = [x.strip() for x in head.split(",") if x.strip()]
+    kept = [x for x in items if shown(x)]
+    if len(kept) == len(items):
+        return text
+    return (", ".join(kept) + " " + dots + tail) if kept else ""
 
 
 def _console_dir(request) -> Path:
