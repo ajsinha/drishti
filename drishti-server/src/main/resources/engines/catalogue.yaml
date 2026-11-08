@@ -45,7 +45,7 @@ engines:
     console: [/admin/api/lakes/memory]
     words: []
     menus: []
-    help: [docs-tutorials-16-load-your-own-data-into-a-new-lake#part-d--news-held-in-memory-only]
+    help: []                      # its guide is a section of the Data lake guide and its tutorial a part of the lake tutorial, never hidden with it
     landings: []
     tiles: []
     lenses: []
@@ -101,7 +101,7 @@ engines:
     console: [/pivot, /api/pivot/]
     words: [PIVOT]
     menus: [pivot]
-    help: [docs-guides-pivot-guide, docs-tutorials-07-pivot-cubes-and-explain, docs-tutorials-07-pivot-cubes-and-explain#part-b--custom-functions-why-did-it-move-and-what-if]
+    help: [docs-guides-pivot-guide, docs-tutorials-07-pivot-cubes-and-explain]
     landings: []
     tiles: []
     lenses: []

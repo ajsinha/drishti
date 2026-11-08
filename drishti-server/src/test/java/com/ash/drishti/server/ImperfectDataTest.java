@@ -118,11 +118,11 @@ class ImperfectDataTest {
         assertThat(empties).isPositive();
     }
 
-    /** The deep-documents Sutra (BUILD_GUIDE.md, Sutras over deep documents), over a real, deeply nested trade from the trading pack: every panel has data. */
+    /** The deep-documents Sutra (BUILD_GUIDE.md section 6, Sutras over deep documents), over a real, deeply nested trade from the trading pack: every panel has data. */
     @Test
     void theNestedDocumentsTutorialWorksOnARealTrade() throws Exception {
         String guide = Files.readString(Path.of("../docs/guides/BUILD_GUIDE.md"));
-        guide = guide.substring(guide.indexOf("#### Sutras over deep documents"));    // the deep-documents section (was NESTED_DOCUMENTS.md)
+        guide = guide.substring(guide.indexOf("## 6. Sutras over deep documents"));    // the deep-documents section (was NESTED_DOCUMENTS.md)
         var m = java.util.regex.Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$").matcher(guide);
         assertThat(m.find()).isTrue();
         Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "BUILD_GUIDE.md", "docs");
