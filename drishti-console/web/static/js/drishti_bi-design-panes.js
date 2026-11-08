@@ -179,6 +179,17 @@
       markTypes();
     }
 
+    /** What a well may take ({value, label}): fields as table.column, measures, and the model's field parameters (2.6.0: the reader's
+     *  parameter slicer chooses which field or measure the visual draws). */
+    function choicesFor(kind, ds0) {
+      const ds = ds0 || D.dataset, out = [];
+      if (kind !== 'measure') { (ds.tables || []).forEach((t) => t.columns.forEach((c) => out.push({ value: t.name + '.' + c.name, label: t.name + ' › ' + c.name }))); }
+      if (kind !== 'field') { (ds.measures || []).forEach((m) => out.push({ value: m.name, label: m.name + ' (measure)' })); }
+      (ds.parameters || []).filter((p) => p.kind === 'field' && (kind === 'any' || D.paramKind('param.' + p.name) === kind))
+        .forEach((p) => out.push({ value: 'param.' + p.name, label: (p.title || p.name) + ' (' + (p.fields || []).map(B.label).join(' / ') + ')' }));
+      return out;
+    }
+
     /** What would be lost turning `v` into `type`: the wells' items no well of the new type takes (or takes beyond its room). */
     function lostIn(v, type) {
       D.curIdx = D.idxOf(v);
