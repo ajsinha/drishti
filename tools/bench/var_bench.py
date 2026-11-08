@@ -56,7 +56,7 @@ from javacmd import java_cmd  # noqa: E402
 
 FORBIDDEN = {18480, 18791, 18792, 17480}                 # the product owner's own stack: never touched
 JAVAS = {"21": "/usr/lib/jvm/java-21-openjdk-amd64", "25": "/usr/lib/jvm/java-25-openjdk-amd64"}
-KEYS = {"pnl-vector": "VECTOR_ID", "scenario-set": "SCENARIO_SET_ID", "risk-hierarchy": "NODE_ID", "portfolio": "PORTFOLIO_ID", "var-limit": "LIMIT_ID"}
+KEYS = {"pnl-vector": "VECTOR_ID", "scenario-set": "SCENARIO_SET_ID", "var-limit": "LIMIT_ID"}   # system baskets: no data (imported)
 PACKS = "trading,counterparty-risk,market-risk"
 ADMIN = "drishti-dev-admin"
 
@@ -392,7 +392,7 @@ def main(argv=None) -> int:
     lp.add_argument("--data", required=True)
     lp.add_argument("--lake", required=True)
     lp.add_argument("--engine", choices=("drishti", "java", "deltalake"), required=True)
-    lp.add_argument("--kinds", default="scenario-set,risk-hierarchy,var-limit,portfolio,pnl-vector")
+    lp.add_argument("--kinds", default="scenario-set,var-limit,pnl-vector")
     lp.add_argument("--loader-set", action="append")
     rp = sub.add_parser("run")
     rp.add_argument("--mode", choices=("single", "cluster"), required=True)

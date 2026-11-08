@@ -208,7 +208,6 @@ packs:
       scenario-pv: { generator: var }
       fx-scenario: { generator: var }
       scenario-set: { generator: var }
-      risk-hierarchy: { generator: var }
       portfolio: { generator: var }
       var-limit: { generator: var }
       pnl-history: { generator: var }

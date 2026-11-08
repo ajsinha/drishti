@@ -71,7 +71,7 @@ export DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,worl
 python3 tools/drishti.py lake demo                    # every table; or: python3 tools/build_demo_lakes.py --only funds
 ```
 
-On Windows, `.\tools\windows\start-server.ps1 -DemoLakes` loads the public-data packs including `funds`, and
+On Windows, `bin\start-server.cmd --demo` loads the public-data packs including `funds`, and
 `python tools\build_demo_lakes.py --only funds` builds its three tables. The demo cluster (`drishti-stack/stack.yaml`) loads it on
 every node. Type `FUNDS` and press Enter: the pack's overview lists its three commands with their counts (200 funds, 586 companies
 held, 3 indexes tracked).

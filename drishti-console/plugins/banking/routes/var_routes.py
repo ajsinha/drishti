@@ -46,6 +46,9 @@ VAR_WORDS = {"BANK": "BANK", "LE": "LE", "DIV": "DIV", "DESK": "DESK", "BOOK": "
              "WHERE": "WHERE", "SCOPE": "SCOPE", "CAPTURE": "CAPTURE"}
 #: the retired stored kinds whose ids and links open the explorer
 RETIRED_KINDS = ("var", "var-node")
+#: the system baskets' API the page reads (VAR_GUIDE.md section 5.7): the list, its fields' words, one basket; and the retire of one
+SYSTEM_BASKETS = re.compile(r"^system-baskets(/fields|/[A-Z0-9][A-Z0-9._-]{0,63})?$")
+SYSTEM_RETIRE = re.compile(r"^system-baskets/[A-Z0-9][A-Z0-9._-]{0,63}/retire$")
 
 
 def retired_scope(old_id: str) -> str | None:
@@ -60,7 +63,10 @@ def retired_scope(old_id: str) -> str | None:
 
 
 def retired_link(kind: str, old_id: str) -> str | None:
-    """Where ``/v/<kind>/<id>`` of a retired kind goes: the explorer at the id's scope (the bank when it names none), with a notice."""
+    """Where ``/v/<kind>/<id>`` of a retired kind goes: the explorer at the id's scope (the bank when it names none), with a notice; a
+    link of the removed portfolio kind, its system basket's page (``/v/system-basket/<id>``, the same id, VAR_GUIDE.md section 5.7)."""
+    if kind == "portfolio":
+        return f"/v/system-basket/{quote(old_id)}"
     if kind not in RETIRED_KINDS:
         return None
     scope = retired_scope(old_id) or "BANK"
@@ -354,6 +360,9 @@ async def api_get(request: Request, path: str):
                             headers={"Content-Disposition": headers.get("content-disposition", "attachment")})
         if path.startswith("captures/") or path.startswith("baskets/") or PROPOSAL.match(path):
             return await risk_api.var(request.app.state.backend, "GET", "/" + path, ident(request))
+        if SYSTEM_BASKETS.match(path):                   # the system baskets (VAR_GUIDE.md section 5.7): the list, one, the words of the fields
+            params = {k: q[k] for k in ("asOf", "all") if q.get(k)}
+            return await risk_api.var(request.app.state.backend, "GET", "/" + path, ident(request), **params)
         if path not in _GETS:
             return JSONResponse({"code": "DRS-1001", "detail": f"no VaR endpoint {path}"}, status_code=404)
         params = {k: q.get(k, "") for k in _GETS[path]}
@@ -397,6 +406,12 @@ async def api_post(request: Request, path: str):
     if path == "stress-window/proposals":           # the proposal; its decision is made in the one Approvals queue
         try:
             return await risk_api.var(request.app.state.backend, "POST", "/" + path, ident(request), body=await json_body(request))
+        except BackendError as e:
+            return _problem(e)
+    if path == "system-baskets" or SYSTEM_RETIRE.match(path):   # create, edit or retire a system basket: the server checks the permission
+        try:
+            return await risk_api.var(request.app.state.backend, "POST", "/" + path, ident(request), body=await json_body(request),
+                                      asOf=request.query_params.get("asOf", ""))
         except BackendError as e:
             return _problem(e)
     if path not in ("baskets", "captures", "what-if", "basket/sheet"):    # basket/sheet: the sheet's checks and figures (VAR_GUIDE.md 3.5)

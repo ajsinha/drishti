@@ -23,6 +23,12 @@
 .mr-tiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--d-sp-8); }
 @media (max-width: 1100px) { .mr-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .mr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* the figures on the title's line (the pivot's header, data-pv-headline): compact, one row that wraps */
+.pv-headline .mr-tiles { display: flex; flex-wrap: wrap; gap: var(--d-sp-6); }
+.pv-headline .mr-tile { min-height: 0; padding: var(--d-sp-2) var(--d-sp-8); gap: 0; max-width: 220px; }
+.pv-headline .mr-tv { font-size: var(--d-fs-14); }
+.pv-headline .mr-ts { display: none; }
+@media (max-width: 640px) { .pv-headline .mr-tile { max-width: 100%; } }
 .mr-tile { display: flex; flex-direction: column; gap: var(--d-sp-3); padding: var(--d-sp-8) var(--d-sp-10); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); background: var(--d-surface); min-height: 72px; min-width: 0; }
 .mr-tile.skel { background: linear-gradient(90deg, var(--d-surface-2), transparent, var(--d-surface-2)); background-size: 200% 100%; animation: mr-sk 1.2s linear infinite; }
 .mr-tl { font-size: var(--d-fs-10_5); text-transform: uppercase; letter-spacing: .04em; color: var(--d-muted); overflow-wrap: anywhere; }

@@ -205,7 +205,7 @@ export class GridBase {
     if (id === 'grand') { this.ui.grandColumn = on; this._disp = null; this.refresh(); return; }
     if (id === 'above') { this.setPivotOptions({ subtotals: on ? 'above' : 'below' }, 'Subtotals ' + (on ? 'above' : 'below')); return; }
     if (id === 'defer') {
-      if (on) { this.draft = new WellsModel(m.columns, m.wells.getState()); this.draft.serverFuncs = m.wells.serverFuncs; this.draft.allowedFuncs = m.wells.allowedFuncs; this.draftDirty = false; } else { const d = this.draftDirty; if (d) { this.applyDraft(); } this.draft = null; }
+      if (on) { this.draft = new WellsModel(m.columns, m.wells.getState()); this.draft.serverFuncs = m.wells.serverFuncs; this.draft.allowedFuncs = m.wells.allowedFuncs; this.draft.hierarchies = m.wells.hierarchies; this.draftDirty = false; } else { const d = this.draftDirty; if (d) { this.applyDraft(); } this.draft = null; }
       this.renderChrome();
     }
   }
@@ -295,4 +295,43 @@ export class GridBase {
    */
   measures() { return pivotMeasures(this.model.shownColumns()); }
 
+  // ---- the wells' pickers, views and panes (the keys R, C, V, F, Shift+V, \\, Alt+arrows) -------------------------------------------------
+  /**
+   * Customize › (and \): the Fields and Build panes (layout panel, A) from the compact line (B, C), and back to the layout it came from.
+   * @returns {void}
+   */
+  toggleCustomize() {
+    const L = this.model.layout;
+    if (L === 'panel') { this.setLayout(this.backLayout && this.backLayout !== 'panel' ? this.backLayout : 'wells'); }
+    else { this.backLayout = L; this.setLayout('panel'); }
+    this.emitView('customizeChanged', { open: this.model.layout === 'panel' });
+  }
+
+  /**
+   * Opens a well's field picker (the keys R, C, V and F).
+   * @param {('rows'|'columns'|'values'|'filters')} well
+   * @returns {void}
+   */
+  openPicker(well) { this.wells.pick(well); }
+
+  /**
+   * Opens the View picker (Shift+V) when the grid has a views hook.
+   * @returns {boolean}
+   */
+  openViews() { return this.wells.openViews(); }
+
+  /**
+   * A hierarchy in Rows (or Columns) a level up (−1) or down (+1): Alt+↑ and Alt+↓, the stepper's ▲ and ▼.
+   * @param {number} dir
+   * @param {string} [id] the hierarchy (default: the first one in Rows)
+   * @returns {void}
+   */
+  stepHierarchy(dir, id) { this.wells.step(dir, id); }
+
+  /**
+   * The source's hierarchies (the server's catalogue), each one item of the pickers.
+   * @param {Array<Object>} list
+   * @returns {void}
+   */
+  setHierarchies(list) { this.model.wells.setHierarchies(list); this.renderChrome(); }
 }

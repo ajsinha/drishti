@@ -19,6 +19,7 @@ from core.backend import BackendError
 from table_chart_backend import ChartBackend, inline_answer
 
 FIELDS = [("DESK", "string"), ("CURRENCY", "string"), ("PRODUCT", "string"), ("TRADE_DATE", "date"), ("NOTIONAL", "number"), ("PNL", "number")]
+NUMBER_FUNCS = ["sum", "count", "count_distinct", "avg", "wavg", "min", "max", "median", "percentile", "var_samp", "stddev_samp"]
 DESKS = ["Rates", "FX", "Credit", "Equities"]
 CCY = ["USD", "EUR", "GBP", "JPY", "CAD"]
 PRODUCTS = ["IRS", "FX Forward", "CDS", "Equity Swap", "Bond"]
@@ -44,12 +45,34 @@ class PivotBackend(ChartBackend):
         if path == "/sources":
             return {"sources": [{"source": "trade", "title": "Trades", "provider": "tabular"}]}
         if path.startswith("/catalogue"):
+            # the field list's metadata as the server's catalogue gives it (CatalogueMeta): group, folder, hidden, the functions valid per
+            # field, one hierarchy (Organisation: Desk › Product, its level columns hidden) and the show-as forms
+            fns = {"number": NUMBER_FUNCS, "string": ["count", "count_distinct"], "date": ["count", "count_distinct"]}
             return {"source": "trade", "title": "Trades", "provider": "tabular", "date": "2026-10-30", "dates": ["2026-10-29", "2026-10-30"],
-                    "fields": [{"name": n, "type": t, "label": n.replace("_", " ").title()} for n, t in FIELDS], "measures": [], "masked": 0}
+                    "fields": [{"name": n, "type": t, "label": n.replace("_", " ").title(), "unit": "money" if t == "number" else "",
+                                "group": "hierarchy" if n in ("DESK", "PRODUCT") else "field", "hierarchy": "ORG" if n in ("DESK", "PRODUCT") else None,
+                                "folder": "Figures" if t == "number" else None, "hidden": n in ("DESK", "PRODUCT"), "functions": fns[t]} for n, t in FIELDS],
+                    "measures": [], "masked": 0,
+                    "hierarchies": [{"id": "ORG", "title": "Organisation", "levels": [{"field": "DESK", "label": "Desk"}, {"field": "PRODUCT", "label": "Product"}],
+                                     "columns": []}],
+                    "showAs": [{"id": "pct-grand", "label": "% of grand total", "needs": None}, {"id": "pct-row", "label": "% of row total", "needs": None},
+                               {"id": "rank", "label": "Rank among siblings", "needs": None}, {"id": "diff", "label": "Difference from previous", "needs": "dimension"}]}
         if path == "/estimate":
             return {"rows": len(TRADES), "cells": 40, "bytes": 0, "route": "stand-in", "confirm": False}
-        if path == "/views" and method == "GET":
-            return {"views": []}
+        if path == "/views" and method == "GET":                     # the saved views: u/desk shared with everyone, and the ones saved here
+            return {"views": [{"id": "u/desk", "owner": "u", "name": "desk", "version": 2, "sharedWith": ["role:risk"],
+                               "view": {"source": "trade", "rows": ["DESK"], "columns": [], "values": [{"measure": "count()", "as": "count()"}]}}]
+                    + list(getattr(self, "saved", {}).values())}
+        if path == "/views" and method == "POST":
+            self.saved = getattr(self, "saved", {})
+            owner = getattr(ident, "user", None) or "ash"
+            sv = {"id": owner + "/" + body["name"], "owner": owner, "name": body["name"], "version": 1, "sharedWith": body.get("sharedWith") or [],
+                  "view": body["view"]}
+            self.saved[sv["id"]] = sv
+            self.asked.append(("views", body))
+            return sv
+        if path.startswith("/views/") and method == "GET" and path[len("/views/"):] in getattr(self, "saved", {}):
+            return self.saved[path[len("/views/"):]]
         if path in ("/query", "/expand"):
             view = dict((body or {}).get("view") or body or {})
             names = [n for n, _ in FIELDS]

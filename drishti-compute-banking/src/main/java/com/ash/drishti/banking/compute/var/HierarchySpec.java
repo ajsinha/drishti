@@ -24,38 +24,40 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * One hierarchy of the VaR and exposure engines (VAR_GUIDE.md section 16, 2.9.5): its id ({@code MGMT}, {@code LEGAL}, {@code LL}), its
- * title, where its nodes come from, and the scope word that names its nodes.
+ * One hierarchy of the VaR and exposure engines (VAR_GUIDE.md section 15.14): its id ({@code MGMT}, {@code LEGAL}, {@code LL}), its title,
+ * its level columns and the scope word that names its nodes. A hierarchy is built from the trades' own <b>promoted columns</b>,
+ * {@code levels: "DIVISION > DESK > TT_BOOK"}: every distinct path of values is a node, under one root. A node's members are the trades
+ * whose values start with its path (rows, not books: a letter may hold part of a book).
  *
- * <ul>
- *   <li>{@code source: risk-hierarchy}: the nodes are the {@code risk-hierarchy} rows of the hierarchy (book-based: each node lists its
- *       books; names and limits on the rows), as before 2.9.5;</li>
- *   <li>{@code source: columns}: the nodes are derived from the trades' own columns, {@code levels: "LIMIT_LETTER > DESK"}: every distinct
- *       path of values is a node, under one root. A node's members are the trades whose values start with its path (rows, not books: a
- *       letter may hold part of a book).</li>
- * </ul>
- *
- * Node ids of a column hierarchy are paths by default ({@code LL~LL-0042/DESK-RATES}); {@code ids: leaf} names a node by its own value
+ * <p>Node ids are paths by default ({@code LL~LL-0042/DESK-RATES}); {@code ids: leaf} names a node by its own value
  * ({@code MGMT~DESK-RATES}), allowed only when every value has one parent on the date (checked at load).
+ *
+ * <p>A row whose level column is empty (an empty text and a missing value alike) is placed under a <b>(Blank)</b> node at that level, under
+ * its real parent, the deeper levels continuing beneath it: nothing is dropped. A (Blank) node's own value is {@link #BLANK} and its id is
+ * always a path ({@code MGMT~DIV-MARKETS/~}), even in an {@code ids: leaf} hierarchy, so two (Blank) desks under two divisions never
+ * collide. Its name is the hierarchy's {@code empty-label} (the server's {@code drishti.var.hierarchy.empty-label} when not set).
  *
  * @param id the hierarchy's id, upper case ({@code [A-Z][A-Z0-9_]*})
  * @param title what the screens call it ({@code Limit letters})
- * @param source {@link #RISK_HIERARCHY} or {@link #COLUMNS}
- * @param levels the level columns, top first (a column hierarchy; empty for risk-hierarchy)
- * @param levelNames the level each column's nodes are at ({@code desk}, {@code book}); the column in lower case when not given
+ * @param levels the level columns, top first
+ * @param levelNames the level each column's nodes are at ({@code desk}, {@code book}); the column in lower case when not given. A level's
+ *     name is also the reference kind its nodes' display names are read from ({@code desk}, {@code book}, {@code legal-entity})
  * @param rootId the root node's own id ({@code BANK}: the node {@code <id>~BANK})
  * @param rootName the root node's name (the title when not given)
  * @param leafIds {@code ids: leaf}
  * @param word the scope word naming the hierarchy's nodes ({@code LL:LL-0042}), or null
- * @param limits the kind the nodes' VaR limits come from ({@code var-limit}), or null (a risk-hierarchy's own {@code LIMIT_VAR})
+ * @param limits the kind the nodes' VaR limits come from ({@code var-limit}), or null (no limits)
+ * @param emptyLabel the name of a (Blank) node, or null (the server's default, else {@link #DEFAULT_EMPTY_LABEL})
  */
-public record HierarchySpec(String id, String title, String source, List<String> levels, List<String> levelNames, String rootId,
-        String rootName, boolean leafIds, String word, String limits) {
+public record HierarchySpec(String id, String title, List<String> levels, List<String> levelNames, String rootId, String rootName,
+        boolean leafIds, String word, String limits, String emptyLabel) {
 
-    public static final String RISK_HIERARCHY = "risk-hierarchy";
-    public static final String COLUMNS = "columns";
-    /** The level of a column hierarchy's root. */
+    /** The level of a hierarchy's root. */
     public static final String ROOT_LEVEL = "bank";
+    /** The value a (Blank) node stands for in its path id: reserved, never a real level value. */
+    public static final String BLANK = "~";
+    /** The name of a (Blank) node when neither the hierarchy nor the server sets one: Power BI's. */
+    public static final String DEFAULT_EMPTY_LABEL = "(Blank)";
     /** The scope words of the engines: a hierarchy's word must be none of them. */
     public static final Set<String> RESERVED = Set.of("BANK", "LE", "DIV", "DESK", "BOOK", "NODE", "POS", "TRD", "CPTY", "PORT", "BASKET",
             "WHERE", "CAPTURE", "NSET", "GROUP");
@@ -64,8 +66,6 @@ public record HierarchySpec(String id, String title, String source, List<String>
     public HierarchySpec {
         id = id == null ? "" : id.strip().toUpperCase(Locale.ROOT);
         title = title == null || title.isBlank() ? id : title.strip();
-        source = source == null || source.isBlank() ? (levels == null || levels.isEmpty() ? RISK_HIERARCHY : COLUMNS)
-                : source.strip().toLowerCase(Locale.ROOT);
         levels = levels == null ? List.of() : levels.stream().map(s -> s.strip().toUpperCase(Locale.ROOT)).filter(s -> !s.isEmpty()).toList();
         List<String> names = new ArrayList<>();
         for (int i = 0; i < levels.size(); i++) {
@@ -78,20 +78,28 @@ public record HierarchySpec(String id, String title, String source, List<String>
         rootName = rootName == null || rootName.isBlank() ? title : rootName.strip();
         word = word == null || word.isBlank() ? null : word.strip().toUpperCase(Locale.ROOT);
         limits = limits == null || limits.isBlank() ? null : limits.strip();
+        emptyLabel = emptyLabel == null || emptyLabel.isBlank() ? null : emptyLabel.strip();
     }
 
-    /** A hierarchy read from the rows of the {@code risk-hierarchy} kind, as before 2.9.5 (no word, its rows' limits). */
-    public static HierarchySpec riskHierarchy(String id, String title) {
-        return new HierarchySpec(id, title, RISK_HIERARCHY, List.of(), List.of(), null, null, false, null, null);
+    /** True when a level value is empty (an empty or blank text and a missing value alike): the row goes under a (Blank) node. */
+    public static boolean blank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    /** The name of this hierarchy's (Blank) nodes: its own {@code empty-label}, else {@link #DEFAULT_EMPTY_LABEL}. */
+    public String blankName() {
+        return emptyLabel == null ? DEFAULT_EMPTY_LABEL : emptyLabel;
+    }
+
+    /** The same hierarchy with the server's (Blank) name when it sets none of its own. */
+    public HierarchySpec withDefaultEmptyLabel(String label) {
+        return emptyLabel != null || label == null || label.isBlank() ? this
+                : new HierarchySpec(id, title, levels, levelNames, rootId, rootName, leafIds, word, limits, label);
     }
 
     /** The same hierarchy with another root name. */
     public HierarchySpec withRootName(String name) {
-        return new HierarchySpec(id, title, source, levels, levelNames, rootId, name, leafIds, word, limits);
-    }
-
-    public boolean columns() {
-        return COLUMNS.equals(source);
+        return new HierarchySpec(id, title, levels, levelNames, rootId, name, leafIds, word, limits, emptyLabel);
     }
 
     /** The root node's id ({@code LL~BANK}). */
@@ -99,12 +107,26 @@ public record HierarchySpec(String id, String title, String source, List<String>
         return id + "~" + rootId;
     }
 
-    /** The node id of a path of values (the first {@code depth} of {@code values}): {@code LL~LL-0042/DESK-RATES}, or the leaf's own. */
+    /**
+     * The node id of a path of values (the first {@code depth} of {@code values}, an empty one {@link #blank}): {@code LL~LL-0042/DESK-RATES},
+     * or the leaf's own ({@code ids: leaf}); a (Blank) node's is always its path, each empty value written {@link #BLANK}
+     * ({@code MGMT~DIV-MARKETS/~}).
+     */
     public String nodeId(List<String> values, int depth) {
-        if (leafIds) {
-            return id + "~" + values.get(depth - 1);
+        String own = values.get(depth - 1);
+        if (leafIds && !blank(own)) {
+            return id + "~" + own;
         }
-        return id + "~" + String.join("/", values.subList(0, depth));
+        StringBuilder b = new StringBuilder(id).append('~');
+        for (int i = 0; i < depth; i++) {
+            b.append(i == 0 ? "" : "/").append(blank(values.get(i)) ? BLANK : values.get(i));
+        }
+        return b.toString();
+    }
+
+    /** True when a node id is a (Blank) node's (its own value {@link #BLANK}). */
+    public static boolean blankNode(String nodeId) {
+        return nodeId != null && (nodeId.endsWith("/" + BLANK) || nodeId.endsWith("~" + BLANK));
     }
 
     /** The specification read from a map (a pack's {@code hierarchies:} entry or the {@code drishti.var.hierarchies} setting). */
@@ -142,12 +164,16 @@ public record HierarchySpec(String id, String title, String source, List<String>
         } else if (root != null) {
             rootId = text(root);
         }
+        if (m.get("source") != null) {
+            throw new IllegalArgumentException("hierarchy " + id + ": source is not a setting (the risk-hierarchy kind is removed): a "
+                    + "hierarchy is built from the promoted columns its levels name (levels: \"DIVISION > DESK > TT_BOOK\")");
+        }
         String ids = text(m.get("ids"));
         if (ids != null && !ids.equalsIgnoreCase("leaf") && !ids.equalsIgnoreCase("path")) {
             throw new IllegalArgumentException("hierarchy " + id + ": ids is path or leaf, not " + ids);
         }
-        return new HierarchySpec(id, text(m.get("title")), text(m.get("source")), levels, names, rootId, rootName,
-                "leaf".equalsIgnoreCase(ids), text(m.get("word")), text(m.get("limits")));
+        return new HierarchySpec(id, text(m.get("title")), levels, names, rootId, rootName, "leaf".equalsIgnoreCase(ids), text(m.get("word")),
+                text(m.get("limits")), text(first(m, "empty-label", "emptyLabel")));
     }
 
     private static Object first(Map<?, ?> m, String a, String b) {
@@ -159,8 +185,8 @@ public record HierarchySpec(String id, String title, String source, List<String>
     }
 
     /**
-     * The hierarchies read from a map of id to specification, checked: ids and words unique and well formed, no word reserved, a column
-     * hierarchy with levels, a known source. {@link IllegalArgumentException} says what is wrong.
+     * The hierarchies read from a map of id to specification, checked: ids and words unique and well formed, no word reserved, every
+     * hierarchy with levels. {@link IllegalArgumentException} says what is wrong.
      */
     public static List<HierarchySpec> parse(Map<?, ?> all) {
         List<HierarchySpec> out = new ArrayList<>();
@@ -186,13 +212,11 @@ public record HierarchySpec(String id, String title, String source, List<String>
             if (!ids.add(s.id())) {
                 throw new IllegalArgumentException("hierarchy " + s.id() + " is configured twice");
             }
-            if (!s.source().equals(RISK_HIERARCHY) && !s.source().equals(COLUMNS)) {
-                throw new IllegalArgumentException("hierarchy " + s.id() + ": source is risk-hierarchy or columns, not " + s.source());
+            if (s.levels().isEmpty()) {
+                throw new IllegalArgumentException("hierarchy " + s.id() + " names no levels: a hierarchy is built from the promoted columns "
+                        + "its levels name (levels: \"DIVISION > DESK > TT_BOOK\")");
             }
-            if (s.columns() && s.levels().isEmpty()) {
-                throw new IllegalArgumentException("hierarchy " + s.id() + " is built from columns but names no levels (levels: \"A > B\")");
-            }
-            if (s.columns() && new LinkedHashSet<>(s.levels()).size() != s.levels().size()) {
+            if (new LinkedHashSet<>(s.levels()).size() != s.levels().size()) {
                 throw new IllegalArgumentException("hierarchy " + s.id() + " names a level column twice: " + s.levels());
             }
             for (String c : s.levels()) {
@@ -216,28 +240,23 @@ public record HierarchySpec(String id, String title, String source, List<String>
         return List.copyOf(specs);
     }
 
-    /** The default: MGMT and LEGAL from the risk-hierarchy rows, as before 2.9.5. */
-    public static List<HierarchySpec> defaults() {
-        return List.of(riskHierarchy("MGMT", "Management"), riskHierarchy("LEGAL", "Legal entity"));
-    }
-
-    /** A digest of the configuration (a hot file built under another is not reopened): empty for the default, so earlier files stay valid. */
+    /** A digest of the configuration (a hot file built under another is not reopened). */
     public static String digest(List<HierarchySpec> specs) {
-        if (specs.stream().noneMatch(HierarchySpec::columns) && specs.stream().allMatch(s -> s.limits() == null)) {
+        if (specs.isEmpty()) {
             return "";
         }
         StringBuilder b = new StringBuilder("|hier=");
         for (HierarchySpec s : specs) {
-            b.append(s.id()).append(':').append(s.source()).append(':').append(s.levels()).append(':').append(s.levelNames()).append(':')
-                    .append(s.rootId()).append(':').append(s.leafIds() ? "leaf" : "path").append(':').append(s.limits()).append(';');
+            b.append(s.id()).append(':').append(s.levels()).append(':').append(s.levelNames()).append(':').append(s.rootId()).append(':')
+                    .append(s.leafIds() ? "leaf" : "path").append(':').append(s.limits()).append(':').append(s.blankName()).append(';');
         }
         return b.toString();
     }
 
-    /** Every level column of every column hierarchy, in order. */
+    /** Every level column of every hierarchy, in order. */
     public static List<String> levelColumns(List<HierarchySpec> specs) {
         LinkedHashSet<String> out = new LinkedHashSet<>();
-        specs.stream().filter(HierarchySpec::columns).forEach(s -> out.addAll(s.levels()));
+        specs.forEach(s -> out.addAll(s.levels()));
         return List.copyOf(out);
     }
 }

@@ -183,7 +183,7 @@ You should see one line per table, then the summary (the folder is your clone's)
 ```text
   trading/trade_endur: … rows over 60 days
   …
-Demo lake ready: …/drishti/data/delta/demo: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/drishti/data/delta/demo: 87 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://localhost:18480: left …/drishti/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -506,37 +506,25 @@ The Delta engine's and connector's tests: `.\mvnw.cmd -q verify -pl drishti-delt
 **Or copy** a server built elsewhere (Java bytecode is the same everywhere) into a folder such as `C:\drishti`: the
 `drishti-server-<version>-exec.jar` (every library is inside), `config\packs\` (and `config\connectors\`, `config\bi\` if you use them),
 `drishti-console\` (only to run the console there), `tools\` and `data\testdata\` (to build the demo lakes there), an existing `data\` if any
-(lakes, users, feeds; created when absent) and your `application.local.yaml`. Without a clone put the scripts in `C:\drishti\tools\windows\`:
-they work from two folders above themselves and look for the jar in `drishti-server\target\`, then in that folder.
+(lakes, users, feeds; created when absent) and your `application.local.yaml`. Without a clone copy `bin\` to `C:\drishti\bin\`:
+the scripts work from the folder above themselves and look for the jar in `drishti-server\target\`, then in that folder.
 
 ### 4.3 The demo lakes, the server and the console
 
 ```powershell
 drishti-console\.venv\Scripts\python.exe tools\drishti.py lake demo      # after the console's Python exists (below)
-.\tools\windows\start-server.ps1 -Packs market-risk
-Invoke-RestMethod http://localhost:18480/actuator/health                    # from another window: UP
-.\tools\windows\start-console.ps1                                           # in a second window; then http://localhost:17480/t
+bin\start-server.cmd --packs market-risk --background
+bin\start-console.cmd --background                                       # makes drishti-console\.venv on its first run
+bin\status.cmd                                                            # both running, UP, with their LAN addresses
+bin\stop-all.cmd
 ```
 
-`lake demo` writes the same 89 tables as on Linux. `start-server.ps1` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native`,
-adds `-XX:+UseCompactObjectHeaders` only on Java 25 and runs until `Ctrl+C`. Set `$env:DRISHTI_DEMO_ENABLED='false'` first to read every page
-from the lakes, and the sign-in variables of 2.5 A (`$env:DRISHTI_SECURITY_ENABLED='true'` …) to sign in; set the console's variables of
-2.6 before `start-console.ps1` with sign-in on. Admin → Health then lists each lake connector as `UP (engine: native)`.
-
-| `start-server.ps1` option | Default | Meaning |
-|---|---|---|
-| `-JavaHome` | `DRISHTI_JAVA_HOME`, `JAVA_HOME`, then `java` on the PATH | the JDK folder |
-| `-Packs` | `DRISHTI_PACKS`, else the seven | the packs to load |
-| `-Port` | `DRISHTI_PORT`, else `18480` | the server's port |
-| `-LakeRoot` | `DRISHTI_DELTA_ROOT`, else `.\data\delta` | the Delta Lake |
-| `-Engine` | `DRISHTI_DELTA_ENGINE`, else `native` | `native`, `hadoop` (needs `winutils.exe`) or `auto` ([`delta` in CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)) |
-| `-Heap` | `2g` | the heap limit (8 GB per million entities a day for a large lake) |
-| `-Jar` | the newest `drishti-server-*-exec.jar` | another jar |
-| `-Background`, `-Stop` | off | start without a window (log `data\logs\server.log`, process id `data\server.pid`); stop it |
-| `-Iceberg` | off | copy `config\connectors.examples\iceberg\*.yaml` in (engine native) |
-
-`start-console.ps1` makes the console's environment on its first run (with uv when present, else `python -m venv` and pip); options
-`-Port` (17480), `-Backend` (`http://127.0.0.1:18480`), `-Python`, `-Reinstall`. By hand: `uv venv --python 3.13 drishti-console\.venv`,
+`lake demo` writes the same 87 tables as on Linux. The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
+`.sh` there): `start-server` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native` on Windows ([`delta` in CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)), adds
+`-XX:+UseCompactObjectHeaders` only on Java 25, and `--demo` sets the demo's settings with its development secrets; `start-console` makes
+the console's environment on its first run (with uv when present, else `python -m venv` and pip). Every option, where the pid, log and
+temporary files go, the exit codes and the errors: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](../DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
+Admin → Health then lists each lake connector as `UP (engine: native)`. By hand: `uv venv --python 3.13 drishti-console\.venv`,
 `uv pip install --python drishti-console\.venv\Scripts\python.exe -r drishti-console\requirements.txt`, then
 `drishti-console\.venv\Scripts\python.exe drishti-console\run_drishti_web.py` (the console's own settings: `DRISHTI_CONSOLE_PORT`,
 `DRISHTI_BACKEND_URL`). The jar by hand: `$env:DRISHTI_PACKS = 'market-risk'` then
@@ -544,7 +532,7 @@ from the lakes, and the sign-in variables of 2.5 A (`$env:DRISHTI_SECURITY_ENABL
 
 **Iceberg tables on Windows** run on the native engine too: `.\tools\windows\load-iceberg.ps1` (the samples, ten business days;
 `-Trades 10000 -Days 3` adds a book; the sort spills under `data\tmp\iceberg`, `-SpillDir` to move it), then
-`.\tools\windows\start-server.ps1 -Iceberg`. On Linux the same is `tools/load-iceberg.sh ./data/iceberg --engine native`.
+`bin\start-server.cmd --iceberg`. On Linux the same is `tools/load-iceberg.sh ./data/iceberg --engine native`.
 
 ### 4.4 What works differently on Windows
 
@@ -2226,13 +2214,12 @@ in `/tmp`, whose quota fills. Health lists both folders with their size ([CONFIG
   the exchange (`DRISHTI_ARROW_EXCHANGE_MB`) plus Flight's `memory.total-mb` (`DRISHTI_FLIGHT_MEMORY_MB`, 4,096) when its engine is on. The limit is
   256 MB plus the in-memory lake's stores plus Arrow's budget. An ECS task has no Python: set `DRISHTI_ARROW_MB` (and `DRISHTI_LAKE_MEMORY_MB`) to what
   `memory_caps.py --arrow-only` (`--stores-only`) prints ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md#10-operations)). A unit file of your own adds both flags.
-- **Diagnostics.** The production launchers (`drishti-stack`, the Docker and ECS images, `start-server.ps1`, the unit of [5.3](#53-running-as-services-systemd))
+- **Diagnostics.** The production launchers (`bin/start-server` and `drishti-stack` through it, the Docker and ECS images, the unit of [5.3](#53-running-as-services-systemd))
   also start the server with `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<folder>/dumps` (a `java_pid<pid>.hprof` about the size of the heap:
   open it in Eclipse MAT or VisualVM; keep room on that disk; at most `drishti.disk.max-dumps`, 2, are kept), a GC log per process rotated at 20 MB with
   five kept (`-Xlog:gc*:file=<logs>/gc-%p.log:…`: whether the heap was filling for hours before a failure), and `-XX:NativeMemoryTracking=summary`
-  (`jcmd <pid> VM.native_memory summary`, or `baseline` then `summary.diff scale=MB`; "Other" holds direct buffers). `drishti-stack` writes them to
-  `drishti-stack/run/dumps/<node>` and `run/logs/gc-<node>-<pid>.log`, the images to `data/dumps` and `data/logs`, `start-server.ps1` to `data\dumps`
-  and `data\logs`. The launcher makes both folders: the JVM does not start when the GC log's folder is missing.
+  (`jcmd <pid> VM.native_memory summary`, or `baseline` then `summary.diff scale=MB`; "Other" holds direct buffers). `bin/start-server` writes them to
+  `<data>/dumps/<node>` and `<data>/logs/gc-server[-<node>]-<pid>.log`, the images to `data/dumps` and `data/logs`. The launcher makes both folders: the JVM does not start when the GC log's folder is missing.
 - **Health → Disk** lists every folder Drishti fills (`var/hot`, `ccr/hot`, `bi-store`, dumps, `tmp/server`, the connectors' `cache`) with its size
   against its cap and its oldest item, and the free space against the guard: amber at 80% of a cap or under twice the guard, red at the cap or under
   the guard (status `DEGRADED`; a new date that would go under the guard is refused with `DRS-5218`).
@@ -3552,6 +3539,8 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-5214` | the tree of a hierarchy the date does not have: `GET /api/v1/risk/var/tree` lists the date's |
 | `DRS-5216` | VaR sharding: a partial sum was asked for another data version or shard map than the owner holds: ask again in a moment; persistent: check every member reads the same tables (`drishti.py var shards`) |
 | `DRS-5218` | not enough free disk to build a date (the guard, `drishti.disk.min-free-percent`, `min-free-gb`): Health → Disk shows which folder holds what; free space, lower a folder's cap or purge a date in Admin → Caches |
+| `DRS-5220` | a system basket cannot be saved or imported as given (VAR_GUIDE.md section 5.7): the message names it and the reason; fix the field (an import's dry run lists every entry's reason) |
+| `DRS-5221` | no system basket of that id on the date: `PORT <GO>` lists them; a retired one is valid only until its `validTo` |
 | `DRS-5219` | the data is held in memory only by contract, and this would keep it (a scheduled report, a picture or e-mail of a share, a note copying its values, an Ask): download the rows instead ([7.6](#76-the-in-memory-lake-memory-only-feeds)) |
 | `DRS-5443` | the scope sums more netting sets than an interactive answer may: read the official record (`GET /api/v1/risk/exposure/official`), narrow it, or raise `drishti.ccr.exposure.max-scope-netting-sets` |
 | `DRS-5444` | a row of the date's exposure paths was rejected (another length than `PATHS`, NaN, a grid index outside): fix it upstream and reload the date |

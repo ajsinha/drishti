@@ -195,7 +195,7 @@ public final class ScopeResolver {
                     unknown.add(r.toString());
                     return OrdinalSet.empty();
                 }
-                notes.add("portfolio " + r.arg() + " = " + def.get());
+                notes.add("system basket " + r.arg() + " = " + def.get());
                 return eval(ScopeExpr.parse(def.get(), words.keySet()), unknown, notes, warnings, depth + 1);
             }
             case "BASKET" -> {

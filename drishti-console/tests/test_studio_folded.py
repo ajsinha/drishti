@@ -123,7 +123,7 @@ def test_the_build_menu_is_create_learn_with_no_studio_entry_and_approvals_is_on
     page = app_client.get("/build").text
     menu = page.split('class="tbar-menus"')[1].split("</nav>")[0]
     for text in ("Create", "Build home", "New screen", "Examples", "Learn", "Screen designer guide", "Screen developer guide",
-                 "Tutorials", "Screen language reference", "Pack developer guide", "Approvals"):
+                 "Tutorials", "Screen language reference", "Packs and screens guide", "Approvals"):
         assert text in menu, text
     assert "Sutra Studio" not in menu and 'href="/studio' not in menu and "data-approvals-count" in menu and "Govern" not in menu
     assert "Screen Builder guide" not in menu

@@ -37,7 +37,7 @@
         <td class="mono">{{ r.name }}{% if r.builtIn %} <span class="st">built-in</span>{% endif %}</td>
         <td>{{ r.description }}</td>
         <td>{% if '*' in r.kinds %}<span class="role">every kind</span>{% else %}{% for k in r.kinds %}<span class="role">{{ k }}</span>{% endfor %}{% endif %}</td>
-        <td>{% for f, label in [('raw', 'raw JSON'), ('author', 'author Sutras'), ('approve', 'approve Sutras'), ('admin', 'administer'), ('calc', 'Calc'), ('edit', 'submit edits')] %}{% if r[f] %}<span class="st st-ok">{{ label }}</span>{% endif %}{% endfor %}{% if r.layout is not defined or r.layout %}<span class="st st-ok">layouts</span>{% endif %}</td>
+        <td>{% for f, label in [('raw', 'raw JSON'), ('author', 'author Sutras'), ('approve', 'approve Sutras'), ('admin', 'administer'), ('calc', 'Calc'), ('edit', 'submit edits')] %}{% if r[f] %}<span class="st st-ok">{{ label }}</span>{% endif %}{% endfor %}{% if r.layout is not defined or r.layout %}<span class="st st-ok">layouts</span>{% endif %}{% for p in (r.permissions or []) %}<span class="st st-ok">{{ p }}</span>{% endfor %}</td>
         <td class="mono"><a href="/admin/users?q={{ r.name }}">{{ r.users }}</a></td>
         <td class="mono">{% if r.updatedAt %}{{ r.updatedAt[:16] | replace('T', ' ') }} · {{ r.updatedBy }}{% else %}—{% endif %}</td>
         <td class="adm-actions">{% if not r.builtIn %}

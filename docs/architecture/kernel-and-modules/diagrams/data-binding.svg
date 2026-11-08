@@ -18,7 +18,7 @@
 <text x="36" y="248" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">pnl-vector</text>
 <text x="36" y="267" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">any-of</text>
 <rect x="24" y="288" width="212" height="50" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
-<text x="36" y="310" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">risk-hierarchy</text>
+<text x="36" y="310" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">var-limit</text>
 <text x="36" y="329" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="start">read</text>
 <rect x="24" y="350" width="212" height="50" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
 <text x="36" y="372" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start" font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace">fx-vol-surface</text>

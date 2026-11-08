@@ -2065,7 +2065,7 @@ Implementation: [ICEBERG_CONNECTOR.md section 17](../../plugins/drishti-plugin-i
   Iceberg row.
 - `tools/windows/load-iceberg.ps1` beside `load-delta.ps1`: sample data and `--trades N --days D`, same options as
   `load-iceberg.sh`; the spill folder defaults under the data folder, never the system temp folder.
-- `tools/windows/start-server.ps1` takes `-Iceberg` to start with the Iceberg connector files.
+- `bin/start-server` takes `--iceberg` to start with the Iceberg connector files.
 - Tutorial: the Iceberg steps of GETTING_STARTED gain PowerShell next to bash.
 
 ### 12. Proving it keeps to the protocol
@@ -3161,6 +3161,25 @@ fresh read, so two nodes receiving announcements at once lose none, a batch anno
 a late notice goes out once. A pack's old file `<data>/loads/<pack>.json` is imported the first time the pack is read (the document's
 existence is the marker) and left in place. Per-pack overrides saved through Admin are the shared documents `loads/config/<pack>.yaml` (section 11; `drishti.loads.config-store`: `content`, default, or `file`); the folder `<data>/loads/config` is imported once (`system/imports/loads-config.json`) and kept.
 
+#### 10.6a The VaR engine's baskets: people's and the system's
+
+The basket store of the VaR engine ([VAR_GUIDE.md sections 5.7 and 5.8](../guides/VAR_GUIDE.md#57-system-baskets)) is two scopes of
+this store, one shape of document, read by every server:
+
+| Key | Holds | Who writes it |
+|---|---|---|
+| `var/baskets/<owner>/<name>.json` | a person's basket (`BASKET:<owner>/<name>`): its sheet or scope, sharing, versions | its owner; an administrator (audited, the owner told) |
+| `var/system-baskets/<ID>.json` | a **system basket** (`PORT:<ID>`), the system scope: id, name, description, owner, type (`hierarchy`, `rule`, `basket`) with its node, rule or members, rolls-up-to, valid-from and valid-to, its version and history | a holder of `var:system-baskets` (the sheet's System basket, the API, an import); audited, the owner told |
+| `var/system-baskets-seq` | a counter raised by every system-basket write: each server's cache of the system scope follows it, so an edit on one server is read at the next request on every other | the store, with each write |
+| `var/system-baskets-seeded` | written once when a pack's seed was imported into the empty system scope, so a server never seeds it twice | the first server to seed |
+
+The system scope's name is visible (no leading dot or underscore) and no person's basket can take it: people's baskets live under
+`var/baskets/`, the system's under `var/system-baskets/`. A document that does not read as a system basket is listed (the API's
+`skipped`) and left out, never an error. The system baskets are no data and no configuration: YAML is only how they are imported and
+exported (`drishti.py var baskets import | export`); the demo's come from the market-risk pack's seed file, imported once. Moving the
+store to the one Drishti database ([section 6](#6-the-one-drishti-database-design-not-built)) moves both scopes together, as rows of
+`drishti_content`.
+
 #### 10.7 Left on each node, on purpose
 
 Alerts and monitors (each node evaluates its own); the BI store's Parquet (a derived cache); users, roles, tokens and preferences
@@ -4024,7 +4043,7 @@ the packs follow and the mechanisms that apply it; the open steps (the engines s
 | **Computed** | needs an engine: scenarios, paths, quantiles, correlations, regulatory parameter tables, any scope, any date, what-if, per-reader entitlements | the engines (reactive connectors, Java or Python) | **no** (only as an immutable capture or a published official result) | VaR, ES, EE, PFE, EPE, SA-CCR EAD, SIMM IM, the FRTB charge, CVA |
 
 The contracts' four data kinds ([contracts README section 3](../contracts/README.md#3-four-kinds-of-data)) map onto these: fundamental
-and input are fundamental; Drishti-owned covers Drishti's derived records (positions) and users' definitions (portfolios, baskets);
+and input are fundamental; Drishti-owned covers Drishti's derived records (positions) and definitions kept in Drishti (the system baskets, people's baskets);
 computed is computed. Ask in order; the first "yes" decides:
 
 1. Delivered by a system of record and not reproducible from anything Drishti holds? **Fundamental**: stored, with a contract.
@@ -4044,10 +4063,10 @@ move, cannot be rebuilt or explained, leak sums over trades a reader may not see
 
 | Mechanism | Example | Runs | Refreshes | Scope | Entitlements | Limits |
 |---|---|---|---|---|---|---|
-| **Sutra expression** (Rachana-EL in `bind:`, `title:`, `when:`) | `size($.DEFINITION.MEMBERS)` on the portfolio page | in the server, as the page is built from one document | every render | one document | the reader's | Rachana's function set |
+| **Sutra expression** (Rachana-EL in `bind:`, `title:`, `when:`) | `size($.DEFINITION.MEMBERS)` on the system basket page | in the server, as the page is built from one document | every render | one document | the reader's | Rachana's function set |
 | **Derived kind** (`plugin: derived`, `DerivedSourcePlugin`) | `counterparty-trades` grouped by `$.COUNTERPARTY` from `trade`; `nset-mtm`, `cpty-mtm`, `stress-scenario-pnl` | in the server, reading every member through the router | once per business date and data version, else every `refresh`; a reader never waits (served stale, refreshed behind) | one page per group key | **built once per date and shared by every reader** | `max-scan` documents per kind; aggregates `count`, `sum`, `avg`, `median`, `min`, `max`, `distinct`, `first`; no join to another kind |
 | **Reactive engine** (`plugin: reactive`) | `var-engine`, `exposure-engine` and their what-ifs | Java in the server or Python on the compute pools | on request; cached; recomputed on `data-version` triggers of its input kinds, coalesced | any scope, any date, parameters | **as the requesting user** | timeouts, in-flight limits per user, scope sizes |
-| **Engine figures on a stored page** | `VarFigures` (`$.VAR_ENGINE` on position and portfolio pages), `ExposureFigures` (`$.EXPOSURE_ENGINE` on netting-set and counterparty pages) | as the page opens | the engine's cache | the page's own entity as a scope | as the reader | the engine's |
+| **Engine figures on a stored page** | `VarFigures` (`$.VAR_ENGINE` on position and system basket pages), `ExposureFigures` (`$.EXPOSURE_ENGINE` on netting-set and counterparty pages) | as the page opens | the engine's cache | the page's own entity as a scope | as the reader | the engine's |
 | **BI measure** | `MTM: sum(trades.MTM)` in a model | the BI engine over datasets | on load | any slice | dataset row rules and masks | additive measures only; a non-additive figure comes from an engine's published result |
 
 Where each class belongs: fundamental, a stored kind with a contract; derived within one document, a Sutra expression; derived across
@@ -4096,8 +4115,8 @@ counterparty asking for CAD or EUR) is designed in the open steps.
   (`CSA-<counterparty>-<legal entity>`, named by the netting set, the collateral balance and the margin call; an agreement lists its
   `CSAS`); CSA terms are numeric with a currency (`CSA_CURRENCY`, `MTA_US`, `MTA_THEM`, `MARGIN_FREQUENCY_DAYS`, `MPOR_DAYS`); maturity
   buckets are named sets per purpose (`display`, `limit`) in `config/packs/banking/counterparty-risk/config/maturity-buckets.yaml`; every
-  VaR limit lives in `var-limit` (MGMT, LEGAL and limit-letter nodes, and each portfolio as hierarchy `PORTFOLIO`), so `risk-hierarchy`
-  and `portfolio` carry none; a counterparty group's `LIMIT` is its own approved limit; `netting-set.UTILISATION` is not delivered. The
+  VaR limit lives in `var-limit` (MGMT, LEGAL and limit-letter nodes, and each system basket as hierarchy `PORTFOLIO`; the system
+  baskets themselves are kept in the basket store, section 5, not data), and the hierarchies themselves are built from the trades' promoted columns (no hierarchy feed); a counterparty group's `LIMIT` is its own approved limit; `netting-set.UTILISATION` is not delivered. The
   retirement guard (`tools/contracts.policy.yaml`, `removed:`) fails the build if a retired field returns.
 - **The exposure engine's inputs** (`ExposureLoader`): a netting set's members and their current MtM come from `trade-valuation` (a live
   status, the set in `NETTING_SET`), not the set's stored `TRADES[]` (a date without valuations reads the stored members and logs it); the

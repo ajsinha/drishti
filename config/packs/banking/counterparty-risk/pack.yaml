@@ -715,6 +715,7 @@ lake:
       - NETTING_SET
       - COUNTERPARTY
       - LEGAL_ENTITY
+      - DIVISION
       - DESK
       - TT_BOOK
       - LIMIT_LETTER

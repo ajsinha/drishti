@@ -21,7 +21,7 @@
 
 /** The view's own events (the engine's are GRID_EVENTS): dispatched on the element as drishti:<kebab-name> and on the grid's bus. */
 export const VIEW_EVENTS = Object.freeze(['layoutChanged', 'densityChanged', 'menuOpened', 'menuAction', 'chartRequested', 'drillThrough',
-  'viewSaved', 'measureSwitched', 'phoneChanged', 'explainShown', 'copied', 'exported']);
+  'viewSaved', 'measureSwitched', 'phoneChanged', 'explainShown', 'copied', 'exported', 'customizeChanged']);
 
 /** Below this width (px) the grid is drawn for a phone (ELEMENTS.md O2). */
 export const PHONE_WIDTH = 640;

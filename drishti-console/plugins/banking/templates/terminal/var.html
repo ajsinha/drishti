@@ -18,7 +18,7 @@
    (loaded only when opened). Every figure is explained by the one Explain (SHARED_SCREENS.md section 3, drishti-insight): hover a tile
    for the preview, click it (or Explain ›, E) for the drawer, Formula · Inputs & lineage · Why it moved · Workbook. The layout (2.9.11.b, the approved mock-up
    docs/lenses/mockups/var-layout/A.html): the hierarchy tree on the left; the baskets in two searchable drop-downs in the toolbar
-   (System baskets: the bank's portfolios; My baskets: saved, mine and shared with me; keys B and M; drishti_var-layout.js), "+ New basket" opens
+   (System baskets: the bank's, kept in Drishti's basket store; My baskets: saved, mine and shared with me; keys B and M; drishti_var-layout.js), "+ New basket" opens
    the basket's sheet (collapsed on load). The header strip's Reporting currency (the product owner's mock-up A, 2.9.4) moves
    every panel to that currency; the choice stays for the session and goes into the page's link (ccy=EUR). Beside it (2.9.7, the
    approved mock-up var-horizon-picker) the Horizon (1-day, 10-day √10, 10-day sum), the VaR confidence and the ES confidence: each
@@ -81,7 +81,7 @@
     </label>
   </div>
   <div class="vx-bar" role="group" aria-label="Baskets, Explain and what-if">
-    {% for key, word, label, why in [('system', 'B', 'System baskets', "The baskets the system provides: the bank's portfolios, from the market-risk pack's portfolio feed."),
+    {% for key, word, label, why in [('system', 'B', 'System baskets', "The bank's own baskets, kept in Drishti: PORT <id> for everyone; whoever holds var:system-baskets changes them in the sheet."),
                                     ('mine', 'M', 'My baskets', 'The baskets you saved, and those shared with you.')] %}
     <div class="vx-pick" data-vx-pick="{{ key }}">
       <button type="button" class="vx-pick-btn" id="vxPick-{{ key }}" data-vx-pick-btn aria-haspopup="listbox" aria-expanded="false" aria-controls="vxPop-{{ key }}" aria-keyshortcuts="{{ word }}" title="{{ label }} ({{ word }})">

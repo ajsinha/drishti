@@ -26,17 +26,15 @@ kinds:
 - frtb-sensitivity
 - pnl-explain
 - trade-valuation
-- portfolio
 - pnl-vector
 - scenario-pv
 - fx-scenario
 - scenario-set
-- risk-hierarchy
 - var-limit
 - desk-pnl
 - pnl-history
-description: risk-store read from AWS S3 Tables (the market-risk pack's risk domain with its P&L vectors, scenario PVs, hierarchy and limits)
+description: risk-store read from AWS S3 Tables (the market-risk pack's risk domain with its P&L vectors, scenario PVs and limits)
 settings:
   lake: s3tables
-  lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.portfolio,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.risk-hierarchy,risk.var-limit,risk.desk-pnl,risk.pnl-history
+  lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.var-limit,risk.desk-pnl,risk.pnl-history
   engine: native

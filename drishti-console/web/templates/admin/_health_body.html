@@ -139,9 +139,9 @@
   <a href="/admin/net">Admin → Cluster</a></p>
   {% for w in h.net.warnings or [] %}<p class="t-warn" data-net-warning><b>Last administrator kept</b> {{ (w.at or '')[:19] | replace('T', ' ') }} UTC: {{ w.text }}</p>{% endfor %}</div></section>
 {% endif %}
-{% if h.hierarchiesSkipped %}
-<section class="ws-card" data-hierarchies-skipped><div class="ws-cb">
-  {% for k, why in h.hierarchiesSkipped.items() %}<p class="t-warn"><b>Hierarchy skipped</b> ({{ k }}): {{ why }}</p>{% endfor %}
+{% if h.hierarchyWarnings %}
+<section class="ws-card" data-hierarchy-warnings><div class="ws-cb">
+  {% for k, why in h.hierarchyWarnings.items() %}<p class="t-warn"><b>Hierarchy warning</b> ({{ k }}): {{ why }}</p>{% endfor %}
 </div></section>
 {% endif %}
 <h2 class="ws-h">Connectors</h2>

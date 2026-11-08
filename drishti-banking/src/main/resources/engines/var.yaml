@@ -104,10 +104,12 @@ drishti:
       kafka:                         # the PV topic (the market-risk pack's pv-updates connector, off by default): VAR_GUIDE.md section 8.4
         window: ${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}   # everything received in a window: one intraday batch in the lake, applied
         max-trades: ${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}   # a window applied earlier once this many trades wait
-    root-name: ${DRISHTI_VAR_ROOT_NAME:}   # the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME
+    root-name: ${DRISHTI_VAR_ROOT_NAME:}   # the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy's root.name (else its title)
     # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
-    # hierarchies:                   # VAR_GUIDE.md section 15.14: wins over a loaded pack's hierarchies: block (the market-risk pack's:
-    #   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }   # MGMT, LEGAL from the rows; LL from columns)
+    hierarchy:                       # what every hierarchy shares (VAR_GUIDE.md section 15.14)
+      empty-label: ${DRISHTI_VAR_HIERARCHY_EMPTY_LABEL:(Blank)}   # the node a row with an empty (or unpromoted) level value sits under; a hierarchy's empty-label wins
+    # hierarchies:                   # VAR_GUIDE.md section 15.14: any number, each from promoted columns; wins over a loaded pack's hierarchies: block
+    #   REGION: { title: Regions, levels: "REGION > DESK", word: REG, limits: var-limit }   # (the market-risk pack's: MGMT, LEGAL, LL)
     sharding:                        # VaR sharding (docs/architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built): on only with the market-risk pack's sharding: block or enabled: true
       release-after-seconds: 900     # a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released
     tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
@@ -120,14 +122,15 @@ drishti:
     kinds:                         # the kinds the engine reads (the market-risk pack's), and the kind its derived positions are served as
       vector: pnl-vector  # the kind of the stored P&L vectors
       position: position  # the kind the engine's derived positions are served as (the var-positions connector)
-      hierarchy: risk-hierarchy  # the kind of the risk hierarchies
       scenario-set: scenario-set  # the kind of the scenario sets (the dates of the historical scenarios)
-      portfolio: portfolio  # the kind of the stored portfolios
+      system-basket: system-basket   # the kind the system baskets are served as (the var-system-baskets connector, PORT <id>); they are kept in the basket store
       scenario-pv: scenario-pv       # trades sent as scenario PVs in their own currency, converted to USD P&L at load (beside or instead of vectors)
       fx-scenario: fx-scenario       # each currency's rate under each scenario, when the batch supplies it (USD per unit)
       fx-spot: fx-spot               # the FX history scenario rates are derived from when not supplied (the market-data pack's)
       limit: var-limit               # the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it
       valuation: trade-valuation     # the trade valuations a VaR by a trade column the vectors do not carry joins by trade id (by=attribute:TRADER_ID)
+    system-baskets:                  # the bank's own baskets (VAR_GUIDE.md section 5.7): kept in the basket store (var/system-baskets/), never read from data
+      seed: ${DRISHTI_VAR_SYSTEM_BASKETS_SEED:${DRISHTI_DEMO_ENABLED:true}}   # import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start
     access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
     positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
       live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)

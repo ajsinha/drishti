@@ -254,7 +254,7 @@ final class VarBasketCheck {
 
     private String unknown(VarBasketSheet.Cell c, String date, Map<String, String> words) {
         return switch (c.word()) {
-            case "PORT" -> "is not a portfolio on " + date;
+            case "PORT" -> "is not a system basket on " + date + " (PORT <GO> lists them)";
             case "BASKET" -> "is not a basket you may read (deleted, or not shared with you)";
             case "BOOK" -> "is not a book of the hierarchy on " + date;
             case "DESK" -> "is not a desk of the hierarchy on " + date;

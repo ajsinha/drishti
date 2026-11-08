@@ -20107,20 +20107,6 @@ datasets:
     files:
     - trader.2026-09-30.jsonl.gz
     bytes: 20
-- folder: market-risk/risk-hierarchy
-  pack: market-risk
-  kind: risk-hierarchy
-  connector: risk-store
-  key: NODE_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-28'
-  last-date: '2026-09-30'
-  documents: 264
-  files:
-  - risk-hierarchy.2026-09-28.jsonl.gz
-  - risk-hierarchy.2026-09-29.jsonl.gz
-  - risk-hierarchy.2026-09-30.jsonl.gz
-  bytes: 5772
 - folder: market-risk/scenario-set
   pack: market-risk
   kind: scenario-set
@@ -20173,20 +20159,6 @@ datasets:
   files:
   - fx-scenario.tar
   bytes: 61440
-- folder: market-risk/portfolio
-  pack: market-risk
-  kind: portfolio
-  connector: risk-store
-  key: PORTFOLIO_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-28'
-  last-date: '2026-09-30'
-  documents: 84
-  files:
-  - portfolio.2026-09-28.jsonl.gz
-  - portfolio.2026-09-29.jsonl.gz
-  - portfolio.2026-09-30.jsonl.gz
-  bytes: 4934
 - folder: market-risk/var-limit
   pack: market-risk
   kind: var-limit
@@ -20200,7 +20172,7 @@ datasets:
   - var-limit.2026-09-28.jsonl.gz
   - var-limit.2026-09-29.jsonl.gz
   - var-limit.2026-09-30.jsonl.gz
-  bytes: 5574
+  bytes: 5773
 - folder: market-risk/desk-pnl
   pack: market-risk
   kind: desk-pnl
@@ -20224,7 +20196,7 @@ datasets:
   documents: 28
   files:
   - pnl-history.2026-09-30.jsonl.gz
-  bytes: 1155846
+  bytes: 1155460
 - folder: counterparty-risk/simulation-run
   pack: counterparty-risk
   kind: simulation-run
@@ -20248,7 +20220,7 @@ datasets:
   documents: 7540
   files:
   - exposure-path.tar
-  bytes: 6031360
+  bytes: 6041600
 - folder: market-risk/position-sensitivity
   pack: market-risk
   kind: position-sensitivity

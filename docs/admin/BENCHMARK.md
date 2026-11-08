@@ -792,7 +792,7 @@ The same files: 20 gzip files a date at 200,000 positions (400,000 P&L rows for 
 | `pnl-vector`, rows × 509 | **68.4 s**, peak 2.7 GB (with `DRISHTI_LAKE_HEAP=4g`) | **7.2 s**, peak 4.0 GB | **20.0 s**, peak 4.6 GB (100,000 rows a second) |
 | table size, both dates | 831 MB | 571 MB (285 MB a date) | 2,854 MB (1,427 MB a date) |
 | `portfolio` (two dates) | 2.6 s, 0.76 GB (3,000 rows) | 1.8 s, 1.3 GB (3,000 rows) | 2.4 s, 1.5 GB (30,000 rows) |
-| `risk-hierarchy`, `scenario-set`, `var-limit` | 1.3 to 1.7 s each | 1.6 s each (JVM start) | 1.6 to 1.8 s each |
+| `scenario-set`, `var-limit` | 1.3 to 1.7 s each | 1.6 s each (JVM start) | 1.6 to 1.8 s each |
 | all five kinds | | **13.9 s** | **27.6 s** |
 
 The Java loader is 9 times faster than the Python path on the vectors and writes a 31% smaller table; from 200,000 to 1,000,000 positions

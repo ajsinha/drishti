@@ -203,21 +203,23 @@ uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requ
 # 3. The demo lake, from the committed test data in data/testdata
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 
-# 4. The server on :18480 (native libraries unpack in its own folder, not /tmp)
-mkdir -p data/tmp/server
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
-
-# 5. In a second terminal: the console on http://localhost:17480
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+# 4. The server on :18480 and the console on :17480, in the background, with the demo's settings
+bin/start-all.sh --demo          # Windows: bin\start-all.cmd --demo
+bin/status.sh                    # both UP, with the addresses to open
+bin/stop-all.sh                  # when you are done
 ```
 
-Open http://localhost:17480/t and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`. Security is off in this start,
-which is meant for one developer machine; the tutorials sign in
-([OPERATIONS_GUIDE.md section 2.7](docs/guides/OPERATIONS_GUIDE.md#27-sign-in-change-the-admin-password-first-views)).
+Open the console's address that `start-all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
+development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`.
+
+- **Starting and stopping**: the seven scripts of [bin/](bin/README.md) (`start-server`, `start-console`, `stop-server`, `stop-console`,
+  `status`, `start-all`, `stop-all`), each as `.sh` (Linux, macOS), `.ps1` and `.cmd` (Windows); every option, a cluster node by node with
+  `--node`, and the console pointed at a cluster's entry node with `--server`:
+  [DEPLOYMENT_AND_QA_GUIDE.md section 6](docs/DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
 
 - **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, Elements, approvals, VaR, exposure
   and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)).
-- **A local cluster of three** with its consoles: [drishti-stack/](drishti-stack/README.md).
+- **A local cluster of three** with its console, from one file: [drishti-stack/](drishti-stack/README.md) (it starts them through `bin/`).
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
   [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
   [IDEs](docs/guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).
@@ -281,35 +283,35 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 432k | 2,160 |
-| Java, tests | 165k | 1,038 |
-| Python, product (console, tools, loaders, feeds) | 142k | 730 |
-| Python, tests | 106k | 602 |
-| JavaScript, product (console and Elements) | 125k | 486 |
-| JavaScript, tests | 4k | 22 |
+| Java, product | 434k | 2,167 |
+| Java, tests | 166k | 1,044 |
+| Python, product (console, tools, loaders, feeds) | 143k | 732 |
+| Python, tests | 107k | 603 |
+| JavaScript, product (console and Elements) | 127k | 490 |
+| JavaScript, tests | 5k | 23 |
 | CSS | 19k | 114 |
-| HTML (templates and pages) | 34k | 328 |
-| YAML: configuration, Sutras, data contracts | 111k | 1,412 |
-| Markdown: guides, tutorials, design | 219k | 303 |
+| HTML (templates and pages) | 37k | 338 |
+| YAML: configuration, Sutras, data contracts | 112k | 1,425 |
+| Markdown: guides, tutorials, design | 222k | 307 |
 
-About **751k lines of product code** and **275k lines of tests** (37% of the product code), with **219k lines of documentation**.
+About **759k lines of product code** and **278k lines of tests** (37% of the product code), with **222k lines of documentation**.
 
 | What | Count |
 |---|---|
 | Maven modules | 52 (19 of them connector plugins) |
 | Domain modules | 4: core, banking, economy, capitalmarkets |
 | Lenses | 10: risk, trading, market, cro, mr-cube, ccr-cube, world, publicsector, cio, oversight |
-| Functions a module declares | 106 (47 banking, 32 capitalmarkets, 27 economy); every other command word is the core's |
+| Functions a module declares | 105 (46 banking, 32 capitalmarkets, 27 economy); every other command word is the core's |
 | Console routes | 644 |
-| Server REST handlers | 754 |
-| Drishti Elements | 11 libraries, 186 ES modules |
+| Server REST handlers | 761 |
+| Drishti Elements | 11 libraries, 190 ES modules |
 | Domain packs | 17: banking 4, capitalmarkets 2, core 3, economy 8 |
 | Sutras in the shipped packs | 248 |
 | Connector plugins | 19 |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,523: Java 955, console 249, browser 177, tools 120, JavaScript 22 |
-| Documents under docs/ | 174 (32 guides, 22 tutorials) |
+| Test files | 1,529: Java 959, console 250, browser 177, tools 120, JavaScript 23 |
+| Documents under docs/ | 178 (32 guides, 22 tutorials) |
 
 <!-- code-volume:end -->
 

@@ -45,12 +45,20 @@ final class VarSaved {
 
     private static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9._-]{0,63}");
     private final ContentDocs docs;
+    /** The system baskets: the same basket store, under the system scope (VAR_GUIDE.md section 5.7). */
+    private final VarSystemBaskets system;
     /** Who may read the official end-of-day captures: a viewer who sees every node at positions level. */
     private final java.util.function.Predicate<Principal> seesAll;
 
     VarSaved(ContentStore store, java.util.function.Predicate<Principal> seesAll) {
         this.docs = new ContentDocs(store);
+        this.system = new VarSystemBaskets(store);
         this.seesAll = seesAll;
+    }
+
+    /** The system baskets, beside people's baskets in the same store. */
+    VarSystemBaskets system() {
+        return system;
     }
 
     static String slug(String name) {

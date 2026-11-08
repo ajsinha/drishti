@@ -13,8 +13,10 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The pivot screen, PIVOT [table | @owner/name] <GO> (PIVOT_GUIDE.md; mock-up A of ARCHITECTURE.md section 26): drawn by drishti-grid
-   (Drishti Elements) in its wells layout: the ribbon of wells (Rows, Columns, Values, Filters) and the field list above the grid, nested
+{# The pivot screen, PIVOT [table | @owner/name] <GO> (PIVOT_GUIDE.md; mock-ups docs/lenses/mockups/pivot-fields): drawn by drishti-grid
+   (Drishti Elements). It opens as the View picker in front of the compact line (mode views, the default: Rows · Columns · Filters ·
+   Values on one line, a picker behind each), or the compact line alone (compact), or the Fields and Build panes (panes, behind
+   Customize › and \); the header line holds the short title, the i of the scan estimate and the lens's headline figures; nested
    rows opened with + and − (each asked of the server), ≈ and ◆ marks, a figure's Explain (its provenance) in the drawer; the
    scan-estimate bar above; slicers and paths; a chart of the selection below (a non-additive measure is never stacked); the Export menu
    (Excel with outline and formulas only where a measure adds up, CSV, Arrow, the definition). drishti_pivot.js fills it from
@@ -29,12 +31,15 @@
 {% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% for href in screen_parts('pivot', 'css', lens=lens) %}<link rel="stylesheet" href="/static/{{ href }}?v={{ ASSET_V }}">{% endfor %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-<div class="pv{% if lens %} {{ lens }}{% endif %}" data-pivot-screen{% if cube %} data-preset-name="{{ cube.name }}"{% endif %} data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}>
+<div class="pv{% if lens %} {{ lens }}{% endif %}" data-pivot-screen{% if cube %} data-preset-name="{{ cube.name }}"{% endif %} data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}
+  data-user="{{ me.user if me else '' }}" data-mode="{{ mode or '' }}" data-views="{{ views_json or '[]' }}" data-open-view="{{ open_view or '' }}">
   <div class="pv-head">
     {% if cube %}<h1 class="pv-title"><span class="pv-word mono" title="Type {{ cube.word }}, a scope, BY rows,columns, MEASURE …, then &lt;GO&gt;">{{ cube.word }}</span>
       <span data-pv-title>{{ cube.title }}</span></h1>{% else %}<h1 class="pv-title"><span class="pv-word mono" title="Type PIVOT, a table (or var) or @owner/name, then &lt;GO&gt;">PIVOT</span>
       <span data-pv-title>{{ view_id or source or 'choose a table' }}</span></h1>{% endif %}
-    <span class="pv-meta" data-pv-meta aria-live="polite"></span>
+    <span class="pv-titlectx" data-pv-titlectx></span>
+    <button type="button" class="pv-info" data-pv-info aria-expanded="false" aria-controls="pvInfo" title="What this view reads and how it was computed (the scan estimate)">i</button>
+    <span class="pv-headline" data-pv-headline aria-live="polite"></span>
     {% if cube %}<a class="pv-help" href="/help/context/{{ cube.help }}" title="Help: the {{ cube.title }}" aria-label="Help: the {{ cube.title }}"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% else %}<a class="pv-help" href="/help/context/pivot" title="Help: the pivot screen (PIVOT_GUIDE.md)" aria-label="Help: the pivot screen"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% endif %}
   </div>
   {% if cube_building %}<p class="pv-building" role="status" data-cube-building><span class="drishti_uc-chip" data-uc="{{ cube.under_construction }}" title="Depends on work not built yet (Help → Under construction)">Under construction</span>
@@ -66,13 +71,14 @@
   </div>
   {% for part in screen_parts('pivot', 'top', lens=lens) %}{% include part %}{% endfor %}
   <div class="pv-slicers" data-pv-slicers role="group" aria-label="Slicers" hidden></div>
+  <div class="pv-infobox" id="pvInfo" data-pv-infobox hidden><span class="pv-meta" data-pv-meta aria-live="polite"></span> <span class="pv-sub" data-pv-grid-sub></span></div>
   <div class="pv-estimate" data-pv-estimate role="status" hidden></div>
   <p class="pv-notice" data-pv-notice role="alert" hidden></p>
   <div class="pv-main">
     <section class="pv-card pv-gridcard" aria-labelledby="pvGridTitle">
-      <h2 id="pvGridTitle"><span data-pv-grid-title>Pivot</span> <span class="pv-sub" data-pv-grid-sub></span></h2>
+      <h2 id="pvGridTitle" class="pv-gridtitle"><span data-pv-grid-title>Pivot</span></h2>
       <div class="pv-grid" data-pv-grid></div>
-      <p class="pv-keys"><kbd>→</kbd> expand · <kbd>←</kbd> collapse · <kbd>Shift</kbd>+<kbd>→</kbd> all below · <kbd>1</kbd>–<kbd>9</kbd> to level · <kbd>E</kbd> explain a figure (its provenance) · <kbd>Shift</kbd>+<kbd>E</kbd> expand by… · <kbd>G</kbd> chart · <kbd>X</kbd> export · <kbd>L</kbd> live · <kbd>M</kbd> comment (in a figure's Explain)</p>
+      <p class="pv-keys"><kbd>R</kbd><kbd>C</kbd><kbd>V</kbd><kbd>F</kbd> Rows, Columns, Values, Filters · <kbd>Shift</kbd>+<kbd>V</kbd> views · <kbd>Alt</kbd>+<kbd>↑</kbd><kbd>↓</kbd> a level up or down · <kbd>\</kbd> Customize (panes) · <kbd>→</kbd> <kbd>←</kbd> open, close a row · <kbd>Shift</kbd>+<kbd>→</kbd> all below · <kbd>1</kbd>–<kbd>9</kbd> to level · <kbd>E</kbd> explain · <kbd>Shift</kbd>+<kbd>E</kbd> expand by… · <kbd>G</kbd> chart · <kbd>X</kbd> export · <kbd>L</kbd> live · <kbd>M</kbd> comment</p>
       <div class="pv-paths">
         <label class="pv-chip">Path <input class="pv-input mono" data-pv-path placeholder="$.LEGS[0].CURRENCY" aria-label="A path read from each document, added to Rows"></label>
         <button type="button" class="pv-btn" data-pv-path-add>Add to Rows</button>
@@ -141,6 +147,16 @@
     </div>
     <div class="pf-result" data-pf-check-result aria-live="polite"></div>
   </section>
+  <dialog class="pv-dialog" data-pv-formula aria-labelledby="pvFormulaTitle">
+    <form method="dialog" class="pv-formula">
+      <h2 id="pvFormulaTitle">Custom formula <span class="pv-sub" data-pv-formula-field></span></h2>
+      <p class="pv-sub">A Rachana formula or a custom function (sum(PV) / sum(NOTIONAL), wret(RET, W)); the server checks it before it is used.</p>
+      <label>Label <input class="pv-input" data-pv-formula-label aria-label="The value's label"></label>
+      <textarea class="pv-input pf-code" data-pv-formula-text data-di-code="rachana" rows="3" aria-label="Formula"></textarea>
+      <p class="pv-notice" data-pv-formula-problem role="alert" hidden></p>
+      <div class="pv-formula-b"><button type="button" class="pv-btn primary" data-pv-formula-ok>Use it</button> <button type="button" class="pv-btn" data-pv-formula-cancel>Cancel</button></div>
+    </form>
+  </dialog>
   <section class="pv-card pv-chartcard" data-pv-chartcard hidden aria-labelledby="pvChartTitle">
     <h2 id="pvChartTitle"><span data-pv-chart-title>Chart of the selection</span> <span class="pv-sub" data-pv-chart-sub></span></h2>
     <div class="pv-chart" data-pv-chart-box></div>

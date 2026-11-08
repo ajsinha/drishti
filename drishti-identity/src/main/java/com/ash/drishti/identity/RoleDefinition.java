@@ -37,10 +37,25 @@ import java.util.List;
  * @param updatedBy who made it (empty for built-in roles)
  * @param bi business-intelligence powers held ({@link #BI_POWERS}); each one above {@code bi} also needs {@code bi} to open the page
  * @param edit may submit changes through write-back (APPROVALS_GUIDE.md › The design and its reasons, section 12: the {@code edit} power); false unless granted
+ * @param permissions the module permissions held ({@link #PERMISSIONS}, such as {@code var:system-baskets}); an administrator holds every one
  */
 public record RoleDefinition(String name, String description, List<String> kinds, boolean raw, boolean author, boolean approve,
         boolean admin, boolean calc, boolean layout, boolean collaborate, boolean compliance, boolean builtIn, Instant updatedAt, String updatedBy,
-        java.util.Set<String> bi, boolean edit) {
+        java.util.Set<String> bi, boolean edit, java.util.Set<String> permissions) {
+
+    /**
+     * The module permissions a role may hold (docs/architecture/ACCESS_MODEL.md section 8): {@code var:system-baskets} creates, edits and
+     * retires the VaR engine's system baskets and imports them (VAR_GUIDE.md section 5.7).
+     */
+    public static final List<String> PERMISSIONS = List.of("var:system-baskets");
+
+    /** A role without module permissions. */
+    public RoleDefinition(String name, String description, List<String> kinds, boolean raw, boolean author, boolean approve, boolean admin,
+            boolean calc, boolean layout, boolean collaborate, boolean compliance, boolean builtIn, Instant updatedAt, String updatedBy,
+            java.util.Set<String> bi, boolean edit) {
+        this(name, description, kinds, raw, author, approve, admin, calc, layout, collaborate, compliance, builtIn, updatedAt, updatedBy, bi, edit,
+                java.util.Set.of());
+    }
 
     /** A role without the write-back {@code edit} power. */
     public RoleDefinition(String name, String description, List<String> kinds, boolean raw, boolean author, boolean approve, boolean admin,
@@ -60,9 +75,15 @@ public record RoleDefinition(String name, String description, List<String> kinds
 
     public RoleDefinition {
         bi = bi == null ? java.util.Set.of() : java.util.Set.copyOf(bi);
+        permissions = permissions == null ? java.util.Set.of() : java.util.Set.copyOf(permissions);
         description = description == null ? "" : description;
         kinds = kinds == null ? List.of() : List.copyOf(kinds);
         updatedBy = updatedBy == null ? "" : updatedBy;
+    }
+
+    /** Whether the role holds the module permission (an administrator holds every one). */
+    public boolean holds(String permission) {
+        return admin || permissions.contains(permission);
     }
 
     public boolean mayOpen(String kind) {

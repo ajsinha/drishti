@@ -93,7 +93,7 @@ menus:
           - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
           - { id: mcube, cmd: MCUBE, href: "/pivot?preset=mr", icon: grid-3x3-gap, label: Market-risk cube, desc: "The Pivot's market-risk preset: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE <GO>", requires: [word:VAR, word:PIVOT, word:MCUBE] }
           - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
-          - { id: hier, cmd: HIER, icon: diagram-3, label: Hierarchies and limit letters, desc: "The VaR hierarchies, their nodes and limits", requires: [cmd:HIER] }
+          - { id: var-limits, cmd: VLIM, icon: diagram-3, label: Hierarchy limits, desc: "The VaR limits of every hierarchy's nodes (the hierarchies are built from the trades' columns)", requires: [cmd:VLIM] }
       - engine: exposure
         domain: banking
         title: Exposure

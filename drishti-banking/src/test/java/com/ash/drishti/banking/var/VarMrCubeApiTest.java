@@ -57,7 +57,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.risk-lake.plugin=delta",
         "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=risk-hierarchy", "drishti.sources.connectors.risk-lake.kinds[3]=portfolio",
+        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
         "drishti.sources.connectors.risk-lake.settings.domain=risk",
         "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
@@ -66,8 +66,12 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
-        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.risk-hierarchy=risk-lake",
-        "drishti.sources.routes.portfolio=risk-lake",
+        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
+        "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
+        "drishti.var.hierarchies.MGMT.level-names=desk > book", "drishti.var.hierarchies.MGMT.ids=leaf",
+        "drishti.var.hierarchies.MGMT.limits=var-limit", "drishti.var.hierarchies.LEGAL.title=Legal entity",
+        "drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "drishti.var.hierarchies.LEGAL.ids=leaf",
+        "drishti.var.hierarchies.LEGAL.limits=var-limit",
         "drishti.var.positions.rules[0].name=securities", "drishti.var.positions.rules[0].groups[0]=Fixed income",
         "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
         "drishti.var.official.on-start=false",
@@ -272,6 +276,47 @@ class VarMrCubeApiTest {
                 Map.of()), "axis", "rows", "path", List.of(List.of("MGMT.DESK", "DESK-X")), "by", "MGMT.BOOK"), 200);
         assertThat(open.get("rows").findValuesAsText("value")).contains("BOOK-1", "BOOK-2");
         everyCellIsTheEngines(rita, open, "VaR", null);
+    }
+
+    @Test
+    void theCatalogueSaysEachFieldsGroupFolderHiddenAndFunctionsAndEachHierarchyOnce() throws Exception {
+        JsonNode cat = call(as("rita", "risk"), get("/api/v1/pivot/catalogue").param("source", "var"), null, 200);
+        JsonNode mgmt = null;
+        for (JsonNode h : cat.path("hierarchies")) {
+            if ("MGMT".equals(h.path("id").asText())) {
+                mgmt = h;
+            }
+        }
+        assertThat(mgmt).as("MGMT is one item of the catalogue's hierarchies: " + cat.path("hierarchies")).isNotNull();
+        assertThat(mgmt.path("levels").findValuesAsText("field")).contains("MGMT.DESK", "MGMT.BOOK");
+        assertThat(mgmt.path("levels").findValuesAsText("label")).contains("Desk", "Book");
+        assertThat(cat.path("hierarchies").findValuesAsText("id")).contains("POSITIONS");
+        for (JsonNode f : cat.path("fields")) {
+            String name = f.path("name").asText();
+            if (name.endsWith(".BANK")) {
+                assertThat(f.path("hidden").asBoolean()).as(name + ": the root, every view's total, under More fields").isTrue();
+            } else if (name.startsWith("MGMT.")) {
+                assertThat(f.path("group").asText()).as(name).isEqualTo("hierarchy");
+                assertThat(f.path("hierarchy").asText()).as(name).isEqualTo("MGMT");
+                assertThat(f.path("hidden").asBoolean()).as(name + ": offered through its hierarchy").isTrue();
+            }
+            if ("CURRENCY".equals(name) || "RISK_CLASS".equals(name)) {
+                assertThat(f.path("group").asText()).isEqualTo("field");
+                assertThat(f.path("hidden").asBoolean()).as(name).isFalse();
+            }
+            assertThat(f.path("functions").size()).as(name + ": the VaR source's values are its own measures").isZero();
+        }
+        for (JsonNode m : cat.path("measures")) {
+            assertThat(m.path("group").asText()).isEqualTo("measure");
+            assertThat(m.path("folder").asText()).as(m.path("name").asText()).isNotBlank();
+            assertThat(m.path("functions").size()).isZero();
+            if ("var".equals(m.path("name").asText()) || "es".equals(m.path("name").asText())) {
+                assertThat(m.path("perCell").asBoolean()).as("VaR is computed per cell, never summed").isTrue();
+                assertThat(m.path("folder").asText()).isEqualTo("VaR");
+            }
+        }
+        assertThat(cat.path("showAs").findValuesAsText("id")).contains("pct-grand", "rank", "diff").doesNotContain("running");
+        assertThat(cat.path("notes").has("folders")).as("the metadata is lifted out of the notes").isFalse();
     }
 
     @Test

@@ -43,11 +43,11 @@ fields:
     QUANTITY: "The signed sum of the trades' quantities (a buy adds, a sell takes away)"
     TRADE_IDS: "The trades in the position (each links to the trade)"
     TRADES: "Each trade's signed quantity, direction, PV, product and counterparty"
-  portfolio:
-    _: "A portfolio definition: a hierarchy node, a rule over the positions' columns, or a basket of positions and trades. Portfolios may overlap; their VaR is computed when asked"
+  system-basket:
+    _: "A system basket: one of the bank's own baskets (PORT <id>), kept in Drishti's basket store, never read from data (docs/guides/VAR_GUIDE.md section 5.7): a hierarchy node, a rule over the positions' columns, or a basket of positions and trades; served by the var-system-baskets connector. System baskets may overlap; their VaR is computed when asked"
     TYPE: "HIERARCHY, RULE or BASKET"
     DEFINITION: "NODE (a hierarchy node), RULE (a condition) or MEMBERS (positions and trades)"
-    LIMIT_VAR: "The portfolio's VaR limit (USD), an input"
+    VALID_TO: "The last business date it applies to (set when it is retired); its VaR limit is a var-limit row (HIERARCHY PORTFOLIO)"
   pnl-vector:
     _: "One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR is summed from, with the trade's terms the server derives its position from"
     VECTOR_ID: "PNL-<trade or position>-HS-509 (PV- also read)"
@@ -58,10 +58,6 @@ fields:
   scenario-set:
     _: "The scenario days of a business date: HS-509, historical simulation over 509 business days"
     SCENARIO_DATES: "The 509 scenario days, oldest first: index i of every vector is day i"
-  risk-hierarchy:
-    _: "A node of a hierarchy: MGMT (bank, division, desk, book) or LEGAL (bank, legal entity, desk, book), with its VaR limit (any hierarchy id)"
-    BOOKS: "Every book beneath the node"
-    LIMIT_VAR: "The node's VaR limit (USD)"
   var-limit:
     _: "A node's 1-day 99% VaR limit by hierarchy and node id, in USD: the limit letters' (LL) and the MGMT and LEGAL nodes' own"
     NODE_ID: "The node, as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES"
@@ -71,10 +67,13 @@ fields:
 
 Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
 trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs**: one P&L vector
-per live trade over 509 historical scenario days, the scenario set, the MGMT and LEGAL hierarchies with VaR limits (and the limit
-letters, LL, built from the trades' LIMIT_LETTER, with their limits in `var-limit`), and portfolio
-definitions (hierarchy, rule, basket). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
-[VAR_GUIDE.md section 3](../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the portfolio
+per live trade over 509 historical scenario days, the scenario set and the VaR limits of the hierarchies' nodes and of the system
+baskets (`var-limit`). The system baskets themselves (`PORT <id>`: a hierarchy node, a rule or a basket) are kept in Drishti's basket
+store, not data: the demo's are this pack's seed, `seeds/system-baskets.yaml`, imported once at a demo's first start
+([VAR_GUIDE.md section 5.7](../../../docs/guides/VAR_GUIDE.md#57-system-baskets)). The hierarchies themselves are configured in this pack's `hierarchies:` block (any
+number): MGMT (`DIVISION > DESK > TT_BOOK`), LEGAL (`LEGAL_ENTITY > DESK > TT_BOOK`) and the limit letters LL (`LIMIT_LETTER > DESK`),
+each built by the server from the trades' promoted columns ([VAR_GUIDE.md section 15.14](../../../docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
+[VAR_GUIDE.md section 3](../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the system basket
 and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
 are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by
 book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR_GUIDE.md Part II](../../../docs/guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).

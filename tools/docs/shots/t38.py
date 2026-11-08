@@ -20,7 +20,7 @@ docs/tutorials/img/t38/, in the light theme. Run it on its own: it builds the Va
 
 The pictures, in the tutorial's order: the landing (desks by risk class), the headline's tiles, the RATES × IR cell's provenance with its
 tail and Explain the move, the lens at 10 days and 97.5% on DESK:RATES, RATES opened to its books with CURRENCY across, tabs B and C, and
-the view saved as morning and shared with role:risk."""
+the view saved as morning and shared with role:risk; then the fields (Step 21): the View picker, the Rows picker, VaR's menu and the panes."""
 from __future__ import annotations
 
 import _var
@@ -38,7 +38,8 @@ def before(c: Ctx, _name: str) -> None:
 
 
 def _grid(c: Ctx) -> None:
-    c.until("document.querySelectorAll('[data-pv-grid] td.pv-c').length > 0", 300)
+    c.until("document.querySelectorAll('[data-pv-grid] .dg-cell[data-cell]').length > 0", 300)
+    c.until("!!document.querySelector('[data-mr-tiles] .mr-tile .mr-tv')", 120)
     c.page.wait_for_timeout(1500)
 
 
@@ -77,8 +78,9 @@ def diversification(c: Ctx):
 @shot("03-cell-provenance.jpg")
 def cell(c: Ctx):
     _cube(c)
-    c.page.evaluate("""() => { const tr = Array.from(document.querySelectorAll('[data-pv-grid] tr')).find(r => /DESK-RATES/.test(r.textContent));
-        const cells = Array.from(tr.querySelectorAll('td.pv-c')).filter(td => td.textContent.trim()); cells[0].click(); }""")
+    rates = c.page.locator("[data-pv-grid] .dg-cell[data-cell*='DESK-RATES']").filter(has_text="m")     # the RATES × IR cell
+    (rates if rates.count() else c.page.locator("[data-pv-grid] .dg-cell[data-cell]")).first.click()
+    c.until("!!document.querySelector('[data-pv-grid] [data-pv-pop]')", 60)
     c.page.wait_for_timeout(3500)
     page_shot(c, "03-cell-provenance.jpg", _union(c, "[data-pv-grid]", "[data-pv-pop]", "[data-mr-tail]", "[data-mr-explain]"))
 
@@ -124,3 +126,42 @@ def saved(c: Ctx):
     c.page.locator("[data-pv-export-open]").click()
     c.page.wait_for_timeout(1200)
     c.save("08-saved-morning.jpg")
+
+
+@shot("09-view-picker.jpg")
+def view_picker(c: Ctx):
+    _cube(c)
+    c.page.locator("[data-pv-title]").click()
+    c.page.keyboard.press("Shift+V")
+    c.page.wait_for_selector(".dg-views-pop .di-option")
+    c.page.wait_for_timeout(600)
+    c.save("09-view-picker.jpg")
+
+
+@shot("10-rows-picker.jpg")
+def rows_picker(c: Ctx):
+    _cube(c)
+    c.page.locator("[data-pv-title]").click()
+    c.page.keyboard.press("r")
+    c.page.locator(".di-fp-pop").wait_for()
+    c.page.wait_for_timeout(600)
+    c.save("10-rows-picker.jpg")
+
+
+@shot("11-var-menu.jpg")
+def var_menu(c: Ctx):
+    _cube(c)
+    c.page.click(".dg-zone[data-well='values'] .dg-vchip[data-field='m:var'] .dg-chip-menu")
+    c.page.wait_for_selector(".dg-menu .dg-menu-note")
+    c.page.wait_for_timeout(600)
+    c.save("11-var-menu.jpg")
+
+
+@shot("12-panes.jpg")
+def panes(c: Ctx):
+    _cube(c)
+    c.page.locator("[data-pv-title]").click()
+    c.page.keyboard.press("\\")
+    c.page.wait_for_selector("[data-pv-grid] .dg-fieldpane")
+    c.page.wait_for_timeout(800)
+    c.save("12-panes.jpg")

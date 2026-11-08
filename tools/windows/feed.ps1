@@ -17,7 +17,7 @@
   Runs a Drishti data feed (the PowerShell form of tools/feeds/feed.sh): pull external data and load it into the lakes.
 
 .DESCRIPTION
-  Runs `tools\drishti.py feed` with the console's Python environment (drishti-console\.venv, made by tools\windows\start-console.ps1)
+  Runs `tools\drishti.py feed` with the console's Python environment (drishti-console\.venv, made by bin\start-console.ps1)
   when it exists, else DRISHTI_PYTHON or python. Python and Java only: no other program is needed. Every argument is passed on
   unchanged: list, run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--dry-run] [--snapshot], status,
   schedule --windows. The exit code is the command's (0 ok, 1 failed, 2 refused, 3 locked, 4 partial), so Task Scheduler's

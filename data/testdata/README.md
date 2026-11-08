@@ -75,7 +75,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), and so do the dates a market document holds a fixed
    number of business days from its date (an FX spot's value date `SPOT_DATE`, T+2; an IR curve's pillar `POINTS[].MATURITY`), so a price history has no missing days between the series
    and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
-   89 tables, about 3.4 GB on disk (14 tables are static reference data built from the world-economy and
+   87 tables, about 3.4 GB on disk (14 tables are static reference data built from the world-economy and
    news-and-markets packs' samples, 2 the captured quotes and headlines, 8 the us-equities and gleif public data; since 2.9.2 the
    country groups, SIC sectors, ownership groups and LEI countries are computed from them, not stored).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
@@ -254,8 +254,7 @@ The counts below are the newest date's.
 | `market-risk/scenario-pv` | `scenario-pv` · `SCENARIO_PV_ID` | the last three days | 2.9.4: the Endur trades (1,339; 1,089 USD, 246 EUR, 4 CAD) sent as scenario PVs instead: each trade's PV under the 509 scenarios and its base PV, in its own currency (`SCENARIO_PV`, a `list<double>` column), in 3 files; the server converts them to USD P&L when it loads the date |
 | `market-risk/fx-scenario` | `fx-scenario` · `FX_SCENARIO_ID` | the last three days | 2.9.4: the scenario FX the batch supplies for AUD, CAD, CHF, EUR, GBP and JPY: USD per unit today (the `fx-spot` mid) and under each of the 509 scenarios (moved by the factor model's FX factors) |
 | `market-risk/scenario-set` | `scenario-set` · `SCENARIO_SET_ID` | the last three days | HS-509: the 509 scenario days |
-| `market-risk/risk-hierarchy` | `risk-hierarchy` · `NODE_ID` | the last three days | 88 nodes: MGMT (bank, 2 divisions, 10 desks, 30 books) and LEGAL (bank, 4 legal entities, desks, books); their VaR limits are `var-limit` rows |
-| `market-risk/var-limit` | `var-limit` · `LIMIT_ID` | the last three days | 157 VaR limits: every node of the MGMT, LEGAL and limit-letter hierarchies and every portfolio with one |
+| `market-risk/var-limit` | `var-limit` · `LIMIT_ID` | the last three days | 157 VaR limits: every node of the MGMT, LEGAL and limit-letter hierarchies (the server builds the three from the vectors' DIVISION, LEGAL_ENTITY, DESK, TT_BOOK and LIMIT_LETTER) and every portfolio with one |
 | `market-risk/desk-pnl` | `desk-pnl` · `DESK_PNL_ID` | 260 days to the last day | the desks' daily actual and hypothetical P&L for backtesting |
 | `market-risk/pnl-history` | `pnl-history` · `HISTORY_ID` | the last day | each node's long P&L history (since 2007) for the stress window selection |
 | `market-risk/portfolio` | `portfolio` · `PORTFOLIO_ID` | the last three days | 28 portfolio definitions: HIERARCHY (one per desk and legal entity, and a book), RULE and BASKET, overlapping; no figures |

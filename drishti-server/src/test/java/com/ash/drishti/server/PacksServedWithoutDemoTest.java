@@ -90,8 +90,8 @@ class PacksServedWithoutDemoTest {
             if (!lists || "demo".equals(plugin)) {
                 continue;
             }
-            if ("derived".equals(plugin) || "reactive".equals(plugin) || "var-positions".equals(plugin)) {   // computed from other kinds (the
-                // positions Drishti derives from the P&L vectors' trades), never from the demo
+            if (Set.of("derived", "reactive", "var-positions", "var-system-baskets").contains(plugin)) {
+                // computed (the positions Drishti derives from the trades) or kept in Drishti (the system baskets), never the demo
                 return true;
             }
             JsonNode ds = datasets.get(pack + "/" + kind + "/" + e.getKey());

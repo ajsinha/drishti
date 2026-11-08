@@ -12,11 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of a hierarchy skipped because the data lacks its level column (docs/guides/VAR_GUIDE.md section 15.14), written to
-docs/guides/img/varskip/: a VaR lake built as before 2.9.5, its P&L-vector and scenario-PV tables without LIMIT_LETTER (the market-risk pack
-copied into the scratch folder with the column taken out of its layouts), read by a server whose pack configures the limit letters (LL).
-The date loads, MGMT and LEGAL answer, LL is skipped: the explorer's select lists it *(not available)*, disabled, and Admin -> Health says
-*Hierarchy skipped*. Run it on its own:
+"""Pictures of a hierarchy whose level column the data does not promote (docs/guides/VAR_GUIDE.md section 15.14), written to
+docs/guides/img/varskip/: a VaR lake whose P&L-vector and scenario-PV tables do not promote LIMIT_LETTER (the market-risk pack copied into
+the scratch folder with the column taken out of its layouts), read by a server whose pack configures the limit letters (LL). The date
+loads, MGMT and LEGAL answer, and every row sits under LL's (Blank) letter: the tree shows *(Blank)* muted, in italics, with its ?, and
+Admin -> Health says *Hierarchy warning* with the fix. Run it on its own:
 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide varskip"""
 from __future__ import annotations
@@ -28,7 +28,7 @@ import time
 import urllib.error
 import urllib.request
 
-from _var import choose, open_var, painted
+from _var import open_var, painted
 from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, Ctx, register
 from shotlib import start_servers as _start
@@ -38,7 +38,7 @@ from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a p
 
 shot = register("varskip")
 SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false"}   # marks the guide as one that runs on its own (--guide varskip)
-KINDS = ",".join(f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit"))
+KINDS = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "var-limit")] + ["core/desk", "core/book", "core/legal-entity"])
 
 
 def start_servers(work) -> list:
@@ -58,7 +58,7 @@ def start_servers(work) -> list:
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         sys.exit("could not build the lake without LIMIT_LETTER: " + (r.stderr or r.stdout)[-600:])
     procs = _start(work, {DEMO_ROOT_ENV: str(lake), "DRISHTI_CONNECTORS_DIR": str(work / "connectors"), "DRISHTI_DATA_DIR": str(work / "data"),
-                          "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_SECURITY_ENABLED": "false"})
+                          "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true", "DRISHTI_OFFLINE": "true", "DRISHTI_SECURITY_ENABLED": "false"})
     deadline = time.monotonic() + 240
     while True:
         try:
@@ -73,26 +73,25 @@ def start_servers(work) -> list:
     return procs
 
 
-@shot("01-hierarchy-not-available.jpg")
-def not_available(c: Ctx):
-    """The hierarchy select opened (drishti-inputs' Select): Management, Legal entities and Limit letters (not available), greyed with
-    the reason beside it; the provenance's DRS-5211 warning on the right."""
-    open_var(c, "/var?scope=BANK")
+@shot("01-hierarchy-blank.jpg")
+def blank(c: Ctx):
+    """The limit letters' tree: every row under the (Blank) letter, muted and in italics, its ? saying how many trades and the fix; the
+    provenance's DRS-5211 warning on the right."""
+    open_var(c, "/var?scope=BANK&hierarchy=LL")
     painted(c, "BANK")
-    c.until("document.querySelector('[data-vx-hierarchy]').component.options.some(o => o.disabled)", 60)
-    choose(c, "[data-vx-hierarchy]", "", keep_open=True)
+    c.until("!!document.querySelector('[data-vx-tree] .dg-blank')", 60)
     c.page.wait_for_timeout(500)
-    c.save("01-hierarchy-not-available.jpg")
+    c.save("01-hierarchy-blank.jpg")
 
 
-@shot("02-health-hierarchy-skipped.jpg")
+@shot("02-health-hierarchy-warning.jpg")
 def health(c: Ctx):
-    """Admin -> Health: Hierarchy skipped (var LL) with the reason and the fix."""
+    """Admin -> Health: Hierarchy warning (var LL LIMIT_LETTER pnl-vector) with the fix."""
     c.page.set_viewport_size({"width": 1400, "height": 900})
     c.page.goto(c.base + "/admin/health")
-    c.until("document.body.innerText.includes('Hierarchy skipped')", 90)
-    top = c.page.evaluate("""(() => { const b = Array.from(document.querySelectorAll('p.t-warn b')).find(x => x.textContent.includes('Hierarchy skipped'));
+    c.until("document.body.innerText.includes('Hierarchy warning')", 90)
+    top = c.page.evaluate("""(() => { const b = Array.from(document.querySelectorAll('p.t-warn b')).find(x => x.textContent.includes('Hierarchy warning'));
         return b.getBoundingClientRect().top + window.scrollY; })()""")
     c.page.set_viewport_size({"width": 1400, "height": int(top) + 200})     # the clip lies inside the window
     c.page.wait_for_timeout(800)
-    c.save("02-health-hierarchy-skipped.jpg", clip={"x": 80, "y": top - 200, "width": 1240, "height": 270})   # the paragraph, not the scratch paths below
+    c.save("02-health-hierarchy-warning.jpg", clip={"x": 80, "y": top - 16, "width": 1240, "height": 132})   # the warnings, not the chart above or the scratch paths below

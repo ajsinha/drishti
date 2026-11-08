@@ -170,6 +170,11 @@ public final class RoleStore {
                         e.powers.add(BI_PREFIX + b);
                     }
                 }
+                for (String x : role.permissions()) {
+                    if (RoleDefinition.PERMISSIONS.contains(x)) {
+                        e.powers.add(x);                                // kept by its own name (var:system-baskets)
+                    }
+                }
                 e.updatedAt = at;
                 e.updatedBy = by;
                 e.kinds.clear();
@@ -223,13 +228,15 @@ public final class RoleStore {
         return "kinds=" + r.kinds() + (r.raw() ? " raw" : "") + (r.author() ? " author" : "") + (r.approve() ? " approve" : "")
                 + (r.admin() ? " admin" : "") + (r.calc() ? " calc" : "") + (r.layout() ? "" : " no-layout")
                 + (r.collaborate() ? "" : " no-collaborate") + (r.compliance() ? " compliance" : "") + (r.edit() ? " edit" : "")
-                + (r.bi().isEmpty() ? "" : " bi=" + new TreeSet<>(r.bi()));
+                + (r.bi().isEmpty() ? "" : " bi=" + new TreeSet<>(r.bi()))
+                + (r.permissions().isEmpty() ? "" : " permissions=" + new TreeSet<>(r.permissions()));
     }
 
     private static RoleDefinition toDefinition(RoleEntity e) {
         return new RoleDefinition(e.name, e.description, List.copyOf(new TreeSet<>(e.kinds)), e.raw, e.author, e.approve, e.admin,
                 e.powers.contains(CALC), !e.powers.contains(NO_LAYOUT), !e.powers.contains(NO_COLLABORATE), e.powers.contains(COMPLIANCE), false,
                 e.updatedAt, e.updatedBy, e.powers.stream().filter(x -> x.startsWith(BI_PREFIX)).map(x -> x.substring(BI_PREFIX.length()))
-                .collect(Collectors.toUnmodifiableSet()), e.powers.contains(EDIT));
+                .collect(Collectors.toUnmodifiableSet()), e.powers.contains(EDIT),
+                e.powers.stream().filter(RoleDefinition.PERMISSIONS::contains).collect(Collectors.toUnmodifiableSet()));
     }
 }

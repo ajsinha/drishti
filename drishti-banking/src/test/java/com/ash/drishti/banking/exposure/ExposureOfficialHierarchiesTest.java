@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Exposure on the configured hierarchies (2.9.5): the limit letters (LL, {@code LIMIT_LETTER > DESK}, {@code drishti.var.hierarchies})
  * on {@link ExposureHierarchyFixture}'s paths. The official record holds every letter's node; each node's EE, PFE and EPE are those of
  * its trades (the same as the scope {@code LL:<letter>}, as {@code WHERE:} on the letter, and LL-B's desk node as the desk B is alone on);
- * the root is the bank (with no risk-hierarchy rows here, LL's are the only nodes).
+ * the root is the bank (LL is the only hierarchy configured here, so its nodes are the only ones).
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",

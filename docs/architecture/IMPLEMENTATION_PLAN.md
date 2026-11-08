@@ -376,7 +376,7 @@ they are served by ordinary packs (records, workflows, write-back).
 - **Counterparty terms:** agreements and CSAs.
 - **GLEIF:** entities, relationships and mappings.
 - **Market data:** curves, surfaces, cubes, fixings, bonds, equities, indices, correlation inputs.
-- **Engine inputs:** P&L vectors (PNLV), scenario sets (SSET), stress scenario definitions (SCN), portfolio definitions (PORT), the hierarchy (HIER), trades (TRD).
+- **Engine inputs:** P&L vectors (PNLV), scenario sets (SSET), stress scenario definitions (SCN), VaR limits (VLIM, also of the system baskets: the system baskets themselves, PORT, are kept in Drishti, not data; the hierarchies are built from the trades' promoted columns), trades (TRD).
 - **Public data:** SEC filings and facts, IMF macro and forecasts, regional figures, elections, news.
 
 ### 2.12.0: AI and generated UI (parked until 2.11.0 is done)
@@ -476,7 +476,7 @@ side still lacks. 2.9.5 closes it, so every capability the Delta side has is bui
 | 3. Speed and convenience | Disk caches | Iceberg id maps and document caches across restarts, as Delta has |
 | | Lake build | `lake build --format iceberg` (and `build_demo_lakes.py`), JSONL in as everywhere |
 
-| 4. Hierarchies | Any number of VaR hierarchies | a third hierarchy beside MGMT and LEGAL, e.g. limit letters (a tree of nodes with VaR limits, rolled up like desk; a bank may have about 700): the `risk-hierarchy` contract's HIERARCHY and LEVEL open, the VaR page's selector listing the hierarchies the date holds, a scope word for a limit letter (`LL:<id>`), official VaR and exposure records for every hierarchy (product owner, 2026-10-27). Assumes a letter groups whole books; a letter holding part of a book would need position-level membership |
+| 4. Hierarchies | Any number of VaR hierarchies | a third hierarchy beside MGMT and LEGAL, e.g. limit letters (a tree of nodes with VaR limits, rolled up like desk; a bank may have about 700): every hierarchy built from the trades' promoted columns (any number, by YAML), the VaR page's selector listing the hierarchies the date holds, a scope word for a limit letter (`LL:<id>`), official VaR and exposure records for every hierarchy (product owner, 2026-10-27). A letter may hold part of a book: membership is by row |
 | | Hierarchies defined by columns (configurable drill-down) | a VaR hierarchy is configured as an ordered list of columns that every input row carries (scenario-PV, P&L-vector or trade record in the lake), e.g. `LEGAL_ENTITY > DESK > TT_BOOK`, `LIMIT_LETTER > DESK`, `REGION > PRODUCT_TYPE`: the nodes are derived from the data, so any column present on every row can be a level and the drill-down path is configuration; limits attach to node paths from a limits table; a hierarchy whose level column is on each row also handles a limit letter holding part of a book (membership per row, not per book). Validated at load: a configured column missing from a source's rows is refused with a DRS code naming the source and column (product owner, 2026-10-27) |
 
 Deferred (decided later): converting tables between Delta and Iceberg; S3 Tables if the REST route does not work.

@@ -1,0 +1,127 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written (docs/guides/VAR_GUIDE.md section 5.7): a system basket is a definition kept in the basket store (the var-system-baskets
+# connector serves it); its positions and figures are the VaR engine's, added under VAR_ENGINE as the page opens (VarFigures), never stored.
+rachana: 1
+sutra: system-basket
+version: 1
+description: "A system basket in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution."
+doc:
+  summary: "A system basket's positions in detail; a click opens the position and its trades beside; VaR, ES and limit use on top"
+  description: >-
+    A system basket is one of the bank's own baskets (PORT <id>), kept in Drishti's basket store: a node of a hierarchy (HIERARCHY), a
+    condition over the positions' columns (RULE) or a list of positions and trades someone picked (BASKET); system baskets may overlap.
+    Only the definition is kept: everything else is the VaR engine's, computed as the page opens and as the reader may see it. The strip
+    counts the positions, the longs and the shorts, gives the gross and net market value, the VaR and ES of the basket and the use of its
+    limit. The positions table (filterable,
+    with Pivot (the pivot screen)) gives each position's instrument, direction, quantity, market value, currency, book, VaR on its own and
+    component VaR (the components add up to the basket's VaR); a click opens the position beside with the trades that make it.
+    The right column splits the component VaR by product, currency and direction and lists the top contributors, and gives the
+    definition (its version and who changed it last). VAR PORT <id> opens the basket in the VaR explorer; PORT <GO> lists every one.
+  params: {}
+  emits:
+    - { name: open, on: row-click, payload: { id: id, ref: id } }
+  expects: []
+  examples:
+    - "/v/system-basket/PF-RATES-DESK"
+    - "PORT PF-ASHA-UNWIND"
+  since: "2.8.0"
+match: { kind: system-basket, priority: 10 }
+title: { pill: "System basket · ${$.TYPE}", id: $.PORTFOLIO_ID, with: $.NAME }
+strip:
+  - { label: Positions, bind: $.VAR_ENGINE.POSITION_COUNT, emphasis: true }
+  - { label: Long, bind: $.VAR_ENGINE.LONG_COUNT }
+  - { label: Short, bind: $.VAR_ENGINE.SHORT_COUNT }
+  - { label: Gross market value, bind: $.VAR_ENGINE.GROSS_MV, fmt: compact }
+  - { label: Net market value, bind: $.VAR_ENGINE.NET_MV, fmt: compact, tone: sign }
+  - { label: VaR 99% 1D, bind: $.VAR_ENGINE.VAR, fmt: compact, emphasis: true }
+  - { label: ES 97.5%, bind: $.VAR_ENGINE.ES, fmt: compact }
+  - { label: Limit use, bind: $.VAR_ENGINE.LIMIT_USE, fmt: pct0 }
+panels:
+  - id: positions
+    kind: table
+    title: "Positions (a click opens the position and its trades beside)"
+    code: POS
+    key: F2
+    rows: $.VAR_ENGINE.POSITIONS
+    pivot: true
+    empty: "No positions: none on this date, or the VaR engine could not answer (the note below says why)"
+    columns:
+      - { label: Position, bind: "@.POSITION_ID", link: true }
+      - { label: Instrument, bind: "@.INSTRUMENT" }
+      - { label: Direction, bind: "@.DIRECTION" }
+      - { label: Quantity, bind: "@.QUANTITY", fmt: compact }
+      - { label: Market value, bind: "@.MARKET_VALUE", fmt: compact, total: true }
+      - { label: Currency, bind: "@.CURRENCY" }
+      - { label: Book, bind: "@.TT_BOOK" }
+      - { label: "VaR 99% (own)", bind: "@.VAR", fmt: amount0 }
+      - { label: Component VaR, bind: "@.COMPONENT_VAR", fmt: amount0, total: true }
+      - { label: "% of VaR", bind: "@.PCT_OF_VAR", fmt: pct0 }
+    emits:
+      - { name: open, on: row-click, payload: { id: { bind: "@.POSITION_ID", type: id }, ref: { bind: "@.TT_BOOK", type: id } } }
+    children:
+      - place: detail-right
+        source: { kind: position, id: "@parent.open.id" }
+        waits: Pick a position to see its trades
+        panels:
+          - id: position
+            kind: kv
+            title: "${@parent.open.id}"
+            columns:
+              - { label: Instrument, bind: $src.INSTRUMENT }
+              - { label: Direction, bind: $src.DIRECTION }
+              - { label: Quantity, bind: $src.QUANTITY, fmt: amount0 }
+              - { label: Market value, bind: $src.MARKET_VALUE, fmt: compact }
+              - { label: VaR 99% on its own, bind: $src.VAR_ENGINE.VAR, fmt: compact }
+              - { label: ES 97.5%, bind: $src.VAR_ENGINE.ES, fmt: compact }
+          - id: position-trades
+            kind: table
+            title: Its trades and their contributions
+            rows: $src.VAR_ENGINE.TRADES
+            columns:
+              - { label: Trade, bind: "@.TRADE_ID", link: true }
+              - { label: Direction, bind: "@.DIRECTION" }
+              - { label: Quantity, bind: "@.QUANTITY", fmt: compact, total: true }
+              - { label: VaR (own), bind: "@.VAR", fmt: compact }
+              - { label: Component VaR, bind: "@.COMPONENT_VAR", fmt: compact, total: true }
+  - { use: pnl-distribution@1, with: { id: dist, title: "The basket's P&L over the scenario days", rows: $.VAR_ENGINE.PNL, var: $.VAR_ENGINE.VAR, es: $.VAR_ENGINE.ES, key: F3 } }
+  - { use: ranked-bars@1, with: { id: top, title: Top contributors (component VaR), rows: $.VAR_ENGINE.TOP_CONTRIBUTORS, label: INSTRUMENT, value: COMPONENT_VAR, fmt: compact, area: right, key: F4 } }
+  - { use: ranked-bars@1, with: { id: by-product, title: Component VaR by product, rows: $.VAR_ENGINE.BY_PRODUCT, label: KEY, value: COMPONENT_VAR, fmt: compact, area: right } }
+  - { use: ranked-bars@1, with: { id: by-currency, title: Component VaR by currency, rows: $.VAR_ENGINE.BY_CURRENCY, label: KEY, value: COMPONENT_VAR, fmt: compact, area: right } }
+  - { use: ranked-bars@1, with: { id: by-direction, title: "Net market value, long and short", rows: $.VAR_ENGINE.BY_DIRECTION, label: KEY, value: NET_MV, fmt: compact, tone: sign, area: right } }
+  - id: definition
+    kind: kv
+    title: Definition
+    area: right
+    columns:
+      - { label: Type, bind: $.TYPE }
+      - { label: Owner, bind: $.OWNER }
+      - { label: Node, bind: $.DEFINITION.NODE }
+      - { label: Rule, bind: $.DEFINITION.RULE }
+      - { label: Members named, bind: "size($.DEFINITION.MEMBERS)" }
+      - { label: Rolls up to, bind: $.ROLLS_UP_TO.ID }
+      - { label: VaR limit, bind: $.VAR_ENGINE.LIMIT, fmt: compact }
+      - { label: Valid from, bind: $.VALID_FROM, fmt: date }
+      - { label: Valid to, bind: $.VALID_TO, fmt: date }
+      - { label: Description, bind: $.DESCRIPTION }
+      - { label: Version, bind: $.VERSION }
+      - { label: Changed by, bind: $.UPDATED_BY }
+  - use: explainer-note@1
+    with:
+      title: VaR explorer
+      area: right
+      text: "Every scenario, the history and the contributions of this system basket: VAR PORT ${$.PORTFOLIO_ID} <GO>, or /var?scope=PORT:${$.PORTFOLIO_ID}. System baskets may overlap; combined in the explorer, a position in two of them counts once. It is kept in Drishti's basket store; whoever holds var:system-baskets changes it in Construct your basket. ${coalesce($.VAR_ENGINE.NOTE, '')}"
+  - { use: data-provenance@1 }
+keys: { F9: raw }

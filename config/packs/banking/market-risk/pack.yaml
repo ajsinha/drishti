@@ -30,12 +30,11 @@ kinds:
 - pnl-explain
 - trade-valuation
 - position
-- portfolio
+- system-basket
 - pnl-vector
 - scenario-pv
 - fx-scenario
 - scenario-set
-- risk-hierarchy
 - var-limit
 - desk-pnl
 - pnl-history
@@ -66,8 +65,8 @@ mnemonics:
     kind: position
     label: Position
   PORT:
-    kind: portfolio
-    label: Portfolio
+    kind: system-basket
+    label: System basket (the bank's baskets, kept in Drishti)
   PNLV:
     kind: pnl-vector
     label: P&L vector (509 scenarios)
@@ -80,9 +79,6 @@ mnemonics:
   SSET:
     kind: scenario-set
     label: Scenario set
-  HIER:
-    kind: risk-hierarchy
-    label: Risk hierarchy node
   VLIM:
     kind: var-limit
     label: VaR limit of a hierarchy node
@@ -124,7 +120,7 @@ graph:
   - pattern: ^POS-
     kind: position
   - pattern: ^PF-
-    kind: portfolio
+    kind: system-basket
   - pattern: ^PV-
     kind: pnl-vector
   - pattern: ^SPV-
@@ -133,8 +129,6 @@ graph:
     kind: fx-scenario
   - pattern: ^HS-
     kind: scenario-set
-  - pattern: ^(MGMT|LEGAL)~
-    kind: risk-hierarchy
   - pattern: ^VL-
     kind: var-limit
   - pattern: ^DPNL-
@@ -146,15 +140,12 @@ graph:
   - pattern: ^(IR|INF|CR|FX|EQ|CM|VOL)/
     kind: risk-factor
   fields:
-    NODE_ID:
-      kind: risk-hierarchy
-      label: Hierarchy node
     PNL_VECTOR_ID:
       kind: pnl-vector
       label: P&L vector
     PORTFOLIO_ID:
-      kind: portfolio
-      label: Portfolio
+      kind: system-basket
+      label: System basket
     POSITION_ID:
       kind: position
       label: Position
@@ -175,7 +166,7 @@ graph:
       label: VaR of this trade
   badges:
     position: fmt($.QUANTITY, 'compact')
-    portfolio: $.TYPE
+    system-basket: $.TYPE
   impact:
     measures:
       trade-valuation: $.MTM
@@ -191,12 +182,10 @@ connectors:
     - frtb-sensitivity
     - pnl-explain
     - trade-valuation
-    - portfolio
     - pnl-vector
     - scenario-pv
     - fx-scenario
     - scenario-set
-    - risk-hierarchy
     - var-limit
     - desk-pnl
     - pnl-history
@@ -204,7 +193,7 @@ connectors:
     - risk-factor
     settings:
       lake: demo
-      lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.portfolio,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.risk-hierarchy,risk.var-limit,risk.desk-pnl,risk.pnl-history,risk.position-sensitivity,risk.risk-factor
+      lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.var-limit,risk.desk-pnl,risk.pnl-history,risk.position-sensitivity,risk.risk-factor
   mr-derived:
     plugin: derived
     enabled: ${DRISHTI_MR_DERIVED_ENABLED:true}
@@ -256,6 +245,11 @@ connectors:
     enabled: ${DRISHTI_VAR_ENABLED:true}
     kinds:
     - position
+  var-system-baskets:
+    plugin: var-system-baskets
+    enabled: ${DRISHTI_VAR_ENABLED:true}
+    kinds:
+    - system-basket
   pv-updates:
     plugin: var-pv-stream
     enabled: ${DRISHTI_VAR_PV_STREAM:false}
@@ -318,9 +312,7 @@ connectors:
       - pnl-vector
       - scenario-pv
       - fx-scenario
-      - risk-hierarchy
       - scenario-set
-      - portfolio
       - var-limit
       affects: all
     coalesce:
@@ -340,12 +332,11 @@ routes:
   pnl-explain: risk-store
   trade-valuation: risk-store
   position: var-positions
-  portfolio: risk-store
+  system-basket: var-system-baskets
   pnl-vector: risk-store
   scenario-pv: risk-store
   fx-scenario: risk-store
   scenario-set: risk-store
-  risk-hierarchy: risk-store
   var-limit: risk-store
   desk-pnl: risk-store
   pnl-history: risk-store
@@ -463,7 +454,7 @@ form:
   - path: SECURITY_ID
     label: Security id
     type: id
-  portfolio:
+  system-basket:
   - path: PORTFOLIO_ID
     label: Portfolio id
     type: id
@@ -525,19 +516,6 @@ form:
   - path: BUSINESS_DATE
     label: Business date
     type: date
-  risk-hierarchy:
-  - path: NODE_ID
-    label: Node id
-    type: id
-  - path: HIERARCHY
-    label: Hierarchy
-    type: text
-  - path: LEVEL
-    label: Level
-    type: enum
-  - path: NAME
-    label: Name
-    type: text
   var-limit:
   - path: LIMIT_ID
     label: Limit id
@@ -662,9 +640,9 @@ console:
   - - FRTB FRTB-RATES-1
     - FRTB sensitivities and charges
   - - PORT PF-RATES-DESK
-    - Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it)
+    - System basket · its positions, longs and shorts, VaR and component VaR (computed as you open it)
   - - PORT PF-ASHA-UNWIND
-    - A basket of positions and trades · overlaps the rates desk
+    - A system basket of positions and trades · overlaps the rates desk
   - - VRES DESK:RATES
     - The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES)
   - - VAR BANK 10D SUM
@@ -711,12 +689,6 @@ lake:
       - id
       file-rows: 250000
       row-group-rows: 1000
-    risk.portfolio:
-      promote:
-      - PORTFOLIO_ID
-      - NAME
-      - TYPE
-      - OWNER
     risk.pnl-vector:
       promote:
       - VALUE_TYPE
@@ -795,13 +767,6 @@ lake:
       - RATE
       - SCENARIO_SET_ID
     risk.scenario-set: null
-    risk.risk-hierarchy:
-      promote:
-      - NODE_ID
-      - HIERARCHY
-      - LEVEL
-      - PARENT_ID
-      - NAME
     risk.var-limit:
       promote:
       - LIMIT_ID
@@ -881,8 +846,8 @@ history:
     columns: [MTM, PNL_1D, DV01, NOTIONAL]
   pnl-explain:
     columns: [ACTUAL, EXPLAINED, UNEXPLAINED]
-  # the VaR engine's kinds (VAR_GUIDE.md): a position (derived by Drishti) and a portfolio's definition over time; their VaR history is
-  # the official end-of-day captures (VAR <scope> <GO>, History tab), never a stored column
+  # the VaR engine's kinds (VAR_GUIDE.md): a position (derived by Drishti) over time; its VaR history is the official end-of-day captures
+  # (VAR <scope> <GO>, History tab), never a stored column
   position:
     columns: [QUANTITY, MARKET_VALUE, TRADE_COUNT]
 
@@ -904,15 +869,25 @@ positions:
       key: [SECURITY_ID, CONTRACT]
     - name: otc                         # everything else: one position per trade
 
-# The hierarchies the VaR and exposure engines build (docs/guides/VAR_GUIDE.md section 16); drishti.var.hierarchies in the
-# server's settings wins over this block. source: risk-hierarchy reads the risk-hierarchy rows (book-based: each node lists its books,
-# with its name); source: columns (the default when levels are given) builds the nodes from the trades' own columns, every
-# distinct path of values a node under one root (LL~BANK), its members the rows (a letter may hold part of a book). ids: path (default,
-# LL~LL-0003/DESK-RATES) or leaf (LL~DESK-RATES, when each value has one parent). word: the scope word naming a node (LL:LL-0003).
-# limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no limit). Every VaR
-# limit lives in var-limit, with its currency (docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes): the risk-hierarchy rows
-# and the portfolios carry none (a portfolio's limit is the var-limit row of hierarchy PORTFOLIO and its id).
+# The hierarchies the VaR and exposure engines build (docs/guides/VAR_GUIDE.md section 15.14), any number of them; drishti.var.hierarchies
+# in the server's settings wins over this block. Every hierarchy is built from the trades' PROMOTED columns: levels names them, top first
+# (each must be in layout.scenario-pv.columns, layout.pnl-vector.columns and layout.exposure-path.columns), and every distinct path of
+# values is a node under one root (MGMT~BANK), its members the rows (a letter may hold part of a book). A row with an empty level value
+# goes under a (Blank) node at that level (empty-label:, else drishti.var.hierarchy.empty-label). level-names: the level of each column's
+# nodes, also the reference kind their display names are read from (desk, book, legal-entity; the value itself when there is none).
+# ids: path (default, LL~LL-0003/DESK-RATES) or leaf (MGMT~DESK-RATES, when each value has one parent). word: the scope word naming a
+# node (LL:LL-0003). limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no
+# limit). Every VaR limit lives in var-limit, with its currency (docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes).
+# The system baskets (docs/guides/VAR_GUIDE.md section 5.7) are kept in Drishti's basket store, never read from data. seed: the demo's,
+# imported once into an empty system scope at the first start while drishti.var.system-baskets.seed is on (it follows
+# DRISHTI_DEMO_ENABLED); written by tools/packgen/var/make_var_data.py. A bank turns the seed off and imports its own file
+# (drishti.py var baskets import FILE --apply, the permission var:system-baskets).
+system-baskets:
+  seed: seeds/system-baskets.yaml
+
 hierarchies:
-  MGMT: { title: Management, source: risk-hierarchy, limits: var-limit }
-  LEGAL: { title: Legal entities, source: risk-hierarchy, limits: var-limit }
+  MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
+          root: { id: BANK, name: Drishti Bank }, limits: var-limit }
+  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path,
+           root: { id: BANK, name: Drishti Bank }, limits: var-limit }   # path: a desk booking into two legal entities is two nodes
   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }

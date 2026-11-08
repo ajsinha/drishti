@@ -1164,12 +1164,20 @@ public final class VarService implements AutoCloseable {
         return loader.hierarchies();
     }
 
-    /** Definitions of stored portfolios, the caller's baskets and captures, for the resolver. */
+    /**
+     * The system baskets valid on the date, as the engine resolves {@code PORT:<id>} by (VAR_GUIDE.md section 5.7): read from the basket
+     * store (cached until one changes anywhere), each with its var-limit limit in the date's currency.
+     */
+    Map<String, VarDate.Portfolio> portfolios(VarDate d) {
+        return saved.system().portfolios(d.date(), d.portfolioLimits());
+    }
+
+    /** Definitions of the system baskets, the caller's baskets and captures, for the resolver. */
     ScopeResolver.Definitions definitions(Principal p, VarDate d) {
         return new ScopeResolver.Definitions() {
             @Override
             public Optional<String> portfolio(String id) {
-                VarDate.Portfolio pf = d.portfolios().get(id);
+                VarDate.Portfolio pf = portfolios(d).get(id);
                 return pf == null ? Optional.empty() : Optional.of(pf.scope());
             }
 
@@ -1288,6 +1296,7 @@ public final class VarService implements AutoCloseable {
         } catch (IllegalArgumentException e) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
         }
+        unknownSystemBasket(parsed, res, d);
         if (parsed.refs().stream().anyMatch(r -> r.word().equals("CPTY")) && access.masked(p, "COUNTERPARTY")) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "the counterparty is masked for your role: a scope may not select trades by it");
         }
@@ -1319,6 +1328,14 @@ public final class VarService implements AutoCloseable {
         return new ScopeMembers(d.date(), res.canonical(), trades, positions, notionals, res.set().size() - set.size());
     }
 
+    /** {@code PORT:<id>} of a system basket the date does not have: {@code 404} in words, never an empty figure (VAR_GUIDE.md section 5.7). */
+    private static void unknownSystemBasket(ScopeExpr parsed, ScopeResolver.Resolution res, VarDate d) {
+        if (parsed instanceof ScopeExpr.Ref one && one.word().equals("PORT") && res.unknown().contains(one.toString())) {
+            throw new DrishtiException(ErrorCode.VAR_SYSTEM_BASKET_UNKNOWN, "no system basket " + one.arg() + " on " + d.date()
+                    + ": PORT <GO> lists the system baskets (VAR_GUIDE.md section 5.7)");
+        }
+    }
+
     private Scoped scoped1d(Principal p, String scope, LocalDate asked, String ccy) {
         return scoped1d(p, scope, date(asked, ccy));
     }
@@ -1335,6 +1352,7 @@ public final class VarService implements AutoCloseable {
         } catch (IllegalArgumentException e) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
         }
+        unknownSystemBasket(parsed, res, d);
         if (parsed.refs().stream().anyMatch(r -> r.word().equals("CPTY")) && access.masked(p, "COUNTERPARTY")) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "the counterparty is masked for your role: a scope may not select trades by it");
         }
@@ -1343,7 +1361,8 @@ public final class VarService implements AutoCloseable {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "a scope of positions, trades, a counterparty, a rule or a basket portfolio may only "
                     + "name what you see position by position; your role sees some of these only in aggregate");
         }
-        String key = d.date() + "|" + d.currency() + "|" + d.version() + "|i" + d.intradayStamp() + "|" + view.signature() + "|" + res.canonical() + "|" + res.set().digest();
+        String key = d.date() + "|" + d.currency() + "|" + d.version() + "|i" + d.intradayStamp() + "|" + view.signature() + "|" + res.canonical() + "|" + res.set().digest()
+                + (parsed.refs().stream().anyMatch(r -> r.word().equals("PORT")) ? "|sb" + saved.system().stamp() : "");   // a system basket renamed
         Scoped hit = cache.getIfPresent(key);
         if (hit != null) {
             return new Scoped(d, hit.view(), hit.res(), hit.set(), hit.hidden(), hit.vector(), hit.measures(), hit.kind(), hit.label(),
@@ -1377,9 +1396,9 @@ public final class VarService implements AutoCloseable {
         return m;
     }
 
-    /** A stored portfolio of type BASKET (named positions and trades): probing it is naming them (VAR_GUIDE.md section 5.3). */
-    private static boolean basket(VarDate d, String id) {
-        VarDate.Portfolio pf = d.portfolios().get(id);
+    /** A system basket of type BASKET (named positions and trades): probing it is naming them (VAR_GUIDE.md section 5.3). */
+    private boolean basket(VarDate d, String id) {
+        VarDate.Portfolio pf = portfolios(d).get(id);
         return pf != null && "BASKET".equals(pf.type());
     }
 
@@ -1427,7 +1446,7 @@ public final class VarService implements AutoCloseable {
                     : b.trades().text("PRODUCT_TYPE", res.trade()));
             case "portfolio" -> {
                 ScopeExpr.Ref r = (ScopeExpr.Ref) e;
-                VarDate.Portfolio pf = d.portfolios().get(r.arg());
+                VarDate.Portfolio pf = portfolios(d).get(r.arg());
                 yield pf == null || pf.name() == null ? r.arg() : pf.name();
             }
             case "basket" -> {

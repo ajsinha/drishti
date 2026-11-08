@@ -1110,6 +1110,7 @@ pivot:                          # the fields on offer, and the arrangement the p
 | `filters` | none | Fields offered as filters: a name (every value kept), `{ field, values: [USD, EUR] }` (only those values) or `{ field, min, max }` (an inclusive range of numbers, or of ISO dates written as text). Not both `values` and a range. |
 | `heat` | `false` | Kept for the arrangement; the pivot screen's conditional formats replace it. |
 | `chart` | none | Kept for the arrangement; the pivot screen charts a selection (`G`). |
+| `mode` | `views` | How the pivot screen opens it ([PIVOT_GUIDE.md section 2](PIVOT_GUIDE.md#2-the-screen)): `views` (the View picker in front of the compact line), `compact` (the compact line alone) or `panes` (the Fields and Build panes). A promoted view keeps its mode. |
 | `totals` | `true` | Kept for the arrangement; the pivot screen always shows the totals, each made from its own rows. |
 
 With `pivot: true`, or a mapping without `fields`, the fields are the panel's columns: a column bound to a row path (`"@.MTM"`) is named
@@ -3710,7 +3711,7 @@ wrote, comments included; then it reloads. A `name@version` already defined by a
 | `config/packs/core/core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml` | `CPTY CP-MERIDIAN-RE` | table with totals, kv, graph |
 | `config/packs/banking/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with a limit, four controls, `on-select`, Pivot, automatic id links |
 | `config/packs/banking/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
-| `config/packs/banking/market-risk/sutras/market-risk/portfolio.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, Pivot |
+| `config/packs/banking/market-risk/sutras/market-risk/system-basket.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, Pivot |
 | `config/packs/economy/world-economy/sutras/economics/economy.v1.sutra.yaml` | `ECON ECON-AUS` | map with a shade and a link |
 | `docs/guides/examples/*.sutra.yaml` | Help → Examples | twelve self-contained examples with their own small documents, every kind |
 

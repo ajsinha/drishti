@@ -227,7 +227,7 @@ the whole surface, `kernelApi: MAJOR.MINOR`, separate from the product version (
 | SPI | Purpose | Banking |
 |---|---|---|
 | `DrishtiModule` | the module's entry point: `start(ModuleContext)`, `stop()`, `health()`; the context gives the kernel services below, its settings, its folders and its logger | `BankingModule` |
-| `ModuleContext` services | `Kinds` (read and subscribe to bound kinds **as the person**), `KindWriter` (write produced kinds to their bound target), `Events`, `Scheduler`, `ComputePools` (incl. the Python pool), `Settings`, `Secrets` (**none**: modules get no secrets; section 13.4), `Audit`, `Registry` (ask, never read), `Caches`, `Clock` (business date) | VaR reads `scenario-pv`, `pnl-vector`, `risk-hierarchy` through `Kinds` |
+| `ModuleContext` services | `Kinds` (read and subscribe to bound kinds **as the person**), `KindWriter` (write produced kinds to their bound target), `Events`, `Scheduler`, `ComputePools` (incl. the Python pool), `Settings`, `Secrets` (**none**: modules get no secrets; section 13.4), `Audit`, `Registry` (ask, never read), `Caches`, `Clock` (business date) | VaR reads `scenario-pv`, `pnl-vector`, `var-limit` through `Kinds` |
 | `KindProvider` | answers a kind the module **computes** (replaces modules' `SourcePlugin`s and the reactive-connector Java runners): fetch, search, subscribe; inputs read through `Kinds` | `position` (derived from trades), `var-result` (`VRES`), `exposure-result`, intraday scenario PVs |
 | `ModuleSettings` | binds the module's `settings/schema.json` to a typed record; validated at start and on change | VaR windows, confidence, root names, hierarchies |
 | `AiToolProvider` | tools the AI assistant may call, each tied to a function (off function = no tool) | "VaR of a scope", "why VaR moved" |
@@ -713,9 +713,7 @@ functions and engines that depend on it, and its `demo` allowance. Banking's nee
 | `pnl-vector` | `>=1.0 <2` | read | any-of A | VAR, PVAR, SMAT | instead of scenario PVs |
 | `fx-scenario` | `>=1.0 <2` | read | with scenario-pv | VAR | converts scenario PVs to USD |
 | `scenario-set` | `>=1.0 <2` | read | yes | VAR, SWIN | the 509-day and 250-day windows |
-| `risk-hierarchy` | `>=1.0 <2` | read | yes | VAR, VLIM, HIER | the VaR tree and limit letters |
-| `portfolio` | `>=1.0 <2` | read | no | VAR PORT | |
-| `var-limit` | `>=1.0 <2` | read | no | VLIM, limit bars | |
+| `var-limit` | `>=1.0 <2` | read | no | VLIM, limit bars | the VaR limits of the hierarchies' nodes (the trees are built from the trades' promoted columns) |
 | `desk-pnl` | `>=1.0 <2` | read | no | backtesting | actual and hypothetical P&L |
 | `pnl-history` | `>=1.0 <2` | read | no | SWIN | stress window selection |
 | `position-sensitivity` | `>=1.0 <2` | read | yes for FRSA, SIMM | FRSA, SIMM, SENS | |
@@ -742,7 +740,7 @@ bindings:
   scenario-pv:
     read: [risk-store]                                 # a Delta connector on risklake (lake: risklake)
     live: var-pv-kafka
-  risk-hierarchy:
+  var-limit:
     read: [risk-store]
   var-official:
     write: { lake: risklake, table: banking.var-official }
@@ -828,7 +826,7 @@ administrator (four eyes), audited, applied **hot**: the kernel validates the ne
 
 ### 5.11 Banking's example bindings, three sites
 
-| Site | `trade` | `scenario-pv` / `pnl-vector` | `risk-hierarchy` | `var-official` |
+| Site | `trade` | `scenario-pv` / `pnl-vector` | `var-limit` | `var-official` |
 |---|---|---|---|---|
 | Laptop demo | `DEMO` | `DEMO` | `DEMO` | written to the demo lake |
 | Bank on Delta (`risklake`) | `trade-endur` + `trade-calypso` + `trade-murex` (union) on risklake | `risk-store` (Delta, risklake) | `risk-store` | `risklake` table `banking.var-official` |

@@ -53,7 +53,6 @@ needs:
   - { kind: pnl-vector,     contract: ">=1.0 <2", use: [read], any-of: A, demo: true, used-by: [VAR, PVAR, SMAT, PNLV] }
   - { kind: fx-scenario,    contract: ">=1.0 <2", use: [read], required: { with: scenario-pv }, demo: true, used-by: [VAR, FXS] }
   - { kind: scenario-set,   contract: ">=1.0 <2", use: [read], required: true, demo: true, used-by: [VAR, SWIN, SSET] }
-  - { kind: risk-hierarchy, contract: ">=1.0 <2", use: [read], required: true, demo: true, used-by: [VAR, VLIM, HIER] }
   - { kind: portfolio,      contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [PORT] }
   - { kind: var-limit,      contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [VLIM] }
   - { kind: desk-pnl,       contract: ">=1.0 <2", use: [read], required: false, demo: true, used-by: [DPNL, "VAR backtesting"] }
@@ -86,5 +85,5 @@ needs:
 
 computed:                                  # KindProviders of this module: not needs, not bindable; listed so Admin can show them
   - { kind: position,        from: [trade, scenario-pv, pnl-vector] }
-  - { kind: var-result,      from: [position, scenario-set, risk-hierarchy] }
+  - { kind: var-result,      from: [position, scenario-set, var-limit] }
   - { kind: exposure-result, from: [trade, netting-set, csa, collateral-balance, ir-curve, fx-spot] }

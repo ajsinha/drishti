@@ -303,7 +303,7 @@ any later batch.
 | `risk-factor` (RFAC) | `RISK_FACTOR`, `SOURCE_NAMES` | every factor's class, bucket, tenor and grid mapping; the bank's names (section 4.1) |
 | `trade` (TRD) | `TRADE_ID` | live status, gross notional (RRAO), the DRC's derived inputs |
 | `issuer` (ISS), `lei-entity` (LEI) | `OBLIGOR`, the issuer in a factor name | the obligor's rating and sector (DRC bucket and risk weight when derived) |
-| `risk-hierarchy` (HIER) | `NODE_ID` | the scopes: desks, legal entities, limit letters; the FRTB desks |
+| the VaR hierarchies (built from the trades' columns) | `NODE_ID` | the scopes: desks, legal entities, limit letters; the FRTB desks |
 | `pnl-vector` (positions) | `POSITION_ID` | the completeness check and the consistency check against VaR |
 | FX rates of the date | currency pair | conversion of every element to the reporting currency |
 | The parameter files | file name, version and hash | section 6.1 |
@@ -501,7 +501,7 @@ precomputed, and the file's SHA-256.
 
 ## 8. Scopes
 
-Every VaR scope ([VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets)): a hierarchy node (desk, legal entity,
+Every VaR scope ([VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets)): a hierarchy node (desk, legal entity,
 limit letter, FRTB desk), a portfolio, a basket, an ad-hoc set of positions. Positions' sensitivities to the same factor are added
 first; everything after the weighting is computed for the scope as a whole. **Non-additive:** the MR cube shows each cell's own charge
 and the diversification row `Σ cells − total`, as for VaR. **Filers:** the official capture is per filer (a legal entity that files)

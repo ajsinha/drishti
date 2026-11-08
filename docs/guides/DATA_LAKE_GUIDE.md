@@ -16,7 +16,7 @@
 # Data lake and data load guide
 
 How Drishti keeps data in a lake and how your files get into it, with real, runnable examples. It is written for the person who loads a
-bank's own data: trades, positions, the scenario PVs that VaR is computed from, and the VaR hierarchy's nodes, into a lake of their own
+bank's own data: trades, positions, the scenario PVs that VaR is computed from, and the VaR limits of the hierarchies' nodes, into a lake of their own
 (called `risklake` throughout), beside the demo lake and never mixed with it.
 
 The hands-on walk-through of the same, every step in the UI, on the command line and in YAML, is
@@ -25,7 +25,7 @@ not a lake (a database, a file folder, Kafka) is the [data guide](DATA_GUIDE.md)
 its section 1. The in-memory lake (feeds that may never touch a disk) is [section 13](#13-the-in-memory-lake).
 
 Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`, `DESK`, `BOOK`, `COUNTERPARTY_ID`); outputs marked
-*captured* were produced on a scratch data folder with 2,000 trades, 300 positions of 509 scenarios and 26 hierarchy nodes.
+*captured* were produced on a scratch data folder with 2,000 trades, 300 positions of 509 scenarios and 26 VaR limits.
 
 ## Contents
 
@@ -68,7 +68,7 @@ data/delta/
     │       ├── PRODUCT_TYPE=IRS/part-00000-....parquet
     │       └── ...
     ├── risk/scenario-pv/
-    ├── risk/risk-hierarchy/
+    ├── risk/var-limit/
     └── _drishti-lake/                  the lake's own state: runs/ (one summary per load), locks/, staging/
 data/delta/risk-results/                the official VaR and exposure results the server publishes (their own lake files)
 ```
@@ -107,7 +107,7 @@ Why one file per lake, who reads it and how it is built: [DATA_ARCHITECTURE.md s
 
 ### 2.1 A worked example: `config/lakes/risklake.yaml`
 
-Trades from Endur, positions and their scenario PVs, and the VaR hierarchy's nodes:
+Trades from Endur, positions and their scenario PVs, and the VaR limits of the hierarchy's nodes:
 
 ```yaml
 lake: risklake                    # its name: the file's name (lower-case letters, digits, - and _)
@@ -143,8 +143,8 @@ tables:
     row-group-mb: 64
     vector-compression: zstd
     retention: 7y
-  risk.risk-hierarchy:            # the VaR hierarchy's nodes: BANK > DESK > BOOK
-    promote: [NODE_ID, HIERARCHY, LEVEL, PARENT_ID, NAME]
+  risk.var-limit:                 # the VaR limits of the hierarchy's nodes: BANK > DESK > BOOK
+    promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
     id: NODE_ID
     date: BUSINESS_DATE
 ```
@@ -165,7 +165,7 @@ Check the file before you load: `drishti.py lake show` lists it as the server re
   risklake: delta at data/delta/risklake, 3 tables
     trading.trade_endur                      trading/trade_endur                      partitioned by business_date, PRODUCT_TYPE; 18 promoted
     risk.scenario-pv                         risk/scenario-pv                         partitioned by business_date; 24 promoted, vectors SCENARIO_PV
-    risk.risk-hierarchy                      risk/risk-hierarchy                      partitioned by business_date; 5 promoted
+    risk.var-limit                           risk/var-limit                           partitioned by business_date; 5 promoted
 ```
 
 ### 2.2 The lake's own keys
@@ -537,15 +537,15 @@ rows: 164
 ```
 
 **A tar of several tables and dates**, all or nothing: `<folder>/<YYYY-MM-DD>/part-0001.jsonl.gz` inside. A folder is a **table**
-(`trade_endur`, `trade_calypso`: the tables of the kind `trade`, one per source system) or a **kind** with one table (`risk-hierarchy`: [contract](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy), [example](../contracts/samples/market-risk.md#risk-hierarchy),
-written `risk_hierarchy` too), so one archive may mix the trades of several systems with the hierarchy:
+(`trade_endur`, `trade_calypso`: the tables of the kind `trade`, one per source system) or a **kind** with one table (`var-limit`: [contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit), [example](../contracts/samples/market-risk.md#var-limit),
+written `var_limit` too), so one archive may mix the trades of several systems with the limits:
 
 ```bash
 python3 push_inbox.py --inbox <data>/dataload/inbox --tar eod-2026-11-06 \
     --part trade_endur:2026-11-05:endur-1105.jsonl --part trade_endur:2026-11-06:endur-1106.jsonl \
     --part trade_calypso:2026-11-05:calypso-1105.jsonl --part trade_calypso:2026-11-06:calypso-1106.jsonl \
-    --part risk_hierarchy:2026-11-05:nodes-1105.jsonl --part risk_hierarchy:2026-11-06:nodes-1106.jsonl \
-    --folders trade_endur=trading,trade_calypso=trading,risk_hierarchy=market-risk --lake risklake
+    --part var_limit:2026-11-05:limits-1105.jsonl --part var_limit:2026-11-06:limits-1106.jsonl \
+    --folders trade_endur=trading,trade_calypso=trading,var_limit=market-risk --lake risklake
 ```
 
 You should see the pair go through the inbox within a cycle; the outbox's `eod-2026-11-06.tar.loaded.json` says `"outcome" : "loaded"`
@@ -558,8 +558,8 @@ prepare. `--folders` is optional when each folder names one pack's table or kind
 
 One file:  push_inbox.py --inbox <data>/dataload/inbox --table trade_endur --date 2026-11-06 --source rows.jsonl.gz --lake risklake \
                --pack trading --kind trade --connector trade-endur
-A tar:     push_inbox.py --inbox ... --tar eod-2026-11-06 --part trade_endur:2026-11-06:a.jsonl.gz --part risk_hierarchy:2026-11-06:b.jsonl \
-               --folders trade_endur=trading,risk_hierarchy=market-risk --lake risklake
+A tar:     push_inbox.py --inbox ... --tar eod-2026-11-06 --part trade_endur:2026-11-06:a.jsonl.gz --part var_limit:2026-11-06:b.jsonl \
+               --folders trade_endur=trading,var_limit=market-risk --lake risklake
 
 The data file is written in <dataload>/staging/ and renamed into the inbox when complete (one atomic rename); its .ready file,
 with the SHA-256 and the row count, is written LAST, the same way. A re-run of a day is safe with --mode replace."""
@@ -831,7 +831,7 @@ java -Xmx4g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-
 #### (d) At scale
 
 - **One file per table and business date**, gzipped, up to a few GB each; or **one tar** per batch when several tables (the trades of
-  several systems, the hierarchy, the PVs) must land together (all or nothing). Many small files cost more than a few large ones: aim for 100 MB to 2 GB per file.
+  several systems, the limits, the PVs) must land together (all or nothing). Many small files cost more than a few large ones: aim for 100 MB to 2 GB per file.
 - **One `.ready` per data file**; or, when a whole batch is written, one `ready.all` in the inbox releases every file there at once.
 - **Order:** a cycle takes every ready, stable file at that moment, oldest first, and loads the files of one table together; files that
   become ready during a run wait for the next cycle (`interval`, 10 minutes; **Load now** starts one at once). Send a table's dates in
@@ -886,7 +886,7 @@ key: TRADE_ID                # the id field. Default: the lake entry's id:, else
 new-table: false             # true: this file may create a table no pack has (with pack:, and drishti.dataload.new-tables: true). Default false
 #
 # --- A tar only ----------------------------------------------------------------------------------------------------------------------------------
-folders: {trade_endur: trading, scenario-pv: market-risk, risk_hierarchy: market-risk}
+folders: {trade_endur: trading, scenario-pv: market-risk, var_limit: market-risk}
                              # each top folder's pack (a tar holds <table or kind>/<YYYY-MM-DD>/ files). Default: the one pack with a
                              #   kind or table of that name (_ and - alike), else a pack of that name with one kind; an unresolved folder
                              #   refuses the whole tar. Section 4.4
@@ -922,31 +922,31 @@ mode that is not replace or append, or a checksum that is not 64 hexadecimal cha
 ### 4.1 One plain JSONL file
 
 ```text
-inbox/risk_hierarchy.2026-11-06.jsonl
-inbox/risk_hierarchy.2026-11-06.ready          (empty)
+inbox/var_limit.2026-11-06.jsonl
+inbox/var_limit.2026-11-06.ready          (empty)
 ```
 
-The table is `risk_hierarchy` and the date 2026-11-06, both from the name. With a rule or a `.ready` saying `pack: market-risk`,
-`kind: risk-hierarchy` and `lake: risklake` it goes to `risklake/risk/risk-hierarchy`.
+The table is `var_limit` and the date 2026-11-06, both from the name. With a rule or a `.ready` saying `pack: market-risk`,
+`kind: var-limit` and `lake: risklake` it goes to `risklake/risk/var-limit`.
 
 ### 4.2 A file whose name carries no date
 
 ```text
-inbox/var_nodes.jsonl
-inbox/var_nodes.ready
+inbox/var_limits.jsonl
+inbox/var_limits.ready
 ```
 
 ```yaml
 lake: risklake
-table: risk-hierarchy
+table: var-limit
 business-date: 2026-11-06
 mode: replace
-sha256: a8ef6dcae92b7c15871a93aa455e5e7bda0379f19c64d78b9c5eebcccb58c133
+sha256: 5e1e6523226a718f836f725d58650af2de53973add4a7733622e3fe5fb6df266
 rows: 26
 ```
 
-`lake build --plan` says where each value came from (*captured*): `var_nodes.jsonl: table risk-hierarchy …, business date 2026-11-06
-from the .ready file, mode overwrite-dates (var_nodes.ready)`.
+`lake build --plan` says where each value came from (*captured*): `var_limits.jsonl: table var-limit …, business date 2026-11-06
+from the .ready file, mode overwrite-dates (var_limits.ready)`.
 
 ### 4.3 A gz of scenario PVs, held until the risk run is signed off
 
@@ -964,8 +964,8 @@ The Inbox screen shows it as *held*; delete the `hold:` line (or set it to `fals
 
 A tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<folder>/<YYYY-MM-DD>/<files>.jsonl[.gz]`, nothing else (operating-system litter
 such as `__MACOSX/` and `.DS_Store` is ignored). **Each top folder is a table or a kind**: a table name (`trade_endur`, `trade_calypso`,
-`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv` ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv), [example](../contracts/samples/market-risk.md#scenario-pv)), `risk-hierarchy`)
-writes the kind's one table. Names compare without case and with `_` and `-` alike (`risk_hierarchy` is the kind `risk-hierarchy`):
+`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv` ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv), [example](../contracts/samples/market-risk.md#scenario-pv)), `var-limit`)
+writes the kind's one table. Names compare without case and with `_` and `-` alike (`var_limit` is the kind `var-limit`):
 
 ```text
 eod-2026-11-06.tar.gz
@@ -974,13 +974,13 @@ eod-2026-11-06.tar.gz
 ├── trade_calypso/2026-11-06/part-0001.jsonl.gz
 ├── scenario-pv/2026-11-06/part-0001.jsonl.gz
 ├── scenario-pv/2026-11-06/part-0002.jsonl.gz
-└── risk_hierarchy/2026-11-06/nodes.jsonl
+└── var_limit/2026-11-06/limits.jsonl
 ```
 
 ```yaml
 # eod-2026-11-06.tar.gz.ready
 lake: risklake
-folders: {trade_endur: trading, trade_calypso: trading, scenario-pv: market-risk, risk_hierarchy: market-risk}
+folders: {trade_endur: trading, trade_calypso: trading, scenario-pv: market-risk, var_limit: market-risk}
 rows: 2050326
 ```
 
@@ -991,7 +991,7 @@ refused naming them: name the table's folder (`trade_endur`). Each table's id is
 gets the pack's entry with the kind's key as `id:` (section 5.1), so a tar into a new lake needs nothing prepared. Every table of the archive shares
 one load id, and **an archive loads completely or not at all**: if one table's load fails, the tables already committed are undone and the
 archive goes to `failed/` saying what failed and what was rolled back. Make one from dated folders with
-`tar -czf eod-2026-11-06.tar.gz trade_endur trade_calypso scenario-pv risk_hierarchy` run in the folder holding them.
+`tar -czf eod-2026-11-06.tar.gz trade_endur trade_calypso scenario-pv var_limit` run in the folder holding them.
 
 ### 4.5 Checks: sha256 and rows
 
@@ -1027,9 +1027,9 @@ dataload:
       kind: scenario-pv
       lake: risklake
       date-field: BUSINESS_DATE               # the rows' own date: only counted when it differs
-    - match: "risk_hierarchy.*"
+    - match: "var_limit.*"
       pack: market-risk
-      kind: risk-hierarchy
+      kind: var-limit
       lake: risklake
   unmatched: fail                             # the only choice: a file no rule matches goes to failed/
 ```
@@ -1127,7 +1127,7 @@ python3 tools/drishti.py lake undo 20261107T080233.594-1791776.1 --lake data/del
 ```
 
 ```text
-would undo risk/risk-hierarchy 2026-11-06: 26 rows of load 20261107T080233.594-1791776.1 removed, 26 rows of the date before it restored
+would undo risk/var-limit 2026-11-06: 26 rows of load 20261107T080233.594-1791776.1 removed, 26 rows of the date before it restored
 ```
 
 Without `--dry-run` it asks for the load id again (`--yes` for scripts). The old versions an undo restores must still be there:
@@ -1150,10 +1150,10 @@ partitions and promoted columns come from the lake file. To read your scenario P
 ```yaml
 plugin: delta
 enabled: true
-kinds: [scenario-pv, risk-hierarchy]               # only what risklake holds
+kinds: [scenario-pv, var-limit]               # only what risklake holds
 settings:
   lake: risklake
-  lake-tables: risk.scenario-pv,risk.risk-hierarchy
+  lake-tables: risk.scenario-pv,risk.var-limit
   refresh-seconds: 30
 ```
 
@@ -1179,7 +1179,7 @@ from showing demo data beside yours:
   is unchanged. The server's published results lakes (`var-official`, `ccr-official`) do not count: they hold no inputs.
 - **A whole pack, one lake.** Point every Delta and Iceberg connector of a pack at the lake, not one of them: the pack's screens read
   all its connectors (`trade-endur`, `trade-calypso` and `trade-murex` are one trade store; VaR reads scenario PVs, P&L vectors,
-  hierarchies, portfolios and limits from `risk-store` and the market data from `market-store`). A connector file replaces the pack's
+  limits from `risk-store` and the market data from `market-store`). A connector file replaces the pack's
   template whole: keep its other keys (`union: true` on the trade connectors) when you change `lake:`.
 - **The warning.** A pack whose connectors read more than one lake is *DEGRADED* in Admin → Health and `GET /api/v1/health`
   (`packs[].lakes`, each lake with its connectors, and `packs[].lakeWarning`): *trading's connectors read different lakes: demo
@@ -1616,7 +1616,7 @@ scheduled report. Only a download by you may leave the server."*
 ### 13.7 Memory, the JVM and the host
 
 - **Direct memory.** The stores live in direct buffers. The JVM's limit must be 256 MB (the server's own I/O) plus the stores' caps.
-  `tools/windows/start-server.ps1` computes it from the configuration (`tools/lake/memory_caps.py`); the Docker image and the ECS
+  `bin/start-server` (`.sh` and `.ps1`) computes it from the configuration (`tools/lake/memory_caps.py`); the Docker image and the ECS
   entrypoint take `DRISHTI_LAKE_MEMORY_MB` (the caps added up); a systemd unit or a run configuration adds
   `-XX:MaxDirectMemorySize=<256 + caps>m` after the existing flag (the later one wins). Admin → Health turns **red** when the running
   limit is below it.

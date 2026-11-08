@@ -33,7 +33,7 @@ commands:                                # what people may type and see (command
     # trades and FX spot (scenario FX)
      TRD, CTRD, PTRD, LTRD, FX,
     # VaR: hierarchies, portfolios, positions, P&L vectors, scenario PVs, FX scenarios, scenario sets, limits, results, official (the what-if is the word VAR's)
-     HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VOFF,
+     PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VOFF,
     # Exposure: agreements, CSAs, netting sets, credit limits, collateral, margin calls, runs, paths, results, official (the what-if is the word EXP's)
      AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XOFC,
     # derived from the trade valuations: netting-set and counterparty MtM totals

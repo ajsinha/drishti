@@ -56,7 +56,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.risk-lake.plugin=delta",
         "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=risk-hierarchy", "drishti.sources.connectors.risk-lake.kinds[3]=portfolio",
+        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
         "drishti.sources.connectors.risk-lake.settings.domain=risk",
         "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
@@ -65,8 +65,13 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
-        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.risk-hierarchy=risk-lake",
-        "drishti.sources.routes.portfolio=risk-lake", "drishti.sources.routes.var-result=var-engine",
+        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
+        "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
+        "drishti.var.hierarchies.MGMT.level-names=desk > book", "drishti.var.hierarchies.MGMT.ids=leaf",
+        "drishti.var.hierarchies.MGMT.limits=var-limit", "drishti.var.hierarchies.LEGAL.title=Legal entity",
+        "drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "drishti.var.hierarchies.LEGAL.ids=leaf",
+        "drishti.var.hierarchies.LEGAL.limits=var-limit",
+        "drishti.sources.routes.var-result=var-engine",
         "drishti.var.positions.rules[0].name=securities", "drishti.var.positions.rules[0].groups[0]=Fixed income",
         "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
         "drishti.var.official.on-start=false",
@@ -98,6 +103,13 @@ class VarApiTest {
     }
 
     @Autowired MockMvc mvc;
+    @Autowired VarService systemBasketsOf;
+
+    /** The system baskets the tests name, in the basket store (they are no data). */
+    @org.junit.jupiter.api.BeforeEach
+    void systemBaskets() {
+        VarLakeFixture.systemBaskets(systemBasketsOf);
+    }
     @Autowired TokenVerifier tokens;
     @Autowired VarOfficial official;
     @Autowired VarFigures figures;
@@ -160,13 +172,14 @@ class VarApiTest {
     @Test
     @Order(2)
     void aLegalEntityIsItsTradesAndACounterpartyItsTrades() throws Exception {
-        // LE-B books T5 (BOOK-3) and T9 (BOOK-2, of no risk): the trades' entity is the answer, the LEGAL tree's difference a warning
+        // LE-B books T5 (BOOK-3): the LEGAL tree is built from the trades' LEGAL_ENTITY, so its node is the entity's trades exactly
         JsonNode le = getJson("/api/v1/risk/var/scope", "LE:LE-B", as("rita", "risk"));
         assertThat(le.get("var").asDouble()).isEqualTo(450);
-        assertThat(le.at("/provenance/trades").asInt()).isEqualTo(2);
-        assertThat(le.at("/provenance/warnings").toString()).contains("1 trades booked by LE-B sit outside LEGAL~LE-B");
+        assertThat(le.at("/provenance/trades").asInt()).isEqualTo(1);
+        assertThat(le.at("/provenance/warnings").toString()).doesNotContain("sit outside");
+        assertThat(getJson("/api/v1/risk/var/scope", "NODE:LEGAL~LE-B", as("rita", "risk")).at("/provenance/trades").asInt()).isEqualTo(1);
         assertThat(getJson("/api/v1/risk/var/scope", "LE:LE-A", as("rita", "risk")).at("/provenance/warnings").toString())
-                .contains("LEGAL~LE-A holds 1 trades booked by another legal entity");
+                .doesNotContain("booked by another legal entity");
         assertThat(var("CPTY:CP-2")).isEqualTo(450);
         assertThat(var("CPTY:cp-1")).isEqualTo(var("DESK:DESK-X"));
     }
@@ -217,7 +230,7 @@ class VarApiTest {
         assertThat(getJson("/api/v1/risk/var/scope/history", "DESK:DESK-X", as("rita", "risk")).get("mode").asText()).isEqualTo("replay");
         JsonNode t = getJson("/api/v1/risk/var/tree", "", as("rita", "risk"));
         assertThat(t.get("nodes")).hasSize(6);
-        assertThat(t.get("portfolios")).hasSize(2);
+        assertThat(t.get("portfolios").findValuesAsText("id")).contains("PF-EUR", "PF-MIX");   // the system baskets valid on the date
     }
 
     /**
@@ -444,7 +457,7 @@ class VarApiTest {
                 .isEqualTo("unavailable");                                                  // outside a request: no viewer, no figures
         com.ash.drishti.server.net.NetCaller.with(new com.ash.drishti.server.net.NetCaller.Caller(
                 new com.ash.drishti.server.security.Principal("rita", List.of("risk")), null, "t"),
-                () -> seen[0] = figures.augment(new com.ash.drishti.api.EntityDocument(com.ash.drishti.api.EntityRef.of("portfolio", "PF-MIX"),
+                () -> seen[0] = figures.augment(new com.ash.drishti.api.EntityDocument(com.ash.drishti.api.EntityRef.of("system-basket", "PF-MIX"),
                         com.ash.drishti.api.DataNode.of(java.util.Map.of("PORTFOLIO_ID", "PF-MIX")), stored.provenance()), null));
         JsonNode pf = json.readTree(json.writeValueAsString(seen[0].data().unwrap())).get(VarFigures.FIELD);
         assertThat(pf.get("VAR").asDouble()).isEqualTo(1080);

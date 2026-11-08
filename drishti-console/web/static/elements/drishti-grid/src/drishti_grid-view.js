@@ -60,6 +60,17 @@ let seq = 0;
  * @property {function(Object): ?Object<string, *>} [getRowData] data-* attributes for a leaf's row ({key: 'A-1'}: data-key)
  * @property {boolean} [chrome=true] false: the grid without its layout's chrome (no command line, toolbar, wells or function keys; the
  *   status bar and Explain stay), for a small table inside a screen that has its own command line and keys
+ * @property {Array<{id: string, title: string, levels: Array<{field: string, label: string}>}>} [hierarchies] the source's hierarchies (the
+ *   server's catalogue): one item of the pickers each, its levels side by side in Rows or Columns with a level stepper
+ * @property {Array<{id: string, label: string, needs: ?string}>} [showAs] the show-as forms the server computes (none: no Show value as)
+ * @property {import('./drishti_grid-views.js').ViewsHook} [views] the View picker in front of the compact line (C): ready-made, my and
+ *   shared views, Save view as…
+ * @property {boolean} [customize=true] Customize › (and \) between the compact line and the panes
+ * @property {function(Object, Object): {items: Array<Object>, run: function(string): void}} [valueOptions] a per-cell measure's options in
+ *   its value menu (the VaR lens: horizon, confidence, scenario set)
+ * @property {Array<{name: string, label: string}>} [customFunctions] the custom functions the server has enabled, offered as ƒ in the value menus
+ * @property {function({formula: string, field: Object, value: Object, done: function(string, string): void}): void} [formulaEditor] the
+ *   host's formula editor for Custom ƒ… (default: a text field; the server checks the formula when it answers)
  * @property {GridModel} [model] draw this model rather than make one
  * @property {boolean} [chrome=true] false: the grid alone, without toolbar, wells, status bar or Explain drawer (a panel inside a page
  *   that has its own; the keys, menus and Explain hook still work)
@@ -105,6 +116,7 @@ export class Grid extends GridBase {
     this.wire();
     if (o.pivotOptions) { this.model.pivotExtra = Object.assign({}, o.pivotOptions); }
     if (o.pivot) { this.model.wells.setState(o.pivot); this.model.setPivotMode(true); }
+    host.addEventListener('keydown', (e) => this.wells.hostKey(e));      // R C V F, Shift+V, \, Alt+arrows: the wells' keys
     this.watchSize();
     this.refresh();
   }

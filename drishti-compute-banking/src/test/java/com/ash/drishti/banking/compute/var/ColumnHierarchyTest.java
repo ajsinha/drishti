@@ -43,8 +43,8 @@ import org.junit.jupiter.api.io.TempDir;
 class ColumnHierarchyTest {
 
     static final int W = SyntheticBank.WIDTH;
-    static final HierarchySpec LL = new HierarchySpec("LL", "Limit letters", "columns", List.of("LIMIT_LETTER", "DESK"), null, null, null,
-            false, "LL", "var-limit");
+    static final HierarchySpec LL = new HierarchySpec("LL", "Limit letters", List.of("LIMIT_LETTER", "DESK"), null, null, null,
+            false, "LL", "var-limit", null);
     static ParallelSums sums;
     @TempDir
     static Path dir;
@@ -53,6 +53,8 @@ class ColumnHierarchyTest {
     record T(String id, String book, String desk, String letter, String pos, double[] pnl) {}
 
     static final Map<String, T> TRADES = new LinkedHashMap<>();
+    /** The legal entity a book books into (LE-1 unless a test says otherwise). */
+    static final Map<String, String> ENTITY = new java.util.concurrent.ConcurrentHashMap<>();
 
     @BeforeAll
     static void data() {
@@ -86,7 +88,7 @@ class ColumnHierarchyTest {
         List<String> cols = b.textColumns();
         String[] x = new String[cols.size()];
         x[cols.indexOf("POSITION_ID")] = t.pos() == null ? "POS-" + t.book() + "~" + t.id() : t.pos();
-        x[cols.indexOf("LEGAL_ENTITY")] = "LE-1";
+        x[cols.indexOf("LEGAL_ENTITY")] = ENTITY.getOrDefault(t.book(), "LE-1");
         x[cols.indexOf("DESK")] = t.desk();
         x[cols.indexOf("TT_BOOK")] = t.book();
         x[cols.indexOf("CURRENCY")] = "USD";
@@ -194,13 +196,38 @@ class ColumnHierarchyTest {
     }
 
     @Test
+    void aDeskBookingIntoTwoLegalEntitiesIsTwoNodesOfLegalWithPathIds() {
+        // the market-risk pack's LEGAL: LEGAL_ENTITY > DESK > TT_BOOK, ids: path; DESK-A books BOOK-0 into LE-1 and BOOK-1 into LE-2
+        HierarchySpec legal = new HierarchySpec("LEGAL", "Legal entities", List.of("LEGAL_ENTITY", "DESK", "TT_BOOK"),
+                List.of("legal-entity", "desk", "book"), "BANK", "Bank", false, null, null, null);
+        ENTITY.put("BOOK-1", "LE-2");
+        try {
+            VarBook b = build(TRADES, null, List.of(legal));                   // the date loads: no DRS-5213
+            assertThat(b.node("LEGAL~LE-1/DESK-A").parent()).isEqualTo("LEGAL~LE-1");
+            assertThat(b.node("LEGAL~LE-2/DESK-A").parent()).isEqualTo("LEGAL~LE-2");
+            assertThat(b.node("LEGAL~LE-1/DESK-A/BOOK-0").members()).isEqualTo(b.node("MGMT~BOOK-0").members());
+            assertThat(b.node("LEGAL~LE-2/DESK-A/BOOK-1").members()).isEqualTo(b.node("MGMT~BOOK-1").members());
+            assertThat(b.node("LEGAL~LE-1/DESK-A").members().or(b.node("LEGAL~LE-2/DESK-A").members()))
+                    .isEqualTo(b.node("MGMT~DESK-A").members());                // the desk's trades, split by entity, none lost
+            assertThat(b.node("LEGAL~BANK").members()).isEqualTo(b.all());
+            assertThat(b.node("LEGAL~LE-1").children()).contains("LEGAL~LE-1/DESK-A", "LEGAL~LE-1/DESK-B");
+            // the same with leaf ids is refused: DESK-A under two entities
+            HierarchySpec leaf = new HierarchySpec("LEGAL", "Legal entities", List.of("LEGAL_ENTITY", "DESK", "TT_BOOK"),
+                    List.of("legal-entity", "desk", "book"), "BANK", "Bank", true, null, null, null);
+            assertThatThrownBy(() -> build(TRADES, null, List.of(leaf))).isInstanceOf(IllegalStateException.class).hasMessageContaining("DESK-A");
+        } finally {
+            ENTITY.clear();
+        }
+    }
+
+    @Test
     void leafIdsAreRefusedWhenAValueHasTwoParents() {
-        HierarchySpec leaf = new HierarchySpec("LL", "Limit letters", "columns", List.of("LIMIT_LETTER", "DESK"), null, null, null, true, "LL", null);
+        HierarchySpec leaf = new HierarchySpec("LL", "Limit letters", List.of("LIMIT_LETTER", "DESK"), null, null, null, true, "LL", null, null);
         // DESK-A sits under LL-1 and LL-2
         assertThatThrownBy(() -> build(TRADES, null, List.of(leaf))).isInstanceOf(IllegalStateException.class).hasMessageContaining("DESK-A")
                 .hasMessageContaining("ids: path");
         // a tree where each value has one parent: leaf ids work
-        HierarchySpec deskBook = new HierarchySpec("DB", "Desks", "columns", List.of("DESK", "TT_BOOK"), null, null, null, true, "DB", null);
+        HierarchySpec deskBook = new HierarchySpec("DB", "Desks", List.of("DESK", "TT_BOOK"), null, null, null, true, "DB", null, null);
         VarBook b = build(TRADES, null, List.of(deskBook));
         assertThat(b.node("DB~BOOK-0").parent()).isEqualTo("DB~DESK-A");
         assertThat(b.node("DB~BOOK-0").members()).isEqualTo(b.node("MGMT~BOOK-0").members());

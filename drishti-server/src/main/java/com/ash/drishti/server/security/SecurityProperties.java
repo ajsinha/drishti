@@ -93,21 +93,29 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param compliance may place legal holds, export the collaboration record and read any share; false unless set
      * @param bi business-intelligence powers (Rupaka): any of {@code bi}, {@code bi-author}, {@code bi-steward}, {@code bi-admin}; an administrator holds all
      * @param edit may submit changes through write-back (APPROVALS_GUIDE.md › The design and its reasons, section 12); false unless set
+     * @param permissions module permissions ({@code var:system-baskets}: create, edit, retire and import the VaR engine's system baskets,
+     *     VAR_GUIDE.md section 5.7); an administrator holds every one
      */
     public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance,
-            List<String> bi, Boolean edit) {
+            List<String> bi, Boolean edit, List<String> permissions) {
 
         public Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance) {
-            this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, null, null);
+            this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, null, null, null);
         }
 
         public Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance,
                 List<String> bi) {
-            this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, bi, null);
+            this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, bi, null, null);
+        }
+
+        public Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance,
+                List<String> bi, Boolean edit) {
+            this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, bi, edit, null);
         }
 
         @org.springframework.boot.context.properties.bind.ConstructorBinding
         public Role {
+            permissions = permissions == null ? List.of() : List.copyOf(permissions);
             bi = bi == null ? List.of() : List.copyOf(bi);
             kinds = kinds == null ? List.of() : List.copyOf(kinds);
             raw = raw != null && raw;

@@ -107,10 +107,6 @@ tables:
     file-rows: 250000
     row-group-rows: 1000
     id: VALUATION_ID
-  risk.portfolio:
-    promote: [PORTFOLIO_ID, NAME, TYPE, OWNER]
-    id: PORTFOLIO_ID
-    date: BUSINESS_DATE
   risk.pnl-vector:
     promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK,
       LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, PV, TAGS, TRADE_STATUS, MATURITY_DATE,
@@ -138,10 +134,6 @@ tables:
     id: FX_SCENARIO_ID
     date: BUSINESS_DATE
   risk.scenario-set: {id: SCENARIO_SET_ID, date: BUSINESS_DATE}
-  risk.risk-hierarchy:
-    promote: [NODE_ID, HIERARCHY, LEVEL, PARENT_ID, NAME]
-    id: NODE_ID
-    date: BUSINESS_DATE
   risk.var-limit:
     promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
     id: LIMIT_ID

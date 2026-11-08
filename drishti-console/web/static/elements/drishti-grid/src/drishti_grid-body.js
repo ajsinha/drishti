@@ -366,6 +366,11 @@ export class GridBody extends GridPointer {
       if (deco && deco.title) { note = note ? note + '\n' + deco.title : String(deco.title); }
       if (deco && deco.style) { Object.keys(deco.style).forEach((k) => { if (DECO_STYLES.indexOf(k) >= 0 && deco.style[k]) { style[k] = String(deco.style[k]); } }); }
     }
+    const blank = x.kind === 'pivot' && col.rowHeader && !loading && /^\(blank\)$/i.test(String(text || '').trim());   // an empty member: (Blank)
+    if (x.kind === 'pivot' && col.rowHeader && !loading && !note) {                                     // the full label, its path
+      note = x.entry.path && x.entry.path.length ? x.entry.path.map((p) => (p[1] === null || p[1] === undefined || p[1] === '' ? '(Blank)' : p[1])).join(' › ') : x.entry.label || null;
+    }
+    if (blank) { cls += ' dg-blank'; }
     const focused = k.focus && k.focus.row === r && k.focus.col === c;
     if (focused) { cls += ' dg-focus'; }
     if ((col.cellClass || col.cellStyle) && !loading && (x.kind === 'leaf' || x.kind === 'group' || x.tree)) {
@@ -405,6 +410,10 @@ export class GridBody extends GridPointer {
     } else if (drawn !== null && drawn !== undefined && drawn !== '') {
       cell.appendChild(typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn);
     } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
+    if (blank) {
+      const dim = x.entry.path && x.entry.path.length ? x.entry.path[x.entry.path.length - 1][0] : 'this level';
+      cell.appendChild(h(doc, 'span', { cls: 'dg-blank-q', text: '?', attrs: { role: 'note', title: '(Blank): the rows with no ' + dim + ' value are kept here, so every total above stays complete' } }));
+    }
     if (deco && deco.after !== undefined && deco.after !== null && deco.after !== '') {
       cell.appendChild(typeof deco.after === 'object' && deco.after.nodeType ? deco.after : h(doc, 'span', { cls: 'dg-after', text: String(deco.after) }));
     }

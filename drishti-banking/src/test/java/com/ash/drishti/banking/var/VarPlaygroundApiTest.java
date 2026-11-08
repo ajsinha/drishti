@@ -58,7 +58,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.risk-lake.plugin=delta",
         "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=risk-hierarchy", "drishti.sources.connectors.risk-lake.kinds[3]=scenario-pv",
+        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit", "drishti.sources.connectors.risk-lake.kinds[3]=scenario-pv",
         "drishti.sources.connectors.risk-lake.kinds[4]=fx-scenario",
         "drishti.sources.connectors.risk-lake.settings.domain=risk",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
@@ -71,7 +71,12 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.sources.connectors.risk-lake.settings.layout.scenario-pv.vectors=SCENARIO_PV",
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
-        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.risk-hierarchy=risk-lake",
+        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
+        "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK",
+        "drishti.var.hierarchies.MGMT.level-names=desk", "drishti.var.hierarchies.MGMT.ids=leaf",
+        "drishti.var.hierarchies.MGMT.limits=var-limit", "drishti.var.hierarchies.LEGAL.title=Legal entity",
+        "drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "drishti.var.hierarchies.LEGAL.ids=leaf",
+        "drishti.var.hierarchies.LEGAL.limits=var-limit",
         "drishti.sources.routes.scenario-pv=risk-lake", "drishti.sources.routes.fx-scenario=risk-lake",
         "drishti.var.official.on-start=false", "drishti.var.official.publish=false", "drishti.var.currencies=USD",
         "drishti.var.hot-dates=1", "drishti.var.playground.max-ids=3",
@@ -183,12 +188,13 @@ class VarPlaygroundApiTest {
         fx.add(rate("EUR", 1.0835, r));
         fx.add(rate("GBP", 1.2994, r));
         VarLakeFixture.table(root, work, "fx-scenario", "FX_SCENARIO_ID", fx, List.of("CURRENCY", "RATE", "SCENARIO_SET_ID"), null);
-        List<Map<String, Object>> nodes = new ArrayList<>();
-        nodes.add(node("MGMT~BANK", "bank", null, List.of(books)));
+        // MGMT (bank > desk) is built from the rows' DESK; each node's limit a var-limit row
+        List<Map<String, Object>> limits = new ArrayList<>();
+        limits.add(limit("MGMT~BANK"));
         for (int b = 0; b < 3; b++) {
-            nodes.add(node("MGMT~" + desks[b], "desk", "MGMT~BANK", List.of(books[b])));
+            limits.add(limit("MGMT~" + desks[b]));
         }
-        VarLakeFixture.table(root, work, "risk-hierarchy", "NODE_ID", nodes, List.of("NODE_ID", "LIMIT_VAR"), null);
+        VarLakeFixture.table(root, work, "var-limit", "LIMIT_ID", limits, List.of("HIERARCHY", "NODE_ID", "LIMIT_VAR"), null);
     }
 
     static Map<String, Object> rate(String ccy, double base, Random r) {
@@ -207,15 +213,13 @@ class VarPlaygroundApiTest {
         return d;
     }
 
-    static Map<String, Object> node(String id, String level, String parent, List<String> books) {
+    static Map<String, Object> limit(String id) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("NODE_ID", id);
+        m.put("LIMIT_ID", "VL-" + id);
         m.put("HIERARCHY", "MGMT");
-        m.put("LEVEL", level);
-        m.put("PARENT_ID", parent);
-        m.put("NAME", id.substring(5));
-        m.put("BOOKS", books);
+        m.put("NODE_ID", id);
         m.put("LIMIT_VAR", 1e9);
+        m.put("CURRENCY", "USD");
         m.put("BUSINESS_DATE", DAY.toString());
         return m;
     }

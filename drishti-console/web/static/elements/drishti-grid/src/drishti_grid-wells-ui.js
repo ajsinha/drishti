@@ -13,19 +13,30 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The wells as drawn: the field list (searched) and the four wells, Filters, Rows, Columns and Values, as chips a person drags between
-   them (or moves from the chip's menu: the keyboard's way). Three arrangements of one model: the ribbon above the grid (layout wells),
-   the side tool panel with a grouped field list, checkboxes and switches (layout panel), the lane under the terminal's command line
-   (layout terminal). A chip's menu holds its aggregation (a non-additive value says the server computes it), a filter's members, the
-   value filters and top N of the pivot, a move to another well and the removal. A drop that cannot be made says why. */
+/* The wells as drawn (PIVOT_GUIDE.md section 2), three arrangements of one model (drishti_wells.js):
+
+     ribbon (layout wells)    the compact line above the grid, the trader view (B): [View ▾] Rows [⋔ MGMT ▾ Desk › Book ▲▼] [Position ▾] +
+                              · Columns [Risk class ▾] + · Filters [Trade status ▾] + · Values: the lit measure toggles ARE the values (▾ for
+                              each one's function and show-as), the unlit ones a click away, ⋯ for the rest · Customize ›. No field list on
+                              screen: each well's name or + opens its picker (R, C, V, F). With a views hook the View picker sits in front (C).
+     panel (layout panel)     the panes beside the grid (A, Power BI's): Build (the four wells as lists, the switches) and Fields (search,
+                              Hierarchies, the fields by folder, the measures by folder, More fields), collapsible to a rail; drag between them.
+     lane (layout terminal)   the lane under the terminal's command line.
+
+   A hierarchy is one chip with a level stepper (▲ up a level, ▼ the next level; Alt+↑ and Alt+↓). A chip's menu (drishti_grid-wells-menus.js)
+   holds a value's function, show-as and options, a field's members, order and top N, moves and removal. A drop that cannot be made says why. */
 import { h } from '../../drishti-core/src/drishti_index.js';
-import { VALUE_FUNCS } from './drishti_wells.js';
-import { aggFunc } from './drishti_aggregate.js';
-import { parseCondition, conditionText } from './drishti_grid-ui.js';
+import { conditionText } from './drishti_grid-ui.js';
+import { chipMenu, valueMenu, valueFilterMenu } from './drishti_grid-wells-menus.js';
+import { fieldGroups, openPicker } from './drishti_grid-fields.js';
+import { ViewPicker } from './drishti_grid-views.js';
 
 const NAMES = { filters: 'Filters', rows: 'Rows', columns: 'Columns', values: 'Values' };
 const LANE = { rows: 'ROWS', columns: 'COLS', values: 'VALS', filters: 'FILT' };
+const KEYS = { rows: 'R', columns: 'C', values: 'V', filters: 'F' };
 const MIME = 'text/x-drishti-field';
+/** How many unlit measure toggles the line shows before ⋯. */
+const TOGGLES = 8;
 
 /**
  * The wells and the field list of a grid's view.
@@ -39,6 +50,9 @@ export class WellsView {
     this.doc = view.doc;
     this.search = '';
     this.dragging = null;
+    this.views = view.o.views ? new ViewPicker(view) : null;
+    this.openHier = new Set();
+    this.closedGroups = new Set(['more']);
   }
 
   /** @private the wells model being edited (the draft while updates are deferred) */
@@ -55,46 +69,106 @@ export class WellsView {
     const keepFocus = doc.activeElement && el.contains(doc.activeElement) && doc.activeElement.classList.contains('dg-field-search');
     el.textContent = '';
     el.className = 'dg-wells dg-wells-' + how;
-    const order = how === 'lane' ? ['rows', 'columns', 'values', 'filters'] : how === 'panel' ? ['filters', 'columns', 'rows', 'values'] : ['filters', 'rows', 'columns', 'values'];
-    const zones = h(doc, 'div', { cls: 'dg-zones' }, order.map((w) => this.zone(w, how)));
-    const search = h(doc, 'input', { cls: 'dg-field-search', attrs: { type: 'search', placeholder: 'Find a field', 'aria-label': 'Find a field', value: this.search } });
-    search.addEventListener('input', () => { this.search = search.value; this.view.renderChrome(); });
-    if (how === 'panel') {
-      el.append(h(doc, 'div', { cls: 'dg-field-list', attrs: { role: 'group', 'aria-label': 'Fields' } }, [search].concat(this.groupedFields())), zones, this.switches());
-    } else if (how === 'lane') {
-      el.append(zones, h(doc, 'div', { cls: 'dg-lane-fields' }, [h(doc, 'span', { cls: 'dg-zl', text: '+ FIELD' }), search].concat(this.unusedChips())));
-    } else {
-      el.append(h(doc, 'span', { cls: 'dg-zl', text: 'Fields' }), h(doc, 'div', { cls: 'dg-fields', attrs: { role: 'list', 'aria-label': 'Fields' } }, [search].concat(this.unusedChips())),
-        h(doc, 'span', { cls: 'dg-zl', text: 'Wells' }), zones);
-    }
+    if (how === 'panel') { this.panes(el); }
+    else if (how === 'lane') {
+      const search = this.searchBox();
+      el.append(h(doc, 'div', { cls: 'dg-zones' }, ['rows', 'columns', 'values', 'filters'].map((w) => this.zone(w, how))),
+        h(doc, 'div', { cls: 'dg-lane-fields' }, [h(doc, 'span', { cls: 'dg-zl', text: '+ FIELD' }), search].concat(this.unusedChips())));
+    } else { this.line(el); }
     if (!el.dataset.dgWired) { el.dataset.dgWired = '1'; this.listen(el); }
-    if (keepFocus) { const s = el.querySelector('.dg-field-search'); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+    if (keepFocus) { const s = el.querySelector('.dg-field-search'); if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
   }
 
-  /** @private the fields matching the search */
-  fields() { return this.w().fieldList(this.search); }
+  /** @private the field search of the panes and the lane */
+  searchBox() {
+    const search = h(this.doc, 'input', { cls: 'dg-field-search', attrs: { type: 'search', placeholder: 'Search fields  /', 'aria-label': 'Search fields', value: this.search } });
+    search.addEventListener('input', () => { this.search = search.value; this.view.renderChrome(); });
+    return search;
+  }
 
-  /** @private a chip per field in no well */
-  unusedChips() { return this.fields().filter((f) => !f.in.length).map((f) => this.chip(f.id, '', -1)); }
+  // ---- B: the compact line -----------------------------------------------------------------------------------------------------------
 
-  /** @private the panel's grouped list with checkboxes */
-  groupedFields() {
-    const doc = this.doc, groups = new Map();
-    this.fields().forEach((f) => { const g = f.group || (f.value ? 'Measures' : 'Fields'); if (!groups.has(g)) { groups.set(g, []); } groups.get(g).push(f); });
-    const out = [];
-    groups.forEach((list, g) => {
-      out.push(h(doc, 'div', { cls: 'dg-fgroup', text: g }));
-      list.forEach((f) => {
-        const box = h(doc, 'input', { attrs: { type: 'checkbox', 'aria-label': 'Use ' + f.header }, data: { use: f.id } });
-        box.checked = f.in.length > 0;
-        out.push(h(doc, 'div', { cls: 'dg-field', attrs: { draggable: 'true' }, data: { field: f.id, well: '', index: '-1' } }, [box, h(doc, 'span', { text: f.header }),
-          f.value && !f.additive ? h(doc, 'span', { cls: 'dg-na', text: '◆' }) : null, h(doc, 'span', { cls: 'dg-ftype', text: f.value ? (f.additive ? 'Σ' : 'server') : 'abc' })]));
+  /** @private the compact line: [View] Rows · Columns · Filters · Values · Customize › */
+  line(el) {
+    const doc = this.doc, dot = () => h(doc, 'span', { cls: 'dg-dotsep', text: '·', attrs: { 'aria-hidden': 'true' } });
+    if (this.views) { el.append(this.views.button(), h(doc, 'span', { cls: 'dg-bar', attrs: { 'aria-hidden': 'true' } })); }
+    el.append(this.zone('rows', 'line'), dot(), this.zone('columns', 'line'), dot(), this.zone('filters', 'line'), dot(), this.valuesLine(), h(doc, 'span', { cls: 'dg-sp' }));
+    if (this.view.o.customize !== false) {
+      el.append(h(doc, 'button', { cls: 'dg-customize', text: 'Customize ›', attrs: { type: 'button', title: 'The Fields and Build panes (\\)', 'aria-keyshortcuts': '\\' }, data: { act: 'customize' } }));
+    }
+  }
+
+  /** @private Values on the line: the lit toggles (the values, in order, each with ▾), the unlit measures, ⋯ */
+  valuesLine() {
+    const doc = this.doc, w = this.w(), st = w.state;
+    const items = st.values.map((v, i) => this.chip(v.colId, 'values', i));
+    const used = new Set(st.values.map((v) => v.colId));
+    const cands = w.fieldList('').filter((f) => !used.has(f.id) && !f.more && (f.role === 'measure' || (f.value && f.type === 'number')))
+      .sort((a, b) => (a.role === 'measure' ? 0 : 1) - (b.role === 'measure' ? 0 : 1));   // the measures first, then the number fields
+    cands.slice(0, TOGGLES).forEach((f) => items.push(h(doc, 'button', { cls: 'dg-vtoggle', text: f.header, attrs: { type: 'button', 'aria-pressed': 'false', title: 'Add ' + f.header + ' to Values' }, data: { field: f.id } })));
+    items.push(h(doc, 'button', { cls: 'dg-add', text: cands.length > TOGGLES ? '⋯' : '+', attrs: { type: 'button', 'aria-label': 'Values: every measure and field (V)', title: 'Values (V)' }, data: { pick: 'values' } }));
+    return h(doc, 'div', { cls: 'dg-zone dg-zone-values', attrs: { role: 'list', 'aria-label': 'Values' }, data: { well: 'values' } },
+      [h(doc, 'button', { cls: 'dg-zl dg-pick', text: 'Values', attrs: { type: 'button', 'aria-keyshortcuts': 'V', title: 'Values (V)' }, data: { pick: 'values' } })].concat(items));
+  }
+
+  // ---- A: the panes ------------------------------------------------------------------------------------------------------------------
+
+  /** @private Build (the wells, the switches) and Fields (the catalogue), or the rail when closed */
+  panes(el) {
+    const doc = this.doc, v = this.view;
+    if (v.ui.panesClosed) {
+      el.classList.add('dg-rail');
+      el.append(h(doc, 'button', { cls: 'dg-rail-btn', text: '«', attrs: { type: 'button', 'aria-label': 'Open the Build and Fields panes', title: 'Open the panes' }, data: { act: 'panes' } }),
+        h(doc, 'span', { cls: 'dg-rail-label', text: 'Build · Fields' }));
+      return;
+    }
+    const head = (text, act) => h(doc, 'div', { cls: 'dg-pane-head' }, [h(doc, 'span', { text: text }), act ? h(doc, 'button', { cls: 'dg-pane-close', text: '»', attrs: { type: 'button', 'aria-label': 'Close the panes to a rail', title: 'Close the panes' }, data: { act: act } }) : null]);
+    const build = h(doc, 'section', { cls: 'dg-build', attrs: { 'aria-label': 'Build' } }, [head('Build', 'panes')]);
+    if (this.views) { build.append(h(doc, 'div', { cls: 'dg-pane-views' }, [this.views.button()])); }
+    build.append(h(doc, 'div', { cls: 'dg-zones' }, ['rows', 'columns', 'values', 'filters'].map((w) => this.zone(w, 'panel'))), this.switches());
+    if (v.o.customize !== false) { build.append(h(doc, 'button', { cls: 'dg-customize', text: '‹ Close the panes', attrs: { type: 'button', title: 'Back to the compact line (\\)' }, data: { act: 'customize' } })); }
+    const list = h(doc, 'div', { cls: 'dg-field-list', attrs: { role: 'tree', 'aria-label': 'Fields' } }, this.fieldTree());
+    const fields = h(doc, 'section', { cls: 'dg-fieldpane', attrs: { 'aria-label': 'Fields' } }, [head('Fields', null), this.searchBox(), list]);
+    el.append(build, fields);
+  }
+
+  /** @private the Fields pane: hierarchies (each with its levels), the fields and the measures by folder, More fields */
+  fieldTree() {
+    const doc = this.doc, w = this.w(), out = [], q = this.search.toLowerCase();
+    const groups = fieldGroups(w, 'rows').concat(fieldGroups(w, 'values').filter((g) => g.id.indexOf('m:') === 0));
+    groups.forEach((g) => {
+      const items = g.items.filter((it) => !q || (it.label + ' ' + (it.detail || '') + ' ' + (it.children || []).map((c) => c.label).join(' ')).toLowerCase().indexOf(q) >= 0);
+      if (!items.length) { return; }
+      const closed = !q && this.closedGroups.has(g.id);
+      out.push(h(doc, 'div', { cls: 'dg-fgroup', attrs: { role: 'presentation' }, data: { group: g.id } }, [closed ? '▸ ' : '▾ ', g.label, h(doc, 'span', { cls: 'dg-fcount', text: String(items.length) })]));
+      if (closed) { return; }
+      items.forEach((it) => {
+        if (it.children) {
+          const open = this.openHier.has(it.id) || !!q;
+          out.push(h(doc, 'div', { cls: 'dg-field dg-hfield', attrs: { role: 'treeitem', 'aria-expanded': String(open), draggable: 'true' }, data: { hier: it.id.slice(2), well: '', index: '-1' } },
+            [h(doc, 'span', { cls: 'dg-twist', text: open ? '▾' : '▸', data: { act: 'hier-open' } }), h(doc, 'span', { cls: 'dg-ficon', text: it.icon }), h(doc, 'b', { text: it.label }),
+              h(doc, 'span', { cls: 'dg-fdetail', text: it.detail }), it.checked ? h(doc, 'span', { cls: 'dg-fin', text: '✓' }) : null]));
+          if (open) { it.children.forEach((l) => out.push(this.fieldRow(l, true))); }
+          return;
+        }
+        out.push(this.fieldRow(it, false));
       });
     });
     return out;
   }
 
-  /** @private the panel's switches */
+  /** @private a field in the Fields pane: its check (in any well), drag it to a well */
+  fieldRow(it, level) {
+    const doc = this.doc, w = this.w(), f = this.view.model.columns.get(it.id) || {};
+    const inAny = ['rows', 'columns', 'values', 'filters'].some((x) => w.has(x, it.id));
+    const box = h(doc, 'input', { attrs: { type: 'checkbox', 'aria-label': 'Use ' + it.label }, data: { use: it.id } });
+    box.checked = inAny;
+    return h(doc, 'div', { cls: 'dg-field' + (level ? ' dg-level' : ''), attrs: { role: 'treeitem', draggable: 'true', title: f.description || null }, data: { field: it.id, well: '', index: '-1' } },
+      [box, it.icon ? h(doc, 'span', { cls: 'dg-ficon', text: it.icon }) : null, h(doc, 'span', { text: it.label }), f.additive === false && f.type === 'number' ? h(doc, 'span', { cls: 'dg-na', text: '◆' }) : null,
+        it.note && !level ? h(doc, 'span', { cls: 'dg-ftype', text: it.note }) : null]);
+  }
+
+  /** @private the panes' switches */
   switches() {
     const doc = this.doc, v = this.view, m = v.model;
     const sw = (id, label, on) => { const b = h(doc, 'input', { attrs: { type: 'checkbox' }, data: { sw: id } }); b.checked = !!on; return h(doc, 'label', { cls: 'dg-switch' }, [b, ' ' + label]); };
@@ -103,27 +177,60 @@ export class WellsView {
       h(doc, 'button', { cls: 'dg-btn', text: 'Update', attrs: { type: 'button', disabled: !v.draft || !v.draftDirty }, data: { act: 'apply-draft' } })]);
   }
 
+  // ---- the wells and their chips ---------------------------------------------------------------------------------------------------
+
+  /** @private the fields that are in no well (the terminal's lane) */
+  unusedChips() { return this.w().fieldList(this.search).filter((f) => !f.in.length && !f.more && !f.hierarchy).map((f) => this.chip(f.id, '', -1)); }
+
   /** @private a well */
   zone(well, how) {
     const doc = this.doc, w = this.w(), st = w.state;
-    const label = how === 'lane' ? LANE[well] : NAMES[well];
-    const items = well === 'values' ? st.values.map((v, i) => this.chip(v.colId, well, i)) : well === 'filters' ? st.filters.map((f, i) => this.chip(f.colId, well, i)) : st[well].map((id, i) => this.chip(id, well, i));
+    let items;
+    if (well === 'values') { items = st.values.map((v, i) => this.chip(v.colId, well, i)); }
+    else if (well === 'filters') { items = st.filters.map((f, i) => this.chip(f.colId, well, i)); }
+    else { items = how === 'lane' ? st[well].map((id, i) => this.chip(id, well, i)) : this.segmentChips(well); }
     if (well === 'filters') {
       (this.view.model.pivotExtra.valueFilters || []).forEach((f, i) => items.push(this.vfChip(f, i)));
       if (st.values.length && st.rows.length) { items.push(h(doc, 'button', { cls: 'dg-add-vf', text: '+ value filter', attrs: { type: 'button', 'aria-label': 'Add a value filter' }, data: { act: 'add-vf' } })); }
     }
-    if (!items.length) { items.push(h(doc, 'span', { cls: 'dg-zone-hint', text: how === 'lane' ? '—' : 'Drop fields here' })); }
-    return h(doc, 'div', { cls: 'dg-zone', attrs: { role: 'list', 'aria-label': NAMES[well] }, data: { well: well } }, [h(doc, 'span', { cls: 'dg-zl', text: label })].concat(items));
+    if (how === 'line' || how === 'panel') {
+      items.push(h(doc, 'button', { cls: 'dg-add', text: '+', attrs: { type: 'button', 'aria-label': 'Add to ' + NAMES[well] + ' (' + KEYS[well] + ')', title: NAMES[well] + ' (' + KEYS[well] + ')' }, data: { pick: well } }));
+    } else if (!items.length) { items.push(h(doc, 'span', { cls: 'dg-zone-hint', text: how === 'lane' ? '—' : 'Drop fields here' })); }
+    const label = how === 'lane' ? h(doc, 'span', { cls: 'dg-zl', text: LANE[well] })
+      : h(doc, 'button', { cls: 'dg-zl dg-pick', text: NAMES[well], attrs: { type: 'button', 'aria-keyshortcuts': KEYS[well], title: NAMES[well] + ' (' + KEYS[well] + ')' }, data: { pick: well } });
+    return h(doc, 'div', { cls: 'dg-zone', attrs: { role: 'list', 'aria-label': NAMES[well] }, data: { well: well } }, [label].concat(items));
   }
 
-  /** @private a field's chip (in a well, or in the field list when well is '') */
+  /** @private Rows or Columns as chips: a hierarchy's levels as one chip with its stepper, each other field its own */
+  segmentChips(well) {
+    return this.w().segments(well).map((s) => (s.hierarchy ? this.hierChip(s, well) : this.chip(s.ids[0], well, s.index)));
+  }
+
+  /** @private a hierarchy's chip: ⋔ MGMT ▾ Desk › Book ▲▼ × */
+  hierChip(s, well) {
+    const doc = this.doc, hh = s.hierarchy, labels = s.ids.map((id) => (hh.levels.find((l) => l.id === id) || {}).label || id);
+    const text = hh.id + ' ' + labels.join(' › ');
+    const deepest = hh.levels.findIndex((l) => l.id === s.ids[s.ids.length - 1]);
+    return h(doc, 'span', { cls: 'dg-chip dg-hchip', attrs: { role: 'listitem', tabindex: '0', draggable: 'true', 'aria-label': text + ' in ' + NAMES[well] + '. Alt+Up and Alt+Down: a level up or down; Enter: its levels; Delete: remove', title: hh.title + ': ' + labels.join(' › ') },
+      data: { hier: hh.id, well: well, field: s.ids[0], index: String(s.index) } }, [
+      h(doc, 'span', { cls: 'dg-ficon', text: '⋔', attrs: { 'aria-hidden': 'true' } }), h(doc, 'b', { text: hh.id }),
+      h(doc, 'button', { cls: 'dg-chip-menu', text: '▾', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'The levels of ' + hh.id }, data: { pick: well } }),
+      h(doc, 'span', { cls: 'dg-chip-label', text: labels.join(' › ') }),
+      h(doc, 'span', { cls: 'dg-stepper' }, [
+        h(doc, 'button', { cls: 'dg-step', text: '▲', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Up a level (Alt+Up)', title: 'Up a level (Alt+↑)', disabled: s.ids.length < 2 ? true : null }, data: { step: '-1' } }),
+        h(doc, 'button', { cls: 'dg-step', text: '▼', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'The next level (Alt+Down)', title: 'The next level (Alt+↓)', disabled: deepest >= hh.levels.length - 1 ? true : null }, data: { step: '1' } })]),
+      h(doc, 'button', { cls: 'dg-chip-x', text: '×', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Remove ' + hh.id + ' from ' + NAMES[well] } })]);
+  }
+
+  /** @private a field's chip (in a well, or in the lane's field list when well is '') */
   chip(colId, well, index) {
     const doc = this.doc, w = this.w(), c = w.columns.get(colId);
     if (!c) { return h(doc, 'span', { text: colId }); }
     let text = c.header;
     if (well === 'values') {
       const v = w.state.values[index];
-      text = v.as ? v.as : c.additive === false ? c.header : c.header + (v.aggFunc && v.aggFunc !== 'sum' ? ' (' + w.funcLabel(v.aggFunc).toLowerCase() + ')' : '');
+      text = v.as ? v.as : w.labelOf(v);
+      if (v.showAs) { text += ' · ' + v.showAs.replace(/:1:/, ' vs ').replace(/^pct-/, '% '); }
     }
     if (well === 'filters') {
       const f = w.state.filters[index].filter;
@@ -131,11 +238,11 @@ export class WellsView {
       if (n > 0) { text += ' (−' + n + ')'; } else if (n < 0) { text += ' (' + (-n) + ')'; }
     }
     const kids = [h(doc, 'span', { cls: 'dg-chip-label', text: text })];
-    if (c.additive === false && c.type === 'number') { kids.push(h(doc, 'span', { cls: 'dg-na', text: '◆', attrs: { 'aria-label': 'not additive' } })); }
+    if (c.additive === false && c.type === 'number') { kids.push(h(doc, 'span', { cls: 'dg-na', text: '◆', attrs: { 'aria-label': 'computed per cell' } })); }
     kids.push(h(doc, 'button', { cls: 'dg-chip-menu', text: '▾', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Options of ' + text } }));
     if (well) { kids.push(h(doc, 'button', { cls: 'dg-chip-x', text: '×', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Remove ' + text + ' from ' + NAMES[well] } })); }
-    return h(doc, 'span', { cls: 'dg-chip' + (c.type === 'number' ? ' dg-measure' : '') + (c.additive === false ? ' dg-chip-nadd' : ''),
-      attrs: { role: 'listitem', tabindex: '0', draggable: 'true', 'aria-label': text + (well ? ' in ' + NAMES[well] : ', a field') + '. Enter for options, Delete to remove' },
+    return h(doc, 'span', { cls: 'dg-chip' + (c.type === 'number' ? ' dg-measure' : '') + (well === 'values' ? ' dg-vchip' : '') + (c.additive === false ? ' dg-chip-nadd' : ''),
+      attrs: { role: 'listitem', tabindex: '0', draggable: 'true', title: c.description || null, 'aria-label': text + (well ? ' in ' + NAMES[well] : ', a field') + '. Enter for options, Delete to remove' },
       data: { field: colId, well: well, index: String(index) } }, kids);
   }
 
@@ -147,19 +254,21 @@ export class WellsView {
         h(doc, 'button', { cls: 'dg-chip-x', text: '×', attrs: { type: 'button', tabindex: '-1', 'aria-label': 'Remove the value filter' } })]);
   }
 
+  // ---- pointer and keys ------------------------------------------------------------------------------------------------------------
+
   /** @private the wells' pointer and keyboard work */
   listen(el) {
     el.addEventListener('click', (e) => this.click(e));
     el.addEventListener('keydown', (e) => this.key(e));
     el.addEventListener('change', (e) => this.change(e));
     el.addEventListener('dragstart', (e) => {
-      const c = e.target.closest('[data-field]');
+      const c = e.target.closest('[data-field], [data-hier]');
       if (!c) { return; }
-      this.dragging = { field: c.dataset.field, from: c.dataset.well || '', index: +c.dataset.index };
+      this.dragging = { field: c.dataset.field || '', hier: c.dataset.hier || '', from: c.dataset.well || '', index: +(c.dataset.index || -1) };
       c.classList.add('dg-dragging');
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData(MIME, JSON.stringify(this.dragging));
-      e.dataTransfer.setData('text/plain', this.dragging.field);
+      e.dataTransfer.setData('text/plain', this.dragging.field || this.dragging.hier);
     });
     el.addEventListener('dragend', () => { this.dragging = null; el.querySelectorAll('.dg-over').forEach((z) => z.classList.remove('dg-over')); });
     el.addEventListener('dragover', (e) => {
@@ -178,13 +287,30 @@ export class WellsView {
       let d = this.dragging;
       if (!d) { try { d = JSON.parse(e.dataTransfer.getData(MIME)); } catch (err) { d = null; } }
       if (!d) { return; }
+      if (d.hier) { this.moveHierarchy(d.hier, d.from, z.dataset.well || ''); return; }
       if (!z.dataset.well) { if (d.from) { this.remove(d.from, d.from === 'values' || d.from === 'filters' ? d.index : d.field, d.field); } return; }
       const chips = Array.from(z.querySelectorAll('.dg-chip[data-field]'));
       const vertical = z.closest('.dg-wells-panel') !== null;
       let at = chips.findIndex((c) => { const r = c.getBoundingClientRect(); return vertical ? e.clientY < r.top + r.height / 2 : e.clientX < r.left + r.width / 2; });
-      if (at < 0) { at = chips.length; }
+      at = at < 0 ? this.w().state[z.dataset.well].length : +chips[at].dataset.index;
       this.move(d.field, d.from, d.index, z.dataset.well, at);
     });
+  }
+
+  /** @private a hierarchy dragged as one: its levels in the well it left go to the well it joins (its first level when from the Fields pane) */
+  moveHierarchy(id, from, to) {
+    const w = this.w(), v = this.view, hh = w.hierarchies.find((x) => x.id === id);
+    if (!hh) { return; }
+    const levels = from ? hh.levels.filter((l) => w.has(from, l.id)).map((l) => l.id) : [hh.levels[0].id];
+    if (!to) { if (from) { w.setHierarchyLevels(from, id, []); v.wellsChanged(id + ' taken out of ' + NAMES[from]); } return; }
+    if (to === 'rows' || to === 'columns') {
+      if (from && from !== to && (from === 'rows' || from === 'columns')) { w.setHierarchyLevels(from, id, []); }
+      w.setHierarchyLevels(to, id, from === to ? levels : levels.concat(hh.levels.filter((l) => w.has(to, l.id)).map((l) => l.id)));
+      v.wellsChanged(id + ' to ' + NAMES[to]);
+      return;
+    }
+    if (to === 'filters') { levels.forEach((l) => { if (!w.has('filters', l)) { w.drop(l, 'filters'); } }); v.wellsChanged(id + ' to Filters'); return; }
+    v.say(hh.title + ' cannot be a value: its levels group the rows');
   }
 
   /**
@@ -214,41 +340,120 @@ export class WellsView {
     return true;
   }
 
-  /** @private */
+  /**
+   * A field's header.
+   * @param {string} id
+   * @returns {string}
+   */
   header(id) { const c = this.w().columns.get(id); return c ? c.header : id; }
 
-  /** @private takes a field out of a well */
+  /**
+   * Takes a field out of a well.
+   * @param {string} well
+   * @param {(string|number)} which the field, or a value's index
+   * @param {string} field
+   * @returns {void}
+   */
   remove(well, which, field) {
     this.w().remove(well, which);
     this.view.wellsChanged('Removed ' + this.header(field) + ' from ' + NAMES[well]);
   }
 
+  /**
+   * Opens a well's picker (R, C, V, F; a click on the well's name, its + or a hierarchy's ▾).
+   * @param {string} well
+   * @param {Element} [anchor]
+   * @returns {void}
+   */
+  pick(well, anchor) {
+    const root = this.view.regions ? this.view.regions.wells : null;
+    const at = anchor || (root && root.querySelector('[data-well="' + well + '"] .dg-pick')) || (root && root.querySelector('[data-pick="' + well + '"]')) || this.view.host;
+    openPicker(this.view, well, at);
+  }
+
+  /**
+   * Opens the View picker (Shift+V), when the grid has a views hook.
+   * @returns {boolean} whether there is one
+   */
+  openViews() {
+    if (!this.views) { return false; }
+    const root = this.view.regions ? this.view.regions.wells : null, b = root && root.querySelector('.dg-viewbtn');
+    this.views.open(b || this.view.host);
+    return true;
+  }
+
+  /**
+   * The first hierarchy in Rows a level up (−1) or down (+1): Alt+↑ and Alt+↓.
+   * @param {number} dir
+   * @param {string} [id] the hierarchy (default: the first one in Rows)
+   * @returns {void}
+   */
+  step(dir, id) {
+    const w = this.w(), seg = w.segments('rows').find((s) => s.hierarchy && (!id || s.hierarchy.id === id)) || w.segments('columns').find((s) => s.hierarchy && (!id || s.hierarchy.id === id));
+    if (!seg) { this.view.say('No hierarchy in Rows: add one with R'); return; }
+    const well = w.state.rows.indexOf(seg.ids[0]) >= 0 ? 'rows' : 'columns';
+    const r = w.stepHierarchy(well, seg.hierarchy.id, dir);
+    if (!r.ok) { this.view.say(r.why); return; }
+    const now = w.segments(well).find((s) => s.hierarchy === seg.hierarchy);
+    this.view.wellsChanged(seg.hierarchy.id + ': ' + (now ? now.ids.map((x) => (seg.hierarchy.levels.find((l) => l.id === x) || {}).label).join(' › ') : ''));
+  }
+
+  /**
+   * The value filter menu (a new one when index is -1), from a column's menu or the Filters well.
+   * @param {number} index
+   * @param {Element} anchor
+   * @returns {void}
+   */
+  valueFilterMenu(index, anchor) { valueFilterMenu(this, index, anchor); }
+
   /** @private */
   click(e) {
-    const t = e.target, v = this.view;
+    const t = e.target, v = this.view, w = this.w();
     const act = t.closest('[data-act]');
-    if (act && act.dataset.act === 'add-vf') { this.valueFilterMenu(-1, act); return; }
-    if (act && act.dataset.act === 'apply-draft') { v.applyDraft(); return; }
+    if (act) {
+      const a = act.dataset.act;
+      if (a === 'add-vf') { valueFilterMenu(this, -1, act); return; }
+      if (a === 'apply-draft') { v.applyDraft(); return; }
+      if (a === 'views') { this.views.open(act); return; }
+      if (a === 'customize') { v.toggleCustomize(); return; }
+      if (a === 'panes') { v.ui.panesClosed = !v.ui.panesClosed; v.regions.main.classList.toggle('dg-panes-closed', !!v.ui.panesClosed); v.renderChrome(); return; }
+      if (a === 'hier-open') { const id = 'h:' + t.closest('[data-hier]').dataset.hier; if (this.openHier.has(id)) { this.openHier.delete(id); } else { this.openHier.add(id); } v.renderChrome(); return; }
+    }
+    const grp = t.closest('.dg-fgroup');
+    if (grp) { const id = grp.dataset.group; if (this.closedGroups.has(id)) { this.closedGroups.delete(id); } else { this.closedGroups.add(id); } v.renderChrome(); return; }
+    const step = t.closest('[data-step]');
+    if (step) { const chip = step.closest('[data-hier]'); const r = w.stepHierarchy(chip.dataset.well, chip.dataset.hier, +step.dataset.step); if (!r.ok) { v.say(r.why); } else { v.wellsChanged(chip.dataset.hier + ' ' + (+step.dataset.step > 0 ? 'down a level' : 'up a level')); } return; }
+    const hchip = t.closest('.dg-hchip');
+    if (hchip) {
+      if (t.closest('.dg-chip-x')) { w.setHierarchyLevels(hchip.dataset.well, hchip.dataset.hier, []); v.wellsChanged(hchip.dataset.hier + ' taken out of ' + NAMES[hchip.dataset.well]); return; }
+      openPicker(v, hchip.dataset.well, hchip);
+      return;
+    }
+    const pk = t.closest('[data-pick]');
+    if (pk) { openPicker(v, pk.dataset.pick, pk); return; }
+    const tog = t.closest('.dg-vtoggle');
+    if (tog) { w.drop(tog.dataset.field, 'values'); v.wellsChanged(this.header(tog.dataset.field) + ' to Values'); return; }
     const vf = t.closest('.dg-vf');
     if (vf) {
       const i = +vf.dataset.vf;
       if (t.closest('.dg-chip-x')) { v.setValueFilters(v.model.pivotExtra.valueFilters.filter((x, k) => k !== i)); return; }
-      this.valueFilterMenu(i, vf);
+      valueFilterMenu(this, i, vf);
       return;
     }
     const chip = t.closest('[data-field]');
     if (!chip || t.matches('input')) { return; }
     const field = chip.dataset.field, well = chip.dataset.well, index = +chip.dataset.index;
     if (t.closest('.dg-chip-x')) { this.remove(well, well === 'values' ? index : field, field); return; }
-    if (t.closest('.dg-chip-menu') || !well) { this.chipMenu(chip); }
+    if (t.closest('.dg-chip-menu') || !well || well === 'values') { chipMenu(this, chip); }
   }
 
-  /** @private */
+  /** @private a check in the Fields pane: a measure to Values, a field to Rows; unchecked, out of every well */
   change(e) {
     const t = e.target, v = this.view, w = this.w();
     if (t.dataset.use) {
       const id = t.dataset.use, c = w.columns.get(id);
-      if (t.checked) { w.drop(id, c.enableValue ? 'values' : c.enableRowGroup ? 'rows' : 'filters'); }
+      const measure = c.role === 'measure' || (c.measure && !c.enableRowGroup) || (c.enableValue && !c.enableRowGroup);
+      if (t.checked) { w.drop(id, measure ? 'values' : c.enableRowGroup ? 'rows' : 'filters'); }
       else {
         const st = w.getState();
         w.setState({ rows: st.rows.filter((x) => x !== id), columns: st.columns.filter((x) => x !== id), values: st.values.filter((x) => x.colId !== id), filters: st.filters.filter((x) => x.colId !== id) });
@@ -259,14 +464,20 @@ export class WellsView {
     if (t.dataset.sw) { v.panelSwitch(t.dataset.sw, t.checked); }
   }
 
-  /** @private a chip's keys: Enter opens its menu, Delete removes, Ctrl+arrows move it in its well */
+  /** @private a chip's keys: Enter opens its menu (a hierarchy: its levels), Delete removes, Ctrl+arrows move it, Alt+arrows step a hierarchy */
   key(e) {
     const chip = e.target.closest ? e.target.closest('.dg-chip') : null;
     if (!chip || e.target !== chip) { return; }
-    const field = chip.dataset.field, well = chip.dataset.well, index = +chip.dataset.index;
+    const field = chip.dataset.field, well = chip.dataset.well, index = +chip.dataset.index, w = this.w();
+    if (chip.dataset.hier) {
+      if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); this.step(e.key === 'ArrowDown' ? 1 : -1, chip.dataset.hier); return; }
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); openPicker(this.view, well, chip); return; }
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); w.setHierarchyLevels(well, chip.dataset.hier, []); this.view.wellsChanged(chip.dataset.hier + ' taken out of ' + NAMES[well]); }
+      return;
+    }
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
       e.preventDefault();
-      if (chip.dataset.vf !== undefined) { this.valueFilterMenu(+chip.dataset.vf, chip); } else { this.chipMenu(chip); }
+      if (chip.dataset.vf !== undefined) { valueFilterMenu(this, +chip.dataset.vf, chip); } else if (well === 'values') { valueMenu(this, chip, index); } else { chipMenu(this, chip); }
     } else if ((e.key === 'Delete' || e.key === 'Backspace') && well) {
       e.preventDefault();
       if (chip.dataset.vf !== undefined) { this.view.setValueFilters(this.view.model.pivotExtra.valueFilters.filter((x, k) => k !== +chip.dataset.vf)); }
@@ -277,101 +488,23 @@ export class WellsView {
     }
   }
 
-  /** @private a chip's menu: aggregation, members, sort and top N, moves, removal */
-  chipMenu(chip) {
-    const field = chip.dataset.field, well = chip.dataset.well, index = +chip.dataset.index, v = this.view, w = this.w(), c = w.columns.get(field);
-    const items = () => {
-      const out = [];
-      if (well === 'values') {
-        const val = w.state.values[index];
-        if (c.additive === false) { out.push({ heading: 'Aggregation · computed by the server' }, { id: 'agg-server', label: c.measure || c.header, checked: true, disabled: true, why: c.header + ' is not additive: every total is the server\'s figure for its group, never a sum made in the browser' }); }
-        else { out.push({ heading: 'Aggregation' }); w.funcs().forEach((f) => out.push({ id: 'agg:' + f.name, label: f.label + (f.server ? ' (server)' : ''), checked: val.aggFunc === f.name })); }
-        out.push({ sep: true });
-      }
-      if (well === 'filters') {
-        const f = w.state.filters[index].filter, ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
-        out.push({ heading: 'Show ' + c.header });
-        v.membersOf(field).slice(0, 200).forEach((mm) => out.push({ id: 'member:' + mm.text, label: mm.text + (mm.count !== undefined ? '  (' + mm.count + ')' : ''), checked: !ex.has(mm.text), keep: true }));
-        out.push({ id: 'members-all', label: 'Select all' }, { id: 'members-none', label: 'Clear all' }, { sep: true });
-      }
-      if ((well === 'rows' || well === 'columns') && v.model.pivotMode) {
-        const s = (v.model.pivotExtra.sort || {})[c.field], first = w.toView().values[0];
-        out.push({ heading: 'Order of ' + c.header }, { id: 'order-label', label: 'By name', checked: !s || s.by === 'label' });
-        if (first) { out.push({ id: 'order-measure', label: 'By ' + first.as + ', largest first', checked: !!s && s.by === first.as }, { id: 'top-5', label: 'Top 5 by ' + first.as + ' (the rest in Others)', checked: !!(v.model.pivotExtra.top || {})[c.field] }); }
-        out.push({ sep: true });
-      }
-      if (!well) { ['rows', 'columns', 'values', 'filters'].forEach((t) => out.push({ id: 'to:' + t, label: 'Add to ' + NAMES[t], disabled: !w.canDrop(field, t).ok, why: w.canDrop(field, t).why })); }
-      else {
-        ['rows', 'columns', 'values', 'filters'].filter((t) => t !== well).forEach((t) => out.push({ id: 'to:' + t, label: 'Move to ' + NAMES[t], disabled: !w.canDrop(field, t).ok, why: w.canDrop(field, t).why }));
-        out.push({ id: 'left', label: 'Move left', key: 'Ctrl+←', disabled: index === 0 }, { id: 'right', label: 'Move right', key: 'Ctrl+→' }, { sep: true }, { id: 'remove', label: 'Remove', key: 'Delete', icon: '×' });
-      }
-      return out;
-    };
-    v.menu.open(items, { anchor: chip, label: c.header + ' options', theme: v.host, run: (id) => this.chipAction(id, field, well, index) });
-  }
-
-  /** @private */
-  chipAction(id, field, well, index) {
-    const v = this.view, w = this.w(), c = w.columns.get(field);
-    if (id.indexOf('agg:') === 0) { const r = w.setAggregation(index, id.slice(4)); if (!r.ok) { v.say(r.why); } v.wellsChanged(c.header + ': ' + w.funcLabel(id.slice(4))); return; }
-    if (id.indexOf('member:') === 0) {
-      const text = id.slice(7), f = w.state.filters[index].filter, ex = new Set(f && f.excluded ? f.excluded.map(String) : []);
-      if (ex.has(text)) { ex.delete(text); } else { ex.add(text); }
-      w.setFilter(field, ex.size ? { type: 'set', excluded: Array.from(ex) } : null);
-      v.wellsChanged(null);
-      return;
-    }
-    if (id === 'members-all') { w.setFilter(field, null); v.wellsChanged('All of ' + c.header); return; }
-    if (id === 'members-none') { w.setFilter(field, { type: 'set', excluded: v.membersOf(field).map((m) => m.text) }); v.wellsChanged('None of ' + c.header); return; }
-    if (id === 'order-label' || id === 'order-measure') {
-      const sort = Object.assign({}, v.model.pivotExtra.sort);
-      const first = w.toView().values[0];
-      if (id === 'order-label') { delete sort[c.field]; } else { sort[c.field] = { by: first.as, desc: true }; }
-      v.setPivotOptions({ sort: sort }, 'Order of ' + c.header + ' changed');
-      return;
-    }
-    if (id === 'top-5') {
-      const top = Object.assign({}, v.model.pivotExtra.top), first = w.toView().values[0];
-      if (top[c.field]) { delete top[c.field]; } else { top[c.field] = { n: 5, by: first.as }; }
-      v.setPivotOptions({ top: top }, 'Top 5 of ' + c.header);
-      return;
-    }
-    if (id.indexOf('to:') === 0) { this.move(field, well, index, id.slice(3)); return; }
-    if (id === 'left' || id === 'right') { this.move(field, well, index, well, id === 'left' ? Math.max(0, index - 1) : index + 2); return; }
-    if (id === 'remove') { this.remove(well, well === 'values' ? index : field, field); }
-  }
-
   /**
-   * The value filter menu (a new one when index is -1): the measure, a condition from the figures or typed ("> 400k").
-   * @param {number} index
-   * @param {Element} anchor
-   * @returns {void}
+   * The wells' keys anywhere in the grid (not while typing): R, C, V, F open the pickers, Shift+V the views, \ the panes, Alt+↑ and Alt+↓
+   * the first hierarchy's level. A host with its own keymap (the console's) registers the same through the Grid's methods.
+   * @param {KeyboardEvent} e
+   * @returns {boolean} whether the key was the wells'
    */
-  valueFilterMenu(index, anchor) {
-    const v = this.view, w = this.w();
-    const view = w.toView(), dims = view.rows, measures = view.values.map((x) => x.as);
-    if (!dims.length || !measures.length) { v.say('A value filter needs a row field and a value'); return; }
-    const list = (v.model.pivotExtra.valueFilters || []).slice();
-    const cur = index >= 0 ? Object.assign({}, list[index]) : { dim: dims[dims.length - 1], by: measures[0], op: 'gt', value: 0 };
-    const save = (f) => { if (index >= 0) { list[index] = f; } else { list.push(f); } v.setValueFilters(list); };
-    const items = () => {
-      const med = v.levelFigures(cur.dim, cur.by);
-      const out = [{ heading: 'Value filter on ' + this.header(cur.dim) }];
-      dims.forEach((d) => out.push({ id: 'dim:' + d, label: 'Level: ' + this.header(d), checked: cur.dim === d, keep: true }));
-      out.push({ sep: true }, { heading: 'Measure' });
-      measures.forEach((m) => out.push({ id: 'by:' + m, label: m, checked: cur.by === m, keep: true }));
-      out.push({ sep: true }, { heading: 'Condition' }, { id: 'c:gt:0', label: cur.by + ' > 0' }, { id: 'c:lt:0', label: cur.by + ' < 0' });
-      if (med) { out.push({ id: 'c:gt:' + med.median, label: cur.by + ' > ' + v.fmtMeasure(cur.by, med.median) + ' (the median)' }, { id: 'c:gt:' + med.p75, label: cur.by + ' > ' + v.fmtMeasure(cur.by, med.p75) + ' (the top quarter)' }); }
-      out.push({ id: 'custom', label: 'Condition', input: { placeholder: '> 400k', value: index >= 0 ? (cur.op === 'gt' ? '> ' : cur.op === 'lt' ? '< ' : '') + cur.value : '' } });
-      if (index >= 0) { out.push({ sep: true }, { id: 'remove', label: 'Remove this filter', icon: '×' }); }
-      return out;
-    };
-    v.menu.open(items, { anchor: anchor, label: 'Value filter', theme: v.host, run: (id, value) => {
-      if (id.indexOf('dim:') === 0) { cur.dim = id.slice(4); return; }
-      if (id.indexOf('by:') === 0) { cur.by = id.slice(3); return; }
-      if (id.indexOf('c:') === 0) { const [, op, n] = id.split(':'); save(Object.assign(cur, { op: op, value: +n })); return; }
-      if (id === 'custom') { const c = parseCondition(value); if (!c) { v.say('Write a condition such as > 400k or < 0'); return; } save(Object.assign(cur, c)); return; }
-      if (id === 'remove') { v.setValueFilters(list.filter((x, k) => k !== index)); }
-    } });
+  hostKey(e) {
+    const t = e.target, tag = t && t.tagName;
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || (t && (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable))) { return false; }
+    if (this.view.o.chrome === false || !this.view.model) { return false; }
+    const k = e.key;
+    if (e.altKey && (k === 'ArrowUp' || k === 'ArrowDown')) { e.preventDefault(); this.step(k === 'ArrowDown' ? 1 : -1); return true; }
+    if (e.altKey) { return false; }
+    if (k === '\\' && this.view.o.customize !== false) { e.preventDefault(); this.view.toggleCustomize(); return true; }
+    if ((k === 'V') && e.shiftKey && this.views) { e.preventDefault(); this.openViews(); return true; }
+    const well = { r: 'rows', c: 'columns', v: 'values', f: 'filters' }[String(k).toLowerCase()];
+    if (well && !e.shiftKey && this.view.model.layout !== 'terminal') { e.preventDefault(); this.pick(well); return true; }
+    return false;
   }
 }

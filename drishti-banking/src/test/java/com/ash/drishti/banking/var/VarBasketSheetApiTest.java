@@ -53,7 +53,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.risk-lake.plugin=delta",
         "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=risk-hierarchy", "drishti.sources.connectors.risk-lake.kinds[3]=portfolio",
+        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
         "drishti.sources.connectors.risk-lake.settings.domain=risk",
         "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
@@ -62,8 +62,13 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
-        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.risk-hierarchy=risk-lake",
-        "drishti.sources.routes.portfolio=risk-lake", "drishti.sources.routes.var-result=var-engine",
+        "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
+        "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
+        "drishti.var.hierarchies.MGMT.level-names=desk > book", "drishti.var.hierarchies.MGMT.ids=leaf",
+        "drishti.var.hierarchies.MGMT.limits=var-limit", "drishti.var.hierarchies.LEGAL.title=Legal entity",
+        "drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "drishti.var.hierarchies.LEGAL.ids=leaf",
+        "drishti.var.hierarchies.LEGAL.limits=var-limit",
+        "drishti.sources.routes.var-result=var-engine",
         "drishti.var.positions.rules[0].name=securities", "drishti.var.positions.rules[0].groups[0]=Fixed income",
         "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
         "drishti.var.official.on-start=false",
@@ -92,6 +97,13 @@ class VarBasketSheetApiTest {
     }
 
     @Autowired MockMvc mvc;
+    @Autowired VarService systemBasketsOf;
+
+    /** The system baskets the tests name, in the basket store (they are no data). */
+    @org.junit.jupiter.api.BeforeEach
+    void systemBaskets() {
+        VarLakeFixture.systemBaskets(systemBasketsOf);
+    }
     @Autowired TokenVerifier tokens;
     @Autowired com.ash.drishti.identity.AuditLog audit;
     final ObjectMapper json = new ObjectMapper();

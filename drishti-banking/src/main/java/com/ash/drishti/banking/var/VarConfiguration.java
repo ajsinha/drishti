@@ -52,7 +52,7 @@ public class VarConfiguration {
             ObjectProvider<com.ash.drishti.server.net.NetService> net, ObjectProvider<com.ash.drishti.server.net.DigestService> digests,
             ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk, VarReadProperties reads,
             ObjectProvider<com.ash.drishti.engine.time.BusinessDates> businessDates,
-            ObjectProvider<com.ash.drishti.server.nativelib.NativeLibraries> nativeLibraries) {
+            ObjectProvider<com.ash.drishti.server.nativelib.NativeLibraries> nativeLibraries, org.springframework.core.env.Environment env) {
         nativeLibraries.getIfAvailable();                                 // BLAS bound from drishti.native.* before any sum (OPERATIONS_GUIDE.md 2.1)
         ParallelSums sums = new ParallelSums(props.threads(), props.parallelRows());
         com.ash.drishti.banking.compute.var.VarBook.positionCacheBytes(props.memoryBudgetMb() * 1024 * 1024 / 4);   // heap tier: a quarter of a date's budget
@@ -71,7 +71,45 @@ public class VarConfiguration {
         svc.shards(new VarShards(props, sharding, shardSettings, loader, new com.ash.drishti.server.shard.ShardPeers(VarSharding.MEASURE.service(), net::getIfAvailable, digests::getIfAvailable), access,
                 sums).start());
         VarPositions.install(new VarPositions(svc));
+        seedSystemBaskets(svc, packs, env);
         return svc;
+    }
+
+    /**
+     * The demo's system baskets (VAR_GUIDE.md section 5.7): when {@code drishti.var.system-baskets.seed} is on (it follows
+     * {@code DRISHTI_DEMO_ENABLED}) and the basket store's system scope is empty and was never seeded, the seed file a loaded pack names
+     * ({@code system-baskets: {seed: seeds/system-baskets.yaml}} in the market-risk pack) is imported once, audited as
+     * {@code var-system-basket-create} by {@code system (seed)}. A bank's installation turns the seed off and imports its own file.
+     */
+    static int seedSystemBaskets(VarService svc, ObjectProvider<PackRegistry> packs, org.springframework.core.env.Environment env) {
+        if (env != null && !env.getProperty("drishti.var.system-baskets.seed", Boolean.class, Boolean.TRUE)) {
+            return 0;
+        }
+        PackRegistry r = packs == null ? null : packs.getIfAvailable();
+        if (r == null) {
+            return 0;
+        }
+        for (Pack p : r.packs()) {
+            if (p.manifest().get("system-baskets") instanceof Map<?, ?> m && m.get("seed") != null) {
+                Path file = p.resolve(String.valueOf(m.get("seed")));
+                try {
+                    Object doc = VarSystemBasketEdit.YAML.readValue(file.toFile(), Object.class);
+                    String actor = "system (seed)";
+                    int n = svc.saved().system().seed(doc, actor, (action, b) -> svc.audit(actor, "var-system-basket-" + action, b.id(),
+                            "seeded from " + p.name() + "/" + m.get("seed") + " version=" + b.version() + " type=" + b.type()));
+                    if (n > 0) {
+                        org.slf4j.LoggerFactory.getLogger(VarConfiguration.class).info("VaR: {} system baskets seeded from the {} pack's {}", n, p.name(),
+                                m.get("seed"));
+                    }
+                    return n;
+                } catch (java.io.IOException | RuntimeException e) {
+                    org.slf4j.LoggerFactory.getLogger(VarConfiguration.class).warn("VaR: the system baskets' seed {} of the {} pack was not imported: {}",
+                            file, p.name(), e.getMessage());
+                    return 0;
+                }
+            }
+        }
+        return 0;
     }
 
     /** The VaR engine's figures on Admin -> Capacity (DOMAIN_MODULES.md J3). */
@@ -81,20 +119,20 @@ public class VarConfiguration {
     }
 
     /**
-     * {@code /api/v1/health}'s {@code hierarchiesSkipped} (DOMAIN_MODULES.md J4): a hierarchy the VaR or exposure engine skipped (its level
-     * column not in the source), "var LL" to why (DRS-5211, a warning).
+     * {@code /api/v1/health}'s {@code hierarchyWarnings} (DOMAIN_MODULES.md J4): a level column the VaR or exposure engine's source does not
+     * promote (its rows sit under (Blank) at that level), "var LL LIMIT_LETTER scenario-pv" to the words and the fix (DRS-5211, a warning).
      */
     @Bean
-    com.ash.drishti.server.api.HealthFigures hierarchiesSkippedHealth() {
+    com.ash.drishti.server.api.HealthFigures hierarchyWarningsHealth() {
         return new com.ash.drishti.server.api.HealthFigures() {
             @Override
             public String key() {
-                return "hierarchiesSkipped";
+                return "hierarchyWarnings";
             }
 
             @Override
             public Object value() {
-                return Hierarchies.skipped();
+                return Hierarchies.warnings();
             }
         };
     }

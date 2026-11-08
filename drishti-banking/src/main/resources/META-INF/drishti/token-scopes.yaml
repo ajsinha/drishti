@@ -45,3 +45,9 @@ scopes:
       - DELETE /api/v1/compute/sandboxes/*
       - POST /api/v1/compute/sandboxes/*/copy
       - DELETE /api/v1/compute/requests/*
+  "risk:system-baskets":
+    description: "Create, edit, retire and import the VaR engine's system baskets (VAR_GUIDE.md section 5.7: drishti.py var baskets import --apply). The token's user must still hold the permission var:system-baskets; every change is audited and its owner told."
+    allow:
+      - POST /api/v1/risk/var/system-baskets
+      - POST /api/v1/risk/var/system-baskets/import
+      - POST /api/v1/risk/var/system-baskets/*/retire

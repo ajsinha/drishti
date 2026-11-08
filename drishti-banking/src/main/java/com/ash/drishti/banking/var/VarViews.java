@@ -353,13 +353,13 @@ final class VarViews {
         return svc.loader().limitBasis(s.date().date(), id);
     }
 
-    private static double limitOf(VarService.Scoped s) {
+    private double limitOf(VarService.Scoped s) {
         if (s.res().node() != null) {
             return s.date().book().node(s.res().node()).limit();
         }
         if ("portfolio".equals(s.kind())) {
             String id = s.res().canonical().substring("PORT:".length());
-            VarDate.Portfolio pf = s.date().portfolios().get(id);
+            VarDate.Portfolio pf = svc.portfolios(s.date()).get(id);
             return pf == null ? Double.NaN : pf.limit();
         }
         return Double.NaN;
@@ -1357,10 +1357,9 @@ final class VarViews {
         String h = hierarchy == null || hierarchy.isBlank() ? (present.contains("MGMT") || present.isEmpty() ? "MGMT" : present.get(0))
                 : hierarchy.toUpperCase(java.util.Locale.ROOT);
         VarBook.Node root = b.root(h);
-        Map<String, String> skipped = svc.loader().skipped(d.date());
         if (root == null) {
-            throw new DrishtiException(ErrorCode.VAR_HIERARCHY_UNKNOWN, skipped.containsKey(h) ? skipped.get(h)
-                    : "no hierarchy " + h + " on " + d.date() + " (it has " + String.join(", ", present) + ")");
+            throw new DrishtiException(ErrorCode.VAR_HIERARCHY_UNKNOWN, "no hierarchy " + h + " on " + d.date() + " (it has "
+                    + (present.isEmpty() ? "none: configure hierarchies: in the pack or drishti.var.hierarchies" : String.join(", ", present)) + ")");
         }
         List<Map<String, Object>> rows = new ArrayList<>();
         walk(p, b, root, 0, rows, date, d.currency(), lens);
@@ -1368,13 +1367,21 @@ final class VarViews {
         out.put("hierarchy", h);
         out.put("currency", d.currency());
         out.put("intraday", intradayNote(d));
-        // the date's hierarchies (2.9.5): their ids as before, in the configured order, and each with its title, word and levels
-        List<Map<String, Object>> info = svc.hierarchies().describe(present, skipped);
-        out.put("hierarchies", info.stream().filter(m -> !m.containsKey("skipped")).map(m -> String.valueOf(m.get("id"))).toList());
+        // the date's hierarchies: their ids in the configured order, and each with its title, word, levels and (Blank) label
+        List<Map<String, Object>> info = svc.hierarchies().describe(present);
+        out.put("hierarchies", info.stream().map(m -> String.valueOf(m.get("id"))).toList());
         out.put("hierarchyInfo", info);
         out.put("title", svc.hierarchies().title(h));
         out.put("businessDate", d.date().toString());
         out.put("nodes", rows);
+        // var-limit rows of this hierarchy's nodes with no positions on the date: shown as "limit, no positions", never dropped
+        List<Map<String, Object>> idle = new ArrayList<>();
+        svc.loader().limitsWithoutNodes(d.date()).noPositions().forEach((id, hh) -> {
+            if (hh.equals(h)) {
+                idle.add(Map.of("id", id, "status", "limit, no positions"));
+            }
+        });
+        out.put("limitsNoPositions", idle);
         VarLens l = lens == null ? svc.props().defaultLens() : lens;
         Map<String, Object> ln = new LinkedHashMap<>();
         ln.put("horizon", l.horizon());
@@ -1385,13 +1392,14 @@ final class VarViews {
         ln.put("set", l.set());
         out.put("lens", ln);
         List<Map<String, Object>> ports = new ArrayList<>();
-        d.portfolios().values().forEach(pf -> {
+        svc.portfolios(d).values().forEach(pf -> {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("id", pf.id());
             m.put("scope", "PORT:" + pf.id());
             m.put("name", pf.name());
             m.put("type", pf.type());
             m.put("owner", pf.owner());
+            svc.saved().system().get(pf.id()).ifPresent(sb -> m.put("description", sb.description()));   // the system basket's, for the list
             ports.add(m);
         });
         out.put("portfolios", ports);
@@ -1425,6 +1433,11 @@ final class VarViews {
         m.put("trades", s.set().size());
         m.put("hidden", s.hidden());
         m.put("expandable", !n.children().isEmpty() || s.view().seesPositions(s.set()));
+        String blank = svc.hierarchies().blankNote(n.hierarchy(), n.id(), n.level(), n.members().size());
+        if (blank != null) {                                             // a (Blank) node: its rows have no value at its level
+            m.put("blank", true);
+            m.put("blankNote", blank);
+        }
         var pf = pFigures(s);
         if (pf != null) {
             m.put("parametric", parametric.treeCell(pf, lens(s), n.name(), s.measures().var(), s.measures().es()));

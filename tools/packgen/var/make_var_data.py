@@ -26,12 +26,10 @@ keeps its move on every date: factors.Market ``back``), one book moved between d
     scenario-set/     HS-509: the scenario days of the business date
     stress-*          the stress scenario set HS-STRESS-2008 (stress.py): its scenario set, P&L vectors, scenario PVs and scenario FX in
                       files of their own (stress-cob...) beside the normal set's, under the same table and date, for stressed VaR
-    risk-hierarchy/   the MGMT tree (bank, division, desk, book) and the LEGAL tree (bank, legal entity, desk, book); their VaR limits are var-limit rows
-    portfolio/        portfolio definitions of the three types (HIERARCHY, RULE, BASKET), overlapping on purpose: no figures
-    var-limit/        2.9.5: the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (built by the
-                      server from the rows' LIMIT_LETTER and DESK; a few left without one, shown blank), and the MGMT and LEGAL nodes' own
-                      limits, and every portfolio's (hierarchy PORTFOLIO): 2.9.7, the one home of every VaR limit (the
-                      risk-hierarchy rows and the portfolios carry none)
+    var-limit/        the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (a few left without one,
+                      shown blank), every node of MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book; LEGAL's ids are paths), and every
+                      system basket's (hierarchy PORTFOLIO): the one home of every VaR limit. The server builds the three hierarchies from the
+                      rows' promoted columns (DIVISION, LEGAL_ENTITY, DESK, TT_BOOK, LIMIT_LETTER), every row carrying each of them
     desk-pnl/         the desks' daily actual and hypothetical P&L for regulatory backtesting (desk_pnl.py): 260 business days to the
                       business date, generated from each desk's scenario P&L (its risk-theoretical P&L) with front-office and finance
                       differences
@@ -83,9 +81,11 @@ import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 PACK, CONNECTOR, SET = "market-risk", "risk-store", "HS-509"
 #: kind -> its id field (the lake key)
 KEYS = {"pnl-vector": "VECTOR_ID", "scenario-pv": "SCENARIO_PV_ID", "fx-scenario": "FX_SCENARIO_ID", "scenario-set": "SCENARIO_SET_ID",
-        "risk-hierarchy": "NODE_ID", "portfolio": "PORTFOLIO_ID", "var-limit": "LIMIT_ID", "desk-pnl": "DESK_PNL_ID", "pnl-history": "HISTORY_ID"}
+        "var-limit": "LIMIT_ID", "desk-pnl": "DESK_PNL_ID", "pnl-history": "HISTORY_ID"}
 #: the folders this generator used to write and no longer does (removed when it writes)
-RETIRED = ("position", "var-node")
+RETIRED = ("position", "var-node", "risk-hierarchy", "portfolio")
+#: the demo's system baskets: not data, the market-risk pack's seed (VAR_GUIDE.md section 5.7; portfolios.py)
+SEED = Path("seeds") / "system-baskets.yaml"
 #: the business dates the VaR data is written for: the newest and the two before it, so the VaR change explanation (VAR_GUIDE.md
 #: section 3.11) has real dates to compare; the stress set, the desk P&L and the long P&L history are the newest date's only
 VAR_DATES = 3
@@ -159,8 +159,11 @@ class Demo:
         nodes: dict[str, dict] = {}
 
         def node(hier, level, name_id, parent, name, ref=None):
-            nid = f"{hier}~{name_id}"
-            nodes[nid] = {"NODE_ID": nid, "HIERARCHY": hier, "LEVEL": level, "PARENT_ID": parent, "NAME": name, "REF": ref,
+            # MGMT's ids are the values (ids: leaf); LEGAL's the path below its root (ids: path, LEGAL~LE-NY/DESK-RATES/BOOK-RATES-1), as
+            # the server builds them, so a desk booking into two legal entities is two nodes. SEED_ID (the value's own id) seeds the limit.
+            seed = f"{hier}~{name_id}"
+            nid = seed if hier == "MGMT" or not parent or nodes[parent]["LEVEL"] == "bank" else f"{parent}/{name_id}"
+            nodes[nid] = {"NODE_ID": nid, "SEED_ID": seed, "HIERARCHY": hier, "LEVEL": level, "PARENT_ID": parent, "NAME": name, "REF": ref,
                           "CHILDREN": [], "BOOKS": []}
             if parent:
                 nodes[parent]["CHILDREN"].append(nid)
@@ -197,8 +200,8 @@ class Demo:
         tight = {"DESK-STRUCT", "BOOK-RATES-2", "BOOK-FX-3", "LE-TKY"}
         for nid, n in self.nodes.items():
             v = VM.var(self.node_vector(nid)[:self.n])
-            r = F.seeded("limit", nid)
-            head = (1.04 + 0.06 * r.random()) if nid.split("~")[1] in tight else (1.2 + 0.7 * r.random())
+            r = F.seeded("limit", n["SEED_ID"])                      # the value's own id: a LEGAL path keeps the limit it had as a leaf
+            head = (1.04 + 0.06 * r.random()) if n["SEED_ID"].split("~")[1] in tight else (1.2 + 0.7 * r.random())
             n["LIMIT_VAR"] = nice(v * head)
         # one board-approved firm-wide limit: both hierarchies split the same bank, so their roots carry the management root's limit
         for n in self.nodes.values():
@@ -239,11 +242,6 @@ class Demo:
         for nid, n in sorted(self.nodes.items()):
             row(n["HIERARCHY"], nid, n["LIMIT_VAR"])
         return rows
-
-    def hierarchy_rows(self) -> list[dict]:
-        """The nodes without their limits: every VaR limit lives in var-limit (2.9.7, DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)."""
-        return [{**{k: v for k, v in n.items() if k != "LIMIT_VAR"}, "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
-                for _, n in sorted(self.nodes.items())]
 
     def portfolio_limit_rows(self, portfolios: list[dict]) -> list[dict]:
         """A portfolio's VaR limit as a var-limit row of hierarchy PORTFOLIO (2.9.7): the limit the portfolio's definition was set with."""
@@ -314,12 +312,12 @@ def documents(demo: Demo, newest_only: bool = True) -> dict[str, list[dict]]:
     demo.limits()
     portfolios = PF.rows(demo)
     limits = demo.var_limit_rows() + demo.portfolio_limit_rows(portfolios)
-    return {"risk-hierarchy": demo.hierarchy_rows(), "scenario-set": [demo.scenario_set()],
+    return {"scenario-set": [demo.scenario_set()],
             # sorted as a book's trades are contiguous (the engine sorts a date in memory anyway: the lake's order does not matter)
             "pnl-vector": sorted(demo.batch.vector_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
             "scenario-pv": sorted(demo.batch.pv_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
             "fx-scenario": demo.fx.rows(demo.cob, SET, f"B-{demo.cob}-01"),
-            "portfolio": [{k: v for k, v in p.items() if k != "LIMIT_VAR"} for p in portfolios], "var-limit": limits,
+            "var-limit": limits,
             **({"desk-pnl": DP.rows(demo),
                 # the long-history P&L of today's portfolio per node, for the stress window selection (history.py; VAR_GUIDE.md section 18.9)
                 "pnl-history": HI.History(demo, demo.stress()).rows()} if newest_only else {})}
@@ -368,15 +366,17 @@ TESTS = pack_dir(PACK) / "tests"
 
 def retired_samples(want: dict[Path, str] | None = None) -> list[Path]:
     """Samples and Sutra tests on disk that are no longer written: the retired stored kinds', and earlier picks' tests."""
-    out = [SAMPLES / "var-node.jsonl"] + sorted(TESTS.glob("var-node/*"))
+    out = [SAMPLES / "var-node.jsonl", SAMPLES / "portfolio.jsonl"] + sorted(TESTS.glob("var-node/*")) + sorted(TESTS.glob("portfolio/*"))
     if want is not None:
-        out += [f for kind in ("position", "portfolio") for f in sorted((TESTS / kind).glob("*.json*")) if f not in want]   # the older <id>.json too
+        out += [f for kind in ("position", "system-basket") for f in sorted((TESTS / kind).glob("*.json*")) if f not in want]   # the older <id>.json too
     return [p for p in out if p.is_file()]
 
 
 def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
     """The few documents of each kind the pack's samples/ keep for its README and docs (never served from there: the lake is), and the
-    pack's Sutra tests of the position and portfolio pages. The positions are the server's derived documents (no figures)."""
+    pack's Sutra tests of the position and system-basket pages, and the pack's seed of the demo's system baskets (portfolios.py). The
+    positions are the server's derived documents (no figures)."""
+    baskets = PF.rows(demo)
     pos = sorted(demo.batch.positions, key=lambda p: p["POSITION_ID"])
     fungible = next((p for p in pos if p["POSITION_RULE"] == "securities" and p["LONG_TRADES"] and p["SHORT_TRADES"]),
                     next(p for p in pos if p["TRADE_COUNT"] > 1))
@@ -386,10 +386,9 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
              "scenario-pv": [r for r in docs["scenario-pv"] if r["CURRENCY"] != "USD"][:1],
              "fx-scenario": [r for r in docs["fx-scenario"] if r["CURRENCY"] == "EUR"],
              "scenario-set": docs["scenario-set"],
-             "risk-hierarchy": [n for n in docs["risk-hierarchy"] if n["NODE_ID"] in ("MGMT~DESK-RATES", "LEGAL~LE-NY")],
              "var-limit": [r for r in docs["var-limit"] if r["HIERARCHY"] == "LL"][:3] + [r for r in docs["var-limit"]
                                                                                           if r["NODE_ID"] == "MGMT~DESK-RATES"],
-             "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-RATES-DESK", "PF-USD-RATES", "PF-ASHA-UNWIND")],
+             "system-basket": [PF.page_document(r) for r in baskets if r["PORTFOLIO_ID"] in ("PF-RATES-DESK", "PF-USD-RATES", "PF-ASHA-UNWIND")],
              "desk-pnl": [r for r in docs["desk-pnl"] if r["BUSINESS_DATE"] == demo.cob][:3],
              # a node's history cut to its first 20 days, so the sample stays readable (the lake's rows hold every day since 2007)
              "pnl-history": [{**r, "HISTORY_DATES": r["HISTORY_DATES"][:20], "PNL": r["PNL"][:20], "DAY_COUNT": 20,
@@ -409,10 +408,12 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
     # the pack's Sutra tests (tests/<kind>/cases.jsonl and expect.yaml: java -jar <server> sutra test config/packs/banking/market-risk). The VaR
     # figures of these pages are the engine's, added when the page is opened: a test of the stored document checks the rest.
     head = "".join(f"# {ln}".rstrip() + "\n" for ln in (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines())
-    expect = {"position": "noErrors: true\nnonEmpty: [trades, where]\n", "portfolio": "noErrors: true\nnonEmpty: [definition]\n"}
-    for kind, key in (("position", "POSITION_ID"), ("portfolio", "PORTFOLIO_ID")):
+    expect = {"position": "noErrors: true\nnonEmpty: [trades, where]\n", "system-basket": "noErrors: true\nnonEmpty: [definition]\n"}
+    for kind, key in (("position", "POSITION_ID"), ("system-basket", "PORTFOLIO_ID")):
         out[TESTS / kind / SC.FILE] = SC.text(sorted((str(d[key]), d) for d in picks[kind]))
         out[TESTS / kind / "expect.yaml"] = head + "\n" + expect[kind]
+    lic = (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines()
+    out[pack_dir(PACK) / SEED] = PF.seed_yaml(baskets, lic)
     return out
 
 

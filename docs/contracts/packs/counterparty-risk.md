@@ -31,7 +31,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [MC](#mc-margin-call-margin-call) | `margin-call` | fundamental | active | 11 | 6 |
 | [SIMM](#simm-isda-simm-initial-margin-simm) | `simm` | fundamental | active | 8 | 4 |
 | [XRUN](#xrun-exposure-simulation-run-simulation-run) | `simulation-run` | input | active | 24 | 3 |
-| [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 21 | 6 |
+| [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 22 | 6 |
 | [EXP](#exp-exposure-profile-of-a-scope-computed-exposure-result) | `exposure-result` | computed | active | 27 | 0 |
 | [XOFC](#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | `exposure-official-cpty` | computed | active | 32 | 0 |
 | [NSMTM](#nsmtm-netting-set-mtm-totals-derived-from-the-trade-valuations-nset-mtm) | `nset-mtm` | computed | active | 21 | 0 |
@@ -788,7 +788,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be agreed with the simulator's owner (EXPOSURE_GUIDE.md open question 1); a bank's run often lands 04:00-07:00) |
 | Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/exposure-path/` |
-| Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
+| Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
 | Vectors | `MTM` |
 | Test data | data/testdata/counterparty-risk/exposure-path |
 | Worked example | [counterparty-risk/exposure-path](../samples/counterparty-risk.md#exposure-path) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
@@ -805,9 +805,10 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | `NETTING_SET` | id | required |  | The netting set the trade belongs to (its membership wins when they differ). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
 | `COUNTERPARTY` | id | required |  | The trade's counterparty, denormalised from its netting set: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
+| `DIVISION` | text | optional |  | The division of the trade's desk (DIV-…): the top level column of the hierarchy MGMT (DIVISION > DESK > TT_BOOK, VAR_GUIDE.md section 15.14), as the trade's VaR records carry it. A row that leaves it empty sits under the (Blank) division. | `DIV-TREASURY` |  |
 | `DESK` | id | required |  | The desk the trade is booked on: a DESK_ID of the core pack's desk kind (DESK-…). | `DESK-SFT` (pattern `^DESK-`) | `desk` |
 | `TT_BOOK` | id | required |  | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` |
-| `LIMIT_LETTER` | text | optional |  | The trade's limit letter, as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning). | `LL-0003` |  |
+| `LIMIT_LETTER` | text | optional |  | The trade's limit letter, as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR_GUIDE.md section 15.14). Every hierarchy is built from promoted columns: a row that leaves a level column empty sits under a (Blank) node at that level, and a table that does not promote the column puts every row there, with a DRS-5211 warning. | `LL-0003` |  |
 | `ASSET_CLASS` | text | required |  | The trade's asset class, denormalised from the netting set's member row (used by the asset scope). | `Commodity`, `Credit`, `Equity`, `FX`, `Fixed income`, `Inflation`, `Money market`, `Rates`, `Securities financing`, `Structured` |  |
 | `PRODUCT` | text | required |  | The trade's product name, denormalised from the netting set's member row (e.g. Basis swap (float/float)). | `Tri-party repo` |  |
 | `NOTIONAL` | amount | required | trade currency | The trade's notional as its netting set lists it, in the trade's currency; denormalised for people and checks. | `237000000.0` |  |

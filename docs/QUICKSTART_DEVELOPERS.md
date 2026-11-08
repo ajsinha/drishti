@@ -79,33 +79,45 @@ package -DskipTests -pl drishti-app -am`.
 
 ## 3. Run the server and the console on the demo lake
 
-Build the demo lake once (89 tables, sixty business days ending today, about 15 minutes and 3.4 GB under `data/delta/demo/`), then start
-the two programs in two terminals:
+Build the demo lake once (87 tables, sixty business days ending today, about 15 minutes and 3.4 GB under `data/delta/demo/`), then start
+both programs with the scripts in `bin/`:
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-```bash
-# terminal 1: the server, sign-in off, every page read from the demo lake
-mkdir -p data/tmp/server
-DRISHTI_DEMO_ENABLED=false java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
-```
+**Linux and macOS**
 
 ```bash
-# terminal 2: the console
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+bin/start-all.sh --demo          # the server on :18480, then the console on :17480, in the background
+bin/status.sh                    # both running and UP, with the addresses to open
+bin/stop-all.sh                  # the console, then the server (by their pid files)
 ```
 
-**You should see** `Started DrishtiApplication in … seconds` in terminal 1 and `Uvicorn running on http://0.0.0.0:17480` in terminal 2.
-Open `http://<this machine's address>:17480/t`, type `TRD 1000001` and press Enter: an ENDUR commodity swap with its legs and cash
-flows. `VAR BANK` answers the bank's value at risk. With sign-in off you act as the development user with every role. The run
-configurations **Drishti server (demo lakes)** and **Drishti console** do the same with sign-in on; the settings they set and why are
-in [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#25-start-the-server) and
+**Windows** (`cmd` or PowerShell; Java and Python only)
+
+```powershell
+bin\start-all.cmd --demo
+bin\status.cmd
+bin\stop-all.cmd
+```
+
+**You should see** `server: up on http://<this machine's address>:18480` and `console: up on http://<this machine's address>:17480`, with a
+warning that the demo's **development** secrets are in use (fine on your machine, never on a shared one). Open the console's address,
+sign in as `drishti-dev-admin` (password `drishti-dev-admin123`), type `TRD 1000001` and press Enter: an ENDUR commodity swap with its
+legs and cash flows. `VAR BANK` answers the bank's value at risk.
+
+To watch a program's output, start each in the foreground in its own terminal instead (`Ctrl+C` stops it):
+`bin/start-server.sh --demo`, then `bin/start-console.sh --demo` (Windows: `bin\start-server.cmd --demo`, `bin\start-console.cmd --demo`).
+Logs are in `data/logs/` (`server.log`, `console.log`), process ids in `data/run/`. Every option of the scripts (ports, heap, an
+env-file for your own secrets, a cluster of several servers with `--node`, the console's `--server`), where the files go, the exit codes
+and what to do when a script stops with an error: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
+The IntelliJ run configurations **Drishti server (demo lakes)** and **Drishti console** set the same demo settings for debugging; why each
+setting: [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#25-start-the-server) and
 [› Start the console](guides/OPERATIONS_GUIDE.md#26-start-the-console).
 
-`Ctrl+C` stops each. Everything the two write at run time is under `data/` (git-ignored except `data/testdata/`); deleting `data/delta`,
-`data/bi-store` and `data/cache` while both are stopped starts you fresh.
+Everything the two write at run time is under `data/` (git-ignored except `data/testdata/`); deleting `data/delta`, `data/bi-store` and
+`data/cache` while both are stopped starts you fresh.
 
 ## 4. The repository map
 
@@ -128,7 +140,8 @@ capitalmarkets and economy. The full map, module by module: [DEVELOPER_GUIDE.md 
 | `drishti-console/` | `run_drishti_web.py`, `core/` (one module per feature), `routes/`, `web/templates/`, `plugins/<module>/` (a module's console pages, help and static files: `banking`, `economy`), `config/` (`application.yaml`, `help.yaml`), `tests/` |
 | `config/packs/<domain>/<pack>/` | the packs (content, not code): `core/`, `banking/`, `capitalmarkets/`, `economy/` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)) |
 | `config/` (the rest) | `modules/`, `lenses/<module>/`, `lakes/`, `engines/`, `tables/`, `bi/`, `feeds/`: the site's switches and files ([CONFIGURATION.md](admin/CONFIGURATION.md)) |
-| `tools/` | `drishti.py` (the command line), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill), `windows/` (PowerShell starters) |
+| `bin/` | the start and stop scripts of the server, its cluster nodes and the console (`.sh` for Linux and macOS, `.ps1` and `.cmd` for Windows; [bin/README.md](../bin/README.md)) |
+| `tools/` | `drishti.py` (the command line), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill), `windows/` (PowerShell loaders and feeds) |
 | `docs/` | `guides/`, `tutorials/`, `admin/`, `architecture/`, `contracts/`; the index is [docs/README.md](README.md) |
 | `drishti-it`, `drishti-benchmarks` | the architecture and repository rule tests; the JMH benchmarks |
 

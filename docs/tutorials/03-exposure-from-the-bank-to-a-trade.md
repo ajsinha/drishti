@@ -524,10 +524,9 @@ $ drishti.py exposure retention        (abridged)
 }
 ```
 
-The record holds 124 scopes (74 netting sets, 23 counterparties, 22 groups, the four legal entities and the bank's management node)
-and the 43 nodes of the limit letters, a hierarchy built from the exposure paths' `LIMIT_LETTER` and `DESK` (167 in all;
-with the market-risk pack's [`risk-hierarchy`](../contracts/samples/market-risk.md#risk-hierarchy) ([contract](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy)) in the lake too, every MGMT and LEGAL node is captured as well: 250 scopes on the test data,
-`LL:LL~LL-0011` among them). It is also appended to the tables `risk-results/exposure-official` and `risk-results/exposure-official-cpty`
+The record holds 250 scopes on the test data: 74 netting sets, 23 counterparties, 22 groups, and the nodes of the market-risk pack's
+three hierarchies, every one built from the exposure paths' promoted columns: 43 of MGMT (`DIVISION > DESK > TT_BOOK`), 45 of LEGAL
+(`LEGAL_ENTITY > DESK > TT_BOOK`) and 43 of the limit letters (`LIMIT_LETTER > DESK`, `LL:LL~LL-0011` among them). It is also appended to the tables `risk-results/exposure-official` and `risk-results/exposure-official-cpty`
 of the lake: Delta by default (`"published": "… (Delta version 0)"`), Iceberg with `drishti.ccr.exposure.official.format: iceberg`
 ([EXPOSURE_GUIDE.md section 20](../guides/EXPOSURE_GUIDE.md); [tutorial 16, Part E](16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg) for VaR's). A
 second capture of the same run is `unchanged`; a new run of the date makes `resultVersion` 2. `--capture` is for administrators.

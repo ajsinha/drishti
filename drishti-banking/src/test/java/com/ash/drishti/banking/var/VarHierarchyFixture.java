@@ -27,9 +27,10 @@ import java.util.Map;
  * A tiny VaR lake with limit letters (2.9.5, VAR_GUIDE.md section 16), written with Drishti's lake writer through {@link VarLakeFixture}'s
  * table writer (its own rows are not changed): five live trades of {@link VarLakeFixture}'s instruments in three books of two desks, each
  * row with its {@code LIMIT_LETTER}. The letter LL-A holds T1, T3 (BOOK-1) and T5 (BOOK-3, the other desk); LL-B holds T2 (BOOK-1: the
- * book is split between the letters, and so is the position of T1 and T2) and T4 (BOOK-2). T10 leaves its letter empty: refused
- * (DRS-5211). The MGMT and LEGAL trees as rows; VaR limits by node in {@code var-limit}: LL~LL-A 700, LL~LL-A/DESK-Y 300, a row for a node
- * no date has (DRS-5212), none for LL-B (no limit: blank).
+ * book is split between the letters, and so is the position of T1 and T2) and T4 (BOOK-2). T10 leaves its letter empty
+ * (it sits under LL's (Blank) letter). MGMT and LEGAL are built from the rows' columns too; VaR limits by node in {@code var-limit}: MGMT's
+ * and LEGAL's, LL~LL-A 700, LL~LL-A/DESK-Y 300, a row for a letter with no positions ("limit, no positions"), two no hierarchy can
+ * build (DRS-5212), none for LL-B (no limit: blank).
  */
 final class VarHierarchyFixture {
 
@@ -90,41 +91,21 @@ final class VarHierarchyFixture {
         VarLakeFixture.table(root, work, "scenario-set", "SCENARIO_SET_ID",
                 List.of(Map.of("SCENARIO_SET_ID", "HS-20", "BUSINESS_DATE", DAY.toString(), "SCENARIO_DATES", VarLakeFixture.scenarioDates())), List.of(),
                 null);
-        List<Map<String, Object>> nodes = new ArrayList<>();
-        nodes.add(node("MGMT~BANK", "MGMT", "bank", null, List.of("BOOK-1", "BOOK-2", "BOOK-3"), 5000));
-        nodes.add(node("MGMT~DESK-X", "MGMT", "desk", "MGMT~BANK", List.of("BOOK-1", "BOOK-2"), 1000));
-        nodes.add(node("MGMT~DESK-Y", "MGMT", "desk", "MGMT~BANK", List.of("BOOK-3"), 600));
-        nodes.add(node("MGMT~BOOK-1", "MGMT", "book", "MGMT~DESK-X", List.of("BOOK-1"), 800));
-        nodes.add(node("MGMT~BOOK-2", "MGMT", "book", "MGMT~DESK-X", List.of("BOOK-2"), 500));
-        nodes.add(node("MGMT~BOOK-3", "MGMT", "book", "MGMT~DESK-Y", List.of("BOOK-3"), 600));
-        nodes.add(node("LEGAL~BANK", "LEGAL", "bank", null, List.of("BOOK-1", "BOOK-2", "BOOK-3"), 5000));
-        nodes.add(node("LEGAL~LE-A", "LEGAL", "legal-entity", "LEGAL~BANK", List.of("BOOK-1", "BOOK-2"), 1000));
-        nodes.add(node("LEGAL~LE-B", "LEGAL", "legal-entity", "LEGAL~BANK", List.of("BOOK-3"), 600));
-        VarLakeFixture.table(root, work, "risk-hierarchy", "NODE_ID", nodes, List.of("NODE_ID", "LIMIT_VAR"), null);
-        List<Map<String, Object>> limits = new ArrayList<>();
+        List<Map<String, Object>> limits = new ArrayList<>(VarLakeFixture.limits(DAY));   // MGMT's and LEGAL's
         limits.add(limit("LL", "LL~LL-A", 700));
         limits.add(limit("LL", "LL~LL-A/DESK-Y", 300));
-        limits.add(limit("LL", "LL~LL-NOPE", 1));
-        limits.add(limit("MGMT", "MGMT~DESK-X", 999));                // MGMT's limits are its rows' (its limits name no kind): unused
-        limits.add(limit("PORTFOLIO", "PF-LL-A", 640));               // a portfolio's limit (2.9.7): wins over the record's own LIMIT_VAR
+        limits.add(limit("LL", "LL~LL-NOPE", 1));                     // a letter with no positions on the date: "limit, no positions"
+        limits.add(limit("ZZ", "ZZ~X", 1));                           // no hierarchy ZZ: DRS-5212
+        limits.add(limit("LL", "LL~LL-A/DESK-X/BOOK-1", 1));          // deeper than LL's two levels: DRS-5212
+        limits.add(limit("PORTFOLIO", "PF-LL-A", 640));               // a system basket's limit: its var-limit row of hierarchy PORTFOLIO
         VarLakeFixture.table(root, work, "var-limit", "LIMIT_ID", limits, List.of("HIERARCHY", "NODE_ID", "LIMIT_VAR"), null);
-        VarLakeFixture.table(root, work, "portfolio", "PORTFOLIO_ID", List.of(Map.of("PORTFOLIO_ID", "PF-LL-A", "BUSINESS_DATE", DAY.toString(),
-                "NAME", "Letter A", "TYPE", "HIERARCHY", "OWNER", "risk", "DEFINITION", Map.of("NODE", "LL~LL-A"), "LIMIT_VAR", 650.0)),
-                List.of("NAME", "TYPE"), null);
         return root;
     }
 
-    private static Map<String, Object> node(String id, String h, String level, String parent, List<String> books, double limit) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("NODE_ID", id);
-        m.put("HIERARCHY", h);
-        m.put("LEVEL", level);
-        m.put("PARENT_ID", parent);
-        m.put("NAME", id.substring(id.indexOf('~') + 1));
-        m.put("BOOKS", books);
-        m.put("LIMIT_VAR", limit);
-        m.put("BUSINESS_DATE", DAY.toString());
-        return m;
+    /** The fixture's system basket of the basket store (VAR_GUIDE.md section 5.7): PF-LL-A, the node LL~LL-A. */
+    static void systemBaskets(VarService svc) {
+        svc.saved().system().importDoc(Map.of("system-baskets", List.of(Map.of("id", "PF-LL-A", "name", "Letter A", "type", "hierarchy",
+                "owner", "risk", "node", "LL~LL-A"))), true, "test", null, null);
     }
 
     private static Map<String, Object> limit(String h, String node, double limit) {

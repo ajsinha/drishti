@@ -186,7 +186,7 @@ def data_binding():
     b.append(text(24, 92, "BANKING DECLARES (data/needs.yaml)", 12, MUTED, 700))
     b.append(text(282, 92, "THE KERNEL BINDS (config/bindings.yaml)", 12, MUTED, 700))
     b.append(text(560, 92, "THE SITE'S SOURCES", 12, MUTED, 700))
-    needs = [("trade", "read · live"), ("scenario-pv", "read · live"), ("pnl-vector", "any-of"), ("risk-hierarchy", "read"),
+    needs = [("trade", "read · live"), ("scenario-pv", "read · live"), ("pnl-vector", "any-of"), ("var-limit", "read"),
              ("fx-vol-surface", "read"), ("position-sensitivity", "required"), ("var-official", "write")]
     ys = []
     for i, (k, u) in enumerate(needs):
@@ -197,7 +197,7 @@ def data_binding():
         ys.append(y + 25)
     b.append(f'<rect x="270" y="102" width="250" height="428" rx="10" fill="#ffffff" stroke="{NAVY}" stroke-width="2"/>')
     rows = [("trade", "trade-endur + calypso + murex", "live: trade-kafka"), ("scenario-pv", "risk-store", "live: var-pv-kafka"),
-            ("pnl-vector", "risk-store", ""), ("risk-hierarchy", "risk-store", ""), ("fx-vol-surface", "demo: true", ""),
+            ("pnl-vector", "risk-store", ""), ("var-limit", "risk-store", ""), ("fx-vol-surface", "demo: true", ""),
             ("position-sensitivity", "— UNBOUND —", "FRSA, SIMM off"), ("var-official", "write: risklake", "banking.var-official")]
     for i, (k, s1, s2) in enumerate(rows):
         y = ys[i]

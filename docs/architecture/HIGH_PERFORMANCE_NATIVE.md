@@ -109,7 +109,7 @@ nothing comes from a CDN.
 
 Java 21 is being retired; Java 25 (an LTS release) becomes the only runtime. Today the build compiles with `--release 21`
 (`pom.xml`), the drill verifies on 21 and runs a forward-compatibility verify on 25 (`tools/drill.sh`), and Java 25-only features are
-reached at run time by reflection (`FileMaps`) or by flags added only on 25 (`tools/windows/start-server.ps1`). With 25 as the baseline
+reached at run time by reflection (`FileMaps`) or by flags added only on 25 (`bin/start-server`). With 25 as the baseline
 those workarounds go.
 
 ### 2.1 The features and where Drishti uses them
@@ -121,7 +121,7 @@ change; "incubator" lives in a `jdk.incubator.*` module and may change.
 |---|---|---|---|
 | **Foreign Function & Memory API** (`MemorySegment`, `Arena`, `Linker`) | JEP 454, **final** (since Java 22) | `FileMaps` (drishti-api) maps through a shared `Arena` found by reflection and hands out a `ByteBuffer`; `MappedMatrix` (drishti-compute) maps rows in pieces of at most 2 GB because a buffer cannot be larger; `VarHotFile`, `ExposureHotFile`, `RowSpill`; native calls to BLAS and other libraries (sections 5, 6) | one mapping per matrix of any size, no 2 GB pieces, no reflection, no `sun.misc.Unsafe` cleaner fallback, reads straight from the segment without the scratch copy |
 | **Vector API** (`jdk.incubator.vector`) | JEP 508, **incubator** (tenth incubation) | `MappedMatrix.addRangeInto` (float32 rows widened into float64 sums), `VarMath.addInto`, `ExposureMath.addInto`, `mean`, `positive` | fewer instructions per value; matters where a path is compute-bound (the heap tier, exposure); little once the bus is full |
-| **Compact object headers** | JEP 519, **final** (a product option, off by default: `-XX:+UseCompactObjectHeaders`) | the whole server; already passed on Java 25 by `tools/windows/start-server.ps1` and the benchmark | 5.2% less heap measured at 200,000 positions; more where objects are small and many (the ids and strings of a date's skeleton) |
+| **Compact object headers** | JEP 519, **final** (a product option, off by default: `-XX:+UseCompactObjectHeaders`) | the whole server; already passed on Java 25 by `bin/start-server` and the benchmark | 5.2% less heap measured at 200,000 positions; more where objects are small and many (the ids and strings of a date's skeleton) |
 | **Generational ZGC** | JEP 439 (Java 21); generational is ZGC's only mode since Java 24 (JEP 490); **final** | an option for large heaps (`-XX:+UseZGC`); G1 stays the default | low pauses at large heaps; measured RSS is higher (section 2.4) |
 | **AOT class loading and linking** | JEP 483, **final** (Java 24) | server and loader start-up | faster start: classes found, loaded and linked from the cache |
 | **AOT command-line ergonomics** (`-XX:AOTCacheOutput`) | JEP 514, **final** (Java 25) | building the cache in one training run | one step instead of two to make the cache |

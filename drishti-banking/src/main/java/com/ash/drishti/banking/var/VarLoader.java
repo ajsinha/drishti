@@ -81,7 +81,7 @@ final class VarLoader {
         return this;
     }
 
-    /** The hierarchies a load builds now (the setting, a pack's block, or MGMT and LEGAL from the rows). */
+    /** The hierarchies a load builds now (the setting, else a pack's block, else none). */
     Hierarchies hierarchies() {
         return hierarchies.get();
     }
@@ -189,12 +189,9 @@ final class VarLoader {
         return versions;
     }
 
-    /** The stored portfolios of a date (their definitions), read again for a date put together from its shards. */
-    Map<String, VarDate.Portfolio> portfolios(LocalDate date) {
-        Map<String, VarDate.Portfolio> out = new LinkedHashMap<>();
-        Map<String, Double> lim = portfolioLimits(AsOf.of(date));
-        documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> out.put(id, VarDate.Portfolio.of(id, p, lim)));
-        return out;
+    /** The system baskets' VaR limits of a date (USD), read again for a date put together from its shards. */
+    Map<String, Double> portfolioLimits(LocalDate date) {
+        return portfolioLimits(AsOf.of(date));
     }
 
     /** The position rules a load uses now (a pack's section, else the server's setting). */
@@ -226,7 +223,7 @@ final class VarLoader {
             inputsKey += "|shard=" + shard.key();                         // a shard's file: its range of its map is part of its inputs
         }
         // the hierarchies' configuration (2.9.5) and their limits' version: a file built under another is not reopened
-        String hierKey = versions.get(k.hierarchy()) + props.rootNamesKey() + hs.digest()
+        String hierKey = props.rootNamesKey() + hs.digest() + namesKey(date, hs)
                 + (hs.limitKinds().isEmpty() ? "" : "|limits=" + versions.getOrDefault(k.limit(), ""));
         String setKey = versions.get(k.scenarioSet()) + (stressSet != null ? "|stress=" + stressSet : props.window() > 0 ? "|window=" + props.window() : "");
         return VarTier.digest(date, inputsKey, hierKey, setKey, pr.digest());
@@ -285,7 +282,8 @@ final class VarLoader {
         AsOf asOf = AsOf.of(date);
         Map<String, String> versions = versions(date);                // the 2.9.4 kinds only when a connector holds them (records stay comparable)
         PositionRules pr = rules.get();
-        // a column hierarchy whose level column a source does not keep is skipped, said (DRS-5211 as a warning); the rest load (2.9.5)
+        // the hierarchies, checked against the sources' promoted columns: a level column a source does not promote is a warning (its rows
+        // sit under (Blank) at that level), one promoted by no source refuses the date (DRS-5213)
         Hierarchies hs = effective(date, hierarchies.get());
         String trades = version(date);
         Sets sets = sets(date, asOf);
@@ -322,35 +320,24 @@ final class VarLoader {
         // the build sums every node's PVs per trade currency too (VAR_GUIDE.md section 15.11): the date's FX, read only when a trade needs it
         b.currencyRates(c -> fx(date, scenarioDates, fxSet).rates(c).orElse(null));
         Map<String, Double> limits = limits(asOf, hs);
-        // the column hierarchies' cells and nodes (2.9.5); their roots named as the risk-hierarchy roots are (drishti.var.root-name(s))
-        b.columnHierarchies(hs.specs().stream().map(s -> s.columns() ? s.withRootName(props.rootName(s.id(), null, s.rootName())) : s).toList(),
-                limits);
+        // the hierarchies' cells and nodes, from the trades' promoted columns; their roots named by drishti.var.root-name(s) when set, each
+        // node by its reference entity (desk, book, legal-entity) when there is one
+        b.columnHierarchies(hs.specs().stream().map(s -> s.withRootName(props.rootName(s.id(), null, s.rootName()))).toList(), limits,
+                names(asOf, hs));
         try {
             VarIntake intake = intake(date, asOf, b, pr, setId, scenarioDates, fullSet.size(), hs, shard, stress ? keepOnly(setId)
                     : keepNormal(sets.stressIds()), fxSet);
             List<LocalDate> days = scenarioDates;
             VarIntake.Summary sum = intake.summary();
             long tVectors = System.nanoTime();
-            com.ash.drishti.banking.compute.var.ShardAssembly.Nodes rows = nodeRows(asOf, hs, limits);
-            for (String[] r : rows.rows()) {
-                b.node(r[0], r[1], r[2], r[3], r[4], rows.books().get(r[0]), rows.limits().get(r[0]));
-            }
-            Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
-            Map<String, Double> pfLimits = portfolioLimits(asOf);
-            documents(k.portfolio(), asOf).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p, pfLimits)));
+            Map<String, Double> portfolios = portfolioLimits(asOf);       // the system baskets' limits (their definitions: the basket store)
             versions.put("scenarioSet", setId);
-            List<String> unknownLimits = new ArrayList<>();
             b.batchId(sum.batchIds().isEmpty() ? "" : sum.batchIds().get(0));
             VarBook book;
             try {
                 book = b.meta(meta(sum, versions, intake.fx())).build(sums);
             } catch (IllegalStateException e) {
                 throw new DrishtiException(ErrorCode.VAR_HIERARCHY_INVALID, "the VaR inputs of " + date + " are not loaded: " + e.getMessage());
-            }
-            for (String nid : limits.keySet()) {
-                if (book.node(nid) == null) {
-                    unknownLimits.add(nid);
-                }
             }
             tier.opened(book);
             long ms = (System.nanoTime() - t0) / 1_000_000;
@@ -362,7 +349,8 @@ final class VarLoader {
             if (stress) {
                 return stressDate(vd, set);                            // the stress set: the morning run only
             }
-            unknownLimits(date, unknownLimits);
+            limitsWithoutNodes(date, book, hs);
+            blanks(date, book, hs, sum);
             return withIntraday(vd, intake, days);
         } catch (RuntimeException e) {
             b.discard();
@@ -381,33 +369,94 @@ final class VarLoader {
     }
 
     /**
-     * The hierarchy rows of a date (the {@code risk-hierarchy} kind, for the hierarchies built from rows) with their books and limits (a
-     * var-limit row wins over the row's own {@code LIMIT_VAR}), the root names as configured, and the hierarchies built from columns: what
-     * a date's nodes are built from (a load, or a sharded date put together, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built).
+     * What a date's nodes are built from (a load, or a sharded date put together, DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built):
+     * the hierarchies, every one from the trades' promoted columns, their roots named as configured, with the var-limit rows and the
+     * reference entities' names.
      */
     com.ash.drishti.banking.compute.var.ShardAssembly.Nodes nodeRows(AsOf asOf, Hierarchies hs, Map<String, Double> limits) {
-        List<String[]> rows = new ArrayList<>();
-        Map<String, List<String>> books = new java.util.HashMap<>();
-        Map<String, Double> lim = new java.util.HashMap<>();
-        for (DataNode n : documents(props.kinds().hierarchy(), asOf).values()) {
-            if (!hs.fromRows(text(n, "HIERARCHY"))) {
-                continue;                                              // a hierarchy built from the columns: its rows are not read
-            }
-            List<String> bs = new ArrayList<>();
-            DataNode list = n.get("BOOKS");
-            for (int i = 0; list != null && i < list.size(); i++) {
-                bs.add(list.get(i).asText());
-            }
-            // a root's name from drishti.var.root-name(s) when set (the top of the VaR tree), else the data's
-            String name = props.rootName(text(n, "HIERARCHY"), text(n, "PARENT_ID"), text(n, "NAME"));
-            String nid = text(n, "NODE_ID");
-            rows.add(new String[] {nid, text(n, "HIERARCHY"), text(n, "LEVEL"), name, text(n, "PARENT_ID")});
-            books.put(nid, List.copyOf(bs));
-            lim.put(nid, limits.getOrDefault(nid, number(text(n, "LIMIT_VAR"))));   // a var-limit row wins over the row's own LIMIT_VAR
-        }
-        List<com.ash.drishti.banking.compute.var.HierarchySpec> specs = hs.specs().stream().filter(com.ash.drishti.banking.compute.var.HierarchySpec::columns)
+        List<com.ash.drishti.banking.compute.var.HierarchySpec> specs = hs.specs().stream()
                 .map(s -> s.withRootName(props.rootName(s.id(), null, s.rootName()))).toList();
-        return new com.ash.drishti.banking.compute.var.ShardAssembly.Nodes(rows, books, lim, specs, limits);
+        return new com.ash.drishti.banking.compute.var.ShardAssembly.Nodes(List.of(), Map.of(), Map.of(), specs, limits, names(asOf, hs));
+    }
+
+    /**
+     * The display names of a date's nodes (VAR_GUIDE.md section 15.14): a level's name is the reference kind ({@code desk}, {@code book},
+     * {@code legal-entity}) and the value its id; the entity's {@code NAME} when a connector serves it, else none (the node is named by
+     * its value). Each kind's names are read once per load, as one column when its source keeps {@code NAME} as a column, else entity by
+     * entity (at most {@link #NAME_READS} a kind, then by value).
+     */
+    com.ash.drishti.banking.compute.var.Cells.Names names(AsOf asOf, Hierarchies hs) {
+        java.util.Set<String> levels = new java.util.HashSet<>();
+        hs.specs().forEach(s -> levels.addAll(s.levelNames()));
+        Map<String, Map<String, String>> byKind = new java.util.concurrent.ConcurrentHashMap<>();
+        Map<String, java.util.concurrent.atomic.AtomicInteger> reads = new java.util.concurrent.ConcurrentHashMap<>();
+        return (level, value) -> {
+            if (!levels.contains(level) || value == null) {
+                return null;
+            }
+            Map<String, String> names = byKind.computeIfAbsent(level, k -> nameColumn(k, asOf));
+            String got = names.get(value);
+            if (got == null && !names.containsKey(ALL_READ) && reads.computeIfAbsent(level, k -> new java.util.concurrent.atomic.AtomicInteger())
+                    .incrementAndGet() <= NAME_READS) {
+                got = nameOf(level, value, asOf);
+                names.put(value, got);
+            }
+            return got == null || got.isEmpty() ? null : got;
+        };
+    }
+
+    /** The most entities of one kind whose names a load reads one by one (a kind whose source keeps no NAME column). */
+    static final int NAME_READS = 200;
+    private static final String ALL_READ = "\u0000all";
+
+    /** A kind's names as one column ({@code NAME} kept as a column by its source), marked complete; else an empty map to fill. */
+    private Map<String, String> nameColumn(String kind, AsOf asOf) {
+        Map<String, String> out = new java.util.concurrent.ConcurrentHashMap<>();
+        try {
+            router.columns(kind, List.of("NAME"), asOf, java.time.Duration.ofSeconds(30)).filter(c -> c.has("NAME")).ifPresent(c -> {
+                for (int i = 0; i < c.size(); i++) {
+                    Object n = c.value("NAME", i);
+                    if (c.ids()[i] != null && n != null && !String.valueOf(n).isBlank()) {
+                        out.put(c.ids()[i], String.valueOf(n).strip());
+                    }
+                }
+                out.put(ALL_READ, "");
+            });
+        } catch (RuntimeException e) {
+            out.put(ALL_READ, "");                                     // no connector serves the kind: every node named by its value
+        }
+        return out;
+    }
+
+    /** One entity's {@code NAME} ("" when there is none). */
+    private String nameOf(String kind, String id, AsOf asOf) {
+        try {
+            com.ash.drishti.api.EntityRef ref = new com.ash.drishti.api.EntityRef(kind, id);
+            EntityDocument d = router.fetchAll(List.of(ref), java.time.Duration.ofSeconds(10), asOf).get(ref);
+            String n = d == null || d.data() == null ? null : text(d.data(), "NAME");
+            return n == null || n.isBlank() ? "" : n.strip();
+        } catch (RuntimeException e) {
+            return "";
+        }
+    }
+
+    /** What the reference entities that name the nodes add to a hot file's digest: each level kind's data version. */
+    private String namesKey(LocalDate date, Hierarchies hs) {
+        java.util.TreeSet<String> kinds = new java.util.TreeSet<>();
+        hs.specs().forEach(s -> kinds.addAll(s.levelNames()));
+        StringBuilder b = new StringBuilder();
+        for (String k : kinds) {
+            String v;
+            try {
+                v = router.dataVersion(k, AsOf.of(date)).orElse("");
+            } catch (RuntimeException e) {
+                v = "";
+            }
+            if (!v.isEmpty() && !v.equals("none")) {
+                b.append("|names.").append(k).append('=').append(v);
+            }
+        }
+        return b.toString();
     }
 
     private VarIntake intake(LocalDate date, AsOf asOf, VarBook.Builder b, PositionRules pr, String setId, List<LocalDate> scenarioDates,
@@ -421,7 +470,7 @@ final class VarLoader {
             sayable(columns, pvColumns, setId);                       // the stress set's rows must be told from the normal set's
         }
         VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size())).scenarioSet(setId)
-                .inputs(new VarInputs(props::input)).setLength(setLength).pnlFx(() -> fx(date, scenarioDates, fxSet)).levels(levels);
+                .inputs(new VarInputs(props::input)).setLength(setLength).pnlFx(() -> fx(date, scenarioDates, fxSet));
         boolean read;
         boolean readPv;
         try {
@@ -594,42 +643,63 @@ final class VarLoader {
         if ("true".equalsIgnoreCase(String.valueOf(text(set, "SYNTHETIC")))) {
             v.put(STRESS_SYNTHETIC, "true");
         }
-        return new VarDate(vd.date(), vd.book(), vd.portfolios(), vd.version() + "|set=" + setId, vd.loadedAt(), vd.loadMs(), vd.vectorMs(),
+        return new VarDate(vd.date(), vd.book(), vd.portfolioLimits(), vd.version() + "|set=" + setId, vd.loadedAt(), vd.loadMs(), vd.vectorMs(),
                 vd.intake(), v, vd.warnings(), vd.currency(), vd.fx(), null);
     }
 
-    /** Per business date, the column hierarchies skipped on it and why (2.9.5). */
-    private final Map<LocalDate, Map<String, String>> skipped = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Per business date, its hierarchy warnings: level columns not promoted, (Blank) nodes and their counts (VAR_GUIDE.md section 15.14). */
+    private final Map<LocalDate, List<String>> blankNotes = new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
-     * The hierarchies a date is built with: the configured ones but the column hierarchies whose level column a source of the trades does not
-     * keep (the P&amp;L vectors' or the scenario PVs' table, when a connector serves it and can say its columns). Each skipped one is said:
-     * in the date's provenance (DRS-5211, a warning: the date and its official capture go on), in Admin → Health and in the log. A connector
-     * that cannot say its columns is asked for them; its rows without one are refused one by one, as a row with the column left blank is.
+     * The hierarchies a date is built with, checked against the promoted columns of the sources of its trades (the P&amp;L vectors' and the
+     * scenario PVs' tables, when a connector can say its columns): a level column a source does not promote is a warning (its rows sit
+     * under (Blank) at that level, said in Admin → Health and the log); a level column no source promotes refuses the date (DRS-5213: a
+     * typo in {@code levels:}).
      */
     Hierarchies effective(LocalDate date, Hierarchies all) {
-        if (all.columnSpecs().isEmpty()) {
-            skipped.remove(date);
-            return all;
-        }
         VarProperties.Kinds k = props.kinds();
         Map<String, java.util.Set<String>> kept = new LinkedHashMap<>();
         kept.put(k.vector(), router.columnar(k.vector()));
         kept.put(k.scenarioPv(), router.columnar(k.scenarioPv()));
-        Map<String, String> why = all.missingColumns(kept, " on " + date);
-        Map<String, String> before = skipped.put(date, why);
-        for (com.ash.drishti.banking.compute.var.HierarchySpec s : all.columnSpecs()) {
-            Hierarchies.skipped("var", s.id(), why.get(s.id()));
-        }
+        Map<String, String> why = all.unpromoted(kept, true);
+        Map<String, String> before = Hierarchies.warnings().entrySet().stream().filter(e -> e.getKey().startsWith("var "))
+                .collect(java.util.stream.Collectors.toMap(e -> e.getKey().substring(4), Map.Entry::getValue));
+        Hierarchies.warnings("var", why);
         if (!why.equals(before)) {
             why.values().forEach(w -> org.slf4j.LoggerFactory.getLogger(VarLoader.class).warn("VaR: {}", w));
         }
-        return all.without(why.keySet());
+        return all;
     }
 
-    /** The column hierarchies skipped on a date, id to why (empty: none, or the date not loaded yet). */
-    Map<String, String> skipped(LocalDate date) {
-        return skipped.getOrDefault(date, Map.of());
+    /**
+     * The (Blank) nodes of a loaded date (VAR_GUIDE.md section 15.14), each with its count of trades by source kind, kept with the date for
+     * its answers' provenance (a warning, never a reason to refuse the date).
+     */
+    private void blanks(LocalDate date, VarBook book, Hierarchies hs, VarIntake.Summary sum) {
+        List<String> out = new ArrayList<>(Hierarchies.warnings().entrySet().stream().filter(e -> e.getKey().startsWith("var "))
+                .map(Map.Entry::getValue).toList());
+        for (VarBook.Node n : book.nodes().values()) {
+            if (!com.ash.drishti.banking.compute.var.HierarchySpec.blankNode(n.id()) || !n.children().isEmpty() && hasBlankParent(book, n)) {
+                continue;
+            }
+            int[] byKind = new int[2];
+            n.members().forEach(o -> byKind[sum != null && sum.fromScenarioPv(book.tradeId(o)) ? 1 : 0]++);
+            com.ash.drishti.banking.compute.var.HierarchySpec s = hs.spec(n.hierarchy());
+            int i = s == null ? -1 : s.levelNames().indexOf(n.level());
+            String col = i < 0 ? n.level() : s.levels().get(i);
+            out.add(n.name() + " " + n.id() + " (" + n.hierarchy() + ", level " + n.level() + "): " + (byKind[0] + byKind[1])
+                    + " trades with no " + col + " value (" + props.kinds().vector() + " " + byKind[0] + ", " + props.kinds().scenarioPv() + " "
+                    + byKind[1] + "); fix: send " + col + " on every row and promote it in the connector's layout.<kind>.columns");
+        }
+        if (blankNotes.size() > 64) {
+            blankNotes.clear();
+        }
+        blankNotes.put(date, List.copyOf(out));
+    }
+
+    /** True when a (Blank) node's parent is a (Blank) node too (the rows are said once, at the highest empty level). */
+    private static boolean hasBlankParent(VarBook book, VarBook.Node n) {
+        return n.parent() != null && com.ash.drishti.banking.compute.var.HierarchySpec.blankNode(n.parent());
     }
 
     /**
@@ -744,37 +814,89 @@ final class VarLoader {
         return limitBases.getOrDefault(date, Map.of()).getOrDefault(id, LimitBasis.DEFAULT);
     }
 
-    /** Per business date, the var-limit rows its load found naming no node (kept with the date; a date is never refused for them). */
-    private final Map<LocalDate, List<String>> unknownLimits = new java.util.concurrent.ConcurrentHashMap<>();
+    /**
+     * Per business date, the var-limit rows naming no node of the date (kept with the date; a date is never refused for them): a node its
+     * hierarchy can build but with no positions on the date ({@code limit, no positions}), or one it cannot build (DRS-5212, the reason).
+     */
+    private final Map<LocalDate, LimitsWithoutNodes> limitsWithoutNodes = new java.util.concurrent.ConcurrentHashMap<>();
 
-    private void unknownLimits(LocalDate date, List<String> nodes) {
-        if (unknownLimits.size() > 64) {
-            unknownLimits.clear();
+    /**
+     * The var-limit rows of a date without a node.
+     *
+     * @param noPositions node id to its hierarchy: a node of a configured hierarchy with no positions on the date
+     * @param unbuildable node id to why it cannot be a node (DRS-5212)
+     */
+    record LimitsWithoutNodes(Map<String, String> noPositions, Map<String, String> unbuildable) {
+        static final LimitsWithoutNodes NONE = new LimitsWithoutNodes(Map.of(), Map.of());
+    }
+
+    private void limitsWithoutNodes(LocalDate date, VarBook book, Hierarchies hs) {
+        if (limitsWithoutNodes.size() > 64) {
+            limitsWithoutNodes.clear();
         }
-        unknownLimits.put(date, List.copyOf(nodes));
+        try {
+            limitsWithoutNodes.put(date, limitsWithoutNodes(AsOf.of(date), book, hs));
+        } catch (RuntimeException e) {
+            limitsWithoutNodes.put(date, LimitsWithoutNodes.NONE);   // the limits are a warning only
+        }
+    }
+
+    /** The var-limit rows of a date that name no node of its book, told apart: no positions, or not a node of its hierarchy (DRS-5212). */
+    LimitsWithoutNodes limitsWithoutNodes(AsOf asOf, VarBook book, Hierarchies hs) {
+        Map<String, String> none = new java.util.TreeMap<>();
+        Map<String, String> bad = new java.util.TreeMap<>();
+        Map<String, String> kinds = hs.limitKinds();
+        for (String kind : new java.util.LinkedHashSet<>(kinds.values())) {
+            for (DataNode d : optional(kind, asOf).values()) {
+                String h = text(d, "HIERARCHY");
+                String node = text(d, "NODE_ID");
+                if (h == null || node == null || "PORTFOLIO".equalsIgnoreCase(h) || book.node(node) != null) {
+                    continue;
+                }
+                String why = hs.unbuildable(h.toUpperCase(java.util.Locale.ROOT), node);
+                if (why == null) {
+                    none.put(node, h.toUpperCase(java.util.Locale.ROOT));
+                } else {
+                    bad.put(node, why);
+                }
+            }
+        }
+        return new LimitsWithoutNodes(Map.copyOf(none), Map.copyOf(bad));
+    }
+
+    /** The var-limit rows of a date without a node (empty: none, or the date not loaded yet). */
+    LimitsWithoutNodes limitsWithoutNodes(LocalDate date) {
+        return limitsWithoutNodes.getOrDefault(date, LimitsWithoutNodes.NONE);
     }
 
     /**
-     * What the answers of a date say about its hierarchies (2.9.5), in the provenance's warnings: positions split at a cell's edge, limits
-     * naming no node (DRS-5212). Data-quality notes: never a reason to answer another date or skip the official capture.
+     * What the answers of a date say about its hierarchies, in the provenance's warnings: level columns not promoted and (Blank) nodes,
+     * positions split at a cell's edge, limits without a node. Data-quality notes: never a reason to answer another date or skip the
+     * official capture.
      */
     List<String> hierarchyNotes(VarDate d) {
-        List<String> out = new ArrayList<>(skipped(d.date()).values());
-        out.addAll(warnings(d.book(), unknownLimits.getOrDefault(d.date(), List.of())));
+        List<String> out = new ArrayList<>(blankNotes.getOrDefault(d.date(), List.of()));
+        out.addAll(warnings(d.book(), limitsWithoutNodes(d.date())));
         return out;
     }
 
-    /** What the answers of a date say about its hierarchies: positions split at a cell's edge, limits naming no node (DRS-5212). */
-    static List<String> warnings(VarBook book, List<String> unknownLimits) {
+    /** What the answers of a date say about its hierarchies: positions split at a cell's edge, limits without a node. */
+    static List<String> warnings(VarBook book, LimitsWithoutNodes limits) {
         List<String> out = new ArrayList<>();
         if (book.splitPositions() > 0) {
             out.add(book.splitPositions() + " position" + (book.splitPositions() == 1 ? "" : "s") + " had trades under two nodes of a hierarchy "
-                    + "built from columns and " + (book.splitPositions() == 1 ? "is" : "are") + " split, one part per node (<position>@<value>)");
+                    + "and " + (book.splitPositions() == 1 ? "is" : "are") + " split, one part per node (<position>@<value>)");
         }
-        if (!unknownLimits.isEmpty()) {
-            out.add(ErrorCode.VAR_LIMIT_UNKNOWN_NODE.code() + " " + unknownLimits.size() + " VaR limit" + (unknownLimits.size() == 1 ? " names" : "s name")
-                    + " no node of the date, unused: " + String.join(", ", unknownLimits.subList(0, Math.min(5, unknownLimits.size())))
-                    + (unknownLimits.size() > 5 ? ", ..." : ""));
+        if (!limits.noPositions().isEmpty()) {
+            List<String> ids = new ArrayList<>(limits.noPositions().keySet());
+            out.add(ids.size() + " VaR limit" + (ids.size() == 1 ? "" : "s") + " with no positions on the date (limit, no positions): "
+                    + String.join(", ", ids.subList(0, Math.min(5, ids.size()))) + (ids.size() > 5 ? ", ..." : ""));
+        }
+        if (!limits.unbuildable().isEmpty()) {
+            List<String> ids = new ArrayList<>(limits.unbuildable().keySet());
+            out.add(ErrorCode.VAR_LIMIT_UNKNOWN_NODE.code() + " " + ids.size() + " VaR limit" + (ids.size() == 1 ? " names" : "s name")
+                    + " no node its hierarchy can build, unused: " + String.join("; ", ids.subList(0, Math.min(5, ids.size())).stream()
+                    .map(i -> i + " (" + limits.unbuildable().get(i) + ")").toList()) + (ids.size() > 5 ? "; ..." : ""));
         }
         return out;
     }
@@ -786,17 +908,6 @@ final class VarLoader {
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             return "{}";
         }
-    }
-
-    /** The var-limit rows of a date that name no node of its book (a date reopened from its hot file: its limits read again). */
-    private List<String> unknownLimits(LocalDate date, VarBook book) {
-        List<String> out = new ArrayList<>();
-        try {
-            limits(AsOf.of(date), hierarchies.get()).keySet().stream().filter(n -> book.node(n) == null).forEach(out::add);
-        } catch (RuntimeException e) {
-            // the limits are a warning only
-        }
-        return out;
     }
 
     /**
@@ -827,16 +938,16 @@ final class VarLoader {
             return null;
         }
         v.put("scenarioSet", book.scenarioSet());
-        Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
-        Map<String, Double> pfLimits = portfolioLimits(AsOf.of(date));
-        documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p, pfLimits)));
+        Map<String, Double> portfolios = portfolioLimits(AsOf.of(date));
         tier.opened(book);
         long ms = (System.nanoTime() - t0) / 1_000_000;
         VarDate vd = new VarDate(date, book, portfolios, version(date), java.time.Instant.now(), ms, 0, sum, v, List.of(), VarDate.USD, fx);
         if (!withDay) {
             return vd;                                                 // a shard: the morning run only
         }
-        unknownLimits(date, unknownLimits(date, book));
+        Hierarchies hs = hierarchies.get();
+        limitsWithoutNodes(date, book, hs);
+        blanks(date, book, hs, sum);
         try {                                                          // the hot file holds the morning run: the day's updates read again
             return withIntraday(vd, readIntraday(date, book, java.util.Set.of(), sum), book.scenarioDates());
         } catch (RuntimeException e) {
@@ -995,7 +1106,6 @@ final class VarLoader {
         VarInputs in = new VarInputs(props::input);
         in.restore(morningRun == null ? null : morningRun.inputs());     // each system's morning form and grain: an update follows it
         VarIntake intake = new VarIntake(none, pr, date, columns.subList(1, columns.size())).scenarioSet(morning.scenarioSet()).intradayOnly(applied)
-                .levels(levels)
                 .inputs(in).setLength(morningRun == null || morningRun.setLength() <= 0 ? days.size() : morningRun.setLength())
                 .pnlFx(() -> fx(date, days));
         java.util.function.Predicate<String> normal = keepNormal(stressIds(date));     // the stress set's rows are never the normal set's

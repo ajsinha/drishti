@@ -24,6 +24,12 @@ drishti-stack/status.sh      # the processes and ports, the members, the console
 drishti-stack/stop.sh        # stop everything start.sh started (by process id, never by name)
 ```
 
+The three are thin callers of the start and stop scripts of [bin/](../bin/README.md): each node is started with
+`bin/start-server.sh --node <name> --node-dir drishti-stack/nodes/<name>/net --env-file drishti-stack/secrets.env --background` (with its port,
+heap, data folder and settings from `stack.yaml`), the console with `bin/start-console.sh --server http://<this machine's address>:18480`,
+and `stop.sh` and `status.sh` use `bin/stop-server.sh`, `bin/stop-console.sh` and `bin/status.sh`. To run a cluster without this folder
+(on several machines, or on Windows), use `bin/` directly: [DEPLOYMENT_AND_QA_GUIDE.md › section 10.6](../docs/DEPLOYMENT_AND_QA_GUIDE.md#106-start-order-and-joining).
+
 Open the console at `http://<this machine's address>:17480` (start.sh prints it) and go to **Admin → Cluster**: the three members are alive.
 
 ## What runs where
@@ -54,7 +60,8 @@ Open `/v/trade/10000001` on the console: the trade is held by `drishti-b` only, 
 | `nodes/<node>/net/` | yes | each node's Drishti*net folder: `node.yaml` (its id, its address as `http://${DRISHTI_STACK_HOST}:<port>` and `secret: ${DRISHTI_NET_SECRET}`, references, never the key or this machine's IP), `gossip.yaml`, `peers/` (the seed) |
 | `secrets.env.example` | yes | the names of the secrets, no values |
 | `secrets.env` | **no** (git-ignored) | the secrets themselves, mode 600 |
-| `run/` | **no** (git-ignored) | `server.jar` (the copy the servers run), `pids.txt`, `logs/` |
+| `run/` | **no** (git-ignored) | `server.jar` (the copy the servers run) |
+| `../data/run/`, `../data/logs/` | **no** (`data/` is git-ignored) | the process ids (`server-<node>.pid`, `console.pid`) and the logs (`server-<node>.log`, `console.log`), where `bin/` keeps them |
 | `../data/stack/` | **no** (`data/` is git-ignored) | the nodes' data and connector folders, the synthetic lakes |
 
 On the first start `start.sh` makes what is missing: the secrets, `run/server.jar` (a copy of the newest
@@ -112,18 +119,19 @@ starts it, and the cluster learns it within seconds. Commit the new net folder w
 
 ## Logs
 
-`run/logs/<node>.log` and `run/logs/console.log`, appended on every start. Since 2.9.7 each server writes `run/logs/<node>.log` itself,
-rotated at 100 MB a file and kept within 1 GB (`drishti.logging.*`, compressed `<node>.log.<date>.<n>.gz`); the JVM's own standard output
-(a crash, a warning before logging starts) goes to `run/logs/<node>.out`. The oldest heap dumps beyond two go at each start
-(`drishti.disk.max-dumps`). A node that does not answer within five minutes is reported by
-`start.sh` with its log's path. Each JVM writes its temporary files under its own data folder (`-Djava.io.tmpdir=<data>/tmp/server`), never
-the system `/tmp`.
+`data/logs/server-<node>.log` and `data/logs/console.log` in the repository (bin/ keeps them there for every node, whatever its own data
+folder). Each server writes its log itself, rotated at 100 MB a file and kept within 1 GB (`drishti.logging.*`, compressed
+`<file>.<date>.<n>.gz`); the JVM's own standard output (a crash, a warning before logging starts) goes to `data/logs/server-<node>.out`; the
+GC log to `data/logs/gc-server-<node>-<pid>.log` and a heap dump on OutOfMemoryError to `data/dumps/<node>`. The oldest heap dumps beyond
+two go at each start (`drishti.disk.max-dumps`). A node that does not answer within five minutes is reported with its log's path. Each JVM
+writes its temporary files under `data/tmp/server-<node>`, never the system `/tmp`.
 
 ## Stopping
 
-`stop.sh` stops the processes in `run/pids.txt`, the console first, by process id: it checks that the id is still one of this stack's
-processes (its command line names `run/server.jar` or the console) before it sends `SIGTERM`, and sends `SIGKILL` only after 60 s. Other
-Java or Python processes on the machine are never touched.
+`stop.sh` stops the console first, then each node, through `bin/stop-console.sh` and `bin/stop-server.sh --node <name>`: by the process id
+in `data/run/<process>.pid`, after checking that the id is still a Drishti server or console; `SIGTERM` first, `SIGKILL` only after 60 s.
+Other Java or Python processes on the machine are never touched. A stack started before `bin/` (its ids in `run/pids.txt`) is stopped the
+same way once, from that file.
 
 ## Content store
 

@@ -24,9 +24,10 @@
    top of this page, opened when asked: a column per kind of part, the type-ahead, "+ basket" on every row of the tree and the
    contributions, pasted columns, "Start from the whole bank", the server's check of every cell and the basket's VaR live, a pre-deal
    what-if, Save (a basket, private or shared read-only) and Open. Opening a basket loads it back into the sheet. The baskets are listed
-   in the toolbar's two drop-downs (2.9.11.b, drishti_var-layout.js): System baskets (the bank's portfolios) and My baskets (saved: mine, then
+   in the toolbar's two drop-downs (2.9.11.b, drishti_var-layout.js): System baskets (the bank's, kept in Drishti's basket store) and My baskets (saved: mine, then
    shared with me); the sheet is collapsed until "+ New basket" (or Alt+B, + basket, Edit) and collapses again once saved. A saved
-   basket of yours has "Edit" (an administrator's on everyone's; a basket shared with you and a portfolio, the bank's, have "Edit a copy")
+   basket of yours has "Edit" (an administrator's on everyone's; a basket shared with you and a system basket, the bank's, have "Edit a copy";
+   a holder of var:system-baskets edits the system basket itself under the sheet)
    and "Delete", which asks in a dialog (drishti_scope-delete.js), then refreshes the list and says so. How a number was built is the one Explain's
    (drishti-insight): the VaR and ES tiles and Explain › carry their figure's request (bindExplain), the page's scope, date and lens. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
    another capture or with now, and exports as CSV.
@@ -947,14 +948,12 @@
     });
   }
 
-  /** The hierarchy selector from the date's hierarchies (2.9.5: every configured one, by its title), the current one chosen. */
+  /** The hierarchy selector from the date's hierarchies (every configured one, by its title), the current one chosen. */
   function fillHierarchies(d) {
     var sel = picker("[data-vx-hierarchy]");
     var info = d.hierarchyInfo || (d.hierarchies || []).map(function (id) { return { id: id, title: id }; });
     if (!info.length) return;
-    // 2.9.5: a hierarchy skipped on this date (its column not in the data) is shown disabled, with why
-    sel.setOptions(info.map(function (x) { return { value: x.id, label: (x.title || x.id) + (x.skipped ? " (not available)" : ""), disabled: !!x.skipped, detail: x.skipped ? x.note || "" : "" }; }),
-      d.hierarchy || S.hierarchy);
+    sel.setOptions(info.map(function (x) { return { value: x.id, label: x.title || x.id, detail: (x.levels || []).join(" > ") }; }), d.hierarchy || S.hierarchy);
   }
 
   /** The hierarchy shown, kept in the page's link (hierarchy=LL). */
@@ -972,7 +971,8 @@
   /** A hierarchy node's row for the tree (2.9.7: "n/c" when the limit is of another horizon or confidence). */
   function nodeRow(n) {
     return { ID: n.id, PARENT: n.parent || null, LABEL: n.name, name: n.name, LEVEL: n.level, level: n.level, scope: n.scope, parametric: n.parametric,
-      VAR: n["var"], ES: n.es, LIMIT_USE: n.limitUse, LIMIT_STATUS: n.limitStatus, LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit" };
+      VAR: n["var"], ES: n.es, LIMIT_USE: n.limitUse, LIMIT_STATUS: n.limitStatus, LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit",
+      blank: !!n.blank, blankNote: n.blankNote || "" };
   }
   /** A book's positions, or a position's trades (the contributions of that scope), as rows under the part's row; a position's are lazy. */
   function partRows(parentId, kids) {
@@ -1012,7 +1012,17 @@
   function nameCell(c) {
     var r = c.row, s = h("span", "nm");
     if (r.direction) s.appendChild(chip(r.direction));
-    s.appendChild(document.createTextNode(" " + r.name));
+    s.appendChild(document.createTextNode(" "));
+    if (r.blank) {                                     // a (Blank) node: muted, in italics, its ? the count of trades and the fix
+      s.appendChild(h("span", "dg-blank", r.name));
+      var q = h("span", "dg-blank-q", "?");
+      q.title = r.blankNote;
+      q.setAttribute("role", "img");
+      q.setAttribute("aria-label", r.blankNote);
+      s.appendChild(q);
+    } else {
+      s.appendChild(document.createTextNode(r.name));
+    }
     s.appendChild(addButton(r.scope, { type: r.kind === "position" ? "POS" : r.kind === "trade" ? "TRD" : r.scope.split(":")[0], id: r.scope.replace(/^[A-Z]+:/, ""), name: r.name }));
     return s;
   }
@@ -1065,9 +1075,9 @@
     if (window.Drishti.VarLayout) window.Drishti.VarLayout.mark(S.scope);          // the basket drop-downs name the scope when it is one of theirs
   }
 
-  /** The baskets in the toolbar's two drop-downs (2.9.11.b, drishti_var-layout.js): System baskets are the bank's portfolios (the tree's
-      answer: the market-risk pack's portfolio feed), My baskets the saved baskets the engine lists for me (mine, then those shared with
-      me). Each row keeps the actions the column had: + basket, Edit a copy (a portfolio, a basket shared read-only), Edit and Delete. */
+  /** The baskets in the toolbar's two drop-downs (2.9.11.b, drishti_var-layout.js): System baskets are the bank's (the tree's answer: the
+      basket store's system scope, VAR_GUIDE.md section 5.7), My baskets the saved baskets the engine lists for me (mine, then those shared
+      with me). Each row keeps the actions the column had: + basket, Edit a copy (a system basket, a basket shared read-only), Edit and Delete. */
   function renderAdhoc() {
     var L = window.Drishti.VarLayout;
     if (!L) return;
@@ -1075,7 +1085,7 @@
       var type = String(p.type || "").toLowerCase();
       return { scope: p.scope, label: p.name, desc: p.description || "", meta: [p.id, p.owner].filter(Boolean).join(" · "), chip: type,
                acts: [addButton(p.scope, { type: "PORT", id: p.scope.replace(/^[A-Z]+:/, ""), name: p.name }),
-                      editButton(p.scope, p.name, true)] };            // the bank's portfolio: never edited, a copy is
+                      editButton(p.scope, p.name, true)] };            // the bank's: a copy (a holder of var:system-baskets edits it in the sheet)
     }));
     api("baskets", {}, true).then(function (bs) {
       S.baskets = bs;
@@ -1092,7 +1102,7 @@
     markTree();
   }
 
-  /** "Edit" (a basket the viewer owns, or anyone's for an administrator) or "Edit a copy" (a portfolio, a basket shared read-only): the sheet. */
+  /** "Edit" (a basket the viewer owns, or anyone's for an administrator) or "Edit a copy" (a system basket, a basket shared read-only): the sheet. */
   function editButton(scope, name, copy) {
     var x = h("button", "vx-add vx-edit", copy ? "Edit a copy" : "Edit");
     x.type = "button";
@@ -1155,6 +1165,8 @@
     // the sheet opens only when asked (Construct your basket, Alt+B, + basket, Edit): a basket kept in this browser waits behind the link's count
     // saved: the basket joins My baskets (onOpen lists them again) and the sheet collapses (2.9.11.b)
     document.addEventListener("drishti:vb-saved", function (ev) { root.dataset.saved = ev.detail.id; B.hide(); });
+    // a system basket saved or retired in the sheet (VAR_GUIDE.md section 5.7): System baskets lists the store as it is now
+    document.addEventListener("drishti:vb-system-saved", function (ev) { root.dataset.systemSaved = ev.detail.id + "@" + ev.detail.version; S.tree = null; loadTree(); });
   }
   $("[data-vx-basket-open]").addEventListener("click", function () { if (B) { B.show(); var f = root.querySelector("[data-vb-find]"); if (f) f.focus(); } });
   $("[data-vx-whatif]").addEventListener("click", function () {

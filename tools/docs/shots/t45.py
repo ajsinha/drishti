@@ -74,9 +74,9 @@ tables:
     sort-by: [DESK, TT_BOOK, id]
     file-size-mb: 256
     row-group-mb: 64
-  risk.risk-hierarchy:
-    promote: [NODE_ID, HIERARCHY, LEVEL, PARENT_ID, NAME]
-    id: NODE_ID
+  risk.var-limit:
+    promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
+    id: LIMIT_ID
     date: BUSINESS_DATE
 """
 RULES = """dataload:
@@ -92,9 +92,9 @@ RULES = """dataload:
       kind: scenario-pv
       lake: risklake
       date-field: BUSINESS_DATE
-    - match: "risk_hierarchy.*"
+    - match: "var_limit.*"
       pack: market-risk
-      kind: risk-hierarchy
+      kind: var-limit
       lake: risklake
   unmatched: fail
 """
@@ -108,10 +108,10 @@ settings:
 """
 RISK_STORE = """plugin: delta
 enabled: true
-kinds: [scenario-pv, risk-hierarchy]
+kinds: [scenario-pv, var-limit]
 settings:
   lake: risklake
-  lake-tables: risk.scenario-pv,risk.risk-hierarchy
+  lake-tables: risk.scenario-pv,risk.var-limit
   refresh-seconds: 30
 """
 
@@ -171,7 +171,7 @@ def start_servers(w: Path) -> list:
     shutil.copytree(ROOT / "config", w / "config", ignore=shutil.ignore_patterns("connectors"))
     (w / "config" / "dataload.yaml").write_text("dataload:\n  rules: []\n  unmatched: fail\n")
     for d in [p for p in (w / "data").glob("*") if p.name != "delta"] + [p for p in (w / "data" / "delta").glob("*") if p.name != "demo"] + [w / "sutras"]:
-        shutil.rmtree(d, ignore_errors=True) if d.is_dir() else d.unlink()
+        shutil.rmtree(d, ignore_errors=True) if d.is_dir() else d.unlink(missing_ok=True)
     (w / "sutras").mkdir(exist_ok=True)
     if not (w / "data" / "delta" / "demo").exists():
         os.environ["DRISHTI_SHOTS_WORK"] = str(w)
@@ -299,7 +299,7 @@ def waiting(c: Ctx):
     (inbox() / (trades + ".ready")).write_text(f"lake: risklake\nmode: replace\nsha256: {sums[trades][1]}\nrows: {sums[trades][0]}\n")
     (inbox() / (pvs + ".ready")).write_text(f"lake: risklake\npack: market-risk\nkind: scenario-pv\nsha256: {sums[pvs][1]}\n"
                                             f"rows: {sums[pvs][0]}\nhold: true\n")
-    (inbox() / f"risk_hierarchy.{DAY}.ready").write_text("lake: risklake\nrows: 26\n")
+    (inbox() / f"var_limit.{DAY}.ready").write_text("lake: risklake\nrows: 26\n")
     time.sleep(40)                                                 # stable-seconds: 30 as shipped
     cli("dataload", "status")
     page(c, "/admin/loads/inbox")
@@ -371,7 +371,7 @@ def duplicate(c: Ctx):
     time.sleep(3)
     idle()
     cli("dataload", "status")
-    reports = sorted((work() / "data" / "dataload" / "outbox").rglob(f"risk_hierarchy.{DAY}*.loaded.json"))
+    reports = sorted((work() / "data" / "dataload" / "outbox").rglob(f"var_limit.{DAY}*.loaded.json"))
     m = re.search(r"\d{8}T\d{6}\.\d{3}-\d+\.\d+", reports[0].read_text()) if reports else None
     load_id = m.group(0) if m else ""
     print("  load id:", load_id)

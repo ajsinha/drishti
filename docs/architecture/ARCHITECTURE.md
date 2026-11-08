@@ -546,65 +546,47 @@ and the export read. When a tick changes the panel, the console renders it again
 
 ### Example 2: a kind with no Sutra
 
-No Sutra in the default packs matches `risk-hierarchy` (`HIER`, a node of a VaR hierarchy; it is normally read from
-the `risk-store` lake). To show what inference alone makes of it, the first line of the committed sample
-`config/packs/banking/market-risk/samples/risk-hierarchy.jsonl` was put in the `file` connector's folder of the scratch
-server (`<data>/feeds/risk-hierarchy/LEGAL~LE-NY.json`). The document is flat UPPER_SNAKE fields, a `REF` object and
-two lists of ids (`CHILDREN`, `BOOKS`).
+No Sutra in the default packs matches `var-limit` (`VLIM`, a hierarchy node's VaR limit; it is normally read from the `risk-store`
+lake). To show what inference alone makes of it, the first line of the committed sample
+`config/packs/banking/market-risk/samples/var-limit.jsonl` is put in the `file` connector's folder of a scratch server
+(`<data>/feeds/var-limit/VL-LL~BANK.json`). The document is flat UPPER_SNAKE fields: ids, a number, a currency and dates.
 
 ```bash
-curl -s 'http://localhost:18480/api/v1/views/risk-hierarchy/LEGAL~LE-NY'
+curl -s 'http://localhost:18480/api/v1/views/var-limit/VL-LL~BANK'
 ```
 
 Abbreviated:
 
 ```json
 {
-  "title": {"pill": "Risk hierarchy", "id": "risk-hierarchy", "with": null},
-  "strip": [{"label": "Node ID", "text": "LEGAL~LE-NY", "path": "$.NODE_ID"},
-            {"label": "Hierarchy", "text": "LEGAL", "path": "$.HIERARCHY"},
-            {"label": "Limit VaR", "text": "180,000,000", "path": "$.LIMIT_VAR"},
-            {"label": "Business date", "text": "2026-09-30", "path": "$.BUSINESS_DATE"}, …],
+  "title": {"pill": "Var limit", "id": "var-limit", "with": null},
+  "strip": [{"label": "Limit ID", "path": "$.LIMIT_ID"}, {"label": "Hierarchy", "path": "$.HIERARCHY"},
+            {"label": "Node ID", "path": "$.NODE_ID"}, {"label": "Limit VaR", "path": "$.LIMIT_VAR"}, …],
   "panels": [
-    {"id": "built", "kind": "provenance", "title": "How this view was built", "inferred": true,
-     "data": {"fields": [{"label": "Layout", "text": "inference only"}, …]}},
-    {"id": "ref", "kind": "kv", "title": "Ref", "area": "right", "inferred": true,
-     "explanation": "NestedObjectRule 0.55: 2 fields",
-     "data": {"fields": [{"label": "Kind", "text": "legal-entity"}, {"label": "ID", "text": "LE-NY"}]}},
-    {"id": "refs", "kind": "links", "title": "Linked entities", "area": "right", "inferred": true, "empty": true, …}],
-  "provenance": {"layout": "inference only", "sutra": null, "source": "feed-file", "fingerprint": "fd66…eda6", …}
+    {"id": "built", "kind": "provenance", "title": "How this view was built", "inferred": true, …}, …],
+  "provenance": {"layout": "inference only", "sutra": null, "source": "feed-file", …}
 }
 ```
 
-Reading it: `provenance.layout` is `inference only` and `sutra` is `null`; every panel says `"inferred": true` and
-why (`explanation`); the strip is the eight top-ranked scalars. The lists of plain ids gave no panel, and the
-identifier rules look for camelCase names (`riskHierarchyId`, `id`, `code`, `name`), so the title falls back to the
-kind's name; a Sutra with `title: { id: $.NODE_ID }` fixes both. The ViewModel has the same shape as example 1, so
-the same template and macros draw it. To start that Sutra from what inference made:
+Reading it: `provenance.layout` is `inference only` and `sutra` is `null`; every panel says `"inferred": true` and why
+(`explanation`); the strip is the top-ranked scalars. The identifier rules look for camelCase names (`varLimitId`, `id`, `code`,
+`name`), so the title falls back to the kind's name; a Sutra with `title: { id: $.LIMIT_ID }` fixes it. The ViewModel has the same
+shape as example 1, so the same template and macros draw it. To start that Sutra from what inference made:
 
 ```bash
-curl -s 'http://localhost:18480/api/v1/studio/inferred/risk-hierarchy/LEGAL~LE-NY?name=risk-node'
+curl -s 'http://localhost:18480/api/v1/studio/inferred/var-limit/VL-LL~BANK?name=var-limit-row'
 ```
 
 ```yaml
-# Started from what inference makes of risk-hierarchy LEGAL~LE-NY. Edit freely.
+# Started from what inference makes of var-limit VL-LL~BANK. Edit freely.
 rachana: 1
-sutra: risk-node
+sutra: var-limit-row
 version: 1
-match: { kind: risk-hierarchy, priority: 1 }
-title: { pill: "Risk hierarchy", id: "'risk-hierarchy'" }
+match: { kind: var-limit, priority: 1 }
+title: { pill: "Var limit", id: "'var-limit'" }
 strip:
-  - { label: "Node ID", bind: "$.NODE_ID" }
+  - { label: "Limit ID", bind: "$.LIMIT_ID" }
   - …
-panels:
-  - id: ref
-    kind: kv
-    title: "Ref"
-    area: right
-    rows: "$.REF"
-    columns:
-      - { label: "Kind", bind: "@.KIND" }
-      - { label: "ID", bind: "@.ID" }
 ```
 
 [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#from-an-inferred-layout-to-a-sutra) explains the rules and the step from here to a Sutra.

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -38,20 +39,47 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * The equality tests of 2.9.5 (VAR_GUIDE.md section 16) on the committed test data of 2026-09-30, read straight from
- * {@code data/testdata/market-risk/} as {@link VarTestDataPrecisionTest} reads it:
+ * The golden test of the hierarchies (VAR_GUIDE.md section 15.14) on the committed test data of 2026-09-30, read straight from
+ * {@code data/testdata/market-risk/} as {@link VarTestDataPrecisionTest} reads it.
  *
- * <ul>
- *   <li>MGMT built from the columns {@code DIVISION > DESK > TT_BOOK} (leaf ids, levels division, desk, book) and LEGAL from
- *       {@code LEGAL_ENTITY > DESK > TT_BOOK}, against the same trees from the {@code risk-hierarchy} rows: the same node ids, parents,
- *       levels and members; the aggregates to the bit; VaR, ES, the children's component VaR and the worst scenarios to the cent at every
- *       node; in USD and in EUR (the books converted with the supplied scenario FX); every node's limit from {@code var-limit} on both
- *       sides (2.9.7: the rows carry no {@code LIMIT_VAR}, every VaR limit lives in {@code var-limit});</li>
- *   <li>the limit letters (LL, {@code LIMIT_LETTER > DESK}): every row carries a letter; some letter holds part of a book; each letter's
- *       and each letter-desk's vector is exactly the sum of its rows (the trades named one by one, as {@code TRD:} lists name them).</li>
- * </ul>
+ * <p>{@code var/hierarchy-golden-2026-09-30.json} holds the MGMT, LEGAL and LL trees as they were built before the hierarchies came from
+ * the promoted columns only (MGMT and LEGAL then from rows of their own, LL from the columns), in USD and in EUR: every node's parent,
+ * level, children, members, aggregate (to the bit), VaR, ES, worst scenarios, its children's component VaR (exact doubles) and its limit
+ * from {@code var-limit}. The trees built now, all three from the trades' promoted columns as the market-risk pack configures them, are
+ * equal to it field by field. LEGAL's node ids are paths since the pack's LEGAL is {@code ids: path} (a desk booking into two legal
+ * entities is two nodes): the golden file's LEGAL ids were re-keyed from the leaf ids it was recorded with to their paths, every figure
+ * kept as recorded ({@link #legalIdsAreThePathsOfTheLeafIdsTheTreesWereRecordedWith}).
  */
 class HierarchyEquivalenceTest {
+
+    /**
+     * The re-keying of the golden file: each LEGAL node below the legal entities is its parent's id, a slash and its own value (the leaf
+     * id it was recorded with), the root and the legal entities keep theirs; the number of nodes, and every MGMT and LL node, unchanged.
+     */
+    @Test
+    void legalIdsAreThePathsOfTheLeafIdsTheTreesWereRecordedWith() {
+        for (String ccy : List.of("USD", "EUR")) {
+            JsonNode tree = golden.get(ccy);
+            List<String> legal = new ArrayList<>();
+            tree.fieldNames().forEachRemaining(id -> {
+                if (id.startsWith("LEGAL~")) {
+                    legal.add(id);
+                }
+            });
+            assertThat(legal).as(ccy + ": LEGAL's nodes, bank, legal entities, desks and books").hasSize(1 + 4 + 40);
+            for (String id : legal) {
+                JsonNode n = tree.get(id);
+                String parent = n.get("parent").isNull() ? null : n.get("parent").asText();
+                String level = n.get("level").asText();
+                if (parent == null || level.equals("legal-entity")) {
+                    assertThat(id).as(ccy + " " + id).doesNotContain("/");
+                } else {
+                    assertThat(id).as(ccy + " " + id + " is its parent's path and its value").startsWith(parent + "/")
+                            .doesNotContain("~DESK-").matches("LEGAL~LE-[A-Z]+/DESK-[A-Z]+(/BOOK-[A-Z]+-\\d+)?");
+                }
+            }
+        }
+    }
 
     static final ObjectMapper JSON = new ObjectMapper();
     static ParallelSums sums;
@@ -60,16 +88,17 @@ class HierarchyEquivalenceTest {
     static List<LocalDate> scen;
     static ScenarioFx fx;
     static Map<String, Double> varLimits = new HashMap<>();
-    static VarBook rows;
     static VarBook columns;
-    static VarBook letters;
+    static JsonNode golden;
 
-    static final HierarchySpec MGMT = new HierarchySpec("MGMT", "Management", "columns", List.of("DIVISION", "DESK", "TT_BOOK"),
-            List.of("division", "desk", "book"), "BANK", "Drishti Bank", true, null, "var-limit");
-    static final HierarchySpec LEGAL = new HierarchySpec("LEGAL", "Legal entities", "columns", List.of("LEGAL_ENTITY", "DESK", "TT_BOOK"),
-            List.of("legal-entity", "desk", "book"), "BANK", "Drishti Bank", true, null, "var-limit");
-    static final HierarchySpec LL = new HierarchySpec("LL", "Limit letters", "columns", List.of("LIMIT_LETTER", "DESK"), null, null, null, false,
-            "LL", "var-limit");
+    static final HierarchySpec MGMT = new HierarchySpec("MGMT", "Management", List.of("DIVISION", "DESK", "TT_BOOK"),
+            List.of("division", "desk", "book"), "BANK", "Drishti Bank", true, null, "var-limit", null);
+    static final HierarchySpec LEGAL = new HierarchySpec("LEGAL", "Legal entities", List.of("LEGAL_ENTITY", "DESK", "TT_BOOK"),
+            List.of("legal-entity", "desk", "book"), "BANK", "Drishti Bank", false, null, "var-limit", null);   // ids: path
+    static final HierarchySpec LL = new HierarchySpec("LL", "Limit letters", List.of("LIMIT_LETTER", "DESK"), null, null, null, false,
+            "LL", "var-limit", null);
+    /** MGMT and LEGAL as the market-risk pack configures them. */
+    static final List<HierarchySpec> MGMT_LEGAL = List.of(MGMT, LEGAL);
 
     @BeforeAll
     @SuppressWarnings("unchecked")
@@ -78,14 +107,18 @@ class HierarchyEquivalenceTest {
         data = repo.resolve("data/testdata/market-risk");
         Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("config/packs/banking/market-risk/pack.yaml").toFile(), Map.class);
         rules = PositionRules.of((Map<?, ?>) pack.get("positions"));
+        // the pack's own hierarchies are the ones this test builds (the root name is the server's drishti.var.root-name)
+        assertThat(HierarchySpec.parse((Map<?, ?>) pack.get("hierarchies")).stream().map(s -> s.withRootName("Drishti Bank")).toList())
+                .isEqualTo(List.of(MGMT, LEGAL, LL.withRootName("Drishti Bank")));
         scen = new ArrayList<>();
         VarTestDataPrecisionTest.lines(data.resolve("scenario-set"), n -> n.path("SCENARIO_DATES").forEach(d -> scen.add(LocalDate.parse(d.asText()))));
         fx = VarTestDataPrecisionTest.fx(data, scen.size());
         VarTestDataPrecisionTest.lines(data.resolve("var-limit"), n -> varLimits.put(n.path("NODE_ID").asText(), n.path("LIMIT_VAR").asDouble()));
         sums = new ParallelSums(4, 4096);
-        rows = build(List.of(), true);
-        columns = build(List.of(MGMT, LEGAL), false);
-        letters = build(List.of(LL), true);
+        columns = build(List.of(MGMT, LEGAL, LL), Cells.Names.NONE);
+        try (InputStream in = HierarchyEquivalenceTest.class.getResourceAsStream("/var/hierarchy-golden-2026-09-30.json")) {
+            golden = JSON.readTree(in);
+        }
     }
 
     @AfterAll
@@ -93,10 +126,10 @@ class HierarchyEquivalenceTest {
         sums.close();
     }
 
-    /** The date's book: the risk-hierarchy rows' trees when {@code fromRows}, and the given column hierarchies with the var-limit rows. */
-    static VarBook build(List<HierarchySpec> specs, boolean fromRows) throws IOException {
+    /** The date's book: the given hierarchies from the trades' promoted columns, with the var-limit rows. */
+    static VarBook build(List<HierarchySpec> specs, Cells.Names names) throws IOException {
         VarBook.Builder b = new VarBook.Builder(LocalDate.of(2026, 9, 30), "HS-509", scen, 65_536, Long.MAX_VALUE);
-        b.columnHierarchies(specs, varLimits);
+        b.columnHierarchies(specs, varLimits, names);
         b.currencyRates(c -> fx.rates(c).orElse(null));
         VarTestDataPrecisionTest.lines(data.resolve("scenario-pv"), n -> {
             if (rules.live(VarTestDataPrecisionTest.text(n, "TRADE_STATUS"))) {
@@ -121,15 +154,6 @@ class HierarchyEquivalenceTest {
                 add(b, n, v, n.path("PV").asDouble(Double.NaN), null);
             }
         });
-        if (fromRows) {
-            VarTestDataPrecisionTest.lines(data.resolve("risk-hierarchy"), n -> {
-                List<String> books = new ArrayList<>();
-                n.path("BOOKS").forEach(x -> books.add(x.asText()));
-                b.node(n.path("NODE_ID").asText(), n.path("HIERARCHY").asText(), n.path("LEVEL").asText(), n.path("NAME").asText(),
-                        VarTestDataPrecisionTest.text(n, "PARENT_ID"), books, varLimits.getOrDefault(n.path("NODE_ID").asText(), Double.NaN));
-                assertThat(n.has("LIMIT_VAR")).as("a risk-hierarchy row carries no LIMIT_VAR (2.9.7)").isFalse();
-            });
-        }
         return b.build(sums);
     }
 
@@ -150,71 +174,77 @@ class HierarchyEquivalenceTest {
         b.trade(trade, v, v.length, texts, new double[] {n.path("QUANTITY").asDouble(Double.NaN), pvUsd});
     }
 
-    static void sameTrees(VarBook a, VarBook b, String what) {
-        VarCalc calc = VarCalc.defaults();
-        assertThat(new TreeSet<>(b.nodes().keySet())).as(what + ": node ids").isEqualTo(new TreeSet<>(a.nodes().keySet()));
-        for (VarBook.Node x : a.nodes().values()) {
-            VarBook.Node y = b.node(x.id());
-            assertThat(y.parent()).as(what + " parent of " + x.id()).isEqualTo(x.parent());
-            assertThat(y.level()).as(what + " level of " + x.id()).isEqualTo(x.level());
-            assertThat(y.hierarchy()).isEqualTo(x.hierarchy());
-            assertThat(new TreeSet<>(y.children())).as(what + " children of " + x.id()).isEqualTo(new TreeSet<>(x.children()));
-            assertThat(y.members()).as(what + " members of " + x.id()).isEqualTo(x.members());
-            double[] va = a.aggregate(x.id());
-            double[] vb = b.aggregate(x.id());
-            assertThat(vb).as(what + " aggregate of " + x.id() + " to the bit").isEqualTo(va);
-            VarCalc.Measures ma = calc.measures(va);
-            VarCalc.Measures mb = calc.measures(vb);
-            assertThat(mb.var()).as(what + " VaR " + x.id()).isCloseTo(ma.var(), within(0.005));
-            assertThat(mb.es()).as(what + " ES " + x.id()).isCloseTo(ma.es(), within(0.005));
-            assertThat(java.util.Arrays.copyOf(mb.order(), 10)).as(what + " worst scenarios " + x.id()).isEqualTo(java.util.Arrays.copyOf(ma.order(), 10));
-            if (!x.children().isEmpty()) {
-                List<VarCalc.Contribution> ca = calc.contributions(va, ma, parts(a, x));
-                List<VarCalc.Contribution> cb = calc.contributions(vb, mb, parts(b, x));
-                Map<String, Double> byKey = new LinkedHashMap<>();
-                ca.forEach(c -> byKey.put(c.key(), c.componentVar()));
-                for (VarCalc.Contribution c : cb) {
-                    assertThat(c.componentVar()).as(what + " component of " + c.key() + " in " + x.id()).isCloseTo(byKey.get(c.key()), within(0.005));
-                }
-            }
+    /** Every node of {@code b} equal to the golden record's, field by field (doubles exactly), and no node more or fewer. */
+    static void sameAsGolden(VarBook b, String currency) {
+        JsonNode want = golden.get(currency);
+        Map<String, Map<String, Object>> have = HierarchyGolden.describe(b);
+        List<String> ids = new ArrayList<>();
+        want.fieldNames().forEachRemaining(ids::add);
+        assertThat(have.keySet()).as(currency + ": node ids").containsExactlyElementsOf(new TreeSet<>(ids));
+        for (String id : ids) {
+            JsonNode got = JSON.valueToTree(have.get(id));
+            JsonNode exp = want.get(id);
+            exp.fieldNames().forEachRemaining(f -> assertThat(got.get(f)).as(currency + " " + id + " " + f).isEqualTo(exp.get(f)));
+            assertThat(got.size()).as(currency + " " + id + " fields").isEqualTo(exp.size());
         }
-    }
-
-    private static List<VarCalc.Part> parts(VarBook b, VarBook.Node n) {
-        List<VarCalc.Part> out = new ArrayList<>();
-        for (String c : new TreeSet<>(n.children())) {
-            out.add(new VarCalc.Part(c, c, "node", b.aggregate(c), b.node(c).members().size()));
-        }
-        return out;
     }
 
     @Test
-    void mgmtAndLegalFromTheColumnsAreTheTreesOfTheRiskHierarchyRows() {
-        assertThat(rows.nodes()).hasSize(88);
-        assertThat(columns.cellColumns()).containsExactly("DIVISION", "DESK", "LEGAL_ENTITY");
-        sameTrees(rows, columns, "USD");
-        // the limits: var-limit's rows give each node its limit, the same on both sides, and every MGMT and LEGAL node has one (2.9.7)
-        for (VarBook.Node x : rows.nodes().values()) {
-            assertThat(columns.node(x.id()).limit()).as("limit of " + x.id()).isEqualTo(x.limit());
-            assertThat(x.limit()).as("limit of " + x.id()).isPositive();
-        }
+    void mgmtLegalAndLimitLettersFromThePromotedColumnsEqualTheGoldenTrees() {
+        assertThat(columns.cellColumns()).containsExactly("DIVISION", "DESK", "LEGAL_ENTITY", "LIMIT_LETTER");
+        sameAsGolden(columns, "USD");
+        // every MGMT and LEGAL node has its var-limit row
+        columns.nodes().values().stream().filter(x -> !x.hierarchy().equals("LL"))
+                .forEach(x -> assertThat(x.limit()).as("limit of " + x.id()).isPositive());
     }
 
     @Test
     void theSameInEuro() {
         ScenarioFx.Rates eur = fx.rates("EUR").orElseThrow();
-        VarBook a = CurrencyBook.convert(rows, eur, new VarBook.Builder(LocalDate.of(2026, 9, 30), "HS-509", scen, 65_536, Long.MAX_VALUE), sums).book();
-        VarBook b = CurrencyBook.convert(columns, eur, new VarBook.Builder(LocalDate.of(2026, 9, 30), "HS-509", scen, 65_536, Long.MAX_VALUE), sums)
+        VarBook e = CurrencyBook.convert(columns, eur, new VarBook.Builder(LocalDate.of(2026, 9, 30), "HS-509", scen, 65_536, Long.MAX_VALUE), sums)
                 .book();
-        sameTrees(a, b, "EUR");
-        for (VarBook.Node x : a.nodes().values()) {
-            assertThat(b.node(x.id()).limit()).as("EUR limit of " + x.id()).isCloseTo(x.limit(), within(0.005));
+        sameAsGolden(e, "EUR");
+    }
+
+    @Test
+    void nodesAreNamedFromTheirReferenceEntitiesElseTheirValue() throws IOException {
+        Map<String, String> desks = Map.of("DESK-RATES", "Rates · Swaps and options");
+        VarBook named = build(List.of(MGMT), (level, value) -> level.equals("desk") ? desks.get(value) : null);
+        assertThat(named.node("MGMT~DESK-RATES").name()).isEqualTo("Rates · Swaps and options");
+        assertThat(named.node("MGMT~DESK-FX").name()).isEqualTo("DESK-FX");          // no entity: its id
+        assertThat(named.node("MGMT~BOOK-FX-1").name()).isEqualTo("BOOK-FX-1");
+        assertThat(named.node("MGMT~BANK").name()).isEqualTo("Drishti Bank");
+    }
+
+    @Test
+    void anyNumberOfHierarchiesByYaml() throws IOException {
+        Map<?, ?> yaml = new ObjectMapper(new YAMLFactory()).readValue("""
+                MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf, limits: var-limit }
+                LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path, limits: var-limit }
+                LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
+                REG: { title: Regions, levels: "LEGAL_ENTITY > DIVISION", word: REG }
+                """, Map.class);
+        List<HierarchySpec> four = HierarchySpec.parse(yaml);
+        assertThat(four).extracting(HierarchySpec::id).containsExactly("MGMT", "LEGAL", "LL", "REG");
+        VarBook b = build(four, Cells.Names.NONE);
+        for (String root : List.of("MGMT~BANK", "LEGAL~BANK", "LL~BANK", "REG~BANK")) {
+            assertThat(b.node(root).members()).as(root).isEqualTo(b.all());
+            double[] a = b.aggregate(root);
+            double[] m = columns.aggregate("MGMT~BANK");
+            for (int j = 0; j < a.length; j++) {
+                assertThat(a[j]).as(root + " " + j).isCloseTo(m[j], within(0.005));
+            }
+        }
+        assertThat(b.node("REG~LE-NY/DIV-MARKETS").parent()).isEqualTo("REG~LE-NY");
+        // the three of the pack unchanged beside the fourth
+        for (String id : List.of("MGMT~DESK-RATES", "LEGAL~LE-NY", "LL~BANK")) {
+            assertThat(b.aggregate(id)).as(id).isEqualTo(columns.aggregate(id));
         }
     }
 
     @Test
     void aLimitLetterIsExactlyTheSumOfItsRowsAndSomeHoldPartOfABook() {
-        assertThat(letters.cellColumns()).containsExactly("LIMIT_LETTER", "DESK");
+        VarBook letters = columns;
         Map<String, List<String>> byLetter = new LinkedHashMap<>();
         Map<String, Set<String>> lettersOfBook = new HashMap<>();
         for (int o = 0; o < letters.tradeCount(); o++) {
@@ -249,14 +279,5 @@ class HierarchyEquivalenceTest {
         }
         // the letters split the bank: their roots' members are every trade
         assertThat(letters.node("LL~BANK").members()).isEqualTo(letters.all());
-        // the MGMT tree beside them is the rows', unchanged by the letters' cells
-        for (VarBook.Node x : rows.nodes().values()) {
-            assertThat(letters.node(x.id()).members()).isEqualTo(x.members());
-            double[] a = rows.aggregate(x.id());
-            double[] b = letters.aggregate(x.id());
-            for (int j = 0; j < a.length; j++) {
-                assertThat(b[j]).isCloseTo(a[j], within(0.005));
-            }
-        }
     }
 }

@@ -39,8 +39,8 @@ from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and he
 from wb_live import _stack
 
 ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio",
-                                                 "var-limit")] + ["trades/murex"])
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set",
+                                                 "var-limit")] + ["core/desk", "core/book", "core/legal-entity"] + ["trades/murex"])
 
 
 @pytest.fixture(scope="module")
@@ -52,7 +52,7 @@ def stack(tmp_path_factory):
                         "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=1500)
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
+    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
                                         "DRISHTI_COMPUTE_ENABLED": "false", "DRISHTI_MR_CUBE_ENABLED": "true",
                                         "DRISHTI_VAR_HOT_DIR": str(work / "hot")}):
         _engine_ready(str(st))
@@ -122,6 +122,48 @@ def test_mcube_opens_the_pivot_screen_with_the_mr_lens_and_every_cell_is_the_eng
     headline = pg.locator("[data-mr-tiles] .mr-tile").first.locator(".mr-tv").text_content()
     assert headline.replace(",", "").strip() == f"{total['values']['VaR']:.0f}"
     shot(pg, "mr-cube-landing")
+    assert not pg.errors, pg.errors
+    pg.close()
+
+
+def test_the_fields_the_view_picker_a_hierarchy_as_one_chip_var_per_cell_and_the_panes(stack, browser):
+    """PIVOT_GUIDE.md section 2 on the real cube: it opens as the View picker in front of the compact line; MGMT is one chip; the Rows picker
+    lists each hierarchy once with its level columns under More fields; VaR's ▾ says it is computed per cell and offers the VaR options,
+    never a function; a ready-made view opens; \\ opens the panes."""
+    pg = open_cube(browser, str(stack))
+    assert pg.evaluate("window.Drishti.PivotScreen.mode()") == "views"
+    assert pg.locator("[data-pv-grid] .dg-viewbtn").count() == 1 and pg.locator("[data-pv-grid] .dg-fields").count() == 0
+    assert pg.locator(".dg-zone[data-well='rows'] .dg-hchip[data-hier='MGMT']").count() == 1
+    assert pg.locator("[data-pv-headline] [data-mr-tiles]").count() == 1                         # the headline figures on the title's line
+    shot(pg, "mr-cube-fields-landing")
+    pg.locator("[data-pv-title]").click()
+    pg.keyboard.press("r")
+    pick = pg.locator(".di-fp-pop")
+    pick.wait_for()
+    assert pick.locator(".di-fp-item[data-key='h:MGMT']").count() == 1
+    assert pick.locator(".di-fp-item[data-key='MGMT.DESK']").count() == 0                       # a level only under its hierarchy
+    assert any(g.startswith("▸More fields") for g in pick.locator(".di-fp-group").all_text_contents())
+    shot(pg, "mr-cube-rows-picker")
+    pg.keyboard.press("Escape")
+    pg.click(".dg-zone[data-well='values'] .dg-vchip[data-field='m:var'] .dg-chip-menu")
+    assert "computed per cell by the var engine" in pg.locator(".dg-menu .dg-menu-note").text_content().lower()
+    assert pg.locator(".dg-menu [data-action^='agg:']").count() == 0                             # VaR is never summed: no function
+    assert pg.locator(".dg-menu [data-action='opt:horizon:10d']").count() == 1
+    shot(pg, "mr-cube-var-menu")
+    pg.keyboard.press("Escape")
+    pg.locator("[data-pv-title]").click()
+    pg.keyboard.press("Shift+V")
+    pg.wait_for_selector(".dg-views-pop .di-option")
+    assert pg.locator(".dg-views-pop .di-option", has_text="By book").count() == 1
+    shot(pg, "mr-cube-view-picker")
+    pg.locator(".dg-views-pop .di-option", has_text="By book").click()
+    wait(pg, "window.Drishti.PivotScreen.view().rows.join() === 'MGMT.DESK,MGMT.BOOK'", 60)
+    opened(pg)
+    assert pg.locator(".dg-hchip[data-hier='MGMT'] .dg-chip-label").text_content() == "Desk › Book"
+    pg.locator("[data-pv-title]").click()
+    pg.keyboard.press("\\")
+    pg.wait_for_selector("[data-pv-grid] .dg-fieldpane")
+    shot(pg, "mr-cube-panes")
     assert not pg.errors, pg.errors
     pg.close()
 

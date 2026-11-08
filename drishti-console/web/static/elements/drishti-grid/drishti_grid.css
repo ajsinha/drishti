@@ -40,9 +40,47 @@
 .dg :focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 
 /* wells and chips */
-.dg-wells-ribbon { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px 10px; padding: 8px 10px; border-bottom: 1px solid var(--d-border); align-items: center; }
+/* the compact line (B; with the View picker in front, C): Rows · Columns · Filters · Values toggles · Customize › on one line */
+.dg-wells-ribbon { display: flex; flex-wrap: wrap; gap: 4px 6px; padding: 5px 10px; border-bottom: 1px solid var(--d-border); align-items: center; }
+.dg-wells-ribbon .dg-zone { border: 0; padding: 0; min-height: 28px; gap: 4px; }
+.dg-wells-ribbon .dg-zone.dg-over { outline: 1px dashed var(--d-accent); border-radius: 8px; }
+.dg-dotsep { color: var(--d-faint); padding: 0 2px; }
+.dg-bar { width: 1px; align-self: stretch; margin: 2px 4px; background: var(--d-border); }
+.dg-sp { flex: 1; }
+.dg-pick { background: none; border: 0; padding: 0 2px; cursor: pointer; }
+.dg-pick:hover { color: var(--d-accent); }
+.dg-add { background: none; border: 1px dashed var(--d-border); color: var(--d-faint); border-radius: 12px; min-width: 22px; padding: 0 6px; line-height: 20px; cursor: pointer; }
+.dg-add:hover, .dg-add:focus-visible { color: var(--d-accent); border-color: var(--d-accent); }
+.dg-customize { margin-left: auto; background: none; border: 0; color: var(--d-link); cursor: pointer; padding: 2px 4px; white-space: nowrap; }
+.dg-zone-values { flex-wrap: wrap; }
+.dg-vtoggle { background: var(--d-surface); border: 1px solid var(--d-border); color: var(--d-muted); border-radius: 0; padding: 2px 9px; margin-left: -1px; cursor: pointer; white-space: nowrap; }
+.dg-vtoggle:hover, .dg-vtoggle:focus-visible { color: var(--d-ink); border-color: var(--d-faint); }
+.dg-chip.dg-vchip { border-radius: 4px; background: var(--d-accent-tint); border-color: var(--d-accent); color: var(--d-accent); font-weight: 650; }
+.dg-hchip { gap: 5px; }
+.dg-hchip b { color: var(--d-ink); }
+.dg-ficon { color: var(--d-accent); font-size: 0.86em; }
+.dg-stepper { display: inline-flex; flex-direction: column; margin-left: 2px; }
+.dg-step { background: none; border: 0; padding: 0 2px; font-size: 0.6em; line-height: 1; color: var(--d-faint); cursor: pointer; }
+.dg-step:hover { color: var(--d-accent); }
+.dg-step[disabled] { opacity: 0.35; cursor: default; }
+.dg-viewbtn { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border: 1px solid var(--d-accent); border-radius: 6px; background: var(--d-accent-tint);
+  color: var(--d-ink); cursor: pointer; white-space: nowrap; }
+.dg-viewbtn .dg-dot { color: var(--d-warn); font-size: 0.7em; }
+.dg-caret { color: var(--d-faint); }
+.dg-views-pop { width: min(500px, 94vw); }
+.dg-vp { display: flex; flex-direction: column; gap: 6px; }
+.dg-vp-head { display: flex; align-items: baseline; gap: 8px; }
+.dg-vp-name { display: flex; flex-direction: column; min-width: 0; }
+.dg-vp-detail { color: var(--d-faint); font-size: 0.88em; }
+.dg-vp-badge { margin-left: auto; padding: 0 7px; border: 1px solid var(--d-border); border-radius: 10px; color: var(--d-faint); font-size: 0.82em; }
+.dg-vp-key { margin-left: auto; color: var(--d-faint); font-family: var(--d-font-mono); }
+.dg-vp-save { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 6px; border-top: 1px solid var(--d-border); }
+.dg-vp-save-name, .dg-vp-share { flex: 1; min-width: 120px; }
+.dg-vp-foot { color: var(--d-faint); font-size: 0.86em; }
+.dg-seg { display: inline-flex; }
+.dg-seg-b { background: var(--d-surface); border: 1px solid var(--d-border); color: var(--d-muted); padding: 2px 9px; cursor: pointer; margin-left: -1px; }
+.dg-seg-b.on { color: var(--d-accent); border-color: var(--d-accent); background: var(--d-accent-tint); }
 .dg-fields, .dg-lane-fields { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 28px; }
-.dg-wells-ribbon .dg-zones { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .dg-zone { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; min-height: 32px; padding: 4px 7px; border: 1px dashed var(--d-border); border-radius: 8px; }
 .dg-zone.dg-over, .dg-fields.dg-over, .dg-field-list.dg-over, .dg-lane-fields.dg-over { border-color: var(--d-accent); background: var(--d-accent-tint); }
 .dg-zl { font-size: 0.82em; letter-spacing: 0.12em; color: var(--d-faint); text-transform: uppercase; font-weight: 700; margin-right: 2px; }
@@ -50,7 +88,7 @@
 .dg-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 14px; border: 1px solid var(--d-border); background: var(--d-surface-2);
   cursor: grab; user-select: none; white-space: nowrap; max-width: 100%; }
 .dg-measure-pick { width: 150px; }   /* the phone pivot's measure: drishti-inputs' Select */
-.dg-chip.dg-measure { border-color: color-mix(in srgb, var(--d-accent) 55%, var(--d-border)); }
+.dg-chip.dg-measure { width: auto; border-color: color-mix(in srgb, var(--d-accent) 55%, var(--d-border)); }   /* not the phone's .dg-measure select */
 .dg-chip.dg-dragging { opacity: 0.4; }
 .dg-chip.dg-vf { border-style: dashed; border-color: var(--d-link); color: var(--d-link); cursor: default; }
 .dg-chip-label { overflow: hidden; text-overflow: ellipsis; }
@@ -58,11 +96,15 @@
 .dg-chip-menu:hover, .dg-chip-x:hover, .dg-ctoggle:hover, .dg-hmenu:hover { color: var(--d-accent); }
 .dg-add-vf { background: none; border: 1px dashed var(--d-link); color: var(--d-link); border-radius: 14px; padding: 2px 8px; cursor: pointer; }
 .dg-na { color: var(--d-accent); font-size: 0.8em; }
+.dg-blank .dg-text { color: var(--d-muted); font-style: italic; }   /* (Blank): an empty member, Power BI's word */
+.dg-blank-q { display: inline-block; margin-left: 6px; width: 14px; height: 14px; line-height: 13px; text-align: center; border: 1px solid var(--d-border);
+  border-radius: 50%; font-size: 0.75em; color: var(--d-faint); cursor: help; }
 
 /* the main area of each layout */
 .dg-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); position: relative; }
 .dg-layout-wells .dg-main.dg-open { grid-template-columns: minmax(0, 1fr) 340px; }
-.dg-layout-panel .dg-main { grid-template-columns: minmax(0, 1fr) 300px; }
+.dg-layout-panel .dg-main { grid-template-columns: minmax(0, 1fr) 420px; }
+.dg-layout-panel .dg-main.dg-panes-closed { grid-template-columns: minmax(0, 1fr) 28px; }
 .dg-gridarea { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .dg-drawer { border-left: 1px solid var(--d-border); overflow: auto; padding: 12px 14px; background: var(--d-surface); position: relative; }
 .dg-drawer[hidden], .dg-card[hidden], .dg-side[hidden], .dg-wells[hidden] { display: none; }
@@ -142,17 +184,36 @@
 
 /* panel layout: the side tool panel and the Explain card */
 .dg-side { border-left: 1px solid var(--d-border); background: var(--d-surface-2); display: flex; flex-direction: column; min-height: 0; overflow: auto; }
-.dg-side-head { padding: 7px 10px; font-weight: 650; color: var(--d-accent); border-bottom: 1px solid var(--d-border); }
-.dg-wells-panel { display: flex; flex-direction: column; min-height: 0; }
-.dg-field-list { padding: 8px 10px; border-bottom: 1px solid var(--d-border); max-height: 240px; overflow: auto; }
-.dg-field-list .dg-field-search { width: 100%; margin-bottom: 6px; }
-.dg-fgroup { font-size: 0.82em; color: var(--d-faint); letter-spacing: 0.1em; text-transform: uppercase; margin: 6px 0 2px; }
-.dg-field { display: flex; align-items: center; gap: 7px; padding: 2px; border-radius: 5px; cursor: grab; }
+/* the panes (A): Build (the wells as lists, the switches) and Fields (Hierarchies, fields and measures by folder, More fields), or a rail */
+.dg-wells-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; height: 100%; }
+.dg-wells-panel.dg-rail { display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 6px; }
+.dg-rail-btn { background: none; border: 0; color: var(--d-link); cursor: pointer; }
+.dg-rail-label { writing-mode: vertical-rl; color: var(--d-faint); letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.8em; }
+.dg-build, .dg-fieldpane { display: flex; flex-direction: column; min-height: 0; overflow: auto; }
+.dg-build { border-right: 1px solid var(--d-border); }
+.dg-pane-head { display: flex; align-items: center; padding: 7px 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.82em; color: var(--d-muted);
+  border-bottom: 1px solid var(--d-border); }
+.dg-pane-close { margin-left: auto; background: none; border: 0; color: var(--d-faint); cursor: pointer; }
+.dg-pane-views { padding: 8px 10px 0; }
+.dg-fieldpane .dg-field-search { margin: 8px 10px 4px; width: auto; }
+.dg-field-list { padding: 2px 8px 10px; overflow: auto; min-height: 0; }
+.dg-fgroup { display: flex; gap: 4px; font-size: 0.8em; color: var(--d-faint); letter-spacing: 0.1em; text-transform: uppercase; margin: 8px 0 2px; font-weight: 700; cursor: pointer; }
+.dg-fcount { margin-left: auto; font-family: var(--d-font-mono); font-weight: 400; }
+.dg-field { display: flex; align-items: center; gap: 7px; padding: 2px; border-radius: 5px; cursor: grab; white-space: nowrap; min-width: 0; }
+.dg-field.dg-level { padding-left: 26px; }
 .dg-field:hover { background: var(--d-highlight); }
-.dg-ftype { margin-left: auto; font-family: var(--d-font-mono); font-size: 0.85em; color: var(--d-faint); }
-.dg-wells-panel .dg-zones { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 10px; }
-.dg-wells-panel .dg-zone { flex-direction: column; align-items: stretch; min-height: 72px; }
+.dg-twist { width: 12px; color: var(--d-faint); cursor: pointer; text-align: center; }
+.dg-fdetail { color: var(--d-muted); overflow: hidden; text-overflow: ellipsis; }
+.dg-fin { margin-left: auto; color: var(--d-accent); }
+.dg-ftype { margin-left: auto; font-size: 0.85em; color: var(--d-faint); font-style: italic; }
+.dg-wells-panel .dg-zones { display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+.dg-wells-panel .dg-zone { flex-direction: column; align-items: stretch; min-height: 40px; }
+.dg-wells-panel .dg-zone .dg-add { align-self: flex-start; }
 .dg-wells-panel .dg-chip { justify-content: space-between; }
+.dg-wells-panel .dg-hchip { justify-content: flex-start; }
+.dg-wells-panel .dg-hchip .dg-chip-x { margin-left: auto; }
+.dg-wells-panel .dg-zone .dg-pick { align-self: flex-start; text-align: left; }
+.dg-wells-panel .dg-customize { margin: 8px 10px; align-self: flex-start; }
 .dg-switches { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 8px 10px; border-top: 1px solid var(--d-border); color: var(--d-muted); }
 .dg-switch { display: inline-flex; align-items: center; gap: 4px; }
 .dg-card { position: absolute; z-index: 20; width: 330px; max-height: 80%; overflow: auto; padding: 12px 14px; border-radius: 10px; background: var(--d-surface);
@@ -214,6 +275,8 @@
 .dg-menu-key { margin-left: auto; padding-left: 14px; color: var(--d-faint); font-family: var(--d-font-mono); font-size: 0.9em; }
 .dg-menu-head { padding: 5px 12px 3px; font-size: 0.82em; letter-spacing: 0.1em; text-transform: uppercase; color: var(--d-faint); font-weight: 700; }
 .dg-menu-sep { height: 1px; margin: 4px 0; background: var(--d-border); }
+.dg-menu-note { padding: 3px 12px 6px; max-width: 340px; color: var(--d-muted); font-size: 0.9em; white-space: normal; }
+.dg-menu-why { margin-left: 10px; color: var(--d-faint); font-size: 0.86em; font-style: italic; white-space: normal; max-width: 220px; }
 .dg-menu-form { display: flex; align-items: center; gap: 6px; padding: 4px 12px; }
 .dg-menu-input { width: 110px; padding: 2px 6px; border: 1px solid var(--d-border); border-radius: 5px; background: var(--d-surface); color: var(--d-ink); }
 .dg-tip { position: fixed; z-index: 1001; max-width: 340px; padding: 7px 10px; border-radius: 8px; background: var(--d-surface-2); border: 1px solid var(--d-border);
@@ -228,8 +291,6 @@
 .dg-dialog-grid { height: calc(100% - 44px); }
 
 /* a phone (O2): wells behind a button, Explain as a sheet, the panel over the grid */
-.dg[data-phone] .dg-wells-ribbon { grid-template-columns: minmax(0, 1fr); }
-.dg[data-phone] .dg-wells-ribbon .dg-zones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .dg[data-phone] .dg-main, .dg[data-phone] .dg-layout-wells .dg-main.dg-open, .dg[data-phone] .dg-layout-panel .dg-main { grid-template-columns: minmax(0, 1fr); }
 .dg[data-phone] .dg-drawer { position: absolute; left: 0; right: 0; bottom: 0; max-height: 60%; z-index: 25; border-left: 0; border-top: 2px solid var(--d-accent); }
 .dg[data-phone] .dg-side { position: absolute; top: 0; right: 0; bottom: 0; width: min(320px, 92%); z-index: 25; box-shadow: var(--d-shadow); }
@@ -263,6 +324,10 @@
 .dg-cell.dg-tone-warn { color: var(--d-warn); }
 .dg-cell.dg-tone-muted { color: var(--d-muted); }
 .dg-cell.dg-tone-strong { font-weight: 600; }
+/* a (Blank) value: a hierarchy node of rows with no value at its level (Power BI's "(Blank)"), muted and in italics, its ? the count and fix */
+.dg-cell .dg-blank { color: var(--d-muted); font-style: italic; }
+.dg-cell .dg-blank-q { display: inline-block; width: 14px; height: 14px; margin-left: 4px; border: 1px solid var(--d-border); border-radius: 50%;
+  font-size: 10px; line-height: 12px; text-align: center; font-style: normal; color: var(--d-link, var(--d-accent)); background: var(--d-surface); cursor: help; }
 .dg-cell a { color: var(--d-link, var(--d-accent)); text-decoration: none; }
 .dg-cell a:hover { text-decoration: underline; }
 .dg-cell .dg-cell-btn { font: inherit; font-size: 11px; line-height: 1.4; padding: 0 6px; margin-left: 4px; border: 1px solid var(--d-border); border-radius: 5px;

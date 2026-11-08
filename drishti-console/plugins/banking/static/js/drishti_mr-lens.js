@@ -32,6 +32,8 @@
   function $(s) { return root.querySelector(s); }
   function $$(s) { return Array.prototype.slice.call(root.querySelectorAll(s)); }
   var st = { versions: null, compare: null, tray: [], cell: null, answer: null, sparks: {} };
+  // the headline figures share the title's line (docs/lenses/mockups/pivot-fields: the short title, the figures beside it)
+  (function () { var hl = document.querySelector("[data-pv-headline]"), tl = $("[data-mr-tiles]"); if (hl && tl) { hl.appendChild(tl); } })();
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function isNum(v) { return typeof v === "number" && isFinite(v); }
@@ -122,6 +124,8 @@
       var div = null, first = (a.measures || [])[0];
       (a.rows || []).forEach(function (r) { if (r.kind === "grand" && r.diversification && first) { div = r.diversification[first.label]; } });
       var intraday = h.intraday && h.intraday.batchCount ? " + " + h.intraday.batchCount + " intraday" : "";
+      var ctx = document.querySelector("[data-pv-titlectx]");
+      if (ctx) { ctx.textContent = [h.scope, (S.view() || {}).date || ""].filter(Boolean).join(" ") + " · " + (h.lens || "") + " " + pct(h.confidence, 0) + " · " + (h.currency || ""); }
       box.innerHTML = [
         tile("VaR " + pct(h.confidence, 1) + " " + (h.lens || "") + " · " + h.scope, money(h.var), (h.k ? h.k + "th worst of " + h.scenarios : "") + " · " + esc(h.currency || "")),
         tile("ES " + pct(h.esConfidence, 1), money(h.es), "mean of the " + (h.esCount || "?") + " worst"),

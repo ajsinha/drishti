@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.api.DataNode;
 import com.ash.drishti.banking.compute.var.VarBook;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -24,44 +23,47 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * One loaded business date: the engine's {@link VarBook}, the stored portfolios' definitions, and what the date was read from.
+ * One loaded business date: the engine's {@link VarBook}, the system baskets' VaR limits (var-limit, HIERARCHY PORTFOLIO, in the
+ * date's currency) and what the date was read from. The system baskets themselves are read from the basket store as they are asked
+ * ({@link VarSystemBaskets}), never with the date, so an edit is seen at once.
  *
  * @param version the vector table's data version (the pin a result is stamped with)
  * @param loadMs the whole load, {@code vectorMs} the vectors' part
  * @param intake the rows rejected and left out, the batch ids, the position rules the date was built with
- * @param versions every input kind's data version on the date (vectors, scenario set, hierarchy, portfolios)
+ * @param versions every input kind's data version on the date (vectors, scenario set, limits)
  * @param warnings what the answers of this date say about it (the date asked could not be loaded, this one is answered instead)
  * @param currency the reporting currency of the book's vectors (USD, built at load; another, built from the USD book when first asked)
  * @param fx how the vectors met FX: per currency used, the source of its scenario rates and today's rate (empty: no FX was needed)
  * @param intraday the date's intraday updates applied on its book (VAR_GUIDE.md section 8.4): the latest per trade, the batches met, the
  *     morning run's {@code COMPUTED_AT}; null when the date has none
  */
-record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, String version, Instant loadedAt, long loadMs, long vectorMs,
+record VarDate(LocalDate date, VarBook book, Map<String, Double> portfolioLimits, String version, Instant loadedAt, long loadMs, long vectorMs,
         VarIntake.Summary intake, Map<String, String> versions, List<String> warnings, String currency, Map<String, Object> fx,
         VarIntradayRows intraday) {
 
     static final String USD = com.ash.drishti.banking.compute.var.ScenarioFx.USD;
 
     VarDate {
+        portfolioLimits = portfolioLimits == null ? Map.of() : Map.copyOf(portfolioLimits);
         versions = versions == null ? Map.of() : Map.copyOf(versions);
         warnings = warnings == null ? List.of() : List.copyOf(warnings);
         currency = currency == null || currency.isBlank() ? USD : currency;
         fx = fx == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(fx));
     }
 
-    VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, String version, Instant loadedAt, long loadMs, long vectorMs,
+    VarDate(LocalDate date, VarBook book, Map<String, Double> portfolioLimits, String version, Instant loadedAt, long loadMs, long vectorMs,
             VarIntake.Summary intake, Map<String, String> versions, List<String> warnings, String currency, Map<String, Object> fx) {
-        this(date, book, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions, warnings, currency, fx, null);
+        this(date, book, portfolioLimits, version, loadedAt, loadMs, vectorMs, intake, versions, warnings, currency, fx, null);
     }
 
     /** The same date over another book (an intraday batch applied), with its intraday updates. */
     VarDate withBook(VarBook b, VarIntradayRows rows) {
-        return new VarDate(date, b, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions, warnings, currency, fx, rows);
+        return new VarDate(date, b, portfolioLimits, version, loadedAt, loadMs, vectorMs, intake, versions, warnings, currency, fx, rows);
     }
 
     /** The date without its intraday layer: the morning run alone (the official captures, VAR_GUIDE.md section 8.4). */
     VarDate morning() {
-        return book.intraday() == null ? this : new VarDate(date, book.morning(), portfolios, version, loadedAt, loadMs, vectorMs, intake, versions,
+        return book.intraday() == null ? this : new VarDate(date, book.morning(), portfolioLimits, version, loadedAt, loadMs, vectorMs, intake, versions,
                 warnings, currency, fx, null);
     }
 
@@ -74,7 +76,7 @@ record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, 
     VarDate warned(String warning) {
         List<String> w = new ArrayList<>(warnings);
         w.add(warning);
-        return new VarDate(date, book, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions, w, currency, fx, intraday);
+        return new VarDate(date, book, portfolioLimits, version, loadedAt, loadMs, vectorMs, intake, versions, w, currency, fx, intraday);
     }
 
     /** The same date without the warnings that begin with {@code prefix} (a condition that has passed). */
@@ -82,7 +84,7 @@ record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, 
         if (warnings.stream().noneMatch(w -> w.startsWith(prefix))) {
             return this;
         }
-        return new VarDate(date, book, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions,
+        return new VarDate(date, book, portfolioLimits, version, loadedAt, loadMs, vectorMs, intake, versions,
                 warnings.stream().filter(w -> !w.startsWith(prefix)).toList(), currency, fx, intraday);
     }
 
@@ -98,47 +100,11 @@ record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, 
     }
 
     /**
-     * A stored portfolio (the {@code portfolio} kind): its definition as scope text.
+     * A system basket as the date resolves {@code PORT:<id>} by (VAR_GUIDE.md section 5.7): its definition as scope text and its limit.
      *
      * @param type HIERARCHY, RULE or BASKET
      * @param scope its definition in the scope grammar: {@code NODE:x}, {@code WHERE:rule}, {@code POS:... + TRD:...}
+     * @param limit its VaR limit in the date's currency (var-limit, HIERARCHY PORTFOLIO), NaN when it has none
      */
-    record Portfolio(String id, String name, String type, String owner, String scope, double limit) {
-
-        static Portfolio of(String id, DataNode d, Map<String, Double> limits) {
-            String type = VarLoader.text(d, "TYPE");
-            DataNode def = d.get("DEFINITION");
-            String scope;
-            if ("HIERARCHY".equals(type)) {
-                scope = "NODE:" + VarLoader.text(def, "NODE");
-            } else if ("RULE".equals(type)) {
-                scope = "WHERE:" + VarLoader.text(def, "RULE");
-            } else {
-                List<String> pos = new ArrayList<>();
-                List<String> trd = new ArrayList<>();
-                DataNode m = def.get("MEMBERS");
-                for (int i = 0; i < m.size(); i++) {
-                    String p = VarLoader.text(m.get(i), "POSITION_ID");
-                    String t = VarLoader.text(m.get(i), "TRADE_ID");
-                    if (p != null) {
-                        pos.add(p);
-                    } else if (t != null) {
-                        trd.add(t);
-                    }
-                }
-                List<String> parts = new ArrayList<>();
-                if (!pos.isEmpty()) {
-                    parts.add("POS:" + String.join(",", pos));
-                }
-                if (!trd.isEmpty()) {
-                    parts.add("TRD:" + String.join(",", trd));
-                }
-                scope = parts.isEmpty() ? "TRD:NONE" : String.join(" + ", parts);
-            }
-            // its VaR limit from var-limit (hierarchy PORTFOLIO, 2.9.7); a portfolio record that still carries LIMIT_VAR is read as a fallback
-            Double fromLimits = limits == null ? null : limits.get(id);
-            return new Portfolio(id, VarLoader.text(d, "NAME"), type, VarLoader.text(d, "OWNER"), scope,
-                    fromLimits != null ? fromLimits : VarLoader.number(VarLoader.text(d, "LIMIT_VAR")));
-        }
-    }
+    record Portfolio(String id, String name, String type, String owner, String scope, double limit) {}
 }

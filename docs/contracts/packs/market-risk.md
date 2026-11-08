@@ -27,12 +27,11 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [PNL](#pnl-pl-explain-pnl-explain) | `pnl-explain` | fundamental | active | 8 | 5 |
 | [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | fundamental | active | 21 | 6 |
 | [POS](#pos-position-position) | `position` | drishti-owned | active | 32 | 5 |
-| [PORT](#port-portfolio-portfolio) | `portfolio` | input | active | 9 | 4 |
+| [PORT](#port-system-basket-the-banks-baskets-kept-in-drishti-system-basket) | `system-basket` | drishti-owned | active | 11 | 0 |
 | [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 39 | 5 |
 | [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 39 | 5 |
 | [FXS](#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | `fx-scenario` | input | active | 9 | 3 |
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 13 | 3 |
-| [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 11 | 4 |
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 10 | 0 |
 | [DPNL](#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | `desk-pnl` | input | active | 10 | 0 |
 | [PNLH](#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) | `pnl-history` | input | active | 16 | 0 |
@@ -472,84 +471,74 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 - number types decided by the field's name: NOTIONAL amount, TRADES[].PV amount: confirm amount, rate or integer.
 - no unit stated for the amounts QUANTITY, GROSS_QUANTITY, NOTIONAL, TRADES[].QUANTITY, TRADES[].PV (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
-## PORT: Portfolio (`portfolio`)
+## PORT: System basket (the bank's baskets, kept in Drishti) (`system-basket`)
 
-A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution.
+A system basket in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution.
 
 |  |  |
 |---|---|
-| Contract | [portfolio.contract.yaml](../../../config/packs/banking/market-risk/contracts/portfolio.contract.yaml) · version 1.0 |
-| Class | input |
+| Contract | [system-basket.contract.yaml](../../../config/packs/banking/market-risk/contracts/system-basket.contract.yaml) · version 1.0 |
+| Class | drishti-owned |
 | Status | active |
-| Source | Synthetic sample data (tools/packgen/banking) |
-| Grain | One row per portfolio per BUSINESS_DATE, keyed by PORTFOLIO_ID. |
+| Source | Drishti (the basket store's system scope, var/system-baskets/, docs/guides/VAR_GUIDE.md section 5.7; the demo's from the market-risk pack's seed) |
+| Grain | One system basket per business date it is valid on (VALID_FROM to VALID_TO), served from the basket store, never stored as data. |
 | Key | `PORTFOLIO_ID` |
 | Id pattern | `^PF-` |
 | Dated by | `BUSINESS_DATE` |
-| Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/portfolio/` |
-| Columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` |
-| Test data | data/testdata/market-risk/portfolio |
-| Worked example | [market-risk/portfolio](../samples/market-risk.md#portfolio) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Cadence | on change (due: at once (a save in Drishti is read at the next request on every server)) |
+| Storage | connector `var-system-baskets` (plugin `var-system-baskets`) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `PORTFOLIO_ID` | id | required |  | The record's id (the business key) | `PF-ASHA-UNWIND` (pattern `^PF-`) | `portfolio` |
-| `NAME` | text | required |  | The portfolio's display name. | `Unwind candidates (Asha)` |  |
-| `OWNER` | text | required |  | Who keeps the portfolio's definition. | `asha` |  |
+| `PORTFOLIO_ID` | id | required |  | The system basket's id, PORT:<id> in a scope: 1-64 upper-case letters, digits, dots, dashes or underscores. | `PF-ASHA-UNWIND` (pattern `^PF-`) |  |
+| `NAME` | text | required |  | The system basket's display name. | `Unwind candidates (Asha)` |  |
+| `DESCRIPTION` | text | optional |  | What the system basket is for, in its owner's words. |  |  |
+| `OWNER` | text | required |  | Who keeps the system basket's definition; told in their inbox when someone else changes it. | `asha` |  |
 | `TYPE` | text | required |  | HIERARCHY: a node of the bank's hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked. | `BASKET`, `HIERARCHY`, `RULE` |  |
-| `DEFINITION` | record | required |  | What the portfolio holds, one object whose shape follows TYPE: a BASKET lists MEMBERS (POSITION_ID or TRADE_ID each), a HIERARCHY names a NODE (a NODE_ID such as MGMT~BOOK-COMM-1), a RULE gives a RULE expression over the trades' columns (CURRENCY == 'EUR'). |  |  |
-| `ROLLS_UP_TO` | record | required |  | The hierarchy node the portfolio reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID (BANK, DIV-…, LE-…, DESK-…, BOOK-…). |  |  |
-| `BUSINESS_DATE` | date | required |  | The close of business the definition belongs to (YYYY-MM-DD). | `2026-09-30` |  |
-| `VALID_FROM` | date | required |  | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. | `2026-01-02` |  |
-| `VALID_TO` | unknown | optional |  | The last date the definition is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
+| `DEFINITION` | record | required |  | What the system basket holds, one object whose shape follows TYPE: a BASKET lists MEMBERS (POSITION_ID or TRADE_ID each), a HIERARCHY names a NODE, a RULE gives a RULE over the positions' columns. |  |  |
+| `ROLLS_UP_TO` | record | required |  | The node the system basket reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID. |  |  |
+| `BUSINESS_DATE` | date | required |  | The business date the system basket is read on (YYYY-MM-DD): the date asked, else the VaR engine's newest date. | `2026-09-30` |  |
+| `VALID_FROM` | date | required |  | The first business date the system basket applies to. | `2026-01-02` |  |
+| `VALID_TO` | date | optional |  | The last business date the system basket applies to (empty while it is open-ended; set when it is retired). |  |  |
+| `VERSION` | integer | required |  | The basket store's version of the definition: every change is the next version, audited. | `1` |  |
 
 **Nested `DEFINITION`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `MEMBERS` | record list | optional |  | For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position). |  |  |
-| `NODE` | text | optional |  | For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it). | `MGMT~DESK-RATES` |  |
-| `RULE` | text | optional |  | For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date. | `PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money market') …` |  |
+| `MEMBERS` | record list | optional |  | For a BASKET system basket: the positions and trades someone picked (a trade brings that part of its position). |  |  |
+| `NODE` | text | optional |  | For a HIERARCHY system basket: the node of the bank's hierarchy whose positions it holds (every book under it). | `MGMT~DESK-RATES` |  |
+| `RULE` | text | optional |  | For a RULE system basket: the condition a position's columns must meet to be in it, checked on each business date. | `PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money market') …` |  |
 
 **Nested `DEFINITION.MEMBERS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `POSITION_ID` | id | optional |  | A position in a BASKET: a position id as Drishti derives it (POS-<book>~<trade or security>); give it or TRADE_ID. | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
-| `TRADE_ID` | id | optional |  | A trade in a BASKET: a TRADE_ID of the trading pack's trade kind, as text; it brings its part of its position. | `CLY-3000087` | `trade` |
+| `POSITION_ID` | id | optional |  | Position: the position it refers to | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
+| `TRADE_ID` | id | optional |  | Trade: the trade it refers to | `CLY-3000087` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
 
 **Nested `ROLLS_UP_TO`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `KIND` | text | required |  | The kind of the node the portfolio reports under (bank, division, desk, legal-entity, book). | `division` |  |
-| `ID` | id | required |  | The desk or book the portfolio reports under. | `DIV-MARKETS` |  |
+| `KIND` | text | required |  | The kind of the node it reports under: bank, division, legal-entity, desk or book. | `division` |  |
+| `ID` | id | required |  | The node the system basket reports under (the bank, a division, a legal entity, a desk or a book). | `DIV-MARKETS` |  |
 
-**Links:** `PORTFOLIO_ID` → `portfolio`, `DEFINITION.MEMBERS[].POSITION_ID` → `position`, `DEFINITION.MEMBERS[].TRADE_ID` → `trade`.
+**Links:** `DEFINITION.MEMBERS[].POSITION_ID` → `position`, `DEFINITION.MEMBERS[].TRADE_ID` → `trade`.
 
 **Validation**
 
-- required: fields `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `BUSINESS_DATE`, `VALID_FROM`
 - unique: key `PORTFOLIO_ID`; per BUSINESS_DATE
-- pattern: field PORTFOLIO_ID; pattern ^PF-
-- link: field PORTFOLIO_ID; kind portfolio
 - enum: field TYPE; values `BASKET`, `HIERARCHY`, `RULE`
+- required: fields `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `BUSINESS_DATE`, `VALID_FROM`, `VERSION`
 - link: field DEFINITION.MEMBERS[].POSITION_ID; kind position
 - link: field DEFINITION.MEMBERS[].TRADE_ID; kind trade
 
 **Notes**
 
-- The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored.
-
-**To review (4)**
-
-- required inferred from 100% coverage in 31 documents (3 samples and 28 test-data documents (data/testdata/market-risk/portfolio/portfolio.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- source is the pack's first listed source (its README): confirm.
-- due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- enum values inferred from the data, not from a glossary: TYPE: confirm they are closed lists.
+- The system baskets are kept in Drishti's basket store (VAR_GUIDE.md section 5.7), never read from data: a holder of the permission var:system-baskets creates, edits and retires them in Construct your basket or imports them as YAML; the demo's are the market-risk pack's seed (seeds/system-baskets.yaml). Their VaR limits are var-limit rows (HIERARCHY PORTFOLIO), their figures the engine's as the page opens (VAR_ENGINE), never stored.
 
 ## PNLV: P&L vector (509 scenarios) (`pnl-vector`)
 
@@ -592,10 +581,10 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 | `TRADE_STATUS` | text | required |  | The trade's status the batch priced: NEW, VALIDATED and AMENDED count on the date; others are left out. | `AMENDED`, `VALIDATED` |  |
 | `MATURITY_DATE` | date | required |  | The trade's maturity date (YYYY-MM-DD); a trade matured before the business date does not count. | `2027-05-26` |  |
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…); the LEGAL hierarchy's level and the first sort key in memory. Must be a promoted column. | `LE-LDN` (pattern `^LE-`) | `legal-entity` |
-| `DIVISION` | id | required |  | The division of the desk the trade is booked in (a hierarchy level above the desk). | `DIV-MARKETS` |  |
+| `DIVISION` | id | required |  | The division of the desk the trade is booked in: the top level column of the hierarchy MGMT (DIVISION > DESK > TT_BOOK, VAR_GUIDE.md section 15.14). Must be a promoted column. | `DIV-MARKETS` |  |
 | `DESK` | id | required |  | The desk the trade is booked on: a DESK_ID of the core pack's desk kind (DESK-…); the second sort key. Must be a promoted column. | `DESK-EQD` (pattern `^DESK-`) | `desk` |
-| `TT_BOOK` | id | required |  | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…); a trade without a book is in no hierarchy node. Must be a promoted column. | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
-| `LIMIT_LETTER` | text | optional |  | The limit letter: the letter of authority the record's VaR limit is granted under. A hierarchy may be built from it (the market-risk pack's LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning, and the rest loads). Per row, so a letter may hold part of a book. | `LL-0003` |  |
+| `TT_BOOK` | id | required |  | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…); a trade without a book sits under the (Blank) book of its desk. Must be a promoted column. | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
+| `LIMIT_LETTER` | text | optional |  | The limit letter: the letter of authority the record's VaR limit is granted under. A hierarchy may be built from it (the market-risk pack's LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 15.14): every hierarchy level column must be a promoted column; a row that leaves it empty sits under the (Blank) node at that level, and a table that does not promote it puts every row there, with a DRS-5211 warning naming the fix. Per row, so a letter may hold part of a book. | `LL-0003` |  |
 | `PORTFOLIO` | id | required |  | The booking portfolio on the trade as the source system names it: a BOOK_ID of the core pack's book kind (BOOK-…), the same as TT_BOOK in the demo. | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
 | `STRATEGY` | unknown | optional |  | The trading strategy on the trade, when the booking system has one (empty in the demo); a scope may filter on it. |  |  |
 | `PRODUCT_GROUP` | text | required |  | The product group (Rates, Credit, FX, Equity, Commodity, Securities financing): picks the position rule that groups the trade into a position. | `Commodity`, `Credit`, `Equity`, `FX`, `Fixed income`, `Inflation`, `Money market`, `Rates`, `Securities financing`, `Structured` |  |
@@ -699,8 +688,8 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…). Must be a promoted column. | `LE-NY` (pattern `^LE-`) | `legal-entity` |
 | `DIVISION` | id | required |  | The division of the desk the trade is booked in. | `DIV-MARKETS` |  |
 | `DESK` | id | required |  | The desk the trade is booked on: a DESK_ID of the core pack's desk kind (DESK-…). Must be a promoted column. | `DESK-COMM` (pattern `^DESK-`) | `desk` |
-| `TT_BOOK` | id | required |  | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…); a trade without a book is in no hierarchy node. Must be a promoted column. | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
-| `LIMIT_LETTER` | text | optional |  | The limit letter: the letter of authority the record's VaR limit is granted under. A hierarchy may be built from it (the market-risk pack's LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning, and the rest loads). Per row, so a letter may hold part of a book. | `LL-0003` |  |
+| `TT_BOOK` | id | required |  | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…); a trade without a book sits under the (Blank) book of its desk. Must be a promoted column. | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
+| `LIMIT_LETTER` | text | optional |  | The limit letter: the letter of authority the record's VaR limit is granted under. A hierarchy may be built from it (the market-risk pack's LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 15.14): every hierarchy level column must be a promoted column; a row that leaves it empty sits under the (Blank) node at that level, and a table that does not promote it puts every row there, with a DRS-5211 warning naming the fix. Per row, so a letter may hold part of a book. | `LL-0003` |  |
 | `PORTFOLIO` | id | required |  | The booking portfolio on the trade as the source system names it: a BOOK_ID of the core pack's book kind (BOOK-…), the same as TT_BOOK in the demo. | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
 | `STRATEGY` | unknown | optional |  | The trading strategy on the trade, when the booking system has one (empty in the demo). |  |  |
 | `PRODUCT_GROUP` | text | required |  | The product group: picks the position rule that groups the trade into a position. | `Commodity` |  |
@@ -874,66 +863,6 @@ The historical scenario days of a business date, oldest first: index i of every 
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 
-## HIER: Risk hierarchy node (`risk-hierarchy`)
-
-One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the books under it and its VaR limit.
-
-|  |  |
-|---|---|
-| Contract | [risk-hierarchy.contract.yaml](../../../config/packs/banking/market-risk/contracts/risk-hierarchy.contract.yaml) · version 1.0 |
-| Class | input |
-| Status | active |
-| Source | Synthetic sample data (tools/packgen/banking) |
-| Grain | One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID. |
-| Key | `NODE_ID` |
-| Id pattern | `^(MGMT\|LEGAL)~` |
-| Dated by | `BUSINESS_DATE` |
-| Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-hierarchy/` |
-| Columns | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME` |
-| Test data | data/testdata/market-risk/risk-hierarchy |
-| Worked example | [market-risk/risk-hierarchy](../samples/market-risk.md#risk-hierarchy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
-
-**Fields**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `NODE_ID` | id | required |  | The record's id (the business key) | `LEGAL~LE-NY` (pattern `^[A-Z][A-Z0-9_]*~`) | `risk-hierarchy` |
-| `HIERARCHY` | text | required |  | The hierarchy's id (any name, A-Z, digits, _). The demo's: MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades' columns (VAR_GUIDE.md section 16): its rows here are then not read. | `LEGAL` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
-| `LEVEL` | text | required |  | The node's level, a name of the hierarchy's own: bank, division, legal-entity, desk or book in the demo. | `legal-entity` |  |
-| `PARENT_ID` | id | optional |  | The parent node's NODE_ID (null at the root); the engine builds the tree from it. | `LEGAL~BANK` |  |
-| `NAME` | text | required |  | The node's display name. | `LE-NY` |  |
-| `REF` | record | optional |  | The master record the node stands for, one object: KIND (legal-entity, desk, book) and ID (LE-…, DESK-…, BOOK-…); null for the bank and division nodes. |  |  |
-| `CHILDREN` | text list | required |  | The child nodes' ids; informational, the engine uses PARENT_ID. |  |  |
-| `BOOKS` | text list | required |  | Every book beneath the node: its positions are the node's. |  |  |
-| `BUSINESS_DATE` | date | required |  | The close of business the node belongs to (YYYY-MM-DD): a past date's VaR uses that date's hierarchy. | `2026-09-30` |  |
-| `VALID_FROM` | date | required |  | The first date the node is valid (YYYY-MM-DD). Informational. | `2026-01-02` |  |
-| `VALID_TO` | unknown | optional |  | The last date the node is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
-
-**Nested `REF`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `KIND` | text | required |  | The kind of master record the node is (legal-entity, desk, book). | `book`, `desk`, `legal-entity` |  |
-| `ID` | id | required |  | The id of the master record the node is (a legal entity, desk or book id). | `LE-NY` |  |
-
-**Links:** `NODE_ID` → `risk-hierarchy`.
-
-**Validation**
-
-- required: fields `NODE_ID`, `HIERARCHY`, `LEVEL`, `NAME`, `CHILDREN`, `BOOKS`, `BUSINESS_DATE`, `VALID_FROM`
-- unique: key `NODE_ID`; per BUSINESS_DATE
-- pattern: field NODE_ID; pattern ^[A-Z][A-Z0-9_]*~
-- link: field NODE_ID; kind risk-hierarchy
-- enum: field REF.KIND; values `book`, `desk`, `legal-entity`
-
-**To review (4)**
-
-- required inferred from 100% coverage in 90 documents (2 samples and 88 test-data documents (data/testdata/market-risk/risk-hierarchy/risk-hierarchy.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- source is the pack's first listed source (its README): confirm.
-- due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- enum values inferred from the data, not from a glossary: REF.KIND: confirm it is a closed list (HIERARCHY and LEVEL are open).
-
 ## VLIM: VaR limit of a hierarchy node (`var-limit`)
 
 The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD; 1-day 99% unless the row's HORIZON and CONFIDENCE say otherwise
@@ -959,9 +888,9 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `LIMIT_ID` | id | required |  | The record's id, VL-<NODE_ID> (the business key) | `VL-LL~LL-0003` (pattern `^VL-`) |  |
-| `HIERARCHY` | text | required |  | The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo, read for a hierarchy whose configuration names this kind (limits: var-limit, VAR_GUIDE.md section 16); PORTFOLIO for a portfolio's limit (NODE_ID its PORTFOLIO_ID). Every VaR limit lives here, with its currency (decision 8): the risk-hierarchy rows and the portfolios carry none. | `LL` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
-| `NODE_ID` | id | required |  | The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES), or a portfolio's id (PF-RATES-DESK) on a row of hierarchy PORTFOLIO. A row that names no node of the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero). | `LL~LL-0003/DESK-RATES` (pattern `^([A-Z][A-Z0-9_]*~\|PF-)`) | `risk-hierarchy` |
-| `LIMIT_VAR` | amount | required | USD | The 1-day 99% VaR the node may take, in USD (shown in another reporting currency at today's rate). It wins over a risk-hierarchy row's own LIMIT_VAR for the same node. | `8500000` |  |
+| `HIERARCHY` | text | required |  | The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo, read for a hierarchy whose configuration names this kind (limits: var-limit, VAR_GUIDE.md section 15.14); PORTFOLIO for a portfolio's limit (NODE_ID its PORTFOLIO_ID). Every VaR limit lives here, with its currency (decision 8): the portfolios carry none. | `LL` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
+| `NODE_ID` | id | required |  | The node: its id as the engine builds it from the trades' promoted columns (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES), or a portfolio's id (PF-RATES-DESK) on a row of hierarchy PORTFOLIO. A node its hierarchy can build but with no positions on the date shows as "limit, no positions"; a row its hierarchy cannot build (the hierarchy not configured, or more values than levels) is unused and said with the reason (DRS-5212). A node without a row has no limit (shown blank, never zero). | `LL~LL-0003/DESK-RATES` (pattern `^([A-Z][A-Z0-9_]*~\|PF-)`) |  |
+| `LIMIT_VAR` | amount | required | USD | The 1-day 99% VaR the node may take, in USD (shown in another reporting currency at today's rate). | `8500000` |  |
 | `CURRENCY` | text | required |  | The currency of LIMIT_VAR, ISO 4217: USD. | `USD` |  |
 | `HORIZON` | text | optional |  | The horizon the limit is set for: 1D (the default when absent) or 10D. A page compares the VaR with the limit (limit use) only when the VaR asked for is at the limit's own horizon and CONFIDENCE; otherwise it says "limit is for 1-day 99%: not comparable" (VAR_GUIDE.md section 18.6). | `1D`, `10D` |  |
 | `CONFIDENCE` | rate | optional |  | The VaR confidence the limit is set for, as a fraction (0.99, the default when absent; 99 is read as 0.99). | `0.99` |  |
@@ -969,14 +898,11 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 | `VALID_FROM` | date | required |  | The first date the limit is valid (YYYY-MM-DD). Informational. | `2026-01-02` |  |
 | `VALID_TO` | date | optional |  | The last date the limit is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
 
-**Links:** `NODE_ID` → `risk-hierarchy`.
-
 **Validation**
 
 - required: fields `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY`, `BUSINESS_DATE`, `VALID_FROM`
 - unique: key `LIMIT_ID`; per BUSINESS_DATE
 - pattern: field LIMIT_ID; pattern ^VL-
-- link: field NODE_ID; kind risk-hierarchy
 - enum: field CURRENCY; values `USD`
 - enum: field HORIZON; values `1D`, `10D`
 
@@ -1061,8 +987,8 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 |---|---|---|---|---|---|---|
 | `HISTORY_ID` | id | required |  | The record's id, PNLH-<NODE_ID> (the business key) | `PNLH-MGMT~BANK` (pattern `^PNLH-`) |  |
 | `HIERARCHY` | text | required |  | The hierarchy the node is in (MGMT, LEGAL in the demo): the tool's Hierarchy picker offers the hierarchies the date's rows name. | `MGMT` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
-| `NODE_ID` | id | required |  | The node, its id as the engine builds it (MGMT~BANK, MGMT~DESK-RATES, LEGAL~LE-NY). | `MGMT~DESK-RATES` (pattern `^[A-Z][A-Z0-9_]*~`) | `risk-hierarchy` |
-| `NAME` | text | optional |  | The node's name, as on the risk-hierarchy row. | `Rates` |  |
+| `NODE_ID` | id | required |  | The node, its id as the engine builds it (MGMT~BANK, MGMT~DESK-RATES, LEGAL~LE-NY). | `MGMT~DESK-RATES` (pattern `^[A-Z][A-Z0-9_]*~`) |  |
+| `NAME` | text | optional |  | The node's name, as the engine shows it (its reference entity's name, else its id). | `Rates` |  |
 | `LEVEL` | text | optional |  | The node's level: bank, division, legal-entity, desk (book rows are allowed; the demo sends none). | `desk` |  |
 | `CURRENCY` | text | required |  | The currency of PNL, ISO 4217: USD (the stress set's own currency). | `USD` |  |
 | `FIRST_DAY` | date | required |  | The first day of the history (YYYY-MM-DD), HISTORY_DATES' first. | `2007-01-02` |  |
@@ -1076,14 +1002,11 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 | `DESCRIPTION` | text | optional |  | What the history is, in words. |  |  |
 | `BUSINESS_DATE` | date | required |  | The positions date (YYYY-MM-DD), whose portfolio was revalued over the history. | `2026-09-30` |  |
 
-**Links:** `NODE_ID` → `risk-hierarchy`.
-
 **Validation**
 
 - required: fields `HISTORY_ID`, `HIERARCHY`, `NODE_ID`, `CURRENCY`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT`, `HISTORY_DATES`, `PNL`, `BUSINESS_DATE`
 - unique: key `HISTORY_ID`; per BUSINESS_DATE
 - pattern: field HISTORY_ID; pattern ^PNLH-
-- link: field NODE_ID; kind risk-hierarchy
 - enum: field CURRENCY; values `USD`
 - range: field DAY_COUNT; min 0
 - vector-length: field PNL; same every row of one business date
@@ -1372,7 +1295,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 |---|---|---|---|---|---|---|
 | `BUSINESS_DATE` | date | required |  | The business date (the partition column business_date). |  |  |
 | `HIERARCHY` | text | required |  | The hierarchy of the node (MGMT or LEGAL). | `MGMT`, `LEGAL` |  |
-| `NODE_ID` | id | required |  | The node, <HIERARCHY>~<id>, as in risk-hierarchy. | `MGMT~DESK-RATES` | `risk-hierarchy` |
+| `NODE_ID` | id | required |  | The node, <HIERARCHY>~<id>, as the engine builds it from the trades' promoted columns (VAR_GUIDE.md section 15.14). | `MGMT~DESK-RATES` |  |
 | `NODE_NAME` | text | required |  | The node's display name. |  |  |
 | `PARENT_ID` | id | optional |  | The parent node (none for the bank). |  |  |
 | `LEVEL` | text | required |  | The node's level in its hierarchy (bank, division, legal-entity, desk, book). | `bank`, `legal-entity`, `division`, `desk`, `book` |  |
@@ -1402,13 +1325,10 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 | `EXCEPTIONS_250` | integer | optional |  | Backtest exceptions over the official history (up to 250 days). |  |  |
 | `TRAFFIC_LIGHT` | text | optional |  | The Basel backtest zone over the official history: green up to 4 exceptions in 250 days, amber 5 to 9, red 10 or more. | `green`, `amber`, `red` |  |
 
-**Links:** `NODE_ID` → `risk-hierarchy`.
-
 **Validation**
 
 - required: fields `NODE_ID`, `RESULT_VERSION`, `VAR`, `ES`
 - unique: key `NODE_ID`, `RESULT_VERSION`; per BUSINESS_DATE
-- link: field NODE_ID; kind risk-hierarchy
 
 **Notes**
 

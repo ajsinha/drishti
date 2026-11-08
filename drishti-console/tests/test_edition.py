@@ -555,7 +555,7 @@ def test_the_trading_edition_follows_its_file_on_every_surface(trading, monkeypa
         r = c.get("/go", params={"q": typed}, follow_redirects=False)
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
     ed = app.state.editions.instance
-    for shown in ("TRD", "CTRD", "PTRD", "LTRD", "ITRD", "BOOK", "DESK", "TRDR", "POS", "VLIM", "VRES", "TVAL", "PNLV", "HIER", "PORT",
+    for shown in ("TRD", "CTRD", "PTRD", "LTRD", "ITRD", "BOOK", "DESK", "TRDR", "POS", "VLIM", "VRES", "TVAL", "PNLV", "PORT",
                   "CPTY", "GRP", "NSET", "NSMTM", "CPMTM", "LIM", "EXP", "CRV", "FX", "FXV", "EQ", "EQX", "CMD", "CMDC", "BND", "CDS"):
         assert ed.command_shown(shown), shown
     for hidden in ("FRTB", "SACCR", "CVA", "SIMM", "SCN", "STR", "SSPNL", "COLL", "MC", "ECON", "XRUN", "SPV", "PSUM", "PSTRIP", "PBOOK"):

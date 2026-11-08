@@ -290,7 +290,7 @@ different `rows` and it is a reload.
 | 401 | `DRS-5010` | no or an unknown bearer token | `{"title":"unauthenticated","status":401,"code":"DRS-5010","detail":"DRS-5010 missing bearer token"}` |
 | 403 | `DRS-5002` | not an administrator and no `loads:write` token; a token without the scope; the token's user may not open the kind | `{"title":"forbidden","status":403,"code":"DRS-5002","detail":"this token lacks the scope loads:write"}` |
 | 404 | `DRS-5011` | no loaded pack with that name (also for a pack none of whose kinds the caller may open: the two look the same) | `{"type":"about:blank","title":"load pack not found","status":404,"detail":"DRS-5011 no loaded pack named 'nope'","instance":"/api/v1/packs/nope/loads","code":"DRS-5011"}` |
-| 422 | `DRS-5012` | the pack has no such kind | `{"type":"about:blank","title":"load kind unknown","status":422,"detail":"DRS-5012 pack 'market-risk' has no kind 'nope'; its kinds are [stress-scenario, stress-result, frtb-sensitivity, pnl-explain, trade-valuation, position, portfolio, pnl-vector, scenario-set, risk-hierarchy]","instance":"/api/v1/packs/market-risk/loads","code":"DRS-5012"}` |
+| 422 | `DRS-5012` | the pack has no such kind | `{"type":"about:blank","title":"load kind unknown","status":422,"detail":"DRS-5012 pack 'market-risk' has no kind 'nope'; its kinds are [stress-scenario, stress-result, frtb-sensitivity, pnl-explain, trade-valuation, position, portfolio, pnl-vector, scenario-set, var-limit]","instance":"/api/v1/packs/market-risk/loads","code":"DRS-5012"}` |
 
 A `ready` load that was recorded but could not be verified is **not** an error: it is `201` with `"verified": "not-found"` and a `warn`
 `verify` step, so your job can decide (the CLI exits 1). For example (the shape; a dated connector with no data for the date). On the
@@ -3256,7 +3256,7 @@ days) and, for scale tests, a generated trade book: the scripts in [the other st
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 89 tables, about 3.4 GB**, sixty business days
+(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 87 tables, about 3.4 GB**, sixty business days
 ending on today's business date (the test data's 2026-07-08 to 2026-09-30, moved; `--as-of data` keeps them). The trades go to one
 table per source system, `data/delta/demo/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
 `PRODUCT_TYPE`, each read by its own connector (`trade-endur`, `trade-calypso`, `trade-murex`) and served together as one kind,
@@ -3273,7 +3273,7 @@ every data type, every field explained for the query that must produce it, is in
 | Trades | 5,000 per source system on the last day, 15,000 in all (4,407 ENDUR, 3,471 CALYPSO, 4,198 MUREX on the first); about 3–7% amended each day (`TRADE_VERSION` moves) |
 | Source systems | `ENDUR` (ids `1000001` …), `CALYPSO` (`CLY-3000001` …), `MUREX` (`MX-20000001` …): ids unique across them |
 | Tables | 85 (measured 2026-10-28): 3 trade tables, the test-data datasets of the banking packs (with [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit))), the reference tables of world-economy and news-and-markets, the public-data snapshots of us-equities, gleif and funds |
-| Disk | about 3.4 GB (measured 2026-10-28, `du` of the 89 tables; the committed test data: about 181 MB, the VaR data on three business dates) |
+| Disk | about 3.4 GB (measured 2026-10-28, `du` of the 87 tables; the committed test data: about 181 MB, the VaR data on three business dates) |
 | Counterparties | fictitious look-alikes (`CP-NORTHPLAINS`, `CP-VAULTGUARD`, …), with UEN, country of risk, legal entity, agreements and netting sets holding their trades |
 
 Re-running `lake demo` rebuilds every table it writes (the folder is removed first) and is safe while a server runs: the server gets
@@ -3531,11 +3531,12 @@ each value that **starts with** an old name followed by a comma (a branch keeps 
 | Where | Field | Names |
 |---|---|---|
 | `core/legal-entity` (test data, lake `reference/legal-entity`) | `NAME` | the four legal entities |
-| `market-risk/risk-hierarchy` (test data, lake `risk/risk-hierarchy`) | `NAME` | the bank, at the top of both trees |
+| `market-risk/pnl-history` (test data, lake `risk/pnl-history`) | `NAME` | the bank, at the top of both trees' histories |
 | `config/packs/core/core/samples` | `legal-entity.jsonl` `NAME`, `catalog.jsonl` subtitles | the four legal entities |
 | the retired example packs (`examples/packs/climate-risk`, `liquidity-risk`, `operational-risk`; `finance`) | `legalEntityName`, `legalEntity.name` | the legal entities |
 
-So after an edit rebuild those two datasets (`--only core/legal-entity,market-risk/risk-hierarchy`, or a full `lake demo`). The
+So after an edit rebuild those two datasets (`--only core/legal-entity,market-risk/pnl-history`, or a full `lake demo`); the VaR trees
+show each legal entity by its `legal-entity` record's `NAME` ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity), [example](../contracts/samples/core.md#legal-entity)), so they follow at once. The
 packs' samples, served without a lake, follow the file when their generators are run again: `python3 tools/packgen/banking/make_data.py`
 (the core samples; the catalogue's subtitles too) and an example pack's `make.py`. The VaR tree's top node is named by a server setting
 of its own, the VaR root name (listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) under the VaR

@@ -269,6 +269,29 @@ Returns `string`.
 formatDuration(2400)   // "2.4 s"
 ```
 
+#### `columnScale(values, units)`
+
+One unit for a whole column of figures (a pivot's measure): the largest compact unit the column's largest figure reaches, so every figure of the column reads in it ("74.63 m" beside "0.84 m", never "938,400.00" beside "1.12 m"), the unit said once.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `Array&lt;*&gt;` | the column's figures (non-numbers ignored) |
+| `[units]` | `Array&lt;Array&lt;*&gt;&gt;` | [suffix, size] largest first (default COMPACT_UNITS without k: a thousand reads in full) |
+
+Returns `{unit: string, size: number}`: unit '' and size 1 when no figure reaches a unit.
+
+#### `formatScaled(v, scale, o)`
+
+A figure in a column's unit (columnScale): two decimals, grouped, the unit after a space; a missing figure is blank, never 0.00.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `scale` | `{unit: string, size: number}` |  |
+| `[o]` | `NumberOptions` | decimals default 2; empty default '' |
+
+Returns `string`.
+
 ### drishti_dates.js
 
 #### `parseDate(v)`
@@ -2678,6 +2701,47 @@ Replaces the roots.
 
 Returns `void`.
 
+### drishti_field-picker.js
+
+#### class `FieldPicker`
+
+A field picker.
+
+##### `new FieldPicker(doc, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `o` | `{label: string, title: string, hint: string, groups: function(): PickerGroup[], onPick: function(PickerItem, ?PickerItem, {close: boolean}): void, link: {label: string, run: function(): void}, theme: Element, keys: string}` | groups: asked again after each pick; onPick: the item (and the child picked, else null); link: a button in the foot (Customize ›); keys: the foot's words about the keys |
+
+##### `FieldPicker.isOpen()`
+
+Whether it is open.
+
+Returns `boolean`.
+
+##### `FieldPicker.open(anchor)`
+
+Opens the picker under an anchor.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `anchor` | `Element` |  |
+
+Returns `HTMLElement`: the panel.
+
+##### `FieldPicker.close()`
+
+Closes it.
+
+Returns `void`.
+
+##### `FieldPicker.refresh()`
+
+Draws the items again (after a pick changed them), keeping the search and the active item.
+
+Returns `void`.
+
 ### drishti_multiselect.js
 
 #### class `MultiSelect`
@@ -4100,6 +4164,31 @@ An entry of the function catalogue (the server's: GET /api/v1/functions, or a pa
 | `[weekStart=1]` | `number` |  |
 | `[label]` | `string` |  |
 
+#### `PickerItem` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `label` | `string` |  |
+| `[detail]` | `string` | muted words after the label (a hierarchy's levels: Division › Desk › Book) |
+| `[icon]` | `string` | a mark before it (⋔ a hierarchy, Σ a measure, Aa a text field) |
+| `[note]` | `string` | words on the right (in Rows, above the scope) |
+| `[checked]` | `boolean` | its check (undefined: no check) |
+| `[disabled]` | `boolean` | shown off; why says the reason |
+| `[why]` | `string` |  |
+| `[children]` | `PickerItem[]` | shown when it is open |
+| `[open]` | `boolean` | its children shown at first |
+
+#### `PickerGroup` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `label` | `string` |  |
+| `items` | `PickerItem[]` |  |
+| `[collapsed]` | `boolean` | closed at first (More fields) |
+| `[columns]` | `boolean` | two columns of items (short labels) |
+
 #### `FilterField` : `Object`
 
 A field the bar may filter.
@@ -4786,6 +4875,16 @@ The format of an answer's measure for GridOptions.pivotFormat: measureText bound
 
 Returns `function(*): string`.
 
+#### `answerScales(answer)`
+
+Each measure's one unit over an answer (one number format per column: "74.63 m" beside "0.84 m"): drishti-core's columnScale of every cell's figure of the measure. A count, a percentage, a rank and a text answer keep their own forms (no scale).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `answer` | `Object` | the server's answer ({measures, cells}) |
+
+Returns `Object&lt;string, {unit: string, size: number}&gt;`: measure label to its scale.
+
 ### drishti_wells.js
 
 #### `WELLS`
@@ -4795,6 +4894,24 @@ The wells, in the ribbon's order.
 #### `VALUE_FUNCS`
 
 The aggregations a value can take in the browser (a non-additive column's value is the server's measure).
+
+#### `FUNC_LABELS`
+
+The functions in plain words, as the value pickers say them (PIVOT_GUIDE.md section 4); a name not here reads as itself.
+
+#### `FUNC_ARGS`
+
+The functions that take an argument after the field, and what it is: wavg a weight field, percentile a quantile.
+
+#### `funcLabel(name)`
+
+A function's label in plain words.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+
+Returns `string`.
 
 #### class `WellsModel`
 
@@ -4807,11 +4924,75 @@ The wells of a pivot.
 | `columns` | `import('./drishti_columns.js').ColumnModel` |  |
 | `[initial]` | `{rows: string[], columns: string[], values: WellValue[], filters: Array&lt;{colId: string, filter: Object}&gt;}` |  |
 
+##### `WellsModel.setHierarchies(list)`
+
+The source's hierarchies (the server's catalogue: {id, title, levels: [{field, label}]}); levels the grid has no column for are left out.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Array&lt;Object&gt;` |  |
+
+Returns `void`.
+
+##### `WellsModel.hierarchyOf(colId)`
+
+The hierarchy a field is a level of, or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `colId` | `string` |  |
+
+Returns `?Hierarchy`.
+
+##### `WellsModel.segments(well)`
+
+Rows or Columns as the line draws them: consecutive levels of one hierarchy as one item, each other field as its own.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `well` | `('rows'\|'columns')` |  |
+
+Returns `Array&lt;{hierarchy: ?Hierarchy, ids: string[], index: number}&gt;`: index: the first field's place in the well.
+
+##### `WellsModel.stepHierarchy(well, id, dir)`
+
+The level stepper of a hierarchy in a well: down (+1) adds its next level after its deepest one there (the first level when it is not there yet), up (−1) takes its deepest level away.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `well` | `('rows'\|'columns')` |  |
+| `id` | `string` | the hierarchy |
+| `dir` | `number` | +1 or −1 |
+
+Returns `{ok: boolean, why: ?string}`.
+
+##### `WellsModel.setHierarchyLevels(well, id, levels)`
+
+Puts exactly these levels of a hierarchy in a well (in the hierarchy's order), where its first level was (else at the end).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `well` | `('rows'\|'columns')` |  |
+| `id` | `string` | the hierarchy |
+| `levels` | `string[]` | level field ids |
+
+Returns `void`.
+
 ##### `WellsModel.funcs()`
 
 The aggregations a value may take: the browser's (VALUE_FUNCS), then the server's own (GridOptions.serverFuncs).
 
 Returns `Array&lt;{name: string, label: string, server: boolean}&gt;`.
+
+##### `WellsModel.funcsFor(colId)`
+
+The functions a value of a field may take, in plain words: the column's own list (funcs, the server's catalogue says which are valid for the field) or else the grid's (funcs()) by its type; a function that would mislead is shown off with the reason (a rate is never summed, a text is counted). A measure computed per cell (VaR, ES: a column with a server measure that is not additive) takes none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `colId` | `string` |  |
+
+Returns `Array&lt;{name: string, label: string, server: boolean, disabled: boolean, why: ?string, arg: ?Object}&gt;`.
 
 ##### `WellsModel.funcLabel(name)`
 
@@ -4825,7 +5006,7 @@ Returns `string`.
 
 ##### `WellsModel.fieldList(search)`
 
-The field list, searched (ColumnModel.fields), each field with the wells it is in.
+The field list, searched (ColumnModel.fields), each field with the wells it is in and its hierarchy.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -4855,15 +5036,16 @@ Whether a field may be dropped in a well, and if not, why (in words).
 
 Returns `{ok: boolean, why: ?string}`.
 
-##### `WellsModel.drop(colId, well, index)`
+##### `WellsModel.drop(colId, well, index, value)`
 
-Drops a field in a well at a place (moving it from Rows to Columns or back; a field may be a value and a filter as well).
+Drops a field in a well at a place (moving it from Rows to Columns or back; a field may be a value and a filter as well, and a value several times with different functions).
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `colId` | `string` |  |
 | `well` | `string` |  |
 | `[index]` | `number` | the place (default: the end) |
+| `[value]` | `{aggFunc: string, args: Array}` | a value's function and arguments (default: the column's) |
 
 Returns `void`.
 
@@ -4890,16 +5072,40 @@ Moves an item within its well.
 
 Returns `void`.
 
-##### `WellsModel.setAggregation(index, func)`
+##### `WellsModel.setAggregation(index, func, args)`
 
-Sets a value's aggregation. A non-additive field (VaR, ES) keeps its server measure whatever is asked, and says so.
+Sets a value's function (and its arguments: wavg's weight field, percentile's q). A value computed per cell by the server (VaR, ES) keeps its measure whatever is asked, and says so; a function that is not valid for the field is refused with the reason.
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `index` | `number` | the value's place |
 | `func` | `string` |  |
+| `[args]` | `Array&lt;(string\|number)&gt;` |  |
 
 Returns `{ok: boolean, why: ?string}`.
+
+##### `WellsModel.setFormula(index, formula, label)`
+
+Makes a value a custom formula (Rachana, or a custom function's call: wret(RET, W)); the server checks it when it answers.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` |  |
+| `formula` | `string` |  |
+| `[label]` | `string` |  |
+
+Returns `{ok: boolean, why: ?string}`.
+
+##### `WellsModel.setShowAs(index, showAs)`
+
+Shows a value as (the server's show-as: pct-grand, pct-row, pct-column, pct-parent-row, rank, ntile:4, diff:1:&lt;dim&gt;, pct-change:1:&lt;dim&gt;), or as its figure (null).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` |  |
+| `showAs` | `?string` |  |
+
+Returns `void`.
 
 ##### `WellsModel.setFilter(colId, filter)`
 
@@ -4930,7 +5136,17 @@ Returns `void`.
 
 ##### `WellsModel.measureOf(v)`
 
-A value's measure text: the column's own server measure when it has one or is not additive, else func(field).
+A value's measure text: the column's own server measure when it has one, a custom formula as written, else func(field[, args]).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `WellValue` |  |
+
+Returns `string`.
+
+##### `WellsModel.labelOf(v)`
+
+A value's label when it has none of its own: the field's header, with its function in words unless a sum (PV, PV (median), PV (weighted average by NOTIONAL), PV (percentile 0.95)); a custom formula its text; a server measure its header.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -4947,6 +5163,100 @@ The pivot view the wells make (with the member filters of the Filters well and o
 | `[extra]` | `Object` | more of the view (expanded, sort, top, subtotals, valueFilters, source) |
 
 Returns `import('./drishti_pivot.js').PivotView`.
+
+### drishti_grid-fields.js
+
+#### `fieldIcon(f)`
+
+The icon of a field in a picker.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `Object` | a field (ColumnModel.fields) |
+
+Returns `string`.
+
+#### `fieldGroups(w, well)`
+
+The groups of fields for a well: hierarchies, fields by folder, measures by folder, more fields (collapsed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `w` | `import('./drishti_wells.js').WellsModel` |  |
+| `well` | `string` | rows, columns, values or filters |
+
+Returns `Array&lt;import('../../drishti-inputs/src/drishti_field-picker.js').PickerGroup&gt;`.
+
+#### `pickField(v, well, item, child)`
+
+What a pick in a well's picker (or a check in the Fields pane) does: a hierarchy on or off (its first level), one of its levels on or off, a field in or out; in Values a field is added again (several values of one field) or its last value taken away.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `Object` | the Grid |
+| `well` | `string` |  |
+| `item` | `Object` | the picked item (a hierarchy's is h:&lt;id&gt;) |
+| `child` | `?Object` | the level picked, else null |
+
+Returns `void`.
+
+#### `openPicker(v, well, anchor)`
+
+Opens a well's field picker under an anchor (R, C, V, F or a click on the well's name or +).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `Object` | the Grid |
+| `well` | `string` |  |
+| `anchor` | `Element` |  |
+
+Returns `FieldPicker`.
+
+### drishti_grid-views.js
+
+#### class `ViewPicker`
+
+The View picker of a grid.
+
+##### `new ViewPicker(v)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `Object` | the Grid |
+
+##### `ViewPicker.hook()`
+
+The host's views hook (GridOptions.views).
+
+Returns `ViewsHook`.
+
+##### `ViewPicker.button()`
+
+The button in front of the line: VIEW and the open view's name (a dot when the layout changed since).
+
+Returns `HTMLElement`.
+
+##### `ViewPicker.isOpen()`
+
+Whether it is open.
+
+Returns `boolean`.
+
+##### `ViewPicker.open(anchor)`
+
+Opens the picker under an anchor (the VIEW button).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `anchor` | `Element` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `ViewPicker.close()`
+
+Closes it.
+
+Returns `void`.
 
 ### drishti_client-rows.js
 
@@ -6151,6 +6461,12 @@ Gives back a kept state.
 
 Returns `Promise&lt;void&gt;`.
 
+##### `GridModelBase.headWidth()`
+
+The pivot's row-header column wide enough for its labels (indented by depth), 220 px at least and 460 at most: full row labels (POS-BOOK-RATES-3~CORP-BOND-ALLY-4.25-2031), a longer one ends with … and its full path in its tooltip.
+
+Returns `number`: px.
+
 ### drishti_grid-live.js
 
 #### `GRID_EVENTS`
@@ -7243,6 +7559,49 @@ Returns `void`.
 The measures a phone may switch between.
 
 Returns `string[]`.
+
+##### `GridBase.toggleCustomize()`
+
+Customize › (and \): the Fields and Build panes (layout panel, A) from the compact line (B, C), and back to the layout it came from.
+
+Returns `void`.
+
+##### `GridBase.openPicker(well)`
+
+Opens a well's field picker (the keys R, C, V and F).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `well` | `('rows'\|'columns'\|'values'\|'filters')` |  |
+
+Returns `void`.
+
+##### `GridBase.openViews()`
+
+Opens the View picker (Shift+V) when the grid has a views hook.
+
+Returns `boolean`.
+
+##### `GridBase.stepHierarchy(dir, id)`
+
+A hierarchy in Rows (or Columns) a level up (−1) or down (+1): Alt+↑ and Alt+↓, the stepper's ▲ and ▼.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `dir` | `number` |  |
+| `[id]` | `string` | the hierarchy (default: the first one in Rows) |
+
+Returns `void`.
+
+##### `GridBase.setHierarchies(list)`
+
+The source's hierarchies (the server's catalogue), each one item of the pickers.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Array&lt;Object&gt;` |  |
+
+Returns `void`.
 
 ### drishti_grid-view.js
 
@@ -8592,6 +8951,12 @@ A row as the grid sees it at a display index.
 | `[enableValue]` | `boolean` | may be a value (default: numbers) |
 | `[group]` | `string` | a heading above several columns |
 | `[description]` | `string` | words for the field list |
+| `[role]` | `('field'\|'measure')` | the field pickers' group: a field to group or filter by, or a measure (default: a column with a server measure that cannot group rows is a measure) |
+| `[folder]` | `string` | its display folder in the pickers and the Fields pane (VaR, Contribution, Limits) |
+| `[listHidden=false]` | `boolean` | listed under "More fields" (a hierarchy's level column, the long tail), still usable |
+| `[funcs]` | `string[]` | the functions valid for a value of it (the server's catalogue: sum, count, count_distinct, avg, wavg, min, max, median, percentile, var_samp, stddev_samp, a custom function's name); default: the grid's by its type |
+| `[perCell]` | `boolean` | its figure is computed per cell by the server (VaR, ES): it takes no function |
+| `[unit]` | `string` | money, rate, pct, count: a rate or a percentage is never summed |
 | `[cellClass]` | `(string\|function(*, Object): (string\|string[]))` | classes on a row's cell (letters, digits, - and _ only; others are dropped): a name, or a function of the value and the row |
 | `[cellStyle]` | `(Object\|function(*, Object): Object)` | a row's cell's style, limited to colour, background, font weight and style, text alignment and decoration (anything else is dropped): an object, or a function of the value and the row |
 | `[system=false]` | `boolean` | a column the grid adds (the AG Grid-style adapter's group column): never in the field list |
@@ -8736,8 +9101,35 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[getRowClass]` | `function(Object): ?string` | more classes for a leaf's row from its data |
 | `[getRowData]` | `function(Object): ?Object&lt;string, *&gt;` | data-* attributes for a leaf's row ({key: 'A-1'}: data-key) |
 | `[chrome=true]` | `boolean` | false: the grid without its layout's chrome (no command line, toolbar, wells or function keys; the status bar and Explain stay), for a small table inside a screen that has its own command line and keys |
+| `[hierarchies]` | `Array&lt;{id: string, title: string, levels: Array&lt;{field: string, label: string}&gt;}&gt;` | the source's hierarchies (the server's catalogue): one item of the pickers each, its levels side by side in Rows or Columns with a level stepper |
+| `[showAs]` | `Array&lt;{id: string, label: string, needs: ?string}&gt;` | the show-as forms the server computes (none: no Show value as) |
+| `[views]` | `import('./drishti_grid-views.js').ViewsHook` | the View picker in front of the compact line (C): ready-made, my and shared views, Save view as… |
+| `[customize=true]` | `boolean` | Customize › (and \) between the compact line and the panes |
+| `[valueOptions]` | `function(Object, Object): {items: Array&lt;Object&gt;, run: function(string): void}` | a per-cell measure's options in its value menu (the VaR lens: horizon, confidence, scenario set) |
+| `[customFunctions]` | `Array&lt;{name: string, label: string}&gt;` | the custom functions the server has enabled, offered as ƒ in the value menus |
+| `[formulaEditor]` | `function({formula: string, field: Object, value: Object, done: function(string, string): void}): void` | the host's formula editor for Custom ƒ… (default: a text field; the server checks the formula when it answers) |
 | `[model]` | `GridModel` | draw this model rather than make one |
 | `[chrome=true]` | `boolean` | false: the grid alone, without toolbar, wells, status bar or Explain drawer (a panel inside a page that has its own; the keys, menus and Explain hook still work) |
+
+#### `ViewsHook` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `list` | `function(): Promise&lt;{ready: Array&lt;ViewEntry&gt;, mine: Array&lt;ViewEntry&gt;, shared: Array&lt;ViewEntry&gt;}&gt;` |  |
+| `open` | `function(ViewEntry): void` | the host lays the view out (and says so) |
+| `save` | `function(string, ('personal'\|'shared'), string): Promise&lt;ViewEntry&gt;` | name, scope, shared with (people or role:x) |
+| `current` | `function(): ?{name: string, dirty: boolean}` | the view open now, and whether the layout changed since |
+| `[revert]` | `function(): void` | back to the view as it was opened |
+| `[title]` | `string` | the picker's words ("the layouts for this cube") |
+
+#### `ViewEntry` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `name` | `string` |  |
+| `[detail]` | `string` | what it shows (MGMT Desk › Book · VaR, ES) |
+| `[badge]` | `string` | personal, shared · desk head |
 
 #### `GridOptions` : `Object`
 
@@ -8884,9 +9276,19 @@ A tree node.
 | Name | Type | Meaning |
 |---|---|---|
 | `colId` | `string` |  |
-| `aggFunc` | `string` |  |
+| `aggFunc` | `string` | its function (custom: a formula) |
+| `[args]` | `Array&lt;(string\|number)&gt;` | the function's arguments after the field (wavg: the weight field's id; percentile: q) |
+| `[formula]` | `string` | a custom formula (Rachana, or a custom function's call), the measure's text as written |
 | `[as]` | `string` | its label |
 | `[showAs]` | `string` | how the server shows it (pct-grand, rank, diff:1:MONTH) |
+
+#### `Hierarchy` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` | MGMT |
+| `title` | `string` | Management |
+| `levels` | `Array&lt;{id: string, label: string}&gt;` | its level fields, top first (MGMT.DIVISION, MGMT.DESK, MGMT.BOOK) |
 
 ## drishti-tree
 

@@ -91,7 +91,7 @@ class VarShardClusterTest {
     /** The risk lake's connector file for one node (as VarFormatEqualityTest's): the plugin, its root, and (Iceberg) the node's own caches. */
     static String riskLake(String plugin, Path lake, Path node) {
         return "plugin: " + plugin + "\n"
-                + "kinds: [pnl-vector, scenario-set, risk-hierarchy, portfolio, var-limit, scenario-pv, fx-scenario, fx-spot]\n"
+                + "kinds: [pnl-vector, scenario-set, var-limit, scenario-pv, fx-scenario, fx-spot]\n"
                 + "settings:\n"
                 + "  root: " + lake + "\n"
                 + "  domain: risk\n"
@@ -115,11 +115,15 @@ class VarShardClusterTest {
                 "--drishti.sources.connectors.finance-lake.enabled=false", "--drishti.sources.connectors.var-positions.plugin=var-positions",
                 "--drishti.sources.connectors.var-positions.kinds[0]=position", "--drishti.sources.routes.pnl-vector=risk-lake",
                 "--drishti.sources.routes.position=var-positions", "--drishti.sources.routes.scenario-set=risk-lake",
-                "--drishti.sources.routes.risk-hierarchy=risk-lake", "--drishti.sources.routes.portfolio=risk-lake",
                 "--drishti.sources.routes.var-limit=risk-lake", "--drishti.sources.routes.scenario-pv=risk-lake",
                 "--drishti.sources.routes.fx-scenario=risk-lake", "--drishti.sources.routes.fx-spot=risk-lake",
                 "--drishti.var.positions.rules[0].name=securities", "--drishti.var.positions.rules[0].groups[0]=Fixed income",
-                "--drishti.var.positions.rules[0].key[0]=SECURITY_ID", "--drishti.var.hierarchies.LL.title=Limit letters",
+                "--drishti.var.positions.rules[0].key[0]=SECURITY_ID",
+                "--drishti.var.hierarchies.MGMT.title=Management", "--drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
+                "--drishti.var.hierarchies.MGMT.level-names=desk > book", "--drishti.var.hierarchies.MGMT.ids=leaf",
+                "--drishti.var.hierarchies.MGMT.limits=var-limit", "--drishti.var.hierarchies.LEGAL.title=Legal entity",
+                "--drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "--drishti.var.hierarchies.LEGAL.ids=leaf",
+                "--drishti.var.hierarchies.LEGAL.limits=var-limit", "--drishti.var.hierarchies.LL.title=Limit letters",
                 "--drishti.var.hierarchies.LL.levels=LIMIT_LETTER > DESK", "--drishti.var.hierarchies.LL.word=LL",
                 "--drishti.var.hierarchies.LL.limits=var-limit", "--drishti.var.official.on-start=false",
                 "--drishti.var.official.root=" + node.resolve("official"), "--drishti.var.official.currencies[0]=EUR",

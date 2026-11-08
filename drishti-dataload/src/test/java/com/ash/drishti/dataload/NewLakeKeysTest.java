@@ -39,7 +39,7 @@ import org.junit.jupiter.api.io.TempDir;
  * Pushing into a lake that does not exist yet (DATA_LAKE_GUIDE.md sections 3.4, 4.4 and 5.6): a table created by its first load takes its
  * kind's key from the pack (its ingest key, else its data contract's) as the lake entry's {@code id:}; a {@code .ready} file's
  * {@code key:} wins; a tar's folder may be a table name ({@code trade_endur}, {@code trade_calypso}: one kind, several tables) or a kind
- * name written either way ({@code risk_hierarchy}, {@code risk-hierarchy}).
+ * name written either way ({@code var_limit}, {@code var-limit}).
  */
 class NewLakeKeysTest {
 
@@ -66,7 +66,7 @@ class NewLakeKeysTest {
         Path pack = Files.createDirectories(base.resolve("packs/book"));
         Files.writeString(pack.resolve("pack.yaml"), """
                 pack: book
-                kinds: [trade, risk-hierarchy]
+                kinds: [trade, var-limit]
                 connectors:
                   trade-endur:
                     plugin: delta
@@ -78,17 +78,17 @@ class NewLakeKeysTest {
                     settings: {lake: demo, lake-tables: book.trade_calypso}
                   risk:
                     plugin: delta
-                    kinds: [risk-hierarchy]
-                    settings: {lake: demo, lake-tables: book.risk-hierarchy}
+                    kinds: [var-limit]
+                    settings: {lake: demo, lake-tables: book.var-limit}
                 lake:
                   tables:
                     book.trade_endur: {kind: trade, promote: [TRADE_ID, DESK]}
                     book.trade_calypso: {kind: trade, promote: [TRADE_ID, DESK]}
-                    book.risk-hierarchy: {promote: [NODE_ID]}
+                    book.var-limit: {promote: [NODE_ID]}
                 """);
         Files.createDirectories(pack.resolve("contracts"));
         Files.writeString(pack.resolve("contracts/trade.contract.yaml"), "kind: trade\nkey:\n- TRADE_ID\n");
-        Files.writeString(pack.resolve("contracts/risk-hierarchy.contract.yaml"), "kind: risk-hierarchy\nkey:\n- NODE_ID\n");
+        Files.writeString(pack.resolve("contracts/var-limit.contract.yaml"), "kind: var-limit\nkey:\n- NODE_ID\n");
         return pack;
     }
 
@@ -96,7 +96,7 @@ class NewLakeKeysTest {
         return new Routes.Packs() {
             @Override
             public Routes.PackInfo find(String name) {
-                return name.equals("book") ? new Routes.PackInfo(pack, List.of("trade", "risk-hierarchy")) : null;
+                return name.equals("book") ? new Routes.PackInfo(pack, List.of("trade", "var-limit")) : null;
             }
 
             @Override
@@ -124,9 +124,9 @@ class NewLakeKeysTest {
         LakeTable t = PackEntry.read(pack, "trade", "trade-calypso").toTable("trade");
         assertThat(t.name()).isEqualTo("book.trade_calypso");
         assertThat(t.id()).isEqualTo("TRADE_ID");
-        assertThat(PackEntry.read(pack, "risk-hierarchy", null).toTable("risk-hierarchy").id()).isEqualTo("NODE_ID");
+        assertThat(PackEntry.read(pack, "var-limit", null).toTable("var-limit").id()).isEqualTo("NODE_ID");
         assertThat(PackEntry.tables(pack)).extracting(PackEntry.PackTable::table)
-                .containsExactly("trade_endur", "trade_calypso", "risk-hierarchy");
+                .containsExactly("trade_endur", "trade_calypso", "var-limit");
     }
 
     @Test
@@ -136,11 +136,11 @@ class NewLakeKeysTest {
         Routes.Route r = routes.route("trade_endur.2026-11-06.jsonl.gz", null);
         assertThat(r.kind()).isEqualTo("trade");
         assertThat(r.connector()).isEqualTo("trade-endur");
-        assertThat(routes.route("risk_hierarchy.2026-11-06.jsonl", null).kind()).isEqualTo("risk-hierarchy");
-        List<Routes.Route> tar = routes.routeTar("eod.tar", List.of("trade_endur", "trade_calypso", "risk_hierarchy", "risk-hierarchy"), ReadyNote.EMPTY);
-        assertThat(tar).extracting(Routes.Route::kind).containsExactly("trade", "trade", "risk-hierarchy", "risk-hierarchy");
+        assertThat(routes.route("var_limit.2026-11-06.jsonl", null).kind()).isEqualTo("var-limit");
+        List<Routes.Route> tar = routes.routeTar("eod.tar", List.of("trade_endur", "trade_calypso", "var_limit", "var-limit"), ReadyNote.EMPTY);
+        assertThat(tar).extracting(Routes.Route::kind).containsExactly("trade", "trade", "var-limit", "var-limit");
         assertThat(tar).extracting(Routes.Route::connector).containsExactly("trade-endur", "trade-calypso", null, null);
-        assertThat(tar).extracting(Routes.Route::dataset).containsExactly("trade_endur", "trade_calypso", "risk_hierarchy", "risk-hierarchy");
+        assertThat(tar).extracting(Routes.Route::dataset).containsExactly("trade_endur", "trade_calypso", "var_limit", "var-limit");
         assertThatThrownBy(() -> routes.routeTar("eod.tar", List.of("trade_murex"), ReadyNote.EMPTY))
                 .hasMessageContaining("trade_murex: no pack, kind or table").hasMessageContaining("book/trade_endur");
     }
@@ -177,7 +177,7 @@ class NewLakeKeysTest {
 
     /**
      * A tar into a new lake with table-named folders of one kind (trade_endur, trade_calypso) and a kind folder written with an underscore
-     * (risk_hierarchy), over two dates: every table created with its key, every row lands; the same archive changed and sent again replaces
+     * (var_limit), over two dates: every table created with its key, every row lands; the same archive changed and sent again replaces
      * its dates (the rows are the new file's, never doubled).
      */
     @Test
@@ -191,8 +191,8 @@ class NewLakeKeysTest {
         members.put("trade_endur/2026-11-06/a.jsonl", Fixture.rows("2026-11-06", "E1", "E2", "E3"));
         members.put("trade_calypso/2026-11-05/a.jsonl", Fixture.rows("2026-11-05", "C1"));
         members.put("trade_calypso/2026-11-06/a.jsonl", Fixture.rows("2026-11-06", "C1", "C2"));
-        members.put("risk_hierarchy/2026-11-05/n.jsonl", nodes("N1", "N2"));
-        members.put("risk_hierarchy/2026-11-06/n.jsonl", nodes("N1", "N2", "N3"));
+        members.put("var_limit/2026-11-05/n.jsonl", nodes("N1", "N2"));
+        members.put("var_limit/2026-11-06/n.jsonl", nodes("N1", "N2", "N3"));
         Files.write(f.inbox().resolve("eod.tar"), DataInboxLoaderTest.tar(members));
         Files.writeString(f.inbox().resolve("eod.tar.ready"), "lake: pushlake\nmode: replace\nrows: 13\n");
         f.age(f.inbox().resolve("eod.tar"), f.inbox().resolve("eod.tar.ready"));
@@ -202,9 +202,9 @@ class NewLakeKeysTest {
             assertThat(o.rows()).isEqualTo(13);
         });
         Lake lake = Lakes.readFile(lakes.resolve("pushlake.yaml"), k -> k.equals("drishti.data.dir") ? data.toString() : null);
-        assertThat(lake.tables()).containsOnlyKeys("book.trade_endur", "book.trade_calypso", "book.risk-hierarchy");
+        assertThat(lake.tables()).containsOnlyKeys("book.trade_endur", "book.trade_calypso", "book.var-limit");
         assertThat(lake.tables().values()).extracting(LakeTable::id).containsOnly("TRADE_ID", "NODE_ID");
-        for (String t : List.of("book/trade_endur", "book/trade_calypso", "book/risk-hierarchy")) {
+        for (String t : List.of("book/trade_endur", "book/trade_calypso", "book/var-limit")) {
             assertThat(data.resolve("delta/pushlake/" + t + "/business_date=2026-11-05")).as(t).isDirectory();
             assertThat(data.resolve("delta/pushlake/" + t + "/business_date=2026-11-06")).as(t).isDirectory();
         }
@@ -240,6 +240,24 @@ class NewLakeKeysTest {
                 }
             })).toList();
             return Fixture.JSON.readTree(all.get(n - 1).toFile());
+        }
+    }
+
+    @Test
+    void aFileOfTheRemovedRiskHierarchyKindIsRefusedSayingWhatReplacesIt() throws Exception {
+        Routes routes = Routes.read(tmp.resolve("none.yaml"), "demo", packs(bookPack(tmp)));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> routes.route("risk_hierarchy.2026-11-06.jsonl", null))
+                .isInstanceOf(Routes.Unrouted.class).hasMessageContaining("the risk-hierarchy kind is removed")
+                .hasMessageContaining("promoted columns").hasMessageContaining("hierarchies:");
+    }
+
+    @Test
+    void aFileOfTheRemovedPortfolioKindIsRefusedSayingWhatReplacesIt() throws Exception {
+        Routes routes = Routes.read(tmp.resolve("none.yaml"), "demo", packs(bookPack(tmp)));
+        for (String file : List.of("portfolio.2026-09-30.jsonl.gz", "PORTFOLIO.2026-09-30.jsonl")) {
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> routes.route(file, null))
+                    .isInstanceOf(Routes.Unrouted.class).hasMessageContaining("the portfolio kind is removed")
+                    .hasMessageContaining("basket store").hasMessageContaining("var:system-baskets").hasMessageContaining("var baskets import");
         }
     }
 }

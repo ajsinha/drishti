@@ -80,19 +80,19 @@ def _book(tmp_path):
     pack = tmp_path / "packs" / "book"
     (pack / "contracts").mkdir(parents=True)
     (pack / "pack.yaml").write_text("""pack: book
-kinds: [trade, risk-hierarchy]
+kinds: [trade, var-limit]
 connectors:
   trade-endur: {plugin: delta, kinds: [trade], settings: {lake: demo, lake-tables: book.trade_endur}}
   trade-calypso: {plugin: delta, kinds: [trade], settings: {lake: demo, lake-tables: book.trade_calypso}}
-  risk: {plugin: delta, kinds: [risk-hierarchy], settings: {lake: demo, lake-tables: book.risk-hierarchy}}
+  risk: {plugin: delta, kinds: [var-limit], settings: {lake: demo, lake-tables: book.var-limit}}
 lake:
   tables:
     book.trade_endur: {kind: trade, promote: [TRADE_ID]}
     book.trade_calypso: {kind: trade, promote: [TRADE_ID]}
-    book.risk-hierarchy: {promote: [NODE_ID]}
+    book.var-limit: {promote: [NODE_ID]}
 """, encoding="utf-8")
     (pack / "contracts" / "trade.contract.yaml").write_text("kind: trade\nkey:\n- TRADE_ID\n", encoding="utf-8")
-    (pack / "contracts" / "risk-hierarchy.contract.yaml").write_text("key: [NODE_ID]\n", encoding="utf-8")
+    (pack / "contracts" / "var-limit.contract.yaml").write_text("key: [NODE_ID]\n", encoding="utf-8")
     (pack / "contracts" / "two.contract.yaml").write_text("key: [A, B]\n", encoding="utf-8")
     return pack
 
@@ -102,9 +102,9 @@ def test_a_table_name_resolves_to_its_kind_and_connector_and_underscores_match_h
     t = feedroute.resolve("trade_endur", tmp_path / "packs")
     assert (t.pack.name, t.kind, t.connector, t.table) == ("book", "trade", "trade-endur", "trade_endur")
     assert feedroute.resolve("trade_calypso", tmp_path / "packs", pack).connector == "trade-calypso"
-    for name in ("risk_hierarchy", "risk-hierarchy", "RISK_HIERARCHY"):
+    for name in ("var_limit", "var-limit", "VAR_LIMIT"):
         r = feedroute.resolve(name, tmp_path / "packs")
-        assert (r.kind, r.table) == ("risk-hierarchy", None)
+        assert (r.kind, r.table) == ("var-limit", None)
     with pytest.raises(feedroute.RouteError, match="trade_murex: no pack"):
         feedroute.resolve("trade_murex", tmp_path / "packs")
 
@@ -117,4 +117,4 @@ def test_the_kinds_key_comes_from_the_contract(tmp_path):
     assert feedroute.contract_key(pack, "nothing") is None
     d = build.pack_defaults(pack, "trade", "trade-calypso")
     assert d["key"] == "TRADE_ID" and d["table"] == "trade_calypso"
-    assert build.pack_defaults(pack, "risk-hierarchy")["key"] == "NODE_ID"
+    assert build.pack_defaults(pack, "var-limit")["key"] == "NODE_ID"

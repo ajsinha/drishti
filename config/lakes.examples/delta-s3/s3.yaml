@@ -29,8 +29,6 @@ tables:
     sort-by: [id]
     file-rows: 250000
     row-group-rows: 1000
-  risk.portfolio:
-    promote: [PORTFOLIO_ID, NAME, TYPE, OWNER]
   risk.pnl-vector:
     promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK,
       LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, PV, TAGS, TRADE_STATUS, MATURITY_DATE,
@@ -44,8 +42,6 @@ tables:
   risk.fx-scenario:
     promote: [CURRENCY, RATE, SCENARIO_SET_ID]
   risk.scenario-set: null
-  risk.risk-hierarchy:
-    promote: [NODE_ID, HIERARCHY, LEVEL, PARENT_ID, NAME]
   risk.var-limit:
     promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
   risk.desk-pnl:

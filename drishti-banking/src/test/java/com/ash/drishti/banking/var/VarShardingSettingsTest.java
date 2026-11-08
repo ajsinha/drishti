@@ -31,7 +31,7 @@ class VarShardingSettingsTest {
 
     static VarProperties var() {
         return new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     static VarShardingProperties own(Boolean enabled, List<String> key, List<String> kinds, Double mb, Integer replicas) {
@@ -70,7 +70,7 @@ class VarShardingSettingsTest {
     void aServerSettingThatIsNotValidRefusesTheStart() {
         assertThatThrownBy(() -> VarSharding.of(own(true, List.of("DESK"), null, null, null), var(), () -> null))
                 .hasMessageContaining("drishti.var.sharding").hasMessageContaining("LEGAL_ENTITY");
-        assertThatThrownBy(() -> VarSharding.of(own(true, null, List.of("risk-hierarchy"), null, null), var(), () -> null))
+        assertThatThrownBy(() -> VarSharding.of(own(true, null, List.of("var-limit"), null, null), var(), () -> null))
                 .hasMessageContaining("only the trades' scenario P&L");
         assertThatThrownBy(() -> VarSharding.of(own(true, null, null, 0.0, null), var(), () -> null)).hasMessageContaining("target-shard-mb");
         assertThatThrownBy(() -> VarSharding.of(own(true, null, null, null, 0), var(), () -> null)).hasMessageContaining("replicas");

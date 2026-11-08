@@ -116,7 +116,7 @@ governance ([section 5](#5-oversight-lens)).
 | Stressed VaR and its 12-week average; the stress window review (`SWIN`) | **Built** in the engine; not yet on the landings (RL1) | [VAR_GUIDE sections 18.8](../guides/VAR_GUIDE.md#188-stressed-var), [18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window) |
 | Why did VaR move? | **Built** as the VaR figure's Explain (*Why it moved*, causes that add up exactly); not yet a card on the landings (RL4) | [VAR_GUIDE section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained) |
 | Which scenario drives it and who loses on it; the scenario matrix (`SMAT`) | **Built** | [VAR_GUIDE sections 3.4](../guides/VAR_GUIDE.md#34-the-tabs), [3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
-| Several hierarchies (MGMT, LEGAL, limit letters `LL`, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
+| Several hierarchies (MGMT, LEGAL, limit letters `LL`, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns) |
 | Captures, compare, history, backtest on Drishti's derived hypothetical P&L | **Built**; the bank's actual and hypothetical P&L not yet (RL3) | [VAR_GUIDE sections 6](../guides/VAR_GUIDE.md#6-captures-and-compare), [7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 | A large trade's effect; intraday VaR from files and Kafka; the pre-deal basket | **Built** | [VAR_GUIDE section 8](../guides/VAR_GUIDE.md#8-what-if-and-var-as-a-kind) |
 | The VaR of every short EUR position, of a basket | **Built**: scope words, rule portfolios, `WHERE:`, baskets | [VAR_GUIDE section 3.5](../guides/VAR_GUIDE.md#35-construct-your-basket) |
@@ -383,7 +383,7 @@ the VaR explorer: the baskets leave the left-hand column for two drop-downs, and
 
 | # | Panel | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|
-| L1 | System baskets drop-down with search | the tree's `portfolios` | **B**; type, ↑↓, Enter, Esc | **Built**, without a VaR figure per row (one computation each) |
+| L1 | System baskets drop-down with search | the tree's `portfolios` (the basket store's system baskets) | **B**; type, ↑↓, Enter, Esc | **Built**, without a VaR figure per row (one computation each) |
 | L2 | My baskets drop-down | `GET /api/var/baskets` | **M**; edit, copy, delete per row | **Built** |
 | L3 | + New basket | the basket's sheet (`drishti_var-basket.js`) | Alt+B | **Built** |
 | L4 | The hierarchy tree | `/api/var/tree` | ▸ opens, click shows the node's VaR | **Built** |
@@ -443,7 +443,7 @@ STR, SSPNL) and collateral operations (COLL, MC), left out by the lens file. **D
 | Need | Status | Where it is described |
 |---|---|---|
 | P&L today: MtM change of every trade valued on both the business date and the day before, by book, by trader, overnight movers | **Built** (MtM change only; the bank's struck P&L is not received; the pricing system's `PNL_1D` is not used) | [ADMIN_GUIDE.md, How the figures are made](../guides/ADMIN_GUIDE.md#162-drishti-trading) |
-| My VaR, Desk VaR (any union of books), top positions and VaR by trader from the server's contributions; labelled intraday after updates | **Built** | [VAR_GUIDE section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets), [section 11.3](../guides/VAR_GUIDE.md#113-path-and-contributions), [section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes) |
+| My VaR, Desk VaR (any union of books), top positions and VaR by trader from the server's contributions; labelled intraday after updates | **Built** | [VAR_GUIDE section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets), [section 11.3](../guides/VAR_GUIDE.md#113-path-and-contributions), [section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes) |
 | 10-day VaR and the confidence chosen | **Built** on the VaR page; on the landings: TL5 | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen) |
 | The scenario matrix (`SMAT`, "is this tail scenario new?") | **Built**, on in the lens (`SMAT BOOK BOOK-RATES-1 20`) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
 | VaR limit use per book and desk; limit use by book over 5 official dates; breaches and near limit | **Built** (`var-limit`; the server's `limitStatus` with `drishti.risk.limit-near` 0.8) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits) |
@@ -1458,15 +1458,15 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 |---|---|---|
 | VaR 99% and ES 97.5% of any scope; component, incremental, marginal VaR; any confidence and window per request | **Built** | [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts), [18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences) |
 | 10-day VaR (√10 and overlapping sum); stressed VaR; the stress-window selection `SWIN` | **Built** | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen), [18.8](../guides/VAR_GUIDE.md#188-stressed-var), [18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window) |
-| Several hierarchies (management, legal entity, limit letters `LL`) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
-| VaR limits per node and stored portfolio; `LIMIT_USE` on every answer and official record; near from `drishti.risk.limit-near` (0.8) | **Built** | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits), [3.2](../guides/VAR_GUIDE.md#32-the-screen), [19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
+| Several hierarchies (management, legal entity, limit letters `LL`) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns) |
+| VaR limits per node and system basket; `LIMIT_USE` on every answer and official record; near from `drishti.risk.limit-near` (0.8) | **Built** | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits), [3.2](../guides/VAR_GUIDE.md#32-the-screen), [19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | Why VaR moved (RO1) | **Built** | [VAR_GUIDE section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained); [5.3.1](#531-ro1-var-change-explanation) |
 | Worst scenarios and who lost on them; the scenario matrix `SMAT` | **Built** | [VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs), [3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
 | Captures and compare; official end-of-day records, append-only, seven years, reproducible | **Built** | [VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare), [19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | Backtesting (actual and hypothetical P&L, zone, multiplier, Kupiec, Christoffersen) | **Built, needs the bank's data** (`desk-pnl`) | [REGULATORY_VAR_REPORTING section 4.6](../guides/REGULATORY_VAR_REPORTING.md#46-backtesting), [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 | Period statistics; VaR by risk type (by hierarchy) | **Built** (risk types need the bank's hierarchy) | [REGULATORY_VAR_REPORTING sections 4.4, 4.5](../guides/REGULATORY_VAR_REPORTING.md#44-period-statistics) |
 | Report definitions, checks, frozen runs with lineage, maker-checker-approver sign-off | **Built** (the pilot pack) | [REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off) |
-| Position sensitivities by risk factor (`SENS`), the factor dictionary; FRTB standardised approach | **Built, needs the bank's data** | [PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#279-position-sensitivity-the-sensitivities), [FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
+| Position sensitivities by risk factor (`SENS`), the factor dictionary; FRTB standardised approach | **Built, needs the bank's data** | [PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#278-position-sensitivity-the-sensitivities), [FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
 | DV01 ladder by currency and tenor bucket against configured two-sided bucket limits | **Built** (MR cube tab C) | [PIVOT_GUIDE section 29.6](../guides/PIVOT_GUIDE.md#296-tail-attribution-sensitivities-and-what-if) |
 | Intraday VaR from files and Kafka; the pre-deal what-if | **Built** | [VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes), [8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet) |
 | Data trust: load checks and rejections, late loads, proxied/failed vector status, market-data quality | **Partly** (each in its own place; completeness against the trades booked not checked) | [VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks), [DATA_GUIDE section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data), the [Market lens](#3-market-lens) |
@@ -1813,8 +1813,8 @@ retires) at the grain and with the ids of the VaR inputs and a sparse list of fa
 [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens)); Drishti's slash-separated **risk-factor naming standard** with a mapping from the bank's names (an unmapped name
 refused, never guessed) and the factor dictionary `risk-factor`; **both** the FRTB buckets and the bank's own limit grids, each limit
 naming its grid; an intraday record replaces a position's record whole. The contract and its load checks:
-[PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#279-position-sensitivity-the-sensitivities) and
-[14.8](../guides/PIVOT_GUIDE.md#2710-risk-factor-the-factor-dictionary), [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens);
+[PIVOT_GUIDE section 27.9](../guides/PIVOT_GUIDE.md#278-position-sensitivity-the-sensitivities) and
+[14.8](../guides/PIVOT_GUIDE.md#279-risk-factor-the-factor-dictionary), [FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens);
 the data-contract design (D8, D9) is in the [MR cube lens](#6-mr-cube-lens).
 
 | Risk type | Measure | Granularity oversight needs |
@@ -1941,7 +1941,7 @@ edition: oversight
 title: Drishti Oversight
 packs: { enabled: [core, market-data, trading, market-risk, counterparty-risk], allow-only: true }  # counterparty read for concentration
 commands:
-  allow: [VRES, VOFF, VLIM, HIER, PORT, POS, TVAL, PNLV, STR, SCN, SSPNL, PNL, FRTB, SENS, SMAT,
+  allow: [VRES, VOFF, VLIM, PORT, POS, TVAL, PNLV, STR, SCN, SSPNL, PNL, FRTB, SENS, SMAT,
           CPTY, GRP, LE, BOOK, DESK, TRDR, ISS, TRD, CTRD, PTRD, LTRD, EXP, XOFC, LIM,
           CRV, FX, FXV, EQ, CMD, CDS, BND, BRCH, LREQ]
   words: { BI: on, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on, FORM: off, RUPAKA: off }
@@ -2281,7 +2281,7 @@ seen only in aggregate shows the aggregate and says drill is not allowed); **sta
 |---|---|---|---|---|---|
 | A1 | Command line and key strip | `MCUBE BANK BY DESK,RISK_CLASS MEASURE VAR <GO>`; keys R C F, M, H, [ ], E, P, W, ? | the view | must (field) | **Partly built**: the `MCUBE` form and keys H, [ ], W, E (expand), Enter; R C F M P S ? not built |
 | A2 | Headline strip (six tiles) | VaR (rank of N), ES, limit use with its bar, Σ desks − bank, stressed VaR or its reason, the data (batches, intraday, data version, trades) | `POST /api/v1/risk/mr/headline` | must (VaR, ES, limit use), glance | **Built** |
-| A3 | Lens controls | rows, columns and filter zones; measure VaR · ES · Comp VaR · DV01 · SBM; horizon 1D · 10D √10 · 10D sum; confidence; Normal · Stressed; currency | the view's options | desk | **Built** (the zones are the pivot's field list) |
+| A3 | Lens controls | rows, columns and filter zones; measure VaR · ES · Comp VaR · DV01 · SBM; horizon 1D · 10D √10 · 10D sum; confidence; Normal · Stressed; currency | the view's options | desk | **Built** (the zones are the pivot's compact line, [6.4.4](#644-pivot-fields-the-view-picker-the-compact-line-and-the-panes)) |
 | A4 | Time-travel slider | dates with official runs and batches; as-of and compare handles; `[` `]` step; brush a sparkline window | `GET /api/v1/risk/mr/versions` | more | **Partly built**: dates as stops, shift-click compare, `[` `]`; batches as stops and the brush not built |
 | A5 | Pivot grid | desks × risk classes, each cell its figure and a 20-day sparkline, the Limit column with use and bar, total row re-aggregated, Σ cells − total | `POST /api/v1/pivot/query`, `/api/v1/risk/mr/history` | must (first five rows, totals pinned), glance (sparklines) | **Partly built**: grid, drill, totals, diversification, sparklines; in-cell limit bars and shift-click compare not built ([6.3.3](#633-mc3-and-mc4-the-remaining-visuals)) |
 | A6 | Tail histogram (rail) | the cell's scenario P&Ls in bins, ES tail marked **E**, VaR bin **V** | `POST /api/v1/risk/mr/detail` | glance | **Built**; bin hover, click to `SMAT` and drag-to-compare not built |
@@ -2314,6 +2314,29 @@ seen only in aggregate shows the aggregate and says drill is not allowed); **sta
 **In the design, not on the mock-ups:** saved views and export (**built**); the embed of a saved view and the phone tiers
 ([6.3.9](#639-front-ends-embedding-and-phone)); the SBM pivot (**built** as `sbm()`); corrections' markers (MC11).
 
+#### 6.4.4 Pivot fields: the View picker, the compact line and the panes
+
+The MR cube's field list (about 45 chips in four rows: every hierarchy level and every column it is built from) left the grid a quarter of
+the screen. Three mock-ups ([README](../lenses/mockups/pivot-fields/README.md)): [A · Power BI panes](../lenses/mockups/pivot-fields/A-powerbi-panes.html),
+[B · trader view first](../lenses/mockups/pivot-fields/B-trader-view.html), [C · saved views + B](../lenses/mockups/pivot-fields/C-saved-views.html).
+**Decided (owner, 2026-11-08): C + B is the default** (the View picker in front of B's compact line) **everywhere a pivot opens; A is behind
+Customize ›** (`\`); the BI designer, an authoring tool, keeps its panes. A preset names the view it opens with; any number of rows and
+columns; every value's function chosen in plain words from those valid for its field, show-as where the engine computes it. The guide is
+[PIVOT_GUIDE.md section 2](../guides/PIVOT_GUIDE.md#2-the-screen); the component is drishti-grid's wells (one model, three arrangements).
+
+![C, the View picker open: the default](../lenses/mockups/pivot-fields/C-open-desk.png)
+
+| Panel | Contents | Data | Interaction | Status |
+|---|---|---|---|---|
+| Header line | short title (scope, date, lens, currency), **i** (the scan estimate, how computed, the figures' unit), the lens's headline figures on the same line, tools | the lens's headline, the scan estimate | click **i** | **Built** (the MR lens's tiles move onto the title's line; the change since the previous date stays in its tile) |
+| View picker (C) | ready-made (the preset's `views:`), My views, Shared with me, Save view as… Personal or Shared, the changed-layout dot and Revert | `pivot-presets.yaml` `views:`, the saved views (`/api/v1/pivot/views`) | `Shift+V`, `1`–`9`, `Enter`, `Ctrl+S` | **Built** |
+| Compact line (B) | the hierarchy chip with its stepper, other row fields, Columns, Filters (with value filters), the Values toggle strip with ▾, ⋯, Customize › | WellsModel | `R C V F`, `Alt+↑ ↓` (the mock-up's `[` `]` stay the MR lens's dates), `\` | **Built** |
+| Field picker (B) | search, Hierarchies with level check-boxes, the fields by folder, the measures by folder (Values), More fields collapsed, Customize › | the catalogue's metadata | `/ ↑↓ → Space Enter Esc` | **Built** ("above the scope" greying of a level not built: the scope is a lens option the picker does not read) |
+| Value menu | the functions valid for the field in plain words, off ones with the reason, Weighted average… and Percentile… arguments, Custom ƒ… (Rachana editor, checked by the server), the custom functions, Show value as, another value of the field; a per-cell measure's note and VaR options | the catalogue's `functions`, `showAs`, `/api/v1/pivot/functions` | ▾ on a value | **Built** |
+| Panes (A) | Build (the wells as lists, the switches, Close), Fields (search, Hierarchies, folders, More fields), a rail | WellsModel + catalogue | drag, check, `\`, `»` | **Built** (filter scopes *on this view / on every view of the cube* not built: one filter scope) |
+| Grid | full labels (width to fit, path tooltip), indent, (Blank) with ?, diversification only where it means something, one number format per column, blank cells | the pivot answer | `→ ← 1–9 Enter E` | **Built** (the diversification is on the node's line, not a row of its own; the mock-up's drill arrows on the grid's corner are the stepper and `1`–`9`) |
+| Catalogue metadata | group, folder, hidden, a hierarchy's levels and columns, the functions valid per field, show-as | `GET /api/v1/pivot/catalogue` | none | **Built** |
+
 ### 6.5 The shared cube core (MR and CCR)
 
 The machinery both cubes share; the CCR cube ([section 7](#7-ccr-cube-lens)) refers here and does not repeat it. As built it is the
@@ -2325,7 +2348,7 @@ CCR cube, [ARCHITECTURE.md section 26.4](ARCHITECTURE.md#264-the-providers)).
 
 A **cube view** is a scope, dimensions on rows and columns, measures, filters, a business date (or two for a change) and a lens (horizon,
 confidence, reporting currency). **Dimensions** come from any attribute the inputs carry, any hierarchy the engine holds
-([VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)), the risk-factor parts
+([VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)), the risk-factor parts
 of the sensitivities, reference data joined by id (an issuer's sector, a counterparty's country), and the scenario day.
 
 | Class | Examples | How a cell and a total are made |
@@ -2442,7 +2465,7 @@ input is the bank's**; the demo's synthetic data is labelled as such.
 | 2 | Positions | the position grain; market value | [D2](#664-d2-position-pos-existing-derived-by-drishti) | existing |
 | 3 | Scenario P&L vectors, scenario PVs, FX scenarios | VaR, ES, components, histogram, explain | [D3](#665-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) | existing; per-class vectors proposed |
 | 4 | Scenario sets, the stress set | scenario days; Normal / Stressed | [D4](#666-d4-scenario-set-sset-existing-extended) | existing; `PURPOSE` proposed |
-| 5 | Hierarchies and VaR limits | rows; `limit()` | [D5](#667-d5-risk-hierarchy-and-var-limit-existing) | existing |
+| 5 | Hierarchies and VaR limits | rows; `limit()` | [D5](#667-d5-the-hierarchies-and-var-limit-existing) | existing |
 | 6 | Limits of every measure | ladder, stress, ES, capital limits | [D6](#668-d6-risk-limit-new-one-limit-table-for-every-measure) | proposed (DV01 limits are configuration today) |
 | 7 | Market data curves and surfaces | explain's overlay; QLRisk pricing | [D7](#669-d7-market-data-existing-read-for-explain-and-pricing) | existing; factor mapping proposed |
 | 8 | FX rates | the reporting currency | [D3](#665-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) | existing |
@@ -2471,7 +2494,7 @@ the sparklines and explain; the sensitivities and factor dictionary light up tab
 | D2 | `position` (POS) | drishti-owned | existing | the position grain; market value |
 | D3 | `pnl-vector` (PNLV), `scenario-pv` (SPV), `fx-scenario` (FXS) | input | existing; extension proposed | the vector measures |
 | D4 | `scenario-set` (SSET) | input | existing; extension proposed | scenario days, the stress set |
-| D5 | `risk-hierarchy` (HIER), `var-limit` (VLIM) | input | existing | dimensions; VaR limits |
+| D5 | the hierarchies (from the trades' columns), `var-limit` (VLIM) | input | existing | dimensions; VaR limits |
 | D6 | `risk-limit` | fundamental | proposed (RO3) | sensitivity, stress, ES, capital limits |
 | D7 | market data (`ir-curve`, `credit-curve`, `fx-spot`, vol surfaces …) | fundamental | existing | factor moves; pricing |
 | D8 | `position-sensitivity` (SENS) | input | existing | sensitivities, ladders, SBM, SIMM (CCR) |
@@ -2516,10 +2539,10 @@ One row per set per date (`SCENARIO_DATES` oldest first, count, window, horizon,
 `REDUCED_FACTOR_SET`. Every set is a lens (Normal / Stressed). Validation: one `NORMAL` set per date; a `STRESSED` window inside the
 approved stress period.
 
-#### 6.6.7 D5 `risk-hierarchy` and `var-limit`: existing
+#### 6.6.7 D5 the hierarchies and `var-limit`: existing
 
-Nodes per date (`NODE_ID` `LEGAL~LE-NY`, hierarchy, level, parent, books) or built from the vectors' columns; VaR limits per node with
-horizon and confidence. The cube draws a cell's limit only when the cell is exactly a node and the lens matches the limit's horizon and
+Nodes per date (`NODE_ID` `LEGAL~LE-NY`, hierarchy, level, parent), built by the engine from the vectors' promoted columns; VaR limits
+per node with horizon and confidence. The cube draws a cell's limit only when the cell is exactly a node and the lens matches the limit's horizon and
 confidence; otherwise no limit, with the reason in the cell's notes.
 
 #### 6.6.8 D6 `risk-limit`: new (one limit table for every measure)
@@ -3008,7 +3031,7 @@ Steps 2 and 3 are why trades cannot be summed across netting sets: exposures of 
 
 **Two hierarchies:** the legal one (GLEIF ultimate parent → … → netting set → trade; exact, sets summed per path) and the desk one
 (bank → division → desk → book → trade, and the legal-entity and limit-letter hierarchies,
-[VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns); allocated).
+[VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns); allocated).
 
 #### 7.5.2 Shards by counterparty and netting set
 
@@ -3021,7 +3044,7 @@ second round for PFE (the quantile paths), as contributions do today. Planned wi
 ### 7.6 CCR data and contracts
 
 The conventions and the shared contracts are [section 6.6](#66-data-and-contracts): `trade` ([D1](#663-d1-trade-trd-existing-read-as-dimensions)),
-the risk hierarchies ([D5](#667-d5-risk-hierarchy-and-var-limit-existing)) for allocation by desk, and `position-sensitivity`
+the risk hierarchies ([D5](#667-d5-the-hierarchies-and-var-limit-existing)) for allocation by desk, and `position-sensitivity`
 ([D8](#6610-d8-position-sensitivity-sens-existing)) read as CRIF for SIMM and SA-CVA hedges. CCR demo data lives in
 `data/testdata/counterparty-risk/<kind>/`; the built contracts are documented in
 [docs/contracts/packs/counterparty-risk.md](../contracts/packs/counterparty-risk.md) and
@@ -3623,7 +3646,7 @@ packs:
     economy: [news-and-markets, world-economy]
   allow-only: true
 commands:
-  allow: [CRO, VOFF, VLIM, VRES, HIER, STR, SCN, SSPNL, EXP, XOFC, LIM, CPTY, GRP, LE, DESK, BOOK, NEWS, TOPIC, QUOTE, ECON, MACRO,
+  allow: [CRO, VOFF, VLIM, VRES, STR, SCN, SSPNL, EXP, XOFC, LIM, CPTY, GRP, LE, DESK, BOOK, NEWS, TOPIC, QUOTE, ECON, MACRO,
           RAPM, RAPS, BRCH, LREQ, GCAL, LIQM, CAPP, FEMS]
   words: { BI: on, FUNC: on, WHAT: on, DATAMAP: off, VAR: on, EXP: on, SMAT: on, FORM: off, RUPAKA: off }
 home: { landing: appetite, landings: [appetite, brief, detail], template: home/cro_landing.html }
@@ -4046,7 +4069,7 @@ Fields: `PACK`, `KIND`, `SOURCE`, `STATE` (the six states), `DEADLINE`, `LANDED_
 
 #### 9.5.3 FDEP: feed-dependency, what each official output needs
 
-New, fundamental, from the data office, checked against what the engines read (VaR: `pnl-vector`, `risk-hierarchy`, `scenario-set`,
+New, fundamental, from the data office, checked against what the engines read (VaR: `pnl-vector`, `var-limit`, `scenario-set`,
 `scenario-pv`; exposure: `simulation-run`, `exposure-path`). Key `OUTPUT` (`VAR-OFFICIAL`, `EXPOSURE-OFFICIAL`, `STRESS`, or a feed for
 chains), `INPUT`; fields `READY_BY`, `TYPICAL_MINUTES`, `REQUIRED` (false when a fallback exists). Validation: no cycles; inputs known; an
 output with no input refused.

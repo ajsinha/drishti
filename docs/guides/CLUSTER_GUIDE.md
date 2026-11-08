@@ -377,6 +377,16 @@ PostgreSQL or S3 need none. A member that finds another recorded with a differen
 
 ## 2. A cluster of three
 
+### 2.0 Starting the nodes
+
+Each node is a server started with `bin/start-server --node <name>` (`.sh` on Linux and macOS, `.ps1`/`.cmd` on Windows): `--node-dir`
+names its Drishti\*net folder (made when missing), `--seed <host:port>` the member it joins through, `--advertise` the address it
+advertises (by default the machine's real LAN address, never a loopback one), `--node-data` its own data folder when several nodes share a
+machine; the cluster key comes from an `--env-file`. The console is started with `bin/start-console --server <the entry node>` (or several,
+comma-separated) and learns the other members from the cluster. The commands for three nodes on one machine and on three machines, and
+every option: [DEPLOYMENT_AND_QA_GUIDE.md › section 10.6](../DEPLOYMENT_AND_QA_GUIDE.md#106-start-order-and-joining) and
+[section 6.1](../DEPLOYMENT_AND_QA_GUIDE.md#61-the-start-and-stop-scripts-bin).
+
 ### 2.1 The ready-made local cluster: drishti-stack
 
 For a cluster on one machine without the steps below, the repository's `drishti-stack/` starts three servers and a console from one file,
@@ -387,6 +397,8 @@ drishti-stack/start.sh       # start what is not running: the three servers, the
 drishti-stack/status.sh      # the processes and ports, the members, the console's servers
 drishti-stack/stop.sh        # stop everything start.sh started (by process id, never by name)
 ```
+
+It starts each node and the console through the scripts of `bin/` (2.0), so their pid files and logs are in `data/run/` and `data/logs/`.
 
 `drishti-main` (18480) serves the seven default packs, the demo lakes and live news; `drishti-b` (18791) synthetic ENDUR and CALYPSO
 trades; `drishti-c` (18792) synthetic MUREX trades with `counterparty-risk` and `market-risk`; the console (17480) is given `drishti-main`
@@ -714,7 +726,7 @@ official records) is in the [VaR guide](VAR_GUIDE.md); the operator's facts are 
 |---|---|---|
 | trade and position rows ([`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv)), [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector)), a trade never split from its PVs) | **sharded** by `[LEGAL_ENTITY, DESK]`, a desk never split; `replicas` 2 | 16.3 GB a date hot; 5.4 GB an owner of 6 |
 | the **skeleton** (ids, columns, positions, books, nodes and their aggregates) | **copied to every member**, owners and coordinators | 2.23 GB a date on the heap |
-| hierarchies, scenario sets, portfolios, FX scenarios | read whole by every member | MB |
+| hierarchies, scenario sets, FX scenarios; the system baskets (from the basket store) | read whole by every member | MB |
 | the intraday layer | every member, from the lake on its own signal | thousands of rows |
 
 **Every member answers every VaR scope**; only the rows are spread. A node's figures come from its aggregate on any member (under a
@@ -1058,6 +1070,8 @@ Timing (estimate): the loader's 2.3M load 1 to 5 minutes; shard books in paralle
 1. Database (primary, then standby), Kafka, the lake reachable.
 2. Seeds (two or three members named in every node's `peers/`), then the other owners, then coordinators, BI, data-serving.
 3. Consoles last (they wait for `/readyz`).
+
+Each with `bin/start-server --node …` and `bin/start-console --server …` ([2.0](#20-starting-the-nodes)).
 
 A cold start of the whole cluster: owners build the open dates' shard books (or map kept hot files); coordinators put dates together once
 skeletons are available. A whole-cluster stop: in reverse.
@@ -2184,7 +2198,7 @@ JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterva
 `-XX:MaxDirectMemorySize` caps direct buffers (the default cap is the heap size); `-XX:TrimNativeHeapInterval` (Java 21.0.1 and later)
 returns freed native memory every minute; `-Djdk.nio.maxCachedBufferSize=262144` stops Java keeping a large temporary direct buffer cached on
 every thread. Every launcher Drishti ships sets them (`drishti-stack`, the Docker and ECS server images and `compose.yaml`, the IntelliJ run
-configurations, `tools/windows/start-server.ps1`, which sets the two JVM flags only: Windows' allocator has no arenas); the production
+configurations, `bin/start-server.sh` and `bin/start-server.ps1`, which on Windows sets the JVM flags only: Windows' allocator has no arenas); the production
 launchers also keep a heap dump on OutOfMemoryError, a rotated GC log and native memory tracking. To look at a running server: start it with
 `-XX:NativeMemoryTracking=summary`, take `jcmd <pid> VM.native_memory baseline`, later `jcmd <pid> VM.native_memory summary.diff scale=MB`,
 and compare with `VmRSS` in `/proc/<pid>/status`: a category that keeps rising after the heap is fully committed is a leak; RSS that NMT does

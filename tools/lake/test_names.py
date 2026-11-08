@@ -49,7 +49,7 @@ legal-entities:
   LE-LDN: Example Bank plc
   LE-NY: Example Securities Inc.
 """
-ONLY = "core/legal-entity,market-risk/risk-hierarchy"
+ONLY = "core/legal-entity,market-risk/pnl-history"
 
 
 class Mapping(unittest.TestCase):
@@ -75,7 +75,7 @@ class LakeDemo(unittest.TestCase):
         td, lake = tmp / "testdata", tmp / ("lake-" + (names.stem if names else "default"))
         if not td.exists():
             shutil.copytree(ROOT / "data" / "testdata" / "core" / "legal-entity", td / "core" / "legal-entity")
-            shutil.copytree(ROOT / "data" / "testdata" / "market-risk" / "risk-hierarchy", td / "market-risk" / "risk-hierarchy")
+            shutil.copytree(ROOT / "data" / "testdata" / "market-risk" / "pnl-history", td / "market-risk" / "pnl-history")
             shutil.copy(ROOT / "data" / "testdata" / "testdata.yaml", td / "testdata.yaml")
             snap = td / "core" / "legal-entity" / "legal-entity.2026-07-08.jsonl.gz"     # a branch, as an extract may name one
             with gzip.open(snap, "rt", encoding="utf-8") as f:
@@ -111,7 +111,7 @@ class LakeDemo(unittest.TestCase):
             before = {json.loads(x)["ENTITY_ID"]: json.loads(x) for x in gzip.open(ROOT / "data/testdata/core/legal-entity/legal-entity.2026-07-08.jsonl.gz",
                                                                                     "rt", encoding="utf-8") if x.strip()}
             self.assertEqual(les["LE-LDN"].get("LEI"), before["LE-LDN"].get("LEI"))       # identifiers stay
-            hier = [d for t in lake.rglob("risk-hierarchy") if (t / "_delta_log").is_dir() for d in self.docs(t)]
+            hier = [d for t in lake.rglob("pnl-history") if (t / "_delta_log").is_dir() for d in self.docs(t)]
             self.assertIn("Example Bank", {d.get("NAME") for d in hier})                    # another kind: the bank at the top
             self.assertNotIn("Drishti Bank", {d.get("NAME") for d in hier})
             # the committed data is never rewritten

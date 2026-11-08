@@ -29,8 +29,8 @@ guides:
     file: docs/guides/VAR_GUIDE.md
     number: 36
     note: |
-      **The minimum for a VaR number:** `scenario-set`, a `risk-hierarchy` (or hierarchy columns on the vectors), and for every trade either a
-      `scenario-pv` row or a `pnl-vector` row. Everything else adds a feature: currencies, portfolios, limits, backtesting, the trade pages.
+      **The minimum for a VaR number:** `scenario-set`, and for every trade either a `scenario-pv` row or a `pnl-vector` row carrying its
+      hierarchy columns (`DIVISION`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`: the trees are built from them, [15.14](#1514-hierarchies-from-promoted-columns)). Everything else adds a feature: currencies, limits, backtesting, the trade pages.
     datasets:
       - kind: scenario-set
         title: the scenario days
@@ -93,38 +93,16 @@ guides:
           Market data: each currency pair's quote today and its recent history (`HISTORY`). VaR reads it for reporting currencies (the page's
           Reporting currency picker), for today's conversion, and to derive scenario FX when `fx-scenario` is not supplied. It is read, never
           watched: a change during the day does not recompute VaR.
-      - kind: risk-hierarchy
-        title: the trees
-        sample: market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz
-        required: "**yes** (or built from the trades' columns)"
-        for: the trees (MGMT, LEGAL, limit letters…) that make the scopes
-        guide: "[15.4](#154-risk-hierarchy-the-trees-and-their-limits), [15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)"
-        about: |
-          One row per node of each tree: the bank, its divisions or legal entities, desks and books (MGMT, LEGAL, LL for limit letters, or any
-          other hierarchy the bank defines). `CHILDREN` and `PARENT_ID` give the tree; `BOOKS` the books under the node, which is how positions
-          join it. These are the **Scopes** on the VaR screen.
-
-          - **`NODE_ID`:** `<hierarchy>~<id>`, valid from `VALID_FROM` to `VALID_TO` (open-ended when null).
-          - A hierarchy can instead be built from the trades' own columns ([15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)).
-      - kind: portfolio
-        title: stored portfolios and baskets
-        sample: market-risk/portfolio/portfolio.*.jsonl.gz
-        required: optional
-        for: "stored portfolios: hierarchy, rule and basket portfolios"
-        guide: "[15.5](#155-portfolio-stored-portfolio-definitions)"
-        about: |
-          Named sets of positions beyond the trees: a **hierarchy** portfolio (a node), a **rule** portfolio (a filter, e.g. every swap over 5 years)
-          and a **basket** (an explicit member list, as here). They appear as Portfolios and System baskets on the VaR screen. `ROLLS_UP_TO` says
-          which node it belongs to for limits and reporting.
       - kind: var-limit
         title: VaR limits
         sample: market-risk/var-limit/var-limit.*.jsonl.gz
         required: optional
-        for: a node's VaR limit (the Limit column, limit use)
+        for: a node's or a system basket's VaR limit (the Limit column, limit use)
         guide: "[15.15](#1515-var-limit-the-nodes-var-limits)"
         about: |
           A node's VaR limit with its horizon and confidence: the **Limit** column and limit use on the VaR screen. A limit is compared only at its
-          own horizon and confidence (the screen says *not comparable* otherwise).
+          own horizon and confidence (the screen says *not comparable* otherwise). A system basket's limit is a row of `HIERARCHY` `PORTFOLIO`
+          whose `NODE_ID` is the basket's id ([5.7](#57-system-baskets)): the system baskets themselves are kept in Drishti, not data.
       - kind: desk-pnl
         title: actual and hypothetical P&L for backtesting
         sample: market-risk/desk-pnl/desk-pnl.tar
@@ -231,13 +209,6 @@ guides:
         for: the connected groups of counterparties
         about: |
           A group of connected counterparties (a parent and its subsidiaries): the `GROUP:` scope.
-      - kind: risk-hierarchy
-        title: the trees
-        sample: market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz
-        required: for hierarchy scopes (`LE:` and the trees)
-        for: the legal entity and management trees, shared with VaR
-        about: |
-          The market-risk pack's trees, shared with VaR: a legal-entity or desk scope of exposure is a node of one of them.
 
   # ---------------------------------------------------------------------------------------------------------------------------- FRTB
   - id: frtb-sa
@@ -533,13 +504,6 @@ guides:
         for: the scenario days of the histogram and the explain
         about: |
           The ordered scenario days: the histogram's and the explain's dates.
-      - kind: risk-hierarchy
-        title: the trees
-        sample: market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz
-        required: for the MR cube
-        for: the hierarchy levels as dimensions
-        about: |
-          The trees' levels are dimensions (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`, `LL.LIMIT_LETTER`).
       - kind: var-limit
         title: VaR limits
         sample: market-risk/var-limit/var-limit.*.jsonl.gz

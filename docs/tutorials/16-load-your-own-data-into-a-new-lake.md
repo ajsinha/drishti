@@ -114,9 +114,9 @@ The reference is the [data guide, section 7](../guides/DATA_GUIDE.md#7-the-data-
 
 ### Part A · A new lake of your own
 
-You have your own trades, positions with their scenario PVs, and a VaR hierarchy, and you want Drishti to read them instead of the demo.
+You have your own trades, positions with their scenario PVs, and the VaR limits of your hierarchy, and you want Drishti to read them instead of the demo.
 In this part you create a lake of your own, `risklake`, in its own folder beside the demo lake; route files to it; drop one business
-day of trades, scenario PVs and VaR nodes with full `.ready` files; watch them load; point the connectors at the new lake; check and undo
+day of trades, scenario PVs and VaR limits with full `.ready` files; watch them load; point the connectors at the new lake; check and undo
 a load; and go back to the demo. Each step shows the UI, the command line and the YAML.
 
 The data is synthetic and Endur-style (`TRADE_ID`, `PRODUCT_TYPE`, `DESK`, `BOOK`, `COUNTERPARTY_ID`), written by a small script that
@@ -156,9 +156,9 @@ tables:
     sort-by: [DESK, TT_BOOK, id]
     file-size-mb: 256
     row-group-mb: 64
-  risk.risk-hierarchy:
-    promote: [NODE_ID, HIERARCHY, LEVEL, PARENT_ID, NAME]
-    id: NODE_ID
+  risk.var-limit:
+    promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
+    id: LIMIT_ID
     date: BUSINESS_DATE
 ```
 
@@ -177,7 +177,7 @@ python3 tools/drishti.py lake show
   risklake: delta at data/delta/risklake, 3 tables
     trading.trade_endur                      trading/trade_endur                      partitioned by business_date, PRODUCT_TYPE; 18 promoted
     risk.scenario-pv                         risk/scenario-pv                         partitioned by business_date; 24 promoted, vectors SCENARIO_PV
-    risk.risk-hierarchy                      risk/risk-hierarchy                      partitioned by business_date; 5 promoted
+    risk.var-limit                           risk/var-limit                           partitioned by business_date; 5 promoted
 ```
 
 (The other lakes, `demo`, `var-official` and `ccr-official`, are listed too.) A mistake in the file is refused with the key named:
@@ -189,7 +189,7 @@ first load creates each one exactly as the file says.
 ![Admin → Lakes: risklake opened, at ./data/delta/risklake, with its three tables, their partitions, promoted columns, vector and ids](img/t45/01-lake-file.jpg)
 
 **You should see** `risklake` beside `demo`, at `./data/delta/risklake`, with three tables: `trading.trade_endur` partitioned by
-`business_date, PRODUCT_TYPE` (18 promoted), `risk.scenario-pv` with the vector `SCENARIO_PV` (24 promoted) and `risk.risk-hierarchy`
+`business_date, PRODUCT_TYPE` (18 promoted), `risk.scenario-pv` with the vector `SCENARIO_PV` (24 promoted) and `risk.var-limit`
 (5 promoted), each *replace each date*.
 
 ## Step 2 · Route the files to it
@@ -213,9 +213,9 @@ dataload:
       kind: scenario-pv
       lake: risklake
       date-field: BUSINESS_DATE
-    - match: "risk_hierarchy.*"
+    - match: "var_limit.*"
       pack: market-risk
-      kind: risk-hierarchy
+      kind: var-limit
       lake: risklake
   unmatched: fail
 ```
@@ -230,7 +230,7 @@ kind, lake and where the business date comes from (`"lake": "risklake"`, `"date"
 ![The Inbox screen: the three routing rules in effect, with the pack and kind, the table and where the business date comes from](img/t45/02-rules.jpg)
 
 **You should see** three rules: `trade_endur.*.jsonl.gz` to *trading / trade*, table `trade-endur`, the date *from the name
-(required)*; `scenario_pv.*.jsonl.gz` and `risk_hierarchy.*` to *market-risk*, the pack's table, the date *from the .ready file, else
+(required)*; `scenario_pv.*.jsonl.gz` and `var_limit.*` to *market-risk*, the pack's table, the date *from the .ready file, else
 the name, else today*; and a last line, *anything else: unmatched: fail*. The screen does not show the lake; `dataload status --json`
 does.
 
@@ -245,7 +245,7 @@ python3 docs/tutorials/data/risklake/make_day.py --out data/tmp/drop --date 2026
 ```text
 data/tmp/drop/trade_endur.2026-11-06.jsonl.gz  rows: 2000  sha256: 521f496bb0793e6c2cbf2922c44c0aa58adfe7ca80440ed90dd0ca76283ee4e7
 data/tmp/drop/scenario_pv.2026-11-06.jsonl.gz  rows: 300  sha256: e46294c4566b785f780d3f6dd8b9edaf71473b3cd4b87a0336cc448cd6b0eb90
-data/tmp/drop/risk_hierarchy.2026-11-06.jsonl  rows: 26  sha256: a8ef6dcae92b7c15871a93aa455e5e7bda0379f19c64d78b9c5eebcccb58c133
+data/tmp/drop/var_limit.2026-11-06.jsonl  rows: 26  sha256: 5e1e6523226a718f836f725d58650af2de53973add4a7733622e3fe5fb6df266
 ```
 
 The script writes the same bytes every time for the same date, so your checksums are these. Use a date that is not in the future on
@@ -256,17 +256,17 @@ from the name, never from a row. Look at the first line of each:
 for f in data/tmp/drop/*.jsonl*; do echo "== $f"; (zcat -f "$f" | head -1 | cut -c1-300); done
 ```
 
-Each line is one record of its kind: a trade, a trade's scenario PVs (509 numbers, one per scenario day), a hierarchy node. What every
+Each line is one record of its kind: a trade, a trade's scenario PVs (509 numbers, one per scenario day), a node's VaR limit. What every
 field means is the kind's data contract, and a real record with every field explained is its example:
 
 | File | Kind | Contract | Example |
 |---|---|---|---|
 | `trade_endur…` | `trade` | [trade](../contracts/packs/trading.md#trd-trade-trade) | [an Endur trade](../contracts/samples/trades.md#endur) |
 | `scenario_pv…` | `scenario-pv` | [scenario-pv](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | [scenario PVs](../contracts/samples/market-risk.md#scenario-pv) |
-| `risk_hierarchy…` | `risk-hierarchy` | [risk-hierarchy](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) | [a hierarchy node](../contracts/samples/market-risk.md#risk-hierarchy) |
+| `var_limit…` | `var-limit` | [var-limit](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) | [a node's VaR limit](../contracts/samples/market-risk.md#var-limit) |
 
 **You should see** the three files in `data/tmp/drop/` with exactly the rows and checksums above: 2,000 trades, 300 scenario-PV
-rows, 26 hierarchy nodes.
+rows, 26 VaR limits.
 
 ## Step 4 · Drop the files with their `.ready` files
 
@@ -293,7 +293,7 @@ hold: true                      # wait: the risk run is not signed off yet
 ```
 
 ```yaml
-# data/dataload/inbox/risk_hierarchy.2026-11-06.ready     (the short form of the name)
+# data/dataload/inbox/var_limit.2026-11-06.ready     (the short form of the name)
 lake: risklake
 rows: 26
 ```
@@ -308,19 +308,19 @@ cp data/tmp/drop/*.jsonl* data/dataload/inbox/
 python3 tools/drishti.py dataload status
 ```
 
-**The UI.** Admin → Data loads → Inbox → **Waiting**: the trades and the hierarchy *ready* once stable for 30 seconds, each with the rule
+**The UI.** Admin → Data loads → Inbox → **Waiting**: the trades and the limits *ready* once stable for 30 seconds, each with the rule
 that routes it and *2026-11-06 from the name*; the scenario PVs **held**.
 
-![The Inbox screen: three files waiting, the hierarchy and the trades ready with their rules, the scenario PVs held](img/t45/03-waiting.jpg)
+![The Inbox screen: three files waiting, the limits and the trades ready with their rules, the scenario PVs held](img/t45/03-waiting.jpg)
 
-**You should see** **Waiting 3**: `risk_hierarchy.2026-11-06.jsonl` and `trade_endur.2026-11-06.jsonl.gz` *ready* (*stable 40 s · marker
-with keys*, *rule 3 → market-risk / risk-hierarchy* and *rule 1 → trading / trade · trade-endur*, *2026-11-06 from the name*, *taken at
+**You should see** **Waiting 3**: `var_limit.2026-11-06.jsonl` and `trade_endur.2026-11-06.jsonl.gz` *ready* (*stable 40 s · marker
+with keys*, *rule 3 → market-risk / var-limit* and *rule 1 → trading / trade · trade-endur*, *2026-11-06 from the name*, *taken at
 the next cycle*), and `scenario_pv.2026-11-06.jsonl.gz` *held: its .ready file says hold: true (remove the key to release it)*.
 `dataload status` says the same:
 
 ```text
 waiting (3):
-  risk_hierarchy.2026-11-06.jsonl                 3.6 KB  ready: the next cycle takes it
+  var_limit.2026-11-06.jsonl                      4.1 KB  ready: the next cycle takes it
                                                           business date: 2026-11-06 from the name
   trade_endur.2026-11-06.jsonl.gz                50.8 KB  ready: the next cycle takes it
                                                           business date: 2026-11-06 from the name
@@ -330,7 +330,7 @@ waiting (3):
 
 ## Step 5 · Load, and release the held file
 
-**The UI.** Press **Load now** (or wait for the next cycle). **Loading** shows the run table by table (the hierarchy, then the trades),
+**The UI.** Press **Load now** (or wait for the next cycle). **Loading** shows the run table by table (the limits, then the trades),
 each with its date's version and rows while it commits; **Last cycles** then shows the cycle as loaded, with its two files, two tables,
 one date and 2,026 rows. Each table was created in `data/delta/risklake/` as the lake file says.
 
@@ -358,11 +358,11 @@ log and summary.
 
 Admin → Data loads → **Loads** lists every load by pack, as the packs were told of them:
 
-![Admin → Data loads → Loads: trading's trade 2026-11-06 ready with 2,000 rows; market risk's scenario-pv and risk-hierarchy ready, not found](img/t45/05-loads.jpg)
+![Admin → Data loads → Loads: trading's trade 2026-11-06 ready with 2,000 rows; market risk's scenario-pv and var-limit ready, not found](img/t45/05-loads.jpg)
 
 **You should see**, on Admin → Data loads → Inbox and in each report, the warning *loaded into risklake, but no connector reads it:
 point trading's connectors at it (lake: risklake) and restart*; on **Loads**, *trade 2026-11-06 · ready · 2,000 rows* for Trading and,
-for Market risk, *scenario-pv 2026-11-06 · ready, not found · 300 rows* and *risk-hierarchy 2026-11-06 · ready, not found · 26 rows*:
+for Market risk, *scenario-pv 2026-11-06 · ready, not found · 300 rows* and *var-limit 2026-11-06 · ready, not found · 26 rows*:
 the rows are in the lake, but no connector of the pack reads it, so no page shows them yet. That is the next step.
 
 ## Step 6 · Point the connectors at risklake
@@ -386,10 +386,10 @@ settings:
 ```yaml
 plugin: delta
 enabled: true
-kinds: [scenario-pv, risk-hierarchy]
+kinds: [scenario-pv, var-limit]
 settings:
   lake: risklake
-  lake-tables: risk.scenario-pv,risk.risk-hierarchy
+  lake-tables: risk.scenario-pv,risk.var-limit
   refresh-seconds: 30
 ```
 
@@ -447,16 +447,16 @@ python3 tools/drishti.py lake undo 20261107T101740.754-2543825.1 --lake data/del
 ```
 
 ```text
-would undo risk/risk-hierarchy 2026-11-06: 26 rows of load 20261107T101740.754-2543825.1 removed
+would undo risk/var-limit 2026-11-06: 26 rows of load 20261107T101740.754-2543825.1 removed
 ```
 
 Your id differs (it carries the time of your load). Run it again without `--dry-run` (it asks for the id once more; `--yes` in a
-script). The hierarchy was appended (its `.ready` names no mode, and the inbox's `default-mode` is `append`), so its rows simply go; an
+script). The limits were appended (its `.ready` names no mode, and the inbox's `default-mode` is `append`), so their rows simply go; an
 undone replace restores the date as it was.
 
 **The UI.** Admin → Data loads → Inbox → **Undo a load**: paste the id, **Check** (nothing changes), then **Undo…**, type the id again,
 confirm. The server finds the load's lake in the ledger (the route's `lake`), so for this load it answers *would undo in risklake: 1
-table date* and lists *risk/risk-hierarchy 2026-11-06: 26 rows removed*. A load the inbox did not make (a `lake build`) is looked for in
+table date* and lists *risk/var-limit 2026-11-06: 26 rows removed*. A load the inbox did not make (a `lake build`) is looked for in
 the inbox's own lake; use the command line for those.
 
 **The command line, through the server.** The same check and undo, the lake found the same way:
@@ -525,7 +525,7 @@ python3 tools/drishti.py lake show
 lakes in .../config/lakes: 3
   ccr-official: delta at .../data/delta, 1 tables
     risk-results.exposure-official-cpty      risk-results/exposure-official-cpty      partitioned by business_date; 26 promoted
-  demo: delta at .../data/delta/demo, 89 tables
+  demo: delta at .../data/delta/demo, 87 tables
     compute-demo.path-book                   compute-demo/path-book                   partitioned by business_date; 4 promoted
     ...
     risk.pnl-vector                          risk/pnl-vector                          partitioned by business_date; 32 promoted, vectors PNL
@@ -1333,7 +1333,7 @@ committed test data.
 
 ```bash
 drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio,market-risk/var-limit
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
 ```text
@@ -1360,7 +1360,7 @@ text it replaced is kept in `data/connectors/history/`), and does the same for t
 # Written by tools/build_demo_lakes.py --store risk=iceberg: every risk table in Iceberg (data/iceberg/risk), …
 plugin: iceberg
 kinds: [stress-scenario, stress-result, frtb-sensitivity, pnl-explain, trade-valuation, portfolio, pnl-vector, scenario-pv,
-        fx-scenario, scenario-set, risk-hierarchy, var-limit]
+        fx-scenario, scenario-set, var-limit]
 settings:
   root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   engine: native

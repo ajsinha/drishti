@@ -165,7 +165,7 @@ trades; the day-over-day change shows it under *gone*).
 |---|---|---|
 | `trade` (TRD; connectors `trade-endur`, `trade-calypso`, `trade-murex`) | `TRADE_ID` | live status, book (`TT_BOOK`, else `PORTFOLIO`: open question 5), counterparty, legal entity, product, currency, maturity, trader, version; the derived columns of §3.2 |
 | `netting-set` (NSET) | `TRADE_IDS` | the trade's netting set (the trade master has none; the retired record carried `NETTING_SET`) |
-| `risk-hierarchy` (HIER) | `NODE_ID`, `BOOKS` | the nodes and their books, as VaR ([VAR_GUIDE.md section 15.4](../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits)) |
+| the VaR hierarchies (built from the trades' columns) | `NODE_ID` | the nodes and their trades, as VaR ([VAR_GUIDE.md section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)) |
 | `fx-rate` (market-data pack) | currency pair, date | USD → reporting currency at the close of the date (§6.2) |
 | `counterparty` (CPTY), `lei-entity` (LEI), `legal-entity` (LE), `book`, `desk` | ids | labels and the `CPTY:`, `GROUP:`, `LE:` scopes |
 
@@ -278,7 +278,7 @@ Three hot dates of a 1 M-trade bank hold about 330 MB. No memory tiering is need
 
 ## 8. Scopes
 
-Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets), including the planned `CPTY:`, `GROUP:`, `NSET:`, `LE:` (the trade's booking
+Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets), including the planned `CPTY:`, `GROUP:`, `NSET:`, `LE:` (the trade's booking
 `LEGAL_ENTITY`, product owner 2026-10-25), and the words [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md#8-scopes) adds (`INDEX:`,
 `TRDR:`). **Everything is additive**, so every scope is answered exactly from node aggregates and runs. `WHERE:` rules see the
 position columns (VaR's) and, for TVAL, the trade columns of §7.1 (`MTM`, `NOTIONAL`, `MATURITY_BUCKET`, …) through `TWHERE:` (open
@@ -345,7 +345,7 @@ engine:
   entry: com.ash.drishti.compute.measure.tval.TvalEngine      # proposed: the measure framework's TVAL engine
   version: "1.0"
 triggers:
-  - { on: data-version, kinds: [valuation, trade, risk-hierarchy], affects: all }
+  - { on: data-version, kinds: [valuation, trade], affects: all }
   - { on: write-back, kinds: [trade], affects: subscribed }
 coalesce: { quiet: 250ms, max-wait: 2s }
 cache: { results: 2000, ttl: 1d }

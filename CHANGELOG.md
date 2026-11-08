@@ -17,7 +17,126 @@
 
 ## Unreleased
 
+### Breaking
+
+- **The `risk-hierarchy` kind is removed (HIER):** every VaR and exposure hierarchy is built by the server from the trades' **promoted
+  columns**, as the pack's `hierarchies:` block (or `drishti.var.hierarchies`) configures them, any number of them: MGMT
+  `DIVISION > DESK > TT_BOOK`, LEGAL `LEGAL_ENTITY > DESK > TT_BOOK` and LL `LIMIT_LETTER > DESK` in the market-risk pack, with the same
+  node ids as before (`MGMT~DESK-RATES`, `LL~LL-0003/DESK-RATES`), so `var-limit` rows, captures, links and saved views keep working. A
+  site that sent `risk-hierarchy` rows now puts the level columns on every `scenario-pv`, `pnl-vector` (and `exposure-path`) row,
+  promotes them in the connector's `layout.<kind>.columns`, and configures `hierarchies:`; the setting `source:` is refused
+  (`DRS-5213`), `drishti.var.kinds.hierarchy` and `drishti.ccr.exposure.kinds.hierarchy` are gone, and a data-load file of the kind is
+  refused saying what replaces it. With no hierarchy configured the engines build no tree. A connector file written before still naming
+  the kind is kept as it is, the kind listed as obsolete. The demo lake needs a rebuild (it holds a `risk-hierarchy` table no connector reads).
+  [VAR_GUIDE.md section 15.14](docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns).
+- **LEGAL's node ids are paths** (`ids: path` in the market-risk pack): `LEGAL~LE-NY`, `LEGAL~LE-NY/DESK-RATES`,
+  `LEGAL~LE-NY/DESK-RATES/BOOK-RATES-1`, so a desk booking into two legal entities on a date is a node under each and never refuses the
+  date (with `ids: leaf` it was `DRS-5213`). MGMT keeps leaf ids, LL is unchanged, `LE:LE-NY` still means the trades booked to the entity,
+  and every VaR, ES, component and limit is as before (golden test). A site whose `var-limit` rows of LEGAL name desks or books by leaf id
+  (`LEGAL~DESK-RATES`) re-keys them to the path; the demo's rows are re-keyed.
+- **The `portfolio` kind is removed: the system baskets are managed in Drishti.** The bank's own baskets (`PORT:<id>`, the *System
+  baskets* list) no longer come from a data feed: they are kept in the basket store beside people's baskets, under the system scope
+  (`var/system-baskets/<ID>.json` in the content store; the one Drishti database later, with people's baskets), created, edited and
+  retired in the basket sheet by the holders of the new permission `var:system-baskets`, and imported or exported as YAML
+  (`drishti.py var baskets export [--scope system]`, `drishti.py var baskets import FILE [--apply]`). The demo's 28 (the same ids, names,
+  owners and definitions) are the market-risk pack's seed (`seeds/system-baskets.yaml`), imported once into an empty system scope at the
+  first start (`drishti.var.system-baskets.seed`, following `DRISHTI_DEMO_ENABLED`); their VaR, ES and limit use on the demo date, and
+  `PORT PF-RATES-DESK`'s page, are unchanged (golden test). Gone: the contract, the test data (`data/testdata/market-risk/portfolio/`),
+  the sample, the lake tables and connector kinds, the route and `drishti.var.kinds.portfolio`; a data-load file of the kind is refused
+  saying what replaces it. `PORT <id> <GO>`, `PORT <GO>`, `PORT:<id>` and `VAR PORT <id>` work as before, served from the store (the kind
+  `system-basket`, the `var-system-baskets` connector; an old `/v/portfolio/<id>` link opens it); an unknown id is `404 DRS-5221`. Limits
+  stay `var-limit` rows (`HIERARCHY` `PORTFOLIO`). People's baskets (`BASKET:<owner>/<name>`) are unchanged. A site that loaded
+  `portfolio` rows exports them as the import file once and imports it.
+  [VAR_GUIDE.md section 5.7](docs/guides/VAR_GUIDE.md#57-system-baskets).
+
+### Features
+
+- **System baskets in the basket sheet:** a holder of `var:system-baskets` sees *System basket* under *Construct your basket* (a
+  drishti-inputs form: id, name, description, owner, type with its node or rule, rolls up to, valid from and to): **Save system basket**
+  (a basket from the sheet's positions and trades, a hierarchy from its node, a rule from its condition; the next version when it exists),
+  **Retire**; *Edit a copy* on a system basket fills it. Checked on save (`422 DRS-5220`: an unknown node, a rule that does not read, a
+  position the date does not hold, an id that exists); every change audited (`var-system-basket-create`, `-edit`, `-retire`, `-import`)
+  and its owner told in their inbox. The server has no reusable four-eyes flow for content-store records, so audit and the owner's
+  notice are the control. API: `/api/v1/risk/var/system-baskets` (list, one, save, retire, export, import).
+- **Module permissions on roles:** a role carries `permissions` (today `var:system-baskets`): in configuration and packs
+  (`permissions: [var:system-baskets]`), in Admin → Roles (*Permissions*) and the role API; kept as a power row (no schema change);
+  every administrator holds them ([ACCESS_MODEL.md section 8](docs/architecture/ACCESS_MODEL.md#8-as-built-the-backend-phase-1-of-the-split)).
+
+- **(Blank) nodes:** a row whose level column is empty, or whose source does not promote it, sits under a **(Blank)** node at that level,
+  under its real parent, the deeper levels beneath it (Power BI's convention): never refused, never dropped, the totals complete. The
+  name is `empty-label` per hierarchy, else `drishti.var.hierarchy.empty-label` (default `(Blank)`); the id is always a path (`~` for the
+  empty value: `MGMT~DIV-MARKETS/~`), so two (Blank) desks never collide; no limit unless a `var-limit` row names it. The explorer shows
+  it muted and in italics with a `?` (the trades without a value and the fix). A level column a source does not promote is a `DRS-5211`
+  warning (provenance, Admin → Health *Hierarchy warnings*, the log), replacing the hierarchy skipped before; a column no source promotes
+  and no pack names is a typo, refused (`DRS-5213`). `/api/v1/health`'s `hierarchiesSkipped` is now `hierarchyWarnings`.
+- **Node names from the reference entities:** a node is named by its `desk`, `book` or `legal-entity` record (the level's name is the
+  kind), else by its value.
+- **`var-limit`:** a row of a node its hierarchy can build but with no positions on the date shows as *limit, no positions*
+  (`limitsNoPositions` of the tree); one its hierarchy cannot build is said with the reason (`DRS-5212`). The exposure paths carry
+  `DIVISION`.
+
+### Pivot: the fields made manageable
+
+- **The View picker in front of one compact line is how every pivot opens** (Views → Pivot, the MR and CCR cubes, the Pivot under a page's
+  table and above search results; the mock-ups and their build checklist: [LENSES.md section 6.4.4](docs/architecture/LENSES.md#644-pivot-fields-the-view-picker-the-compact-line-and-the-panes)).
+  No field list on screen: Rows · Columns · Filters · Values on one line, a picker behind each (`R`, `C`, `V`, `F`), a hierarchy as one chip
+  (`⋔ MGMT ▾ Desk › Book`) with a level stepper (`Alt+↑`, `Alt+↓`), the lit measure toggles as the values; the grid gets the screen.
+  **Customize ›** (`\`) opens the Fields and Build panes (Power BI's), which close to a rail; the BI designer keeps its panes. A preset, a
+  Sutra's `pivot: { mode: … }` or the address (`mode=views|compact|panes`) chooses; old addresses and saved views open as they were.
+- **Views:** ready-made layouts per preset (`views:` in `pivot-presets.yaml`; the MR cube's six: by risk class × desk, desk, book, limit
+  letter, top contributors, trades in my scope; keys `1`–`9`), *My views*, *Shared with me* and **Save view as…** Personal or Shared
+  (`Shift+V`, `Ctrl+S`), a changed layout marked with Revert; the saved and shared views of before, no new store.
+- **A value's function in plain words, only those valid for its field** (Sum, Count, Distinct count, Average, Weighted average… with its
+  weight, Min, Max, Median, Percentile… with its q, Variance, Std dev, the custom functions you may use, Custom ƒ… in the Rachana editor,
+  checked by the server); a rate is never summed and a text is counted (shown off with the reason); VaR and ES say they are computed per
+  cell and offer the VaR options; **Show value as** with the forms the engine computes (% of grand, row, column or parent total, rank,
+  quartile, difference and % change along a field); several values of one field side by side.
+- **The catalogue says it** (`GET /api/v1/pivot/catalogue`): each field's group, display folder, hidden flag (More fields), hierarchy and
+  valid functions, each measure's folder and per-cell flag, the source's hierarchies (VaR: MGMT, LEGAL, LL and any configured, their level
+  columns hidden; Positions › Trade) and the show-as forms.
+- **The cleanups:** full row labels (the row-header column as wide as its labels, the path in the tooltip), one number format per column
+  (`74.63 m` beside `0.84 m`), blank cells never 0.00, the diversification only where it means something, `(Blank)` muted with its **?**,
+  the scan estimate behind an **i**, the short title with the MR lens's headline figures on its line.
+- **Drishti Elements:** drishti-grid's WellsModel (hierarchies, functions per field, arguments, formulas, show-as), the compact line, the
+  panes and the View picker; drishti-inputs' FieldPicker; drishti-core's `columnScale` and `formatScaled`. Docs: PIVOT_GUIDE sections 2, 4,
+  11 and 29, tutorial 7 (a new step 21 with new pictures), REPORTS_GUIDE 8.2, RACHANA_REFERENCE (`mode`), USER_GUIDE, Help.
+- **The source names its measures:** the VaR source's catalogue carries the measures' group and their per-cell notes (`notes.measureGroup`,
+  `perCellNote`, `perCellSumNote`, `addsUp`), so the pivot screen names no engine itself. Tutorial 7's step 21 pictures and VAR_GUIDE
+  15.14's (Blank) and hierarchy-warning pictures are made by their screenshot scripts (t38, varskip).
+### Added
+
+- **`bin/`: one home for starting and stopping Drishti, on Windows, Linux and macOS.** Seven scripts, `start-server`, `stop-server`,
+  `start-console`, `stop-console`, `status`, `start-all` and `stop-all`, each as a `.sh` (Linux and macOS: bash 3.2 and the BSD userland),
+  a `.ps1` (Windows PowerShell 5.1 and PowerShell 7) and a `.cmd` that runs the `.ps1` from `cmd` or a double-click, with the same options
+  and `--help`.
+  - `start-server` finds Java 21+ (`DRISHTI_JAVA_HOME`, `JAVA_HOME`, the `PATH`, `java_home` on macOS), the newest server jar, sets the
+    temporary folder, the native memory and diagnostic flags and the logs under the data folder, waits for the health URL and prints the
+    LAN address; `--background`, `--port`, `--heap`, `--env-file` (secrets off the command line, values never printed), `--demo` (the
+    development secrets, marked not for production).
+  - **Clusters:** `--node <name>` with `--node-dir` (the node's Drishti\*net folder, made when missing), `--node-data` (its own data
+    folder; two nodes on one folder are refused), `--seed <host:port>` and `--advertise` (the machine's real LAN address by default;
+    loopback and wildcard addresses refused). Pid, log and temporary folder are per node, so several nodes run on one machine.
+  - `start-console --server` takes one server or a cluster's entry nodes (comma-separated): the console uses the first that answers
+    and learns the other members.
+  - The stops act on the pid file only (never by name): graceful, then forced after a timeout; a stale pid file is removed and said so;
+    `--node`, `--all-nodes`. `status` shows pid, state, port, health and LAN address.
+
+### Changed
+
+- **`tools/windows/start-server.ps1` and `start-console.ps1` moved to `bin/`** (their options kept; `-DemoLakes` is `--demo`, `-Backend`
+  is `--server`, `-Stop` calls `stop-server`). The pid file moved from `data/server.pid` to `data/run/server.pid`.
+- **`drishti-stack/` starts and stops through `bin/`**: `start.sh`, `stop.sh` and `status.sh` keep their behaviour, ports and the
+  git-ignored `secrets.env`; process ids and logs moved from `drishti-stack/run/` to the repository's `data/run/` and `data/logs/`
+  (`server-<node>.pid`, `server-<node>.log`). `stop.sh` still stops a stack started before the move, from `run/pids.txt`.
+
 ### Docs
+
+- **Starting and stopping with `bin/`:** [DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md) section 6 rewritten around the
+  scripts (every option with its default, the environment, where the files go, exit codes, one server and a console, the background,
+  status and stop, an env-file, the errors) for Windows, Linux and macOS; section 10.6 starts three nodes on one machine and on three
+  machines with `--node`, `--seed` and `--advertise`, the console given the entry node, and stops one node and all; PDF regenerated.
+  QUICKSTART_DEVELOPERS (and its PDF), OPERATIONS_GUIDE 4.3, CLUSTER_GUIDE 2.0, tutorials 01 and 22, the root README, `bin/README.md`,
+  `drishti-stack/README.md` and every former reference to the Windows starters follow.
 
 - **Kernel and modules, the console tier (design):** [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) opens with the
   three building blocks (Drishti Kernel, Drishti Console, Drishti modules) and gains section 10, the Drishti Console on Spring Boot as a

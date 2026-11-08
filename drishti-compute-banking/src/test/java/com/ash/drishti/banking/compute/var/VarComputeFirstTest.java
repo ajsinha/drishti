@@ -81,7 +81,8 @@ class VarComputeFirstTest {
     static double[] build(VarBook.Builder b, Form form) throws IOException {
         ScenarioFx fx = VarTestDataPrecisionTest.fx(data, b.width());
         b.currencyRates(c -> fx.rates(c).orElse(null));
-        double[] worst = {0, 0};                                              // the largest absolute and relative differences
+        b.columnHierarchies(HierarchyEquivalenceTest.MGMT_LEGAL, Map.of());      // MGMT and LEGAL from the promoted columns
+        double[] worst = {0, 0};                                             // the largest absolute and relative differences
         VarTestDataPrecisionTest.lines(data.resolve("scenario-pv"), n -> {   // the Endur trades: scenario PVs in their own currency
             if (!rules.live(VarTestDataPrecisionTest.text(n, "TRADE_STATUS"))) {
                 return;
@@ -118,12 +119,6 @@ class VarComputeFirstTest {
             }
             add(b, n, v, pv, null);
         });
-        VarTestDataPrecisionTest.lines(data.resolve("risk-hierarchy"), n -> {
-            List<String> books = new ArrayList<>();
-            n.path("BOOKS").forEach(x -> books.add(x.asText()));
-            b.node(VarTestDataPrecisionTest.text(n, "NODE_ID"), VarTestDataPrecisionTest.text(n, "HIERARCHY"), VarTestDataPrecisionTest.text(n, "LEVEL"),
-                    VarTestDataPrecisionTest.text(n, "NAME"), VarTestDataPrecisionTest.text(n, "PARENT_ID"), books, Double.NaN);
-        });
         return worst;
     }
 
@@ -142,9 +137,10 @@ class VarComputeFirstTest {
     }
 
     private static void add(VarBook.Builder b, JsonNode n, double[] v, double pvUsd, String pvCurrency) {
-        String[] texts = new String[VarBook.TRADE_TEXTS.size()];
+        List<String> cols = b.textColumns();
+        String[] texts = new String[cols.size()];
         for (int c = 0; c < texts.length; c++) {
-            texts[c] = VarTestDataPrecisionTest.text(n, VarBook.TRADE_TEXTS.get(c));
+            texts[c] = VarTestDataPrecisionTest.text(n, cols.get(c));
         }
         String trade = VarTestDataPrecisionTest.text(n, "TRADE_ID");
         PositionRules.Derived d = rules.derive(trade, VarTestDataPrecisionTest.text(n, "TT_BOOK"), VarTestDataPrecisionTest.text(n, "PRODUCT_GROUP"),

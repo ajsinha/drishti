@@ -28,7 +28,7 @@ from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx
 from shotlib import start_servers as _start
 
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit")]
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "var-limit")] + ["core/desk", "core/book", "core/legal-entity"]
                     + ["trades/murex"])   # trades: the Risk links; var-limit: the limit letters' limits (2.9.5)
 WIDE, HIGH = 1600, 1000
 LAKE: list = []                                  # the scratch lake start_servers built (a shot appends intraday batches to it)
@@ -43,7 +43,7 @@ def start_servers(work) -> list:
                         "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=900)
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         sys.exit("could not build the VaR lake: " + (r.stderr or r.stdout)[-600:])
-    procs = _start(work, {DEMO_ROOT_ENV: str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
+    procs = _start(work, {DEMO_ROOT_ENV: str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true", "DRISHTI_OFFLINE": "true",
                           "DRISHTI_SECURITY_ENABLED": "false"})
     deadline = time.monotonic() + 240
     while True:

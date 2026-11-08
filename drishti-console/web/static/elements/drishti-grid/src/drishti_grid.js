@@ -94,6 +94,7 @@ export class GridModel extends GridModelBase {
     this.wells = new WellsModel(this.columns);
     this.wells.serverFuncs = (o.serverFuncs || []).map((f) => (typeof f === 'string' ? { name: f, label: f } : { name: f.name, label: f.label || f.name }));
     this.wells.allowedFuncs = o.valueFuncs ? o.valueFuncs.slice() : null;
+    this.wells.setHierarchies(o.hierarchies); this.showAs = (o.showAs || []).slice();   // one item per hierarchy; the forms of Show value as
     this.pivotState = new PivotState();
     this.pivotMode = false;
     this.pivotExtra = {};
@@ -160,7 +161,7 @@ export class GridModel extends GridModelBase {
     if (this._pivotCols) { return this._pivotCols; }
     const a = this.answer;
     const dims = a ? a.rowDimensions : [];
-    const head = { id: '__rows', header: dims.map((d) => { const c = this.columns.get(d); return c ? c.header : d; }).join(' / ') || 'Total', type: 'text', pinned: 'left', width: 220, additive: true, rowHeader: true };
+    const head = { id: '__rows', header: dims.map((d) => { const c = this.columns.get(d); return c ? c.header : d; }).join(' › ') || 'Total', type: 'text', pinned: 'left', width: this.headWidth(), additive: true, rowHeader: true };
     const rc = a ? resultColumns(a) : [];
     const byLabel = {};
     (a ? a.measures || [] : []).forEach((x) => { byLabel[x.label] = x; });

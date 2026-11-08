@@ -177,7 +177,7 @@ final class VarSelection {
         }
         switch (r.word()) {
             case "PORT" -> {
-                VarDate.Portfolio pf = d.portfolios().get(r.arg());
+                VarDate.Portfolio pf = svc.portfolios(d).get(r.arg());
                 return pf == null || pf.name() == null ? r.toString() : pf.name();
             }
             case "BASKET" -> {
@@ -226,7 +226,8 @@ final class VarSelection {
                     }
                 }
             } else if (unknown.contains(r.toString()) && said.add(r.toString())) {
-                out.add(r.toString() + " matches nothing on " + date + (r.word().equals("BASKET") || r.word().equals("CAPTURE")
+                out.add(r.word().equals("PORT") ? r + ": no system basket " + r.arg() + " on " + date + " (PORT <GO> lists them)"
+                        : r.toString() + " matches nothing on " + date + (r.word().equals("BASKET") || r.word().equals("CAPTURE")
                         ? " (no such " + r.word().toLowerCase(Locale.ROOT) + " you may read" + (r.word().equals("BASKET")
                                 ? ": it was deleted, or it is not shared with you" : "") + ")" : ""));
             }
@@ -344,21 +345,21 @@ final class VarSelection {
     }
 
     /**
-     * The date's catalogue: nodes (each configured hierarchy's by its word, 2.9.5), portfolios, counterparties, positions and trades
-     * (built once per date, data version and configured words).
+     * The date's catalogue: nodes (each configured hierarchy's by its word, 2.9.5), system baskets, counterparties, positions and trades
+     * (built once per date, data version, configured words and system baskets).
      */
     private List<Entry> catalogue(VarDate d, Map<String, String> words) {
-        String key = d.date() + "|" + d.version() + "|" + words;
+        String key = d.date() + "|" + d.version() + "|" + words + "|sb" + svc.saved().system().stamp();   // a system basket changed: built again
         return catalogues.computeIfAbsent(key, k -> {
             catalogues.keySet().removeIf(x -> !x.equals(k) && catalogues.size() > 3);
             return build(d, words);
         });
     }
 
-    private static List<Entry> build(VarDate d, Map<String, String> words) {
+    private List<Entry> build(VarDate d, Map<String, String> words) {
         VarBook b = d.book();
         List<Entry> out = new ArrayList<>();
-        d.portfolios().values().forEach(pf -> out.add(entry("PORT", "PORT:" + pf.id(), pf.id(), pf.name() == null ? pf.id() : pf.name())));
+        svc.portfolios(d).values().forEach(pf -> out.add(entry("PORT", "PORT:" + pf.id(), pf.id(), pf.name() == null ? pf.id() : pf.name())));
         Map<String, String> wordOf = new HashMap<>();
         words.forEach((w, h) -> wordOf.put(h, w));
         b.nodes().values().forEach(n -> {

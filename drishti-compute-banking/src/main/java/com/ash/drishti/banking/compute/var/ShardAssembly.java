@@ -83,11 +83,12 @@ public final class ShardAssembly {
     }
 
     /**
-     * What the date's nodes are built from, as {@link VarBook.Builder} takes them: the hierarchy rows ({@code id, hierarchy, level, name,
-     * parent}) with their books and limits, and the hierarchies built from the trades' columns with their limits.
+     * What the date's nodes are built from, as {@link VarBook.Builder} takes them: the node rows of a converted book ({@code id, hierarchy,
+     * level, name, parent}) with their books and limits, or the hierarchies built from the trades' promoted columns with their limits and
+     * the reference entities' names.
      */
     public record Nodes(List<String[]> rows, Map<String, List<String>> books, Map<String, Double> limits, List<HierarchySpec> columnSpecs,
-            Map<String, Double> columnLimits) {
+            Map<String, Double> columnLimits, Cells.Names names) {
 
         /** Collects the nodes of a book as its builder did (a reporting currency's book: the USD book's nodes, limits converted). */
         public static Nodes of(VarBook b, double limitDivisor) {
@@ -99,7 +100,7 @@ public final class ShardAssembly {
                 books.put(n.id(), n.books());
                 limits.put(n.id(), Double.isNaN(n.limit()) ? Double.NaN : n.limit() / limitDivisor);
             }
-            return new Nodes(rows, books, limits, List.of(), Map.of());
+            return new Nodes(rows, books, limits, List.of(), Map.of(), Cells.Names.NONE);
         }
     }
 
@@ -181,7 +182,8 @@ public final class ShardAssembly {
         Map<String, List<String>> nodeUnits = new HashMap<>(nodeInputs.books());
         Map<String, Double> limits = new HashMap<>(nodeInputs.limits());
         for (HierarchySpec s : nodeInputs.columnSpecs()) {
-            Cells.derive(s, tcols, cellColumns.isEmpty() ? lay.books() : lay.cells(), nodeInputs.columnLimits(), rows, nodeUnits, limits);
+            Cells.derive(s, tcols, cellColumns.isEmpty() ? lay.books() : lay.cells(), lay.books(), nodeInputs.columnLimits(), nodeInputs.names(),
+                    rows, nodeUnits, limits);
         }
         Map<String, VarBook.Node> nodes = VarBook.nodes(rows, nodeUnits, limits, units);
         for (VarBook.Node node : nodes.values()) {

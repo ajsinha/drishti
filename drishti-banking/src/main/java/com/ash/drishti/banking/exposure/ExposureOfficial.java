@@ -15,8 +15,6 @@
  */
 package com.ash.drishti.banking.exposure;
 
-import com.ash.drishti.api.AsOf;
-import com.ash.drishti.api.DataNode;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.banking.compute.ccr.ExposureBook;
 import com.ash.drishti.banking.compute.ccr.ExposureCalc;
@@ -368,7 +366,10 @@ final class ExposureOfficial implements AutoCloseable {
         return out;
     }
 
-    /** A column hierarchy's nodes from the date's trades: the root (the bank), then every distinct path of the level columns' values. */
+    /**
+     * A hierarchy's nodes from the date's trades: the root (the bank), then every distinct path of the level columns' values; an empty
+     * value is a (Blank) node at its level (VAR_GUIDE.md section 15.14), its scope the hierarchy's path ({@code MGMT:DIV-MARKETS/~}).
+     */
     static List<Node> columnNodes(ExposureDate d, com.ash.drishti.banking.compute.var.HierarchySpec s) {
         List<Node> out = new ArrayList<>();
         out.add(new Node(s.id(), s.rootNodeId(), s.rootName(), null, com.ash.drishti.banking.compute.var.HierarchySpec.ROOT_LEVEL, "BANK"));
@@ -380,19 +381,26 @@ final class ExposureOfficial implements AutoCloseable {
             List<String> values = new ArrayList<>(k);
             for (String c : s.levels()) {
                 Object v = cols.column(t, c);
-                values.add(v == null ? "" : String.valueOf(v));
+                String text = v == null ? null : String.valueOf(v);
+                values.add(com.ash.drishti.banking.compute.var.HierarchySpec.blank(text) ? null : text);
             }
             String parent = s.rootNodeId();
             StringBuilder where = new StringBuilder("WHERE:");
+            StringBuilder path = new StringBuilder(s.id()).append(':');
+            boolean blank = false;
             for (int i = 1; i <= k; i++) {
                 String id = s.nodeId(values, i);
-                where.append(i == 1 ? "" : " and ").append(s.levels().get(i - 1)).append(" == '").append(values.get(i - 1)).append('\'');
+                String v = values.get(i - 1);
+                blank |= v == null;
+                where.append(i == 1 ? "" : " and ").append(s.levels().get(i - 1)).append(" == '").append(v).append('\'');
+                path.append(i == 1 ? "" : "/").append(v == null ? com.ash.drishti.banking.compute.var.HierarchySpec.BLANK : v);
                 if (seen.add(id)) {
-                    out.add(new Node(s.id(), id, values.get(i - 1), parent, s.levelNames().get(i - 1), where.toString()));
+                    out.add(new Node(s.id(), id, v == null ? s.blankName() : v, parent, s.levelNames().get(i - 1),
+                            blank ? path.toString() : where.toString()));
                     parentOf.put(id, parent);
                 } else if (s.leafIds() && !parent.equals(parentOf.get(id))) {
                     throw new DrishtiException(com.ash.drishti.common.ErrorCode.VAR_HIERARCHY_INVALID, "the hierarchy " + s.id() + " names its nodes by their own value "
-                            + "(ids: leaf), but " + values.get(i - 1) + " sits under both " + parentOf.get(id) + " and " + parent + ": use ids: path");
+                            + "(ids: leaf), but " + v + " sits under both " + parentOf.get(id) + " and " + parent + ": use ids: path");
                 }
                 parent = id;
             }
@@ -404,45 +412,12 @@ final class ExposureOfficial implements AutoCloseable {
     record Node(String hierarchy, String id, String name, String parent, String level, String scope) {}
 
     /**
-     * The hierarchies' nodes VaR builds (2.9.5, {@code Hierarchies}): those of the market-risk pack's risk-hierarchy rows (a node's scope its
-     * books, {@code BOOK:a + BOOK:b}), and those of every hierarchy built from columns (a node's scope its path of values,
-     * {@code WHERE:LIMIT_LETTER == 'LL-0003' and DESK == 'DESK-RATES'}); with neither, the bank and the legal entities.
+     * The hierarchies' nodes VaR builds ({@code Hierarchies}, every one from the trades' promoted columns: a node's scope its path of
+     * values, {@code WHERE:LIMIT_LETTER == 'LL-0003' and DESK == 'DESK-RATES'}); with none configured, the bank and the legal entities.
      */
     List<Node> nodes(ExposureDate d) {
         List<Node> out = new ArrayList<>();
-        com.ash.drishti.banking.var.Hierarchies hs = svc.loader().hierarchies();
-        Map<String, DataNode> h = new LinkedHashMap<>();
-        try {
-            svc.loader().documents(svc.props().kinds().hierarchy(), AsOf.of(d.date())).forEach((id, n) -> {
-                if (hs.fromRows(String.valueOf(ExposureLoader.text(n, "HIERARCHY")))) {
-                    h.put(id, n);
-                }
-            });
-        } catch (RuntimeException e) {
-            if (hs.columnSpecs().isEmpty()) {
-                throw e;
-            }
-        }
-        Set<String> books = new LinkedHashSet<>();
-        d.book().trades().forEach(t -> {
-            if (t.book() != null) {
-                books.add(t.book());
-            }
-        });
-        for (Map.Entry<String, DataNode> e : h.entrySet()) {
-            DataNode n = e.getValue();
-            List<String> bs = new ArrayList<>();
-            DataNode list = n.get("BOOKS");
-            for (int i = 0; i < list.size(); i++) {
-                if (books.contains(list.get(i).asText())) {
-                    bs.add("BOOK:" + list.get(i).asText());
-                }
-            }
-            String id = e.getKey();
-            out.add(new Node(String.valueOf(ExposureLoader.text(n, "HIERARCHY")), id, ExposureLoader.text(n, "NAME"), ExposureLoader.text(n, "PARENT_ID"),
-                    ExposureLoader.text(n, "LEVEL"), bs.isEmpty() ? null : String.join(" + ", bs)));
-        }
-        for (com.ash.drishti.banking.compute.var.HierarchySpec s : hs.columnSpecs()) {
+        for (com.ash.drishti.banking.compute.var.HierarchySpec s : svc.loader().hierarchies().specs()) {
             out.addAll(columnNodes(d, s));
         }
         if (out.isEmpty()) {

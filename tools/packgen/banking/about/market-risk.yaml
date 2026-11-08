@@ -292,16 +292,6 @@ kinds:
       WINDOW_START: { term: "Window start", means: "The oldest scenario day." }
       WINDOW_END: { term: "Window end", means: "The newest scenario day: the business day before the business date." }
       REVALUATION: { term: "Revaluation", means: "full (every trade repriced under each scenario) or sensitivities (a Taylor expansion), as the batch did it." }
-  risk-hierarchy:
-    title: Risk hierarchy node
-    about: >-
-      ${$.NAME} is a ${$.LEVEL} of the ${$.HIERARCHY} hierarchy, under ${coalesce($.PARENT_ID, 'nothing: the root')}, with
-      ${size($.BOOKS)} book(s) beneath it. Its VaR limit is its var-limit row (the node carries none).
-    guide: market-risk
-    glossary:
-      HIERARCHY: { term: "Hierarchy", means: "MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. Any id." }
-      LEVEL: { term: "Level", means: "The hierarchy's own level names: bank, division, legal-entity, desk or book in the demo." }
-      BOOKS: { term: "Books", means: "Every book beneath the node: its positions are the node's." }
   var-limit:
     title: VaR limit of a hierarchy node
     about: >-
@@ -309,7 +299,7 @@ kinds:
       ${$.VALID_FROM}). A node without such a row has no limit.
     guide: market-risk
     glossary:
-      HIERARCHY: { term: "Hierarchy", means: "The hierarchy the node is in: LL (the limit letters, built from the trades' LIMIT_LETTER and DESK), MGMT or LEGAL." }
+      HIERARCHY: { term: "Hierarchy", means: "The hierarchy the node is in, each built from the trades' promoted columns: MGMT (DIVISION > DESK > TT_BOOK), LEGAL (LEGAL_ENTITY > DESK > TT_BOOK) or LL (LIMIT_LETTER > DESK)." }
       NODE_ID: { term: "Node", means: "The node's id as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES." }
       LIMIT_VAR: { term: "VaR limit", means: "The 1-day 99% VaR the node may take.", unit: "USD" }
   desk-pnl:
@@ -354,35 +344,40 @@ kinds:
       PNL: { term: "P&L by day", means: "Today's portfolio at the node under each historical day's market moves, gains positive.", unit: "USD" }
       DAY_COUNT: { term: "Days", means: "How many business days the history holds." }
       FIRST_DAY: { term: "First day", means: "The oldest day of the history." }
-  portfolio:
-    title: Portfolio
+  system-basket:
+    title: System basket
     about: >-
-      ${$.NAME} is a ${$.TYPE} portfolio owned by ${$.OWNER}. Its positions, VaR, ES, contributions and VaR limit (its var-limit row of
-      hierarchy PORTFOLIO) are the engine's, computed as the page opens (PORT ${$.PORTFOLIO_ID} in the VaR explorer).
+      ${$.NAME} is a ${$.TYPE} system basket owned by ${$.OWNER}, kept in Drishti's basket store (version ${$.VERSION}). Its positions, VaR,
+      ES, contributions and VaR limit (its var-limit row of hierarchy PORTFOLIO) are the engine's, computed as the page opens (PORT
+      ${$.PORTFOLIO_ID} in the VaR explorer).
     guide: market-risk
     glossary:
       TYPE:
-        term: "Portfolio type"
+        term: "System basket type"
         means: "HIERARCHY: a node of the bank's hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked."
-      VAR_ENGINE.LIMIT: { term: "VaR limit", means: "The VaR the portfolio may take: its var-limit row of hierarchy PORTFOLIO.", unit: "USD" }
+      VAR_ENGINE.LIMIT: { term: "VaR limit", means: "The VaR the system basket may take: its var-limit row of hierarchy PORTFOLIO.", unit: "USD" }
       VAR_ENGINE.VAR: { use: "var99" }
       VAR_ENGINE.ES: { use: "es975" }
-      VAR_ENGINE.LIMIT_USE: { term: "Limit use", means: "The VaR over the portfolio's VaR limit." }
-      VAR_ENGINE.POSITION_COUNT: { term: "Positions", means: "The positions in the portfolio on the business date (a basket naming one trade of a position holds that part of it)." }
+      VAR_ENGINE.LIMIT_USE: { term: "Limit use", means: "The VaR over the system basket's VaR limit." }
+      VAR_ENGINE.POSITION_COUNT: { term: "Positions", means: "The positions in the system basket on the business date (a basket naming one trade of a position holds that part of it)." }
       VAR_ENGINE.GROSS_MV: { term: "Gross market value", means: "The sum of the positions' market values without their signs.", unit: "USD" }
       VAR_ENGINE.NET_MV: { term: "Net market value", means: "The sum of the positions' market values: longs and shorts offset.", unit: "USD", sign: "Positive is a net asset." }
       VAR_ENGINE.POSITIONS.COMPONENT_VAR:
         term: "Component VaR"
-        means: "The position's share of the portfolio's VaR (Euler): the shares add up to the portfolio's VaR; a hedge has a negative share."
+        means: "The position's share of the system basket's VaR (Euler): the shares add up to the basket's VaR; a hedge has a negative share."
         unit: "USD"
       VAR_ENGINE.POSITIONS.VAR: { term: "VaR on its own", means: "The position's own 1-day 99% VaR, as if it were alone.", unit: "USD" }
-      VAR_ENGINE.POSITIONS.PCT_OF_VAR: { term: "Share of VaR", means: "The component VaR over the portfolio's VaR." }
-      DEFINITION.NODE: { term: "Hierarchy node", means: "For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it)." }
-      DEFINITION.RULE: { term: "Rule", means: "For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date." }
-      DEFINITION.MEMBERS: { term: "Members", means: "For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position)." }
-      ROLLS_UP_TO.ID: { term: "Rolls up to", means: "The desk or book the portfolio reports under." }
-      VALID_FROM: { term: "Valid from", means: "The first business date the portfolio's definition applies to; an earlier date uses the definition then in force." }
-      OWNER: { term: "Owner", means: "Who keeps the portfolio's definition." }
+      VAR_ENGINE.POSITIONS.PCT_OF_VAR: { term: "Share of VaR", means: "The component VaR over the system basket's VaR." }
+      DEFINITION.NODE: { term: "Hierarchy node", means: "For a HIERARCHY system basket: the node of the bank's hierarchy whose positions it holds (every book under it)." }
+      DEFINITION.RULE: { term: "Rule", means: "For a RULE system basket: the condition a position's columns must meet to be in it, checked on each business date." }
+      DEFINITION.MEMBERS: { term: "Members", means: "For a BASKET system basket: the positions and trades someone picked (a trade brings that part of its position)." }
+      ROLLS_UP_TO.ID: { term: "Rolls up to", means: "The node the system basket reports under (the bank, a division, a legal entity, a desk or a book)." }
+      VALID_FROM: { term: "Valid from", means: "The first business date the system basket applies to." }
+      VALID_TO: { term: "Valid to", means: "The last business date the system basket applies to (empty while it is open-ended; set when it is retired)." }
+      DESCRIPTION: { term: "Description", means: "What the system basket is for, in its owner's words." }
+      VERSION: { term: "Version", means: "The basket store's version of the definition: every change is the next version, audited." }
+      UPDATED_BY: { term: "Changed by", means: "Who saved the current version (a holder of the permission var:system-baskets)." }
+      OWNER: { term: "Owner", means: "Who keeps the system basket's definition; told in their inbox when someone else changes it." }
   var-result:
     title: VaR of a scope
     about: >-

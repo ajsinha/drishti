@@ -13,10 +13,12 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The VaR engine's kinds in the market-risk pack (docs/guides/VAR_GUIDE.md): what make_packs.py adds to the pack's manifest beside the
-taxonomy's kinds. The engine's inputs (P&L vectors, scenario set, hierarchies, portfolio definitions) are written by
+taxonomy's kinds. The engine's inputs (P&L vectors, scenario set, VaR limits) are written by
 tools/packgen/var/make_var_data.py into data/testdata/market-risk/ and served by the pack's Delta connector risk-store, the P&L vectors
 as a list<double> column (``vectors:``). Positions are Drishti's: derived from the trades by the pack's rules when a date loads and
-served from the engine by the var-positions connector. No kind stores a VaR figure: the pages show the engine's, computed when opened.
+served from the engine by the var-positions connector. The system baskets (VAR_GUIDE.md section 5.7) are no data: they are kept in the
+basket store, the demo's imported once from the pack's seed (seeds/system-baskets.yaml), and served as the kind system-basket (PORT) by
+the var-system-baskets connector. No kind stores a VaR figure: the pages show the engine's, computed when opened.
 The computed kind var-result (VAR_GUIDE.md section 8) is served by the reactive connector var-engine, the server's Java engine, read as the
 viewer; the pre-deal what-if is the same engine's (POST /api/v1/risk/var/what-if), not a kind. The published official end-of-day results
 (risk-results/var-official, written by the server's VarPublisher) are the read-only kind var-official of the Delta connector var-results,
@@ -27,10 +29,10 @@ base PV, in the trade's own currency (``scenario-pv``, the vector column SCENARI
 supplies it (``fx-scenario``; else the server derives it from the FX history of the market-data pack's fx-spot). The server converts them to
 USD P&L when the date loads, and every VaR answer takes a reporting currency (the parameter ccy of var-result).
 
-Since 2.9.5 the hierarchies are configured (the manifest's ``hierarchies:`` block, kept/market-risk.yaml): MGMT and LEGAL from the
-``risk-hierarchy`` rows, and LL, the limit letters, built by the server from the rows' ``LIMIT_LETTER`` and ``DESK`` columns (promoted in
-both trades' layouts), with its limits from the new dated kind ``var-limit`` (by hierarchy and node id). A P&L vector's id is
-``PNL-<trade or position>-<set>`` (``PV-`` before, still read)."""
+The hierarchies are configured (the manifest's ``hierarchies:`` block, kept/market-risk.yaml), any number of them, every one built by the
+server from the trades' promoted columns (MGMT: ``DIVISION > DESK > TT_BOOK``, LEGAL: ``LEGAL_ENTITY > DESK > TT_BOOK``, LL:
+``LIMIT_LETTER > DESK``; each promoted in both trades' layouts), with their limits from the dated kind ``var-limit`` (by hierarchy and node
+id). A P&L vector's id is ``PNL-<trade or position>-<set>`` (``PV-`` before, still read)."""
 from __future__ import annotations
 
 import sys as _sys
@@ -42,12 +44,12 @@ from packlake import OFFICIAL_ROOT as _OFFICIAL_ROOT  # noqa: E402  (the publish
 #: kind -> (mnemonic, label, id pattern, id field)
 KINDS = {
     "position": ("POS", "Position", "^POS-", "POSITION_ID"),
-    "portfolio": ("PORT", "Portfolio", "^PF-", "PORTFOLIO_ID"),
+    # the system baskets (VAR_GUIDE.md section 5.7): kept in the basket store, not data; served for PORT <id> (their page) and PORT <GO>
+    "system-basket": ("PORT", "System basket (the bank's baskets, kept in Drishti)", "^PF-", "PORTFOLIO_ID"),
     "pnl-vector": ("PNLV", "P&L vector (509 scenarios)", "^PV-", "VECTOR_ID"),     # the ids before 2.9.5 (PNL- ids: ID_PATTERNS_FIRST)
     "scenario-pv": ("SPV", "Scenario PVs of a trade (509 scenarios, its currency)", "^SPV-", "SCENARIO_PV_ID"),
     "fx-scenario": ("FXS", "Scenario FX of a currency (509 scenarios)", "^FXS-", "FX_SCENARIO_ID"),
     "scenario-set": ("SSET", "Scenario set", "^HS-", "SCENARIO_SET_ID"),
-    "risk-hierarchy": ("HIER", "Risk hierarchy node", "^(MGMT|LEGAL)~", "NODE_ID"),
     # 2.9.5: a node's VaR limit by hierarchy and node id (USD), for the hierarchies whose limits name it (LL in the demo)
     "var-limit": ("VLIM", "VaR limit of a hierarchy node", "^VL-", "LIMIT_ID"),
     # a desk's daily actual and hypothetical P&L from the bank's finance and front-office systems, for regulatory backtesting
@@ -71,9 +73,9 @@ KINDS = {
 #: id patterns that must come before the taxonomy's (2.9.5): a P&L vector's PNL-<trade>-<set> id before pnl-explain's ^PNL-
 ID_PATTERNS_FIRST = [{"pattern": "^PNL-.+-HS-[0-9]+$", "kind": "pnl-vector"}]
 #: kinds not served by risk-store: the connector each is routed to
-SERVED_BY = {"position": "var-positions", "var-result": "var-engine", "var-official": "var-results",
+SERVED_BY = {"position": "var-positions", "system-basket": "var-system-baskets", "var-result": "var-engine", "var-official": "var-results",
              "stress-scenario-pnl": "mr-derived"}
-_INPUTS = ["pnl-vector", "scenario-pv", "fx-scenario", "risk-hierarchy", "scenario-set", "portfolio", "var-limit"]
+_INPUTS = ["pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "var-limit"]
 #: the reporting currency every VaR answer takes (2.9.4): USD unless asked, any currency with scenario FX on the date
 _CCY = {"ccy": {"type": "text", "default": "USD"}}
 #: the lens of a VaR answer (2.9.7, VAR_GUIDE.md section 18.6): the horizon, the 10-day method (default: drishti.var.ten-day-method) and
@@ -115,6 +117,8 @@ CONNECTORS = {
                                                              "EXCEPTIONS_250", "TRAFFIC_LIGHT", "CONFIDENCE", "ES_CONFIDENCE"]}}},
     },
     "var-positions": {"plugin": "var-positions", "enabled": "${DRISHTI_VAR_ENABLED:true}", "kinds": ["position"]},
+    # the system baskets of the basket store (VAR_GUIDE.md section 5.7), served for their page (PORT <id>) and list (PORT <GO>)
+    "var-system-baskets": {"plugin": "var-system-baskets", "enabled": "${DRISHTI_VAR_ENABLED:true}", "kinds": ["system-basket"]},
     # 2.9.4: the PV topic of the pricing systems, windowed into intraday batches of the lake (VAR_GUIDE.md section 8.4); off by default,
     # as every Kafka connector of the packs
     "pv-updates": {"plugin": "var-pv-stream", "enabled": "${DRISHTI_VAR_PV_STREAM:false}", "kinds": ["pv-update"],
@@ -135,12 +139,12 @@ CONNECTORS = {
 }
 #: link fields the kinds carry (field -> (kind, label)); the hierarchy fields (TT_BOOK, LEGAL_ENTITY, COUNTERPARTY) link through the
 #: core and trading packs' own fields
-FIELDS = {"POSITION_ID": ("position", "Position"), "PORTFOLIO_ID": ("portfolio", "Portfolio"), "NODE_ID": ("risk-hierarchy", "Hierarchy node"),
+FIELDS = {"POSITION_ID": ("position", "Position"), "PORTFOLIO_ID": ("system-basket", "System basket"),
           "TRADE_IDS": ("trade", "Trade"), "RISK_FACTOR": ("risk-factor", "Risk factor"),
           # a trade page's Risk links (risk-links@1): set on the view by the VaR engine when the trade is live
           "PNL_VECTOR_ID": ("pnl-vector", "P&L vector"), "SCENARIO_PV_ID": ("scenario-pv", "Scenario PVs"),
           "VAR_RESULT_ID": ("var-result", "VaR of this trade")}
-#: the hierarchy columns of the trades' rows; LIMIT_LETTER (2.9.5) is the level column of the pack's hierarchy LL
+#: the hierarchy columns of the trades' rows, promoted in both trades' layouts: the level columns of the pack's hierarchies (MGMT, LEGAL, LL)
 _HIER = ["LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "LIMIT_LETTER", "PORTFOLIO"]
 #: the risk-store layout of each kind: promoted columns, and the vector columns (list<double>, out of the document)
 LAYOUT = {
@@ -156,13 +160,11 @@ LAYOUT = {
                                 "BATCH_ID", "RUN_KIND", "COMPUTED_AT", "TRADE_IDS"],
                     "vectors": ["SCENARIO_PV"]},
     "fx-scenario": {"columns": ["CURRENCY", "RATE", "SCENARIO_SET_ID"]},
-    "risk-hierarchy": {"columns": ["NODE_ID", "HIERARCHY", "LEVEL", "PARENT_ID", "NAME"]},
     "var-limit": {"columns": ["LIMIT_ID", "HIERARCHY", "NODE_ID", "LIMIT_VAR", "CURRENCY"]},
     "desk-pnl": {"columns": ["DESK_PNL_ID", "DESK_ID", "LEGAL_ENTITY", "ACTUAL_PNL", "HYPOTHETICAL_PNL", "FEES_AND_COMMISSIONS", "CURRENCY",
                              "SOURCE", "AS_OF"]},
     # one row per node and date: the day-by-day P&L a vector column, its dates in the document
     "pnl-history": {"columns": ["HIERARCHY", "NODE_ID", "LEVEL", "CURRENCY", "FIRST_DAY", "LAST_DAY", "DAY_COUNT"], "vectors": ["PNL"]},
-    "portfolio": {"columns": ["PORTFOLIO_ID", "NAME", "TYPE", "OWNER"]},
     # 2.9.11: the sparse SENSITIVITIES list stays in the document; the columns are the contract's storage columns
     "position-sensitivity": {"columns": ["SENSITIVITY_ID", "GRAIN", "POSITION_ID", "TRADE_ID", "SOURCE_SYSTEM", "BATCH_ID", "STATUS", "DESK", "TT_BOOK",
                                          "PRODUCT_TYPE", "CURRENCY"]},
@@ -170,12 +172,11 @@ LAYOUT = {
 }
 #: the search form (FORM market-risk) of each kind: its key columns
 FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CURRENCY", "SECURITY_ID"],
-                "portfolio": ["NAME", "TYPE", "OWNER"],
+                "system-basket": ["NAME", "TYPE", "OWNER"],
                 "pnl-vector": ["TRADE_ID", "SECURITY_ID", "DESK", "TT_BOOK"],
                 "scenario-pv": ["TRADE_ID", "CURRENCY", "DESK", "TT_BOOK"],
                 "fx-scenario": ["CURRENCY", "BUSINESS_DATE"],
                 "scenario-set": ["BUSINESS_DATE"],
-                "risk-hierarchy": ["HIERARCHY", "LEVEL", "NAME"],
                 "var-limit": ["HIERARCHY", "NODE_ID", "LIMIT_VAR"],
                 "desk-pnl": ["DESK_ID", "BUSINESS_DATE", "ACTUAL_PNL", "HYPOTHETICAL_PNL"],
                 "pnl-history": ["HIERARCHY", "NODE_ID", "FIRST_DAY", "LAST_DAY"],
@@ -183,10 +184,10 @@ FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CU
                 "stress-scenario-pnl": ["SCENARIO_NAME", "PNL", "DESK_COUNT", "BREACHES"],
                 "position-sensitivity": ["POSITION_ID", "DESK", "TT_BOOK", "PRODUCT_TYPE", "SOURCE_SYSTEM"],
                 "risk-factor": ["RISK_CLASS", "FACTOR_TYPE", "QUALIFIER", "FRTB_BUCKET"]}
-BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}
+BADGES = {"position": "fmt($.QUANTITY, 'compact')", "system-basket": "$.TYPE"}
 #: the computed kinds' fields (VAR_GUIDE.md section 8): read as an ordinary kind, never stored
 COMPUTED = ("var-result",)
-EXAMPLES = [("PORT PF-RATES-DESK", "Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it)"),
-            ("PORT PF-ASHA-UNWIND", "A basket of positions and trades · overlaps the rates desk"),
+EXAMPLES = [("PORT PF-RATES-DESK", "System basket · its positions, longs and shorts, VaR and component VaR (computed as you open it)"),
+            ("PORT PF-ASHA-UNWIND", "A system basket of positions and trades · overlaps the rates desk"),
             ("VRES DESK:RATES", "The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES)"),
             ("VAR BANK 10D SUM", "The bank's 10-day VaR from 10 consecutive days (VAR BANK 10D SQRT: the 1-day × √10; VAR BANK 95: at 95%)")]

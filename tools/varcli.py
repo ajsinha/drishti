@@ -50,6 +50,8 @@ EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 
           "  drishti.py var shards --date 2026-09-30\n"
           "  drishti.py var basket rates-hedges \"WHERE:'hedge' in TAGS\" --title 'Rates hedges'\n"
           "  drishti.py var basket-delete rates-hedges\n  drishti.py var basket-delete old-unwind --owner asha --reason 'left the desk'\n"
+          "  drishti.py var baskets export --scope system > baskets.yaml\n  drishti.py var baskets import baskets.yaml\n"
+          "  drishti.py var baskets import baskets.yaml --apply\n"
           "  drishti.py var capture 'BASKET:asha/rates-hedges' --note 'before the unwind'\n  drishti.py var compare CAP-20260930-7 now\n"
           "  drishti.py var whatif 'DESK:RATES' --copy BOOK:BOOK-RATES-3=-0.5\n  drishti.py var whatif 'DESK:RATES' --trades new-swap.json\n"
           "  drishti.py var explain BANK\n  drishti.py var explain 'DESK:RATES' --from 2026-09-29 --to 2026-09-30 --xlsx why.xlsx")
@@ -681,6 +683,30 @@ def register(groups, srv, ctx: dict) -> None:
             body = {"name": a.name, "scope": a.scope, "title": a.title or a.name, "description": a.description or "",
                     "sharedWith": a.share or []}
             say_json(api.json("POST", "/api/v1/risk/var/baskets", body))
+        elif c == "baskets" and a.action == "export":
+            if a.scope == "system":                             # the system baskets as the import file (VAR_GUIDE.md section 5.7)
+                _, raw = api.request("GET", "/api/v1/risk/var/system-baskets/export", extra={"Accept": "application/yaml"})
+                sys.stdout.write(raw.decode("utf-8"))
+            else:                                               # the baskets you may read (yours and shared with you), for keeping
+                import yaml
+                kept = api.json("GET", "/api/v1/risk/var/baskets")
+                sys.stdout.write("# Your VaR baskets and those shared with you (drishti.py var baskets export --scope mine); not an import file.\n"
+                                 + yaml.safe_dump({"baskets": kept}, sort_keys=False, allow_unicode=True, width=140))
+        elif c == "baskets" and a.action == "import":
+            if not a.file:
+                raise CliError("var baskets import: give the YAML file (drishti.py var baskets export --scope system writes one)", 2)
+            try:
+                text = __import__("pathlib").Path(a.file).read_text(encoding="utf-8")
+            except OSError as e:
+                raise CliError(f"cannot read {a.file}: {e.strerror}", 1) from None
+            path = "/api/v1/risk/var/system-baskets/import?" + enc(dated(a, {"apply": "true" if a.apply else "false"}))
+            _, raw = api.request("POST", path, data=text.encode("utf-8"), ctype="application/yaml")
+            r = json.loads(raw)
+            if getattr(a, "json", False):
+                say_json(r)
+            else:
+                render_import(r, print)
+            return 1 if r.get("invalid") else 0
         elif c == "baskets":
             if a.all or a.owner:                                # every person's (administrators), optionally one owner's
                 say_json(api.json("GET", "/api/v1/risk/var/admin/baskets" + ("?" + enc({"owner": a.owner}) if a.owner else "")))
@@ -840,7 +866,16 @@ def register(groups, srv, ctx: dict) -> None:
     bk.add_argument("--title")
     bk.add_argument("--description")
     bk.add_argument("--share", action="append", metavar="USER|role:NAME")
-    bl = sub.add_parser("baskets", help="the baskets you may read; --all: every person's (administrators)", parents=[srv])
+    bl = sub.add_parser("baskets", help="the baskets you may read (list; --all: every person's, administrators); export or import the system "
+                        "baskets as YAML (VAR_GUIDE.md section 5.7; import: a diff, --apply writes, the permission var:system-baskets)",
+                        parents=[srv])
+    bl.add_argument("action", nargs="?", choices=("list", "export", "import"), default="list",
+                    help="list (the default), export (to standard output) or import FILE")
+    bl.add_argument("file", nargs="?", help="import: the YAML file, system-baskets: [...] (as export --scope system writes it)")
+    bl.add_argument("--scope", choices=("system", "mine"), default="system",
+                    help="export: the system baskets (the default: an import file), or the baskets you may read (mine)")
+    bl.add_argument("--apply", action="store_true", help="import: write the changes (without it: the diff only, nothing written)")
+    bl.add_argument("--date", help="import: the business date the baskets are checked on (default: the newest)")
     bl.add_argument("--all", action="store_true", help="every person's baskets with owner, scope, sharing, dates and size (administrators)")
     bl.add_argument("--owner", help="with --all: only the baskets whose owner contains this")
     bd = sub.add_parser("basket-delete", help="delete a saved basket: yours, or with --owner anyone's (administrators); captures of it are kept",
@@ -901,6 +936,25 @@ def register(groups, srv, ctx: dict) -> None:
 
 
 enc = urllib.parse.urlencode
+
+
+def render_import(r: dict, say) -> None:
+    """An import's answer (VAR_GUIDE.md section 5.7): per system basket add, change (each field from, to), same or invalid (why)."""
+    for b in r.get("baskets") or []:
+        act = b.get("action")
+        line = f"  {act:<8}{b.get('id') or '?'}"
+        if b.get("version"):
+            line += f"  (version {b['version']})"
+        if act == "invalid":
+            line += f"  {b.get('reason')}"
+        say(line)
+        for field, d in (b.get("changes") or {}).items():
+            say(f"            {field}: {json.dumps(d.get('from'))} -> {json.dumps(d.get('to'))}")
+    kept = r.get("keptNotInFile") or []
+    say(f"{r.get('add', 0)} to add, {r.get('change', 0)} to change, {r.get('same', 0)} the same, {r.get('invalid', 0)} invalid"
+        + (f"; {len(kept)} in Drishti not in the file, kept as they are" if kept else "")
+        + (" (checked on " + r["checkedOn"] + ")" if r.get("checkedOn") else ""))
+    say("written: every change above (audited)" if r.get("applied") else "nothing written: --apply writes the changes")
 
 
 def render_backtest(b: dict, say) -> None:

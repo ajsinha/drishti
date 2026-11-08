@@ -115,6 +115,25 @@ class PivotApiTest {
         JsonNode cat = ok("trades-only", get("/api/v1/pivot/catalogue").param("source", "trade"), null);
         assertThat(cat.path("fields").toString()).contains("productType").doesNotContain("\"dv01\"");
         assertThat(cat.path("masked").asInt()).isEqualTo(1);
+        // the field list's metadata: every field is a plain field with the functions valid for it (a text: its rows or its distinct
+        // values; a number: sum and the statistics; a rate never summed), and the show-as forms the engine computes
+        for (JsonNode f : cat.path("fields")) {
+            assertThat(f.path("group").asText()).isEqualTo("field");
+            assertThat(f.has("hidden")).isTrue();
+            java.util.List<String> fns = new java.util.ArrayList<>();
+            for (JsonNode x : f.path("functions")) {
+                fns.add(x.asText());
+            }
+            if ("number".equals(f.path("type").asText())) {
+                assertThat(fns).contains("avg", "median", "percentile", "wavg");
+                String unit = f.path("unit").asText();
+                assertThat(fns.contains("sum")).as(f.path("name").asText() + " (" + unit + ")").isEqualTo(!"rate".equals(unit) && !"pct".equals(unit));
+            } else {
+                assertThat(fns).containsExactly("count", "count_distinct");
+            }
+        }
+        assertThat(cat.path("showAs").findValuesAsText("id")).contains("pct-grand", "pct-row", "pct-parent-row", "rank", "pct-change");
+        assertThat(cat.path("hierarchies").isArray()).isTrue();
         String num = numberField(cat);
         Map<String, Object> view = Map.of("source", "trade", "rows", List.of("productType"), "values",
                 List.of(Map.of("measure", "sum(" + num + ")", "as", "S"), Map.of("measure", "count()", "as", "N")));

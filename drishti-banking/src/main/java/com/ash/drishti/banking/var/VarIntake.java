@@ -131,11 +131,9 @@ final class VarIntake {
     private final LocalDate date;
     private final int width;
     private final Map<String, Integer> at = new HashMap<>();
-    /** The builder's text columns ({@link VarBook#TRADE_TEXTS}, then a column hierarchy's level columns), in its order. */
+    /** The builder's text columns ({@link VarBook#TRADE_TEXTS}, then the hierarchies' level columns), in its order. */
     private final List<String> textColumns;
     private final String[] texts;
-    /** The level columns of the column hierarchies (2.9.5): a row that leaves one empty is refused (DRS-5211). */
-    private List<String> levels = List.of();
     private final double[] numbers = new double[VarBook.TRADE_NUMBERS.size()];
     private final List<String> rejections = new ArrayList<>();
     private final TreeSet<String> batches = new TreeSet<>();
@@ -161,12 +159,6 @@ final class VarIntake {
         this.textColumns = book.textColumns();
         this.texts = new String[textColumns.size()];
         map(columns);
-    }
-
-    /** The level columns every row must carry (the column hierarchies', 2.9.5). */
-    VarIntake levels(List<String> columns) {
-        this.levels = List.copyOf(columns);
-        return this;
     }
 
     private void map(List<String> columns) {
@@ -203,7 +195,7 @@ final class VarIntake {
         return columns(kept, rules, own, List.of());
     }
 
-    /** The same, with the level columns of the column hierarchies ({@code levels}, 2.9.5): always asked. */
+    /** The same, with the hierarchies' level columns ({@code levels}): always asked (an empty one puts the row under a (Blank) node). */
     static List<String> columns(java.util.Set<String> kept, PositionRules rules, List<String> own, List<String> levels) {
         List<String> want = new ArrayList<>(List.of("TRADE_ID"));
         LinkedHashMap<String, Boolean> all = new LinkedHashMap<>();
@@ -216,7 +208,7 @@ final class VarIntake {
         levels.forEach(c -> all.put(c, true));
         for (String c : all.keySet()) {
             if (kept.isEmpty() ? REQUIRED.contains(c) || VarBook.TRADE_NUMBERS.contains(c) || isEngineText(c) || own.contains(c) || levels.contains(c)
-                    : kept.contains(c) || REQUIRED.contains(c) || levels.contains(c)) {
+                    : kept.contains(c) || REQUIRED.contains(c)) {               // a level column not promoted: its rows sit under (Blank)
                 want.add(c);
             }
         }
@@ -343,13 +335,6 @@ final class VarIntake {
                 notLive.put(trade, !rules.live(status) ? "its status is " + status : "it matured on " + maturity.substring(0, 10));
             }
             return;
-        }
-        for (String c : levels) {                                       // a column hierarchy places the row by its level columns (2.9.5)
-            if (live && text(row, c) == null) {                         // (a cancel needs no node)
-                reject(new String[] {ErrorCode.VAR_HIERARCHY_COLUMN.code(), c + " is empty: a hierarchy is built from it, so the row has no node "
-                        + "(never placed under a guessed one)"}, trade);
-                return;
-            }
         }
         double[] vector = values;
         double pvUsd = Double.NaN;

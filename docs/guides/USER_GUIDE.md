@@ -153,12 +153,12 @@ you are on is highlighted.
 |---|---|---|
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](#export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`), *Approvals* (`/approvals`: [the one queue](#approvals), with the number waiting) |
-| **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchies and limit letters* `HIER` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `PREDEAL` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
+| **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchy limits* `VLIM` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `PREDEAL` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
 | **BI** (people with the `bi` power) | Business intelligence | *Catalogue* (`/bi/catalogue`), *My workspace* (`/bi/w/me`), *My runs*, *Workspaces* |
 | | Analyse | *Models*, *Datasets*, *Report designer* (`/bi/designer`), *Promotion (test to live)* (`/bi/environments`), *Notebook*, *Data prep* (`/bi/transform`) |
 | | Administer | *BI settings* (administrators with `bi-admin`, [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
 | **Build** | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack)), *Tables & models* (`/build/tables`), *Examples* |
-| | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Screen developer guide*, *Panel kinds*, *Screen language reference*, *Pack developer guide* |
+| | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Screen developer guide*, *Panel kinds*, *Screen language reference*, *Packs and screens guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *API tokens*, *Who looked at what*, *Audit log*, *Saved VaR baskets* |
 | | Data | *Packs*, *Connectors*, *Data loads*, *Lakes*, *Record edits*, *Data out*, *Installed items* |
 | | Platform | *Configuration* ([the configuration editor](OPERATIONS_GUIDE.md#62-admin--configuration-the-configuration-editor)), *Engines*, *Python workers*, *Cluster* (Drishti\*net: [OPERATIONS_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)), *AI*, *Collaboration*, *Embedded views*, *Health*, *Caches*, *Capacity* |
@@ -369,20 +369,20 @@ says it equals the engine to the cent. On a phone: the headline and the explanat
 ([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [tutorial 2, step 18](../tutorials/02-var-from-the-bank-to-a-trade.md#step-18--work-the-var-out-by-hand-the-var-playground)).
 
 **The VaR page's layout.** The hierarchy tree is on the left (click **▸** to open a node, its name to see its VaR); the toolbar above
-the figures has two searchable drop-downs, **System baskets** (key **B**: the bank's portfolios) and **My baskets** (key **M**: the
+the figures has two searchable drop-downs, **System baskets** (key **B**: the bank's own, kept in Drishti) and **My baskets** (key **M**: the
 baskets you saved and those shared with you), where you type to search by name or description, move with ↑ ↓ and open with Enter;
 **Explain ›** (key **E**) opens the Explain drawer of the scope's VaR ([Explain: one for every number](#explain-one-for-every-number);
 [VAR_GUIDE.md section 3.2](VAR_GUIDE.md#32-the-screen)).
 
 **Construct your basket.** On the VaR page, **+ New basket** in the toolbar (or `Alt+B`) opens the basket's sheet across its top, one
-sheet like Excel: the VaR of any mix of trades, positions, portfolios, books, desks, limit letters and counterparties, a column per kind
+sheet like Excel: the VaR of any mix of trades, positions, system baskets, books, desks, limit letters and counterparties, a column per kind
 and the Op column (+ adds, − takes away). Type in a cell, pick a hint (it lands in its kind's column), use **+ basket** on any row, or
 paste whole columns from Excel; **Start from the whole bank** makes the basket the bank and the rows refine it. The server checks every
 cell (a red cell says why it is not found) and computes the basket's VaR, ES, sum of the parts and diversification under the sheet; then
 a pre-deal what-if, **Save basket and open VaR** and **Download as .xlsx**. It is on the VaR page only; what it holds stays in your
 browser, so it is there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
 
-**Editing your baskets.** In the toolbar's *My baskets* drop-down (key **M**; *System baskets*, key **B**, lists the bank's portfolios) each basket of yours has **Edit**: it opens in the sheet and **Save as version *n***
+**Editing your baskets.** In the toolbar's *My baskets* drop-down (key **M**; *System baskets*, key **B**, lists the bank's own: whoever holds `var:system-baskets` changes those under the sheet, [VAR_GUIDE.md section 5.7](VAR_GUIDE.md#57-system-baskets)) each basket of yours has **Edit**: it opens in the sheet and **Save as version *n***
 keeps its name as a new version. A portfolio (the bank's) and a basket shared with you have **Edit a copy**: it opens as your own basket,
 to save under your own name. An administrator may edit anyone's basket; you get a notice in your inbox saying who.
 
@@ -410,7 +410,7 @@ entities* and, in the demo, *Limit letters*: the letter of authority each trade'
 may hold part of a book: its VaR is exactly that of its own trades. Choose one and the tree, the breadcrumbs and the contributions
 follow it, and the link keeps it (`&hierarchy=LL`); a letter's limit bar reads its own limit (blank when it has none). Type a letter in
 the scope box (`LL:LL-0003`, `LL:LL-0003/DESK-RATES`) or search for it. Which hierarchies exist, and from which columns, is set by an
-administrator ([VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)).
+administrator ([VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)).
 
 **Any form, any grain.** Explain's *Inputs & lineage* says, per source system, whether its figures came as scenario PVs or P&L
 vectors, per trade or per position. A position its system sends whole answers `POS:<id>`; its trades have no VaR of their own on that
@@ -1470,8 +1470,10 @@ work only while the focus is inside the element ([Drishti Elements, keyboard](EM
 A table or ladder whose Sutra says `pivot:`, and the results of a search whose kind's pack says `pivot:`, carry a **Pivot** button. It opens
 the **pivot screen** (`PIVOT <GO>`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md), [tutorial 7, Part A](../tutorials/07-pivot-cubes-and-explain.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk)) on the table's own
 rows (the same document, Sutra and business date as the page) or on every row of the kind, with the Sutra's or the pack's arrangement as the
-view it opens with. Everything is computed by the server's pivot engine: rows, columns, values and filters by drag or by key (`R`, `C`, `V`,
-`F`), nested rows opened lazily with + and −, totals made from their own rows (an average of a total is never an average of averages),
+view it opens with. It opens as the **View** picker in front of one compact line (Rows, Columns, Filters and Values, a picker behind each; a
+hierarchy is one chip with a level stepper), with the Fields and Build panes behind **Customize ›** (`\`). Everything is computed by the
+server's pivot engine: rows, columns, values and filters from their pickers (`R`, `C`, `V`, `F`) or by drag in the panes, each value's
+function in plain words (only those valid for its field) and its show-as, nested rows opened lazily with + and −, totals made from their own rows (an average of a total is never an average of averages),
 the provenance of every cell and its rows, a chart of a selection, Excel with outline levels and formulas only where a figure adds up, CSV
 and Arrow.
 
@@ -1590,7 +1592,7 @@ editor: typing `?` or `n` there types it (the few exceptions are named in the ta
 | `Alt+S` | Share this view (or panel) with people with a note; `Ctrl+Enter` sends, `Esc` closes |
 | `Alt+N` | Discussion: the second tab of the side drawer ([Discussion](#discussion)) |
 | `Alt+I` | Your inbox: what people sent you |
-| `R` `C` `V` `F` | On a field of the [pivot screen](#pivot-slice-a-table-your-way): move it to Rows, Columns, Values or Filters, remove it, reorder it ([all its keys](#pivot-slice-a-table-your-way)) |
+| `R` `C` `V` `F` | On the [pivot screen](#pivot-slice-a-table-your-way): open the Rows, Columns, Values or Filters picker; `Shift+V` the View picker; `Alt+↑` `Alt+↓` a hierarchy a level up or down; `\` the panes ([all its keys](PIVOT_GUIDE.md#2-the-screen)) |
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
 | `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4, also while the focus is inside a pane |
 | `Alt+0` | In a workspace: from a pane back to the workspace's bar |

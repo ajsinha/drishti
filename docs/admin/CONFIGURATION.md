@@ -246,7 +246,7 @@ end it there): the folders are listed. The server's leftovers are still only lis
 
 | Key | Default | Meaning |
 |---|---|---|
-| `drishti.logging.file` | empty (`DRISHTI_LOG_FILE`) | The server writes its log to this file itself, rotated; empty: standard output only (containers). `drishti-stack` sets `run/logs/<node>.log`. |
+| `drishti.logging.file` | empty (`DRISHTI_LOG_FILE`) | The server writes its log to this file itself, rotated; empty: standard output only (containers). `bin/start-server` sets `<data>/logs/server[-<node>].log` when started with `--background` (`drishti-stack` too, through it). |
 | `drishti.logging.max-file-mb` | `100` | One log file's size before it rolls (also daily); rolled files are compressed (`.gz`). |
 | `drishti.logging.max-total-mb` | `1024` | Every rolled file together; the oldest go beyond. |
 | `drishti.logging.max-files` | `30` | Rolled days kept at most. |
@@ -268,7 +268,7 @@ mkdir -p data/tmp/server        # once: the server makes it too, but the JVM war
 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
-or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `tools/windows/start-server.ps1`, the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
+or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `bin/start-server` (`<data>/tmp/server[-<node>]`), the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
 
 At start the server
 
@@ -1557,7 +1557,7 @@ else by `drishti.var.positions`.
 | `max-parts` | `5000` | Most parts a contribution table computes at once; more: the largest by gross size (market value, PV, quantity), and the answer says so. |
 | `path-page` | `60` | Rows of the ranked P&L path per page. |
 | `smat.max-days` | `${DRISHTI_VAR_SMAT_MAX_DAYS:60}` | The most business dates one **scenario matrix** reads (`SMAT <id> N`, `GET /api/v1/var/matrix`); N asked above it is cut to it and the answer says so. Each date not open in memory is one read by id (a trade or a position its source sends whole), an official capture (a node), or one date opened by the engine (anything else), one at a time ([VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)). |
-| `kinds.vector`, `kinds.position`, `kinds.hierarchy`, `kinds.scenario-set`, `kinds.portfolio` | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | The kinds the engine reads (the market-risk pack's), and `position`, the kind its derived positions are served as (the `var-positions` connector). The data-load signal of an input kind (and of `trade`) reloads that date and captures it officially. |
+| `kinds.vector`, `kinds.position`, `kinds.scenario-set`, `kinds.system-basket`, `kinds.limit` | `pnl-vector`, `position`, `scenario-set`, `system-basket`, `var-limit` | The kinds the engine reads (the market-risk pack's), and `position` and `system-basket`, the kinds its derived positions and the system baskets of the basket store are served as (the `var-positions` and `var-system-baskets` connectors). `system-baskets.seed` (`DRISHTI_VAR_SYSTEM_BASKETS_SEED`, following `DRISHTI_DEMO_ENABLED`) imports a loaded pack's seed of system baskets once into an empty system scope ([VAR_GUIDE.md section 5.7](../guides/VAR_GUIDE.md#57-system-baskets)). The data-load signal of an input kind (and of `trade`) reloads that date and captures it officially. |
 | `kinds.scenario-pv`, `kinds.fx-scenario`, `kinds.fx-spot` | `scenario-pv`, `fx-scenario`, `fx-spot` | Trades sent as **scenario PVs** in their own currency (beside or instead of P&L vectors; converted to USD P&L when the date loads), each currency's **supplied** scenario FX, and the **FX history** scenario rates are derived from when none is supplied (the market-data pack's `fx-spot`). `scenario-pv` and `fx-scenario` are inputs (their data-load signal reloads the date); `fx-spot` is not ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)). |
 | `access` | `{}` | Per role and hierarchy node, `positions` or `aggregate`: an aggregate-only role sees figures but no positions or trades below that node (`drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate`). |
 | `positions.live-statuses` | `[NEW, VALIDATED, AMENDED]` | Trade statuses (the vector rows' `TRADE_STATUS`) that count on their date; a row with no status counts; a matured trade (`MATURITY_DATE` before the date) never does. Used when no loaded pack has a `positions:` section. |
@@ -1575,7 +1575,8 @@ else by `drishti.var.positions`.
 | `root-name` | empty (`DRISHTI_VAR_ROOT_NAME`) | The name every hierarchy's root node shows (the top of the VaR tree, the breadcrumbs, the headline, the command line, `var-result`, captures and new official records); empty keeps the data's `NAME`. Records captured before a change keep the name they were captured with. The name is part of a hot file's digest, so a change rebuilds the date's file at its next load. |
 | `inputs` | none (`default: {form: any, grain: any}`) | An optional pin per source system of what its PV records are: `inputs: {ENDUR: {form: pv, grain: position}, CALYPSO: {form: pnl, grain: trade}, default: {form: any, grain: any}}` (`form` pv, pnl or any; `grain` trade, position or any). Every record says what it is (`VALUE_TYPE`, `GRAIN`); a pin is a cross-check: a record that disagrees is refused (`DRS-5209`). Read at start (a change needs a restart and applies from the next date loaded). [VAR_GUIDE.md section 15.13](../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain). |
 | `root-names` | none | One hierarchy's root name, over `root-name`: `root-names: {MGMT: "Group", LEGAL: "Group legal entities"}` (hierarchy ids in any case). |
-| `hierarchies` | none (a commented example) | The hierarchies, id to settings: `title`, `source` (`risk-hierarchy`: the rows, book-based; `columns`: built from the trades' columns, the default when `levels` is given), `levels` (`"LIMIT_LETTER > DESK"` or a list), `level-names`, `root` (`{id, name}`), `ids` (`path`, default: `LL~LL-0003/DESK-RATES`; `leaf`: `MGMT~DESK-RATES`, when each value has one parent), `word` (the scope word, `LL:LL-0003`), `limits` (the kind the limits come from, `var-limit`). Wins over a loaded pack's `hierarchies:` block (the market-risk pack's: MGMT and LEGAL from the rows, LL from `LIMIT_LETTER > DESK`); neither: MGMT and LEGAL from the rows. Checked at start (`DRS-5213`). The exposure engine builds the same hierarchies. [VAR_GUIDE.md section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns). |
+| `hierarchies` | none (a commented example) | The hierarchies, any number, every one built from the trades' promoted columns, id to settings: `title`, `levels` (`"DIVISION > DESK > TT_BOOK"` or a list: each a promoted column of every source), `level-names` (also the reference kind a node's name is read from), `root` (`{id, name}`), `ids` (`path`, default: `LL~LL-0003/DESK-RATES`; `leaf`: `MGMT~DESK-RATES`, when each value has one parent), `word` (the scope word, `LL:LL-0003`), `limits` (the kind the limits come from, `var-limit`), `empty-label` (the (Blank) node's name). Wins over a loaded pack's `hierarchies:` block (the market-risk pack's MGMT, LEGAL and LL); neither: no hierarchy. Checked at start (`DRS-5213`). The exposure engine builds the same hierarchies. [VAR_GUIDE.md section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns). |
+| `hierarchy.empty-label` | `${DRISHTI_VAR_HIERARCHY_EMPTY_LABEL:(Blank)}` | The name of a (Blank) node: the node rows with an empty (or unpromoted) level value sit under, at that level, under their real parent (Power BI's *(Blank)*); a hierarchy's own `empty-label` wins. |
 | `kinds.limit` | `var-limit` | The nodes' VaR limits by hierarchy and node id, in USD, read for a hierarchy whose `limits` names it; a node without a row has no limit. An input: its data-load signal reloads the date ([VAR_GUIDE.md section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)). |
 | `currency-retention-dates` | `5` (`DRISHTI_VAR_CURRENCY_RETENTION_DATES`) | The newest business dates whose listed currencies are built ahead and kept; older dates' listed-currency hot files are deleted after each build (asked again, they are built on first ask). |
 | `official.currencies` | `[USD]` | The reporting currencies captured officially: USD always (first, and the only one published to `risk-results/var-official`); each other one (`[USD, EUR]`) is captured from the date's book in that currency and kept in the content store (`var/official/<CCY>/<date>.json`), read by `GET /api/v1/var/official?ccy=EUR` and by a node's history in that currency. |
@@ -1642,7 +1643,7 @@ pool; the check's one setting is `limit-near`.
 | `max-parts` | `5000` | Most parts a contribution table returns. |
 | `histogram-bins` | `42` | Bins of an exposure distribution (`/scope/distribution`). |
 | `t0-tolerance` | `0.10` | The load lists a trade whose paths' mean at the first grid date departs from its MtM today by more than this share of it (or 5% of its notional, the larger). |
-| `kinds.run`, `kinds.paths`, `kinds.netting-set`, `kinds.csa`, `kinds.collateral`, `kinds.counterparty`, `kinds.group`, `kinds.hierarchy` | `simulation-run`, `exposure-path`, `netting-set`, `csa`, `collateral-balance`, `counterparty`, `counterparty-group`, `risk-hierarchy` | The kinds the engine reads. The data-load signal of the first five reloads that date and captures it officially. |
+| `kinds.run`, `kinds.paths`, `kinds.netting-set`, `kinds.csa`, `kinds.collateral`, `kinds.counterparty`, `kinds.group` | `simulation-run`, `exposure-path`, `netting-set`, `csa`, `collateral-balance`, `counterparty`, `counterparty-group` | The kinds the engine reads. The data-load signal of the first five reloads that date and captures it officially. |
 | `kinds.limit` | `credit-limit` | The stored credit limits, read as stored for the explorer's limit column and a counterparty's limit use (LIM stays parked: usage is not computed against them; the stored limits were sized on stored profiles, so the use reads low). |
 | `access` | `{}` | Per role and counterparty, group or legal entity: `trades`, `aggregate` (figures, no netting set or trade below it) or `none` (`drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate`); a role with entries sees nothing else, a role without sees all at `trades` when it may open `exposure-path`. |
 | `official.enabled` | `true` (`DRISHTI_EXPOSURE_OFFICIAL`) | Capture every netting set, counterparty, group and hierarchy node officially when a date's run is complete (after the data-load signal, and once at start). |
@@ -2712,9 +2713,9 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md
 
 ## Every setting
 
-Every key of every kind: 2,198 settings in 20 areas, and 337 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,200 settings in 20 areas, and 339 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
-Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,767, **expert** 413. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
+Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,769, **expert** 413. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
 
 | Area | Settings |
 |---|---|
@@ -2724,7 +2725,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [The console: `application.yaml`](#the-console-applicationyaml) | 187 |
 | [The console's other files](#the-consoles-other-files) | 108 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 535 |
-| [Packs: `pack.yaml`](#packs-packyaml) | 138 |
+| [Packs: `pack.yaml`](#packs-packyaml) | 140 |
 | [Lenses: `config/lenses/`](#lenses-configlenses) | 72 |
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
@@ -2738,7 +2739,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 337 |
+| [Environment variable index](#environment-variable-index) | 339 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -2811,7 +2812,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.logging.file` | string | empty | `DRISHTI_LOG_FILE` | server | empty: standard output only (containers); drishti-stack sets run/logs/&lt;node&gt;.log | restart |  | admin |
+| `drishti.logging.file` | string | empty | `DRISHTI_LOG_FILE` | server | empty: standard output only (containers); bin/start-server sets &lt;data&gt;/logs/server\[-&lt;node&gt;].log | restart |  | admin |
 | `drishti.logging.max-file-mb` | integer | `100` |  | server | one file's size before it rolls (also daily); rolled files compressed | restart |  | expert |
 | `drishti.logging.max-total-mb` | integer | `1024` |  | server | every rolled file together; the oldest go beyond | restart |  | expert |
 | `drishti.logging.max-files` | integer | `30` |  | server | rolled days kept at most | restart |  | admin |
@@ -3770,7 +3771,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.path-page` | integer | `60` |  | server (each node its own) | rows of the ranked P&amp;L path per page | restart |  | admin |
 | `drishti.var.currencies` | string | `USD,EUR,CAD,JPY,GBP` | `DRISHTI_VAR_CURRENCIES` | server (each node its own) | reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask | restart |  | admin |
 | `drishti.var.currency-retention-dates` | integer | `5` | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | server (each node its own) | newest business dates whose listed currencies are built ahead and kept on disk | restart |  | admin |
-| `drishti.var.root-name` | string | empty | `DRISHTI_VAR_ROOT_NAME` | server (each node its own) | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME | restart |  | admin |
+| `drishti.var.root-name` | string | empty | `DRISHTI_VAR_ROOT_NAME` | server (each node its own) | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy's root.name (else its title) | restart |  | admin |
 | `drishti.var.access` | map | `{}` |  | server (each node its own) | per role, per node: positions \| aggregate (drishti.var.access.&lt;role&gt;\[MGMT~DESK-RATES]=aggregate) | restart |  | admin |
 
 #### `drishti.var.stress`
@@ -3862,6 +3863,12 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.intraday.kafka.window` | duration | `5m` | `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | server (each node its own) | everything received in a window: one intraday batch in the lake, applied | restart |  | expert |
 | `drishti.var.intraday.kafka.max-trades` | integer | `500` | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | server (each node its own) | a window applied earlier once this many trades wait | restart |  | expert |
 
+#### `drishti.var.hierarchy`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
+|---|---|---|---|---|---|---|---|---|
+| `drishti.var.hierarchy.empty-label` | string | `(Blank)` | `DRISHTI_VAR_HIERARCHY_EMPTY_LABEL` | server (each node its own) | the node a row with an empty (or unpromoted) level value sits under; a hierarchy's empty-label wins | restart |  | admin |
+
 #### `drishti.var.sharding`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
@@ -3885,14 +3892,19 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 |---|---|---|---|---|---|---|---|---|
 | `drishti.var.kinds.vector` | string | `pnl-vector` |  | server (each node its own) | the kind of the stored P&amp;L vectors | restart |  | admin |
 | `drishti.var.kinds.position` | string | `position` |  | server (each node its own) | the kind the engine's derived positions are served as (the var-positions connector) | restart |  | admin |
-| `drishti.var.kinds.hierarchy` | string | `risk-hierarchy` |  | server (each node its own) | the kind of the risk hierarchies | restart |  | admin |
 | `drishti.var.kinds.scenario-set` | string | `scenario-set` |  | server (each node its own) | the kind of the scenario sets (the dates of the historical scenarios) | restart |  | admin |
-| `drishti.var.kinds.portfolio` | string | `portfolio` |  | server (each node its own) | the kind of the stored portfolios | restart |  | admin |
+| `drishti.var.kinds.system-basket` | string | `system-basket` |  | server (each node its own) | the kind the system baskets are served as (the var-system-baskets connector, PORT &lt;id&gt;); they are kept in the basket store | restart |  | admin |
 | `drishti.var.kinds.scenario-pv` | string | `scenario-pv` |  | server (each node its own) | trades sent as scenario PVs in their own currency, converted to USD P&amp;L at load (beside or instead of vectors) | restart |  | admin |
 | `drishti.var.kinds.fx-scenario` | string | `fx-scenario` |  | server (each node its own) | each currency's rate under each scenario, when the batch supplies it (USD per unit) | restart |  | admin |
 | `drishti.var.kinds.fx-spot` | string | `fx-spot` |  | server (each node its own) | the FX history scenario rates are derived from when not supplied (the market-data pack's) | restart |  | admin |
 | `drishti.var.kinds.limit` | string | `var-limit` |  | server (each node its own) | the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it | restart |  | admin |
 | `drishti.var.kinds.valuation` | string | `trade-valuation` |  | server (each node its own) | the trade valuations a VaR by a trade column the vectors do not carry joins by trade id (by=attribute:TRADER\_ID) | restart |  | admin |
+
+#### `drishti.var.system-baskets`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
+|---|---|---|---|---|---|---|---|---|
+| `drishti.var.system-baskets.seed` | boolean | `true` | `DRISHTI_VAR_SYSTEM_BASKETS_SEED`, `DRISHTI_DEMO_ENABLED` | server (each node its own) | import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start | restart |  | admin |
 
 #### `drishti.var.positions`
 
@@ -3981,7 +3993,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.ccr.exposure.kinds.collateral` | string | `collateral-balance` |  | server (each node its own) | the kind of the collateral balances | restart |  | admin |
 | `drishti.ccr.exposure.kinds.counterparty` | string | `counterparty` |  | server (each node its own) | the kind of the counterparties (the core pack's) | restart |  | admin |
 | `drishti.ccr.exposure.kinds.group` | string | `counterparty-group` |  | server (each node its own) | the kind of the counterparty groups | restart |  | admin |
-| `drishti.ccr.exposure.kinds.hierarchy` | string | `risk-hierarchy` |  | server (each node its own) | the kind of the risk hierarchies (the market-risk pack's) | restart |  | admin |
 | `drishti.ccr.exposure.kinds.limit` | string | `credit-limit` |  | server (each node its own) | the stored credit limits, read as stored (the explorer's limit column; LIM stays parked) | restart |  | admin |
 | `drishti.ccr.exposure.access` | map | `{}` |  | server (each node its own) | per role, per counterparty, group or legal entity: trades \| aggregate \| none (drishti.ccr.exposure.access.&lt;role&gt;\[CP-ALDERSHOT]=aggregate) | restart |  | admin |
 | `drishti.ccr.exposure.official.enabled` | boolean | `true` | `DRISHTI_EXPOSURE_OFFICIAL` | server (each node its own) | capture every netting set, counterparty, group and hierarchy node when a date's run is complete | restart |  | admin |
@@ -5513,11 +5524,13 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `positions.rules[].groups` | list | `[]` |  | the pack | PRODUCT\_GROUP values it holds | live |  | admin |
 | `positions.rules[].types` | list | `[]` |  | the pack | PRODUCT\_TYPE values it holds | live |  | admin |
 | `positions.rules[].key` | list | `none: one position per trade` |  | the pack | The fields keying the position, the first the trade carries | live |  | admin |
-| `hierarchies` | map | `{}` |  | the pack | The hierarchies the VaR and exposure engines build (VAR\_GUIDE.md section 16); drishti.var.hierarchies wins | live |  | admin |
+| `hierarchies` | map | `{}` |  | the pack | The hierarchies the VaR and exposure engines build, any number, each from the trades' promoted columns (VAR\_GUIDE.md section 15.14); drishti.var.hierarchies wins | live |  | admin |
 | `hierarchies.<name>` | map | none |  | the pack | One hierarchy | live |  | admin |
 | `hierarchies.<name>.title` | string | none |  | the pack | Its name | live |  | admin |
-| `hierarchies.<name>.source` | string | `columns when levels are given` |  | the pack | risk-hierarchy (the stored rows) or columns (built from the trades' own columns) | live |  | admin |
-| `hierarchies.<name>.levels` | string | `none` |  | the pack | The columns, top first: LIMIT\_LETTER &gt; DESK | live |  | admin |
+| `hierarchies.<name>.levels` | string | `none` |  | the pack | The promoted columns, top first: DIVISION &gt; DESK &gt; TT\_BOOK (each in layout.&lt;kind&gt;.columns of every source kind) | live |  | admin |
+| `hierarchies.<name>.level-names` | string | `each column in lower case` |  | the pack | The level of each column's nodes, also the reference kind their names are read from: division &gt; desk &gt; book | live |  | admin |
+| `hierarchies.<name>.root` | map | `{id: BANK, name: <title>}` |  | the pack | The root node's id and name | live |  | admin |
+| `hierarchies.<name>.empty-label` | string | `drishti.var.hierarchy.empty-label` |  | the pack | The name of a (Blank) node: rows with an empty level value | live |  | admin |
 | `hierarchies.<name>.ids` | string | `path` |  | the pack | path or leaf: how node ids are made | live |  | admin |
 | `hierarchies.<name>.word` | string | `none` |  | the pack | The scope word naming a node (LL:LL-0003) | live |  | admin |
 | `hierarchies.<name>.limits` | string | `none` |  | the pack | The kind its nodes' VaR limits come from (var-limit) | live |  | admin |
@@ -6219,7 +6232,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | server | Packs new users get until an admin says otherwise (empty: every installed pack). |
 | `DRISHTI_DELTA_ENGINE` | `engine` (connector), delta engine | `native` | connector, packs | Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI\_DELTA\_ENGINE, else native |
 | `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), the demo lake's root (config/lakes/demo.yaml) | `./data/delta` | engine, packs | a folder or s3://bucket/prefix |
-| `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled` | `true` | server | run the demo source (the packs' sample data) |
+| `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled`, `drishti.var.system-baskets.seed` (engine) | `true` | engine, server | run the demo source (the packs' sample data) |
 | `DRISHTI_DOCTOR_PORTS` | drishti.py doctor | none | tools | The ports doctor checks |
 | `DRISHTI_DRAIN_TOKEN` | rolling.py, deploy/bin/drishti-node.sh | none | tools | An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI\_DRAIN\_TOKEN\_FILE, else DRISHTI\_TOKEN) |
 | `DRISHTI_DRAIN_WAIT` | deploy/bin/drishti-node.sh | `90` | tools | Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop) |
@@ -6313,7 +6326,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | console | Subscriptions one browser's channel carries at most (views across all its tabs and workspace panes, the alerts bell, monitors; a view open in several tabs counts once). Each holds one stream to the server from the backend pool (backend.pool\_size). Beyond it a view says it is not live, and why, instead of silently not ticking. |
 | `DRISHTI_LOADER_HEAP` | store loaders | none | tools | The heap of the Java store loaders (Iceberg, ...) |
 | `DRISHTI_LOADS_DIR` | `drishti.loads.dir` | `./data/loads` | server | history per pack, and the administrators' expectation overrides (config/&lt;pack&gt;.yaml) |
-| `DRISHTI_LOG_FILE` | `drishti.logging.file` | empty | server | empty: standard output only (containers); drishti-stack sets run/logs/&lt;node&gt;.log |
+| `DRISHTI_LOG_FILE` | `drishti.logging.file` | empty | server | empty: standard output only (containers); bin/start-server sets &lt;data&gt;/logs/server\[-&lt;node&gt;].log |
 | `DRISHTI_MAIL_FROM` | `drishti.collab.email.from` | `drishti@localhost` | server | the From address of collaboration email |
 | `DRISHTI_MASK_COPIES` | `drishti.security.mask-copies` | `false` | server | Opt-in: also replace exact copies of a masked field's value found in the OTHER text of the same document (best effort: exact, case-sensitive; text of at least min-length characters, numbers of 4+ digits). Documents over max-nodes are not scanned. |
 | `DRISHTI_MAX_SWALLOW` | `server.tomcat.max-swallow-size` | `64MB` | server | After a 413 for an oversized body, Tomcat drains up to this much of the rest so the client reads the answer, not a reset. |
@@ -6448,6 +6461,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VAR_ENABLED` | `drishti.engines.var.enabled` (engine) | `true` | engine | run the VaR engine on this node: /api/v1/var, VAR, SMAT, PLAY VAR, regulatory VaR (live) |
 | `DRISHTI_VAR_ES_CONFIDENCE` | `drishti.var.es-confidence` (engine) | `0.975` | engine | expected shortfall's |
 | `DRISHTI_VAR_EXPLAIN_ENABLED` | `drishti.var.explain.enabled` (engine) | `true` | engine | the tab, the command, the API and the workbook |
+| `DRISHTI_VAR_HIERARCHY_EMPTY_LABEL` | `drishti.var.hierarchy.empty-label` (engine) | `(Blank)` | engine | the node a row with an empty (or unpromoted) level value sits under; a hierarchy's empty-label wins |
 | `DRISHTI_VAR_HOT_DATES` | `drishti.var.hot-dates` (engine) | `10` | engine | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay |
 | `DRISHTI_VAR_HOT_DIR` | `drishti.var.tier.dir` (engine) | `./data/var/hot` | engine | one folder per business date; never under the repository |
 | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | `drishti.var.intraday.kafka.max-trades` (engine) | `500` | engine | a window applied earlier once this many trades wait |
@@ -6464,11 +6478,12 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VAR_PV_STREAM` | pv-updates enabled | `false` | packs | Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches |
 | `DRISHTI_VAR_PV_TOPIC` | pv-updates topic | `drishti.risk.pv-updates` | packs | Its topic: JSON Lines of scenario-pv or pnl-vector records per message |
 | `DRISHTI_VAR_READ_THREADS` | `drishti.var.read.threads` (engine) | `0` | engine | files (or runs of row groups) decoded at once for one load, delivered in file order (0: half the cores, at most 8; 1: on the load's own thread) |
-| `DRISHTI_VAR_ROOT_NAME` | `drishti.var.root-name` (engine) | empty | engine | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME |
+| `DRISHTI_VAR_ROOT_NAME` | `drishti.var.root-name` (engine) | empty | engine | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy's root.name (else its title) |
 | `DRISHTI_VAR_SCENARIO_WINDOW` | `drishti.var.scenario-window` (engine) | `250` | engine | the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo) |
 | `DRISHTI_VAR_SMAT_MAX_DAYS` | `drishti.var.smat.max-days` (engine) | `60` | engine | the most business dates a scenario matrix (SMAT &lt;id&gt; N, GET /api/v1/var/matrix) reads |
 | `DRISHTI_VAR_STRESS_ENABLED` | `drishti.var.stress.enabled` (engine) | `true` | engine | offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart) |
 | `DRISHTI_VAR_STRESS_WINDOW_ENABLED` | `drishti.var.stress-window.enabled` (engine) | `true` | engine | the tool and its API (off: refused in words) |
+| `DRISHTI_VAR_SYSTEM_BASKETS_SEED` | `drishti.var.system-baskets.seed` (engine) | `true` | engine | import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start |
 | `DRISHTI_VAR_TEN_DAY_METHOD` | `drishti.var.ten-day-method` (engine) | `sqrt10` | engine | 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days) |
 | `DRISHTI_VAR_THREADS` | `drishti.var.threads` (engine) | `0` | engine | cores the vector sums use (0: every core) |
 | `DRISHTI_VAR_TIER` | `drishti.var.tier.mode` (engine) | `mapped` | engine | mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap |

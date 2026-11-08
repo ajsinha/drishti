@@ -80,7 +80,7 @@ spring:
 
 logging:
   # CLUSTER_GUIDE.md 6.4: with drishti.logging.file set the server writes its own log, rotated by size and day and kept
-  # within a total (compressed); unset (containers), standard output only, as before. The stack sets it per node (run/logs/<node>.log).
+  # within a total (compressed); unset (containers), standard output only, as before. bin/start-server sets it with --background (<data>/logs/server[-<node>].log).
   file:
     name: ${drishti.logging.file:}  # the log file, from drishti.logging.file (empty: standard output only)
   logback:
@@ -149,7 +149,7 @@ drishti:
     # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.
     dir: ${DRISHTI_DATA_DIR:./data}
   logging:                           # CLUSTER_GUIDE.md 6.4: the server's own log file, read by logging: above
-    file: ${DRISHTI_LOG_FILE:}       # empty: standard output only (containers); drishti-stack sets run/logs/<node>.log
+    file: ${DRISHTI_LOG_FILE:}       # empty: standard output only (containers); bin/start-server sets <data>/logs/server[-<node>].log
     max-file-mb: 100                 # one file's size before it rolls (also daily); rolled files compressed
     max-total-mb: 1024               # every rolled file together; the oldest go beyond
     max-files: 30                    # rolled days kept at most
