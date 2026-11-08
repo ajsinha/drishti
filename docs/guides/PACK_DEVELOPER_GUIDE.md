@@ -693,7 +693,12 @@ Only roles with `calc: true` see Calc (here `support-lead`). More in [Calc: Pyth
 3. a Delta connector in the pack's `pack.yaml` serves them (`plugin: delta`, its `domain`, the kinds, `layout.<kind>.columns` for the
    fields searches and the search form filter on, `layout.<kind>.type-ahead` for the columns a name is found by).
 
-`PacksServedWithoutDemoTest` (drishti-server) fails the build when a kind of a shipped pack has no such connector and data.
+**Data a feed fills daily** (the economy module's public-sector packs: [PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md#5-the-feeds)) is
+never committed: the pack's Delta connector reads the lake its feed loads (`settings.lake: worldlake`, the feed file's `lake: worldlake`
+and a `datasets:` entry of the pack and kind), and `samples/` keep only a few reference documents.
+
+`PacksServedWithoutDemoTest` (drishti-server) fails the build when a kind of a shipped pack has neither: no Delta connector with
+committed data, and none reading a lake an enabled feed fills with the kind.
 
 Samples are for demos. Real tickets live somewhere else; here, the ticketing system exports each business day's tickets as one
 JSON Lines file, the layout the `file` plugin reads ([FILE_CONNECTOR.md](../connectors/FILE_CONNECTOR.md)):

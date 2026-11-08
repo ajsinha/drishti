@@ -4787,7 +4787,7 @@
       }
       tb.append(button(doc, 'menu-format', 'Formatting ▾', { menu: true }), button(doc, 'menu-export', 'Export ▾', { menu: true }), button(doc, 'menu-view', 'View ▾', { menu: true }));
       const how = L === 'panel' ? 'panel' : L === 'terminal' ? 'lane' : 'ribbon';
-      v.wells.render(R.wells, how);
+      if (v.o.chrome === false) { R.wells.textContent = ''; } else { v.wells.render(R.wells, how); }      // a bare grid draws no wells: none of their fields and wells in the host's page
       const hideWells = v.phone && !v.ui.fieldsOpen;
       (R.side || R.wells).hidden = hideWells;
       if (R.cmdInput && doc.activeElement !== R.cmdInput) { R.cmdInput.value = commandText(v.activeWells().getState()); }

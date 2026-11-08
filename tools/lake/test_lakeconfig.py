@@ -88,7 +88,10 @@ def test_the_shipped_demo_lake_reads_whole():
     demo = next(x for x in out["lakes"] if x["lake"] == "demo")
     trades = [t for t in demo["tables"] if t["kind"] == "trade"]
     assert {t["path"] for t in trades} == {"trading/trade_endur", "trading/trade_calypso", "trading/trade_murex"}
-    assert all(t["partition-by"] == ["PRODUCT_TYPE"] for t in trades)
+    # Endur by PRODUCT_TYPE, Calypso and Murex by PRODUCT_GROUP (the owner's layout of the demo lake: DATA_LAKE_GUIDE.md)
+    assert {t["path"]: t["partition-by"] for t in trades} == {"trading/trade_endur": ["PRODUCT_TYPE"],
+                                                           "trading/trade_calypso": ["PRODUCT_GROUP"],
+                                                           "trading/trade_murex": ["PRODUCT_GROUP"]}
 
 
 def _files(d: pathlib.Path) -> list[str]:

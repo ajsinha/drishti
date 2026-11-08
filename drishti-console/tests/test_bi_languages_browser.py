@@ -161,7 +161,9 @@ def test_a_reports_fields_pane_inherits_the_models_properties_and_perspectives(b
                                       "perspectives:\n  desk-view: { title: Desk view, fields: [trade.DESK], measures: [Sum of MTM] }\n")
     expect(page.locator('[data-model-header="model"]')).to_be_visible(timeout=30000)
     expect(page.locator('[data-field="trade.DESK"]')).to_contain_text("Trading desk")              # the model's display name, not re-declared
-    expect(page.locator('[data-folder="Risk"] [data-field="trade.MTM"]')).to_be_visible()
+    expect(page.locator('[data-fields-tree] [data-folder="Risk"]')).to_be_visible()                     # the model's folder, the field one level under it
+    expect(page.locator('[data-field="trade.MTM"]')).to_be_visible()
+    assert page.evaluate("() => { const lv = (s) => +document.querySelector(s).closest('[aria-level]').getAttribute('aria-level'); return lv('[data-field=\"trade.MTM\"]') - lv('[data-folder=\"Risk\"]'); }") == 1
     expect(page.locator('[data-field="trade.PORTFOLIO"]')).to_have_count(0)                            # hidden by the model
     page.select_option("[data-perspective-pick]", "desk-view")
     expect(page.locator('[data-field="trade.CURRENCY"]')).to_have_count(0, timeout=10000)

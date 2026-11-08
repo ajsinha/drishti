@@ -16,24 +16,11 @@
 {# The theme designer (report schema v2, 2.4.0; docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2), inside BI Studio: a theme item's colours, type and format defaults per kind of
    visual, with a preview, drawn by static/js/drishti_bi-theme-designer.js from /bi/api/items/<id>; /bi/design/theme/new makes one. #}
 {% extends "bi/shell.html" %}
-{% import "bi/_studio.html" as studio %}
 {% block bi_title %}Theme{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-studio.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
-<div class="bi-studio" data-studio data-studio-kind="theme">
-{{ studio.rail() }}
-<div class="bi-studio-main">
-{{ studio.tabs() }}
+<div data-studio data-studio-kind="theme">{# drishti_bi-studio.js builds the kit's DesignerShell here and moves the designer into it #}
 <div class="bi-design bi-theme-design" data-theme-root data-ready="">
-  <header class="bi-dbar">
-    <div class="bi-dtitle"><a class="bi-dback" href="/bi/designer" aria-label="Back to the designer start"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
-      <h1 data-title>Theme</h1><span class="bi-badge" data-state>Loading</span></div>
-    <div class="bi-dactions" role="toolbar" aria-label="Theme actions">
-      <button type="button" class="btn-pill btn-ghost" data-publish><i class="bi bi-send" aria-hidden="true"></i> <span class="bi-lbl">Publish</span></button>
-      <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-floppy" aria-hidden="true"></i> <span class="bi-lbl">Save</span></button>
-    </div>
-  </header>
-  <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
   <div class="bi-theme-main">
     <section class="bi-theme-edit" aria-labelledby="thE"><h2 id="thE">Theme</h2><div data-theme-editor></div></section>
     <section class="bi-theme-side" aria-labelledby="thP"><h2 id="thP">Preview</h2>
@@ -46,8 +33,6 @@
     </section>
   </div>
 </div>
-{{ studio.dock() }}
-</div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-visuals-format.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-matrix.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-studio.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-format-pane.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-format-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-theme-designer.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "_designer_kit.html" %}<script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-visuals-format.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-matrix.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-studio.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-format-pane.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-format-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-theme-designer.js?v={{ ASSET_V }}"></script>{% endblock %}
