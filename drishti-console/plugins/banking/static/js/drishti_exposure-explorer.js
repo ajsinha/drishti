@@ -108,7 +108,9 @@
     return { id: "spark", field: field, header: "Profile (EE)", width: 124, sortable: false, filterable: false, valueGetter: function () { return ""; },
       cellRenderer: function (c) { var v = c.row[field]; return v && v.length ? F.sparkline(document, v, undefined, "xx") : null; } };
   }
-  function useClass(u) { return u > 1 ? "crit" : u > 0.9 ? "warn" : "ok"; }
+  /** The tone of a credit limit's status as the server says it (within, near by drishti.risk.limit-near, breach); none without one. */
+  var USE_TONE = { within: "ok", near: "warn", breach: "crit" };
+  function useClass(status) { return (status && USE_TONE[status]) || ""; }
   function errorBox(host, e, retry) {
     var busy = window.Drishti.Busy && window.Drishti.Busy.problem(e);
     if (busy) {                                   // busy protection: the calm message in this panel, a countdown, tried again by itself
@@ -227,7 +229,7 @@
         ["EEPE", m(d.eepe), "running max of EE"], ["EAD (IMM, info)", m(d.eadImm), "α " + d.alpha + " × EEPE"]];
       if (d.limit) {
         tiles.push(["Limit used", pct(d.limit.use, 0), "of " + m(d.limit.limit) + " · PFE " + Math.round(d.limit.confidence * 100) + "% peak " + m(d.limit.used),
-          useClass(d.limit.use)]);
+          useClass(d.limit.status)]);
       } else {
         var r = peakTenorRow(d), ben = r.eeUncoll > 0 ? 1 - r.ee / r.eeUncoll : 0;
         tiles.push(["Collateral effect", S.collateral === "none" ? "—" : change(ben), S.collateral === "none" ? "the uncollateralised view"
@@ -435,14 +437,14 @@
           { id: "bar", field: "use", header: "Used", width: 84, sortable: false, valueGetter: function () { return ""; }, cellRenderer: function (c) {
             var l = c.row.lim;
             if (!l) return null;
-            var b = h("span", "xx-bar"), i = h("i", useClass(l.use));
+            var b = h("span", "xx-bar"), i = h("i", useClass(l.status));
             i.style.width = Math.min(100, l.use * 100) + "%";
             b.appendChild(i);
             b.title = pct(l.use, 0) + " of the stored limit " + l.id + " (" + (l.measure || "") + ")";
             return b;
           } },
           share("use", "Use", { id: "chip", format: function (v) { return v === null || v === undefined ? "no limit" : pct(v, 0); },
-            cellRenderer: function (c) { return c.row.lim ? h("span", "xx-chip " + useClass(c.row.use), pct(c.row.use, 0)) : h("span", "muted", "no limit"); } }),
+            cellRenderer: function (c) { return c.row.lim ? h("span", "xx-chip " + useClass(c.row.lim.status), pct(c.row.use, 0)) : h("span", "muted", "no limit"); } }),
           whole("sets", "Sets", { width: 64 })],
         onRow: function (r) { select(r.scope, { via: lev === "legal-entity" ? d.canonical : null }); } });
       if (withPaths.length > shown.length) {

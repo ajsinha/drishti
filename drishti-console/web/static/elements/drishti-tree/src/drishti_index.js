@@ -21,7 +21,7 @@
 import { defineTreeElement } from './drishti_tree-element.js';
 
 export { PATH_SEP, HierarchyModel } from './drishti_tree-model.js';
-export { orgLayout, partition, arcPath, bandTone } from './drishti_tree-layout.js';
+export { orgLayout, partition, arcPath, statusTone } from './drishti_tree-layout.js';
 export { svg, nodeColour, drawOrg, drawPartition, partitionTable } from './drishti_tree-draw.js';
 export { gridRows, TreeGrid } from './drishti_tree-grid.js';
 export { loadOpenChildren } from './drishti_tree-hooks.js';

@@ -150,7 +150,7 @@ business risk managers.
 | Stress limits | **Partly**: the stored stress result carries a positive `LIMIT` per desk; the derived per-scenario view shows each desk's limit use and breaches; the proposed `risk-limit` table | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived); [STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental) |
 | One catalogue of every limit (id, type, upper and lower, approver, validity) | **Not built**; proposed for stress in STR.md, needed by Volcker | [STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental); REGULATORY_VAR_REPORTING G8 |
 | Utilisation history | **Partly**: VaR only, from the official records; the Trading desk-head landing's five-day grid by book | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results); [EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading) |
-| Near-breach thresholds | **Partly**, three different numbers: the explorer's bar amber at 75%, red at 90% ([VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen)); `drishti.risk.limit-near` 80%, the server's for VaR limits, the pre-deal check and sensitivity limits; `WARNING_AT` 0.8 per limit, proposed ([STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental)) | One threshold per limit, from the catalogue |
+| Near-breach thresholds | **Partly**, two numbers: `drishti.risk.limit-near` 80%, the server's for VaR limits, credit limits, the pre-deal check and sensitivity limits, every screen drawing its status ([VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen)); `WARNING_AT` 0.8 per limit, proposed ([STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental)) | One threshold per limit, from the catalogue |
 | Credit limits on counterparties | **Built** as read (stored `credit-limit`, PFE against it); the LIM engine is parked | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md); [LIM.md](../contracts/LIM.md) |
 
 ### 3.3 Breaches and escalation
@@ -631,7 +631,7 @@ with `risk-limit`.
 | Key | Default | Meaning |
 |---|---|---|
 | `drishti.breach.enabled` | `false` | breach records from the official run |
-| `drishti.limits.warning-at` | `0.8` | the site's near level when a limit has no `WARNING_AT` (one threshold, decision 8; the server's `drishti.risk.limit-near` and the explorer's bands read it) |
+| `drishti.limits.warning-at` | `0.8` | the site's near level when a limit has no `WARNING_AT` (one threshold, decision 8; the server's `drishti.risk.limit-near` reads it, and the screens draw the server's status) |
 | `drishti.breach.explain-within-days` | `1` | business days for the first line's explanation |
 | `drishti.breach.review-within-days` | `2` | business days for the risk manager's review |
 | `drishti.breach.escalate-after-days` | `[3, 10]` | business days open at which the breach moves up each level of the chain |

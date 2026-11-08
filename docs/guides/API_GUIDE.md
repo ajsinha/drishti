@@ -3526,7 +3526,7 @@ source then offers the hierarchy levels (`MGMT.DESK`), `RISK_CLASS`, `POSITION`,
 
 | Call | Does |
 |---|---|
-| `POST /api/v1/risk/mr/headline` | `{view}`: the view's scope's `var`, `es`, `k`, `esCount`, `lens`, `limit`, `limitUse`, `stressedVar`, `dataVersion`, `batches`, `trades`, `positions`, `provenance` |
+| `POST /api/v1/risk/mr/headline` | `{view}`: the view's scope's `var`, `es`, `k`, `esCount`, `lens`, `limit`, `limitUse`, `limitStatus` (within, near, breach), `limitNear`, `stressedVar`, `dataVersion`, `batches`, `trades`, `positions`, `provenance` |
 | `POST /api/v1/risk/mr/detail` | `{view, coords}`: one cell's tail: `edges`, `counts`, `var`, `es`, `k`, `varDate`, `tail`, `trades`, `positions`, `scope` |
 | `POST /api/v1/risk/mr/history` | `{view}`: the sparklines: `dates`, `series` by cell key of the first measure |
 | `GET /api/v1/risk/mr/versions` | the time-travel slider's stops: dates and their batches |

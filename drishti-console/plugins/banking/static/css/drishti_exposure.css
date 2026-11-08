@@ -84,7 +84,7 @@
 .xx-grid .dg-row.xx-click { cursor: pointer; }
 .xx-grid .dg-row.xx-total .dg-cell { font-weight: 600; border-top: 1px solid var(--d-muted); }
 .xx-bar { display: inline-block; width: 70px; height: 6px; background: var(--d-bg-2); border-radius: var(--d-radius-3); vertical-align: middle; overflow: hidden; }
-.xx-bar i { display: block; height: 100%; border-radius: var(--d-radius-3); }
+.xx-bar i { display: block; height: 100%; border-radius: var(--d-radius-3); background: var(--d-faint); }
 .xx-bar i.ok { background: var(--d-ok); } .xx-bar i.warn { background: var(--d-warn); } .xx-bar i.crit { background: var(--d-bad); }
 .xx-note { font-size: var(--d-fs-11_5); color: var(--d-muted); margin: 0 0 var(--d-sp-8); }
 .xx-note.after { margin: var(--d-sp-8) 0 0; }

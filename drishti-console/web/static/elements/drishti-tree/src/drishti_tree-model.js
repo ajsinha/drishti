@@ -33,8 +33,9 @@ import { EventBus } from '../../drishti-core/src/drishti_index.js';
  * @property {boolean} [rollup=true] an additive measure: a node with no figure of its own shows its children's sum
  * @property {boolean} [childSum=false] a non-additive measure: show the children's figures added up beside it (Σ children, not a figure
  *   of the measure: the gap is the diversification)
- * @property {{bands: Array<{to: number, tone: string}>, max: number}} [bar] draw the figure as a bar (a ratio such as a limit's use):
- *   its tone by the first band whose `to` it stays under; max the full bar (default 1)
+ * @property {{status: string, tones: Object<string, string>, max: number}} [bar] draw the figure as a bar (a ratio such as a limit's
+ *   use): its tone the node's status (the field `status` names, the host's word such as within, near or breach) in `tones` (status to
+ *   tone: good, warn, bad ...), none without a status; words (status to the legend's words); max the full bar (default 1)
  * @property {Object} [column] drishti-grid ColumnDef properties for its column in the tree grid (header, width, format (value, row),
  *   cellClass, cellRenderer: drawn where the tree draws nothing of its own, the waiting mark and the bar)
  */

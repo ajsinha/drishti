@@ -2031,10 +2031,10 @@ items:
       - { as: tree, var: /tree, params: { hierarchy: LEGAL } }      # GET /api/v1/risk/var/tree?hierarchy=LEGAL&asOf=<date>
       - as: book                                                    # the best row: where filters, order ranks (largest first)
         pick: tree.nodes
-        where: "book.limitUse > 1 and find(tree.nodes, 'id', book.parent).limitUse <= 1"
+        where: "book.limitStatus == 'breach' and find(tree.nodes, 'id', book.parent).limitStatus != 'breach'"   # the server's status
         order: book.limitUse
       - { as: parent, let: "find(tree.nodes, 'id', book.parent)" }  # a value
-    when: "book.limitUse > 1"              # what makes it surprising; false: not shown today
+    when: "book.limitStatus == 'breach'"   # what makes it surprising; false: not shown today
     text: "{book.name} is at **{book.limitUse|pct}** of its VaR limit."       # **…** is drawn highlighted
     why: "Its VaR is {book.var|money} against {book.limit|money}; …"
     picture: { type: bars, caption: "Share of the limit used, {asOf}",

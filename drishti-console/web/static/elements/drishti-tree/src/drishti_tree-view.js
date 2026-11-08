@@ -55,7 +55,7 @@ const MODE_NAMES = { grid: 'Tree grid', org: 'Org chart', sunburst: 'Sunburst', 
  * @property {boolean} [editable=false] offer the edit mode (✎ Edit (propose)): moves become one proposal for four eyes
  * @property {string} [proposalNote] words under the proposal (who approves, the impact)
  * @property {string} [sizeBy] the additive measure that sizes a partition (default: the first additive one)
- * @property {string} [colourBy] the measure whose bands colour the nodes (default: the first with bar bands)
+ * @property {string} [colourBy] the measure whose bar's status colours the nodes (default: the first bar with a status)
  * @property {string[]} [shown] the measures an org chart box shows (default: the first two)
  * @property {number} [openDepth=1] nodes open down to this depth at the start (-1: all)
  * @property {string[]} [status] more words for the status line (the business date)
@@ -99,7 +99,7 @@ export class Tree {
     this.altOpen = false;
     const add = this.model.measures.filter((m) => m.additive !== false);
     this.sizeBy = o.sizeBy || (add[0] && add[0].field) || null;
-    this.colourBy = o.colourBy || ((this.model.measures.find((m) => m.bar && m.bar.bands) || {}).field) || null;
+    this.colourBy = o.colourBy || ((this.model.measures.find((m) => m.bar && m.bar.status) || {}).field) || null;
     this.shown = o.shown || this.model.measures.filter((m) => !m.bar).slice(0, 2).map((m) => m.field);
     this.fmt = {};
     this.model.measures.forEach((m) => { this.fmt[m.field] = formatterFor(m.format); });

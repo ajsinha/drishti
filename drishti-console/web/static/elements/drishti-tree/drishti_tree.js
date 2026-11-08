@@ -341,17 +341,17 @@
       return 'M' + p(r0, A0) + 'L' + p(r1, A0) + 'A' + r1 + ',' + r1 + ' 0 ' + large + ' 1 ' + p(r1, A1) + 'L' + p(r0, A1) + 'A' + r0 + ',' + r0 + ' 0 ' + large + ' 0 ' + p(r0, A0) + 'Z';
     }
     function r1fmt(v) { return String(Math.round(v * 100) / 100); }
-    function bandTone(v, bands) {
-      if (typeof v !== 'number' || !bands || !bands.length) { return null; }
-      for (const b of bands) { if (v < b.to) { return b.tone; } }
-      return bands[bands.length - 1].tone;
+    function statusTone(n, bar) {
+      if (!n || !bar || !bar.status || !bar.tones) { return null; }
+      const v = n.values && n.values[bar.status] !== undefined && n.values[bar.status] !== null ? n.values[bar.status] : n.data ? n.data[bar.status] : null;
+      return v === undefined || v === null ? null : (Object.prototype.hasOwnProperty.call(bar.tones, v) ? bar.tones[v] : null);
     }
-    return { "orgLayout": orgLayout, "partition": partition, "arcPath": arcPath, "bandTone": bandTone };
+    return { "orgLayout": orgLayout, "partition": partition, "arcPath": arcPath, "statusTone": statusTone };
   })();
   /* ---- src/drishti_tree-draw.js ---- */
   __m["src/drishti_tree-draw.js"] = (function () {
     var h = __lib("drishti-core").h, toneColour = __lib("drishti-core").toneColour;
-    var orgLayout = __m["src/drishti_tree-layout.js"].orgLayout, partition = __m["src/drishti_tree-layout.js"].partition, arcPath = __m["src/drishti_tree-layout.js"].arcPath, bandTone = __m["src/drishti_tree-layout.js"].bandTone;
+    var orgLayout = __m["src/drishti_tree-layout.js"].orgLayout, partition = __m["src/drishti_tree-layout.js"].partition, arcPath = __m["src/drishti_tree-layout.js"].arcPath, statusTone = __m["src/drishti_tree-layout.js"].statusTone;
     const NS = 'http://www.w3.org/2000/svg';
     function svg(doc, tag, attrs, kids) {
       const el = doc.createElementNS(NS, tag);
@@ -361,7 +361,7 @@
     }
     function nodeColour(c, n) {
       const m = c.colourBy && c.model.measure(c.colourBy);
-      if (m && m.bar && m.bar.bands) { const t = bandTone(n.values[m.field], m.bar.bands); if (t) { return toneColour(c.theme, t); } return c.theme.nodata; }
+      if (m && m.bar && m.bar.status) { const t = statusTone(n, m.bar); if (t) { return toneColour(c.theme, t); } return c.theme.nodata; }
       const kinds = c.kinds || (c.kinds = Array.from(new Set(c.model.all().map((x) => x.kind))));
       return toneColour(c.theme, null, Math.max(0, kinds.indexOf(n.kind)));
     }
@@ -394,7 +394,7 @@
         if (bar && typeof n.values[bar.field] === 'number') {
           const v = n.values[bar.field], max = bar.bar.max || 1, w = Math.max(0, Math.min(1, v / max)) * (b.w - 24);
           g.appendChild(svg(doc, 'rect', { class: 'dt-barbg', x: 12, y: b.h - 9, width: b.w - 24, height: 4, rx: 2, fill: t.border }));
-          g.appendChild(svg(doc, 'rect', { class: 'dt-barfg', x: 12, y: b.h - 9, width: Math.round(w * 10) / 10, height: 4, rx: 2, fill: toneColour(t, bandTone(v, bar.bar.bands) || 'accent') }));
+          g.appendChild(svg(doc, 'rect', { class: 'dt-barfg', x: 12, y: b.h - 9, width: Math.round(w * 10) / 10, height: 4, rx: 2, fill: toneColour(t, statusTone(n, bar.bar) || 'faint') }));
         }
         if (kids) {
           const tg = svg(doc, 'g', { class: 'dt-tg', transform: 'translate(' + (b.w / 2) + ',' + b.h + ')', 'data-toggle': n.id, 'aria-hidden': 'true' });
@@ -457,7 +457,7 @@
   __m["src/drishti_tree-grid.js"] = (function () {
     var h = __lib("drishti-core").h, toneColour = __lib("drishti-core").toneColour;
     var Grid = __lib("drishti-grid").Grid;
-    var bandTone = __m["src/drishti_tree-layout.js"].bandTone;
+    var statusTone = __m["src/drishti_tree-layout.js"].statusTone;
     const LABEL = '__label';
     const WAIT = '\u0000wait:';
     function gridRows(model, o) {
@@ -527,8 +527,8 @@
         const doc = p.doc, row = p.row;
         if ((p.value === null || p.value === undefined) && m.additive === false && row && this.tree.model.isPending(row.__id, m.field)) { return h(doc, 'span', { cls: 'dg-text dt-wait', text: '…', attrs: { title: 'asked of the server' } }); }
         if (!m.bar || typeof p.value !== 'number') { return null; }
-        const max = m.bar.max || 1, tone = bandTone(p.value, m.bar.bands);
-        const fill = h(doc, 'i', { style: { width: Math.round(Math.max(0, Math.min(1, p.value / max)) * 100) + '%', 'background-color': toneColour(this.tree.theme, tone || 'accent') } });
+        const max = m.bar.max || 1, tone = statusTone(row && this.tree.model.node(row.__id), m.bar);
+        const fill = h(doc, 'i', { style: { width: Math.round(Math.max(0, Math.min(1, p.value / max)) * 100) + '%', 'background-color': toneColour(this.tree.theme, tone || 'faint') } });
         return h(doc, 'span', { cls: 'dg-text dt-barcell' }, [h(doc, 'span', { cls: 'dt-bar', attrs: { 'aria-hidden': 'true' } }, [fill]), h(doc, 'span', { text: p.text })]);
       }
       decorate(ctx) {
@@ -666,13 +666,10 @@
     function legend(t) {
       const doc = t.doc, m = t.model, out = [];
       const cm = t.colourBy && m.measure(t.colourBy);
-      if (cm && cm.bar && cm.bar.bands) {
-        let lo = null;
-        const items = cm.bar.bands.map((b, i) => {
-          const words = i === cm.bar.bands.length - 1 && lo !== null ? '≥ ' + t.text(cm.field, lo) : (lo === null ? '< ' : t.text(cm.field, lo) + ' – ') + t.text(cm.field, b.to);
-          lo = b.to;
-          return h(doc, 'span', { cls: 'dt-lg' }, [h(doc, 'span', { cls: 'dt-sw', style: { 'background-color': toneColour(t.theme, b.tone) } }), words]);
-        });
+      if (cm && cm.bar && cm.bar.status && cm.bar.tones) {
+        const said = cm.bar.words || {};
+        const items = Object.keys(cm.bar.tones).map((s) =>
+          h(doc, 'span', { cls: 'dt-lg' }, [h(doc, 'span', { cls: 'dt-sw', style: { 'background-color': toneColour(t.theme, cm.bar.tones[s]) } }), said[s] || s]));
         out.push(h(doc, 'h3', { cls: 'dt-sec', text: cm.label }), h(doc, 'div', { cls: 'dt-legend' }, items));
       }
       if (m.measures.some((x) => x.additive === false)) {
@@ -823,7 +820,7 @@
         this.altOpen = false;
         const add = this.model.measures.filter((m) => m.additive !== false);
         this.sizeBy = o.sizeBy || (add[0] && add[0].field) || null;
-        this.colourBy = o.colourBy || ((this.model.measures.find((m) => m.bar && m.bar.bands) || {}).field) || null;
+        this.colourBy = o.colourBy || ((this.model.measures.find((m) => m.bar && m.bar.status) || {}).field) || null;
         this.shown = o.shown || this.model.measures.filter((m) => !m.bar).slice(0, 2).map((m) => m.field);
         this.fmt = {};
         this.model.measures.forEach((m) => { this.fmt[m.field] = formatterFor(m.format); });
@@ -1745,7 +1742,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineTreeElement = __m["src/drishti_tree-element.js"].defineTreeElement;
     function install(root) { if (root && root.document && root.customElements) { defineTreeElement(root.customElements, root); } }
-    return { "install": install, "PATH_SEP": __m["src/drishti_tree-model.js"].PATH_SEP, "HierarchyModel": __m["src/drishti_tree-model.js"].HierarchyModel, "orgLayout": __m["src/drishti_tree-layout.js"].orgLayout, "partition": __m["src/drishti_tree-layout.js"].partition, "arcPath": __m["src/drishti_tree-layout.js"].arcPath, "bandTone": __m["src/drishti_tree-layout.js"].bandTone, "svg": __m["src/drishti_tree-draw.js"].svg, "nodeColour": __m["src/drishti_tree-draw.js"].nodeColour, "drawOrg": __m["src/drishti_tree-draw.js"].drawOrg, "drawPartition": __m["src/drishti_tree-draw.js"].drawPartition, "partitionTable": __m["src/drishti_tree-draw.js"].partitionTable, "gridRows": __m["src/drishti_tree-grid.js"].gridRows, "TreeGrid": __m["src/drishti_tree-grid.js"].TreeGrid, "loadOpenChildren": __m["src/drishti_tree-hooks.js"].loadOpenChildren, "sideContent": __m["src/drishti_tree-side.js"].sideContent, "statusParts": __m["src/drishti_tree-side.js"].statusParts, "TREE_EXPORTS": __m["src/drishti_tree-io.js"].TREE_EXPORTS, "svgText": __m["src/drishti_tree-io.js"].svgText, "pngOf": __m["src/drishti_tree-io.js"].pngOf, "dataText": __m["src/drishti_tree-io.js"].dataText, "keyMove": __m["src/drishti_tree-io.js"].keyMove, "exportTree": __m["src/drishti_tree-io.js"].exportTree, "TREE_MODES": __m["src/drishti_tree-view.js"].TREE_MODES, "TREE_EVENTS": __m["src/drishti_tree-view.js"].TREE_EVENTS, "Tree": __m["src/drishti_tree-view.js"].Tree, "PANEL_MODES": __m["src/drishti_tree-panel.js"].PANEL_MODES, "readTableTree": __m["src/drishti_tree-panel.js"].readTableTree, "isChain": __m["src/drishti_tree-panel.js"].isChain, "TreePanel": __m["src/drishti_tree-panel.js"].TreePanel, "treeTables": __m["src/drishti_tree-panel.js"].treeTables, "flattenTree": __m["src/drishti_tree-nodes.js"].flattenTree, "findNode": __m["src/drishti_tree-nodes.js"].findNode, "isWithin": __m["src/drishti_tree-nodes.js"].isWithin, "moveNode": __m["src/drishti_tree-nodes.js"].moveNode, "nodesSource": __m["src/drishti_tree-nodes.js"].nodesSource, "OUTLINE_TONES": __m["src/drishti_tree-outline.js"].OUTLINE_TONES, "outlineFilter": __m["src/drishti_tree-outline.js"].outlineFilter, "outlineKey": __m["src/drishti_tree-outline.js"].outlineKey, "TreeOutline": __m["src/drishti_tree-outline.js"].TreeOutline, "TREE_ELEMENT": __m["src/drishti_tree-element.js"].TREE_ELEMENT, "defineTreeElement": __m["src/drishti_tree-element.js"].defineTreeElement };
+    return { "install": install, "PATH_SEP": __m["src/drishti_tree-model.js"].PATH_SEP, "HierarchyModel": __m["src/drishti_tree-model.js"].HierarchyModel, "orgLayout": __m["src/drishti_tree-layout.js"].orgLayout, "partition": __m["src/drishti_tree-layout.js"].partition, "arcPath": __m["src/drishti_tree-layout.js"].arcPath, "statusTone": __m["src/drishti_tree-layout.js"].statusTone, "svg": __m["src/drishti_tree-draw.js"].svg, "nodeColour": __m["src/drishti_tree-draw.js"].nodeColour, "drawOrg": __m["src/drishti_tree-draw.js"].drawOrg, "drawPartition": __m["src/drishti_tree-draw.js"].drawPartition, "partitionTable": __m["src/drishti_tree-draw.js"].partitionTable, "gridRows": __m["src/drishti_tree-grid.js"].gridRows, "TreeGrid": __m["src/drishti_tree-grid.js"].TreeGrid, "loadOpenChildren": __m["src/drishti_tree-hooks.js"].loadOpenChildren, "sideContent": __m["src/drishti_tree-side.js"].sideContent, "statusParts": __m["src/drishti_tree-side.js"].statusParts, "TREE_EXPORTS": __m["src/drishti_tree-io.js"].TREE_EXPORTS, "svgText": __m["src/drishti_tree-io.js"].svgText, "pngOf": __m["src/drishti_tree-io.js"].pngOf, "dataText": __m["src/drishti_tree-io.js"].dataText, "keyMove": __m["src/drishti_tree-io.js"].keyMove, "exportTree": __m["src/drishti_tree-io.js"].exportTree, "TREE_MODES": __m["src/drishti_tree-view.js"].TREE_MODES, "TREE_EVENTS": __m["src/drishti_tree-view.js"].TREE_EVENTS, "Tree": __m["src/drishti_tree-view.js"].Tree, "PANEL_MODES": __m["src/drishti_tree-panel.js"].PANEL_MODES, "readTableTree": __m["src/drishti_tree-panel.js"].readTableTree, "isChain": __m["src/drishti_tree-panel.js"].isChain, "TreePanel": __m["src/drishti_tree-panel.js"].TreePanel, "treeTables": __m["src/drishti_tree-panel.js"].treeTables, "flattenTree": __m["src/drishti_tree-nodes.js"].flattenTree, "findNode": __m["src/drishti_tree-nodes.js"].findNode, "isWithin": __m["src/drishti_tree-nodes.js"].isWithin, "moveNode": __m["src/drishti_tree-nodes.js"].moveNode, "nodesSource": __m["src/drishti_tree-nodes.js"].nodesSource, "OUTLINE_TONES": __m["src/drishti_tree-outline.js"].OUTLINE_TONES, "outlineFilter": __m["src/drishti_tree-outline.js"].outlineFilter, "outlineKey": __m["src/drishti_tree-outline.js"].outlineKey, "TreeOutline": __m["src/drishti_tree-outline.js"].TreeOutline, "TREE_ELEMENT": __m["src/drishti_tree-element.js"].TREE_ELEMENT, "defineTreeElement": __m["src/drishti_tree-element.js"].defineTreeElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-tree", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });
