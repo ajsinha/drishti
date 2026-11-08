@@ -164,10 +164,12 @@ def rows(delta: pathlib.Path, table_name: str, newest: list, domain: str = DOMAI
     column, a null kept: a column null on every row, such as POSITION_ID on trade-grain scenario PVs, is still a column of the Iceberg
     table, as it is of the Delta one, so the layout check finds every column the pack declares)}; ``newest`` gets the newest business
     date."""
-    from deltalake import DeltaTable
-    ds = DeltaTable(str(delta)).to_pyarrow_dataset()
+    if str(HERE) not in sys.path:
+        sys.path.insert(0, str(HERE))
+    import deltaread                                    # every reader feature honoured (DATA_LAKE_GUIDE.md section 14)
+    ds = deltaread.read(delta)
     names = [n for n in ds.schema.names if n not in ("id", "doc", "business_date")]
-    for batch in ds.to_batches(batch_size=2000):
+    for batch in ds.to_batches(max_chunksize=2000):
         cols = batch.to_pydict()
         for i, rid in enumerate(cols["id"]):
             day = cols["business_date"][i]

@@ -205,7 +205,9 @@ public final class Relocation {
         }
         String local;
         if (file) {
-            local = LocalPaths.toLocal(LocalPaths.decodeUri(s), false);         // file:///x, file://localhost/x, file:/x: /x; a share //fs/…
+            // file:///x, file://localhost/x, file:/x: /x; a share //fs/…; never percent-decoded: an Iceberg path is a literal string
+            // (a folder g=a%2Fb is that folder), so the metadata's paths and the pairs compare as written
+            local = LocalPaths.toLocal(s, false);
         } else {
             local = s;
         }

@@ -1122,6 +1122,33 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 
 ### Fixes (the train's bulk drill)
 
+- **Delta lakes follow the Delta protocol's path rules exactly, tested against delta-rs both ways**
+  ([DATA_LAKE_GUIDE.md section 14](docs/guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)). The native reader decoded Delta Kernel's
+  plain file paths a second time, so a table with a Hive-escaped partition folder (Spark's and Databricks' `PRODUCT_GROUP=100%25`,
+  `a%3Ab`) or one delta-rs wrote (`Money%20market`) could not be read; only a `java.nio` `file://` URI is decoded now
+  (`LocalPaths.decodeUri`). The Java lake writer and the parallel loader take Kernel's target folder, which Kernel hands as a URI,
+  decoded once (`LakeWriter.targetDirectory`): folders are Spark's Hive-escaped names and `add.path` is encoded exactly once (a value
+  `100%` failed the load; the loader wrote `Money%2520market` in the log for the folder `Money market`). An empty partition value is
+  null in `__HIVE_DEFAULT_PARTITION__`, as Spark writes it (Java writer, loader, Python writer). `lake build` refuses a partition column
+  name a folder would change (`PRODUCT GROUP`, `a=b`, `a/b`). `tools/lake/test_delta_interop.py`: delta-rs writes and Drishti's Java
+  reader reads; Drishti's three writers write and delta-rs, `pyarrow.dataset` and the Java reader read; 47 partition values (space, `%`,
+  a literal `%2F`, `:`, `/`, `..`, `\`, control characters, quotes, Unicode, emoji, 200 characters, the sentinel text, empty, null);
+  `LakeWriterTest`, `LocalPathsTest`. Upgrade: reload tables the parallel loader wrote since 2026-11-07 21:27 with such values
+  (RELEASE_NOTES, upgrade step 13).
+- **Column-mapped Delta tables (mode `name` or `id`, as Databricks writes them) are read correctly by every server path**: the fast
+  paths that read Parquet columns by name (the id map and type-ahead, columns with partition values, vectors with partition texts, one
+  entity's vector, the one-document read's id filter) read each column by its physical name (`col-<uuid>`), and the business date, a
+  partition column, the load id's and a key range's statistics are looked up by it (`DeltaTable.Layout.phys`); before, such a table's
+  columns read as empty. `DeltaColumnMappingTest`: column-mapped copies (written by delta-rs) of the layout, partitioned and vector
+  fixtures answer exactly what the plain tables answer, both engines.
+- **Python reads deletion vectors, column mapping and v2 checkpoints**: `tools/lake/deltaread.py` reads a table with delta-rs when its
+  pyarrow reader reads it completely, else with Delta Kernel through the server's exec jar
+  (`com.ash.drishti.deltalake.read.DeltaRowsCli`). delta-rs 1.6.6, the latest release, refuses deletion vectors and v2 checkpoints and
+  reads a column-mapped table of reader version 2 as all nulls. `lake maintain`'s relayout and the Delta-to-Iceberg copy read through
+  it. Fixtures `tools/lake/testdata/delta-features` (real deletion-vector files written by Kernel, a column-mapped table, a table only a
+  checkpoint describes); `test_delta_interop.py`: Python returns exactly what the Java reader returns
+  ([DATA_LAKE_GUIDE.md section 14.3](docs/guides/DATA_LAKE_GUIDE.md#143-table-features)).
+
 - **The MR cube's capped measures are deterministic**: stressed VaR (`drishti.cube.mr.stressed-max-cells`, 100) and SBM
   (`sbm-max-cells`, 60) were counted per evaluation, and cells already cached by an earlier view were not counted, so which cells got a
   figure depended on what was asked before and in what order (desks × currency alone: stressed VaR on 100 of 186 cells; after the same
@@ -1132,6 +1159,21 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   diversification (`diversification`, `diversificationByColumn`) is `null` when the total or a part with members has no figure, never a
   partial sum; a sort or a top N by a capped measure is refused in words. Every figure computed is the engine's own for the cell's scope,
   as before (`CappedMeasureTest`, `VarMrCubeCapTest`; PIVOT_GUIDE sections 9 and 29.2).
+- **Iceberg tables follow the Iceberg spec exactly, tested against the Apache Iceberg Java library both ways**
+  ([DATA_LAKE_GUIDE.md section 15](docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance)). drishti-iceberg percent-decoded a
+  `file:` data file path holding a `%` (`FileAccess`, and `relocate`'s matching), so a table the library, pyiceberg or Spark partitioned
+  by a value such as `a/b`, `100%`, `a:b` or `é` (folders `g=a%2Fb`, `g=100%25`, `g=a%3Ab`, `g=%C3%A9`) failed with *no such file*;
+  paths are opened as written now. Expiring snapshots removed a snapshot a tag named and left the tag dangling (the library could no
+  longer load the table): expiry keeps every branch's and tag's snapshot, and removing snapshots removes the refs and statistics entries
+  that named them. Moving `main` dropped its retention settings (`min-snapshots-to-keep`, `max-snapshot-age-ms`). Delete files were matched
+  to data files by a text key, so an equality delete of the null partition also deleted rows of the partition holding the text `null`.
+  The library engine turned a root with a space, `%` or non-ASCII letters into `java.nio`'s encoded URI, so Hadoop wrote the lake into a
+  folder named `my%20lake` beside the root. Drishti's writers left the other partition values null in a table another engine had
+  re-partitioned (its files then vanished from pruned reads): such a table is refused for writing, by name. A stale Hadoop
+  `.version-hint.text.crc` made the library log a checksum error after each Drishti commit. `lake maintain`'s figures read gzip-compressed
+  metadata files. `IcebergSpecInteropTest` (26 partition values under eight transforms, position and equality deletes, a tag and a branch
+  through expiry, a root with a space, `%` and unicode, a re-partitioned table), `LiteralPathsTest`, `TableUpdateRefsTest`,
+  `test_maintain_iceberg.py`. Upgrade: RELEASE_NOTES, upgrade step 14.
 - **The old explain endpoints answer for one release**: `GET /api/v1/var/explain`, `/api/v1/var/explain/matrix` and
   `/api/v1/pivot/mr/explain` (and their `/api/v1/risk/...` paths) answered `404` since the one Explain replaced them; like every other
   moved path of this release they now answer with the 2.9.11.d body (the one Explain's `why.answer`, its `matrix`, and the MR cube's

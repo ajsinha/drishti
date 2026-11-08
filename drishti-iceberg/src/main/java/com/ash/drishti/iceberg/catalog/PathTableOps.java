@@ -203,6 +203,11 @@ public final class PathTableOps implements TableOps {
             throw new CommitConflict("version " + v + " of " + location + " was committed by another writer");
         }
         s.put(io.resolve(metadataDir() + "/version-hint.text"), String.valueOf(v).getBytes(StandardCharsets.UTF_8));
+        // Hadoop's local file system keeps a checksum beside the hint it wrote; a stale one makes the Apache library fail its check and
+        // fall back to listing, so it goes with the hint it no longer matches (the library writes a fresh one at its next commit)
+        if ("file".equals(com.ash.drishti.lakeio.LocalPaths.scheme(location))) {
+            s.delete(io.resolve(metadataDir() + "/.version-hint.text.crc"));
+        }
         if (Boolean.parseBoolean(md.property("write.metadata.delete-after-commit.enabled", "false"))) {
             removeOldVersions(md, s);
         }

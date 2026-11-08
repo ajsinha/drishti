@@ -208,7 +208,7 @@ public final class LakeWriter {
             }
             try (Batches data = new Batches(m, part, schema);
                  CloseableIterator<FilteredColumnarBatch> physical = Transaction.transformLogicalData(engine, state, data, pv);
-                 CloseableIterator<DataFileStatus> written = engine.getParquetHandler().writeParquetFiles(ctx.getTargetDirectory(), physical, stats);
+                 CloseableIterator<DataFileStatus> written = engine.getParquetHandler().writeParquetFiles(targetDirectory(ctx), physical, stats);
                  CloseableIterator<Row> adds = Transaction.generateAppendActions(engine, state, written, ctx)) {
                 while (adds.hasNext()) {
                     actions.add(adds.next());
@@ -252,6 +252,25 @@ public final class LakeWriter {
             case "vector32" -> VECTOR32;        // exposure paths in float32: list<float>
             default -> StringType.STRING;
         };
+    }
+
+    /**
+     * The folder a write context's files go to, as a plain path: Delta Kernel hands it as a URI ({@code DataWriteContext#getTargetDirectory}
+     * is {@code Path.toUri()}: {@code file:/lake/t/PRODUCT_GROUP=100%2525}) while every other path it hands is unencoded, so it is decoded
+     * here, once, to the Hive-escaped folder Spark and Databricks write ({@code PRODUCT_GROUP=100%25}). The written files' paths are then
+     * plain too, and Kernel encodes each once into {@code add.path} (the Delta protocol: a relative URI).
+     */
+    public static String targetDirectory(io.delta.kernel.DataWriteContext ctx) {
+        String dir = ctx.getTargetDirectory();
+        try {
+            java.net.URI u = new java.net.URI(dir);
+            if (u.getScheme() == null) {
+                return u.getPath();
+            }
+            return u.getScheme() + ":" + (u.getRawAuthority() == null ? "" : "//" + u.getAuthority()) + u.getPath();
+        } catch (java.net.URISyntaxException e) {
+            throw new IllegalStateException("Delta Kernel's target directory is not a URI: " + dir, e);
+        }
     }
 
     private static Map<String, Literal> partitionValues(LakeManifest m, LakeManifest.Part part, StructType schema) {

@@ -163,7 +163,9 @@ tables:
 ```
 
 Why each key is there, and the arithmetic behind keeping `partition-by` short, is the guide's
-[section 2](../guides/DATA_LAKE_GUIDE.md#2-the-lake-file-every-key).
+[section 2](../guides/DATA_LAKE_GUIDE.md#2-the-lake-file-every-key). A partition column needs a plain name (letters, digits, `_`, `-`);
+its values may hold anything (`Fixed income`, `100%`, `x/y`): the folders are named as Spark names them, so Databricks and delta-rs
+read the lake as it is ([section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
 
 **The command line.**
 
@@ -1375,8 +1377,12 @@ settings:
 **You should see** `data/iceberg/risk/<kind>/metadata` and `data` folders for the seven VaR kinds, `data/delta/demo/risk` empty, and
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
 
+These are standard Apache Iceberg v2 tables: Spark, Trino, Snowflake or pyiceberg read them as they are. To try it with pyiceberg,
+see [the data lake guide, section 15.5](../guides/DATA_LAKE_GUIDE.md#155-check-it-yourself).
+
 **Further:** [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (the connector, sections 18 and 19),
-[../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage) (mixed storage).
+[../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage) (mixed storage). What Drishti reads and writes of the Iceberg spec:
+[DATA_LAKE_GUIDE.md section 15](../guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
 ## Step 31 · Publish the official results to Iceberg
 

@@ -1939,7 +1939,8 @@ Storage, HDFS), as `hadoop` does for Delta.
 
 ### 5. What of the protocol is covered
 
-Against the Apache Iceberg table spec (format versions 1 and 2) and the REST catalog OpenAPI spec:
+Against the Apache Iceberg table spec (format versions 1 and 2) and the REST catalog OpenAPI spec. The user-facing feature table, the
+partition path examples and the exact refusals are in [DATA_LAKE_GUIDE.md section 15](../guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
 | Area | Covered | Refused or later |
 |---|---|---|
@@ -1949,7 +1950,9 @@ Against the Apache Iceberg table spec (format versions 1 and 2) and the REST cat
 | Partitioning | identity, bucket (the spec's Murmur3 hashing per type), truncate, year, month, day, hour, void; several specs (partition evolution) | |
 | Manifests | manifest lists and manifests (Avro), data and delete manifests, status, inherited snapshot ids and sequence numbers, partition summaries, column metrics with the spec's single-value binary bounds | |
 | Deletes | position deletes; equality deletes; the sequence-number rules for which delete applies to which data file | v3 deletion vectors (Puffin): later, reusing the Delta engine's roaring bitmap reader |
-| Snapshots | current snapshot, snapshot log (time travel by *known at*), the `main` ref | reading a named branch or tag: later |
+| Snapshots | current snapshot, snapshot log (time travel by *known at*), the `main` ref; moving `main` keeps its retention settings; expiry keeps every branch's and tag's snapshot and drops the refs and statistics entries of the snapshots it removes, as the library does | reading a named branch or tag: later |
+| File paths | opaque, opened **as written** (never percent-decoded, `relocate` included): a folder `g=a%2Fb` the library or pyiceberg wrote is that folder | |
+| Writing a partition | the identity partition on `business_date`; a table whose spec has any other non-void field is refused for writing (a file's partition tuple must hold every field) | other specs: `engine: library` |
 | Data files | Parquet | ORC, Avro data files: refused, naming the file |
 | Encryption | | refused (a `key_metadata` present) |
 | Catalogs | path-based (`version-hint.text`), a metadata file named directly, REST | Hive metastore, JDBC catalog (both reachable through a REST catalog in front of them) |
@@ -2076,6 +2079,7 @@ Implementation: [ICEBERG_CONNECTOR.md section 17](../../plugins/drishti-plugin-i
 | **No Hadoop**: the connector, the loader and maintenance run in a class loader that refuses `org.apache.hadoop` | the goal itself |
 | **Concurrent commits**: two writers on local disk, on MinIO, and through a REST catalog (Testcontainers, its own containers only) | no lost commit; a conflicting rewrite reported |
 | **Refusals**: ORC file, encrypted table, v3 table, unknown type | refused by name, never read wrongly |
+| **Spec interop against the library** (`IcebergSpecInteropTest`): 26 special partition values under eight transforms, position and equality deletes in special partitions, expiry with a tag and a branch, a root with a space, `%` and unicode, a re-partitioned table | paths, transforms, deletes and refs as the spec and the library have them |
 | **Windows paths**: drive letters, backslashes, UNC, on every OS; one real run on a Windows laptop before release | Windows works |
 | **Speed**: the Delta engines' benchmark table (section 16 of DELTA_CONNECTOR.md) for Iceberg, both engines | native at least as fast; first single reads faster (footer cache) |
 
@@ -3839,6 +3843,7 @@ Exactly the layout the existing readers expect.
 | New table | created by the first date's commit, with `target.properties` | created with the layout's properties (zstd, 1 MB row groups, metrics: `doc` none, `id` full), sort order by id |
 | Parquet | `LakeWriter`'s row groups and pages (`DRISHTI_LAKE_ROW_GROUP_KB` 256, `DRISHTI_LAKE_PAGE_KB` 64), Snappy; exact statistics for every scalar column, none for `doc` | the table's properties |
 | The vector column | BYTE_STREAM_SPLIT (a double's 8 bytes as 8 streams), ZSTD, no dictionary, no statistics | the same |
+| Partition folders and paths | the Delta protocol's: Kernel's write context hands the folder as a URI (`DataWriteContext.getTargetDirectory`), `LakeWriter.targetDirectory` decodes it once, so the folder is the Hive-escaped value Spark writes and `add.path` is that path encoded once; an empty value is null (`__HIVE_DEFAULT_PARTITION__`). Every path Kernel hands a reader is plain and is never decoded again (`LocalPaths.decodeUri` decodes only a `java.nio` `file://` URI). Examples: [DATA_LAKE_GUIDE.md section 14.2](../guides/DATA_LAKE_GUIDE.md#142-partition-paths-values-folders-addpath) | Iceberg's own (`identity` partition paths) |
 
 BYTE_STREAM_SPLIT is a standard Parquet encoding read by parquet-java, Kernel, Arrow and DuckDB. Where the Python Iceberg path rejects a
 row (a promoted field holding a list) or drops a value (an object), the loader keeps the JSON text; it makes a column for a field null
@@ -3949,6 +3954,7 @@ the server table, the spill and heap advice: [BENCHMARK.md section 7](../admin/B
 | `ThroughputTest` | the measurements above, BYTE_STREAM_SPLIT and ZSTD on the vector column, the manifest's key order, a 24 MB budget and a `-Xmx192m` JVM giving the identical table |
 | `CodecsTest` | Python's float repr and string escapes, multi-member gzip and a corrupt CRC, globs, sort keys, the pack's layout, the configuration's checks |
 | `tools/lake/test_javaload.py` | the build's options as the loader's configuration, secrets kept out of the file, when `auto` picks the loader |
+| `tools/lake/test_delta_interop.py` | the loader's Delta tables against delta-rs both ways, with 47 partition values that need escaping, and the features each reader reads ([DATA_LAKE_GUIDE.md section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)) |
 | `ShardSortedLayoutTest` (Iceberg plugin) | relayout leaves a sort-by table in its order |
 
 ### 10.12 Open

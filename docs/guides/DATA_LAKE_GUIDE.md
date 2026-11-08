@@ -42,6 +42,8 @@ Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`,
 11. [Archives: zip and tar](#11-archives-zip-and-tar)
 12. [Other lakes, packs and older installations](#12-other-lakes-packs-and-older-installations)
 13. [The in-memory lake](#13-the-in-memory-lake)
+14. [Delta protocol compliance](#14-delta-protocol-compliance)
+15. [Iceberg spec compliance](#15-iceberg-spec-compliance)
 
 ## 1. What a lake is
 
@@ -915,7 +917,8 @@ When the bank's tables already sit in a lakehouse that Databricks, Spark, Trino 
 own readers inside the server (Delta Kernel and drishti-iceberg): **no Databricks cluster, Spark or warehouse is needed to read**. The
 tables need the shape of section 1 (`id`, `doc`, `business_date`, promoted columns); a Spark job that writes it is in
 [DELTA_CONNECTOR.md section 5](../../plugins/drishti-plugin-delta/README.md#writing-the-lake). Each day sorted by `id` (on Databricks,
-`OPTIMIZE … ZORDER BY (id)` or liquid clustering on `id`) reads fastest.
+`OPTIMIZE … ZORDER BY (id)` or liquid clustering on `id`) reads fastest. Drishti's lakes follow the Delta protocol's path encoding and are
+tested against delta-rs both ways; the table features each reader supports are in [section 14](#14-delta-protocol-compliance).
 
 ### 10.1 Built
 
@@ -1299,3 +1302,235 @@ jobs write Delta.
 | `DRS-5219` on a report, a share, an Ask | as the contract asks; download the rows from Export data instead |
 | a table *evicted, a refill is queued* | the store needed room for another table; pin the tables that must stay |
 | a run `failed: … connector cannot list its documents` | that connector computes documents when asked: give `ids` or `ids-from`, or read its feed by `url` |
+
+## 14. Delta protocol compliance
+
+Drishti's Delta tables are plain [Delta Lake protocol](https://github.com/delta-io/delta/blob/master/PROTOCOL.md) tables: Spark,
+Databricks, delta-rs and any Delta Kernel reader open them as they are, and Drishti reads the tables those engines write. No Drishti-only
+file, field or naming rule is involved, and it is tested both ways against delta-rs. The internals (the lake file, the in-memory lake,
+the loader) are in [DATA_ARCHITECTURE.md sections 8–10](../architecture/DATA_ARCHITECTURE.md#8-the-lake-file-one-description-of-every-lake).
+
+### 14.1 The four readers and writers
+
+| Path | Library | Writes | Reads |
+|---|---|---|---|
+| Java writer (`lake build --engine drishti`) and the parallel loader (`--engine java`, the data inbox's large loads) | Delta Kernel 4.4.0 with Drishti's file access | protocol `{"minReaderVersion":1,"minWriterVersion":2}`, no table features; a classic checkpoint every `delta.checkpointInterval` commits (10) | |
+| Java reader (the server's Delta connector) | Delta Kernel 4.4.0 on Drishti's native engine (no Hadoop) | | the features in 14.3's Java column |
+| Python writer (`lake build --engine deltalake`) | delta-rs 1.6.6 | the protocol delta-rs writes | |
+| Python reader (`tools/lake/deltaread.py`: `lake maintain`'s relayout, the Delta-to-Iceberg copy) | delta-rs 1.6.6, or Delta Kernel through the server's exec jar when delta-rs would not read the table completely | | the features in 14.3's Python column |
+
+### 14.2 Partition paths: values, folders, `add.path`
+
+A partition value goes to three places, each by the protocol's rule:
+
+- **the folder** is the value Hive-escaped, as Spark writes it: `"` `#` `%` `'` `*` `/` `:` `=` `?` `\` `{` `[` `]` `^`, DEL and the
+  control characters become `%XX`; a space, a dot and non-ASCII letters stay as they are; null is `__HIVE_DEFAULT_PARTITION__`;
+- **`add.path`** in the log is that relative path as a URI, encoded once (`%` becomes `%25`, a space `%20`); every reader decodes it
+  once and finds the file;
+- **`partitionValues`** hold the raw value; an empty value is written as null, as Spark writes it.
+
+From a table the Java writer wrote (captured):
+
+| Value | Folder on disk | In `add.path` | `partitionValues` |
+|---|---|---|---|
+| `Money market` | `PRODUCT_GROUP=Money market` | `PRODUCT_GROUP=Money%20market` | `"Money market"` |
+| `x/y` | `PRODUCT_GROUP=x%2Fy` | `PRODUCT_GROUP=x%252Fy` | `"x/y"` |
+| `100%` | `PRODUCT_GROUP=100%25` | `PRODUCT_GROUP=100%2525` | `"100%"` |
+| the text `%2F` | `PRODUCT_GROUP=%252F` | `PRODUCT_GROUP=%25252F` | `"%2F"` (never decoded to `/`) |
+| `a:b` | `PRODUCT_GROUP=a%3Ab` | `PRODUCT_GROUP=a%253Ab` | `"a:b"` |
+| `k=v` | `PRODUCT_GROUP=k%3Dv` | `PRODUCT_GROUP=k%253Dv` | `"k=v"` |
+| `.` | `PRODUCT_GROUP=.` | `PRODUCT_GROUP=.` | `"."` |
+| `..` | `PRODUCT_GROUP=..` | `PRODUCT_GROUP=..` | `".."` |
+| `Zürich` | `PRODUCT_GROUP=Zürich` | `PRODUCT_GROUP=Zürich` | `"Zürich"` |
+| `東京` | `PRODUCT_GROUP=東京` | `PRODUCT_GROUP=東京` | `"東京"` |
+| empty | `PRODUCT_GROUP=__HIVE_DEFAULT_PARTITION__` | the same | `null` |
+| null | `PRODUCT_GROUP=__HIVE_DEFAULT_PARTITION__` | the same | `null` |
+
+A value never adds a folder level or leaves the table: `/` and `\` are escaped, and `..` is part of the name `PRODUCT_GROUP=..`, not a
+folder of its own. One `add` action of that table, as written (statistics shortened):
+
+```json
+{"add":{"path":"business_date=2026-11-06/PRODUCT_GROUP=Money%20market/c8daa754-2833-4db9-b0b1-1397f1b207d5-000.parquet","partitionValues":{"PRODUCT_GROUP":"Money market","business_date":"2026-11-06"},"size":1718,"modificationTime":1794142500377,"dataChange":true,"stats":"{\"numRecords\":1,\"minValues\":{\"id\":\"0\"},\"maxValues\":{\"id\":\"0\"},\"nullCount\":{\"id\":0}}"}}
+```
+
+**The Python writer** (delta-rs) spells folders its own way: it percent-encodes a space and non-ASCII letters too
+(`PRODUCT_GROUP=Money%20market`, `PRODUCT_GROUP=Z%C3%BCrich`). That is within the protocol (the folder is whatever `add.path` decodes
+to, and every reader, Drishti's included, reads it), but the names differ from Spark's convention; use the Java writer when the folder
+names themselves must be Spark's.
+
+**A partition column's name** is never escaped (by Kernel or by Spark), so `lake build` refuses one a folder would change, or that Spark
+refuses without column mapping (a space, `,` `;` `{` `}` `(` `)` `=` `/` `\` `%` `:` `#` `?` `*` quotes `[` `]` `^`, control
+characters): *partition column 'PRODUCT GROUP' cannot name a Delta partition folder*. A dotted field path is a plain name
+(`counterparty.id` is the column `counterparty__id`).
+
+### 14.3 Table features
+
+Each feature below was put on a table with delta-rs 1.6.6, appended to and read back by both readers. Delta Kernel 4.4.0's own list
+(`TableFeatures`) declares read support for every feature it knows, including the ones delta-rs cannot create.
+
+**The Python reader** is `tools/lake/deltaread.py`: delta-rs reads a table its pyarrow reader reads completely; any other table is read
+by Delta Kernel, the server's reader, through the server's exec jar (`com.ash.drishti.deltalake.read.DeltaRowsCli`), so Python reads
+exactly what the server reads. delta-rs alone is not enough: version 1.6.6 (the latest) refuses deletion vectors and v2 checkpoints,
+and reads a column-mapped table of reader version 2 (the protocol Databricks gives column mapping) as all nulls.
+
+| Feature | Java reader (server) | Python reader (`deltaread`) | delta-rs appends (the feature's flag only) |
+|---|---|---|---|
+| `appendOnly`, `invariants`, `checkConstraints`, `generatedColumns`, `changeDataFeed` | reads | reads (delta-rs) | yes |
+| `timestampNtz`, `variantType`, `variantType-preview` | reads | reads (delta-rs) | yes |
+| `deletionVectors` | reads, the deleted rows left out (tested with real deletion-vector files) | reads (Kernel), the same rows | yes |
+| `v2Checkpoint` | reads a table whose files only its single-file checkpoint names (tested); with sidecar files: **not verified** | reads (Kernel), the same | yes |
+| `columnMapping`, mode `name` or `id` | reads: every path (documents, columns, type-ahead, vectors, partition values, statistics) uses the physical names (tested) | reads (Kernel) | yes |
+| `domainMetadata`, `identityColumns`, `rowTracking`, `icebergCompatV1` (UniForm) | reads | reads (delta-rs) | **refused** |
+| `typeWidening`, `inCommitTimestamp`, `vacuumProtocolCheck`, `clustering`, `collations`, `allowColumnDefaults`, `icebergCompatV2`/`V3`, `timestampNanos` | **not verified**: Kernel declares read support; delta-rs cannot create them | through Kernel when delta-rs refuses them; **not verified** | not tested |
+
+The server reads through Kernel's scan plan (the files, their partition values, deletion vectors), and its fast paths then read the
+Parquet columns of those files directly, by their physical names (`delta.columnMapping.physicalName`, which Databricks writes in both
+modes). A v2 checkpoint with sidecar files is left to Kernel's declared support: neither delta-rs nor Kernel 4.4.0 writes sidecars, so
+there is no local fixture. **Writing into an existing external table** (one Databricks writes) that uses deletion vectors, column
+mapping or another of these features is **not verified**: Drishti's writers write and append to their own plain tables (protocol 1/2,
+no features). A table that needs a feature no reader knows is refused, never half-read:
+
+- Java reader (and the Python reader through it): `UnsupportedTableFeatureException: Unsupported Delta table feature: table requires
+  feature "madeUpFeature" which is unsupported by this version of Delta Kernel.`
+- Python writer: `Unsupported table features required: [RowTracking]`; `lake maintain` compacts and vacuums with delta-rs, so on
+  such a table it stops with that message and changes nothing.
+
+### 14.4 Maintenance in protocol terms
+
+`drishti.py lake maintain` (section 2.6) does each step as an ordinary commit any engine reads: compaction is delta-rs
+`optimize.compact` (OPTIMIZE: the small files removed and the rewritten ones added, `dataChange: false`); a checkpoint is a classic
+Parquet checkpoint with `_last_checkpoint`; old log files go after `delta.logRetentionDuration`; vacuum deletes only files no version
+within `time-travel` needs. A table Databricks also maintains follows the same rules.
+
+### 14.5 Check it yourself
+
+```bash
+python3 tools/drishti.py lake check
+uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/lake/test_delta_interop.py -q
+```
+
+Reading a Drishti table with delta-rs, as Spark or Databricks would:
+
+```python
+from deltalake import DeltaTable
+t = DeltaTable("data/delta/risklake/trading/trade_endur")
+print(t.protocol(), t.to_pyarrow_table().num_rows)
+```
+
+A table with deletion vectors, column mapping or a v2 checkpoint (one Databricks wrote, say) is read completely from Python with
+`deltaread` (it needs the server's exec jar and Java 21):
+
+```python
+import sys; sys.path.insert(0, "tools/lake")
+import deltaread
+print(deltaread.read("data/delta/risklake/trading/trade_endur", date="2026-11-06").num_rows)
+```
+
+Section 10 is the other way round: Drishti reading the tables a lakehouse writes.
+
+## 15. Iceberg spec compliance
+
+Drishti's Iceberg tables are standard Apache Iceberg tables, and Drishti reads other engines' Iceberg tables to the
+[Iceberg table spec](https://iceberg.apache.org/spec/) with no workaround: Spark, Trino, Flink, Snowflake, AWS Glue, pyiceberg and the Apache
+Iceberg Java library read what Drishti writes, and Drishti reads what they write, or refuses a table by name. It never reads one wrongly.
+The design is in [DATA_ARCHITECTURE.md › drishti-iceberg](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine);
+the connectors are [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) and
+[ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md).
+
+### 15.1 Who reads and writes
+
+| Engine | Where | Reads | Writes |
+|---|---|---|---|
+| **drishti-iceberg** (`engine: native`, the default) | inside the server, the loader (`IcebergLoader`, `lake build --format iceberg`, the data inbox) and maintenance (`IcebergMaintenance`); the `iceberg-external` connector | format v1 and v2 | v1 and v2 tables in Drishti's layout (section 1): partitioned by `business_date` |
+| **Apache Iceberg Java 1.10.1** (`engine: library`) | the `iceberg` connector, loader and maintenance when chosen | everything the library reads | everything the library writes |
+| **Python** (`tools/lake`) | `lake build --format iceberg` streams rows to the loader above; `lake maintain` and Admin → Lakes read the metadata JSON for the figures, then run `IcebergMaintenance` | | no Iceberg writer of its own |
+
+### 15.2 File paths and partition values
+
+Per the spec, a data file's path in a manifest is opaque: a reader opens it **as written**, never percent-decoding it, and takes partition
+values from the manifest, never from the folder name. Each writer names its partition folders its own way. The Apache library and pyiceberg
+URL-encode the value, so the folder name on disk holds the `%XX` literally. Captured with pyiceberg 0.12.0, an identity partition on `g`
+with the table at `file:///…/wh/ns/t`:
+
+| Value of `g` | Data file path in the manifest (after `…/ns/t/data/`) |
+|---|---|
+| `a b` | `g=a+b/00000-0-….parquet` |
+| `a/b` | `g=a%2Fb/…` |
+| `100%` | `g=100%25/…` |
+| `a%2Fb` (the text itself) | `g=a%252Fb/…` |
+| `a:b`, `a=b`, `a\b`, `a+b` | `g=a%3Ab/…`, `g=a%3Db/…`, `g=a%5Cb/…`, `g=a%2Bb/…` |
+| `.` and `..` | `g=./…` and `g=../…` (folder names that start with `g=`, never a path step) |
+| `x` U+0001 `y`, `é漢` | `g=x%01y/…`, `g=%C3%A9%E6%BC%A2/…` |
+| empty text | `g=/…` |
+| null | `g=null/…` (the text `null` gets the same folder; the manifest tells them apart) |
+
+Drishti opens each of these as written: `g=a%2Fb` is that folder, not `g=a/b`. The same holds through `relocate`, whose two sides are also
+compared as written. The pairs in `relocate` are plain folders or `file:` paths spelled as the metadata spells them (`/data/100%25` names
+the folder `100%25`). Drishti's own writers make `business_date=YYYY-MM-DD` folders and plain `file:` locations (`file:/srv/my lake/…`),
+the form the library uses. The library engine's lake is the folder its `root` names, spaces, `%` and unicode included.
+
+### 15.3 The feature table
+
+| Area | Drishti reads | Drishti writes | Otherwise |
+|---|---|---|---|
+| Format versions | 1, 2 | 1, 2 (the loader makes 2) | 3: refused by name |
+| Partition transforms | identity, bucket[N], truncate[W], year, month, day, hour, void; pruned by each; the partition values the library computes, value for value | identity on `business_date` | an unknown transform is read, never pruned; a table another engine **re-partitioned** (any field besides `business_date`) is refused for writing |
+| Partition evolution | every spec, void fields, a field whose source column was dropped | | |
+| Schema evolution by field id | add, drop, rename, reorder, int→long, float→double, decimal widening; nested structs, lists, maps; `schema.name-mapping.default` for files without ids | adds optional columns | |
+| Sort orders | read | `sort_order_id` set when the files are sorted by `id` | |
+| Snapshots, time travel | by snapshot id and by time (*known at*, the snapshot log) | one snapshot per commit | |
+| Refs | the `main` branch | moves `main`, keeping its retention settings | other branches and tags are not read by name; expiry keeps every branch's and tag's snapshot |
+| Position deletes (v2) | applied by the spec's sequence-number rule (`referenced_data_file` and `file_path` bounds honoured) | never writes delete files (rewrites copy on write) | |
+| Equality deletes (v2) | applied by partition and sequence number, unpartitioned ones globally, null equal to null | | |
+| Deletion vectors (v3) | | | refused (format version 3) |
+| Row lineage, default values, `variant`, `geometry`, `geography`, `timestamp_ns`, `unknown`, multi-argument transforms (v3) | | | refused by name |
+| Data files | Parquet | Parquet with field ids and column metrics | ORC and Avro data or delete files: refused, naming the file |
+| Manifests and manifest lists | Avro v1 and v2 from any writer, inherited snapshot ids and sequence numbers | Avro v1 and v2 | |
+| Statistics (Puffin) | not used | not written; expiry drops the entries of expired snapshots | |
+| Metadata tables (`snapshots`, `files`, …) | | | not offered as tables; Admin → Lakes and Health show snapshots and files |
+| Encryption | | | refused (`encryption-keys`, a file's `key_metadata`) |
+| Catalogs | path-based (`version-hint.text` and `vN.metadata.json`, or a catalog's `NNNNN-uuid.metadata.json`), a metadata file named directly, REST (Polaris, Snowflake Open Catalog, AWS Glue's REST endpoint, Unity Catalog, Nessie, Lakekeeper, Gravitino), AWS S3 Tables | path-based, REST | Hive metastore, JDBC/SQL catalog, the Glue SDK: through a REST catalog in front, or `metadata-location.<table>` |
+| Storage | local disk (Windows too), `s3://`, `s3a://`, `s3n://`, `mem://` | the same | `abfs://`, `gs://`, `hdfs://`: `engine: library` |
+| Maintenance | | expire snapshots (keeping every branch and tag), rewrite a day's files, rewrite manifests, remove orphans, drop old days ([ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md#retention-and-maintenance)) | |
+
+### 15.4 What a refusal says
+
+A table or file the native engine does not read stops the read with this message (`[…]` names the table or file where it was met):
+
+```text
+drishti-iceberg does not read format version 3 tables; use the connector's engine: library for this table [<table>]
+drishti-iceberg does not read ORC data files; use the connector's engine: library for this table [<the .orc file>]
+drishti-iceberg does not read the Iceberg type 'variant' (format version 3); use the connector's engine: library for this table
+drishti-iceberg does not read column defaults (format version 3) on NOTIONAL; use the connector's engine: library for this table
+drishti-iceberg does not read encrypted data files; use the connector's engine: library for this table [<the file>]
+```
+
+A load into a table another engine re-partitioned stops before any file is written (the parallel loader's wording; the Iceberg loader's says the same):
+
+```text
+<table> is not in the layout: its partition spec 1 has the field 'id_bucket_8' (bucket[8]) beside the identity partition on
+business_date; Drishti writes only tables partitioned by business_date alone (write this table with engine: library, or restore its spec)
+```
+
+### 15.5 Check it yourself
+
+`IcebergSpecInteropTest` (plugins/drishti-plugin-iceberg) runs both directions against the Apache Iceberg Java library: the library
+writes a table partitioned by identity, bucket, truncate, year, month, day, hour and truncate of a decimal, with 26 partition values
+(space, `/`, `%`, `%2F`, `%20`, `:`, `=`, `.`, `..`, `\`, control characters, a tab, a newline, quotes, unicode, an emoji, `+`, `?#`, `*`,
+`~`, 200 characters, empty, `__HIVE_DEFAULT_PARTITION__`, the text `null`, null), then position and equality deletes. Drishti reads
+every row the library reads, computes each file's partition values as the library did, and prunes to exactly the matching rows.
+Drishti expires a library table's snapshots, and the library still reads its tag and its branch. `PyicebergReadsNativeTest` and
+`NativeReadInteropTest` do the same with pyiceberg.
+
+```bash
+./mvnw -pl plugins/drishti-plugin-iceberg -am test -Dtest='IcebergSpecInteropTest,PyicebergReadsNativeTest,NativeReadInteropTest' \
+    -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+Read a Drishti table from Python with pyiceberg alone:
+
+```python
+from pyiceberg.table import StaticTable
+t = StaticTable.from_metadata("file:///srv/drishti/data/iceberg/risk/pnl-vector/metadata/v12.metadata.json")
+print(t.scan(row_filter="business_date = '2026-09-30'").to_arrow().num_rows)
+```

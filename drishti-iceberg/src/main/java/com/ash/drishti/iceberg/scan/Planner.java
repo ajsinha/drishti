@@ -183,7 +183,7 @@ public final class Planner {
     private static final class DeleteIndex {
         private record Entry(DataFile file, long sequence) {}
 
-        private final Map<String, List<Entry>> byPartition = new HashMap<>();
+        private final Map<List<Object>, List<Entry>> byPartition = new HashMap<>();
         private final List<Entry> global = new ArrayList<>();
 
         DeleteIndex(List<ManifestEntry> deletes, TableMetadata table) {
@@ -232,12 +232,17 @@ public final class Planner {
             return Values.compareCodePoints(path, l) >= 0 && (Values.compareCodePoints(path, h) <= 0 || path.startsWith(h));
         }
 
-        private static String key(DataFile f) {
-            StringBuilder b = new StringBuilder().append(f.specId());
+        /**
+         * The spec and the partition values as one key compared value by value (a null partition and the text {@code "null"}, or values
+         * holding a separator, are different partitions); byte arrays by content.
+         */
+        private static List<Object> key(DataFile f) {
+            List<Object> k = new ArrayList<>(f.partition().length + 1);
+            k.add(f.specId());
             for (Object v : f.partition()) {
-                b.append('\u001f').append(v instanceof byte[] bytes ? java.util.HexFormat.of().formatHex(bytes) : String.valueOf(v));
+                k.add(v instanceof byte[] bytes ? java.nio.ByteBuffer.wrap(bytes) : v);
             }
-            return b.toString();
+            return k;
         }
     }
 }

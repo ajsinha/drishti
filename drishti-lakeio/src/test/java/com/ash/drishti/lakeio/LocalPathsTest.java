@@ -70,6 +70,10 @@ class LocalPathsTest {
                 .isEqualTo("C:\\Users\\John Smith\\lake\\");
         assertThat(LocalPaths.decodeUri("file:/home/me/100%/lake")).isEqualTo("file:/home/me/100%/lake");   // not encoded
         assertThat(LocalPaths.decodeUri("file:/C:/plain")).isEqualTo("file:/C:/plain");
+        // Delta Kernel's paths are unencoded (file:/): a Hive-escaped partition folder keeps its literal %XX (Spark's 100%25, a%3Ab)
+        assertThat(LocalPaths.decodeUri("file:/lake/t/PRODUCT_GROUP=100%25/p.parquet")).isEqualTo("file:/lake/t/PRODUCT_GROUP=100%25/p.parquet");
+        assertThat(LocalPaths.decodeUri("file:/lake/t/PRODUCT_GROUP=a%3Ab/p.parquet")).isEqualTo("file:/lake/t/PRODUCT_GROUP=a%3Ab/p.parquet");
+        assertThat(LocalPaths.decodeUri("file:/lake/t/PRODUCT_GROUP=Money%20market")).isEqualTo("file:/lake/t/PRODUCT_GROUP=Money%20market");
         assertThat(LocalPaths.decodeUri("s3a://bucket/a%20b")).isEqualTo("s3a://bucket/a%20b");
     }
 

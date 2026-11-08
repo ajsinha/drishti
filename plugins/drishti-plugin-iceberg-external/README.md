@@ -289,6 +289,8 @@ tools/drishti.py pack make --schema build/risk-mart-schemas --name risk-mart
 - **Local disk and S3 only**: tables in Azure, Google Cloud Storage or HDFS are not read; a REST catalog with an S3-compatible store
   in front of them works.
 - **Format version 3, encrypted tables, ORC and Avro data files** are refused by name; branches and tags other than `main` are not read.
+  Data file paths are opened as written (a Spark or pyiceberg folder `g=a%2Fb` is that folder); every partition transform is pruned.
+  Feature by feature: [DATA_LAKE_GUIDE.md section 15](../../docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 - **Effective kinds are not read as columns** (each entity's latest row would have to be resolved across days).
 - `engine: library` is refused (it is the `iceberg` connector's only).
 
