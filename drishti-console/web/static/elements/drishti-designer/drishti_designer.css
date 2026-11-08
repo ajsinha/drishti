@@ -111,6 +111,7 @@
 a.dd-btn { text-decoration: none; display: inline-block; }
 .dd-btn[aria-pressed="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); color: var(--d-accent-strong, var(--d-ink)); }
 .dd-btn[hidden], .dd-choice[hidden] { display: none; }
+.dd-choice { width: auto; max-width: 16rem; }
 .dd-obj-badge { margin-left: 6px; font-size: 10px; padding: 0 5px; border: 1px solid var(--d-border); border-radius: 8px; color: var(--d-muted); }
 a.dd-obj { text-decoration: none; }
 .dd-obj[aria-current="page"] { background: var(--d-surface-2); border-left-color: var(--d-accent); font-weight: 600; }

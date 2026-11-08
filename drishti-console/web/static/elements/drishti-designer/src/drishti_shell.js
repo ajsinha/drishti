@@ -27,7 +27,7 @@
    A studio that edits several objects in turn adds the open documents above the editor (docs), a dock of panes under it (dock: problems,
    a query) and a left rail that folds away (collapsible); its header's actions may be links, toggles and choices too (drishti_shell-parts.js). */
 import { EventBus, announce, h, openDialog, closeDialog } from '../../drishti-core/src/drishti_index.js';
-import { actionElement, DocTabs, Dock } from './drishti_shell-parts.js';
+import { actionElement, drawObjectGroups, DocTabs, Dock } from './drishti_shell-parts.js';
 
 /** The header's actions, in order, with their words. */
 export const SHELL_ACTIONS = Object.freeze([
@@ -375,57 +375,25 @@ export class DesignerShell {
     });
   }
 
-  /**
-   * An action's words (Publish or Propose, as the place requires).
-   * @param {string} id
-   * @param {string} label
-   * @returns {void}
-   */
+  /** An action's words (Publish or Propose, as the place requires). @param {string} id @param {string} label @returns {void} */
   setLabel(id, label) { const b = this.buttons[id]; if (b && b.tagName !== 'SELECT') { b.textContent = label; } }
 
-  /**
-   * Shows or hides an action (one that does not apply here).
-   * @param {string} id
-   * @param {boolean} on
-   * @returns {void}
-   */
+  /** Shows or hides an action (one that does not apply here). @param {string} id @param {boolean} on @returns {void} */
   showAction(id, on) { if (this.buttons[id]) { this.buttons[id].hidden = !on; } }
 
-  /**
-   * The open documents above the editor (the docs option).
-   * @param {Array<{id: string, label: string, href: string, current: boolean, title: string}>} list
-   * @returns {void}
-   */
+  /** The open documents above the editor (docs). @param {Array<{id: string, label: string, href: string, current: boolean}>} list @returns {void} */
   setDocs(list) { if (this.docs) { this.docs.set(list); } }
 
-  /**
-   * A dock pane's element, for the host to fill (the dock option).
-   * @param {string} id
-   * @returns {?HTMLElement}
-   */
+  /** A dock pane's element, for the host to fill (dock). @param {string} id @returns {?HTMLElement} */
   dockPane(id) { return this.dock && this.dock.tabs[id] ? this.dock.tabs[id].pane : null; }
 
-  /**
-   * Opens a dock pane (null folds the dock).
-   * @param {?string} id
-   * @returns {void}
-   */
+  /** Opens a dock pane (null folds the dock). @param {?string} id @returns {void} */
   showDock(id) { if (this.dock) { this.dock.show(id); } }
 
-  /**
-   * The count on a dock tab (bad: an error among them).
-   * @param {string} id
-   * @param {?number} n
-   * @param {boolean} [bad]
-   * @returns {void}
-   */
+  /** The count on a dock tab (bad: an error among them). @param {string} id @param {?number} n @param {boolean} [bad] @returns {void} */
   setDockCount(id, n, bad) { if (this.dock) { this.dock.count(id, n, bad); } }
 
-  /**
-   * Shows or folds the left rail (the collapsible option).
-   * @param {boolean} open
-   * @returns {void}
-   */
+  /** Shows or folds the left rail (collapsible). @param {boolean} open @returns {void} */
   setRail(open) {
     this.el.classList.toggle('dd-rail-off', !open);
     if (this.railToggle) { this.railToggle.setAttribute('aria-expanded', String(!!open)); this.railToggle.setAttribute('aria-label', open ? 'Hide the left rail' : 'Show the left rail'); }
@@ -491,20 +459,7 @@ export class DesignerShell {
   setObjects(groups) { this.groups = groups || []; this.drawObjects(); }
 
   /** @private */
-  drawObjects() {
-    if (!this.objects) { return; }
-    const term = (this.searchEl.value || '').toLowerCase(), doc = this.doc;
-    this.objects.textContent = '';
-    this.groups.forEach((g) => {
-      const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
-      const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, x.href ? 'a' : 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
-        attrs: { type: x.href ? null : 'button', href: x.href || null, title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
-        on: x.href ? {} : { click: () => this.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label },
-        x.badge ? [h(doc, 'span', { cls: 'dd-obj-badge', text: x.badge })] : []), h(doc, 'small', { text: x.detail || '' })])])));
-      this.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
-        list.length ? ul : h(doc, 'p', { cls: 'dd-muted dd-small', text: term ? 'none match' : 'none yet' })]));
-    });
-  }
+  drawObjects() { drawObjectGroups(this); }
 
   /**
    * A message under the header (bad: a problem).

@@ -64,6 +64,27 @@ export function actionElement(doc, a, emit) {
 }
 
 /**
+ * The shell's objects on the left, in groups, filtered by its search: an item with an href is a link to the object's own address, else a
+ * button that emits "open"; a badge is a word after its name.
+ * @param {Object} shell the DesignerShell (its objects, searchEl, groups, events)
+ * @returns {void}
+ */
+export function drawObjectGroups(shell) {
+  if (!shell.objects) { return; }
+  const term = (shell.searchEl.value || '').toLowerCase(), doc = shell.doc;
+  shell.objects.textContent = '';
+  shell.groups.forEach((g) => {
+    const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
+    const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, x.href ? 'a' : 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
+      attrs: { type: x.href ? null : 'button', href: x.href || null, title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
+      on: x.href ? {} : { click: () => shell.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label },
+      x.badge ? [h(doc, 'span', { cls: 'dd-obj-badge', text: x.badge })] : []), h(doc, 'small', { text: x.detail || '' })])])));
+    shell.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
+      list.length ? ul : h(doc, 'p', { cls: 'dd-muted dd-small', text: term ? 'none match' : 'none yet' })]));
+  });
+}
+
+/**
  * The open documents: a strip of tabs above the editor. setDocs draws them; a tab is a link to the document's address (the current one
  * marked), its close button emits "close" {id}.
  */

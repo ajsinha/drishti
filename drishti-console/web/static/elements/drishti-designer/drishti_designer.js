@@ -1415,6 +1415,20 @@
       });
       return b;
     }
+    function drawObjectGroups(shell) {
+      if (!shell.objects) { return; }
+      const term = (shell.searchEl.value || '').toLowerCase(), doc = shell.doc;
+      shell.objects.textContent = '';
+      shell.groups.forEach((g) => {
+        const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
+        const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, x.href ? 'a' : 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
+          attrs: { type: x.href ? null : 'button', href: x.href || null, title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
+          on: x.href ? {} : { click: () => shell.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label },
+          x.badge ? [h(doc, 'span', { cls: 'dd-obj-badge', text: x.badge })] : []), h(doc, 'small', { text: x.detail || '' })])])));
+        shell.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
+          list.length ? ul : h(doc, 'p', { cls: 'dd-muted dd-small', text: term ? 'none match' : 'none yet' })]));
+      });
+    }
     class DocTabs {
       constructor(doc, emit) {
         this.doc = doc;
@@ -1465,12 +1479,12 @@
         t.count.classList.toggle('dd-bad', !!bad);
       }
     }
-    return { "actionElement": actionElement, "DocTabs": DocTabs, "Dock": Dock };
+    return { "actionElement": actionElement, "drawObjectGroups": drawObjectGroups, "DocTabs": DocTabs, "Dock": Dock };
   })();
   /* ---- src/drishti_shell.js ---- */
   __m["src/drishti_shell.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus, announce = __lib("drishti-core").announce, h = __lib("drishti-core").h, openDialog = __lib("drishti-core").openDialog, closeDialog = __lib("drishti-core").closeDialog;
-    var actionElement = __m["src/drishti_shell-parts.js"].actionElement, DocTabs = __m["src/drishti_shell-parts.js"].DocTabs, Dock = __m["src/drishti_shell-parts.js"].Dock;
+    var actionElement = __m["src/drishti_shell-parts.js"].actionElement, drawObjectGroups = __m["src/drishti_shell-parts.js"].drawObjectGroups, DocTabs = __m["src/drishti_shell-parts.js"].DocTabs, Dock = __m["src/drishti_shell-parts.js"].Dock;
     const SHELL_ACTIONS = Object.freeze([
       { id: 'validate', label: 'Validate', title: 'Check the definition now (Ctrl+Enter)' },
       { id: 'preview', label: 'Preview', title: 'Read the preview again' },
@@ -1723,20 +1737,7 @@
       }
       setYamlState(text, tone) { this.yamlState.textContent = text || ''; this.yamlState.className = 'dd-ystate' + (tone ? ' dd-' + tone : ''); }
       setObjects(groups) { this.groups = groups || []; this.drawObjects(); }
-      drawObjects() {
-        if (!this.objects) { return; }
-        const term = (this.searchEl.value || '').toLowerCase(), doc = this.doc;
-        this.objects.textContent = '';
-        this.groups.forEach((g) => {
-          const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
-          const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, x.href ? 'a' : 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
-            attrs: { type: x.href ? null : 'button', href: x.href || null, title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
-            on: x.href ? {} : { click: () => this.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label },
-            x.badge ? [h(doc, 'span', { cls: 'dd-obj-badge', text: x.badge })] : []), h(doc, 'small', { text: x.detail || '' })])])));
-          this.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
-            list.length ? ul : h(doc, 'p', { cls: 'dd-muted dd-small', text: term ? 'none match' : 'none yet' })]));
-        });
-      }
+      drawObjects() { drawObjectGroups(this); }
       say(text, bad) { this.msg.textContent = text || ''; this.msg.classList.toggle('dd-bad', !!bad); if (text) { announce(text); } }
       setReadOnly(ro) {
         this.readOnlyBar.textContent = '';
