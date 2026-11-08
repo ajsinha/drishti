@@ -18,14 +18,6 @@
 .bi-shell-design { grid-template-columns: minmax(0, 1fr); max-width: none; }
 .bi-shell-design .bi-rail { display: none; }
 .bi-design { display: flex; flex-direction: column; gap: var(--d-sp-8); min-width: 0; }
-.bi-dbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--d-sp-8) var(--d-sp-16); }
-.bi-dtitle { display: flex; align-items: center; gap: var(--d-sp-9_6); min-width: 0; }
-.bi-dtitle h1 { font-size: var(--d-fs-20); margin: 0; padding: 0; overflow-wrap: anywhere; }
-.bi-dtitle h1::before, .bi-dtitle h1::after { content: none; }
-.bi-dback { color: var(--d-muted); padding: var(--d-sp-4_8); border-radius: var(--d-radius-6); }
-.bi-dactions { display: flex; flex-wrap: wrap; gap: var(--d-sp-5_6); align-items: center; }
-.bi-dactions .bi-viewas { width: auto; flex: 0 0 auto; max-width: 13rem; }
-.bi-preview-toggle { margin: 0 var(--d-sp-6_4); }
 .bi-checkpanel { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-9_6) var(--d-sp-14_4); background: var(--d-surface); }
 .bi-checkpanel h2 { font-size: var(--d-fs-16); margin: 0 0 var(--d-sp-4_8); }
 .bi-readonly { border: 1px solid var(--d-warn); border-radius: var(--d-radius); padding: var(--d-sp-6_4) var(--d-sp-12_8); list-style: none; color: var(--d-ink); }
@@ -119,10 +111,9 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 }
 @media (max-width: 760px) {
   .bi-dmain { grid-template-columns: minmax(0, 1fr); }
-  .bi-dactions .btn-pill { flex: 1 1 8rem; }
 }
 @media (pointer: coarse) {
-  .bi-field, .bi-chipbtn, .bi-viewas { min-height: 44px; min-width: 44px; }
+  .bi-field, .bi-chipbtn { min-height: 44px; min-width: 44px; }
 }
 
 /* the Model view (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.2): tables as boxes with their columns, relationships as lines */
@@ -176,11 +167,8 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
   [data-bookmarks] .bi-chipbtn { min-height: 44px; min-width: 44px; }
 }
 
-/* a phone: the toolbar shows icons, and the panes are reached through tabs under the canvas */
+/* a phone: the panes are reached through tabs under the canvas */
 @media (max-width: 760px) {
-  .bi-dactions .bi-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .bi-dactions .btn-pill, .bi-dactions .bi-checkrow { flex: 0 0 auto; min-width: 44px; min-height: 44px; justify-content: center; }
-  .bi-dactions .bi-preview-toggle { display: none; }
   .bi-mpanes { display: flex; gap: var(--d-sp-4); overflow-x: auto; margin: var(--d-sp-6_4) 0; }
   .bi-mpanes .bi-tab { min-height: 44px; flex: 0 0 auto; }
   .bi-dmain[data-mpane="canvas"] .bi-pane, .bi-dmain[data-mpane="vis"] .bi-pane:not(.bi-pane-vis), .bi-dmain[data-mpane="fields"] .bi-pane:not(.bi-pane-fields), .bi-dmain[data-mpane="filters"] .bi-pane:not(.bi-pane-filters) { display: none; }

@@ -13,30 +13,11 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* BI Studio (BI_DESIGN.md section 8.1, 2.4.0): the Explorer on the left, the open items on top, the designer in the middle, Problems and Query in the dock below;
+/* BI Studio (BI_DESIGN.md section 8.1) is drishti-designer's DesignerShell (its look is the kit's: drishti_designer.css); here only what sits inside it:
    the generated Format pane (sections), conditional formatting rules, Edit interactions on the canvas, and the theme designer. Colours are theme tokens;
-   touch targets are 44 px on a coarse pointer; under 900 px the Explorer folds away. */
-.bi-studio { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: var(--d-sp-12); align-items: start; min-width: 0; }
-.bi-studio.bi-studio-railless { grid-template-columns: 2.6rem minmax(0, 1fr); }
-.bi-studio-main { display: flex; flex-direction: column; gap: var(--d-sp-8); min-width: 0; }
-.bi-studio-rail { position: sticky; top: 4.5rem; display: flex; flex-direction: column; gap: var(--d-sp-7_2); max-height: calc(100vh - 5.5rem); overflow: auto; border-right: 1px solid var(--d-border); padding-right: var(--d-sp-8); }
-.bi-studio-railless .bi-studio-rail > :not(.bi-studio-railhead), .bi-studio-railless .bi-studio-railhead h2 { display: none; }
-.bi-studio-railhead { display: flex; align-items: center; justify-content: space-between; gap: var(--d-sp-4_8); }
-.bi-studio-railhead h2 { font-size: var(--d-fs-15_2); margin: 0; }
-.bi-studio-new { display: flex; align-items: center; gap: var(--d-sp-6_4); font-size: var(--d-fs-13_6); }
-.bi-studio-tree details { margin: var(--d-sp-3_2) 0; }
-.bi-studio-tree summary { cursor: pointer; font-size: var(--d-fs-12_8); font-weight: 600; color: var(--d-muted); text-transform: uppercase; letter-spacing: .03em; }
-.bi-studio-list { list-style: none; margin: var(--d-sp-1_6) 0 var(--d-sp-4_8); padding: 0; }
-.bi-studio-item { display: flex; align-items: center; gap: var(--d-sp-3_2); padding: var(--d-sp-4) var(--d-sp-5_6); border-radius: var(--d-radius-6); color: var(--d-ink); text-decoration: none; font-size: var(--d-fs-13_6); overflow-wrap: anywhere; }
-.bi-studio-item:hover { background: var(--d-highlight); }
-.bi-studio-item[aria-current="page"] { background: var(--d-accent-tint); color: var(--d-accent-strong); font-weight: 600; }
-.bi-studio-tabs { display: flex; flex-wrap: wrap; gap: var(--d-sp-4); border-bottom: 1px solid var(--d-border); min-height: 2rem; }
-.bi-studio-tabwrap { display: inline-flex; align-items: center; }
-.bi-studio-tab { text-decoration: none; }
-.bi-studio-dock { border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
-.bi-studio-docktabs { display: flex; gap: var(--d-sp-4); padding: var(--d-sp-3_2) var(--d-sp-6_4); }
-.bi-studio-dockbody { padding: var(--d-sp-6_4) var(--d-sp-12_8) var(--d-sp-9_6); max-height: 16rem; overflow: auto; }
-.bi-studio-dock.bi-dock-closed .bi-studio-dockbody { display: none; }
+   touch targets are 44 px on a coarse pointer. */
+.bi-studio.dd-shell { padding: 0; min-height: 0; }                                   /* the kit's DesignerShell inside the BI canvas: its own frame, no second padding */
+.bi-studio .dd-actions { position: relative; }
 .bi-dock-list li { cursor: default; }
 
 /* the generated Format pane */
@@ -66,10 +47,8 @@
 .bi-theme-sample[data-theme-sample="card"] { grid-column: span 4; min-height: 11rem; }
 
 @media (max-width: 900px) {
-  .bi-studio { grid-template-columns: minmax(0, 1fr); }
-  .bi-studio-rail { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--d-border); padding: 0 0 var(--d-sp-8); }
   .bi-theme-main { grid-template-columns: minmax(0, 1fr); }
 }
 @media (pointer: coarse) {
-  .bi-ix-btn, .bi-studio-item, .bi-studio-close { min-height: 44px; min-width: 44px; }
+  .bi-ix-btn { min-height: 44px; min-width: 44px; }
 }

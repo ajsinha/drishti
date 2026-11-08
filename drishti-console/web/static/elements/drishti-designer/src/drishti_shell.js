@@ -23,8 +23,11 @@
    The header says where you are, the name, the status with its versions ("Draft · approved v3"), and holds Validate, Preview,
    History, Impact, Save draft, Propose for review and + New. A Visual / YAML / Both toggle, remembered per person through a hook.
    Nothing goes live without review: Propose asks for a note and files it through the host's hook (the Approvals queue's API); a person
-   may not approve their own proposal. The panes' contents are the host's (a LayoutCanvas, an Inspector, a YamlPane, a preview). */
+   may not approve their own proposal. The panes' contents are the host's (a LayoutCanvas, an Inspector, a YamlPane, a preview).
+   A studio that edits several objects in turn adds the open documents above the editor (docs), a dock of panes under it (dock: problems,
+   a query) and a left rail that folds away (collapsible); its header's actions may be links, toggles and choices too (drishti_shell-parts.js). */
 import { EventBus, announce, h, openDialog, closeDialog } from '../../drishti-core/src/drishti_index.js';
+import { actionElement, DocTabs, Dock } from './drishti_shell-parts.js';
 
 /** The header's actions, in order, with their words. */
 export const SHELL_ACTIONS = Object.freeze([
@@ -41,11 +44,13 @@ export const SHELL_MODES = Object.freeze(['visual', 'yaml', 'both']);
 
 /**
  * What the status pill says: a draft, proposed, approved or shipped, its versions, unsaved.
- * @param {{status: string, version: number, origin: string, dirty: boolean}} s
+ * @param {{status: string, version: number, origin: string, dirty: boolean, text: string, versions: string}} s text (and versions): the host's
+ *   own words in place of the made ones
  * @returns {{word: string, versions: string, tone: string}}
  */
 export function statusWords(s) {
   if (!s) { return { word: '', versions: '', tone: '' }; }
+  if (s.text) { return { word: s.text, versions: s.versions || '', tone: s.status || 'draft' }; }      // the host's own words (Saved, Read-only)
   const word = s.origin === 'file' ? 'Shipped' : s.status === 'published' || s.status === 'approved' ? 'Approved' : s.status === 'proposed' ? 'Proposed' : 'Draft';
   const versions = s.origin === 'file' ? 'from configuration' : s.origin === 'item' || s.version ? (s.version ? 'approved v' + s.version : 'never approved') + (s.status === 'draft' && s.version ? ' · a draft after it' : '') : '';
   return { word: word + (s.dirty ? ' · unsaved' : ''), versions, tone: s.status || 'draft' };
@@ -55,7 +60,8 @@ export function statusWords(s) {
  * @typedef {Object} ShellOptions
  * @property {string[]} [crumbs] where you are (the last one is the group)
  * @property {string} [title]
- * @property {Array<{id: string, label: string, title: string, primary: boolean}>} [actions] default SHELL_ACTIONS
+ * @property {import('./drishti_shell-parts.js').ShellAction[]} [actions] default SHELL_ACTIONS (a button each; links, toggles and
+ *   choices too, with the host's data-* attributes)
  * @property {Array<{id: string, label: string}>} [newItems] + New's menu (none: no + New)
  * @property {boolean} [modes=true] the Visual / YAML / Both toggle
  * @property {string} [mode='both']
@@ -67,6 +73,9 @@ export function statusWords(s) {
  * @property {boolean} [inspector=false] an inspector pane (shell.inspector)
  * @property {('studio'|'side-by-side'|'terminal')} [layout='studio'] g7's options A, B and C
  * @property {function(string): (true|string)} [canMode] whether a mode may be picked now, else why not in words
+ * @property {boolean} [docs=false] the open documents above the editor (setDocs; "close" {id})
+ * @property {Array<{id: string, label: string}>} [dock] the dock's tabs under the editor (dockPane(id), showDock, setDockCount; "dock" {id})
+ * @property {boolean} [collapsible=false] the left rail folds away (a button in the header; setRail; "rail" {open})
  */
 
 /** The layouts of the shell (mock-up g7: A the docked studio, B side by side, C the terminal). */
@@ -76,8 +85,8 @@ export const SHELL_LAYOUTS = Object.freeze(['studio', 'side-by-side', 'terminal'
 export const SHELL_FKEYS = Object.freeze({ F3: 'validate', F4: 'yaml', F5: 'preview', F7: 'history', F8: 'impact', F9: 'propose' });
 
 /**
- * The shell. Events: action {id}, mode {mode}, new {id}, open {group, item}, search {query}, tab {id}, command {text},
- * layout {layout, user}.
+ * The shell. Events: action {id} (a toggle's {id, pressed}, a choice's {id, value}), mode {mode}, new {id}, open {group, item}, search
+ * {query}, tab {id}, command {text}, layout {layout, user}, close {id} (an open document), dock {id}, rail {open}.
  */
 export class DesignerShell {
   /**
@@ -121,8 +130,7 @@ export class DesignerShell {
     this.buttons = {};
     const acts = x('div', { cls: 'dd-actions' });
     o.actions.forEach((a) => {
-      const b = x('button', { cls: 'dd-btn' + (a.primary ? ' dd-primary' : ''), text: a.label, attrs: { type: 'button', 'data-act': a.id, title: a.title || '', 'data-title': a.title || '', disabled: true },
-        on: { click: () => this.events.emit('action', { id: a.id }) } });
+      const b = actionElement(doc, a, (ev) => this.events.emit('action', ev));
       if (a.id === 'impact') { b.appendChild(doc.createTextNode(' ')); this.impactCount = x('span', { attrs: { 'data-impact-count': '' } }); b.appendChild(this.impactCount); }
       this.buttons[a.id] = b;
       acts.appendChild(b);
@@ -136,6 +144,11 @@ export class DesignerShell {
       acts.append(nb, menu);
     }
     head.appendChild(acts);
+    if (o.collapsible) {
+      this.railToggle = x('button', { cls: 'dd-btn dd-rail-toggle', text: '◧', attrs: { type: 'button', 'data-dd-rail-toggle': '', 'aria-expanded': 'true', 'aria-label': 'Hide the left rail' },
+        on: { click: () => { this.setRail(this.el.classList.contains('dd-rail-off')); this.events.emit('rail', { open: !this.el.classList.contains('dd-rail-off') }); } } });
+      head.insertBefore(this.railToggle, head.firstChild);
+    }
     this.msg = x('p', { cls: 'dd-msg', attrs: { 'data-msg': '', role: 'status', 'aria-live': 'polite' } });
     const grid = x('div', { cls: 'dd-shell-grid', attrs: { 'data-grid': '' } });
     const railTabs = (o.search ? [{ id: 'objects', label: 'Objects' }] : []).concat(o.rail || []);
@@ -175,7 +188,9 @@ export class DesignerShell {
     this.yamlBody = x('div', { cls: 'dd-ybody', attrs: { 'data-yaml-body': '' } });
     this.yaml = x('section', { cls: 'dd-yaml-panel', attrs: { 'data-yaml-panel': '', 'aria-label': 'The definition as YAML', hidden: true } }, [
       x('div', { cls: 'dd-yh' }, [this.yamlToggle, this.yamlState, x('span', { cls: 'dd-ynote', text: 'edits on either side show on the other' })]), this.yamlBody]);
-    grid.appendChild(x('section', { cls: 'dd-main', attrs: { 'aria-label': 'Editor' } }, [this.readOnlyBar, this.visual, this.yaml]));
+    if (o.docs) { this.docs = new DocTabs(doc, (n, ev) => this.events.emit(n, ev)); this.docs.set([]); }
+    if (o.dock && o.dock.length) { this.dock = new Dock(doc, o.dock, (n, ev) => this.events.emit(n, ev)); this.dock.show(null); }
+    grid.appendChild(x('section', { cls: 'dd-main', attrs: { 'aria-label': 'Editor' } }, [this.docs ? this.docs.el : null, this.readOnlyBar, this.visual, this.yaml, this.dock ? this.dock.el : null]));
     if (o.inspector) {
       this.inspector = x('div', { cls: 'dd-inspector-pane', attrs: { 'data-dd-inspector': '' } });
       this.inspectorBox = x('aside', { cls: 'dd-insp-side', attrs: { 'aria-label': 'Inspector' } }, [x('h3', { cls: 'dd-sec', text: 'Inspector' }), this.inspector]);
@@ -354,10 +369,66 @@ export class DesignerShell {
   setActions(states) {
     Object.keys(states).forEach((id) => {
       const b = this.buttons[id], v = states[id];
-      if (!b) { return; }
+      if (!b || b.tagName === 'A') { return; }                                 // a link is never off
       b.disabled = v !== true;
       b.title = v === true ? b.getAttribute('data-title') : String(v || '');
     });
+  }
+
+  /**
+   * An action's words (Publish or Propose, as the place requires).
+   * @param {string} id
+   * @param {string} label
+   * @returns {void}
+   */
+  setLabel(id, label) { const b = this.buttons[id]; if (b && b.tagName !== 'SELECT') { b.textContent = label; } }
+
+  /**
+   * Shows or hides an action (one that does not apply here).
+   * @param {string} id
+   * @param {boolean} on
+   * @returns {void}
+   */
+  showAction(id, on) { if (this.buttons[id]) { this.buttons[id].hidden = !on; } }
+
+  /**
+   * The open documents above the editor (the docs option).
+   * @param {Array<{id: string, label: string, href: string, current: boolean, title: string}>} list
+   * @returns {void}
+   */
+  setDocs(list) { if (this.docs) { this.docs.set(list); } }
+
+  /**
+   * A dock pane's element, for the host to fill (the dock option).
+   * @param {string} id
+   * @returns {?HTMLElement}
+   */
+  dockPane(id) { return this.dock && this.dock.tabs[id] ? this.dock.tabs[id].pane : null; }
+
+  /**
+   * Opens a dock pane (null folds the dock).
+   * @param {?string} id
+   * @returns {void}
+   */
+  showDock(id) { if (this.dock) { this.dock.show(id); } }
+
+  /**
+   * The count on a dock tab (bad: an error among them).
+   * @param {string} id
+   * @param {?number} n
+   * @param {boolean} [bad]
+   * @returns {void}
+   */
+  setDockCount(id, n, bad) { if (this.dock) { this.dock.count(id, n, bad); } }
+
+  /**
+   * Shows or folds the left rail (the collapsible option).
+   * @param {boolean} open
+   * @returns {void}
+   */
+  setRail(open) {
+    this.el.classList.toggle('dd-rail-off', !open);
+    if (this.railToggle) { this.railToggle.setAttribute('aria-expanded', String(!!open)); this.railToggle.setAttribute('aria-label', open ? 'Hide the left rail' : 'Show the left rail'); }
   }
 
   /**
@@ -412,7 +483,9 @@ export class DesignerShell {
 
   /**
    * The objects on the left, in groups.
-   * @param {Array<{id: string, label: string, items: Array<{id: string, label: string, detail: string, current: boolean, search: string, data: Object}>}>} groups
+   * @param {Array<{id: string, label: string, items: Array<{id: string, label: string, detail: string, current: boolean, search: string, data: Object,
+   *   href: string, badge: string, title: string}>}>} groups an item with an href is a link to the object's own address (a studio of
+   *   pages), else a button that emits "open"; a badge is a word after its name (draft)
    * @returns {void}
    */
   setObjects(groups) { this.groups = groups || []; this.drawObjects(); }
@@ -424,9 +497,10 @@ export class DesignerShell {
     this.objects.textContent = '';
     this.groups.forEach((g) => {
       const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
-      const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
-        attrs: { type: 'button', 'aria-current': x.current ? 'true' : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
-        on: { click: () => this.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label }), h(doc, 'small', { text: x.detail || '' })])])));
+      const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, x.href ? 'a' : 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
+        attrs: { type: x.href ? null : 'button', href: x.href || null, title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
+        on: x.href ? {} : { click: () => this.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label },
+        x.badge ? [h(doc, 'span', { cls: 'dd-obj-badge', text: x.badge })] : []), h(doc, 'small', { text: x.detail || '' })])])));
       this.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
         list.length ? ul : h(doc, 'p', { cls: 'dd-muted dd-small', text: term ? 'none match' : 'none yet' })]));
     });
