@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 27 · Groupings and analytics, computed
+# Tutorial 6 · Groupings and analytics, computed
 
 An ownership group, a country's legal entities, a SIC sector, a World Bank region, a set of correlations, a company's margin and a
 stock's volatility are all **derived** from data the packs already hold. Drishti computes them when you open them, from that
@@ -29,7 +29,7 @@ About 25 minutes.
 
 ## Before you start
 
-- [Tutorial 1](01-first-15-minutes.md) done: a server and console you can build, start and stop.
+- [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done: a server and console you can build, start and stop.
 - The demo lake built with the public-data packs: `python3 tools/drishti.py lake demo`, and the packs loaded:
   `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif`.
 - For the command-line steps: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens), or `--user`
@@ -526,6 +526,6 @@ Further: [guide section 23](../guides/GROUPINGS_ANALYTICS_GUIDE.md#23-the-retire
 
 - The [groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md): every column and formula, and the reconciliation with the
   retired pages ([section 18](../guides/GROUPINGS_ANALYTICS_GUIDE.md#18-reconciliation-stored-against-computed)).
-- [Tutorial 25](25-var-from-the-bank-to-a-trade.md) and [tutorial 26](26-exposure-from-the-bank-to-a-trade.md): the same rule (computed,
+- [Tutorial 2, Part A](02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) and [tutorial 3](03-exposure-from-the-bank-to-a-trade.md): the same rule (computed,
   never stored) for VaR and exposure.
 - The data contracts of every command: [docs/contracts/packs/](../contracts/packs/README.md).
