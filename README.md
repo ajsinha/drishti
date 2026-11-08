@@ -280,10 +280,10 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 431k | 2,159 |
-| Java, tests | 164k | 1,034 |
-| Python, product (console, tools, loaders, feeds) | 142k | 729 |
-| Python, tests | 106k | 601 |
+| Java, product | 432k | 2,160 |
+| Java, tests | 165k | 1,038 |
+| Python, product (console, tools, loaders, feeds) | 142k | 730 |
+| Python, tests | 106k | 602 |
 | JavaScript, product (console and Elements) | 125k | 486 |
 | JavaScript, tests | 4k | 22 |
 | CSS | 19k | 114 |
@@ -291,7 +291,7 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 | YAML: configuration, Sutras, data contracts | 111k | 1,412 |
 | Markdown: guides, tutorials, design | 219k | 303 |
 
-About **751k lines of product code** and **274k lines of tests** (37% of the product code), with **219k lines of documentation**.
+About **751k lines of product code** and **275k lines of tests** (37% of the product code), with **219k lines of documentation**.
 
 | What | Count |
 |---|---|
@@ -307,7 +307,7 @@ About **751k lines of product code** and **274k lines of tests** (37% of the pro
 | Connector plugins | 19 |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,518: Java 951, console 249, browser 177, tools 119, JavaScript 22 |
+| Test files | 1,523: Java 955, console 249, browser 177, tools 120, JavaScript 22 |
 | Documents under docs/ | 174 (32 guides, 22 tutorials) |
 
 <!-- code-volume:end -->
