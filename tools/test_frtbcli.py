@@ -55,16 +55,16 @@ class FakeApi:
 
     def json(self, method, path, body=None):
         FakeApi.calls.append((method, path))
-        if path.startswith("/api/v1/frtb/playground/recipes/"):
+        if path.startswith("/api/v1/risk/frtb/playground/recipes/"):
             return {**SA, "reproduced": FakeApi.reproduced}
-        if path.startswith("/api/v1/frtb/playground/recipes"):
+        if path.startswith("/api/v1/risk/frtb/playground/recipes"):
             return {"id": "FR-AB12CD34-1", "command": "PLAY FRTB RUN FR-AB12CD34-1", "knownAt": "2026-11-02T00:00:00Z"}
-        if path.startswith("/api/v1/frtb/playground"):
+        if path.startswith("/api/v1/risk/frtb/playground"):
             return {**SA, "choices": [{"name": "girr-correlation", "value": "table", "default": "table", "rule": "MAR21.46"}],
                     "compare": {"words": "Girr-correlation: table → exact raises the total by 24.37"}}
-        if path.startswith("/api/v1/frtb/sa/contributions"):
+        if path.startswith("/api/v1/risk/frtb/sa/contributions"):
             return {"scope": "BANK", "by": "DESK", "total": 10.0, "addsUp": True, "rows": [{"key": "DESK-A", "contribution": 10.0}]}
-        if path.startswith("/api/v1/sensitivities"):
+        if path.startswith("/api/v1/risk/sensitivities"):
             return {"canonical": "DESK:RATES", "date": "2026-09-30", "currency": "USD", "records": 3,
                     "rows": [{"key": "GIRR USD", "measure": "DV01", "value": -1500.0, "positions": 2}]}
         return SA

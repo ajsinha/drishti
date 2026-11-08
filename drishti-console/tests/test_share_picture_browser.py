@@ -36,7 +36,7 @@ def open_dialog(ann, base):
     ann.keyboard.press("Alt+s")
     ann.locator("[data-share-dialog]:not([hidden])").wait_for()
     ann.keyboard.type("rav")
-    ann.locator("#shrList [role=option]").first.wait_for()
+    ann.locator(".di-combo-pop [role=option]").first.wait_for()          # drishti-inputs' combobox list
     ann.keyboard.press("Enter")
     ann.locator("[data-shr-chips] .shr-chip").first.wait_for()
 

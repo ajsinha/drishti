@@ -968,7 +968,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `PNLH` | `pnl-history` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/pnl-history/` → `lake demo` → connector `risk-store` |
 | `SENS` | `position-sensitivity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/position-sensitivity/` → `lake demo` → connector `risk-store` |
 | `RFAC` | `risk-factor` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/risk-factor/` → `lake demo` → connector `risk-store` |
-| `VRES` | `var-result` | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `VRES` | `var-result` | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.banking.var.VarResultEngine); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `VOFF` | `var-official` | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official; see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/var-official/` |
 | `SSPNL` | `stress-scenario-pnl` | computed by Drishti: the derived connector mr-derived over the kind stress-result | nothing to load: computed from its inputs when asked |
 

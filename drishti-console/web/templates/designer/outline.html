@@ -46,7 +46,7 @@
   </div>
   <div class="ol-wrap">
     <div class="ol-left">
-      <ol class="ol-tree" data-ol-tree role="tree" aria-label="The screen, as an outline"></ol>
+      <div class="ol-tree" data-ol-tree></div>
       <button type="button" class="dz-btn ol-add" data-ol-add-section><i class="bi bi-plus-lg" aria-hidden="true"></i> Add a section</button>
       <section class="ol-detail" data-ol-detail aria-live="polite" aria-label="The selected item"><p class="dz-note">Pick an item to see what it shows and change its settings. Drag an item to move it; drop it on a table's “opens on a click” line to nest it.</p></section>
       <pre class="dz-yaml mono" data-ol-sutra hidden aria-label="The Sutra (read only)"></pre>
@@ -59,4 +59,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_designer-outline.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "_designer_kit.html" %}<script src="/static/js/drishti_designer-outline.js?v={{ ASSET_V }}"></script>{% endblock %}

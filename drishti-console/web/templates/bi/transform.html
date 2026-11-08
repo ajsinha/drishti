@@ -70,7 +70,7 @@
       </form>
       <form class="bi-form tx-coder" data-coder hidden aria-label="Write a step">
         <label>What it does<input class="studio-in" data-code-label autocomplete="off" maxlength="120" placeholder="Keep the FX desk"></label>
-        <label>Python (on <code>df</code>)<textarea class="studio-in mono tx-code" data-code rows="6" spellcheck="false" placeholder='df = df[df["DESK"] == "DESK-FX"]'></textarea></label>
+        <label>Python (on <code>df</code>)<textarea class="studio-in mono tx-code" data-code data-di-code="python" rows="6" spellcheck="false" placeholder='df = df[df["DESK"] == "DESK-FX"]'></textarea></label>
         <div class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-code-add><i class="bi bi-check-lg" aria-hidden="true"></i> <span data-code-verb>Add the step</span></button>
           <button type="button" class="btn-pill btn-ghost" data-coder-close>Cancel</button></div>
       </form>
@@ -95,8 +95,8 @@
     <p class="text-muted-d">The Transform is saved as a Python item (the steps are the lines after each <code># step:</code>) and a Python dataset that runs it as each reader.
       Edit either here and <strong>Read the YAML back</strong> to see it as steps again.</p>
     <div class="tx-yaml-grid">
-      <label>Python item<textarea class="studio-in mono tx-yaml-text" rows="16" spellcheck="false" data-yaml-python></textarea></label>
-      <label>Python dataset<textarea class="studio-in mono tx-yaml-text" rows="16" spellcheck="false" data-yaml-dataset></textarea></label>
+      <label>Python item<textarea class="studio-in mono tx-yaml-text" rows="16" spellcheck="false" data-yaml-python data-di-code="yaml"></textarea></label>
+      <label>Python dataset<textarea class="studio-in mono tx-yaml-text" rows="16" spellcheck="false" data-yaml-dataset data-di-code="yaml"></textarea></label>
     </div>
     <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-yaml-read><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Read the YAML back</button></div>
   </details>

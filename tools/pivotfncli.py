@@ -130,20 +130,23 @@ def register(ps, srv, ctx: dict, view_args, body) -> None:
     def explain(a, extra=None) -> int:
         api = Api.from_args(a)
         b = body(a)
-        b.update({"from": _coords(a.cell), "by": a.by})
+        b.update({"kind": "pivot", "measure": "cell", "part": "why", "from": _coords(a.cell), "by": a.by})
         if a.other_cell:
             b["to"] = _coords(a.other_cell)
         if a.from_date:
             b["fromDate"] = a.from_date
         if a.to_date:
             b["toDate"] = a.to_date
-        for k in ("measure", "order", "price", "quantity"):
+        if a.measure:
+            b["value"] = a.measure                                # the value of the view to explain (its label)
+        for k in ("order", "price", "quantity"):
             if getattr(a, k):
                 b[k] = getattr(a, k)
-        res = api.json("POST", "/api/v1/pivot/explain", b)
+        out = api.json("POST", "/api/v1/explain", b)              # the one Explain, kind pivot (API_GUIDE.md, "Explain")
         if a.json:
-            say_json(res)
+            say_json(out)
             return 0
+        res = (out.get("why") or {}).get("answer") or {}
         print(res["words"])
         print(f"  {res['method']}")
         for s in res["steps"]:

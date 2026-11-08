@@ -71,7 +71,7 @@ final class VegaSpecs {
 
     /**
      * The names the rows carry in the page: a field is the text after the table's dot (the table is put back, with an underscore, when two fields share a
-     * name), a measure keeps its name. {@code drishti_bi-vega.js} {@code V.records} builds the same keys.
+     * name), a measure keeps its name. {@code drishti_bi-grids.js} {@code V.records} builds the same keys.
      */
     static Set<String> keys(Report.Visual v, Dataset ds) {
         List<String> names = new ArrayList<>();

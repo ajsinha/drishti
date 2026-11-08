@@ -13,16 +13,18 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the designer's canvas - the page's visuals on the 12-column grid, drawn with real data (and the time each query took),
-   dragged and resized with the pointer and with the keyboard, and the rules that put a field into a visual: a field dropped on the canvas makes the best
-   visual for it; dropped on a visual (or its well) it joins that visual. The same wells logic serves the Fields pane's Add buttons. */
+   and the rules that put a field into a visual: a field dropped on the canvas makes the best visual for it; dropped on a visual (or its well) it joins that
+   visual. The same wells logic serves the Fields pane's Add buttons. The canvas itself is drishti-designer's LayoutCanvas (grid): selecting (Shift or Ctrl for
+   more), moving by the heading and resizing by the corner with the pointer, snapped to the grid, and the keys (arrows move, Shift+arrows resize, Delete,
+   Ctrl+D, Enter to Format); each move is one step of the designer's undo, settled as a report page settles. */
 (function () {
   'use strict';
   const B = window.drishtiBi;
   const D = B.design;
   if (!D) { return; }
   const h = B.h;
-  const MIME = 'application/x-drishti-field';
 
   D.modules.push(function () {
     const grid = D.q('[data-canvas-grid]');
@@ -157,16 +159,6 @@
     };
 
     // ---- drawing -----------------------------------------------------------------------------------------------------
-    const metrics = () => {
-      const w = grid.clientWidth;
-      const col = (w - 11 * B.GAP_PX) / 12;
-      return { stepX: col + B.GAP_PX, stepY: B.ROW_PX + B.GAP_PX, col };
-    };
-
-    function place(el, at) {
-      el.style.gridColumn = (at.x + 1) + ' / span ' + at.w;
-      el.style.gridRow = (at.y + 1) + ' / span ' + at.h;
-    }
 
     function previewKey(v) {
       const p = D.page();
@@ -259,24 +251,9 @@
       const dup = h('button', { type: 'button', class: 'bi-vis-btn', 'aria-label': 'Duplicate this visual', title: 'Duplicate', 'data-act': 'duplicate' }, B.icon('files'));
       const f = B.frame(v, { buttons: [dup, del], onRetry: () => { const e = frames.get(v.id); if (e) { e.key = null; drawEntry(v.id); } } });          // a design error card has Retry too: fix the model, then ask again
       f.el.classList.add('bi-dvis');
-      f.el.tabIndex = 0;
       f.head.classList.add('bi-dhandle');
-      const rs = h('div', { class: 'bi-resize', 'aria-hidden': 'true', 'data-resize': '' });
-      f.el.appendChild(rs);
       del.addEventListener('click', (e) => { e.stopPropagation(); remove(v.id); });
       dup.addEventListener('click', (e) => { e.stopPropagation(); duplicate(v.id); });
-      f.el.addEventListener('click', () => { if (D.selected !== v.id) { D.select(v.id); } });
-      f.el.addEventListener('focus', () => { if (D.selected !== v.id) { D.select(v.id); } });
-      f.el.addEventListener('keydown', (e) => keys(v.id, e));
-      pointerDrag(f.el, f.head, v.id, 'move');
-      pointerDrag(f.el, rs, v.id, 'resize');
-      f.el.addEventListener('dragover', (e) => { if (e.dataTransfer && [...e.dataTransfer.types].indexOf(MIME) >= 0) { e.preventDefault(); f.el.classList.add('bi-drop'); } });
-      f.el.addEventListener('dragleave', () => f.el.classList.remove('bi-drop'));
-      f.el.addEventListener('drop', (e) => {
-        f.el.classList.remove('bi-drop');
-        const p = payload(e);
-        if (p && !p.vtype) { e.preventDefault(); e.stopPropagation(); D.addField(p.name, p.kind, { visual: v.id, dataset: p.dataset || '' }); }
-      });
       return f;
     }
 
@@ -290,33 +267,65 @@
       tag.setAttribute('title', 'This visual reads the dataset ' + v.dataset);
     }
 
-    function render() {
-      const page = D.page();
-      const ids = new Set(page.visuals.map((v) => v.id));
-      frames.forEach((e, id) => { if (!ids.has(id) || e.page !== page.id) { e.frame.dispose(); e.frame.el.remove(); frames.delete(id); } });
-      page.visuals.slice().sort((a, b) => a.at.y - b.at.y || a.at.x - b.at.x).forEach((v) => {
-        let e = frames.get(v.id);
-        if (e && e.type !== v.type) { e.frame.dispose(); e.frame.el.remove(); frames.delete(v.id); e = null; }          // another type is another frame (its class and its look)
-        if (!e) {
-          e = { frame: makeFrame(v), key: null, token: 0, page: page.id, type: v.type };
-          frames.set(v.id, e);
-          grid.appendChild(e.frame.el);
-        }
-        place(e.frame.el, v.at);
-        e.frame.el.classList.toggle('bi-selected', D.selected === v.id);
-        e.frame.el.setAttribute('aria-label', (v.title || v.type) + ' (' + v.type + '), column ' + (v.at.x + 1) + ' row ' + (v.at.y + 1) + ', ' + v.at.w + ' wide, ' + v.at.h + ' high. Arrow keys move it, Shift with arrows resizes it, Delete removes it');
+    // the layout canvas (drishti-designer): the page's visuals as items of a grid layout; the designer's undo keeps each step (stack: null)
+    const K = window.Drishti.elements.designer;
+    const layout = new K.LayoutModel({ cols: 12, maxH: 40, stack: null });
+    const selection = new K.Selection();
+    D.hub = D.hub || new K.DragHub();                 // the panes' fields and visual types are dragged through it onto the canvas and the wells
+    const vlabel = (it) => { const v = D.visual(it.id); return v ? (v.title || v.type) + ' (' + v.type + ')' : it.id; };
+    const canvas = new K.LayoutCanvas(grid, { model: layout, selection, rowPx: B.ROW_PX, gap: B.GAP_PX, handle: '.bi-dhandle', hub: D.hub, label: vlabel,
+      createItem: (it) => {
+        const v = D.visual(it.id), e = { frame: makeFrame(v), key: null, token: 0, page: D.pageId, type: v.type };
+        frames.set(v.id, e);
+        return e.frame.el;
+      },
+      updateItem: (it, el) => {
+        const v = D.visual(it.id), e = frames.get(it.id);
+        if (!v || !e) { return; }
+        el.setAttribute('data-visual', v.id);
         e.frame.title.textContent = v.title || '';
         dsTag(e, v);
         const key = previewKey(v) + '|' + D.preview;
         if (e.key !== key) { e.key = key; drawEntry(v.id); }
-      });
+      },
+      removeItem: (id) => { const e = frames.get(id); if (e) { e.frame.dispose(); frames.delete(id); } },
+      onAction: (type) => {
+        const id = selection.primary();
+        if (type === 'delete' && id) { remove(id); return true; }
+        if (type === 'duplicate' && id) { duplicate(id); return true; }
+        if (type === 'open') { D.showPane('format'); const t = D.q('[data-format-title]'); if (t) { t.focus(); } return true; }
+        if (['undo', 'redo', 'copy', 'cut', 'paste', 'selectAll', 'group', 'ungroup', 'zorder'].indexOf(type) >= 0) { return false; }     // the designer's own keys (Ctrl+Z, Ctrl+Y)
+        return undefined;
+      } });
+    D.canvas = canvas;
+    layout.on('commit', (c) => {                      // a move or a resize: one step of the designer's history; the grid is already settled
+      const moved = c.after.filter((it) => c.ids.indexOf(it.id) >= 0 || c.before.some((b) => b.id === it.id && (b.x !== it.x || b.y !== it.y || b.w !== it.w || b.h !== it.h)));
+      const label = c.label.indexOf('Resize') === 0 ? 'Resize a visual' : 'Move a visual';
+      if (!D.change(label, (m) => { const p = m.pages.find((x) => x.id === D.pageId); moved.forEach((it) => { const v = p.visuals.find((x) => x.id === it.id); if (v) { v.at = { x: it.x, y: it.y, w: it.w, h: it.h }; } }); })) { render(); }
+      const v = D.visual(c.ids[0]);
+      if (v) { D.say((label === 'Resize a visual' ? 'Resized to ' + v.at.w + ' by ' + v.at.h : 'Moved to column ' + (v.at.x + 1) + ', row ' + (v.at.y + 1)) + '.'); }
+    });
+    selection.on('change', (s) => { if (s.source !== 'designer' && D.selected !== s.primary) { D.select(s.primary); } });
+    canvas.on('drop', (d) => {                        // a field, or a visual type from the palette: onto a visual it joins it, onto the canvas it starts one
+      const p = d.payload;
+      if (p.vtype) { D.addVisual(p.vtype, d.cell.x, d.cell.y); return; }
+      if (d.item) { D.addField(p.name, p.kind, { visual: d.item, dataset: p.dataset || '' }); return; }
+      D.addField(p.name, p.kind, Object.assign({ dataset: p.dataset || '' }, d.cell));
+    });
+
+    function render() {
+      const page = D.page();
+      frames.forEach((e, id) => { const v = page.visuals.find((x) => x.id === id); if (!v || e.page !== page.id || e.type !== v.type) { canvas.forget(id); } });     // another type is another frame (its class and its look)
+      canvas.o.readOnly = !!D.readOnly;
+      layout.load(page.visuals.map((v) => ({ id: v.id, x: v.at.x, y: v.at.y, w: v.at.w, h: v.at.h })));
+      selection.set(D.selected && D.visual(D.selected) ? D.selected : null, 'designer');
       empty.hidden = page.visuals.length > 0;
       D.emit('rendered');
     }
     D.on('model', render);
     D.on('page', render);
     D.on('preview', render);
-    D.on('select', () => { frames.forEach((e, id) => e.frame.el.classList.toggle('bi-selected', D.selected === id)); });
+    D.on('select', (id) => { if (selection.primary() !== id) { selection.set(id, 'designer'); } });
     if (window.ResizeObserver) { new ResizeObserver(() => frames.forEach((e) => e.frame.resize())).observe(grid); }
 
     // ---- actions on a visual -----------------------------------------------------------------------------------------
@@ -341,86 +350,5 @@
     }
     D.removeVisual = remove;
 
-    function move(id, dx, dy, dw, dh) {
-      D.change('Move a visual', (m) => {
-        const p = m.pages.find((x) => x.id === D.pageId);
-        const v = p.visuals.find((x) => x.id === id);
-        v.at.w = Math.max(1, Math.min(12, v.at.w + dw));
-        v.at.h = Math.max(1, Math.min(40, v.at.h + dh));
-        v.at.x = Math.max(0, Math.min(12 - v.at.w, v.at.x + dx));
-        v.at.y = Math.max(0, v.at.y + dy);
-        D.settle(p, v);
-      });
-    }
-
-    function keys(id, e) {
-      if (e.target !== e.currentTarget) { return; }
-      const step = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
-      if (step) {
-        e.preventDefault();
-        if (e.shiftKey) { move(id, 0, 0, step[0], step[1]); } else { move(id, step[0], step[1], 0, 0); }
-        D.say((e.shiftKey ? 'Resized to ' : 'Moved to column ') + (e.shiftKey ? D.visual(id).at.w + ' by ' + D.visual(id).at.h : (D.visual(id).at.x + 1) + ', row ' + (D.visual(id).at.y + 1)) + '.');
-        const el = frames.get(id) && frames.get(id).frame.el;
-        if (el) { el.focus(); }
-      } else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); remove(id); }
-      else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(id); }
-      else if (e.key === 'Enter') { e.preventDefault(); D.showPane('format'); const t = D.q('[data-format-title]'); if (t) { t.focus(); } }
-    }
-
-    // ---- the pointer: move by the header, resize by the corner --------------------------------------------------------
-    function pointerDrag(el, handle, id, mode) {
-      handle.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0 || e.target.closest('button')) { return; }
-        const v = D.visual(id);
-        if (!v || D.readOnly) { return; }
-        e.preventDefault();
-        D.select(id);
-        const m = metrics();
-        const start = { x: e.clientX, y: e.clientY, at: Object.assign({}, v.at) };
-        let at = Object.assign({}, v.at);
-        handle.setPointerCapture(e.pointerId);
-        el.classList.add('bi-dragging');
-        const onMove = (ev) => {
-          const cx = Math.round((ev.clientX - start.x) / m.stepX), cy = Math.round((ev.clientY - start.y) / m.stepY);
-          if (mode === 'move') { at = { x: Math.max(0, Math.min(12 - start.at.w, start.at.x + cx)), y: Math.max(0, start.at.y + cy), w: start.at.w, h: start.at.h }; }
-          else { at = { x: start.at.x, y: start.at.y, w: Math.max(1, Math.min(12 - start.at.x, start.at.w + cx)), h: Math.max(1, Math.min(40, start.at.h + cy)) }; }
-          place(el, at);
-        };
-        const onUp = () => {
-          handle.removeEventListener('pointermove', onMove);
-          handle.removeEventListener('pointerup', onUp);
-          handle.removeEventListener('pointercancel', onUp);
-          el.classList.remove('bi-dragging');
-          if (!B.same(at, start.at)) {
-            D.change(mode === 'move' ? 'Move a visual' : 'Resize a visual', (mm) => {
-              const p = mm.pages.find((x) => x.id === D.pageId);
-              const live = p.visuals.find((x) => x.id === id);
-              live.at = at;
-              D.settle(p, live);
-            });
-          } else { place(el, start.at); }
-        };
-        handle.addEventListener('pointermove', onMove);
-        handle.addEventListener('pointerup', onUp);
-        handle.addEventListener('pointercancel', onUp);
-      });
-    }
-
-    // ---- drops on the canvas -----------------------------------------------------------------------------------------
-    function payload(e) {
-      try { const t = e.dataTransfer.getData(MIME); return t ? JSON.parse(t) : null; } catch (err) { return null; }
-    }
-    grid.addEventListener('click', (e) => { if (e.target === grid && D.selected) { D.select(null); } });          // a click on the empty canvas lets go of the selection
-    grid.addEventListener('dragover', (e) => { if (e.dataTransfer && [...e.dataTransfer.types].indexOf(MIME) >= 0) { e.preventDefault(); } });
-    grid.addEventListener('drop', (e) => {
-      const p = payload(e);
-      if (!p) { return; }
-      e.preventDefault();
-      const r = grid.getBoundingClientRect(), m = metrics();
-      const at = { x: Math.max(0, Math.min(11, Math.floor((e.clientX - r.left) / m.stepX))), y: Math.max(0, Math.floor((e.clientY - r.top) / m.stepY)) };
-      if (p.vtype) { D.addVisual(p.vtype, at.x, at.y); return; }                  // a visual type dragged from the palette: a new, empty visual of that type at the cell
-      D.addField(p.name, p.kind, Object.assign({ dataset: p.dataset || '' }, at));
-    });
-    D.MIME = MIME;
   });
 })();

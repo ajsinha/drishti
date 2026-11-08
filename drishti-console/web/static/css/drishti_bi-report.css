@@ -15,53 +15,53 @@
  */
 /* Rupaka phase 3: the report viewer and the visuals the designer shares (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8). Colours are theme tokens (dark, light, high contrast); every state
    has its word as well as its colour; targets are 44 px on touch; a phone shows one column in reading order. */
-.bi-report-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: .5rem 1rem; border-bottom: 1px solid var(--d-border); margin: .5rem 0 .6rem; }
-.bi-tabs { display: flex; gap: .15rem; overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
-.bi-tab { display: inline-flex; align-items: center; padding: .5rem .9rem; border: 1px solid transparent; border-bottom: 0; border-radius: var(--d-radius) var(--d-radius) 0 0; color: var(--d-muted); text-decoration: none; white-space: nowrap; min-height: 2.4rem; }
+.bi-report-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--d-sp-8) var(--d-sp-16); border-bottom: 1px solid var(--d-border); margin: var(--d-sp-8) 0 var(--d-sp-9_6); }
+.bi-tabs { display: flex; gap: var(--d-sp-2_4); overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
+.bi-tab { display: inline-flex; align-items: center; padding: var(--d-sp-8) var(--d-sp-14_4); border: 1px solid transparent; border-bottom: 0; border-radius: var(--d-radius) var(--d-radius) 0 0; color: var(--d-muted); text-decoration: none; white-space: nowrap; min-height: 2.4rem; }
 .bi-tab:hover { color: var(--d-ink); background: var(--d-highlight); }
 .bi-tab[aria-selected="true"] { color: var(--d-ink); font-weight: 600; border-color: var(--d-border); background: var(--d-surface); box-shadow: inset 0 3px 0 var(--d-accent); }
 .bi-tab:focus-visible { outline: 2px solid var(--d-link); outline-offset: -2px; }
-.bi-report-tools { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; padding-bottom: .4rem; }
-.bi-tool { display: flex; flex-direction: column; gap: .15rem; font-size: .75rem; color: var(--d-muted); }
-.bi-chips { display: flex; flex-wrap: wrap; gap: .35rem; margin: 0 0 .5rem; min-height: 0; }
-.bi-chip { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; border: 1px solid var(--d-border); background: var(--d-surface-2); border-radius: 999px; padding: .05rem .6rem; color: var(--d-ink); }
-.bi-problems { border: 1px solid var(--d-bad); border-radius: var(--d-radius); padding: .6rem .9rem; }
+.bi-report-tools { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: flex-end; padding-bottom: var(--d-sp-6_4); }
+.bi-tool { display: flex; flex-direction: column; gap: var(--d-sp-2_4); font-size: var(--d-fs-12); color: var(--d-muted); }
+.bi-chips { display: flex; flex-wrap: wrap; gap: var(--d-sp-5_6); margin: 0 0 var(--d-sp-8); min-height: 0; }
+.bi-chip { display: inline-flex; align-items: center; gap: var(--d-sp-4_8); font-size: var(--d-fs-12_48); border: 1px solid var(--d-border); background: var(--d-surface-2); border-radius: var(--d-radius-pill); padding: var(--d-sp-0_8) var(--d-sp-9_6); color: var(--d-ink); }
+.bi-problems { border: 1px solid var(--d-bad); border-radius: var(--d-radius); padding: var(--d-sp-9_6) var(--d-sp-14_4); }
 .bi-problems h2 { color: var(--d-bad); }
 
 /* the grid: 12 columns, rows of one fixed height (the designer's canvas uses the same numbers) */
-.bi-rgrid, .bi-dgrid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-rows: 56px; gap: 10px; align-items: stretch; }
+.bi-rgrid, .bi-dgrid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-rows: 56px; gap: var(--d-sp-10); align-items: stretch; }
 .bi-vis { container-type: inline-size; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); overflow: hidden; }
 .bi-vis:focus-visible { outline: 2px solid var(--d-link); outline-offset: 2px; }
-.bi-vis-head { display: flex; align-items: center; justify-content: space-between; gap: .4rem; padding: .3rem .5rem .1rem .65rem; min-height: 1.9rem; }
-.bi-vis-title { margin: 0; font-size: .85rem; font-weight: 600; color: var(--d-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0; line-height: 1.3; }
+.bi-vis-head { display: flex; align-items: center; justify-content: space-between; gap: var(--d-sp-6_4); padding: var(--d-sp-4_8) var(--d-sp-8) var(--d-sp-1_6) var(--d-sp-10_4); min-height: 1.9rem; }
+.bi-vis-title { margin: 0; font-size: var(--d-fs-13_6); font-weight: 600; color: var(--d-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0; line-height: 1.3; }
 .bi-vis-title::before, .bi-vis-title::after { content: none; }
 .bi-vis-card .bi-vis-title, .bi-vis-kpi .bi-vis-title, .bi-vis-multirow-card .bi-vis-title { white-space: normal; }
 .bi-slicer-clear { white-space: nowrap; }
-.bi-vis-tools { display: flex; gap: .1rem; flex: 0 0 auto; }
-.bi-vis-btn { background: none; border: 1px solid transparent; color: var(--d-muted); border-radius: 6px; padding: 0 .3rem; min-width: 1.7rem; min-height: 1.7rem; cursor: pointer; font-size: .9rem; }
+.bi-vis-tools { display: flex; gap: var(--d-sp-1_6); flex: 0 0 auto; }
+.bi-vis-btn { background: none; border: 1px solid transparent; color: var(--d-muted); border-radius: var(--d-radius-6); padding: 0 var(--d-sp-4_8); min-width: 1.7rem; min-height: 1.7rem; cursor: pointer; font-size: var(--d-fs-14_4); }
 .bi-vis-btn:hover:not(:disabled) { color: var(--d-ink); border-color: var(--d-border); }
 .bi-vis-btn:disabled { opacity: .35; cursor: default; }
 .bi-vis-btn[aria-pressed="true"] { color: var(--d-accent-strong); border-color: var(--d-accent); background: var(--d-accent-tint); }
 .bi-vis-btn:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
-.bi-vis-body { flex: 1 1 auto; min-height: 0; position: relative; padding: 0 .4rem; overflow: hidden; }
-.bi-vis-bare .bi-vis-body { padding: .4rem; }
-.bi-vis-foot { flex: 0 0 auto; font-size: .68rem; color: var(--d-muted); padding: .1rem .65rem .25rem; min-height: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bi-vis-body { flex: 1 1 auto; min-height: 0; position: relative; padding: 0 var(--d-sp-6_4); overflow: hidden; }
+.bi-vis-bare .bi-vis-body { padding: var(--d-sp-6_4); }
+.bi-vis-foot { flex: 0 0 auto; font-size: var(--d-fs-10_88); color: var(--d-muted); padding: var(--d-sp-1_6) var(--d-sp-10_4) var(--d-sp-4); min-height: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bi-asof-foot { color: var(--d-warn, var(--d-muted)); }                         /* its tables stand at different dates (2.6.7 patch) */
 [data-asof-note][data-asof-aligned="false"] { color: var(--d-warn, var(--d-muted)); }
-.bi-vis-showall { font: inherit; font-weight: 600; color: var(--d-accent, currentColor); background: none; border: 1px solid currentColor; border-radius: 4px; padding: 0 .4rem; margin-left: .2rem; cursor: pointer; }
+.bi-vis-showall { font: inherit; font-weight: 600; color: var(--d-accent, currentColor); background: none; border: 1px solid currentColor; border-radius: var(--d-radius-4); padding: 0 var(--d-sp-6_4); margin-left: var(--d-sp-3_2); cursor: pointer; }
 .bi-vis-cut { color: var(--d-warn); }
 @media (pointer: coarse) { .bi-vis-showall { min-height: 44px; min-width: 44px; } }
 .bi-vis-busy .bi-vis-body { opacity: .55; }
 .bi-vis-failed { border-color: var(--d-bad); }
-.bi-vis-error { padding: .5rem; color: var(--d-ink); overflow: auto; max-height: 100%; }
+.bi-vis-error { padding: var(--d-sp-8); color: var(--d-ink); overflow: auto; max-height: 100%; }
 .bi-vis-error strong { color: var(--d-bad); }
-.bi-vis-error p { margin: .2rem 0 .4rem; font-size: .8rem; overflow-wrap: anywhere; }
-.bi-vis-empty, .bi-vis-note { color: var(--d-muted); font-size: .85rem; padding: .5rem; margin: 0; }
+.bi-vis-error p { margin: var(--d-sp-3_2) 0 var(--d-sp-6_4); font-size: var(--d-fs-12_8); overflow-wrap: anywhere; }
+.bi-vis-empty, .bi-vis-note { color: var(--d-muted); font-size: var(--d-fs-13_6); padding: var(--d-sp-8); margin: 0; }
 .bi-chart { width: 100%; height: 100%; min-height: 80px; }
-.bi-map-note { margin: .25rem .5rem; font-size: .75rem; color: var(--d-muted); overflow-wrap: anywhere; }
+.bi-map-note { margin: var(--d-sp-4) var(--d-sp-8); font-size: var(--d-fs-12); color: var(--d-muted); overflow-wrap: anywhere; }
 .bi-vis-map .bi-vis-body { display: flex; flex-direction: column; }
 .bi-vis-map .bi-chart { flex: 1 1 auto; height: auto; }
-.bi-map-crumb { flex: none; display: flex; align-items: center; gap: .15rem; padding: 0 .4rem; font-size: .85rem; color: var(--d-muted); }
+.bi-map-crumb { flex: none; display: flex; align-items: center; gap: var(--d-sp-2_4); padding: 0 var(--d-sp-6_4); font-size: var(--d-fs-13_6); color: var(--d-muted); }
 .bi-map-crumb .bi-vis-btn { color: var(--d-link); text-decoration: underline; }
 .bi-map-here { color: var(--d-ink); font-weight: 600; }
 @media (max-width: 640px) { .bi-map-crumb .bi-vis-btn { min-height: 44px; min-width: 44px; } }
@@ -69,28 +69,28 @@
 .bi-chart:focus-visible { outline: 2px solid var(--d-link); outline-offset: -2px; }
 
 /* cards */
-.bi-card-body { display: flex; flex-direction: column; justify-content: center; height: 100%; padding: .2rem .4rem; gap: .1rem; }
-.bi-card-value { font-size: clamp(1.1rem, 9cqi, 1.9rem); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bi-card-label { color: var(--d-muted); font-size: .8rem; }
-.bi-kpi-target { font-size: .8rem; }
+.bi-card-body { display: flex; flex-direction: column; justify-content: center; height: 100%; padding: var(--d-sp-3_2) var(--d-sp-6_4); gap: var(--d-sp-1_6); }
+.bi-card-value { font-size: var(--d-fs-display-6); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bi-card-label { color: var(--d-muted); font-size: var(--d-fs-12_8); }
+.bi-kpi-target { font-size: var(--d-fs-12_8); }
 .bi-up { color: var(--d-ok); }
 .bi-down { color: var(--d-bad); }
 .bi-spark { height: 34px; width: 100%; }
-.bi-multirow { display: flex; flex-direction: column; gap: .1rem; overflow: auto; height: 100%; padding: .2rem .3rem; }
-.bi-multirow-row { display: flex; flex-wrap: wrap; gap: .2rem .9rem; align-items: baseline; border-bottom: 1px solid var(--d-border); padding: .25rem 0; }
+.bi-multirow { display: flex; flex-direction: column; gap: var(--d-sp-1_6); overflow: auto; height: 100%; padding: var(--d-sp-3_2) var(--d-sp-4_8); }
+.bi-multirow-row { display: flex; flex-wrap: wrap; gap: var(--d-sp-3_2) var(--d-sp-14_4); align-items: baseline; border-bottom: 1px solid var(--d-border); padding: var(--d-sp-4) 0; }
 .bi-multirow-v small { color: var(--d-muted); }
 
 /* tables and matrices */
 .bi-vis-scroll { height: 100%; overflow: auto; }
-.bi-vis-table { width: 100%; font-size: .8rem; }
+.bi-vis-table { width: 100%; font-size: var(--d-fs-12_8); }
 .bi-vis-table th.num, .bi-vis-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .bi-vis-table th { position: sticky; top: 0; background: var(--d-surface); z-index: 1; }
 /* a table visual: drishti-grid (its own sheet) filling the visual, the engine's totals under it */
 .bi-vis-body:has(> .bi-grid-box) { display: flex; flex-direction: column; }
 .bi-grid-box { flex: 1 1 auto; min-height: 120px; height: 100%; }
 .bi-grid-box.bi-wrap .dg-text { white-space: normal; }
-.bi-grid-box .bi-cf-mark { margin-right: .25rem; }
-.bi-grid-foot { display: flex; flex-wrap: wrap; gap: .25rem 1rem; padding: .25rem .4rem; border-top: 1px solid var(--d-border); font-size: .8rem; }
+.bi-grid-box .bi-cf-mark { margin-right: var(--d-sp-4); }
+.bi-grid-foot { display: flex; flex-wrap: wrap; gap: var(--d-sp-4) var(--d-sp-16); padding: var(--d-sp-4) var(--d-sp-6_4); border-top: 1px solid var(--d-border); font-size: var(--d-fs-12_8); }
 .bi-grid-foot .bi-total-name { color: var(--d-muted); font-weight: 400; }
 .bi-barcell { position: relative; display: block; min-width: 5rem; }
 .bi-bar { position: absolute; left: 0; top: 10%; bottom: 10%; background: var(--d-accent-tint); border-right: 2px solid var(--d-accent); }
@@ -98,32 +98,30 @@
 .bi-subtotal th, .bi-subtotal td, .bi-grandtotal th, .bi-grandtotal td, .bi-total { font-weight: 700; }
 .bi-subtotal { background: var(--d-surface-2); }
 .bi-grandtotal { border-top: 2px solid var(--d-border); }
-.bi-indent { padding-left: 1.6rem !important; font-weight: 400; }
-.bi-twist { background: none; border: 0; color: var(--d-muted); padding: 0 .2rem; cursor: pointer; min-width: 1.6rem; min-height: 1.6rem; }
+.bi-twist { background: none; border: 0; color: var(--d-muted); padding: 0 var(--d-sp-3_2); cursor: pointer; min-width: 1.6rem; min-height: 1.6rem; }
 .bi-twist:focus-visible { outline: 2px solid var(--d-link); }
 .bi-toterm-link { font-family: var(--d-font-mono); }
 
 /* slicers */
-.bi-slicer { display: flex; flex-direction: column; gap: .35rem; height: 100%; overflow: auto; padding: .2rem 0; }
-.bi-slicer-head { display: flex; gap: .35rem; }
+.bi-slicer { display: flex; flex-direction: column; gap: var(--d-sp-5_6); height: 100%; overflow: auto; padding: var(--d-sp-3_2) 0; }
+.bi-slicer-head { display: flex; gap: var(--d-sp-5_6); }
 .bi-slicer-head input { flex: 1 1 auto; min-width: 0; }
-.bi-slicer-list { display: flex; flex-direction: column; gap: .05rem; overflow: auto; }
-.bi-slicer-list label { display: flex; align-items: center; gap: .45rem; font-size: .85rem; padding: .1rem .2rem; }
-.bi-range { display: flex; flex-direction: column; font-size: .75rem; color: var(--d-muted); }
+.bi-slicer-list { display: flex; flex-direction: column; gap: var(--d-sp-0_8); overflow: auto; }
+.bi-slicer-list label { display: flex; align-items: center; gap: var(--d-sp-7_2); font-size: var(--d-fs-13_6); padding: var(--d-sp-1_6) var(--d-sp-3_2); }
+.bi-range { display: flex; flex-direction: column; font-size: var(--d-fs-12); color: var(--d-muted); }
 /* From and To side by side, so a short (two-row) slicer shows both fields; the note takes a line of its own and drops away when there is no room */
-.bi-slicer[data-mode="range"] { flex-direction: row; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: .35rem .5rem; }
+.bi-slicer[data-mode="range"] { flex-direction: row; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: var(--d-sp-5_6) var(--d-sp-8); }
 .bi-slicer[data-mode="range"] .bi-range { flex: 1 1 7rem; min-width: 0; }
 .bi-slicer[data-mode="range"] .bi-range input { width: 100%; min-height: 36px; }
 .bi-slicer[data-mode="range"] .bi-vis-note { flex: 1 0 100%; margin: 0; }
 @media (pointer: coarse) { .bi-slicer[data-mode="range"] .bi-range input { min-height: 44px; } }
-.bi-dropdown summary { cursor: pointer; border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .5rem; background: var(--d-surface-2); min-height: 2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bi-text { margin: 0; padding: .3rem .4rem; overflow-wrap: anywhere; }
-h3.bi-text { font-size: 1.1rem; }
+.bi-dropdown summary { cursor: pointer; border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-4_8) var(--d-sp-8); background: var(--d-surface-2); min-height: 2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bi-text { margin: 0; padding: var(--d-sp-4_8) var(--d-sp-6_4); overflow-wrap: anywhere; }
+h3.bi-text { font-size: var(--d-fs-17_6); }
 .bi-picture { max-width: 100%; max-height: 100%; object-fit: contain; }
-.bi-button { margin: .4rem; }
+.bi-button { margin: var(--d-sp-6_4); }
 
 @media (pointer: coarse) {
-  .bi-slicer .ms-sum, .bi-dropdown summary { min-height: 44px; display: flex; align-items: center; }
   .bi-vis-btn { min-width: 44px; min-height: 44px; }
   .bi-tab, .bi-twist { min-height: 44px; }
   .bi-slicer-list label { min-height: 44px; }
@@ -148,15 +146,11 @@ h3.bi-text { font-size: 1.1rem; }
 /* Rupaka phase 6: a python visual (drishti_bi-python.js): an ECharts option or an image drawn from what a Python item returned */
 .bi-vis-python .bi-chart { min-height: 160px; }
 .bi-py-img { display: block; max-width: 100%; max-height: 100%; margin: 0 auto; object-fit: contain; }
-.bi-py-trace { margin: .5rem 0 0; padding: .5rem; max-height: 10rem; overflow: auto; text-align: left; white-space: pre-wrap; font-size: .75rem; background: var(--d-surface-2, transparent); border: 1px solid var(--d-border); border-radius: 4px; }
+.bi-py-trace { margin: var(--d-sp-8) 0 0; padding: var(--d-sp-8); max-height: 10rem; overflow: auto; text-align: left; white-space: pre-wrap; font-size: var(--d-fs-12); background: var(--d-surface-2, transparent); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); }
 .bi-py-foot { color: var(--d-muted); }
-@media (max-width: 40rem) { .bi-rgrid .bi-vis-python { height: 18rem; } }
+@media (max-width: 640px) { .bi-rgrid .bi-vis-python { height: 18rem; } }
 
-/* A dropdown slicer: its list floats over the visuals below instead of being cut off by the slicer's frame. */
-.bi-vis details > .ms-pop { position: absolute; left: 0; right: 0; top: 100%; max-height: 22rem; overflow: auto; }
-.bi-vis:has(details[open]) { overflow: visible; z-index: 40; position: relative; }
-.bi-vis:has(details[open]) .bi-vis-body, .bi-vis:has(details[open]) .bi-slicer { overflow: visible; }
-.bi-vis details:has(> .ms-pop) { position: relative; }
+/* A dropdown slicer is drishti-inputs' multi-select: its list floats in the page's body, over the visuals below. */
 
 /* an entity view: the Drishti view of the selected entity, in a frame of the visual's size */
 .bi-entity-frame { display: block; width: 100%; height: 100%; min-height: 12rem; border: 0; background: var(--d-bg); }
@@ -167,17 +161,17 @@ h3.bi-text { font-size: 1.1rem; }
 @media (max-width: 480px) { .bi-vis-btn, .bi-vis-head .btn-pill, .bi-chipbtn { min-height: 44px; min-width: 44px; } }
 
 /* 2.4.0 report schema v2: the frame of the typed format, the theme, conditional formatting, the matrix's levels, tile slicers, tooltip pages */
-.bi-vis-border { border: 1px solid var(--d-border-strong, var(--d-border)); }
-.bi-vis-shadow { box-shadow: 0 2px 10px rgba(0, 0, 0, .18); }
-.bi-vis-subtitle { margin: -.15rem .7rem .15rem; font-size: .75rem; color: var(--d-muted); }
+.bi-vis-border { border: 1px solid var(--d-border); }
+.bi-vis-shadow { box-shadow: var(--d-elev-raised); }
+.bi-vis-subtitle { margin: -.15rem var(--d-sp-11_2) var(--d-sp-2_4); font-size: var(--d-fs-12); color: var(--d-muted); }
 .bi-themed .bi-vis { background: var(--bi-theme-bg, var(--d-surface)); color: var(--bi-theme-fg, var(--d-ink)); font-family: var(--bi-theme-font, inherit); }
-.bi-themed .bi-vis-table { font-size: var(--bi-theme-size, .8rem); }
+.bi-themed .bi-vis-table { font-size: var(--bi-theme-size, var(--d-fs-12_8)); }
 .bi-band > td, .bi-band > th { background: var(--d-surface-2); }
 .bi-wrap td, .bi-wrap th { white-space: normal; overflow-wrap: anywhere; }
-.bi-cf-icon { margin-right: .3rem; font-size: .9em; }
-.bi-card-filled { padding: .1rem .6rem; border-radius: 6px; }
-.bi-mx-tools { display: flex; justify-content: flex-end; gap: .25rem; padding: 0 .2rem .2rem; }
-.bi-mx-btn .bi-lbl { font-size: .75rem; }
+.bi-cf-icon { margin-right: var(--d-sp-4_8); font-size: var(--d-fs-em-90); }
+.bi-card-filled { padding: var(--d-sp-1_6) var(--d-sp-9_6); border-radius: var(--d-radius-6); }
+.bi-mx-tools { display: flex; justify-content: flex-end; gap: var(--d-sp-4); padding: 0 var(--d-sp-3_2) var(--d-sp-3_2); }
+.bi-mx-btn .bi-lbl { font-size: var(--d-fs-12); }
 .bi-mx-stepped th[scope="row"] { white-space: nowrap; }
 .bi-mx-pick { cursor: pointer; }
 .bi-mx-pick:hover .bi-mx-label, .bi-mx-pick:focus-visible .bi-mx-label { text-decoration: underline; }
@@ -185,13 +179,13 @@ h3.bi-text { font-size: 1.1rem; }
 .bi-mx-measure { font-weight: 400; color: var(--d-muted); }
 .bi-mx-cont { border-top: 0; }
 .bi-mx-group > th { font-weight: 600; }
-.bi-slicer-tiles { display: flex; flex-wrap: wrap; gap: .3rem; padding: .3rem; }
-.bi-slicer-tile { min-height: 2.2rem; padding: .25rem .75rem; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface); color: var(--d-ink); font: inherit; cursor: pointer; }
+.bi-slicer-tiles { display: flex; flex-wrap: wrap; gap: var(--d-sp-4_8); padding: var(--d-sp-4_8); }
+.bi-slicer-tile { min-height: 2.2rem; padding: var(--d-sp-4) var(--d-sp-12); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); background: var(--d-surface); color: var(--d-ink); font: inherit; cursor: pointer; }
 .bi-slicer-tile[aria-pressed="true"] { background: var(--d-fill); border-color: var(--d-fill); color: var(--d-on-fill); }
 .bi-slicer-tile:focus-visible { outline: 2px solid var(--d-link); outline-offset: 2px; }
-.bi-tip-pop { position: fixed; z-index: 2000; width: 380px; max-width: calc(100vw - 16px); background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 8px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, .25); padding: .45rem; }
-.bi-tip-head { margin: 0 0 .35rem; font-size: .8rem; }
-.bi-tip-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; }
+.bi-tip-pop { position: fixed; z-index: var(--d-z-overlay); width: 380px; max-width: calc(100vw - 16px); background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-8);
+  box-shadow: var(--d-elev-sheet); padding: var(--d-sp-7_2); }
+.bi-tip-head { margin: 0 0 var(--d-sp-5_6); font-size: var(--d-fs-12_8); }
+.bi-tip-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--d-sp-4); }
 .bi-tip-grid .bi-vis { min-height: 0; overflow: hidden; }
 @media (pointer: coarse) { .bi-slicer-tile, .bi-mx-btn { min-height: 44px; min-width: 44px; } }

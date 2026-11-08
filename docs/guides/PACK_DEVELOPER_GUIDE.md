@@ -2023,7 +2023,7 @@ items:
     domain: Market risk                    # the tile's label
     needs: [counterparty-risk]             # other packs it needs (its own pack always); one off for the user: not shown
     steps:                                 # run in order; each binds its result to the name in `as`
-      - { as: tree, var: /tree, params: { hierarchy: LEGAL } }      # GET /api/v1/var/tree?hierarchy=LEGAL&asOf=<date>
+      - { as: tree, var: /tree, params: { hierarchy: LEGAL } }      # GET /api/v1/risk/var/tree?hierarchy=LEGAL&asOf=<date>
       - as: book                                                    # the best row: where filters, order ranks (largest first)
         pick: tree.nodes
         where: "book.limitUse > 1 and find(tree.nodes, 'id', book.parent).limitUse <= 1"
@@ -5671,17 +5671,20 @@ live in `ELEMENT_ADDENDUM` in `core/element_sheet.py`. `test_element_sheet.py` f
 
 ---
 
-#### 5.8a The shared multi-select dropdown
+#### 5.8a The multi-select and the date fields
 
-`static/js/drishti_multiselect.js` (vendored with the console, no library) is the one multi-select the console draws: a `<details>` whose
-`<summary>` shows "All", the value, or "3 selected: ABS, REPO, +1", and whose pop-up holds a search box, *Select all* / *Clear* and a
-labelled group of **real checkboxes** (so form submission, keyboard and screen readers are the browser's own; 44 px rows on touch; theme
-tokens in `css/drishti_controls.css`). Two callers: the query-by-form renderer marks every enum field with more than 3 values `data-ms`
-(`terminal/form.html`; up to 3 stay a checkbox row, so the renderer decides by option count and no pack is hard-coded) and
-`drishti_multiselect.js` wraps it on load, keeping the checkboxes' names and so the criteria encoding; and `drishti_controls.js` builds the
-`multi-select` control from `window.drishtiModules.multiselect.decorate(details, {label, boxes, onChange})`. Inside `<drishti-view>` it is
-one of the allow-listed enhancer scripts (`routes/embed_routes.py` `ENHANCERS`, `web/embed/assets.js`), loaded before `controls`.
-Tests: `test_form_browser.py` (dropdown, search, keyboard, URL, phone), `test_controls_browser.py`.
+The console draws its pickers with **drishti-inputs** (Drishti Elements, [ELEMENTS.md](../architecture/ELEMENTS.md) section 8.2),
+loaded on every page by `base.html`. A form stays a plain server form: `drishti_app.js` calls `upgradeFields(document)`, which turns
+every `<input type="date">` into the business-date picker (the field becomes a hidden input with the same name and value, so the form
+sends `2026-11-06` as before) and every group marked `data-multiselect` with more than six checkboxes into the multi-select (chips, a
+search field, *Select all* and *Clear*; the **real checkboxes** stay in the form, so the criteria encoding is unchanged). The
+query-by-form renderer marks every enum field with more than three values `data-multiselect` (`terminal/form.html`; the renderer
+decides by option count, no pack is hard-coded); a dependent list's labels carry `qf-dep-off` when they do not apply and the
+multi-select offers only the others. `drishti_controls.js` builds a Sutra's `multi-select`, `date` and `date-range` controls with
+`MultiSelect`, `DatePicker` and `DateRangePicker` (the server's presets). Inside `<drishti-view>` drishti-inputs is one of the
+allow-listed enhancer bundles (`routes/embed_routes.py` `ENHANCERS`, `web/embed/assets.js`), loaded before `controls`, with its style
+sheet in the view sheet and on the host page (a picker's list floats in the page's body). Tests: `test_form_browser.py` (multi-select,
+search, keyboard, URL, phone), `test_controls_browser.py`, `test_embed_controls_browser.py`.
 
 #### 5.9 Write a view enhancer (the `init(root)` contract)
 

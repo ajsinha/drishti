@@ -69,7 +69,7 @@ MAX_TRADES = 10_000                       # the local limit: never more trades i
 DEMO_TRADES = 9_500                       # the demo run (lake demo): whole counterparties, smallest first, within this many trades
 PART_BYTES = 1_200_000                    # compressed bytes per file, about
 QS = [0.95, 0.99]
-REFERENCE = ROOT / "drishti-compute" / "src" / "test" / "resources" / "ccr" / "reference.json"
+REFERENCE = ROOT / "drishti-compute-banking" / "src" / "test" / "resources" / "ccr" / "reference.json"
 SYSTEMS = (("CLY-", "CALYPSO"), ("MX-", "MUREX"))
 
 

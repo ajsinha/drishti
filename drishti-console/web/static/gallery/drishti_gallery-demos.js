@@ -206,6 +206,23 @@
   }));
 
   demos.push(gridDemo({
+    id: 'server-tree', title: 'Server-side tree data', summary: 'A tree the server answers a level at a time: a node\'s children asked when it opens (groupKeys its path), reopened from the cache, every open level asked again on a sort.',
+    extra: [{ name: 'delay', control: { kind: 'select', values: ['40', '250', '800'] }, desc: 'The stand-in server\'s answer time, in milliseconds.' }],
+    values: { rows: '2000', delay: '250', layout: 'wells', density: 'compact', title: 'Bank › desk › book › trade (server-side tree)', blockSize: 100 },
+    examples: [{ title: 'Bank, desks, books and trades', values: {} }, { title: 'A slow server: each level\'s placeholders', values: { delay: '800' } }],
+    build: function (values, ctx) {
+      const D = ctx.data, G = ctx.E.grid;
+      const rows = ctx.memo('trades:' + values.rows, () => D.trades(+values.rows));
+      const ds = ctx.memo('tree-ds:' + values.rows + ':' + values.delay, () => G.memoryDatasource(rows, { delay: +values.delay, keyField: 'ID', getDataPath: (r) => ['Bank', r.DESK, r.BOOK, r.ID] }));
+      const isGroup = (r) => r.treeGroup, key = (r) => r.treeKey;
+      return gridBuild(values, ctx, { datasource: ds, options: { treeData: true, groupDefaultExpanded: 1, isServerSideGroup: isGroup, getServerSideGroupKey: key, getRowId: (r, i, keys) => keys.concat([r.treeKey]).join('/') },
+        names: new Map([[ds, 'datasource'], [isGroup, 'isServerSideGroup'], [key, 'getServerSideGroupKey']]) });
+    },
+    agNote: 'rowModelType serverSide with treeData, isServerSideGroup and getServerSideGroupKey',
+    sutra: () => null
+  }));
+
+  demos.push(gridDemo({
     id: 'live', title: 'Live updates', summary: 'Transactions by row id from a feed (here a manual feed: SSE and WebSocket feeds take the same messages), batched, with the up and down flash.',
     extra: [{ name: 'perTick', control: { kind: 'select', values: ['3', '20', '200'] }, desc: 'Rows changed by each tick.' }],
     values: { perTick: '3', layout: 'wells', density: 'compact', title: 'Live MTM' },

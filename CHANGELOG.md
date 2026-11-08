@@ -15,11 +15,48 @@
 -->
 # Changelog
 
-## 2.9.11.h (unreleased)
-
-- **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
-
 ## 2.9.11.g (unreleased)
+
+### The pre-deal service and the exposure what-if in Java
+
+- **The pre-deal check is a service of the exposure engine** (EXPOSURE_GUIDE.md section 18.9): `POST /api/v1/exposure/predeal` and the
+  command `PREDEAL <counterparty> LIKE <trade> [<notional>] [REVERSE] [IN <netting set>]` (or, without a template, `PREDEAL <counterparty>
+  <asset class> <notional> <maturity> [MTM <amount>]`), `GET /api/v1/exposure/predeal/grammar`, `drishti.py exposure predeal "PREDEAL …"`.
+  The what-if with the trade added is held to the counterparty's stored credit limit on its measure (`PFE 95 peak` at its confidence;
+  EEPE, EPE, peak EE) and to each tenor bucket's limit (`BUCKETS`, read from `credit-limit` now), and answers **approve** (exact data,
+  within the limit and every bucket), **decline** (exact, over the limit or a bucket) or **refer** with the reason: a proxy answer (the
+  `addon` method) only refers, never approves; so does no limit on record, a limit on a measure the engine does not compute, netting sets
+  the person does not see, a stale run, the netting set not certain, or no exposure for the counterparty. Every answer shows the method
+  and the template trade (copied: id, product, notional, the factor and side; or described), the limit before and after with the
+  headroom and the buckets, and the exposure before, with and incremental; SA-CCR's incremental EAD says **under construction**
+  (2.9.11.k). Computed as the person (a template only of a trade they see trade by trade, `403` otherwise; a counterparty they see none of
+  `403`); every check audited (`ccr-predeal`, with its check id, decision, method, command and limit use). Code: `ExposurePreDeal`,
+  `ExposurePreDealCommand`, `ExposurePreDealController` in the counterparty-risk server package `com.ash.drishti.server.exposure`.
+- **Counterparties → Pre-deal check** runs `PREDEAL` (the menu item that ran `XWIF`). Its screen is **under construction** (registry item
+  `pre-deal-screen`): it is built on the Drishti Elements libraries, which have not reached develop; until then `PREDEAL` typed in the
+  console says so and names the API and the command line. The exposure explorer's Pre-deal tab stays until that screen replaces it.
+- **The Trading landing's new-trade check** asks the pre-deal service for its exposure half: the decision, the limit use and every figure
+  are the server's (the console no longer divides by the limit or picks the netting set); when the copied trade has no paths on the run
+  the same check is asked described, and refers. Its verdict shows *Refer to credit* and *Declined: over the limit* with the reason.
+- **The exact pre-deal exposure what-if (`POST /api/v1/exposure/what-if`, method `paths`) is computed by the Java exposure engine**
+  (EXPOSURE_GUIDE.md sections 7, 18.7 and 19.5; COUNTERPARTY_ENGINES.md 6.4). `ExposureWhatIfMath` (`drishti-compute`) adds each
+  candidate's paths to its netting set's value path by path and computes the set's collateral and exposure again with `ExposureMath`, the
+  same code as every exposure figure; `ExposureWhatIfPaths` reads the scope and each joined netting set as the asker. The same request and
+  the same answer field by field (only the `engine` and `note` texts say Java); no sandbox, no reactive connector, no compute workers: it
+  answers on every server that runs exposure. Parity: the Python engine's answers on a book of four netting sets (margined with
+  thresholds, MTA, IA, rounding and IM; unmargined with IA; no CSA; collateral posted), six what-ifs over the three collateral models,
+  both rank rules, an unwind and a horizon change, recorded before it was retired (`ccr/whatif-parity.json`, `tools/ccr/`), are given
+  again to the cent (`ExposureWhatIfMathTest`). A `copyOf` is made only of a trade the asker sees trade by trade (`403` otherwise).
+- **The Python exposure engine is retired:** `drishti_compute.exposure` (`measures.py`, `whatif.py`) and its tests, the compute pool
+  `exposure` and `DRISHTI_COMPUTE_EXPOSURE_WORKERS`, the counterparty-risk pack's reactive connector `exposure-whatif` with its kind,
+  contract and command `XWIF`, the `exposure-result` parameters `detail` and `sets` (`ExposureWhatIfInputs`), and `DRS-5446`. A
+  never-edited `exposure-whatif.yaml` connector file is removed at start (kept beside it as `.retired-<time>.bak`); an edited one stays,
+  its kind listed as obsolete.
+- **Tests**: `ExposurePreDealApiTest` (the what-if equal to a full recompute with the trade booked, figure by figure and date by date;
+  approve; decline on the limit and on a bucket; refer on a proxy, no limit, a measure not computed and no exposure; two people at once
+  with their own entitlements; the grammar; the audit); the console's trading check, menus and under-construction tests; `test_expcli`.
+
+### drishti-feeds: external data into the lakes, every day
 
 - **drishti-feeds: one module to pull external data into the lakes every day** ([FEEDS_GUIDE.md](docs/guides/FEEDS_GUIDE.md), Help → Data
   → External data feeds). A feed is a feed file (`config/feeds/<feed>.yaml`: the source, its datasets and the pack, kind and table
@@ -56,8 +93,153 @@
   status, the inbox route's `.ready` and tar, the java and python routes into a temporary lake, the command line and the schedule
   output; Admin → Feeds in the console and the server; one `--live` smoke per feed for a person to run.
 
+## 2.9.11.h (unreleased)
+
+- **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
+
+## 2.9.11.f (unreleased)
+
+- **Domain modules, phase 1: the backend split** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md)).
+  The core knows no industry: banking is a module. New Maven modules: **drishti-registry** (the access registry), **drishti-compute-banking**
+  (VaR and ES, parametric, components, backtesting, exposure, FRTB-SA, SIMM, beta and correlation: `com.ash.drishti.banking.compute`, pure
+  maths), **drishti-banking** (the VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube and official-results services, storage and API:
+  `com.ash.drishti.banking`) and **drishti-app** (the runnable jar, at its old path `drishti-server/target/drishti-server-<version>-exec.jar`).
+  The six places where the core used banking code are SPIs now (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`,
+  `OfficialReaders.OfficialResults`, the edition's words); `ArchitectureRulesTest` fails the build when the core imports a domain, a
+  domain another, a domain's compute Spring or the server, or anything but the registry reads the access model. VaR, exposure and the BI
+  parity answers are unchanged.
+- **The access registry** (drishti-registry: `AccessRegistry`, `EmbeddedAccessRegistry`, `AccessStore`, `YamlAccessStore`): licence →
+  module → lens → function → permission, decided in one place. Each module's jar ships its manifest (`META-INF/drishti/module.yaml`:
+  packages, engines, packs, connectors, API, functions) and its lenses (with the modules they need and the functions they bundle); a module
+  is on when installed, licensed and enabled. No `config/access/licence.yaml` is the **development licence** (every module, unsigned), so an
+  existing installation changes nothing. A module that is off loads no bean, engine, job or API (`@ConditionalOnModule`), its packs and
+  connectors do not load, its API answers `404 DRS-1025`, and Admin → Engines says why its engines are not installed.
+- **Admin → Modules over REST**: `GET/POST /api/v1/admin/modules` (states, what each brings, the licence, the lenses; the switch, with a
+  reason, audited, written to `config/modules/<module>.yaml`, taken at the next start); `GET /api/v1/modules` (the modules loaded and the
+  lenses open to the caller). New settings `drishti.modules.dir`, `drishti.modules.<module>.enabled`, `drishti.modules.watch-seconds`,
+  `drishti.access.dir` (CONFIGURATION.md; OPERATIONS.md section 22).
+- **Functions** (command words such as VAR, TRD, EQV, EXP) are the finest unit of access: each belongs to one module (a word no module
+  declares is the core's), lenses bundle them, and the mnemonic switches (Admin → Commands) are decided by the registry: a function is on
+  when its module is on and no administrator turned it off; its API then answers `404 DRS-1026` (and `403 DRS-1027` is wired for per-person
+  grants in 2.9.11.i).
+- **The banking API is under `/api/v1/risk/…`** (`/risk/var`, `/risk/exposure`, `/risk/frtb`, `/risk/simm`, `/risk/sensitivities`,
+  `/risk/risk-factors`, `/risk/mr`); the old paths are answered as the new ones for this release (`Deprecation: true` and a `Link` to the
+  new path), then removed. Connector files naming the moved engine classes keep working for this release.
+- **Packs name their domain** (`domain: core | banking | economy | capitalmarkets` in `pack.yaml`; ids and folders unchanged): a pack loads
+  only while a module of its domain is on. A **capitalmarkets** module (content only, shipped with the core) holds the us-equities and
+  funds packs and the market data's functions (CRV, FX, EQV ...; the market-data pack stays banking's while its engines read it); GLEIF is
+  core reference data; economy keeps world-economy and news-and-markets. The Market lens needs capital markets and banking.
+- **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
+  only while its modules are on.
 ## 2.9.11.e (unreleased)
 
+- **The forms on drishti-inputs' `Form`** ([ELEMENTS.md 8.2, "The forms on Form"](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  the query form (`FORM <pack>`: the server sends its schema, the fields are a `Form` embedded in the page's GET form and the address is
+  unchanged), the subscription's When, the table editor's name, rows and look-up dialog, BI's Format pane, the Build inspector's
+  structured options and the record forms' fields (beside the table and in the drawer's steps). **drishti-inputs 0.3.0**: `Form` gains
+  live and embedded modes, steps, named fields for server forms, hooks (`hook`, `optionHook`, `submitHook`, a field's `data-path`),
+  custom widgets (`defineWidget`), the types `time`, `datetime` and `money`, a row of checkboxes, dependent lists, `setField`,
+  `setNotes`, `showErrors`; the new `TimePicker` and `DateTimePicker`, and the native time and date-time fields upgraded in place (the
+  top bar's Known at, compare, the record forms). The column filter's dates and BI's date parameters are the date picker. Deleted: the
+  query form's server-drawn fields, its dependents and long-list search, the record forms' field boxes, messages and currency painter,
+  the inspector's hand-made lists, objects and number checks, the Format pane's hand-made controls, and their CSS.
+- **No bespoke UI, the second pass** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  `trackPointer` moved into drishti-core (with pointer capture); the Sutra designer's Customize, Grid and Outline drags, the BI designer's
+  field, visual-type and well drags, layout mode, screen arranging, workspaces and sliders on it or on drishti-designer's `DragHub` (their
+  HTML5 drags deleted); drishti-inputs makes a page's `<textarea data-di-code>` a code editor (`upgradeCodeArea`) and the connector,
+  net, theme, BI item, workspace, transform and Pivot code areas use it. The guard's allow-list went from 19 files to 3.
+- **No bespoke UI, the third pass**: the Sutra designer's Grid formula bar is drishti-inputs' `CodeEditor` (Rachana, growing with its
+  text; Enter keeps, Shift+Enter a new line, Esc goes back; the panels' events after `@`, fragments and kinds first in a line and
+  parameters after a bracket are its completion), its hand-made suggestion list deleted; the Outline mode's tree is drishti-designer's
+  `Outline` (keys, Alt+arrows, drags before, after or into an item; dropping a panel on a table nests it), the hand-made tree deleted;
+  the table and model editors' formula fields (computed columns, the filter, the look-up key, row rules, measures, hierarchies, the
+  statement) are the code editor, their hand-made completion list deleted. drishti-inputs: `<input data-di-code>` becomes a one-line
+  code editor (`singleLine`), `height: 'auto'` with `minHeight` and `maxHeight`, `insert()`, `setInvalid()`; a code area's "change" on
+  leaving comes only after a person's edit, never for the page's own text. drishti-designer's `Outline`: a node's `cls` and its own
+  `data-*` attributes. The guard's allow-list went from 3 files to 1 (the workbench's data-shape tree, moved onto drishti-tree on its
+  own branch).
+- **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
+  are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
+  what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never
+  drawn wrong. Python visuals may return a drishti-chart spec (`output: drishti-chart`, the preferred form; `data.source` refused in the
+  sandbox). Deleted: the vendored Vega, Vega-Lite, vega-embed and vega-interpreter, their VENDOR.md entry and notice, `drishti_bi-vega.js`
+  and every Vega code path. Tests: the two shipped specifications translate to the same data and encodings, a refused feature's message,
+  (`tests/test_vega_translate.py`), a guard that no file references the Vega library (`tests/test_bi_wave_c.py`), `test_items.py` (the
+  drishti-chart output).
+- **The Explain page carries a pivot cell's view**: Open as a page puts the body the drawer posted (the view, the cells, the split) in
+  the link as one JSON parameter (`body`), and the page asks with it (`test_explain_routes.py`, `test_pivot_functions_browser.py`).
+- **One Explain for a pivot cell**: the server's `POST /api/v1/pivot/explain` is folded into `POST /api/v1/explain` (kind `pivot`); the
+  old address is a deprecated alias for one release (it answers the engine's own answer, `why.answer`, with `Deprecation` and `Link`
+  headers); the audit (`pivot.explain`) moved to the explainer; `drishti.py pivot explain` and tutorial 37 use the one Explain.
+- **FRTB-SA class totals from the server**: `Sbm.Result.classTotal` and `classes()`, `classTotals` in `GET /api/v1/frtb/sa` (per
+  scenario and in the reported one); the FRTB screen's Total column is back, the server's figure (never summed in the browser).
+- **Connector stamp kept on the demo lake's move**: a stamped connector file nobody edited, rewritten to `lake: demo`, is stamped again
+  (`TemplateStamp.keepPristine`), so it still counts as unedited and keeps following its pack's template; an edited one stays edited.
+- **drishti-insight 0.1.0** (library 6, in the Elements manifest, so packing and the gallery include it): the one Explain, the one
+  search box and the one Approvals queue moved in whole from `drishti_explain.js`, `drishti_search-box.js` and `drishti_approvals.js`
+  (deleted), and the workbook export (`workbookLinks`, `exportWorkbook`); `base.html` loads the bundle once (Explain only for someone
+  signed in). Tests: `tests/elements/insight.test.mjs`; the keymap and Explain tests read the library's sources.
+- **The Elements 1.x npm package retired**: `tools/elements_package.py`, `core/element_package.py` and `web/elements/package/` deleted,
+  with the 1.x TypeScript generators; the 1.x embedding elements are frozen and still served unchanged at `/embed/v1/elements/1.4.5/`
+  (and the renderer 1.2.0 files as they were); the per-library packages replace the package.
+- **`tools/drishti.py` split**: its command tree is `tools/drishti_parser.py` (`build_parser(h)`), the commands stay in `drishti.py`
+  (1,495 → about 1,135 lines).
+- **drishti-grid**: the row model is chosen in `drishti_grid-model-base.js` (`rowModelFor`), keeping `drishti_grid.js` under the
+  modules' 530-line cap.
+- **Tests**: `test_docs_rot.py` knows the figures capture's test-only variables (`DRISHTI_FIGURES_OUT`, `DRISHTI_FIGURES_BASELINE`).
+
+- **drishti-grid: tree data on server-side rows** ([ELEMENTS.md section 8](docs/architecture/ELEMENTS.md), the AG Grid migration
+  guide): `treeData` with a `datasource`, `isServerSideGroup(row)` and `getServerSideGroupKey(row)` — the server answers the tree one
+  level at a time (`treeData: true` in the block request, `groupKeys` the path of the node whose children are asked); a node is a row
+  with the server's figures, a closed node reopens from its cached blocks, a sort or filter asks every open level again,
+  `refresh({keys})` asks one node's level, `groupDefaultExpanded` and expand/collapse all open levels as they load, the body draws a
+  `treegrid` with `aria-level` and `aria-expanded`. `memoryDatasource` answers tree requests with `getDataPath`. The AG Grid-style
+  adapter maps `treeData` with `rowModelType: 'serverSide'`, `isServerSideGroup` and `getServerSideGroupKey` (no longer reported as
+  unsupported); the adapter harness's `?mode=server-tree` and the gallery's "Server-side tree data" demo show it. Tests:
+  `tests/elements/tree.test.mjs`, `ag-adapter.test.mjs`, `test_elements_grid_browser.py`.
+- **A single-choice select in drishti-inputs, and the VaR and exposure screens' pickers on it** (ELEMENTS.md 8.2 and 12.2). `Select`,
+  `<drishti-select>` (`drishti_select.js`): the WAI-ARIA select-only combobox over the library's one listbox and popover (groups,
+  disabled options); Down, Up, Enter, Space, Alt+Down open, Home and End, Page Up and Down, type-ahead, Enter, Space or Alt+Up pick,
+  Escape and Tab close without picking; a long list (more than 8, or `search: true`) has a search field on top; in markup its options
+  are `<option>` and `<optgroup>` children; `name` makes a hidden input for a plain form; `setOptions`, `setDisabled`, `drishti:change`
+  `{value, option}`. Every native select of the VaR family and the exposure screens is now one: the VaR explorer's currency (its "More…"
+  group), scenarios, horizon, VaR and ES confidence and hierarchy (a hierarchy skipped on the date disabled, with why), the basket
+  sheet's saved baskets (searchable, asked when opened), the playground's horizon, confidences, currency and workbook size (a refused
+  size disabled with its reason), the stress window's hierarchy and window, the period statistics' measure, and the exposure explorer's
+  pre-deal form (netting set, candidate, method, whose figures). `terminal/_risk_elements.html` loads drishti-inputs; the gallery has a
+  Select demo; the harness and `test_elements_inputs_browser.py` test it by keyboard, type-ahead, search and ARIA; the screens' browser
+  tests pick through it (`tests/select_helpers.py`).
+
+- **The console's pickers on drishti-inputs** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  the as-of date in the top bar is a business-date picker keyed by the server's holidays (T-1, month-end, a weekend or holiday refused
+  in words); every date field of the terminal, BI and Admin pages (and the ones scripts make: BI's statement, designer and slicer
+  dates, the record forms and their cells, Explain's dates) is upgraded in place to the date picker and keeps sending its ISO date;
+  the query forms' long enums, a Sutra's multi-select and BI's drop-down slicer are `MultiSelect`; a Sutra's date control is
+  `DatePicker` and its date range `DateRangePicker` with the server's presets (open-ended allowed); the history page's range is a
+  `DateRangePicker` whose presets open the server's ranges; the people picker (`Drishti.People.attach(input, opts)`, four screens),
+  the comment box's `@` and `{` lists and the record forms' entity field are drishti-inputs' combobox. Deleted: the console's
+  multi-select (`drishti_multiselect.js`, 106 lines, now a 40-line loader for the frozen renderer 1.2.0), the hand-made listboxes of
+  the people picker, the comment box and the entity field, the native date handling of the top bar, and their CSS (`.ms-*`,
+  `.ctl-pop`, `.shr-list`, `.fm-entity-list`). **drishti-inputs 0.2.0**: `upgradeDateInput`, `upgradeCheckboxes` and `upgradeFields`
+  (a page's own fields upgraded in place: the field keeps its name, id and value, its `value` setter moves the picker, the picker's
+  changes come back as `input` and `change` events, `hidden`, `disabled`, `min` and `max` followed, a required or unreadable date stops
+  the submit); `Combobox` on a page's own field and in a `suggest` mode; `DateRangePicker` with presets given whole and `openEnded`;
+  44 px targets on touch screens. The renderer 2.0.0 and the embeds load drishti-inputs for the controls (its style sheet in the view
+  sheet, raised to 29 KB gzip on purpose). A guard fails a console script that draws its own multi-select or picker list.
+
+- **drishti-designer 0.1.0, the designer kit** (the product owner, 2026-11-07: "duplicated code will make the system unmaintainable";
+  [ELEMENTS.md section 8.8](docs/architecture/ELEMENTS.md#88-as-built-drishti-designer-the-designer-kit)): one layout canvas over a
+  layout model (grid or flow; snap, settle, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys,
+  undo and redo on one command stack or by snapshots), the palette, the inspector (a drishti-inputs Form), the outline, the YAML pane kept
+  in step with the model both ways (Studio's reader and schema assistant moved into it) and the designer shell of EDITORS.md in the three
+  layouts of mock-up g7 (studio the default, side by side, terminal; remembered per person). Moved onto it, the old code deleted: the
+  Build workbench's canvas, drags, YAML tab and about box; the BI report designer's canvas, undo and YAML tab (completion in the editor
+  in place of the suggestion strip); the table, model and Python editors' shell and YAML. `drishti_studio-yaml.js`,
+  `drishti_studio-assist.js` and `drishti_cm-yaml.js` deleted. drishti-inputs extended for it (CodeEditor: updateValue, highlight,
+  cursor, completeAfter, tabLeaves, YAML's Enter; Form: live). The standing rule **no bespoke UI**
+  ([ELEMENTS.md section 3.1](docs/architecture/ELEMENTS.md#31-standing-rule-no-bespoke-ui)) and its guard `test_designer_kit_guard.py`
+  (an allow-list of the screens still moving that only shrinks; every authoring screen and its state in section 12.3). The gallery has a
+  designer in each layout and a flow canvas; ELEMENTS_API.md covers the kit.
 - **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
   partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd
   (vectors too), 256 MB files, 16 MB row groups, 30 days' time travel, maintenance (compaction to 256 MB, vacuum after 7 days,
@@ -433,6 +615,38 @@
   `pinnedCellClicked`, a tree node's own row in its cell context), drishti-chart 0.2.0 (the histogram of a server's bins). A
   before-and-after comparison of sixteen screens and tabs (`tests/screen_figures.py`, `tests/test_var_family_figures_browser.py`, run on
   demand) and every family browser file on the new selectors with its assertions kept.
+- **The first global search no longer waits on Help** (Alt+K): it read every Help page's text, rendering them all on the event loop
+  (about 12 s on a cold console, longer on a busy machine); the console now renders them once in a worker thread as it starts, Help's
+  search renders what is missing off the event loop, and the rendered pages are shared by every pack set's library. **The Approvals
+  queue drops a stale list**: an answer to an older filter that arrives after a newer one no longer replaces it.
+- **The console's CSS on design tokens, the look unchanged** ([ELEMENTS.md 4.1, Design tokens](docs/architecture/ELEMENTS.md#design-tokens)):
+  `drishti_tokens.css` is the one home of every colour and scale. Each hard-coded colour became a token whose value in every theme is
+  what its rule drew: fixed colours (white labels on coloured fills, the navigation band, scrims, the theme menu's swatches, FRTB-SA's
+  Terminal colours), the landings' and Capacity's hues per theme, elevations, and the print palette (last in the file, with no
+  `!important`). The type scale (53 steps in px: a library or an embedded view draws the same size on a host page whose root text is not 16px,
+  as the Elements' harnesses' 13px; 7 relative steps, 10 fluid display sizes), spacing (52 px steps up to 32px),
+  radii, layers (14 `--d-z-*`), breakpoints (24 `--d-bp-*`) and the Elements' densities are tokens of exactly the values in use;
+  grid and chart take their density sizes from them. Gone: rules of removed screens (the old Studio, the BI model designer and layer
+  wizard, the browser Python console, the top bar's clock and desk name, the exposure sparkline, unused tone and text utilities), the
+  `[hidden]` rules of console-only sheets that Bootstrap's own covers, rules repeated twice, the theme button's hidden label, and
+  fallbacks of tokens that never existed (`--d-text`, `--d-fg`, `--d-mono`, `--d-border-strong`: the value they drew is written).
+  `!important` removed where specificity or order does it; the rest is on an allow-list with a reason each. The embedded view, report
+  and renderer sheets write the fixed tokens into their rules, so their size is unchanged. Numbers (90 sheets): lines 9,404 → 9,256;
+  distinct hex colours outside the token file 75 → 0 and `rgb()` 15 → 0 (194 distinct hex in all the CSS, every one now in the token
+  file); literal font sizes 69 → 0; `!important` 149 → 97; `@media` widths 25 → 24 breakpoints. The forms', pickers' and record forms'
+  sheets (`drishti_form.css`, `drishti_controls.css`, `drishti_record-forms.css`) are tokenised too, their rules otherwise as the inputs
+  conversion left them; the line count after the pickers' own deletions is 9,213.
+  - **Proof the look did not change** (`tools/dev/css_visual_check.py`, [TEST_HARNESS.md 3.14](docs/architecture/TEST_HARNESS.md#314-the-css-visual-check)):
+    landing, the VaR explorer, Pivot, a BI report, Build home, Admin and Help at 1440 px and landing, VaR and Help at 390 px, in all ten
+    themes, before and after against one server, compared pixel by pixel: 100 pictures, 76 identical, 23 within the anti-aliasing
+    tolerance (the VaR charts' edges, as between two runs of the same tree), 1 different (a BI report's timing footer, whose width
+    follows a measured time; identical when taken again). Again after the inputs conversion merged and its three sheets were tokenised:
+    71 identical, 28 within tolerance, 1 different (a BI chart caught mid-redraw; identical when taken again). No picture differs
+    because of the CSS.
+  - **Guards** (`test_css_tokens.py`, a quick file check): no colour literal outside the token file, font sizes only from the type scale,
+    `@media` widths only from the breakpoints, no undefined `--d-*`, and `!important` only on its allow-list, which only shrinks.
+  - **Left for the forms work**: the stacked-label rules repeated in eighteen forms, with the seven checkbox-row classes that escape them
+    with `!important`: one form-label convention once wip/e-forms has converted the forms.
 
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.

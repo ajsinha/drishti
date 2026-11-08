@@ -14,24 +14,24 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Admin → Artifacts and the shared safe-uninstall dialog. Colours come from the theme tokens; state is always also a word. */
-.art-kind { display: inline-block; border: 1px solid var(--d-border); border-radius: 999px; padding: 0 .6rem; font-size: .85rem; background: var(--d-surface); }
-.art-problems { max-width: 22rem; white-space: normal; overflow-wrap: anywhere; font-size: .85rem; }
+.art-kind { display: inline-block; border: 1px solid var(--d-border); border-radius: var(--d-radius-pill); padding: 0 var(--d-sp-9_6); font-size: var(--d-fs-13_6); background: var(--d-surface); }
+.art-problems { max-width: 22rem; white-space: normal; overflow-wrap: anywhere; font-size: var(--d-fs-13_6); }
 [data-artifacts] [data-list] th, [data-artifacts] [data-list] td, [data-archives] th, [data-archives] td { white-space: normal; }
-.art-install { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; margin: .6rem 0 1.2rem; }
-.art-card { border: 1px solid var(--d-border); border-radius: 8px; padding: .6rem 1rem 1rem; background: var(--d-surface); min-width: 0; }
-.art-card h3 { margin: .3rem 0; font-size: 1rem; }
-.art-file { display: flex; flex-direction: column; gap: .3rem; margin: .5rem 0; color: var(--d-ink); }
+.art-install { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--d-sp-16); margin: var(--d-sp-9_6) 0 var(--d-sp-19_2); }
+.art-card { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-9_6) var(--d-sp-16) var(--d-sp-16); background: var(--d-surface); min-width: 0; }
+.art-card h3 { margin: var(--d-sp-4_8) 0; font-size: var(--d-fs-16); }
+.art-file { display: flex; flex-direction: column; gap: var(--d-sp-4_8); margin: var(--d-sp-8) 0; color: var(--d-ink); }
 .art-dialog { width: min(640px, 94vw); max-height: 92vh; overflow: auto; }
-.art-group { margin: .5rem 0; }
-.art-group h3 { margin: 0 0 .2rem; font-size: .95rem; }
-.art-names { margin: 0; padding-left: 1.2rem; overflow-wrap: anywhere; }   /* every dependant is listed in full: the dialog scrolls, the list does not clip */
-.art-notes { margin: .4rem 0; padding-left: 1.2rem; }
-.art-typed { display: flex; flex-direction: column; gap: .3rem; margin: .6rem 0; }
-.art-cascade { display: flex; align-items: center; gap: .5rem; min-height: 44px; margin: .5rem 0; }
+.art-group { margin: var(--d-sp-8) 0; }
+.art-group h3 { margin: 0 0 var(--d-sp-3_2); font-size: var(--d-fs-15_2); }
+.art-names { margin: 0; padding-left: var(--d-sp-19_2); overflow-wrap: anywhere; }   /* every dependant is listed in full: the dialog scrolls, the list does not clip */
+.art-notes { margin: var(--d-sp-6_4) 0; padding-left: var(--d-sp-19_2); }
+.art-typed { display: flex; flex-direction: column; gap: var(--d-sp-4_8); margin: var(--d-sp-9_6) 0; }
+.art-cascade { display: flex; align-items: center; gap: var(--d-sp-8); min-height: 44px; margin: var(--d-sp-8) 0; }
 .art-cascade[hidden], .art-typed[hidden], .art-dialog [hidden], .art-card .chk[hidden] { display: none !important; }   /* .chk is inline-flex !important */
 @media (max-width: 640px) {
-  .art-dialog { padding: .8rem; }
-  .art-dialog input, .art-dialog select { font-size: 16px; min-height: 44px; }
+  .art-dialog { padding: var(--d-sp-12_8); }
+  .art-dialog input, .art-dialog select { font-size: var(--d-fs-16); min-height: 44px; }
   .art-dialog .ds-actions .btn-pill, .art-card .btn-pill, .art-card input[type=file], [data-artifacts] .adm-bar .btn-pill, [data-artifacts] .adm-bar select { flex: 1 1 100%; min-height: 44px; }
   [data-artifacts] .adm-actions .fk, .art-install a.btn-pill { min-height: 44px; min-width: 44px; }
 }

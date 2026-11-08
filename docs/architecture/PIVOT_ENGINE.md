@@ -378,7 +378,7 @@ The paused MR cube's `VarCubeSource` becomes this provider, unchanged in its ari
   on a sharded date one call per owner for all of a view's cells (`VarBook.vectors`, `ShardedVectors.sumSets`, built on the branch).
 - **Finish**: VaR, ES, stressed VaR at the lens's confidence and horizon; component VaR as a cell's share of the grand total's tail
   scenario; diversification shown beside each total (Σ cells − total).
-- **Totals**: each total is its own set's vector, summed from members, so it equals `GET /api/v1/var/scope` for that scope to the bit
+- **Totals**: each total is its own set's vector, summed from members, so it equals `GET /api/v1/risk/var/scope` for that scope to the bit
   (the branch's tests already prove it). Merging cells' vectors would be faster but equal only to the cent; it is not used for official
   figures (decision 3, [section 23](#23-decisions)).
 - **Scope text**: a cell's scope in VaR's grammar (`DESK:RATES-NY & CCY:USD`) so any cell can be asked of the VaR engine itself.
@@ -1012,7 +1012,7 @@ Product owner (2026-11-02): "And pick and choose charting as well."
    so the chart shows the parts beside the total with **diversification as its own segment**, or refuses stacking in words; ≈ values are
    drawn hatched with their error bars; axes carry units and currency; mixed currencies are refused unless converted.
 5. **Several charts** from one pivot pinned beside it, saved in the view, shared with it, **embedded in BI reports and Sutra pages**
-   (they are BI visuals over the pivot's answer, drawn with the vendored ECharts and Vega-Lite libraries, nothing from a CDN), exported to
+   (they are BI visuals over the pivot's answer, drawn with drishti-chart over the vendored ECharts, nothing from a CDN), exported to
    Excel as **native charts bound to the PivotTable** (P4) and to PNG and SVG.
 6. **Keyboard**: select with `Shift` and the arrows, `G` charts, `Shift+G` cycles the suggestions, `P` pins.
 
@@ -1150,7 +1150,7 @@ a per-store allowance is a later step. Every key is in [CONFIGURATION.md](../adm
 | `GET /api/v1/pivot/cells/{ref}` | one cell by reference ([section 10](#10-beyond-anything-out-there), item 8): value, exactness, provenance id |
 | `GET /api/v1/pivot/cells/{ref}/rows` | drill-through, paged |
 | `GET /api/v1/pivot/provenance/{id}` | the provenance of an answer or a cell |
-| `POST /api/v1/pivot/explain` | the difference between two cells or two dates, as steps that add up |
+| `POST /api/v1/explain` (kind `pivot`) | the difference between two cells or two dates, as steps that add up (`/api/v1/pivot/explain`: a deprecated alias for one release) |
 | `POST /api/v1/pivot/compare` | two dates or versions, cell by cell |
 | `GET, POST, PUT, DELETE /api/v1/pivot/views[/{owner}/{name}]` | saved views, versions, share, restore |
 | `GET /api/v1/pivot/catalogue?source=` | dimensions, measures and functions a source offers this person |
@@ -1199,7 +1199,7 @@ The same words as the API; `--wait` for background runs; a refused view prints t
 | `ExactQuantileTest` | iterative selection equals a sort on the same data, across splits |
 | `FunctionHarnessTest` | the harness fails a function whose merge is wrong, non-deterministic, too slow or too large, and passes the built-ins |
 | `PythonFunctionSandboxTest` | no network, no files, no processes, the time and memory limits, only declared columns; nothing written for memory-only data |
-| `VarProviderParityTest` | the paused branch's tests unchanged: every cell and total equal to `/api/v1/var/scope` to the bit, sharded and whole |
+| `VarProviderParityTest` | the paused branch's tests unchanged: every cell and total equal to `/api/v1/risk/var/scope` to the bit, sharded and whole |
 | `LazyExpandTest` | expanding a node computes only its children; the expansion state round-trips through a saved view and a link |
 | `OthersTest` | Others equals the measure over its own members (VaR from vectors), not total minus top N |
 | `CurrencyAndUnitsTest` | mixed currencies refused unless converted; percentages not summed |

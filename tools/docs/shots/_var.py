@@ -77,3 +77,14 @@ def tab(c: Ctx, name: str) -> None:
     c.page.locator(f'.vx-tab[data-tab="{name}"]').click()
     c.until("document.querySelector('[data-var]').dataset.tabPainted === %r" % name, 60)
     c.page.wait_for_timeout(600)
+
+
+def choose(c: Ctx, sel: str, value: str, keep_open: bool = False) -> None:
+    """Picks value in a <drishti-select> (drishti-inputs' Select) as a person does: opens it and clicks the option; keep_open leaves the
+    list open for the picture instead."""
+    c.page.locator(sel + " .di-select-control").click()
+    c.page.wait_for_selector(".di-select-pop [role=listbox]")
+    if keep_open:
+        return
+    i = c.page.evaluate("([s, v]) => document.querySelector(s).component.matches.findIndex((o) => String(o.value) === v)", [sel, str(value)])
+    c.page.locator(".di-select-pop [role=option][data-i='%d']" % i).click()

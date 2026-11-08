@@ -61,6 +61,15 @@ public enum ErrorCode {
     ENGINE_FILE_CONFLICT("DRS-1023", 409),
     /** An old switch name still in use ({@code drishti.var.enabled} for {@code drishti.engines.var.enabled}): a warning at start, never an answer. */
     ENGINE_OLD_KEY("DRS-1024", 400),
+    /**
+     * A module is off here (docs/architecture/ACCESS_MODEL.md): not installed, not licensed or switched off by an administrator. Its API
+     * answers 404 in words, never 403 (nothing is forbidden; the module is not here).
+     */
+    MODULE_OFF("DRS-1025", 404),
+    /** A function (a command word such as VAR or TRD) is off here: its module is off or an administrator switched it off; its APIs answer 404. */
+    FUNCTION_OFF("DRS-1026", 404),
+    /** A function this person may not use (per-person grants and denials, 2.9.11.i): 403 with the reason, audited. */
+    FUNCTION_NOT_ALLOWED("DRS-1027", 403),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),
@@ -269,11 +278,6 @@ public enum ErrorCode {
     EXPOSURE_ROW_REJECTED("DRS-5444", 422),
     /** Exposure: a date's netting-set matrices need more memory than the budget (drishti.ccr.exposure.memory-budget-gb). */
     EXPOSURE_CAPACITY("DRS-5445", 503),
-    /**
-     * Exposure: the exact what-if (method {@code paths}) could not be answered: the Python exposure engine (the reactive connector
-     * {@code exposure-whatif} and its compute pool) is not running on this server, or did not answer in time.
-     */
-    EXPOSURE_METHOD_UNAVAILABLE("DRS-5446", 503),
     /** A connector file or draft that fails validation. */
     CONNECTOR_INVALID("DRS-5031", 422),
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */
@@ -443,7 +447,7 @@ public enum ErrorCode {
     TRANSFORM_FAILED("DRS-9075", 422),
     /** Python in BI: a test shipped with a Python item failed, so the item is not published (a bi-admin may force it). */
     PYTHON_TESTS("DRS-9076", 422),
-    /** BI: a Vega-Lite specification could not be drawn (a url or loader in it, a library that did not load); raised by the page, in the visual's frame, and listed here so the code has one home. */
+    /** BI: a Vega-Lite specification was not drawn (a url or loader in it, or a feature drishti-chart does not translate, named with what to use instead); raised by the page, in the visual's frame, and listed here so the code has one home. */
     VEGA_FAILED("DRS-9077", 422),
     /** BI runs (docs/architecture/BI_DESIGN.md): no such run, or not one the caller may see. */
     RUN_NOT_FOUND("DRS-9080", 404),

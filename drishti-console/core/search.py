@@ -226,11 +226,11 @@ async def help_pages(request: Request, q: str, section: str = "", limit: int = 2
     lib = await library(request)
     sid = lib.section_id(section) if section else ""
     hits = []
-    for g in lib.guides.values():
-        if not g.listed and "qa" in g.path.parts:
-            continue                             # the QA records (history) are reachable by link, not search
-        if sid and (g.category != sid or not g.listed) or category and g.category != category:
-            continue
+    pages = [g for g in lib.guides.values()
+             if (g.listed or "qa" not in g.path.parts)                # the QA records (history) are reachable by link, not search
+             and not (sid and (g.category != sid or not g.listed) or category and g.category != category)]
+    await asyncio.to_thread(lambda: [lib.render(g.slug) for g in pages])   # a page not yet rendered: off the event loop (Library.warm)
+    for g in pages:
         low_title = g.title.lower()
         text = lib.render(g.slug)["text"]
         low = text.lower()

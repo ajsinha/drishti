@@ -27,11 +27,12 @@
   var root = document.querySelector('[data-grid]');
   if (!root || !root.dataset.draft) { return; }
   var draft = root.dataset.draft, kind = root.dataset.kind, id = root.dataset.id;
-  var sheet = root.querySelector('[data-gd-sheet]'), msg = root.querySelector('[data-gd-msg]'), input = root.querySelector('[data-gd-formula]');
-  var nameBox = root.querySelector('[data-gd-name]'), list = root.querySelector('[data-gd-suggest]'), frame = root.querySelector('[data-gd-preview]');
+  var sheet = root.querySelector('[data-gd-sheet]'), msg = root.querySelector('[data-gd-msg]'), bar = root.querySelector('[data-gd-formula]');
+  var nameBox = root.querySelector('[data-gd-name]'), frame = root.querySelector('[data-gd-preview]');
   var errBox = root.querySelector('[data-gd-error]'), sutra = root.querySelector('[data-gd-sutra]'), info = root.querySelector('[data-gd-info]');
   var nest = root.querySelector('[data-gd-nest]'), nestWrap = root.querySelector('[data-gd-nest-wrap]');
-  var state = null, sel = { r: 0, c: 0, kid: null }, anchor = null, rev = 0, dragging = null, choices = [], pick = -1;
+  var state = null, sel = { r: 0, c: 0, kid: null }, anchor = null, rev = 0, input = null;
+  var hub = new window.Drishti.elements.designer.DragHub();          // a cell dragged onto another (drishti-designer)
 
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -124,25 +125,16 @@
         body.push(kid);
       });
       var cell = el('div', { 'class': 'gd-cell' + (picked ? ' gd-sel' : '') + (inRange ? ' gd-in' : '') + (x.panels.length ? '' : ' gd-blank'), role: 'gridcell',
-        tabindex: picked ? '0' : '-1', 'aria-selected': picked || inRange ? 'true' : 'false', 'data-gd-cell': x.ref, 'data-gd-range': x.range,
-        draggable: x.panels.length ? 'true' : null }, body);
+        tabindex: picked ? '0' : '-1', 'aria-selected': picked || inRange ? 'true' : 'false', 'data-gd-cell': x.ref, 'data-gd-range': x.range }, body);
       cell.style.gridRow = (x.r + 2) + ' / span ' + x.rs; cell.style.gridColumn = (x.c + 2) + ' / span ' + x.cs;
       cell.addEventListener('click', function (e) {
         if (e.shiftKey && state.grid.mode === 'areas') { if (!anchor) { anchor = { r: sel.r, c: sel.c }; } } else { anchor = null; }
         sel = { r: x.r, c: x.c, kid: null }; select(true);
       });
       cell.addEventListener('dblclick', function () { edit(); });
-      cell.addEventListener('dragstart', function (e) { dragging = x.ref; e.dataTransfer.setData('text/x-gd', x.ref); e.dataTransfer.effectAllowed = 'move'; });
-      cell.addEventListener('dragend', function () { dragging = null; });
-      cell.addEventListener('dragover', function (e) { if (dragging) { e.preventDefault(); cell.classList.add('gd-over'); } });
-      cell.addEventListener('dragleave', function () { cell.classList.remove('gd-over'); });
-      cell.addEventListener('drop', function (e) {
-        cell.classList.remove('gd-over');
-        if (!dragging) { return; }
-        e.preventDefault();
-        var from = dragging; dragging = null;
-        if (from !== x.ref) { sel = { r: x.r, c: x.c, kid: null }; step({ op: 'move', from: from, to: x.ref }); }
-      });
+      if (x.panels.length) { hub.draggable(cell, { payload: function () { return { ref: x.ref }; }, label: function () { return x.range; } }); }   // drishti-designer's one drag
+      hub.target({ el: cell, accepts: function (d) { return !!d.ref; }, over: function () { cell.classList.add('gd-over'); }, leave: function () { cell.classList.remove('gd-over'); },
+        drop: function (px, py, d) { cell.classList.remove('gd-over'); if (d.ref !== x.ref) { sel = { r: x.r, c: x.c, kid: null }; step({ op: 'move', from: d.ref, to: x.ref }); } } });
       sheet.appendChild(cell);
     });
     sutra.textContent = state.yaml || '';
@@ -164,9 +156,8 @@
       if (on && focus) { n.focus(); }
     });
     nameBox.textContent = anchor ? ref(rg.r0, rg.c0) + ':' + ref(rg.r1, rg.c1) : x.range;
-    input.value = x.formula || '';
-    fit();
-    hideError(); closeList();
+    input.setValue(x.formula || '');
+    hideError();
     var tables = state.suggest.panels.filter(function (p) { return p.table && x.panels.indexOf(p.index) < 0; });
     nestWrap.hidden = !(!x.kid && x.panels.length === 1 && tables.length);
     nest.innerHTML = '';
@@ -174,7 +165,7 @@
     tables.forEach(function (p) { nest.appendChild(el('option', { value: p.id, text: (p.cell || p.id) + ' · ' + p.title })); });
   }
 
-  function edit() { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+  function edit() { var ls = input.getValue().split('\n'); input.goTo(ls.length, ls[ls.length - 1].length); }
 
   /* ---- column widths: 12 units across, a header's edge dragged (or Left and Right on it), or a width typed on the header ---------- */
   function units() { return state.grid.widths.map(function (w) { return Math.max(1, Math.round(Number(w))); }); }
@@ -231,7 +222,6 @@
     });
     box.addEventListener('blur', function () { finish(true); });
   }
-  function fit() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight + 2, 190) + 'px'; }   /* the whole formula shows, up to about eight lines */
 
   /* ---- steps -------------------------------------------------------------------------------------------------------------------- */
   function step(body) {
@@ -257,9 +247,9 @@
     bad.hidden = !(at && text);
     root.querySelector('[data-gd-why]').textContent = why;
     errBox.hidden = false;
-    input.setAttribute('aria-invalid', 'true');
+    input.setInvalid(true);
   }
-  function hideError() { errBox.hidden = true; input.removeAttribute('aria-invalid'); }
+  function hideError() { errBox.hidden = true; input.setInvalid(false); }
 
   /* the preview, drawn again in place: the new page's grid swapped into the frame (its scripts set it up), else a reload */
   function redraw() {
@@ -288,21 +278,22 @@
     });
   }
 
-  /* ---- suggestions --------------------------------------------------------------------------------------------------------------- */
-  function context() {
-    var v = input.value, at = input.selectionStart, start = at;
+  /* ---- the formula bar: drishti-inputs' CodeEditor, its completion offering the panels' events, fragments, kinds and parameters --- */
+  function context(c) {                                                  /* the word at the cursor and where it sits in its line */
+    var v = c.line, at = c.ch, start = at;
     while (start > 0 && /[\w@.\-\/$]/.test(v[start - 1])) { start--; }
-    var lineStart = v.lastIndexOf('\n', start - 1) + 1, before = v.slice(lineStart, start).replace(/^\s*[A-Z]{1,2}\d{1,3}(?:[a-z]\d{0,2})?\s*=\s*/, '').replace(/^\s*=/, '');
-    var head = (v.slice(lineStart).match(/^\s*(?:[A-Z]{1,2}\d{1,3}(?:[a-z]\d{0,2})?\s*=\s*)?=?\s*([\w@\/-]+)\(/) || [])[1] || '';
+    var before = v.slice(0, start).replace(/^\s*[A-Z]{1,2}\d{1,3}(?:[a-z]\d{0,2})?\s*=\s*/, '').replace(/^\s*=/, '');
+    var head = (v.match(/^\s*(?:[A-Z]{1,2}\d{1,3}(?:[a-z]\d{0,2})?\s*=\s*)?=?\s*([\w@\/-]+)\(/) || [])[1] || '';
     return { word: v.slice(start, at), start: start, end: at, first: !before.trim(), after: (before.match(/[(,;]\s*$/) || [''])[0], head: head };
   }
-  function suggest() {
-    var cx = context(), w = cx.word.toLowerCase(), out = [];
+  function suggest(c) {                                                  /* @ events anywhere, fragments and kinds first in a line, parameters after ( */
+    if (!state) { return []; }
+    var cx = context(c), w = cx.word.toLowerCase(), out = [];
     if (cx.word.charAt(0) === '@') {
       var events = function (at, title, emits, what) {
         (emits || []).forEach(function (ev) {
           (ev.fields.length ? ev.fields : ['']).forEach(function (f) {
-            out.push({ text: '@' + at + '.' + ev.name + (f ? '.' + f : ''), doc: title + ': ' + what + ' (' + ev.name + ')' });
+            out.push({ name: '@' + at + '.' + ev.name + (f ? '.' + f : ''), description: title + ': ' + what + ' (' + ev.name + ')' });
           });
         });
       };
@@ -310,55 +301,27 @@
       if (mine) { events('parent', mine.up, mine.parent, 'what the parent emitted'); }       /* inside a child cell: its parent first */
       state.suggest.panels.forEach(function (p) { events(p.cell || p.id, p.title, p.emits, 'a click on a row'); });
       kids.forEach(function (k) { events(k.ref, k.title + ' (opens from ' + k.up + ')', k.emits, 'a click on a row'); });
-      if (!mine) { out.push({ text: '@parent.', doc: 'what the parent panel emitted (a panel a click opens)' }); }
+      if (!mine) { out.push({ name: '@parent.', description: 'what the parent panel emitted (a panel a click opens)' }); }
     } else if (cx.first) {
-      state.suggest.fragments.forEach(function (f) { out.push({ text: f.ref, doc: f.summary, head: true }); });
-      state.suggest.kinds.forEach(function (k) { out.push({ text: k, doc: 'a panel of kind ' + k, head: true }); });
+      state.suggest.fragments.forEach(function (f) { out.push({ name: f.ref, insert: f.ref + '(', description: f.summary }); });
+      state.suggest.kinds.forEach(function (k) { out.push({ name: k, insert: k + '(', description: 'a panel of kind ' + k }); });
     } else if (cx.after && cx.head) {
       var frag = state.suggest.fragments.filter(function (f) { return f.ref === cx.head || f.ref.split('@')[0].split('/').pop() === cx.head; })[0];
-      ((frag && frag.params) || ['id', 'title', 'rows', 'source', 'when']).forEach(function (p) { out.push({ text: p, doc: 'a parameter', param: true }); });
+      ((frag && frag.params) || ['id', 'title', 'rows', 'source', 'when']).forEach(function (p) { out.push({ name: p, insert: p + ': ', description: 'a parameter' }); });
     }
-    choices = out.filter(function (o) { return !w || o.text.toLowerCase().indexOf(w) >= 0; }).slice(0, 8);
-    pick = choices.length ? 0 : -1;
-    list.innerHTML = '';
-    choices.forEach(function (o, k) {
-      var li = el('li', { role: 'option', id: 'gdOpt' + k, 'aria-selected': k === pick ? 'true' : 'false', 'data-gd-option': o.text }, [el('code', { text: o.text }), o.doc ? el('span', { text: ' ' + o.doc }) : null]);
-      li.addEventListener('mousedown', function (e) { e.preventDefault(); accept(k); });
-      list.appendChild(li);
-    });
-    list.hidden = !choices.length || (!cx.word && !cx.after && !cx.first);
-    input.setAttribute('aria-expanded', String(!list.hidden));
+    if (!cx.word && !cx.after && !cx.first) { return []; }
+    return out.filter(function (o) { return !w || o.name.toLowerCase().indexOf(w) >= 0; }).slice(0, 8)
+      .map(function (o) { return Object.assign(o, { insert: o.insert || o.name, kind: 'field', from: cx.start, to: cx.end }); });
   }
-  function closeList() { list.hidden = true; choices = []; pick = -1; input.setAttribute('aria-expanded', 'false'); }
-  function accept(k) {
-    var o = choices[k], cx = context();
-    if (!o) { return; }
-    var add = o.text + (o.head ? '(' : o.param ? ': ' : '');
-    input.value = input.value.slice(0, cx.start) + add + input.value.slice(cx.end);
-    var caret = cx.start + add.length;
-    input.setSelectionRange(caret, caret);
-    closeList(); fit();
+  function keepFormula() {                                               /* Enter: the server reads the formula, the cell keeps it */
+    var x = current(), text = input.getValue();
+    if (text === (x.formula || '')) { select(true); return; }
+    step({ op: 'formula', cell: x.ref, text: text }).then(function (ok) { if (ok) { select(true); } });
   }
-  function mark() { list.querySelectorAll('li').forEach(function (li, k) { li.setAttribute('aria-selected', k === pick ? 'true' : 'false'); }); input.setAttribute('aria-activedescendant', pick >= 0 ? 'gdOpt' + pick : ''); }
-
-  input.addEventListener('input', function () { fit(); suggest(); });
-  input.addEventListener('blur', function () { setTimeout(closeList, 150); });
-  input.addEventListener('keydown', function (e) {
-    if (!list.hidden && choices.length) {
-      if (e.key === 'ArrowDown') { e.preventDefault(); pick = (pick + 1) % choices.length; mark(); return; }
-      if (e.key === 'ArrowUp') { e.preventDefault(); pick = (pick - 1 + choices.length) % choices.length; mark(); return; }
-      if (e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey)) { e.preventDefault(); accept(pick); return; }
-      if (e.key === 'Escape') { e.preventDefault(); closeList(); return; }
-    }
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      var x = current();
-      if (input.value === (x.formula || '')) { select(true); return; }
-      step({ op: 'formula', cell: x.ref, text: input.value }).then(function (ok) { if (ok) { select(true); } });
-    } else if (e.key === 'Escape') {
-      e.preventDefault(); select(true);                                    // back to the cell, the formula as it was
-    }
-  });
+  input = new window.Drishti.elements.inputs.CodeEditor(bar, { mode: 'rachana', lineNumbers: false, lineWrapping: true, height: 'auto', minHeight: 60, maxHeight: 190,
+    label: "The cell's formula: Enter keeps it, Shift+Enter a new line (another panel in the cell), Esc goes back", tabLeaves: true,
+    complete: suggest, completeAfter: function (before) { return /[(,;]\s*$/.test(before); },
+    keys: { Enter: keepFormula, 'Shift-Enter': function () { input.insert('\n'); }, Esc: function () { select(true); } } });   /* Esc: back to the cell, the formula as it was */
 
   /* ---- the keyboard on the sheet --------------------------------------------------------------------------------------------------- */
   sheet.addEventListener('keydown', function (e) {

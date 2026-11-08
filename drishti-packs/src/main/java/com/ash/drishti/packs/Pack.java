@@ -109,6 +109,15 @@ public record Pack(String name, String version, String title, String description
         return manifest.get("sample") instanceof Boolean b ? b : "true".equalsIgnoreCase(String.valueOf(manifest.get("sample")));
     }
 
+    /**
+     * The domain the pack serves ({@code domain:} in {@code pack.yaml}: {@code core}, {@code banking}, {@code economy}); {@code core} when
+     * not given. A pack of a domain whose modules are all off is not loaded (docs/architecture/ACCESS_MODEL.md).
+     */
+    public String domain() {
+        Object d = manifest.get("domain");
+        return d == null || String.valueOf(d).isBlank() ? "core" : String.valueOf(d).strip().toLowerCase(java.util.Locale.ROOT);
+    }
+
     public Path resolve(String relative) {
         return dir.resolve(relative).normalize();
     }

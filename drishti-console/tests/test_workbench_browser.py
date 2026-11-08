@@ -232,7 +232,7 @@ def test_moving_and_sizing_a_panel_changes_the_yaml_and_keeps_the_comments(live_
     rev = state(page, "rev")
     t = page.locator('[data-preview] [data-panel="terms"]')
     t.hover()
-    e = t.locator(".lh-e").bounding_box()
+    e = t.locator("[data-dd-edge='e']").bounding_box()
     page.mouse.move(e["x"] + 5, e["y"] + 30)
     page.mouse.down()
     page.mouse.move(e["x"] + 90, e["y"] + 30, steps=5)

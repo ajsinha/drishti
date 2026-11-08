@@ -120,8 +120,9 @@ def test_the_boxes_the_areas_the_kind_and_refresh_filter_the_list(browser, appro
     page.wait_for_function("() => document.querySelectorAll('[data-ap-row]').length === 1")
     assert page.locator("[data-ap-group=risk]").get_attribute("aria-pressed") == "true"
     page.locator("[data-ap-group='']").click()
+    page.wait_for_function("() => document.querySelectorAll('[data-ap-row]').length === 5")   # all areas again, before the kind
     page.locator("[data-ap-kind]").select_option("sutra")
-    page.wait_for_function("() => document.querySelectorAll('[data-ap-row]').length === 1")
+    page.wait_for_function("() => [...document.querySelectorAll('[data-ap-row]')].map(e => e.dataset.apRow).join() === 'sutra/P-000007'")
     assert _ids(page) == ["sutra/P-000007"] and "kind=sutra" in page.url
     page.locator("[data-ap-kind]").select_option("")
     page.locator("[data-ap-box=done]").click()

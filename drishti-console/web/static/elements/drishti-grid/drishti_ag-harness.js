@@ -16,7 +16,7 @@
 /* The AG Grid-style adapter's harness (drishti_ag-harness.html): a grid made only from AG Grid Enterprise-shaped options by
    createGridFromAgOptions, over invented trades. The non-additive VaR's totals come from a stand-in server in the page (each cell's
    diversified VaR of its own trades, never a sum); ?mode=server answers an AG-shaped serverSideDatasource in the page; ?mode=tree is
-   tree data. window.__ag is what the browser test drives: the handle (api), the AG events heard, the requests the datasource saw. */
+   tree data; ?mode=server-tree is tree data on server-side rows (each node's level asked when it opens). window.__ag is what the browser test drives: the handle (api), the AG events heard, the requests the datasource saw. */
 (function () {
   'use strict';
   const G = window.Drishti.elements.grid;
@@ -96,6 +96,21 @@
     Object.assign(gridOptions, { rowData: data, treeData: true, getDataPath: (d) => d.path, autoGroupColumnDef: { headerName: 'Organisation', width: 260 }, groupDefaultExpanded: 1 });
     columnDefs.forEach((c) => { delete c.rowGroup; delete c.pivot; });
     delete columnDefs[4].aggFunc;                                         // a tree node's VaR is not a sum: none shown here
+  }
+  if (mode === 'server-tree') {                                           // the server answers the tree a level at a time; a node's VaR is the server's
+    Object.assign(gridOptions, { rowModelType: 'serverSide', treeData: true, autoGroupColumnDef: { headerName: 'Organisation', width: 260 }, cacheBlockSize: 50,
+      isServerSideGroup: (d) => d.group, getServerSideGroupKey: (d) => d.key, getRowId: (p) => p.data.id, serverSideDatasource: { getRows(params) {
+        const r = params.request, d = r.groupKeys.length, by = new Map();
+        H.requests.push(JSON.parse(JSON.stringify(r)));
+        data.filter((x) => r.groupKeys.every((k, i) => x.path[i] === k)).forEach((x) => { const k = x.path[d]; (by.get(k) || by.set(k, []).get(k)).push(x); });
+        const out = Array.from(by.keys()).map((k) => {
+          const rows = by.get(k), leaf = rows.length === 1 && rows[0].path.length === d + 1;
+          return leaf ? Object.assign({ key: k, group: false }, rows[0])
+            : { id: r.groupKeys.concat([k]).join('/'), key: k, group: true, mtm: rows.reduce((s, x) => s + x.mtm, 0), var: Math.round(diversified(rows)) };
+        });
+        setTimeout(() => params.success({ rowData: out.slice(r.startRow, r.endRow), rowCount: out.length }), 20);
+      } } });
+    columnDefs.forEach((c) => { delete c.rowGroup; delete c.pivot; delete c.aggFunc; });
   }
   const box = document.createElement('div');
   box.className = 'hx-one';

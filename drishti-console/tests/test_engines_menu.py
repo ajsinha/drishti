@@ -67,7 +67,8 @@ def test_the_menus_file_has_one_engines_menu_and_no_var_or_exposure_menu():
 
 
 def test_the_pre_deal_check_and_fx_volatility_have_one_menu_item_each():
-    """Lean (2.9.11.c): Pre-deal check (XWIF) only under Counterparties, FX volatility (FXV) only under Volatility."""
+    """Lean (2.9.11.c): Pre-deal check (PREDEAL, the server's pre-deal service since 2.9.11.g) only under Counterparties, FX volatility
+    (FXV) only under Volatility."""
     spec = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
     where: dict[str, list[str]] = {}
     for m in spec["menus"]:
@@ -75,7 +76,7 @@ def test_the_pre_deal_check_and_fx_volatility_have_one_menu_item_each():
             for it in col.get("items") or []:
                 if it.get("cmd"):
                     where.setdefault(it["cmd"], []).append(m["id"])
-    assert where["XWIF"] == ["counterparties"] and where["FXV"] == ["volatility"]
+    assert where["PREDEAL"] == ["counterparties"] and where["FXV"] == ["volatility"] and "XWIF" not in where
 
 
 def test_an_administrator_sees_every_running_engine_with_its_word_and_admin_engines(backend, monkeypatch):
@@ -140,7 +141,7 @@ def test_an_engines_commands_follow_the_same_rule_as_its_menu_column(backend, mo
     app = _app(backend, monkeypatch)
     _people(app, monkeypatch)
     mira = _client(app, "mira")                                                         # market risk: VaR, FRTB-SA, SIMM; not Exposure
-    for typed in ("EXP CPTY:CP-ALDERSHOT", "XWIF", "exp bank"):
+    for typed in ("EXP CPTY:CP-ALDERSHOT", "PLAY EXP", "exp bank"):
         r = mira.get("/go", params={"q": typed + " <GO>"}, follow_redirects=False)
         assert r.status_code == 303 and "Exposure is not opened for your role; ask an administrator." in unquote(r.headers["location"]), typed
     bea = _client(app, "bea")

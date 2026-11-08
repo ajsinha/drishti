@@ -200,6 +200,11 @@ drishti:
     dir: ${DRISHTI_ENGINES_DIR:./config/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
     drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled
     watch-seconds: 5                 # how often the engine files are compared with what was read (an edit by hand takes effect as from the page)
+  modules:                           # the modules (docs/architecture/ACCESS_MODEL.md; Admin -> Modules): each on when installed, licensed and enabled
+    dir: ${DRISHTI_MODULES_DIR:./config/modules}   # the folder of the modules' switches (config/modules/<id>.yaml: enabled), written by Admin -> Modules; drishti.modules.<id>.enabled (DRISHTI_MODULES_<ID>_ENABLED) wins over a file
+    watch-seconds: 5                 # how often the module and access files are compared with what was read (a change to a module takes effect at the next start; lenses and the licence at once)
+  access:                            # the access model's files (docs/architecture/ACCESS_MODEL.md): the access registry reads them, nothing else does
+    dir: ${DRISHTI_ACCESS_DIR:./config/access}     # licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed
   metrics:                           # the platform metrics and alerts (docs/admin/OPERATIONS.md section 13.6; RESOURCES_AND_SCALE.md 8.3, 8.5)
     enabled: ${DRISHTI_METRICS_ENABLED:true}  # export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules
     sample-interval: 15s             # how often the gauges are sampled and the alert rules evaluated
@@ -365,15 +370,15 @@ drishti:
       - /api/v1/tables/editor/python/notebook
       - /api/v1/tables/editor/python/contract
       - /api/v1/pivot/live               # a live pivot: the same answer kept current for the caller (ended by DELETE, or when no stream reads it)
-      - /api/v1/pivot/explain            # the difference between two cells in steps, computed as the caller, stored nowhere
+      - /api/v1/pivot/explain            # DEPRECATED alias of /api/v1/explain (kind pivot) for one release: computed as the caller, stored nowhere
       - /api/v1/pivot/whatif             # a view with an overlay beside the original, computed as the caller, stored nowhere
       - /api/v1/pivot/functions/test     # the custom-function playground: the harness on a sample, nothing saved
-      - /api/v1/pivot/mr/headline        # the MR cube's lens (MR_CUBE_GUIDE.md): a view's headline, a cell's detail and history and the
-      - /api/v1/pivot/mr/detail          # what-if side by side, each computed by the VaR engine as the caller, written nowhere
-      - /api/v1/pivot/mr/history
-      - /api/v1/pivot/mr/what-if
-      - /api/v1/var/basket/sheet        # the basket sheet's checks and figures, computed as the caller, saved nowhere
-      - /api/v1/var/basket/sheet.xlsx   # the sheet as a workbook, written nowhere on the server
+      - /api/v1/risk/mr/headline        # the MR cube's lens (MR_CUBE_GUIDE.md): a view's headline, a cell's detail and history and the
+      - /api/v1/risk/mr/detail          # what-if side by side, each computed by the VaR engine as the caller, written nowhere
+      - /api/v1/risk/mr/history
+      - /api/v1/risk/mr/what-if
+      - /api/v1/risk/var/basket/sheet        # the basket sheet's checks and figures, computed as the caller, saved nowhere
+      - /api/v1/risk/var/basket/sheet.xlsx   # the sheet as a workbook, written nowhere on the server
       - /api/v1/command
       - /api/v1/forms/*/*/compile        # query by form: writes the criteria out as a search command, nothing else
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
@@ -412,8 +417,9 @@ drishti:
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
       - /api/v1/compute/*/*             # a reactive connector's answer for the caller (DATA_ARCHITECTURE.md): computed and cached, changes no data
-      - /api/v1/exposure/what-if        # incremental exposure before dealing (EXPOSURE_GUIDE.md section 18.7) for the caller: computed, stores nothing
-      - /api/v1/var/what-if             # VaR before and after hypothetical trades (VAR_GUIDE.md section 8.5) for the caller: computed by the Python engine, stores nothing
+      - /api/v1/risk/exposure/what-if        # incremental exposure before dealing (EXPOSURE_GUIDE.md section 18.7) for the caller: computed, stores nothing
+      - /api/v1/risk/exposure/predeal        # the pre-deal check (EXPOSURE_GUIDE.md section 18.9) for the caller: computed, audited, stores nothing else
+      - /api/v1/risk/var/what-if             # VaR before and after hypothetical trades (VAR_GUIDE.md section 8.5) for the caller: computed by the Python engine, stores nothing
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
@@ -423,14 +429,14 @@ drishti:
       "[risk:write]":
         description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only (an administrator's token may also delete anyone's basket, as its user may); the bank's data is never changed."
         allow:
-          - POST /api/v1/var/baskets
-          - POST /api/v1/frtb/playground/recipes   # save a FRTB-SA playground recipe (yours, replayable)
-          - POST /api/v1/simm/playground/recipes   # save a SIMM playground recipe
-          - DELETE /api/v1/var/baskets/*/*
-          - DELETE /api/v1/var/baskets/*
-          - POST /api/v1/var/captures
-          - POST /api/v1/var/reports/*/runs           # generate a regulatory report run (frozen, versioned); its sign-off is never a token's
-          - POST /api/v1/exposure/captures
+          - POST /api/v1/risk/var/baskets
+          - POST /api/v1/risk/frtb/playground/recipes   # save a FRTB-SA playground recipe (yours, replayable)
+          - POST /api/v1/risk/simm/playground/recipes   # save a SIMM playground recipe
+          - DELETE /api/v1/risk/var/baskets/*/*
+          - DELETE /api/v1/risk/var/baskets/*
+          - POST /api/v1/risk/var/captures
+          - POST /api/v1/risk/var/reports/*/runs           # generate a regulatory report run (frozen, versioned); its sign-off is never a token's
+          - POST /api/v1/risk/exposure/captures
           - POST /api/v1/compute/sandboxes
           - PUT /api/v1/compute/sandboxes/*
           - DELETE /api/v1/compute/sandboxes/*
@@ -605,27 +611,27 @@ drishti:
       - "* /api/v1/compute/peer/**"            # compute fan-out between nodes: signed with the cluster key, never a token
       - "* /api/v1/admin/compute/**"           # compute pools, environments and four-eyes approvals: an administrator in the console
       - "POST /api/v1/compute/events"          # trigger events (the write-back hook): the server and administrators, never a token
-      - "POST /api/v1/var/reload"              # reloading the VaR vectors: an administrator in the console
-      - "POST /api/v1/var/official"            # running the official end-of-day VaR capture: an administrator in the console
-      - "POST /api/v1/var/official/synthetic-history"   # seeding a demo server's synthetic official records: an administrator
-      - "POST /api/v1/var/reports/*/runs/*/narrative"  # a report's maker writes the narrative as a person, never a token
+      - "POST /api/v1/risk/var/reload"              # reloading the VaR vectors: an administrator in the console
+      - "POST /api/v1/risk/var/official"            # running the official end-of-day VaR capture: an administrator in the console
+      - "POST /api/v1/risk/var/official/synthetic-history"   # seeding a demo server's synthetic official records: an administrator
+      - "POST /api/v1/risk/var/reports/*/runs/*/narrative"  # a report's maker writes the narrative as a person, never a token
       - "POST /api/v1/approvals/var-report/**"          # a report's maker, checker and approver sign as people (the Approvals queue), never a token
-      - "POST /api/v1/var/stress-window/proposals"      # proposing a stress window is a governance step a person takes
+      - "POST /api/v1/risk/var/stress-window/proposals"      # proposing a stress window is a governance step a person takes
       - "POST /api/v1/approvals/stress-window/**"       # approving or rejecting one, by a second person
       - "POST /api/v1/approvals/compute/**"            # compute requirements: an administrator in the console
       - "POST /api/v1/approvals/*/*/questions"          # a question on an item: a person asks it
       - "* /api/v1/alerts/**"                           # the alerts raised for a person and their rules: personal state, set in the console
-      - "POST /api/v1/var/intraday/streams/*/apply"   # applying a PV topic's waiting window now: an administrator in the console
+      - "POST /api/v1/risk/var/intraday/streams/*/apply"   # applying a PV topic's waiting window now: an administrator in the console
       # VaR shards (docs/architecture/VAR_SHARDING.md section 10). /partial is one member's call to another, signed with the cluster key
       # and made as the caller (their on-behalf-of token; the owner applies their rights again): like /compute/peer/**, never a token's.
       # It reads data but is no read POST for a token, which would only add a door to the members' channel. /shards/drain takes a member's
       # shards away before it stops: an administrator (console, drishti.py var shards --drain, a task's stop hook signed in as one), never
       # a token, like /var/reload.
-      - "POST /api/v1/var/partial"
-      - "POST /api/v1/var/partials"            # many sets of one shard in one call: the same channel as /partial
-      - "POST /api/v1/var/shards/drain"
-      - "POST /api/v1/exposure/reload"         # reloading the exposure paths: an administrator in the console
-      - "POST /api/v1/exposure/official"       # running the official end-of-day exposure capture: an administrator in the console
+      - "POST /api/v1/risk/var/partial"
+      - "POST /api/v1/risk/var/partials"            # many sets of one shard in one call: the same channel as /partial
+      - "POST /api/v1/risk/var/shards/drain"
+      - "POST /api/v1/risk/exposure/reload"         # reloading the exposure paths: an administrator in the console
+      - "POST /api/v1/risk/exposure/official"       # running the official end-of-day exposure capture: an administrator in the console
       - "* /api/v1/embed/**"
       - "* /api/v1/admin/embed/**"
       - "* /api/v1/admin/users/**"
@@ -638,6 +644,8 @@ drishti:
       - "* /api/v1/admin/commands/**"
       - "* /api/v1/admin/engines"             # Admin -> Engines: compute engines on or off on a node, written to its file, audited with a reason; never a token
       - "* /api/v1/admin/engines/**"
+      - "* /api/v1/admin/modules"             # Admin -> Modules: a module switched on or off, written to config/modules/<id>.yaml, audited with a reason; never a token
+      - "* /api/v1/admin/modules/**"
       - "* /api/v1/admin/settings/proposals"      # Admin -> Configuration: settings changes proposed and decided by two administrators; never a token
       - "* /api/v1/admin/settings/proposals/**"
       - "POST /api/v1/admin/data-out/streams/*/stop"   # Admin -> Data out: stop a live Flight stream (DRS-5610 to its reader); an administrator from the console, never a token

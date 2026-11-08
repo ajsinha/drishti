@@ -26,7 +26,7 @@ from _tut import OUT
 import subprocess
 import sys
 
-from _var import HIGH, LAKE, WIDE, open_var, painted, server, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
+from _var import HIGH, LAKE, WIDE, choose, open_var, painted, server, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
 from shotlib import ROOT
 from shotlib import Ctx, register
 
@@ -161,7 +161,7 @@ def reporting_currency(c: Ctx):
     open_var(c, "/var?scope=BANK")
     painted(c, "BANK")
     c.until("document.querySelector('[data-var]').dataset.ccyReady === 'true'", 60)
-    c.page.select_option("[data-vx-ccy]", "EUR")
+    choose(c, "[data-vx-ccy]", "EUR")
     c.until("document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf('EUR') >= 0", 90)
     painted(c, "BANK")
     tab(c, "ccy")

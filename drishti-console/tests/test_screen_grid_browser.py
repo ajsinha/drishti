@@ -183,22 +183,22 @@ def test_outline_reorder_nest_unnest_and_add_a_section(browser, stack):
     assert made["http"] == 201, made
     pg.goto(stack + "/designer/outline?kind=portfolio-trades&id=BOOK-RATES-2&design=" + made["id"])
     wait(pg, "document.querySelector('[data-ol-rev]')")
-    titles = lambda: pg.evaluate("[...document.querySelectorAll('[data-ol-panel] > .ol-row .ol-title')].map(t => t.textContent)")  # noqa: E731
+    titles = lambda: pg.evaluate("[...document.querySelectorAll('[data-ol-panel] > .dd-node-label')].map(t => t.textContent)")  # noqa: E731
     first = titles()
     assert first[:4] == ["Payments, next 7 days", "Payments, next 30 days", "Payments, next 90 days", "Trades"]
-    assert pg.locator('[data-ol-panel="trades"] .ol-desc').first.inner_text().startswith("A table of trades")
-    # reorder: drag the third metric above the first
+    assert pg.locator('[data-ol-panel="trades"] .dd-node-detail').inner_text().startswith("A table of trades")
+    # reorder: drag the third metric above the first (its row's top edge: before it; its middle would be into it, which only a table takes)
     rev = pg.get_attribute("[data-outline]", "data-ol-rev")
-    pg.locator('[data-ol-panel="pay90"]').drag_to(pg.locator('[data-ol-panel="pay7"] > .ol-row'))
+    pg.locator('[data-ol-panel="pay90"] .dd-node-label').drag_to(pg.locator('[data-ol-panel="pay7"]'), target_position={"x": 40, "y": 2})
     wait(pg, f"document.querySelector('[data-outline]').getAttribute('data-ol-rev') !== '{rev}'")
     assert titles()[:3] == ["Payments, next 90 days", "Payments, next 7 days", "Payments, next 30 days"]
     # nest: drop the 7-day metric on the trades table's "opens on a click" line, say where, Make it so
     rev = pg.get_attribute("[data-outline]", "data-ol-rev")
-    pg.locator('[data-ol-panel="pay7"]').drag_to(pg.locator('[data-ol-nest="trades"]'), force=True)
+    pg.locator('[data-ol-panel="pay7"] .dd-node-label').drag_to(pg.locator('[data-ol-nest="trades"]'))
     pg.select_option("[data-ol-place]", "detail-below")
     pg.click("[data-ol-nest-apply]")
     wait(pg, f"document.querySelector('[data-outline]').getAttribute('data-ol-rev') !== '{rev}' && document.querySelector('[data-ol-child=\"pay7\"]')")
-    assert "opens below the table" in pg.locator('[data-ol-child="pay7"] .ol-desc').inner_text()
+    assert "opens below the table" in pg.locator('[data-ol-child="pay7"] .dd-node-detail').inner_text()
     # the live preview: a click on a trade opens it below the table
     fr = pg.frame_locator("[data-ol-preview]")
     wait(pg, "!!(document.querySelector('[data-ol-preview]').contentWindow.Drishti && document.querySelector('[data-ol-preview]').contentWindow.Drishti.wire && document.querySelector('[data-ol-preview]').contentDocument.querySelector('#p-trades tbody tr[data-ev]'))")
@@ -208,7 +208,7 @@ def test_outline_reorder_nest_unnest_and_add_a_section(browser, stack):
     pg.screenshot(path=str(IMG / "outline.jpg"), type="jpeg", quality=80, full_page=False)
     # un-nest: pick the child, press Un-nest; it is back on the page
     rev = pg.get_attribute("[data-outline]", "data-ol-rev")
-    pg.click('[data-ol-child="pay7"]')
+    pg.click('[data-ol-child="pay7"] .dd-node-label')
     pg.click("[data-ol-unnest]")
     wait(pg, f"document.querySelector('[data-outline]').getAttribute('data-ol-rev') !== '{rev}' && document.querySelector('[data-ol-panel=\"pay7\"]')")
     assert pg.locator('[data-ol-child="pay7"]').count() == 0
@@ -218,12 +218,18 @@ def test_outline_reorder_nest_unnest_and_add_a_section(browser, stack):
     pg.click("[data-ol-add-section]")
     wait(pg, f"document.querySelector('[data-outline]').getAttribute('data-ol-rev') !== '{rev}' && document.querySelector('[data-ol-sec=\"risk\"]')")
     rev = pg.get_attribute("[data-outline]", "data-ol-rev")
-    pg.locator('[data-ol-panel="pay30"] > .ol-row').click()
+    pg.locator('[data-ol-panel="pay30"] .dd-node-label').click()
     pg.select_option("[data-ol-set-section]", "risk")
-    wait(pg, f"document.querySelector('[data-outline]').getAttribute('data-ol-rev') !== '{rev}' && document.querySelector('[data-ol-sec=\"risk\"] [data-ol-panel=\"pay30\"]')")
+    wait(pg, f"document.querySelector('[data-outline]').getAttribute('data-ol-rev') !== '{rev}' && document.querySelector('[data-ol-panel=\"pay30\"][data-ol-in=\"risk\"]')")
     wait(pg, "!!document.querySelector('[data-ol-preview]').contentDocument.querySelector('[data-sg-section=\"risk\"] #p-pay30')")
     doc = pg.locator("[data-ol-sutra]").text_content()
     assert "sections:" in doc and "section: risk" in doc
+    # the outline's keys: Alt+Down moves the picked panel below its neighbour
+    before, rev = titles(), pg.get_attribute("[data-outline]", "data-ol-rev")
+    pg.locator('[data-ol-panel] .dd-node-label').first.click()
+    pg.keyboard.press("Alt+ArrowDown")
+    wait(pg, f"document.querySelector('[data-outline]').getAttribute('data-ol-rev') !== '{rev}'")
+    assert titles()[:2] == [before[1], before[0]], (before, titles())
     assert json.loads(json.dumps(pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")))
     pg.click("[data-ol-cancel]")
     pg.wait_for_load_state()

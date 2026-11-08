@@ -21,7 +21,7 @@ the marker it kept in <data>/connectors/generated/, plus deliberately edited fil
   met: it must gain ccy (and every other key the template has) and keep its edit, its reads' id listed as a conflict;
 * risk-store with an administrator's own refresh-seconds: kept, everything else the template gained added.
 
-    python3 tools/connector_upgrade_fixture.py --rev 0bcfb7322 --out drishti-server/src/test/resources/connector-upgrade/2.9.4
+    python3 tools/connector_upgrade_fixture.py --rev 0bcfb7322 --out drishti-banking/src/test/resources/connector-upgrade/2.9.4
 
 Writes <out>/connectors/*.yaml, <out>/generated/*.properties and <out>/edits.json (the edited keys per connector). Deterministic.
 """

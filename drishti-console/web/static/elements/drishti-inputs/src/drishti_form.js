@@ -19,16 +19,15 @@
    conditions that show and hide fields as people type, validation in words on each field once it was touched (and on every field at
    submit, the first problem focused and a summary at the top), the server's own checks (check hook) and a submit. With four eyes, the
    submit becomes a proposal: what changed, a comment and an approver; the hook files it and the form waits, read-only, with the
-   proposal's number. Labels are real <label>s, problems are tied to their fields (aria-describedby, aria-invalid). */
-import { announce, formatNumber } from '../../drishti-core/src/drishti_index.js';
-import { fieldsOf, defaults, getPath, setPath, conditionHolds, validate, visibleValue, changes, parseField, words } from './drishti_schema.js';
+   proposal's number. Labels are real <label>s, problems are tied to their fields (aria-describedby, aria-invalid).
+   Live (no <form> of its own, no buttons: a change per field, for property panes and parts of a server form), steps (a field's step;
+   Back and Next check the step's fields), named fields a surrounding server form submits, dependent lists, and custom widgets: the
+   drawing is drishti_form-fields.js. */
+import { announce } from '../../drishti-core/src/drishti_index.js';
+import { fieldsOf, defaults, getPath, setPath, conditionHolds, validate, visibleValue, changes, currencyOf, offeredValues } from './drishti_schema.js';
 import { InputBase, uid } from './drishti_inputs-dom.js';
-import { DatePicker } from './drishti_date-picker.js';
-import { DateRangePicker } from './drishti_date-range.js';
-import { MultiSelect } from './drishti_multiselect.js';
 import { Combobox } from './drishti_combobox.js';
-import { TreePicker } from './drishti_tree-picker.js';
-import { CodeEditor } from './drishti_code-editor.js';
+import { drawField, defaultWidget, writeNames } from './drishti_form-fields.js';
 
 /**
  * @typedef {Object} FourEyes
@@ -49,10 +48,23 @@ import { CodeEditor } from './drishti_code-editor.js';
  * @property {boolean} [readOnly=false]
  * @property {('stacked'|'columns')} [layout='stacked']
  * @property {string} [locale] how numbers are read and shown
+ * @property {boolean} [live=false] no Save or Reset: each change is the host's at once (a designer's inspector, a property pane)
+ * @property {boolean} [embedded=false] no <form> element of its own (the fields sit inside a page's server form, which submits the fields
+ *   that have a name); implies live
+ * @property {string} [pathAttr='data-path'] the attribute each field's block carries its path in (a page whose own controls use
+ *   data-path names another)
+ * @property {boolean} [actions=true] the Save and Reset buttons (false: none, the page has its own)
+ * @property {Array<{id: string, title: string, description: string}>} [steps] the form in steps: a field's step names one; Back and Next,
+ *   Next checks the step's fields; the last step submits
+ * @property {Object<string, import('./drishti_form-fields.js').WidgetFactory>} [widgets] custom widgets by name (a field's widget)
+ * @property {string} [label] the form's name for a reader (default: the schema's title)
+ * @property {string} [submitHook] a data attribute on the submit button ("lookup-go" is data-lookup-go), for tutorials and tests
+ * @property {boolean} [resetButton=true] the Reset button
  */
 
 /**
- * A form from a schema. Events: change {path, value, values}, invalid {errors}, submitted {values, result}, proposed {proposal, result}, reset.
+ * A form from a schema. Events: change {path, value, values}, invalid {errors}, submitted {values, result}, proposed {proposal, result},
+ * reset, step {index, id}.
  */
 export class Form extends InputBase {
   /**
@@ -68,11 +80,16 @@ export class Form extends InputBase {
     this.touched = new Set();
     this.errors = {};
     this.server = {};
+    this.notes = {};
     this.parts = new Map();
     this.state = this.o.readOnly ? 'readonly' : 'editing';
     this.id = uid('form');
-    this.form = this.el('form', { cls: 'di-form-el' + (this.o.layout === 'columns' ? ' di-columns' : ''), attrs: { novalidate: true, 'aria-label': this.schema.title || 'Form' } });
-    this.form.addEventListener('submit', (e) => { e.preventDefault(); this.submit(); });
+    this.at = 0;
+    if (this.o.embedded) { this.o.live = true; }
+    this.pathAttr = this.o.pathAttr || 'data-path';
+    this.form = this.el(this.o.embedded ? 'div' : 'form', { cls: 'di-form-el' + (this.o.layout === 'columns' ? ' di-columns' : '') + (this.o.live ? ' di-live' : ''),
+      attrs: { novalidate: this.o.embedded ? null : true, role: this.o.embedded ? 'group' : null, 'aria-label': this.o.label || this.schema.title || 'Form' } });
+    if (!this.o.embedded) { this.form.addEventListener('submit', (e) => { e.preventDefault(); this.submit(); }); }
     host.appendChild(this.form);
     this.render();
   }
@@ -83,8 +100,8 @@ export class Form extends InputBase {
    * @returns {void}
    */
   render() {
-    const had = this.doc.activeElement && this.form.contains(this.doc.activeElement) ? this.doc.activeElement.closest('[data-path]') : null;
-    const path = had ? had.dataset.path : null;
+    const had = this.doc.activeElement && this.form.contains(this.doc.activeElement) ? this.doc.activeElement.closest('[' + this.pathAttr + ']') : null;
+    const path = had ? had.getAttribute(this.pathAttr) : null;
     this.parts.forEach((p) => { if (p.widget && p.widget.destroy) { p.widget.destroy(); } });
     this.parts.clear();
     this.form.textContent = '';
@@ -93,144 +110,89 @@ export class Form extends InputBase {
     this.summary = this.el('div', { cls: 'di-form-summary', attrs: { role: 'alert', hidden: true, tabindex: '-1' } });
     this.banner = this.el('div', { cls: 'di-form-banner', attrs: { role: 'status', hidden: true } });
     this.form.append(this.summary, this.banner);
+    if (this.o.steps && this.o.steps.length) { this.form.appendChild(this.stepBar()); }
     const body = this.el('div', { cls: 'di-form-body' });
     fieldsOf(this.schema, '').forEach((f) => body.appendChild(this.field(f)));
     this.form.appendChild(body);
     this.form.appendChild(this.actions());
     this.refresh();
-    if (path) { const el = this.form.querySelector('[data-path="' + path + '"] input, [data-path="' + path + '"] button, [data-path="' + path + '"] select'); if (el) { el.focus(); } }
+    if (path) { const at = '[' + this.pathAttr + '="' + path + '"] ', el = this.form.querySelector(at + 'input, ' + at + 'button, ' + at + 'select, ' + at + 'textarea'); if (el) { el.focus(); } }   // the focus stays where it was
   }
 
-  /** @private the buttons */
+  /** @private the buttons (Back and Next in a form with steps) */
   actions() {
     const bar = this.el('div', { cls: 'di-form-actions' });
-    if (this.state !== 'editing') { return bar; }
-    this.submitBtn = this.el('button', { cls: 'di-btn di-primary', text: this.o.fourEyes ? 'Submit for approval' : (this.o.submitLabel || 'Save'), attrs: { type: 'submit' }, data: { act: 'submit' } });
-    bar.append(this.submitBtn, this.el('button', { cls: 'di-btn', text: 'Reset', attrs: { type: 'button' }, data: { act: 'reset' }, on: { click: () => this.reset() } }));
+    this.submitBtn = null;
+    if (this.state !== 'editing' || this.o.live || this.o.actions === false) { bar.hidden = true; return bar; }
+    const steps = this.o.steps || [], last = !steps.length || this.at >= steps.length - 1;
+    if (steps.length && this.at > 0) { bar.appendChild(this.el('button', { cls: 'di-btn', text: 'Back', attrs: { type: 'button' }, data: { act: 'back' }, on: { click: () => this.goTo(this.at - 1) } })); }
+    if (!last) { bar.appendChild(this.el('button', { cls: 'di-btn di-primary', text: 'Next', attrs: { type: 'button' }, data: { act: 'next' }, on: { click: () => this.next() } })); }
+    else {
+      this.submitBtn = this.el('button', { cls: 'di-btn di-primary', text: this.o.fourEyes ? 'Submit for approval' : (this.o.submitLabel || 'Save'), attrs: { type: 'submit' }, data: { act: 'submit' } });
+      if (this.o.submitHook) { this.submitBtn.setAttribute('data-' + this.o.submitHook, ''); }
+      bar.appendChild(this.submitBtn);
+    }
+    if (this.o.resetButton !== false) { bar.appendChild(this.el('button', { cls: 'di-btn', text: 'Reset', attrs: { type: 'button' }, data: { act: 'reset' }, on: { click: () => this.reset() } })); }
     return bar;
   }
 
-  /** @private one field's block */
-  field(f) {
-    const fs = f.field, id = this.id + '-' + f.path.replace(/[^\w]/g, '_'), ro = this.state !== 'editing' || !!fs.readOnly;
-    const wrap = this.el('div', { cls: 'di-form-field di-t-' + fs.type, data: { path: f.path } });
-    const part = { f: f, wrap: wrap, id: id, widget: null, input: null };
-    this.parts.set(f.path, part);
-    const msg = this.el('div', { cls: 'di-msg', attrs: { id: id + '-msg', 'aria-live': 'polite' } });
-    const help = fs.description ? this.el('div', { cls: 'di-help', text: fs.description, attrs: { id: id + '-help' } }) : null;
-    const described = [help ? id + '-help' : null, id + '-msg'].filter(Boolean).join(' ');
-    const label = (forId) => this.el(forId ? 'label' : 'span', { cls: 'di-label', attrs: forId ? { for: forId } : { id: id + '-label' } }, [f.label, f.required ? this.el('span', { cls: 'di-req', text: ' *', attrs: { 'aria-hidden': 'true' } }) : null]);
-    const v = getPath(this.values, f.path), widget = fs.widget || this.defaultWidget(fs);
-    const set = (val) => this.change(f.path, val);
-    const touch = () => { this.touched.add(f.path); this.refresh(); };
-    if (fs.type === 'object') {
-      const box = this.el('fieldset', { cls: 'di-fieldset' }, [this.el('legend', { text: f.label })]);
-      if (help) { box.appendChild(help); }
-      fieldsOf(fs, f.path).forEach((sub) => box.appendChild(this.field(sub)));
-      wrap.appendChild(box);
-      return wrap;
-    }
-    if (fs.type === 'array' && fs.items && fs.items.type === 'object') { return this.repeat(f, wrap, msg, help, ro); }
-    const mount = (Cls, opts) => { const host = this.el('div', { cls: 'di-form-widget' }); part.widget = new Cls(host, Object.assign({ label: f.label }, fs.options, opts)); return host; };
-    let control;
-    switch (widget) {
-      case 'checkbox': case 'switch': {
-        const box = part.input = this.el('input', { attrs: { type: 'checkbox', id: id, role: widget === 'switch' ? 'switch' : null, 'aria-describedby': described, disabled: ro || null } });
-        box.checked = !!v;
-        box.addEventListener('change', () => { set(box.checked); touch(); });
-        wrap.append(this.el('label', { cls: 'di-check-label', attrs: { for: id } }, [box, ' ' + f.label]), help, msg);
-        return wrap;
-      }
-      case 'select': case 'radio': {
-        const opts = (fs.enum || []).map((x, i) => ({ value: x, label: fs.enumLabels ? fs.enumLabels[i] : String(x) }));
-        if (widget === 'radio') {
-          control = this.el('div', { cls: 'di-radios', attrs: { role: 'radiogroup', 'aria-labelledby': id + '-label', 'aria-describedby': described } });
-          opts.forEach((o, i) => {
-            const r = this.el('input', { attrs: { type: 'radio', name: id, id: id + '-' + i, disabled: ro || null } });
-            r.checked = v === o.value;
-            r.addEventListener('change', () => { if (r.checked) { set(o.value); touch(); } });
-            control.appendChild(this.el('label', { cls: 'di-radio', attrs: { for: id + '-' + i } }, [r, ' ' + o.label]));
-          });
-          wrap.append(label(null), control, help, msg);
-          return wrap;
-        }
-        const sel = part.input = this.el('select', { cls: 'di-field', attrs: { id: id, 'aria-describedby': described, disabled: ro || null, 'aria-required': f.required ? 'true' : null } });
-        sel.appendChild(this.el('option', { text: f.required ? 'Pick one' : '(none)', attrs: { value: '' } }));
-        opts.forEach((o, i) => { const op = this.el('option', { text: o.label, attrs: { value: String(i) } }); if (v === o.value) { op.selected = true; } sel.appendChild(op); });
-        sel.addEventListener('change', () => { set(sel.value === '' ? undefined : opts[+sel.value].value); touch(); });
-        control = sel;
-        break;
-      }
-      case 'date': control = mount(DatePicker, { value: v, businessOnly: fs.options && fs.options.businessOnly !== undefined ? fs.options.businessOnly : false, required: f.required }); break;
-      case 'daterange': control = mount(DateRangePicker, { value: v }); break;
-      case 'multiselect': control = mount(MultiSelect, { options: fs.items && fs.items.enum ? fs.items.enum.map((x, i) => ({ value: x, label: fs.items.enumLabels ? fs.items.enumLabels[i] : String(x) })) : (fs.options || {}).options, value: v || [] }); break;
-      case 'combobox': control = mount(Combobox, { value: v === undefined || v === null ? null : { value: v, label: String(v) } }); break;
-      case 'tree': control = mount(TreePicker, { value: v || [] }); break;
-      case 'code': control = mount(CodeEditor, { value: v || '', readOnly: ro, height: (fs.options && fs.options.height) || 120 }); break;
-      case 'textarea': {
-        const ta = part.input = this.el('textarea', { cls: 'di-field', attrs: { id: id, rows: '3', 'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || null } });
-        ta.value = v === undefined || v === null ? '' : String(v);
-        ta.addEventListener('input', () => set(ta.value === '' ? undefined : ta.value));
-        ta.addEventListener('blur', touch);
-        control = ta;
-        break;
-      }
-      default: {
-        const numeric = fs.type === 'number' || fs.type === 'integer';
-        const inp = part.input = this.el('input', { cls: 'di-field' + (numeric ? ' di-num' : ''), attrs: { id: id, type: fs.format === 'email' ? 'email' : 'text', inputmode: numeric ? 'decimal' : null,
-          'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || null, 'aria-required': f.required ? 'true' : null, autocomplete: 'off' } });
-        const show = (x) => (x === undefined || x === null ? '' : numeric && typeof x === 'number' ? formatNumber(x, { maxDecimals: 10 }) : String(x));
-        inp.value = show(v);
-        inp.addEventListener('input', () => {
-          const r = parseField(fs, inp.value, f.label);
-          part.parseError = r.error;
-          set(r.error ? (numeric ? NaN : undefined) : r.value);
-        });
-        inp.addEventListener('blur', () => { if (!part.parseError && numeric) { inp.value = show(getPath(this.values, f.path)); } touch(); });
-        control = inp;
-      }
-    }
-    if (part.widget) {
-      part.widget.on('change', (d) => { set(widget === 'combobox' ? (d.value ? d.value.value : undefined) : widget === 'code' ? d.value : (d.value !== undefined ? d.value : d)); touch(); });
-      control.setAttribute('aria-describedby', described);
-    }
-    const lab = part.input ? label(id) : label(null);
-    if (!part.input && control.firstElementChild) { control.setAttribute('role', 'group'); control.setAttribute('aria-labelledby', id + '-label'); }
-    wrap.append(lab, control, help, msg);
-    return wrap;
+  /** @private the steps, the current one marked */
+  stepBar() {
+    const ol = this.el('ol', { cls: 'di-steps', attrs: { 'aria-label': 'Steps' } });
+    this.o.steps.forEach((st, i) => ol.appendChild(this.el('li', { cls: 'di-step' + (i === this.at ? ' di-current' : i < this.at ? ' di-done' : ''), text: (i < this.at ? '✓ ' : '') + st.title,
+      attrs: { 'aria-current': i === this.at ? 'step' : null }, data: { step: st.id } })));
+    const cur = this.o.steps[this.at];
+    return this.el('div', { cls: 'di-steps-box' }, [ol, cur && cur.description ? this.el('p', { cls: 'di-help', text: cur.description }) : null]);
   }
+
+  /** @private the step a top-level path belongs to ('' when the form has no steps or the field names none) */
+  stepOf(path) {
+    if (!this.o.steps || !this.o.steps.length) { return ''; }
+    const top = String(path).split(/[.[]/)[0], f = fieldsOf(this.schema, '').find((x) => x.key === top);
+    return (f && f.field.step) || this.o.steps[0].id;
+  }
+
+  /**
+   * The current step (its index), or 0.
+   * @returns {number}
+   */
+  step() { return this.at; }
+
+  /**
+   * Goes to a step (Back always; forward only through Next, which checks the step's fields).
+   * @param {number} i
+   * @returns {void}
+   */
+  goTo(i) {
+    const n = (this.o.steps || []).length;
+    if (!n) { return; }
+    this.at = Math.max(0, Math.min(n - 1, i));
+    this.render();
+    const first = this.form.querySelector('.di-form-field:not([hidden]) input, .di-form-field:not([hidden]) select, .di-form-field:not([hidden]) textarea');
+    if (first) { first.focus(); }
+    this.emit('step', { index: this.at, id: this.o.steps[this.at].id });
+    announce('Step ' + (this.at + 1) + ' of ' + n + ': ' + this.o.steps[this.at].title);
+  }
+
+  /**
+   * Checks the current step's fields and, when they hold, goes on.
+   * @returns {boolean} whether it went on
+   */
+  next() {
+    const id = this.o.steps[this.at].id;
+    this.parts.forEach((p, path) => { if (this.stepOf(path) === id) { this.touched.add(path); } });
+    this.refresh();
+    const bad = Object.keys(this.errors).filter((p) => this.parts.has(p) && this.shown(p) && this.stepOf(p) === id);
+    if (bad.length) { this.focusField(bad[0]); announce(bad.length + (bad.length === 1 ? ' problem: ' : ' problems: ') + this.errors[bad[0]]); return false; }
+    this.goTo(this.at + 1);
+    return true;
+  }
+
+  /** @private one field's block (drishti_form-fields.js draws it) */
+  field(f) { return drawField(this, f); }
 
   /** @private a field's widget when the schema names none */
-  defaultWidget(fs) {
-    if (fs.enum) { return fs.enum.length <= 3 ? 'radio' : 'select'; }
-    if (fs.type === 'boolean') { return 'checkbox'; }
-    if (fs.type === 'date') { return 'date'; }
-    if (fs.type === 'daterange') { return 'daterange'; }
-    if (fs.type === 'array' && fs.items && fs.items.enum) { return 'multiselect'; }
-    if (fs.format === 'textarea') { return 'textarea'; }
-    if (fs.format === 'code') { return 'code'; }
-    return 'text';
-  }
-
-  /** @private an array of objects: repeatable groups */
-  repeat(f, wrap, msg, help, ro) {
-    const fs = f.field, list = getPath(this.values, f.path) || [];
-    const box = this.el('fieldset', { cls: 'di-fieldset di-repeat' }, [this.el('legend', { text: f.label + ' (' + list.length + ')' })]);
-    if (help) { box.appendChild(help); }
-    list.forEach((item, i) => {
-      const p = f.path + '[' + i + ']', name = (fs.items.title || words(f.key).replace(/s$/, '')) + ' ' + (i + 1);
-      const group = this.el('div', { cls: 'di-repeat-item', attrs: { role: 'group', 'aria-label': name }, data: { index: String(i) } }, [this.el('div', { cls: 'di-repeat-head' }, [this.el('b', { text: name }), this.el('span', { cls: 'di-sp' }),
-        ro ? null : this.el('button', { cls: 'di-btn', text: '↑', attrs: { type: 'button', 'aria-label': 'Move ' + name + ' up', disabled: i === 0 || null }, on: { click: () => this.moveItem(f.path, i, -1) } }),
-        ro ? null : this.el('button', { cls: 'di-btn', text: '↓', attrs: { type: 'button', 'aria-label': 'Move ' + name + ' down', disabled: i === list.length - 1 || null }, on: { click: () => this.moveItem(f.path, i, 1) } }),
-        ro ? null : this.el('button', { cls: 'di-btn', text: 'Remove', attrs: { type: 'button', 'aria-label': 'Remove ' + name, disabled: (fs.minItems && list.length <= fs.minItems) || null }, data: { act: 'remove' }, on: { click: () => this.removeItem(f.path, i) } })])]);
-      fieldsOf(fs.items, p).forEach((sub) => group.appendChild(this.field(sub)));
-      box.appendChild(group);
-    });
-    if (!ro) { box.appendChild(this.el('button', { cls: 'di-btn', text: 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => this.addItem(f.path) } })); }
-    box.appendChild(msg);
-    wrap.appendChild(box);
-    return wrap;
-  }
+  defaultWidget(fs) { return defaultWidget(fs); }
 
   /** @private */
   addItem(path) {
@@ -250,8 +212,34 @@ export class Form extends InputBase {
   change(path, value, redraw) {
     this.values = setPath(this.values, path, value);
     delete this.server[path];
-    if (redraw) { this.touched.add(path); this.render(); } else { this.refresh(); }
+    const dependents = this.narrow(path);                   // a dependent list follows what was chosen here: only it is drawn again
+    if (redraw) { this.touched.add(path); this.render(); } else { dependents.forEach((q) => this.redrawField(q)); this.refresh(); }
     this.emit('change', { path: path, value: value, values: this.getValue() });
+  }
+
+  /** @private one field drawn again in its place (its widget taken out first) */
+  redrawField(path) {
+    const p = this.parts.get(path);
+    if (!p || !p.wrap.parentNode) { return; }
+    if (p.widget && p.widget.destroy) { p.widget.destroy(); }
+    if (p.custom && p.custom.destroy) { p.custom.destroy(); }
+    p.wrap.replaceWith(this.field(p.f));
+  }
+
+  /** @private the lists that depend on a path: their values narrowed to what they offer now; their paths */
+  narrow(path) {
+    const any = [];
+    this.parts.forEach((p, q) => {
+      const fs = p.f.field;
+      if (!fs.dependsOn) { return; }
+      const target = fs.dependsOn.charAt(0) === '/' ? fs.dependsOn.slice(1) : q.split('.').slice(0, -1).concat([fs.dependsOn]).join('.');
+      if (target !== path) { return; }
+      any.push(q);
+      const offered = offeredValues(fs.items && fs.items.enum ? Object.assign({}, fs.items, { dependsOn: fs.dependsOn, parents: fs.parents }) : fs, this.values, q).map(String), cur = getPath(this.values, q);
+      if (Array.isArray(cur)) { this.values = setPath(this.values, q, cur.filter((x) => offered.indexOf(String(x)) >= 0)); }
+      else if (cur !== undefined && offered.indexOf(String(cur)) < 0) { this.values = setPath(this.values, q, undefined); }
+    });
+    return any;
   }
 
   /**
@@ -263,12 +251,16 @@ export class Form extends InputBase {
     this.errors = Object.assign({}, res.errors, this.server);
     this.parts.forEach((p, path) => {
       if (p.parseError) { this.errors[path] = p.parseError; }
-      const shown = this.shown(path);
-      p.wrap.hidden = !shown;
+      const shown = this.shown(path), inStep = !this.o.steps || !this.o.steps.length || this.stepOf(path) === this.o.steps[this.at].id;
+      p.wrap.hidden = !shown || !inStep;
+      writeNames(p, getPath(this.values, path), shown);
+      if (p.ccy) { p.ccy.textContent = currencyOf(p.f.field, this.values, path) || '—'; }
       const why = shown && (this.touched.has(path) || this.tried) ? this.errors[path] : null;
       const msg = p.wrap.querySelector('#' + CSS_ESCAPE(p.id) + '-msg');
-      if (msg) { msg.textContent = why || ''; }
+      const note = shown && !why ? this.notes[path] : null;
+      if (msg) { msg.textContent = why || note || ''; msg.classList.toggle('di-note', !!note); }
       p.wrap.classList.toggle('di-invalid', !!why);
+      p.wrap.classList.toggle('di-warned', !!note);
       const target = p.input || (p.widget && p.widget.input);
       if (target) { if (why) { target.setAttribute('aria-invalid', 'true'); } else { target.removeAttribute('aria-invalid'); } }
     });
@@ -326,6 +318,10 @@ export class Form extends InputBase {
   submit() {
     if (this.state !== 'editing') { return Promise.resolve(false); }
     const res = this.validate();
+    if (!res.ok && this.o.steps && this.o.steps.length) {           // the first problem's step comes forward
+      const first = Object.keys(res.errors)[0], at = this.o.steps.findIndex((x) => x.id === this.stepOf(first));
+      if (at >= 0 && at !== this.at) { this.at = at; this.render(); this.tried = true; this.refresh(); }
+    }
     if (!res.ok) { this.emit('invalid', { errors: res.errors }); this.summary.focus(); announce(Object.keys(res.errors).length + ' problems: ' + res.errors[Object.keys(res.errors)[0]]); return Promise.resolve(false); }
     const values = this.getValue();
     this.busy(true);
@@ -397,6 +393,28 @@ export class Form extends InputBase {
   /** @private */
   busy(on) { if (this.submitBtn) { this.submitBtn.disabled = on; } this.form.setAttribute('aria-busy', String(on)); }
 
+  /**
+   * One field's value set from outside (a page's own control, a server's answer); the field is drawn again.
+   * @param {string} path
+   * @param {*} value
+   * @returns {void}
+   */
+  setField(path, value) {
+    this.values = setPath(this.values, path, value);
+    const p = this.parts.get(path), active = this.doc.activeElement;
+    if (!p || (active && p.wrap.contains(active))) { this.narrow(path).forEach((q) => this.redrawField(q)); this.refresh(); return; }   // a field being typed in keeps its text
+    this.redrawField(path);
+    this.narrow(path).forEach((q) => this.redrawField(q));
+    this.refresh();
+  }
+
+  /**
+   * A field's value.
+   * @param {string} path
+   * @returns {*}
+   */
+  getField(path) { return getPath(this.values, path); }
+
   /** @private a line above the fields */
   say(text, tone) { this.banner.hidden = !text; this.banner.textContent = text || ''; this.banner.className = 'di-form-banner di-tone-' + (tone || 'info'); announce(text); }
 
@@ -411,13 +429,13 @@ export class Form extends InputBase {
    * @param {Object} v
    * @returns {void}
    */
-  setValue(v) { this.initial = JSON.parse(JSON.stringify(v || {})); this.values = JSON.parse(JSON.stringify(this.initial)); this.touched.clear(); this.tried = false; this.render(); }
+  setValue(v) { this.initial = JSON.parse(JSON.stringify(v || {})); this.values = JSON.parse(JSON.stringify(this.initial)); this.touched.clear(); this.tried = false; this.at = 0; this.render(); }
 
   /**
    * Puts the start value back.
    * @returns {void}
    */
-  reset() { this.values = JSON.parse(JSON.stringify(this.initial)); this.touched.clear(); this.tried = false; this.server = {}; this.render(); this.emit('reset'); }
+  reset() { this.values = JSON.parse(JSON.stringify(this.initial)); this.touched.clear(); this.tried = false; this.server = {}; this.at = 0; this.render(); this.emit('reset'); }
 
   /**
    * Problems from elsewhere (a server's answer), by path.
@@ -425,6 +443,20 @@ export class Form extends InputBase {
    * @returns {void}
    */
   setErrors(errors) { this.server = Object.assign({}, errors); this.tried = true; this.refresh(); }
+
+  /**
+   * Notes by path that do not stop a submit (a warning: "above the desk limit"), shown where a problem would be when there is none.
+   * @param {Object<string, string>} notes
+   * @returns {void}
+   */
+  setNotes(notes) { this.notes = Object.assign({}, notes); this.refresh(); }
+
+  /**
+   * Problems from elsewhere shown at once, without marking every field tried (a live check as people type).
+   * @param {Object<string, string>} errors
+   * @returns {void}
+   */
+  showErrors(errors) { this.server = Object.assign({}, errors); Object.keys(errors).forEach((p) => this.touched.add(p)); this.refresh(); }
 }
 
 function CSS_ESCAPE(s) { return String(s).replace(/([^\w-])/g, '\\$1'); }

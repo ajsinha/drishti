@@ -74,10 +74,10 @@ public final class Editions {
         java.util.Set<String> commands = new java.util.LinkedHashSet<>(list(b, SPEC + ".commands.allow"));
         commands.addAll(list(b, SPEC + ".commands.also-allow"));        // the site's additions, without restating the list
         Map<String, Boolean> words = new LinkedHashMap<>();
-        for (String w : Edition.WORDS) {
-            String v = env.getProperty(SPEC + ".commands.words." + w.toLowerCase(Locale.ROOT));
-            if (v != null && !v.isBlank()) {
-                words.put(w, on(v));
+        // the core's words (Edition.WORDS) and any module's (its manifest's words: VAR, EXP ...): every word the edition names
+        for (Map.Entry<String, String> w : b.bind(SPEC + ".commands.words", Bindable.mapOf(String.class, String.class)).orElse(Map.of()).entrySet()) {
+            if (w.getValue() != null && !w.getValue().isBlank()) {
+                words.put(w.getKey().toUpperCase(Locale.ROOT), on(w.getValue()));
             }
         }
         Map<String, String> features = b.bind(SPEC + ".features", Bindable.mapOf(String.class, String.class)).orElse(Map.of());

@@ -31,11 +31,7 @@
       <input type="hidden" name="title" value="{{ form.title or '' }}">
       <label>Name<input name="name" class="studio-in" value="{{ form.name or '' }}" required maxlength="64"></label>
       <fieldset class="wide dist-when" data-when><legend>When</legend>
-        <label>Send<select class="studio-select" data-when-kind aria-label="How often">
-          <option value="daily">every day</option><option value="business-days">every business day</option><option value="weekly">every week on</option>
-          <option value="month-end">on the last business day of the month</option><option value="hourly">every hour</option><option value="custom">on a schedule I write (advanced)</option></select></label>
-        <label data-when-day-row hidden>Day<select class="studio-select" data-when-day><option value="mon">Monday</option><option value="tue">Tuesday</option><option value="wed">Wednesday</option><option value="thu">Thursday</option><option value="fri">Friday</option><option value="sat">Saturday</option><option value="sun">Sunday</option></select></label>
-        <label data-when-time-row>At<input type="time" class="studio-in" data-when-time value="07:30"></label>
+        <div class="wide" data-when-form>{# how often, the day, the time: drishti-inputs' Form, live (drishti_subscribe-when.js); it writes the schedule below #}</div>
         <p class="text-muted-d wide" data-when-says aria-live="polite"></p>
         <p class="text-muted-d wide" data-model-note aria-live="polite"></p>
         <details class="wide"><summary>Advanced: the schedule as text</summary>
@@ -57,8 +53,7 @@
       <label class="wide">To (user names, <code>role:NAME</code> for everyone with a role, separated by commas)
         <input name="recipients" class="studio-in mono" value="{{ form.recipients or '' }}" required placeholder="alice, role:risk"></label>
       <label class="wide bi-people">Find people or roles to add
-        <input class="studio-in" data-find-people autocomplete="off" placeholder="type a name or a role to search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="subFindList">
-        <ul class="shr-list" id="subFindList" role="listbox" aria-label="Known people and roles" data-find-list hidden></ul></label>
+        <input class="studio-in" data-find-people autocomplete="off" placeholder="type a name or a role to search"></label>
       {% if opts.ai %}<label class="wide"><input type="checkbox" name="narrative" data-narrative{% if form.narrative %} checked{% endif %}> Open the email with a short written summary
         <span class="text-muted-d">Written by an AI model from <b>each recipient's own</b> figures (what they may see, masked values left out), through your administrator's AI policy.
         {% if opts.mode != 'aggregates' %}The policy here lets the model see labels only, so the summary is left out of every email until an administrator sets <code>drishti.bi.ai.values: aggregates</code>.{% endif %}</span></label>{% endif %}

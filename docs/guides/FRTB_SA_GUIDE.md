@@ -189,7 +189,7 @@ runs the hand-built cases of section 10 with no data.
 **`FRSA <scope> <GO>`** opens the capital screen:
 
 - **Capital stack** (the default tab): one bar each for delta, vega and curvature of the reported scenario, DRC, RRAO and the total, then
-  the class × measure grid; select a cell to drill into its buckets (K_b and S_b per scenario, the curvature side) and their factors.
+  the class × measure grid with each class's **Total** (its three charges added, the server's figure) and SBM; select a cell to drill into its buckets (K_b and S_b per scenario, the curvature side) and their factors.
 - **Scenarios**: every class and measure in the low, medium and high scenarios, the binding scenario outlined, the alternative
   specification marked where it applied.
 - **Contributions**: by desk, book, legal entity, product type or position; the sum is shown beside the total.
@@ -255,15 +255,15 @@ flipped. **Hand-built cases workbook** (`/api/frtb/template.xlsx`) is the same w
 
 | What | API | Command | CLI |
 |---|---|---|---|
-| Sensitivities of a scope by factor, bucket, class, tenor, measure or attribute | `GET /api/v1/sensitivities?scope=…&by=BUCKET` | `SENS <id>` (a record) | `drishti.py sens show <scope> --by BUCKET` |
-| The factor dictionary and the load's refusals | `GET /api/v1/risk-factors?q=…` | `RFAC <factor>` | `drishti.py sens factors --q SOFR` |
-| FRTB-SA of a scope | `GET /api/v1/frtb/sa?scope=…` | `FRSA <scope>` | `drishti.py frtb sa <scope>` |
-| Its steps | `GET /api/v1/frtb/sa/explain?scope=…&class=GIRR` | in FRSA | `drishti.py frtb explain <scope>` |
-| Contributions | `GET /api/v1/frtb/sa/contributions?scope=…&by=DESK` | in FRSA | `drishti.py frtb contributions <scope>` |
-| The playground, a comparison | `GET /api/v1/frtb/playground?scope=…&compare=girr-correlation=exact` | `PLAY FRTB <scope>` | `drishti.py play frtb <scope> --compare …` |
-| The workbook | `GET /api/v1/frtb/playground.xlsx?scope=…` | Export to Excel | `drishti.py play frtb <scope> --xlsx f.xlsx` |
-| The hand-built cases' workbook | `GET /api/v1/frtb/playground/template` | Hand-built cases workbook | `drishti.py play frtb EXAMPLE --xlsx f.xlsx` |
-| Save a recipe; replay it | `POST /api/v1/frtb/playground/recipes?scope=…`; `GET …/recipes/{id}` | Save recipe; `PLAY FRTB RUN <id>` | `--save`; `--recipe <id>` |
+| Sensitivities of a scope by factor, bucket, class, tenor, measure or attribute | `GET /api/v1/risk/sensitivities?scope=…&by=BUCKET` | `SENS <id>` (a record) | `drishti.py sens show <scope> --by BUCKET` |
+| The factor dictionary and the load's refusals | `GET /api/v1/risk/risk-factors?q=…` | `RFAC <factor>` | `drishti.py sens factors --q SOFR` |
+| FRTB-SA of a scope | `GET /api/v1/risk/frtb/sa?scope=…` | `FRSA <scope>` | `drishti.py frtb sa <scope>` |
+| Its steps | `GET /api/v1/risk/frtb/sa/explain?scope=…&class=GIRR` | in FRSA | `drishti.py frtb explain <scope>` |
+| Contributions | `GET /api/v1/risk/frtb/sa/contributions?scope=…&by=DESK` | in FRSA | `drishti.py frtb contributions <scope>` |
+| The playground, a comparison | `GET /api/v1/risk/frtb/playground?scope=…&compare=girr-correlation=exact` | `PLAY FRTB <scope>` | `drishti.py play frtb <scope> --compare …` |
+| The workbook | `GET /api/v1/risk/frtb/playground.xlsx?scope=…` | Export to Excel | `drishti.py play frtb <scope> --xlsx f.xlsx` |
+| The hand-built cases' workbook | `GET /api/v1/risk/frtb/playground/template` | Hand-built cases workbook | `drishti.py play frtb EXAMPLE --xlsx f.xlsx` |
+| Save a recipe; replay it | `POST /api/v1/risk/frtb/playground/recipes?scope=…`; `GET …/recipes/{id}` | Save recipe; `PLAY FRTB RUN <id>` | `--save`; `--recipe <id>` |
 
 Every FRTB endpoint takes the switches (`curvatureSource`, `girrCurvatureShock`, `fxCurvatureDivisor`, `girrCorrelation`, `scenario`),
 `override=path=value` (repeatable), `ccy` and `asOf`. Every answer carries its provenance: the date, the knowledge time, the batches, the

@@ -52,10 +52,10 @@ body {
 .pnl { box-shadow: 0 1px 0 color-mix(in srgb, var(--d-grad-to) 12%, transparent), 0 8px 24px -18px color-mix(in srgb, var(--d-grad-from) 40%, transparent); }
 .pnl-h {
   background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) var(--g-pnl, 14%), var(--d-surface)), color-mix(in srgb, var(--d-grad-to) 4%, var(--d-surface)) 75%);
-  border-top-left-radius: 6px; border-top-right-radius: 6px;
+  border-top-left-radius: var(--d-radius-6); border-top-right-radius: var(--d-radius-6);
 }
 .pnl-h h3::before {
-  content: ""; display: inline-block; width: 3px; height: .95em; margin-right: .5rem; vertical-align: -.1em; border-radius: 2px;
+  content: ""; display: inline-block; width: 3px; height: .95em; margin-right: var(--d-sp-8); vertical-align: -.1em; border-radius: var(--d-radius-2);
   background: linear-gradient(180deg, var(--d-grad-from), var(--d-grad-to));
 }
 
@@ -94,7 +94,7 @@ body {
   .tbar-brand span, .adm > h1, .thome > h1, .help-hero h1, .login-box h1 { background: none; color: var(--d-ink); }
 }
 @media print {
-  body, .vhead, .pnl-h { background: #fff !important; }
+  body, .vhead, .pnl-h { background: var(--d-paper) !important; }
   .pnl-h h3::before, .tbar::after { display: none; }
 }
 
@@ -118,35 +118,30 @@ body {
 
 /* Crimson, crimson dark, blue and green, as in Maya and Sajha: a solid navigation gradient (crimson-deep → crimson → indigo) with white
    text and icons, and deep-crimson headings. The command line, the date box and the menus keep their own light grounds. */
-:root[data-theme="crimson"] { --d-nav-from: #5c0e1b; --d-nav-via: #a51c30; --d-nav-to: #293352; }
-:root[data-theme="crimson-dark"] { --d-nav-from: #2e0810; --d-nav-via: #6e1120; --d-nav-to: #1b2138; }
-:root[data-theme="blue"] { --d-nav-from: #002654; --d-nav-via: #0079c1; --d-nav-to: #003168; }
-:root[data-theme="green"] { --d-nav-from: #00261a; --d-nav-via: #006039; --d-nav-to: #1c3a2e; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar { background: linear-gradient(90deg, var(--d-nav-from), var(--d-nav-via) 55%, var(--d-nav-to)); color: #fff; border-bottom-color: transparent; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar { background: linear-gradient(90deg, var(--d-nav-from), var(--d-nav-via) 55%, var(--d-nav-to)); color: var(--d-on-band); border-bottom-color: transparent; }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-brand, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-brand *, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn,
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-tools .tool, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-tools .theme-btn, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .uname { color: #fff; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-tools .tool, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-tools .theme-btn, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .uname { color: var(--d-on-band); }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn:hover, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn.show,
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-tools .tool:hover, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-tools .tool.show { background: rgba(255, 255, 255, .16); color: #fff; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn.active { background: rgba(255, 255, 255, .2); color: #fff; box-shadow: inset 0 -3px 0 #fff; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn:focus-visible, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tool:focus-visible { outline-color: #fff; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-tools .tool:hover, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-tools .tool.show { background: var(--d-band-hover); color: var(--d-on-band); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn.active { background: var(--d-band-pressed); color: var(--d-on-band); box-shadow: inset 0 -3px 0 var(--d-on-band); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn:focus-visible, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tool:focus-visible { outline-color: var(--d-on-band); }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) main h1, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) main h2 { color: var(--d-accent-strong); }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn.active::after, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn.show::after { background: #fff; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-name small { color: #fff; -webkit-text-fill-color: #fff; opacity: .95; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .brand-mark { color: #fff; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .brand-mark .eye { stroke: #fff; }   /* the eye's outline is ink elsewhere: white on a coloured bar */
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn.active::after, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn.show::after { background: var(--d-on-band); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-name small { color: var(--d-on-band); -webkit-text-fill-color: var(--d-on-band); opacity: .95; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .brand-mark { color: var(--d-on-band); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .brand-mark .eye { stroke: var(--d-on-band); }   /* the eye's outline is ink elsewhere: white on a coloured bar */
 
 
 /* The public pages' bar (landing, About, Help signed out) in the same colours as the top bar: the theme's gradient, white text,
    the logo white; the accent button turns white with the accent as its text so it stands out on the band. */
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public { background: linear-gradient(90deg, var(--d-nav-from), var(--d-nav-via) 55%, var(--d-nav-to)); backdrop-filter: none; border-bottom-color: transparent; color: #fff; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public :is(.brand, .brand > span, .links > a, .pub-user-btn, .uname, .theme-btn) { color: #fff; -webkit-text-fill-color: #fff; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .brand-mark, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .brand-mark .eye { color: #fff; stroke: #fff; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .links > a:hover { color: #fff; opacity: .85; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .links > a.btn-accent { background: #fff; color: var(--d-accent-strong); -webkit-text-fill-color: var(--d-accent-strong); }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public :is(.btn-ghost, .theme-btn) { border-color: rgba(255, 255, 255, .7); background: transparent; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .pub-user-btn:hover { background: rgba(255, 255, 255, .16); }
-:root[data-theme="crimson-dark"] .nav-public .links > a.btn-accent { color: #6e1120; -webkit-text-fill-color: #6e1120; }   /* the dark theme's accent is light pink: too faint on white */
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public { background: linear-gradient(90deg, var(--d-nav-from), var(--d-nav-via) 55%, var(--d-nav-to)); backdrop-filter: none; border-bottom-color: transparent; color: var(--d-on-band); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public :is(.brand, .brand > span, .links > a, .pub-user-btn, .uname, .theme-btn) { color: var(--d-on-band); -webkit-text-fill-color: var(--d-on-band); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .brand-mark, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .brand-mark .eye { color: var(--d-on-band); stroke: var(--d-on-band); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .links > a:hover { color: var(--d-on-band); opacity: .85; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .links > a.btn-accent { background: var(--d-paper); color: var(--d-band-button-ink); -webkit-text-fill-color: var(--d-band-button-ink); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public :is(.btn-ghost, .theme-btn) { border-color: var(--d-band-edge); background: transparent; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .pub-user-btn:hover { background: var(--d-band-hover); }
 /* the business date on the coloured bar: a white field with dark figures, like the command line (blue, green and crimson drew it
    unreadable on the gradient) */
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .asof-date { background: #fff; color: #1b2433; -webkit-text-fill-color: #1b2433; border-color: rgba(255, 255, 255, .85); color-scheme: light; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .asof-past .asof-date { background: #fff7d6; color: #6b4a00; -webkit-text-fill-color: #6b4a00; border-color: #ffd34d; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .di-was-asof-date .di-control { background: var(--d-paper); color: var(--d-band-field-ink); -webkit-text-fill-color: var(--d-band-field-ink); border-color: var(--d-band-field-edge); color-scheme: light; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .asof-past .di-was-asof-date .di-control { background: var(--d-band-past-bg); color: var(--d-band-past-ink); -webkit-text-fill-color: var(--d-band-past-ink); border-color: var(--d-band-past-edge); }

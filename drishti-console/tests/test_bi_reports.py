@@ -33,7 +33,7 @@ def test_the_viewer_is_a_shell_with_the_toolbar_and_the_scripts_in_order():
         assert hook in r.text, hook
     scripts = re.findall(r"/static/js/drishti_([a-z-]+)\.js", r.text)
     assert scripts.index("bi-lib") < scripts.index("bi-visuals") < scripts.index("bi-grids") < scripts.index("bi-frame") < scripts.index("bi-report")
-    assert "multiselect" in scripts and "/static/vendor/echarts/echarts.min.js" in r.text and "drishti_bi-report.css" in r.text
+    assert "/static/elements/drishti-inputs/drishti_inputs.js" in r.text and "/static/vendor/echarts/echarts.min.js" in r.text and "drishti_bi-report.css" in r.text
 
 
 def test_the_viewer_takes_a_page_after_the_id():
@@ -51,7 +51,8 @@ def test_the_designer_start_and_one_draft_and_the_model_view_are_real_pages():
     for hook in ("data-canvas-grid", "data-fields-tree", "data-types", "data-build", "data-format", "data-filters", "data-yaml", "data-undo", "data-redo", "data-check", "data-save", "data-preview"):
         assert hook in d.text, hook
     scripts = re.findall(r"/static/js/drishti_([a-z-]+)\.js", d.text)
-    assert scripts.index("bi-design") < scripts.index("bi-design-canvas") < scripts.index("bi-design-panes") and "cm-yaml" in scripts
+    assert scripts.index("bi-design") < scripts.index("bi-design-canvas") < scripts.index("bi-design-panes") and "cm-yaml" not in scripts
+    assert "/static/elements/drishti-designer/drishti_designer.js" in d.text           # the canvas, the undo history and the YAML editor are the designer kit's
 
 
 def test_the_designer_is_in_the_rail_without_a_phase_label():

@@ -204,12 +204,16 @@ sum(NOTIONAL) moved from 35,644,171,130 to 25,679,859,409 (-9,964,311,721); the 
   ...
 ```
 
-**JSON** (`POST /api/v1/pivot/explain`):
+**JSON** (the one Explain, `POST /api/v1/explain`, kind `pivot`; the engine's steps are under `why.answer`):
 
 ```json
-{"view": {"source": "trade", "rows": ["PRODUCT_TYPE"], "values": ["sum(NOTIONAL)"]},
+{"kind": "pivot", "measure": "cell", "part": "why",
+ "view": {"source": "trade", "rows": ["PRODUCT_TYPE"], "values": ["sum(NOTIONAL)"]},
  "from": {"PRODUCT_TYPE": "FX_SWAP"}, "to": {"PRODUCT_TYPE": "FX_FORWARD"}, "by": "COUNTERPARTY"}
 ```
+
+The old `POST /api/v1/pivot/explain` still answers for one release, as a deprecated alias of this (it says so in its `Deprecation` and
+`Link` headers); move scripts to `/api/v1/explain`.
 
 ![Why did it move: two product types split by counterparty, one step per counterparty and the difference](img/t37/04-explain.jpg)
 

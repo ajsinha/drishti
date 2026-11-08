@@ -21,7 +21,7 @@
    entity or a group, the netting sets' contributions and the pre-deal what-if (into a netting set it picks) at a counterparty, the netting-set workbench (collateral, trades, pre-deal) at a
    netting set, the trade in its netting set at a trade; By tenor and Captures everywhere. Every view is a command (EXP <scope>) and a
    URL (/exposure?scope=...), so links, the command line and F1 work. The time from a click to the painted headline is kept on the root
-   element (data-paint-ms) for the tests. How a figure was built is the one Explain's (drishti_explain.js): hover a tile, click it, or Explain ›. */
+   element (data-paint-ms) for the tests. How a figure was built is the one Explain's (drishti-insight): hover a tile, click it, or Explain ›. */
 (function () {
   "use strict";
   var root = document.querySelector("[data-exposure]");
@@ -360,7 +360,7 @@
     }
   }
 
-  /** The one Explain (SHARED_SCREENS.md section 3, drishti_explain.js): each figure tile and Explain › carry their figure's request. */
+  /** The one Explain (SHARED_SCREENS.md section 3, drishti-insight): each figure tile and Explain › carry their figure's request. */
   function bindExplain(d) {
     var req = function (measure) {
       var r = { kind: "exposure", measure: measure, scope: d.canonical, q: S.q, collateral: S.collateral };
@@ -611,46 +611,39 @@
       var rows = x[0].rows || [];
       pane.textContent = "";
       var two = h("div", "xx-two"), form = h("div", "xx-form");
-      var sel = h("select", "xx-select");
-      sel.dataset.xxCandidate = "1";
+      // the form's pickers are <drishti-select>s (drishti-inputs' Select: search, keyboard, ARIA); el.component is the Select
+      var pick = function (data, label, options) {
+        var el = h("drishti-select", "xx-pick");
+        el.dataset[data] = "1";
+        el.options = { label: label, options: options };
+        return { el: el, s: el.component };
+      };
+      var cand = pick("xxCandidate", "Candidate: like trade", []), sel = cand.s;
       var fill = function () {
-        sel.textContent = "";
-        rows.forEach(function (r) { var o = h("option", null, r.key + " · " + (r.product || "") + " · " + m(r.notional)); o.value = r.key; sel.appendChild(o); });
+        sel.setOptions(rows.map(function (r) { return { value: r.key, label: r.key + " · " + (r.product || "") + " · " + m(r.notional) }; }));
       };
       fill();
       var factor = h("input", "xx-input");
       factor.value = "1";
       factor.dataset.xxFactor = "1";
       factor.setAttribute("aria-label", "Factor");
-      var method = h("select", "xx-select");
-      method.dataset.xxMethod = "1";
-      [["paths", "paths (exact, the same run)"], ["addon", "addon (conservative proxy)"]].forEach(function (o) { var e = h("option", null, o[1]); e.value = o[0]; method.appendChild(e); });
-      var sc = h("select", "xx-select");
-      sc.dataset.xxWhatifScope = "1";
+      var meth = pick("xxMethod", "Method", [{ value: "paths", label: "paths (exact, the same run)" }, { value: "addon", label: "addon (conservative proxy)" }]), method = meth.s;
       var cp = onCp ? { scope: d.canonical } : (d.ancestors || []).filter(function (a) { return a.kind === "counterparty"; })[0];
+      var figs = pick("xxWhatifScope", "Figures of", []), sc = figs.s;
       var scopes = function () {
-        sc.textContent = "";
-        [[cp ? cp.scope : set, onCp ? "this counterparty (the credit limit's)" : "its counterparty (the credit limit's)"],
-          [set, onCp ? "the netting set " + set.slice(5) : "this netting set"]].forEach(function (o) {
-          var e = h("option", null, o[1]); e.value = o[0]; sc.appendChild(e);
-        });
+        sc.setOptions([{ value: cp ? cp.scope : set, label: onCp ? "this counterparty (the credit limit's)" : "its counterparty (the credit limit's)" },
+          { value: set, label: onCp ? "the netting set " + set.slice(5) : "this netting set" }], cp ? cp.scope : set);
       };
       scopes();
-      var fields = [["Candidate: like trade", sel], ["Factor (−1: its unwind)", factor], ["Method", method], ["Figures of", sc]];
+      var fields = [["Candidate: like trade", cand.el], ["Factor (−1: its unwind)", factor], ["Method", meth.el], ["Figures of", figs.el]];
       if (onCp) {
-        var into = h("select", "xx-select");
-        into.dataset.xxPredealSet = "1";
-        sets0.forEach(function (s) {
-          var o = h("option", null, s.nettingSet + " · peak PFE " + m(s.peakPfe));
-          o.value = "NSET:" + s.nettingSet;
-          into.appendChild(o);
+        var into = pick("xxPredealSet", "Into the netting set", sets0.map(function (s) { return { value: "NSET:" + s.nettingSet, label: s.nettingSet + " · peak PFE " + m(s.peakPfe) }; }));
+        into.s.on("change", function (e) {
+          set = e.value;
+          sel.setDisabled(true);
+          setTrades(set).then(function (c) { rows = c.rows || []; fill(); scopes(); sel.setDisabled(false); });
         });
-        into.addEventListener("change", function () {
-          set = into.value;
-          sel.disabled = true;
-          setTrades(set).then(function (c) { rows = c.rows || []; fill(); scopes(); sel.disabled = false; });
-        });
-        fields.unshift(["Into the netting set", into]);
+        fields.unshift(["Into the netting set", into.el]);
       }
       fields.forEach(function (r) { form.appendChild(h("label", null, r[0])); form.appendChild(r[1]); });
       var left = h("div");
@@ -665,7 +658,7 @@
       left.appendChild(acts);
       left.appendChild(h("p", "xx-note after", "Pre-deal what-if: the candidate is a copy of a booked trade's paths on the day's run, scaled by the "
         + "factor, added to " + (onCp ? "the netting set picked above (the counterparty's largest first)" : "this netting set") + ". paths: its values "
-        + "netted and collateralised with the set, path by path, by the Python exposure engine; addon: a netting set of its own, uncollateralised, "
+        + "netted and collateralised with the set, path by path, by the exposure engine; addon: a netting set of its own, uncollateralised, "
         + "SA-CCR's supervisory factor (flagged proxy)."));
       var out = h("div");
       out.dataset.xxWhatifOut = "1";
@@ -673,12 +666,12 @@
       two.appendChild(out);
       pane.appendChild(two);
       run.addEventListener("click", function () {
-        var r = rows.filter(function (x) { return x.key === sel.value; })[0] || {}, f = Number(factor.value) || 1;
+        var r = rows.filter(function (x) { return x.key === sel.getValue(); })[0] || {}, f = Number(factor.value) || 1;
         chip.className = "xx-chip";
         chip.textContent = "computing…";
         var t0 = performance.now();
         var setId = set.slice(5);
-        send("what-if", { scope: sc.value, method: method.value, q: S.q, collateral: S.collateral,
+        send("what-if", { scope: sc.getValue(), method: method.getValue(), q: S.q, collateral: S.collateral,
           candidates: [{ tradeId: "CANDIDATE-1", label: f + " × " + r.key, nettingSet: setId, paths: { copyOf: r.key, factor: f },
             assetClass: r.assetClass, notional: Math.abs((r.notional || 0) * f), maturityDate: r.maturity, mtm: (r.mtm || 0) * f, delta: f < 0 ? -1 : 1 }] })
           .then(function (w) {

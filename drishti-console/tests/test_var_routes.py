@@ -108,7 +108,7 @@ def test_in_a_currency_the_command_opens_the_page_in_it():
 def test_the_page_has_the_reporting_currency_picker_and_the_tab(client):
     html = client.get("/var?scope=DESK:DESK-RATES&ccy=eur").text
     assert 'data-ccy="EUR"' in html
-    assert 'aria-label="Reporting currency"' in html and "data-vx-ccy" in html
+    assert ' label="Reporting currency"' in html and "data-vx-ccy" in html
     assert 'data-tab="ccy"' in html and "In other currencies" in html and "data-vx-ccytable" in html
     js = client.get("/static/js/drishti_var-explorer.js").text               # the tables are grids: their headings are the columns'
     assert js.count('header: "Trade currency"') >= 3                        # the contributions, the worst scenarios and a scenario's parts
@@ -208,8 +208,8 @@ def test_the_type_ahead_offers_the_horizons_and_confidences_once_a_scope_is_type
 def test_the_page_has_the_lens_pickers_and_keeps_the_lens_of_its_link(client, backend, monkeypatch):
     html = client.get("/var?scope=BANK&h=10d&m=sum&q=0.95&esq=0.975").text
     assert 'data-h="10d"' in html and 'data-m="sum"' in html and 'data-q="0.95"' in html and 'data-esq="0.975"' in html
-    assert 'aria-label="Horizon"' in html and '<option value="10d:sum">10-day (sum)</option>' in html and '10-day (√10)' in html
-    assert 'aria-label="VaR confidence"' in html and 'aria-label="ES confidence"' in html and "data-vx-method" in html
+    assert ' label="Horizon"' in html and '<option value="10d:sum">10-day (sum)</option>' in html and '10-day (√10)' in html
+    assert ' label="VaR confidence"' in html and ' label="ES confidence"' in html and "data-vx-method" in html
     bad = client.get("/var?scope=BANK&h=5d&m=full&q=x").text                # not a lens: the default
     assert 'data-h=""' in bad and 'data-m=""' in bad and 'data-q=""' in bad
     seen = []
@@ -237,7 +237,7 @@ def test_stressed_var_in_a_command_the_page_and_every_answer(client, backend, mo
     from routes.var_routes import var_suggestions
     assert "VAR BANK SVAR" in [s["complete"] for s in var_suggestions("VAR BANK")]
     html = client.get("/var?scope=BANK&set=stressed").text
-    assert 'data-set="stressed"' in html and 'aria-label="Normal or stressed VaR"' in html and '<option value="stressed" selected>' in html
+    assert 'data-set="stressed"' in html and ' label="Normal or stressed VaR"' in html and '<option value="stressed" selected>' in html
     assert 'data-set=""' in client.get("/var?scope=BANK&set=crisis").text                  # not a set: Normal
     seen = []
 

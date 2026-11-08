@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the designer's three panes. Fields: the dataset's tables, columns (dates open into their parts), measures and
    hierarchies, with search; drag one onto the canvas or press its button. Visualizations: the catalogue of visual types, then Build (the field wells of the
    selected visual) and Format (titles, labels, colours from the theme, axes, number formats, conditional formats, slicer and drill settings; with no visual
@@ -47,13 +48,9 @@
     const search = q('[data-fields-search]');
 
     function fieldButton(name, kind, label, icon, title, masked, ref) {
-      const b = h('button', { type: 'button', class: 'bi-field', draggable: 'true', 'data-field': name, 'data-kind': kind, title: title || name, 'aria-label': 'Add ' + name + ' to the report' }, B.icon(icon), ' ', h('span', { class: 'bi-field-name', text: label }),
+      const b = h('button', { type: 'button', class: 'bi-field', 'data-field': name, 'data-kind': kind, title: title || name, 'aria-label': 'Add ' + name + ' to the report' }, B.icon(icon), ' ', h('span', { class: 'bi-field-name', text: label }),
         masked ? h('small', { class: 'bi-badge', text: 'masked' }) : null);
-      b.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData(D.MIME, JSON.stringify({ name, kind, dataset: ref || '' }));
-        e.dataTransfer.setData('text/plain', name);
-        e.dataTransfer.effectAllowed = 'copy';
-      });
+      D.hub.draggable(b, { payload: () => ({ name, kind, dataset: ref || '' }), label: () => label });      // dragged onto the canvas or a well (drishti-designer's DragHub)
       b.addEventListener('click', () => D.addField(name, kind, { useSelected: true, dataset: ref || '' }));
       return b;
     }
@@ -173,9 +170,9 @@
         types.appendChild(h('p', { class: 'bi-type-group', text: title }));
         const row = h('div', { class: 'bi-typegrid', role: 'group', 'aria-label': title });
         list.forEach((t) => {
-          const b = h('button', { type: 'button', class: 'bi-vtype', 'data-type': t, 'aria-label': t, title: t + ' (click to use it; drag onto the canvas to add one there)', 'aria-pressed': 'false', draggable: 'true' }, B.icon(ICONS[t]), h('span', { text: t }));
+          const b = h('button', { type: 'button', class: 'bi-vtype', 'data-type': t, 'aria-label': t, title: t + ' (click to use it; drag onto the canvas to add one there)', 'aria-pressed': 'false' }, B.icon(ICONS[t]), h('span', { text: t }));
           b.addEventListener('click', () => chooseType(t));
-          b.addEventListener('dragstart', (e) => { e.dataTransfer.setData(D.MIME, JSON.stringify({ vtype: t })); e.dataTransfer.effectAllowed = 'copy'; });
+          D.hub.draggable(b, { payload: () => ({ vtype: t }), label: () => t });
           row.appendChild(b);
         });
         types.appendChild(row);
@@ -292,21 +289,14 @@
           D.withIdx(D.idxOf(v), () => D.change('Add ' + B.label(name), () => { D.putInWell(v, w, name); D.auto.delete(v.id); }));
         });
         const fs = h('fieldset', { class: 'bi-well', 'data-well': w }, h('legend', {}, w, h('small', { class: 'text-muted-d', text: ' ' + (spec.kind === 'any' ? 'fields and measures' : spec.kind + 's') + (spec.required ? ', needed' : '') + (spec.max ? ', up to ' + spec.max : '') })), ul, add);
-        fs.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].indexOf(D.MIME) >= 0) { e.preventDefault(); fs.classList.add('bi-drop'); } });
-        fs.addEventListener('dragleave', () => fs.classList.remove('bi-drop'));
-        fs.addEventListener('drop', (e) => {
+        D.hub.target({ el: fs, accepts: (p) => !!p && !p.vtype, over: () => fs.classList.add('bi-drop'), leave: () => fs.classList.remove('bi-drop'), drop: (x, y, p) => {      // a field dropped on the well
           fs.classList.remove('bi-drop');
-          let p = null;
-          try { p = JSON.parse(e.dataTransfer.getData(D.MIME)); } catch (err) { p = null; }
-          if (!p || p.vtype) { return; }
-          e.preventDefault();
-          e.stopPropagation();
           const clash = D.dsConflict(v, p.dataset || '');
           if (clash) { D.say(clash, true); return; }
           D.withIdx(D.idxForRef(p.dataset || ''), () => {
             if (!D.change('Add ' + B.label(p.name), () => { D.dsClaim(v, p.dataset || ''); if (!D.putInWell(v, w, p.name)) { D.say(p.name + ' does not go in the ' + w + ' well.', true); } D.auto.delete(v.id); })) { D.say(p.name + ' does not go in the ' + w + ' well, or is already there.', true); }
           });
-        });
+        } });
         build.appendChild(fs);
       });
       const group = (D.catalogue.visuals[v.type] || {}).group;
@@ -342,6 +332,14 @@
       const i = h('input', Object.assign({ type: 'text', class: 'studio-in', autocomplete: 'off', value: value || '' }, attrs || {}));
       i.addEventListener('change', () => onChange(i.value));
       return i;
+    }
+    /** A date: drishti-inputs' date picker over a date field (typed T-1 or 6 Nov 2026, or the calendar); onChange hears the ISO date. */
+    function dateInput(value, onChange, label) {
+      const i = textInput(value, onChange, { type: 'date', 'aria-label': label });
+      const box = h('span', { class: 'bi-date' }, i);
+      const I = window.Drishti.elements && window.Drishti.elements.inputs;
+      if (I) { I.upgradeDateInput(i); }
+      return box;
     }
     function checkbox(label, value, onChange, attrs) {
       const c = h('input', Object.assign({ type: 'checkbox' }, attrs || {}));
@@ -443,8 +441,8 @@
       D.reportV2(fmt, m);
       fmt.appendChild(frow('Colours', selectInput(B.PALETTES.map((n) => [n, n]), (m.theme || {}).palette || 'default', (x) => D.change('Theme', () => { m.theme = Object.assign({}, m.theme, { palette: x }); }), { 'data-theme-palette': '' }), 'default follows the console theme; colour-blind is Okabe-Ito.'));
       const dates = m.dates || {};
-      fmt.appendChild(frow('Business date from', textInput(dates.from, (x) => setDates({ from: x }), { type: 'date' })));
-      fmt.appendChild(frow('Business date to', textInput(dates.to, (x) => setDates({ to: x }), { type: 'date' })));
+      fmt.appendChild(frow('Business date from', dateInput(dates.from, (x) => setDates({ from: x }), 'Business date from')));
+      fmt.appendChild(frow('Business date to', dateInput(dates.to, (x) => setDates({ to: x }), 'Business date to')));
       fmt.appendChild(frow('Dataset', h('code', { text: m.dataset })));
       const lk = h('fieldset', { class: 'bi-fieldset', 'data-links': '' }, h('legend', { text: 'Links between datasets' }));
       (m.links || []).forEach((l, i) => {

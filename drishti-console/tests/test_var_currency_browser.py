@@ -34,6 +34,7 @@ import pytest
 from test_var_explorer_browser import open_var, painted, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from var_stack import VAR_TRADES, var_data, var_lake, var_server
+from select_helpers import choose, options, value, values  # <drishti-select>: drishti-inputs' Select
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
@@ -58,8 +59,8 @@ def test_the_picker_moves_every_panel_and_the_tab_loads_only_when_opened(stack, 
     pg = watch(open_var(browser, str(stack), "/var?scope=DESK:DESK-RATES"))
     painted(pg, "DESK:DESK-RATES")
     wait(pg, "document.querySelector('[data-var]').dataset.ccyReady === 'true'", 30)
-    options = pg.eval_on_selector_all("[data-vx-ccy] option", "os => os.map(o => o.value)")
-    assert options[:5] == ["USD", "EUR", "CAD", "JPY", "GBP"] and options[-1] == "__more", options
+    ccys = values(pg, "[data-vx-ccy]")
+    assert ccys[:5] == ["USD", "EUR", "CAD", "JPY", "GBP"] and ccys[-1] == "__more", ccys
     assert tile_label(pg).endswith("· USD")
     usd_var = pg.locator('.vx-tile[data-tile="0"] .v').inner_text()
     for t in ("hist", "contrib", "captures"):                                # every other tab: the currencies are not asked
@@ -68,7 +69,7 @@ def test_the_picker_moves_every_panel_and_the_tab_loads_only_when_opened(stack, 
     pg.locator('.vx-tab[data-tab="path"]').click()
     assert not requests_to(pg, "/api/var/scope/currencies"), pg.seen
 
-    pg.select_option("[data-vx-ccy]", "EUR")
+    choose(pg, "[data-vx-ccy]", "EUR")
     wait(pg, "document.querySelector('[data-var]').dataset.painted === 'DESK:DESK-RATES' && "
              "document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf('EUR') >= 0", 60)
     assert "ccy=EUR" in pg.url
@@ -95,7 +96,7 @@ def test_the_picker_moves_every_panel_and_the_tab_loads_only_when_opened(stack, 
     shot(pg, "ccy-tab")
     pg.locator('[data-vx-ccytable] .dg-row[data-ccy="CAD"] button').click()      # a row switches the page
     wait(pg, "document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf('CAD') >= 0", 60)
-    assert "ccy=CAD" in pg.url and pg.input_value("[data-vx-ccy]") == "CAD"
+    assert "ccy=CAD" in pg.url and value(pg, "[data-vx-ccy]") == "CAD"
     wait(pg, "!!document.querySelector('[data-vx-ccytable] .dg-row.vx-shown[data-ccy=\"CAD\"]')", 60)
 
     # the session keeps it: another VaR page in this tab opens in CAD
@@ -104,11 +105,11 @@ def test_the_picker_moves_every_panel_and_the_tab_loads_only_when_opened(stack, 
     assert "ccy=CAD" in pg.url and tile_label(pg).endswith("· CAD")
     # More…: every other currency with FX on the date
     wait(pg, "document.querySelector('[data-var]').dataset.ccyReady === 'true'", 30)
-    pg.select_option("[data-vx-ccy]", "USD")
+    choose(pg, "[data-vx-ccy]", "USD")
     wait(pg, "document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf('USD') >= 0", 60)
-    pg.select_option("[data-vx-ccy]", "__more")
-    wait(pg, "!!document.querySelector('[data-vx-ccy] optgroup')", 30)
-    more = pg.eval_on_selector_all("[data-vx-ccy] optgroup option", "os => os.map(o => o.value)")
+    choose(pg, "[data-vx-ccy]", "__more")
+    wait(pg, "document.querySelector('[data-vx-ccy]').component.options.some(o => o.group)", 30)
+    more = [o["value"] for o in options(pg, "[data-vx-ccy]") if o["group"]]          # the group "More currencies with FX on <date>"
     assert "CHF" in more and "AUD" in more, more
     pg.close()
 
@@ -118,7 +119,7 @@ def test_the_command_in_a_currency_opens_the_page_in_it(stack, browser):
     assert "ccy=EUR" in pg.url
     painted(pg, "DESK:DESK-RATES")
     assert tile_label(pg).endswith("· EUR")
-    assert pg.input_value("[data-vx-ccy]") == "EUR"
+    assert value(pg, "[data-vx-ccy]") == "EUR"
     pg.close()
 
 
@@ -126,7 +127,7 @@ def test_on_a_phone_the_picker_and_the_tab_fit(stack, browser):
     pg = open_var(browser, str(stack), "/var?scope=DESK:DESK-RATES&ccy=EUR", {"width": 390, "height": 844})
     painted(pg, "DESK:DESK-RATES")
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
-    box = pg.locator("[data-vx-ccy]").bounding_box()
+    box = pg.locator("[data-vx-ccy] .di-select-control").bounding_box()
     assert box and box["height"] >= 36 and box["x"] + box["width"] <= 391, box          # a touch target, inside the screen
     pg.locator('.vx-tab[data-tab="ccy"]').click()
     wait(pg, "((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid ? document.querySelector('[data-vx-ccytable] drishti-grid').grid.model.rowCount() : 0) >= 5", 60)

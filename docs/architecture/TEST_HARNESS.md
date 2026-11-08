@@ -234,6 +234,17 @@ the component's own condition (`wait_for_function`) and `Drishti.settled()`, and
 behaviour is one `spread` test of a second or two (`tests/test_resize_browser.py`); the screens that use the component keep one test
 each in their own files for the real markup.
 
+### 3.14 The CSS visual check
+
+A change to the console's CSS that must not change the look (tokens in place of literals, folded rules) is proved by pictures:
+`tools/dev/css_visual_check.py run --before <base checkout> --after . --out data/tmp/cssvis/out` takes ten screens (landing, the VaR
+explorer, Pivot, a BI report, Build home, Admin, Help, and landing, VaR and Help at phone width) in every theme of `drishti_tokens.css`
+from both checkouts against one scratch server (so both read the same data: a VaR lake built once under `data/tmp/cssvis/`), and
+compares them pixel by pixel (a per-channel difference of 2 on at most 0.05% of the pixels counts as anti-aliasing). It prints a
+screen × theme table, writes a diff image for each picture that differs and exits 1 when one does. The theme is set as the app sets
+it (`localStorage 'drishti.theme'`), the pictures wait on `Drishti.settled()`, and parts that change on their own (the clock, the
+paint timings) are masked.
+
 ## 4. Numbers to hold
 
 | What | Number |
