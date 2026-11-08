@@ -356,3 +356,47 @@ def test_a_partition_column_name_a_folder_would_change_is_refused(tmp_path, name
     with pytest.raises(build.BuildError, match="cannot name a Delta partition folder"):
         build.check_partition_names([name])
     build.check_partition_names(["PRODUCT_GROUP", "counterparty.id", "risk-class"])      # plain names pass (a dotted path: a__b)
+
+
+# ---- table features: the Python reader returns exactly what the Java reader returns --------------------------------------------------
+
+FEATURES = HERE / "testdata" / "delta-features"
+
+
+def _keyed(rows, numbers=True) -> dict:
+    """(business_date, id) -> (book, doc[, mtm]) of a pyarrow table's rows or the Java reader's rows."""
+    rows = rows.to_pylist() if hasattr(rows, "to_pylist") else rows
+    return {(str(r["business_date"]), r["id"]): (r.get("book"), r["doc"]) + ((r.get("mtm"),) if numbers else ()) for r in rows}
+
+
+@pytest.mark.parametrize("fixture", ["column-mapping", "deletion-vectors", "v2-checkpoint"])
+def test_the_python_reader_reads_every_feature_as_the_java_reader(tmp_path, fixture, java_reader):
+    """Fixtures (tools/lake/testdata/delta-features): ``plain`` 40 trades on each of two dates (delta-rs); ``column-mapping`` the same
+    rows written with delta.columnMapping.mode=name (physical columns col-<uuid>, reader version 2 as Databricks writes it);
+    ``deletion-vectors`` the plain table with T-033 and T-034 of 2026-09-30 deleted by deletion vectors (Delta Kernel, real .bin
+    files); ``v2-checkpoint`` the plain table with the v2Checkpoint feature, checkpointed, its earlier commits gone (only the checkpoint
+    holds the files)."""
+    import shutil
+    import deltaread
+    table = tmp_path / fixture
+    shutil.copytree(FEATURES / fixture, table)
+    plain = _keyed(deltalake.DeltaTable(str(FEATURES / "plain")).to_pyarrow_table())
+    assert len(plain) == 80
+    assert deltaread.needs_kernel(str(table)) is not None                # delta-rs's pyarrow reader would refuse it or half-read it
+    got = deltaread.read(table)
+    _, java_rows = java_reader(table)
+    assert _keyed(got, numbers=False) == _keyed(java_rows, numbers=False)          # the test's Java reader prints text and dates
+    want = plain
+    if fixture == "deletion-vectors":
+        want = {k: v for k, v in plain.items() if k not in {("2026-09-30", "T-033"), ("2026-09-30", "T-034")}}
+        assert len(want) == 78
+    assert _keyed(got) == want
+    day = deltaread.read(table, date="2026-09-29", columns=["id", "mtm"])
+    assert day.column_names == ["id", "mtm"] and day.num_rows == 40
+
+
+def test_a_table_delta_rs_reads_completely_stays_with_delta_rs():
+    import deltaread
+    assert deltaread.needs_kernel(str(FEATURES / "plain")) is None
+    t = deltaread.read(FEATURES / "plain", date="2026-09-29", columns=["id", "mtm"])
+    assert t.num_rows == 40 and t.column_names == ["id", "mtm"]

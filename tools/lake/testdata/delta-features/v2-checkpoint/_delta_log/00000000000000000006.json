@@ -1,0 +1,2 @@
+{"commitInfo":{"timestamp":1794143106017,"operation":"ADD FEATURE","operationParameters":{"name":"[\"v2Checkpoint\"]"},"engineInfo":"delta-rs:py-1.6.6","clientVersion":"delta-rs.py-1.6.6"}}
+{"protocol":{"minReaderVersion":3,"minWriterVersion":7,"readerFeatures":["v2Checkpoint"],"writerFeatures":["v2Checkpoint"]}}
