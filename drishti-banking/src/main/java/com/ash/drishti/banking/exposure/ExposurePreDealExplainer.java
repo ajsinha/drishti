@@ -101,7 +101,7 @@ final class ExposurePreDealExplainer implements Explainer {
             x.formula("use = with ÷ limit = " + Explanation.number(after) + " ÷ " + Explanation.number(l) + " = " + pct(num(lim.get("useAfter")))
                     + "   (before: " + pct(num(lim.get("useBefore"))) + ")");
             x.formula("headroom = limit − with = " + Explanation.number(l) + " − " + Explanation.number(after) + " = " + Explanation.signed(l - after));
-            x.formula("status: breach over 100% of the limit, near from " + pct(num(lim.get("near"))) + " (limit-near), else within → "
+            x.formula("status: breach over 100% of the limit, near from " + pct(num(lim.get("near"))) + " (drishti.risk.limit-near), else within → "
                     + lim.get("status"));
             if (lim.get("buckets") instanceof List<?> bs) {
                 for (Object o : bs) {

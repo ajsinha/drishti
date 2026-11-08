@@ -35,7 +35,7 @@ class ExposureTierDiskCapTest {
 
     static ExposureProperties props(Path hot, Double maxDiskGb) {
         return new ExposureProperties(null, null, null, null, null, null, null, null, null, null, hot.toString(), "mapped", null, true, 0, null,
-                null, null, null, null, null, null, null, null, null, maxDiskGb, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, maxDiskGb, null, null, null, null, null);
     }
 
     @Test

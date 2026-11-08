@@ -20,6 +20,8 @@ drishti:
     var:
       enabled: ${DRISHTI_VAR_ENABLED:true}   # run the VaR engine on this node: /api/v1/var, VAR, SMAT, PLAY VAR, regulatory VaR (live)
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  risk:
+    limit-near: 0.8                  # one rule for every limit the banking module holds a figure to (VaR limits, the pre-deal check's credit limit and buckets, sensitivity limits): near from this share, a breach over 100%
   var:                               # the VaR engine (docs/guides/VAR_GUIDE.md): VaR of any set of trades from the stored P&L vectors
     confidence: ${DRISHTI_VAR_CONFIDENCE:0.99}          # VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1))
     es-confidence: ${DRISHTI_VAR_ES_CONFIDENCE:0.975}   # expected shortfall's

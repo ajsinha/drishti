@@ -166,8 +166,8 @@ public class VarConfiguration {
     }
 
     @Bean
-    VarViews varViews(VarService svc, VarParametricProperties parametric) {
-        VarViews v = new VarViews(svc).parametric(new VarParametric(parametric));
+    VarViews varViews(VarService svc, VarParametricProperties parametric, com.ash.drishti.banking.RiskLimits limits) {
+        VarViews v = new VarViews(svc).parametric(new VarParametric(parametric)).limits(limits);
         VarResultEngine.install(v);                                    // the computed kind var-result (the reactive connector var-engine)
         return v;
     }

@@ -90,8 +90,8 @@ public class ExposureConfiguration {
 
     /** Explain a pre-deal check (kind predeal: the decision, the limit's use, headroom and buckets; EXPOSURE_GUIDE.md section 18.9). */
     @Bean
-    com.ash.drishti.server.explain.Explainer exposurePreDealExplainer(ExposureService svc) {
-        return new ExposurePreDealExplainer(new ExposurePreDeal(svc, new ExposureWhatIf(svc)));
+    com.ash.drishti.server.explain.Explainer exposurePreDealExplainer(ExposureService svc, com.ash.drishti.banking.RiskLimits limits) {
+        return new ExposurePreDealExplainer(new ExposurePreDeal(svc, new ExposureWhatIf(svc), limits));
     }
 
     @Bean
