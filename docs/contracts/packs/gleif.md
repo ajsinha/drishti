@@ -45,7 +45,7 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 | Storage | connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-entity/` |
 | Columns | `LEI`, `NAME`, `LEI_COUNTRY`, `LEGAL_CITY`, `LEGAL_FORM`, `REGISTRATION_STATUS`, `RENEWAL_LATE`, `SEGMENT`, `NEXT_RENEWAL`, `US_COMPANY` |
 | Test data | data/testdata/gleif/lei-entity |
-| Worked example | [gleif/lei-entity](../samples/gleif/lei-entity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [gleif/lei-entity](../samples/gleif.md#lei-entity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -273,7 +273,7 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 | Storage | connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-relationship/` |
 | Columns | `RELATIONSHIP_ID`, `LEVEL`, `CHILD_ENTITY`, `PARENT_ENTITY`, `RELATIONSHIP_STATUS` |
 | Test data | data/testdata/gleif/lei-relationship |
-| Worked example | [gleif/lei-relationship](../samples/gleif/lei-relationship.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [gleif/lei-relationship](../samples/gleif.md#lei-relationship) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -412,7 +412,7 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 | Storage | connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-mapping/` |
 | Columns | `IDENTIFIER`, `TYPE`, `ENTITY_LEI`, `ENTITY_NAME` |
 | Test data | data/testdata/gleif/lei-mapping |
-| Worked example | [gleif/lei-mapping](../samples/gleif/lei-mapping.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [gleif/lei-mapping](../samples/gleif.md#lei-mapping) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

@@ -46,7 +46,7 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 | Columns | `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `TRADE_STATUS`, `TRADE_VERSION`, `BUY_SELL_CODE`, `CURRENCY`, `QUANTITY`, `TRADE_DATE`, `MATURITY_DATE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `NOTIONAL`, `INDEX_NAME` |
 | Partitioned by | `PRODUCT_TYPE` |
 | Test data | data/testdata/trades/endur, data/testdata/trades/calypso, data/testdata/trades/murex |
-| Worked example | [trades/endur](../samples/trades/endur.md) · [trades/calypso](../samples/trades/calypso.md) · [trades/murex](../samples/trades/murex.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [trades/endur](../samples/trades.md#endur) · [trades/calypso](../samples/trades.md#calypso) · [trades/murex](../samples/trades.md#murex) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

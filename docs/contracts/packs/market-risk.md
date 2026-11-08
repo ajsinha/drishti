@@ -59,7 +59,7 @@ A named historical or hypothetical shock set.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/stress-scenario/` |
 | Test data | data/testdata/market-risk/stress-scenario |
-| Worked example | [market-risk/stress-scenario](../samples/market-risk/stress-scenario.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/stress-scenario](../samples/market-risk.md#stress-scenario) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -115,7 +115,7 @@ P&L of a desk under a scenario, by book.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/stress-result/` |
 | Test data | data/testdata/market-risk/stress-result |
-| Worked example | [market-risk/stress-result](../samples/market-risk/stress-result.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/stress-result](../samples/market-risk.md#stress-result) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -176,7 +176,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/frtb-sensitivity/` |
 | Test data | data/testdata/market-risk/frtb-sensitivity |
-| Worked example | [market-risk/frtb-sensitivity](../samples/market-risk/frtb-sensitivity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/frtb-sensitivity](../samples/market-risk.md#frtb-sensitivity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -250,7 +250,7 @@ Daily P&L attributed to risk factors, new trades and residual.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-explain/` |
 | Test data | data/testdata/market-risk/pnl-explain |
-| Worked example | [market-risk/pnl-explain](../samples/market-risk/pnl-explain.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/pnl-explain](../samples/market-risk.md#pnl-explain) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -319,7 +319,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/trade-valuation/` |
 | Columns | `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `NETTING_SET`, `TRADER_ID`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `PNL_1D`, `DV01`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE` |
 | Test data | data/testdata/market-risk/trade-valuation |
-| Worked example | [market-risk/trade-valuation](../samples/market-risk/trade-valuation.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/trade-valuation](../samples/market-risk.md#trade-valuation) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -490,7 +490,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/portfolio/` |
 | Columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` |
 | Test data | data/testdata/market-risk/portfolio |
-| Worked example | [market-risk/portfolio](../samples/market-risk/portfolio.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/portfolio](../samples/market-risk.md#portfolio) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -570,7 +570,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `REPORTING_CCY`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-vector |
-| Worked example | [market-risk/pnl-vector](../samples/market-risk/pnl-vector.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/pnl-vector](../samples/market-risk.md#pnl-vector) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -676,7 +676,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `SCENARIO_PV` |
 | Test data | data/testdata/market-risk/scenario-pv |
-| Worked example | [market-risk/scenario-pv](../samples/market-risk/scenario-pv.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/scenario-pv](../samples/market-risk.md#scenario-pv) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -787,7 +787,7 @@ A currency's rate against USD today and under each historical scenario, as the r
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/fx-scenario/` |
 | Columns | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` |
 | Test data | data/testdata/market-risk/fx-scenario |
-| Worked example | [market-risk/fx-scenario](../samples/market-risk/fx-scenario.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/fx-scenario](../samples/market-risk.md#fx-scenario) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -840,7 +840,7 @@ The historical scenario days of a business date, oldest first: index i of every 
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/scenario-set/` |
 | Test data | data/testdata/market-risk/scenario-set |
-| Worked example | [market-risk/scenario-set](../samples/market-risk/scenario-set.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/scenario-set](../samples/market-risk.md#scenario-set) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -892,7 +892,7 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-hierarchy/` |
 | Columns | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME` |
 | Test data | data/testdata/market-risk/risk-hierarchy |
-| Worked example | [market-risk/risk-hierarchy](../samples/market-risk/risk-hierarchy.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/risk-hierarchy](../samples/market-risk.md#risk-hierarchy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -952,7 +952,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/var-limit/` |
 | Columns | `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY` |
 | Test data | data/testdata/market-risk/var-limit |
-| Worked example | [market-risk/var-limit](../samples/market-risk/var-limit.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/var-limit](../samples/market-risk.md#var-limit) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1002,7 +1002,7 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/desk-pnl/` |
 | Columns | `DESK_PNL_ID`, `DESK_ID`, `LEGAL_ENTITY`, `ACTUAL_PNL`, `HYPOTHETICAL_PNL`, `FEES_AND_COMMISSIONS`, `CURRENCY`, `SOURCE`, `AS_OF` |
 | Test data | data/testdata/market-risk/desk-pnl |
-| Worked example | [market-risk/desk-pnl](../samples/market-risk/desk-pnl.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/desk-pnl](../samples/market-risk.md#desk-pnl) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1053,7 +1053,7 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 | Columns | `HIERARCHY`, `NODE_ID`, `LEVEL`, `CURRENCY`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-history |
-| Worked example | [market-risk/pnl-history](../samples/market-risk/pnl-history.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/pnl-history](../samples/market-risk.md#pnl-history) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1111,7 +1111,7 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/position-sensitivity/` |
 | Columns | `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`, `CURRENCY` |
 | Test data | data/testdata/market-risk/position-sensitivity |
-| Worked example | [market-risk/position-sensitivity](../samples/market-risk/position-sensitivity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/position-sensitivity](../samples/market-risk.md#position-sensitivity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1212,7 +1212,7 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-factor/` |
 | Columns | `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `TENOR`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET` |
 | Test data | data/testdata/market-risk/risk-factor |
-| Worked example | [market-risk/risk-factor](../samples/market-risk/risk-factor.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [market-risk/risk-factor](../samples/market-risk.md#risk-factor) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
