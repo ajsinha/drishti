@@ -63,6 +63,23 @@ def business_today(today: date | None = None) -> date:
     return d - timedelta(days=max(0, d.weekday() - 4))
 
 
+def local_day(stamp: str | float | None = None) -> date:
+    """The calendar day of a moment in the business calendar: local time, as ``business_today`` and the "not in the future" check read
+    it (``date.today()``). ``stamp``: an ISO timestamp (``...Z`` or with an offset; one without an offset is taken as UTC, as the download
+    caches write them), seconds since the epoch (a file time), or None for now. A download made at 23:00 local, already the next day in
+    UTC, is dated today, never tomorrow."""
+    from datetime import datetime, timezone
+    if stamp is None:
+        return date.today()
+    if isinstance(stamp, (int, float)):
+        return datetime.fromtimestamp(stamp).date()
+    text = str(stamp).strip()
+    if len(text) == 10:                                  # a calendar date already: kept as it is
+        return date.fromisoformat(text)
+    t = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    return (t if t.tzinfo else t.replace(tzinfo=timezone.utc)).astimezone().date()
+
+
 def base_name(name) -> str:
     """The last part of a path (after '/', '\\' or an archive's '!/')."""
     return str(name).replace("\\", "/").rsplit("/", 1)[-1]

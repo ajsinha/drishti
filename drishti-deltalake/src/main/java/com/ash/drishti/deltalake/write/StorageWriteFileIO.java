@@ -83,7 +83,7 @@ final class StorageWriteFileIO implements FileIO {
     @Override
     public boolean mkdirs(String path) throws IOException {
         if (LocalPaths.isLocal(path)) {
-            java.nio.file.Files.createDirectories(java.nio.file.Path.of(LocalPaths.toLocal(path, LocalPaths.WINDOWS)));
+            java.nio.file.Files.createDirectories(java.nio.file.Path.of(LocalPaths.toLocal(LocalPaths.decodeUri(path), LocalPaths.WINDOWS)));
         }
         return true;                                             // an object store has no folders
     }

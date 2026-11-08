@@ -81,8 +81,8 @@ class _Fetcher(F.Fetcher):
         fresh = not (dest.is_file() and (self.http.offline or self.http.cache.fresh(dest, self.http.max_age_h, url)))
         body = self.http.get(url, dest)
         if body is not None and fresh:
-            from datetime import datetime, timezone
-            self.retrieved[str(dest.relative_to(self.cache))] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            from datetime import datetime
+            self.retrieved[str(dest.relative_to(self.cache))] = datetime.now().strftime("%Y-%m-%d")   # the business calendar: local
         return body
 
 

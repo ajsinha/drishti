@@ -14,8 +14,8 @@
 
 """The gdelt-events feed (config/feeds/gdelt-events.yaml): the GDELT 1.0 daily event files (one zipped tab-separated file a day, every event the world's news reported
 that day, coded with CAMEO), for the gdelt-events pack. Incremental: only the days after the last one
-processed (at most `backfill-days`) are downloaded; each day is reduced at once to per-country aggregates (history/days/<day>.json),
-and the raw file is not kept. Emits the event-country kind (one a country: the latest day's events, tone and Goldstein scale, the
+processed (at most `backfill-days`) are downloaded; each day is reduced at once to per-country aggregates (history/days/<day>.jsonl,
+a country a line), and the raw file is not kept. Emits the event-country kind (one a country: the latest day's events, tone and Goldstein scale, the
 share of conflict, the events by CAMEO category, the daily history over `history-days`, the most-mentioned stories' links)."""
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from feedbase import Feed, FeedError
-from publicsector import provenance, tolerate
+from publicsector import provenance, read_kept, tolerate, write_kept
 
 DAILY = "https://data.gdeltproject.org/events/{day}.export.CSV.zip"
 # the GDELT 1.0 event record's columns (the codebook, 58 tab-separated fields since 2013-04-01)
@@ -116,8 +116,7 @@ class GdeltEventsFeed(Feed):
                 with z.open(z.namelist()[0]) as fh:
                     agg = aggregate(io.TextIOWrapper(fh, encoding="utf-8", errors="replace"), run.option("rows-per-day"),
                                     int(run.option("top-stories", 5)))
-            days_dir.mkdir(parents=True, exist_ok=True)
-            (days_dir / f"{d.isoformat()}.json").write_text(json.dumps(agg, separators=(",", ":")) + "\n", encoding="utf-8")
+            write_kept(days_dir / f"{d.isoformat()}.jsonl", ({"ISO3": iso3, **a} for iso3, a in sorted(agg.items())))
             fetched.append(d.isoformat())
         if not fetched:
             if run.state.get("lastDay"):
@@ -127,11 +126,11 @@ class GdeltEventsFeed(Feed):
         run.state["lastDay"] = fetched[-1]
         floor = (date.fromisoformat(fetched[-1]) - timedelta(days=int(run.option("history-days", 30)) - 1)).isoformat()
         days = {}
-        for f in sorted(days_dir.glob("*.json")):
+        for f in sorted(days_dir.glob("*.jsonl")):
             if f.stem < floor:
                 f.unlink()                            # outside the window: the feed's folder stays small
                 continue
-            days[f.stem] = json.loads(f.read_text(encoding="utf-8"))
+            days[f.stem] = {r.pop("ISO3"): r for r in read_kept(f)}
         run.emit("event-country", self._docs(run, days, fetched[-1], int(run.option("min-events", 20))))
         run.mark("event-country", run.business_date)
 
