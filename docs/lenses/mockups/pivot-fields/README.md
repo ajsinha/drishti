@@ -106,14 +106,8 @@ pivots and the BI visuals on the pivot engine. In practice:
 6. **Tests and docs:** the pivot browser tests (`test_pivot_screen_browser.py`, `test_pivot_expand_browser.py`) cover all three modes.
    PIVOT_GUIDE §2 (the screen) and §29, tutorial 7, and its screenshots are redone with the build.
 
-## Build checklist (once an option is chosen)
+## Decision and build checklist
 
-| Panel | Contents | Data | Interaction | Status |
-|---|---|---|---|---|
-| Header line | short title, i (scan estimate), headline figures, tools | lens headline, scan estimate | hover or click i | mock-up |
-| View picker (C) | ready-made, my, shared, Save view as… | preset `views:`, saved views | `Shift+V`, `1`–`6`, `Ctrl+S` | mock-up |
-| Compact line (B) | hierarchy chip with stepper, members chip, Columns, Filters, Values toggle strip, Customize › | WellsModel | `R C F M [ ] \` | mock-up |
-| Field picker (B) | search, hierarchies with level check-boxes, trade & position, more fields | catalogue + metadata | `/ ↑↓ Space Enter Esc` | mock-up |
-| Panes (A) | Build (wells, filter scopes), Fields tree, rail | WellsModel + catalogue | drag, `R C V F`, `\`, `/` | mock-up |
-| Grid | full labels with tooltip, indent, (Blank) with ?, Diversification row, one number format | pivot answer | drill arrows, `→ ← 1–9 Enter E` | mock-up |
-| Catalogue metadata | group, folder, hidden, hierarchy levels | `/api/v1/pivot/catalogue` | none | to design |
+**Decided (owner, 2026-11-08): C + B is the default everywhere a pivot opens, A behind Customize ›; the BI designer keeps its panes.** The
+build checklist, ticked as built, lives in the lens document:
+[LENSES.md section 6.4.4](../../../architecture/LENSES.md#644-pivot-fields-the-view-picker-the-compact-line-and-the-panes).

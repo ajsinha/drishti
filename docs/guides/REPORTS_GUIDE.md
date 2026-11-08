@@ -937,7 +937,10 @@ with it chosen. The designer needs the `bi-author` power; its step-by-step use i
 ### 8.2 The report designer
 
 The panes are where Power BI authors expect them: the canvas on the left, then **Filters**, **Visualizations** (with **Build** and **Format**)
-and **Fields**.
+and **Fields**. The designer is an authoring tool, so it opens with its panes, as the pivot screen does behind **Customize ›**
+([PIVOT_GUIDE.md section 2](PIVOT_GUIDE.md#2-the-screen), mode A); a reader of the report meets the visuals alone, as a pivot's reader meets
+the View picker and the compact line. The same field-list rules hold in both: a hierarchy is one item, a model's hidden fields are left
+out, measures sit in their display folders.
 
 ![The designer, with a report of two cards, a bar, a line and a slicer](img/bi-reports/design-two-visuals.png)
 

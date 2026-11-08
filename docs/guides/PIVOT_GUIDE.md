@@ -70,25 +70,61 @@ switch it with `drishti.engines.pivot.enabled` (on as shipped; `DRISHTI_PIVOT_EN
 
 ## 2. The screen
 
-The screen is Excel's PivotTable
-as people know it, with what Excel lacks in the places Excel's equivalents would be.
+The screen is Excel's PivotTable as people know it, with what Excel lacks in the places Excel's equivalents would be. It gives the grid
+most of the screen: the fields live behind pickers, not in a list beside it. One component draws every pivot (drishti-grid's wells,
+[ELEMENTS_API.md](ELEMENTS_API.md)): Views → Pivot, the MR and CCR cubes, the Pivot under a page's table and above search results all open this screen.
+
+**Three ways to hold the fields, one model.** The screen opens in the first; **Customize ›** (or `\`) moves between the line and the panes.
+
+| Mode | What you see | For |
+|---|---|---|
+| **Views** (C + B, the default) | the **View** picker first (ready-made layouts, *My views*, *Shared with me*, **Save view as…**), then the compact line | everyone: the first click answers the question |
+| **Compact** (B) | one line above the grid: `Rows [⋔ MGMT ▾ Desk › Book ▲▼] [Position ▾] + · Columns [Risk class ▾] + · Filters [Trade status ▾] + · Values VaR ▾ ES ▾ Comp VaR … ⋯ · Customize ›`; no field list on screen | a trader who reads the pivot |
+| **Panes** (A, behind Customize ›) | the grid on the left; **Build** (Rows, Columns, Values, Filters as lists, the switches) and **Fields** (search, Hierarchies, the fields by folder, the measures by folder, More fields) on the right, both closing to a 28 px rail (`»`) | building a new view, Power BI and Excel habits; the BI designer opens here |
+
+A preset (`mode:` in `config/pivot-presets.yaml`), a page's Sutra (`pivot: { mode: … }`) or the address (`/pivot?source=trade&mode=panes`)
+chooses how a pivot opens; your choice of the panes is kept in this browser under your name. Old addresses and saved views open as they
+did, in the default mode.
 
 | Part | What it does |
 |---|---|
-| Toolbar | Source, Date, Compare (another date, cell by cell), Subtotals (below or above), Chart (`G`), Export (`X`), Save view, Share |
-| Scan-estimate bar | what the view reads before it runs ("This pivot reads ≈2,000 rows (≈94 KB, 3 of 8 columns), ≈under a second."); a large one asks first, with **Run** |
-| The grid | rows in display order: a member with **+** (closed) or a header with **−** (open), its children indented, then its total (subtotals below; above puts the total on the member's own line); Others; the grand total. Columns × measures; a holistic measure's header carries **H**, an approximate figure **≈** |
-| Fields | every field you may use, with its type (string, date, number), and the source's own measures (VaR, ES); search with `/` |
-| Slicers | a strip above the grid: each slicer field's members as buttons (read from the engine, as you may see them); a button keeps or drops its member (a filter of the view), **All** clears it. Add one by dragging a field to **Slicers** or pressing `S` on it |
+| Header line | the short title (`MR cube · DESK-RATES 2026-11-06 · 1d 99% · USD`), the **i** (what the view reads and how the answer was computed: the scan estimate, the cells, the cache, the figures' unit), the lens's headline figures on the same line, help |
+| Toolbar | Source, Date, Compare (another date, cell by cell), Subtotals (below or above), Chart (`G`), Export (`X`), Save view, Share, Why, What-if, Functions |
+| Scan estimate | behind the **i**: what the view reads before it runs ("This pivot reads ≈2,000 rows (≈94 KB, 3 of 8 columns), ≈under a second."); a large one shows at once and asks first, with **Run** |
+| View picker (Views mode) | **VIEW By book ▾**: ready-made layouts (keys `1`–`9`), *My views*, *Shared with me*, **Save view as…** (Personal or Shared, `Ctrl+S`); a layout changed since its view was opened shows a dot and offers **Revert** ([section 11](#11-saved-and-shared-views-compare)) |
+| Rows, Columns, Filters | chips on the line (or lists in Build). A **hierarchy is one chip** (`⋔ MGMT ▾ Desk › Book`) with a level stepper: ▲ up a level, ▼ the next level (`Alt+↑`, `Alt+↓`). Any number of fields in each, nested in the order given. The well's name or **+** opens its picker |
+| Field picker | search, then **Hierarchies** (each one item; open it for its levels, each with a check), the fields by display folder, **More fields** (collapsed: the columns a hierarchy's levels are built from, the long tail). `↑↓` move, `→` levels, `Space` on or off, `Enter` use, `Esc` close; **Customize ›** in its foot |
+| Values | on the line, the lit toggles **are** the values, in order; the unlit measures are a click away and **⋯** opens the Values picker. Each value's **▾** sets its function, its show-as and more ([section 4](#4-measures-and-how-each-total-is-made)). The same field may be a value twice (Sum of PV and Count of PV side by side) |
+| The grid | rows in display order: a member with **+** (closed) or a header with **−** (open), its children indented, then its total (subtotals below; above puts the total on the member's own line); Others; the grand total. Each row label is shown in full (the row-header column is as wide as its labels, up to 460 px; its tooltip is the row's whole path). An empty member is **(Blank)**, muted, with a **?** that says the rows with no value are kept so every total is complete. Columns × measures; a holistic measure's header carries **H**, an approximate figure **≈** |
+| Figures | one number format per measure: every figure of a column in the unit its largest reaches (`74.63 m` beside `0.84 m`, never `938,400.00`); the unit is said once (the **i**); an empty cell is blank, never 0.00 |
+| Diversification | a non-additive measure's (VaR, ES) total is its own figure; where an open node's parts add up to more, its row says **diversification −29.24 m** (total − Σ parts, the engine's figure). Nothing is said where there is no gap |
+| Slicers | a strip above the grid: each slicer field's members as buttons (read from the engine, as you may see them); a button keeps or drops its member (a filter of the view), **All** clears it |
 | Conditional formats | on a value's chip: **colour scale** or **data bars**, drawn from the figures shown over the members' cells (never changing a figure), kept with the view |
-| Four zones | Filters, Columns, Rows, Values. Drag a field onto a zone, or select it and press `R`, `C`, `V` or `F`; double-click puts a number into Values and a text into Rows. A value's chip has a function picker (sum, count, avg, min, max, median, count_distinct, var_samp, stddev_samp) |
 | Provenance popover | click a cell: its figure, exact or ≈, the function and how its totals are made, the members counted, the condition (or VaR scope) that selects them, the data version, the filters, what was computed and what came from the cache, its reference; **Rows** lists the members, **Ask the VaR engine** opens the cell's scope in VAR |
 | Chart | a chart of the selected cells (or the top level), linked to the grid: a click on a bar opens that member |
 | Export | what (the pivot, the rows of the selected cell, the definition) and how (Excel, CSV, JSON Lines, Arrow) |
 
-Keyboard: arrows move between cells; `→` on a row's first cell opens it, `←` closes it; `Shift+→` opens every level below; `1` to `9`
-opens the whole row axis to that level; `E` expands the selected row by another field; `Enter` lists a cell's rows; `G` charts; `X`
-exports. The help line under the grid shows them.
+**Keyboard** (the line under the grid shows them; `?` lists every key of the screen):
+
+| Keys | What they do |
+|---|---|
+| `R` `C` `V` `F` | open the Rows, Columns, Values or Filters picker |
+| `Shift+V` | open the View picker; `1`–`9` in it pick a ready-made view, `Ctrl+S` saves |
+| `Alt+↑` `Alt+↓` | the first hierarchy in Rows a level up or down (the stepper's ▲ ▼) |
+| `\` | Customize: the panes, and back to the line |
+| `→` `←` | open or close a row (on its first cell); `Shift+→` opens every level below; `1`–`9` open the row axis to that level |
+| `E` | explain a figure (its provenance); `Shift+E` expands the selected row by another field |
+| `Enter` | a cell's rows |
+| `G` `X` `L` `M` | chart, export, live, a comment (in a figure's Explain) |
+| a chip: `Enter`, `Delete`, `Ctrl+←` `Ctrl+→` | its menu, remove it, move it in its well |
+
+The MR lens keeps its own keys: `H` the horizon, `[` `]` the previous or next date, `W` the what-if tray.
+
+![The trader view: the View picker, the compact line, the grid with most of the screen](img/pivot/pivot-fields-views.png)
+
+![The Rows picker: the hierarchies with their levels, the fields, More fields](img/pivot/pivot-fields-rows-picker.png)
+
+![The panes (Customize ›): Build and Fields](img/pivot/pivot-fields-panes.png)
 
 ## 3. Sources and fields
 
@@ -343,6 +379,32 @@ rows or the columns). The column header is the text as written; the raw figure s
 (`skewness`, `kurtosis`, `corr`, `slope`, `iqr`, `trimmean`, `mode`, `string_agg` …) are ordinary values:
 [FUNCTIONS.md](FUNCTIONS.md).
 
+### Choosing a function in the screen
+
+A value's **▾** (on the line, or on its chip in Build) offers, in plain words, **only the functions valid for its field**, as the source's
+catalogue says them (`GET /api/v1/pivot/catalogue`: each field's `functions`):
+
+| Field | Offered | Shown off, with the reason |
+|---|---|---|
+| a number (money, a count) | Sum, Count, Distinct count, Average, Weighted average…, Min, Max, Median, Percentile…, Variance, Std dev | none |
+| a rate or a percentage (`unit: rate`, `pct`) | the same without Sum | **Sum**: "a rate is never summed (an average or a weighted average is)" |
+| a text, a date, a hierarchy level | Count, Distinct count | **Sum**: "not a number: count it, or count its distinct values" |
+| a measure computed per cell (VaR, ES, Comp VaR, Limit use…) | no function: the menu says *computed per cell by the VaR engine from the cell's own trades; a total is never a sum of the cells (Σ − total = the diversification)* and offers the VaR options instead (horizon, confidence, scenario set: the view's options) | every function |
+
+**Weighted average…** asks for its weight (another number field: `wavg(PV, NOTIONAL)`); **Percentile…** for its quantile (p50, p90, p95,
+p99 or one typed: `percentile(PV, 0.99)`). **Custom ƒ…** opens the Rachana formula editor (a formula, `sum(PV) / sum(NOTIONAL)`, or a
+custom function, `wret(RET, W)`); the server checks it before it is used and says why when it cannot. The custom functions you may use
+([section 19](#19-custom-functions)) are listed as **ƒ name**. **Add another value of PV** puts the same field in Values again with
+another function, so Sum of PV and Count of PV stand side by side.
+
+![A value's menu: the functions valid for a number field, Custom ƒ…, Show value as](img/pivot/pivot-fields-value-menu.png)
+
+**Show value as** offers the forms the engine computes (the catalogue's `showAs`), and only those: % of grand total, % of row total, % of
+column total, % of parent row, Rank among siblings, Quartile among siblings, and, for each field on the rows or columns, *Difference from
+previous* and *% change vs previous* (`diff:1:<field>`, `pct-change:1:<field>`). A share of a measure that does not add up (VaR) is shown off,
+with the reason. Running totals are not a form of the engine and are not offered. The figure is computed by the server from the finished
+figures; the raw figure stays in the answer.
+
 ## 5. Nested rows, opened lazily
 
 Rows are levels. Only level one is computed at first; opening a member computes **its children only**: one statement for that node's
@@ -426,6 +488,36 @@ what, the format, the size), never its values.
 **Save view** keeps the definition (never the numbers) under your name, each save a new version; **Share** adds people or roles
 (`role:risk`). A reader opens a shared view with their own entitlements and masks. `PIVOT @owner/name <GO>` opens one.
 
+**The View picker** (`Shift+V`, the **VIEW** chip in front of the line) lists three kinds of view, with no store of its own:
+
+| Group | What | From |
+|---|---|---|
+| Ready-made (keys `1`–`9`) | the preset's layouts: the MR cube's *By risk class × desk* (its landing), *By desk*, *By book*, *By limit letter*, *Top contributors*, *Trades in my scope*; a source without a preset offers its *Default layout* | `views:` of the preset in `drishti-console/config/pivot-presets.yaml`; a view naming a field the source does not have (a hierarchy not configured) is left out |
+| My views | your saved views of this source | the saved views above |
+| Shared with me | the views others shared with you or your roles | the same |
+
+**Save view as…** names the layout (letters, digits and dashes are kept: *Desk morning* is saved as `desk-morning`) and saves it
+**Personal** or **Shared** (with people, or `role:risk`), `Ctrl+S`. A ready-made view is laid over the landing: the scope, the date and the
+lens's options you chose stay. When the layout changes after a view was opened, its chip shows a dot and the picker offers **Revert**.
+
+![The View picker: ready-made, my and shared views, Save view as…](img/pivot/pivot-fields-view-picker.png)
+
+A preset names the ready-made views and, with `view:`, the one it opens with:
+
+```yaml
+presets:
+  mr:
+    mode: views                      # views (the default), compact or panes
+    view: by-desk                    # optional: the ready-made view it opens with (default: the source's landing)
+    views:
+      - id: by-book
+        name: By book
+        detail: MGMT Desk › Book · VaR, ES, Limit use
+        rows: [MGMT.DESK, MGMT.BOOK]
+        values: [{measure: "var()", as: VaR}, {measure: "es()", as: ES}, {measure: "limit_use()", as: Limit use}]
+        expandTo: {rows: 2, columns: 1}
+```
+
 On a page's table, an author may **promote** the view to the Sutra (`POST /api/v1/pivot/promote` `{"sutra", "view", "note", "preview"}`):
 the Sutra's next version with the panel's `pivot:` arrangement, through review when review is on; a view the arrangement cannot say (a
 grouped date, a median, a filter that leaves values out) is refused in words and stays a saved view
@@ -470,7 +562,7 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | Call | Does |
 |---|---|
 | `GET /api/v1/pivot/sources` | the sources you may pivot |
-| `GET /api/v1/pivot/catalogue?source=&date=` | a source's fields, measures, functions, dates, masked count |
+| `GET /api/v1/pivot/catalogue?source=&date=` | a source's fields, measures, functions, dates, masked count; for the pickers each field's `group` (hierarchy, field, measure), `folder`, `hidden` (More fields), `hierarchy` and `functions` (those valid for it), each measure's `folder` and `perCell`, the source's `hierarchies` (`{id, title, levels: [{field, label}], columns}`) and `showAs` (the forms the engine computes) |
 | `POST /api/v1/pivot/query` | a view (or `{"view": "owner/name"}`) → its answer |
 | `POST /api/v1/pivot/estimate` | the scan estimate; nothing read |
 | `POST /api/v1/pivot/expand` | `{view, axis, path, by}`: the view with that node open; only its children computed |
@@ -1145,6 +1237,13 @@ A name that is not an option is refused in words.
 | string (derived) | `RISK_CLASS` | the configured classes, then `OTHER`; the scope is `WHERE:PRODUCT_GROUP in (…)` |
 | string (members) | `POSITION`, `TRADE` | each position (`POS:`), each trade (`TRD:`): the last levels of a drill |
 
+**In the pickers** each hierarchy is one item (the catalogue's `hierarchies`: `MGMT ▸ Division › Desk › Book`, `LEGAL ▸ Legal entity ›
+Desk › Book`, `LL ▸ Limit letter › Desk`, any other the VaR configuration names, and the members' drill `Positions ▸ Position › Trade`).
+The promoted columns a hierarchy's levels are built from (`DIVISION`, `DESK`, `TT_BOOK`, `LEGAL_ENTITY`, `LIMIT_LETTER`) are hidden from
+the plain list, under **More fields**, still usable. The measures sit in display folders: VaR (VaR, ES, Parametric VaR, Stressed VaR),
+Contribution (Comp VaR, Comp ES, Incr VaR), Limits (Limit, Limit use), Sensitivities (DV01, CS01, SBM capital) and Book (PV, Trades); each
+is computed per cell, so its value menu offers the VaR options rather than a function ([section 4](#choosing-a-function-in-the-screen)).
+
 The landing view (the catalogue's `defaultView`) puts the management hierarchy's desks on the rows, its lower levels then `POSITION` and
 `TRADE` beneath them (each opened when you open a node), and `RISK_CLASS` on the columns.
 
@@ -1168,10 +1267,10 @@ pivot screen on the VaR source with the MR lens, the pivot first, with tabs B an
 
 | Panel | What it shows |
 |---|---|
-| Headline strip | VaR of the scope (its rank of N), ES (mean of the worst), limit use with its bar (green under 80%, amber from it, red over 100%), **Σ rows − total** (the diversification), stressed VaR, the data (batches, intraday, data version, trades and positions) |
+| Headline figures | on the title's line, beside the short title (`MR cube · BANK 2026-11-06 · 1d 99% · USD`): VaR of the scope (its rank of N), ES (mean of the worst), limit use with its bar (green under 80%, amber from it, red over 100%), **Σ rows − total** (the diversification), stressed VaR, the data (batches, intraday, data version, trades and positions) |
 | Lens controls | the scope; the measure (VaR, ES, Comp VaR, DV01, SBM: one not running here is greyed); horizon 1D, 10D √10, 10D sum; confidence; scenario set; currency. Each changes the view's options and the engine answers again |
 | Time-travel slider | the business dates with an official record, open on this server or held by the lake (official ones dotted); a click: *as of*; shift-click: *compare* (explain's earlier date); `[` and `]` step |
-| Pivot | the pivot engine's grid: nested rows opened with + and −, *expand by…* per node, the field list and its zones, each cell a sparkline of the first measure over the open dates |
+| Pivot | the pivot engine's grid: nested rows opened with + and −, *expand by…* per node, the View picker and the compact line ([section 2](#2-the-screen)): MGMT as one chip with its stepper, the lit measure toggles as the values; the panes behind Customize ›; each cell a sparkline of the first measure over the open dates |
 | Rail | the clicked cell's tail histogram (V and E), explain the move, the sparklines' note |
 
 Click a cell to fill the rail and see its provenance; `→` opens a row (desk → book → position → trade), `E` expands a node by another field,

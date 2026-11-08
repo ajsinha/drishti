@@ -1110,6 +1110,7 @@ pivot:                          # the fields on offer, and the arrangement the p
 | `filters` | none | Fields offered as filters: a name (every value kept), `{ field, values: [USD, EUR] }` (only those values) or `{ field, min, max }` (an inclusive range of numbers, or of ISO dates written as text). Not both `values` and a range. |
 | `heat` | `false` | Kept for the arrangement; the pivot screen's conditional formats replace it. |
 | `chart` | none | Kept for the arrangement; the pivot screen charts a selection (`G`). |
+| `mode` | `views` | How the pivot screen opens it ([PIVOT_GUIDE.md section 2](PIVOT_GUIDE.md#2-the-screen)): `views` (the View picker in front of the compact line), `compact` (the compact line alone) or `panes` (the Fields and Build panes). A promoted view keeps its mode. |
 | `totals` | `true` | Kept for the arrangement; the pivot screen always shows the totals, each made from its own rows. |
 
 With `pivot: true`, or a mapping without `fields`, the fields are the panel's columns: a column bound to a row path (`"@.MTM"`) is named

@@ -12,13 +12,13 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures of the pivot screen (PIVOT_GUIDE.md, tutorial 7, Part A) from the stand-in server's synthetic trades (not a test: run it
-by hand).
+"""Makes the pictures of the pivot screen (PIVOT_GUIDE.md section 2, tutorial 7, Part A) from the stand-in server's synthetic trades (not a
+test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/pivot_shots.py [pictures dir]
 
-Default folder: docs/guides/img/pivot. The screen by desk in the Terminal theme (dark), desk by currency in the light theme, and the
-export panel."""
+Default folder: docs/guides/img/pivot. The screen as it opens (the View picker in front of the compact line) in the Terminal theme, the
+Rows picker, a value's functions, the View picker and the panes behind Customize."""
 import sys
 from pathlib import Path
 
@@ -45,19 +45,30 @@ def main(out: Path) -> None:
             page.goto(url + "/pivot?source=trade", wait_until="load")
             page.wait_for_selector("[data-pv-grid] .dg-cell[data-cell]")
             theme(page, "terminal")
-            page.screenshot(path=str(out / "pivot-screen-terminal.png"))
-            print(out / "pivot-screen-terminal.png")
-            theme(page, "light")
-            page.click(".dg-fields .dg-chip[data-field='CURRENCY'] .dg-chip-menu")
-            page.click(".dg-menu [data-action='to:columns']")
-            page.wait_for_selector("[data-pv-grid] .dg-hcell.dg-hgroup")
-            page.wait_for_timeout(200)
-            page.screenshot(path=str(out / "pivot-screen-columns-light.png"))
-            print(out / "pivot-screen-columns-light.png")
-            page.click("[data-pv-export-open]")
+            page.screenshot(path=str(out / "pivot-fields-views.png"))
+            page.locator("[data-pv-title]").click()
+            page.keyboard.press("r")
+            page.wait_for_selector(".di-fp-pop")
             page.wait_for_timeout(150)
-            page.locator("section[data-pv-export]").screenshot(path=str(out / "pivot-export-panel.png"))
-            print(out / "pivot-export-panel.png")
+            page.screenshot(path=str(out / "pivot-fields-rows-picker.png"))
+            page.keyboard.press("Escape")
+            page.click(".dg-zone[data-well='values'] .dg-vchip[data-field='NOTIONAL'] .dg-chip-menu")
+            page.wait_for_timeout(150)
+            page.screenshot(path=str(out / "pivot-fields-value-menu.png"))
+            page.keyboard.press("Escape")
+            page.locator("[data-pv-title]").click()
+            page.keyboard.press("Shift+V")
+            page.wait_for_selector(".dg-views-pop .di-option")
+            page.wait_for_timeout(150)
+            page.screenshot(path=str(out / "pivot-fields-view-picker.png"))
+            page.keyboard.press("Escape")
+            page.locator("[data-pv-title]").click()
+            page.keyboard.press("\\")
+            page.wait_for_selector("[data-pv-grid] .dg-fieldpane")
+            page.wait_for_timeout(200)
+            page.screenshot(path=str(out / "pivot-fields-panes.png"))
+            for n in ("pivot-fields-views", "pivot-fields-rows-picker", "pivot-fields-value-menu", "pivot-fields-view-picker", "pivot-fields-panes"):
+                print(out / (n + ".png"))
             browser.close()
     finally:
         stop()
