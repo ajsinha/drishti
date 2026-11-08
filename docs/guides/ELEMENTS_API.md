@@ -7394,7 +7394,7 @@ Returns `void`.
 
 #### class `Select`
 
-A single-choice select with keyboard, type-ahead and search. Events: change {value, option}, open, close.
+A single-choice select with keyboard, type-ahead and search. Events: change {value, option} (the value changed), pick {value, option} (a person picked, the same value too), open, close.
 
 ##### `new Select(host, options)`
 
