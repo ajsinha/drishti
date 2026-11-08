@@ -25,11 +25,11 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
 | [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-inputs](#drishti-inputs) | 0.3.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
-| [drishti-designer](#drishti-designer) | 0.1.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
+| [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
 | [drishti-graph](#drishti-graph) | 0.1.0 | The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel |
-| [drishti-tree](#drishti-tree) | 0.1.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, export, keyboard and ARIA |
+| [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
 | [drishti-insight](#drishti-insight) | 0.1.0 | Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export |
 | [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself |
 | [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-tree, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
@@ -8827,7 +8827,7 @@ A visible row of the tree.
 
 ## drishti-designer
 
-Version 0.1.0. Bundle `static/elements/drishti-designer/drishti_designer.js`, global `Drishti.elements.designer`; requires drishti-core, drishti-inputs.
+Version 0.2.0. Bundle `static/elements/drishti-designer/drishti_designer.js`, global `Drishti.elements.designer`; requires drishti-core, drishti-inputs, drishti-tree.
 
 ### drishti_commands.js
 
@@ -9972,11 +9972,11 @@ The problems of the fields shown, in words, by path.
 
 Returns `Object&lt;string, string&gt;`.
 
-### drishti_outline.js
+### drishti_tree-outline.js
 
 #### `flattenTree(nodes, closed)`
 
-The nodes as visible rows (depth first), with their level, parent and position.
+Nested nodes as visible rows (depth first), with their level, parent and position.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -9987,7 +9987,7 @@ Returns `Array&lt;{node: OutlineNode, level: number, parent: ?string, index: num
 
 #### `findNode(nodes, id)`
 
-Where a node is: its parent's id (null at the top), its list and its index.
+Where a nested node is: its parent's id (null at the top), its list and its index.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -10010,7 +10010,7 @@ Returns `boolean`.
 
 #### `moveNode(nodes, id, target, where)`
 
-A node moved before or after another, or inside it (as its last child): a new tree (the given one is not changed), or null when the move is impossible (onto itself, or into its own branch).
+A nested node moved before or after another, or inside it (as its last child): a new tree (the given one is not changed), or null when the move is impossible (onto itself, or into its own branch).
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -10023,18 +10023,18 @@ Returns `?OutlineNode[]`.
 
 #### class `Outline`
 
-The outline. Events: move {id, target, where, parent}, open {id}, toggle {id, open}.
+The outline: a hierarchy as a compact tree grid (a Tree without its chrome), with marks, a hiding filter, a tree's keys and a detail; for a designer, a Selection followed both ways and moves by drag or Alt+arrows. Its rows carry data-node (the node's id) and the host's data-* attributes. Events (on): move {id, target, where, parent}, open {id} (Enter on a node without children, a double click), toggle {id, open}.
 
-##### `new Outline(el, o)`
+##### `new Outline(host, options)`
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `el` | `HTMLElement` |  |
-| `o` | `{nodes: OutlineNode[], selection: import('./drishti_selection.js').Selection, label: string, canDrop: function(string, string, string): (boolean\|string), readOnly: boolean}` | canDrop(id, target, where): true, false, or why not in words |
+| `host` | `HTMLElement` | the element the outline fills |
+| `options` | `OutlineOptions` |  |
 
 ##### `Outline.on(name, fn)`
 
-Listens to one of its events; answers the function that stops listening.
+Listens to one of its events (move, open, toggle); answers the function that stops listening.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -10045,7 +10045,7 @@ Returns `function(): void`.
 
 ##### `Outline.setNodes(nodes)`
 
-New nodes (the design changed).
+New nested nodes (the design changed): the open state kept, the filter applied again, the selection shown.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -10053,20 +10053,89 @@ New nodes (the design changed).
 
 Returns `void`.
 
-##### `Outline.toggle(id, open)`
+##### `Outline.setData(data)`
 
-Opens or closes a branch.
+New data: the open state kept for the nodes still there (opened by openDepth when none is), the filter applied again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `data` | `import('./drishti_tree-model.js').HierarchySource` |  |
+
+Returns `void`.
+
+##### `Outline.filter(q)`
+
+Keeps the nodes whose words hold the query and the nodes above them (an empty query: every node); their branches open.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+
+Returns `string[]`: the ids of the matching nodes.
+
+##### `Outline.expandAll()`
+
+Opens every node.
+
+Returns `void`.
+
+##### `Outline.collapseAll()`
+
+Closes every node: the top level shows.
+
+Returns `void`.
+
+##### `Outline.nodeAt(el)`
+
+The node of an element inside the outline (a row's cell, its marks), for a host's drag or menu.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `?Element` |  |
+
+Returns `?import('./drishti_tree-model.js').TreeNode`.
+
+##### `Outline.shownIds()`
+
+The ids of the rows shown, top to bottom.
+
+Returns `string[]`.
+
+##### `Outline.focusedId()`
+
+The focused node's id (the grid's focus), or null.
+
+Returns `?string`.
+
+##### `Outline.focusNode(id)`
+
+Moves the grid's focus to a node's row.
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `id` | `string` |  |
-| `[open]` | `boolean` | default: the other way |
+
+Returns `void`.
+
+##### `Outline.showDetail(id)`
+
+Shows a node's detail under the tree (the detail option); nothing when the node has none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `boolean`: whether a detail shows.
+
+##### `Outline.closeDetail()`
+
+Closes the detail.
 
 Returns `void`.
 
 ##### `Outline.requestMove(id, target, where)`
 
-Asks for a move (the host's canDrop decides; the "move" event asks the host to do it).
+Asks for a move: the host's canDrop decides, the "move" event asks the host to do it (the outline changes when the host gives it the new nodes).
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -10078,7 +10147,7 @@ Returns `boolean`: whether it was asked.
 
 ##### `Outline.destroy()`
 
-Stops following the selection.
+Takes the outline down.
 
 Returns `void`.
 
@@ -10860,21 +10929,6 @@ A rectangle in grid units.
 | `y` | `number` | first row (0-based) |
 | `w` | `number` | columns |
 | `h` | `number` | rows |
-
-#### `OutlineNode` : `Object`
-
-A node of the outline.
-
-| Name | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-| `label` | `string` |  |
-| `[detail]` | `string` | a short note after the label (its kind, "opens on a click") |
-| `[icon]` | `string` |  |
-| `[children]` | `OutlineNode[]` |  |
-| `[fixed]` | `boolean` | cannot be dragged (a heading, a "drop here" row: still a place to drop on) |
-| `[cls]` | `string` | more classes on its row (the host's look: a drop row, a heading) |
-| `[attrs]` | `Object&lt;string, string&gt;` | the host's own data-* attributes on its row (its selectors: data-panel="trades"); other names are left out, the row's role and state stay the outline's |
 
 #### `PaletteEntry` : `Object`
 
@@ -14372,7 +14426,7 @@ One line of a command's answer.
 
 ## drishti-tree
 
-Version 0.1.0. Bundle `static/elements/drishti-tree/drishti_tree.js`, global `Drishti.elements.tree`; requires drishti-core, drishti-grid.
+Version 0.2.0. Bundle `static/elements/drishti-tree/drishti_tree.js`, global `Drishti.elements.tree`; requires drishti-core, drishti-grid.
 
 ### drishti_tree-model.js
 
@@ -15286,9 +15340,66 @@ What a key does on an outline's focused node: keyMove's tree keys, with Enter an
 
 Returns `?{to: string, act: ('focus'\|'open'\|'close'\|'detail')}`.
 
+#### `flattenTree(nodes, closed)`
+
+Nested nodes as visible rows (depth first), with their level, parent and position.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+| `[closed]` | `Set&lt;string&gt;` | the ids of closed branches |
+
+Returns `Array&lt;{node: OutlineNode, level: number, parent: ?string, index: number, size: number}&gt;`.
+
+#### `findNode(nodes, id)`
+
+Where a nested node is: its parent's id (null at the top), its list and its index.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+| `id` | `string` |  |
+
+Returns `?{parent: ?string, list: OutlineNode[], index: number, node: OutlineNode}`.
+
+#### `isWithin(nodes, id, of)`
+
+Whether `id` is `of` or inside it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+| `id` | `string` |  |
+| `of` | `string` |  |
+
+Returns `boolean`.
+
+#### `moveNode(nodes, id, target, where)`
+
+A nested node moved before or after another, or inside it (as its last child): a new tree (the given one is not changed), or null when the move is impossible (onto itself, or into its own branch).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+| `id` | `string` |  |
+| `target` | `string` |  |
+| `where` | `('before'\|'after'\|'inside')` |  |
+
+Returns `?OutlineNode[]`.
+
+#### `nodesSource(nodes)`
+
+Nested nodes as an outline's hierarchy: rows naming their parent, each keeping its node's own fields (its children left out).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+
+Returns `import('./drishti_tree-model.js').HierarchySource`.
+
 #### class `TreeOutline`
 
-The outline: a hierarchy as a compact tree grid (a Tree without its chrome), with marks, a hiding filter, a tree's keys and a detail.
+The outline: a hierarchy as a compact tree grid (a Tree without its chrome), with marks, a hiding filter, a tree's keys and a detail; for a designer, a Selection followed both ways and moves by drag or Alt+arrows. Its rows carry data-node (the node's id) and the host's data-* attributes. Events (on): move {id, target, where, parent}, open {id} (Enter on a node without children, a double click), toggle {id, open}.
 
 ##### `new TreeOutline(host, options)`
 
@@ -15296,6 +15407,27 @@ The outline: a hierarchy as a compact tree grid (a Tree without its chrome), wit
 |---|---|---|
 | `host` | `HTMLElement` | the element the outline fills |
 | `options` | `OutlineOptions` |  |
+
+##### `TreeOutline.on(name, fn)`
+
+Listens to one of its events (move, open, toggle); answers the function that stops listening.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`.
+
+##### `TreeOutline.setNodes(nodes)`
+
+New nested nodes (the design changed): the open state kept, the filter applied again, the selection shown.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `OutlineNode[]` |  |
+
+Returns `void`.
 
 ##### `TreeOutline.setData(data)`
 
@@ -15376,6 +15508,18 @@ Returns `boolean`: whether a detail shows.
 Closes the detail.
 
 Returns `void`.
+
+##### `TreeOutline.requestMove(id, target, where)`
+
+Asks for a move: the host's canDrop decides, the "move" event asks the host to do it (the outline changes when the host gives it the new nodes).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `target` | `string` |  |
+| `where` | `('before'\|'after'\|'inside')` |  |
+
+Returns `boolean`: whether it was asked.
 
 ##### `TreeOutline.destroy()`
 
@@ -15553,7 +15697,8 @@ The options of an outline.
 
 | Name | Type | Meaning |
 |---|---|---|
-| `data` | `import('./drishti_tree-model.js').HierarchySource` | the hierarchy (rows with parents, a nested root, or paths) |
+| `[data]` | `import('./drishti_tree-model.js').HierarchySource` | the hierarchy (rows with parents, a nested root, or paths) |
+| `[nodes]` | `OutlineNode[]` | or the hierarchy as nested nodes (a designer's structure); neither: an empty outline (setNodes later) |
 | `[title='Node']` | `string` | the grid's heading |
 | `[label]` | `string` | its name for a screen reader (default: the title) |
 | `[density='compact']` | `('comfortable'\|'compact'\|'terminal')` |  |
@@ -15565,6 +15710,21 @@ The options of an outline.
 | `[text]` | `function(import('./drishti_tree-model.js').TreeNode): string` | the words a filter looks in (default: label, id, kind) |
 | `[detail]` | `function(import('./drishti_tree-model.js').TreeNode, HTMLElement): (string[]\|void)` | a node's detail: lines of text to show, or nothing after filling the box itself; no lines and an empty box: the node has no detail |
 | `[onKey]` | `function(import('./drishti_tree-model.js').TreeNode, KeyboardEvent): boolean` | the host's keys on the focused node, before the outline's (true: handled) |
+
+#### `OutlineNode` : `Object`
+
+A nested node of an outline (OutlineOptions.nodes).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `label` | `string` |  |
+| `[detail]` | `string` | a short note after the label (its kind, "opens on a click"): a muted mark |
+| `[icon]` | `string` | the classes of an icon before the label |
+| `[children]` | `OutlineNode[]` |  |
+| `[fixed]` | `boolean` | cannot be dragged (a heading, a "drop here" row: still a place to drop on) |
+| `[cls]` | `string` | more classes on its row (the host's look: a drop row, a heading) |
+| `[attrs]` | `Object&lt;string, string&gt;` | the host's own data-* attributes on its row (its selectors: data-panel="trades"); other names are left out, the row's role and state stay the outline's |
 
 #### `TableTreeRow` : `Object`
 

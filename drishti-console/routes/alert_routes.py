@@ -113,7 +113,7 @@ def body_from(f: dict) -> dict:
     body = {"title": f.get("title", "").strip(), "severity": f.get("severity", "warn"), "source": source, "condition": cond, "trigger": trigger,
             "delivery": {"inbox": f.get("d_inbox") == "on", "email": f.get("d_email") == "on", "bridge": f.get("d_bridge") == "on",
                          "webhooks": sorted(k[2:] for k, v in f.items() if k.startswith("w_") and v == "on"), "sms": f.get("d_sms") == "on"},
-            "enabled": f.get("enabled", "on") == "on"}
+            "enabled": f.get("enabled") == "on"}                      # a checkbox: an unchecked one is not sent, so a missing field is off
     if (h := _num(f.get("hysteresis", ""))) is not None:
         body["hysteresis"] = h
     if f.get("cooldown", "").strip():

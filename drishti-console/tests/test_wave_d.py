@@ -137,12 +137,23 @@ def test_the_history_shows_the_narrative_outcome_and_the_channel_of_each_deliver
     assert "summary: written" in page and "webhook:ops · sent (attempt 2)" in page and "summary: skipped: the AI policy lets the model see labels only" in page
 
 
+def _alert_schema(page: str) -> dict:
+    """The alert form's schema and value as the page hands them to drishti-inputs' Form."""
+    import html
+    import json
+    import re
+    m = re.search(r'data-alert-fields data-schema="([^"]*)"', page)
+    assert m, "the page carries the form's schema"
+    return json.loads(html.unescape(m.group(1)))
+
+
 def test_the_alert_form_offers_webhooks_and_texts_and_sends_them(client, backend):
     backend.alerts_kept.clear()
     backend.phones_set.clear()
     backend.notify_kept = {"webhooks": ["ops"], "sms": {"configured": True, "maxChars": 160, "phone": ""}}
     page = client.get("/alerts/new", params={"source": "visual", "report": "file:report:daily", "page": "main", "visual": "net"}).text
-    assert 'name="w_ops"' in page and 'name="d_sms"' in page and 'name="phone"' in page and "no number" in page
+    to = _alert_schema(page)["schema"]["properties"]["deliver"]["properties"]                                # the form's schema (core/alert_form.py)
+    assert to["w_ops"]["name"] == "w_ops" and to["d_sms"]["name"] == "d_sms" and to["phone"]["name"] == "phone" and "no number" in page
     base = {"name": "Net", "severity": "warn", "source_type": "visual", "report": "file:report:daily", "page": "main", "visual": "net", "reduce": "first", "condition_type": "threshold",
             "op": "above", "value": "1000", "trigger_mode": "schedule", "schedule": "hourly", "d_inbox": "on", "enabled": "on", "w_ops": "on", "d_sms": "on", "phone": "+15551234567"}
     r = client.post("/alerts/new", content=urlencode(base), headers=FORM, follow_redirects=False)

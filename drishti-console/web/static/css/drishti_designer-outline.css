@@ -20,10 +20,10 @@
 .ol-wrap { display: grid; grid-template-columns: minmax(18rem, 26rem) minmax(0, 1fr); gap: var(--d-sp-16); align-items: start; }
 .ol-left { display: flex; flex-direction: column; gap: var(--d-sp-11_2); min-width: 0; }
 .ol-tree { border: 1px solid var(--d-border); border-radius: var(--d-radius-12); background: var(--d-surface); padding: var(--d-sp-8); }
-.ol-tree .dd-node.ol-sec { font-size: var(--d-fs-14_4); color: var(--d-ink); }
-.ol-tree .dd-node.ol-sec > .dd-node-label { font-weight: 600; }
-.ol-tree .dd-node.ol-nest { color: var(--d-muted); font-size: var(--d-fs-12_48); border: 1px dashed var(--d-border); margin: var(--d-sp-2_4) 0; }
-.ol-tree .dd-dragging .dd-node.ol-nest { border-color: var(--d-accent); color: var(--d-ink); }
+.ol-tree .dg-row.ol-sec .dt-oname { font-weight: 600; color: var(--d-ink); }
+.ol-tree .dg-row.ol-nest .dt-oline { color: var(--d-muted); font-size: var(--d-fs-12_48); font-style: italic; }
+.ol-tree .dg-row.ol-nest > .dg-cell { box-shadow: inset 0 0 0 1px var(--d-border); }
+.ol-tree .dt-dragging .dg-row.ol-nest > .dg-cell { box-shadow: inset 0 0 0 1px var(--d-accent); }
 .ol-add { align-self: flex-start; }
 .ol-detail { border: 1px solid var(--d-border); border-radius: var(--d-radius-12); background: var(--d-surface); padding: var(--d-sp-12_8); display: flex; flex-direction: column; gap: var(--d-sp-9_6); }
 .ol-what { margin: 0; color: var(--d-ink); }

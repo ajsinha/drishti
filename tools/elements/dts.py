@@ -335,15 +335,16 @@ def declarations(name: str, entry: Path, spec_of: Callable[[str], str]) -> str:
         if sym in typedefs:
             continue
         text = module.read_text(encoding="utf-8") if module.is_file() else ""
+        own = ref.declared(sym, module)                              # re-exported under another name: TreeOutline as Outline
         found = None
         for m in ref.DOC_DECL.finditer(text):
-            if sym in (m.group(4), m.group(6), m.group(7)) and not m.group(1).count("/**"):
+            if own in (m.group(4), m.group(6), m.group(7)) and not m.group(1).count("/**"):
                 found = m
                 break
         if not found:
-            if re.search(r"\bclass\s+" + re.escape(sym) + r"\b", text):
+            if re.search(r"\bclass\s+" + re.escape(own) + r"\b", text):
                 out.append(f"export declare class {sym} {{ constructor(...args: any[]); [member: string]: any; }}")
-            elif re.search(r"\bfunction\s*\*?\s*" + re.escape(sym) + r"\b", text):
+            elif re.search(r"\bfunction\s*\*?\s*" + re.escape(own) + r"\b", text):
                 out.append(f"export declare function {sym}(...args: any[]): any;")
             else:
                 out.append(f"export declare const {sym}: any;")
@@ -356,7 +357,7 @@ def declarations(name: str, entry: Path, spec_of: Callable[[str], str]) -> str:
             ret = ts_type(t["returns"], known) if t["returns"] is not None else "void"
             out.append(f"export declare function {sym}({params_ts(t['params'], args, known)}): {ret};")
         elif cls:
-            ext = re.search(r"\bclass\s+" + re.escape(sym) + r"\s+extends\s+([\w$.]+)", text)
+            ext = re.search(r"\bclass\s+" + re.escape(own) + r"\s+extends\s+([\w$.]+)", text)
             base = known(ext.group(1)) if ext else None
             out.append(f"export declare class {sym}{' extends ' + base if base and not base.startswith('import(') else ''} {{")
             body = ref.class_body(text, found.end())

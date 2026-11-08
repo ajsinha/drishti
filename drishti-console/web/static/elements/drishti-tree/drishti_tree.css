@@ -169,5 +169,14 @@
 .dt-tone-bad { color: var(--d-bad); }
 .dt-detail { margin-top: 6px; padding: 5px 9px; border-left: 3px solid var(--d-accent); background: var(--d-surface); color: var(--d-ink); font-size: 0.95em; overflow-wrap: anywhere; }
 .dt-detail .dt-line { margin: 2px 0; }
+.dt-oname.dt-plain { font-family: inherit; font-weight: 500; }
+.dt-oicon { color: var(--d-muted); }
+.dt-mark.dt-odetail { font-size: 0.85em; }
+/* a designer's outline: the picked rows, the moves' drop marks */
+.dt-outline .dg-row.dt-picked > .dg-cell { background: var(--d-accent-tint); }
+.dt-outline-tree.dt-dragging, .dt-outline-tree.dt-dragging * { cursor: grabbing; user-select: none; }
+.dt-outline .dg-row.dt-drop-before > .dg-cell { box-shadow: inset 0 2px 0 var(--d-accent); }
+.dt-outline .dg-row.dt-drop-after > .dg-cell { box-shadow: inset 0 -2px 0 var(--d-accent); }
+.dt-outline .dg-row.dt-drop-inside > .dg-cell { background: var(--d-surface-2); box-shadow: inset 0 0 0 1px var(--d-accent); }
 
 @media (max-width: 760px) { .dt-body { grid-template-columns: minmax(0, 1fr); } .dt-side { border-left: 0; border-top: 1px solid var(--d-border); } }
