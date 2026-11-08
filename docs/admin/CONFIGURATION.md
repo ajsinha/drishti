@@ -5580,7 +5580,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `trading.match-records` | boolean | `true` |  | an edition (server and console) | fall back to a matching trader record (TRADER\_ID = TRDR-&lt;USER&gt;, or the same NAME) | restart |  | admin |
 | `trading.landing-by-role` | map | `{ desk-head: desk, trader: trader }` |  | an edition (server and console) | the same {role: landing} hook for the trading role: below the person's own choice | restart |  | admin |
 | `trading.live-statuses` | list | `[NEW, VALIDATED, AMENDED]` |  | an edition (server and console) | a trade counts in DV01, top lists and the check when its status is one of these | restart |  | admin |
-| `trading.near-limit` | number | `0.8` |  | an edition (server and console) | a book at or above this share of its VaR limit is "near limit"; above 1 it breaches | restart |  | admin |
+| `trading.near-limit` | number | `0.8` |  | an edition (server and console) | a book at or above this share of its VaR limit is "near limit"; above 1 it breaches (the new-trade check's counterparty half: the exposure engine's limit-near) | restart |  | admin |
 | `trading.limit-days` | integer | `5` |  | an edition (server and console) | the Desk head's limit use by book: this many business dates (the official records) | restart |  | admin |
 | `trading.pnl-var-days` | integer | `60` |  | an edition (server and console) | the Desk head's P&amp;L against VaR: this many days of the desk's official history | restart |  | admin |
 | `trading.max-rows` | integer | `20000` |  | an edition (server and console) | the most trade valuations read per date for a scope (more: the figures say partial) | restart |  | admin |

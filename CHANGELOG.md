@@ -74,6 +74,9 @@
   what-if (the profile overlay with the limit and the incremental PFE per tenor on drishti-chart through drishti-risk; the figures and the
   table by tenor on drishti-grid). Every number is the server's; a typed command checks at once; a phone layout; gone with the banking
   module. The registry item `pre-deal-screen` is retired.
+- **The Trading landing's new-trade check takes the counterparty's state from the server**: fits, near or breaches is the pre-deal
+  answer's limit status (`within`, `near` from the engine's `limit-near`, `breach`); the console no longer applies `trading.near-limit`
+  to it (that setting now serves the VaR half and the books only).
 - **One way to check a trade**: the exposure explorer's Pre-deal tab, its form and the console's what-if proxy (`POST /api/exposure/what-if`)
   are removed; the tab's address (`/exposure?scope=…&tab=predeal`) opens the check at that counterparty or netting set. The API and
   `drishti.py exposure whatif` keep the what-if alone.

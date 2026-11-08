@@ -835,7 +835,7 @@ async def check(backend, me, scope: Scope, cfg: dict, body: dict) -> dict:
     near = _share(cfg, "near-limit", 0.8)
     label = f"{product} {notional:,.0f} with {cp}"
     var_t = asyncio.create_task(_var_check(backend, me, book, tid, factor, label, near))
-    exp_t = asyncio.create_task(_exposure_check(backend, me, cp, tid, t, factor, notional, sign, label, near))
+    exp_t = asyncio.create_task(_exposure_check(backend, me, cp, tid, t, factor, notional, sign, label))
     v = await var_t
     x = await exp_t
     return {"ok": True, "template": {"trade": tid, "product": product, "notional": base_notional, "book": t.get("PORTFOLIO"),
@@ -862,12 +862,16 @@ async def _var_check(backend, me, book: str | None, tid: str, factor: float, lab
             "engine": w.get("engine"), "note": w.get("note")}
 
 
-async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float, notional: float, sign: float, label: str,
-                          near: float) -> dict:
+#: the pre-deal answer's limit status (the server's: within, near from its limit-near, breach) as the landing's states
+EXPOSURE_STATES = {"within": "ok", "near": "near", "breach": "breach"}
+
+
+async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float, notional: float, sign: float, label: str) -> dict:
     """The exposure engine's pre-deal check on the counterparty (``POST /api/v1/risk/exposure/predeal``, EXPOSURE_GUIDE.md section 18.9): the
     copy's paths on the date's run, exact (``LIKE`` the template); when the copy has no paths on the run, the same check described (asset
     class, notional, maturity), the engine's conservative proxy, which only refers. The decision, the limit use and every figure are the
-    server's; here only ``near`` (a display share) is applied to an approval."""
+    server's, the state too: a decline is a breach, a referral a referral, an approval the limit's status as the server says it (within,
+    near from the engine's ``limit-near``, breach); no limit applied: ``none``."""
     side = "reverse" if sign < 0 else "same"
     body = {"counterparty": cp, "like": tid, "notional": notional, "side": side}
     a, why, code = await _ask(risk_api.exposure, backend, "POST", "/predeal", me, body=body)
@@ -887,7 +891,7 @@ async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float
         return {"state": "unavailable", "scope": f"CPTY:{cp}", "reason": why, "code": code}
     lim = a.get("limit") if isinstance(a.get("limit"), dict) else {}
     decision = a.get("decision")
-    state = {"decline": "breach", "refer": "refer"}.get(decision) or limit_state(_num(lim.get("useAfter")), near)
+    state = {"decline": "breach", "refer": "refer"}.get(decision) or EXPOSURE_STATES.get(str(lim.get("status") or ""), "none")
     method = a.get("method") or {}
     base, wth = (a.get("exposure") or {}).get("base") or {}, (a.get("exposure") or {}).get("with") or {}
     return {"state": state, "decision": decision, "reason": a.get("reason"), "reasons": a.get("reasons") or [], "checkId": a.get("checkId"),
