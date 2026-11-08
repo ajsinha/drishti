@@ -1450,6 +1450,8 @@ drishti.py var baskets import baskets.yaml                    # the diff: add, c
 drishti.py var baskets import baskets.yaml --apply            # writes the adds and changes (the permission var:system-baskets), audited
 ```
 
+From a script, the API token needs the scope `risk:system-baskets` (its user still needs the permission).
+
 ```yaml
 system-baskets:
   - id: PF-RATES-DESK
