@@ -25,6 +25,14 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
 
 ### Drishti Elements, and one way for each job (2.9.11.e)
 
+- **Security: one name, one definition across the domain folders.** A table or model defined twice (`config/tables/bi/` and
+  `config/tables/banking/`, or a file and a stored item), a BI file of one id in two folders (`reports/` and `reports/banking/`, the same
+  for notebooks, Python items, tables and models) and a pack in two domain folders of one packs root are **refused, both**: neither is
+  read, never one picked (the server had used the last one read, so a report could read a second `trades-basic` model without the row
+  rules and masks of the first). The table layer's check says `DRS-9610 ... is defined twice: <file> and <file>; neither is read`; the
+  BI folder lists each refused file under Health › BI problems and Admin › Artifacts; a pack named twice stops the server at start
+  (and keeps its last good version on a hot reload, with the problem on Health) naming both folders. The Python resolver
+  (`core/pack_paths.py`) refuses the same, and the shipped packs are checked to hold each name once.
 - **Fixed: a Form's Select with an `aria-label` hook names its combobox** (drishti-inputs): the label went onto the `<drishti-select>`
   element as well, so one field was two labelled things (the Build workbench's enumerated options, the BI tile pickers).
 - **Fixed: an embedded live report follows its live tables again**: the server describes a report's model by its `datasets` (each with
