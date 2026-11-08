@@ -1071,9 +1071,9 @@ filter box: `treeTables(scope, {address})` takes the host's page address (`read(
 writes `?tf.<panel id>=<words>`, so a reload or a shared link shows the same rows (not inside `<drishti-view>`: the host's address is
 not touched).
 
-**Touch.** drishti-grid draws rows that open and close (a tree, groups, a pivot) 44 px high (inside the row line) on a touch screen (`pointer: coarse`) or
-a phone (`data-phone`), with the twisty 44 px wide: a target a finger can hit, for every tree on the grid. Other grids keep their
-density's height.
+**Touch.** drishti-grid draws rows that open and close (a tree, groups, a pivot) 44 px high (inside the row line) on a touch screen (`pointer: coarse`:
+a phone, a tablet), with the twisty 44 px wide: a target a finger can hit, for every tree on the grid. Not by width alone: a narrow
+panel on a desktop (the VaR scope tree) is not a touch screen. Other grids keep their density's height.
 
 **Tests.** Node: `tests/elements/graph.test.mjs` (13: the model, paths, layers, every layout and the timings, the scene, encodings,
 hit testing, export, the terminal's commands and completion, the lineage, the panel options, the bundle) and

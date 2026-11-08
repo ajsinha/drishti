@@ -234,10 +234,15 @@ def test_the_partitions_sized_by_an_additive_measure_with_their_table_and_zoom(b
     run(browsers, body, f"view={mode}")
 
 
-def test_on_a_phone_the_twisty_is_a_finger_sized_target(browsers):
-    """drishti-grid on a phone (and any touch screen): the rows that open and close are 44 px tall and the + / − is 44 px wide."""
+def test_on_a_touch_screen_the_twisty_is_a_finger_sized_target(browsers):
+    """drishti-grid on a touch screen (a phone): the rows that open and close are 44 px high and the + / − is 44 px wide."""
     async def body(pg):
-        assert await pg.locator("#hx-tree .dg[data-phone]").count() >= 1
+        cdp = await pg.context.new_cdp_session(pg)                                 # a touch screen: (pointer: coarse)
+        await cdp.send("Emulation.setTouchEmulationEnabled", {"enabled": True, "maxTouchPoints": 5})
+        await pg.reload()
+        await pg.wait_for_function(READY, timeout=30000)
+        await settle(pg)
+        assert await pg.evaluate("() => matchMedia('(pointer: coarse)').matches")
         boxes = await pg.eval_on_selector_all("#hx-tree .dg-tw:not(.dg-tw-none)", "els => els.slice(0, 4).map((e) => { const r = e.getBoundingClientRect(); return [r.width, r.height]; })")
         assert boxes and all(w >= 44 and hh >= 43.5 for w, hh in boxes), boxes
         n0 = await pg.evaluate("window.__harness.tree.grid.grid.model.rowCount()")

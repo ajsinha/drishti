@@ -133,7 +133,7 @@
   their ancestors, masked values as sent). Deleted: `rl-tree`'s rows, `xx-tree`'s rows, twisties and open-state bookkeeping, the raw
   viewer's own tree and their CSS. **A tree's filter is in the address again** (`?tf.<panel id>=<words>`; treeTables' `address` hook):
   a reload or a shared link shows the same rows, as before the move. **drishti-grid**: rows that open and close (a tree, groups, a
-  pivot) are 44 px high on a touch screen or a phone (inside the row line), with a 44 px twisty.
+  pivot) are 44 px high on a touch screen (a phone, a tablet; inside the row line), with a 44 px twisty.
 
 - **The Build workbench's shape tree is drishti-tree** (no bespoke UI in an authoring tool): a Design's Shape section draws its fields
   with drishti-tree's new **outline** (`TreeOutline`, `drishti_tree-outline.js`: a `Tree` in grid mode without chrome for a narrow

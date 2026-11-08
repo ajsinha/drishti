@@ -139,7 +139,7 @@
 /* chrome: false, the view alone (a screen with its own toolbar and panels), no frame; a tree grid with fitRows as tall as its rows */
 .dt-bare > .dt-shell { border: 0; border-radius: 0; background: transparent; }
 .dt-bare .dt-tb, .dt-bare .dt-editbar, .dt-bare .dt-crumbs, .dt-bare .dt-side, .dt-bare .dt-status { display: none; }
-.dt-bare .dt-body { grid-template-columns: minmax(0, 1fr); }
+.dt.dt-bare .dt-body { grid-template-columns: minmax(0, 1fr); }   /* over the terminal density's two columns too */
 .dt-view.dt-fitted, .dt-fitted > .dt-gridbox { height: auto; }
 
 /* a table tree (drishti_tree-panel.js): a server's tree table as the tree grid or the org chart; the server's table hidden, printed */
