@@ -14,7 +14,8 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Upgrading a page's own fields in place (progressive enhancement): a server-drawn form keeps working without scripts, and with them its
-   `<input type="date">` becomes the business-date picker and its group of checkboxes the multi-select. The page's field stays the one
+   `<input type="date">` becomes the business-date picker, `<input type="time">` the time picker, `<input type="datetime-local">` the
+   date-and-time picker (its zone from data-time-zone), and its group of checkboxes the multi-select. The page's field stays the one
    that is submitted and read: the date input turns into a hidden input with the same name, id and value (its `value` setter moves the
    picker too, and the picker's changes are written back with `input` and `change` events, so the page's own listeners keep working);
    the checkboxes stay in their group, hidden, ticked and unticked by the multi-select with a `change` event each. Attributes the page
@@ -22,15 +23,16 @@
    (a dependent list's `offClass`), and ticks made by the page. */
 import { HolidayCalendar } from './drishti_calendar.js';
 import { DatePicker } from './drishti_date-picker.js';
+import { TimePicker, DateTimePicker } from './drishti_time-picker.js';
 import { MultiSelect } from './drishti_multiselect.js';
 
 /** @private the text of the label(s) that name a field, or its aria-label */
-function labelOf(input) {
+function labelOf(input, fallback) {
   const own = input.getAttribute('aria-label');
   if (own) { return own; }
   const ls = input.labels ? Array.from(input.labels) : [];
   const t = ls.map((l) => Array.from(l.childNodes).filter((n) => n.nodeType === 3 || (n.nodeType === 1 && !/^(INPUT|SELECT|TEXTAREA|SPAN)$/.test(n.tagName) && !n.classList.contains('di'))).map((n) => n.textContent).join(' ')).join(' ').replace(/\s+/g, ' ').trim();
-  return t || input.name || 'Date';
+  return t || input.name || fallback || 'Date';
 }
 
 /**
@@ -52,6 +54,37 @@ function labelOf(input) {
  * @returns {?DatePicker}
  */
 export function upgradeDateInput(input, options) {
+  return upgrade(input, options, (o, ds, start, cal, business) => ({ Cls: DatePicker, opts: {
+    value: start || null, calendar: cal || undefined, businessOnly: business, asOf: o.asOf || ds.current || undefined,
+    min: input.getAttribute('min') || undefined, max: input.getAttribute('max') || undefined, required: input.required,
+    shortcuts: o.shortcuts !== undefined ? o.shortcuts : business, label: o.label || labelOf(input),
+    placeholder: o.placeholder || input.getAttribute('placeholder') || undefined } }));
+}
+
+/**
+ * Upgrades an `<input type="time">` to the time picker in place ("HH:MM"), as upgradeDateInput does a date.
+ * @param {HTMLInputElement} input
+ * @param {{label: string, stepMinutes: number}} [options] stepMinutes: default the field's step (seconds) in minutes, else 15
+ * @returns {?TimePicker}
+ */
+export function upgradeTimeInput(input, options) {
+  return upgrade(input, options, (o, ds, start) => ({ Cls: TimePicker, opts: { value: start || null, required: input.required, label: o.label || labelOf(input, 'Time'),
+    step: o.stepMinutes || (+input.getAttribute('step') >= 60 ? +input.getAttribute('step') / 60 : 15), min: input.getAttribute('min') || undefined, max: input.getAttribute('max') || undefined } }));
+}
+
+/**
+ * Upgrades an `<input type="datetime-local">` to the date-and-time picker in place ("YYYY-MM-DDTHH:MM"; data-time-zone names the zone).
+ * @param {HTMLInputElement} input
+ * @param {{label: string, timeZone: string}} [options]
+ * @returns {?DateTimePicker}
+ */
+export function upgradeDateTimeInput(input, options) {
+  return upgrade(input, options, (o, ds, start, cal, business) => ({ Cls: DateTimePicker, opts: { value: start || null, required: input.required, label: o.label || labelOf(input, 'Date and time'),
+    timeZone: o.timeZone || ds.timeZone || undefined, calendar: cal || undefined, businessOnly: business, min: input.getAttribute('min') || undefined, max: input.getAttribute('max') || undefined } }));
+}
+
+/** @private the upgrade itself: the input hidden in place, the picker after it, the value kept in both directions */
+function upgrade(input, options, make) {
   if (!input || !input.ownerDocument) { return null; }
   if (input.diPicker) { return input.diPicker; }
   const doc = input.ownerDocument, win = doc.defaultView, o = Object.assign({}, options);
@@ -64,12 +97,7 @@ export function upgradeDateInput(input, options) {
   input.insertAdjacentElement('afterend', host);
   const proto = Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value');
   const start = proto.get.call(input) || input.getAttribute('value') || '';
-  const picker = new DatePicker(host, {
-    value: start || null, calendar: cal || undefined, businessOnly: business, asOf: o.asOf || ds.current || undefined,
-    min: input.getAttribute('min') || undefined, max: input.getAttribute('max') || undefined, required: input.required,
-    shortcuts: o.shortcuts !== undefined ? o.shortcuts : business, label: o.label || labelOf(input),
-    placeholder: o.placeholder || input.getAttribute('placeholder') || undefined
-  });
+  const made = make(o, ds, start, cal, business), picker = new made.Cls(host, made.opts);
   input.type = 'hidden';
   proto.set.call(input, start);
   Object.defineProperty(input, 'value', {
@@ -78,7 +106,7 @@ export function upgradeDateInput(input, options) {
     set(v) { proto.set.call(input, v == null ? '' : String(v)); picker.setValue(v ? String(v) : null); }
   });
   input.focus = () => picker.focus();
-  input.showPicker = () => picker.open();
+  input.showPicker = () => (picker.open ? picker.open() : picker.focus());
   picker.on('change', (e) => {
     proto.set.call(input, e.value || '');
     input.dispatchEvent(new win.Event('input', { bubbles: true }));
@@ -86,7 +114,7 @@ export function upgradeDateInput(input, options) {
   });
   const follow = () => {
     host.hidden = input.hidden;
-    picker.input.disabled = input.disabled;
+    host.querySelectorAll('input, button').forEach((e) => { e.disabled = input.disabled; });
     picker.o.min = input.getAttribute('min') || undefined;
     picker.o.max = input.getAttribute('max') || undefined;
   };
@@ -163,7 +191,7 @@ export function upgradeCheckboxes(group, options) {
 }
 
 /**
- * Upgrades every `<input type="date">` under a root (not those marked data-native) and every group marked `[data-multiselect]` with more than
+ * Upgrades every `<input type="date">`, `"time"` and `"datetime-local"` under a root (not those marked data-native) and every group marked `[data-multiselect]` with more than
  * `small` checkboxes (fewer stay a compact row of checkboxes).
  * @param {(Document|Element)} root
  * @param {{small: number, offClass: string, dates: UpgradeDateOptions}} [options]
@@ -174,6 +202,8 @@ export function upgradeFields(root, options) {
   const out = { dates: [], checks: [] };
   if (!root || !root.querySelectorAll) { return out; }
   root.querySelectorAll('input[type=date]:not([data-native])').forEach((i) => { const p = upgradeDateInput(i, o.dates); if (p) { out.dates.push(p); } });
+  root.querySelectorAll('input[type=time]:not([data-native])').forEach((i) => { const p = upgradeTimeInput(i); if (p) { out.dates.push(p); } });
+  root.querySelectorAll('input[type=datetime-local]:not([data-native])').forEach((i) => { const p = upgradeDateTimeInput(i); if (p) { out.dates.push(p); } });
   root.querySelectorAll('[data-multiselect]').forEach((g) => {
     if (g.diUpgrade || g.querySelectorAll('input[type=checkbox]').length <= o.small) { return; }
     const u = upgradeCheckboxes(g, { offClass: o.offClass });

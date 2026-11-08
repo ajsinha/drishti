@@ -170,6 +170,11 @@ components the gallery shows, on every page. What people see:
 - **The people pickers** (Share, Subscribe, a workspace's members, sharing a run) and the comment box's `@` and `{` lists are the
   combobox: the list floats over the page, names, ids and desks as before; typed names still work.
 - On a phone every field, option and button of these pickers is at least 44 px high.
+- **The forms** (search with a form, a subscription's When, the table editor, BI's Format pane, the Build inspector's options, the
+  record forms beside a table and in the New drawer) are drawn with the same components: every field has its label above it, a problem
+  in words under it and a warning marked ⚠; numbers and amounts are read loosely (1.5m, 250k) and shown grouped, an amount with its
+  currency beside it; a time is typed (14:05, 2pm) or picked from the day's times; a date and time shows its zone. Searching with a form
+  makes the same address as before, so saved searches and links still work.
 
 ## Upgrade: one Explain for every number
 
