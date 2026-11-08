@@ -1085,8 +1085,15 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   Engine deck gains the same four chapters (*Modules, lenses and access* in place of *Editions*); the Drishti-on-AWS deck a chapter
   *Feeds and modules* (the feeds into the S3 lakes; one image with modules per deployment) and its public-data slide on drishti-feeds.
   Every deck: the lens files under `config/lenses/<module>/`, the under-construction registry with the pre-deal check's SA-CCR part, and
-  the roadmap with this train built and the next steps in order (docs and onboarding, trust and controls, memory and speed,
-  counterparty engines and stress, collateral and margin, CVA, hardening).
+  the roadmap with this train built and the next steps in order (trust and controls, memory and speed, counterparty engines and
+  stress, collateral and margin, CVA, hardening, onboarding).
+- **Decks after the documentation rewrite**: every document name, link and tutorial number on the three decks' slides and notes now
+  names the guide and section that holds the subject (the combined guides: OPERATIONS_GUIDE, CLUSTER_GUIDE, ADMIN_GUIDE,
+  CLI_REFERENCE, REPORTS_GUIDE, NOTEBOOK_GUIDE, APPROVALS_GUIDE, BUILD_GUIDE, DEVELOPER_GUIDE, API_REFERENCE, EMBED_GUIDE, AI_GUIDE,
+  DATA_GUIDE) and the 22 tutorials' numbers; a slide *One guide and one tutorial per feature* (172 documents, the tutorial tracks, Help
+  by domain and lens, contracts with JSON examples, link don't copy, the docs gates) in the Design-and-Evidence deck's *Operating and
+  deploying* chapter and the VaR deck's *Operating it*; the size slide's counts from README's By the numbers; the related-documents
+  slides on the new guides; the AWS deck's footer sources; the roadmap with the documentation rewrite built.
 
 ### Fixes (the train's bulk drill)
 
