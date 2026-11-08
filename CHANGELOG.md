@@ -106,6 +106,11 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
   `docs/guides/CLUSTER_GUIDE.pdf`), made by `tools/docs/md_to_pdf.py` with Playwright's Chromium (nothing fetched from the network), the
   pictures inside and links to other documents shown with their path; `--check` and `test_docs_pdfs.py` fail when a PDF is older than its
   Markdown or pictures.
+- **Page names as the console shows them.** Every document says **Admin → Cluster** (`/admin/net`), the tab's name, and the cluster
+  guide's section is "Admin → Cluster"; Admin → Health links it under that name. Modules are switched in `config/modules/<module>.yaml`,
+  with `DRISHTI_MODULES_<MODULE>_ENABLED` or `POST /api/v1/admin/modules`: the documents, the settings index, the module files' comments
+  and the messages (the API's `DRS-1025`, an engine's *not installed* reason, the console's *not available* line, the start log's
+  packs-not-loaded line) name those, and no longer a page.
 
 ### Drishti Elements, and one way for each job (2.9.11.e)
 

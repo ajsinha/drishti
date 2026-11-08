@@ -279,7 +279,7 @@ def why_off(module_id: str) -> str:
     p = person()
     reason = (p or {}).get("off", {}).get(module_id) if p else ""
     title = plugin(module_id).title if plugin(module_id) else module_id
-    return f"the module '{title}' is not on here" + (f": {reason}" if reason else "") + " (Admin → Modules)"
+    return f"the module '{title}' is not on here" + (f": {reason}" if reason else "") + " (config/modules/<module>.yaml or DRISHTI_MODULES_<MODULE>_ENABLED, then a restart)"
 
 
 def module_of_engine(engine_id: str) -> str | None:

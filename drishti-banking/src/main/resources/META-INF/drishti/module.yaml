@@ -14,7 +14,7 @@
 
 # The banking module's manifest (docs/architecture/ACCESS_MODEL.md, DOMAIN_MODULES.md): shipped in its jar, so the module is installed
 # exactly when the jar is on the class path. The access registry reads it; nothing else does. A site switches the module with
-# config/modules/banking.yaml (enabled: true|false, Admin -> Modules) or DRISHTI_MODULES_BANKING_ENABLED; a licence names it by its feature.
+# config/modules/banking.yaml (enabled: true|false, written by POST /api/v1/admin/modules) or DRISHTI_MODULES_BANKING_ENABLED; a licence names it by its feature.
 # Off (not installed, not licensed or switched off): no bean, engine, job or API of it is loaded, its packs and connectors do not load, its
 # functions are gone, and its API answers 404 DRS-1025.
 module:
