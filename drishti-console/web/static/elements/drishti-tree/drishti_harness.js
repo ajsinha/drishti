@@ -30,6 +30,7 @@
     COM: ['Commodities', ['Energy', 'Metals', 'Agri']] };
   const rows = [{ ID: 'BANK', LABEL: 'Bank (synthetic)', LEVEL: 'bank' }];
   const book = {};
+  const st = (u) => (u > 1 ? 'breach' : u >= 0.8 ? 'near' : 'within');                  // the stand-in server's limit status (drishti.risk.limit-near 0.8)
   Object.keys(DIV).forEach((dk) => {
     rows.push({ ID: dk, PARENT: 'BANK', LABEL: DIV[dk][0], LEVEL: 'division' });
     DIV[dk][1].forEach((desk, i) => {
@@ -37,7 +38,7 @@
       rows.push({ ID: id, PARENT: dk, LABEL: desk, LEVEL: 'desk' });
       for (let b = 1; b <= 3; b++) {
         const v = Math.round((0.4 + rnd() * 2.6) * 1e6), lim = Math.round(v * (0.95 + rnd() * 0.75) / 1e5) * 1e5;
-        const r = { ID: id + '-B' + b, PARENT: id, LABEL: desk + ' book ' + b, LEVEL: 'book', VAR: v, ES: Math.round(v * 1.27), LIMIT: lim, LIMIT_USE: Math.round(v / lim * 1000) / 1000,
+        const r = { ID: id + '-B' + b, PARENT: id, LABEL: desk + ' book ' + b, LEVEL: 'book', VAR: v, ES: Math.round(v * 1.27), LIMIT: lim, LIMIT_USE: Math.round(v / lim * 1000) / 1000, LIMIT_STATUS: st(v / lim),
           POSITIONS: 20 + Math.floor(rnd() * 400), NOTIONAL: Math.round((20 + rnd() * 900) * 1e6) };
         book[r.ID] = r;
         rows.push(r);
@@ -60,7 +61,7 @@
     H.asked.push(reqs.map((r) => r.id));
     return new Promise((resolve) => setTimeout(() => resolve(reqs.map((r) => {
       const v = serverVar(r.id), lim = limitOf(r.id);
-      return { id: r.id, values: { VAR: v, ES: Math.round(v * 1.26), LIMIT: lim, LIMIT_USE: Math.round(v / lim * 1000) / 1000 } };
+      return { id: r.id, values: { VAR: v, ES: Math.round(v * 1.26), LIMIT: lim, LIMIT_USE: Math.round(v / lim * 1000) / 1000, LIMIT_STATUS: st(v / lim) } };
     })), 15));
   };
   const explain = (ctx) => {

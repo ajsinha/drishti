@@ -155,7 +155,9 @@
     return e;
   }
   var int = R.riskInt, pct = R.riskPct;
-  function utilClass(u) { return u >= 0.9 ? "bad" : u >= 0.75 ? "warn" : "ok"; }
+  /** The tile's tone of the server's limit status (within, near by drishti.risk.limit-near, breach); none without a status. */
+  var LIMIT_TONE = { within: "ok", near: "warn", breach: "bad" };
+  function limitTone(status) { return (status && LIMIT_TONE[status]) || null; }
   function chip(dir) { return h("span", "vx-chip " + (dir === "LONG" ? "long" : dir === "SHORT" ? "short" : ""), dir || ""); }
   function fresh(which, text, cls) {
     var e = root.querySelector('[data-vx-fresh="' + which + '"]');
@@ -317,7 +319,7 @@
         d.diversification === null ? "single part" : (d.diversification / d.sumStandalone * 100).toFixed(1) + "% of standalone", null],
       d.limitComparable === false
         ? ["Limit utilisation", "—", d.limitNote || "limit not comparable", "nc"]
-        : ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + money(d.limit) + (cur !== "USD" ? " " + cur + " (set in USD, at today's rate)" : "") : "no limit set", u === null || u === undefined ? null : utilClass(u)],
+        : ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + money(d.limit) + (cur !== "USD" ? " " + cur + " (set in USD, at today's rate)" : "") : "no limit set", limitTone(d.limitStatus)],
       stressed
         ? ["Stressed VaR · " + (avg.weeks || 12) + "-week average", avg.average === null || avg.average === undefined ? "—" : money(avg.average),
            avg.records ? "mean of " + avg.records + " official record" + (avg.records === 1 ? "" : "s") : (avg.note || "no official records"), null]
@@ -970,7 +972,7 @@
   /** A hierarchy node's row for the tree (2.9.7: "n/c" when the limit is of another horizon or confidence). */
   function nodeRow(n) {
     return { ID: n.id, PARENT: n.parent || null, LABEL: n.name, name: n.name, LEVEL: n.level, level: n.level, scope: n.scope, parametric: n.parametric,
-      VAR: n["var"], ES: n.es, LIMIT_USE: n.limitUse, LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit" };
+      VAR: n["var"], ES: n.es, LIMIT_USE: n.limitUse, LIMIT_STATUS: n.limitStatus, LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit" };
   }
   /** A book's positions, or a position's trades (the contributions of that scope), as rows under the part's row; a position's are lazy. */
   function partRows(parentId, kids) {

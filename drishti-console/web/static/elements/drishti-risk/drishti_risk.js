@@ -242,13 +242,14 @@
   __m["src/drishti_risk-tree.js"] = (function () {
     var riskMoney = __m["src/drishti_risk-format.js"].riskMoney;
     var TONES = __m["src/drishti_risk-grid.js"].TONES;
-    const LIMIT_USE_BANDS = Object.freeze([{ to: 0.75, tone: 'good' }, { to: 0.9, tone: 'accent' }, { to: 1, tone: 'warn' }, { to: Infinity, tone: 'bad' }]);
+    const LIMIT_STATUS_TONES = Object.freeze({ within: 'good', near: 'warn', breach: 'bad' });
+    const LIMIT_STATUS_WORDS = Object.freeze({ within: 'within the limit', near: 'near the limit', breach: 'over the limit' });
     function limitUseText(v, row) { return typeof v === 'number' ? Math.round(v * 100) + '%' : (row && row.LIMIT_NOTE) || 'no limit'; }
     const VAR_TREE_MEASURES = Object.freeze([
       Object.freeze({ field: 'VAR', label: 'VaR 99% 1d', format: riskMoney, additive: false, childSum: true }),
       Object.freeze({ field: 'ES', label: 'ES 97.5%', format: riskMoney, additive: false }),
       Object.freeze({ field: 'LIMIT', label: 'Limit', format: riskMoney, additive: false }),
-      Object.freeze({ field: 'LIMIT_USE', label: 'Limit use', format: 'percent', additive: false, bar: Object.freeze({ max: 1, bands: LIMIT_USE_BANDS }),
+      Object.freeze({ field: 'LIMIT_USE', label: 'Limit use', format: 'percent', additive: false, bar: Object.freeze({ max: 1, status: 'LIMIT_STATUS', tones: LIMIT_STATUS_TONES, words: LIMIT_STATUS_WORDS }),
         column: Object.freeze({ format: limitUseText, cellClass: (v) => (typeof v === 'number' ? null : TONES.muted) }) }),
       Object.freeze({ field: 'POSITIONS', label: 'Positions', format: 'integer' }),
       Object.freeze({ field: 'NOTIONAL', label: 'Notional', format: riskMoney })
@@ -272,8 +273,8 @@
       delete opts.measures;
       return opts;
     }
-    function limitBreaches(rows) { return (rows || []).filter((r) => typeof r.LIMIT_USE === 'number' && r.LIMIT_USE >= 1).map((r) => String(r.ID)); }
-    return { "LIMIT_USE_BANDS": LIMIT_USE_BANDS, "limitUseText": limitUseText, "VAR_TREE_MEASURES": VAR_TREE_MEASURES, "varHierarchyTree": varHierarchyTree, "limitBreaches": limitBreaches };
+    function limitBreaches(rows) { return (rows || []).filter((r) => r.LIMIT_STATUS === 'breach').map((r) => String(r.ID)); }
+    return { "LIMIT_STATUS_TONES": LIMIT_STATUS_TONES, "limitUseText": limitUseText, "VAR_TREE_MEASURES": VAR_TREE_MEASURES, "varHierarchyTree": varHierarchyTree, "limitBreaches": limitBreaches };
   })();
   /* ---- src/drishti_risk-graph.js ---- */
   __m["src/drishti_risk-graph.js"] = (function () {
@@ -331,7 +332,7 @@
     const RISK_KINDS = Object.freeze(['risk.pnl-distribution', 'risk.backtest', 'risk.exposure-profile', 'risk.var-change']);
     registerRiskKinds();
     function install(root) { if (root) { registerRiskKinds(); } }
-    return { "RISK_KINDS": RISK_KINDS, "install": install, "TRAFFIC_LIGHT": __m["src/drishti_risk-kinds.js"].TRAFFIC_LIGHT, "trafficLight": __m["src/drishti_risk-kinds.js"].trafficLight, "tailFigures": __m["src/drishti_risk-kinds.js"].tailFigures, "tenorText": __m["src/drishti_risk-kinds.js"].tenorText, "eepeOf": __m["src/drishti_risk-kinds.js"].eepeOf, "buildPnlDistribution": __m["src/drishti_risk-kinds.js"].buildPnlDistribution, "buildBacktest": __m["src/drishti_risk-kinds.js"].buildBacktest, "buildExposureProfile": __m["src/drishti_risk-kinds.js"].buildExposureProfile, "buildVarChange": __m["src/drishti_risk-kinds.js"].buildVarChange, "registerRiskKinds": __m["src/drishti_risk-kinds.js"].registerRiskKinds, "RISK_GRID_DEFAULTS": __m["src/drishti_risk-grid.js"].RISK_GRID_DEFAULTS, "TONES": __m["src/drishti_risk-grid.js"].TONES, "figureColumn": __m["src/drishti_risk-grid.js"].figureColumn, "riskGrid": __m["src/drishti_risk-grid.js"].riskGrid, "riskChart": __m["src/drishti_risk-chart.js"].riskChart, "LIMIT_USE_BANDS": __m["src/drishti_risk-tree.js"].LIMIT_USE_BANDS, "VAR_TREE_MEASURES": __m["src/drishti_risk-tree.js"].VAR_TREE_MEASURES, "limitUseText": __m["src/drishti_risk-tree.js"].limitUseText, "varHierarchyTree": __m["src/drishti_risk-tree.js"].varHierarchyTree, "limitBreaches": __m["src/drishti_risk-tree.js"].limitBreaches, "COUNTERPARTY_LEVELS": __m["src/drishti_risk-graph.js"].COUNTERPARTY_LEVELS, "COUNTERPARTY_MEASURES": __m["src/drishti_risk-graph.js"].COUNTERPARTY_MEASURES, "counterpartyStructureGraph": __m["src/drishti_risk-graph.js"].counterpartyStructureGraph, "textColumn": __m["src/drishti_risk-columns.js"].textColumn, "moneyColumn": __m["src/drishti_risk-columns.js"].moneyColumn, "riskMoney": __m["src/drishti_risk-format.js"].riskMoney, "riskSigned": __m["src/drishti_risk-format.js"].riskSigned, "riskInt": __m["src/drishti_risk-format.js"].riskInt, "riskPct": __m["src/drishti_risk-format.js"].riskPct };
+    return { "RISK_KINDS": RISK_KINDS, "install": install, "TRAFFIC_LIGHT": __m["src/drishti_risk-kinds.js"].TRAFFIC_LIGHT, "trafficLight": __m["src/drishti_risk-kinds.js"].trafficLight, "tailFigures": __m["src/drishti_risk-kinds.js"].tailFigures, "tenorText": __m["src/drishti_risk-kinds.js"].tenorText, "eepeOf": __m["src/drishti_risk-kinds.js"].eepeOf, "buildPnlDistribution": __m["src/drishti_risk-kinds.js"].buildPnlDistribution, "buildBacktest": __m["src/drishti_risk-kinds.js"].buildBacktest, "buildExposureProfile": __m["src/drishti_risk-kinds.js"].buildExposureProfile, "buildVarChange": __m["src/drishti_risk-kinds.js"].buildVarChange, "registerRiskKinds": __m["src/drishti_risk-kinds.js"].registerRiskKinds, "RISK_GRID_DEFAULTS": __m["src/drishti_risk-grid.js"].RISK_GRID_DEFAULTS, "TONES": __m["src/drishti_risk-grid.js"].TONES, "figureColumn": __m["src/drishti_risk-grid.js"].figureColumn, "riskGrid": __m["src/drishti_risk-grid.js"].riskGrid, "riskChart": __m["src/drishti_risk-chart.js"].riskChart, "LIMIT_STATUS_TONES": __m["src/drishti_risk-tree.js"].LIMIT_STATUS_TONES, "VAR_TREE_MEASURES": __m["src/drishti_risk-tree.js"].VAR_TREE_MEASURES, "limitUseText": __m["src/drishti_risk-tree.js"].limitUseText, "varHierarchyTree": __m["src/drishti_risk-tree.js"].varHierarchyTree, "limitBreaches": __m["src/drishti_risk-tree.js"].limitBreaches, "COUNTERPARTY_LEVELS": __m["src/drishti_risk-graph.js"].COUNTERPARTY_LEVELS, "COUNTERPARTY_MEASURES": __m["src/drishti_risk-graph.js"].COUNTERPARTY_MEASURES, "counterpartyStructureGraph": __m["src/drishti_risk-graph.js"].counterpartyStructureGraph, "textColumn": __m["src/drishti_risk-columns.js"].textColumn, "moneyColumn": __m["src/drishti_risk-columns.js"].moneyColumn, "riskMoney": __m["src/drishti_risk-format.js"].riskMoney, "riskSigned": __m["src/drishti_risk-format.js"].riskSigned, "riskInt": __m["src/drishti_risk-format.js"].riskInt, "riskPct": __m["src/drishti_risk-format.js"].riskPct };
   })();
   return Object.freeze(Object.assign({ library: "drishti-risk", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

@@ -1064,7 +1064,8 @@ Drishti screen draws that many today.
 
 - **The model** (`HierarchyModel`, `drishti_tree-model.js`): rows with a parent, a nested root, or paths; further parents in `also`
   (a node read from two parents, marked ⧉); expand and collapse; search that opens the matching branches and gives each match its
-  breadcrumb; measures (`TreeMeasure`: field, label, format, `additive`, `rollup`, `childSum`, a `bar` in bands). A measure with
+  breadcrumb; measures (`TreeMeasure`: field, label, format, `additive`, `rollup`, `childSum`, a `bar` toned by a status the host gives: `{status, tones, words, max}`, the field holding
+  the node's status, its tone per status, the legend's words; none without a status, the tree never makes one of a figure). A measure with
   `additive: false` (◆) is **never summed in the browser**: `requests()` lists the nodes that lack it and the host's `serverMeasures`
   hook answers (debounced); `childSum` shows the children's figures added up beside the node's, the gap being the diversification.
 - **The four modes**, one engine: `grid` (g6 B, the default: the indented tree **on drishti-grid's tree data**, `treeData` and
@@ -1121,7 +1122,8 @@ Drishti screen draws that many today.
 **drishti-risk's presets** (options only: a page loads drishti-graph or drishti-tree itself): `counterpartyStructureGraph(rows, links)`
 (groups → legal entities → netting sets → CSAs, layered top-down by level, sized by EAD; EAD, MTM and collateral add up, PFE does not)
 and `varHierarchyTree(rows)` (bank → divisions → desks → books with VaR, ES, the limit and its use as ◆ figures, positions and
-notional additive; the grid mode in the terminal density and layout, as the VaR screens; the figures in `riskMoney`, a node without a
+notional additive; the limit-use bar and the nodes' colour in the tone of the server's `LIMIT_STATUS`, `LIMIT_STATUS_TONES`: within
+good, near warn, breach bad, by the server's one rule `drishti.risk.limit-near`, no tone without a status, no threshold in the page; the grid mode in the terminal density and layout, as the VaR screens; the figures in `riskMoney`, a node without a
 limit use saying why, `LIMIT_NOTE`, *no limit* by default; a screen picks its `fields` and changes a measure's label or column).
 
 **What moved onto them, and what was deleted:**
@@ -1137,7 +1139,7 @@ limit use saying why, `LIMIT_NOTE`, *no limit* by default; a screen picks its `f
 | a table or ladder with `children:` (`table.tbl-tree`): ▸/▾ buttons, the filter box keeping ancestors and the column funnels of the console (`drishti_tree-rows.js`), and the renderer's own copy (drishti-grid's `tree` and `treeVisibility`) | drishti-tree's table tree (`treeTables`): the tree grid, or the org chart for one chain, in the console, the renderer and the embed (`elements-tree`; its sheet in `<drishti-view>`'s and the renderer's); the same rows, texts, tones and links; the mode, open rows and filter kept across live patches | the console's hand-built toggles and filter (`treeTable`, its address state), drishti-grid's `tree` and `treeVisibility`, their CSS (`.tr-q`, `.tr-bar`, `.tr-count`) |
 | the GLEIF entity's parents chain (`lei-entity` `PAR`): a flat table, direct parent first | the same panel as a tree from the ultimate parent down to the entity (Rachana `take`, `let` and the document; no engine change), opening as the org chart; the group tree (`lei-group` `TREE`) the tree grid with the org chart a click away | the flat chain's order |
 
-| the Drishti Risk home's VaR hierarchy (`drishti_risk-landing.js`, `rl-tree`: indented rows to depth 2 with VaR and a limit pill) | drishti-tree through `varHierarchyTree`, `chrome: false`, in the panel: every node with the server's VaR and limit use (the bar in bands; *no limit* / *n/c*), open to the desks, a node's name the link to `/var?scope=…&hierarchy=…` | the rows, their depth classes and CSS |
+| the Drishti Risk home's VaR hierarchy (`drishti_risk-landing.js`, `rl-tree`: indented rows to depth 2 with VaR and a limit pill) | drishti-tree through `varHierarchyTree`, `chrome: false`, in the panel: every node with the server's VaR and limit use (the bar in the tone of the server's limit status; *no limit* / *n/c*), open to the desks, a node's name the link to `/var?scope=…&hierarchy=…` | the rows, their depth classes and CSS |
 | the exposure explorer's scope tree (`drishti_exposure-explorer.js`, `xx-tree`: hand-built rows with ▸/▾, the open state in `S.expanded`, a set's trades drawn under it) | drishti-tree, `chrome: false`: the bank, legal entities, counterparties (under each legal entity), netting sets and a set's trades through `loadChildren` (the 30 largest, the open trade wherever it ranks, *… n more in the Trades tab*); peak PFE `additive: false`, every figure the server's; a click opens the scope, the way to the current scope opens and its row is marked (`xx-current`, `data-scope`) | the rows, twisties, open-state bookkeeping and their CSS (`.xx-row` and the rest) |
 | the raw document viewer and F9's drawer (`drishti_raw-viewer.js`: a hand-built `role=tree` of `.jt-n` rows, ▸ buttons, *Show all* buttons) | drishti-tree's tree grid (loaded on demand) with a **Key** and a **Value** column: the document's order, open two levels, the path opened, selected and scrolled to, an array over 50 cut with *Show all* as a row, search keeping the matches and their ancestors (open), masked values as sent, every colour a token (`.jt-key`, `.jt-num` …); `Drishti.Raw.render` returns a promise of the tree | the tree class, its toggles and its CSS (`.jt-n`, `.jt-l`, `.jt-c`, `.jt-t`) |
 
@@ -1631,7 +1633,7 @@ an edit mode where a node is dragged to a new parent and the moves become one pr
 |---|---|---|
 | A, org chart | top-down boxes with figures and a limit-use bar; the lineage as a layered DAG left to right | structures people present |
 | B, tree grid with measures | an indented tree in drishti-grid (`role="treegrid"`), a column per measure, the limit-use bar, keyboard | risk managers' daily view (recommended default) |
-| C, sunburst or icicle | an additive measure (positions, notional, RWA, rows) as angle or width, colour by limit use; VaR is never an angle | where it is concentrated, at a glance |
+| C, sunburst or icicle | an additive measure (positions, notional, RWA, rows) as angle or width, colour by the server's limit status; VaR is never an angle | where it is concentrated, at a glance |
 
 **g7, the designer kit** ([g7-designer-kit.html](mockups/elements/g7-designer-kit.html)): one shell on which every designer is built
 (Sutra screens, BI reports, forms, semantic models, tables, Python tables and models, the Build workbench's YAML), with the header

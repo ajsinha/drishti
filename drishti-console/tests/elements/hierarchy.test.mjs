@@ -23,7 +23,7 @@ import { createRequire } from 'node:module';
 import * as T from '../../web/static/elements/drishti-tree/src/drishti_index.js';
 import * as R from '../../web/static/elements/drishti-risk/src/drishti_index.js';
 
-const MEASURES = [{ field: 'n', label: 'Count' }, { field: 'v', label: 'Risk', additive: false, childSum: true }, { field: 'u', label: 'Use', additive: false, bar: { max: 1, bands: [{ to: 0.75, tone: 'good' }, { to: 1, tone: 'warn' }, { to: Infinity, tone: 'bad' }] } }];
+const MEASURES = [{ field: 'n', label: 'Count' }, { field: 'v', label: 'Risk', additive: false, childSum: true }, { field: 'u', label: 'Use', additive: false, bar: { max: 1, status: 'us', tones: { within: 'good', near: 'warn', breach: 'bad' } } }];
 const ROWS = () => [
   { id: 'B', label: 'Bank', kind: 'bank' },
   { id: 'D1', parent: 'B', label: 'Markets', kind: 'division' },
@@ -108,9 +108,31 @@ test('the partition: shares by an additive measure; a non-additive one cannot si
   assert.equal(T.partition(m, { sizeBy: 'n', depth: 1 }).length, 3);
   assert.throws(() => T.partition(m, { sizeBy: 'v' }), /Risk is not additive: its parts do not add up to the whole/);
   assert.match(T.arcPath(100, 100, 20, 40, 0, 0.25), /^M100,80L100,60A40,40 0 0 1 140,100L120,100A20,20 0 0 0 100,80Z$/);
-  assert.equal(T.bandTone(0.5, MEASURES[2].bar.bands), 'good');
-  assert.equal(T.bandTone(1.2, MEASURES[2].bar.bands), 'bad');
-  assert.equal(T.bandTone(null, MEASURES[2].bar.bands), null);
+  const bar = MEASURES[2].bar;                                                   // the tone is the host's status, never a figure's band
+  assert.equal(T.statusTone({ values: { u: 0.5 }, data: { us: 'near' } }, bar), 'warn');
+  assert.equal(T.statusTone({ values: { u: 0.5, us: 'breach' }, data: { us: 'near' } }, bar), 'bad');       // a host's answer wins
+  assert.equal(T.statusTone({ values: { u: 1.2 }, data: {} }, bar), null);                                   // no status: no tone
+  assert.equal(T.statusTone({ values: {}, data: { us: 'unheard' } }, bar), null);
+});
+
+test('drishti-risk\'s limit bar: its tone is the server\'s status (within, near, breach), none without one', () => {
+  const lu = R.VAR_TREE_MEASURES.find((x) => x.field === 'LIMIT_USE');
+  assert.deepEqual(Object.keys(R).filter((k) => /BANDS/.test(k)), []);          // no thresholds of its own
+  assert.deepEqual(R.LIMIT_STATUS_TONES, { within: 'good', near: 'warn', breach: 'bad' });
+  assert.equal(lu.bar.status, 'LIMIT_STATUS');
+  const m = new T.HierarchyModel(R.varHierarchyTree([{ ID: 'BANK', LABEL: 'Bank', LEVEL: 'bank' },
+    { ID: 'A', PARENT: 'BANK', LABEL: 'A', LEVEL: 'book', LIMIT_USE: 0.95, LIMIT_STATUS: 'within' },
+    { ID: 'B', PARENT: 'BANK', LABEL: 'B', LEVEL: 'book', LIMIT_USE: 0.5, LIMIT_STATUS: 'near' },
+    { ID: 'C', PARENT: 'BANK', LABEL: 'C', LEVEL: 'book', LIMIT_USE: 1.01, LIMIT_STATUS: 'breach' },
+    { ID: 'D', PARENT: 'BANK', LABEL: 'D', LEVEL: 'book', LIMIT_USE: 1.5 }]).data);
+  const tone = (id) => T.statusTone(m.node(id), lu.bar);
+  assert.equal(tone('A'), 'good');                                               // 95% the server calls within: no amber of the page's own
+  assert.equal(tone('B'), 'warn');                                               // a lower near limit on the server: amber at 50%
+  assert.equal(tone('C'), 'bad');
+  assert.equal(tone('D'), null);                                                 // no status: no tone, however high the use
+  assert.equal(tone('BANK'), null);
+  m.setValues([{ id: 'A', values: { LIMIT_STATUS: 'breach' } }]);               // a host's later answer replaces the status
+  assert.equal(tone('A'), 'bad');
 });
 
 test('the grid\'s rows: one per node with its path of unique keys and its children\'s sum', () => {
@@ -233,6 +255,8 @@ test('drishti-risk\'s VaR hierarchy: VaR, ES, limit and its use never summed; po
   assert.equal(m.childSum('EQ', 'VAR'), 5e6);
   assert.equal(m.value('EQ', 'POSITIONS'), 200);
   assert.equal(m.value('BANK', 'NOTIONAL'), 7e8);
+  assert.deepEqual(R.limitBreaches(rows), []);                                  // a use over 1 is not a breach until the server says so
+  rows[2].LIMIT_STATUS = 'breach'; rows[3].LIMIT_USE = 0.99; rows[3].LIMIT_STATUS = 'near';
   assert.deepEqual(R.limitBreaches(rows), ['B1']);
   assert.throws(() => T.partition(m, { sizeBy: 'VAR' }), /not additive/);
   assert.equal(T.partition(m, { sizeBy: o.sizeBy }).length, 4);

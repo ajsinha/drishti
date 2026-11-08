@@ -376,11 +376,15 @@ Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-lay
   entity, desk, book; and every configured hierarchy by its title, such as *Limit letters*: letter, desk; the choice kept
   in the link as `hierarchy=LL`; a hierarchy skipped on the date because its column is not in the data is listed *(not available)*,
   disabled, its reason on hover: [section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)) with each
-  node's VaR, ES and a bar of its limit use (green, amber at 75%, red at 90%; *no limit* where the node has none). Click **▸** to open
+  node's VaR, ES and a bar of its limit use in the tone of the node's limit status as the server says it (`limitStatus`: *within*
+  green, *near* amber, *breach* red; no tone without a status; *no limit* where the node has none). Click **▸** to open
   a node, click its name to see its VaR. A book opens to its positions (a LONG or SHORT chip, the
   quantity, VaR, ES, the component VaR in the book); a position opens to its trades. Every row has **+ basket** (shown as you point at it).
 - **The scope** (the rest of the width): the breadcrumb, six tiles (VaR 99% 1-day, ES 97.5%, the sum of the children's standalone VaR, the
-  diversification, the limit use, the backtest exceptions over 250 days with the Basel light), and the tabs.
+  diversification, the limit use in the tone of the scope's limit status, the backtest exceptions over 250 days with the Basel light),
+  and the tabs. The page decides no limit status of its own: **near** starts at the one setting `drishti.risk.limit-near` (0.8 by
+  default, in `config/engines/var.yaml`) and **breach** is over 100%, the same rule for every screen, the official record and the
+  what-if ([section 11.2](#112-the-headline-get-scope-and-its-provenance), `limitStatus` and `limitNear`).
 - The **?** in the status line opens this guide.
 
 The keys **B**, **M** and **H** work anywhere on the page except while you type in a box or in the basket's sheet.

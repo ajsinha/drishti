@@ -9214,16 +9214,16 @@ The SVG path of a ring's slice.
 
 Returns `string`.
 
-#### `bandTone(v, bands)`
+#### `statusTone(n, bar)`
 
-The tone of a figure by bands (the first band whose `to` the figure stays under; the last band past them all).
+The tone of a node's bar: its status (the field `bar.status` of the node, a word the host's server gave, such as a limit's within, near or breach) in the bar's tones. The tree never makes a status of a figure: a node without one has no tone.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `v` | `number` |  |
-| `bands` | `Array&lt;{to: number, tone: string}&gt;` | in rising order |
+| `n` | `?Object` | a TreeNode (its values first: a host's answer; else the row it was read from) |
+| `bar` | `?{status: string, tones: Object&lt;string, string&gt;}` |  |
 
-Returns `?string`: the tone's name, or null without a figure.
+Returns `?string`: the tone's name, or null without a status (or one the tones do not name).
 
 ### drishti_tree-draw.js
 
@@ -9242,7 +9242,7 @@ Returns `SVGElement`.
 
 #### `nodeColour(c, n)`
 
-A node's fill: the tone of its colourBy figure by the measure's bands, else its kind's colour of the palette.
+A node's fill: the tone of its status on the colourBy measure's bar (none: the no-data colour), else its kind's colour of the palette.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -10012,7 +10012,7 @@ What a drawing needs: the model, the theme, the formatter of each measure, the v
 | `text` | `function(string, *): string` | a measure's figure as text (field, value) |
 | `selected` | `?string` |  |
 | `hits` | `Set&lt;string&gt;` | the search's matches |
-| `colourBy` | `?string` | the measure whose bands colour a node (else its kind) |
+| `colourBy` | `?string` | the measure whose bar's status colours a node (else its kind) |
 | `shown` | `string[]` | the measures a box shows |
 | `sizeBy` | `?string` | the additive measure of the partition |
 | `focus` | `?string` | the partition's centre |
@@ -10081,7 +10081,7 @@ A measure of the nodes.
 | `[additive=true]` | `boolean` | false: never summed here (◆); a node's figure is the host's (TreeOptions.measures hook) |
 | `[rollup=true]` | `boolean` | an additive measure: a node with no figure of its own shows its children's sum |
 | `[childSum=false]` | `boolean` | a non-additive measure: show the children's figures added up beside it (Σ children, not a figure of the measure: the gap is the diversification) |
-| `[bar]` | `{bands: Array&lt;{to: number, tone: string}&gt;, max: number}` | draw the figure as a bar (a ratio such as a limit's use): its tone by the first band whose `to` it stays under; max the full bar (default 1) |
+| `[bar]` | `{status: string, tones: Object&lt;string, string&gt;, max: number}` | draw the figure as a bar (a ratio such as a limit's use): its tone the node's status (the field `status` names, the host's word such as within, near or breach) in `tones` (status to tone: good, warn, bad ...), none without a status; words (status to the legend's words); max the full bar (default 1) |
 | `[column]` | `Object` | drishti-grid ColumnDef properties for its column in the tree grid (header, width, format (value, row), cellClass, cellRenderer: drawn where the tree draws nothing of its own, the waiting mark and the bar) |
 
 #### `TreeNode` : `Object`
@@ -10262,7 +10262,7 @@ The options of a tree.
 | `[editable=false]` | `boolean` | offer the edit mode (✎ Edit (propose)): moves become one proposal for four eyes |
 | `[proposalNote]` | `string` | words under the proposal (who approves, the impact) |
 | `[sizeBy]` | `string` | the additive measure that sizes a partition (default: the first additive one) |
-| `[colourBy]` | `string` | the measure whose bands colour the nodes (default: the first with bar bands) |
+| `[colourBy]` | `string` | the measure whose bar's status colours the nodes (default: the first bar with a status) |
 | `[shown]` | `string[]` | the measures an org chart box shows (default: the first two) |
 | `[openDepth=1]` | `number` | nodes open down to this depth at the start (-1: all) |
 | `[status]` | `string[]` | more words for the status line (the business date) |
@@ -16201,9 +16201,9 @@ Returns `Object`: the Chart.
 
 ### drishti_risk-tree.js
 
-#### `LIMIT_USE_BANDS`
+#### `LIMIT_STATUS_TONES`
 
-The VaR limit's use bands (the colours of the bar and of the nodes).
+The tones of the server's limit status (a node's LIMIT_STATUS: within, near or breach, by the server's one rule drishti.risk.limit-near), the colours of the bar and of the nodes; a node without a status has no tone.
 
 #### `VAR_TREE_MEASURES`
 
@@ -16226,14 +16226,14 @@ The options of a VaR hierarchy tree.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `rows` | `Object[]` | the nodes: {ID, PARENT, LABEL, LEVEL} and any figures the server sent with them (VAR, ES, LIMIT, LIMIT_USE, POSITIONS, NOTIONAL), LIMIT_NOTE (why a node has no limit use), lazy (its children come later, loadChildren) and any field of the screen's own; the books' POSITIONS and NOTIONAL roll up, the risk figures never do |
+| `rows` | `Object[]` | the nodes: {ID, PARENT, LABEL, LEVEL} and any figures the server sent with them (VAR, ES, LIMIT, LIMIT_USE, POSITIONS, NOTIONAL), LIMIT_STATUS (the server's within, near or breach: the bar's tone), LIMIT_NOTE (why a node has no limit use), lazy (its children come later, loadChildren) and any field of the screen's own; the books' POSITIONS and NOTIONAL roll up, the risk figures never do |
 | `[o]` | `Object` | serverMeasures (the non-additive figures of the nodes that lack them), explain, link, editable, proposalNote, mode (default grid), density (default terminal), title, status; fields (the measures shown, in order: default all), measures (by field, what a screen changes of one: its label, childSum, its column); and any TreeOptions (chrome, grid, loadChildren ...) |
 
 Returns `Object`: TreeOptions (drishti-tree).
 
 #### `limitBreaches(rows)`
 
-The nodes over their VaR limit (the server's use of 1 or more), for a screen's warning.
+The nodes over their VaR limit (the server's status breach), for a screen's warning.
 
 | Parameter | Type | Meaning |
 |---|---|---|

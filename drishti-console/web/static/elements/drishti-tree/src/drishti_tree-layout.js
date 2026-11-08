@@ -16,7 +16,7 @@
 /* drishti-tree's geometry, pure functions (Node runs them): the org chart's tidy layout (each leaf in its own column, a parent centred
    over its first and last child, closed nodes drawn without their children; further parents of a DAG as extra links), the partition
    of the sunburst and the icicle (an ADDITIVE measure only: a node's share of its parent's angle or width; a non-additive one is
-   refused in words, since its parts do not add up to the whole), an arc's path, and the tone of a figure by bands. */
+   refused in words, since its parts do not add up to the whole), an arc's path, and the tone of a node's bar by its status. */
 
 /**
  * The org chart's sizes.
@@ -130,13 +130,14 @@ export function arcPath(cx, cy, r0, r1, a0, a1) {
 function r1fmt(v) { return String(Math.round(v * 100) / 100); }
 
 /**
- * The tone of a figure by bands (the first band whose `to` the figure stays under; the last band past them all).
- * @param {number} v
- * @param {Array<{to: number, tone: string}>} bands in rising order
- * @returns {?string} the tone's name, or null without a figure
+ * The tone of a node's bar: its status (the field `bar.status` of the node, a word the host's server gave, such as a limit's within,
+ * near or breach) in the bar's tones. The tree never makes a status of a figure: a node without one has no tone.
+ * @param {?Object} n a TreeNode (its values first: a host's answer; else the row it was read from)
+ * @param {?{status: string, tones: Object<string, string>}} bar
+ * @returns {?string} the tone's name, or null without a status (or one the tones do not name)
  */
-export function bandTone(v, bands) {
-  if (typeof v !== 'number' || !bands || !bands.length) { return null; }
-  for (const b of bands) { if (v < b.to) { return b.tone; } }
-  return bands[bands.length - 1].tone;
+export function statusTone(n, bar) {
+  if (!n || !bar || !bar.status || !bar.tones) { return null; }
+  const v = n.values && n.values[bar.status] !== undefined && n.values[bar.status] !== null ? n.values[bar.status] : n.data ? n.data[bar.status] : null;
+  return v === undefined || v === null ? null : (Object.prototype.hasOwnProperty.call(bar.tones, v) ? bar.tones[v] : null);
 }

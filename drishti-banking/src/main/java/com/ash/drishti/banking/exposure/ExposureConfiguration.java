@@ -95,8 +95,8 @@ public class ExposureConfiguration {
     }
 
     @Bean
-    ExposureViews exposureViews(ExposureService svc) {
-        ExposureViews v = new ExposureViews(svc);
+    ExposureViews exposureViews(ExposureService svc, com.ash.drishti.banking.RiskLimits limits) {
+        ExposureViews v = new ExposureViews(svc, limits);
         ExposureResultEngine.install(v);                               // the computed kind exposure-result (the reactive connector exposure-engine)
         return v;
     }
