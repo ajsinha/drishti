@@ -39,6 +39,7 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from core.backend import BackendError  # noqa: E402
 import engine_fakes  # noqa: E402
+import select_helpers  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 from scratch_ports import worker_port  # noqa: E402
 
@@ -246,7 +247,7 @@ def test_a_proxy_refers_and_the_form_checks_a_booked_trade(browser, predeal_cons
         pg.evaluate("delete document.querySelector('[data-predeal]').dataset.decision")
         pg.locator("[data-pd-method-option=paths]").check()
         pg.select_option("[data-pd-set]", "NS-ALDERSHOT-LDN")
-        pg.wait_for_function("() => [...document.querySelector('[data-pd-like]').options].some(o => o.value === 'T-9')")
+        pg.wait_for_function(select_helpers.has_option("[data-pd-like]", "T-9"))   # a <drishti-select> (the one form kit)
         pg.select_option("[data-pd-like]", "T-9")
         pg.locator("[data-pd-notional]").fill("40m")
         pg.locator("[data-pd-notional]").press("Tab")

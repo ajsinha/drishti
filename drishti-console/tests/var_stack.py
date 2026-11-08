@@ -35,6 +35,12 @@ RISK = ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierar
 VAR_TRADES = ("trades/murex", "trades/endur")
 
 
+#: the heap of a VaR file's server: both trade sets' P&L vectors, the official capture of the newest date it runs at start (every node,
+#: written to its lake) and a page's bank-wide by-trade contributions at once pass 768 MB (heap at 95-99 % after collections, then
+#: OutOfMemoryError: requests time out and the console's pages hang, as test_arrow_browser and test_var_explorer_browser saw)
+VAR_HEAP = "1536m"
+
+
 def var_data(*more: str, limits: bool = True) -> str:
     """The ``--only`` list: the market-risk VaR tables (and the limits, when ``limits``), then ``more`` (trades/murex, trades/endur ...)."""
     return ",".join([f"market-risk/{k}" for k in RISK + (("var-limit",) if limits else ())] + list(more))
@@ -82,6 +88,6 @@ def var_server(tmp_path_factory, lake: Path, **env: str):
     hot = tmp_path_factory.mktemp("var-hot")
     official = tmp_path_factory.mktemp("var-official")
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
-                                        "DRISHTI_VAR_HOT_DIR": str(hot), "DRISHTI_VAR_OFFICIAL_ROOT": str(official), **env}):
+                                        "DRISHTI_VAR_HOT_DIR": str(hot), "DRISHTI_VAR_OFFICIAL_ROOT": str(official), **env}, heap=VAR_HEAP):
         _engine_ready(str(st))
         yield st
