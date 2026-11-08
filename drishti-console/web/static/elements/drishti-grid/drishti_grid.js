@@ -4836,7 +4836,7 @@
       tb.append(h(doc, 'span', { cls: 'dg-sp' }));
       if (v.phone && piv) {
         const ms = v.measures(), sel = selectElement(doc, { options: ms, value: v.ui.phoneMeasure && ms.indexOf(v.ui.phoneMeasure) >= 0 ? v.ui.phoneMeasure : undefined,
-          label: 'Measure shown', search: false }, { class: 'dg-measure' });                    // drishti-inputs' Select
+          label: 'Measure shown', search: false }, { class: 'dg-measure-pick' });                    // drishti-inputs' Select
         sel.component.on('change', (d) => v.switchMeasure(d.value));
         tb.append(sel);
       }

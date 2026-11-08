@@ -449,7 +449,7 @@ def test_a_phone_pins_the_first_column_and_switches_the_pivot_measure(browsers):
             assert await pg.get_attribute("drishti-grid", "data-phone") == ""
             assert await pg.locator(".dg-hcell.dg-leaf").count() == 2                       # the row headings and one value column
             assert await pg.locator(".dg-wells").is_hidden()
-            sel = ".dg-toolbar drishti-select.dg-measure"                                    # drishti-inputs' Select
+            sel = ".dg-toolbar drishti-select.dg-measure-pick"                                    # drishti-inputs' Select
             assert await pg.eval_on_selector(sel, "e => e.component.options.map((o) => String(o.value))") == ["MTM", "VaR 99% 1d"]
             await pg.select_option(sel, "VaR 99% 1d")
             await settle(pg)

@@ -36,7 +36,7 @@
 .dg-btn:hover, .dg-btn:focus-visible { color: var(--d-ink); border-color: var(--d-faint); }
 .dg-btn.on { background: var(--d-accent-tint); border-color: var(--d-accent); color: var(--d-accent); }
 .dg-btn[disabled] { opacity: 0.5; cursor: default; }
-.dg-quick, .dg-field-search { padding: 3px 8px; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface); color: var(--d-ink); width: 150px; }
+.dg-quick, .dg-field-search, .dg-measure { padding: 3px 8px; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface); color: var(--d-ink); width: 150px; }
 .dg :focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 
 /* wells and chips */
@@ -49,7 +49,7 @@
 .dg-zone-hint { color: var(--d-faint); font-size: 0.9em; }
 .dg-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 14px; border: 1px solid var(--d-border); background: var(--d-surface-2);
   cursor: grab; user-select: none; white-space: nowrap; max-width: 100%; }
-drishti-select.dg-measure { width: 150px; }   /* drishti-inputs' Select */
+.dg-measure-pick { width: 150px; }   /* the phone pivot's measure: drishti-inputs' Select */
 .dg-chip.dg-measure { border-color: color-mix(in srgb, var(--d-accent) 55%, var(--d-border)); }
 .dg-chip.dg-dragging { opacity: 0.4; }
 .dg-chip.dg-vf { border-style: dashed; border-color: var(--d-link); color: var(--d-link); cursor: default; }
