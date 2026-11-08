@@ -222,6 +222,14 @@ public enum ErrorCode {
      * Only a user's download may leave; the answer names the data and its contract.
      */
     MEMORY_ONLY("DRS-5219", 403),
+    /**
+     * A system basket (VAR_GUIDE.md section 5.7) that cannot be saved or imported as given: an id that is not {@code A-Z 0-9 . _ -}, a type
+     * that is not hierarchy, rule or basket, a node no hierarchy holds on the date, a rule that does not read, a position or trade the date
+     * does not hold, a date that is not YYYY-MM-DD, an id that exists already; the message names the basket and the reason.
+     */
+    VAR_SYSTEM_BASKET_INVALID("DRS-5220", 422),
+    /** {@code PORT:<id>} (or an edit) of a system basket there is none of on the date: {@code PORT <GO>} lists them. */
+    VAR_SYSTEM_BASKET_UNKNOWN("DRS-5221", 404),
     /** The pivot engine (PIVOT_GUIDE.md): a view it cannot answer (an unknown source, field or function, a field twice, a bad filter or sort). */
     PIVOT_BAD_VIEW("DRS-5701", 400),
     /**

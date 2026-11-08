@@ -189,6 +189,22 @@ public final class Entitlements {
         }
     }
 
+    /**
+     * A module permission ({@code var:system-baskets}, docs/architecture/ACCESS_MODEL.md section 8): held by a role that lists it in
+     * {@code permissions}, and by every administrator; with sign-in off, by everyone (as every power is).
+     */
+    public boolean holds(Principal p, String permission) {
+        return has(p, r -> r.holds(permission));
+    }
+
+    /** {@code 403} without the module permission, naming it. */
+    public void requirePermission(Principal p, String permission) {
+        if (!holds(p, permission)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, p.user() + " does not hold the permission " + permission
+                    + " (Admin -> Roles: a role with it)");
+        }
+    }
+
     public void requireService(Principal p) {
         if (props.enabled() && !p.roles().contains(SERVICE)) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "sign-in is verified by the console only");

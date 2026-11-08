@@ -189,12 +189,9 @@ final class VarLoader {
         return versions;
     }
 
-    /** The stored portfolios of a date (their definitions), read again for a date put together from its shards. */
-    Map<String, VarDate.Portfolio> portfolios(LocalDate date) {
-        Map<String, VarDate.Portfolio> out = new LinkedHashMap<>();
-        Map<String, Double> lim = portfolioLimits(AsOf.of(date));
-        documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> out.put(id, VarDate.Portfolio.of(id, p, lim)));
-        return out;
+    /** The system baskets' VaR limits of a date (USD), read again for a date put together from its shards. */
+    Map<String, Double> portfolioLimits(LocalDate date) {
+        return portfolioLimits(AsOf.of(date));
     }
 
     /** The position rules a load uses now (a pack's section, else the server's setting). */
@@ -333,9 +330,7 @@ final class VarLoader {
             List<LocalDate> days = scenarioDates;
             VarIntake.Summary sum = intake.summary();
             long tVectors = System.nanoTime();
-            Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
-            Map<String, Double> pfLimits = portfolioLimits(asOf);
-            documents(k.portfolio(), asOf).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p, pfLimits)));
+            Map<String, Double> portfolios = portfolioLimits(asOf);       // the system baskets' limits (their definitions: the basket store)
             versions.put("scenarioSet", setId);
             b.batchId(sum.batchIds().isEmpty() ? "" : sum.batchIds().get(0));
             VarBook book;
@@ -648,7 +643,7 @@ final class VarLoader {
         if ("true".equalsIgnoreCase(String.valueOf(text(set, "SYNTHETIC")))) {
             v.put(STRESS_SYNTHETIC, "true");
         }
-        return new VarDate(vd.date(), vd.book(), vd.portfolios(), vd.version() + "|set=" + setId, vd.loadedAt(), vd.loadMs(), vd.vectorMs(),
+        return new VarDate(vd.date(), vd.book(), vd.portfolioLimits(), vd.version() + "|set=" + setId, vd.loadedAt(), vd.loadMs(), vd.vectorMs(),
                 vd.intake(), v, vd.warnings(), vd.currency(), vd.fx(), null);
     }
 
@@ -943,9 +938,7 @@ final class VarLoader {
             return null;
         }
         v.put("scenarioSet", book.scenarioSet());
-        Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
-        Map<String, Double> pfLimits = portfolioLimits(AsOf.of(date));
-        documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p, pfLimits)));
+        Map<String, Double> portfolios = portfolioLimits(AsOf.of(date));
         tier.opened(book);
         long ms = (System.nanoTime() - t0) / 1_000_000;
         VarDate vd = new VarDate(date, book, portfolios, version(date), java.time.Instant.now(), ms, 0, sum, v, List.of(), VarDate.USD, fx);

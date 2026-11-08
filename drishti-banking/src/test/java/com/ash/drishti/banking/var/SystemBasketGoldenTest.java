@@ -17,7 +17,7 @@ package com.ash.drishti.banking.var;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.api.DataNode;
+import com.ash.drishti.identity.content.FileContentStore;
 import com.ash.drishti.banking.compute.var.ScopeResolver;
 import com.ash.drishti.banking.compute.var.VarBook;
 import com.ash.drishti.banking.compute.var.VarCalc;
@@ -41,6 +41,7 @@ import java.util.TreeMap;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * The golden test of the system baskets (VAR_GUIDE.md section 5.7) on the committed test data's demo date, 2026-09-30, in USD.
@@ -50,7 +51,8 @@ import org.junit.jupiter.api.Test;
  * vector (a digest of the float64 bits), its VaR and ES (exact doubles), its limit from {@code var-limit} (hierarchy PORTFOLIO) and the
  * limit use; and the figures of the page {@code PORT PF-RATES-DESK} shows: its positions with their trades in scope, standalone VaR,
  * component VaR, direction and market value, the counts of longs and shorts, the gross and net market value. The same figures computed
- * now, from the definitions as they are kept (the definitions the date's {@link VarDate.Portfolio} map holds), are equal field by field.
+ * now, from the definitions as they are kept now (the market-risk pack's seed imported into the basket store's system scope, read back as
+ * the date's portfolios with their var-limit limits), are equal field by field.
  */
 class SystemBasketGoldenTest {
 
@@ -60,6 +62,8 @@ class SystemBasketGoldenTest {
     static VarBook book;
     static Path repo;
     static Map<String, Double> limits;
+    @TempDir
+    static Path store;
 
     @BeforeAll
     static void load() throws IOException {
@@ -74,16 +78,15 @@ class SystemBasketGoldenTest {
         sums.close();
     }
 
-    /** The definitions as the server keeps them now: the demo's system baskets, as the date's portfolios. */
+    /** The definitions as the server keeps them now: the pack's seed imported into an empty system scope, read back on the date. */
     static Map<String, VarDate.Portfolio> definitions() throws IOException {
-        Map<String, VarDate.Portfolio> out = new TreeMap<>();
-        TestDataBook.lines(repo.resolve("data/testdata/market-risk/portfolio"), n -> {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> m = TestDataBook.JSON.convertValue(n, Map.class);
-            String id = String.valueOf(m.get("PORTFOLIO_ID"));
-            out.put(id, VarDate.Portfolio.of(id, DataNode.of(m), limits));
-        });
-        return out;
+        VarSystemBaskets sb = new VarSystemBaskets(new FileContentStore(store.resolve("content")));
+        Object seed = VarSystemBasketEdit.YAML.readValue(repo.resolve("config/packs/banking/market-risk/seeds/system-baskets.yaml").toFile(),
+                Object.class);
+        assertThat(sb.seed(seed, "test", null)).as("seeded").isEqualTo(28);
+        assertThat(sb.seed(seed, "test", null)).as("seeded once").isZero();
+        assertThat(sb.skipped()).isEmpty();
+        return new TreeMap<>(sb.portfolios(java.time.LocalDate.parse(TestDataBook.DATE), limits));
     }
 
     /** Every portfolio's figures, and the page's, as the golden file keeps them. */
@@ -176,7 +179,7 @@ class SystemBasketGoldenTest {
     @Test
     void theSystemBasketsAnswerAsThePortfoliosDid() throws IOException {
         Map<String, Object> have = describe(definitions());
-        JsonNode got = TestDataBook.JSON.valueToTree(have);
+        JsonNode got = TestDataBook.JSON.readTree(TestDataBook.JSON.writeValueAsString(have));   // numbers typed as a file reads them
         String record = System.getenv("DRISHTI_GOLDEN_RECORD");        // set once, to record the golden file
         if (record != null && !record.isBlank()) {
             Path out = Path.of(record);
