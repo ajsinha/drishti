@@ -190,7 +190,60 @@ def capacity_download(**_) -> Markup:
     return K.host(K.schema(props), {"inputs": "plan"}, attrs={"data-cap-download-fields": ""}, label="Which inputs?")
 
 
+LAKE_MODES = [("overwrite-dates", "Replace those dates (re-runs are safe)"), ("overwrite-partitions", "Replace only those dates and classifier values"),
+              ("append", "Add the rows")]
+
+
+def lake_file(*, max_mb: int = 0, **_) -> Markup:
+    """Admin › Lakes, step 1: the file (the page's script uploads it at once)."""
+    return field(key="file", kind="file", title=f"A .json (array), .jsonl, .ndjson or .gz file, up to {max_mb:,} MB",
+                 accept=".json,.jsonl,.ndjson,.gz,application/json", hook={"data-file": ""})
+
+
+def lake_fields(**_) -> Markup:
+    """Admin › Lakes, step 2: the id field (the file's fields, filled by the page's script) and another business date."""
+    props = {"key": K.select("Id field (one row per id and date)", None, [], hook={"data-key": ""}),
+             "asOf": K.date("Another business date for the whole file (optional)", None, hook={"data-lake-asof": ""})}
+    return K.host(K.schema(props), {"key": ""}, attrs={"data-lake-fields": ""}, layout="columns", label="Id and business date")
+
+
+def lake_target(**_) -> Markup:
+    """Admin › Lakes, step 3: where it goes (the lakes, roots and packs filled by the page's script), how a date already there is
+    treated, and whether to bind and announce."""
+    props = {"table": K.select("Lake", None, [("", "A new lake (table)")], hook={"data-table": ""}),
+             "root": K.select("Lake root", None, [], hook={"data-root": ""}),
+             "domain": K.text("Domain", None, mono=True, hook={"data-domain": ""}, placeholder="trading"),
+             "kind": K.text("Kind (the table)", None, mono=True, hook={"data-kind": ""}, placeholder="deal"),
+             "mode": K.select("When a date is already there", None, LAKE_MODES, hook={"data-mode": ""}),
+             "pack": K.select("Pack (its Delta connector reads the lake)", None, [], hook={"data-pack": ""}),
+             "bind": K.check("Bind the lake to the pack's Delta connector (a new connector file, or the kind added to it; kept in its history)", None, hook={"data-bind": ""}),
+             "signal": K.check("Tell the server the data landed (Data loads, alerts, notices)", None, hook={"data-signal": ""})}
+    return K.host(K.schema(props), {"table": "", "root": "", "domain": "", "kind": "", "mode": "overwrite-dates", "pack": "", "bind": True, "signal": True},
+                  attrs={"data-lake-target": ""}, layout="columns", label="Where it goes")
+
+
+def net_explain(*, roles=(), **_) -> Markup:
+    """Admin › Drishti*net, Explain a request: a kind and id, or a search, as a role, on a past date (the page's script asks the server)."""
+    props = {"kind": K.text("Kind", None, mono=True, hook={"data-ex-kind": ""}, placeholder="trade"),
+             "id": K.text("Id (optional)", None, mono=True, hook={"data-ex-id": ""}, placeholder="IRS-48213"),
+             "q": K.text("or a search", None, mono=True, hook={"data-ex-q": ""}, placeholder="TRD where mtm > 1m"),
+             "role": K.select("As the role", None, list(roles), empty="mine", hook={"data-ex-role": ""}),
+             "dated": K.check("A past business date (a peer with another calendar is left out)", None, hook={"data-ex-dated": ""})}
+    return K.host(K.schema(props), {"kind": "", "id": "", "q": "", "role": "", "dated": False}, attrs={"data-explain-fields": ""}, layout="columns",
+                  label="Explain a request")
+
+
+def net_node(*, tags=(), peer_only=(), **_) -> Markup:
+    """Admin › Drishti*net, Access: this node's tags and the packs it serves to peers only."""
+    props = {"tags": K.text("This node's tags (comma-separated)", None, mono=True, hook={"data-node-tags": ""}, placeholder="region:emea, tier:risk"),
+             "peerOnly": K.text("Packs served to peers only (comma-separated)", None, mono=True, hook={"data-node-peer-only": ""}, placeholder="market-risk")}
+    return K.host(K.schema(props), {"tags": ", ".join(tags or []), "peerOnly": ", ".join(peer_only or [])}, attrs={"data-node-fields": ""}, layout="columns",
+                  label="This node")
+
+
 BUILDERS: dict[str, Callable[..., Markup]] = {
+    "net_explain": net_explain, "net_node": net_node,
+    "lake_file": lake_file, "lake_fields": lake_fields, "lake_target": lake_target,
     "capacity_growth": capacity_growth, "capacity_download": capacity_download,
     "pack_signature": pack_signature, "pack_data": pack_data,
     "role": role, "user": user, "search": search, "field": field, "access_filter": access_filter, "config_search": config_search,
