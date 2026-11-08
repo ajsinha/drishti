@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 30 · FRTB-SA from the hand-built cases to a desk
+# Tutorial 4 · FRTB-SA from the hand-built cases to a desk
 
 FRTB-SA, the regulator's standard formula for market-risk capital, computed by Drishti for any scope from the positions' sensitivities.
 In this tutorial you start from the design's hand-built cases (small enough to check with a calculator), read the capital stack and the
@@ -27,7 +27,7 @@ About 25 minutes.
 
 ## Before you start
 
-- [Tutorial 25](25-var-from-the-bank-to-a-trade.md) step 1 done once: the VaR test data in the lake, `VAR BANK` answering. FRTB-SA
+- [Tutorial 2, Part A](02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) step 1 done once: the VaR test data in the lake, `VAR BANK` answering. FRTB-SA
   resolves scopes as VaR does.
 - The position sensitivities and the factor dictionary in the lake: `drishti.py lake demo` loads `market-risk/position-sensitivity` (8,052
   records on 2026-09-30) and `market-risk/risk-factor` with the other risk kinds.
@@ -273,9 +273,9 @@ drishti:
 
 - The [FRTB-SA guide](../guides/FRTB_SA_GUIDE.md): every formula, rule and setting.
 - The data contract: [FRTB.md](../contracts/FRTB.md).
-- [Tutorial 32](32-simm-from-the-examples-to-a-netting-set.md): SIMM from the same sensitivities.
+- [Tutorial 5](05-simm.md): SIMM from the same sensitivities.
 
-## When something goes wrong
+## If something goes wrong
 
 - *DRS-5329 the FRTB-SA parameter files are not in …*: `drishti.frtb.parameters-dir` names a folder without `frtb-sa-sbm.yaml`
   and `frtb-sa-drc-rrao.yaml`; blank it to read the market-risk pack's `capital/`.
