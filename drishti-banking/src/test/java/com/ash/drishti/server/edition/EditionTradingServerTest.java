@@ -131,9 +131,9 @@ class EditionTradingServerTest {
         ok(get("/api/v1/bi/datasets").header("Authorization", bearer(fay)).header(EditionContext.HEADER, "trading")).path("datasets")
                 .forEach(d -> ids.add(d.path("id").asText()));
         assertThat(ids).contains("file:table:banking.market_risk_var_latest", "file:table:banking.trading_risk_trades")
-                .doesNotContain("file:table:banking.counterparty_exposure_counterparties", "file:table:bi.live_exposure",
+                .doesNotContain("file:table:banking.counterparty_exposure_counterparties", "file:table:banking.live_exposure_netting",
                         "file:table:bi.world_economics_economies");
         assertThat(ids).allSatisfy(id -> assertThat(id.substring(id.lastIndexOf(':') + 1)).matches(
-                "bi\\.(trading_.*|trades_basic_trade|live_trading.*|market_risk_var_.*)"));
+                "banking\\.(trading_.*|trades_basic_trade|live_trading.*|market_risk_var_.*)"));
     }
 }
