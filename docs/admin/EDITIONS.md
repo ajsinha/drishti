@@ -490,7 +490,7 @@ each on a copy of a booked trade of the product scaled to your notional, give on
 85%* and *Counterparty near its limit · peak PFE 401.5m → 409.2m · 97% of limit*. When the trade copied has no paths on the day's run the
 counterparty half is the engine's add-on proxy, labelled **proxy**; both halves are the server's engines and need no compute workers.
 
-**Other settings** (all in `trading:`): `near-limit` (0.8: from this share of a limit a book is "near"), `limit-days` (5),
+**Other settings** (all in `trading:`): `near-limit` (0.8: from this share of its VaR limit a book is "near"; the counterparty half takes the exposure engine's own status), `limit-days` (5),
 `pnl-var-days` (60), `max-rows` (20,000 valuations a date before the figures say **partial**), `live-statuses` (`NEW`, `VALIDATED`,
 `AMENDED`).
 
@@ -985,10 +985,11 @@ copy's).
 - **VaR**: `POST /api/v1/var/what-if {scope: BOOK:<book>, items: [{copyOf, factor}]}` (the VaR page's basket what-if, the server's VaR engine)
   gives VaR before and after; the book's limit (its `/var/scope`) gives limit use before and after: **fits** below `near-limit`, **near**
   from it, **breaches** above 100%; no limit: the change only. When the engine cannot answer (no vectors for the book on the date) the half says why.
-- **Counterparty**: `POST /api/v1/exposure/what-if {scope: CPTY:<cp>, method: paths, q: the limit's confidence, candidates: [the copy into
-  the counterparty's largest netting set]}` (the exposure page's pre-deal check) gives peak PFE before and after against the counterparty's
-  credit limit: fits, near or breaches. When the exact `paths` method cannot run (the trade copied has no paths on the run, or no netting
-  set to deal into) the engine's own conservative `addon` proxy answers, labelled **proxy** with the reason.
+- **Counterparty**: the exposure engine's pre-deal check, `POST /api/v1/risk/exposure/predeal {counterparty, like: <the copy>, notional,
+  side}` (EXPOSURE_GUIDE.md section 18.9): the decision and the counterparty's credit limit before and after, and the state as the server
+  says it: **fits** (the limit `within`), **near** (from the engine's `drishti.ccr.exposure.limit-near`), **breaches** (a decline), or
+  **refer** with the reason; the console applies no share of its own. When the copied trade has no paths on the run the same check is
+  asked described, the engine's conservative proxy, labelled **proxy**, which refers.
 
 #### What the data does not give (left out or labelled, never invented)
 
