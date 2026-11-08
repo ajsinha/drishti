@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The scenario matrix in the console (SMAT, routes/smat_routes.py; VAR_GUIDE.md section 3.9): the command and its spaced forms, the
+"""The scenario matrix in the console (SMAT, plugins/banking/routes/smat_routes.py; VAR_GUIDE.md section 3.9): the command and its spaced forms, the
 page and its JSON, Arrow, CSV and Arrow file read from the server as the person, gaps said in the export (never zeros), the links on the
 entity pages and the VaR page offered only where the word is (Drishti Risk and Trading; not Market or World, DRS-4023), FUNC and the
 type-ahead. The server's own logic (the values against the stored vectors, PV to P&L, ranks, gaps, masks) is VarMatrixApiTest's."""
@@ -29,7 +29,8 @@ from core import arrow_answer
 from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
-from routes.smat_routes import smat_command, to_csv
+from plugins.banking.routes.smat_routes import smat_command, to_csv
+import engine_fakes  # noqa: E402
 
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
 MARKET_ABOUT = {"product": "Drishti Market", "tagline": "Curves", "edition": {"name": "market", "title": "Drishti Market"}}
@@ -105,7 +106,7 @@ def _var(backend, monkeypatch, sent: list):
             return json.dumps(ANSWER).encode(), {"content-type": "application/json"}
         return ANSWER
 
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
 
 
 def test_the_page_and_its_answers_are_read_as_the_person(backend, monkeypatch):

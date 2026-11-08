@@ -101,7 +101,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 | Question | Drishti today | Gap |
 |---|---|---|
 | *Show me this economy* | **Built**: `ECON`, `MACRO`, `FCST`, `LABR`, `FISC`, `SOCI`, `JUR`, `PARTY`, `OFFC`, `ELEC`; forms on | — |
-| *Compare the G7 (or G20, or emerging markets)* | **Partly**: the World map shows G7 and G20 as **member lists** (hard-coded in `drishti-console/web/static/js/drishti_world-landing.js`); the pack's groups are World Bank regions, income groups and the World; the income groups stand for emerging markets | G7 and G20 as country groups with GDP-weighted figures like the others (section 5.2) |
+| *Compare the G7 (or G20, or emerging markets)* | **Partly**: the World map shows G7 and G20 as **member lists** (hard-coded in `drishti-console/plugins/economy/static/js/drishti_world-landing.js`); the pack's groups are World Bank regions, income groups and the World; the income groups stand for emerging markets | G7 and G20 as country groups with GDP-weighted figures like the others (section 5.2) |
 | *Which elections are coming up?* | **Not served**: an election's next date is free text (`NEXT_ELECTION`, "by December 2028", [world-economy README](../../config/packs/world-economy/README.md)); the tile was replaced by funds and ETFs | A parsed date window (section 5.3) |
 | *Who owns this company? Who is its ultimate parent?* | **Built**: `LEI`, `LEIG`, `LEIR`, `LEIC`, `LEIM`; a company and its LEI record link both ways when us-equities is on ([gleif README](../../config/packs/gleif/README.md)) | Parent changes over time (section 5.6) |
 | *Which funds hold this company? Which ETFs track this index?* | **Built**: `HELD`, `TRACK`, `FUND` (the 200 largest US funds and ETFs, newest N-PORT) | Holdings changes between quarters (section 5.7) |
@@ -488,8 +488,8 @@ row.
 ![The World landing mock-ups: A World desk, B Explorer, C World map](mockups/world/world-landing.png)
 
 [Open the mock-up](mockups/world/world-landing.html). **Chosen:** all three, A the default ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)).
-A teal accent on the terminal look. **Code:** [`world_landing.html`](../../drishti-console/web/templates/home/world_landing.html),
-[`drishti_world-landing.js`](../../drishti-console/web/static/js/drishti_world-landing.js), [`drishti_world-landing.css`](../../drishti-console/web/static/css/drishti_world-landing.css)
+A teal accent on the terminal look. **Code:** [`world_landing.html`](../../drishti-console/plugins/economy/templates/home/world_landing.html),
+[`drishti_world-landing.js`](../../drishti-console/plugins/economy/static/js/drishti_world-landing.js), [`drishti_world-landing.css`](../../drishti-console/plugins/economy/static/css/drishti_world-landing.css)
 (the packs' own answers through `/api/home/search` and `/api/raw`, [`edition_routes.py`](../../drishti-console/routes/edition_routes.py)),
 [`world.yaml`](../../config/editions/world.yaml). The mock-up's figures are illustrative. Its warning, *IMF figures and Yahoo prices are for
 internal demonstrations only*, is a decision, not a panel: shown inside the bank (product owner, 2026-10-29); an external showing needs a
@@ -499,7 +499,7 @@ decision and the switch of WL12.
 `FUND` by net assets); every economy, topic, fund and region tile is a link; the Group by and Measure toggles (C) redraw the regions in
 place; chips and quick cards run their commands. A landing switch and the lens links sit above every landing. **States.** *Loading:* `…`.
 *Error:* `Not available: <reason>` in the panel (each panel on its own answer). *Empty:* "Nothing yet: type a command above" (Recently
-opened). **Phone** (600 px and below): one column ([`drishti_world-landing.css`](../../drishti-console/web/static/css/drishti_world-landing.css)); the
+opened). **Phone** (600 px and below): one column ([`drishti_world-landing.css`](../../drishti-console/plugins/economy/static/css/drishti_world-landing.css)); the
 mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |

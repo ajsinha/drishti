@@ -20,33 +20,13 @@
    as a checklist (the name here, where it comes from, its type, the key) with computed columns as Rachana formulas; the filter, the grain
    and the materialisation; business dates follow the source. The Text toggle shows the same table as one Rachana statement. The name
    and title, the rows' filter, grain and materialisation and the look-up dialog are drishti-inputs' Form (live, or submitted in the
-   dialog) with a Rachana formula widget; the columns stay a grid of their own. */
+   dialog) with the Form's formula widget (completing from the columns and functions: E.complete); the columns stay a grid of their own. */
 (function () {
   'use strict';
   var E = window.Drishti.editors;
   var TYPES = ['string', 'integer', 'decimal', 'boolean', 'date', 'timestamp'];
   var text = false;     // the Text toggle, for this page
   var I = window.Drishti.elements && window.Drishti.elements.inputs;
-
-  /** The Rachana formula widget of the editors' forms: a field with the type-ahead of the columns and functions (drishti_editor-formula.js). */
-  function formulaWidget(ctx) {
-    return function (w) {
-      var inp = ctx.h('input', { class: 'ed-in', id: w.id, value: w.value || '', 'aria-describedby': w.describedBy, placeholder: w.field.placeholder || '', spellcheck: 'false', autocomplete: 'off' });
-      inp.readOnly = !!w.readOnly;
-      inp.addEventListener('input', function () { w.set(inp.value.trim() || undefined); });
-      inp.addEventListener('blur', w.touch);
-      E.formula(inp, ctx.names);
-      return { el: inp, input: inp, setValue: function (v) { inp.value = v || ''; }, focus: function () { inp.focus(); } };
-    };
-  }
-  /** A live Form for some of the document's fields: each change goes into the document, each focus tells the editor where the cursor is. */
-  function liveForm(ctx, cls, label, schema, value, apply) {
-    var host = ctx.h('div', { class: cls });
-    var f = new I.Form(host, { schema: { type: 'object', properties: schema }, value: value, live: true, layout: 'columns', label: label, pathAttr: 'data-form-path', widgets: { formula: formulaWidget(ctx) } });
-    f.on('change', function (e) { ctx.change(function (d) { apply(d, e.path, e.value); }, e.path); });
-    host.addEventListener('focusin', function (e) { var p = e.target.getAttribute && e.target.getAttribute('data-path'); if (p) { ctx.focus(p); } });
-    return host;
-  }
 
   function kindOf(ctx, doc) {
     var k = doc.from && doc.from.kind;
@@ -84,7 +64,7 @@
           title: S.statementRefused || 'The same table as one Rachana statement', disabled: !!S.statementRefused, on: { click: function () { text = true; ctx.redraw(); } } }, 'Text')));
     host.appendChild(bar);
     if (text && !S.statementRefused) { return statement(ctx, host); }
-    host.appendChild(liveForm(ctx, 'ed-row2', 'The table', {
+    host.appendChild(E.liveForm(ctx, 'ed-row2', 'The table', {
       table: { type: 'string', title: 'Name', hook: { 'data-path': 'table' } },
       title: { type: 'string', title: 'Title', hook: { 'data-path': 'title' } } }, { table: doc.table, title: doc.title },
     function (d, path, v) { var t = (v || '').trim(); if (path === 'table') { d.table = t; } else if (t) { d.title = t; } else { delete d.title; } }));
@@ -136,12 +116,12 @@
     var names = [], parents = {};                                     // the columns of every table; the ones offered follow the table picked
     tables.forEach(function (t) { (t.columns || []).forEach(function (c) { if (!parents[c.name]) { parents[c.name] = []; names.push(c.name); } parents[c.name].push(t.table); }); });
     var host = h('div', { class: 'ed-form' });
-    var f = new I.Form(host, { submitLabel: 'Add the look-up', submitHook: 'lookup-go', resetButton: false, pathAttr: 'data-form-path', label: 'Look up a column from another table', widgets: { formula: formulaWidget(ctx) },
+    var f = new I.Form(host, { submitLabel: 'Add the look-up', submitHook: 'lookup-go', resetButton: false, pathAttr: 'data-form-path', label: 'Look up a column from another table',
       value: { table: tables.length ? tables[0].table : undefined, columns: [] },
       schema: { type: 'object', required: ['table', 'on', 'columns'], properties: {
         table: { type: 'string', title: 'Table', enum: tables.map(function (x) { return x.table; }), enumLabels: tables.map(function (x) { return x.table + (x.connector ? ' · ' + x.connector : ''); }),
           widget: 'select', allowEmpty: false, hook: 'lookup-table' },
-        on: { type: 'string', title: 'On', description: 'The key in this table\'s source: a path or a formula', widget: 'formula', placeholder: '$.DESK', hook: 'lookup-on' },
+        on: { type: 'string', title: 'On', description: 'The key in this table\'s source: a path or a formula', widget: 'formula', options: { complete: E.complete(ctx.names) }, placeholder: '$.DESK', hook: 'lookup-on' },
         columns: { type: 'array', title: 'Columns to bring in', items: { type: 'string', enum: names }, widget: 'checkboxes', optionHook: 'lookup-col', dependsOn: 'table', parents: parents } } },
       onSubmit: function (v) {
         var t = tables.filter(function (x) { return x.table === v.table; })[0] || { columns: [] };
@@ -233,8 +213,8 @@
     var h = ctx.h;
     var mat = typeof doc.materialize === 'string' ? doc.materialize : doc.materialize && doc.materialize.live ? 'live' : 'none';
     var kinds = [['none', 'read on demand'], ['on-load', 'kept per business date, rebuilt on each load']].concat(mat === 'live' ? [['live', 'live (in memory by key)']] : []);
-    return h('section', { class: 'ed-card' }, h('h3', { text: 'Rows' }), liveForm(ctx, 'ed-rows', 'Rows', {
-      filter: { type: 'string', title: 'Keep the rows where (Rachana over the source)', widget: 'formula', hook: { 'data-path': 'filter' } },
+    return h('section', { class: 'ed-card' }, h('h3', { text: 'Rows' }), E.liveForm(ctx, 'ed-rows', 'Rows', {
+      filter: { type: 'string', title: 'Keep the rows where (Rachana over the source)', widget: 'formula', options: { complete: E.complete(ctx.names) }, hook: { 'data-path': 'filter' } },
       grain: { type: 'string', title: 'One row per (grain: a list in the document)', hook: { 'data-path': 'grain' } },
       materialize: { type: 'string', title: 'Materialisation', enum: kinds.map(function (k) { return k[0]; }), enumLabels: kinds.map(function (k) { return k[1]; }), widget: 'select', allowEmpty: false,
         readOnly: mat === 'live', hook: { 'data-path': 'materialize', 'data-materialize': '' } } },

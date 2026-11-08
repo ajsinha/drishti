@@ -685,8 +685,8 @@
       var by = window.prompt("Expand " + row.label + " by which field?", "");
       if (by) { state.grid.model.pivotState.toggle("rows", row.path, true, by.trim()); again(); }
     }});
-  // The screen's one face for the code around it, which reads the view and the answer and never computes: a lens (the MR cube,
-  // drishti_mr-lens.js) changes the view's options and marks cells; the custom functions, explain and what-if cards (drishti_pivot-functions.js)
+  // The screen's one face for the code around it, which reads the view and the answer and never computes: a module's lens (its
+  // plugin.yaml's screens.pivot script) changes the view's options and marks cells; the custom functions, explain and what-if cards (drishti_pivot-functions.js)
   // read the view, its answer and the selection; the switches, live pivots and comments (drishti_pivot-switches.js) send the request body
   // as asked, draw a pushed answer, mark the commented cells.
   window.Drishti.PivotScreen = {

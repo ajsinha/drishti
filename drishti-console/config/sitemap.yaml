@@ -28,8 +28,9 @@
 #   cmd:<WORD>           a command the edition shows (its commands.allow, or a word it keeps)
 #   route:<path>         the server has a page at that path
 #   engine:<id>          the compute engine runs on a server of the cluster
+#   module:<id>          the domain module is on for the person (ACCESS_MODEL.md)
 # Visibility tags, on an item, a column or a menu (the innermost wins): domain: the domain module it belongs to (core when not said;
-# banking, economy: drawn while the module is on, console setting domains.off lists the ones switched off) and lenses: the lenses it
+# banking, economy: drawn while the module is on for the person, as the server says: core/modules.py) and lenses: the lenses it
 # shows in (none said: every lens; the full product, outside any lens, shows everything its requirements allow). What a person sees
 # follows their role (requires:) and their lens (lenses: and the lens's own menus: lists), per request: nothing is kept per person.
 # also: [ids] on a menu draws items listed elsewhere in it (the Admin strip's BI settings and Commands, the BI rail's Pivot) without

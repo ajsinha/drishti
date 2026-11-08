@@ -2283,6 +2283,7 @@
     var Combobox = __m["src/drishti_combobox.js"].Combobox;
     var TreePicker = __m["src/drishti_tree-picker.js"].TreePicker;
     var CodeEditor = __m["src/drishti_code-editor.js"].CodeEditor;
+    var upgradeCodeArea = __m["src/drishti_code-upgrade.js"].upgradeCodeArea;
     const WIDGETS = new Map();
     function defineWidget(name, factory) { WIDGETS.set(name, factory); }
     function defaultWidget(fs) {
@@ -2392,6 +2393,18 @@
         case 'combobox': control = mount(Combobox, { value: v === undefined || v === null ? null : { value: v, label: String(v) } }); break;
         case 'tree': control = mount(TreePicker, { value: v || [] }); break;
         case 'code': control = mount(CodeEditor, { value: v || '', readOnly: ro, height: (fs.options && fs.options.height) || 120 }); break;
+        case 'formula': {                                         // a one-line code editor; the input holds the value (upgradeCodeArea)
+          const fo = fs.options || {};
+          const inp = part.input = named(form.el('input', { cls: 'di-field di-formula', attrs: { id: id, type: 'text', 'data-di-code': fo.mode || 'rachana', 'aria-describedby': described,
+            readonly: ro || null, placeholder: fs.placeholder || null, autocomplete: 'off', spellcheck: 'false' } }));
+          inp.value = v === undefined || v === null ? '' : String(v);
+          inp.drishtiCodeOptions = { complete: fo.complete, label: f.label };
+          inp.addEventListener(fs.lazy ? 'change' : 'input', () => set(inp.value === '' ? undefined : inp.value));
+          inp.addEventListener('blur', touch);
+          Promise.resolve().then(() => { if (inp.isConnected && !inp.drishtiCode) { upgradeCodeArea(inp); } });   // once in the page (a page's observer may be first)
+          control = inp;
+          break;
+        }
         case 'textarea': {
           const ta = part.input = named(form.el('textarea', { cls: 'di-field', attrs: { id: id, rows: String((fs.options && fs.options.rows) || 3), 'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || null } }));
           ta.value = v === undefined || v === null ? '' : String(v);

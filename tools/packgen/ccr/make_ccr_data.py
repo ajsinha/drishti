@@ -313,7 +313,7 @@ def samples(docs: dict[str, list[dict]]) -> dict[Path, str]:
 
 
 def write_side_files(docs: dict[str, list[dict]], ref: dict) -> None:
-    """The parity reference of drishti-compute's test and the pack's samples, beside the committed test data."""
+    """The parity reference of drishti-compute-banking's test and the pack's samples, beside the committed test data."""
     REFERENCE.parent.mkdir(parents=True, exist_ok=True)
     REFERENCE.write_text(reference_text(ref), encoding="utf-8")
     for f, t in samples(docs).items():

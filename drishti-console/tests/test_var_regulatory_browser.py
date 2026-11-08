@@ -15,7 +15,7 @@
 """Regulatory VaR's three screens in a real browser (docs/guides/VAR_GUIDE.md sections 18.10, 18.11 and 18.14), over the market-risk
 pack's committed VaR data and desk P&L built into a scratch lake (lake demo --as-of data --only market-risk/<the VaR kinds>,desk-pnl),
 served by its Delta connector with the demo connector off, sign-in on and ``drishti.regulatory.synthetic-history`` on; the administrator
-seeds the synthetic official history (``POST /api/v1/var/official/synthetic-history?days=259``) once the server has captured the newest
+seeds the synthetic official history (``POST /api/v1/risk/var/official/synthetic-history?days=259``) once the server has captured the newest
 date. Three people sign in: a maker, a checker and an approver.
 
 - ``VAR BANK BACKTEST <GO>`` opens the backtest: the zone, the multiplier, the counts at 99% and 97.5% and the exceptions are the API's
@@ -89,7 +89,7 @@ def stack(tmp_path_factory):
         # background; the synthetic history is seeded before it (refused with 404 until that record exists)
         deadline = time.monotonic() + 600
         while True:
-            status, out = _server(st, "POST", "/api/v1/var/official/synthetic-history?days=259", seconds=300)
+            status, out = _server(st, "POST", "/api/v1/risk/var/official/synthetic-history?days=259", seconds=300)
             if status == 200:
                 break
             if time.monotonic() > deadline or status not in (404, 503):

@@ -809,7 +809,7 @@ for "emerging markets"); a debt aggregate per group (computed, GDP-weighted, fro
 The product owner asked for a third edition on the same mechanism (2026-10-29, mock-ups approved: "mockups look cool, go ahead"):
 **`market`**, branded **Drishti Market**, the bank's own market data, the curves, surfaces and fixings that feed risk and valuations. No
 trades and no VaR. It is one file, [`config/editions/market.yaml`](../../config/editions/market.yaml), plus its landings and one console
-helper (`core/market_landing.py`); nothing in the engines changed.
+helper (`plugins/banking/market_landing.py`); nothing in the engines changed.
 
 | Area | Shown | Hidden |
 |---|---|---|
@@ -826,7 +826,7 @@ helper (`core/market_landing.py`); nothing in the engines changed.
 
 Drawn in the terminal look with a **violet accent** (`#a78bfa` on the dark themes, `#6d28d9` on the light ones). One template,
 `home/market_landing.html`, with `static/js/drishti_market-landing.js` and `static/css/drishti_market-landing.css`. The figures are worked out in the
-console by `core/market_landing.py` from the pack's own answers (search, raw documents, the business date and one field's history,
+console by `plugins/banking/market_landing.py` from the pack's own answers (search, raw documents, the business date and one field's history,
 `/api/v1/history/{kind}/{id}/series`), with the person's identity, lens and date box, read-only and cached for two minutes per person, and
 served by `/api/home/market/desk`, `/api/home/market/moves` and `/api/home/market/quality` (`404 DRS-4023` unless the person's edition or
 lens shows `CRV`).
@@ -884,7 +884,7 @@ A landing chosen in one lens is kept when it is also the next one's (`desk`, `ex
 The product owner asked for a fourth edition for traders and desk heads (2026-10-30, mock-ups approved: "show me mockups and then let us
 just build"): **`trading`**, branded **Drishti Trading**, a person's own books, P&L, VaR and limits, today's trades and counterparties, and
 whether the next trade fits. It is one file, [`config/editions/trading.yaml`](../../config/editions/trading.yaml), its landings, one console
-helper (`core/trading_landing.py`) and its read-only routes (`routes/trading_routes.py`); one server change: the person's settings keep
+helper (`plugins/banking/trading_landing.py`) and its read-only routes (`plugins/banking/routes/trading_routes.py`); one server change: the person's settings keep
 their View as choice (`tradingView`). Nothing in the engines changed.
 
 | Area | Shown | Hidden |
@@ -926,7 +926,7 @@ Desk head's figures by trader say so instead of guessing (tested: `test_scoping_
 
 Drawn in the terminal look with a **green accent** (`#4fd18b` on the dark themes, `#1a7f4b` on the light ones). One template,
 `home/trading_landing.html`, with `static/js/drishti_trading-landing.js` and `static/css/drishti_trading-landing.css`. The figures are worked out by
-`core/trading_landing.py` and served read-only by `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and
+`plugins/banking/trading_landing.py` and served read-only by `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and
 `POST /api/home/trading/check` (`404 DRS-4023` unless the person's edition or lens shows `TRD`; the check also the words `VAR` and `EXP`), cached
 two minutes per person, date and scope; two panels needing the same valuations wait for one read.
 

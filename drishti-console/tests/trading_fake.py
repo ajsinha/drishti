@@ -29,6 +29,7 @@ import re
 from conftest import FakeBackend
 from core import asof
 from core.backend import BackendError
+import engine_fakes  # noqa: E402
 
 BOOKS = ["BOOK-RATES-1", "BOOK-RATES-2", "BOOK-RATES-3"]
 CPS = ["CP-ALDERSHOT", "CP-NORTHPLAINS", "CP-MERIDIAN"]
@@ -131,6 +132,8 @@ class TradingBackend(FakeBackend):
             day = asof.current() if asof.current() != "live" else "2026-09-30"
             return {"ref": {"kind": kind, "id": id_}, "provenance": {"businessDate": self.carried or day}, "data": trade(i, day)}
         raise BackendError(404, "DRS-1001", f"no source holds {kind}/{id_}")
+
+    engine = engine_fakes.method
 
     async def var(self, method, path, ident, body=None, raw=False, accept="", **params):
         self.asked.append(("var", method, path, dict(params), body))

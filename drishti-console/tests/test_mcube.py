@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The MR cube in the console, the Pivot's preset mr (config/pivot-presets.yaml, routes/pivot_routes.py, routes/mcube_routes.py;
+"""The MR cube in the console, the Pivot's preset mr (config/pivot-presets.yaml, routes/pivot_routes.py, plugins/banking/routes/mcube_routes.py;
 docs/guides/MR_CUBE_GUIDE.md, PIVOT_GUIDE.md › Presets): MCUBE and its forms lead to /pivot?preset=mr, the pivot screen on source var with the MR
 lens (landing A, tabs B and C; one pivot engine, no second grid), the typed view laid over the landing, /mcube kept as the older address, every MR
 answer read from the server as the person through the same-origin proxy /api/pivot/mr/..., the server's refusals passed on in words. The
@@ -23,8 +23,9 @@ from __future__ import annotations
 import pytest
 
 from core.backend import BackendError
-from routes.mcube_routes import mcube_command, parse
+from plugins.banking.routes.mcube_routes import mcube_command, parse
 from test_play import RISK_ABOUT, _app
+import engine_fakes  # noqa: E402
 
 
 @pytest.mark.parametrize("typed, where", [
@@ -57,6 +58,7 @@ def test_the_page_is_the_pivot_screen_with_the_mr_lens_and_the_api_is_read_as_th
         return {"ok": True, "path": path}
 
     monkeypatch.setattr(backend, "pivot", pivot, raising=False)
+    engine_fakes.patch(monkeypatch, backend, pivot=pivot)
     app, c = _app(backend, monkeypatch, RISK_ABOUT)
     r = c.get("/go", params={"q": "MCUBE DESK:RATES BY MGMT.BOOK <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/pivot?preset=mr&text=DESK%3ARATES+BY+MGMT.BOOK"

@@ -156,8 +156,43 @@
   core reference data; economy keeps world-economy and news-and-markets. The Market lens needs capital markets and banking.
 - **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
   only while its modules are on.
+- **Domain modules, phase 2 (first half): the console follows the modules** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)
+  section 8, [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md) section 8; OPERATIONS.md section 22). The console asks the server and
+  nothing else: the public about answer now lists the `modules` loaded, and `GET /api/v1/modules` answers, as the person, the modules not
+  loaded (with why), the lenses open to them (with the modules and functions each needs) and the **functions they may not use** (each with
+  its module and the words to say). A module that is off, or a function off for the person, is gone from every door the console draws:
+  its pages and routes answer 404, menus (sitemap `domain:` tags, now drawn by the module's state; a new `requires: module:<id>`), the
+  Engines menu, the Admin strip, search, the command line and its type-ahead, Help (its guides, tutorials and section) and the Build home
+  leave it out, and typed anyway it says *VRES is not available to you: ask your administrator*.
+- **Domain modules, phase 2 (second half, first steps): the moves.** The banking console code, pages, scripts and styles live in
+  `drishti-console/plugins/banking/` (`routes/`, `templates/`, `static/`, the landings' code, the Build types, the engine calls), the
+  World landing in `plugins/economy/`; the console finds a module's templates after its own and serves a module's files at the same
+  `/static/...` addresses, gated by module and lens. The banking engines are the module's: their catalogue entries in drishti-banking's
+  `META-INF/drishti/engines.yaml` (and the console's `plugins/banking/engines.yaml`), their jar files in its `engines/`; a server without
+  the module lists none of them. Rule 4 of the boundaries as a check: `tools/domain_strings.py` counts the banking names in the core's
+  code against an allow list that only shrinks. `EngineRegistryTest` and `EngineFilesTest` run in drishti-banking (they use its engines).
+- **Static assets by module**: each module's console part is `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words,
+  pages, templates, static files, and the parts it adds to a core screen). An off module's scripts, styles and Elements library are not
+  served (404), and neither to a person whose lens does not use the module (the World lens gets no banking file). The Elements manifest
+  carries each library's `module` (drishti-risk: banking) and the loader refuses a library of a module the page does not list
+  (`<meta name="drishti-modules">`, `configure({modules})`, `refused(name)`).
+- **The console's cycles C1 to C7 are broken in place** (no screen moved yet): the banking routers are included from the plugin's list;
+  commands, retired links, the type-ahead, the Pivot presets' word grammar and the landing rules are hooks the module fills
+  (`core/plugins.py`); one workbook streamer (`core/workbook_stream.py`); the core client has one engine call (`BackendClient.engine`) and
+  the banking calls are the module's own (`plugins/banking/risk_api.py`), **on `/api/v1/risk/…`**; the market landing's figures moved to the
+  banking routes, Admin → Saved VaR baskets to the VaR routes, the Pivot draws the MR lens through the plugin's `screens:`. A static test
+  (`test_module_boundaries.py`) fails when the core imports a module's code, includes its templates or names its files.
+
 ## 2.9.11.e (unreleased)
 
+- **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  the Build workbench's inspector is drishti-designer's `Inspector` (one live `Form` from the Rachana schema; `build/drishti_inspector.js`
+  286 → 242 lines) and its palette the kit's `Palette` (`build/drishti_palette.js` 80 → 63); its expression fields are `Form`'s new
+  **formula** widget, a one-line `CodeEditor` completing shape paths and functions (`build/drishti_expr.js` 107 → 65: the hand-made
+  completion list deleted); `build/drishti_forms.js` is the converter of the structured options into fields (134 → 116). The table editor's
+  own formula widget folded into the `Form`'s; the model editor's Overview (name, title, in words) and Masks are live `Form`s; the Sutra
+  designer's columns checklist is `Form`'s checkboxes. drishti-designer's `Inspector` takes `form` and `head`. The kit guard gains a rule:
+  no console script draws a label and an input in a loop over a schema's properties or fields (an allow-list of 2 that only shrinks).
 - **The forms on drishti-inputs' `Form`** ([ELEMENTS.md 8.2, "The forms on Form"](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
   the query form (`FORM <pack>`: the server sends its schema, the fields are a `Form` embedded in the page's GET form and the address is
   unchanged), the subscription's When, the table editor's name, rows and look-up dialog, BI's Format pane, the Build inspector's
@@ -545,7 +580,7 @@
   a rail grouped Data · Screens · Analysis · Work with a count per kind, lists with lineage both ways (what an item uses, what uses it,
   inverted across every kind gathered for the person), first-visit task tiles (Bring data in, Shape it, Show it, Package it; hidden per
   browser), one search across every kind, + New per kind. Built from one registry of object types (`core/build_registry.py`): the core's
-  types in `core/build_types.py`, banking's (VaR baskets) in `core/build_types_banking.py`, so the domain split moves banking's entries as
+  types in `core/build_types.py`, banking's (VaR baskets) in `plugins/banking/build_types.py`, so the domain split moves banking's entries as
   one file; every source runs at once with a time limit and a failing one leaves its kind without a count. Folded and deleted: *My
   designs* (`build/designs.html`, now the home's *My drafts* partial with its actions; `drishti_build-designs.js` is
   `drishti_build-home.js`), Studio's bare start page (`/studio` redirects to `/build`); **BI Studio's own home is folded in**: `/bi` redirects to `/build`,
@@ -3036,7 +3071,7 @@
   masked for a role without raw, said); P&L against VaR from the official history (left out, with a note, without one); overnight
   movers. **Explorer**: the command line, chips, grouped commands, recent Trading commands. Read-only routes
   `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and `POST /api/home/trading/check` (`DRS-4023` unless the
-  edition or lens shows the commands), `core/trading_landing.py` (EDITIONS.md section 14).
+  edition or lens shows the commands), `plugins/banking/trading_landing.py` (EDITIONS.md section 14).
 - **Four lenses by default**: `drishti.lenses` is `risk,world,market,trading` (server `application.yaml`, the stack, Docker, the AWS
   example); Open, Leave and Switch to across all four; no design link inside the Trading lens.
 - **Tests**: `EditionTradingServerTest` (the lens through the real settings API, its commands, `ECON`, `SCN`, `COLL`, `FRTB` refused with
@@ -3089,7 +3124,7 @@
   and `EXP` off), no trades and no VaR, the Market data Knowledge page, branding "Drishti Market". The pack ships no BI dataset yet: BI is
   kept to `market-data-*` names, so it offers no VaR, exposure or world item.
 - **Its Home**: the three approved mock-ups, Market desk (default), Explorer and Quality, in the terminal look with a violet accent. The
-  figures are worked out by `core/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's
+  figures are worked out by `plugins/banking/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's
   history) and served read-only by `/api/home/market/desk`, `/moves` and `/quality` (`DRS-4023` unless the edition or lens shows `CRV`).
   Desk: USD OIS 10Y, USD 2s10s, EUR/USD 1M ATM vol, the CDS 5Y median and the data exceptions, with a day-over-day change only when both
   days hold real data; the USD curves against a week ago (else OIS against projection); the biggest moves in σ of each item's own history

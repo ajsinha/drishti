@@ -29,18 +29,9 @@ from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes, phone_routes
 from core.edition import ADMIN_PAGES, WORDS
 from routes.common import ident, packs, render
-from routes.var_routes import redirect_for as var_redirect
-from routes.var_routes import retired_link as var_retired_link
-from routes.exposure_routes import predeal_redirect
-from routes.exposure_routes import redirect_for as exp_redirect
-from routes.frtb_routes import redirect_for as frsa_redirect
-from routes.simm_routes import redirect_for as simm_redirect
-from routes.play_routes import redirect_for as play_redirect
-from routes.smat_routes import redirect_for as smat_redirect
-from routes.mcube_routes import redirect_for as mcube_redirect
-from core import pivot_presets as _pivot_presets
+from core import modules as _modules
+from core import plugins as _plugins
 from routes.pivot_routes import redirect_for as pivot_redirect
-from routes.exposure_routes import retired_link as exp_retired_link
 
 router = APIRouter(include_in_schema=False)
 
@@ -118,6 +109,8 @@ async def go(request: Request, q: str = ""):
     typed = q.replace("<GO>", "").replace("<go>", "").strip()
     ed = getattr(request.state, "edition", None) or request.app.state.editions.instance
     head = typed.split(None, 1)[0].upper() if typed else ""
+    if (gone := _modules.typed_refusal(typed)) is not None:        # a function whose module is off, switched off or not the person's
+        return RedirectResponse(f"/t?error={quote(gone)}", status_code=303)   # (ACCESS_MODEL.md): "VRES is not available to you: ..."
     from core import engines as _engines
     if (off := _engines.typed_engine(typed)) is not None:          # FRSA with FRTB-SA running nowhere: said in the server's words (DRS-1020)
         return RedirectResponse(f"/t?error={quote(_engines.refusal(off))}", status_code=303)
@@ -148,26 +141,10 @@ async def go(request: Request, q: str = ""):
         rest = " ".join(words[1:])
         return RedirectResponse("/data" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
     me = getattr(request.state, "identity", None)
-    if ed.word_on("VAR") and (to_var := var_redirect(typed, (me.user if me else "") or "")) is not None:   # VAR DESK RATES: the VaR explorer (var_routes.py)
-        return to_var
-    if ed.word_on("PLAY") and ed.word_on("VAR") and (to_play := play_redirect(typed, (me.user if me else "") or "")) is not None:   # PLAY VAR <scope|ids>: the VaR Playground (play_routes.py)
-        return to_play
-    if ed.word_on("VAR") and ed.word_on("FRSA") and (to_frsa := frsa_redirect(typed)) is not None:   # FRSA <scope>: FRTB-SA capital (frtb_routes.py)
-        return to_frsa
-    if ed.word_on("SIMM") and (to_simm := simm_redirect(typed)) is not None:          # SIMM [<netting set> | CPTY <id>]: ISDA SIMM (simm_routes.py)
-        return to_simm
-    if ed.word_on("VAR") and ed.word_on("PIVOT") and ed.word_on("MCUBE") and (to_mcube := mcube_redirect(typed)) is not None:   # MCUBE [scope BY ...]: the pivot screen with the MR lens (mcube_routes.py)
-        return to_mcube
-    if ed.word_on("EXP") and ed.word_on("PIVOT") and [w.upper() for w in typed.split()[:1]] == ["CCUBE"]:              # CCUBE: the Pivot's preset ccr (core/pivot_presets.py), under construction
-        return RedirectResponse(_pivot_presets.command(typed.split()) or "/pivot?preset=ccr", status_code=303)
+    if (to_module := _plugins.redirect(ed, typed, (me.user if me else "") or "")) is not None:   # a module's command (VAR DESK RATES, SMAT ...)
+        return to_module
     if ed.word_on("PIVOT") and (to_pivot := pivot_redirect(typed)) is not None:        # PIVOT [table | @owner/name]: the pivot screen (pivot_routes.py)
         return to_pivot
-    if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)
-        return to_smat
-    if ed.word_on("EXP") and (to_predeal := predeal_redirect(typed)) is not None:    # PREDEAL …: the pre-deal check (exposure_routes.py)
-        return to_predeal
-    if ed.word_on("EXP") and (to_exp := exp_redirect(typed)) is not None:            # EXP NSET NS-X, EXP EXP-X (retired): exposure-result (exposure_routes.py)
-        return to_exp
     if _SEARCH.match(q.replace("<GO>", "")):
         return RedirectResponse(f"/s?q={quote(q.replace('<GO>', '').strip())}", status_code=303)
     try:
@@ -567,9 +544,7 @@ async def view_children(request: Request, kind: str, id_: str, panel: str):
 
 @router.get("/v/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int = 0, share: str = ""):
-    if (retired := var_retired_link(kind, id_)) is not None:   # a retired stored VaR record (VAR-COMM): the explorer at its scope
-        return RedirectResponse(retired, status_code=303)
-    if (retired := exp_retired_link(kind, id_)) is not None:   # a retired stored exposure profile (EXP-X-FRA): NSET:NS-X-FRA, computed
+    if (retired := _plugins.retired_link(kind, id_)) is not None:   # a module's retired stored record (VAR-COMM, EXP-X-FRA): where it is now
         return RedirectResponse(retired, status_code=303)
     hist = history_routes.history_link(kind, id_, request.query_params)
     if hist:                                        # /v/trade/1000015?days=30, the short form of a history link

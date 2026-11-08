@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR Playground in the console (PLAY VAR, routes/play_routes.py; VAR_GUIDE.md section 3.10): the command and its forms (a scope in
+"""The VaR Playground in the console (PLAY VAR, plugins/banking/routes/play_routes.py; VAR_GUIDE.md section 3.10): the command and its forms (a scope in
 the VaR explorer's words with its lens and currency, or ids), the page and its grid read from the server as the person, the export and
 the empty workbook streamed through, the VaR page's link, FUNC and the type-ahead, and the word only where the edition has it (Drishti
 Risk and Trading; not Market or World, DRS-4023). The workbook's own figures against the engine are VarPlaygroundWorkbookTest's and
@@ -26,7 +26,8 @@ from conftest import CONSOLE
 from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
-from routes.play_routes import play_command
+from plugins.banking.routes.play_routes import play_command
+import engine_fakes  # noqa: E402
 
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
 MARKET_ABOUT = {"product": "Drishti Market", "tagline": "Curves", "edition": {"name": "market", "title": "Drishti Market"}}
@@ -93,7 +94,7 @@ def _server(backend, monkeypatch, sent: list):
         sent.append(("STREAM", path, getattr(ident, "user", None), {}))
         return _Upstream(b"PK\x03\x04workbook")
 
-    monkeypatch.setattr(backend, "var", var, raising=False)
+    engine_fakes.patch(monkeypatch, backend, var=var)
     monkeypatch.setattr(backend, "open_download", open_download, raising=False)
 
 
@@ -113,9 +114,9 @@ def test_the_page_grid_and_export_are_read_as_the_person(backend, monkeypatch):
     assert c.get("/api/play/grid").status_code == 400                                     # no scope, no ids: said in words
     x = c.get("/api/play/export.xlsx", params={"scope": "DESK:RATES", "count": "all"})
     assert x.status_code == 200 and x.content == b"PK\x03\x04workbook" and "var-playground_" in x.headers["content-disposition"]
-    assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/var/playground.xlsx?") and "count=all" in sent[-1][1]
+    assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/risk/var/playground.xlsx?") and "count=all" in sent[-1][1]
     t = c.get("/api/play/template.xlsx", params={"positions": 5})
-    assert t.status_code == 200 and sent[-1][1] == "/var/playground/template?positions=5&scenarios=509"
+    assert t.status_code == 200 and sent[-1][1] == "/risk/var/playground/template?positions=5&scenarios=509"
     e = c.get("/api/play/estimate", params={"scope": "BANK", "view": "pnl"})
     assert e.status_code == 200 and sent[-1][1] == "/playground/estimate" and sent[-1][3] == {"scope": "BANK"}
     empty = c.get("/play").text
@@ -152,6 +153,6 @@ def test_market_has_no_playground(backend, monkeypatch):
 
 def test_the_var_page_link_carries_the_pages_date_and_settings():
     """The VaR page's Playground link opens the same view: the page's date (asOf), currency, horizon, measure, confidences and set."""
-    js = (CONSOLE / "web" / "static" / "js" / "drishti_play-link.js").read_text(encoding="utf-8")
+    js = (CONSOLE / "plugins" / "banking" / "static" / "js" / "drishti_play-link.js").read_text(encoding="utf-8")
     for k in ("asOf", "ccy", "h", "m", "q", "esq", "set"):
         assert f'"{k}"' in js, k

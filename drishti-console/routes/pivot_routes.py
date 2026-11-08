@@ -74,8 +74,9 @@ async def page(request: Request, source: str = "", view: str = "", date: str = "
     from core import engines
     if cube.engine and not engines.engine_available(cube.engine):          # its engine runs on no server of the cluster: said in the server's words
         return RedirectResponse("/t?error=" + quote(engines.refusal(engines.entry(cube.engine) or {"id": cube.engine})), status_code=303)
-    from routes.mcube_routes import parse                                  # a preset's word lays a view over its landing (the PIVOT grammar's preset form)
-    laid = parse(text.split()) if text.strip() else {}
+    from core import plugins
+    parse = plugins.preset_parser(cube.lens)                               # a preset's word lays a view over its landing (its module's grammar)
+    laid = parse(text.split()) if parse is not None and text.strip() else {}
     if date and "date" not in laid:
         laid["date"] = date
     typed = f"{cube.word} @{view}" if view else f"{cube.word} {text}".strip()

@@ -26,6 +26,7 @@ from conftest import CONSOLE, FakeBackend  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 from test_page_widths_browser import AUDIT  # noqa: E402
 from scratch_ports import worker_port  # noqa: E402
+import engine_fakes  # noqa: E402
 
 PORT = worker_port(17962)
 THEMES = ["terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"]
@@ -41,6 +42,8 @@ EXP_TREE = {"groups": [{"id": "(no group)", "children": [
 
 
 class RiskBackend(FakeBackend):
+    engine = engine_fakes.method
+
     async def var(self, method, path, ident, body=None, raw=False, **params):
         return {"/scope": {"var": 112_040_000, "es": 131_000_000, "confidence": 0.99, "businessDate": "2026-09-30", "currency": "USD"},
                 "/scope/history": {"backtest": {"days": 250, "exceptions": 5, "light": "amber", "kupiecPValue": 0.21}},

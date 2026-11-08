@@ -17,8 +17,8 @@ netting set with its IM to collect and post and the selected one's breakdown bes
 as its second tab); ``SIMM <netting set>`` opens it on that netting set, ``SIMM CPTY <id>`` on a counterparty's netting sets; ``PLAY SIMM
 <netting set>`` opens the SIMM Playground (the Choices panel with the parameter version, the concentration and HVR switches and the side,
 a switch compared side by side with the difference explained, the grid of weighted sensitivities with its formula bar and the
-explanation, Save recipe and Export to Excel); ``PLAY SIMM RUN <id>`` replays a recipe. Every figure is the server's (``/api/v1/simm/...``,
-as the person); the pages are shells that web/static/js/drishti_simm.js fills."""
+explanation, Save recipe and Export to Excel); ``PLAY SIMM RUN <id>`` replays a recipe. Every figure is the server's (``/api/v1/risk/simm/...``,
+as the person); the pages are shells that plugins/banking/static/js/drishti_simm.js fills."""
 from __future__ import annotations
 
 import re
@@ -29,6 +29,8 @@ from fastapi.responses import JSONResponse
 
 from core.backend import BackendError
 from routes.common import ident, render
+from plugins.banking import risk_api
+from core import plugins as _plugins
 
 router = APIRouter(include_in_schema=False)
 
@@ -108,7 +110,7 @@ async def playground_page(request: Request, nettingSet: str = "", recipe: str = 
 
 async def _get(request: Request, path: str, **params):
     try:
-        return JSONResponse(await request.app.state.backend.simm("GET", path, ident(request), **params), headers={"Cache-Control": "no-store"})
+        return JSONResponse(await risk_api.risk(request.app.state.backend, "GET", path, ident(request), **params), headers={"Cache-Control": "no-store"})
     except BackendError as e:
         return _problem(e)
 
@@ -146,7 +148,7 @@ async def playground(request: Request):
 @router.post("/api/simm/recipes")
 async def save_recipe(request: Request):
     try:
-        return JSONResponse(await request.app.state.backend.simm("POST", "/simm/playground/recipes", ident(request), **_params(request)))
+        return JSONResponse(await risk_api.risk(request.app.state.backend, "POST", "/simm/playground/recipes", ident(request), **_params(request)))
     except BackendError as e:
         return _problem(e)
 
@@ -161,15 +163,19 @@ async def replay(request: Request, rid: str):
 @router.get("/api/simm/export.xlsx")
 async def export(request: Request):
     """The workbook of live formulas for what is on screen (its switches, side and overrides), streamed from the server; a recipe is saved."""
-    from routes.play_routes import _stream
+    from core.workbook_stream import stream
     query = []
     for k, v in _params(request, ("nettingSet", "scope", "version", "concentration", "hvr", "side", "asOf")).items():
         for x in (v if isinstance(v, list) else [v]):
             query.append((k, x))
-    return await _stream(request, "/simm/playground.xlsx" + ("?" + urlencode(query) if query else ""), {}, "simm-playground.xlsx")
+    return await stream(request, risk_api.path("/simm/playground.xlsx" + ("?" + urlencode(query) if query else "")), {}, "simm-playground.xlsx")
 
 
 @router.get("/api/simm/template.xlsx")
 async def template(request: Request):
-    from routes.play_routes import _stream
-    return await _stream(request, "/simm/playground/template", {}, "simm-playground-template.xlsx")
+    from core.workbook_stream import stream
+    return await stream(request, risk_api.path("/simm/playground/template"), {}, "simm-playground-template.xlsx")
+
+
+# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2) ----------------------------------------------------------------------
+_plugins.command(redirect_for, needs=("SIMM",))                               # SIMM [<netting set> | CPTY <id>]: ISDA SIMM

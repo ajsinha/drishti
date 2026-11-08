@@ -35,10 +35,23 @@
     return ns.concat(fns).slice(0, 12);
   }
 
-  /** Makes {@code el} (an input or textarea) a Rachana input. {@code names()} answers the editor's names: [{name, note}]. */
+  /** The code editor's completion hook over the editor's names ({@code names()}: [{name, note}]) and the functions (a Form's formula widget takes it as options.complete). */
+  E.complete = function (names) { return function (c) { return entries(c.word.replace(/^[$@]/, ''), names); }; };
+
+  /** A live drishti-inputs Form for some of the document's fields (the table and model editors): each change goes into the document
+   * ({@code apply(doc, path, value)}), each focus tells the editor where the cursor is (a field's hook data-path). */
+  E.liveForm = function (ctx, cls, label, schema, value, apply) {
+    var host = ctx.h('div', { class: cls });
+    var f = new window.Drishti.elements.inputs.Form(host, { schema: { type: 'object', properties: schema }, value: value, live: true, layout: 'columns', label: label, pathAttr: 'data-form-path' });
+    f.on('change', function (e) { ctx.change(function (d) { apply(d, e.path, e.value); }, e.path); });
+    host.addEventListener('focusin', function (e) { var p = e.target.getAttribute && e.target.getAttribute('data-path'); if (p) { ctx.focus(p); } });
+    return host;
+  };
+
+  /** Makes {@code el} (an input or textarea outside a Form) a Rachana input. {@code names()} answers the editor's names: [{name, note}]. */
   E.formula = function (el, names) {
     if (el.getAttribute('data-di-code')) { return el; }
-    el.drishtiCodeOptions = { complete: function (c) { return entries(c.word.replace(/^[$@]/, ''), names); } };
+    el.drishtiCodeOptions = { complete: E.complete(names) };
     el.setAttribute('data-di-code', 'rachana');
     if (el.isConnected) { window.Drishti.elements.inputs.upgradeCodeArea(el); }   // else drishti-inputs makes it one as it arrives in the page
     return el;

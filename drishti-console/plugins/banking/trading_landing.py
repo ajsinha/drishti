@@ -26,16 +26,16 @@ engine (``POST /api/v1/pivot/inline``, :func:`engine_figures`) and its cells sho
 
 * P&L today: the MtM change of every trade valued on both the business date and the business day before (``TVAL``, the trade valuations,
   read on both dates), summed over the scope by the engine; no valuations the day before: None, said;
-* VaR and limit use: the VaR engine's own answers (``/api/v1/var/scope`` of ``BOOK:`` and ``DESK:`` scopes, with their ``var-limit``),
+* VaR and limit use: the VaR engine's own answers (``/api/v1/risk/var/scope`` of ``BOOK:`` and ``DESK:`` scopes, with their ``var-limit``),
   intraday when the engine applied updates (its ``intraday`` label);
 * DV01: the valuations' ``DV01`` of the live trades, when any holds a number;
 * today's trades: the trades (``TRD``) whose ``SOURCE_UPDATE_TIME`` is on the business date, new (``TRADE_ACTION`` NEW, or booked that
   day), amended or cancelled (``TRADE_STATUS``);
-* the desk's limit use by book over the last business dates: each date's official VaR record (``/api/v1/var/official``); P&L against VaR:
-  the desk's official history (``/api/v1/var/scope/history``, mode ``official``: the hypothetical P&L against the VaR before it);
+* the desk's limit use by book over the last business dates: each date's official VaR record (``/api/v1/risk/var/official``); P&L against VaR:
+  the desk's official history (``/api/v1/risk/var/scope/history``, mode ``official``: the hypothetical P&L against the VaR before it);
 * by trader: P&L and trades from the valuations' ``TRADER_ID`` (masked for a role without raw: then said), VaR as the sum of the trader's
   trades' component VaR in the desk (``/scope/contributions?by=trade``, which adds up to the desk's VaR);
-* the new-trade check: one VaR what-if (``POST /api/v1/var/what-if``) and one pre-deal check (``POST /api/v1/exposure/predeal``: its
+* the new-trade check: one VaR what-if (``POST /api/v1/risk/var/what-if``) and one pre-deal check (``POST /api/v1/risk/exposure/predeal``: its
   decision approve, refer or decline, the limit use and the figures), each the engine's own, on a copy of a booked trade of the product,
   scaled to the notional (no risk maths here).
 """
@@ -52,6 +52,7 @@ from core import asof
 from core.user_cache import LRU, user_key
 from core import engine_figures as engine
 from core.backend import BackendError
+from plugins.banking import risk_api
 
 LIVE = ("NEW", "VALIDATED", "AMENDED")
 VIEW = re.compile(r"^(trader|desk):([A-Za-z0-9][A-Za-z0-9._~-]{0,79})$")
@@ -657,9 +658,9 @@ async def risk(backend, me, scope: Scope, cfg: dict) -> dict:
     if text is None:
         return {"available": False, "reason": "no books in your scope"}
     near = _share(cfg, "near-limit", 0.8)
-    head_t = asyncio.create_task(_ask(backend.var, "GET", "/scope", me, scope=text))
-    book_ts = [asyncio.create_task(_ask(backend.var, "GET", "/scope", me, scope=f"BOOK:{b}")) for b in scope.books]
-    parts_t = asyncio.create_task(_ask(backend.var, "GET", "/scope/contributions", me, scope=text, by="position"))
+    head_t = asyncio.create_task(_ask(risk_api.var, backend, "GET", "/scope", me, scope=text))
+    book_ts = [asyncio.create_task(_ask(risk_api.var, backend, "GET", "/scope", me, scope=f"BOOK:{b}")) for b in scope.books]
+    parts_t = asyncio.create_task(_ask(risk_api.var, backend, "GET", "/scope/contributions", me, scope=text, by="position"))
     head, why, _c = await head_t
     books, problems = [], []
     for b, t in zip(scope.books, book_ts):
@@ -704,7 +705,7 @@ async def limits(backend, me, scope: Scope, cfg: dict) -> dict:
     if business is None or not scope.books:
         return {"available": False, "reason": "no books in your scope" if business else "the server gave no business date"}
     days = business_days(business, _count(cfg, "limit-days", 5, 1, 20), holidays)
-    answers = await asyncio.gather(*(_ask(backend.var, "GET", "/official", me, asOf=d.isoformat()) for d in days))
+    answers = await asyncio.gather(*(_ask(risk_api.var, backend, "GET", "/official", me, asOf=d.isoformat()) for d in days))
     if all(a is None for a, _w, _c in answers):
         return {"available": False, "reason": answers[-1][1] or "no official record"}
     near = _share(cfg, "near-limit", 0.8)
@@ -728,7 +729,7 @@ async def pnl_vs_var(backend, me, scope: Scope, cfg: dict) -> dict:
     text = var_scope(scope) if scope.kind == "desk" else None
     if text is None:
         return {"available": False, "reason": "a desk's history: pick a desk"}
-    h, why, _c = await _ask(backend.var, "GET", "/scope/history", me, scope=text)
+    h, why, _c = await _ask(risk_api.var, backend, "GET", "/scope/history", me, scope=text)
     if h is None:
         return {"available": False, "reason": why}
     if str(h.get("mode") or "") != "official":
@@ -752,7 +753,7 @@ async def traders(backend, me, scope: Scope, cfg: dict) -> dict:
         return {"available": False, "reason": "by trader is a desk's: pick a desk"}
     listed, why, _c = await _ask(backend.search, f"TRDR where DESK = {_q(scope.id)} and (NAME != null or TRADE_COUNT != null) limit 200", me)
     tv_t = asyncio.create_task(valuations(backend, me, scope, cfg))
-    groups_t = asyncio.create_task(_ask(backend.var, "GET", "/scope/contributions", me, scope=f"DESK:{scope.id}", by="attribute:TRADER_ID"))
+    groups_t = asyncio.create_task(_ask(risk_api.var, backend, "GET", "/scope/contributions", me, scope=f"DESK:{scope.id}", by="attribute:TRADER_ID"))
     tv = await tv_t
     groups, gwhy, _c2 = await groups_t
     rows: dict[str, dict] = {}
@@ -847,8 +848,8 @@ async def _var_check(backend, me, book: str | None, tid: str, factor: float, lab
     if not book:
         return {"state": "unavailable", "reason": "no book in your scope"}
     scope = f"BOOK:{book}"
-    head_t = asyncio.create_task(_ask(backend.var, "GET", "/scope", me, scope=scope))
-    w, why, code = await _ask(backend.var, "POST", "/what-if", me, body={"scope": scope, "items": [{"copyOf": tid, "factor": factor, "label": label}]})
+    head_t = asyncio.create_task(_ask(risk_api.var, backend, "GET", "/scope", me, scope=scope))
+    w, why, code = await _ask(risk_api.var, backend, "POST", "/what-if", me, body={"scope": scope, "items": [{"copyOf": tid, "factor": factor, "label": label}]})
     head, _hw, _hc = await head_t
     if w is None:
         return {"state": "unavailable", "scope": scope, "reason": why, "code": code}
@@ -863,13 +864,13 @@ async def _var_check(backend, me, book: str | None, tid: str, factor: float, lab
 
 async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float, notional: float, sign: float, label: str,
                           near: float) -> dict:
-    """The exposure engine's pre-deal check on the counterparty (``POST /api/v1/exposure/predeal``, EXPOSURE_GUIDE.md section 18.9): the
+    """The exposure engine's pre-deal check on the counterparty (``POST /api/v1/risk/exposure/predeal``, EXPOSURE_GUIDE.md section 18.9): the
     copy's paths on the date's run, exact (``LIKE`` the template); when the copy has no paths on the run, the same check described (asset
     class, notional, maturity), the engine's conservative proxy, which only refers. The decision, the limit use and every figure are the
     server's; here only ``near`` (a display share) is applied to an approval."""
     side = "reverse" if sign < 0 else "same"
     body = {"counterparty": cp, "like": tid, "notional": notional, "side": side}
-    a, why, code = await _ask(backend.exposure, "POST", "/predeal", me, body=body)
+    a, why, code = await _ask(risk_api.exposure, backend, "POST", "/predeal", me, body=body)
     fell_back = None
     if a is None and code == "DRS-1001":           # the copy has no paths on the run: the check described, the proxy (it refers)
         fell_back = why
@@ -881,7 +882,7 @@ async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float
             pass
         body = {"counterparty": cp, "assetClass": t.get("PRODUCT_GROUP") or "rates", "notional": notional, "maturity": maturity or "1Y",
                 "mtm": (_num(t.get("MTM")) or 0) * factor, "side": side}
-        a, why, code = await _ask(backend.exposure, "POST", "/predeal", me, body=body)
+        a, why, code = await _ask(risk_api.exposure, backend, "POST", "/predeal", me, body=body)
     if a is None:
         return {"state": "unavailable", "scope": f"CPTY:{cp}", "reason": why, "code": code}
     lim = a.get("limit") if isinstance(a.get("limit"), dict) else {}
