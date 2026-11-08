@@ -48,13 +48,18 @@ class VarComputeFirstGuardTest {
     static Path sources() {
         Path p = Path.of("").toAbsolutePath();
         for (Path at = p; at != null; at = at.getParent()) {
-            Path s = at.resolve("drishti-server/src/main/java/com/ash/drishti/server/var");
+            // The VaR engine lives in the banking module since the domain split. Stop at the first checkout root, so a
+            // worktree inside another checkout never reads the outer one's (older) sources.
+            Path here = at.resolve("src/main/java/com/ash/drishti/banking/var");
+            if (Files.isDirectory(here)) {
+                return here;
+            }
+            Path s = at.resolve("drishti-banking/src/main/java/com/ash/drishti/banking/var");
             if (Files.isDirectory(s)) {
                 return s;
             }
-            Path here = at.resolve("src/main/java/com/ash/drishti/server/var");
-            if (Files.isDirectory(here)) {
-                return here;
+            if (Files.exists(at.resolve("mvnw"))) {
+                break;
             }
         }
         throw new IllegalStateException("the VaR engine's sources are not above " + p);
