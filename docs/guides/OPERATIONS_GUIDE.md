@@ -183,7 +183,7 @@ You should see one line per table, then the summary (the folder is your clone's)
 ```text
   trading/trade_endur: … rows over 60 days
   …
-Demo lake ready: …/drishti/data/delta/demo: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/drishti/data/delta/demo: 87 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://localhost:18480: left …/drishti/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -518,7 +518,7 @@ Invoke-RestMethod http://localhost:18480/actuator/health                    # fr
 .\tools\windows\start-console.ps1                                           # in a second window; then http://localhost:17480/t
 ```
 
-`lake demo` writes the same 89 tables as on Linux. `start-server.ps1` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native`,
+`lake demo` writes the same 87 tables as on Linux. `start-server.ps1` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native`,
 adds `-XX:+UseCompactObjectHeaders` only on Java 25 and runs until `Ctrl+C`. Set `$env:DRISHTI_DEMO_ENABLED='false'` first to read every page
 from the lakes, and the sign-in variables of 2.5 A (`$env:DRISHTI_SECURITY_ENABLED='true'` …) to sign in; set the console's variables of
 2.6 before `start-console.ps1` with sign-in on. Admin → Health then lists each lake connector as `UP (engine: native)`.

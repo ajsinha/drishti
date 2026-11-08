@@ -79,7 +79,7 @@ package -DskipTests -pl drishti-app -am`.
 
 ## 3. Run the server and the console on the demo lake
 
-Build the demo lake once (89 tables, sixty business days ending today, about 15 minutes and 3.4 GB under `data/delta/demo/`), then start
+Build the demo lake once (87 tables, sixty business days ending today, about 15 minutes and 3.4 GB under `data/delta/demo/`), then start
 the two programs in two terminals:
 
 ```bash

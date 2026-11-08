@@ -116,6 +116,13 @@
   function say(el, text, bad) { el.textContent = text; el.classList.toggle('t-bad', !!bad); el.classList.toggle('t-ok', !bad); }
   function kindsVisible() { root.querySelectorAll('fieldset[data-kinds]').forEach(function (el) { el.hidden = !!F.getField('all'); }); }
 
+  /** The permissions a role holds, ticked by name (each said, true or false). */
+  function held(role) {
+    var m = {};
+    PERMISSIONS.forEach(function (k) { m[k] = !!role && (role.permissions || []).indexOf(k) >= 0; });
+    return m;
+  }
+
   function open(role) {
     editing = role;
     say(dmsg, '');
@@ -125,7 +132,7 @@
     POWERS.forEach(function (k) { powers[k] = role ? (k === 'layout' ? role.layout !== false : !!role[k]) : k === 'layout'; });   // layouts: on unless the role says otherwise
     F.setValue({ name: role ? role.name : '', description: role ? role.description || '' : '', all: !!role && role.kinds.indexOf('*') >= 0,
       kinds: role ? role.kinds.filter(function (k) { return k !== '*'; }).join('\n') : '', powers: powers,
-      permissions: PERMISSIONS.reduce(function (m, k) { m[k] = !!role && (role.permissions || []).indexOf(k) >= 0; return m; }, {}) });
+      permissions: held(role) });
     kindsVisible();
     dlg.showModal();
   }
