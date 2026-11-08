@@ -168,6 +168,7 @@ def gcode(pg, key, rid, c, text):
     """A formula cell (drishti-inputs' one-line code editor over the cell) given new text, as a paste, then Enter."""
     gcell(pg, key, rid, c)
     wait(pg, "!!document.querySelector('.dg-editor-code .CodeMirror')")
+    wait(pg, OPEN)          # over its cell and focused, as gtext and gselect wait: Enter in an editor without the focus goes nowhere
     pg.evaluate("""t => { const cm = document.querySelector('.dg-editor-code .CodeMirror').CodeMirror; cm.focus();
       cm.replaceRange(t, { line: 0, ch: 0 }, { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }, 'paste'); }""", text)
     pg.keyboard.press("Enter")
@@ -287,6 +288,7 @@ def test_new_table_steps_land_in_the_editor_and_both_sides_follow_each_other(pg)
     # a visual edit shows in the YAML with its line highlighted
     pg.click("[data-add-computed]")                                            # its formula cell opens for typing
     wait(pg, "!!document.querySelector('.dg-editor-code .CodeMirror')")
+    wait(pg, OPEN)                                                             # over its cell and focused, though its row was out of view
     pg.keyboard.press("Escape")
     gcode(pg, "columns", "chosen:NEW_COLUMN", 2, "$.QUANTITY / 1000")
     wait(pg, "window.Drishti.editors.yamlText().includes('$.QUANTITY / 1000')")
