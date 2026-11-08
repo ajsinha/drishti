@@ -128,7 +128,7 @@ body.terminal { font-size: var(--d-fs-14); }
 .lk-label { color: var(--d-ink); }
 .lk-badge { margin-left: var(--d-sp-8); color: var(--d-muted); font-size: var(--d-fs-12_8); }
 .lk-pending .lk-badge { color: var(--d-warn); } .lk-denied .lk-badge { color: var(--d-bad); } .lk-denied .mono { color: var(--d-faint); }
-/* a command an administrator turned off (Admin -> Commands): links to it are struck through, not clickable, and say "not active" */
+/* a command an administrator turned off (Admin -> Functions): links to it are struck through, not clickable, and say "not active" */
 .lk-inactive .mono, .lnk-off { color: var(--d-faint); text-decoration: line-through; }
 .lk-inactive .lk-badge, .lk-badge.lk-off { color: var(--d-bad); text-decoration: none; }
 .cmd-off { max-width: 44rem; margin: var(--d-sp-32) 0; padding: var(--d-sp-24); border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface, transparent); }

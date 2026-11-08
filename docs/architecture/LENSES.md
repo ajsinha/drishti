@@ -3829,7 +3829,7 @@ what a score means.
   ([section 5.3](#53-gaps-and-proposals)), with a sign-off block for the data office.
 - **Ask:** tools over the records of [9.5](#95-data-needed-the-complete-list), never raw rows; each record cited and linked; an answer
   with a figure no tool returned is refused; on only when the site has a model provider.
-- **Read-only:** a row opens its owning page (a feed its Data loads page, a check its rejects, a node Admin → Net or Health, an audit line
+- **Read-only:** a row opens its owning page (a feed its Data loads page, a check its rejects, a node Admin → Cluster or Health, an audit line
   Admin → Audit log, a secret its procedure in [OPERATIONS](../guides/OPERATIONS_GUIDE.md), an incident the bank's ticket). The only two actions
   write records, never settings: the data office **confirms** a BCBS 239 score; anyone with the power **generates** the evidence pack.
 - **Response-time targets** (estimates, to be measured with the POC): landing 600 ms, tab 100 ms, a past date 1.5 s, Ask first token
@@ -4290,7 +4290,7 @@ code change. The administrator's view of the same mechanism (the two uses, the s
 | `EditionsTest` (drishti-packs) | the default list is the one file; the layer's place; presets; a site variable still wins; a missing file stops the start; lenses; packs by module |
 | `EditionRiskServerTest`, `EditionWorldServerTest`, `EditionMarketServerTest`, `EditionTradingServerTest` | a server running each lens: About and branding, its packs, `DRS-1017` for another, `FUNC` and the type-ahead, `DRS-4023` typed and by page, the packs' examples, BI datasets and reports |
 | `EditionNoneAndLensServerTest`, `EditionTwoLensesServerTest`, `SettingsTest` | no instance lens: the full product; a lens header focuses one request only; several lenses offered, set and read back through `/api/v1/me/settings`, switching, others unaffected; `tradingView` validated |
-| `*RiskEditionTest` (seven classes), `EditionShardClusterTest` | the VaR and exposure suites again under `risk`; two Drishti*net members with `risk`: no Admin → Net warning, sharded VaR equal to one server's |
+| `*RiskEditionTest` (seven classes), `EditionShardClusterTest` | the VaR and exposure suites again under `risk`; two Drishti*net members with `risk`: no Admin → Cluster warning, sharded VaR equal to one server's |
 | `PublicSectorLensTest`, `EconomyModuleOffTest`, `BankingModuleOffTest`, `CapitalMarketsModuleOffTest` | lenses offered or not with their modules; functions, packs and cards gone with a module |
 | `test_edition.py` (console) | the full product unchanged; every surface under each lens; the landings and the remembered choice; the role hooks; "my" scoping; the lens for one person and not another; no lens with an instance lens; logo, favicon, manifest |
 | `test_market_landing.py`, `test_trading_landing.py` | Market's figures and quality checks; Trading's mapping, figures, scoping and the new-trade check |

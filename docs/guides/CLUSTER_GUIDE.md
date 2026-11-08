@@ -16,7 +16,7 @@
 # Clusters and scale
 
 For operators who run Drishti on more than one server, or on one large one. It covers Drishti\*net (several servers acting as one),
-a cluster of three from the first seed to production, Admin → Net, the roles of a larger estate and how many of each, VaR sharding from
+a cluster of three from the first seed to production, Admin → Cluster, the roles of a larger estate and how many of each, VaR sharding from
 the operator's side, high availability, load balancing, zero-downtime upgrades and loads, security zones, operations and disaster
 recovery, Drishti on AWS (ECS, EFS, S3), the Delta lake in S3 at scale, the scale strategy for one server, sizing memory, CPU and disk,
 and tuning. Installing and running one server is the [operations guide](OPERATIONS_GUIDE.md); every setting named here is in
@@ -28,7 +28,7 @@ inside is [ARCHITECTURE.md](../architecture/ARCHITECTURE.md). The hands-on walk-
 
 1. [Several servers as one: Drishti\*net](#1-several-servers-as-one-drishtinet)
 2. [A cluster of three](#2-a-cluster-of-three)
-3. [Admin → Net](#3-admin--net)
+3. [Admin → Cluster](#3-admin--cluster)
 4. [Roles and how many](#4-roles-and-how-many)
 5. [Sharding](#5-sharding)
 6. [High availability](#6-high-availability)
@@ -90,7 +90,7 @@ openssl rand -hex 32          # the same value goes into DRISHTI_NET_SECRET on e
 ```
 
 The key is never written in a file of `config/net/` in clear: the file names the variable (`secret: ${DRISHTI_NET_SECRET}`), and a file
-with a key in clear is refused. Admin → Net shows only whether it is set.
+with a key in clear is refused. Admin → Cluster shows only whether it is set.
 
 ### 1.2 Real addresses only
 
@@ -99,7 +99,7 @@ console, on any machine, so `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` 
 (`localhost.`, `ip6-localhost`, `0`, `127.1`, `2130706433`, `0x7f000001`), as are link-local addresses (`169.254.x.x`, `fe80::…`), the
 addresses of this machine's container and VM bridges (`172.17.0.1` on `docker0`) and a host name that resolves here to any of them (on
 Debian and Ubuntu the machine's own name is `127.0.1.1` in `/etc/hosts`; the message says so). The rule holds for `advertise-url` in
-node.yaml, a seed's `url` in `peers/*.yaml` (checked by `drishti.py net check|set|add-peer`, by Admin → Net → Files and by the server when
+node.yaml, a seed's `url` in `peers/*.yaml` (checked by `drishti.py net check|set|add-peer`, by Admin → Cluster → Files and by the server when
 it loads the folder), and every member address learned by gossip, which is never kept nor passed on. Even three nodes on one machine use
 the machine's real address. There is no escape hatch. The refusal names the address to use:
 
@@ -119,7 +119,7 @@ gossiping such an address is never kept. `drishti.py net` and the server apply t
 `server.ssl.enabled`): the address of the interface the default route leaves by, else the first interface that is up and is not a
 loopback, a container bridge (`docker0`, `br-…`, `veth…`) or a virtual link. Set `advertise-url` on a machine with several interfaces,
 behind a load balancer or with a DNS name. To see the address a node would take: `ip -4 route get 1.1.1.1` (Linux: the `src` address),
-`ipconfig getifaddr en0` (macOS) or `ipconfig` (Windows); Admin → Net → Members shows it as *detected*. A machine with no address but
+`ipconfig getifaddr en0` (macOS) or `ipconfig` (Windows); Admin → Cluster → Members shows it as *detected*. A machine with no address but
 loopback cannot be a member: `enabled: true` without `advertise-url` is refused there. The console's own `backend.urls` may name
 `127.0.0.1` for a server on its machine (its own choice, not an advertisement); what it discovers never does.
 
@@ -156,8 +156,8 @@ secret: ${DRISHTI_NET_SECRET}
 ```
 
 **A refused file keeps the previous settings in force.** A file with an error (a value that is not a duration, a key in clear, `enabled:
-true` without a key, a loopback address) is refused as a whole: the settings it held stay, Admin → Net → Files shows it **refused** with each
-problem and its line, and the log names the file and line. An unknown setting is a warning. Every write (Admin → Net or `drishti.py net`) is
+true` without a key, a loopback address) is refused as a whole: the settings it held stay, Admin → Cluster → Files shows it **refused** with each
+problem and its line, and the log names the file and line. An unknown setting is a warning. Every write (Admin → Cluster or `drishti.py net`) is
 atomic and keeps the previous text in `<data dir>/net/history/`. What gossip learns at run time is state, not configuration: it goes to
 `<data dir>/net/peers.json`, never into this folder. Ready-made files with every setting explained are in
 [config/net.examples/](../../config/net.examples/). From a terminal, `drishti.py net` lists, checks and edits the files (`net list`,
@@ -208,7 +208,7 @@ hash changes (and once a minute for the load). A pack switched on at one node is
 | `kinds` | every kind: its mnemonic, its pack, its sources (connector, plugin, **table identity**, the oldest and newest business dates held, data version, columnar, dated, live) |
 | `load` | requests a second and average latency over the last minute, for choosing between peers |
 | `calendar` | the business calendar (`DRISHTI_CALENDAR`): an as-of date must mean the same day on both nodes |
-| `tags`, `redact`, `access` | the node's tags, masked fields and nodes per role, so Admin → Net can show where nodes differ |
+| `tags`, `redact`, `access` | the node's tags, masked fields and nodes per role, so Admin → Cluster can show where nodes differ |
 | `services` | the compute engines running here (a request for an engine's API reaching a node that does not run it goes to the least loaded node that does; none: `404 DRS-1020`) and the VaR shard state |
 
 **Replicas and shards.** A source names where its data lives, the same on every server that reads the same data: a Delta table by the id
@@ -220,17 +220,17 @@ which is always safe; a source that holds nothing of a kind never makes its node
 nodes that both read it; separate lakes are joined by forwarding and scatter-gather.
 
 **The newest pack is served.** When nodes hold different versions of a pack, a request for its kinds goes to a node with the newest; equal
-versions with different contents are flagged on Admin → Net.
+versions with different contents are flagged on Admin → Cluster.
 
 **Commands and packs switched on or off** (Functions, Admin → Packs) are the same on every node, even when each node has a database of its
 own: the switches travel with gossip and a node that was down catches up when it rejoins
 ([ADMIN_GUIDE.md](ADMIN_GUIDE.md#205-several-servers)). **Editions** (`drishti.edition`) are per node and must be equal on all
-(Admin → Net warns).
+(Admin → Cluster warns).
 
 ### 1.6 Security: the key, mutual TLS, nodes per role
 
 **The cluster key.** Every call between nodes carries the calling node's id, the time and an HMAC-SHA256 of the method, path and query, time,
-node and body, made with the cluster key. A call is refused (`401 DRS-5051`, listed on Admin → Net → Security with address and reason) when
+node and body, made with the cluster key. A call is refused (`401 DRS-5051`, listed on Admin → Cluster → Security with address and reason) when
 it has no signature, another key made it, or it was signed more than 60 seconds away from this node's clock.
 
 **Rotating the key with no downtime** takes three rolling steps (restart or reload the nodes one by one in each; the cluster keeps working):
@@ -241,21 +241,21 @@ it has no signature, another key made it, or it was signed more than 60 seconds 
 | 2 | the same | `DRISHTI_NET_SECRET` = **new**, `DRISHTI_NET_PREVIOUS_SECRET` = old | every node signs with the new key and still accepts the old |
 | 3 | remove `previous-secret` | `DRISHTI_NET_SECRET` = new | the old key is refused everywhere |
 
-`previous-secret` is never used to sign, only also accepted. Admin → Net → Security shows, per peer, when it last signed with the previous
+`previous-secret` is never used to sign, only also accepted. Admin → Cluster → Security shows, per peer, when it last signed with the previous
 key: when none has for a while, do step 3. On-behalf-of tokens live 30 seconds, so none outlives a rollover.
 
 **Mutual TLS.** Between nodes on an untrusted network, give each node a certificate: inbound the server's own TLS with client certificates
 (`server.ssl.*`, `server.ssl.client-auth: need`), outbound `tls.*` in node.yaml (the shared settings of [DATA_GUIDE.md section 10](DATA_GUIDE.md#10-tls-and-the-outbound-proxy):
 `keystore`, `truststore`, passwords as `${ENV}` references), with `https://` addresses; the gossip port uses the same certificate. Mutual
-TLS comes on top of the cluster key, never in its place. Admin → Net → Security lists the certificates and their expiry.
+TLS comes on top of the cluster key, never in its place. Admin → Cluster → Security lists the certificates and their expiry.
 
 **The user is carried, not trusted blindly.** A forwarded request carries an **on-behalf-of token** (user, roles, embed application, the
 forwarding node, the request id, the node it is for; signed, valid 30 s). The receiving node serves it as that person: their masks, kinds and
 packs. With `drishti.security.registered-users-only` on (the default) the user must exist and be enabled there too; the nodes copy users
 to each other (section 1.7), so that holds everywhere. **Masks twice:** the node that reads the data masks it for that person, the node that
-shows the page masks again; the stricter wins, and Admin → Net → Capability map warns when two nodes mask different fields.
+shows the page masks again; the stricter wins, and Admin → Cluster → Capability map warns when two nodes mask different fields.
 
-**Nodes per role** (`access.yaml`, or Admin → Net → Access): a role may name the nodes it may reach, by node id or tag; a role not listed,
+**Nodes per role** (`access.yaml`, or Admin → Cluster → Access): a role may name the nodes it may reach, by node id or tag; a role not listed,
 or with no nodes, reaches every node; a person reaches a node when any of their roles does.
 
 ```yaml
@@ -374,7 +374,7 @@ backend:
   that moved because its server restarted returns to it.
 - **One server per screen.** A screen with clickable rows keeps what the reader picked on the server that drew it; its clicks go there.
   When that server stops, the next click says *Your selections were reset because server X went away. Pick again.*
-- **Visible to administrators.** Admin → Net and Admin → Health show the server the console is on, its list, and the failovers of the last
+- **Visible to administrators.** Admin → Cluster and Admin → Health show the server the console is on, its list, and the failovers of the last
   hour; each failover is audited on the server it moved to (`net-console-failover`).
 
 Without Drishti\*net `backend.urls` still works as a plain list of identical servers (same packs, same lakes).
@@ -407,7 +407,7 @@ Each node's net folder is checked in (`advertise-url: http://${DRISHTI_STACK_HOS
 never the key or an address). `start.sh` finds this machine's real address (the default route's interface, never a docker bridge) and gives
 it to every node as `DRISHTI_STACK_HOST`; on a machine with several interfaces set `host:` in `stack.yaml`. The secrets
 (`DRISHTI_TOKEN_SECRET`, `DRISHTI_SESSION_SECRET`, `DRISHTI_NET_SECRET`) are made on the first start in the git-ignored `secrets.env`
-(mode 600). Open the console at the address `start.sh` prints and go to **Admin → Net**: the three members are alive. The stack runs G1
+(mode 600). Open the console at the address `start.sh` prints and go to **Admin → Cluster**: the three members are alive. The stack runs G1
 with `-XX:G1PeriodicGCInterval=60000` and a faster failover for a lab (`suspect-after: 3s`, `dead-after: 10s`). It is for trying a cluster,
 not for production.
 
@@ -439,7 +439,7 @@ $ drishti.py net set node.tags region:emea,tier:risk
 $ drishti.py net set node.enabled true
 ```
 
-In the UI: **Admin → Net → Files**, open `node.yaml`, type the settings, **Check**, **Save**.
+In the UI: **Admin → Cluster → Files**, open `node.yaml`, type the settings, **Check**, **Save**.
 
 **Step 2 · the seed.** On `b` and `c`, one peer file naming `a`:
 
@@ -461,7 +461,7 @@ url: http://192.168.1.20:18783
 tags: [region:emea]
 ```
 
-In the UI: **Admin → Net → Members**, **Add a seed**, type `192.168.1.20:18783`, **Add seed**; it is saved as `peers/192-168-1-20-18783.yaml`
+In the UI: **Admin → Cluster → Members**, **Add a seed**, type `192.168.1.20:18783`, **Add seed**; it is saved as `peers/192-168-1-20-18783.yaml`
 and tried at once.
 
 **Step 3 · start them**, each with `DRISHTI_NET_SECRET` in its environment. A running server picks up a change of the folder within
@@ -474,7 +474,7 @@ INFO  net: node n-1ace3ceb60 joined Drishti*net at http://192.168.1.20:18784 (in
 INFO  net: member n-3d5a69faa3 joined
 ```
 
-**Step 4 · check.** On any node, **Admin → Net → Members** lists the three, each `alive`, with version, tags and latency. From a terminal
+**Step 4 · check.** On any node, **Admin → Cluster → Members** lists the three, each `alive`, with version, tags and latency. From a terminal
 (an administrator's token in `DRISHTI_TOKEN`): `drishti.py net members --server http://192.168.1.20:18784` prints one line per member (node
 id, this node marked, state, address, version, tags, latency, incarnation; `--json` for all of it).
 
@@ -534,12 +534,12 @@ one PostgreSQL primary. Sizing one of the three machines is section 15.3; what t
 
 ---
 
-## 3. Admin → Net
+## 3. Admin → Cluster
 
-**Admin → Net** (`/admin/net`, administrators) is the cluster as the node the console is on sees it. Its summary line says whether the
+**Admin → Cluster** (`/admin/net`, administrators) is the cluster as the node the console is on sees it. Its summary line says whether the
 cluster is on, this node's id, how many members are in each state, whether the key is set (never the key) and whether this node is drained.
 
-![Admin → Net → Members on node c after node a stopped: a left, b and c alive; below, this console's servers: the configured one set aside, a discovered one in use](../tutorials/img/t19/09-after-a-stopped.jpg)
+![Admin → Cluster → Members on node c after node a stopped: a left, b and c alive; below, this console's servers: the configured one set aside, a discovered one in use](../tutorials/img/t19/09-after-a-stopped.jpg)
 
 **Members.** This node (id, address, tags, peer-only packs, version, the gossip timings and rounds run, where `peers.json` is and when it was
 saved), then every member: state, address, version (and protocol when it differs), tags, packs, last heard, latency, incarnation; refreshed
@@ -890,7 +890,7 @@ Defaults throughout (gossip 1 s / 5 s / 30 s; `stable-seconds` 30, `grace-second
 |---|---|---|---|---|
 | **One VaR owner down** | 5–8 s (suspect) | its replica answers its shards; at 35–40 s new owners build the shards (T_b) | node figures never stop; at most one slow call (a black-holed host waits up to `call-timeout-seconds` before the replica) | replace or restart |
 | **Both owners of a shard down** | 5–8 s | node aggregates keep answering; new owners build from the lake | `503 DRS-5215` naming the shard for 35–40 s + T_b | restore one owner; zones prevent it |
-| **A slow owner** | per call | after `call-timeout-seconds` the next member is asked | one slow answer | Admin → Net latency |
+| **A slow owner** | per call | after `call-timeout-seconds` the next member is asked | one slow answer | Admin → Cluster latency |
 | **A flapping node** | each flap 5–8 s | a flap shorter than `stable-seconds` moves no shard | nothing, or one retried call | find the cause (GC pauses, network); raise `stable-seconds` if flaps come near 30 s |
 | **Network partition** | 5–8 s each side | each side builds the shards it lacks from the lake; both answer correctly | brief `DRS-5215`; searches partial, naming missing nodes | heal the network; both sides may run singleton jobs meanwhile |
 | **Partition heals** | ≤ 30 s | tables merge; extra shard copies released after `grace-seconds` | nothing | put a seed in every zone |
@@ -899,7 +899,7 @@ Defaults throughout (gossip 1 s / 5 s / 30 s; `stable-seconds` 30, `grace-second
 | **A bad data version on one node** | per call | partials at another version refused (`409 DRS-5216`); dates put together again at the new version | brief 409s | announce the load (forwarded to every member) |
 | **A stale shard book** | the version watch (30 s) or the signal | owners build the newer version; the old goes after the grace | old figures with a warning until swapped | `drishti.py var reload --date D` |
 | **Disk full** | before the write | least recently used hot files freed first; else the build refused `503 DRS-5218` naming free and needed space | the new date refused with the reason | free disk or raise the cap; Health → Disk is red |
-| **Clock skew** | at the first signed call | none: calls outside 60 s refused; the skewed member becomes suspect, then dead | as one node down | NTP everywhere; Admin → Net → Security lists refusals |
+| **Clock skew** | at the first signed call | none: calls outside 60 s refused; the skewed member becomes suspect, then dead | as one node down | NTP everywhere; Admin → Cluster → Security lists refusals |
 | **Lake outage** | at the next read | open dates answer from hot files; new loads and rebuilds fail | figures of open dates only | restore the lake |
 | **Database primary down** | at the next query | reconnects once the standby is promoted (RDS Multi-AZ about a minute) | sign-in, user and session writes, edits, BI run leases fail meanwhile; VaR and exposure reads with a valid token continue | promote the standby |
 
@@ -941,7 +941,7 @@ standby switchover. The schema files are complete, with no migrations.
 | `GET /actuator/health` | server | the server's own health (sources, disk …); never waits for readiness's gates | monitoring, tools that wait for a start |
 | `GET /healthz` | console | the process answers | the console container's health check |
 | `GET /readyz` | console | the console can reach a server (`503` otherwise) | the ALB target group, the rolling runner |
-| `GET /api/v1/admin/node` | server | readiness with what it waits for, and the drain (`drained`, `safeToStop`, each part) | stop hooks, the runner, Admin → Net |
+| `GET /api/v1/admin/node` | server | readiness with what it waits for, and the drain (`drained`, `safeToStop`, each part) | stop hooks, the runner, Admin → Cluster |
 
 **Readiness that means ready.** `/actuator/health/readiness` answers `OUT_OF_SERVICE` (503) when the node is drained; `DOWN` (503) while it is
 **joining** Drishti\*net, while an enabled engine's (VaR, exposure) **newest business date is not open** here (the check starts opening it; a
@@ -999,7 +999,7 @@ Settings: `live.relay.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
 ### 8.1 Drain before a stop
 
-One action drains a node for a stop: `POST /api/v1/admin/node/drain {"on": true}` (Admin → Net → **Drain for a stop**;
+One action drains a node for a stop: `POST /api/v1/admin/node/drain {"on": true}` (Admin → Cluster → **Drain for a stop**;
 `deploy/bin/drishti-node.sh drain`; administrators, or a personal API token with the `node:drain` scope). It stops Drishti\*net forwarding to
 the node (a forwarded request that reaches it is answered `503` so the caller tries the next peer), hands its VaR shards to their next owners
 and turns readiness `OUT_OF_SERVICE`; `GET /api/v1/admin/node` reports `safeToStop` once every part has handed its work over (the forwarding
@@ -1153,7 +1153,7 @@ skeletons are available. A whole-cluster stop: in reverse.
 |---|---|---|
 | every server | Admin → Health (net, disk, direct memory), Admin → Caches, `/actuator/prometheus` | heap after GC > 85% for 10 min; disk red; direct > 80% |
 | owners | `drishti.py var shards` (shards held and ready, refusals) | any `DRS-5215` in 5 min; a shard with one ready owner for more than 10 min |
-| cluster | Admin → Net; `drishti_net_members{state}`, `drishti_net_gossip_rounds_total`, `drishti_net_forwarded_total{peer,kind,outcome}`, `drishti_net_peer_latency_seconds{peer}` | `drishti_net_members{state="suspect"} > 0` for 5 min; `dead` > 0; the share of `outcome!="ok"` among forwarded requests |
+| cluster | Admin → Cluster; `drishti_net_members{state}`, `drishti_net_gossip_rounds_total`, `drishti_net_forwarded_total{peer,kind,outcome}`, `drishti_net_peer_latency_seconds{peer}` | `drishti_net_members{state="suspect"} > 0` for 5 min; `dead` > 0; the share of `outcome!="ok"` among forwarded requests |
 | consoles | `/readyz`, CPU, pages a second | p95 page > 300 ms |
 | loader | job exit code, the manifest | missed expectation (Data loads page) |
 | database | replication lag, connections against `max_connections` | lag > 10 s; connections > 80% |
@@ -1188,20 +1188,20 @@ Exercise the failover twice a year. On AWS: section 12.10.
 
 | Symptom | Look at | Fix |
 |---|---|---|
-| A node lists no members | its log (`net: node ... joined ... seeds [...]`); Admin → Net → Files: is `node.yaml` **refused**? | the seed's address and port, the firewall, `enabled: true` with the key |
+| A node lists no members | its log (`net: node ... joined ... seeds [...]`); Admin → Cluster → Files: is `node.yaml` **refused**? | the seed's address and port, the firewall, `enabled: true` with the key |
 | `node.yaml was not written: 'http://127.0.0.1:...' is a loopback or wildcard address` | `advertise-url` or the seed's `url` | the machine's real address, which the message names; or leave `advertise-url` out |
 | A member is missing that its own log says joined at `127.0.0.1` or `0.0.0.0` | that node's `advertise-url` | a real address: a loopback advertisement is never kept |
-| `401 DRS-5051 cluster credential refused: bad signature`, the caller on Admin → Net | the two nodes' `DRISHTI_NET_SECRET` | the same key on every node (during a rollover, section 1.6's steps) |
+| `401 DRS-5051 cluster credential refused: bad signature`, the caller on Admin → Cluster | the two nodes' `DRISHTI_NET_SECRET` | the same key on every node (during a rollover, section 1.6's steps) |
 | `... signed 75 s away from this node's clock` | the clocks | NTP on every node |
-| A member flaps between `alive` and `suspect` | latency on Admin → Net; long pauses in its log; `gossipPort` on Admin → Health (0: shares the server's port) | `gossip-port` on `auto` or a number, not `off`; raise `suspect-after`; fix the network or the pauses |
+| A member flaps between `alive` and `suspect` | latency on Admin → Cluster; long pauses in its log; `gossipPort` on Admin → Health (0: shares the server's port) | `gossip-port` on `auto` or a number, not `off`; raise `suspect-after`; fix the network or the pauses |
 | `net: the gossip port ... cannot be reached ... but ... answers` | a firewall between the nodes | a numbered `gossip-port` on every node, opened between them |
 | `404 DRS-5050 Drishti*net is off on this node` | its `node.yaml` | `enabled: true` (and Rejoin if it left) |
-| A page says `502 DRS-5052 ... cannot be reached now: n-a (left)` | Admin → Net → Members | start or Rejoin that node; the page works again by itself |
+| A page says `502 DRS-5052 ... cannot be reached now: n-a (left)` | Admin → Cluster → Members | start or Rejoin that node; the page works again by itself |
 | While a node is down the log has `WARN request refused: DRS-5052 … n-a (dead)`, then a count a minute | nothing: the expected answers; a node just back is named `(rejoining)` | start the node; a `request failed:` line with a stack trace is a real fault |
 | Admin → Health shows *Last administrator kept* | the audit log | nothing to repair; review who disabled whom |
 | The console moves between servers often | Admin → Health, *Console servers*; the console's log | the server it leaves; raise `backend.fail_after` on a flaky network |
-| Links say *pending* on one node and not another | the holding peer's latency on Admin → Net | the peer's health; raise routing.yaml's `link-budget` |
-| A view is answered by an older pack | Admin → Net → Capability map | the newest is served only from reachable, undrained nodes |
+| Links say *pending* on one node and not another | the holding peer's latency on Admin → Cluster | the peer's health; raise routing.yaml's `link-budget` |
+| A view is answered by an older pack | Admin → Cluster → Capability map | the newest is served only from reachable, undrained nodes |
 | `503 DRS-5215` naming a shard | `drishti.py var shards --date D` | restore an owner; the shard is rebuilt after `stable-seconds` |
 | `409 DRS-5216` | members reading different lake versions | announce the load; every member reads the same lake |
 
@@ -1427,8 +1427,8 @@ DRISHTI_NODE_URL=http://var-3.drishti.local:18480 deploy/bin/drishti-node.sh wai
 | Event | What happens, what to do |
 |---|---|
 | Task or host failure | ECS starts a new task, possibly in another zone, on the same folders; it rejoins with its new address; another node's console keeps its users |
-| Adding a node | three access points, a task definition and a service for `drishti-d`; its first start writes its Drishti\*net files and joins through the seeds; Admin → Net shows it |
-| Removing a node | drain it, scale its service to 0, delete it; **Remove** it on Admin → Net; its EFS folders are kept until the backup retention passes, then deleted by hand |
+| Adding a node | three access points, a task definition and a service for `drishti-d`; its first start writes its Drishti\*net files and joins through the seeds; Admin → Cluster shows it |
+| Removing a node | drain it, scale its service to 0, delete it; **Remove** it on Admin → Cluster; its EFS folders are kept until the backup retention passes, then deleted by hand |
 | A pack | `drishti.py pack deploy … --to /opt/drishti/data/packs/installed` from the administration host, or Admin → Packs upload; per node, or once and let the newest-version rule serve it |
 | Connector files, Sutras, `config/net/*.yaml` | edited in the console (written to EFS) or copied from the administration host; watched, no restart |
 | Secrets rotation | a new secret version, then a rolling restart |

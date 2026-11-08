@@ -85,7 +85,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         List<Pack> offPacks = packs.stream().filter(p -> !access.packOn(p.name(), p.domain())).toList();
         if (!offPacks.isEmpty()) {
             System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,
-                    "not loading {0}: their module is off (Admin -> Modules)", offPacks.stream().map(Pack::name).toList());
+                    "not loading {0}: their module is off (config/modules/<module>.yaml, DRISHTI_MODULES_<MODULE>_ENABLED)", offPacks.stream().map(Pack::name).toList());
             packs = new java.util.ArrayList<>(packs);
             packs.removeAll(offPacks);
             offPacks.forEach(p -> suppressed.addAll(p.connectorRefs()));

@@ -145,7 +145,7 @@ public final class YamlAccessStore implements AccessStore {
         try {
             Files.createDirectories(modulesDir);
             List<String> lines = Files.isRegularFile(f) ? new ArrayList<>(Files.readAllLines(f, StandardCharsets.UTF_8)) : new ArrayList<>(List.of(
-                    "# The module '" + id + "' at this site (docs/architecture/ACCESS_MODEL.md): the administrator's switch. Admin -> Modules",
+                    "# The module '" + id + "' at this site (docs/architecture/ACCESS_MODEL.md): the administrator's switch. POST /api/v1/admin/modules",
                     "# writes it; a change takes effect when the server restarts (a module's beans, engines, jobs and API are loaded at start)."));
             boolean replaced = false;
             for (int i = 0; i < lines.size(); i++) {

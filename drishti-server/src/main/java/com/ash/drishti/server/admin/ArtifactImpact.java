@@ -185,7 +185,7 @@ public final class ArtifactImpact {
     }
 
     /**
-     * What turning a command off stops (Admin → Commands): what names its one kind, the BI datasets that read it and what is built on
+     * What turning a command off stops (Admin → Functions): what names its one kind, the BI datasets that read it and what is built on
      * them, saved searches, monitors, alerts, subscriptions, workspaces, shares and embed hosts. Nothing is blocked: a command is turned
      * back on at any time.
      */
