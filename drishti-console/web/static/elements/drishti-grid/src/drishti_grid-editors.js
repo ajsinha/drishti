@@ -60,6 +60,9 @@ export class CellEditor {
     const col = m.shownColumns()[c], ed = editorOf(col), cur = m.cellValue(r, c);
     if (ed === 'checkbox') { this.save(r, c, !cur, null); return true; }
     v.focusCell(r, c);
+    // the rows in view drawn now when the cell is not: the editor goes over its cell at once (an editor without its cell is hidden, and its
+    // focus would scroll the grid back to where the editor last was, so the cell never came into view)
+    if (!this.doc.getElementById(v.uid + '-r' + r + '-c' + c)) { v.body.render(); }
     this.at = { r: r, c: c, ed: ed, col: col, old: cur };
     const box = this.el = h(this.doc, 'div', { cls: 'dg-editor dg-editor-' + ed, attrs: { role: 'presentation' } });
     const msg = this.msg = h(this.doc, 'div', { cls: 'dg-editor-msg', attrs: { role: 'alert', id: v.uid + '-edit-msg', hidden: true } });

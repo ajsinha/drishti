@@ -33,6 +33,9 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
   BI folder lists each refused file under Health › BI problems and Admin › Artifacts; a pack named twice stops the server at start
   (and keeps its last good version on a hot reload, with the problem on Health) naming both folders. The Python resolver
   (`core/pack_paths.py`) refuses the same, and the shipped packs are checked to hold each name once.
+- **Fixed: a grid cell edited while its row is out of view opens over its cell** (drishti-grid): the editor started before the rows
+  were drawn at the new scroll, stayed hidden, and its focus scrolled the grid back, so the cell never came into view (Build › Tables &
+  models, *+ Computed column* on a table of many columns opened an editor nobody could see); the rows in view are drawn first.
 - **Fixed: a Form's Select with an `aria-label` hook names its combobox** (drishti-inputs): the label went onto the `<drishti-select>`
   element as well, so one field was two labelled things (the Build workbench's enumerated options, the BI tile pickers).
 - **Fixed: an embedded live report follows its live tables again**: the server describes a report's model by its `datasets` (each with
