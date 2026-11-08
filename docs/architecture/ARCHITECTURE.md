@@ -1584,6 +1584,14 @@ contract: adopted are ONNX Runtime for machine-learning inference (Tribuo as the
 (Hipparchus simplex and Timefold); pure Java only are JTransforms (FFT) and simdjson-java; candidates when a client asks are GDAL and PROJ
 (GeoTools, proj4j), H3, and libdeflate if a benchmark shows gzip as the bottleneck. Not taken: FAISS, CUDA, a second SQL engine.
 
+<!-- h-docs: 26+ pivot engine (builder A) -->
+
+<!-- h-docs: compute engines (builder C) -->
+
+<!-- h-docs: BI, Python compute, client renderer, collaboration (builder D) -->
+
+<!-- h-docs: other -->
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
