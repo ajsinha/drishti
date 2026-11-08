@@ -21,6 +21,7 @@ import pytest
 pytest.importorskip("playwright")
 from playwright import sync_api  # noqa: E402
 
+import select_helpers  # noqa: E402
 from pivot_screen_backend import PivotBackend  # noqa: E402
 from table_chart_backend import serve  # noqa: E402
 
@@ -70,7 +71,7 @@ def test_why_opens_its_card_and_asks_the_one_explain(stack, page):
     page.click("[data-pf-open='explain']")
     card = _card(page, "explain")
     card.wait_for(state="visible")
-    assert page.locator("[data-pf-by] option").count() > 0                 # the split-by list filled from the view and the catalogue
+    assert select_helpers.values(page, "[data-pf-by]")                 # the split-by list filled from the view and the catalogue
     page.click("[data-pf-explain]")
     drawer = _explained(page)
     assert drawer.get_attribute("data-tab") == "why"
@@ -123,7 +124,7 @@ def test_why_splits_by_any_field_of_the_source(stack, page):
     rows and columns; the field chosen is the one sent (the CLI and the API accept any field too)."""
     page.click("[data-pf-open='explain']")
     _card(page, "explain").wait_for(state="visible")
-    options = page.locator("[data-pf-by] option").all_text_contents()
+    options = select_helpers.labels(page, "[data-pf-by]")
     assert options[0] == "DESK", options                                  # the view's row first
     assert {"CURRENCY", "PRODUCT", "TRADE_DATE", "NOTIONAL", "PNL"} <= set(options), options
     page.select_option("[data-pf-by]", "PRODUCT")

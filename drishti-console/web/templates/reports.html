@@ -72,12 +72,12 @@
       <label>When<input name="schedule" class="studio-in mono" value="{{ form.schedule or '' }}" list="rptWhen" required></label>
       <datalist id="rptWhen"><option value="business-days 18:30"><option value="weekdays 07:00"><option value="daily 06:00"><option value="hourly">
         <option value="cron 0 0 8,12,16 * * MON-FRI"></datalist>
-      <label>Data for<select name="date" class="studio-select"><option value="today"{% if form.date != 'previous' %} selected{% endif %}>the current business day</option>
-        <option value="previous"{% if form.date == 'previous' %} selected{% endif %}>the business day before</option></select></label>
-      <label>Deliver to<select name="deliver" class="studio-select"><option value="folder">the reports folder</option>
-        <option value="webhook"{% if form.deliver == 'webhook' %} selected{% endif %}>a webhook</option></select></label>
-      <label>Format<select name="format" class="studio-select"><option value="csv">CSV</option>
-        <option value="jsonl"{% if form.format == 'jsonl' %} selected{% endif %}>JSON Lines (one entity a line)</option></select></label>
+      <label>Data for<drishti-select name="date" label="Data for"><option value="today"{% if form.date != 'previous' %} selected{% endif %}>the current business day</option>
+        <option value="previous"{% if form.date == 'previous' %} selected{% endif %}>the business day before</option></drishti-select></label>
+      <label>Deliver to<drishti-select name="deliver" label="Deliver to"><option value="folder">the reports folder</option>
+        <option value="webhook"{% if form.deliver == 'webhook' %} selected{% endif %}>a webhook</option></drishti-select></label>
+      <label>Format<drishti-select name="format" label="Format"><option value="csv">CSV</option>
+        <option value="jsonl"{% if form.format == 'jsonl' %} selected{% endif %}>JSON Lines (one entity a line)</option></drishti-select></label>
       <label class="wide">Webhook URL (if a webhook)<input name="webhook" class="studio-in mono" value="{{ form.webhook or '' }}" placeholder="https://hooks.example.com/drishti"></label>
       <label><input type="checkbox" name="enabled" {% if form.enabled is not defined or form.enabled %}checked{% endif %}> Active</label>
       <button type="submit" class="btn-pill btn-accent">Save report</button>

@@ -43,11 +43,11 @@
     {{ qf }}
     <noscript><p class="qf-note">This form is drawn by the browser: with scripts off, type the search in the command line (FORM {{ info.pack }} shows its words).</p></noscript>
     <div class="qf-result-opts">
-      <label class="qf-ro">Sort by <select name="order"><option value="">the source's order</option>{% for f in sortable %}
-        <option value="{{ f.path }}"{{ ' selected' if q.get('order') == f.path }}>{{ f.label }}</option>{% endfor %}</select></label>
+      <label class="qf-ro">Sort by <drishti-select name="order" label="Sort by"><option value="">the source's order</option>{% for f in sortable %}
+        <option value="{{ f.path }}"{{ ' selected' if q.get('order') == f.path }}>{{ f.label }}</option>{% endfor %}</drishti-select></label>
       <label class="qf-chk"><input type="checkbox" name="desc" value="1"{{ ' checked' if q.get('desc') in ('1', 'on', 'true') }}> <span>Descending</span></label>
-      <label class="qf-ro">Show <select name="limit">{% for n in limits %}
-        <option value="{{ n }}"{{ ' selected' if (q.get('limit') or settings.get('searchLimit') or 100) | string == n | string }}>{{ n }}</option>{% endfor %}</select> results</label>
+      <label class="qf-ro">Show <drishti-select name="limit" label="Show">{% for n in limits %}
+        <option value="{{ n }}"{{ ' selected' if (q.get('limit') or settings.get('searchLimit') or 100) | string == n | string }}>{{ n }}</option>{% endfor %}</drishti-select> results</label>
     </div>
     <div class="qf-actions">
       <button type="submit" class="btn btn-sm btn-primary qf-go">Search</button>

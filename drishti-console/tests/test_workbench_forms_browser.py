@@ -17,6 +17,8 @@ operation, the Problems tab (a refused edit with its line, a field the samples r
 take back. Fixtures and helpers are test_workbench_browser.py's."""
 import json
 
+import select_helpers
+
 from test_workbench_browser import browser, drag, formula_value, kinds, open_design, page, settle, state, type_formula, wait  # noqa: F401 - fixtures and helpers
 from wb_live import BROWSER_WAIT_MS, live_console, showcase_json, showcase_sutra  # noqa: F401 - the fixture
 
@@ -127,9 +129,8 @@ def test_phone_width_theme_and_the_sample_switcher_in_the_status_bar(live_consol
     assert page.evaluate("document.querySelector('.wb-frame').getBoundingClientRect().width") < 420
     page.locator('[data-width="desktop"]').click()
     assert page.evaluate("!document.querySelector('.wb-phone')")
-    options = page.locator("[data-theme-pick] option").all_inner_texts()
-    assert len(options) >= 4
-    choice = page.locator("[data-theme-pick] option").nth(2).get_attribute("value")
+    assert len(select_helpers.labels(page, "[data-theme-pick]")) >= 4
+    choice = select_helpers.values(page, "[data-theme-pick]")[2]
     page.select_option("[data-theme-pick]", choice)
     assert page.evaluate("document.documentElement.getAttribute('data-theme')") == choice
 

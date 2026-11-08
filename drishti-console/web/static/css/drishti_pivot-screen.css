@@ -94,9 +94,8 @@
   .pv-seg label, .pv-switches .pv-chip { min-height: 36px; padding: var(--d-sp-6) var(--d-sp-12); }
   .pv-computed { flex-basis: 100%; }
 }
-/* the cards, the chips' selects (at most 220 px, inside a phone), the chart's box and the comments */
-.pv-chip select { background: transparent; color: var(--d-ink); border: 0; font-size: var(--d-fs-12_5); max-width: 220px; }
-.pv-chip select option { background: var(--d-surface); color: var(--d-ink); }
+/* the cards, the chips' Selects (drishti-inputs: at most 220 px, inside a phone), the chart's box and the comments */
+.pv-chip drishti-select { color: var(--d-ink); font-size: var(--d-fs-12_5); max-width: 220px; }
 .pv-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-10); min-width: 0; position: relative; }
 .pv-card h2 { margin: 0 0 var(--d-sp-8); font-size: var(--d-fs-13_5); font-weight: 600; }
 .pv-card h3 { margin: var(--d-sp-8) 0 var(--d-sp-4); font-size: var(--d-fs-11); letter-spacing: .08em; text-transform: uppercase; color: var(--d-accent); }

@@ -33,10 +33,10 @@
       <input id="cfg-q" name="q" type="search" value="{{ q }}" autocomplete="off" data-cfg-q
              placeholder="A key, an environment variable or words: history max-days, DRISHTI_PORT, proxy">
       <label class="visually-hidden" for="cfg-area">Area</label>
-      <select id="cfg-area" name="area" data-cfg-area>
+      <drishti-select id="cfg-area" name="area" data-cfg-area label="Area">
         <option value="">Every area</option>
         {% for a in areas %}<option value="{{ a.id }}"{% if a.id == area %} selected{% endif %}>{{ a.title }}</option>{% endfor %}
-      </select>
+      </drishti-select>
       <button type="submit" class="btn btn-sm btn-primary">Search</button>
       {% if q or area %}<a class="btn btn-sm btn-outline-secondary" href="/help/configuration" data-cfg-clear>Clear</a>{% endif %}
     </form>

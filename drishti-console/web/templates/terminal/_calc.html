@@ -35,7 +35,7 @@
     <button type="button" class="btn-pill btn-accent btn-sm-pill" data-calc-run title="Run (Ctrl+Enter)"{% if not calc.runtime.installed %} disabled{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Run</button>
     <button type="button" class="btn-pill btn-sm-pill" data-calc-stop title="Stop: ends the Python worker and starts a fresh one" disabled><i class="bi bi-stop-fill" aria-hidden="true"></i> Stop</button>
     <label class="calc-pick"><span class="visually-hidden">Snippets</span>
-      <select class="studio-select" data-calc-snippets aria-label="Snippets"><option value="">Snippets…</option></select></label>
+      <drishti-select data-calc-snippets label="Snippets"><option value="">Snippets…</option></drishti-select></label>
     <button type="button" class="fk" data-calc-save title="Save this code as one of your snippets"><i class="bi bi-save" aria-hidden="true"></i> Save</button>
     <button type="button" class="fk" data-calc-delete title="Delete the selected snippet of yours" hidden><i class="bi bi-trash" aria-hidden="true"></i> Delete</button>
     <button type="button" class="fk" data-calc-clear title="Clear the output"><i class="bi bi-eraser" aria-hidden="true"></i> Clear</button>

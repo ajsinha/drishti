@@ -37,8 +37,8 @@
 .cmd-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8) var(--d-sp-16); }
 .cmd-bar .cmd-h { margin: var(--d-sp-6_4) 0; }
 .cmd-find { display: flex; align-items: center; gap: var(--d-sp-6_4); color: var(--d-muted); font-size: var(--d-fs-13_6); }
-.cmd-find input, .cmd-find select { min-height: 36px; min-width: 0; width: 14rem; max-width: 60vw; }
-.cmd-find select { width: auto; }
+.cmd-find input { min-height: 36px; min-width: 0; width: 14rem; max-width: 60vw; }
+.cmd-find drishti-select { max-width: 60vw; color: var(--d-ink); }
 .cmd-bar .btn-pill { min-height: 36px; }
 .cmd-pending { padding: var(--d-sp-1_6) var(--d-sp-9_6); border-radius: var(--d-radius-16); background: var(--d-emph-bg); color: var(--d-warn); font-size: var(--d-fs-12_8); }
 .cmd-tbl th, .cmd-tbl td { white-space: normal; vertical-align: top; }

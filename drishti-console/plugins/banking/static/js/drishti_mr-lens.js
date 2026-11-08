@@ -320,11 +320,9 @@
   }
 
   function tabC() {
-    var pick = $("[data-mr-grid-pick]");
-    sens($("[data-mr-ladder]"), { grid: pick.value || "BANK-IR-TENOR" }, function (box, s) {
-      if (!pick.options.length) {
-        (s.grids || []).forEach(function (g) { var o = el("option", "", g); o.selected = g === s.grid; pick.appendChild(o); });
-      }
+    var pick = $("[data-mr-grid-pick]").component;                    // drishti-inputs' Select, filled with the grids on the first answer
+    sens($("[data-mr-ladder]"), { grid: pick.getValue() || "BANK-IR-TENOR" }, function (box, s) {
+      if (!pick.options.length) pick.setOptions(s.grids || [], s.grid);
       if (!s.rows.length) { note(box, "No GIRR delta of the scope on " + s.date + "."); return; }
       var scale = 0;
       s.rows.forEach(function (r) { r.cells.forEach(function (c) { scale = Math.max(scale, Math.abs(c.net || 0), c.limit || 0); }); });
@@ -390,7 +388,7 @@
     f.trade.value = "";
     whatIf();
   });
-  $("[data-mr-grid-pick]").addEventListener("change", tabC);
+  $("[data-mr-grid-pick]").addEventListener("drishti:change", tabC);
   var K = window.Drishti.keys, answered = function () { return !!st.answer; };
   K.register({ id: "mr.horizon", keys: ["H", "Shift+H"], scope: "screen", area: "mr-lens", group: "Market risk", description: "Switch the horizon: 1 day or 10 days",
     when: answered, run: function () { setLens("horizon", opts().horizon ? "1d" : "10d"); } });

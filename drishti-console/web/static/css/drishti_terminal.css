@@ -349,7 +349,7 @@ body.embed .vhead { padding: var(--d-sp-9_6) var(--d-sp-12_8); }
 .ws-num { color: var(--d-accent); font-weight: 700; }
 .ws-cmd { flex: 1; min-width: 0; } .ws-cmd .studio-in { width: 100%; padding: var(--d-sp-2_4) var(--d-sp-7_2); }
 .ws-follow { color: var(--d-muted); display: inline-flex; gap: var(--d-sp-4_8); align-items: center; white-space: nowrap; }
-.ws-follow .studio-select { padding: var(--d-sp-1_6) var(--d-sp-4_8); font-size: var(--d-fs-12_48); }
+.ws-follow drishti-select { font-size: var(--d-fs-12_48); }
 .ws-x { background: none; border: 0; font-size: var(--d-fs-17_6); line-height: 1; }
 .ws-frame { flex: 1; width: 100%; border: 0; background: var(--d-bg); min-height: 240px; }
 @media (max-width: 900px) {
@@ -600,7 +600,8 @@ button.tbar-link { background: none; border: 0; padding: 0 var(--d-sp-5_6); font
 .pin-on { color: var(--d-accent) !important; }
 .thome-pins { margin: 0 0 var(--d-sp-19_2); }
 .set-form { display: grid; grid-template-columns: max-content minmax(0, 22rem); gap: var(--d-sp-9_6) var(--d-sp-16); align-items: center; }
-.set-form select, .set-form input { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-5); padding: var(--d-sp-4_8) var(--d-sp-8); }
+.set-form drishti-select { display: block; }
+.set-form input { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-5); padding: var(--d-sp-4_8) var(--d-sp-8); }
 @media (max-width: 640px) { .set-form { grid-template-columns: 1fr; } }
 
 /* ---- Health (admin) ---- */

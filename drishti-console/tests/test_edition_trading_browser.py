@@ -134,9 +134,9 @@ def test_the_check_box_answers_end_to_end(browser, trading_console):
     page = _page(ctx)
     try:
         page.goto(f"{trading_console}/?landing=trader", wait_until="load")
-        page.wait_for_function("() => document.querySelectorAll('[data-tl-product] option').length === 3")
+        page.wait_for_function("() => (document.querySelector('[data-tl-product]').component || {options: []}).options.length === 3")
         page.select_option("[data-tl-product]", "IR_SWAP")
-        page.select_option("[data-tl-check] select[name=side]", "S")
+        page.select_option("[data-tl-check] drishti-select[name=side]", "S")
         page.fill("[data-tl-check] input[name=notional]", "250m")
         page.fill("[data-tl-check] input[name=counterparty]", "CP-ALDERSHOT")
         page.click("[data-tl-check-go]")

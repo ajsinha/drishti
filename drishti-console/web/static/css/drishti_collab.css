@@ -153,7 +153,7 @@ body.shr-open { overflow: hidden; }
 .disc-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--d-sp-6_4); padding: var(--d-sp-9_6) var(--d-sp-14_4) var(--d-sp-12_8); border-top: 1px solid var(--d-border); background: var(--d-surface); }
 .disc-h { font-size: var(--d-fs-13_6); font-weight: 700; margin: 0; color: var(--d-accent); }
 .disc-l { display: flex; gap: var(--d-sp-8); align-items: center; color: var(--d-muted); }
-.disc-l select { flex: 1; min-width: 0; }
+.disc-l drishti-select { flex: 1; min-width: 0; }
 .disc-f { display: flex; gap: var(--d-sp-8); flex-wrap: wrap; align-items: center; }
 .disc-f kbd { margin-left: var(--d-sp-4_8); font-size: var(--d-fs-11_2); }
 .disc-note { margin: 0; min-height: 1.1em; overflow-wrap: anywhere; }
