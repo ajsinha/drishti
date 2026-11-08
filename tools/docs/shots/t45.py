@@ -171,7 +171,7 @@ def start_servers(w: Path) -> list:
     shutil.copytree(ROOT / "config", w / "config", ignore=shutil.ignore_patterns("connectors"))
     (w / "config" / "dataload.yaml").write_text("dataload:\n  rules: []\n  unmatched: fail\n")
     for d in [p for p in (w / "data").glob("*") if p.name != "delta"] + [p for p in (w / "data" / "delta").glob("*") if p.name != "demo"] + [w / "sutras"]:
-        shutil.rmtree(d, ignore_errors=True) if d.is_dir() else d.unlink()
+        shutil.rmtree(d, ignore_errors=True) if d.is_dir() else d.unlink(missing_ok=True)
     (w / "sutras").mkdir(exist_ok=True)
     if not (w / "data" / "delta" / "demo").exists():
         os.environ["DRISHTI_SHOTS_WORK"] = str(w)

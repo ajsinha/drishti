@@ -94,4 +94,4 @@ def health(c: Ctx):
         return b.getBoundingClientRect().top + window.scrollY; })()""")
     c.page.set_viewport_size({"width": 1400, "height": int(top) + 200})     # the clip lies inside the window
     c.page.wait_for_timeout(800)
-    c.save("02-health-hierarchy-warning.jpg", clip={"x": 80, "y": top - 16, "width": 1240, "height": 110})   # the warnings, not the chart above or the scratch paths below
+    c.save("02-health-hierarchy-warning.jpg", clip={"x": 80, "y": top - 16, "width": 1240, "height": 132})   # the warnings, not the chart above or the scratch paths below
