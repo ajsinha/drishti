@@ -36,6 +36,14 @@ def _table_file(name: str) -> str:
     return f"{domain}/{rest}.table.yaml"
 
 
+def _model_file(name: str) -> str:
+    """A model's file under config/tables: models live in a domain folder (``bi``, or ``banking`` since the domain split)."""
+    for domain in sorted(p.name for p in TABLES.iterdir() if p.is_dir()):
+        if (TABLES / domain / f"{name}.model.yaml").exists():
+            return f"tables/{domain}/{name}.model.yaml"
+    return f"tables/bi/{name}.model.yaml"
+
+
 def copy_samples(bi_dir: Path, names) -> list[str]:
     """Copies the samples ``names`` (model names) into the stack; returns the files copied, relative to the stack's config folder."""
     copied: list[str] = []
@@ -59,14 +67,14 @@ def copy_samples(bi_dir: Path, names) -> list[str]:
         return body
 
     def model(name: str) -> None:
-        text = put(f"tables/bi/{name}.model.yaml")
+        text = put(_model_file(name))
         for t in _tables_of(text):
             body = table(t)
             py = re.search(r"python:\s*([A-Za-z0-9_.-]+)", body)
             if py and (SHIPPED / "python" / f"{py.group(1)}.python.yaml").exists():
                 put(f"bi/python/{py.group(1)}.python.yaml")
             for used in re.findall(r"model:\s*([A-Za-z0-9_.-]+)@", body):
-                if f"tables/bi/{used}.model.yaml" not in copied:
+                if _model_file(used) not in copied:
                     model(used)
         for py in re.findall(r"python:\s*([A-Za-z0-9_.-]+)", text):
             if (SHIPPED / "python" / f"{py}.python.yaml").exists():
