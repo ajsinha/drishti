@@ -17,7 +17,40 @@
 
 ## Unreleased
 
+### Added
+
+- **`bin/`: one home for starting and stopping Drishti, on Windows, Linux and macOS.** Seven scripts, `start-server`, `stop-server`,
+  `start-console`, `stop-console`, `status`, `start-all` and `stop-all`, each as a `.sh` (Linux and macOS: bash 3.2 and the BSD userland),
+  a `.ps1` (Windows PowerShell 5.1 and PowerShell 7) and a `.cmd` that runs the `.ps1` from `cmd` or a double-click, with the same options
+  and `--help`.
+  - `start-server` finds Java 21+ (`DRISHTI_JAVA_HOME`, `JAVA_HOME`, the `PATH`, `java_home` on macOS), the newest server jar, sets the
+    temporary folder, the native memory and diagnostic flags and the logs under the data folder, waits for the health URL and prints the
+    LAN address; `--background`, `--port`, `--heap`, `--env-file` (secrets off the command line, values never printed), `--demo` (the
+    development secrets, marked not for production).
+  - **Clusters:** `--node <name>` with `--node-dir` (the node's Drishti\*net folder, made when missing), `--node-data` (its own data
+    folder; two nodes on one folder are refused), `--seed <host:port>` and `--advertise` (the machine's real LAN address by default;
+    loopback and wildcard addresses refused). Pid, log and temporary folder are per node, so several nodes run on one machine.
+  - `start-console --server` takes one server or a cluster's entry nodes (comma-separated): the console uses the first that answers
+    and learns the other members.
+  - The stops act on the pid file only (never by name): graceful, then forced after a timeout; a stale pid file is removed and said so;
+    `--node`, `--all-nodes`. `status` shows pid, state, port, health and LAN address.
+
+### Changed
+
+- **`tools/windows/start-server.ps1` and `start-console.ps1` moved to `bin/`** (their options kept; `-DemoLakes` is `--demo`, `-Backend`
+  is `--server`, `-Stop` calls `stop-server`). The pid file moved from `data/server.pid` to `data/run/server.pid`.
+- **`drishti-stack/` starts and stops through `bin/`**: `start.sh`, `stop.sh` and `status.sh` keep their behaviour, ports and the
+  git-ignored `secrets.env`; process ids and logs moved from `drishti-stack/run/` to the repository's `data/run/` and `data/logs/`
+  (`server-<node>.pid`, `server-<node>.log`). `stop.sh` still stops a stack started before the move, from `run/pids.txt`.
+
 ### Docs
+
+- **Starting and stopping with `bin/`:** [DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md) section 6 rewritten around the
+  scripts (every option with its default, the environment, where the files go, exit codes, one server and a console, the background,
+  status and stop, an env-file, the errors) for Windows, Linux and macOS; section 10.6 starts three nodes on one machine and on three
+  machines with `--node`, `--seed` and `--advertise`, the console given the entry node, and stops one node and all; PDF regenerated.
+  QUICKSTART_DEVELOPERS (and its PDF), OPERATIONS_GUIDE 4.3, CLUSTER_GUIDE 2.0, tutorials 01 and 22, the root README, `bin/README.md`,
+  `drishti-stack/README.md` and every former reference to the Windows starters follow.
 
 - **Kernel and modules, the console tier (design):** [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) opens with the
   three building blocks (Drishti Kernel, Drishti Console, Drishti modules) and gains section 10, the Drishti Console on Spring Boot as a

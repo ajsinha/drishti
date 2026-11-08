@@ -86,7 +86,7 @@ settings:
 - proxy.*
 auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:), the AWS chain or credentials a REST catalog vends; a REST catalog takes credential (OAuth2 id:secret) or a token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
 licence: Drishti's own native Iceberg engine (drishti-iceberg) with Apache Iceberg Java, Apache Parquet, Apache Hadoop client and AWS SDK for Java v2 (all Apache-2.0), bundled.
-windows: Works on Windows with engine native (the default; local folders with drive letters, and S3); engine library needs winutils.exe, so it is not for the Windows QA machine. Loader tools\windows\load-iceberg.ps1; start-server.ps1 -Iceberg copies the example files in.
+windows: Works on Windows with engine native (the default; local folders with drive letters, and S3); engine library needs winutils.exe, so it is not for the Windows QA machine. Loader tools\windows\load-iceberg.ps1; bin\start-server.cmd --iceberg copies the example files in.
 doc: plugins/drishti-plugin-iceberg/README.md
 ---
 # The iceberg connector
@@ -439,7 +439,7 @@ plus parsed manifests (`drishti.iceberg.manifest-cache-entries`) and delete file
 engine reads the footer on every single read. On the 10,000-trade test lake the native engine started in 637 ms against 1,848 ms and read
 a past date's trade in 94 ms against 353 ms. A purge of the connector empties every cache.
 
-**Windows**: `tools\windows\start-server.ps1 -Iceberg` starts the server with the Iceberg connector files and the native engine
+**Windows**: `bin\start-server.cmd --iceberg` starts the server with the Iceberg connector files and the native engine
 ([OPERATIONS_GUIDE.md](../../docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows)).
 
 ## Parity with Delta: vectors and disk caches

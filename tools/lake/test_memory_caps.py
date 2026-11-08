@@ -79,30 +79,12 @@ def test_the_shipped_engine_file_is_off_and_names_its_variable():
 
 
 def test_every_launcher_asks_the_one_place_and_passes_arrows_cap():
-    stack = (ROOT / "drishti-stack" / "stack.py").read_text(encoding="utf-8")
-    assert "*direct_memory_flags(cwd, env)" in stack and '"--extra-only"' in stack and '"--arrow-only"' in stack
-    ps1 = (ROOT / "tools" / "windows" / "start-server.ps1").read_text(encoding="utf-8")
-    assert "--arrow-only" in ps1 and "drishti.arrow.max-bytes" in ps1
+    for launcher in ("start-server.sh", "start-server.ps1"):                # drishti-stack starts its nodes through bin/start-server.sh
+        text = (ROOT / "bin" / launcher).read_text(encoding="utf-8")
+        assert "--extra-only" in text and "--arrow-only" in text and "drishti.arrow.max-bytes" in text, launcher
+    assert "bin_run(\"start-server\"" in (ROOT / "drishti-stack" / "stack.py").read_text(encoding="utf-8")
     ecs = (ROOT / "deploy" / "docker" / "ecs" / "server-entrypoint.sh").read_text(encoding="utf-8")
     assert "DRISHTI_ARROW_MB" in ecs and "drishti.arrow.max-bytes" in ecs
     for f in (ROOT / "run-configs").glob("Drishti server*.run.xml"):
         text = f.read_text(encoding="utf-8")
         assert "--add-opens=java.base/java.nio=ALL-UNNAMED" in text and "drishti.arrow.max-bytes" in text, f.name
-
-
-def test_the_stack_turns_the_figures_into_flags(monkeypatch):
-    # read without leaving drishti-stack/__pycache__ in the checkout (litter test_no_hidden_names sees when it runs at the same time)
-    monkeypatch.setattr(sys, "dont_write_bytecode", True)
-    monkeypatch.syspath_prepend(str(ROOT / "drishti-stack"))
-    import stack
-
-    answers = {"--extra-only": "4864", "--arrow-only": "4608"}
-
-    class Done:
-        def __init__(self, out):
-            self.stdout = out
-
-    monkeypatch.setattr(stack.subprocess, "run", lambda cmd, **kw: Done(answers[cmd[-1]]))
-    assert stack.direct_memory_flags(ROOT, {}) == ["-XX:MaxDirectMemorySize=5120m", f"-Ddrishti.arrow.max-bytes={4608 << 20}"]
-    answers.update({"--extra-only": "", "--arrow-only": ""})
-    assert stack.direct_memory_flags(ROOT, {}) == []

@@ -1616,7 +1616,7 @@ scheduled report. Only a download by you may leave the server."*
 ### 13.7 Memory, the JVM and the host
 
 - **Direct memory.** The stores live in direct buffers. The JVM's limit must be 256 MB (the server's own I/O) plus the stores' caps.
-  `tools/windows/start-server.ps1` computes it from the configuration (`tools/lake/memory_caps.py`); the Docker image and the ECS
+  `bin/start-server` (`.sh` and `.ps1`) computes it from the configuration (`tools/lake/memory_caps.py`); the Docker image and the ECS
   entrypoint take `DRISHTI_LAKE_MEMORY_MB` (the caps added up); a systemd unit or a run configuration adds
   `-XX:MaxDirectMemorySize=<256 + caps>m` after the existing flag (the later one wins). Admin → Health turns **red** when the running
   limit is below it.

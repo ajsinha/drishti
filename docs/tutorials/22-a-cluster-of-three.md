@@ -152,12 +152,18 @@ exits 1 and names `node.yaml:3`.
 
 ## Step 3 · Start the three and watch them meet
 
-Start each server with its own data folder and its own `config/net/` folder, and the key in its environment:
+Start each server with `bin/start-server.sh --node`, its own data folder and its own `config/net/` folder, and the key in an env-file
+(`cluster.env`, a line `DRISHTI_NET_SECRET=<the key>`; the script never prints it):
 
 ```bash
-DRISHTI_NET_SECRET=$KEY DRISHTI_NET_DIR=~/drishti/b/net DRISHTI_DATA_DIR=~/drishti/b/data \
-  java -jar drishti-server/target/drishti-server-*-exec.jar --server.port=18784
+bin/start-server.sh --node drishti-a --port 18783 --node-dir ~/drishti/a/net --node-data ~/drishti/a/data --env-file cluster.env --background
+bin/start-server.sh --node drishti-b --port 18784 --node-dir ~/drishti/b/net --node-data ~/drishti/b/data --env-file cluster.env --background
+bin/start-server.sh --node drishti-c --port 18785 --node-dir ~/drishti/c/net --node-data ~/drishti/c/data --env-file cluster.env --background
+bin/status.sh                                   # the three running and UP, each with the address it advertises
 ```
+
+On Windows the same with `bin\start-server.cmd`. Each node advertises this machine's real address (`--advertise` names another); every
+option, and the layout on three machines: [DEPLOYMENT_AND_QA_GUIDE.md › section 10.6](../DEPLOYMENT_AND_QA_GUIDE.md#106-start-order-and-joining).
 
 Each logs its join and each member it learns. Node b's log, as captured:
 

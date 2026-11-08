@@ -2065,7 +2065,7 @@ Implementation: [ICEBERG_CONNECTOR.md section 17](../../plugins/drishti-plugin-i
   Iceberg row.
 - `tools/windows/load-iceberg.ps1` beside `load-delta.ps1`: sample data and `--trades N --days D`, same options as
   `load-iceberg.sh`; the spill folder defaults under the data folder, never the system temp folder.
-- `tools/windows/start-server.ps1` takes `-Iceberg` to start with the Iceberg connector files.
+- `bin/start-server` takes `--iceberg` to start with the Iceberg connector files.
 - Tutorial: the Iceberg steps of GETTING_STARTED gain PowerShell next to bash.
 
 ### 12. Proving it keeps to the protocol

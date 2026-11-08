@@ -15,13 +15,19 @@
 """The local Drishti*net cluster of drishti-stack/ (README.md): start, stop and status, driven by stack.yaml.
 
     start.sh [node ...]     start what is not running (every node, then the console; or only the nodes named, or "console")
-    stop.sh [node ...]      stop by the process ids in run/pids.txt (never by name), the console first
+    stop.sh [node ...]      stop by the pid files of data/run (never by name), the console first
     status.sh               the processes, the ports, the members each node sees, and the console's servers
+
+The processes are started and stopped by the scripts of bin/ (bin/README.md; docs/DEPLOYMENT_AND_QA_GUIDE.md section 6): each node through
+bin/start-server.sh --node <name> --node-dir nodes/<name>/net --env-file secrets.env --background, the console through
+bin/start-console.sh --server <the entry node>. This file only adds what is the stack's own: stack.yaml, the secrets, the jar copy, the
+synthetic lakes and each node's settings.
 
 Secrets live in secrets.env (git-ignored, mode 600): DRISHTI_TOKEN_SECRET, DRISHTI_SESSION_SECRET and DRISHTI_NET_SECRET, each made with
 ``openssl rand -hex 32`` on the first start when missing and kept. They reach the processes through their environment only; nothing here
 prints them. The servers run a copy of the newest built jar, run/server.jar, so a rebuild never replaces the jar under a running server.
-Logs and process ids are in run/ (git-ignored); node data and the synthetic lakes in data/stack/ (data/ is git-ignored)."""
+Process ids and logs are where bin/ keeps them, in the repository's data/ (data/run/server-<node>.pid, data/run/console.pid,
+data/logs/server-<node>.log, data/logs/console.log); node data and the synthetic lakes in data/stack/."""
 from __future__ import annotations
 
 import base64
@@ -42,8 +48,6 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 RUN = HERE / "run"
-LOGS = RUN / "logs"
-PIDS = RUN / "pids.txt"
 JAR = RUN / "server.jar"
 SECRETS = HERE / "secrets.env"
 SECRET_NAMES = ("DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET", "DRISHTI_NET_SECRET")
@@ -65,7 +69,6 @@ HEADER = """# Project Drishti · Any data. Any domain. One grammar.
 """
 
 sys.path.insert(0, str(ROOT / "tools"))
-from javacmd import java_cmd, server_tmp  # noqa: E402
 import hostaddr  # noqa: E402
 
 
@@ -142,49 +145,43 @@ def server_jar() -> Path:
     return JAR
 
 
-# -- process ids -------------------------------------------------------------------------------------------------------------------
-def read_pids() -> dict:
-    out = {}
-    if PIDS.exists():
-        for line in PIDS.read_text(encoding="utf-8").splitlines():
-            parts = line.split()
-            if len(parts) == 2 and parts[1].isdigit():
-                out[parts[0]] = int(parts[1])
-    return out
+# -- process ids -----------------------------------------------------------------------------------------------------------------
+# The processes are started and stopped by bin/ (bin/README.md): their pid files, logs and temp folders are in the repository's data/
+# (data/run/server-<node>.pid, data/run/console.pid, data/logs/), whatever each node's own data folder.
+BIN = ROOT / "bin"
+DATA = ROOT / "data"
+LEGACY_PIDS = RUN / "pids.txt"          # before bin/ (2.9.11.g): stop.sh still stops a stack started then; delete after the next release
 
 
-def write_pids(pids: dict) -> None:
-    RUN.mkdir(parents=True, exist_ok=True)
-    PIDS.write_text("".join(f"{k} {v}\n" for k, v in pids.items()), encoding="utf-8")
+def pid_file(name: str) -> Path:
+    return DATA / "run" / ("console.pid" if name == CONSOLE else f"server-{name}.pid")
+
+
+def running(name: str) -> int | None:
+    """The process id of the node (or the console) when its pid file names a live process of ours, else None."""
+    try:
+        pid = int(pid_file(name).read_text(encoding="utf-8").splitlines()[0].strip())
+    except (OSError, ValueError, IndexError):
+        return None
+    return pid if ours(pid) else None
 
 
 def ours(pid: int) -> bool:
-    """The process is alive and is one this stack started (its command line names run/server.jar or the console), so a reused id is never
-    stopped."""
+    """The process is alive and is a Drishti server or console, so a reused id is never stopped."""
     try:
         cmd = Path(f"/proc/{pid}/cmdline").read_bytes().replace(b"\0", b" ").decode("utf-8", "replace")
     except OSError:
-        return False
-    return str(JAR) in cmd or "run_drishti_web.py" in cmd
+        try:
+            cmd = subprocess.run(["ps", "-p", str(pid), "-o", "command="], capture_output=True, text=True).stdout
+        except OSError:
+            return False
+    return " -jar " in cmd or "run_drishti_web.py" in cmd
 
 
 def listening(port: int) -> bool:
     with socket.socket() as s:
         s.settimeout(0.3)
         return s.connect_ex(("127.0.0.1", int(port))) == 0
-
-
-def wait_up(url: str, seconds: float, proc: subprocess.Popen | None = None) -> bool:
-    deadline = time.monotonic() + seconds
-    while time.monotonic() < deadline:
-        if proc is not None and proc.poll() is not None:
-            return False
-        try:
-            with urllib.request.urlopen(url, timeout=3):
-                return True
-        except (OSError, urllib.error.URLError):
-            time.sleep(2)
-    return False
 
 
 def stack_host(stack: dict) -> str:
@@ -253,43 +250,6 @@ def build_lake(stack: dict, name: str) -> None:
     shutil.rmtree(tmp, ignore_errors=True)
 
 
-# Native memory of a long-running server (SOAK-05, CLUSTER_GUIDE.md *Resident memory*): direct buffers capped, freed native memory given back,
-# the JDK's per-thread temporary direct buffers cached only up to 256 KB (a larger one is freed after its read), and native memory tracked
-# (jcmd <pid> VM.native_memory summary)
-SERVER_MEMORY_FLAGS = ["-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144",
-                       "-XX:NativeMemoryTracking=summary"]
-DUMPS = RUN / "dumps"
-MB = 1 << 20
-
-
-def direct_memory_flags(cwd: Path, env: dict) -> list[str]:
-    """What the node's direct memory needs beyond the 256 MB of SERVER_MEMORY_FLAGS (a later flag wins): the in-memory lake's stores and
-    Arrow's budget (the compute exchange, BI answers as Arrow, Arrow Flight when its engine is on), from tools/lake/memory_caps.py, the
-    one place they are sized; and Arrow's own cap (-Ddrishti.arrow.max-bytes) at the same figure. Nothing when it cannot say."""
-    caps = ROOT / "tools" / "lake" / "memory_caps.py"
-
-    def ask(flag: str) -> int:
-        try:
-            out = subprocess.run([python(), str(caps), flag], cwd=cwd, env=env, capture_output=True, text=True, timeout=60)
-            return int(out.stdout.strip() or 0)
-        except (OSError, ValueError, subprocess.SubprocessError):
-            return 0
-    extra, arrow = ask("--extra-only"), ask("--arrow-only")
-    flags = [f"-XX:MaxDirectMemorySize={256 + extra}m"] if extra > 0 else []
-    return flags + ([f"-Ddrishti.arrow.max-bytes={arrow * MB}"] if arrow > 0 else [])
-
-
-def diagnostic_flags(name: str) -> list[str]:
-    """A heap dump on OutOfMemoryError (run/dumps/<node>) and a rotated GC log (run/logs/gc-<node>-<pid>.log, 5 x 20 MB): what a
-    multi-day soak needs to explain a failure (OPERATIONS_GUIDE.md, Diagnostics of a long run). The folders are made first: the JVM does
-    not start when the GC log's folder is missing."""
-    dumps = DUMPS / name
-    dumps.mkdir(parents=True, exist_ok=True)
-    LOGS.mkdir(parents=True, exist_ok=True)
-    return ["-XX:+HeapDumpOnOutOfMemoryError", f"-XX:HeapDumpPath={dumps}",
-            f"-Xlog:gc*:file={LOGS / ('gc-' + name + '-%p.log')}:time,uptime:filecount=5,filesize=20m"]
-
-
 def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     """The node's environment and working folder: the repository for home: repo, else data/stack/nodes/<node> with its own data,
     connectors and lake."""
@@ -298,7 +258,6 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     env["DRISHTI_NET_DIR"] = str(node_net(stack, node))
     env["DRISHTI_STACK_HOST"] = stack_host(stack)
     env["DRISHTI_PACKS"] = node["packs"]
-    env.setdefault("MALLOC_ARENA_MAX", "2")                 # glibc: two malloc arenas, not one per busy thread (CLUSTER_GUIDE.md, Resident memory)
     env.setdefault("DRISHTI_STORE_ROOT", str(ROOT / "data" / "fstore"))
     env.setdefault("DRISHTI_UI_KIT_DIR", str(ROOT / "config" / "ui-kit"))   # the platform UI kit for every node, whatever its working folder   # one content store for every node of this machine's cluster (DATA_ARCHITECTURE.md)
     if node.get("home") == "repo":
@@ -306,7 +265,7 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     home = STACK_DATA / "nodes" / node["name"]
     (home / "data").mkdir(parents=True, exist_ok=True)
     (home / "connectors").mkdir(parents=True, exist_ok=True)
-    env.update(DRISHTI_DATA_DIR=str(home / "data"), DRISHTI_CONNECTORS_DIR=str(home / "connectors"), DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"))
+    env.update(DRISHTI_NODE_DATA=str(home / "data"), DRISHTI_CONNECTORS_DIR=str(home / "connectors"), DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"))
     # the node's demo lake is the repository's lake file, config/lakes/demo.yaml (docs/guides/DATA_LAKE_GUIDE.md): the same tables, partitions
     # and promoted columns as every node; its root, the demo lake's (config/lakes/demo.yaml), is the node's synthetic lake (stack.yaml lakes)
     env["DRISHTI_LAKES_DIR"] = str(ROOT / "config" / "lakes")
@@ -315,92 +274,91 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     return env, home
 
 
-def start_node(stack: dict, node: dict, keys: dict, jar: Path, pids: dict) -> bool:
+def bin_run(script: str, args: list[str], env: dict | None = None) -> int:
+    """Runs bin/<script>.sh (bin/README.md), its output as it comes."""
+    return subprocess.run(["bash", str(BIN / f"{script}.sh"), *args], env=env or {**os.environ, "DRISHTI_PYTHON": python()}).returncode
+
+
+def start_node(stack: dict, node: dict, jar: Path) -> bool:
+    """One node through bin/start-server.sh: its Drishti*net folder, its own data folder (a node with a home of its own), the stack's
+    settings and secrets, in the background; pid, log and temp folder in the repository's data/ (data/run/server-<node>.pid)."""
     name, port = node["name"], node["port"]
-    if name in pids and ours(pids[name]):
-        say(f"{name}: already running (pid {pids[name]}, port {port})")
+    pid = running(name)
+    if pid:
+        say(f"{name}: already running (pid {pid}, port {port})")
         return True
     if listening(port):
         say(f"{name}: port {port} is in use by another process: not started (stop that process, or change the port in stack.yaml)")
         return False
     if node.get("lake"):
         build_lake(stack, node["lake"])
-    env, cwd = node_env(stack, node, keys)
-    args = [f"-Xmx{node.get('heap', '1536m')}", *SERVER_MEMORY_FLAGS, *direct_memory_flags(cwd, env), *diagnostic_flags(name), *node.get("jvm", []),
-            "-jar", str(jar), f"--server.port={port}"]
-    args += [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])]
-    # 2.9.7 (CLUSTER_GUIDE.md 6.4): the server writes run/logs/<node>.log itself, rotated (100 MB a file, 1 GB in all); standard
-    # output (the JVM's own lines, a crash) goes to run/logs/<node>.out, which stays small
-    args += [f"--drishti.logging.file={LOGS / (name + '.log')}", "--logging.threshold.console=OFF"]
-    args += node.get("args", [])
-    cmd = java_cmd(java(stack), args, tmp=server_tmp(cwd, env), cwd=cwd, env=env)
-    LOGS.mkdir(parents=True, exist_ok=True)
-    with open(LOGS / f"{name}.out", "ab") as log:
-        proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True)
-    pids[name] = proc.pid
-    write_pids(pids)
-    say(f"{name}: started (pid {proc.pid}, port {port}); waiting for it to answer")
-    if not wait_up(f"http://127.0.0.1:{port}/actuator/health", 300, proc):
-        say(f"{name}: did not come up: see {(LOGS / (name + '.log')).relative_to(ROOT)}")
-        return False
-    say(f"{name}: up on http://{stack_host(stack)}:{port}")
-    return True
+    env, cwd = node_env(stack, node, {})
+    node_data = env.pop("DRISHTI_NODE_DATA", "")
+    env.pop("DRISHTI_DATA_DIR", None)
+    env["DRISHTI_PYTHON"] = python()
+    env["JAVA_HOME"] = env.get("JAVA_HOME") or str(Path(java(stack)).parent.parent)
+    args = ["--node", name, "--node-dir", env.pop("DRISHTI_NET_DIR"), "--port", str(port), "--heap", str(node.get("heap", "1536m")),
+            "--jar", str(jar), "--data-dir", str(DATA), "--env-file", str(SECRETS), "--advertise", stack_host(stack),
+            "--workdir", str(cwd), "--background"]
+    if node_data:
+        args += ["--node-data", node_data]
+    for flag in node.get("jvm", []):
+        args += ["--java-opt", flag]
+    for arg in [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])] + list(node.get("args", [])):
+        args += ["--server-arg", arg]
+    return bin_run("start-server", args, env) == 0
 
 
-def start_console(stack: dict, keys: dict, pids: dict) -> bool:
+def start_console(stack: dict) -> bool:
+    """The console through bin/start-console.sh, given the servers of stack.yaml (console.servers) at this machine's real address, so
+    its list matches what the cluster advertises; it learns the other members from the cluster."""
     c = stack["console"]
     port = c["port"]
-    if CONSOLE in pids and ours(pids[CONSOLE]):
-        say(f"console: already running (pid {pids[CONSOLE]}, port {port})")
+    pid = running(CONSOLE)
+    if pid:
+        say(f"console: already running (pid {pid}, port {port})")
         return True
     if listening(port):
         say(f"console: port {port} is in use by another process: not started")
         return False
     by_name = {n["name"]: n for n in stack["nodes"]}
     env = {**os.environ, **{k: str(v) for k, v in (stack.get("settings") or {}).items()}, **{k: str(v) for k, v in (c.get("settings") or {}).items()}}
-    env.update({k: keys[k] for k in ("DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET")})
-    host = stack_host(stack)                               # by real address too, so its list matches what the cluster advertises
-    env["DRISHTI_BACKEND_URLS"] = ",".join(f"http://{host}:{by_name[s]['port']}" for s in c.get("servers", []))
-    env["DRISHTI_CONSOLE_PORT"] = str(port)
-    LOGS.mkdir(parents=True, exist_ok=True)
-    with open(LOGS / "console.log", "ab") as log:
-        proc = subprocess.Popen([python(), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT, env=env, stdout=log,
-                                stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True)
-    pids[CONSOLE] = proc.pid
-    write_pids(pids)
-    if not wait_up(f"http://127.0.0.1:{port}/healthz", 90, proc):
-        say(f"console: did not come up: see {(LOGS / 'console.log').relative_to(ROOT)}")
-        return False
-    say(f"console: up on http://{host}:{port} (given {env['DRISHTI_BACKEND_URLS']})")
-    return True
+    env.pop("DRISHTI_DATA_DIR", None)
+    env["DRISHTI_PYTHON"] = python()
+    host = stack_host(stack)
+    servers = ",".join(f"http://{host}:{by_name[s]['port']}" for s in c.get("servers", []))
+    return bin_run("start-console", ["--server", servers, "--port", str(port), "--data-dir", str(DATA), "--env-file", str(SECRETS),
+                                     "--background"], env) == 0
 
 
 def start(names: list[str]) -> int:
     stack = load_stack()
-    keys = {k: v for k, v in secrets().items() if k in SECRET_NAMES}
+    secrets()
     jar = server_jar()
-    pids = {k: v for k, v in read_pids().items() if ours(v)}
-    write_pids(pids)
     ok = True
     for node in stack["nodes"]:
         if not names or node["name"] in names:
-            ok = start_node(stack, node, keys, jar, pids) and ok
+            ok = start_node(stack, node, jar) and ok
     if not names or CONSOLE in names:
-        ok = start_console(stack, keys, pids) and ok
+        ok = start_console(stack) and ok
     say("" if ok else "some did not start: see above")
     return 0 if ok else 1
 
 
-def stop(names: list[str]) -> int:
-    pids = read_pids()
-    order = ([CONSOLE] if CONSOLE in pids else []) + [n for n in pids if n != CONSOLE]
-    for name in order:
-        if names and name not in names:
+def stop_legacy(names: list[str]) -> None:
+    """A stack started before bin/ (run/pids.txt): those processes stopped by their ids, SIGTERM then SIGKILL after 60 s."""
+    if not LEGACY_PIDS.exists():
+        return
+    left = []
+    for line in LEGACY_PIDS.read_text(encoding="utf-8").splitlines():
+        parts = line.split()
+        if len(parts) != 2 or not parts[1].isdigit():
             continue
-        pid = pids[name]
+        name, pid = parts[0], int(parts[1])
+        if names and name not in names:
+            left.append(line)
+            continue
         if not ours(pid):
-            say(f"{name}: not running (pid {pid} is gone or is not this stack's)")
-            pids.pop(name)
             continue
         os.kill(pid, signal.SIGTERM)
         deadline = time.monotonic() + 60
@@ -408,11 +366,22 @@ def stop(names: list[str]) -> int:
             time.sleep(0.5)
         if ours(pid):
             os.kill(pid, signal.SIGKILL)
-            say(f"{name}: stopped after 60 s with SIGKILL (pid {pid})")
-        else:
-            say(f"{name}: stopped (pid {pid})")
-        pids.pop(name)
-    write_pids(pids)
+        say(f"{name}: stopped (pid {pid}, started before bin/)")
+    if left:
+        LEGACY_PIDS.write_text("\n".join(left) + "\n", encoding="utf-8")
+    else:
+        LEGACY_PIDS.unlink()
+
+
+def stop(names: list[str]) -> int:
+    """The console first, then the nodes, each through bin/stop-console.sh or bin/stop-server.sh (by its pid file, never by name)."""
+    stop_legacy(names)
+    stack = load_stack()
+    if not names or CONSOLE in names:
+        bin_run("stop-console", ["--data-dir", str(DATA)])
+    for node in stack["nodes"]:
+        if not names or node["name"] in names:
+            bin_run("stop-server", ["--node", node["name"], "--data-dir", str(DATA)])
     return 0
 
 
@@ -439,16 +408,8 @@ def get_json(url: str, headers: dict | None = None):
 def status(_names: list[str]) -> int:
     stack = load_stack()
     keys = read_env(SECRETS)
-    pids = read_pids()
     auth = {"Authorization": "Bearer " + token(stack.get("admin", "drishti-dev-admin"), keys["DRISHTI_TOKEN_SECRET"])} if keys.get("DRISHTI_TOKEN_SECRET") else {}
-    say(f"{'process':<14}{'pid':>9}  {'port':<6} state")
-    for node in stack["nodes"] + [{"name": CONSOLE, "port": stack["console"]["port"]}]:
-        name, pid = node["name"], pids.get(node["name"])
-        alive = pid is not None and ours(pid)
-        path = "/healthz" if name == CONSOLE else "/actuator/health"
-        up = get_json(f"http://127.0.0.1:{node['port']}{path}") is not None
-        say(f"{name:<14}{pid or '-':>9}  {node['port']:<6} {'running' if alive else 'not running'}{', answering' if up else ''}"
-            + ("" if alive or not listening(node["port"]) else " (the port is used by another process)"))
+    bin_run("status", ["--data-dir", str(DATA)])
     for node in stack["nodes"]:
         m = get_json(f"http://127.0.0.1:{node['port']}/api/v1/net/members", auth)
         if m and m.get("members"):
