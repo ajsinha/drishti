@@ -5176,7 +5176,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `sasl.kerberos.service-name` | string | `kafka` |  | `kafka` connectors | GSSAPI broker service name | live (the connector restarts) |  | admin |
 | `sasl.kerberos.use-ticket-cache` | boolean | `false` |  | `kafka` connectors | GSSAPI: use the ticket cache instead of a keytab | live (the connector restarts) |  | expert |
 | `sasl.kerberos.krb5-conf` | path | none |  | `kafka` connectors | GSSAPI: path of `krb5.conf` (sets `java.security.krb5.conf` if the JVM has none yet). | live (the connector restarts) |  | admin |
-| `schema-registry.url` | string | none |  | `kafka` connectors | Confluent Schema Registry URL (http:// or https://); reads Avro, Protobuf and JSON Schema payloads | live (the connector restarts) |  | admin |
+| `schema-registry.url` | string | none |  | `kafka` connectors | Confluent Schema Registry URL (http:// or https://); reads Avro and JSON Schema payloads (a Protobuf message is skipped and logged; Protobuf is not supported yet) | live (the connector restarts) |  | admin |
 | `schema-registry.basic-auth` | string | none |  | `kafka` connectors | KEY:SECRET for the registry: ${SR\_KEY}:${SR\_SECRET}, or schema-registry.basic-auth-file | live (the connector restarts) |  | admin |
 | `schema-registry.basic-auth-file` | path | none |  | `kafka` connectors | File whose first line is KEY:SECRET | live (the connector restarts) |  | admin |
 | `schema-registry.bearer-token` | string | none |  | `kafka` connectors | Bearer token for the registry (not with basic-auth): ${ENV} placeholder or schema-registry.bearer-token-file (secret) | live (the connector restarts) |  | admin |

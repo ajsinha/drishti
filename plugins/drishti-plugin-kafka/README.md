@@ -147,7 +147,7 @@ number of changes, and a restart replays one message per entity.
 | `sasl.kerberos.service-name` | string | `kafka` | GSSAPI broker service name |
 | `sasl.kerberos.use-ticket-cache` | boolean | `false` | GSSAPI: use the ticket cache instead of a keytab |
 | `sasl.kerberos.krb5-conf` | path |  | GSSAPI: path of `krb5.conf` (sets `java.security.krb5.conf` if the JVM has none yet). |
-| `schema-registry.url` | string |  | Confluent Schema Registry URL (http:// or https://); reads Avro, Protobuf and JSON Schema payloads |
+| `schema-registry.url` | string |  | Confluent Schema Registry URL (http:// or https://); reads Avro and JSON Schema payloads (a Protobuf message is skipped and logged; Protobuf is not supported yet) |
 | `schema-registry.basic-auth` | string |  | KEY:SECRET for the registry: ${SR_KEY}:${SR_SECRET}, or schema-registry.basic-auth-file (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `schema-registry.basic-auth-file` | path |  | File whose first line is KEY:SECRET |
 | `schema-registry.bearer-token` | string |  | Bearer token for the registry (not with basic-auth): ${ENV} placeholder or schema-registry.bearer-token-file (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
@@ -173,7 +173,7 @@ The site-wide summary is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md
 ## Data structure
 
 Keys are strings and values JSON text (or the Confluent wire format with `value-format: confluent` / `schema-registry.url`, decoded
-to JSON: Avro, Protobuf, JSON Schema). A topic is read in one of two shapes:
+to JSON: Avro and JSON Schema; Protobuf is not supported yet and its messages are skipped and logged). A topic is read in one of two shapes:
 
 - **Mapped** (the topic has `kind.<topic>`, or `kind` for every topic): the value is the whole document. **Id rule:** the message key;
   without a key, the document's field `id-field.<topic>` (else `id-field`, default `id`). Keep the key equal to the id: a keyed message

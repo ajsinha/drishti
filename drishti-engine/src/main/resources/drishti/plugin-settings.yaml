@@ -520,7 +520,7 @@ plugins:
       - { name: sasl.kerberos.service-name, default: kafka, desc: "GSSAPI broker service name", group: security }
       - { name: sasl.kerberos.use-ticket-cache, type: boolean, default: "false", desc: "GSSAPI: use the ticket cache instead of a keytab", group: security }
       - { name: sasl.kerberos.krb5-conf, type: path, desc: "GSSAPI: path of `krb5.conf` (sets `java.security.krb5.conf` if the JVM has none yet).", group: security }
-      - { name: schema-registry.url, desc: "Confluent Schema Registry URL (http:// or https://); reads Avro, Protobuf and JSON Schema payloads", group: schema-registry }
+      - { name: schema-registry.url, desc: "Confluent Schema Registry URL (http:// or https://); reads Avro and JSON Schema payloads (a Protobuf message is skipped and logged; Protobuf is not supported yet)", group: schema-registry }
       - { name: schema-registry.basic-auth, secret: true, desc: "KEY:SECRET for the registry: ${SR_KEY}:${SR_SECRET}, or schema-registry.basic-auth-file", group: schema-registry }
       - { name: schema-registry.basic-auth-file, type: path, desc: "File whose first line is KEY:SECRET", group: schema-registry }
       - { name: schema-registry.bearer-token, secret: true, desc: "Bearer token for the registry (not with basic-auth): ${ENV} placeholder or schema-registry.bearer-token-file", group: schema-registry }
