@@ -54,15 +54,15 @@ def test_the_switches_and_compare_are_selects_that_ask_again(browser, console, w
     assert page.locator(f"[data-{prefix}-choices] select").count() == 0                      # no native select left
     assert S.values(page, f"[data-{prefix}-compare]") == ["", "curvature-floor=off"]           # the switches the server offers, flipped
     S.choose(page, f"[data-{prefix}-sw='curvature-floor']", "off")
-    page.wait_for_timeout(300)
+    page.wait_for_function("p => document.querySelector(p).component.options.some((o) => o.value === 'curvature-floor=on')", arg=f"[data-{prefix}-compare]")
     assert asked[-1].get("curvature-floor") == ["off"]
     assert S.values(page, f"[data-{prefix}-compare]") == ["", "curvature-floor=on"]            # refilled from the new answer
-    S.choose(page, f"[data-{prefix}-compare]", "curvature-floor=on")
-    page.wait_for_timeout(200)
+    with page.expect_response(lambda r: "/playground" in r.url):
+        S.choose(page, f"[data-{prefix}-compare]", "curvature-floor=on")
     assert asked[-1].get("compare") == ["curvature-floor=on"]
     if which == "simm":
-        S.choose(page, "[data-sm-side]", "post")
-        page.wait_for_timeout(200)
+        with page.expect_response(lambda r: "/playground" in r.url):
+            S.choose(page, "[data-sm-side]", "post")
         assert asked[-1].get("side") == ["post"]
     assert errors == [], errors
     page.close()
