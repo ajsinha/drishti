@@ -24,7 +24,7 @@ sources:
   licence: Public sources, attribution; read live, off by default
   internal-only: false
   used-for: rate-fixing, fx-spot and ir-curve when the feed connectors are on
-refresh: tools/publicdata/official_market_data.py
+refresh: drishti.py feed run market-data
 fields:
   ir-curve:
     POINTS: The curve's pillars (tenor, date, rate, discount factor)
@@ -76,4 +76,4 @@ fixings, inflation indexes and a correlation matrix. Products select their curve
 ## Data sources and licences
 
 The committed samples are synthetic. Five feed connectors (off by default) read the same kinds live from official public sources;
-`tools/publicdata/official_market_data.py` captures those sources to files in the data folder, never over the samples.
+`drishti.py feed run market-data` captures those sources to files in the data folder, never over the samples.

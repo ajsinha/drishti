@@ -1,0 +1,99 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The world-development feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): World Bank World Development Indicators by country and
+# year into worldlake, for the world-development pack. Class: tools/feeds/sources/world_development.py. Daily; incremental (the WDI
+# source's last-updated date: unchanged, nothing is written). Edit the selection below to choose the countries, years and indicators.
+# Run: python3 tools/drishti.py feed run world-development (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
+# options is the default selection.
+feed: world-development
+title: World Bank, World Development Indicators
+description: 'The economy module''s public-sector world-development pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Bank World Development Indicators by country
+  and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government
+  debt for every economy, from the World Bank''s API (CC BY 4.0). A country''s profile shows the latest of each indicator and the world map shaded by GDP
+  per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake.'
+class: world_development.WorldDevelopmentFeed
+source:
+  provider: World Bank, World Development Indicators
+  url: https://api.worldbank.org/v2/
+  pause: 0.5
+  retries: 3
+  timeout: 90
+  cache-hours: 12
+lake: worldlake
+load: java
+enabled: true
+schedule:
+  at: 06:30
+  days: daily
+licence:
+  name: CC BY 4.0
+  url: https://www.worldbank.org/en/about/legal/terms-of-use-for-datasets
+  redistribution: attribution
+  internal-only: false
+  attribution: 'The World Bank: World Development Indicators (CC BY 4.0).'
+datasets:
+  development-profile:
+    pack: world-development
+    kind: development-profile
+    key: PROFILE_ID
+  development-series:
+    pack: world-development
+    kind: development-series
+    key: SERIES_ID
+options:
+  module: economy
+  sources:
+  - id: wdi
+    name: World Bank World Development Indicators API (v2)
+    title: World Bank, World Development Indicators
+    url: https://api.worldbank.org/v2/
+    terms: https://www.worldbank.org/en/about/legal/terms-of-use-for-datasets
+    licence: CC BY 4.0
+    redistributable: true
+    internal-only: false
+    attribution: 'The World Bank: World Development Indicators (CC BY 4.0).'
+  countries: all
+  years: 15
+  indicators:
+  - code: SP.POP.TOTL
+    field: POPULATION
+    unit: persons
+  - code: NY.GDP.PCAP.CD
+    field: GDP_PER_CAPITA
+    unit: current USD
+  - code: NY.GDP.MKTP.KD.ZG
+    field: GDP_GROWTH
+    unit: '% a year'
+  - code: FP.CPI.TOTL.ZG
+    field: INFLATION
+    unit: '% a year'
+  - code: SL.UEM.TOTL.ZS
+    field: UNEMPLOYMENT
+    unit: '% of labour force'
+  - code: SP.DYN.LE00.IN
+    field: LIFE_EXPECTANCY
+    unit: years
+  - code: SI.POV.DDAY
+    field: POVERTY_HEADCOUNT
+    unit: '% of population'
+  - code: EG.ELC.ACCS.ZS
+    field: ELECTRICITY_ACCESS
+    unit: '% of population'
+  - code: IT.NET.USER.ZS
+    field: INTERNET_USERS
+    unit: '% of population'
+  - code: GC.DOD.TOTL.GD.ZS
+    field: CENTRAL_GOVERNMENT_DEBT
+    unit: '% of GDP'

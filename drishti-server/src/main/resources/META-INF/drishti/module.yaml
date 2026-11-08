@@ -19,13 +19,15 @@ modules:
   - id: economy
     domain: economy
     title: Economy and markets
-    about: "Public economic and public-sector data: the IMF and World Bank economy, elections and governments, news and markets"
+    about: "Public economic and public-sector data: the IMF and World Bank economy, elections and governments, news and markets; development indicators, central banks, national statistics, the OECD, official press releases and GDELT world events"
     code: false
     feature: economy
     enabled: true
     contributes:
-      packs: [world-economy, news-and-markets]
-      functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE]
+      # the public sector's packs (the owner, 2026-11-07: one module; their own lens, Public sector): each filled daily by its feed
+      packs: [world-economy, news-and-markets, world-development, central-banks, national-statistics, oecd, official-news, gdelt-events]
+      functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE,
+        WDI, WDIS, CBANK, CBSER, NSTAT, OECD, OECDS, PRESS, PREL, GDELT]
   # capital markets (the owner, 2026-11-07): listed companies, funds, and the market data's prices, curves and volatilities as functions.
   # The market-data pack itself stays the banking module's while the banking engines read it (it moves here when banking can require this
   # module); its commands are this module's functions already. GLEIF's legal entities are core reference data (every domain uses them).

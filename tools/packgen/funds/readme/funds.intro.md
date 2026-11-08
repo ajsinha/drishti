@@ -88,4 +88,4 @@ about 1.2 MB); `tools/drishti.py lake demo` builds them into the demo lake and t
 ## Data sources and licences
 
 Every document names its source, licence and retrieval date in `PROVENANCE`. The downloads (about 700 MB a refresh) stay in the data
-folder, never in git; `tools/publicdata/funds.py` fetches them with the User-Agent setting the us-equities pack uses.
+folder, never in git; `drishti.py feed run funds` fetches them with the User-Agent setting the us-equities pack uses.

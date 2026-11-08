@@ -12,12 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Index membership from the index's tracking ETF: the stocks SPY (S&P 500), QQQ (Nasdaq-100) and DIA (Dow Jones Industrial Average)
-report holding in their newest Form N-PORT (SEC, public domain), each resolved to its SEC company (CIK).
+"""Index membership from the index's tracking ETF: the stocks SPY (S&P 500), QQQ (Nasdaq-100), DIA (Dow Jones Industrial Average) and
+IWM (Russell 2000) report holding in their newest Form N-PORT (SEC, public domain), each resolved to its SEC company (CIK).
 
 Index providers' member lists are proprietary; a fund that tracks the index must report every holding to the SEC each quarter, so its
 equity holdings are the index's members as of its report date. No network: it reads the funds pack's download cache (N-PORT data
-sets, the SEC fund ticker file; tools/publicdata/funds.py refresh fills it) and writes trackers.json into the us-equities cache.
+sets, the SEC fund ticker file; drishti.py feed run funds fills it) and writes trackers.json into the us-equities cache.
 
     python3 tools/packgen/us_equities/trackers.py [--funds-cache DIR] [--cache DIR]
 
@@ -42,8 +42,9 @@ sys.path.insert(0, str(HERE.parent / "funds"))
 import fetch as F  # noqa: E402
 import fundsread as R  # noqa: E402
 
-TRACKERS = {"SP500": "SPY", "NDX": "QQQ", "DJIA": "DIA"}
-FUNDS_CACHE = ROOT / "data" / "publicdata" / "cache" / "funds"
+TRACKERS = {"SP500": "SPY", "NDX": "QQQ", "DJIA": "DIA", "R2000": "IWM"}
+REQUIRED = {"SP500", "NDX", "DJIA"}      # IWM (Russell 2000) joins when the N-PORT data set has its report; the others must be there
+FUNDS_CACHE = ROOT / "data" / "datafeeds" / "sources" / "cache" / "funds"
 _FOREIGN = {"nv", "n", "v", "plc", "public", "limited", "sa", "ag", "se"}
 
 
@@ -83,7 +84,7 @@ def extract(funds_cache: Path, cache: Path, log=print) -> dict:
     nport = R.newest(funds_cache / "nport", "_nport.zip") if (funds_cache / "nport").is_dir() else None
     if nport is None or not (funds_cache / "sec" / "company_tickers_mf.json").is_file():
         kept = "keeping the index members of the last run" if (cache / "trackers.json").is_file() else "index members from Wikidata"
-        log(f"  trackers: no N-PORT data set in {funds_cache} (tools/publicdata/funds.py refresh downloads it): {kept}")
+        log(f"  trackers: no N-PORT data set in {funds_cache} (drishti.py feed run funds downloads it): {kept}")
         return {}
     series, listed = R.tickers(funds_cache)
     by_ticker, _ = F.sec_maps(cache)
@@ -96,7 +97,9 @@ def extract(funds_cache: Path, cache: Path, log=print) -> dict:
             for code, t in TRACKERS.items():
                 if t in tickers:
                     chosen[code] = f
-        missing = sorted(set(TRACKERS) - set(chosen))
+        missing = sorted(REQUIRED - set(chosen))
+        for code in sorted(set(TRACKERS) - REQUIRED - set(chosen)):
+            log(f"  {code}: {nport.name} has no report of {TRACKERS[code]}; left out this time")
         if missing:
             raise SystemExit(f"{nport.name} has no report of {', '.join(TRACKERS[c] for c in missing)}")
         holdings = R.nport_holdings(zf, {f["ACCESSION"] for f in chosen.values()}, log)
@@ -129,7 +132,7 @@ def extract(funds_cache: Path, cache: Path, log=print) -> dict:
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--funds-cache", type=Path, default=FUNDS_CACHE)
-    p.add_argument("--cache", type=Path, default=ROOT / "data" / "publicdata" / "cache" / "us-equities")
+    p.add_argument("--cache", type=Path, default=ROOT / "data" / "datafeeds" / "sources" / "cache" / "us-equities")
     a = p.parse_args(argv)
     extract(a.funds_cache, a.cache)
     return 0

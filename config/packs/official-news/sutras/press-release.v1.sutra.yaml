@@ -1,0 +1,52 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
+rachana: 1
+sutra: press-release
+version: 1
+description: "One official press release: its title, publisher, date, summary and the link to the original."
+doc:
+  summary: "A press release: the title, the publisher, when it was published, its category, the summary and the original's address."
+  description: >-
+    One page per release the official-news feed kept: the strip gives the publisher, the date, the category and whether the publisher's
+    terms make it internal only; the release panel gives the title, the summary as the publisher's feed wrote it and the address of the
+    original (open it for the full text); F7 opens the publisher's latest releases.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/press-release/PREL-FED-0224349908"
+    - "PREL PREL-FED-0224349908"
+  since: "2.9.11"
+match: { kind: press-release, priority: 10 }
+title: { pill: Public sector · Press release, id: $.RELEASE_ID, with: $.TITLE }
+strip:
+  - { label: Publisher, bind: $.PUBLISHER_NAME, emphasis: true }
+  - { label: Published, bind: $.PUBLISHED }
+  - { label: Category, bind: $.CATEGORY }
+  - { label: Country, bind: $.COUNTRY }
+  - { label: Internal only, bind: "$.INTERNAL_ONLY ? 'yes' : 'no'" }
+panels:
+  - id: release
+    kind: kv
+    title: The release
+    key: F2
+    columns:
+      - { label: Title, bind: $.TITLE }
+      - { label: Summary, bind: "nonblank($.SUMMARY, 'The feed gives no summary: open the original.')" }
+      - { label: Original, bind: $.URL }
+      - { label: Publisher, bind: "link($.RELEASE_SOURCE, 'release-source', $.PUBLISHER_NAME)" }
+  - { use: source-footer@1 }
+keys: { F7: "link($.RELEASE_SOURCE, 'release-source')", F9: raw }

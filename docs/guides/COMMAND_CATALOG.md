@@ -17,27 +17,33 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 11 packs' codes, and the 108 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 17 packs' codes, and the 118 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 74 fundamental, 14 engine input, 1 Drishti's own and 19 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
+In numbers: 84 fundamental, 14 engine input, 1 Drishti's own and 19 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
 - [The command line's own forms](#the-command-lines-own-forms)
 - [Reserved words](#reserved-words)
 - [Pack codes](#pack-codes)
+- [Central banks (`central-banks`)](#central-banks-central-banks)
 - [Compute demo (`compute-demo`)](#compute-demo-compute-demo)
 - [Core (`core`)](#core-core)
 - [Counterparty credit risk (`counterparty-risk`)](#counterparty-credit-risk-counterparty-risk)
 - [Funds and ETFs (`funds`)](#funds-and-etfs-funds)
+- [GDELT events (`gdelt-events`)](#gdelt-events-gdelt-events)
 - [GLEIF legal entities (`gleif`)](#gleif-legal-entities-gleif)
 - [Market data (`market-data`)](#market-data-market-data)
 - [Market risk (`market-risk`)](#market-risk-market-risk)
+- [National statistics (`national-statistics`)](#national-statistics-national-statistics)
 - [News and markets (`news-and-markets`)](#news-and-markets-news-and-markets)
+- [OECD (`oecd`)](#oecd-oecd)
+- [Official news (`official-news`)](#official-news-official-news)
 - [Trading (`trading`)](#trading-trading)
 - [US equities (`us-equities`)](#us-equities-us-equities)
+- [World development (`world-development`)](#world-development-world-development)
 - [World economy (`world-economy`)](#world-economy-world-economy)
 
 ## The command line's own forms
@@ -73,17 +79,32 @@ A pack's code typed alone opens the pack's overview.
 
 | Code | Pack | What it holds |
 |---|---|---|
+| `CBNK` | `central-banks` | Policy rates and the market series around them: the Federal Reserve's target range and effective rate, Treasury yields, the curve's slope, US inflation, unemployment and the Fed's balance sheet (FRED, Federal Reserve Bank of St. Louis), and the Bank of Canada's target rate, CORRA, Government of Canada yields and USD/CAD (Bank of Canada Valet). A bank's page shows its policy rate, its last move and its series; each series shows two years of history. Filled daily by the central-banks feed into the worldlake lake; FRED needs a free key in DRISHTI_FRED_API_KEY. |
 | `CMPD` | `compute-demo` | Sample pack for reactive connectors: three books of synthetic P&L strips (250 scenario days each) and the sum of a book's paths computed when it is asked for, by a Python engine in a compute pool (path-sum) and by its Java twin in the server (path-sum-java), with progress on the screen and a state per panel. Synthetic numbers only. Not loaded unless named in DRISHTI_PACKS. |
 | `CORE` | `core` | The parties and organisation every pack builds on: counterparties (with country of risk and UEN), groups, issuers, CCPs, legal entities, books and portfolios, desks, traders and holiday calendars. |
 | `CCR` | `counterparty-risk` | ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM. |
 | `FUNDS` | `funds` | The 200 largest US mutual funds and ETFs by net assets with their holdings, from SEC public data: Form N-PORT holdings, derivatives and counterparties, flows and monthly returns; Form N-CEN census facts; prospectus fees, turnover and calendar-year returns. A holding opens its company (us-equities), a company lists the funds that hold it, an index the funds that track it. |
+| `GDLT` | `gdelt-events` | What the world's news reported about each country yesterday, from the GDELT Project's daily event files: the number of events whose first actor is the country, how widely they were reported, their average tone and Goldstein scale, the share of conflict and of cooperation, the events by CAMEO category, thirty days of history and the most-mentioned stories, each a link to the original. The world map is shaded by tone. Free and open with a citation (GDELT terms). Filled daily by the gdelt-events feed into the newslake lake. |
 | `GLEIF` | `gleif` | Legal Entity Identifiers from GLEIF (CC0): the legal entities of the us-equities companies' ownership groups and of the large banks (the FSB's G-SIBs and others), insurers, asset managers and market infrastructures, with their parents and children, addresses, registration and renewal, BICs and ISINs. Off by default; with us-equities on, a company and its LEI record link both ways. |
 | `MKT` | `market-data` | Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds. |
 | `MRSK` | `market-risk` | Value at risk, stress testing, FRTB sensitivities and P&L explain. |
+| `STCAN` | `national-statistics` | Statistics Canada's headline statistics by vector from its Web Data Service (Statistics Canada Open Licence): the consumer price index, unemployment, monthly GDP, population, housing starts and the overnight money market rate. Each series shows its latest value, the change on the period and on the year, and its history. Filled daily by the national-statistics feed into the worldlake lake; more vectors are a line each in the feed's YAML. |
 | `NWMK` | `news-and-markets` | Sample pack: fifteen news topics (central banks, countries, companies, themes) and twenty listed companies, with headlines (Google News) and quotes and price history (Yahoo Finance) fetched on demand. Internal demonstration only: Yahoo's endpoint is unofficial and its terms restrict use; names leave the network when the connectors are on. Off until the connectors are enabled; offline (DRISHTI_OFFLINE=true, or the connectors off) the demo lake serves a captured snapshot of the same quotes and headlines. |
+| `OECDP` | `oecd` | The OECD members' business cycle, jobs, prices and growth from the OECD Data Explorer's SDMX API: the composite leading indicator, the harmonised unemployment rate, consumer price inflation and real GDP growth. A country's page shows the latest of each measure and the members on a map shaded by inflation; each series shows its monthly or quarterly history. Filled daily by the oecd feed into the worldlake lake. |
+| `ONEWS` | `official-news` | Press releases and notices from the publishers' own feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank of England, the SEC, OSFI, the US Federal Register and the Canada Gazette. A publisher's page lists its latest releases newest first, each a link to the original, with its terms; a release's page gives its title, date, summary and link. Each publisher's terms are recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases are internal only. Filled daily by the official-news feed into the newslake lake. |
 | `TRDS` | `trading` | Trades in 125 products across rates, FX, credit, equity, commodities, inflation, fixed income, securities financing, money markets and structured products. |
-| `USEQS` | `us-equities` | Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only. |
+| `USEQS` | `us-equities` | Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA, IWM). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only. |
+| `WDEV` | `world-development` | World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake. |
 | `WRLD` | `world-economy` | Real public economic data for about 200 economies: output, growth, prices, jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts, and World Bank regions and income groups; and governments and societies: government type, office holders, elections, parties with seats, and social and governance indicators (CIA World Factbook, World Bank, UNDP). |
+
+## Central banks (`central-banks`)
+
+Policy rates and the market series around them: the Federal Reserve's target range and effective rate, Treasury yields, the curve's slope, US inflation, unemployment and the Fed's balance sheet (FRED, Federal Reserve Bank of St. Louis), and the Bank of Canada's target rate, CORRA, Government of Canada yields and USD/CAD (Bank of Canada Valet). A bank's page shows its policy rate, its last move and its series; each series shows two years of history. Filled daily by the central-banks feed into the worldlake lake; FRED needs a free key in DRISHTI_FRED_API_KEY.
+
+| Command | Opens | What it does | Example | Data | Change |
+|---|---|---|---|---|---|
+| `CBANK` | Central bank | One central bank: its policy rate, the last move, the rate's history and the market series around it. | `CBANK CBANK-FED` | fundamental |  |
+| `CBSER` | Central bank series | One central-bank or market series from FRED or the Bank of Canada: the history, the latest value, the change on the day and on the year. | `CBSER CBSER-FRED-DGS10` | fundamental |  |
 
 ## Compute demo (`compute-demo`)
 
@@ -144,6 +165,14 @@ The 200 largest US mutual funds and ETFs by net assets with their holdings, from
 | `FUND` | Fund or ETF | A US mutual fund or ETF from SEC public data: the fact sheet, the look-through holdings with derivatives and counterparties, and the fund against its index. | `FUND QQQ` | fundamental |  |
 | `HELD` | Funds holding a company | The reverse look-through: every fund of the pack that holds one us-equities company, by value, and the share of the company they own. | `HELD AAPL` | fundamental |  |
 | `TRACK` | Funds tracking an index | The funds and ETFs of the pack that track one us-equities index, by net assets, with their cost and how closely they follow it. | `TRACK SP500` | fundamental |  |
+
+## GDELT events (`gdelt-events`)
+
+What the world's news reported about each country yesterday, from the GDELT Project's daily event files: the number of events whose first actor is the country, how widely they were reported, their average tone and Goldstein scale, the share of conflict and of cooperation, the events by CAMEO category, thirty days of history and the most-mentioned stories, each a link to the original. The world map is shaded by tone. Free and open with a citation (GDELT terms). Filled daily by the gdelt-events feed into the newslake lake.
+
+| Command | Opens | What it does | Example | Data | Change |
+|---|---|---|---|---|---|
+| `GDELT` | World events by country | What the world's news reported about one country yesterday (GDELT): events, tone, conflict, categories, the world map by tone, the top stories. | `GDELT GDELT-USA` | fundamental |  |
 
 ## GLEIF legal entities (`gleif`)
 
@@ -213,6 +242,14 @@ Value at risk, stress testing, FRTB sensitivities and P&L explain.
 | `VOFF` | VaR official results (published) | The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, as the server captured and published them (one row per node, business date and result version); read only, for BI and other readers, never an engine's input. | `VOFF MGMT~DESK-RATES` | computed |  |
 | `SSPNL` | Stress P&L of a scenario across desks (derived from the stress results) | The bank's stress P&L under one scenario: the desks' stored stress results added (additive), with each desk's limit use and breach, once per business date (quick win Q4 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the stress engine STR). |  | computed |  |
 
+## National statistics (`national-statistics`)
+
+Statistics Canada's headline statistics by vector from its Web Data Service (Statistics Canada Open Licence): the consumer price index, unemployment, monthly GDP, population, housing starts and the overnight money market rate. Each series shows its latest value, the change on the period and on the year, and its history. Filled daily by the national-statistics feed into the worldlake lake; more vectors are a line each in the feed's YAML.
+
+| Command | Opens | What it does | Example | Data | Change |
+|---|---|---|---|---|---|
+| `NSTAT` | National statistic | One Statistics Canada series by vector: the latest value, the change on the period and the year, the history. | `NSTAT NSTAT-V41690973` | fundamental |  |
+
 ## News and markets (`news-and-markets`)
 
 Sample pack: fifteen news topics (central banks, countries, companies, themes) and twenty listed companies, with headlines (Google News) and quotes and price history (Yahoo Finance) fetched on demand. Internal demonstration only: Yahoo's endpoint is unofficial and its terms restrict use; names leave the network when the connectors are on. Off until the connectors are enabled; offline (DRISHTI_OFFLINE=true, or the connectors off) the demo lake serves a captured snapshot of the same quotes and headlines.
@@ -223,6 +260,24 @@ Sample pack: fifteen news topics (central banks, countries, companies, themes) a
 | `NEWS` | Headlines | The headlines for one name, as the news connector computed them: newest first, filtered for relevance, duplicates removed. | `NEWS NEWS-Bitcoin` | fundamental |  |
 | `CO` | Listed company | A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on demand. | `CO CO-AAPL` | fundamental |  |
 | `QUOTE` | Quote and price history | A quote and recent price history for a ticker, as the yfinance connector computed them. | `QUOTE QUOTE-MSFT` | fundamental |  |
+
+## OECD (`oecd`)
+
+The OECD members' business cycle, jobs, prices and growth from the OECD Data Explorer's SDMX API: the composite leading indicator, the harmonised unemployment rate, consumer price inflation and real GDP growth. A country's page shows the latest of each measure and the members on a map shaded by inflation; each series shows its monthly or quarterly history. Filled daily by the oecd feed into the worldlake lake.
+
+| Command | Opens | What it does | Example | Data | Change |
+|---|---|---|---|---|---|
+| `OECD` | OECD country | One OECD member: the latest leading indicator, unemployment, inflation and growth, and the members on a map shaded by inflation. | `OECD OECD-CAN` | fundamental |  |
+| `OECDS` | OECD series | One OECD measure of one member by period: the history, the latest value and the change. | `OECDS OECDS-USA-CLI` | fundamental |  |
+
+## Official news (`official-news`)
+
+Press releases and notices from the publishers' own feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank of England, the SEC, OSFI, the US Federal Register and the Canada Gazette. A publisher's page lists its latest releases newest first, each a link to the original, with its terms; a release's page gives its title, date, summary and link. Each publisher's terms are recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases are internal only. Filled daily by the official-news feed into the newslake lake.
+
+| Command | Opens | What it does | Example | Data | Change |
+|---|---|---|---|---|---|
+| `PRESS` | Official press releases | One publisher of official news (a central bank, a regulator, a government): its latest releases newest first, each a link, and its terms. | `PRESS PRESS-FED` | fundamental |  |
+| `PREL` | Press release | One official press release: its title, publisher, date, summary and the link to the original. | `PREL PREL-FED-0224349908` | fundamental |  |
 
 ## Trading (`trading`)
 
@@ -238,7 +293,7 @@ Trades in 125 products across rates, FX, credit, equity, commodities, inflation,
 
 ## US equities (`us-equities`)
 
-Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only.
+Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA, IWM). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only.
 
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
@@ -249,6 +304,15 @@ Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and 
 | `FILING` | SEC filing | One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov). | `FILING 0001104659-26-117587` | fundamental |  |
 | `FACT` | Financial fact | One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings. | `FACT AAPL-REVENUE` | fundamental |  |
 | `PXH` | Price history (live, internal use only) | A company's quote and a year of daily prices, read live by the us-equities-prices connector: off as shipped, internal use only. |  | fundamental |  |
+
+## World development (`world-development`)
+
+World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake.
+
+| Command | Opens | What it does | Example | Data | Change |
+|---|---|---|---|---|---|
+| `WDI` | Development profile | One country's World Development Indicators: the latest of each, the world map shaded by GDP per head, each series one click away. | `WDI WDI-CAN` | fundamental |  |
+| `WDIS` | Development indicator series | One World Development Indicator of one country by year: the history, the latest value and the change. | `WDIS WDIS-IND-NY_GDP_MKTP_KD_ZG` | fundamental |  |
 
 ## World economy (`world-economy`)
 

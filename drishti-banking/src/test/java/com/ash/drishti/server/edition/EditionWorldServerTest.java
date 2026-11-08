@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @AutoConfigureMockMvc
 class EditionWorldServerTest {
 
-    static final Set<String> WORLD_PACKS = Set.of("world-economy", "news-and-markets", "us-equities", "gleif", "funds");
+    static final Set<String> WORLD_PACKS = Set.of("world-economy", "news-and-markets", "us-equities", "gleif", "funds", "official-news", "gdelt-events");
     static final Set<String> WORLD_DATASETS = Set.of("bi.world_economics_economies", "bi.region_economics_regions");
 
     @Autowired MockMvc mvc;

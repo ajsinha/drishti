@@ -1,0 +1,10 @@
+{
+ "t1-wds-rest-getDataFromVectorByReferencePeriodRange-2c457f2cf7ce": {
+  "file": "t1-wds-rest-getDataFromVectorByReferencePeriodRange-2c457f2cf7ce.gz",
+  "url": "https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorByReferencePeriodRange?vectorIds=%2241690973%22,%2241690914%22,%222062815%22,%2265201210%22,%221%22,%2252300157%22,%2239050%22&startRefPeriod=2021-01-01&endReferencePeriod=2026-11-06"
+ },
+ "t1-wds-rest-getDataFromVectorByReferencePeriodRange-57389f661e4c": {
+  "file": "t1-wds-rest-getDataFromVectorByReferencePeriodRange-57389f661e4c.gz",
+  "url": "https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorByReferencePeriodRange?vectorIds=%2241690973%22,%2241690914%22,%222062815%22,%2265201210%22,%221%22,%2252300157%22,%2239050%22&startRefPeriod=2026-03-31&endReferencePeriod=2026-11-06"
+ }
+}

@@ -16,9 +16,22 @@
 # <data>/delta/newslake/<domain>/<table>; the folder is kept in git with only its README.md, and nothing loaded into it is ever committed.
 # Add a table's entry here before its first load to choose its layout (partition-by after business_date, promote, sort-by, file sizes,
 # retention, maintenance); a load into a table with no entry copies its pack's recommended entry here first. Connectors read this lake
-# with lake: newslake.
+# with lake: newslake. The economy module's public-sector free news packs read it (docs/guides/PUBLIC_SECTOR_GUIDE.md): their feeds fill the tables
+# below daily (official-news, gdelt-events); every other shipped connector reads the demo lake.
 lake: newslake
 format: delta
 root: ${drishti.data.dir:./data}/delta/newslake
 defaults: {load-mode: replace}
-tables: {}
+tables:
+  officialnews.release-source:
+    id: SOURCE_ID
+    promote: [NAME, PUBLISHER_TYPE, COUNTRY, INTERNAL_ONLY, RELEASES, LAST_PUBLISHED]
+    retention: 90
+  officialnews.press-release:
+    id: RELEASE_ID
+    promote: [TITLE, PUBLISHED, DATE, URL, CATEGORY, RELEASE_SOURCE, PUBLISHER_NAME, COUNTRY, INTERNAL_ONLY]
+    retention: 90
+  gdelt.event-country:
+    id: EVENT_COUNTRY_ID
+    promote: [ISO3, COUNTRY_NAME, DATE, EVENTS, MENTIONS, AVG_TONE, AVG_GOLDSTEIN, CONFLICT_SHARE]
+    retention: 90

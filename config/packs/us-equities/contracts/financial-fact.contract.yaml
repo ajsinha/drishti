@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: Financial fact
 description: One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings.
-source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
+source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)'
 grain: One row per financial fact, keyed by FACT_ID.
 key:
 - FACT_ID
@@ -202,6 +202,6 @@ notes:
 review:
 - 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/financial-fact/financial-fact.2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
-- 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
+- 'a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: CONCEPT, LABEL: confirm they are closed lists.'
 - 'no unit stated for the amounts LATEST, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'

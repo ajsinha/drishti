@@ -38,6 +38,9 @@ hs_err_pid*
 !/data/delta/capitalmarket/
 /data/delta/capitalmarket/*
 !/data/delta/capitalmarket/README.md
+!/data/delta/referencelake/
+/data/delta/referencelake/*
+!/data/delta/referencelake/README.md
 .claude/
 # the Python runtime of Calc: installed by tools/fetch-pyodide.sh (pinned and verified), never committed
 drishti-console/web/static/vendor/pyodide/
