@@ -100,7 +100,7 @@ def test_the_designer_loads_the_several_datasets_module_and_its_markup(client):
 def test_the_canvas_tags_a_visual_that_reads_another_dataset_and_fields_carry_their_dataset():
     canvas, panes = read(JS / "drishti_bi-design-canvas.js"), read(JS / "drishti_bi-design-panes.js")
     assert "data-dataset-tag" in canvas and "dataset: p.dataset || ''" in canvas
-    assert "JSON.stringify({ name, kind, dataset: ref || '' })" in panes and "data-dataset-tree" in panes and "data-remove-dataset" in panes
+    assert "({ name, kind, dataset: ref || '' })" in panes and "data-dataset-tree" in panes and "data-remove-dataset" in panes
 
 
 def test_the_dataset_page_offers_a_new_report_on_it_and_the_designer_start_preselects_it(client):

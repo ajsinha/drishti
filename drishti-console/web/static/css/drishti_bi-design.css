@@ -148,7 +148,8 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-phone-name { flex: 1 1 8rem; min-width: 0; overflow-wrap: anywhere; }
 .bi-phone-move { min-width: 32px; min-height: 32px; border: 1px solid var(--d-border); border-radius: var(--d-radius-6); background: var(--d-surface-2); color: var(--d-ink); }
 .bi-phone-move:disabled { opacity: .35; }
-.bi-phone-rowlabel { display: inline-flex; align-items: center; gap: var(--d-sp-4_8); font-size: var(--d-fs-12_8); }
+.bi-phone-settings .di-form-body { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--d-sp-8); }
+.bi-phone-settings .di-form-field { margin: 0; font-size: var(--d-fs-12_8); }
 .bi-phone-rows { width: 4.5rem; }
 .bi-phone-actions { margin: var(--d-sp-9_6) 0 0; }
 .bi-phone-frame { width: 422px; max-width: 100%; border: 2px solid var(--d-border); border-radius: var(--d-radius-22); padding: var(--d-sp-14) var(--d-sp-16); background: var(--d-surface-2); }

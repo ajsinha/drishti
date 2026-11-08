@@ -1360,7 +1360,7 @@ table editor, `/build/tables?new=table`; "the model designer" in two notes means
 | Screen (files) | On the kit | Still its own (moving next) |
 |---|---|---|
 | Build workbench (`build/drishti_*.js`) | canvas (flow `LayoutCanvas`), drags (`DragHub`), YAML tab (`YamlPane`, schema assistant), about box (`CodeEditor`), the form and controls tabs' re-ordering (`sortableList`), the inspector (`Inspector`: one live `Form` from the Rachana schema), its expressions (the `Form`'s formula widget, completing from `WB.expr.candidates`), the palette (`Palette`); undo stays the server's operation log | the data-shape tree (`drishti_build-shape-tree.js` → `Outline`) |
-| BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`); the Format pane and every settings pane beside it (conditional formatting, interactions, tooltip page, page, report, theme, tile: live `Form`s, 8.2); the expression editor (`drishti_bi-expr-editor.js`: a one-line Rachana `CodeEditor`, its completion hook from the fields, measures, functions and keywords) | the Fields and Visualizations panes (→ `Palette`), the wells' add lists, the drill-through and bookmark rows, the Filters pane's editor (→ `Form` with `when`), the links between datasets, the device orders' model (→ `LayoutModel` breakpoints) and their hide, width and rows controls (→ `Form`) |
+| BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`); the Format pane and every settings pane beside it (conditional formatting, interactions, tooltip page, page, report, theme, tile: live `Form`s, 8.2); the expression editor (`drishti_bi-expr-editor.js`: a one-line Rachana `CodeEditor`, its completion hook from the fields, measures, functions and keywords) | the Fields and Visualizations panes and the wells' add lists (→ `Palette`), the device orders' model (→ `LayoutModel` breakpoints) |
 | Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`), the name, rows and look-up dialog (`Form`), every formula field (the `Form`'s formula widget) and the statement (`CodeEditor`, through `drishti_editor-formula.js`) | the source and look-up rows, the columns checklist (→ `Form`, drishti-grid editing) |
 | Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML, the measures', hierarchies' and row rules' formulas (`CodeEditor`), the Overview's name, title and words and the masks (live `Form`s) | the rows of the tables, relationships, measures, hierarchies and row rules, and the access matrix (→ drishti-grid editing) |
 | Python table and model editor (`drishti_editor-python.js`) | the shell, the YAML | the code beside its contract (→ `CodeEditor` Python), the templates |
@@ -1404,12 +1404,16 @@ console script draws a label and an input in a loop over a schema's properties o
 allow-list (2: a lake's classifier and promote checkboxes, a BI transform's parameters) only shrinks and ends at 0.
 
 **The BI designer's own panes (2.9.11.e).** The panes the guard does not see moved too: every settings pane of the report designer and
-the theme designer is a live `Form` through one helper (`drishtiBi.formatPane.form`: fields, values, a handler per top-level field; each
+the theme designer (and, in the second BI pass, the Filters pane's editor, bookmarks, links, drill-through, the Phone and Tablet rows) is a `Form` through one helper (`drishtiBi.formatPane.form`: fields, values, a handler per top-level field; each
 control keeps its `data-*` hook, so tests and tutorials find it), and the ExpressionEditor is a one-line `CodeEditor` (the editor's
 completion in place of its own list). Saved reports are unchanged: a field writes only when a person changes it, and what it writes is
-what the old control wrote. **Still their own** (the next pass): the wells' add lists and the Fields and Visualizations panes (→
-`Palette`), the drill-through and bookmark rows, the links between datasets, the Filters pane's editor (→ a `Form` with `when`), the
-Phone and Tablet controls, the BI Studio shell (→ `DesignerShell`) and a report's measure name beside its formula.
+what the old control wrote. The second BI pass moved the drill-through target (its fields a row of checkboxes, a field to add), the links between
+datasets (repeatable rows), the bookmarks (each name a field; the new one's name and slicer choices a form), the Filters pane's editor (a
+submitted `Form` whose fields follow the kind of filter through `when` and a dependent condition list, every control named as before;
+Pick from the data a row of checkboxes), the Phone and Tablet rows' hide, wide and height, a report measure's name and formula, the
+Copilot's question and a transform step's parameters (`drishti_bi-transform.js` off the form guard's allow-list). **Still their own**
+(the next pass): the wells' add lists and the Fields and Visualizations panes (→ `Palette`, which needs per-entry hooks first) and the
+BI Studio shell (→ `DesignerShell`).
 
 ## 13. Risks
 

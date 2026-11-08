@@ -57,9 +57,24 @@
   (2.9.11.k). Computed as the person (a template only of a trade they see trade by trade, `403` otherwise; a counterparty they see none of
   `403`); every check audited (`ccr-predeal`, with its check id, decision, method, command and limit use). Code: `ExposurePreDeal`,
   `ExposurePreDealCommand`, `ExposurePreDealController` in the counterparty-risk server package `com.ash.drishti.server.exposure`.
-- **Counterparties → Pre-deal check** runs `PREDEAL` (the menu item that ran `XWIF`). Its screen is **under construction** (registry item
-  `pre-deal-screen`): it is built on the Drishti Elements libraries, which have not reached develop; until then `PREDEAL` typed in the
-  console says so and names the API and the command line. The exposure explorer's Pre-deal tab stays until that screen replaces it.
+- **Counterparties → Pre-deal check, the screen** (`/predeal`; `PREDEAL <GO>`, the menu item that ran `XWIF`, and **Pre-deal check ›**
+  in the exposure explorer at a counterparty or a netting set; EXPOSURE_GUIDE.md sections 7 and 18.9, after the CCR cube mock-up C):
+  the trade as a drishti-inputs Form (counterparty, netting set, a booked trade to copy or the trade described, the notional as money,
+  the side), the server's verdict (approve, refer or decline with the lamp and the reasons; the limit and each tenor bucket within, near
+  or over with before, with the trade, increment, use and headroom; EPE and EAD before and after), the one Explain of the check, and the
+  what-if (the profile overlay with the limit and the incremental PFE per tenor on drishti-chart through drishti-risk; the figures and the
+  table by tenor on drishti-grid). Every number is the server's; a typed command checks at once; a phone layout; gone with the banking
+  module. The registry item `pre-deal-screen` is retired.
+- **One way to check a trade**: the exposure explorer's Pre-deal tab, its form and the console's what-if proxy (`POST /api/exposure/what-if`)
+  are removed; the tab's address (`/exposure?scope=…&tab=predeal`) opens the check at that counterparty or netting set. The API and
+  `drishti.py exposure whatif` keep the what-if alone.
+- **The pre-deal answer says near** (new setting `drishti.ccr.exposure.limit-near`, 0.8): the limit and each bucket `within`, `near`
+  (from that share: still approved, the reason says which) or `breach`; also `headroomBefore` and `near` on the limit, `increment`,
+  `useBefore` and `headroomAfter` on each bucket, and with the exact method the IMM EAD (`ead`, α × EEPE) before, with and incremental.
+  The one Explain explains a check (kind `predeal`: `ExposurePreDealExplainer`; the check made again, not audited twice).
+- **Drishti Elements**: drishti-inputs' Form takes `doneText` ('' says nothing after a submit, for a page that shows the answer) and a
+  field without help no longer prints "null"; drishti-risk's `risk.exposure-profile` takes `eepe: false` (an answer without EEPE, such as
+  the proxy's: none drawn, never computed in the page).
 - **The Trading landing's new-trade check** asks the pre-deal service for its exposure half: the decision, the limit use and every figure
   are the server's (the console no longer divides by the limit or picks the netting set); when the copied trade has no paths on the run
   the same check is asked described, and refers. Its verdict shows *Refer to credit* and *Declined: over the limit* with the reason.
@@ -292,6 +307,10 @@
   completion hook offers the fields, measures, functions and keywords (also after `(`, `,` and `=` in a call); its own suggestion list
   and CSS deleted. Deleted: the Format pane's small controls (`row`, `select`, `text`, `checkbox`, `colour`) and the designer's own
   text, date and checkbox helpers. drishti-inputs: `upgradeCodeArea` passes `completeAfter`. Saved reports are unchanged.
+  The second pass: the Filters pane's editor (a `Form` whose fields follow the kind of filter; Pick from the data a row of checkboxes),
+  the drill-through target, the links between datasets, the bookmarks, the Phone and Tablet rows, a report measure's name, the
+  Copilot's question and a transform step's parameters are `Form`s too; the designer's `frow` and `selectInput` deleted; the form
+  guard's allow-list from 2 files to 1.
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never

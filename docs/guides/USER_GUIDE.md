@@ -462,6 +462,19 @@ Reach it three ways: `WHAT <GO>` (or `WHAT <term> <GO>` for one entry), **Build 
 the **What does this mean?** link on a data page: the VaR explorer, `VRES` and `DESK` open Market risk; `CPTY`, `NSET`, `CSA` and the
 exposure explorer open Counterparty credit risk. F1 and **?** open the page's help.
 
+### The pre-deal check
+
+*Does this new trade fit the counterparty's credit limit?* **Counterparties → Pre-deal check** (`PREDEAL <GO>`, or **Pre-deal check ›**
+in the exposure explorer at a counterparty or a netting set) asks the server. On the right, the trade: the counterparty, the netting set
+it goes into, a booked trade to copy (the exact method) or the trade described by asset class and maturity (a proxy, which only
+refers), the notional (`250m`, `1.5bn`) and the side; **Check**. The answer: **approve**, **refer** or **decline** with the reason; the
+limit and each tenor bucket **within**, **near the limit** (from 80% of it, a setting) or **over the limit**, with the numbers before and
+with the trade, the increment and the headroom; EPE and EAD before and after; the profile with the trade over the profile before against
+the limit, the incremental PFE per tenor, and the table by tenor. **Explain ›** (or **E**, or a tile) shows how each number was made.
+Typed with its words the check is made at once: `PREDEAL CP-ALDERSHOT LIKE MX-30001587 250M <GO>`; the same on the command line:
+`drishti.py exposure predeal "PREDEAL CP-ALDERSHOT LIKE MX-30001587 250M"`. Every check is audited. On a phone the verdict comes first.
+Details: [EXPOSURE_GUIDE.md section 7](EXPOSURE_GUIDE.md#7-pre-deal-what-if) and [section 18.9](EXPOSURE_GUIDE.md#189-the-pre-deal-check).
+
 ### The data map
 
 **Views → Data map** (`/datamap`, or `DATAMAP <GO>`) shows every kind of data your packs hold, how much of it there is on the business
