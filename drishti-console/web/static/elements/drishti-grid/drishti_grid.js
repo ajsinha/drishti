@@ -3839,7 +3839,7 @@
         const disp = v.displayColumns();
         const win = doc.defaultView, touch = !!(win && win.matchMedia && win.matchMedia('(pointer: coarse)').matches);
         const twisty = (touch || this.view.host.hasAttribute('data-phone')) && !!(m.pivotMode || m.rowModel.treeData || (m.rowModel.groupBy && m.rowModel.groupBy.length));
-        const want = twisty ? Math.max(44, DENSITIES[m.density] || 28) : DENSITIES[m.density] || vp.rowHeight;
+        const want = twisty ? Math.max(45, DENSITIES[m.density] || 28) : DENSITIES[m.density] || vp.rowHeight;
         if (vp.rowHeight !== want) { vp.rowHeight = want; }
         const rh = vp.rowHeight, hrh = touch ? Math.max(44, rh + 4) : rh + 4;   // a heading is a target a finger can hit on a touch screen (44 px)
         const sp = this.paneSpans(disp);

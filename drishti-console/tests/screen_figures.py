@@ -73,7 +73,7 @@ def figures(page) -> dict:
 
 
 def _key(row: dict, common: list[str]) -> tuple:
-    return tuple(row.get(h, "") for h in common)
+    return tuple(row.get(h, "") or "—" for h in common)          # no figure: a blank cell or a dash (drishti-risk's riskMoney draws "—")
 
 
 def compare(old: dict, new: dict) -> list[str]:

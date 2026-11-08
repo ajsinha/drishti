@@ -194,7 +194,7 @@ def test_the_org_chart_keys_edit_mode_proposal_and_export(browsers):
         await shot(pg, "drishti-tree-org.png")
         await pg.click("#hx-tree [data-act='svg']")
         await pg.click("#hx-tree [data-act='png']")
-        await pg.wait_for_function("window.__harness.downloads.length === 2")
+        await pg.wait_for_function("() => window.__harness.downloads.length === 2")
         d = await pg.evaluate("window.__harness.downloads")
         assert d[0]["type"] == "image/svg+xml" and d[0]["head"].startswith("<svg")
         assert d[1]["type"] == "image/png" and d[1]["head"].startswith("data:image/png;base64,")
@@ -232,3 +232,16 @@ def test_the_partitions_sized_by_an_additive_measure_with_their_table_and_zoom(b
         assert await pg.evaluate("document.activeElement.getAttribute('data-id')") == "EQD-1"
         await shot(pg, f"drishti-tree-{mode}.png")
     run(browsers, body, f"view={mode}")
+
+
+def test_on_a_phone_the_twisty_is_a_finger_sized_target(browsers):
+    """drishti-grid on a phone (and any touch screen): the rows that open and close are 44 px tall and the + / − is 44 px wide."""
+    async def body(pg):
+        assert await pg.locator("#hx-tree .dg[data-phone]").count() >= 1
+        boxes = await pg.eval_on_selector_all("#hx-tree .dg-tw:not(.dg-tw-none)", "els => els.slice(0, 4).map((e) => { const r = e.getBoundingClientRect(); return [r.width, r.height]; })")
+        assert boxes and all(w >= 44 and hh >= 43.5 for w, hh in boxes), boxes
+        n0 = await pg.evaluate("window.__harness.tree.grid.grid.model.rowCount()")
+        await pg.locator("#hx-tree .dg-tw:not(.dg-tw-none)").first.click()
+        await settle(pg)
+        assert await pg.evaluate("window.__harness.tree.grid.grid.model.rowCount()") != n0
+    run(browsers, body, "view=grid", width=390, height=844)

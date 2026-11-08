@@ -102,7 +102,7 @@
     var E = window.Drishti && window.Drishti.elements;
     if (E && E.tree) { return Promise.resolve(E.tree); }
     var load = E && (E.load || (E.core && E.core.load));
-    return load ? load('drishti-tree') : Promise.reject(new Error('Drishti Elements are not on this page'));
+    return load ? load('drishti-tree') : Promise.reject(new Error('the tree library is not on this page'));
   }
 
   /**

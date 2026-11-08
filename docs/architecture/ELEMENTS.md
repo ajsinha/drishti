@@ -1058,10 +1058,22 @@ limit use saying why, `LIMIT_NOTE`, *no limit* by default; a screen picks its `f
 | a table or ladder with `children:` (`table.tbl-tree`): ▸/▾ buttons, the filter box keeping ancestors and the column funnels of the console (`drishti_tree-rows.js`), and the renderer's own copy (drishti-grid's `tree` and `treeVisibility`) | drishti-tree's table tree (`treeTables`): the tree grid, or the org chart for one chain, in the console, the renderer and the embed (`elements-tree`; its sheet in `<drishti-view>`'s and the renderer's); the same rows, texts, tones and links; the mode, open rows and filter kept across live patches | the console's hand-built toggles and filter (`treeTable`, its address state), drishti-grid's `tree` and `treeVisibility`, their CSS (`.tr-q`, `.tr-bar`, `.tr-count`) |
 | the GLEIF entity's parents chain (`lei-entity` `PAR`): a flat table, direct parent first | the same panel as a tree from the ultimate parent down to the entity (Rachana `take`, `let` and the document; no engine change), opening as the org chart; the group tree (`lei-group` `TREE`) the tree grid with the org chart a click away | the flat chain's order |
 
+| the Drishti Risk home's VaR hierarchy (`drishti_risk-landing.js`, `rl-tree`: indented rows to depth 2 with VaR and a limit pill) | drishti-tree through `varHierarchyTree`, `chrome: false`, in the panel: every node with the server's VaR and limit use (the bar in bands; *no limit* / *n/c*), open to the desks, a node's name the link to `/var?scope=…&hierarchy=…` | the rows, their depth classes and CSS |
+| the exposure explorer's scope tree (`drishti_exposure-explorer.js`, `xx-tree`: hand-built rows with ▸/▾, the open state in `S.expanded`, a set's trades drawn under it) | drishti-tree, `chrome: false`: the bank, legal entities, counterparties (under each legal entity), netting sets and a set's trades through `loadChildren` (the 30 largest, the open trade wherever it ranks, *… n more in the Trades tab*); peak PFE `additive: false`, every figure the server's; a click opens the scope, the way to the current scope opens and its row is marked (`xx-current`, `data-scope`) | the rows, twisties, open-state bookkeeping and their CSS (`.xx-row` and the rest) |
+| the raw document viewer and F9's drawer (`drishti_raw-viewer.js`: a hand-built `role=tree` of `.jt-n` rows, ▸ buttons, *Show all* buttons) | drishti-tree's tree grid (loaded on demand) with a **Key** and a **Value** column: the document's order, open two levels, the path opened, selected and scrolled to, an array over 50 cut with *Show all* as a row, search keeping the matches and their ancestors (open), masked values as sent, every colour a token (`.jt-key`, `.jt-num` …); `Drishti.Raw.render` returns a promise of the tree | the tree class, its toggles and its CSS (`.jt-n`, `.jt-l`, `.jt-c`, `.jt-t`) |
+
 The GLEIF relationship (`lei-relationship`) is one child and one parent (a key-value panel and the two entities' cards): no chain to
-draw. The Build home's lineage is a column of links: no graph to move. Still hand-built, to move next: the Drishti Risk home's VaR
-hierarchy list (`drishti_risk-landing.js`, `rl-tree`), the exposure explorer's counterparty tree (`drishti_exposure-explorer.js`,
-`xx-tree`) and the raw-record viewer's JSON tree (`drishti_raw-viewer.js`, `jt`).
+draw. The Build home's lineage is a column of links: no graph to move. No hand-built tree is left on a screen.
+
+**A tree's filter in the address.** Before the move, a table with children kept its column filters in the console's address
+(`?f.<panel>.<column>=…`, USER_GUIDE.md › Filter a table like Excel), and a test said so. The table tree keeps that promise with its
+filter box: `treeTables(scope, {address})` takes the host's page address (`read(panelId)`, `write(panelId, words)`); the console
+writes `?tf.<panel id>=<words>`, so a reload or a shared link shows the same rows (not inside `<drishti-view>`: the host's address is
+not touched).
+
+**Touch.** drishti-grid draws rows that open and close (a tree, groups, a pivot) 44 px high (inside the row line) on a touch screen (`pointer: coarse`) or
+a phone (`data-phone`), with the twisty 44 px wide: a target a finger can hit, for every tree on the grid. Other grids keep their
+density's height.
 
 **Tests.** Node: `tests/elements/graph.test.mjs` (13: the model, paths, layers, every layout and the timings, the scene, encodings,
 hit testing, export, the terminal's commands and completion, the lineage, the panel options, the bundle) and

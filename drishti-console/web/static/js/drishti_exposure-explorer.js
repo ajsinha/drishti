@@ -902,9 +902,9 @@
       grid: { phoneWidth: 1, labelColumn: { header: "Scope", width: 200, cellRenderer: nodeCell },
         rowClass: function (r) { return (r.noPaths ? "xx-nopaths" : "") + (r.scope && r.scope === S.scope ? " xx-current" : "") || null; },
         rowData: function (r) { return { scope: r.scope || null, current: r.scope ? String(r.scope === S.scope) : null }; } } };
-    el.tree.on("selectionChanged", function (e) {                    // a click on a row: that scope (a set without paths has no answer)
+    el.tree.on("selectionChanged", function (e) {                    // a click on a row: that scope (one without paths: its no-paths state)
       var n = e.ids.length ? el.tree.model.node(e.ids[0]) : null;
-      if (n && n.data.scope && !n.data.noPaths) select(n.data.scope, { via: n.data.via });
+      if (n && n.data.scope) select(n.data.scope, { via: n.data.via });
     });
     showPath();
   }

@@ -827,7 +827,8 @@ are shown. The filter is written compactly:
 | `today` `yest` `thisweek` `lastweek` `thismonth` `lastmonth` `last7` `last30` `bf:2026-10-01` `af:2026-10-01` | dates |
 | `ct:x` `nc:x` `bw:x` `ew:x` | contains, does not contain, begins with, ends with |
 
-A filter that names a column or panel that is not there is ignored. Inside `<drishti-view>` the filters are kept in the page's
+A table with children (a tree) has a *Filter rows* box instead of the funnels; its words are in the address too:
+`?tf.<panel id>=<words>`. A filter that names a column or panel that is not there is ignored. Inside `<drishti-view>` the filters are kept in the page's
 memory only (the host's address is not touched). **Remembering** a user's filters between visits is **off**: nothing is stored unless
 the page sets `data-remember-filters="on"` on `<body>` or this browser has `localStorage['drishti.rememberFilters'] = 'on'`; then the
 filters of a table return when the address has none.

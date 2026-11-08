@@ -124,6 +124,16 @@
   the explorer's own riskGrid tree code is deleted. drishti-tree gains generic hooks for it: `chrome: false` (the view alone),
   `grid` (the node's cell, a measure's `column`, more columns, a row's class and data, widths given and kept, `fitRows`), lazy
   children (`loadChildren`, `lazyText`, `HierarchyModel.addChildren`) and a quiet `select`.
+- **The other hand-built trees are drishti-tree too** (ELEMENTS.md section 8.8, no bespoke UI on any screen): the **Drishti Risk
+  home's VaR hierarchy** (`varHierarchyTree` in the panel: VaR and the limit use bar of every node as the server sent them, open to the
+  desks, a node's name the link to the VaR explorer at that scope); the **exposure explorer's scope tree** (the bank, legal entities,
+  counterparties, netting sets and a set's trades asked when it opens; peak PFE not additive, every figure the server's; a click opens
+  the scope, the way to the current scope opens and its row is marked); the **raw document viewer** and F9's drawer (the tree grid
+  with Key and Value columns: the path opened and selected, the cut at 50 with *Show all* as a row, search keeping the matches and
+  their ancestors, masked values as sent). Deleted: `rl-tree`'s rows, `xx-tree`'s rows, twisties and open-state bookkeeping, the raw
+  viewer's own tree and their CSS. **A tree's filter is in the address again** (`?tf.<panel id>=<words>`; treeTables' `address` hook):
+  a reload or a shared link shows the same rows, as before the move. **drishti-grid**: rows that open and close (a tree, groups, a
+  pivot) are 44 px high on a touch screen or a phone (inside the row line), with a 44 px twisty.
 
 - **The Build workbench's shape tree is drishti-tree** (no bespoke UI in an authoring tool): a Design's Shape section draws its fields
   with drishti-tree's new **outline** (`TreeOutline`, `drishti_tree-outline.js`: a `Tree` in grid mode without chrome for a narrow
