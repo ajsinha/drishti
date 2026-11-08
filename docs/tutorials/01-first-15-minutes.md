@@ -206,40 +206,29 @@ You should see no red line (the exit is 0). The two `port` lines say what is on 
 **In the UI.** Run **Drishti server (demo lakes)**, then **Drishti console**. The first reads the lakes with the samples off (`DRISHTI_DEMO_ENABLED=false`), with
 security on and a development administrator; the second signs people in with the same token secret.
 
-**From the command line.** Open two terminals in the repository root. The server, in the first (the same settings as the run configuration):
+**From the command line.** In the repository root, the scripts of `bin/` start both with the same settings as the run configurations
+(`--demo`: the lakes with the samples off, security on, a development administrator, the same token secret for the two):
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-export DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets
-export DRISHTI_DEMO_ENABLED=false
-export DRISHTI_STUDIO_SAVE=true
-export DRISHTI_SECURITY_ENABLED=true
-export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
-export DRISHTI_SEED_ADMIN=true
-mkdir -p data/tmp/server        # Java's temp folder for the server: native libraries unpack here, not in /tmp
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar
+bin/start-server.sh --demo --background           # Windows: bin\start-server.cmd --demo --background
+bin/start-console.sh --demo --background          # Windows: bin\start-console.cmd --demo --background
+bin/status.sh
 ```
 
-The console, in the second (the same token secret, so the two trust each other):
+The secrets `--demo` uses are the development ones of the run configurations, and the script says so: fine on your own machine, never on
+a shared one ([tutorial 21](21-run-it-in-production.md)). Every option: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](../DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
 
-```bash
-export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
-export DRISHTI_AUTH_ENABLED=true
-export DRISHTI_SESSION_SECRET=drishti-dev-only-session-secret-change-me-0123456789
-export DRISHTI_SECURE_COOKIE=false        # plain http on your own machine only
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480
-```
-
-The secrets above are the development ones of the run configurations: fine on your own machine, never on a shared one ([tutorial 21](21-run-it-in-production.md)).
-
-You should see `Started DrishtiApplication` in the server's terminal, and before it the line `The lake was rebuilt while the server was stopped ...: the BI store's
-columns and rollups were cleared` (the note `lake demo` left), and `Uvicorn running on http://0.0.0.0:17480` in the console's. Check the server from a third terminal:
+You should see `server: up on http://<this machine's address>:18480` and `console: up on http://<this machine's address>:17480`, then
+`status` listing both `running` and `UP`. In the server's log, `data/logs/server.log`, `Started DrishtiApplication`, and before it the line
+`The lake was rebuilt while the server was stopped ...: the BI store's columns and rollups were cleared` (the note `lake demo` left). Check the
+server from the command line too:
 
 ```bash
 curl -s localhost:18480/actuator/health
 ```
 
-You should see `{"status":"UP","groups":["liveness","readiness"]}`.
+You should see `{"status":"UP","groups":["liveness","readiness"]}`. `bin/stop-all.sh` stops both when you are done.
 
 (`DRISHTI_STUDIO_SAVE=true` lets the Build pages of tutorial 19 save work. Tutorials 1 and 8 need two people, so all the tutorials run with sign-in on.)
 

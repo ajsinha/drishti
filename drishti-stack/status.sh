@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The processes and their ports, the members the nodes see, and the console's servers.
+# The processes and their ports (bin/status.sh), the members the nodes see, and the console's servers.
 # See drishti-stack/README.md.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

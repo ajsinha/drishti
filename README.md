@@ -203,21 +203,23 @@ uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requ
 # 3. The demo lake, from the committed test data in data/testdata
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 
-# 4. The server on :18480 (native libraries unpack in its own folder, not /tmp)
-mkdir -p data/tmp/server
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
-
-# 5. In a second terminal: the console on http://localhost:17480
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+# 4. The server on :18480 and the console on :17480, in the background, with the demo's settings
+bin/start-all.sh --demo          # Windows: bin\start-all.cmd --demo
+bin/status.sh                    # both UP, with the addresses to open
+bin/stop-all.sh                  # when you are done
 ```
 
-Open http://localhost:17480/t and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`. Security is off in this start,
-which is meant for one developer machine; the tutorials sign in
-([OPERATIONS_GUIDE.md section 2.7](docs/guides/OPERATIONS_GUIDE.md#27-sign-in-change-the-admin-password-first-views)).
+Open the console's address that `start-all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
+development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`.
+
+- **Starting and stopping**: the seven scripts of [bin/](bin/README.md) (`start-server`, `start-console`, `stop-server`, `stop-console`,
+  `status`, `start-all`, `stop-all`), each as `.sh` (Linux, macOS), `.ps1` and `.cmd` (Windows); every option, a cluster node by node with
+  `--node`, and the console pointed at a cluster's entry node with `--server`:
+  [DEPLOYMENT_AND_QA_GUIDE.md section 6](docs/DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
 
 - **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, Elements, approvals, VaR, exposure
   and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)).
-- **A local cluster of three** with its consoles: [drishti-stack/](drishti-stack/README.md).
+- **A local cluster of three** with its console, from one file: [drishti-stack/](drishti-stack/README.md) (it starts them through `bin/`).
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
   [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
   [IDEs](docs/guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).

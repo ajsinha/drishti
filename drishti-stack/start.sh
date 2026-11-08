@@ -13,7 +13,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Starts the local cluster (stack.yaml): every node not running, then the console; or only the nodes named ("console" for the console).
+# Starts the local cluster (stack.yaml) through bin/start-server.sh and bin/start-console.sh: every node not running, then the console;
+# or only the nodes named ("console" for the console).
 # See drishti-stack/README.md.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

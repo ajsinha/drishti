@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Stops what start.sh started, by the process ids in run/pids.txt (never by name): every process, or only the nodes named.
+# Stops what start.sh started, through bin/stop-console.sh and bin/stop-server.sh, by their pid files (never by name): every process, or only the nodes named.
 # See drishti-stack/README.md.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

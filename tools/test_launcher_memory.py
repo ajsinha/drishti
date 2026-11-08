@@ -30,12 +30,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FLAGS = ("-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144", "-XX:NativeMemoryTracking=summary")
 DIAGNOSTICS = ("HeapDumpOnOutOfMemoryError", "HeapDumpPath=", "-Xlog:gc*:file=", "filecount=5,filesize=20m")
-PRODUCTION = ("drishti-stack/stack.py", "deploy/docker/ecs/server-entrypoint.sh", "deploy/docker/server.Dockerfile", "tools/windows/start-server.ps1")
+PRODUCTION = ("bin/start-server.sh", "bin/start-server.ps1", "deploy/docker/ecs/server-entrypoint.sh", "deploy/docker/server.Dockerfile")
 LAUNCHERS = {  # file: whether it sets MALLOC_ARENA_MAX too
-    "drishti-stack/stack.py": True,
+    "bin/start-server.sh": True,
     "deploy/docker/ecs/server-entrypoint.sh": True,
     "deploy/docker/server.Dockerfile": True,
-    "tools/windows/start-server.ps1": False,
+    "bin/start-server.ps1": False,
     "run-configs/Drishti server.run.xml": True,
     "run-configs/Drishti server (demo lakes).run.xml": True,
     "run-configs/Drishti server (debug-friendly).run.xml": True,
@@ -79,10 +79,11 @@ class LauncherMemory(unittest.TestCase):
                     self.assertEqual(text.count("bin/java\" -D"), text.count("-Djdk.nio.maxCachedBufferSize=262144"), "every java line")
 
     def test_the_stack_starts_each_server_with_them(self):
+        """drishti-stack starts every node through bin/start-server.sh, which sets them (one launcher, not two)."""
         text = (ROOT / "drishti-stack/stack.py").read_text(encoding="utf-8")
-        self.assertIn("*SERVER_MEMORY_FLAGS", text)
-        self.assertIn("*diagnostic_flags(name)", text)
-        self.assertIn('env.setdefault("MALLOC_ARENA_MAX", "2")', text)
+        self.assertIn('bin_run("start-server"', text)
+        self.assertNotIn("-XX:MaxDirectMemorySize", text)
+        self.assertIn('MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"', (ROOT / "bin/start-server.sh").read_text(encoding="utf-8"))
 
     def test_compact_headers_on_25_and_generational_zgc_on_21(self):
         """2.9.7 (D5, PO-8): every launcher through javacmd adds -XX:+UseCompactObjectHeaders when the JVM is 25+, never on 21; the

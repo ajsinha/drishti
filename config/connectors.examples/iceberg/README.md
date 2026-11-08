@@ -32,7 +32,7 @@ doc: plugins/drishti-plugin-iceberg/README.md
 
 Ready-made connector files for the `iceberg` plugin: one file per banking data domain (`reference`, `market`, `risk`, `credit`,
 `collateral`) and `trade-endur.yaml` for the trades, all reading tables that `tools/load-iceberg.sh` (or
-`tools\windows\load-iceberg.ps1`) writes. `tools\windows\start-server.ps1 -Iceberg` copies them in.
+`tools\windows\load-iceberg.ps1`) writes. `bin/start-server.sh --iceberg` (Windows `bin\start-server.cmd --iceberg`) copies them in.
 
 ## What it reads
 
