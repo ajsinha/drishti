@@ -42,7 +42,8 @@ def slug(heading: str) -> str:
 
 def anchors(path: Path) -> set:
     text = re.sub(r"```.*?```", "", path.read_text(), flags=re.S)
-    return {slug(h) for h in HEADING.findall(text)}
+    explicit = set(re.findall(r'<a\s+(?:id|name)="([^"]+)"', text))      # a page's own anchors (the sample pages' one per kind)
+    return {slug(h) for h in HEADING.findall(text)} | explicit
 
 
 TRACKS = ["Start", "Risk engines", "BI and analysis", "Data in and out", "Build", "Operate"]
