@@ -27,6 +27,9 @@ lenses:
     title: Public sector
     modules: [economy]
     functions: [WDI, WDIS, CBANK, CBSER, NSTAT, OECD, OECDS, PRESS, PREL, GDELT]
+    menus: [views, bi, admin, help]   # the top menus by id; its Home cards wait for the lens home (none yet: the product's Home)
+    help: [docs-guides-public-sector-guide, docs-tutorials-46-public-sector-data, world-development-pack, central-banks-pack,
+      national-statistics-pack, oecd-pack, official-news-pack, gdelt-events-pack, external-data]
   - id: cio
     title: Chief information officer
     modules: []
