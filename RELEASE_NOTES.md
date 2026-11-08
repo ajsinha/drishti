@@ -13,11 +13,13 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.9.11.g — release notes (draft)
+# Drishti 2.9.11.g — release notes
 
-*Not released yet.* **Industries as modules, opened through lenses; the public sector, the first new domain, filled every day by
+*Released 2026-11-08.* **Industries as modules, opened through lenses; the public sector, the first new domain, filled every day by
 drishti-feeds; the pre-deal check as a service of the exposure engine; every screen drawn with Drishti Elements, eleven libraries you can
 also use in your own applications.** This release carries the work planned as 2.9.11.e, f and g, shipped as one tag.
+
+**VaR check against 2.9.11.d:** the figures are added when the comparison run ends.
 
 ## What changes for risk users
 
@@ -96,7 +98,8 @@ also use in your own applications.** This release carries the work planned as 2.
 
 ## Upgrade
 
-Follow these steps when upgrading an installation of 2.9.11.d.
+Follow these steps when upgrading an installation of 2.9.11.d. The runnable jar is now built from `drishti-app`
+(`./mvnw -q package -DskipTests -pl drishti-app -am`) and keeps its name and folder: `drishti-server/target/drishti-server-2.9.11.g-exec.jar`.
 
 1. **Editions are lenses.** `config/editions/` is gone: a lens file is `config/lenses/<module>/<lens>.yaml` (risk, trading and market
    under `banking/`, world under `economy/`), the feature presets `config/lenses/features.yaml`. Move a site's own edition file to
@@ -202,15 +205,16 @@ drills' logs).
 
 | Measure | 2.9.11.d | 2.9.11.g |
 |---|---|---|
-| The console's screen code (JavaScript, CSS, HTML outside the libraries) | 81,053 lines | 79,746 lines, with every new screen of the release: 19,007 lines deleted, 18,069 written |
-| Drishti Elements, the libraries' sources | none | 41,289 lines in 11 libraries (186 ES modules) |
+| The console's screen code (JavaScript, CSS, HTML outside the libraries) | 81,053 lines | 79,764 lines, with every new screen of the release: 19,007 lines deleted, 18,069 written |
+| Drishti Elements, the libraries' sources | none | 41,295 lines in 11 libraries (186 ES modules) |
 | Parallel implementations folded into one | | 18: search, keymap, Approvals, alert engine, Explain, Build home, sitemap, chart engine (Vega retired), grid, tree, graph, form, select, designer kit, the exposure what-if (Python retired), the limit rule, the pre-deal check, the public-data scripts (into drishti-feeds); and editions into lenses |
 | Designer-kit guard: designers and editors not on the kit | | 0 (19 files when the guard was made) |
 | Form-pane guard: hand-made forms | | 0 (2 when the guard was made) |
 | Admin forms guard: raw controls in Admin templates | | 0 (97 in 21 templates when the guard was made) |
 | Native-select guard: `<select>`s not on drishti-inputs | | 0 (157 in 72 files at the most) |
 | Elements migration guard: files still formatting numbers or drawing charts themselves | | 28 files (35 when the guard was made) |
-| Browser tests: files, and the summed time of the lane | 167 files, 8,308 s of test time; the lane took 3,222 s on 4 workers | 185 files; the final drill's time is added when it ends |
+| Browser tests: files, and the time of the lane | 167 files, 8,308 s of test time; the lane took 3,222 s on 4 workers | 185 files; the lane took about 4,600 s in the final drills |
+| A full release drill, end to end | 82 min | about 105 to 115 min (2.9.11.j, the optimisation release, targets under 60 min) |
 
 # Drishti 2.9.11.d — release notes
 

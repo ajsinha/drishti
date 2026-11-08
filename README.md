@@ -297,7 +297,7 @@ What changed and when: [RELEASE_NOTES.md](RELEASE_NOTES.md) and [CHANGELOG.md](C
 | Language | Lines | Files |
 |---|---|---|
 | Java, product | 431k | 2,159 |
-| Java, tests | 163k | 1,031 |
+| Java, tests | 164k | 1,032 |
 | Python, product (console, tools, loaders, feeds) | 142k | 726 |
 | Python, tests | 105k | 597 |
 | JavaScript, product (console and Elements) | 125k | 486 |
@@ -305,9 +305,9 @@ What changed and when: [RELEASE_NOTES.md](RELEASE_NOTES.md) and [CHANGELOG.md](C
 | CSS | 19k | 114 |
 | HTML (templates and pages) | 34k | 328 |
 | YAML: configuration, Sutras, data contracts | 111k | 1,411 |
-| Markdown: guides, tutorials, design | 272k | 489 |
+| Markdown: guides, tutorials, design | 253k | 346 |
 
-About **750k lines of product code** and **273k lines of tests** (36% of the product code), with **272k lines of documentation**.
+About **750k lines of product code** and **273k lines of tests** (36% of the product code), with **253k lines of documentation**.
 
 | What | Count |
 |---|---|
@@ -323,8 +323,8 @@ About **750k lines of product code** and **273k lines of tests** (36% of the pro
 | Connector plugins | 19 |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,511: Java 948, console 247, browser 177, tools 117, JavaScript 22 |
-| Documents under docs/ | 360 (35 guides, 41 tutorials) |
+| Test files | 1,512: Java 949, console 247, browser 177, tools 117, JavaScript 22 |
+| Documents under docs/ | 217 (33 guides, 41 tutorials) |
 
 <!-- code-volume:end -->
 
