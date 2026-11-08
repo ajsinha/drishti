@@ -95,7 +95,7 @@ def test_history_steps_and_expectations_are_readable_and_filterable(browser, loa
     assert "16 trade entities on 2026-10-06" in steps and "verify" in steps and "skipped" in steps
     states = page.locator("[data-expectations] tbody tr")
     assert states.count() == 2 and "late" in states.nth(0).inner_text() and "on-time" in states.nth(1).inner_text()
-    page.select_option("select[name=status]", "failed")
+    page.select_option(".loads-filter select[name=status]", "failed")
     page.click(".loads-filter button[type=submit]")
     page.wait_for_url("**status=failed**")
     assert page.locator("[data-loads-table] tbody tr").count() == 1
