@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Editions and lenses, the console side (docs/admin/EDITIONS.md).
+"""Editions and lenses, the console side (docs/admin/LENSES.md).
 
 An *edition* is one setting on the servers (``drishti.edition``) naming ``config/lenses/<module>/<lens>.yaml``; the console learns the name from
 the server's about answer (:meth:`Editions.learn`), reads the same file and puts its presets as a layer under the site's own configuration
@@ -61,7 +61,7 @@ ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "conne
                "configuration")
 
 
-# The landings' page (EDITIONS.md › The design as built, section 7): each edition names its own (home.template, home.titles); a file that names none keeps
+# The landings' page (LENSES.md › The design): each edition names its own (home.template, home.titles); a file that names none keeps
 # Drishti Risk's, as before 2.9.7. Only templates under home/ named *_landing.html are taken.
 _LANDING_TEMPLATE = re.compile(r"home/[a-z0-9_]+_landing\.html")
 DEFAULT_LANDING_TEMPLATE = "home/risk_landing.html"
@@ -255,8 +255,8 @@ class Edition:
         return {x: named.get(x) or DEFAULT_LANDING_TITLES.get(x) or x.replace("-", " ").capitalize() for x in self.landings()}
 
     def landing_by_role(self, key: str = "home.landing-by-role") -> dict[str, str]:
-        """``home.landing-by-role`` ({role: landing}): read, wired to role-based access later (EDITIONS.md). The same shape under
-        another key: Drishti Trading's ``trading.landing-by-role``, for the person's trading role (EDITIONS.md › The design as built, section 14)."""
+        """``home.landing-by-role`` ({role: landing}): read, wired to role-based access later (LENSES.md). The same shape under
+        another key: Drishti Trading's ``trading.landing-by-role``, for the person's trading role (LENSES.md › The design)."""
         m = self._get(key) if self.active else None
         return {str(k): str(v) for k, v in m.items()} if isinstance(m, dict) else {}
 

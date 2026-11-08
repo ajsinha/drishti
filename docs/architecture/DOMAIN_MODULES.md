@@ -281,7 +281,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   `scopes:`, the shapes of `drishti.security.token-read-posts` and `token-scopes`), merged by the core's `ModuleTokenScopes` into the
   `TokenScopes` bean only while the module is on (Spring cannot split one list across files). `risk:write` is the banking module's; the
   core's `compute:write` keeps the sandboxes and cancellations. **Help's Risk measures section** is the plugin's
-  (`plugins/banking/help.yaml`: `help-sections:` heads with `after:`, and `sections:` pages), merged by `core/modules.py` (`help_heads`,
+  (`drishti-console/plugins/banking/help.yaml`: `help-sections:` heads with `after:`, and `sections:` pages), merged by `core/modules.py` (`help_heads`,
   `help_pages`) into the sitemap's heads and `help.yaml`'s pages.
 - **Packs in domain folders** (step 7): `config/packs/<domain>/<pack>`: core (core, gleif, compute-demo), banking (trading, market-data,
   market-risk, counterparty-risk), economy (world-economy, news-and-markets), capitalmarkets (us-equities, funds). **One rule** says where a
@@ -305,7 +305,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   carries its Home cards and chips (`cards:`, `chips:` in its module's `META-INF/drishti/lenses.yaml`, answered per person by
   `/api/v1/modules`; each shown only while its function is on), and the lens file its landing, menus, Help, Admin pages, BI lists and
   branding; `drishti.edition` (a lens for the
-  whole instance) and `drishti.lenses` are unchanged ([EDITIONS.md](../admin/EDITIONS.md), *Editions are lenses of modules*).
+  whole instance) and `drishti.lenses` are unchanged ([LENSES.md](../admin/LENSES.md), *Editions are lenses of modules*).
 
 **Phase 2, still to do:**
 

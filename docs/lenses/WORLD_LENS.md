@@ -25,11 +25,11 @@ market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the prop
 
 **Licensing first.** The IMF figures and the Yahoo prices (and the Google News headlines) in these packs are **internal only**: shown
 inside the bank by the product owner's decision of 2026-10-29; any showing outside it needs a decision first
-([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world); [EXTERNAL_DATA.md, The internal-only
+([LENSES.md section 8](../admin/LENSES.md#8-drishti-world); [EXTERNAL_DATA.md, The internal-only
 rule](../guides/EXTERNAL_DATA.md#9-licences-and-internal-only-data)). Section 6 lists every source and its terms.
 
-**Read with:** [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) (the lens as built),
-[EDITIONS.md section 10](../admin/EDITIONS.md#10-drishti-world) (how to run it), the edition file
+**Read with:** [LENSES.md section 8](../admin/LENSES.md#8-drishti-world) (the lens as built),
+[LENSES.md section 8](../admin/LENSES.md#8-drishti-world) (how to run it), the edition file
 [`config/lenses/economy/world.yaml`](../../config/lenses/economy/world.yaml), [EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md) (every external source, its
 licence and its refresh script) and the packs' READMEs: [world-economy](../../config/packs/economy/world-economy/README.md),
 [news-and-markets](../../config/packs/economy/news-and-markets/README.md), [us-equities](../../config/packs/capitalmarkets/us-equities/README.md),
@@ -91,7 +91,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What is the news on my topics?* | **Built**: **Today's news** by topic, each of `home.topics`' latest stories, newest first ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)); Google News headlines, internal only | Relevance to the bank's clients and holdings (section 5.9) |
+| *What is the news on my topics?* | **Built**: **Today's news** by topic, each of `home.topics`' latest stories, newest first ([LENSES.md section 8](../admin/LENSES.md#8-drishti-world)); Google News headlines, internal only | Relevance to the bank's clients and holdings (section 5.9) |
 | *How did markets do?* | **Partly**: quotes up and down in the **market snapshot** (twenty equity quotes) and the **biggest mover** | **Index levels and FX are not in the snapshot**: the S&P 500 level and USD/CAD were replaced by breadth and the biggest mover (section 5.1) |
 | *What changed since yesterday?* | **Partly**: **What changed** shows the latest of each source (the IMF vintage, the filings on the feed's latest day, the latest annual report, the market snapshot, GLEIF on file) | **No change feed**, so no "since yesterday" deltas (sections 5.4 and 5.5) |
 | *Any new filings from my companies?* | **Built**: new SEC filings on the feed's latest day (a tile); `EDGAR`, `FILING` | Filtered to *my* coverage list (section 5.10) |
@@ -172,8 +172,8 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 
 | Need | Status | Evidence |
 |---|---|---|
-| One product for the five public-data packs, its own landings, BI and help | **Built** | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) |
-| A lens beside the others on a full instance | **Built** (`drishti.lenses: risk,world,market,trading`) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
+| One product for the five public-data packs, its own landings, BI and help | **Built** | [LENSES.md section 8](../admin/LENSES.md#8-drishti-world) |
+| A lens beside the others on a full instance | **Built** (`drishti.lenses: risk,world,market,trading`) | [LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people) |
 | Hiding internal-only sources for an external showing | **Not built** | section 5.12 |
 
 ---
@@ -183,7 +183,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 One template, `home/world_landing.html`, with `drishti_world-landing.js` and `drishti_world-landing.css`, a **teal accent** (deeper on light themes). Every
 figure is the packs' own answer through one thin read-only route, `/api/home/search` (`drishti-console/routes/edition_routes.py`: the
 server's own search grammar, refused with `404 DRS-4023` for a command the person's edition or lens does not show), and `/api/raw` for
-entities; each panel paints when its answer arrives ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)).
+entities; each panel paints when its answer arrives ([LENSES.md section 8](../admin/LENSES.md#8-drishti-world)).
 
 ### 4.1 A: World desk (`desk`, the default)
 
@@ -388,7 +388,7 @@ only). It belongs to the Risk lens's roadmap (RISK_LENS.md, RL10).
 **Embedding.** An entity page (`ECON CAN`, `LEIG …`) can be shown on an intranet page by the client renderer, with the optional sign-in
 window for a page without a backend (plan row 2a; [CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window));
 the World landings themselves are not Sutras and cannot be embedded until a "home" Sutra kind exists
-([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). Internal-only data stays internal on any host.
+([LENSES.md section 5](../admin/LENSES.md#5-drishti-risk)). Internal-only data stays internal on any host.
 
 ---
 
@@ -487,7 +487,7 @@ row.
 
 ![The World landing mock-ups: A World desk, B Explorer, C World map](mockups/world/world-landing.png)
 
-[Open the mock-up](mockups/world/world-landing.html). **Chosen:** all three, A the default ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)).
+[Open the mock-up](mockups/world/world-landing.html). **Chosen:** all three, A the default ([LENSES.md section 8](../admin/LENSES.md#8-drishti-world)).
 A teal accent on the terminal look. **Code:** [`world_landing.html`](../../drishti-console/plugins/economy/templates/home/world_landing.html),
 [`drishti_world-landing.js`](../../drishti-console/plugins/economy/static/js/drishti_world-landing.js), [`drishti_world-landing.css`](../../drishti-console/plugins/economy/static/css/drishti_world-landing.css)
 (the packs' own answers through `/api/home/search` and `/api/raw`, [`edition_routes.py`](../../drishti-console/routes/edition_routes.py)),
@@ -550,7 +550,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X4 | Companies menu | US equities `USEQ`; Filings `EDGAR`; Legal entities `LEIC`; Funds and ETFs `FUND` | a subject menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X5 | Phone form | below 640 px the subject menus fold into one **World** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`drishti_phone.js`](../../drishti-console/web/static/js/drishti_phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 
-On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
+On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [LENSES.md](../admin/LENSES.md).
 
 ---
 

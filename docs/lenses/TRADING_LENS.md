@@ -23,8 +23,8 @@ sign-in window) are cited as built. Everything in sections 5 and 8 is a proposal
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
 market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; built). This is the Trading lens's.
 
-**Read with:** [EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading) (the lens as built),
-[EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-trading) (how to run it), the edition file
+**Read with:** [LENSES.md section 6](../admin/LENSES.md#6-drishti-trading) (the lens as built),
+[LENSES.md section 6](../admin/LENSES.md#6-drishti-trading) (how to run it), the edition file
 [`config/lenses/banking/trading.yaml`](../../config/lenses/banking/trading.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md),
 [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) and the contracts
 [TVAL.md](../contracts/TVAL.md) (valuation totals) and [PNL.md](../contracts/PNL.md) (P&L explain). The sibling lens documents:
@@ -85,21 +85,21 @@ operations (COLL, MC) …").
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What did my books make yesterday?* | **Built**: **P&L today**, the MtM change of every trade valued on both the business date and the business day before, summed over my books; no valuations the day before: no number, said ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading), the Trader desk) | Product control's struck P&L (actual, with cash, fees and reserves) is not received: the figure is MtM change only. The bank's P&L feed is planned |
+| *What did my books make yesterday?* | **Built**: **P&L today**, the MtM change of every trade valued on both the business date and the business day before, summed over my books; no valuations the day before: no number, said ([LENSES.md section 6](../admin/LENSES.md#6-drishti-trading), the Trader desk) | Product control's struck P&L (actual, with cash, fees and reserves) is not received: the figure is MtM change only. The bank's P&L feed is planned |
 | *Why did it move?* | **Partly**: **Overnight movers** (the trades whose MtM moved most) on the Desk head landing; the trade events (new, amended, cancelled) on the Trader desk | A P&L explain (market by risk factor, time, new and amended trades, unexplained): the contract is proposed and parked ([PNL.md section 1](../contracts/PNL.md#1-summary)); section 5.4 |
-| *What is my VaR and how close am I to my limit?* | **Built**: **My VaR** (the union of my books, `BOOK:A + BOOK:B`), labelled intraday when updates were applied; **Limit use**: the highest of my books' VaR ÷ its `var-limit` (EDITIONS.md section 14) | Limits other than VaR (DV01, CS01, vega, stop-loss, notional): not built (section 5.7); 10-day and other confidences (**built**: [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) |
+| *What is my VaR and how close am I to my limit?* | **Built**: **My VaR** (the union of my books, `BOOK:A + BOOK:B`), labelled intraday when updates were applied; **Limit use**: the highest of my books' VaR ÷ its `var-limit` (LENSES.md section 6) | Limits other than VaR (DV01, CS01, vega, stop-loss, notional): not built (section 5.7); 10-day and other confidences (**built**: [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) |
 | *Did any of my books breach?* | **Built** for VaR limits: **Breaches** and **Near limit** tiles (Desk head; `trading.near-limit` 0.8); **Limit use by book** over 5 business dates from the official records | A breach as a record the desk explains (RO2 of the oversight analysis; section 5.6) |
-| *Did yesterday's P&L exceed VaR?* | **Partly**: **P&L against VaR**, the desk's official history (hypothetical P&L against the VaR before it), last 60 days, exceptions circled; **left out** without official history (EDITIONS.md section 14) | The bank's actual and hypothetical P&L (planned); section 5.3 |
+| *Did yesterday's P&L exceed VaR?* | **Partly**: **P&L against VaR**, the desk's official history (hypothetical P&L against the VaR before it), last 60 days, exceptions circled; **left out** without official history (LENSES.md section 6) | The bank's actual and hypothetical P&L (planned); section 5.3 |
 | *What did I book yesterday, and is it right?* | **Built**: **Trades today** (new, amended, cancelled) and **Today's blotter**; on the demo data "new" reads 0 (no trade is booked on its business date) | New trades on the demo data (section 5.1) |
 
 ### 2.2 Intraday
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *Does this new trade fit my VaR limit and the counterparty's credit limit?* | **Built**: **Check a new trade**, one VaR what-if on the book and one pre-deal check on the counterparty, each on a scaled copy of a booked trade of the product ([EDITIONS.md section 14, The new-trade check](../admin/EDITIONS.md#the-new-trade-check)) | A real price of the new trade (not a scaled copy): QLRisk pricing, parked until its API is stable ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); section 5.8 |
+| *Does this new trade fit my VaR limit and the counterparty's credit limit?* | **Built**: **Check a new trade**, one VaR what-if on the book and one pre-deal check on the counterparty, each on a scaled copy of a booked trade of the product ([LENSES.md section 6](../admin/LENSES.md#the-new-trade-check)) | A real price of the new trade (not a scaled copy): QLRisk pricing, parked until its API is stable ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); section 5.8 |
 | *Where am I now, after this morning's trades?* | **Built** for VaR: intraday updates from files and Kafka change today's VaR (VAR_GUIDE section 8.4); the tile says **intraday** with the trades updated and the time | Intraday P&L (P&L today is end-of-day valuations only); section 5.9 |
 | *Tell me when I get near my limit.* | **Partly**: alerts on numbers and monitors are on in the edition (`trading.yaml` `features: alerts: on, monitors: on`); each person sets their own ([USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers)) | A one-click "watch my books" from the landing; limit alerts from intraday VaR (section 5.10) |
-| *What is the largest counterparty on my desk?* | **Partly**: **Largest counterparty** is its share of the desk's **positive MtM** over live trades, not exposure (EDITIONS.md section 14) | The desk's share of each counterparty's exposure (section 5.2) |
+| *What is the largest counterparty on my desk?* | **Partly**: **Largest counterparty** is its share of the desk's **positive MtM** over live trades, not exposure (LENSES.md section 6) | The desk's share of each counterparty's exposure (section 5.2) |
 | *What is a curve or vol doing?* | **Built**: `CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS` in the edition (`trading.yaml` `commands.allow`) | The Market lens's moves and quality checks are not on a Trading landing (section 7) |
 
 ### 2.3 The close
@@ -127,11 +127,11 @@ operations (COLL, MC) …").
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| Daily MtM change of my books | **Built** | P&L today ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)) |
+| Daily MtM change of my books | **Built** | P&L today ([LENSES.md section 6](../admin/LENSES.md#6-drishti-trading)) |
 | Actual P&L (with cash, fees, reserves) | **Not built**; needs the bank's P&L feed | planned ([the implementation plan](../architecture/IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned)) |
 | P&L explain (by risk factor, time, new and amended trades, unexplained) | **Not built**; contract proposed, parked. The stored explain is shown in the lens (`PNL`, Risk menu) with its waterfall **under construction** (`pnl-explain-waterfall` in the registry) | [PNL.md](../contracts/PNL.md); the stored `pnl-explain` (PNL) is a generator's, with known inconsistencies ([COMPUTED_ATTRIBUTES.md section 4.10](../architecture/COMPUTED_ATTRIBUTES.md#410-pnl-explain-pnl)) |
-| P&L by trader | **Built** from the valuations' `TRADER_ID`; masked for a role without raw, then said | EDITIONS.md section 14, Desk head |
-| The pricing system's own `PNL_1D` | **Not used**: a different figure on the demo data | EDITIONS.md section 14; agrees with MtM change on 201 of 15,000 trades (F14, [COMPUTED_ATTRIBUTES.md section 4.1](../architecture/COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval)) |
+| P&L by trader | **Built** from the valuations' `TRADER_ID`; masked for a role without raw, then said | LENSES.md section 6, Desk head |
+| The pricing system's own `PNL_1D` | **Not used**: a different figure on the demo data | LENSES.md section 6; agrees with MtM change on 201 of 15,000 trades (F14, [COMPUTED_ATTRIBUTES.md section 4.1](../architecture/COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval)) |
 | Month-to-date, year-to-date | **Not built** | section 5.11 |
 | Intraday P&L | **Not built** | section 5.9 |
 
@@ -139,13 +139,13 @@ operations (COLL, MC) …").
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| VaR of my books, desk, any union | **Built** | My VaR, Desk VaR (EDITIONS.md section 14); scopes ([VAR_GUIDE section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets)) |
+| VaR of my books, desk, any union | **Built** | My VaR, Desk VaR (LENSES.md section 6); scopes ([VAR_GUIDE section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets)) |
 | Top positions by VaR contribution | **Built** | `/scope/contributions?by=position` (Trader desk) |
 | VaR by trader (adds up to the desk) | **Built** in the server over every trade of the desk (`/scope/contributions?by=attribute:TRADER_ID`, [VAR_GUIDE section 11.3](../guides/VAR_GUIDE.md#113-path-and-contributions)); masked for a role without raw, then said | Desk head, By trader |
 | 10-day VaR and the confidence chosen | **Built** (plan row 2b) | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen): √10 and the 10-day sum, a confidence picker, limit use only when comparable |
 | Stressed VaR | **Planned** | |
 | The scenario matrix (is this tail scenario new?) | **Built** | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat), `SMAT`; on in Drishti Trading (`commands.words.SMAT: on`; `SMAT BOOK BOOK-RATES-1 20`), which settles section 9, decision 5 |
-| DV01 of my books | **Partly**: the sum of the live trades' `DV01` when any holds one; else the tile is left out | EDITIONS.md section 14 |
+| DV01 of my books | **Partly**: the sum of the live trades' `DV01` when any holds one; else the tile is left out | LENSES.md section 6 |
 | DV01 by tenor and currency, CS01, vega, FX delta | **Not built**: per-trade `DV01` only, no bucketed sensitivities | [COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); RO4 of the oversight analysis; section 5.7 |
 | Stress on my book | **Hidden** in the edition (stress commands left out) | `trading.yaml`; section 9, decision 4 |
 
@@ -163,7 +163,7 @@ operations (COLL, MC) …").
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| Today's trades: new, amended, cancelled | **Built**, with a fallback from the two days' valuations when the search by `SOURCE_UPDATE_TIME` does not answer in time (`DRS-1004`) | EDITIONS.md section 14, Trades today |
+| Today's trades: new, amended, cancelled | **Built**, with a fallback from the two days' valuations when the search by `SOURCE_UPDATE_TIME` does not answer in time (`DRS-1004`) | LENSES.md section 6, Trades today |
 | New trades on the demo data | **Not served**: every change of a day is an amendment or a cancellation | section 5.1 |
 | Today's blotter, newest first | **Built** | |
 | Trade pages: legs, cash flows, resets, events | **Built** (trading pack) | [trading pack README](../../config/packs/banking/trading/README.md) |
@@ -174,7 +174,7 @@ operations (COLL, MC) …").
 | Need | Status | Evidence or row |
 |---|---|---|
 | A counterparty's trades, netting sets, MtM | **Built**: `CTRD`, `NSET`, `NSMTM`, `CPMTM` (netting-set and counterparty MtM derived) | [COMPUTED_ATTRIBUTES.md section 13.1](../architecture/COMPUTED_ATTRIBUTES.md#131-the-derived-kinds-and-the-sutra-panels-q1-to-q4) |
-| Pre-deal PFE against the credit limit | **Built**: exact `paths` method, or the engine's `addon` proxy labelled proxy | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if); EDITIONS.md section 14 |
+| Pre-deal PFE against the credit limit | **Built**: exact `paths` method, or the engine's `addon` proxy labelled proxy | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if); LENSES.md section 6 |
 | The desk's largest counterparty by exposure | **Partly**: by positive MtM | section 5.2 |
 | Credit limit use on the counterparty's page | **Built as read**; the stored limits read very low use (sized on the retired profiles) | [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items) |
 
@@ -182,11 +182,11 @@ operations (COLL, MC) …").
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| Who is who: user → trader or desk | **Built**: `trading.people` (edition, then console), a matching trader record, then View as | [EDITIONS.md section 14, "My"](../admin/EDITIONS.md#my-who-a-person-is-configured) |
+| Who is who: user → trader or desk | **Built**: `trading.people` (edition, then console), a matching trader record, then View as | [LENSES.md section 6](../admin/LENSES.md#my-who-a-person-is-configured) |
 | The landing by trading role | **Built**: `trading.landing-by-role: {desk-head: desk, trader: trader}`, below the person's own choice | |
 | Never widening access | **Built**, tested (`test_scoping_never_widens_access_every_read_is_the_persons_own`) | |
 | "My" from the bank's directory (groups, claims) | **Not built** | section 5.13 |
-| Who sees the lens link (`lens.roles`) | **Not wired** (a hook) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
+| Who sees the lens link (`lens.roles`) | **Not wired** (a hook) | [LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people) |
 
 ### 3.7 The lens is configuration (product panel A19, 2026-11-06)
 
@@ -208,7 +208,7 @@ draws a trading menu or hides a trading command. The panel's changes are made th
 One template, `home/trading_landing.html`, with `drishti_trading-landing.js` and `drishti_trading-landing.css`, a **green accent**; figures worked out by
 `drishti-console/plugins/banking/trading_landing.py` and served read-only by `drishti-console/plugins/banking/routes/trading_routes.py`
 (`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and `POST /api/home/trading/check`; `404 DRS-4023` unless the
-person's edition or lens shows `TRD`), cached two minutes per person, date and scope ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)).
+person's edition or lens shows `TRD`), cached two minutes per person, date and scope ([LENSES.md section 6](../admin/LENSES.md#6-drishti-trading)).
 
 ### 4.1 A: Trader desk (`trader`, the default)
 
@@ -245,7 +245,7 @@ market data); Recently opened (the person's own history, Trading's commands only
 
 ### 4.4 The new-trade check
 
-From [EDITIONS.md section 14, The new-trade check](../admin/EDITIONS.md#the-new-trade-check): the engines price a **copy of a booked
+From [LENSES.md section 6](../admin/LENSES.md#the-new-trade-check): the engines price a **copy of a booked
 trade**, so the check picks one (a live trade of the product in my books: the counterparty's own first, then the chosen book's, then the
 largest notional) and scales it (factor = notional ÷ its notional, negative when the side differs).
 
@@ -260,7 +260,7 @@ Section 5.8 proposes saying so on the answer and, later, pricing the real trade.
 
 ### 4.5 What the data does not give (as the builder reported)
 
-From [EDITIONS.md section 14](../admin/EDITIONS.md#what-the-data-does-not-give-left-out-or-labelled-never-invented): the DV01 tile
+From [LENSES.md section 6](../admin/LENSES.md#what-the-data-does-not-give-left-out-or-labelled-never-invented): the DV01 tile
 without DV01s; P&L, by book, by trader and the movers without valuations the day before; the P&L-against-VaR card without official
 history; by-trader figures for a masked role; a book's limit use on a date without an official record;
 "new" trades on data that books none on the day; a time of day other than `SOURCE_UPDATE_TIME`; the largest counterparty's share of
@@ -304,7 +304,7 @@ are this document's (Trading lens); RO ids are the oversight analysis's.
 
 **Today.** "New" reads 0 on the demo data because no trade is booked on its business date; the search by `SOURCE_UPDATE_TIME` reads every
 trade document because the field is not a store column, and on the product owner's stack it may not answer in time (`DRS-1004`), so the
-events fall back to the two days' valuations ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)).
+events fall back to the two days' valuations ([LENSES.md section 6](../admin/LENSES.md#6-drishti-trading)).
 
 **Design.**
 
@@ -481,7 +481,7 @@ No public data is needed. None of this data leaves the bank.
 
 **Shared design rules.** "My" chooses scope and never widens access (the same rule the Oversight analysis reuses as coverage); a figure
 the data cannot give is left out or labelled, never invented; the engines are unchanged under every lens
-([EDITIONS.md section 11](../admin/EDITIONS.md#11-later-editions)).
+([LENSES.md section 11](../admin/LENSES.md#proposed-lenses)).
 
 ---
 
@@ -603,7 +603,7 @@ row. The scenario matrix (`SMAT`, on in Trading too) and the VaR horizon picker 
 
 [Open the mock-up](mockups/trading/trading-landing.html). **Chosen:** the footer's proposal, adopted: A the default for traders, B for desk
 heads (`trading.landing-by-role: {desk-head: desk, trader: trader}`, below the person's own choice), C behind the landing switch
-([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)). A green accent on the terminal look.
+([LENSES.md section 6](../admin/LENSES.md#6-drishti-trading)). A green accent on the terminal look.
 **Code:** [`trading_landing.html`](../../drishti-console/plugins/banking/templates/home/trading_landing.html),
 [`drishti_trading-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_trading-landing.js), [`drishti_trading-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_trading-landing.css),
 [`trading_landing.py`](../../drishti-console/plugins/banking/trading_landing.py), [`trading_routes.py`](../../drishti-console/plugins/banking/routes/trading_routes.py)
@@ -676,7 +676,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X6 | Phone form | below 640 px the subject menus fold into one **Trading** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`drishti_phone.js`](../../drishti-console/web/static/js/drishti_phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 | X7 | Markets menu (A19) | not on the mock-up: the product panel's one Markets menu | Rates `CRV`, `REPO`, `FIX`; Volatility surfaces `IRV`, `CPV`, `FXV`; Foreign exchange `FX`, `FXF`; Credit `CDS`, `BND`; Equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`: the one Markets menu (`gather:` of Curves, Volatility, FX and Credit, then its own columns), the items by `menus.markets`, three columns to a row | click an item: its command | **Built** |
 
-On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
+On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [LENSES.md](../admin/LENSES.md).
 
 ---
 

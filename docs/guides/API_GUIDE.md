@@ -1994,7 +1994,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-1025 | 404 | module off | the module of this path is not on here: not installed, not licensed or switched off (Admin → Modules, [OPERATIONS.md](../admin/OPERATIONS.md) section 22); its API, new and old paths, answers in words, never 403 |
 | DRS-1026 | 404 | function off | the function (command word) behind this path is off here: its module is off or an administrator switched it off (Admin → Commands) |
 | DRS-1027 | 403 | function not allowed | the person may not use this function (per-person grants and denials, from 2.9.11.i; today every person may use every function that is on) |
-| DRS-1017 | 403 | edition pack refused | the server's edition lists its packs with allow-only ([EDITIONS.md](../admin/EDITIONS.md)): Admin → Packs load, Deploy archive (a failed check) and the registry install refuse any other pack. Add the pack to the edition's packs, or set `drishti.edition-spec.packs.allow-only=false` |
+| DRS-1017 | 403 | edition pack refused | the server's edition lists its packs with allow-only ([LENSES.md](../admin/LENSES.md)): Admin → Packs load, Deploy archive (a failed check) and the registry install refuse any other pack. Add the pack to the edition's packs, or set `drishti.edition-spec.packs.allow-only=false` |
 | DRS-1015 | 503 | connector restarting | the connector the kind is routed to is being restarted (its file changed, a retry) and was not back within 30 s; a read waits that long for it (and for any connector of the kind being restarted) before answering; try again |
 | DRS-2001 | 422 | sutra parse | the Sutra text cannot be parsed |
 | DRS-2002 | 422 | sutra invalid | the Sutra parsed but has problems (listed in `problems`) |

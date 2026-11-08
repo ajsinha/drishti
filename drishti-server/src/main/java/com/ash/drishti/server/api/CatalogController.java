@@ -57,7 +57,7 @@ public class CatalogController {
 
     private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
 
-    /** The edition's command allow-list (EDITIONS.md › The design as built, section 5.3); none: every command shown. */
+    /** The edition's command allow-list (LENSES.md › The design); none: every command shown. */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
         this.edition = edition;
@@ -109,7 +109,7 @@ public class CatalogController {
         m.put("packs", packs(null));
         m.put("copyright", branding.copyright());
         m.put("notice", branding.notice());
-        m.put("edition", edition.edition().about());       // the instance's edition, or the caller's lens       // {name, title, packs, allowOnly}, or null: the full Drishti (EDITIONS.md)
+        m.put("edition", edition.edition().about());       // the instance's edition, or the caller's lens       // {name, title, packs, allowOnly}, or null: the full Drishti (LENSES.md)
         com.ash.drishti.server.engines.EngineCluster c = engines;
         m.put("engines", c == null ? null : c.about());    // the compute engines: here and in the cluster (COMPUTE_ENGINES.md section 5.2)
         return m;

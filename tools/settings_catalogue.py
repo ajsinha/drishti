@@ -125,7 +125,7 @@ AREAS = [
          "the default packs (`config/packs/default-packs.yaml`, by module), read by the server (`Editions.java`) and the console "
          "(`core/edition.py`). The site's own configuration "
          "wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console "
-         "([EDITIONS.md](EDITIONS.md))."),
+         "([LENSES.md](LENSES.md))."),
     Area("store", "The content store: `config/store/store.yaml`",
          "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),

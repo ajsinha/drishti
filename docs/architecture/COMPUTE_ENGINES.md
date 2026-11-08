@@ -19,7 +19,7 @@ Status: built (2.9.11 row 14, [the plan](IMPLEMENTATION_PLAN.md#2911-sensitiviti
 its Cluster tab. How it was built, and where it differs from the text below, is [section 17](#17-as-built). The administrator's guide is
 [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off).
 
-Companion to [EDITIONS.md](../admin/EDITIONS.md) (editions and lenses: what people may see), [USER_MANAGEMENT.md, Functions](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)
+Companion to [LENSES.md](../admin/LENSES.md) (editions and lenses: what people may see), [USER_MANAGEMENT.md, Functions](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)
 (a command switched off for everyone), [OPERATIONS.md section 18](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)
 and [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md) (Drishti\*net: nodes, capability digests, routing),
 [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the compute workers and their own file `config/compute/compute.yaml`) and
@@ -73,7 +73,7 @@ Three switches exist after this, each with its own job, and they combine:
 | Switch | Who sets it | Scope | What it decides |
 |---|---|---|---|
 | **Engine** (this design) | an administrator, per server (file or Admin → Engines) | one node | whether the engine runs on this node at all |
-| **Edition and lens** ([EDITIONS.md](../admin/EDITIONS.md)) | the site (`DRISHTI_EDITION`), or a person (lens) | every node, or one person | which commands and pages people are offered |
+| **Edition and lens** ([LENSES.md](../admin/LENSES.md)) | the site (`DRISHTI_EDITION`), or a person (lens) | every node, or one person | which commands and pages people are offered |
 | **Command switch** ([Functions](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)) | an administrator, for everyone | the whole cluster (gossip-merged) | whether one mnemonic of a pack may be used |
 
 A word is shown when **all three** allow it: an engine running somewhere in the cluster, the edition or lens offering it, and its command
@@ -381,7 +381,7 @@ Each node reads its own `config/engines/` folder, so nodes differ by design: the
   only one running an engine makes its words disappear within the failure detector's time, and come back when it returns.
 - **Admin → Engines** on any node shows the matrix of nodes × engines and changes any node's engine (section 8);
   `drishti.py server engines list --cluster` prints the same.
-- **Editions:** every member still runs the same edition ([EDITIONS.md section 8](../admin/EDITIONS.md#8-in-a-cluster)). Engines are per
+- **Editions:** every member still runs the same edition ([LENSES.md section 12](../admin/LENSES.md#12-in-a-cluster)). Engines are per
   node; editions are per cluster. An edition that hides a word hides it whatever runs.
 - **VaR sharding** is unchanged: a shard owner must run `var`; a node with `var` off is never a shard owner (it leaves the shard map as a
   draining owner does).
@@ -472,7 +472,7 @@ engine blocked at start by a missing dependency, logged), `DRS-1023` (the engine
 | 9 | `drishti.py server engines` (and `admin engines`) | S |
 | 10 | CONFIGURATION.md's Engines area and its checks | S |
 | 11 | Tests of section 13 | M |
-| 12 | Docs: OPERATIONS.md (an engines section), EDITIONS.md (the three switches), USER_MANAGEMENT.md (Functions beside engines), CLUSTER_DEPLOYMENT.md (digest and routing), each engine's guide (its file), GETTING_STARTED (the folder), a tutorial with screenshots of the page, CHANGELOG | S to M |
+| 12 | Docs: OPERATIONS.md (an engines section), LENSES.md (the three switches), USER_MANAGEMENT.md (Functions beside engines), CLUSTER_DEPLOYMENT.md (digest and routing), each engine's guide (its file), GETTING_STARTED (the folder), a tutorial with screenshots of the page, CHANGELOG | S to M |
 
 Overall **M**: the engines that are built (VaR, exposure, FRTB-SA, the in-memory lake) are moved behind the lifecycle; the engines still
 to build (sensitivities, SIMM, SA-CCR, FVA, the cubes) are written against it from the start, which costs them nothing extra.

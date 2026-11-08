@@ -37,7 +37,7 @@ and cache budgets, data versions), [DATA_GUIDE.md sections 8 and 9](../guides/DA
 expectations and the Data loads page), [OPERATIONS.md section 13](../admin/OPERATIONS.md#132-admin--health) (Health, Prometheus, the
 suggested alerts), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) (roles, tokens, the audit and access logs),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [docs/contracts/README.md](../contracts/README.md) (contracts, validation
-and rejects), [EDITIONS.md](../admin/EDITIONS.md) (lenses and editions) and [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (phone
+and rejects), [LENSES.md](../admin/LENSES.md) (lenses and editions) and [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (phone
 tiers).
 
 ## Contents
@@ -100,7 +100,7 @@ every row opens the admin page or the record behind it, where operators act.
 | **CRO and the CRO's office** | the safe-to-quote panel reads this lens's records; "why was the 7am risk late?" | the CRO lens (proposed) |
 | **Internal audit, supervisors** | reproduce the scorecard and the evidence of a quarter (time travel), read the evidence pack | none |
 
-The CIO lens is **a lens** ([EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses)): `Open Drishti CIO` from Views and Home on a full
+The CIO lens is **a lens** ([LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people)): `Open Drishti CIO` from Views and Home on a full
 instance, and the command word `CIO` (proposed) for its landing. It **reads**; it has no action of its own beyond opening the page that
 owns a row, confirming a BCBS 239 score (the data office) and generating the evidence pack.
 
@@ -157,7 +157,7 @@ owns a row, confirming a BCBS 239 score (the data office) and generating the evi
 | Cloud cost | **Not built**; a later phase (decided) | — |
 | A BCBS 239 scorecard | **Not built**; nothing in the repository mentions BCBS 239 before this document | — |
 | Ask | **Partly**: *Ask about this page* and BI's *ask the data* on the AI layer, off by default; an answer across loads, checks, audit and incidents **not built** | [AI.md section 7](../admin/AI.md#7-ask-on-the-ai-layer) |
-| Lenses and editions | **Built** | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
+| Lenses and editions | **Built** | [LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people) |
 | Phone tiers | **Design**; the phone display is proposed | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk) |
 
 **Verified in code (2026-10-31):** `ExpectationService` (`drishti-server/src/main/java/com/ash/drishti/server/loads/`) defines the six

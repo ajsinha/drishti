@@ -2168,12 +2168,12 @@ One setting turns an instance into a focused product: `drishti.edition: risk` (`
 help, Admin pages, BI datasets and branding. The console learns it from the server. Blank is the full Drishti.
 
 - **Set it on every server** of a cluster, then restart: Admin → Net warns when members run different editions. The stack, Docker and ECS
-  steps are in [EDITIONS.md](EDITIONS.md#1-run-an-instance-as-drishti-risk).
+  steps are in [LENSES.md](LENSES.md#2-run-a-whole-instance-as-one-lens).
 - **Check it**: `curl -s http://<server>/public/about` answers `"edition": {"name": "risk", ...}`.
 - **Adjust it** in the site's configuration (`drishti.edition-spec.*` on the server, `edition:` in the console), without editing the file.
 - **A lens** (`drishti.lenses: risk` on a full instance) lets each person open Drishti Risk for their own session, with no restart; it hides,
   it does not secure.
-- **White-label**: the checklist is in [EDITIONS.md section 6](EDITIONS.md#white-labelling-checklist).
+- **White-label**: the checklist is in [LENSES.md section 10](LENSES.md#white-labelling-checklist).
 
 ## 13. Monitoring
 
@@ -4157,7 +4157,7 @@ itself):
 | Regulatory reports | `config/reports/banking/` (`drishti.regulatory.reports-dir`) |
 | Lenses | `config/lenses/<module>/<lens>.yaml` (risk, trading, market: banking; world: economy), `config/lenses/features.yaml` |
 | Token scopes | a module's own scopes and read-only POSTs come with its jar: with banking off no token can be given `risk:write` |
-| Help | a module's Help section comes with its console plugin (`plugins/banking/help.yaml`: Risk measures) |
+| Help | a module's Help section comes with its console plugin (`drishti-console/plugins/banking/help.yaml`: Risk measures) |
 
 What each module brings to the console is its `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words, pages,
 static files and the parts it adds to a core screen); the capital-markets module has none (its functions are its packs' commands).

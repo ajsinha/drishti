@@ -723,7 +723,7 @@ Data view; choosing the stress window; the lenses' own menus.**
 *Released 2026-11-01.* **Four editions; stressed and 10-day VaR; the scenario matrix; VaR that scales with the scope, not the date;
 a cluster that upgrades one member at a time; one configuration document.**
 
-- **Editions: Drishti World, Market and Trading** beside Drishti Risk ([EDITIONS](docs/admin/EDITIONS.md)): each one setting
+- **Editions: Drishti World, Market and Trading** beside Drishti Risk ([EDITIONS](docs/admin/LENSES.md)): each one setting
   (`drishti.edition: world | market | trading`), with three landings each; on a full instance the lenses (`drishti.lenses`, by default
   `risk,world,market,trading`) open any of them for a person, with no restart. Drishti Trading scopes "my" desks and books per person.
 - **VaR** ([VAR_GUIDE](docs/guides/VAR_GUIDE.md), now the one VaR document): **10-day VaR** by √10 or the sum of ten consecutive days,
@@ -761,7 +761,7 @@ a cluster that upgrades one member at a time; one configuration document.**
 *Released 2026-10-29.* **Drishti Risk with one setting; VaR sharded across servers; a parallel Java loader; servers that run for
 days.**
 
-- **Editions: Drishti Risk** ([EDITIONS_GUIDE](docs/admin/EDITIONS.md), [EDITIONS](docs/admin/EDITIONS.md#13-the-design-as-built)): one setting,
+- **Editions: Drishti Risk** ([EDITIONS_GUIDE](docs/admin/LENSES.md), [EDITIONS](docs/admin/LENSES.md#15-the-design)): one setting,
   `drishti.edition: risk` (or `DRISHTI_EDITION=risk`), turns an instance into **Drishti Risk**, VaR and exposure first: its packs
   (others refused, `DRS-1017`), its commands (others hidden from the command line, FUNC and type-ahead, `DRS-4023`; the engines still
   read every kind), its menus, help, Knowledge, Admin pages, BI datasets and models, and its name. Three landings: **Risk desk** (the

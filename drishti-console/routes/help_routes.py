@@ -36,7 +36,7 @@ def _edition(request):
 
 
 def shown(edition, guide, aliases: dict | None = None) -> bool:
-    """Whether the edition (or the person's lens) keeps a guide (EDITIONS.md › The design as built, section 5.8): its section listed (help.categories,
+    """Whether the edition (or the person's lens) keeps a guide (LENSES.md › The design): its section listed (help.categories,
     a section's id or an old name in help.yaml's aliases:), a Knowledge page or pack guide about one of its packs (help.knowledge for Knowledge
     pages, packs.enabled for pack guides), and an unlisted document only when the edition does not refuse them (help.unlisted-slugs: refuse).
     Without an edition: every guide."""

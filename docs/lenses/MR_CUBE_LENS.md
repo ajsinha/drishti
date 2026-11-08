@@ -101,7 +101,7 @@ maps, ladders, a time-travel slider, provenance on every cell) that a vendor cub
 | **Product control** | hypothetical and actual P&L against the risk-theoretical P&L, restatements, corrections | none today |
 | **Model validation** | the scenario set, proxies, NMRF, PLA statistics, the provenance of every number | none today |
 
-The MR Cube is **a lens** ([EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses)): `Open Drishti MR Cube` from Views and Home on a full
+The MR Cube is **a lens** ([LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people)): `Open Drishti MR Cube` from Views and Home on a full
 instance, and a cube **screen** (`MCUBE <GO>`, the command word the product owner chose on 2026-10-31) inside Drishti Risk, Trading and Oversight. It
 hides what a cube user does not need (Build, Studio, the World and Market packs' menus) and keeps the VaR explorer, SMAT, the
 counterparty cube and BI one click away.
@@ -1052,7 +1052,7 @@ shares the cube core built here.
 
 ### 12.1 The lens
 
-A lens is an edition file opened by one person on a full instance ([EDITIONS.md section 8 of the design as built](../admin/EDITIONS.md#8-lenses)):
+A lens is an edition file opened by one person on a full instance ([LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people)):
 the server offers it in `drishti.lenses` (on by default today: `risk,world,market,trading`), the console's **Open Drishti …** link sets the
 person's `lens` setting, and every call carries `X-Drishti-Lens` so the command line, FUNC, the type-ahead and BI follow the file
 (`drishti-console/core/edition.py`, `drishti-server/.../edition/EditionContext.java`). A lens hides; it does not secure.

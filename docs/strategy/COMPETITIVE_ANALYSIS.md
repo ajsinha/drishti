@@ -624,7 +624,7 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 - [README](../../README.md); [IMPLEMENTATION_PLAN](../architecture/IMPLEMENTATION_PLAN.md) (release table and themed releases);
   [VAR_GUIDE](../guides/VAR_GUIDE.md); [EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md);
   [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [BI_GUIDE](../guides/BI_GUIDE.md);
-  [BI_DESIGN](../architecture/BI_DESIGN.md) (gap check against Power BI); [EDITIONS](../admin/EDITIONS.md);
+  [BI_DESIGN](../architecture/BI_DESIGN.md) (gap check against Power BI); [EDITIONS](../admin/LENSES.md);
   [MOBILE_DISPLAY](../architecture/MOBILE_DISPLAY.md); [RESOURCES_AND_SCALE](../architecture/RESOURCES_AND_SCALE.md);
   [BENCHMARK](../admin/BENCHMARK.md); [AI](../admin/AI.md); [lenses](../lenses/README.md); [connectors](../connectors/CONNECTORS.md).
 

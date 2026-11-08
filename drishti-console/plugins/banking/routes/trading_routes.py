@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Trading's landings (docs/admin/EDITIONS.md › The design as built, section 14): the read-only figures of the Trader desk and Desk head, worked out
+"""Drishti Trading's landings (docs/admin/LENSES.md › The design): the read-only figures of the Trader desk and Desk head, worked out
 by plugins/banking/trading_landing.py from the servers' own answers as the person, and their "View as" choice.
 
 ``GET /api/home/trading/{part}``: ``me`` (who "my" is, and the picker's choices when the person may pick), ``valuations`` (P&L today, by
@@ -161,7 +161,7 @@ async def market_figures(request: Request, part: str):
 
 
 def _trading_landing(request, ed, offered: list[str], me, mine: dict) -> str | None:
-    """Drishti Trading: the person's trading role (desk-head, trader) picks the first landing, below their own choice (EDITIONS.md 14)."""
+    """Drishti Trading: the person's trading role (desk-head, trader) picks the first landing, below their own choice (LENSES.md section 6)."""
     role = tl.trading_role(ed, request.app.state.settings, me, mine) if ed._get("trading") else ""
     return ed.landing_by_role("trading.landing-by-role").get(role) if role else None
 
