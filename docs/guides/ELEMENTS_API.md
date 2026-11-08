@@ -7905,6 +7905,26 @@ The cursor (0-based line and column).
 
 Returns `{line: number, ch: number}`.
 
+##### `CodeEditor.insert(text)`
+
+Puts text in place of the selection (at the cursor), as if typed: a key of the page's own (Shift+Enter: a new line).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
+##### `CodeEditor.setInvalid(on)`
+
+Marks the text as not valid (aria-invalid on the input, the editor drawn as an error) or valid again: a host's own check (a formula the server could not read).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
 ##### `CodeEditor.setReadOnly(on)`
 
 Makes it read-only, or editable.
@@ -8052,7 +8072,9 @@ A lint problem.
 | `[mode='rachana']` | `('rachana'\|'yaml'\|'python'\|'text')` |  |
 | `[readOnly=false]` | `boolean` |  |
 | `[lineNumbers=true]` | `boolean` |  |
-| `[height=200]` | `number` | px |
+| `[height=200]` | `(number\|'auto')` | px, or 'auto': the editor grows with its text (a formula bar), between minHeight and maxHeight |
+| `[minHeight]` | `number` | px, with height 'auto' |
+| `[maxHeight]` | `number` | px, with height 'auto' (past it the editor scrolls) |
 | `[catalogue]` | `import('./drishti_code-text.js').CatalogueEntry[]` | the functions completion offers |
 | `[complete]` | `function({word: string, line: string, ch: number, mode: string}): (Promise&lt;Array&gt;\|Array)` | the completion hook (the server's catalogue); answers CatalogueEntry objects |
 | `[lint]` | `function(string): (Promise&lt;LintProblem[]&gt;\|LintProblem[])` | the lint hook |

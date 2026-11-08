@@ -170,6 +170,7 @@
 .di-code { display: flex; flex-direction: column; gap: 4px; }
 .di-code-box { border: 1px solid var(--d-border); border-radius: 8px; overflow: hidden; }
 .di-code-box:focus-within { border-color: var(--d-accent); }
+.di-code.di-invalid .di-code-box { border-color: var(--d-bad); }
 .di-code-fallback { width: 100%; border: 0; border-radius: 0; font-family: var(--d-font-mono); resize: vertical; }
 .di-code .CodeMirror { font-family: var(--d-font-mono); font-size: 12.5px; background: var(--d-surface); color: var(--d-ink); height: auto; }
 .di-code .CodeMirror-gutters { background: var(--d-surface-2); border-right: 1px solid var(--d-border); }

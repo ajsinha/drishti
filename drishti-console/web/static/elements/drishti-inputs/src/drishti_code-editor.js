@@ -73,7 +73,9 @@ export function ensureCodeMirror(given) {
  * @property {('rachana'|'yaml'|'python'|'text')} [mode='rachana']
  * @property {boolean} [readOnly=false]
  * @property {boolean} [lineNumbers=true]
- * @property {number} [height=200] px
+ * @property {(number|'auto')} [height=200] px, or 'auto': the editor grows with its text (a formula bar), between minHeight and maxHeight
+ * @property {number} [minHeight] px, with height 'auto'
+ * @property {number} [maxHeight] px, with height 'auto' (past it the editor scrolls)
  * @property {import('./drishti_code-text.js').CatalogueEntry[]} [catalogue] the functions completion offers
  * @property {function({word: string, line: string, ch: number, mode: string}): (Promise<Array>|Array)} [complete] the completion hook
  *   (the server's catalogue); answers CatalogueEntry objects
@@ -108,7 +110,7 @@ export class CodeEditor extends InputBase {
     this.marks = [];
     this.area = this.el('textarea', { cls: 'di-field di-code-fallback', attrs: { 'aria-label': o.label || 'Code', spellcheck: 'false', readonly: o.readOnly || null } });
     this.area.value = this.value;
-    this.area.style.height = o.height + 'px';
+    if (o.height === 'auto') { this.area.rows = 1; this.area.style.minHeight = (o.minHeight || 0) + 'px'; } else { this.area.style.height = o.height + 'px'; }
     this.area.addEventListener('input', () => { this.value = this.area.value; this.changed(); });
     this.area.addEventListener('keydown', (e) => {                                     // the page's keys before CodeMirror is in
       const name = (e.ctrlKey ? 'Ctrl-' : '') + (e.metaKey ? 'Cmd-' : '') + (e.shiftKey ? 'Shift-' : '') + (e.key === 'Escape' ? 'Esc' : e.key);
@@ -133,8 +135,15 @@ export class CodeEditor extends InputBase {
     const go = () => {
       this.area.remove();
       const cm = this.cm = CM(this.box, { value: this.value, mode: mode.cm, readOnly: o.readOnly ? true : false, lineNumbers: o.lineNumbers, gutters: ['di-lint-gutter', 'CodeMirror-linenumbers'],
-        indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: !!o.lineWrapping, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys() });
+        indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: !!o.lineWrapping, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys(),
+        viewportMargin: o.height === 'auto' ? Infinity : 10 });
       cm.setSize(null, o.height);
+      if (o.height === 'auto') {                                                       // grows with the text, scrolls past maxHeight
+        const sc = cm.getScrollerElement();
+        if (o.minHeight) { sc.style.minHeight = o.minHeight + 'px'; }
+        if (o.maxHeight) { sc.style.maxHeight = o.maxHeight + 'px'; }
+      }
+      if (this.invalid) { this.setInvalid(true); }
       const ta = cm.getInputField();
       if (ta) { ta.setAttribute('aria-label', (o.label || 'Code') + (o.readOnly ? ' (read-only)' : '')); }
       cm.on('change', (x, ch) => {
@@ -340,6 +349,32 @@ export class CodeEditor extends InputBase {
    * @returns {{line: number, ch: number}}
    */
   cursor() { if (this.cm) { const c = this.cm.getCursor(); return { line: c.line, ch: c.ch }; } const before = this.area.value.slice(0, this.area.selectionStart).split('\n'); return { line: before.length - 1, ch: before[before.length - 1].length }; }
+
+  /**
+   * Puts text in place of the selection (at the cursor), as if typed: a key of the page's own (Shift+Enter: a new line).
+   * @param {string} text
+   * @returns {void}
+   */
+  insert(text) {
+    if (this.cm) { this.cm.replaceSelection(String(text), 'end', '+input'); return; }
+    const a = this.area, at = a.selectionStart;
+    a.setRangeText(String(text), at, a.selectionEnd, 'end');
+    this.value = a.value;
+    this.changed();
+  }
+
+  /**
+   * Marks the text as not valid (aria-invalid on the input, the editor drawn as an error) or valid again: a host's own check (a
+   * formula the server could not read).
+   * @param {boolean} on
+   * @returns {void}
+   */
+  setInvalid(on) {
+    this.invalid = !!on;
+    this.host.classList.toggle('di-invalid', this.invalid);
+    const ta = this.cm ? this.cm.getInputField() : this.area;
+    if (ta) { if (this.invalid) { ta.setAttribute('aria-invalid', 'true'); } else { ta.removeAttribute('aria-invalid'); } }
+  }
 
   /**
    * Makes it read-only, or editable.
