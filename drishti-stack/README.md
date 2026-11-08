@@ -24,7 +24,7 @@ drishti-stack/status.sh      # the processes and ports, the members, the console
 drishti-stack/stop.sh        # stop everything start.sh started (by process id, never by name)
 ```
 
-Open the console at `http://<this machine's address>:17480` (start.sh prints it) and go to **Admin → Net**: the three members are alive.
+Open the console at `http://<this machine's address>:17480` (start.sh prints it) and go to **Admin → Cluster**: the three members are alive.
 
 ## What runs where
 

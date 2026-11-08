@@ -646,11 +646,11 @@ folder, or while its `node.yaml` does not say `enabled: true`, the server is a s
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `drishti.net.dir` | `./config/net` (`DRISHTI_NET_DIR`) | The folder; created on the first write (Admin → Net, `drishti.py net`). Ready-made files are in `config/net.examples/`. |
+| `drishti.net.dir` | `./config/net` (`DRISHTI_NET_DIR`) | The folder; created on the first write (Admin → Cluster, `drishti.py net`). Ready-made files are in `config/net.examples/`. |
 | `drishti.net.watch` | `auto` (`DRISHTI_NET_WATCH`) | `auto`: file events, polling as a fallback; `poll`: polling only; `off`: read at start only. |
 | `drishti.net.poll` | `5s` | How often the folder is looked at when polling (and, with events, at least this often anyway). |
 
-The files, each checked against its schema (a refused file keeps the previous settings in force and shows its error in Admin → Net):
+The files, each checked against its schema (a refused file keeps the previous settings in force and shows its error in Admin → Cluster):
 
 | File | Settings (default) |
 |---|---|
@@ -2883,7 +2883,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.modules.dir` | string | `./config/modules` | `DRISHTI_MODULES_DIR` | server | the folder of the modules' switches (config/modules/&lt;id&gt;.yaml: enabled), written by Admin -&gt; Modules; drishti.modules.&lt;id&gt;.enabled (DRISHTI\_MODULES\_&lt;ID&gt;\_ENABLED) wins over a file | restart |  | admin |
+| `drishti.modules.dir` | string | `./config/modules` | `DRISHTI_MODULES_DIR` | server | the folder of the modules' switches (config/modules/&lt;id&gt;.yaml: enabled), written by POST /api/v1/admin/modules; drishti.modules.&lt;id&gt;.enabled (DRISHTI\_MODULES\_&lt;ID&gt;\_ENABLED) wins over a file | restart |  | admin |
 | `drishti.modules.watch-seconds` | integer | `5` |  | server | how often the module and access files are compared with what was read (a change to a module takes effect at the next start; lenses and the licence at once) | restart |  | admin |
 
 #### `drishti.access`
@@ -4244,11 +4244,11 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `enabled` | boolean | `the manifest's (true)` |  | the module, on this server | false: the module is off here (Admin -&gt; Modules writes it); drishti.modules.&lt;id&gt;.enabled wins over it | restart (a module's beans, engines, jobs and API load at start) |  | admin |
+| `enabled` | boolean | `the manifest's (true)` |  | the module, on this server | false: the module is off here (POST /api/v1/admin/modules writes it); drishti.modules.&lt;id&gt;.enabled wins over it | restart (a module's beans, engines, jobs and API load at start) |  | admin |
 | `module` | map | `none` |  | the module, on this server | The module named at this site: a server without the module's jar knows it and leaves it off as not installed (its packs, lakes, tables, models and reports in its domain folders are not read); with the jar, the jar's manifest wins and this is ignored | restart (a module's beans, engines, jobs and API load at start) |  | admin |
 | `module.id` | string | `none` |  | the module, on this server | The module's id (banking) | restart (a module's beans, engines, jobs and API load at start) |  | admin |
 | `module.domain` | string | `none` |  | the module, on this server | Its domain: the folder name of its packs, lakes, tables and reports (config/packs/banking/) | restart (a module's beans, engines, jobs and API load at start) |  | admin |
-| `module.title` | string | `none` |  | the module, on this server | Its name on Admin -&gt; Modules | restart (a module's beans, engines, jobs and API load at start) |  | admin |
+| `module.title` | string | `none` |  | the module, on this server | Its name in GET /api/v1/admin/modules and in messages | restart (a module's beans, engines, jobs and API load at start) |  | admin |
 
 ### The console: `application.yaml`
 
@@ -5907,7 +5907,7 @@ The cluster folder (`drishti.net.dir`), watched while the server runs ([CLUSTER_
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
 | `url` | string | `https://drishti-a.internal:8480` |  | each member | a name or the real IP of drishti-a: never localhost, 127.x.x.x or 0.0.0.0 (refused) | live |  | admin |
-| `tags` | list | `[region:emea]` |  | each member | the tags it is expected to carry (Admin -&gt; Net warns when gossip says otherwise) | live |  | admin |
+| `tags` | list | `[region:emea]` |  | each member | the tags it is expected to carry (Admin -&gt; Cluster warns when gossip says otherwise) | live |  | admin |
 
 ### Platform alert rules: `config/alerts/platform-alerts.yaml`
 
@@ -6325,7 +6325,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_MINIO_BIN` | S3 simulator tests | none | tools | A MinIO server binary for the lake tools' S3 tests |
 | `DRISHTI_MINIO_SHA256` | S3 simulator tests | none | tools | Its expected SHA-256 |
 | `DRISHTI_MINIO_URL` | S3 simulator tests | none | tools | Where that binary is downloaded from |
-| `DRISHTI_MODULES_DIR` | `drishti.modules.dir` | `./config/modules` | server | the folder of the modules' switches (config/modules/&lt;id&gt;.yaml: enabled), written by Admin -&gt; Modules; drishti.modules.&lt;id&gt;.enabled (DRISHTI\_MODULES\_&lt;ID&gt;\_ENABLED) wins over a file |
+| `DRISHTI_MODULES_DIR` | `drishti.modules.dir` | `./config/modules` | server | the folder of the modules' switches (config/modules/&lt;id&gt;.yaml: enabled), written by POST /api/v1/admin/modules; drishti.modules.&lt;id&gt;.enabled (DRISHTI\_MODULES\_&lt;ID&gt;\_ENABLED) wins over a file |
 | `DRISHTI_MONGODB_DATABASE` | mongodb profile | `drishti` | profile | Its database |
 | `DRISHTI_MONGODB_URI` | mongodb profile | `mongodb://localhost:27017` | profile | The mongodb profile's server |
 | `DRISHTI_MR_CUBE_ENABLED` | `drishti.engines.mr-cube.enabled` (engine) | `true` | engine | run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot |

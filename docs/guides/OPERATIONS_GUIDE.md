@@ -970,8 +970,8 @@ and secrets and embedded applications declared in configuration; Python and Java
   official results and the trading, market-data, market-risk and counterparty-risk packs), **capitalmarkets** (the us-equities and funds packs)
   and **economy** (world-economy, news-and-markets and the public-sector packs: [PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md)). A module is
   on when its jar is in the server, it is licensed (`config/access/licence.yaml`; none: the development licence, every module) and enabled
-  (`config/modules/<module>.yaml`, written by Admin → Modules; `drishti.modules.<module>.enabled` or `DRISHTI_MODULES_<MODULE>_ENABLED`
-  wins), and every module it needs is on. **A change takes effect at the next start** (Admin → Modules says *restart needed*). A module that is
+  (`config/modules/<module>.yaml`, written by `POST /api/v1/admin/modules`; `drishti.modules.<module>.enabled` or `DRISHTI_MODULES_<MODULE>_ENABLED`
+  wins), and every module it needs is on. **A change takes effect at the next start** (`GET /api/v1/admin/modules` says `restartNeeded: true` until then). A module that is
   off is gone on the server and in the console: its API answers `404 DRS-1025`, its engines show *not installed*, its packs, connectors, BI
   folders (`config/bi/reports/banking/`, `config/tables/banking/`), lenses, help, pages, menus, words and static files are not offered. A single
   function (command word) is turned off for everyone in Admin → Commands (`404 DRS-1026`). Check and switch:
@@ -2949,7 +2949,7 @@ python3 tools/drishti.py lake relocate demo               # exit 0 moved (or not
 **Drishti\*net** makes several Drishti servers act as one: each server (a **node**) tells the others by gossip over HTTP which packs, kinds and data it
 serves; a request one node cannot answer is answered by another, and a person connected to any node sees the same pages. It is off by default (a server
 with no `config/net/node.yaml` saying `enabled: true` is a single server). Nodes advertise a real address (never `localhost` or `0.0.0.0`), share one
-key (`DRISHTI_NET_SECRET`), keep their clocks in step, and are watched on **Admin → Net**. Setting one up, its files, security, routing, draining, rolling
+key (`DRISHTI_NET_SECRET`), keep their clocks in step, and are watched on **Admin → Cluster**. Setting one up, its files, security, routing, draining, rolling
 upgrades, VaR sharding, the console with several servers, sizing and performance tuning, and Drishti on AWS are all in
 [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md); a cluster of three on one machine is `drishti-stack/start.sh` and [tutorial 22](../tutorials/22-a-cluster-of-three.md).
 
@@ -3307,7 +3307,7 @@ so most problems clear once the cause is fixed.
 |---|---|---|
 | Pages say `DRS-5003 backend unreachable`, with a bar *Server not reachable, retrying…* | the console cannot reach the server (not started, restarting) | nothing: the page reloads when it is back. Otherwise start the server, or correct `DRISHTI_BACKEND_URL` (`curl -s http://localhost:18480/actuator/health`; Admin → Health, `GET /healthz/backend`) |
 | `/readyz` answers 503 `{"status":"DOWN","server":"unreachable","detail":"…"}` while `/healthz` is UP | the console runs but cannot reach the server; the `detail` says why (refused, timeout, bad token) | start the server, point the console at it, same `DRISHTI_TOKEN_SECRET`; it becomes ready by itself. Probes: liveness `/healthz`, readiness `/readyz` |
-| The server's readiness is `DOWN` or `OUT_OF_SERVICE` while liveness is UP | joining a cluster, opening the VaR or exposure engine's newest date (minutes on a large lake), building a VaR shard; or drained | usually wait; Admin → Net shows what it waits for (`GET /api/v1/admin/node`: `readiness.waitingFor`, `drained`); **Undrain** or restart; a gate you do not want: `drishti.node.readiness.engines: false` (or `.joining`, `.shards`). Never point a restart check at readiness |
+| The server's readiness is `DOWN` or `OUT_OF_SERVICE` while liveness is UP | joining a cluster, opening the VaR or exposure engine's newest date (minutes on a large lake), building a VaR shard; or drained | usually wait; Admin → Cluster shows what it waits for (`GET /api/v1/admin/node`: `readiness.waitingFor`, `drained`); **Undrain** or restart; a gate you do not want: `drishti.node.readiness.engines: false` (or `.joining`, `.shards`). Never point a restart check at readiness |
 | Pages are empty and the console's log says `DRS-5010 missing bearer token` | the server has sign-in on and the console not | start the console with the variables of [2.6](#26-start-the-console) |
 | The Live button has an amber ring (*Reconnecting…*) | the stream dropped (a restart, a blip) or could not open in 10 s; the page keeps working | nothing: it reconnects; an older tab of a previous session: reload it |
 | An amber ring after the tab was in the background (*Paused while hidden*) | the tab was hidden 10 s and gave its subscriptions back | show the tab |
@@ -3504,14 +3504,14 @@ saved state; an item it cannot convert is never changed.
 ### 21.12 Drishti\*net
 
 Cluster set-up and its problems in depth are in [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md); the log names what the cluster does (`net: node ... joined`, `...
-is suspect`, `refused a call from ...`) and **Admin → Net** shows the members, files and refused calls.
+is suspect`, `refused a call from ...`) and **Admin → Cluster** shows the members, files and refused calls.
 
 | You see | Fix |
 |---|---|
-| A node will not join (no members) | Admin → Net: *Cluster on*? `node.yaml` refused (the Files tab says why)? `curl -s <seed>/api/v1/net/ping` from the node must answer `401 DRS-5051`. `enabled: true` needs `secret: ${DRISHTI_NET_SECRET}` set in the environment; the seed reachable and enabled |
+| A node will not join (no members) | Admin → Cluster: *Cluster on*? `node.yaml` refused (the Files tab says why)? `curl -s <seed>/api/v1/net/ping` from the node must answer `401 DRS-5051`. `enabled: true` needs `secret: ${DRISHTI_NET_SECRET}` set in the environment; the seed reachable and enabled |
 | `... is a loopback or wildcard address: the address this node advertises must be an address other machines can call` | members advertise a real address (`localhost`, `127.x`, `::1`, `0.0.0.0`, `::` and names resolving to them are refused): use the address the message names, or leave `advertise-url` out |
 | `refused a call from ... bad signature`; `signed 75 s away from this node's clock` | the same `DRISHTI_NET_SECRET` on every node (rotate with the previous key accepted first); NTP on every node |
-| `DRS-5052 ... cannot be reached now`, `DRS-5053 ... did not answer`; *Your selections were reset ... Pick again.*; a search partial naming a node | the node holding that data is down, drained or slow: Admin → Net → Members and Routing; start, rejoin or undrain it; **Remove** a node retired for good |
+| `DRS-5052 ... cannot be reached now`, `DRS-5053 ... did not answer`; *Your selections were reset ... Pick again.*; a search partial naming a node | the node holding that data is down, drained or slow: Admin → Cluster → Members and Routing; start, rejoin or undrain it; **Remove** a node retired for good |
 | Admin → Health says *Last administrator kept* | two administrators removed the last two at once: one was kept (audit `last-admin-kept`); make another administrator first |
 | A member flaps between alive and suspect | a slow network or long pauses: raise `suspect-after` (and `dead-after`) in `gossip.yaml`, or fix the pauses |
 
