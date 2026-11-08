@@ -27,13 +27,7 @@
     {% if stats.dropped %}<b class="t-warn">{{ stats.dropped }} events were dropped</b> because the database could not keep up.{% endif %}</p>
   {% if error %}<p class="pnl-err" role="alert">{{ error.code }} {{ error.detail }}</p>{% endif %}
   <form class="alert-form" method="get" action="/admin/access">
-    <label>Person<input name="user" class="studio-in mono" value="{{ f.user }}"></label>
-    <label>What<select name="action" class="studio-select"><option value="">anything</option>
-      {% for a in ['view', 'raw', 'history', 'search', 'export'] %}<option{% if f.action == a %} selected{% endif %}>{{ a }}</option>{% endfor %}</select></label>
-    <label>Kind<input name="kind" class="studio-in mono" value="{{ f.kind }}" placeholder="trade, or TRD for searches"></label>
-    <label>Id<input name="id" class="studio-in mono" value="{{ f.id }}"></label>
-    <label>From<input name="from" type="date" class="studio-in mono" value="{{ f['from'] }}"></label>
-    <label>Until<input name="to" type="date" class="studio-in mono" value="{{ f.to }}"></label>
+    {{ admin_form('access_filter', f=f) }}
     <button type="submit" class="btn-pill btn-accent">Show</button>
   </form>
   <div class="tbl-wrap"><table class="tbl adm-tbl">

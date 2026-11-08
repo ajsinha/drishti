@@ -32,6 +32,7 @@
       keeps the VaR and exposure hot files on disk (a rebuild reads the lake): purge <code>var.hot-files</code> or
       <code>exposure.hot-files</code> by name to delete them. From a terminal:
       <code>drishti.py server caches</code>, <code>… caches purge NAME [--date D] [--cluster]</code>, <code>… caches --dates NAME</code>.</p>
+    {{ admin_form('field', key='cluster', kind='check', title='whole cluster', hook={'data-purge-cluster': ''}, layout='inline') }}
     <label class="adm-check"><input type="checkbox" data-purge-cluster> whole cluster</label>
     <button type="button" class="btn-pill btn-ghost" data-purge="all"><i class="bi bi-trash" aria-hidden="true"></i> Purge all</button>
   </div>
@@ -60,7 +61,7 @@
       <td>{{ c.freshness or '' }}</td>
       <td class="mono">{% if c.lastPurge %}{{ c.lastPurge.at[:16] | replace('T', ' ') }} · {{ c.lastPurge.by }}{% if c.lastPurge.date %} · {{ c.lastPurge.date }}{% endif %}{% endif %}</td>
       <td class="cache-actions">{% if c.name != 'memory-budget' and c.name != 'connectors.id-maps' %}<button type="button" class="btn-pill btn-ghost" data-purge="{{ c.name }}"><i class="bi bi-trash" aria-hidden="true"></i> Purge</button>{% endif %}
-        {% if c.dates %}<span class="cache-date"><input type="date" data-purge-date-for="{{ c.name }}" aria-label="Business date to purge from {{ c.name }}"><button type="button" class="btn-pill btn-ghost" data-purge-date="{{ c.name }}">Purge a date</button></span>
+        {% if c.dates %}<span class="cache-date">{{ admin_form('field', key='date', kind='date', title='Business date to purge from ' ~ c.name, attrs={'data-purge-date-for': c.name}, layout='inline') }}<input type="date" data-purge-date-for="{{ c.name }}" aria-label="Business date to purge from {{ c.name }}"><button type="button" class="btn-pill btn-ghost" data-purge-date="{{ c.name }}">Purge a date</button></span>
         <button type="button" class="btn-pill btn-ghost" data-cache-dates="{{ c.name }}" aria-expanded="false"><i class="bi bi-calendar3" aria-hidden="true"></i> Dates</button>{% endif %}</td></tr>
       {% if c.dates %}<tr class="cache-dates-row" data-dates-of="{{ c.name }}" hidden><td colspan="8"><div data-dates-body></div></td></tr>{% endif %}
     {% else %}<tr><td colspan="8">No caches.</td></tr>{% endfor %}</tbody>

@@ -73,7 +73,92 @@ def search(*, name: str, value: str = "", title: str, placeholder: str = "", hoo
                   attrs={"data-search-fields": ""}, layout="inline", label=title)
 
 
-BUILDERS: dict[str, Callable[..., Markup]] = {"role": role, "user": user, "search": search}
+_KINDS = {"text": K.text, "area": K.area, "check": K.check, "date": K.date, "file": K.file}
+
+
+def field(*, key: str, kind: str = "text", title: str, name: str | None = None, value=None, required: bool = False, attrs: dict | None = None,
+          layout: str = "stacked", **more) -> Markup:
+    """One field on its own (a reason, a load id, a typed name to confirm, a date, a file, a box to tick): ``kind`` text, area, check, date
+    or file; the rest of the field's schema in ``more`` (``hook``, ``placeholder``, ``maxLength``, ``mono``, ``accept``)."""
+    fs = _KINDS[kind](title, name, **more)
+    empty = False if kind == "check" else ""
+    return K.host(K.schema({key: fs}, required=[key] if required else ()), {key: empty if value is None else value},
+                  attrs={"data-field-of": key, **(attrs or {})}, layout=layout, label=title)
+
+
+def access_filter(*, f: dict, **_) -> Markup:
+    """Admin › Access log's filter (a GET form): person, what, kind, id, from and until."""
+    props = {"user": K.text("Person", "user", mono=True), "action": K.select("What", "action", ["view", "raw", "history", "search", "export"], empty="anything"),
+             "kind": K.text("Kind", "kind", mono=True, placeholder="trade, or TRD for searches"), "id": K.text("Id", "id", mono=True),
+             "from": K.date("From", "from"), "to": K.date("Until", "to")}
+    value = {k: (f.get(k) or "") for k in props}
+    for k in ("from", "to"):
+        if not value[k]:
+            value.pop(k)
+    return K.host(K.schema(props), value, attrs={"data-access-fields": ""}, layout="inline", label="Filter the access log")
+
+
+def config_search(*, q: str = "", area: str = "", areas=(), **_) -> Markup:
+    """Admin › Configuration's search (a GET form): words and an area."""
+    props = {"q": K.text("Search settings", "q", format="search", hook={"data-cfe-q": ""}, placeholder="A key, an environment variable or words: confidence, DRISHTI_PORT, lens"),
+             "area": K.select("Area", "area", list(areas), empty="Every area", hook={"data-cfe-area": ""})}
+    return K.host(K.schema(props), {"q": q or "", "area": area or ""}, attrs={"data-cfe-fields": ""}, layout="inline", label="Search settings")
+
+
+def config_propose(**_) -> Markup:
+    """Admin › Configuration's Propose a change: the new value and why (a second administrator approves it; the page posts JSON)."""
+    props = {"value": K.text("New value", "value", maxLength=2000, hook={"data-dlg-value": ""}),
+             "reason": K.area("Why (the approver reads it)", "reason", rows=3, maxLength=500, hook={"data-dlg-reason": ""})}
+    return K.host(K.schema(props, required=["value"]), {"value": "", "reason": ""}, attrs={"data-propose-fields": ""}, label="Propose a change")
+
+
+CONNECTOR_STATES = [("RUNNING", "Running"), ("DISABLED", "Disabled"), ("OFFLINE", "Off (offline mode)"), ("FAILED", "Failed"), ("problem", "With a problem")]
+CONNECTOR_ORIGINS = [("file", "File"), ("pack", "Pack"), ("application", "application.yaml")]
+ARTIFACT_KINDS = [("pack", "Packs"), ("connector", "Connectors"), ("table", "BI tables"), ("model", "BI models"), ("report", "BI reports"), ("board", "BI boards"),
+                  ("notebook", "BI notebooks"), ("python", "BI Python items")]
+ARTIFACT_STATES = [("on", "On"), ("off", "Disabled"), ("problem", "With a problem"), ("not loaded", "Not loaded")]
+ARTIFACT_ORIGINS = [("shipped", "Shipped"), ("archive", "Archive"), ("file", "File"), ("ui", "Console"), ("template", "Pack template"), ("application", "application.yaml")]
+
+
+def connector_filters(**_) -> Markup:
+    """Admin › Connectors' list filters (the page's script filters the rows as they change)."""
+    props = {"q": K.text("Filter the connectors", None, format="search", hook={"data-filter": ""}, placeholder="Filter by name, plugin, kind or pack"),
+             "state": K.select("Show connectors in state", None, CONNECTOR_STATES, empty="Any status", hook={"data-state-filter": ""}),
+             "origin": K.select("Show connectors from", None, CONNECTOR_ORIGINS, empty="Any origin", hook={"data-origin-filter": ""})}
+    return K.host(K.schema(props), {"q": "", "state": "", "origin": ""}, attrs={"data-filter-fields": ""}, layout="inline", label="Filter the connectors")
+
+
+def artifact_filters(**_) -> Markup:
+    """Admin › Artifacts' list filters."""
+    props = {"q": K.text("Filter the artifacts", None, format="search", hook={"data-filter": ""}, placeholder="Filter by name, title or problem"),
+             "kind": K.select("Show", None, ARTIFACT_KINDS, empty="All kinds", hook={"data-kind-filter": ""}),
+             "state": K.select("Status", None, ARTIFACT_STATES, empty="Any status", hook={"data-state-filter": ""}),
+             "origin": K.select("Origin", None, ARTIFACT_ORIGINS, empty="Any origin", hook={"data-origin-filter": ""})}
+    return K.host(K.schema(props), {"q": "", "kind": "", "state": "", "origin": ""}, attrs={"data-filter-fields": ""}, layout="inline", label="Filter the artifacts")
+
+
+def artifact_bi_file(**_) -> Markup:
+    """Admin › Artifacts' Install a BI file: the file, and Replace (shown when a file of that name is there)."""
+    props = {"file": K.file("Choose a file", None, accept=".yaml,.yml", hook={"data-bi-file": ""}),
+             "replace": K.check("Replace the file that is there (it is archived first)", None, hook={"data-bi-replace": ""}, when={"field": "exists", "equals": True})}
+    return K.host(K.schema(props), {"replace": False, "exists": False}, attrs={"data-bi-fields": ""}, label="A BI file")
+
+
+def busy_override(*, max_minutes: int = 240, **_) -> Markup:
+    """Admin › Health's busy protection override: the mode, a reason and how long (the page's script posts them)."""
+    minutes = [m for m in (15, 30, 60, 120, 240) if m <= max_minutes] or [15]
+    props = {"mode": K.radios("Override", "busy-mode", [("automatic", "Automatic"), ("open", "Let everything through"), ("hold", "Hold all new heavy work")],
+                              hook={"class": "busy-modes"}),
+             "reason": K.text("Reason", None, maxLength=300, hook={"data-busy-reason": ""}, placeholder='required, e.g. "month-end sign-off, CRO approved"'),
+             "minutes": K.select("Ends after", None, [(str(m), f"{m} minutes") for m in minutes], hook={"data-busy-minutes": ""})}
+    return K.host(K.schema(props), {"mode": "automatic", "reason": "", "minutes": "30" if 30 in minutes else str(minutes[0])},
+                  attrs={"data-busy-fields": ""}, layout="inline", label="Operator override")
+
+
+BUILDERS: dict[str, Callable[..., Markup]] = {
+    "role": role, "user": user, "search": search, "field": field, "access_filter": access_filter, "config_search": config_search,
+    "config_propose": config_propose, "connector_filters": connector_filters, "artifact_filters": artifact_filters, "artifact_bi_file": artifact_bi_file,
+    "busy_override": busy_override}
 
 
 def admin_form(form: str, /, **kw) -> Markup:

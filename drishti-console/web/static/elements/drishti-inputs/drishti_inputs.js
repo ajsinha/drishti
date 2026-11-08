@@ -2797,8 +2797,12 @@
       try { spec = JSON.parse(host.getAttribute('data-schema') || 'null'); } catch (e) { spec = null; }
       if (!spec || !spec.schema) { return null; }
       const opts = Object.assign({ embedded: true }, spec.options || {}, extra || {}, { schema: spec.schema, value: spec.value });
-      host.diForm = new Form(host, opts);
-      return host.diForm;
+      const form = host.diForm = new Form(host, opts);
+      const outer = opts.embedded && host.closest ? host.closest('form') : null;
+      if (outer && opts.checkOnSubmit !== false) {               // the page's form is not sent while a field has a problem (a native control's required did that)
+        outer.addEventListener('submit', (e) => { if (!form.validate().ok) { e.preventDefault(); e.stopImmediatePropagation(); form.focusField(Object.keys(form.errors)[0]); } }, true);
+      }
+      return form;
     }
     function upgradeForms(root) {
       if (!root || !root.querySelectorAll) { return []; }

@@ -122,7 +122,7 @@
     <div class="ds-head"><h2 id="cmpDecideTitle"><span data-decide-verb>Approve</span> <span class="mono" data-decide-id></span></h2>
       <button type="button" class="btn-pill btn-ghost" data-close aria-label="Close without deciding">Close</button></div>
     <p class="text-muted-d" data-decide-help></p>
-    <label>Reason (recorded in the audit log)<textarea class="studio-in" rows="3" maxlength="1000" data-decide-reason required></textarea></label>
+    {{ admin_form('field', key='reason', kind='area', title='Reason (recorded in the audit log)', maxLength=1000, rows=3, hook={'data-decide-reason': ''}) }}
     <p class="adm-msg" data-decide-msg role="status" aria-live="polite"></p>
     <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-ghost" data-close>Cancel</button>
       <button type="button" class="btn-pill btn-accent" data-decide-go>Approve</button></div>

@@ -33,7 +33,7 @@
   function problem(b, fallback) { return (b.code ? b.code + ' ' : '') + (b.detail || fallback); }
 
   // ---- revoke (a request is approved or rejected in the one Approvals queue) ----------------------------------------------
-  var dlg = $('[data-decide-dialog]'), reason = $('[data-decide-reason]'), dmsg = $('[data-decide-msg]'), go = $('[data-decide-go]');
+  var dlg = $('[data-decide-dialog]'), RF = window.Drishti.elements.inputs.formOf(dlg.querySelector('[data-field-of=reason]')), reason = { get value() { return String(RF.getField('reason') || ''); }, focus: function () { RF.focusField('reason'); } }, dmsg = $('[data-decide-msg]'), go = $('[data-decide-go]');
   var HELP = {
     revoke: 'New requests are refused at once; running ones finish. Connectors that need these items stop.'
   };
@@ -47,7 +47,7 @@
       $('[data-decide-id]').textContent = current.id;
       $('[data-decide-help]').textContent = HELP[current.verb];
       go.textContent = label;
-      reason.value = '';
+      RF.setValue({ reason: '' });
       say(dmsg, '');
       show(dlg);
       reason.focus();

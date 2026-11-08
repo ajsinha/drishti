@@ -15,7 +15,8 @@
  */
 /* A form the server drew as a schema: an element with data-di-form and data-schema ({schema, value, options}) becomes a Form, embedded by
    default (its named fields submitted by the page's own <form>, or read by the page's script through the Form). The server builds the
-   schema (core/form_kit.py), so a page has no controls of its own; its script asks formOf(host) for the Form, whichever runs first. */
+   schema (core/form_kit.py), so a page has no controls of its own; its script asks formOf(host) for the Form, whichever runs first. An
+   embedded Form stops its page form's submit while a field has a problem (checkOnSubmit: false leaves that to the page). */
 import { Form } from './drishti_form.js';
 
 /** The attribute that marks a form host. */
@@ -34,8 +35,12 @@ export function formOf(host, extra) {
   try { spec = JSON.parse(host.getAttribute('data-schema') || 'null'); } catch (e) { spec = null; }
   if (!spec || !spec.schema) { return null; }
   const opts = Object.assign({ embedded: true }, spec.options || {}, extra || {}, { schema: spec.schema, value: spec.value });
-  host.diForm = new Form(host, opts);
-  return host.diForm;
+  const form = host.diForm = new Form(host, opts);
+  const outer = opts.embedded && host.closest ? host.closest('form') : null;
+  if (outer && opts.checkOnSubmit !== false) {               // the page's form is not sent while a field has a problem (a native control's required did that)
+    outer.addEventListener('submit', (e) => { if (!form.validate().ok) { e.preventDefault(); e.stopImmediatePropagation(); form.focusField(Object.keys(form.errors)[0]); } }, true);
+  }
+  return form;
 }
 
 /**

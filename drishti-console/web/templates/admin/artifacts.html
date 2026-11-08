@@ -39,17 +39,7 @@
     <p data-summary>{{ counts.pack }} pack{{ '' if counts.pack == 1 else 's' }}, {{ counts.connector }} connector{{ '' if counts.connector == 1 else 's' }}, {{ counts.bi }} BI file{{ '' if counts.bi == 1 else 's' }}.
       {% if attention %}<span class="t-warn">{{ attention }} with a problem.</span>{% endif %}</p>
     <div class="adm-bar">
-      <input class="studio-in" type="search" data-filter placeholder="Filter by name, title or problem" aria-label="Filter the artifacts" autocomplete="off">
-      <label class="visually-hidden" for="artKind">Show</label>
-      <select class="studio-in" id="artKind" data-kind-filter>
-        <option value="">All kinds</option><option value="pack">Packs</option><option value="connector">Connectors</option>
-        <option value="table">BI tables</option><option value="model">BI models</option><option value="report">BI reports</option><option value="board">BI boards</option><option value="notebook">BI notebooks</option><option value="python">BI Python items</option></select>
-      <label class="visually-hidden" for="artState">Status</label>
-      <select class="studio-in" id="artState" data-state-filter>
-        <option value="">Any status</option><option value="on">On</option><option value="off">Disabled</option><option value="problem">With a problem</option><option value="not loaded">Not loaded</option></select>
-      <label class="visually-hidden" for="artOrigin">Origin</label>
-      <select class="studio-in" id="artOrigin" data-origin-filter>
-        <option value="">Any origin</option><option value="shipped">Shipped</option><option value="archive">Archive</option><option value="file">File</option><option value="ui">Console</option><option value="template">Pack template</option><option value="application">application.yaml</option></select>
+      {{ admin_form('artifact_filters') }}
     </div>
     <div class="tbl-wrap"><table class="tbl adm-tbl" data-list data-plain>
       <caption class="visually-hidden">Installed packs, connectors and BI files</caption>
@@ -84,9 +74,8 @@
         <a class="btn-pill btn-ghost" href="/admin/connectors">Open Connectors, then New connector</a></section>
       <section class="art-card" data-bi-install><h3>A BI file</h3>
         <p class="text-muted-d">A table, model, report, board, notebook or Python item as <span class="mono">&lt;name&gt;.&lt;kind&gt;.yaml</span>. It is checked and its impact shown first; then it is placed: a table or model in <span class="mono">config/tables/&lt;domain&gt;</span>, the rest in <span class="mono">config/bi</span>. A dataset file in BI's old form is refused (<span class="mono">DRS-9196</span>): migrate it with <span class="mono">drishti.py tables migrate</span> first.</p>
-        <label class="art-file">Choose a file <input type="file" accept=".yaml,.yml" data-bi-file></label>
+        {{ admin_form('artifact_bi_file') }}
         <div data-bi-result aria-live="polite"></div>
-        <label class="chk" data-bi-replace-row hidden><input type="checkbox" data-bi-replace> Replace the file that is there (it is archived first)</label>
         <button type="button" class="btn-pill btn-accent" data-bi-place hidden>Place it</button></section>
     </div>
   </div>

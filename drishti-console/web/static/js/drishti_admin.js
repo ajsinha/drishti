@@ -187,9 +187,9 @@
     var bd = e.target.closest('[data-purge-date]');
     if (bd) {
       var name = bd.getAttribute('data-purge-date');
-      var input = root.querySelector('[data-purge-date-for="' + name + '"]');
-      if (!input || !input.value) { status.textContent = 'Choose the business date to purge from ' + name + ' first.'; if (input) { input.focus(); } return; }
-      purge(bd, name, input.value);
+      var DF = window.Drishti.elements.inputs.formOf(root.querySelector('[data-purge-date-for="' + name + '"]')), day = DF && DF.getField('date');
+      if (!day) { status.textContent = 'Choose the business date to purge from ' + name + ' first.'; if (DF) { DF.focusField('date'); } return; }
+      purge(bd, name, day);
       return;
     }
     var dl = e.target.closest('[data-cache-dates]');
