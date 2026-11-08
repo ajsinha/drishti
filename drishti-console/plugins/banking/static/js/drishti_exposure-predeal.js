@@ -83,7 +83,7 @@
         S.sets[n.id] = cp.id;
       });
     });
-    return { type: "object", title: "The trade", order: ["counterparty", "nettingSet", "method", "like", "assetClass", "maturity", "notional", "side", "mtm"],
+    return { type: "object", order: ["counterparty", "nettingSet", "method", "like", "assetClass", "maturity", "notional", "side", "mtm"],
       required: ["counterparty", "method"], properties: {
         counterparty: { type: "string", title: "Counterparty", widget: "select", hook: "pd-counterparty", enum: cps.map(function (c) { return c.id; }),
           enumLabels: cps.map(function (c) { return c.id + (c.label && c.label !== c.id ? " · " + c.label : "") + " · peak PFE " + money(c.peakPfe)
@@ -208,6 +208,16 @@
     fillForm(a);
   }
 
+  /** A grid's Explain hook: the server's explanation of the check (the one Explain, kind predeal) in the grid's own pane, in words. */
+  function explainHook(measureOf) {
+    return function (ctx) {
+      if (!window.Drishti.Explain || !S.answer) return "Explain needs a check first.";
+      return window.Drishti.Explain.ask(req(measureOf(ctx)), "formula").then(function (x) {
+        return [x.title || "", x.preview || ""].concat((x.formula && x.formula.lines) || []).filter(Boolean).join("\n");
+      });
+    };
+  }
+
   function req(measure) {
     var r = { kind: "predeal", measure: measure, command: S.answer.command };
     if (S.answer.businessDate) r.date = S.answer.businessDate;
@@ -255,8 +265,7 @@
       .concat((lim.buckets || []).map(function (b) { return Object.assign({ id: "b:" + b.bucket, what: "bucket " + b.bucket }, b); }));
     var m = function (f, h) { return R.figureColumn(f, h, { format: money, width: 96 }); };
     var p = function (f, h) { return R.figureColumn(f, h, { format: pct, width: 84 }); };
-    R.riskGrid(host, { title: "The limit and its buckets", rows: rows, getRowId: function (r) { return r.id; },
-      getRowData: function (r) { return { state: r.status }; },
+    R.riskGrid(host, { title: "The limit and its buckets", rows: rows, fitRows: rows.length, explain: explainHook(function () { return "headroom"; }), getRowId: function (r) { return r.id; },
       columns: [R.textColumn("what", "Limit", { width: 180, pinned: "left" }), m("limit", "Limit"), m("before", "Before"), m("after", "With the trade"),
         R.figureColumn("increment", "Increment", { format: signed, width: 96 }), p("useBefore", "Use before"), p("useAfter", "Use after"),
         R.figureColumn("headroomAfter", "Headroom", { format: money, width: 96, tone: function (v) { return v < 0 ? "bad" : null; } }),
@@ -283,13 +292,14 @@
     var figs = [["peakPfe", "Peak PFE " + q], ["epe", "EPE"], ["eepe", "EEPE"], ["peakEe", "Peak EE"], ["ce", "CE (today)"], ["ead", "EAD (IMM)"]]
       .filter(function (f) { return w[f[0]] !== undefined || base[f[0]] !== undefined; })
       .map(function (f) { return { id: f[0], figure: f[1], current: base[f[0]], with: w[f[0]], incremental: inc[f[0]] }; });
-    R.riskGrid($("[data-pd-compare]"), { title: "Current and with the trade", rows: figs, getRowId: function (r) { return r.id; },
+    R.riskGrid($("[data-pd-compare]"), { title: "Current and with the trade", rows: figs, fitRows: figs.length,
+      explain: explainHook(function (ctx) { return ctx.rowId === "ead" ? "ead" : "increment"; }), getRowId: function (r) { return r.id; },
       columns: [R.textColumn("figure", "Figure", { width: 120, pinned: "left" }), R.figureColumn("current", "Current", { format: money, width: 100 }),
         R.figureColumn("with", "With the trade", { format: money, width: 110 }),
         R.figureColumn("incremental", "Incremental", { format: signed, width: 100, tone: function (v) { return v > 0 ? "warn" : v < 0 ? "good" : null; } })] });
-    $("[data-pd-method]").textContent = a.method ? (a.method.name || a.method.id) + ": " + (a.method.text || "") : "";
+    $("[data-pd-method-note]").textContent = a.method ? (a.method.name || a.method.id) + ": " + (a.method.text || "") : "";
     $("[data-pd-saccr]").textContent = a.saCcr ? a.saCcr.note || "" : "";
-    R.riskGrid($("[data-pd-tenor]"), { title: "By tenor", rows: rows, getRowId: function (r) { return r.id; },
+    R.riskGrid($("[data-pd-tenor]"), { title: "By tenor", rows: rows, fitRows: Math.min(rows.length, 40), explain: explainHook(function () { return "increment"; }), getRowId: function (r) { return r.id; },
       columns: [R.textColumn("tenor", "Tenor", { width: 70, pinned: "left" }), R.figureColumn("eeBase", "EE before", { format: money, width: 100 }),
         R.figureColumn("ee", "EE with", { format: money, width: 100 }), R.figureColumn("pfeBase", "PFE before", { format: money, width: 100 }),
         R.figureColumn("pfe", "PFE with", { format: money, width: 100 }),
