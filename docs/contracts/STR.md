@@ -272,7 +272,7 @@ sensitivity method, nets its sensitivities once and dots them with each scenario
 
 ## 8. Scopes
 
-Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets) and its planned words, plus `INDEX:` and `TRDR:`
+Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets) and its planned words, plus `INDEX:` and `TRDR:`
 ([TRADING_GROUPINGS.md](TRADING_GROUPINGS.md#81-words-added-proposed)). Everything in STR is additive over trades for a fixed scenario;
 only the worst-scenario and limit-use figures are taken after the sum.
 

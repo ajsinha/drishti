@@ -51,9 +51,9 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 - where the VaR inputs live (one P&L vector of 509 scenario days per live trade) and how a date is loaded;
 - what VaR, ES, component, incremental VaR and diversification mean on real numbers, and that components add up;
 - how to drill from the bank to a trade, and how longs and shorts net in a position;
-- the scope grammar: nodes, positions, trades, portfolios, rules, with `+`, `-` and `&`;
+- the scope grammar: nodes, positions, trades, system baskets, rules, with `+`, `-` and `&`;
 - how positions are derived by the pack's rules, never delivered;
-- baskets, captures and compare; the history, the traffic light, Kupiec's and Christoffersen's tests;
+- baskets, captures and compare; system baskets, the bank's own (create one; export and import them as YAML); the history, the traffic light, Kupiec's and Christoffersen's tests;
 - the memory tiers: the date's memory-mapped hot file, float32 rows summed in float64;
 - VaR as a kind (`VRES`) and a pre-deal what-if: what a hedge does to a desk;
 - a hierarchy built from the trades' own columns: the limit letters, a letter holding part of a book.
@@ -79,7 +79,7 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 
 Value at risk answers *how much could this lose in a day, and where does that loss come from?* In this part you build the market-risk
 pack's VaR data into a lake, open the bank's VaR, drill down to one trade without a page load, read the P&L path and the contributions,
-write your own scopes (a desk minus a book plus a portfolio; a rule), see how Drishti derives positions, save a basket and capture it,
+write your own scopes (a desk minus a book plus a system basket; a rule), see how Drishti derives positions, save a basket and capture it,
 read the history and the backtest, look at how the date sits in memory and on disk, read VaR as an ordinary computed kind, and ask the
 what-if what a hedge would do, then read the bank over ten days and at another confidence. Each step shows the UI, the command line (`drishti.py var …`) and the YAML behind it, with real
 output from the committed test data. Everything else about VaR (every measure, column, setting, endpoint and error code, the data
@@ -88,12 +88,12 @@ that go further.
 
 ## Step 1 · Build the VaR data and open the bank
 
-**From the command line.** Build the four VaR tables into the lake on the test data's own date (2026-09-30), so your numbers are the
+**From the command line.** Build the VaR tables into the lake on the test data's own date (2026-09-30), so your numbers are the
 ones below (`--as-of today`, the default, moves the date to your today and trades that have matured since drop out):
 
 ```bash
 python3 tools/drishti.py lake demo --as-of data \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/portfolio,market-risk/var-limit
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
 Start the server and console (tutorial 1, Part A), then ask for the bank:
@@ -276,12 +276,12 @@ least: its worst days are not the desk's.
 
 **Further in the guide:** [section 2](../guides/VAR_GUIDE.md#2-the-measures-with-worked-numbers) (the measures by hand), [section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts) (the decomposition).
 
-## Step 5 · Your own scope: nodes, portfolios, rules
+## Step 5 · Your own scope: nodes, system baskets, rules
 
 **In the UI: Construct your basket.** On the rates desk, click **+ basket** on its row in the tree (point at the row to see it): the
-basket's sheet opens at the top, a column per kind of part (Trade, Position, Portfolio, Book, Desk, Limit letter, Counterparty) and the
+basket's sheet opens at the top, a column per kind of part (Trade, Position, System basket, Book, Desk, Limit letter, Counterparty) and the
 **Op** column (+ or −), with `DESK-RATES` in the Desk column. Type `pf usd` in **Find and add** above it: the engine's hints list *PORT ·
-PF-USD-RATES · USD rates exposure*, its trades and its VaR alone; **Enter** puts it in the Portfolio column. Click **Take away (−)**, type
+PF-USD-RATES · USD rates exposure*, its trades and its VaR alone; **Enter** puts it in the System basket column. Click **Take away (−)**, type
 `book-rates-1` and **Enter**: the book lands in the Book column on a row marked **−**. Or paste: copy a column of trade ids from Excel,
 click the first free cell of the Trade column and press **Ctrl+V**; the ids fill downward, and a leading `-` on an id takes it away.
 
@@ -292,7 +292,7 @@ drops the red cells. **Open without saving** moves the explorer to it: *unsaved 
 lives on the VaR page: **+ New basket** in the toolbar above the figures (or **Alt+B**) opens it, collapsed until then; what it holds stays
 in your browser.
 
-![Construct your basket: the rates desk from its row in the tree, the USD rates portfolio from the hints, a book taken away on a − row; every cell checked and the basket's VaR, ES, sum of the parts and diversification under the sheet](img/t25/06-basket.jpg)
+![Construct your basket: the rates desk from its row in the tree, the USD rates system basket from the hints, a book taken away on a − row; every cell checked and the basket's VaR, ES, sum of the parts and diversification under the sheet](img/t25/06-basket.jpg)
 
 The server composes the scope from the sheet's columns: `DESK:DESK-RATES + PORT:PF-USD-RATES - BOOK:BOOK-RATES-1`, the parts added,
 then those taken away. **Start from the whole bank** (the checkbox above the sheet) makes the basket the bank and the rows refine it:
@@ -335,7 +335,7 @@ drishti: the server said 400 DRS-5001: DRS-5001 DESK: names nothing
 **You should see** that the rates desk without the swap `MX-30000121` has a VaR of 74,720,890, 87,210 more than with it: that one swap
 hedges the desk (its incremental VaR is −87,210).
 
-**Further in the guide:** [section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets) (scopes, portfolios and baskets).
+**Further in the guide:** [section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets) (scopes, system baskets and baskets).
 
 ## Step 6 · Positions are derived, never delivered
 
@@ -385,9 +385,9 @@ private; name users or roles in *Share read-only with* to share it). The basket 
 `VAR SCOPE BASKET:<you>/rates-mix`, the sheet collapses, and the basket is listed in the toolbar's **My baskets** drop-down (press **M**,
 or click it; type `mix` to find it) under *Mine*, with **Edit** and **Delete**; its button now reads *rates-mix*. **Edit** (or choosing
 it in My baskets, a link, `VAR SCOPE rates-mix <GO>`, then **+ New basket**) loads it back into the sheet, column by column; the sheet
-reads *saved basket · \<you>/rates-mix*; change a cell and **Save as version 2** keeps its name as a new version. The bank's portfolios
-are in **System baskets** (press **B**; type `usd` for *USD rates*): each has **Edit a copy** instead, as it is the bank's, so its parts
-open as your own unsaved basket. Then the **Captured results** tab, a note, **Capture VaR**, and **Compare with now**:
+reads *saved basket · \<you>/rates-mix*; change a cell and **Save as version 2** keeps its name as a new version. The bank's own
+baskets are in **System baskets** (press **B**; type `usd` for *USD rates*): each has **Edit a copy** instead, as it is the bank's, so its
+parts open as your own unsaved basket (changing the bank's own is step 7a). Then the **Captured results** tab, a note, **Capture VaR**, and **Compare with now**:
 
 ![A capture of the FX desk compared with now](img/t25/07-capture.jpg)
 
@@ -412,15 +412,137 @@ $ drishti.py var compare CAP-20260930-89
 (the content store numbers them). The basket opens anywhere as `BASKET:rita/rates-short`, or `VAR SCOPE
 rates-short <GO>`. `drishti.py var baskets` lists what *My baskets* shows (yours and those shared with you).
 
-**In YAML.** The two drop-downs have no setting of their own. *System baskets* are the bank's portfolios: the market-risk pack's
-`portfolio` feed (`data/testdata/market-risk/portfolio/portfolio.<date>.jsonl.gz` in the demo, one record a portfolio: `PORTFOLIO_ID`, `NAME`,
-`OWNER`, `TYPE`, `DEFINITION`), loaded into the lake and read through its connector like every VaR input; *My baskets* are the content
-store's `var/baskets/<owner>/<name>.json`.
+**In YAML.** The two drop-downs have no setting of their own. *System baskets* are the bank's own baskets, kept in the content store's
+system scope (`var/system-baskets/<ID>.json`; the demo's imported once from the market-risk pack's seed, step 7a); *My baskets* are the
+content store's `var/baskets/<owner>/<name>.json`. Neither is data: nothing about them is loaded into the lake.
 
 **You should see** the shorts alone with a VaR of 282.4 million, nearly four times the desk's 74.6 million: the desk's longs hedge them.
 A capture never changes: restate the batch and it still reopens with these numbers.
 
 **Further in the guide:** [section 5.8](../guides/VAR_GUIDE.md#58-baskets) (baskets), [section 6](../guides/VAR_GUIDE.md#6-captures-and-compare) (captures and compare).
+
+## Step 7a · Create a system basket
+
+The 28 system baskets you met in **System baskets** (`PORT:PF-USD-RATES`, `PORT:PF-RATES-DESK`, …) are the bank's own baskets, kept in
+Drishti's basket store beside your baskets, never read from data: the demo's came from the market-risk pack's seed file at the first
+start. Making or changing one needs the permission **`var:system-baskets`** (every administrator holds it; give it to a role in
+**Admin → Roles**: tick *VaR system baskets* under **Permissions**). Here you make one of the rates desk's trades as the bank's.
+
+**In the UI.** As an administrator (or with a role that holds the permission), open **+ New basket**: under the sheet sits a section
+**System basket** that other people do not see. Paste three of the rates desk's trade ids into the Trade column (as in step 5), then fill
+**Id** `PF-RATES-TOP3`, **Name** `Rates top three`, **Description** `The desk's three largest swaps`, leave **Owner** empty (you), keep
+**Type** *Basket: the sheet's positions and trades*, set **Rolls up to** *desk* and `DESK-RATES`, and **Valid from** `2026-01-02`. Click
+**Save system basket**: *Saved the system basket PF-RATES-TOP3 (version 1, TRD:…): everyone's PORT:PF-RATES-TOP3.* It is in **System
+baskets** at once (press **B**, type `top3`), for everyone who may open VaR; `PORT PF-RATES-TOP3 <GO>` opens its page.
+
+A **hierarchy** one is a node (choose *Hierarchy: one node* and type `MGMT~DESK-FX`, or leave the node empty with only `DESK-FX` in the
+Desk column); a **rule** one is a condition (choose *Rule* and type `CURRENCY == 'GBP' and DIRECTION == 'SHORT'`). To change a system
+basket, choose it in **System baskets** and click **Edit a copy**: the System basket section fills with it (*Editing the system basket
+PF-USD-RATES (version 1)*), and **Save system basket** saves its next version; **Retire** ends it on a date (it stays for the dates
+before). Someone without the permission sees only the copy, saved as their own basket.
+
+Save one with a node no hierarchy holds (`MGMT~DESK-NOPE`) and the server says why, nothing saved: *PF-X: the node MGMT~DESK-NOPE is not a
+node of a hierarchy on 2026-09-30* (`422 DRS-5220`). Every save is in **Admin → Audit** as `var-system-basket-create` or
+`var-system-basket-edit`, and when you change one someone else owns, its owner gets an inbox notice.
+
+**From the command line**, the same basket from a YAML file (import shows the difference first; `--apply` writes it):
+
+```yaml
+# rates-top3.yaml: the form drishti.py var baskets export --scope system writes
+system-baskets:
+  - id: PF-RATES-TOP3
+    name: Rates top three
+    description: The desk's three largest swaps
+    owner: rita
+    type: basket
+    members: [{trade: MX-20000086}, {trade: MX-20000055}, {trade: MX-20000049}]
+    rolls-up-to: {kind: desk, id: DESK-RATES}
+    valid-from: '2026-01-02'
+```
+
+```text
+$ drishti.py var baskets import rates-top3.yaml
+  add     PF-RATES-TOP3
+1 to add, 0 to change, 0 the same, 0 invalid; 28 in Drishti not in the file, kept as they are (checked on 2026-09-30)
+nothing written: --apply writes the changes
+$ drishti.py var baskets import rates-top3.yaml --apply
+  add     PF-RATES-TOP3  (version 1)
+1 to add, 0 to change, 0 the same, 0 invalid; 28 in Drishti not in the file, kept as they are (checked on 2026-09-30)
+written: every change above (audited)
+$ drishti.py var show PORT:PF-RATES-TOP3
+VAR PORT:PF-RATES-TOP3  ·  Rates top three  ·  portfolio  ·  2026-09-30
+  ...
+```
+
+Without the permission the import answers `403` *… does not hold the permission var:system-baskets*.
+
+**In YAML.** There is no YAML home for system baskets: the file above is only a way in (and `export` a way out). Their VaR limit is a
+row of [`var-limit`](../contracts/samples/market-risk.md#var-limit) of hierarchy `PORTFOLIO` whose `NODE_ID` is the basket's id; the
+permission is a role's `permissions:` list:
+
+```yaml
+# config/application.yaml (a role of your own, or Admin -> Roles -> Permissions)
+drishti:
+  security:
+    roles:
+      market-risk-control:
+        kinds: ["*"]
+        permissions: [var:system-baskets]
+```
+
+**You should see** `PF-RATES-TOP3` in **System baskets** for every user, its page under `PORT PF-RATES-TOP3 <GO>`, and two audit entries:
+your create, and the import's `var-system-basket-import`.
+
+**Further in the guide:** [section 5.7](../guides/VAR_GUIDE.md#57-system-baskets) (system baskets: the fields, the checks, the permission).
+
+## Step 7b · Export and import the system baskets
+
+**From the command line.** Export every system basket (retired ones too) as the import file, change it, look at the difference, then
+write it:
+
+```text
+$ drishti.py var baskets export --scope system > baskets.yaml
+$ head -12 baskets.yaml
+# The VaR engine's system baskets (VAR_GUIDE.md section 5.7), exported 2026-11-08T18:02:11Z.
+# Import: drishti.py var baskets import <this file> (a diff first; --apply writes; needs the permission var:system-baskets).
+system-baskets:
+- id: PF-ASHA-UNWIND
+  name: Unwind candidates (Asha)
+  description: ""
+  owner: asha
+  type: basket
+  members:
+  - position: POS-BOOK-RATES-1~MX-20000002
+  ...
+$ sed -i 's/name: USD rates exposure/name: USD rates and fixed income/' baskets.yaml
+$ drishti.py var baskets import baskets.yaml
+  same    PF-ASHA-UNWIND
+  ...
+  change  PF-USD-RATES
+            name: "USD rates exposure" -> "USD rates and fixed income"
+  ...
+0 to add, 1 to change, 28 the same, 0 invalid (checked on 2026-09-30)
+nothing written: --apply writes the changes
+$ drishti.py var baskets import baskets.yaml --apply
+```
+
+An entry that does not read, or names a node or a position the date does not hold, is listed as `invalid` with the reason and never
+written (the command exits 1); a basket in Drishti that the file leaves out is kept as it is: an import never retires or removes one.
+`drishti.py var baskets export --scope mine` writes your own baskets (and those shared with you) for keeping; it is not an import file.
+
+**In the UI.** Export and import are command-line steps (`GET /api/v1/risk/var/system-baskets/export` and
+`POST /api/v1/risk/var/system-baskets/import?apply=` for scripts); the UI's way to change one is the sheet's System basket (step 7a).
+Each basket an import writes appears in **System baskets** at once, on every server of a cluster.
+
+**In YAML.** The exported file is the import file: `system-baskets:`, one entry a basket with `id`, `name`, `description`, `owner`, `type`,
+its `node`, `rule` or `members`, `rolls-up-to`, `valid-from` and `valid-to`. The demo's own are
+`config/packs/banking/market-risk/seeds/system-baskets.yaml`, imported once into the empty store while `DRISHTI_VAR_SYSTEM_BASKETS_SEED`
+is on (it follows `DRISHTI_DEMO_ENABLED`); a bank's installation turns it off and imports its own file.
+
+**You should see** the dry run list one change and write nothing, then `PF-USD-RATES` renamed in **System baskets** after `--apply`, with
+its version raised by one and a `var-system-basket-edit` entry *by import* in **Admin → Audit**.
+
+**Further in the guide:** [section 5.7](../guides/VAR_GUIDE.md#57-system-baskets) (import and export, the seed).
 
 ## Step 8 · History and the backtest
 
@@ -535,7 +657,7 @@ var-engine:
       result: { required: [VAR, ES, PNL], types: { VAR: number, ES: number } }
   engine: { type: java, class: com.ash.drishti.banking.var.VarResultEngine, version: "1.0" }
   triggers:
-    - { on: data-version, kinds: [pnl-vector, scenario-pv, fx-scenario, scenario-set, portfolio, var-limit], affects: all }
+    - { on: data-version, kinds: [pnl-vector, scenario-pv, fx-scenario, scenario-set, var-limit], affects: all }
 ```
 
 **You should see** the explorer's figures (74,633,680 and 75,377,415): it is the same engine, computed as you, with your entitlements.
@@ -663,7 +785,7 @@ market-risk pack configures three hierarchies over them:
 hierarchies:
   MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
           root: { id: BANK, name: Drishti Bank }, limits: var-limit }
-  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf,
+  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path,
            root: { id: BANK, name: Drishti Bank }, limits: var-limit }
   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
 ```
@@ -672,7 +794,7 @@ A node is every distinct path of the rows' values (`MGMT~DESK-RATES`, `LL~LL-001
 entity when there is one (the desk `DESK-RATES` is *Rates · Swaps and options*), its limit a row of
 [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit))
 (one row per node, USD), and LL's word names a node in any scope (`LL:LL-0011`). Every VaR limit lives in `var-limit`, with its
-currency: MGMT's, LEGAL's, LL's and each portfolio's (a row of hierarchy `PORTFOLIO`).
+currency: MGMT's, LEGAL's, LL's and each system basket's (a row of hierarchy `PORTFOLIO`).
 
 **In the UI**, choose **Limit letters** in the select above the tree (the link keeps it: `&hierarchy=LL`), then **LL-0011**:
 
@@ -735,7 +857,7 @@ whose trades sit under both letters is split in two, one part per letter: `POS:P
        hierarchies:
          MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
                  root: { id: BANK, name: Drishti Bank }, limits: var-limit }
-         LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf,
+         LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path,
                   root: { id: BANK, name: Drishti Bank }, limits: var-limit }
          LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
          PG: { title: Product groups, levels: "PRODUCT_GROUP > DESK", word: PG }
@@ -1287,7 +1409,7 @@ build and its output are [tutorial 16, step 30](16-load-your-own-data-into-a-new
 
 ```bash
 drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/portfolio,market-risk/var-limit
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
 **In the UI.** `VAR BANK`, then **Limit letters** in the select above the tree and **LL-0011**:
@@ -1347,7 +1469,9 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 | other numbers than these | you built the lake with `--as-of today`: trades matured since 2026-09-30 drop out; rebuild with `--as-of data` |
 | the bank's VaR is 112,035,906 and the provenance says only `pnl-vector` | the lake has no `scenario-pv` table (built without it, or `--only` without it): the Endur trades are missing too (8,233 trades); rebuild with the `--only` list of step 1 |
 | `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
-| `PORT <id>` says *no source holds portfolio/…* | the page opens on today's date; pick **2026-09-30** in the date box (the explorer finds the newest date by itself) |
+| `PORT <id>` says *no system basket …* | the page opens on the newest date the engine holds; a basket valid only before or after it (its *Valid from*, *Valid to*) is not there: `PORT <GO>` lists the ones that are |
+| *System basket* is not under the sheet | your roles do not hold `var:system-baskets`: an administrator gives it (Admin → Roles → Permissions) |
+| an import answers `403` | the same: the permission `var:system-baskets` |
 | step 11 answers `400` *… has no P&L vector* | the copied trade or scope has no vectors on the date (matured, cancelled, typed wrong): check it with `VAR SCOPE <it>` |
 | *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |
 | `SMAT` shows one date only | the lake holds one business date (a lake built before the data had three): run `lake demo` again, or add more as in step 16 (`lake demo --as-of <date> --keep-other-dates`); the newest date is the date box's |

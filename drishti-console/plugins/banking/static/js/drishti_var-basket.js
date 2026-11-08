@@ -24,19 +24,24 @@
    every cell (found, or not found with the reason in words; a minus that takes nothing away; a + under the whole bank) and computes the
    basket's VaR, ES, sum of the parts, diversification and trades: the console renders the answer and computes nothing. Under the figures
    the pre-deal what-if (POST /api/var/what-if, the server's VaR engine: no compute workers needed), then the name, sharing, Save and
-   Open without saving. A saved basket opens back into the sheet column by column (Edit; an administrator's edit is saved under its owner); a portfolio is the bank's, so it opens as a copy (Edit
-   a copy). Download as .xlsx gives the sheet back to Excel. The sheet lives on the VaR explorer, opened by "Construct your basket" or
+   Open without saving. A saved basket opens back into the sheet column by column (Edit; an administrator's edit is saved under its owner); a
+   system basket is the bank's, so it opens as a copy (Edit a copy). Whoever holds the permission var:system-baskets also sees System
+   basket under the sheet (VAR_GUIDE.md section 5.7): the system basket's fields in a drishti-inputs Form (id, name, description, owner,
+   type, the node or the rule, rolls up to, valid from and to), Save system basket (a basket: the sheet's positions and trades; a
+   hierarchy: its node, or the one node the sheet holds; a rule: its condition), and Retire; the server checks and audits every change.
+   Download as .xlsx gives the sheet back to Excel. The sheet lives on the VaR explorer, opened by "Construct your basket" or
    Alt+B, and survives a reload (this browser). */
 (function () {
   "use strict";
   var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var KEY = (window.Drishti.key ? window.Drishti.key("drishti.varBasket2") : "drishti.varBasket2");   // per person: never the last one's
-  var DEFAULT_COLS = [{ key: "TRD", title: "Trade" }, { key: "POS", title: "Position" }, { key: "PORT", title: "Portfolio" },
+  var DEFAULT_COLS = [{ key: "TRD", title: "Trade" }, { key: "POS", title: "Position" }, { key: "PORT", title: "System basket" },
                       { key: "BOOK", title: "Book" }, { key: "DESK", title: "Desk" }, { key: "CPTY", title: "Counterparty" }];
   var OPEN_MAX = 4000;          // the longest scope text a link carries ("Open without saving"); a longer basket is saved first
   var T = { rows: [], wholeBank: false, mode: "+", whatif: [], saved: null, copyOf: null, name: "", share: "", dirty: false, columns: DEFAULT_COLS };
   var host = null, el = {}, grid = null, attached = null, popup = null, timer = null, hintTimer = null, hi = 0, hintRows = [], seq = 0;
   var checkSeq = 0, answer = null, checked = {}, flags = {}, lastScope = "";
+  var SYS = { may: false, form: null, editing: null };    // the system basket section: shown to holders of var:system-baskets (the server says)
 
   try {
     var kept = JSON.parse(localStorage.getItem(KEY) || "null");
@@ -98,7 +103,7 @@
   /** The basket's scope text as the server composed it (its last answer for what the sheet holds now), else "". */
   function compose() { return answer && answer.sig === signature() ? answer.scope || "" : ""; }
   function stateText() {
-    var bits = [T.saved && !T.dirty ? "saved basket · " + T.saved.id : T.copyOf ? "a copy of the portfolio " + T.copyOf + " (unsaved)"
+    var bits = [T.saved && !T.dirty ? "saved basket · " + T.saved.id : T.copyOf ? "a copy of the system basket " + T.copyOf + " (unsaved)"
       : "unsaved basket" + (T.saved ? " (edited from " + T.saved.id + ", version " + T.saved.version + ")" : "")];
     bits.push(parts().toLocaleString("en-US") + " part" + (parts() === 1 ? "" : "s"));
     if (answer && answer.businessDate) bits.push("date " + answer.businessDate);
@@ -246,8 +251,93 @@
     el.save.dataset.vbSave = "";
     [el.name, el.share, el.msg, el.open, el.save].forEach(function (x) { save.appendChild(x); });
     root.appendChild(save);
+
+    el.sys = h("div", "vb-card vb-sys");
+    el.sys.dataset.vbSys = "";
+    el.sys.hidden = true;
+    var st = h("h3", null, "System basket");
+    st.appendChild(h("span", null, "the bank's: PORT:<id> for everyone, kept in Drishti; changed with var:system-baskets, audited"));
+    el.sys.appendChild(st);
+    el.sysForm = h("div", "vb-sys-form");
+    el.sys.appendChild(el.sysForm);
+    var srow = h("div", "vb-row");
+    el.sysMsg = h("span", "vb-msg");
+    el.sysMsg.dataset.vbSysMsg = "";
+    el.sysMsg.setAttribute("aria-live", "polite");
+    el.sysRetire = btn("", "Retire", "Valid until Valid to (empty: the day before the page's business date); kept for the dates before");
+    el.sysRetire.dataset.vbSysRetire = "";
+    [el.sysMsg, el.sysRetire].forEach(function (x) { srow.appendChild(x); });
+    el.sys.appendChild(srow);
+    root.appendChild(el.sys);
     wire(root);
     return root;
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------- the system basket
+  /** The system basket's fields (VAR_GUIDE.md section 5.7), as a drishti-inputs schema. */
+  function sysSchema() {
+    return { type: "object", title: "System basket", required: ["id", "name", "type"], properties: {
+      id: { type: "string", title: "Id (PORT:<id>)", pattern: "^[A-Z0-9][A-Z0-9._-]{0,63}$", patternMessage: "upper-case letters, digits, dots, dashes or underscores: PF-RATES-DESK", hook: "vb-sys-id" },
+      name: { type: "string", title: "Name", hook: "vb-sys-name" },
+      description: { type: "string", title: "Description", hook: "vb-sys-description" },
+      owner: { type: "string", title: "Owner (told when someone else changes it; empty: you)", hook: "vb-sys-owner" },
+      type: { type: "string", title: "Type", "enum": ["basket", "hierarchy", "rule"], hook: "vb-sys-type",
+              enumLabels: ["Basket: the sheet's positions and trades", "Hierarchy: one node", "Rule: a condition over the positions"] },
+      node: { type: "string", title: "Node (MGMT~DESK-RATES; empty: the one node the sheet holds)", hook: "vb-sys-node", when: { field: "type", equals: "hierarchy" } },
+      rule: { type: "string", format: "textarea", title: "Rule over the positions' columns (CURRENCY == 'EUR' and DIRECTION == 'LONG')", hook: "vb-sys-rule",
+              when: { field: "type", equals: "rule" } },
+      rollsUpKind: { type: "string", title: "Rolls up to", "enum": ["", "bank", "division", "legal-entity", "desk", "book"], hook: "vb-sys-up-kind" },
+      rollsUpId: { type: "string", title: "Rolls up to: its id (DESK-RATES)", hook: "vb-sys-up-id" },
+      validFrom: { type: "date", title: "Valid from", hook: "vb-sys-from" },
+      validTo: { type: "date", title: "Valid to (empty: open-ended)", hook: "vb-sys-to" } } };
+  }
+  /** Shown to a holder of the permission only (the server's word); the Form is made once. */
+  function sysOffer() {
+    get("system-baskets/fields?").then(function (f) {
+      SYS.may = !!f.mayManage;
+      el.sys.hidden = !SYS.may;
+      if (SYS.may && !SYS.form) {
+        var I = window.Drishti.elements.inputs;
+        SYS.form = new I.Form(el.sysForm, { schema: sysSchema(), value: { type: "basket" }, label: "System basket", layout: "columns",
+          submitLabel: "Save system basket", submitHook: "vb-sys-save", resetButton: false, doneText: "", onSubmit: sysSave });
+      }
+    }).catch(function () { el.sys.hidden = true; });
+  }
+  /** The form filled with a system basket opened in the sheet (Edit a copy by a holder of the permission), or emptied. */
+  function sysFill(b) {
+    SYS.editing = b ? { id: b.id, version: b.version } : null;
+    if (!SYS.form) return;
+    SYS.form.setValue(b ? { id: b.id, name: b.name, description: b.description || "", owner: b.owner || "", type: b.type, node: b.node || "",
+      rule: b.rule || "", rollsUpKind: (b.rollsUpTo || {}).kind || "", rollsUpId: (b.rollsUpTo || {}).id || "", validFrom: b.validFrom || "",
+      validTo: b.validTo || "" } : { type: "basket" });
+    el.sysMsg.textContent = b ? "Editing the system basket " + b.id + " (version " + b.version + "): Save system basket keeps its id as the next version." : "";
+  }
+  function sysSave(v) {
+    var body = { id: v.id, name: v.name, description: v.description || "", owner: v.owner || "", type: v.type, node: v.node || "", rule: v.rule || "",
+      validFrom: v.validFrom || null, validTo: v.validTo || null };
+    if (v.rollsUpKind || v.rollsUpId) body.rollsUpTo = { kind: v.rollsUpKind || null, id: v.rollsUpId || null };
+    if (v.type === "basket" || (v.type === "hierarchy" && !v.node)) body.sheet = payload();   // its members, or its one node
+    if (SYS.editing && SYS.editing.id === v.id) body.version = SYS.editing.version;
+    el.sysMsg.textContent = "saving the system basket…";
+    return post("system-baskets", body).then(function (b) {
+      SYS.editing = { id: b.id, version: b.version };
+      el.sysMsg.textContent = "Saved the system basket " + b.id + " (version " + b.version + ", " + b.scope + "): everyone's PORT:" + b.id + ".";
+      document.dispatchEvent(new CustomEvent("drishti:vb-system-saved", { detail: b }));
+      return b;
+    }).catch(function (e) { el.sysMsg.textContent = e.message + (e.code ? " (" + e.code + ")" : ""); throw e; });
+  }
+  function sysRetire() {
+    var id = SYS.form && SYS.form.getField("id");
+    if (!id) { el.sysMsg.textContent = "Open a system basket first (System baskets ▾, Edit a copy)."; return; }
+    var to = SYS.form.getField("validTo");
+    if (!window.confirm("Retire the system basket " + id + (to ? ": valid until " + to : ": valid until the day before the business date") + "?")) return;
+    var body = { validTo: to || null };
+    if (SYS.editing && SYS.editing.id === id) body.version = SYS.editing.version;
+    post("system-baskets/" + encodeURIComponent(id) + "/retire", body).then(function (b) {
+      SYS.editing = { id: b.id, version: b.version };
+      el.sysMsg.textContent = "Retired the system basket " + b.id + ": valid until " + b.validTo + " (version " + b.version + ").";
+      document.dispatchEvent(new CustomEvent("drishti:vb-system-saved", { detail: b }));
+    }).catch(function (e) { el.sysMsg.textContent = e.message + (e.code ? " (" + e.code + ")" : ""); });
   }
 
   function wire(root) {
@@ -268,6 +358,7 @@
     el.bank.addEventListener("change", function () { T.wholeBank = el.bank.checked; changed(true); });
     el.clear.addEventListener("click", function () {
       T.rows = []; T.whatif = []; T.saved = null; T.copyOf = null; T.name = ""; T.share = ""; T.dirty = false; T.wholeBank = false;
+      sysFill(null);
       el.wifOut.textContent = ""; el.msg.textContent = "";
       changed(false);
     });
@@ -301,6 +392,7 @@
       go(s);
     });
     el.save.addEventListener("click", save);
+    el.sysRetire.addEventListener("click", sysRetire);
     el.close.addEventListener("click", function () { hide(); });
     root.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && popup && !grid.editing) hide(); });
   }
@@ -671,6 +763,7 @@
         T.name = "copy-of-" + String(d.portfolio.id).toLowerCase();
         T.share = "";
       }
+      sysFill(d.portfolio && d.portfolio.mayManage ? d.portfolio.systemBasket : null);   // a holder of the permission edits the system basket itself
       answer = null; checked = {}; flags = {};
       persist();
       lastScope = scope;
@@ -723,7 +816,7 @@
 
   // ---------------------------------------------------------------------------------------------------------------- where it shows
   function ensure() {
-    if (!host) { host = build(); paint(); listSaved(); }
+    if (!host) { host = build(); paint(); listSaved(); sysOffer(); }
     return host;
   }
   function show() {

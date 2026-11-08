@@ -46,9 +46,40 @@ import org.junit.jupiter.api.Test;
  * the promoted columns only (MGMT and LEGAL then from rows of their own, LL from the columns), in USD and in EUR: every node's parent,
  * level, children, members, aggregate (to the bit), VaR, ES, worst scenarios, its children's component VaR (exact doubles) and its limit
  * from {@code var-limit}. The trees built now, all three from the trades' promoted columns as the market-risk pack configures them, are
- * equal to it field by field.
+ * equal to it field by field. LEGAL's node ids are paths since the pack's LEGAL is {@code ids: path} (a desk booking into two legal
+ * entities is two nodes): the golden file's LEGAL ids were re-keyed from the leaf ids it was recorded with to their paths, every figure
+ * kept as recorded ({@link #legalIdsAreThePathsOfTheLeafIdsTheTreesWereRecordedWith}).
  */
 class HierarchyEquivalenceTest {
+
+    /**
+     * The re-keying of the golden file: each LEGAL node below the legal entities is its parent's id, a slash and its own value (the leaf
+     * id it was recorded with), the root and the legal entities keep theirs; the number of nodes, and every MGMT and LL node, unchanged.
+     */
+    @Test
+    void legalIdsAreThePathsOfTheLeafIdsTheTreesWereRecordedWith() {
+        for (String ccy : List.of("USD", "EUR")) {
+            JsonNode tree = golden.get(ccy);
+            List<String> legal = new ArrayList<>();
+            tree.fieldNames().forEachRemaining(id -> {
+                if (id.startsWith("LEGAL~")) {
+                    legal.add(id);
+                }
+            });
+            assertThat(legal).as(ccy + ": LEGAL's nodes, bank, legal entities, desks and books").hasSize(1 + 4 + 40);
+            for (String id : legal) {
+                JsonNode n = tree.get(id);
+                String parent = n.get("parent").isNull() ? null : n.get("parent").asText();
+                String level = n.get("level").asText();
+                if (parent == null || level.equals("legal-entity")) {
+                    assertThat(id).as(ccy + " " + id).doesNotContain("/");
+                } else {
+                    assertThat(id).as(ccy + " " + id + " is its parent's path and its value").startsWith(parent + "/")
+                            .doesNotContain("~DESK-").matches("LEGAL~LE-[A-Z]+/DESK-[A-Z]+(/BOOK-[A-Z]+-\\d+)?");
+                }
+            }
+        }
+    }
 
     static final ObjectMapper JSON = new ObjectMapper();
     static ParallelSums sums;
@@ -63,7 +94,7 @@ class HierarchyEquivalenceTest {
     static final HierarchySpec MGMT = new HierarchySpec("MGMT", "Management", List.of("DIVISION", "DESK", "TT_BOOK"),
             List.of("division", "desk", "book"), "BANK", "Drishti Bank", true, null, "var-limit", null);
     static final HierarchySpec LEGAL = new HierarchySpec("LEGAL", "Legal entities", List.of("LEGAL_ENTITY", "DESK", "TT_BOOK"),
-            List.of("legal-entity", "desk", "book"), "BANK", "Drishti Bank", true, null, "var-limit", null);
+            List.of("legal-entity", "desk", "book"), "BANK", "Drishti Bank", false, null, "var-limit", null);   // ids: path
     static final HierarchySpec LL = new HierarchySpec("LL", "Limit letters", List.of("LIMIT_LETTER", "DESK"), null, null, null, false,
             "LL", "var-limit", null);
     /** MGMT and LEGAL as the market-risk pack configures them. */
@@ -189,7 +220,7 @@ class HierarchyEquivalenceTest {
     void anyNumberOfHierarchiesByYaml() throws IOException {
         Map<?, ?> yaml = new ObjectMapper(new YAMLFactory()).readValue("""
                 MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf, limits: var-limit }
-                LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf, limits: var-limit }
+                LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path, limits: var-limit }
                 LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
                 REG: { title: Regions, levels: "LEGAL_ENTITY > DIVISION", word: REG }
                 """, Map.class);

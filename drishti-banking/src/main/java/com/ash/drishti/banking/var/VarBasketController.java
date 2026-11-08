@@ -119,9 +119,9 @@ public class VarBasketController {
             m.put("own", own);
             out.put("basket", m);
         } else if (e instanceof ScopeExpr.Ref r && r.word().equals("PORT")) {
-            VarDate.Portfolio pf = svc.date(date(asOf)).portfolios().get(r.arg());
+            VarDate.Portfolio pf = svc.portfolios(svc.date(date(asOf))).get(r.arg());
             if (pf == null) {
-                throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no portfolio " + r.arg() + " on the date");
+                throw new DrishtiException(ErrorCode.VAR_SYSTEM_BASKET_UNKNOWN, "no system basket " + r.arg() + " on the date: PORT <GO> lists them");
             }
             List<String> left = new ArrayList<>();
             VarBasketSheet copy = null;
@@ -136,7 +136,11 @@ public class VarBasketController {
             m.put("id", pf.id());
             m.put("name", pf.name());
             m.put("type", pf.type());
-            m.put("note", "a portfolio is the bank's (its feed): never edited, amended or deleted in " + com.ash.drishti.common.Branding.name("the product") + "; this is a copy you save as your own basket");
+            boolean manage = entitlements.holds(p, VarSystemBasketEdit.PERMISSION);
+            m.put("note", "a system basket is the bank's (VAR_GUIDE.md section 5.7): this is a copy you save as your own basket"
+                    + (manage ? "; to change the system basket itself, fill in System basket below and save it" : ""));
+            m.put("mayManage", manage);
+            svc.saved().system().get(pf.id()).ifPresent(b -> m.put("systemBasket", b.toMap()));
             out.put("portfolio", m);
         } else {
             sheet = VarBasketSheet.fromTerms(views.selection().terms(p, scope), words, unplaced);

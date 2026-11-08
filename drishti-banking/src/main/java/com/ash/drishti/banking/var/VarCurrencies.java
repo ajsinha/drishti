@@ -113,9 +113,8 @@ final class VarCurrencies {
             }
         }
         tier.opened(book);
-        Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
-        usd.portfolios().forEach((id, p) -> portfolios.put(id, new VarDate.Portfolio(p.id(), p.name(), p.type(), p.owner(), p.scope(),
-                Double.isNaN(p.limit()) ? Double.NaN : p.limit() / rep.base())));
+        Map<String, Double> portfolios = new LinkedHashMap<>();         // the system baskets' limits in the reporting currency
+        usd.portfolioLimits().forEach((id, l) -> portfolios.put(id, Double.isNaN(l) ? Double.NaN : l / rep.base()));
         Map<String, Object> fxUsed = new LinkedHashMap<>(usd.fx());
         Map<String, Object> mine = new LinkedHashMap<>();
         mine.put("source", rep.source());

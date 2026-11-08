@@ -713,7 +713,6 @@ functions and engines that depend on it, and its `demo` allowance. Banking's nee
 | `pnl-vector` | `>=1.0 <2` | read | any-of A | VAR, PVAR, SMAT | instead of scenario PVs |
 | `fx-scenario` | `>=1.0 <2` | read | with scenario-pv | VAR | converts scenario PVs to USD |
 | `scenario-set` | `>=1.0 <2` | read | yes | VAR, SWIN | the 509-day and 250-day windows |
-| `portfolio` | `>=1.0 <2` | read | no | VAR PORT | |
 | `var-limit` | `>=1.0 <2` | read | no | VLIM, limit bars | the VaR limits of the hierarchies' nodes (the trees are built from the trades' promoted columns) |
 | `desk-pnl` | `>=1.0 <2` | read | no | backtesting | actual and hypothetical P&L |
 | `pnl-history` | `>=1.0 <2` | read | no | SWIN | stress window selection |

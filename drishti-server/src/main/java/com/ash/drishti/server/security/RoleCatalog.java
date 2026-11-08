@@ -64,7 +64,8 @@ public final class RoleCatalog implements RoleNames, com.ash.drishti.common.Live
         SecurityProperties.Role r = builtIn.get(name);
         if (r != null) {
             return Optional.of(new RoleDefinition(name, "", r.kinds(), r.raw(), r.author(), r.approve(), r.admin(), r.calc(), r.layout(), r.collaborate(), r.compliance(), true, null, "",
-                    r.admin() ? Set.copyOf(RoleDefinition.BI_POWERS) : Set.copyOf(r.bi()), r.edit()));
+                    r.admin() ? Set.copyOf(RoleDefinition.BI_POWERS) : Set.copyOf(r.bi()), r.edit(),
+                    Set.copyOf(r.permissions().stream().filter(RoleDefinition.PERMISSIONS::contains).toList())));
         }
         return store.find(name);
     }

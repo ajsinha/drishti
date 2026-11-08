@@ -97,12 +97,15 @@ final class VarHierarchyFixture {
         limits.add(limit("LL", "LL~LL-NOPE", 1));                     // a letter with no positions on the date: "limit, no positions"
         limits.add(limit("ZZ", "ZZ~X", 1));                           // no hierarchy ZZ: DRS-5212
         limits.add(limit("LL", "LL~LL-A/DESK-X/BOOK-1", 1));          // deeper than LL's two levels: DRS-5212
-        limits.add(limit("PORTFOLIO", "PF-LL-A", 640));               // a portfolio's limit (2.9.7): wins over the record's own LIMIT_VAR
+        limits.add(limit("PORTFOLIO", "PF-LL-A", 640));               // a system basket's limit: its var-limit row of hierarchy PORTFOLIO
         VarLakeFixture.table(root, work, "var-limit", "LIMIT_ID", limits, List.of("HIERARCHY", "NODE_ID", "LIMIT_VAR"), null);
-        VarLakeFixture.table(root, work, "portfolio", "PORTFOLIO_ID", List.of(Map.of("PORTFOLIO_ID", "PF-LL-A", "BUSINESS_DATE", DAY.toString(),
-                "NAME", "Letter A", "TYPE", "HIERARCHY", "OWNER", "risk", "DEFINITION", Map.of("NODE", "LL~LL-A"), "LIMIT_VAR", 650.0)),
-                List.of("NAME", "TYPE"), null);
         return root;
+    }
+
+    /** The fixture's system basket of the basket store (VAR_GUIDE.md section 5.7): PF-LL-A, the node LL~LL-A. */
+    static void systemBaskets(VarService svc) {
+        svc.saved().system().importDoc(Map.of("system-baskets", List.of(Map.of("id", "PF-LL-A", "name", "Letter A", "type", "hierarchy",
+                "owner", "risk", "node", "LL~LL-A"))), true, "test", null, null);
     }
 
     private static Map<String, Object> limit(String h, String node, double limit) {

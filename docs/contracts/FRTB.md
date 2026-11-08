@@ -501,7 +501,7 @@ precomputed, and the file's SHA-256.
 
 ## 8. Scopes
 
-Every VaR scope ([VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets)): a hierarchy node (desk, legal entity,
+Every VaR scope ([VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets)): a hierarchy node (desk, legal entity,
 limit letter, FRTB desk), a portfolio, a basket, an ad-hoc set of positions. Positions' sensitivities to the same factor are added
 first; everything after the weighting is computed for the scope as a whole. **Non-additive:** the MR cube shows each cell's own charge
 and the diversification row `Σ cells − total`, as for VaR. **Filers:** the official capture is per filer (a legal entity that files)

@@ -111,7 +111,7 @@ final class VarBasketSheet {
         return switch (column) {
             case "TRD" -> "Trade";
             case "POS" -> "Position";
-            case "PORT" -> "Portfolio";
+            case "PORT" -> "System basket";
             case "BOOK" -> "Book";
             case "DESK" -> "Desk";
             case "CPTY" -> "Counterparty";

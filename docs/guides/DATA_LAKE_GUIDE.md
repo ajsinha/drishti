@@ -1179,7 +1179,7 @@ from showing demo data beside yours:
   is unchanged. The server's published results lakes (`var-official`, `ccr-official`) do not count: they hold no inputs.
 - **A whole pack, one lake.** Point every Delta and Iceberg connector of a pack at the lake, not one of them: the pack's screens read
   all its connectors (`trade-endur`, `trade-calypso` and `trade-murex` are one trade store; VaR reads scenario PVs, P&L vectors,
-  portfolios and limits from `risk-store` and the market data from `market-store`). A connector file replaces the pack's
+  limits from `risk-store` and the market data from `market-store`). A connector file replaces the pack's
   template whole: keep its other keys (`union: true` on the trade connectors) when you change `lake:`.
 - **The warning.** A pack whose connectors read more than one lake is *DEGRADED* in Admin → Health and `GET /api/v1/health`
   (`packs[].lakes`, each lake with its connectors, and `packs[].lakeWarning`): *trading's connectors read different lakes: demo

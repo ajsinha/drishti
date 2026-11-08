@@ -28,6 +28,8 @@ POWERS = [("raw", "See every field unmasked (raw JSON, views, search)"), ("autho
           ("approve", "Approve proposed Sutras"), ("admin", "Administer users, roles and caches"), ("calc", "Use Calc: Python in the browser on what the role opens"),
           ("edit", "Submit edits: change records through forms that save (write-back, when editing is on)"),
           ("layout", "Customise layouts: arrange a view's panels for themselves (Alt+L)")]
+#: the module permissions a role may hold (ACCESS_MODEL.md section 8): the server's RoleDefinition.PERMISSIONS, each with its words
+PERMISSIONS = [("var:system-baskets", "VaR system baskets: create, edit, retire and import them (VAR_GUIDE.md section 5.7)")]
 
 
 def role(**_) -> Markup:
@@ -40,8 +42,10 @@ def role(**_) -> Markup:
         "kinds": K.area("Kinds it opens (one per line, or pick by pack below)", "kinds", rows=4, placeholder="counterparty\ncredit-curve",
                         when={"field": "all", "notEquals": True}),
         "powers": K.group("Powers", {k: K.check(words, k) for k, words in POWERS}),
+        "permissions": K.group("Permissions", {k: K.check(words, k) for k, words in PERMISSIONS}),
     }
-    value = {"name": "", "description": "", "all": False, "kinds": "", "powers": {k: k == "layout" for k, _ in POWERS}}
+    value = {"name": "", "description": "", "all": False, "kinds": "", "powers": {k: k == "layout" for k, _ in POWERS},
+             "permissions": {k: False for k, _ in PERMISSIONS}}
     return K.host(K.schema(props, required=["name"]), value, attrs={"data-role-fields": ""}, label="The role")
 
 

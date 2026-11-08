@@ -22,13 +22,13 @@ data built into a scratch lake (lake demo --only market-risk/<the VaR kinds>) an
   end-of-day captures: the server captures the newest date when it starts), the contributions adding up to the VaR, by position and
   by trade;
 - the official end-of-day record of the newest date: every node of both hierarchies, captured at start;
-- the portfolio and position pages: Drishti's derived positions (the var-positions connector) with the engine's figures computed as
+- the system basket and position pages: Drishti's derived positions (the var-positions connector) with the engine's figures computed as
   the page opens;
 - "Construct your basket", one sheet: "+ basket" on a contribution row and on a tree row and a hint each land in their kind's column,
   columns pasted from Excel fill downward (a leading "-" takes away), every cell checked by the server (an id that is not live said in
   words on its cell), the basket's VaR the engine's own for the scope the server composed, Start from the whole bank flagging the +
   rows, Remove the not found, Download as .xlsx, Open without saving, saved as the sheet's lists, reopened in a fresh browser into the
-  sheet column by column, edited (Save keeps the name as version 2), a portfolio's Edit a copy, deleted through the confirm dialog;
+  sheet column by column, edited (Save keeps the name as version 2), a system basket's Edit a copy, deleted through the confirm dialog;
   elsewhere no Basket in the top bar and Alt+B does nothing, the explorer opens the sheet with the basket kept;
 - the pre-deal what-if under the sheet: a copy of a booked trade, unwound, before and after by the server's VaR engine (the compute workers off);
 - an id that is not a live trade (VAR TRD 10000000) says so, never a VaR of 0 that looks computed;
@@ -51,7 +51,7 @@ from wb_live import _stack
 from select_helpers import choose, labels  # <drishti-select>: drishti-inputs' Select
 
 ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "portfolio", "var-limit")] + ["core/desk", "core/book", "core/legal-entity"] + ["trades/murex"])
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "var-limit")] + ["core/desk", "core/book", "core/legal-entity"] + ["trades/murex"])
 SHOTS = os.environ.get("DRISHTI_VAR_SHOTS")
 #: the time from a click on a desk to its painted panels (the product owner's target is 300 ms on the demo data); generous here, as the
 #: suite runs beside builds: the measured time is printed and kept in the docs
@@ -67,7 +67,7 @@ def stack(tmp_path_factory):
                         "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
+    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
                                         "DRISHTI_COMPUTE_ENABLED": "false",    # the what-if needs no compute workers
                                         "DRISHTI_VAR_SCENARIO_WINDOW": "all"}, heap=VAR_HEAP):   # the full 509-scenario set the figures below are written for
         _engine_ready(str(st))
@@ -304,7 +304,7 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     assert pg.locator("[data-basket-count]").inner_text() == "1"
     assert "Construct your basket" in pg.locator("[data-var-basket]").inner_text()
     assert "unsaved basket" in pg.locator("[data-vb-state]").inner_text()
-    # the type-ahead: a portfolio lands in the Portfolio column
+    # the type-ahead: a system basket lands in the System basket column
     port = type_and_pick(pg, "pf-usd", expect="PORT")
     assert port == "PORT:PF-USD-RATES"
     wait(pg, "(document.querySelector('[data-vb-cell=\"PORT:0\"]') || {}).textContent === 'PF-USD-RATES'")
@@ -417,8 +417,8 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     pg.reload()
     wait(pg, "window.Drishti.VarExplorer && window.Drishti.VarExplorer.state.head && window.Drishti.VarBasket.parts() === 5", 60)
     assert pg.locator("[data-vx-basket]").is_hidden()                       # kept, not opened: only the link opens it
-    # a portfolio is the bank's: Edit a copy opens its parts as your own unsaved basket
-    pg.locator('[data-vx-pick="system"] [data-vx-pick-btn]').click()           # System baskets: the bank's portfolios
+    # a system basket is the bank's: Edit a copy opens its parts as your own unsaved basket
+    pg.locator('[data-vx-pick="system"] [data-vx-pick-btn]').click()           # System baskets: the bank's, kept in Drishti
     pg.locator('[data-vx-baskets-system] [data-vx-edit="PORT:PF-USD-RATES"]').click()
     wait(pg, "window.Drishti.VarBasket.state.copyOf === 'PF-USD-RATES' && !document.querySelector('[data-vx-basket]').hidden")
     assert "your own basket" in pg.locator("[data-vb-save]").inner_text()
@@ -503,24 +503,28 @@ def test_a_trade_page_has_its_risk_links(stack, browser):
     pg.close()
 
 
-def test_a_portfolio_page_lists_its_positions_and_opens_one_beside(stack, browser):
-    """The portfolio kind's page (the market-risk pack's portfolio Sutra), the demo connector off: PORT <id> opens it; the positions
-    table has its rows; a click on a position (not its link) opens its trades beside; POS <id> opens the position's own page."""
+def test_a_system_basket_page_lists_its_positions_and_opens_one_beside(stack, browser):
+    """A system basket's page (the system-basket kind of the basket store, its Sutra; the demo's seeded at start, the demo connector off):
+    PORT <id> opens it; the positions table has its rows; a click on a position (not its link) opens its trades beside; POS <id> opens
+    the position's own page; an old link of the removed portfolio kind opens the same page; PORT alone lists the system baskets."""
     pg = open_var(browser, str(stack), "/go?q=" + "PORT PF-RATES-DESK <GO>".replace(" ", "+"))
-    assert "/v/portfolio/PF-RATES-DESK" in pg.url
+    assert "/v/system-basket/PF-RATES-DESK" in pg.url
     wait(pg, "document.querySelectorAll('#p-positions tbody tr').length > 3")
     assert "Rates desk" in pg.content()
     first = pg.evaluate("document.querySelector('#p-positions tbody tr').cells[0].textContent.trim()")
     pg.locator("#p-positions tbody tr").first.locator("td").nth(1).click()
     wait(pg, "document.querySelectorAll('#p-position-trades tbody tr').length > 0")
-    shot(pg, "portfolio-page")
+    shot(pg, "portfolio-page")                                             # the guides' picture keeps its name
     pg.goto(str(stack) + "/go?q=" + f"POS {first} <GO>".replace(" ", "+").replace("~", "%7E"))
     wait(pg, "document.querySelectorAll('#p-trades tbody tr').length > 0 && !!document.querySelector('#p-dist')")
     assert "/v/position/" in pg.url
     wait(pg, "document.querySelectorAll('#p-trade-var tbody tr').length > 0")               # the engine's figures, computed as it opened
     shot(pg, "position-page")
-    pg.goto(str(stack) + "/v/portfolio/PF-ASHA-UNWIND")                   # a basket of positions and trades
+    pg.goto(str(stack) + "/v/portfolio/PF-ASHA-UNWIND")                   # an old link: the system basket of positions and trades
+    wait(pg, "location.pathname.indexOf('/v/system-basket/PF-ASHA-UNWIND') === 0", 30)
     wait(pg, "document.querySelectorAll('#p-positions tbody tr').length > 3")
+    pg.goto(str(stack) + "/go?q=PORT+%3CGO%3E")                           # PORT alone: the system baskets to pick from
+    wait(pg, "document.body.innerText.indexOf('PF-RATES-DESK') >= 0", 30)
     pg.close()
 
 

@@ -16,7 +16,7 @@
 # VaR in Drishti: the complete guide
 
 This is the one reference for Drishti's value at risk: what every number means and how it is computed, the explorer
-screen by screen, positions, portfolios and any set of trades, captures, history and backtesting, what-if and VaR as a kind, who sees
+screen by screen, positions, system baskets and any set of trades, captures, history and backtesting, what-if and VaR as a kind, who sees
 what, the command line, the API and the settings (Part I); the data contract: every input column, formula, answer, error code, the
 official results, retention and the decisions (Part II); how the engine holds a bank's vectors in memory and on local disk, its
 sizing and benchmark, sharding, and what is still planned (Part III); and what sits around the engine: the VaR-related regulatory
@@ -39,7 +39,7 @@ the code wins and the difference is marked **Design differs**.
 
 Every number below that is not a hand-made example was read from a server over the committed test data: the market-risk pack's VaR
 inputs of **2026-09-30** (`data/testdata/market-risk/`: 9,572 live trades, 7,984 derived positions (7,993 once the limit letters split nine of them), 131 hierarchy nodes (88 MGMT and
-LEGAL, 43 limit letters), 28 portfolio
+LEGAL, 43 limit letters), 28 system basket
 definitions, 509 scenario days), built into a lake with `drishti.py lake demo --as-of data`. The vectors are synthetic (a correlated,
 fat-tailed factor market), not prices.
 
@@ -51,7 +51,7 @@ fat-tailed factor market), not prices.
 2. [The measures, with worked numbers](#2-the-measures-with-worked-numbers)
 3. [The explorer, screen by screen](#3-the-explorer-screen-by-screen)
 4. [Positions: derived, never delivered](#4-positions-derived-never-delivered)
-5. [Scopes, portfolios and baskets](#5-scopes-portfolios-and-baskets)
+5. [Scopes, system baskets and baskets](#5-scopes-system-baskets-and-baskets)
 6. [Captures and compare](#6-captures-and-compare)
 7. [History and backtesting](#7-history-and-backtesting)
 8. [What-if and VaR as a kind](#8-what-if-and-var-as-a-kind)
@@ -148,7 +148,7 @@ covers the conversion and the cross through USD.
 drill-down from the bank to a trade), traders (what a trade does to the desk's VaR) and auditors (every number reproducible from its
 inputs and stamped with them).
 
-Drishti answers it for **any** set of trades: the bank, a legal entity, a desk, a book, a position, one trade, a stored portfolio, a
+Drishti answers it for **any** set of trades: the bank, a legal entity, a desk, a book, a position, one trade, a system basket, a
 rule (*every short EUR position*), a basket you picked, or any union, difference or intersection of these. It never reprices anything.
 An upstream risk batch values every live trade under each of **509 historical scenario days** (the market moves of the last two years,
 applied to today's market), and delivers, per trade, its **P&L vector**: 509 numbers, the P&L the trade would make if the market moved as
@@ -316,7 +316,7 @@ Type a command and press Enter (or `<GO>`):
 | `VAR POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01 <GO>` | a position (a security held in a book; an OTC trade's is `POS-<book>~<trade>`) |
 | `VAR TRD MX-30000121 <GO>` | one trade |
 | `VAR CPTY CP-SUMMIT <GO>` | every trade with a counterparty |
-| `VAR PORT PF-USD-RATES <GO>` | a stored portfolio |
+| `VAR PORT PF-USD-RATES <GO>` | a system basket ([section 5.7](#57-system-baskets)) |
 | `VAR SCOPE unwind <GO>` | your saved basket `unwind` (`VAR SCOPE asha/unwind` for one shared with you) |
 | `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` | any scope written in the [grammar](#52-the-grammar) |
 | `VAR CAPTURE CAP-20260930-12 <GO>` | a capture, reopened exactly as it was taken |
@@ -356,14 +356,14 @@ Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-lay
   - **Backtest ›** opens the regulatory backtest of the scope in view, on the date in view (the same page as `VAR <scope> BACKTEST`,
     [REGULATORY_VAR_REPORTING.md section 4.6](REGULATORY_VAR_REPORTING.md#46-backtesting)): its VaR against the P&L of the last 250
     business days, the exceptions and the zone.
-  - **System baskets** (key **B**): the baskets the system provides, the bank's **portfolios** (the market-risk pack's `portfolio` feed;
-    [section 5.7](#57-stored-portfolios)), each with its name, its id, its owner and its type.
+  - **System baskets** (key **B**): the bank's own baskets, kept in Drishti's basket store (the holders of `var:system-baskets` manage
+    them; [section 5.7](#57-system-baskets)), each with its name, its description, its id, its owner and its type.
   - **My baskets** (key **M**): the baskets you saved, under *Mine*, then those shared with you, under *Shared with me*
     ([section 5.8](#58-baskets)), each with its name, its description and its id.
   - Each opens a search box over its list: type to search the name and the description (and the id, the type, the owner; several words
     each match), **↑ ↓** move, **Enter** opens the scope, **Esc** closes. The scope on the page is named on its drop-down's button. Each
     row keeps its actions: **+ basket** (into the sheet), **Edit** (a basket you own; an administrator's on everyone's), **Edit a copy**
-    (a portfolio, a basket shared with you read-only) and **Delete** (a basket you own), as described in
+    (a system basket, a basket shared with you read-only) and **Delete** (a basket you own), as described in
     [section 3.5](#35-construct-your-basket). Renaming and sharing a basket are done in its sheet (**Edit**, then a new name or *Share
     read-only with*, then Save). At the foot of My baskets, **+ New basket** opens the basket's sheet.
   - **+ New basket** (also **Alt+B**; the count of the parts your sheet holds beside it) opens **Construct your basket**, the sheet,
@@ -389,7 +389,7 @@ Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-lay
 
 The keys **B**, **M** and **H** work anywhere on the page except while you type in a box or in the basket's sheet.
 
-![System baskets open on the bank, rates typed: the bank's portfolios that match, each with + basket and Edit a copy; the hierarchy tree on the left](img/var/17-baskets.jpg)
+![System baskets open on the bank, rates typed: the bank's system baskets that match, each with + basket and Edit a copy; the hierarchy tree on the left](img/var/17-baskets.jpg)
 - **Reporting currency** (the status line's right end): USD, EUR, CAD, JPY, GBP (the configured ones) and **More…** (every
   other currency with scenario FX on the date). Every panel follows it, the tiles say it (`VaR 99% · 1 day · EUR`), the choice stays
   for the session and goes into the link; [section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker).
@@ -478,7 +478,7 @@ explorer opens, waiting behind the link's count: the sheet is collapsed when the
 Alt+B, **+ basket** on a row, **Edit**), never by itself, not even when the explorer opens a saved basket. Once saved, the basket is
 listed in *My baskets* and the sheet collapses.
 
-**The sheet.** A column per kind of part: **Trade** (`TRD`), **Position** (`POS`), **Portfolio** (`PORT`), **Book** (`BOOK`), **Desk**
+**The sheet.** A column per kind of part: **Trade** (`TRD`), **Position** (`POS`), **System basket** (`PORT`), **Book** (`BOOK`), **Desk**
 (`DESK`), one column per configured hierarchy's word (the demo's **Limit letter**, `LL`) and **Counterparty** (`CPTY`), and the **Op**
 column, **+** or **−**, for each row. One id a cell. It fills four ways:
 
@@ -487,14 +487,14 @@ column, **+** or **−**, for each row. One id a cell. It fills four ways:
 - **Paste whole columns from Excel.** Select a cell and paste (Ctrl+V): Excel's columns fill downward from it, and rightward for several
   columns. A first row of headings (**Op**, **Trade**, `TRD`, *Trade (TRD)*, as the sheet's own workbook writes them) puts each pasted
   column under its heading wherever you paste. A sheet holds 20,000 rows; every column takes 10,000 ids and more.
-- **Find and add.** The type-ahead above the sheet offers what the engine knows as you type: portfolios, saved baskets, desks, books,
+- **Find and add.** The type-ahead above the sheet offers what the engine knows as you type: system baskets, saved baskets, desks, books,
   legal entities, divisions, counterparties, positions and trades, each with its type, id, name, trade count and standalone VaR (`pf usd`,
   `aldershot`, `MX-3000`, `rates`); **↓ ↑** and **Enter** pick, and the hint lands in its kind's column. **Add (+)** or **Take away (−)**
   above the sheet says which, and a leading **-** takes it away (`-MX-30000121`). Anything in the [grammar](#52-the-grammar) can be typed
   as written (`TRD:MX-30000121`).
 - **+ basket** on any row of the tree, the contributions and the trades (By trade) adds that row to its column.
 
-A cell may name its kind itself (`NODE:MGMT~DESK-RATES` in the Desk column, `BASKET:asha/unwind` in the Portfolio column); a rule
+A cell may name its kind itself (`NODE:MGMT~DESK-RATES` in the Desk column, `BASKET:asha/unwind` in the System basket column); a rule
 (`WHERE:`) has no column: open it as a scope from the command line ([section 5.4](#54-the-position-rule-language-where-and-rule-portfolios)).
 
 **Take away by a minus.** The basket is everything added, then everything marked − taken away: a **−** in the Op column, or a leading
@@ -533,16 +533,17 @@ The state reads **unsaved basket** until you save, then **saved basket · \<owne
 `VAR SCOPE <name>`, a link, **Open a saved basket ▾**) loads it back into the sheet, column by column. While the explorer shows the
 sheet's unsaved scope, it follows every change you make.
 
-**Edit, amend and delete.** In the toolbar's drop-downs (*System baskets* for the portfolios, *My baskets* for the saved baskets):
+**Edit, amend and delete.** In the toolbar's drop-downs (*System baskets* for the bank's, *My baskets* for the saved baskets):
 
 - a basket you own has **Edit**: it opens in the sheet, and **Save as version *n*** keeps its name as a new version (every version is
   kept); a changed name saves a new basket. Someone else's change since you opened it is not overwritten unseen: the save is refused
   (`409`) and you open it again;
 - an **administrator** has Edit on everyone's basket at any time: the edit is saved under its owner, audited (`var-basket-edit`, *edited
   by administrator \<user>*) and the owner gets an inbox notice, as for a delete;
-- a basket shared with you read-only, and every **portfolio**, have **Edit a copy**: a portfolio belongs to the bank (its feed, the
-  `portfolio` table) and is never edited, amended or deleted in Drishti; its copy opens in the sheet as your own unsaved basket, to save
-  under a name of yours;
+- a basket shared with you read-only, and every **system basket**, have **Edit a copy**: its copy opens in the sheet as your own unsaved
+  basket, to save under a name of yours. A system basket belongs to the bank ([section 5.7](#57-system-baskets)): whoever holds the
+  permission `var:system-baskets` also sees **System basket** under the sheet, filled with it, and changes the system basket itself there
+  (**Save system basket**, the next version; **Retire**), audited, its owner told;
 - **Delete**, on a basket you own (an administrator sees it on every basket listed), asks first, in a dialog that names the basket, its
   owner and whom it is shared with (they lose it too); **Keep it** or **Esc** keeps it, **Delete basket** deletes it.
 
@@ -554,7 +555,7 @@ the dialog is not deleted unseen: the dialog says it changed (`409`) and you loo
 **Admin → Ad-hoc scopes** (every owner's, filtered by owner, **Delete** with an optional reason that goes to the audit log and to the
 owner's inbox; [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#126-deleting-peoples-var-baskets)). CLI: `drishti.py var basket-delete <name>`
 (yours), `--owner <user> --reason <text>` (an administrator, anyone's). API: `POST /api/v1/risk/var/basket/sheet` (the checks and figures),
-`GET /api/v1/risk/var/basket/sheet?scope=` (a basket, a portfolio's copy or a scope laid into the sheet), `POST /api/v1/risk/var/basket/sheet.xlsx`,
+`GET /api/v1/risk/var/basket/sheet?scope=` (a basket, a system basket's copy or a scope laid into the sheet), `POST /api/v1/risk/var/basket/sheet.xlsx`,
 `POST /api/v1/risk/var/baskets` (save, edit), `DELETE /api/v1/risk/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
 
 ![Construct your basket: one sheet, a column per kind; a position from its row, a portfolio from the hints, the FX desk from the tree, trades pasted from Excel, one taken away by its leading minus and one not live said in words on its cell; the basket's VaR, ES, sum of the parts and diversification, the server's](img/var/06-basket.jpg)
@@ -583,7 +584,7 @@ table's data version on the date, the batches and the scenario set.
 
 ### 3.7 The portfolio and position pages
 
-The `portfolio` and `position` kinds have pages of their own (Sutras). They store no figure: the VaR, ES and contributions on them are
+The `system-basket` (`PORT <id>`, the system baskets of [section 5.7](#57-system-baskets)) and `position` kinds have pages of their own (Sutras). They store no figure: the VaR, ES and contributions on them are
 the engine's, computed as the page opens, as you (your view of the nodes):
 
 - `PORT PF-RATES-DESK <GO>`: the strip (positions, longs, shorts, gross and net market value, VaR, ES, limit use); the positions table
@@ -620,7 +621,7 @@ Opening a trade page never waits for the engines to load a date: until they have
 | Page | `VAR_ENGINE` |
 |---|---|
 | position (`POS:<id>`) | `STATUS`, `SCOPE`, `BUSINESS_DATE`, `VAR`, `ES`, `CONFIDENCE`, `ES_CONFIDENCE`, `NOTE`; `TRADES` (each trade's `TRADE_ID`, `QUANTITY`, `DIRECTION`, own `VAR`, `COMPONENT_VAR` in the position); `BOOK_VAR`, `COMPONENT_VAR` and `PCT_OF_BOOK_VAR` (the position in its book); `PNL` (its 509 P&Ls) |
-| portfolio (`PORT:<id>`) | the same headline with `LIMIT`, `LIMIT_USE`; `POSITIONS` (each position's instrument, direction, quantity, market value, currency, book, product, own `VAR`, `COMPONENT_VAR`, `PCT_OF_VAR`, `PARTIAL`), `POSITION_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `TOP_CONTRIBUTORS` (10), `BY_PRODUCT`, `BY_CURRENCY`, `BY_DIRECTION` (component VaR and net market value), `PNL` |
+| system basket (`PORT:<id>`) | the same headline with `LIMIT`, `LIMIT_USE`; `POSITIONS` (each position's instrument, direction, quantity, market value, currency, book, product, own `VAR`, `COMPONENT_VAR`, `PCT_OF_VAR`, `PARTIAL`), `POSITION_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `TOP_CONTRIBUTORS` (10), `BY_PRODUCT`, `BY_CURRENCY`, `BY_DIRECTION` (component VaR and net market value), `PNL` |
 | desk (`DESK:<id>`) | the headline: `VAR`, `ES`, `LIMIT`, `LIMIT_USE` |
 | legal entity (`LE:<id>`) | the headline of `LE:<id>` (`VAR`, `ES`, `LIMIT`, `LIMIT_USE` …: the trades the entity books) and `BOOKS`: the record's own book rows (`BOOK`, `DESK`, `PNL`, `MTM`, `TRADES`) each with the engine's `VAR` of `BOOK:<id>` (null when it cannot answer); the stored record keeps no VaR |
 
@@ -1261,7 +1262,7 @@ rules' text and digest), so an official figure can be recomputed years later. Th
 (`POS <id> <GO>`) by the `var-positions` connector, with no figure stored on them: their page shows the engine's, computed as it opens.
 Every column and rule of the derivation is in [section 15.6](#156-positions-derived-by-drishti).
 
-## 5. Scopes, portfolios and baskets
+## 5. Scopes, system baskets and baskets
 
 Any set of trades is written as text. The same text is the explorer's address (`/var?scope=…`), the `scope` parameter of every endpoint,
 the `var-result` kind's id, a basket's definition, and a cache key once canonical. It is parsed by `ScopeExpr.parse` and resolved on one
@@ -1274,13 +1275,13 @@ date by `ScopeResolver` to a set of trade ordinals.
 | `BANK` | none (`BANK:x` is accepted and `x` ignored) | node `MGMT~BANK`, the Management tree's root |
 | `LE:<id>` | a legal entity (`LE-NY` or `NY`) | the trades whose booking `LEGAL_ENTITY` is it ([section 5.5](#55-scope-words-by-a-trades-attribute)); the node `LEGAL~<id>` (else `LEGAL~LE-<id>`) gives its children, limit and history |
 | `DIV:<id>` | a division | `MGMT~<id>`, else `MGMT~DIV-<id>` |
-| `DESK:<id>` | a desk | `MGMT~<id>`, `MGMT~DESK-<id>`, `LEGAL~<id>`, `LEGAL~DESK-<id>` (first found) |
+| `DESK:<id>` | a desk | `MGMT~<id>`, `MGMT~DESK-<id>`, then a leaf-id LEGAL's `LEGAL~<id>`, `LEGAL~DESK-<id>` (first found; the pack's LEGAL has path ids: its desks are `NODE:LEGAL~LE-NY/DESK-RATES`) |
 | `BOOK:<id>` | a book | `MGMT~<id>`, else `MGMT~BOOK-<id>` |
 | `NODE:<node id>` | a full node id | that node (as written, then upper case) |
 | `POS:<id>[,<id>…]` | position ids | every trade of each position |
 | `TRD:<id>[,<id>…]` | trade ids | those trades (an id as written, else the one id equal to it ignoring case) |
 | `CPTY:<id>[,<id>…]` | counterparty ids | every trade whose `COUNTERPARTY` is one of them (compared ignoring case) |
-| `PORT:<id>` | a stored portfolio | its definition's scope ([section 5.7](#57-stored-portfolios)), resolved recursively |
+| `PORT:<id>` | a system basket | its definition's scope ([section 5.7](#57-system-baskets)), resolved recursively |
 | `BASKET:<owner>/<name>` | a saved basket the caller may read | its scope, resolved recursively |
 | `CAPTURE:<id>` | a capture the caller may read | `TRD:` of its members (resolved on the request's date) |
 | `WHERE:<rule>` | a position rule ([section 5.4](#54-the-position-rule-language-where-and-rule-portfolios)) | every trade of each matching position |
@@ -1322,16 +1323,16 @@ SP       := whitespace (or, before an operator, a closing ')'; after it, an open
 
 | Rule | Behaviour |
 |---|---|
-| Unknown ids | an id, node, portfolio, basket or capture the date or the caller does not have resolves to nothing and is listed in `provenance.unknown` (*Unknown ids*), never silently dropped, and said in words in `provenance.notices`: *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*; a trade the load left out names why (*… is not live on …: its status is CANCELLED*, *… it matured on …*); a rule that matches no position too. The answer is still `200`; an empty scope answers `empty: true` with VaR 0, and the explorer and the basket's sheet show **No trades** and the notices, never a VaR of 0 that looks computed |
+| Unknown ids | an id, node, system basket, basket or capture the date or the caller does not have resolves to nothing and is listed in `provenance.unknown` (*Unknown ids*), never silently dropped, and said in words in `provenance.notices`: *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*; a trade the load left out names why (*… is not live on …: its status is CANCELLED*, *… it matured on …*); a rule that matches no position too. The answer is still `200`; an empty scope answers `empty: true` with VaR 0, and the explorer and the basket's sheet show **No trades** and the notices, never a VaR of 0 that looks computed |
 | Overlap | set algebra on trade ordinals: a trade in two terms of a union counts once |
 | Rules and positions | `WHERE:` and `POS:` take whole positions; `TRD:` takes single trades (a position held in part is a *partial* part) |
-| Entitlements | the resolved set is intersected with the trades the viewer may see; the rest are counted (`hidden`). A scope that names `POS`, `TRD`, `CPTY`, `WHERE`, `BASKET`, `CAPTURE` or a `PORT:` of a BASKET-type portfolio is refused (`403 DRS-5002`) unless every resolved trade is at `positions` level for the viewer; `CPTY:` is refused to a viewer who sees `COUNTERPARTY` masked |
+| Entitlements | the resolved set is intersected with the trades the viewer may see; the rest are counted (`hidden`). A scope that names `POS`, `TRD`, `CPTY`, `WHERE`, `BASKET`, `CAPTURE` or a `PORT:` of a basket-type system basket is refused (`403 DRS-5002`) unless every resolved trade is at `positions` level for the viewer; `CPTY:` is refused to a viewer who sees `COUNTERPARTY` masked |
 | Warnings | data-quality findings about what was resolved, in `provenance.warnings`: a legal entity's trades outside its `LEGAL` node, a `LEGAL` node holding another entity's trades ([section 5.5](#55-scope-words-by-a-trades-attribute)) |
 | Kind of a scope | `node` (exactly one node term, `LE:` included when its `LEGAL` node exists, a configured word's node too), `position`, `trade` (exactly one id), `portfolio`, `basket`, `capture`, `rule`, `counterparty`, [`legal-entity`](../contracts/samples/core.md#legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)) (one term of that word), else `adhoc` |
 | Date | resolved on the request's date: a `CAPTURE:` or a basket of trades holds ids; trades the date does not have are `unknown` |
 
-**Aggregate-only access** ([section 9](#9-who-sees-what-entitlements-and-audit)): a scope that is a node or a HIERARCHY or RULE portfolio
-is allowed and computed over the visible trades; parts below the node's level are not listed. `PORT:` of a BASKET-type portfolio is
+**Aggregate-only access** ([section 9](#9-who-sees-what-entitlements-and-audit)): a scope that is a node or a hierarchy or rule system basket
+is allowed and computed over the visible trades; parts below the node's level are not listed. `PORT:` of a basket-type system basket is
 treated like `BASKET:`: an aggregate-only viewer cannot probe a stored basket of single trades.
 
 ### 5.4 The position rule language (`WHERE:` and RULE portfolios)
@@ -1391,21 +1392,114 @@ The rest of this guide reads the lake built on the data's own date (`--as-of dat
 maturities, so on 2026-10-26 the trades that mature in between are no longer live (8,566 instead of 9,572), and the bank's worst days
 change with them.
 
-### 5.7 Stored portfolios
+### 5.7 System baskets
 
-A **portfolio** (`PORT <id> <GO>`) is a definition, an input of the batch ([section 15.5](#155-portfolio-stored-portfolio-definitions));
-its figures are always the engine's:
+A **system basket** (`PORT <id> <GO>`, the scope `PORT:<id>`) is one of the bank's own baskets: the desks, legal entities, books, rules
+and hand-picked sets risk management reports on, the same for everyone who may open VaR. It is a **definition kept in Drishti**, never
+read from a data feed (the `portfolio` kind of earlier releases is gone: a load of a `portfolio` file is refused, saying so): the basket
+store keeps it under the **system scope**, `var/system-baskets/<ID>.json` in the content store, beside people's own baskets
+(`var/baskets/<owner>/`, [section 5.8](#58-baskets)); every version is kept, and an edit on one server is read at the next request on every
+server of a cluster ([DATA_ARCHITECTURE.md section 5](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)).
+Its figures are always the engine's.
 
-| Type | Definition | Becomes the scope (`VarDate.Portfolio.of`) | Test data |
+| Type | Definition | Becomes the scope | Demo |
 |---|---|---|---|
-| `HIERARCHY` | a node of a hierarchy | `NODE:<node>` | `PF-RATES-DESK` … one per desk and legal entity, `PF-COMM-BOOK-1` |
-| `RULE` | a condition on the positions' columns | `WHERE:<rule>` | `PF-USD-RATES`, `PF-EUR-ALL`, `PF-SHORT-RISK`, `PF-GOVT-BONDS`, `PF-LISTED`, `PF-OPTIONS`, `PF-FX-CROSSES`, `PF-LARGE-LONGS` |
-| `BASKET` | positions and trades someone picked | `POS:<ids>` and/or `TRD:<ids>` joined by ` + ` (a `TRADE_ID` member is that trade only; an empty basket is `TRD:NONE`) | `PF-ASHA-UNWIND`, `PF-NETTED-FLOW`, `PF-HEDGE-PAIRS`, `PF-TOP-SECURITIES`, `PF-PARTIAL-FILLS` |
+| `hierarchy` | a node of a hierarchy (`node`) | `NODE:<node>` | `PF-RATES-DESK` … one per desk and legal entity, `PF-COMM-BOOK-1` |
+| `rule` | a condition on the positions' columns (`rule`, [section 5.4](#54-the-position-rule-language-where-and-rule-portfolios)) | `WHERE:<rule>` | `PF-USD-RATES`, `PF-EUR-ALL`, `PF-SHORT-RISK`, `PF-GOVT-BONDS`, `PF-LISTED`, `PF-OPTIONS`, `PF-FX-CROSSES`, `PF-LARGE-LONGS` |
+| `basket` | positions and trades someone picked (`members`) | `POS:<ids>` and/or `TRD:<ids>` joined by ` + ` (a trade member is that trade only) | `PF-ASHA-UNWIND`, `PF-NETTED-FLOW`, `PF-HEDGE-PAIRS`, `PF-TOP-SECURITIES`, `PF-PARTIAL-FILLS` |
+
+| Field | Meaning |
+|---|---|
+| `id` | the id `PORT:<id>` names: 1 to 64 upper-case letters, digits, dots, dashes or underscores (`PF-RATES-DESK`) |
+| `name`, `description` | its display name and what it is for |
+| `owner` | who keeps its definition (a person or a team); told in their inbox when someone else changes it |
+| `type` | `hierarchy`, `rule` or `basket`, with its `node`, `rule` or `members` (`{position: POS-…}` or `{trade: …}` each) |
+| `rollsUpTo` | `{kind, id}`: the node it reports under (bank, division, legal-entity, desk, book) |
+| `validFrom`, `validTo` | the business dates it applies to (`validTo` empty: open-ended); on any other date `PORT:<id>` is *no system basket* |
+| `version`, `createdAt`, `updatedAt`, `updatedBy`, `retiredBy` | the store's history: every change is the next version |
+
+Its **VaR limit** is a `var-limit` row of `HIERARCHY` `PORTFOLIO` whose `NODE_ID` is its id ([section 15.15](#1515-var-limit-the-nodes-var-limits)).
+
+**Who changes them.** Everyone who may open VaR reads every system basket (the System baskets drop-down, key `B`; `PORT <GO>`;
+`GET /api/v1/risk/var/system-baskets`). Creating, editing and retiring one needs the permission **`var:system-baskets`**: a role that
+lists it (Admin → Roles → *Permissions*, or `permissions: [var:system-baskets]` of a configured role,
+[ACCESS_MODEL.md section 8](../architecture/ACCESS_MODEL.md#8-as-built-the-backend-phase-1-of-the-split)), or an administrator. It is
+done in the basket sheet itself ([section 3.5](#35-construct-your-basket)): a holder of the permission sees **System basket** under the
+sheet, the basket's fields; *Edit a copy* on a system basket fills them with it. **Save system basket** saves a `basket` from the sheet's
+position and trade columns, a `hierarchy` from its node (or the one node the sheet holds) and a `rule` from its condition; the same id is
+the next version (`409` when it changed since it was opened). **Retire** sets `validTo` (by default the day before the page's business
+date): the basket stays for the dates before, and is gone from the list and `PORT:<id>` after. A system basket is never deleted.
+
+**Checks on save** (`422 DRS-5220`, the reason in words): an id that is not of the form above or exists already (on a create); a type that
+is not one of the three; a hierarchy without its node, or a node no hierarchy holds on the date; a rule that does not read, or that names
+a column the positions do not have; a basket without members, or a position or trade the date does not hold; a member of the sheet that
+is not a position or a trade added (`+`); a date that is not `YYYY-MM-DD`, or `validTo` before `validFrom`. A stored entry that does not
+read as a system basket (edited by hand in the store) is listed under `skipped` of the list and left out of everything, never an error.
+
+**Audit and control.** Every change is one audit entry: `var-system-basket-create`, `-edit`, `-retire` (with the version, type, scope,
+owner and dates), and `var-system-basket-import` for an import (one more entry per basket it wrote). When the person changing it is not
+its owner, the owner gets an inbox notice. The server has no reusable four-eyes flow for records of the content store (its maker-checker
+flows are each their own: the stress window's proposals, the report sign-off, setting proposals), so a change takes effect at once and
+the audit trail and the owner's notice are its control.
+
+**YAML: import and export only.** The system baskets are not configuration: YAML is a way in and out, never their home.
+
+```bash
+drishti.py var baskets export --scope system > baskets.yaml   # every system basket, retired ones too (--scope mine: your own baskets)
+drishti.py var baskets import baskets.yaml                    # the diff: add, change (each field from, to), same, invalid (why); nothing written
+drishti.py var baskets import baskets.yaml --apply            # writes the adds and changes (the permission var:system-baskets), audited
+```
+
+From a script, the API token needs the scope `risk:system-baskets` (its user still needs the permission).
+
+```yaml
+system-baskets:
+  - id: PF-RATES-DESK
+    name: Rates desk (New York)
+    owner: rates-risk
+    type: hierarchy
+    node: MGMT~DESK-RATES
+    rolls-up-to: {kind: desk, id: DESK-RATES}
+    valid-from: '2026-01-02'
+  - id: PF-USD-RATES
+    name: USD rates exposure
+    owner: group-risk
+    type: rule
+    rule: "PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money market') and CURRENCY == 'USD'"
+    rolls-up-to: {kind: division, id: DIV-MARKETS}
+    valid-from: '2026-01-02'
+  - id: PF-HEDGE-PAIRS
+    name: Hedge pairs
+    owner: rates-risk
+    type: basket
+    members: [{position: POS-BOOK-RATES-1~MX-20000002}, {trade: CLY-3000087}]
+    valid-from: '2026-01-02'
+```
+
+An import checks every entry as a save does (on the business date `--date`, else the newest) and never writes an invalid one; a basket in
+Drishti the file does not name is kept as it is (an import never retires or removes one). The command exits 1 when an entry is invalid.
+
+**The demo's 28** are the market-risk pack's **seed**, `config/packs/banking/market-risk/seeds/system-baskets.yaml` (named by the pack's
+`system-baskets: {seed: …}`, written by `tools/packgen/var/make_var_data.py`): imported once into an empty system scope at the first start
+while `drishti.var.system-baskets.seed` is on (`DRISHTI_VAR_SYSTEM_BASKETS_SEED`, which follows `DRISHTI_DEMO_ENABLED`), audited as
+`var-system-basket-create` by `system (seed)`, and never read again. A bank's installation turns the seed off and imports its own file.
 
 `PORT:PF-USD-RATES` (*USD rates exposure*, a rule): 918 trades in 563 positions, VaR 28,968,862, 69.0% of its 42 million limit. The 28
-portfolios overlap on purpose: a position belongs to one leaf of each hierarchy and to any number of rule portfolios and baskets; each
-portfolio's vector is the sum over its own members, and a union of portfolios is computed as a set first, so a position in both counts
-once (two overlapping portfolios' vectors cannot simply be added, and a table of overlapping portfolios never shows a total row).
+system baskets overlap on purpose: a position belongs to one leaf of each hierarchy and to any number of rule and basket ones; each one's
+vector is the sum over its own members, and a union is computed as a set first, so a position in both counts once (two overlapping
+baskets' vectors cannot simply be added, and a table of overlapping baskets never shows a total row). The VaR, ES and limit use of each of
+the 28 on the demo date, and the page of `PORT PF-RATES-DESK`, are the same as when they were a data feed (the golden test
+`SystemBasketGoldenTest`).
+
+| Word | Means |
+|---|---|
+| `PORT <id> <GO>` | the system basket's page (the `system-basket` kind, [section 3.7](#37-the-portfolio-and-position-pages)); an old `/v/portfolio/<id>` link opens it |
+| `PORT <GO>` | the system baskets to pick from |
+| `PORT:<id>` | the scope, in any scope text, the sheet's System basket column, SMAT, Explain, captures and the pre-deal what-if |
+| `VAR PORT <id> <GO>` | the explorer at `PORT:<id>` |
+| `BASKET:<owner>/<name>` | a person's own basket ([section 5.8](#58-baskets)), never a system basket |
+
+An unknown id, or one not valid on the date, answers `404 DRS-5221` *no system basket <id> on <date>*.
 
 ### 5.8 Baskets
 
@@ -1449,8 +1543,9 @@ store's form of the user name. **Who may read:** the owner, a named user, or a h
 same name a new version (`version` in the body, when given, is the version the editor opened: changed since, `409`); an administrator
 edits anyone's (`owner` in the body names whose): saved under its owner, audited as `var-basket-edit`, the owner told in their inbox;
 anyone else naming another person's basket gets `404`. **Delete:** the owner, or an administrator (`204`; anything else `404`). A
-**portfolio** is the bank's (the `portfolio` feed, [section 5.7](#57-stored-portfolios)): it is never saved, edited or deleted here; the
-sheet's *Edit a copy* saves its parts as your own basket.
+**system basket** is the bank's ([section 5.7](#57-system-baskets)): it is kept beside people's baskets, under the system scope, and
+changed only by the holders of `var:system-baskets` (System basket under the sheet); everyone else's *Edit a copy* saves its parts as
+their own basket.
 
 **The sheet's checks** (`POST /api/v1/risk/var/basket/sheet`, the body the sheet itself or `{"sheet": {...}}`, with `asOf` and `ccy`) answer
 `cells` (only the cells that need a word: `column`, `row`, `text`, `word`, `id`, `op`, `status` `not-found`, `adds-nothing` or
@@ -1901,12 +1996,15 @@ The engine reads as the server and answers as you:
   those of every node beneath it, never a position or a trade (the tree stops at books, *By position* is refused); a scope is computed
   over the trades you may see and the rest counted (*Outside your view: 4 trades not included*, `hidden`); a node of no entry is not
   seen at all;
-- a scope naming positions, trades, counterparties, a rule, a basket, a capture or a BASKET portfolio may only name trades you see at
+- a scope naming positions, trades, counterparties, a rule, a basket, a capture or a basket-type system basket may only name trades you see at
   positions level (403 otherwise: a rule could probe single trades through aggregates);
 - field masks apply: a masked counterparty reads `•••` in trade rows, and `CPTY:` is refused to a role that sees it masked;
 - answers are cached per date, data version, view and scope: two people with different rights never share one; the computed kinds key
   their cache by the same view signature;
 - tokens need `risk:write` to save baskets and captures; reloads and official captures are for administrators only;
+- the system baskets ([section 5.7](#57-system-baskets)) are read by everyone who may open VaR, each through their own view; creating,
+  editing, retiring and importing them needs the permission `var:system-baskets` (a role that lists it, or an administrator; `403`
+  otherwise); one person's own baskets are never another's unless shared;
 - every headline, capture, basket change, reload and official run is an audit entry (Admin → Audit).
 
 ```yaml
@@ -1926,7 +2024,7 @@ entitlement)*, the bank's 9,572 trades less the desk's 1,487 (8,085 outside), an
 | No entry for any of the caller's roles | every node at `positions` level (no restriction) |
 | Several roles | their entries are merged; `positions` beats `aggregate` for the same node. A role without entries does **not** widen the others |
 | Visible trades | the union of the members of the listed nodes (either level); the answer is computed over them, the rest counted as `hidden` |
-| Positions level | the union of the members of the `positions` nodes; scopes naming positions, trades, counterparties, rules, baskets, BASKET portfolios or captures must stay inside it |
+| Positions level | the union of the members of the `positions` nodes; scopes naming positions, trades, counterparties, rules, baskets, basket-type system baskets or captures must stay inside it |
 | Tree | a node is listed when the caller sees at least one of its trades; `expandable` when it has children or the caller sees its positions |
 | History | the official node history only for a viewer at full `positions` level; others get the replay, with a note. The official captures and records likewise |
 | Cache | answers are keyed by the view's signature, so two viewers with different rights never share one |
@@ -1963,6 +2061,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var tree [--hierarchy MGMT\|LEGAL]` | every node's VaR, ES, limit use |
 | `var status` | settings, tiers, loaded dates |
 | `var basket <name> <scope>`, `var baskets` | save and list baskets |
+| `var baskets export [--scope system\|mine]`, `var baskets import FILE [--apply] [--date D]` | the system baskets as YAML: export them; import a file (the diff, nothing written; `--apply` writes, the permission `var:system-baskets`; exit 1 when an entry is invalid) ([section 5.7](#57-system-baskets)) |
 | `var capture <scope> [--note]`, `var captures`, `var compare <a> [b]` | captures |
 | `var official [--capture] [--date D]`, `var reload [--date D]` | the official record; a reload of every date or one (administrators) |
 | `var official --synthetic-history DAYS` | a demo server's synthetic official history before its oldest record (administrators; [section 18.10](#1810-period-statistics)) |
@@ -2031,9 +2130,9 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /scope/path` | `scope`, `page` (0), `size` (0 → `path-page`; at most 509), `asOf` | the P&L path ([section 11.3](#113-path-and-contributions)) |
 | `GET /scope/history` | `scope`, `asOf` | history and backtest ([section 11.4](#114-history-the-tree-and-the-status)) |
 | `GET /scope/contributions` | `scope`, `by` (`child` default, `node`, `part`, `position`, `trade`, `desk`, `book`, `attribute:<COLUMN>`), `scenario` (a scenario date), `asOf` | the parts ([section 11.3](#113-path-and-contributions)); `part`: the scope's terms ([section 5.8](#58-baskets)), each row with `term`, `word`, `trades`, `allocated`, `alone`; `attribute:TRADER_ID`: VaR by a trade column, every trade in its value's group ([section 11.3](#113-path-and-contributions)) |
-| `GET /hints` | `q` (typed text), `limit` (8, at most 25), `asOf` | the basket sheet's type-ahead: `[{type, id, name, scope, trades, var, notice}]` (portfolios, your baskets, desks, books, legal entities, divisions, counterparties, positions, trades; a typed `WORD:id` as written, with its notice when it matches nothing), as you |
+| `GET /hints` | `q` (typed text), `limit` (8, at most 25), `asOf` | the basket sheet's type-ahead: `[{type, id, name, scope, trades, var, notice}]` (system baskets, your baskets, desks, books, legal entities, divisions, counterparties, positions, trades; a typed `WORD:id` as written, with its notice when it matches nothing), as you |
 | `POST /what-if` | body `{scope, items: [{copyOf, factor, label}]}` (or `{pnl: [N numbers], factor, label}`: priced elsewhere), `ccy`, `asOf` | the pre-deal what-if by the server's engine ([section 8.2](#82-the-what-if-the-java-engine)): `before`, `after`, `change`, `items`, `engine`, `note` |
-| `GET /tree` | `hierarchy` (default `MGMT`), `asOf` | the nodes the caller sees with their figures, and the stored portfolios |
+| `GET /tree` | `hierarchy` (default `MGMT`), `asOf` | the nodes the caller sees with their figures, and the system baskets valid on the date |
 | `GET /scope/currencies` | `scope`, `asOf`, `ccy` | the explorer's tab *In other currencies*: per listed currency `var`, `es`, `varInPage` (that VaR in `ccy` at today's rate), `difference`, `differencePct`, `shown`; `tradeCurrencies`; from the per-trade-currency totals ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)) |
 | `GET /currencies` | `asOf` | the picker's list: `listed` (`drishti.var.currencies`), `available` (every currency with scenario FX on the date), `ready` (built already) |
 | `GET /status` | | settings (with the position rules and the official captures), the tiers (hot files open and on disk) and loaded dates (with any refused) |
@@ -2051,11 +2150,18 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `POST /official/synthetic-history` | `days` (259) | administrators, on a demo server (`drishti.regulatory.synthetic-history`): seeds synthetic official records ([section 18.10](#1810-period-statistics)) |
 | `GET /baskets`, `POST /baskets` | body `{name, title, description, scope or sheet, sharedWith, version, owner}` | baskets ([section 5.8](#58-baskets)): a list (without the sheets' lists, `fromSheet` on those), or a save; `version` the one the editor opened (`409` when changed since), `owner` someone else's basket an administrator edits (audited, the owner told) |
 | `POST /basket/sheet` | body the sheet `{wholeBank, op, TRD, POS, PORT, BOOK, DESK, LL, CPTY}` (lists aligned by row), `asOf`, `ccy` | every cell checked as you (`cells`: those not found or adding or taking away nothing, with the reason in words) and the basket's `var`, `es`, `sumOfParts`, `diversification`, `trades` ([section 5.8](#58-baskets)) |
-| `GET /basket/sheet` | `scope`, `asOf` | a scope laid into the sheet: a saved basket's lists (`basket` with `editable`), a portfolio's definition as a copy (`portfolio`), an ad-hoc scope's terms (`unplaced`: those with no column) |
+| `GET /basket/sheet` | `scope`, `asOf` | a scope laid into the sheet: a saved basket's lists (`basket` with `editable`), a system basket's definition as a copy (`portfolio`: its `note`, and for a holder of `var:system-baskets` `mayManage` and the `systemBasket` itself), an ad-hoc scope's terms (`unplaced`: those with no column) |
 | `POST /basket/sheet.xlsx` | body `{name, sheet}`, `asOf`, `ccy` | the sheet as a workbook: the *Basket* sheet (Op and the columns) and the *Checks* sheet |
 | `GET /baskets/{owner}/{name}` | | one basket you may read |
 | `DELETE /baskets/{owner}/{name}`, `DELETE /baskets/{name}` (your own) | `reason`, `version` (optional; query or body) | deletes a basket (`204`): its owner their own, an administrator anyone's; anyone else `404`; `409 DRS-5007` when `version` is not the basket's now ([section 3.5](#35-construct-your-basket)) |
 | `GET /admin/baskets` | `owner` (optional, contained, any case) | administrators: every person's baskets with `owner`, `scope`, `sharedWith`, `createdAt`, `updatedAt`, `version`, `bytes` |
+| `GET /system-baskets` | `asOf`, `all` (retired and future ones too) | everyone who may open VaR: `{businessDate, mayManage, permission, baskets: [{id, name, description, owner, type, node \| rule \| members, rollsUpTo, validFrom, validTo, scope, version, createdAt, updatedAt, updatedBy, limit, validOnDate}], skipped}` ([section 5.7](#57-system-baskets)) |
+| `GET /system-baskets/{id}` | | one system basket, with `mayManage`; `404 DRS-5221` when there is none |
+| `POST /system-baskets` | body: the fields above (`members`, or `sheet` for a basket's positions and trades or a hierarchy's one node), `version` to edit (absent: create), `asOf` | the permission `var:system-baskets`: the basket as saved (`checkedOn` the date it was checked on); `422 DRS-5220` with the reason, `409` when it changed since `version`, `403` without the permission; audited, the owner told |
+| `POST /system-baskets/{id}/retire` | body `{validTo?, version?, reason?}` | the permission: valid until `validTo` (default the day before `asOf`), audited |
+| `GET /system-baskets/export` | | the YAML file, `system-baskets: [...]` (`application/yaml`) |
+| `POST /system-baskets/import` | body: the YAML file; `apply` (default `false`), `asOf` | the permission: `{applied, add, change, same, invalid, keptNotInFile, baskets: [{id, action, changes \| reason, version}], checkedOn}` |
+| `GET /system-baskets/fields` | | the words the fields take (`types`, `rollsUpKinds`), the `permission` and `mayManage` (the sheet's System basket shows when true) |
 | `POST /captures` | body `{scope, note}`, `asOf` | `201` `{id, capturedAt, var, es, memberCount}` ([section 6](#6-captures-and-compare)) |
 | `GET /captures` | `scope` (optional, compared in canonical form) | the captures the caller may read, newest first |
 | `GET /captures/{id}`, `GET /captures/{id}/csv`, `/jsonl` | `part` (`components`, else the vector) | one capture; CSV; JSON Lines (the CSV's rows, one a line) |
@@ -2072,7 +2178,7 @@ GET  /api/v1/risk/var/scope?scope=DESK:DESK-RATES               headline, ancest
 GET  /api/v1/risk/var/scope/path?scope=…&page=0&size=60          histogram, worst 25, the 509 values, a page of the ranked table
 GET  /api/v1/risk/var/scope/history?scope=…                      250 days of VaR, ES, hypothetical P&L, exceptions, backtest
 GET  /api/v1/risk/var/scope/contributions?scope=…&by=child|node|position|trade|desk|book&scenario=2025-01-31
-GET  /api/v1/risk/var/tree?hierarchy=MGMT                        every node you see with its figures, and the stored portfolios
+GET  /api/v1/risk/var/tree?hierarchy=MGMT                        every node you see with its figures, and the system baskets
 POST /api/v1/risk/var/baskets {"name": "unwind", "scope": "POS:… + TRD:…", "sharedWith": ["risk"]}
 POST /api/v1/risk/var/captures {"scope": "BASKET:asha/unwind", "note": "before the unwind"}
 GET  /api/v1/risk/var/captures/{id}/csv?part=components          GET /api/v1/risk/var/compare?a=CAP-20260930-1&b=now
@@ -2110,7 +2216,7 @@ The last answers:
  "provenance": {"resolved": ["node MGMT~DESK-RATES"], "trades": 1486, "positions": 1348, "hidden": 0, "unknown": [],
    "tier": "hot file (float32 rows, summed in float64)",
    "inputs": {"pnl-vector": "risk-store=dc731161ff617ac4", "var-limit": "risk-store=5e04cd896a85d342",
-              "scenario-set": "risk-store=403c7f5e83f6df91", "portfolio": "risk-store=efcc196b8cbfb4a8", "scenarioSet": "HS-509",
+              "scenario-set": "risk-store=403c7f5e83f6df91", "scenarioSet": "HS-509",
               "batchIds": ["B-2026-09-30-01"], "positionRules": "ab645dcc102d6a9a"},
    "computeMs": 6, "cache": "miss", ...}}
 ```
@@ -2146,7 +2252,7 @@ The last answers:
 | Field | Type | Meaning |
 |---|---|---|
 | `scope` | string | canonical text |
-| `resolved` | list of strings | how each term resolved (`node MGMT~DESK-RATES`, `rule matched 16 positions`, `portfolio PF-X = NODE:…`, `basket a/b`, `the members of capture …`) |
+| `resolved` | list of strings | how each term resolved (`node MGMT~DESK-RATES`, `rule matched 16 positions`, `system basket PF-X = NODE:…`, `basket a/b`, `the members of capture …`) |
 | `trades`, `positions` | integer | members counted (visible; positions as derived) |
 | `failed` | integer | the date's rows with no vector (whole date, not the scope) |
 | `hidden` | integer | trades of the scope outside the viewer's entitlement |
@@ -2163,7 +2269,7 @@ The last answers:
 | `membershipHash` | string | the set's digest ([section 25](#25-one-business-date-in-memory)) |
 | `computedAt` | string | ISO-8601 instant of this answer |
 | `computeMs`, `cache`, `loadedMs` | integer, `hit`/`miss`, integer | time of this answer, cache use, the date's load time |
-| `inputs` | object | every input table's data version on the date (`pnl-vector`, `scenario-pv`, `scenario-set`, `portfolio`, `var-limit`), `scenarioSet`, `batchIds`, `positionRules` (the rules' digest): the shared rules' *input tables' versions and batch ids* ([README.md section 11](../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) |
+| `inputs` | object | every input table's data version on the date (`pnl-vector`, `scenario-pv`, `scenario-set`, `var-limit`), `scenarioSet`, `batchIds`, `positionRules` (the rules' digest): the shared rules' *input tables' versions and batch ids* ([README.md section 11](../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) |
 | `rejected`, `rejections` | integer, list | rows of the date rejected at load and the first 20 reasons (`DRS-5201 <trade>: <why>`) |
 | `excluded` | integer | rows of the date left out as not live (status, maturity) |
 | `positionRules` | string | the position rules the date was built with ([section 15.6](#156-positions-derived-by-drishti)) |
@@ -2220,7 +2326,7 @@ christoffersenLr, christoffersenPValue}`, `rows` `[{date, var, es, pnl, exceptio
 
 **`GET /tree`:** `hierarchy`, `hierarchies` (the roots' hierarchy names), `businessDate`, `nodes` `[{id, scope, name, level, parent,
 depth, var, es, limit, limitUse, trades, hidden, expandable}]` in depth-first order (a node is left out when the caller sees none of its
-trades), `portfolios` `[{id, scope, name, type, owner}]`.
+trades), `portfolios` `[{id, scope, name, type, owner, description}]` (the system baskets valid on the date, [section 5.7](#57-system-baskets)).
 
 **`GET /status`:** `enabled`, `confidence`, `esConfidence`, `rankRule`, `componentWindow`, `threads`, `memoryBudgetMb`, `hotDates`,
 `tier` `{mode, diskDates, keepOnShutdown, closeGraceSeconds, mapping, built, reopened, files, open, diskBytes}` (1.4), `kinds` (string[5]),
@@ -2309,7 +2415,8 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/ris
 | `drishti.var.playground.template` | blank | the built-in template | a bank's own workbook template: a folder with the built-in one's files and style names (a missing one refuses it, listed) |
 | `drishti.var.playground.export-choices`, `export-default` | `[100, 500, 1000, 10000, 0]`, `500` | the same | the export's drop-down (0: All) and the choice selected first |
 | `drishti.var.playground.export-max-cells` | `${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}` | 20,000,000 | the most cells one export may hold on the server; larger is refused in words |
-| `drishti.var.kinds.vector`, `.position`, `.scenario-set`, `.portfolio`, `.limit` | the market-risk kinds | `pnl-vector`, `position`, `scenario-set`, `portfolio`, `var-limit` | the kinds read (and `position`: the kind the derived positions are served as) |
+| `drishti.var.kinds.vector`, `.position`, `.scenario-set`, `.system-basket`, `.limit` | the market-risk kinds | `pnl-vector`, `position`, `scenario-set`, `system-basket`, `var-limit` | the kinds read (and `position`, `system-basket`: the kinds the derived positions and the system baskets are served as) |
+| `drishti.var.system-baskets.seed` (`DRISHTI_VAR_SYSTEM_BASKETS_SEED`) | follows `DRISHTI_DEMO_ENABLED` (`true`) | `true` | import a loaded pack's seed of system baskets once into an empty system scope at start ([section 5.7](#57-system-baskets)); a bank's installation sets `false` |
 | `drishti.var.kinds.scenario-pv`, `.fx-scenario`, `.fx-spot` | `scenario-pv`, `fx-scenario`, `fx-spot` | the same | scenario PVs, supplied scenario FX, the FX history derived FX comes from ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
 | `drishti.var.currencies` | `${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}` | `[USD, EUR, CAD, JPY, GBP]` (USD always first) | the reporting currencies **built ahead**: after a date's USD book loads, each listed currency's book is built in the background into its own hot file, so a VaR in it never waits on its first ask; the console's picker lists them ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)) |
 | `drishti.var.root-name` | `${DRISHTI_VAR_ROOT_NAME:}` | blank: the hierarchy data's `NAME` | the name of every hierarchy's root node (the top of the tree, breadcrumbs, headline, CLI, `var-result`, captures and new official records; older records keep theirs); applied when a date loads and part of the hot file's digest, so a running server shows it after a restart or a reload of the dates |
@@ -2386,7 +2493,7 @@ plugin's vector reader (`DeltaTable.vectors`, `DeltaSourcePlugin.vectorColumns`)
 `drishti.var` in `config/engines/var.yaml` (and its jar copy); the market-risk pack's `positions:` section.
 
 **Commands and pages.** `VAR <word> <id> <GO>` opens the VaR explorer at a scope (`VAR DESK RATES <GO>`, `VAR BANK <GO>`,
-`VAR CAPTURE CAP-20260930-1 <GO>`); `POS` and `PORT` open the position and portfolio pages; `VRES` the computed kind; the
+`VAR CAPTURE CAP-20260930-1 <GO>`); `POS` and `PORT` open the position and system basket pages; `VRES` the computed kind; the
 API is `/api/v1/risk/var`.
 
 **Status.** The engine is **built** and tested: there is no stored `var` or `var-node` kind, no input or fundamental kind carries a VaR figure, positions are
@@ -2400,7 +2507,8 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | Part | Status | Where |
 |---|---|---|
 | Trade-grain P&L vectors in a `list<double>` column (`pnl-vector`), every row checked at load | Built | §15.2, §20 |
-| Scenario set, risk hierarchies (MGMT, LEGAL), portfolio definitions (HIERARCHY, RULE, BASKET) | Built | §15.3–15.5 |
+| Scenario set, hierarchies (MGMT, LEGAL, LL) from the trades' columns | Built | §15.3–15.4 |
+| System baskets (hierarchy, rule, basket) kept in Drishti's basket store, managed with `var:system-baskets`, imported and exported as YAML | Built | §5.7 |
 | **Positions derived by Drishti** when a date loads, by the market-risk pack's `positions:` rules (securities: book + security; listed: book + contract; OTC: book + trade); signed quantity; live statuses only; served as the `position` kind by the `var-positions` connector | Built | §4, §15.6 |
 | The in-memory engine: vector store, trade ordinals, node aggregates, planner, parallel sums | Built | §25 |
 | VaR, ES, standalone, component, incremental, marginal, diversification; backtest | Built | §18 |
@@ -2408,11 +2516,11 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | API `/api/v1/risk/var`, baskets and captures in the content store, entitlements by node, field masks, audit | Built | §11, §9 |
 | Retire the stored `var` kind: `VAR-*` ids and `/v/var/<id>` open the explorer at the matching scope | Built | §21 |
 | Retire the stored `var-node` kind: a node's history is the engine's **official end-of-day captures** | Built | §19, §21 |
-| No computed column on `position`, `portfolio` or the core pack's `desk`: their pages show the engine's figures, computed as they open (`VAR_ENGINE`) | Built | §3.7, §21.3 |
+| No computed column on `position`, `system-basket` or the core pack's `desk`: their pages show the engine's figures, computed as they open (`VAR_ENGINE`) | Built | §3.7, §21.3 |
 | Official end-of-day captures of every node of MGMT and LEGAL, published to `risk-results/var-official` | Built | §19 |
 | The data-load signal reloads the date and captures it (decided, open question 5) | Built | §15.8 |
 | 7 years of vectors and their time travel (Delta log and removed files; lake maintenance never goes below) | Built | §15.1 |
-| The full trade set (9,572 live trades) and 28 portfolios in the test data | Built | §22 |
+| The full trade set (9,572 live trades) in the test data, and the 28 system baskets of the pack's seed | Built | §22, §5.7 |
 | An optional "risk position" grouping for viewing (book × product × currency × underlying × maturity quarter) | PLANNED | §15.6 |
 | Tiered memory: each loaded date a memory-mapped local hot file (float32 position rows in hierarchy order, the trades of fungible positions, float64 aggregates; Delta stays float64), the heap holding aggregates, columns and links; history dates opened lazily from their file; rebuilt when the inputs change; cleaned on eviction and shutdown | Built | §26 |
 | The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | Built (measured locally; the full run is for a server) | [BENCHMARK.md section 5.2](../admin/BENCHMARK.md#52-the-tiered-store-vartierbenchmark) |
@@ -2448,7 +2556,6 @@ ${DRISHTI_DELTA_ROOT}/
 │   ├── fx-scenario/  business_date=YYYY-MM-DD/                  one row per currency per date: its rate today and per scenario
 │   ├── scenario-set/ business_date=YYYY-MM-DD/                  one row per scenario set per date
 │   ├── var-limit/    business_date=YYYY-MM-DD/                  one row per node with a VaR limit (section 15.15)
-│   └── portfolio/    business_date=YYYY-MM-DD/                  one row per portfolio definition per date
 └── risk-results/
     └── var-official/ business_date=YYYY-MM-DD/                  the official end-of-day figures, a row per node and result version
 ```
@@ -2471,7 +2578,6 @@ promotes, and every field's type, is its data contract (each section below links
 | [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) (market-data pack, read for derived FX) | `fx-spot` (`fx-spot`) | `PAIR` | (the market-data pack's) | none |
 | [`scenario-set`](../contracts/samples/market-risk.md#scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)) | `scenario-set` (`scenario-set`) | `SCENARIO_SET_ID` | none | none |
 | [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)) | `limit` (`var-limit`) | `LIMIT_ID` | `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY` | none |
-| `portfolio` | `portfolio` (`portfolio`) | `PORTFOLIO_ID` | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` | none |
 | `position` (served, not stored) | `position` (`position`) | `POSITION_ID` | (the `var-positions` connector) | none |
 
 The connector's layout in the market-risk pack (`config/packs/banking/market-risk/pack.yaml`):
@@ -2568,19 +2674,18 @@ and any other a bank configures) are built by the server from the promoted colum
 limit-letter nodes in the test data. Their limits are `var-limit` rows ([section 15.15](#1515-var-limit-the-nodes-var-limits)). How they
 are configured, the promoted-columns rule, the (Blank) nodes and the display names: [section 15.14](#1514-hierarchies-from-promoted-columns).
 
-### 15.5 `portfolio`: stored portfolio definitions
+### 15.5 System baskets: not an input
 
-**Grain:** one row per portfolio and business date. **Key:** `PORTFOLIO_ID` (`PF-…`). **Row count:** 28 in the test data. A portfolio
-is a **definition**: its positions, VaR, ES and contributions are the engine's, computed when asked (the portfolio page, `PORT:<id>`,
-[section 3.7](#37-the-portfolio-and-position-pages)). It carries no stored figures
-([section 21.3](#213-what-is-not-stored)). How a definition becomes a scope is in
-[section 5.7](#57-stored-portfolios).
+The bank's own baskets (`PORT:<id>`: a hierarchy node, a rule or a list of positions and trades) are **not data**: no upstream system
+sends them, and there is no `portfolio` kind (a file of it is refused at load: `the portfolio kind is removed …`). They are kept in
+Drishti's basket store and managed there by the holders of `var:system-baskets`, or imported from YAML ([section 5.7](#57-system-baskets)).
+What does come from upstream is each one's **VaR limit**, a `var-limit` row of `HIERARCHY` `PORTFOLIO` ([section 15.15](#1515-var-limit-the-nodes-var-limits)).
+A system basket is served as the `system-basket` kind (the `var-system-baskets` connector) for its page, its figures the engine's
+([section 3.7](#37-the-portfolio-and-position-pages), [section 21.3](#213-what-is-not-stored)); its data contract is
+[`system-basket.contract.yaml`](../../config/packs/banking/market-risk/contracts/system-basket.contract.yaml), published as
+[PORT: `system-basket`](../contracts/packs/market-risk.md#port-system-basket-the-banks-baskets-kept-in-drishti-system-basket).
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`portfolio.contract.yaml`](../../config/packs/banking/market-risk/contracts/portfolio.contract.yaml), published as [PORT: `portfolio`](../contracts/packs/market-risk.md#port-portfolio-portfolio); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#portfolio).
-
-A BASKET's `POSITION_ID` members name derived positions: `POS-<TT_BOOK>~<security>` or `POS-<TT_BOOK>~<TRADE_ID>`. Rule portfolios and
-baskets saved by people live in the content store ([section 5.8](#58-baskets)); the stored `portfolio` kind holds the demo's (and a
-bank's own) definitions.
+A `basket`'s position members name derived positions: `POS-<TT_BOOK>~<security>` or `POS-<TT_BOOK>~<TRADE_ID>`.
 
 ### 15.6 Positions derived by Drishti
 
@@ -2680,7 +2785,7 @@ built: a node's backtest reads its official `HYPO_PNL`; any other scope replays 
 ```
 
 **Reload on load (open question 5).** A `ready` load of an input kind (`drishti.var.kinds`: `pnl-vector`, `scenario-set`,
-`var-limit`, `portfolio`) or of `trade` (`LoadService.onReady`) drops that date from the engine (the same as
+`var-limit`) or of `trade` (`LoadService.onReady`) drops that date from the engine (the same as
 `POST /api/v1/risk/var/reload` for the date, audited `var-reload`), so a restated date is never stale, then captures the date officially in
 the background ([section 19](#19-official-end-of-day-results)): a date whose inputs are unchanged is not captured again, a restated one
 gets the next result version. A **new** date is picked up without a signal (each request asks the connector for the newest date with
@@ -2999,7 +3104,7 @@ Any number of hierarchies may be configured; the market-risk pack ships three:
 | Hierarchy | Levels | Node ids | What it is |
 |---|---|---|---|
 | `MGMT` | `DIVISION > DESK > TT_BOOK` | leaf (`MGMT~DESK-RATES`, `MGMT~BOOK-RATES-1`) | management: bank, division, desk, book. The **primary hierarchy**: the planner and the history use it |
-| `LEGAL` | `LEGAL_ENTITY > DESK > TT_BOOK` | leaf (`LEGAL~LE-NY`, `LEGAL~DESK-RATES`) | legal entities: bank, legal entity, desk, book |
+| `LEGAL` | `LEGAL_ENTITY > DESK > TT_BOOK` | path (`LEGAL~LE-NY`, `LEGAL~LE-NY/DESK-RATES`, `LEGAL~LE-NY/DESK-RATES/BOOK-RATES-1`) | legal entities: bank, legal entity, desk, book; a desk booking into two legal entities is a node under each |
 | `LL` | `LIMIT_LETTER > DESK` | path (`LL~LL-0003`, `LL~LL-0003/DESK-RATES`) | the **limit letters**: the letter of authority each trade's VaR limit is granted under |
 
 **Where they are configured.** The market-risk pack's manifest, `hierarchies:` beside `positions:` (generated from
@@ -3013,7 +3118,7 @@ empty. MGMT and LEGAL are the pack's, never a built-in of the engine. The exposu
 hierarchies:
   MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
           root: { id: BANK, name: Drishti Bank }, limits: var-limit }
-  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf,
+  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path,
            root: { id: BANK, name: Drishti Bank }, limits: var-limit }
   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
 ```
@@ -3024,7 +3129,7 @@ hierarchies:
 | `levels` | none (required) | the level columns, top first: `"DIVISION > DESK > TT_BOOK"` or a list. Each must be a promoted column of every source the engine reads (below) |
 | `level-names` | each column in lower case (`limit-letter`, `desk`) | the level of each column's nodes (`division > desk > book`); also the **reference kind** a node's display name is read from (below) |
 | `root` | `{id: BANK, name: <title>}` | the root's own id (the node `MGMT~BANK`) and name; `drishti.var.root-name` (every hierarchy) and `drishti.var.root-names` (one) win over it |
-| `ids` | `path` | `path`: a node's id is its path (`LL~LL-0003/DESK-RATES`); `leaf`: its own value (`MGMT~DESK-RATES`), refused at load (`DRS-5213`) when a value sits under two parents on the date (a desk booking into two legal entities: use `ids: path` for that hierarchy) |
+| `ids` | `path` | `path`: a node's id is its path (`LL~LL-0003/DESK-RATES`); `leaf`: its own value (`MGMT~DESK-RATES`), refused at load (`DRS-5213`) when a value sits under two parents on the date (use `ids: path` for a hierarchy where that may happen) |
 | `word` | none | the scope word naming the hierarchy's nodes: `LL:LL-0003`, `LL:LL-0003/DESK-RATES`, `LL:0003` (the word's own prefix, as `DESK:RATES`). Not one of the engine's words (`BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET WHERE CAPTURE NSET GROUP`). Every node is also `NODE:<id>` |
 | `limits` | none | the kind the nodes' VaR limits come from: `var-limit` ([section 15.15](#1515-var-limit-the-nodes-var-limits)). A node without a row has no limit (blank, never zero) |
 | `empty-label` | `drishti.var.hierarchy.empty-label` (`(Blank)`) | the name of a (Blank) node (below) |
@@ -3109,10 +3214,10 @@ server; `VarHierarchyApiTest` a fourth tree, the words and the limits.
 ### 15.15 `var-limit`: the nodes' VaR limits
 
 **Grain:** one row per node with a limit and business date. **Key:** `LIMIT_ID` = `VL-<NODE_ID>`. **Row count:** 157 in the test data
-(41: the 43 nodes of LL but two letter-desk nodes left without one; the 88 MGMT and LEGAL nodes; the 28 portfolios, hierarchy
-`PORTFOLIO`, `NODE_ID` the portfolio's id: every VaR limit lives here, with its currency, decision 8 of
+(41: the 43 nodes of LL but two letter-desk nodes left without one; the 88 MGMT and LEGAL nodes; the 28 system baskets, hierarchy
+`PORTFOLIO`, `NODE_ID` the system basket's id: every VaR limit lives here, with its currency, decision 8 of
 [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)). Read for the hierarchies whose `limits` names the kind
-(`drishti.var.kinds.limit`, `var-limit`) and for the portfolios; JSON Lines, one row a line.
+(`drishti.var.kinds.limit`, `var-limit`) and for the system baskets (`HIERARCHY` `PORTFOLIO`); JSON Lines, one row a line.
 
 **Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`var-limit.contract.yaml`](../../config/packs/banking/market-risk/contracts/var-limit.contract.yaml), published as [VLIM: `var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#var-limit).
 
@@ -3125,7 +3230,7 @@ the bank's own desk, legal-entity or letter code, one to one. A row whose node i
 | a node its hierarchy cannot build (the hierarchy is not configured, or the id has more values than the hierarchy has levels) | unused, and said with the reason: `DRS-5212` in `provenance.warnings` |
 
 Everything else about limits is unchanged: limit use, `limitStatus` and `limitNear` ([section 11.2](#112-the-headline-get-scope-and-its-provenance)), the bars, the pre-deal check,
-the captures and the portfolios' limits (hierarchy `PORTFOLIO`). A (Blank) node has no limit unless a row names its id.
+the captures and the system baskets' limits (hierarchy `PORTFOLIO`, [section 5.7](#57-system-baskets)). A (Blank) node has no limit unless a row names its id.
 
 The kind is an input: its data version is part of a date's hot-file digest, and its data-load signal reloads the date.
 
@@ -4075,7 +4180,7 @@ not a list of numbers`). A `null` element inside a vector is accepted and stays 
 | 400 | `DRS-5001` | a basket name or an empty basket scope; a capture id that exists | *a basket's name is 1-64 letters …*; *a basket has a scope …* |
 | 403 | `DRS-5002` | the engine is off | *the VaR engine is switched off on this server (drishti.var.enabled)* |
 | 403 | `DRS-5002` | the caller may not open `pnl-vector` | *your role may not see VaR (the kind pnl-vector)* |
-| 403 | `DRS-5002` | a `POS`/`TRD`/`CPTY`/`WHERE`/`BASKET`/`CAPTURE` scope, or `PORT:` of a BASKET portfolio, over trades seen only in aggregate; `by=position` or `by=trade` for such a viewer | *… your role sees some of these only in aggregate* |
+| 403 | `DRS-5002` | a `POS`/`TRD`/`CPTY`/`WHERE`/`BASKET`/`CAPTURE` scope, or `PORT:` of a basket-type system basket, over trades seen only in aggregate; `by=position` or `by=trade` for such a viewer | *… your role sees some of these only in aggregate* |
 | 403 | `DRS-5002` | `CPTY:` for a viewer who sees `COUNTERPARTY` masked | *the counterparty is masked for your role …* |
 | 403 | `DRS-5002` | `POST /reload` or `POST /official` by a non-administrator; `GET /official` by a viewer who does not see every node; a token without `risk:write` on a write | |
 | 404 | `DRS-1001` | no P&L vectors in any connector; no scenario set for the date; no such hierarchy; no basket or capture the caller may read; no official record of the date | *no P&L vectors in any connector (kind pnl-vector): build the demo lake …*; *no scenario set for <date>* |
@@ -4088,6 +4193,9 @@ not a list of numbers`). A `null` element inside a vector is accepted and stays 
 | 422 | `DRS-5210` | one source system sent two forms or grains on the date, or a supplied position covers a trade also sent on its own (section 15.13) | *the inputs of 2026-09-30 are not loaded: MUREX sent {PNL/POSITION=1, PNL/TRADE=7}; one source system sends one form and one grain on one date* |
 | 422 | `DRS-5213` | the hierarchies' configuration is not valid (the removed `source:` setting among the reasons), a level column no source promotes and no pack's layout names (a typo), or a hierarchy with `ids: leaf` has a value under two parents on the date | *the VaR inputs of <date> are not loaded: the hierarchy MGMT names its nodes by their own value (ids: leaf), but DESK-X sits under both … : use ids: path* |
 | 404 | `DRS-5214` | `GET /tree?hierarchy=<id>` of a hierarchy the date has not | *no hierarchy NOPE on <date> (it has LL, LEGAL, MGMT)* |
+| 422 | `DRS-5220` | a system basket that cannot be saved or imported as given ([section 5.7](#57-system-baskets)): its id, type, node, rule, members, dates, or an id that exists | *PF-X: the node MGMT~DESK-NOPE is not a node of a hierarchy on 2026-09-30* |
+| 404 | `DRS-5221` | `PORT:<id>` alone (or an edit) of a system basket the date does not have | *no system basket PF-NOPE on 2026-09-30: PORT <GO> lists the system baskets* |
+| 403 | `DRS-5002` | creating, editing, retiring or importing a system basket without the permission `var:system-baskets` | *rita does not hold the permission var:system-baskets (Admin -> Roles: a role with it)* |
 
 `DRS-5208` (a record that does not say what it is, or contradicts itself) and `DRS-5209` (a record against its system's pin) name a
 refused record in `provenance.rejections` (an intraday one in `intraday.rejections` too). `DRS-5201`, `DRS-5206` and (for a trade) `DRS-5207` are not HTTP answers: they name a rejected row in `provenance.rejections` (section 20.3).
@@ -4178,7 +4286,8 @@ stored VaR figure ([section 21.3](#213-what-is-not-stored)).
 | `var` kind | `pack.yaml` kind, mnemonic, route, form, badge and id pattern `^VAR-` (now: the explorer), `graph.fields.VAR_RESULT`; `samples/var.jsonl`; `data/testdata/market-risk/var/`; `sutras/market-risk/var.v1.sutra.yaml` and its Sutra tests; the about sections (English and French); the Calc snippets reading it (`var_es.py`, `var_tails.py`, `var_methods.py`, `var_component.py`, `var_backtest.py`, `var_limits.py`, `var_factor_regression.py`, and the core pack's `desk_performance.py`); the generator's VaR part of `market_results`; its contract |
 | `var-node` kind | kind, route, layout, mnemonic `VNODE`, id pattern `^VN-`; samples and test data; `Demo.var_nodes()`; `VarLoader.history` and `VarBook.NodeHistory` (replaced by official captures); `drishti.var.kinds.node`; its contract |
 | Computed fields on `position` | `VAR_99`, `ES_975`, `COMPONENT_VAR` (also from the layout's promoted columns), `BOOK_VAR`, `PCT_OF_BOOK_VAR`, `TRADE_QUANTITIES[].VAR_99`, `TRADE_QUANTITIES[].COMPONENT_VAR`, `PNL`: the page reads the engine's ([section 3.7](#37-the-portfolio-and-position-pages)) |
-| Computed fields on `portfolio` | `VAR_99`, `ES_975`, `LIMIT_USE`, `POSITION_COUNT`, `TRADE_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `POSITIONS[]`, `BY_*[]`, `TOP_CONTRIBUTORS`, `ALL_TRADES`, `PNL` (and the promoted `VAR_99`, `ES_975`, `POSITION_COUNT`, the vector `PNL`): the page reads the engine's |
+| `portfolio` kind | the feed of stored portfolio definitions: its contract, samples, test data (`data/testdata/market-risk/portfolio/`), lake tables, routes and Sutra tests; `drishti.var.kinds.portfolio`. The bank's own baskets are the system baskets of the basket store ([section 5.7](#57-system-baskets)) |
+| Computed fields on `system-basket` (the stored portfolio record's figures) | `VAR_99`, `ES_975`, `LIMIT_USE`, `POSITION_COUNT`, `TRADE_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `POSITIONS[]`, `BY_*[]`, `TOP_CONTRIBUTORS`, `ALL_TRADES`, `PNL` (and the promoted `VAR_99`, `ES_975`, `POSITION_COUNT`, the vector `PNL`): the page reads the engine's |
 | The `position` input table | positions are derived by Drishti ([section 15.6](#156-positions-derived-by-drishti)), served by `var-positions` |
 | The core pack's `desk` | `VAR_99` and `VAR_RESULT` on each desk record: the desk page's VaR is the engine's (`DESK:<id>`) |
 | The core pack's `legal-entity` | `BOOKS[].VAR`, a stored book VaR left on each legal entity's book rows (BOOK-SFT-1 read 70.8m against LE-FRA's computed 1.8m): the page's VaR is the engine's, `VAR_ENGINE.VAR` (`LE:<id>`) and each book's `VAR_ENGINE.BOOKS[].VAR` (`BOOK:<id>`), which the risk-return scatter and the Calc snippet `legal_entity_risk_return.py` read |
@@ -4336,7 +4445,7 @@ recommended defaults unless the product owner said otherwise):
 | Provenance | the input tables' versions and batch ids | as designed (`provenance.inputs`) |
 | Load signal | the shared rules' section 9: the signal reloads the date (confirmed 2026-10-25) | as designed (and the date is captured officially) |
 | `VAR-COMM` mapping | the shared rules' section 14: `DIVISION:COMM` | the record is the desk `DESK-COMM`; the division word is `DIV:` |
-| Scope sections | the shared rules' sections 4 and 8 pointed to *VAR.md section 9* (scopes) and *section 11* (memory) | scopes are [section 5](#5-scopes-portfolios-and-baskets) of this guide and memory [section 26](#26-the-tiered-memory-and-the-hot-file) |
+| Scope sections | the shared rules' sections 4 and 8 pointed to *VAR.md section 9* (scopes) and *section 11* (memory) | scopes are [section 5](#5-scopes-system-baskets-and-baskets) of this guide and memory [section 26](#26-the-tiered-memory-and-the-hot-file) |
 | Hot file (proposed in 1.3) | `<data folder>/var/hot/<date>/<SCENARIO_SET_ID>.vhot`, a `STRS` section of every dictionary, `NODE` with member runs over position rows, `TMAT` of every trade | `<date>/inputs-<16 hex of the inputs' digest>.vhot` (the set id is in the header); each column section carries its dictionaries; `NODE` holds books (runs come from `BOOK`); `META`, `SCEN`, `AKEY`, `TMAP` added; `TMAT` holds only the trades of fungible positions |
 | Sharding | each node maps the shards it owns | built ([section 28](#28-sharding-across-drishtinet)): each owner builds and maps only its shards; every member holds the date's skeleton and node aggregates |
 | Computed kinds | `var-result`, `var-contribution`, `var-path`, `var-history`, `what-if` | `var-result`; parts and worst scenarios inside `var-result`; the what-if is the VaR API's (`POST /what-if`) |
@@ -4361,7 +4470,7 @@ as the viewer; packs stay declarative.
 
 | Part | Implementation |
 |---|---|
-| the pack | the **market-risk** pack: the kinds `position`, `portfolio`, `pnl-vector`, `scenario-pv`, `scenario-set`, `var-limit` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`, and `position` to the `var-positions` connector (the engine's derived positions); the computed kind `var-result` on the reactive connector `var-engine`; mnemonics `POS`, `PORT`, `PNLV`, `SPV`, `SSET`, `VLIM`, `VRES`; the hierarchies in its `hierarchies:` block; Sutras for `portfolio` and `position` |
+| the pack | the **market-risk** pack: the kinds `position`, `system-basket`, `pnl-vector`, `scenario-pv`, `scenario-set`, `var-limit` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`, `position` to the `var-positions` connector (the engine's derived positions) and `system-basket` to `var-system-baskets` (the basket store's system scope); its seed of system baskets (`seeds/system-baskets.yaml`); the computed kind `var-result` on the reactive connector `var-engine`; mnemonics `POS`, `PORT`, `PNLV`, `SPV`, `SSET`, `VLIM`, `VRES`; the hierarchies in its `hierarchies:` block; Sutras for `system-basket` and `position` |
 | the stored data | `risk-store` (Delta), the vectors in a `list<double>` column (`layout.<kind>.vectors: [PNL]`); demo data from `tools/packgen/var/make_var_data.py` |
 | the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.banking.compute.var`); loading, entitlements, baskets, captures, official records and the API in `drishti-banking` (`com.ash.drishti.banking.var`). Base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
 | the what-if | `VarWhatIf` (`drishti-server`) over `VarWhatIfMath` (`drishti-compute`): copies of booked trades or scopes and vectors priced elsewhere added to a scope, before and after ([section 8.2](#82-the-what-if-the-java-engine)) |
@@ -5265,15 +5374,14 @@ dates to the latest business days when it is built, so a file dated 2026-09-30 a
 | [`pnl-vector`](#364-pnl-vector-pl-vectors-per-trade-accepted) | each trade's scenario P&L, computed by the source | **one of the two**, per trade | `market-risk/pnl-vector/pnl-vector-*.tar` | [15.2](#152-pnl-vector-one-pl-vector-per-trade) |
 | [`fx-scenario`](#365-fx-scenario-scenario-fx-rates) | each currency's rate on each scenario day, to convert scenario PVs to USD | when scenario PVs are in other currencies (else derived from `fx-spot`) | `market-risk/fx-scenario/fx-scenario.tar` | [15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) |
 | [`fx-spot`](#366-fx-spot-fx-history) | FX history: today's rates, reporting currencies, scenario FX when not supplied | for other currencies | `market-data/fx-spot/fx-spot.*.jsonl.gz` | [15.10](#1510-reporting-currency) |
-| [`portfolio`](#367-portfolio-stored-portfolios-and-baskets) | stored portfolios: hierarchy, rule and basket portfolios | optional | `market-risk/portfolio/portfolio.*.jsonl.gz` | [15.5](#155-portfolio-stored-portfolio-definitions) |
-| [`var-limit`](#368-var-limit-var-limits) | a node's VaR limit (the Limit column, limit use) | optional | `market-risk/var-limit/var-limit.*.jsonl.gz` | [15.15](#1515-var-limit-the-nodes-var-limits) |
-| [`desk-pnl`](#369-desk-pnl-actual-and-hypothetical-pl-for-backtesting) | actual and hypothetical P&L of each desk, per day | for backtesting | `market-risk/desk-pnl/desk-pnl.tar` | [15.16](#1516-desk-pnl-the-banks-actual-and-hypothetical-pl) |
-| [`pnl-history`](#3610-pnl-history-the-long-history-of-each-node) | a node's P&L over many years | for stressed VaR and long-history views | `market-risk/pnl-history/pnl-history.*.jsonl.gz` | — |
-| [`trade-valuation`](#3611-trade-valuation-each-trades-value-today) | each trade's MTM today and its attributes | optional (the position page, What-if) | `market-risk/trade-valuation/trade-valuation.*.jsonl.gz` | — |
-| [The trades](#3612-the-trades-trade_murex-trade_endur-trade_calypso) | the trades themselves, linked from every position | optional for the number, used by the screens | `trades/murex/trade_murex.*.jsonl.gz` | — |
+| [`var-limit`](#367-var-limit-var-limits) | a node's or a system basket's VaR limit (the Limit column, limit use) | optional | `market-risk/var-limit/var-limit.*.jsonl.gz` | [15.15](#1515-var-limit-the-nodes-var-limits) |
+| [`desk-pnl`](#368-desk-pnl-actual-and-hypothetical-pl-for-backtesting) | actual and hypothetical P&L of each desk, per day | for backtesting | `market-risk/desk-pnl/desk-pnl.tar` | [15.16](#1516-desk-pnl-the-banks-actual-and-hypothetical-pl) |
+| [`pnl-history`](#369-pnl-history-the-long-history-of-each-node) | a node's P&L over many years | for stressed VaR and long-history views | `market-risk/pnl-history/pnl-history.*.jsonl.gz` | — |
+| [`trade-valuation`](#3610-trade-valuation-each-trades-value-today) | each trade's MTM today and its attributes | optional (the position page, What-if) | `market-risk/trade-valuation/trade-valuation.*.jsonl.gz` | — |
+| [The trades](#3611-the-trades-trade_murex-trade_endur-trade_calypso) | the trades themselves, linked from every position | optional for the number, used by the screens | `trades/murex/trade_murex.*.jsonl.gz` | — |
 
 **The minimum for a VaR number:** `scenario-set`, and for every trade either a `scenario-pv` row or a `pnl-vector` row carrying its
-hierarchy columns (`DIVISION`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`: the trees are built from them, [15.14](#1514-hierarchies-from-promoted-columns)). Everything else adds a feature: currencies, portfolios, limits, backtesting, the trade pages.
+hierarchy columns (`DIVISION`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`: the trees are built from them, [15.14](#1514-hierarchies-from-promoted-columns)). Everything else adds a feature: currencies, limits, backtesting, the trade pages.
 
 ### 36.2 `scenario-set`: the scenario days
 
@@ -5331,24 +5439,16 @@ watched: a change during the day does not recompute VaR.
 - **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../config/packs/banking/market-data/contracts/fx-spot.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
 
-### 36.7 `portfolio`: stored portfolios and baskets
-
-Named sets of positions beyond the trees: a **hierarchy** portfolio (a node), a **rule** portfolio (a filter, e.g. every swap over 5 years)
-and a **basket** (an explicit member list, as here). They appear as Portfolios and System baskets on the VaR screen. `ROLLS_UP_TO` says
-which node it belongs to for limits and reporting.
-
-- **Data contract:** [`portfolio`](../contracts/packs/market-risk.md#port-portfolio-portfolio) (PORT), key `PORTFOLIO_ID`; 9 fields, 8 required; the file [`portfolio.contract.yaml`](../../config/packs/banking/market-risk/contracts/portfolio.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#portfolio) (files `data/testdata/market-risk/portfolio/portfolio.*.jsonl.gz`).
-
-### 36.8 `var-limit`: VaR limits
+### 36.7 `var-limit`: VaR limits
 
 A node's VaR limit with its horizon and confidence: the **Limit** column and limit use on the VaR screen. A limit is compared only at its
-own horizon and confidence (the screen says *not comparable* otherwise).
+own horizon and confidence (the screen says *not comparable* otherwise). A system basket's limit is a row of `HIERARCHY` `PORTFOLIO`
+whose `NODE_ID` is the basket's id ([5.7](#57-system-baskets)): the system baskets themselves are kept in Drishti, not data.
 
 - **Data contract:** [`var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (VLIM), key `LIMIT_ID`; 10 fields, 7 required; the file [`var-limit.contract.yaml`](../../config/packs/banking/market-risk/contracts/var-limit.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#var-limit) (files `data/testdata/market-risk/var-limit/var-limit.*.jsonl.gz`).
 
-### 36.9 `desk-pnl`: actual and hypothetical P&L for backtesting
+### 36.8 `desk-pnl`: actual and hypothetical P&L for backtesting
 
 Each desk's real P&L per day, from finance: **actual** (with intraday trading and fees), **hypothetical** (today's positions held still)
 and fees. The backtest compares each day's VaR with these to count exceptions and set the traffic-light zone (Backtest ›).
@@ -5356,7 +5456,7 @@ and fees. The backtest compares each day's VaR with these to count exceptions an
 - **Data contract:** [`desk-pnl`](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) (DPNL), key `DESK_PNL_ID`; 10 fields, 8 required; the file [`desk-pnl.contract.yaml`](../../config/packs/banking/market-risk/contracts/desk-pnl.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#desk-pnl) (files `data/testdata/market-risk/desk-pnl/desk-pnl.tar`).
 
-### 36.10 `pnl-history`: the long history of each node
+### 36.9 `pnl-history`: the long history of each node
 
 A node's P&L over many years (`HISTORY_DATES`, `PNL`), e.g. from 2007, so a stressed window (2008) can be found and long-history views
 drawn. The sample's history is synthetic (`SYNTHETIC: true`), anchored to the stress set and HS-509.
@@ -5364,7 +5464,7 @@ drawn. The sample's history is synthetic (`SYNTHETIC: true`), anchored to the st
 - **Data contract:** [`pnl-history`](../contracts/packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) (PNLH), key `HISTORY_ID`; 16 fields, 10 required; the file [`pnl-history.contract.yaml`](../../config/packs/banking/market-risk/contracts/pnl-history.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#pnl-history) (files `data/testdata/market-risk/pnl-history/pnl-history.*.jsonl.gz`).
 
-### 36.11 `trade-valuation`: each trade's value today
+### 36.10 `trade-valuation`: each trade's value today
 
 The trade's MTM today with its attributes (desk, portfolio, counterparty, netting set, trader). Shown on a position's page and used by
 What-if; not needed for the VaR number itself, which comes from the vectors.
@@ -5372,7 +5472,7 @@ What-if; not needed for the VaR number itself, which comes from the vectors.
 - **Data contract:** [`trade-valuation`](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation) (TVAL), key `VALUATION_ID`; 21 fields, 20 required; the file [`trade-valuation.contract.yaml`](../../config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#trade-valuation) (files `data/testdata/market-risk/trade-valuation/trade-valuation.*.jsonl.gz`).
 
-### 36.12 The trades: `trade_murex`, `trade_endur`, `trade_calypso`
+### 36.11 The trades: `trade_murex`, `trade_endur`, `trade_calypso`
 
 The trades themselves (one kind per source system: `trade_murex`, `trade_endur`, `trade_calypso`, under
 `data/testdata/trades/<system>/`), in the source system's names. VaR does not need them for the number (the vectors carry the placement

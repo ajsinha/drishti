@@ -27,7 +27,7 @@ kinds:
 - pnl-explain
 - trade-valuation
 - position
-- portfolio
+- system-basket
 - pnl-vector
 - scenario-pv
 - fx-scenario
@@ -47,7 +47,7 @@ commands:
   PNL: pnl-explain
   TVAL: trade-valuation
   POS: position
-  PORT: portfolio
+  PORT: system-basket
   PNLV: pnl-vector
   SPV: scenario-pv
   FXS: fx-scenario
@@ -72,12 +72,14 @@ depends-on:
   - var-engine
   - var-positions
   - var-results
+  - var-system-baskets
   plugins:
   - delta
   - derived
   - reactive
   - var-positions
   - var-pv-stream
+  - var-system-baskets
   settings:
   - DRISHTI_KAFKA_BOOTSTRAP
   - DRISHTI_LAKE_ENABLED
@@ -101,11 +103,13 @@ generated-by: tools/packgen/banking/make_docs.py
 
 Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
 trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs**: one P&L vector
-per live trade over 509 historical scenario days, the scenario set, the VaR limits of the hierarchies' nodes (`var-limit`), and
-portfolio definitions (hierarchy, rule, basket). The hierarchies themselves are configured in this pack's `hierarchies:` block (any
+per live trade over 509 historical scenario days, the scenario set and the VaR limits of the hierarchies' nodes and of the system
+baskets (`var-limit`). The system baskets themselves (`PORT <id>`: a hierarchy node, a rule or a basket) are kept in Drishti's basket
+store, not data: the demo's are this pack's seed, `seeds/system-baskets.yaml`, imported once at a demo's first start
+([VAR_GUIDE.md section 5.7](../../../../docs/guides/VAR_GUIDE.md#57-system-baskets)). The hierarchies themselves are configured in this pack's `hierarchies:` block (any
 number): MGMT (`DIVISION > DESK > TT_BOOK`), LEGAL (`LEGAL_ENTITY > DESK > TT_BOOK`) and the limit letters LL (`LIMIT_LETTER > DESK`),
 each built by the server from the trades' promoted columns ([VAR_GUIDE.md section 15.14](../../../../docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
-[VAR_GUIDE.md section 3](../../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the portfolio
+[VAR_GUIDE.md section 3](../../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the system basket
 and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
 are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by
 book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR_GUIDE.md Part II](../../../../docs/guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
@@ -312,11 +316,11 @@ Nested structures:
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
 
-### `portfolio`
+### `system-basket`
 
-**Portfolio** · mnemonic `PORT` · read through connector `risk-store`.
+**System basket (the bank's baskets, kept in Drishti)** · mnemonic `PORT` · read through connector `var-system-baskets`.
 
-A portfolio definition: a hierarchy node, a rule over the positions' columns, or a basket of positions and trades. Portfolios may overlap; their VaR is computed when asked
+A system basket: one of the bank's own baskets (PORT <id>), kept in Drishti's basket store, never read from data (docs/guides/VAR_GUIDE.md section 5.7): a hierarchy node, a rule over the positions' columns, or a basket of positions and trades; served by the var-system-baskets connector. System baskets may overlap; their VaR is computed when asked
 
 **Id:** pattern `^PF-`.
 
@@ -324,25 +328,27 @@ Fields, from 3 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `PORTFOLIO_ID` | string | `PF-ASHA-UNWIND` | link to `portfolio` |
+| `PORTFOLIO_ID` | string | `PF-ASHA-UNWIND` | link to `system-basket` |
 | `NAME` | string | `Unwind candidates (Asha)` | — |
-| `OWNER` | string | `asha` | Who keeps the portfolio's definition. |
+| `DESCRIPTION` | null |  | What the system basket is for, in its owner's words. |
+| `OWNER` | string | `asha` | Who keeps the system basket's definition; told in their inbox when someone else changes it. |
 | `TYPE` | string | `BASKET` | HIERARCHY, RULE or BASKET |
 | `DEFINITION` | object |  | NODE (a hierarchy node), RULE (a condition) or MEMBERS (positions and trades) |
 | `ROLLS_UP_TO` | object |  | Nested: see below |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `VALID_FROM` | date | `2026-01-02` | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. |
-| `VALID_TO` | null |  | — |
+| `VALID_FROM` | date | `2026-01-02` | The first business date the system basket applies to. |
+| `VALID_TO` | null |  | The last business date it applies to (set when it is retired); its VaR limit is a var-limit row (HIERARCHY PORTFOLIO) |
+| `VERSION` | integer | `1` | The basket store's version of the definition: every change is the next version, audited. |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `DEFINITION` | `MEMBERS` (list of objects): For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position)., `NODE` (string): For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it)., `RULE` (string): For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date. |
+| `DEFINITION` | `MEMBERS` (list of objects): For a BASKET system basket: the positions and trades someone picked (a trade brings that part of its position)., `NODE` (string): For a HIERARCHY system basket: the node of the bank's hierarchy whose positions it holds (every book under it)., `RULE` (string): For a RULE system basket: the condition a position's columns must meet to be in it, checked on each business date. |
 | `DEFINITION.MEMBERS[]` | `POSITION_ID` (string), `TRADE_ID` (string) |
-| `ROLLS_UP_TO` | `KIND` (string), `ID` (string): The desk or book the portfolio reports under. |
+| `ROLLS_UP_TO` | `KIND` (string), `ID` (string): The node the system basket reports under (the bank, a division, a legal entity, a desk or a book). |
 
-Links: `PORTFOLIO_ID` → `portfolio`.
+Links: `PORTFOLIO_ID` → `system-basket`.
 
 ### `pnl-vector`
 
@@ -635,7 +641,7 @@ No samples ship: documents are read live from its connector `mr-derived` (plugin
 | `PNL` | `pnl-explain` | P&L explain |
 | `TVAL` | `trade-valuation` | Trade valuation |
 | `POS` | `position` | Position |
-| `PORT` | `portfolio` | Portfolio |
+| `PORT` | `system-basket` | System basket (the bank's baskets, kept in Drishti) |
 | `PNLV` | `pnl-vector` | P&L vector (509 scenarios) |
 | `SPV` | `scenario-pv` | Scenario PVs of a trade (509 scenarios, its currency) |
 | `FXS` | `fx-scenario` | Scenario FX of a currency (509 scenarios) |
@@ -657,8 +663,8 @@ Examples:
 | `STR STR-GFC2008-RATES` | Stress · 2008 crisis on the rates desk |
 | `PNL PNL-RATES-1` | P&L explain |
 | `FRTB FRTB-RATES-1` | FRTB sensitivities and charges |
-| `PORT PF-RATES-DESK` | Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it) |
-| `PORT PF-ASHA-UNWIND` | A basket of positions and trades · overlaps the rates desk |
+| `PORT PF-RATES-DESK` | System basket · its positions, longs and shorts, VaR and component VaR (computed as you open it) |
+| `PORT PF-ASHA-UNWIND` | A system basket of positions and trades · overlaps the rates desk |
 | `VRES DESK:RATES` | The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES) |
 | `VAR BANK 10D SUM` | The bank's 10-day VaR from 10 consecutive days (VAR BANK 10D SQRT: the 1-day × √10; VAR BANK 95: at 95%) |
 
@@ -668,10 +674,10 @@ Screens (Sutras):
 |---|---|---|
 | `frtb-sensitivity` | `frtb-sensitivity` | Delta, vega and curvature by risk class and bucket (SBM). |
 | `pnl-explain` | `pnl-explain` | Daily P&L attributed to risk factors, new trades and residual. |
-| `portfolio` | `portfolio` | A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. |
 | `position` | `position` | A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page opens. |
 | `stress-result` | `stress-result` | P&L of a desk under a scenario, by book. |
 | `stress-scenario` | `stress-scenario` | A named historical or hypothetical shock set. |
+| `system-basket` | `system-basket` | A system basket in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. |
 | `trade-valuation` | `trade-valuation` | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). |
 
 ## Data sources and licences
@@ -690,10 +696,11 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `var-limit`, `desk-pnl`, `pnl-history`, `position-sensitivity`, `risk-factor` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `var-limit`, `desk-pnl`, `pnl-history`, `position-sensitivity`, `risk-factor` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `mr-derived` | `derived` | `stress-scenario-pnl` | `${DRISHTI_MR_DERIVED_ENABLED:true}` |
 | `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |
+| `var-system-baskets` | `var-system-baskets` | `system-basket` | `${DRISHTI_VAR_ENABLED:true}` |
 | `pv-updates` | `var-pv-stream` | `pv-update` | `${DRISHTI_VAR_PV_STREAM:false}` |
 | `var-engine` | `reactive` | `var-result` | `${DRISHTI_VAR_ENABLED:true}` |
 

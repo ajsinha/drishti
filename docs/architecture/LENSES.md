@@ -383,7 +383,7 @@ the VaR explorer: the baskets leave the left-hand column for two drop-downs, and
 
 | # | Panel | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|
-| L1 | System baskets drop-down with search | the tree's `portfolios` | **B**; type, ↑↓, Enter, Esc | **Built**, without a VaR figure per row (one computation each) |
+| L1 | System baskets drop-down with search | the tree's `portfolios` (the basket store's system baskets) | **B**; type, ↑↓, Enter, Esc | **Built**, without a VaR figure per row (one computation each) |
 | L2 | My baskets drop-down | `GET /api/var/baskets` | **M**; edit, copy, delete per row | **Built** |
 | L3 | + New basket | the basket's sheet (`drishti_var-basket.js`) | Alt+B | **Built** |
 | L4 | The hierarchy tree | `/api/var/tree` | ▸ opens, click shows the node's VaR | **Built** |
@@ -443,7 +443,7 @@ STR, SSPNL) and collateral operations (COLL, MC), left out by the lens file. **D
 | Need | Status | Where it is described |
 |---|---|---|
 | P&L today: MtM change of every trade valued on both the business date and the day before, by book, by trader, overnight movers | **Built** (MtM change only; the bank's struck P&L is not received; the pricing system's `PNL_1D` is not used) | [ADMIN_GUIDE.md, How the figures are made](../guides/ADMIN_GUIDE.md#162-drishti-trading) |
-| My VaR, Desk VaR (any union of books), top positions and VaR by trader from the server's contributions; labelled intraday after updates | **Built** | [VAR_GUIDE section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets), [section 11.3](../guides/VAR_GUIDE.md#113-path-and-contributions), [section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes) |
+| My VaR, Desk VaR (any union of books), top positions and VaR by trader from the server's contributions; labelled intraday after updates | **Built** | [VAR_GUIDE section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets), [section 11.3](../guides/VAR_GUIDE.md#113-path-and-contributions), [section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes) |
 | 10-day VaR and the confidence chosen | **Built** on the VaR page; on the landings: TL5 | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen) |
 | The scenario matrix (`SMAT`, "is this tail scenario new?") | **Built**, on in the lens (`SMAT BOOK BOOK-RATES-1 20`) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
 | VaR limit use per book and desk; limit use by book over 5 official dates; breaches and near limit | **Built** (`var-limit`; the server's `limitStatus` with `drishti.risk.limit-near` 0.8) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits) |
@@ -1459,7 +1459,7 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 | VaR 99% and ES 97.5% of any scope; component, incremental, marginal VaR; any confidence and window per request | **Built** | [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts), [18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences) |
 | 10-day VaR (√10 and overlapping sum); stressed VaR; the stress-window selection `SWIN` | **Built** | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen), [18.8](../guides/VAR_GUIDE.md#188-stressed-var), [18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window) |
 | Several hierarchies (management, legal entity, limit letters `LL`) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns) |
-| VaR limits per node and stored portfolio; `LIMIT_USE` on every answer and official record; near from `drishti.risk.limit-near` (0.8) | **Built** | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits), [3.2](../guides/VAR_GUIDE.md#32-the-screen), [19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
+| VaR limits per node and system basket; `LIMIT_USE` on every answer and official record; near from `drishti.risk.limit-near` (0.8) | **Built** | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits), [3.2](../guides/VAR_GUIDE.md#32-the-screen), [19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | Why VaR moved (RO1) | **Built** | [VAR_GUIDE section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained); [5.3.1](#531-ro1-var-change-explanation) |
 | Worst scenarios and who lost on them; the scenario matrix `SMAT` | **Built** | [VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs), [3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
 | Captures and compare; official end-of-day records, append-only, seven years, reproducible | **Built** | [VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare), [19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |

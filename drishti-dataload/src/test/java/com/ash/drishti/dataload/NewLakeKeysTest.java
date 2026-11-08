@@ -250,4 +250,14 @@ class NewLakeKeysTest {
                 .isInstanceOf(Routes.Unrouted.class).hasMessageContaining("the risk-hierarchy kind is removed")
                 .hasMessageContaining("promoted columns").hasMessageContaining("hierarchies:");
     }
+
+    @Test
+    void aFileOfTheRemovedPortfolioKindIsRefusedSayingWhatReplacesIt() throws Exception {
+        Routes routes = Routes.read(tmp.resolve("none.yaml"), "demo", packs(bookPack(tmp)));
+        for (String file : List.of("portfolio.2026-09-30.jsonl.gz", "PORTFOLIO.2026-09-30.jsonl")) {
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> routes.route(file, null))
+                    .isInstanceOf(Routes.Unrouted.class).hasMessageContaining("the portfolio kind is removed")
+                    .hasMessageContaining("basket store").hasMessageContaining("var:system-baskets").hasMessageContaining("var baskets import");
+        }
+    }
 }

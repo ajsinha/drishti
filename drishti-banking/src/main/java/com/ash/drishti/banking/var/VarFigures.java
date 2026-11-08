@@ -59,7 +59,7 @@ final class VarFigures implements ViewAugmenter {
 
     @Override
     public boolean augments(String kind) {
-        return Set.of(svc.props().kinds().position(), svc.props().kinds().portfolio(), "desk", LEGAL_ENTITY).contains(kind);
+        return Set.of(svc.props().kinds().position(), svc.props().kinds().systemBasket(), "desk", LEGAL_ENTITY).contains(kind);
     }
 
     @Override
@@ -79,7 +79,7 @@ final class VarFigures implements ViewAugmenter {
             try {
                 String kind = doc.ref().kind();
                 figures = kind.equals(svc.props().kinds().position()) ? position(who.get(), doc.ref().id(), date)
-                        : kind.equals(svc.props().kinds().portfolio()) ? portfolio(who.get(), doc.ref().id(), date)
+                        : kind.equals(svc.props().kinds().systemBasket()) ? portfolio(who.get(), doc.ref().id(), date)
                         : kind.equals(LEGAL_ENTITY) ? legalEntity(who.get(), doc.ref().id(), o, date)
                         : desk(who.get(), doc.ref().id(), date);
             } catch (DrishtiException | IllegalArgumentException e) {

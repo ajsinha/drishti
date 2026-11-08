@@ -43,7 +43,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param historyDays the history and backtest window (250 business days)
  * @param histogramBins the bins of the P&amp;L distribution sent to the screen
  * @param maxParts the most parts a contribution table computes at once (more: the largest by gross size, and said)
- * @param kinds the kinds the engine reads (vectors, scenario set, portfolios, limits) and serves (positions)
+ * @param kinds the kinds the engine reads (vectors, scenario set, limits) and serves (positions, system baskets)
  * @param access per role, the hierarchy nodes it may see and how: {@code MGMT~DESK-RATES: positions} (its numbers, children, positions
  *     and trades) or {@code aggregate} (numbers and children, never a position); a role without an entry sees every node at
  *     {@code positions} level when it may open the vector kind, else nothing
@@ -265,15 +265,17 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * ({@code scenarioPv}, 2.9.4), or both for different trades; the FX of the scenarios is {@code fxScenario} when the batch supplies
      * it, else derived from the FX history of {@code fxSpot} (the market-data pack's). The nodes' VaR limits by hierarchy and node id
      * are {@code limit} (2.9.5, {@code var-limit}), read for the hierarchies whose {@code limits} names it. VaR by a trade column the
-     * vectors do not carry ({@code by=attribute:TRADER_ID}) joins the trade valuations, {@code valuation}, by trade id (2.9.11).
+     * vectors do not carry ({@code by=attribute:TRADER_ID}) joins the trade valuations, {@code valuation}, by trade id (2.9.11). The
+     * system baskets (VAR_GUIDE.md section 5.7) are kept in the basket store, never read from data: {@code systemBasket} is the kind they
+     * are served as (the {@code var-system-baskets} connector, PORT &lt;id&gt;).
      */
-    public record Kinds(String vector, String position, String scenarioSet, String portfolio, String scenarioPv,
+    public record Kinds(String vector, String position, String scenarioSet, String systemBasket, String scenarioPv,
             String fxScenario, String fxSpot, String limit, String valuation) {
         public Kinds {
             vector = vector == null ? "pnl-vector" : vector;
             position = position == null ? "position" : position;
             scenarioSet = scenarioSet == null ? "scenario-set" : scenarioSet;
-            portfolio = portfolio == null ? "portfolio" : portfolio;
+            systemBasket = systemBasket == null ? "system-basket" : systemBasket;
             scenarioPv = scenarioPv == null ? "scenario-pv" : scenarioPv;
             fxScenario = fxScenario == null ? "fx-scenario" : fxScenario;
             fxSpot = fxSpot == null ? "fx-spot" : fxSpot;
@@ -282,7 +284,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         }
 
         public List<String> all() {
-            return List.of(vector, position, scenarioSet, portfolio, scenarioPv, fxScenario, fxSpot, limit);
+            return List.of(vector, position, scenarioSet, systemBasket, scenarioPv, fxScenario, fxSpot, limit);
         }
 
         /**
@@ -290,7 +292,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
          * ({@code fxSpot}) is not one: a market-data load does not reload VaR; a date reads the history it finds when it loads.
          */
         public List<String> inputs() {
-            return List.of(vector, scenarioSet, portfolio, scenarioPv, fxScenario, limit);
+            return List.of(vector, scenarioSet, scenarioPv, fxScenario, limit);
         }
     }
 

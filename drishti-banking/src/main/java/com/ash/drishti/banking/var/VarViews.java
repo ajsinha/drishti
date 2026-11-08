@@ -353,13 +353,13 @@ final class VarViews {
         return svc.loader().limitBasis(s.date().date(), id);
     }
 
-    private static double limitOf(VarService.Scoped s) {
+    private double limitOf(VarService.Scoped s) {
         if (s.res().node() != null) {
             return s.date().book().node(s.res().node()).limit();
         }
         if ("portfolio".equals(s.kind())) {
             String id = s.res().canonical().substring("PORT:".length());
-            VarDate.Portfolio pf = s.date().portfolios().get(id);
+            VarDate.Portfolio pf = svc.portfolios(s.date()).get(id);
             return pf == null ? Double.NaN : pf.limit();
         }
         return Double.NaN;
@@ -1392,13 +1392,14 @@ final class VarViews {
         ln.put("set", l.set());
         out.put("lens", ln);
         List<Map<String, Object>> ports = new ArrayList<>();
-        d.portfolios().values().forEach(pf -> {
+        svc.portfolios(d).values().forEach(pf -> {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("id", pf.id());
             m.put("scope", "PORT:" + pf.id());
             m.put("name", pf.name());
             m.put("type", pf.type());
             m.put("owner", pf.owner());
+            svc.saved().system().get(pf.id()).ifPresent(sb -> m.put("description", sb.description()));   // the system basket's, for the list
             ports.add(m);
         });
         out.put("portfolios", ports);

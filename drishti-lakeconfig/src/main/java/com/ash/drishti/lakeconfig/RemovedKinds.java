@@ -30,7 +30,10 @@ public final class RemovedKinds {
     public static final Map<String, String> REMOVED = Map.of("risk-hierarchy", "the risk-hierarchy kind is removed: the VaR and exposure "
             + "hierarchies are built from the promoted columns of the trades' rows (DIVISION, LEGAL_ENTITY, DESK, TT_BOOK, LIMIT_LETTER on every "
             + "scenario-pv, pnl-vector and exposure-path row) as the pack's hierarchies: block configures them (VAR_GUIDE.md section 15.14); "
-            + "their VaR limits are var-limit rows");
+            + "their VaR limits are var-limit rows",
+            "portfolio", "the portfolio kind is removed: the system baskets (PORT:<id>) are kept in Drishti's basket store, not read from data "
+            + "(VAR_GUIDE.md section 5.7); a holder of the permission var:system-baskets creates and edits them in Construct your basket, or "
+            + "imports them as YAML (drishti.py var baskets import FILE --apply); their VaR limits are var-limit rows (HIERARCHY PORTFOLIO)");
 
     /** What replaces a kind or table name ({@code _} and {@code -} alike, any case), or null when it is not removed. */
     public static String replacement(String name) {

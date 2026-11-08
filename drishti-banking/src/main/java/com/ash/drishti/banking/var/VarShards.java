@@ -253,7 +253,7 @@ final class VarShards implements AutoCloseable {
         Map<String, String> versions = new LinkedHashMap<>(loader.versions(date));
         versions.put("scenarioSet", book.scenarioSet());
         long ms = (System.nanoTime() - t0) / 1_000_000;
-        VarDate vd = new VarDate(date, book, loader.portfolios(date), loader.version(date), Instant.now(), ms, 0, sum, versions, List.of(),
+        VarDate vd = new VarDate(date, book, loader.portfolioLimits(date), loader.version(date), Instant.now(), ms, 0, sum, versions, List.of(),
                 VarDate.USD, fx);
         try {                                                          // the day's updates read and applied here, as one server does
             return loader.withIntraday(vd, loader.readIntraday(date, book, Set.of(), sum), book.scenarioDates());
@@ -282,9 +282,8 @@ final class VarShards implements AutoCloseable {
         for (ShardAssembly.Part p : parts) {
             withoutPv += VarShardIntake.read(p.meta()).withoutPv();
         }
-        Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
-        usd.portfolios().forEach((id, p) -> portfolios.put(id, new VarDate.Portfolio(p.id(), p.name(), p.type(), p.owner(), p.scope(),
-                Double.isNaN(p.limit()) ? Double.NaN : p.limit() / rep.base())));
+        Map<String, Double> portfolios = new LinkedHashMap<>();         // the system baskets' limits in the reporting currency
+        usd.portfolioLimits().forEach((id, l) -> portfolios.put(id, Double.isNaN(l) ? Double.NaN : l / rep.base()));
         Map<String, Object> fxUsed = new LinkedHashMap<>(usd.fx());
         Map<String, Object> mine = new LinkedHashMap<>();
         mine.put("source", rep.source());

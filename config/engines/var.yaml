@@ -123,12 +123,14 @@ drishti:
       vector: pnl-vector  # the kind of the stored P&L vectors
       position: position  # the kind the engine's derived positions are served as (the var-positions connector)
       scenario-set: scenario-set  # the kind of the scenario sets (the dates of the historical scenarios)
-      portfolio: portfolio  # the kind of the stored portfolios
+      system-basket: system-basket   # the kind the system baskets are served as (the var-system-baskets connector, PORT <id>); they are kept in the basket store
       scenario-pv: scenario-pv       # trades sent as scenario PVs in their own currency, converted to USD P&L at load (beside or instead of vectors)
       fx-scenario: fx-scenario       # each currency's rate under each scenario, when the batch supplies it (USD per unit)
       fx-spot: fx-spot               # the FX history scenario rates are derived from when not supplied (the market-data pack's)
       limit: var-limit               # the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it
       valuation: trade-valuation     # the trade valuations a VaR by a trade column the vectors do not carry joins by trade id (by=attribute:TRADER_ID)
+    system-baskets:                  # the bank's own baskets (VAR_GUIDE.md section 5.7): kept in the basket store (var/system-baskets/), never read from data
+      seed: ${DRISHTI_VAR_SYSTEM_BASKETS_SEED:${DRISHTI_DEMO_ENABLED:true}}   # import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start
     access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
     positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
       live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)

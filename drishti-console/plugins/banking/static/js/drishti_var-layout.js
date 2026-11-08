@@ -16,8 +16,8 @@
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The VaR screen's layout (docs/guides/VAR_GUIDE.md section 3.1; the approved mock-up docs/lenses/mockups/var-layout/A.html). One thing:
 
-   - the baskets in two searchable drop-downs in the toolbar: System baskets (the bank's portfolios, from the market-risk pack's
-     portfolio feed) and My baskets (the baskets saved, mine and those shared with me). Each is a button that opens a popup with a
+   - the baskets in two searchable drop-downs in the toolbar: System baskets (the bank's, kept in Drishti's basket store: VAR_GUIDE.md
+     section 5.7) and My baskets (the baskets saved, mine and those shared with me). Each is a button that opens a popup with a
      combobox (type to search the name and the description) over a listbox: ↑↓ move, Enter opens the scope, Esc closes; B and M open
      them from anywhere on the page. The rows and their actions (+ basket, Edit, Edit a copy, Delete) are the explorer's own
      (drishti_var-explorer.js hands them over with setItems); a choice moves the explorer (Drishti.VarExplorer.select).
@@ -233,7 +233,7 @@
     return !!(t && t.closest && t.closest("[data-var-basket], dialog"));
   }
   var K = window.Drishti.keys, free = function (ev) { return !dialogOpen() && !aside(ev.target); };
-  K.register({ id: "var.baskets.system", keys: ["B", "Shift+B"], scope: "screen", area: "var", group: "VaR", description: "System baskets: the bank's portfolios",
+  K.register({ id: "var.baskets.system", keys: ["B", "Shift+B"], scope: "screen", area: "var", group: "VaR", description: "System baskets: the bank's, kept in Drishti",
     when: function (ev) { return free(ev) && !!P.system; }, run: function () { open("system"); } });
   K.register({ id: "var.baskets.mine", keys: ["M", "Shift+M"], scope: "screen", area: "var", group: "VaR", description: "My baskets: saved, mine and shared with me",
     when: function (ev) { return free(ev) && !!P.mine; }, run: function () { open("mine"); } });

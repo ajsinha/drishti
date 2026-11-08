@@ -25,7 +25,6 @@ kinds:
 - frtb-sensitivity
 - pnl-explain
 - trade-valuation
-- portfolio
 - pnl-vector
 - scenario-pv
 - fx-scenario
@@ -35,5 +34,5 @@ kinds:
 description: risk-store read from Iceberg (the market-risk pack's risk domain; Delta stays the default)
 settings:
   lake: iceberg
-  lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.portfolio,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.var-limit,risk.pnl-history
+  lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.var-limit,risk.pnl-history
   engine: native

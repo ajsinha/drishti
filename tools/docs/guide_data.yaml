@@ -30,7 +30,7 @@ guides:
     number: 36
     note: |
       **The minimum for a VaR number:** `scenario-set`, and for every trade either a `scenario-pv` row or a `pnl-vector` row carrying its
-      hierarchy columns (`DIVISION`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`: the trees are built from them, [15.14](#1514-hierarchies-from-promoted-columns)). Everything else adds a feature: currencies, portfolios, limits, backtesting, the trade pages.
+      hierarchy columns (`DIVISION`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`: the trees are built from them, [15.14](#1514-hierarchies-from-promoted-columns)). Everything else adds a feature: currencies, limits, backtesting, the trade pages.
     datasets:
       - kind: scenario-set
         title: the scenario days
@@ -93,25 +93,16 @@ guides:
           Market data: each currency pair's quote today and its recent history (`HISTORY`). VaR reads it for reporting currencies (the page's
           Reporting currency picker), for today's conversion, and to derive scenario FX when `fx-scenario` is not supplied. It is read, never
           watched: a change during the day does not recompute VaR.
-      - kind: portfolio
-        title: stored portfolios and baskets
-        sample: market-risk/portfolio/portfolio.*.jsonl.gz
-        required: optional
-        for: "stored portfolios: hierarchy, rule and basket portfolios"
-        guide: "[15.5](#155-portfolio-stored-portfolio-definitions)"
-        about: |
-          Named sets of positions beyond the trees: a **hierarchy** portfolio (a node), a **rule** portfolio (a filter, e.g. every swap over 5 years)
-          and a **basket** (an explicit member list, as here). They appear as Portfolios and System baskets on the VaR screen. `ROLLS_UP_TO` says
-          which node it belongs to for limits and reporting.
       - kind: var-limit
         title: VaR limits
         sample: market-risk/var-limit/var-limit.*.jsonl.gz
         required: optional
-        for: a node's VaR limit (the Limit column, limit use)
+        for: a node's or a system basket's VaR limit (the Limit column, limit use)
         guide: "[15.15](#1515-var-limit-the-nodes-var-limits)"
         about: |
           A node's VaR limit with its horizon and confidence: the **Limit** column and limit use on the VaR screen. A limit is compared only at its
-          own horizon and confidence (the screen says *not comparable* otherwise).
+          own horizon and confidence (the screen says *not comparable* otherwise). A system basket's limit is a row of `HIERARCHY` `PORTFOLIO`
+          whose `NODE_ID` is the basket's id ([5.7](#57-system-baskets)): the system baskets themselves are kept in Drishti, not data.
       - kind: desk-pnl
         title: actual and hypothetical P&L for backtesting
         sample: market-risk/desk-pnl/desk-pnl.tar

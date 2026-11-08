@@ -40,7 +40,7 @@ settings:
           cpty_id: COUNTERPARTY
       links:
         COUNTERPARTY: counterparty
-        PORTFOLIO: portfolio
+        PORTFOLIO: book
     counterparty:
       table: refdata.counterparties
       id: CPTY_ID

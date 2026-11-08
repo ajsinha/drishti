@@ -46,11 +46,16 @@ public class RoleController {
 
     /** A role as an administrator writes it. */
     public record RoleRequest(String description, List<String> kinds, Boolean raw, Boolean author, Boolean approve, Boolean admin, Boolean calc,
-            Boolean layout, Boolean collaborate, Boolean compliance, List<String> bi, Boolean edit) {
+            Boolean layout, Boolean collaborate, Boolean compliance, List<String> bi, Boolean edit, List<String> permissions) {
 
         public RoleRequest(String description, List<String> kinds, Boolean raw, Boolean author, Boolean approve, Boolean admin, Boolean calc,
                 Boolean layout, Boolean collaborate, Boolean compliance, List<String> bi) {
-            this(description, kinds, raw, author, approve, admin, calc, layout, collaborate, compliance, bi, null);
+            this(description, kinds, raw, author, approve, admin, calc, layout, collaborate, compliance, bi, null, null);
+        }
+
+        public RoleRequest(String description, List<String> kinds, Boolean raw, Boolean author, Boolean approve, Boolean admin, Boolean calc,
+                Boolean layout, Boolean collaborate, Boolean compliance, List<String> bi, Boolean edit) {
+            this(description, kinds, raw, author, approve, admin, calc, layout, collaborate, compliance, bi, edit, null);
         }
     }
 
@@ -84,6 +89,7 @@ public class RoleController {
             m.put("compliance", r.compliance());
             m.put("edit", r.edit());
             m.put("bi", new java.util.TreeSet<>(r.bi()));
+            m.put("permissions", new java.util.TreeSet<>(r.admin() ? RoleDefinition.PERMISSIONS : r.permissions()));
             m.put("builtIn", r.builtIn());
             m.put("updatedAt", r.updatedAt());
             m.put("updatedBy", r.updatedBy());
@@ -104,12 +110,17 @@ public class RoleController {
         if (r.bi() != null && !RoleDefinition.BI_POWERS.containsAll(r.bi())) {
             throw new DrishtiException(ErrorCode.BI_INVALID, "bi powers are " + RoleDefinition.BI_POWERS + ", not " + r.bi());
         }
+        if (r.permissions() != null && !RoleDefinition.PERMISSIONS.containsAll(r.permissions())) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "permissions are " + RoleDefinition.PERMISSIONS + ", not " + r.permissions());
+        }
         List<String> kinds = r.kinds() == null ? List.of() : r.kinds().stream().map(String::trim).filter(k -> !k.isEmpty()).distinct().toList();
         return roles.save(new RoleDefinition(name, r.description(), kinds, Boolean.TRUE.equals(r.raw()), Boolean.TRUE.equals(r.author()),
                 Boolean.TRUE.equals(r.approve()), Boolean.TRUE.equals(r.admin()), Boolean.TRUE.equals(r.calc()), !Boolean.FALSE.equals(r.layout()),
                 !Boolean.FALSE.equals(r.collaborate()), Boolean.TRUE.equals(r.compliance()), false, null, "",
                 r.bi() == null ? roles.find(name).map(RoleDefinition::bi).orElse(java.util.Set.of()) : new java.util.HashSet<>(r.bi()),
-                r.edit() == null ? roles.find(name).map(RoleDefinition::edit).orElse(false) : r.edit()), p.user());   // absent: keep   // absent: keep, so Admin, Roles never wipes them
+                r.edit() == null ? roles.find(name).map(RoleDefinition::edit).orElse(false) : r.edit(),
+                r.permissions() == null ? roles.find(name).map(RoleDefinition::permissions).orElse(java.util.Set.of()) : new java.util.HashSet<>(r.permissions())),
+                p.user());   // absent: keep   // absent: keep, so Admin, Roles never wipes them
     }
 
     @DeleteMapping("/{name}")

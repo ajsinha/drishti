@@ -183,7 +183,7 @@ You should see one line per table, then the summary (the folder is your clone's)
 ```text
   trading/trade_endur: … rows over 60 days
   …
-Demo lake ready: …/drishti/data/delta/demo: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/drishti/data/delta/demo: 87 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://localhost:18480: left …/drishti/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -518,7 +518,7 @@ Invoke-RestMethod http://localhost:18480/actuator/health                    # fr
 .\tools\windows\start-console.ps1                                           # in a second window; then http://localhost:17480/t
 ```
 
-`lake demo` writes the same 89 tables as on Linux. `start-server.ps1` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native`,
+`lake demo` writes the same 87 tables as on Linux. `start-server.ps1` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native`,
 adds `-XX:+UseCompactObjectHeaders` only on Java 25 and runs until `Ctrl+C`. Set `$env:DRISHTI_DEMO_ENABLED='false'` first to read every page
 from the lakes, and the sign-in variables of 2.5 A (`$env:DRISHTI_SECURITY_ENABLED='true'` …) to sign in; set the console's variables of
 2.6 before `start-console.ps1` with sign-in on. Admin → Health then lists each lake connector as `UP (engine: native)`.
@@ -3552,6 +3552,8 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-5214` | the tree of a hierarchy the date does not have: `GET /api/v1/risk/var/tree` lists the date's |
 | `DRS-5216` | VaR sharding: a partial sum was asked for another data version or shard map than the owner holds: ask again in a moment; persistent: check every member reads the same tables (`drishti.py var shards`) |
 | `DRS-5218` | not enough free disk to build a date (the guard, `drishti.disk.min-free-percent`, `min-free-gb`): Health → Disk shows which folder holds what; free space, lower a folder's cap or purge a date in Admin → Caches |
+| `DRS-5220` | a system basket cannot be saved or imported as given (VAR_GUIDE.md section 5.7): the message names it and the reason; fix the field (an import's dry run lists every entry's reason) |
+| `DRS-5221` | no system basket of that id on the date: `PORT <GO>` lists them; a retired one is valid only until its `validTo` |
 | `DRS-5219` | the data is held in memory only by contract, and this would keep it (a scheduled report, a picture or e-mail of a share, a note copying its values, an Ask): download the rows instead ([7.6](#76-the-in-memory-lake-memory-only-feeds)) |
 | `DRS-5443` | the scope sums more netting sets than an interactive answer may: read the official record (`GET /api/v1/risk/exposure/official`), narrow it, or raise `drishti.ccr.exposure.max-scope-netting-sets` |
 | `DRS-5444` | a row of the date's exposure paths was rejected (another length than `PATHS`, NaN, a grid index outside): fix it upstream and reload the date |

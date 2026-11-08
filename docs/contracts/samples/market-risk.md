@@ -24,16 +24,15 @@ Every data type of `market-risk` as a real record of the committed test data, ev
 - [stress-result](#stress-result)
 - [stress-scenario](#stress-scenario)
 - [trade-valuation](#trade-valuation)
+- [position-sensitivity](#position-sensitivity)
+- [risk-factor](#risk-factor)
 - [scenario-set](#scenario-set)
 - [pnl-vector](#pnl-vector)
 - [scenario-pv](#scenario-pv)
 - [fx-scenario](#fx-scenario)
-- [portfolio](#portfolio)
 - [var-limit](#var-limit)
 - [desk-pnl](#desk-pnl)
 - [pnl-history](#pnl-history)
-- [position-sensitivity](#position-sensitivity)
-- [risk-factor](#risk-factor)
 
 <a id="frtb-sensitivity"></a>
 
@@ -491,6 +490,268 @@ None: all 806,304 rows were read, and every field any of them has is in the reco
 - [TVAL, trade valuation totals: the data contract](../../contracts/TVAL.md)
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+
+<a id="position-sensitivity"></a>
+
+## Position sensitivities: position-sensitivity (SENS)
+
+The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Read by the server's FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket. One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/position-sensitivity/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (8,052 records), never a change on the day before.
+
+### File layout
+
+|  |  |
+|---|---|
+| Path | `data/testdata/market-risk/position-sensitivity/` + `position-sensitivity.YYYY-MM-DD.jsonl.gz` |
+| Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
+| Key field | `SENSITIVITY_ID` |
+| Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
+| Promoted columns | `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`, `CURRENCY` |
+| Vector fields | none |
+| Partitioned by | `business_date` |
+| A day's file | the full set of its date |
+
+### One sample record
+
+A real record, the most complete of the 8,052 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SENSITIVITY_ID": "SENS-1004481-B-SENS-2026-09-30-01",
+  "GRAIN": "TRADE",
+  "POSITION_ID": "POS-BOOK-COMM-2~1004481",
+  "TRADE_ID": "1004481",
+  "TRADE_IDS": [
+    "1004481"
+  ],
+  "SOURCE_SYSTEM": "ENDUR",
+  "BUSINESS_DATE": "2026-09-30",
+  "BATCH_ID": "B-SENS-2026-09-30-01",
+  "RUN_KIND": "FULL",
+  "COMPUTED_AT": "2026-09-30T06:10:00Z",
+  "RESTATEMENT": 0,
+  "STATUS": "proxied",
+  "PROXY_REASON": "volatility surface missing on the date: the underlying's index surface used",
+  "PRICER": "demo-factor-model",
+  "MODEL_VERSION": "demo-sens-1",
+  "LEGAL_ENTITY": "LE-NY",
+  "DIVISION": "DIV-MARKETS",
+  "DESK": "DESK-COMM",
+  "TT_BOOK": "BOOK-COMM-2",
+  "LIMIT_LETTER": "LL-0002",
+  "FRTB_DESK": "FD-COMM",
+  "PRODUCT_GROUP": "Commodity",
+  "PRODUCT_TYPE": "CallNot",
+  "TRADE_STATUS": "AMENDED",
+  "MATURITY_DATE": "2026-11-30",
+  "CURRENCY": "EUR",
+  "SENSITIVITIES": [
+    {
+      "RISK_FACTOR": "CM/PRICE/WTI",
+      "MEASURE": "CURVATURE_DOWN",
+      "VALUE": -2414930.93,
+      "CURRENCY": "USD",
+      "RISK_CLASS": "COMM",
+      "FRTB_BUCKET": "2",
+      "TENOR": null,
+      "SIMM_BUCKET": "2",
+      "SHOCK_SIZE": 0.35
+    },
+    {
+      "RISK_FACTOR": "CM/PRICE/WTI",
+      "MEASURE": "CURVATURE_UP",
+      "VALUE": 1217226.89,
+      "CURRENCY": "USD",
+      "RISK_CLASS": "COMM",
+      "FRTB_BUCKET": "2",
+      "TENOR": null,
+      "SIMM_BUCKET": "2",
+      "SHOCK_SIZE": 0.35
+    },
+    "… 2 more elements of the same shape"
+  ],
+  "VOL_CONVENTION": "LOGNORMAL"
+}
+```
+
+### Field reference
+
+Every field of the record above, nested ones as dotted paths (`[]` marks an array of objects). *Required* is the contract's; *in N%* is how often the test data fills it.
+
+| Field | Type | Required | Meaning | Values, format, unit | Example |
+|---|---|---|---|---|---|
+| `SENSITIVITY_ID` | string | required | The record's id, SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID> (the business key). | pattern `^SENS-` | `"SENS-1004481-B-SENS-2026-09-30-01"` |
+| `GRAIN` | string | required | What the record is for: POSITION (POSITION_ID, the position Drishti derives by the pack's position rules) or TRADE (TRADE_ID). One source system sends one grain on one date. | one of `POSITION`, `TRADE` | `"TRADE"` |
+| `POSITION_ID` | string | optional (filled in every row) | The position, POS-<TT_BOOK>~<key> as the pack's position rules derive it; required when GRAIN is POSITION, and on a TRADE record the position the trade belongs to when the source knows it. | pattern `^POS-`; links to `position` | `"POS-BOOK-COMM-2~1004481"` |
+| `TRADE_ID` | string | optional (filled in 17% of rows) | The trade; required when GRAIN is TRADE. | links to `trade` | `"1004481"` |
+| `TRADE_IDS` | array of strings | optional (filled in every row) | The trades a position record covers (for drill-through and the completeness check against the vectors). | links to `trade` | [1 values] |
+| `SOURCE_SYSTEM` | string | required | The system that computed the sensitivities (the trades' booking or risk system). | seen: `MUREX`, `CALYPSO`, `ENDUR` | `"ENDUR"` |
+| `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The business date the sensitivities are for (YYYY-MM-DD); the lake's partition. | — | `"2026-09-30"` |
+| `BATCH_ID` | string | required | The run that produced the record; the full run and each intraday batch have their own. One full run per date and source. | — | `"B-SENS-2026-09-30-01"` |
+| `RUN_KIND` | string | required | FULL (the run after the close: every live position) or INTRADAY (only the changed positions; a later COMPUTED_AT wins). | one of `FULL`, `INTRADAY` | `"FULL"` |
+| `COMPUTED_AT` | timestamp (ISO-8601) | required | The as-of of the sensitivities, when the run computed them (UTC); a restated record carries a later one. | — | `"2026-09-30T06:10:00Z"` |
+| `RESTATEMENT` | integer | required | 0 for the first delivery of the date, 1, 2... for each restatement of it. | — | `0` |
+| `STATUS` | string | required | ok; proxied (valued with a proxy, PROXY_REASON says which: counted and shown beside every sum); failed (no sensitivities: SENSITIVITIES null, never zeros). | one of `ok`, `proxied`, `failed` | `"proxied"` |
+| `PROXY_REASON` | string | optional (filled in 1% of rows) | Why a proxied record was proxied (the missing curve or surface and its proxy). | — | `"volatility surface missing on the date: the underlying's i…` |
+| `PRICER` | string | optional (filled in every row) | The pricing library or model family (audit). | — | `"demo-factor-model"` |
+| `MODEL_VERSION` | string | optional (filled in every row) | The model version (audit). | — | `"demo-sens-1"` |
+| `LEGAL_ENTITY` | string | required | The legal entity that books the position (the LEGAL hierarchy), as on the P&L vectors. | links to `legal-entity` | `"LE-NY"` |
+| `DIVISION` | string | required | The division of the management hierarchy, as on the P&L vectors. | — | `"DIV-MARKETS"` |
+| `DESK` | string | required | The desk of the management hierarchy, as on the P&L vectors. | links to `desk` | `"DESK-COMM"` |
+| `TT_BOOK` | string | required | The trading book. | links to `book` | `"BOOK-COMM-2"` |
+| `LIMIT_LETTER` | string | optional (filled in every row) | The limit letter of authority the position sits under (the LL hierarchy), as on the P&L vectors. | — | `"LL-0002"` |
+| `FRTB_DESK` | string | optional (filled in every row) | The regulatory trading desk (FRTB desk) when the bank's desk structure differs from the management desks; else the regulatory-desk mapping decides. | — | `"FD-COMM"` |
+| `PRODUCT_GROUP` | string | required | The product group of the position's trades (Rates, Credit, FX, Equity, Commodity, Inflation,...). | — | `"Commodity"` |
+| `PRODUCT_TYPE` | string | required | The product type of the position's trades; with PRODUCT_GROUP it decides the residual-risk add-on's class. | — | `"CallNot"` |
+| `TRADE_STATUS` | string | required | The trades' status; a CANCELLED record carries an empty SENSITIVITIES list. | seen: `AMENDED`, `VALIDATED`, `NEW` | `"AMENDED"` |
+| `MATURITY_DATE` | date (YYYY-MM-DD) | required | The position's last maturity (the live rule; the DRC's maturity scaling). | — | `"2026-11-30"` |
+| `CURRENCY` | string | required | The position's own currency (ISO 4217); each element carries the currency of its VALUE. | seen: `USD`, `EUR`, `JPY`, `GBP`, `CAD`, `CHF`, `AUD` | `"EUR"` |
+| `SENSITIVITIES` | array of objects | required | The sparse list of the position's sensitivities: one element per risk factor and measure, never the same twice; empty only when TRADE_STATUS is CANCELLED, null when STATUS is failed. | — | [4 objects] |
+| `SENSITIVITIES[].RISK_FACTOR` | string | required | The risk factor by the naming standard (the risk-factor dictionary): IR/CURVE/<ccy>/<curve>/<tenor>, IR/BASIS/<ccy>, INF/<index>[/<tenor>], CR/SPREAD/<issuer>/<BOND or CDS>/<tenor>, FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor>, VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]; a curvature element names the curvature factor: IR/CURVE/<ccy> (the currency), CR/SPREAD/<issuer>, EQ/SPOT/<underlying>, CM/PRICE/<underlying> (the commodity), FX/SPOT/<ccy>. A bank's own names are mapped to these by the dictionary's SOURCE_NAMES; a name that is not mapped is refused, never guessed. | links to `risk-factor` | `"CM/PRICE/WTI"` |
+| `SENSITIVITIES[].MEASURE` | string | required | What VALUE measures: DV01, CS01, IE01 (P&L for +1 basis point of the rate, spread or inflation rate); DELTA (P&L for a +1% relative move of the spot or price, and for an equity repo, EQ/REPO, the P&L for +1 basis point of the repo rate, MAR21.20); VEGA (P&L for +1 volatility point: 0.01 of lognormal implied volatility, or 1 basis point of normal volatility for a source whose record declares VOL_CONVENTION NORMAL); CURVATURE_UP and CURVATURE_DOWN (the change in value for the regulatory curvature shock up and down, SHOCK_SIZE, delta included: V(x+shock) − V(x) and V(x−shock) − V(x), MAR21.5); GAMMA (decisions 2 and 7: from a source that cannot revalue, the second derivative of the position's value to a parallel shift of the curvature factor, per basis point squared for a curve (IR/CURVE/<ccy> or a curve point, per currency; CR/SPREAD/<issuer>) and per (1%) squared for a spot or price; Drishti estimates curvature from it as −½ · Γ · h², labelled an estimate). BETA and BASE_CORR are reserved for SIMM. | one of `DV01`, `CS01`, `IE01`, `DELTA`, `VEGA`, `CURVATURE_UP`, `CURVATURE_DOWN`, `GAMMA`, `BETA`, `BASE_CORR` | `"CURVATURE_DOWN"` |
+| `SENSITIVITIES[].VALUE` | number | required | The sensitivity, in the element's currency, signed from the bank's point of view (a gain positive). Finite; a factor that could not be computed fails the record, never a zero. | unit: the element's CURRENCY | `-2414930.93` |
+| `SENSITIVITIES[].CURRENCY` | string | required | The currency of VALUE (ISO 4217), converted to the reporting currency at the date's FX when summed. | — | `"USD"` |
+| `SENSITIVITIES[].RISK_CLASS` | string | optional (filled in every `SENSITIVITIES[]` entry) | The FRTB risk class of the factor (GIRR, CSR_NS, CSR_SEC_NCTP, CSR_SEC_CTP, EQ, COMM, FX); derived from the dictionary when absent, and the dictionary wins when they differ (a warning). | one of `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX` | `"COMM"` |
+| `SENSITIVITIES[].FRTB_BUCKET` | string | optional (filled in every `SENSITIVITIES[]` entry) | The FRTB bucket (MAR21.39 to MAR21.89; the currency for GIRR and FX); the dictionary wins when they differ (a warning). | — | `"2"` |
+| `SENSITIVITIES[].SIMM_BUCKET` | string | optional (filled in every `SENSITIVITIES[]` entry) | The ISDA SIMM bucket of the factor (Residual when none applies); the dictionary wins when they differ (a warning). | — | `"2"` |
+| `SENSITIVITIES[].SHOCK_SIZE` | number | optional (filled in 18% of `SENSITIVITIES[]` entries) | The curvature shock applied (required on CURVATURE_UP and CURVATURE_DOWN), checked against the risk weight of the factor's bucket (MAR21.5, MAR21.98 to MAR21.101); a different shock is a warning. | unit: basis points (rates and spreads) or a fraction of the spot or price | `0.35` |
+| `SENSITIVITIES[].TENOR` | string | optional (filled in 65% of `SENSITIVITIES[]` entries) | The factor's tenor or option expiry (MAR21.8's vertices); empty on a curvature, spot or price factor without one. | — | `"3M"` |
+| `SENSITIVITIES[].IMPLIED_VOL` | number | optional (filled in 12% of `SENSITIVITIES[]` entries) | The implied volatility of a VEGA element, for the vega risk sensitivity (vega × implied volatility, MAR21.25). | unit: fraction | `0.32` |
+| `VOL_CONVENTION` | string | optional (filled in 22% of rows) | How the record's rates vegas are delivered (decision 3): LOGNORMAL (the default, absent means it) or NORMAL (VEGA per basis point of normal volatility, IMPLIED_VOL in basis points); one source declares one convention. | one of `LOGNORMAL`, `NORMAL` | `"LOGNORMAL"` |
+
+### Fields in other rows
+
+None: all 8,052 rows were read, and every field any of them has is in the record above.
+
+### For the production query
+
+- **Identity:** one record per `SENSITIVITY_ID` per `BUSINESS_DATE`; the key is text, unique within the date.
+- **Never null:** `SENSITIVITY_ID`, `GRAIN`, `SOURCE_SYSTEM`, `BUSINESS_DATE`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `RESTATEMENT`, `STATUS`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `TRADE_STATUS`, `MATURITY_DATE`, `CURRENCY`, `SENSITIVITIES` (the contract's required fields); every row of the test data also fills `POSITION_ID`, `TRADE_IDS`, `PRICER`, `MODEL_VERSION`, `LIMIT_LETTER`, `FRTB_DESK`.
+- **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
+- **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
+- Each date: the full set of the date in one or more files, every record with its `BUSINESS_DATE`; a later full file of the same date restates it.
+- Unique: `SENSITIVITY_ID` per `BUSINESS_DATE`.
+- `SENSITIVITY_ID` matches `^SENS-`.
+
+### See also
+
+- Data contract: [SENS in the market-risk pack's contracts](../packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (`config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml`, the source of every meaning on this page).
+- [20. position-sensitivity (SENS): every field](../../contracts/FRTB.md#20-position-sensitivity-sens-every-field)
+- [FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital](../../guides/FRTB_SA_GUIDE.md)
+- [1. Market risk](../../knowledge/risk.md#1-market-risk)
+- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
+
+<a id="risk-factor"></a>
+
+## Risk factor dictionary: risk-factor (RFAC)
+
+Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Read by the server's FRTB-SA engine with the sensitivities (docs/guides/FRTB_SA_GUIDE.md). One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/risk-factor/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (867 records), never a change on the day before.
+
+### File layout
+
+|  |  |
+|---|---|
+| Path | `data/testdata/market-risk/risk-factor/` + `risk-factor.YYYY-MM-DD.jsonl.gz` |
+| Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
+| Key field | `RISK_FACTOR` |
+| Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
+| Promoted columns | `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `TENOR`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET` |
+| Vector fields | none |
+| Partitioned by | `business_date` |
+| A day's file | the full set of its date |
+
+### One sample record
+
+A real record, the most complete of the 867 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "RISK_FACTOR": "CR/SPREAD/CDX.NA.HY/CDS/10Y",
+  "FACTOR_TYPE": "SPREAD",
+  "RISK_CLASS": "CSR_NS",
+  "QUALIFIER": "CDX.NA.HY",
+  "CURVE": "CDS",
+  "UNDERLYING": "CDX.NA.HY",
+  "TENOR": "10Y",
+  "UNDERLYING_TENOR": null,
+  "FRTB_BUCKET": "18",
+  "SIMM_RISK_CLASS": "CreditQ",
+  "SIMM_BUCKET": "Residual",
+  "SIMM_LABEL1": "10y",
+  "SIMM_LABEL2": "CDS",
+  "SECTOR": "Index",
+  "CREDIT_QUALITY": "HY",
+  "LIQUIDITY_HORIZON": 40,
+  "MODELLABLE": false,
+  "MARKET_DATA_REF": "CDX-CDX.NA.HY#10Y",
+  "SOURCE_NAMES": [
+    "MX:CR:SPREAD-CDX.NA.HY-CDS-10Y",
+    "CR.SPREAD.CDX.NA.HY.CDS.10Y",
+    "10Y_CDS_CDX.NA.HY_SPREAD_CR"
+  ],
+  "VALID_FROM": "2026-01-02",
+  "BUSINESS_DATE": "2026-09-30",
+  "SOURCE": "demo-factor-master"
+}
+```
+
+### Field reference
+
+Every field of the record above, nested ones as dotted paths (`[]` marks an array of objects). *Required* is the contract's; *in N%* is how often the test data fills it.
+
+| Field | Type | Required | Meaning | Values, format, unit | Example |
+|---|---|---|---|---|---|
+| `RISK_FACTOR` | string | required | The factor's standard name, slash-separated: IR/CURVE/<ccy>/<curve>/<tenor> (a curve point), IR/CURVE/<ccy> (the currency, every curve shifted together: the GIRR curvature factor, MAR21.8), IR/BASIS/<ccy> (the cross-currency basis), INF/<index> (the inflation factor, no tenor in FRTB) and INF/<index>/<tenor>, CR/SPREAD/<issuer or index>[/<BOND or CDS>/<tenor>] (without the tenor: the issuer, the CSR curvature factor), FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor> and CM/PRICE/<underlying> (the commodity, every location and tenor: the commodity curvature factor, MAR21.13), VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]. | pattern `^(IR\|INF\|CR\|FX\|EQ\|CM\|VOL)/` | `"CR/SPREAD/CDX.NA.HY/CDS/10Y"` |
+| `FACTOR_TYPE` | string | required | The kind of factor: CURVE (an interest-rate curve or its point), BASIS (a cross-currency basis), INFLATION, SPREAD (a credit spread), SPOT (an FX rate or equity price), REPO (an equity repo rate), PRICE (a commodity forward) or VOL (an implied volatility). | one of `CURVE`, `BASIS`, `INFLATION`, `SPREAD`, `SPOT`, `REPO`, `PRICE`, `VOL` | `"SPREAD"` |
+| `RISK_CLASS` | string | required | The FRTB risk class (MAR21.1): GIRR (interest rates and inflation), CSR_NS (credit spread, non-securitisation), CSR_SEC_NCTP and CSR_SEC_CTP (securitisations), EQ, COMM, FX. A volatility's class is its underlying's. | one of `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX` | `"CSR_NS"` |
+| `QUALIFIER` | string | required | What the factor is of: the currency (GIRR, FX), the issuer or index (credit), the underlying (equity, commodity). | — | `"CDX.NA.HY"` |
+| `CURVE` | string | optional (filled in 75% of rows) | The curve (SOFR, ESTR), the instrument curve of a credit factor (BOND or CDS), the delivery location of a commodity, or the index of an inflation factor. | — | `"CDS"` |
+| `UNDERLYING` | string | optional (filled in 41% of rows) | The underlying of an equity, commodity, FX or volatility factor (an index, a name, a commodity, a currency pair). | — | `"CDX.NA.HY"` |
+| `TENOR` | string | optional (filled in 88% of rows) | The tenor (curve point) or the option expiry (a volatility); empty for a spot or a whole curve. | — | `"10Y"` |
+| `FRTB_BUCKET` | string | required | The FRTB bucket: the currency for GIRR and FX (MAR21.39, MAR21.86), 1 to 18 for CSR non-securitisation (MAR21.51), 1 to 13 for equity (MAR21.72), 1 to 11 for commodity (MAR21.82). | — | `"18"` |
+| `SIMM_RISK_CLASS` | string | required | The ISDA SIMM risk class: InterestRate, CreditQ, CreditNonQ, Equity, Commodity or FX. | one of `InterestRate`, `CreditQ`, `CreditNonQ`, `Equity`, `Commodity`, `FX` | `"CreditQ"` |
+| `SIMM_BUCKET` | string | required | The SIMM bucket (the currency's volatility group for interest rates, the sector and quality for credit and equity, the commodity group); Residual when none applies. | — | `"Residual"` |
+| `SIMM_LABEL1` | string | optional (filled in 82% of rows) | SIMM's Label1: the tenor (2w … 30y) of a rate or credit factor, the expiry of a volatility; Inf for inflation. | — | `"10y"` |
+| `SIMM_LABEL2` | string | optional (filled in 56% of rows) | SIMM's Label2: the sub-curve of a rate (OIS, Libor3m, Prime) or the credit instrument (BOND, CDS). | seen: `CDS`, `BOND`, `OIS`, `XCcy` | `"CDS"` |
+| `SECTOR` | string | optional (filled in 59% of rows) | The sector of a credit issuer or equity name, as the bucket grids use it. | — | `"Index"` |
+| `CREDIT_QUALITY` | string | optional (filled in 49% of rows) | IG (investment grade) or HY (high yield and not rated) for a credit factor. | one of `IG`, `HY` | `"HY"` |
+| `LIQUIDITY_HORIZON` | integer | required | The liquidity horizon of the factor (MAR33.12), 10, 20, 40, 60 or 120; the vega risk weights scale with it (MAR21.92). | one of `10`, `20`, `40`, `60`, `120`; unit: business days | `40` |
+| `MODELLABLE` | boolean | optional (filled in every row) | Whether the factor passes the risk factor eligibility test on the date (MAR31; for the internal models approach). | seen: `true`, `false` | `false` |
+| `MARKET_DATA_REF` | string | optional (filled in every row) | Where the factor's level comes from in the market data (for explain and repricing). | — | `"CDX-CDX.NA.HY#10Y"` |
+| `SOURCE_NAMES` | array of strings | required | The names the source systems give this factor (the bank's mapping to the standard): each maps to exactly one factor; a sensitivity delivered under a name in no list is refused. | — | [3 values] |
+| `VALID_FROM` | date (YYYY-MM-DD) | required | The first business date the row applies to. | — | `"2026-01-02"` |
+| `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The business date of the delivery (YYYY-MM-DD); the lake's partition. | — | `"2026-09-30"` |
+| `SOURCE` | string | required | The system the dictionary row came from. | — | `"demo-factor-master"` |
+
+### Fields in other rows
+
+Fields no record above has, found by reading all 867 rows, with how many rows fill them.
+
+| Field | Type | Rows with it | Meaning | Example |
+|---|---|---|---|---|
+| `UNDERLYING_TENOR` | string | 50 of 867 | The tenor of the underlying swap of an interest-rate volatility (a swaption's 10Y). | `"10Y"` |
+| `VALID_TO` | date (YYYY-MM-DD) | 7 of 867 | The last business date the row applies to; empty while it applies. | `"2026-12-31"` |
+| `SENIORITY` | string | 396 of 867 | The seniority of a credit factor's curve (SIMM credit qualifiers and the CRIF are per issuer and seniority; the DRC nets by seniority, MAR22.19). SENIOR in the demo. | `"SENIOR"` |
+| `MARKET_CAP` | string | 80 of 867 | LARGE or SMALL for an equity (MAR21.72's market capitalisation test). | `"LARGE"` |
+| `ECONOMY` | string | 80 of 867 | ADVANCED or EMERGING for an equity (MAR21.72). | `"EMERGING"` |
+| `PROXY_OF` | string | 10 of 867 | The factor this one is proxied by, when its data is proxied. | `"VOL/EQ/MXEF/10Y"` |
+
+### For the production query
+
+- **Identity:** one record per `RISK_FACTOR` per `BUSINESS_DATE`; the key is text, unique within the date.
+- **Never null:** `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET`, `LIQUIDITY_HORIZON`, `SOURCE_NAMES`, `VALID_FROM`, `BUSINESS_DATE`, `SOURCE` (the contract's required fields); every row of the test data also fills `MODELLABLE`, `MARKET_DATA_REF`.
+- **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
+- **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
+- Each date: the full set of the date in one or more files, every record with its `BUSINESS_DATE`; a later full file of the same date restates it.
+- Unique: `RISK_FACTOR` per `BUSINESS_DATE`.
+- `RISK_FACTOR` matches `^(IR|INF|CR|FX|EQ|CM|VOL)/`.
+
+### See also
+
+- Data contract: [RFAC in the market-risk pack's contracts](../packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (`config/packs/banking/market-risk/contracts/risk-factor.contract.yaml`, the source of every meaning on this page).
+- [21. risk-factor (RFAC): every field](../../contracts/FRTB.md#21-risk-factor-rfac-every-field)
+- [FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital](../../guides/FRTB_SA_GUIDE.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1243,176 +1504,6 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
-<a id="portfolio"></a>
-
-## Portfolio: portfolio (PORT)
-
-A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. One row per portfolio per BUSINESS_DATE, keyed by PORTFOLIO_ID. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/portfolio/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (28 records on 2026-09-30), never a change on the day before.
-
-### File layout
-
-|  |  |
-|---|---|
-| Path | `data/testdata/market-risk/portfolio/` + `portfolio.YYYY-MM-DD.jsonl.gz` |
-| Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
-| Key field | `PORTFOLIO_ID` |
-| Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
-| Promoted columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` |
-| Vector fields | none |
-| Partitioned by | `business_date` |
-| A day's file | the full set of its date |
-
-### Sub-types
-
-The rows come in 3 sub-types, recognised by `TYPE`. Each has its own most complete record below; the fields every sub-type's record has are in one shared table first.
-
-| Sub-type | Recognised by | Rows | Sample from | Section |
-|---|---|---|---|---|
-| **HIERARCHY** | `TYPE` `HIERARCHY` | 15 | test data | [HIERARCHY](#portfolio-hierarchy) |
-| **RULE** | `TYPE` `RULE` | 8 | test data | [RULE](#portfolio-rule) |
-| **BASKET** | `TYPE` `BASKET` | 5 | test data | [BASKET](#portfolio-basket) |
-
-### Fields every sub-type has
-
-The example is from the **HIERARCHY** record.
-
-| Field | Type | Required | Meaning | Values, format, unit | Example |
-|---|---|---|---|---|---|
-| `PORTFOLIO_ID` | string | required | The record's id (the business key) | pattern `^PF-`; links to `portfolio` | `"PF-COMM-BOOK-1"` |
-| `NAME` | string | required | The portfolio's display name. | — | `"Commodities book 1"` |
-| `OWNER` | string | required | Who keeps the portfolio's definition. | — | `"comm-risk"` |
-| `TYPE` | string | required | HIERARCHY: a node of the bank's hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked. | one of `BASKET`, `HIERARCHY`, `RULE` | `"HIERARCHY"` |
-| `DEFINITION` | object | required | What the portfolio holds, one object whose shape follows TYPE: a BASKET lists MEMBERS (POSITION_ID or TRADE_ID each), a HIERARCHY names a NODE (a NODE_ID such as MGMT~BOOK-COMM-1), a RULE gives a RULE expression over the trades' columns (CURRENCY == 'EUR'). | — | {…} |
-| `ROLLS_UP_TO` | object | required | The hierarchy node the portfolio reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID (BANK, DIV-…, LE-…, DESK-…, BOOK-…). | — | {…} |
-| `ROLLS_UP_TO.KIND` | string | required | The kind of the node the portfolio reports under (bank, division, desk, legal-entity, book). | seen: `desk`, `bank`, `division`, `legal-entity`, `book` | `"book"` |
-| `ROLLS_UP_TO.ID` | string | required | The desk or book the portfolio reports under. | — | `"BOOK-COMM-1"` |
-| `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The close of business the definition belongs to (YYYY-MM-DD). | — | `"2026-09-30"` |
-| `VALID_FROM` | date (YYYY-MM-DD) | required | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. | — | `"2026-01-02"` |
-
-### One record of each sub-type
-
-Each record is real, the most complete of its sub-type, pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data. Below each record, the fields it has beyond the shared table.
-
-#### portfolio: HIERARCHY
-
-15 rows; recognised by `TYPE` `HIERARCHY`.
-
-```json
-{
-  "PORTFOLIO_ID": "PF-COMM-BOOK-1",
-  "NAME": "Commodities book 1",
-  "OWNER": "comm-risk",
-  "TYPE": "HIERARCHY",
-  "DEFINITION": {
-    "NODE": "MGMT~BOOK-COMM-1"
-  },
-  "ROLLS_UP_TO": {
-    "KIND": "book",
-    "ID": "BOOK-COMM-1"
-  },
-  "BUSINESS_DATE": "2026-09-30",
-  "VALID_FROM": "2026-01-02",
-  "VALID_TO": null
-}
-```
-
-Its fields beyond the shared table:
-
-| Field | Type | Required | Meaning | Values, format, unit | Example |
-|---|---|---|---|---|---|
-| `DEFINITION.NODE` | string | optional (filled in 54% of `DEFINITION` entries) | For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it). | — | `"MGMT~BOOK-COMM-1"` |
-
-#### portfolio: RULE
-
-8 rows; recognised by `TYPE` `RULE`.
-
-```json
-{
-  "PORTFOLIO_ID": "PF-EUR-ALL",
-  "NAME": "Everything in EUR",
-  "OWNER": "group-risk",
-  "TYPE": "RULE",
-  "DEFINITION": {
-    "RULE": "CURRENCY == 'EUR'"
-  },
-  "ROLLS_UP_TO": {
-    "KIND": "bank",
-    "ID": "BANK"
-  },
-  "BUSINESS_DATE": "2026-09-30",
-  "VALID_FROM": "2026-01-02",
-  "VALID_TO": null
-}
-```
-
-Its fields beyond the shared table:
-
-| Field | Type | Required | Meaning | Values, format, unit | Example |
-|---|---|---|---|---|---|
-| `DEFINITION.RULE` | string | optional (filled in 29% of `DEFINITION` entries) | For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date. | — | `"CURRENCY == 'EUR'"` |
-
-#### portfolio: BASKET
-
-5 rows; recognised by `TYPE` `BASKET`.
-
-```json
-{
-  "PORTFOLIO_ID": "PF-ASHA-UNWIND",
-  "NAME": "Unwind candidates (Asha)",
-  "OWNER": "asha",
-  "TYPE": "BASKET",
-  "DEFINITION": {
-    "MEMBERS": [
-      {
-        "POSITION_ID": "POS-BOOK-RATES-1~MX-20000002"
-      },
-      "… 8 more elements of the same shape"
-    ]
-  },
-  "ROLLS_UP_TO": {
-    "KIND": "division",
-    "ID": "DIV-MARKETS"
-  },
-  "BUSINESS_DATE": "2026-09-30",
-  "VALID_FROM": "2026-01-02",
-  "VALID_TO": null
-}
-```
-
-Its fields beyond the shared table:
-
-| Field | Type | Required | Meaning | Values, format, unit | Example |
-|---|---|---|---|---|---|
-| `DEFINITION.MEMBERS` | array of objects | optional (filled in 18% of `DEFINITION` entries) | For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position). | — | [9 objects] |
-| `DEFINITION.MEMBERS[].POSITION_ID` | string | optional (filled in 72% of `DEFINITION.MEMBERS[]` entries) | A position in a BASKET: a position id as Drishti derives it (POS-<book>~<trade or security>); give it or TRADE_ID. | pattern `^POS-`; links to `position` | `"POS-BOOK-RATES-1~MX-20000002"` |
-| `DEFINITION.MEMBERS[].TRADE_ID` | string | optional (filled in 28% of `DEFINITION.MEMBERS[]` entries) | A trade in a BASKET: a TRADE_ID of the trading pack's trade kind, as text; it brings its part of its position. | links to `trade` | `"CLY-3000087"` |
-
-### Fields in other rows
-
-Fields no record above has, found by reading all 28 rows, with how many rows fill them.
-
-| Field | Type | Rows with it | Meaning | Example |
-|---|---|---|---|---|
-| `VALID_TO` | string (the contract's type; always empty in the test data) | always empty (28 rows hold the key) | The last date the definition is valid (YYYY-MM-DD); null while it is open-ended. Informational. | — |
-
-### For the production query
-
-- **Identity:** one record per `PORTFOLIO_ID` per `BUSINESS_DATE`; the key is text, unique within the date.
-- **Never null:** `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `BUSINESS_DATE`, `VALID_FROM` (the contract's required fields).
-- **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
-- **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
-- Each date: the full set of the date in one or more files, every record with its `BUSINESS_DATE`; a later full file of the same date restates it.
-- Unique: `PORTFOLIO_ID` per `BUSINESS_DATE`.
-- `PORTFOLIO_ID` matches `^PF-`.
-
-### See also
-
-- Data contract: [PORT in the market-risk pack's contracts](../packs/market-risk.md#port-portfolio-portfolio) (`config/packs/banking/market-risk/contracts/portfolio.contract.yaml`, the source of every meaning on this page).
-- [15.5 `portfolio`: stored portfolio definitions](../../guides/VAR_GUIDE.md#155-portfolio-stored-portfolio-definitions)
-- [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
-- [1. Market risk](../../knowledge/risk.md#1-market-risk)
-- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
-
 <a id="var-limit"></a>
 
 ## VaR limit of a hierarchy node: var-limit (VLIM)
@@ -1671,267 +1762,5 @@ None: all 28 rows were read, and every field any of them has is in the record ab
 
 - Data contract: [PNLH in the market-risk pack's contracts](../packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) (`config/packs/banking/market-risk/contracts/pnl-history.contract.yaml`, the source of every meaning on this page).
 - [18.9 Choosing the stress window](../../guides/VAR_GUIDE.md#189-choosing-the-stress-window)
-- [1. Market risk](../../knowledge/risk.md#1-market-risk)
-- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
-
-<a id="position-sensitivity"></a>
-
-## Position sensitivities: position-sensitivity (SENS)
-
-The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Read by the server's FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket. One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/position-sensitivity/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (8,052 records), never a change on the day before.
-
-### File layout
-
-|  |  |
-|---|---|
-| Path | `data/testdata/market-risk/position-sensitivity/` + `position-sensitivity.YYYY-MM-DD.jsonl.gz` |
-| Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
-| Key field | `SENSITIVITY_ID` |
-| Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
-| Promoted columns | `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`, `CURRENCY` |
-| Vector fields | none |
-| Partitioned by | `business_date` |
-| A day's file | the full set of its date |
-
-### One sample record
-
-A real record, the most complete of the 8,052 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
-
-```json
-{
-  "SENSITIVITY_ID": "SENS-1004481-B-SENS-2026-09-30-01",
-  "GRAIN": "TRADE",
-  "POSITION_ID": "POS-BOOK-COMM-2~1004481",
-  "TRADE_ID": "1004481",
-  "TRADE_IDS": [
-    "1004481"
-  ],
-  "SOURCE_SYSTEM": "ENDUR",
-  "BUSINESS_DATE": "2026-09-30",
-  "BATCH_ID": "B-SENS-2026-09-30-01",
-  "RUN_KIND": "FULL",
-  "COMPUTED_AT": "2026-09-30T06:10:00Z",
-  "RESTATEMENT": 0,
-  "STATUS": "proxied",
-  "PROXY_REASON": "volatility surface missing on the date: the underlying's index surface used",
-  "PRICER": "demo-factor-model",
-  "MODEL_VERSION": "demo-sens-1",
-  "LEGAL_ENTITY": "LE-NY",
-  "DIVISION": "DIV-MARKETS",
-  "DESK": "DESK-COMM",
-  "TT_BOOK": "BOOK-COMM-2",
-  "LIMIT_LETTER": "LL-0002",
-  "FRTB_DESK": "FD-COMM",
-  "PRODUCT_GROUP": "Commodity",
-  "PRODUCT_TYPE": "CallNot",
-  "TRADE_STATUS": "AMENDED",
-  "MATURITY_DATE": "2026-11-30",
-  "CURRENCY": "EUR",
-  "SENSITIVITIES": [
-    {
-      "RISK_FACTOR": "CM/PRICE/WTI",
-      "MEASURE": "CURVATURE_DOWN",
-      "VALUE": -2414930.93,
-      "CURRENCY": "USD",
-      "RISK_CLASS": "COMM",
-      "FRTB_BUCKET": "2",
-      "TENOR": null,
-      "SIMM_BUCKET": "2",
-      "SHOCK_SIZE": 0.35
-    },
-    {
-      "RISK_FACTOR": "CM/PRICE/WTI",
-      "MEASURE": "CURVATURE_UP",
-      "VALUE": 1217226.89,
-      "CURRENCY": "USD",
-      "RISK_CLASS": "COMM",
-      "FRTB_BUCKET": "2",
-      "TENOR": null,
-      "SIMM_BUCKET": "2",
-      "SHOCK_SIZE": 0.35
-    },
-    "… 2 more elements of the same shape"
-  ],
-  "VOL_CONVENTION": "LOGNORMAL"
-}
-```
-
-### Field reference
-
-Every field of the record above, nested ones as dotted paths (`[]` marks an array of objects). *Required* is the contract's; *in N%* is how often the test data fills it.
-
-| Field | Type | Required | Meaning | Values, format, unit | Example |
-|---|---|---|---|---|---|
-| `SENSITIVITY_ID` | string | required | The record's id, SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID> (the business key). | pattern `^SENS-` | `"SENS-1004481-B-SENS-2026-09-30-01"` |
-| `GRAIN` | string | required | What the record is for: POSITION (POSITION_ID, the position Drishti derives by the pack's position rules) or TRADE (TRADE_ID). One source system sends one grain on one date. | one of `POSITION`, `TRADE` | `"TRADE"` |
-| `POSITION_ID` | string | optional (filled in every row) | The position, POS-<TT_BOOK>~<key> as the pack's position rules derive it; required when GRAIN is POSITION, and on a TRADE record the position the trade belongs to when the source knows it. | pattern `^POS-`; links to `position` | `"POS-BOOK-COMM-2~1004481"` |
-| `TRADE_ID` | string | optional (filled in 17% of rows) | The trade; required when GRAIN is TRADE. | links to `trade` | `"1004481"` |
-| `TRADE_IDS` | array of strings | optional (filled in every row) | The trades a position record covers (for drill-through and the completeness check against the vectors). | links to `trade` | [1 values] |
-| `SOURCE_SYSTEM` | string | required | The system that computed the sensitivities (the trades' booking or risk system). | seen: `MUREX`, `CALYPSO`, `ENDUR` | `"ENDUR"` |
-| `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The business date the sensitivities are for (YYYY-MM-DD); the lake's partition. | — | `"2026-09-30"` |
-| `BATCH_ID` | string | required | The run that produced the record; the full run and each intraday batch have their own. One full run per date and source. | — | `"B-SENS-2026-09-30-01"` |
-| `RUN_KIND` | string | required | FULL (the run after the close: every live position) or INTRADAY (only the changed positions; a later COMPUTED_AT wins). | one of `FULL`, `INTRADAY` | `"FULL"` |
-| `COMPUTED_AT` | timestamp (ISO-8601) | required | The as-of of the sensitivities, when the run computed them (UTC); a restated record carries a later one. | — | `"2026-09-30T06:10:00Z"` |
-| `RESTATEMENT` | integer | required | 0 for the first delivery of the date, 1, 2... for each restatement of it. | — | `0` |
-| `STATUS` | string | required | ok; proxied (valued with a proxy, PROXY_REASON says which: counted and shown beside every sum); failed (no sensitivities: SENSITIVITIES null, never zeros). | one of `ok`, `proxied`, `failed` | `"proxied"` |
-| `PROXY_REASON` | string | optional (filled in 1% of rows) | Why a proxied record was proxied (the missing curve or surface and its proxy). | — | `"volatility surface missing on the date: the underlying's i…` |
-| `PRICER` | string | optional (filled in every row) | The pricing library or model family (audit). | — | `"demo-factor-model"` |
-| `MODEL_VERSION` | string | optional (filled in every row) | The model version (audit). | — | `"demo-sens-1"` |
-| `LEGAL_ENTITY` | string | required | The legal entity that books the position (the LEGAL hierarchy), as on the P&L vectors. | links to `legal-entity` | `"LE-NY"` |
-| `DIVISION` | string | required | The division of the management hierarchy, as on the P&L vectors. | — | `"DIV-MARKETS"` |
-| `DESK` | string | required | The desk of the management hierarchy, as on the P&L vectors. | links to `desk` | `"DESK-COMM"` |
-| `TT_BOOK` | string | required | The trading book. | links to `book` | `"BOOK-COMM-2"` |
-| `LIMIT_LETTER` | string | optional (filled in every row) | The limit letter of authority the position sits under (the LL hierarchy), as on the P&L vectors. | — | `"LL-0002"` |
-| `FRTB_DESK` | string | optional (filled in every row) | The regulatory trading desk (FRTB desk) when the bank's desk structure differs from the management desks; else the regulatory-desk mapping decides. | — | `"FD-COMM"` |
-| `PRODUCT_GROUP` | string | required | The product group of the position's trades (Rates, Credit, FX, Equity, Commodity, Inflation,...). | — | `"Commodity"` |
-| `PRODUCT_TYPE` | string | required | The product type of the position's trades; with PRODUCT_GROUP it decides the residual-risk add-on's class. | — | `"CallNot"` |
-| `TRADE_STATUS` | string | required | The trades' status; a CANCELLED record carries an empty SENSITIVITIES list. | seen: `AMENDED`, `VALIDATED`, `NEW` | `"AMENDED"` |
-| `MATURITY_DATE` | date (YYYY-MM-DD) | required | The position's last maturity (the live rule; the DRC's maturity scaling). | — | `"2026-11-30"` |
-| `CURRENCY` | string | required | The position's own currency (ISO 4217); each element carries the currency of its VALUE. | seen: `USD`, `EUR`, `JPY`, `GBP`, `CAD`, `CHF`, `AUD` | `"EUR"` |
-| `SENSITIVITIES` | array of objects | required | The sparse list of the position's sensitivities: one element per risk factor and measure, never the same twice; empty only when TRADE_STATUS is CANCELLED, null when STATUS is failed. | — | [4 objects] |
-| `SENSITIVITIES[].RISK_FACTOR` | string | required | The risk factor by the naming standard (the risk-factor dictionary): IR/CURVE/<ccy>/<curve>/<tenor>, IR/BASIS/<ccy>, INF/<index>[/<tenor>], CR/SPREAD/<issuer>/<BOND or CDS>/<tenor>, FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor>, VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]; a curvature element names the curvature factor: IR/CURVE/<ccy> (the currency), CR/SPREAD/<issuer>, EQ/SPOT/<underlying>, CM/PRICE/<underlying> (the commodity), FX/SPOT/<ccy>. A bank's own names are mapped to these by the dictionary's SOURCE_NAMES; a name that is not mapped is refused, never guessed. | links to `risk-factor` | `"CM/PRICE/WTI"` |
-| `SENSITIVITIES[].MEASURE` | string | required | What VALUE measures: DV01, CS01, IE01 (P&L for +1 basis point of the rate, spread or inflation rate); DELTA (P&L for a +1% relative move of the spot or price, and for an equity repo, EQ/REPO, the P&L for +1 basis point of the repo rate, MAR21.20); VEGA (P&L for +1 volatility point: 0.01 of lognormal implied volatility, or 1 basis point of normal volatility for a source whose record declares VOL_CONVENTION NORMAL); CURVATURE_UP and CURVATURE_DOWN (the change in value for the regulatory curvature shock up and down, SHOCK_SIZE, delta included: V(x+shock) − V(x) and V(x−shock) − V(x), MAR21.5); GAMMA (decisions 2 and 7: from a source that cannot revalue, the second derivative of the position's value to a parallel shift of the curvature factor, per basis point squared for a curve (IR/CURVE/<ccy> or a curve point, per currency; CR/SPREAD/<issuer>) and per (1%) squared for a spot or price; Drishti estimates curvature from it as −½ · Γ · h², labelled an estimate). BETA and BASE_CORR are reserved for SIMM. | one of `DV01`, `CS01`, `IE01`, `DELTA`, `VEGA`, `CURVATURE_UP`, `CURVATURE_DOWN`, `GAMMA`, `BETA`, `BASE_CORR` | `"CURVATURE_DOWN"` |
-| `SENSITIVITIES[].VALUE` | number | required | The sensitivity, in the element's currency, signed from the bank's point of view (a gain positive). Finite; a factor that could not be computed fails the record, never a zero. | unit: the element's CURRENCY | `-2414930.93` |
-| `SENSITIVITIES[].CURRENCY` | string | required | The currency of VALUE (ISO 4217), converted to the reporting currency at the date's FX when summed. | — | `"USD"` |
-| `SENSITIVITIES[].RISK_CLASS` | string | optional (filled in every `SENSITIVITIES[]` entry) | The FRTB risk class of the factor (GIRR, CSR_NS, CSR_SEC_NCTP, CSR_SEC_CTP, EQ, COMM, FX); derived from the dictionary when absent, and the dictionary wins when they differ (a warning). | one of `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX` | `"COMM"` |
-| `SENSITIVITIES[].FRTB_BUCKET` | string | optional (filled in every `SENSITIVITIES[]` entry) | The FRTB bucket (MAR21.39 to MAR21.89; the currency for GIRR and FX); the dictionary wins when they differ (a warning). | — | `"2"` |
-| `SENSITIVITIES[].SIMM_BUCKET` | string | optional (filled in every `SENSITIVITIES[]` entry) | The ISDA SIMM bucket of the factor (Residual when none applies); the dictionary wins when they differ (a warning). | — | `"2"` |
-| `SENSITIVITIES[].SHOCK_SIZE` | number | optional (filled in 18% of `SENSITIVITIES[]` entries) | The curvature shock applied (required on CURVATURE_UP and CURVATURE_DOWN), checked against the risk weight of the factor's bucket (MAR21.5, MAR21.98 to MAR21.101); a different shock is a warning. | unit: basis points (rates and spreads) or a fraction of the spot or price | `0.35` |
-| `SENSITIVITIES[].TENOR` | string | optional (filled in 65% of `SENSITIVITIES[]` entries) | The factor's tenor or option expiry (MAR21.8's vertices); empty on a curvature, spot or price factor without one. | — | `"3M"` |
-| `SENSITIVITIES[].IMPLIED_VOL` | number | optional (filled in 12% of `SENSITIVITIES[]` entries) | The implied volatility of a VEGA element, for the vega risk sensitivity (vega × implied volatility, MAR21.25). | unit: fraction | `0.32` |
-| `VOL_CONVENTION` | string | optional (filled in 22% of rows) | How the record's rates vegas are delivered (decision 3): LOGNORMAL (the default, absent means it) or NORMAL (VEGA per basis point of normal volatility, IMPLIED_VOL in basis points); one source declares one convention. | one of `LOGNORMAL`, `NORMAL` | `"LOGNORMAL"` |
-
-### Fields in other rows
-
-None: all 8,052 rows were read, and every field any of them has is in the record above.
-
-### For the production query
-
-- **Identity:** one record per `SENSITIVITY_ID` per `BUSINESS_DATE`; the key is text, unique within the date.
-- **Never null:** `SENSITIVITY_ID`, `GRAIN`, `SOURCE_SYSTEM`, `BUSINESS_DATE`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `RESTATEMENT`, `STATUS`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `TRADE_STATUS`, `MATURITY_DATE`, `CURRENCY`, `SENSITIVITIES` (the contract's required fields); every row of the test data also fills `POSITION_ID`, `TRADE_IDS`, `PRICER`, `MODEL_VERSION`, `LIMIT_LETTER`, `FRTB_DESK`.
-- **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
-- **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
-- Each date: the full set of the date in one or more files, every record with its `BUSINESS_DATE`; a later full file of the same date restates it.
-- Unique: `SENSITIVITY_ID` per `BUSINESS_DATE`.
-- `SENSITIVITY_ID` matches `^SENS-`.
-
-### See also
-
-- Data contract: [SENS in the market-risk pack's contracts](../packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (`config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml`, the source of every meaning on this page).
-- [20. position-sensitivity (SENS): every field](../../contracts/FRTB.md#20-position-sensitivity-sens-every-field)
-- [FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital](../../guides/FRTB_SA_GUIDE.md)
-- [1. Market risk](../../knowledge/risk.md#1-market-risk)
-- [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
-
-<a id="risk-factor"></a>
-
-## Risk factor dictionary: risk-factor (RFAC)
-
-Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Read by the server's FRTB-SA engine with the sensitivities (docs/guides/FRTB_SA_GUIDE.md). One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/risk-factor/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (867 records), never a change on the day before.
-
-### File layout
-
-|  |  |
-|---|---|
-| Path | `data/testdata/market-risk/risk-factor/` + `risk-factor.YYYY-MM-DD.jsonl.gz` |
-| Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
-| Key field | `RISK_FACTOR` |
-| Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
-| Promoted columns | `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `TENOR`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET` |
-| Vector fields | none |
-| Partitioned by | `business_date` |
-| A day's file | the full set of its date |
-
-### One sample record
-
-A real record, the most complete of the 867 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
-
-```json
-{
-  "RISK_FACTOR": "CR/SPREAD/CDX.NA.HY/CDS/10Y",
-  "FACTOR_TYPE": "SPREAD",
-  "RISK_CLASS": "CSR_NS",
-  "QUALIFIER": "CDX.NA.HY",
-  "CURVE": "CDS",
-  "UNDERLYING": "CDX.NA.HY",
-  "TENOR": "10Y",
-  "UNDERLYING_TENOR": null,
-  "FRTB_BUCKET": "18",
-  "SIMM_RISK_CLASS": "CreditQ",
-  "SIMM_BUCKET": "Residual",
-  "SIMM_LABEL1": "10y",
-  "SIMM_LABEL2": "CDS",
-  "SECTOR": "Index",
-  "CREDIT_QUALITY": "HY",
-  "LIQUIDITY_HORIZON": 40,
-  "MODELLABLE": false,
-  "MARKET_DATA_REF": "CDX-CDX.NA.HY#10Y",
-  "SOURCE_NAMES": [
-    "MX:CR:SPREAD-CDX.NA.HY-CDS-10Y",
-    "CR.SPREAD.CDX.NA.HY.CDS.10Y",
-    "10Y_CDS_CDX.NA.HY_SPREAD_CR"
-  ],
-  "VALID_FROM": "2026-01-02",
-  "BUSINESS_DATE": "2026-09-30",
-  "SOURCE": "demo-factor-master"
-}
-```
-
-### Field reference
-
-Every field of the record above, nested ones as dotted paths (`[]` marks an array of objects). *Required* is the contract's; *in N%* is how often the test data fills it.
-
-| Field | Type | Required | Meaning | Values, format, unit | Example |
-|---|---|---|---|---|---|
-| `RISK_FACTOR` | string | required | The factor's standard name, slash-separated: IR/CURVE/<ccy>/<curve>/<tenor> (a curve point), IR/CURVE/<ccy> (the currency, every curve shifted together: the GIRR curvature factor, MAR21.8), IR/BASIS/<ccy> (the cross-currency basis), INF/<index> (the inflation factor, no tenor in FRTB) and INF/<index>/<tenor>, CR/SPREAD/<issuer or index>[/<BOND or CDS>/<tenor>] (without the tenor: the issuer, the CSR curvature factor), FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor> and CM/PRICE/<underlying> (the commodity, every location and tenor: the commodity curvature factor, MAR21.13), VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]. | pattern `^(IR\|INF\|CR\|FX\|EQ\|CM\|VOL)/` | `"CR/SPREAD/CDX.NA.HY/CDS/10Y"` |
-| `FACTOR_TYPE` | string | required | The kind of factor: CURVE (an interest-rate curve or its point), BASIS (a cross-currency basis), INFLATION, SPREAD (a credit spread), SPOT (an FX rate or equity price), REPO (an equity repo rate), PRICE (a commodity forward) or VOL (an implied volatility). | one of `CURVE`, `BASIS`, `INFLATION`, `SPREAD`, `SPOT`, `REPO`, `PRICE`, `VOL` | `"SPREAD"` |
-| `RISK_CLASS` | string | required | The FRTB risk class (MAR21.1): GIRR (interest rates and inflation), CSR_NS (credit spread, non-securitisation), CSR_SEC_NCTP and CSR_SEC_CTP (securitisations), EQ, COMM, FX. A volatility's class is its underlying's. | one of `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX` | `"CSR_NS"` |
-| `QUALIFIER` | string | required | What the factor is of: the currency (GIRR, FX), the issuer or index (credit), the underlying (equity, commodity). | — | `"CDX.NA.HY"` |
-| `CURVE` | string | optional (filled in 75% of rows) | The curve (SOFR, ESTR), the instrument curve of a credit factor (BOND or CDS), the delivery location of a commodity, or the index of an inflation factor. | — | `"CDS"` |
-| `UNDERLYING` | string | optional (filled in 41% of rows) | The underlying of an equity, commodity, FX or volatility factor (an index, a name, a commodity, a currency pair). | — | `"CDX.NA.HY"` |
-| `TENOR` | string | optional (filled in 88% of rows) | The tenor (curve point) or the option expiry (a volatility); empty for a spot or a whole curve. | — | `"10Y"` |
-| `FRTB_BUCKET` | string | required | The FRTB bucket: the currency for GIRR and FX (MAR21.39, MAR21.86), 1 to 18 for CSR non-securitisation (MAR21.51), 1 to 13 for equity (MAR21.72), 1 to 11 for commodity (MAR21.82). | — | `"18"` |
-| `SIMM_RISK_CLASS` | string | required | The ISDA SIMM risk class: InterestRate, CreditQ, CreditNonQ, Equity, Commodity or FX. | one of `InterestRate`, `CreditQ`, `CreditNonQ`, `Equity`, `Commodity`, `FX` | `"CreditQ"` |
-| `SIMM_BUCKET` | string | required | The SIMM bucket (the currency's volatility group for interest rates, the sector and quality for credit and equity, the commodity group); Residual when none applies. | — | `"Residual"` |
-| `SIMM_LABEL1` | string | optional (filled in 82% of rows) | SIMM's Label1: the tenor (2w … 30y) of a rate or credit factor, the expiry of a volatility; Inf for inflation. | — | `"10y"` |
-| `SIMM_LABEL2` | string | optional (filled in 56% of rows) | SIMM's Label2: the sub-curve of a rate (OIS, Libor3m, Prime) or the credit instrument (BOND, CDS). | seen: `CDS`, `BOND`, `OIS`, `XCcy` | `"CDS"` |
-| `SECTOR` | string | optional (filled in 59% of rows) | The sector of a credit issuer or equity name, as the bucket grids use it. | — | `"Index"` |
-| `CREDIT_QUALITY` | string | optional (filled in 49% of rows) | IG (investment grade) or HY (high yield and not rated) for a credit factor. | one of `IG`, `HY` | `"HY"` |
-| `LIQUIDITY_HORIZON` | integer | required | The liquidity horizon of the factor (MAR33.12), 10, 20, 40, 60 or 120; the vega risk weights scale with it (MAR21.92). | one of `10`, `20`, `40`, `60`, `120`; unit: business days | `40` |
-| `MODELLABLE` | boolean | optional (filled in every row) | Whether the factor passes the risk factor eligibility test on the date (MAR31; for the internal models approach). | seen: `true`, `false` | `false` |
-| `MARKET_DATA_REF` | string | optional (filled in every row) | Where the factor's level comes from in the market data (for explain and repricing). | — | `"CDX-CDX.NA.HY#10Y"` |
-| `SOURCE_NAMES` | array of strings | required | The names the source systems give this factor (the bank's mapping to the standard): each maps to exactly one factor; a sensitivity delivered under a name in no list is refused. | — | [3 values] |
-| `VALID_FROM` | date (YYYY-MM-DD) | required | The first business date the row applies to. | — | `"2026-01-02"` |
-| `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The business date of the delivery (YYYY-MM-DD); the lake's partition. | — | `"2026-09-30"` |
-| `SOURCE` | string | required | The system the dictionary row came from. | — | `"demo-factor-master"` |
-
-### Fields in other rows
-
-Fields no record above has, found by reading all 867 rows, with how many rows fill them.
-
-| Field | Type | Rows with it | Meaning | Example |
-|---|---|---|---|---|
-| `UNDERLYING_TENOR` | string | 50 of 867 | The tenor of the underlying swap of an interest-rate volatility (a swaption's 10Y). | `"10Y"` |
-| `VALID_TO` | date (YYYY-MM-DD) | 7 of 867 | The last business date the row applies to; empty while it applies. | `"2026-12-31"` |
-| `SENIORITY` | string | 396 of 867 | The seniority of a credit factor's curve (SIMM credit qualifiers and the CRIF are per issuer and seniority; the DRC nets by seniority, MAR22.19). SENIOR in the demo. | `"SENIOR"` |
-| `MARKET_CAP` | string | 80 of 867 | LARGE or SMALL for an equity (MAR21.72's market capitalisation test). | `"LARGE"` |
-| `ECONOMY` | string | 80 of 867 | ADVANCED or EMERGING for an equity (MAR21.72). | `"EMERGING"` |
-| `PROXY_OF` | string | 10 of 867 | The factor this one is proxied by, when its data is proxied. | `"VOL/EQ/MXEF/10Y"` |
-
-### For the production query
-
-- **Identity:** one record per `RISK_FACTOR` per `BUSINESS_DATE`; the key is text, unique within the date.
-- **Never null:** `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET`, `LIQUIDITY_HORIZON`, `SOURCE_NAMES`, `VALID_FROM`, `BUSINESS_DATE`, `SOURCE` (the contract's required fields); every row of the test data also fills `MODELLABLE`, `MARKET_DATA_REF`.
-- **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
-- **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
-- Each date: the full set of the date in one or more files, every record with its `BUSINESS_DATE`; a later full file of the same date restates it.
-- Unique: `RISK_FACTOR` per `BUSINESS_DATE`.
-- `RISK_FACTOR` matches `^(IR|INF|CR|FX|EQ|CM|VOL)/`.
-
-### See also
-
-- Data contract: [RFAC in the market-risk pack's contracts](../packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (`config/packs/banking/market-risk/contracts/risk-factor.contract.yaml`, the source of every meaning on this page).
-- [21. risk-factor (RFAC): every field](../../contracts/FRTB.md#21-risk-factor-rfac-every-field)
-- [FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital](../../guides/FRTB_SA_GUIDE.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

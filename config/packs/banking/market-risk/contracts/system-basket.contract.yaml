@@ -1,0 +1,175 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the system-basket kind (command PORT): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap system-basket`; owned by people from then on.
+kind: system-basket
+mnemonic: PORT
+pack: market-risk
+version: '1.0'
+class: drishti-owned
+status: active
+title: System basket (the bank's baskets, kept in Drishti)
+description: 'A system basket in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position''s contribution.'
+source: Drishti (the basket store's system scope, var/system-baskets/, docs/guides/VAR_GUIDE.md section 5.7; the demo's from the market-risk pack's seed)
+grain: One system basket per business date it is valid on (VALID_FROM to VALID_TO), served from the basket store, never stored as data.
+key:
+- PORTFOLIO_ID
+id-pattern:
+- ^PF-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: on change
+  due: at once (a save in Drishti is read at the next request on every server)
+storage:
+  connector: var-system-baskets
+  plugin: var-system-baskets
+fields:
+- name: PORTFOLIO_ID
+  type: id
+  presence: required
+  description: 'The system basket''s id, PORT:<id> in a scope: 1-64 upper-case letters, digits, dots, dashes or underscores.'
+  example: PF-ASHA-UNWIND
+  pattern: ^PF-
+- name: NAME
+  type: text
+  presence: required
+  description: The system basket's display name.
+  example: Unwind candidates (Asha)
+- name: DESCRIPTION
+  type: text
+  presence: optional
+  description: What the system basket is for, in its owner's words.
+- name: OWNER
+  type: text
+  presence: required
+  description: Who keeps the system basket's definition; told in their inbox when someone else changes it.
+  example: asha
+- name: TYPE
+  type: text
+  presence: required
+  description: 'HIERARCHY: a node of the bank''s hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition.
+    BASKET: positions and trades someone picked.'
+  example: BASKET
+  enum:
+  - BASKET
+  - HIERARCHY
+  - RULE
+- name: DEFINITION
+  type: record
+  presence: required
+  description: 'What the system basket holds, one object whose shape follows TYPE: a BASKET lists MEMBERS (POSITION_ID or TRADE_ID each), a HIERARCHY names a NODE, a RULE gives a RULE over the positions'' columns.'
+- name: ROLLS_UP_TO
+  type: record
+  presence: required
+  description: 'The node the system basket reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID.'
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: 'The business date the system basket is read on (YYYY-MM-DD): the date asked, else the VaR engine''s newest date.'
+  example: '2026-09-30'
+- name: VALID_FROM
+  type: date
+  presence: required
+  description: The first business date the system basket applies to.
+  example: '2026-01-02'
+- name: VALID_TO
+  type: date
+  presence: optional
+  description: The last business date the system basket applies to (empty while it is open-ended; set when it is retired).
+- name: VERSION
+  type: integer
+  presence: required
+  description: 'The basket store''s version of the definition: every change is the next version, audited.'
+  example: 1
+nested:
+  DEFINITION:
+  - name: MEMBERS
+    type: record list
+    presence: optional
+    description: 'For a BASKET system basket: the positions and trades someone picked (a trade brings that part of its position).'
+  - name: NODE
+    type: text
+    presence: optional
+    description: 'For a HIERARCHY system basket: the node of the bank''s hierarchy whose positions it holds (every book under it).'
+    example: MGMT~DESK-RATES
+  - name: RULE
+    type: text
+    presence: optional
+    description: 'For a RULE system basket: the condition a position''s columns must meet to be in it, checked on each business date.'
+    example: PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money market') …
+  DEFINITION.MEMBERS[]:
+  - name: POSITION_ID
+    type: id
+    presence: optional
+    description: 'Position: the position it refers to'
+    example: POS-BOOK-RATES-1~MX-20000002
+    pattern: ^POS-
+    link: position
+  - name: TRADE_ID
+    type: id
+    presence: optional
+    description: 'Trade: the trade it refers to'
+    example: CLY-3000087
+    pattern: ^(MX|CLY)-\d+$
+    link: trade
+  ROLLS_UP_TO:
+  - name: KIND
+    type: text
+    presence: required
+    description: 'The kind of the node it reports under: bank, division, legal-entity, desk or book.'
+    example: division
+  - name: ID
+    type: id
+    presence: required
+    description: The node the system basket reports under (the bank, a division, a legal entity, a desk or a book).
+    example: DIV-MARKETS
+links:
+- field: DEFINITION.MEMBERS[].POSITION_ID
+  kind: position
+- field: DEFINITION.MEMBERS[].TRADE_ID
+  kind: trade
+validation:
+- rule: unique
+  key:
+  - PORTFOLIO_ID
+  per: BUSINESS_DATE
+- rule: enum
+  field: TYPE
+  values:
+  - BASKET
+  - HIERARCHY
+  - RULE
+- rule: required
+  fields:
+  - PORTFOLIO_ID
+  - NAME
+  - OWNER
+  - TYPE
+  - DEFINITION
+  - ROLLS_UP_TO
+  - BUSINESS_DATE
+  - VALID_FROM
+  - VERSION
+- rule: link
+  field: DEFINITION.MEMBERS[].POSITION_ID
+  kind: position
+- rule: link
+  field: DEFINITION.MEMBERS[].TRADE_ID
+  kind: trade
+notes:
+- 'The system baskets are kept in Drishti''s basket store (VAR_GUIDE.md section 5.7), never read from data: a holder of the permission var:system-baskets
+  creates, edits and retires them in Construct your basket or imports them as YAML; the demo''s are the market-risk pack''s seed (seeds/system-baskets.yaml).
+  Their VaR limits are var-limit rows (HIERARCHY PORTFOLIO), their figures the engine''s as the page opens (VAR_ENGINE), never stored.'
+review: []
