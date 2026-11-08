@@ -53,9 +53,9 @@ which runs the parallel loader in the server's jar, or drops files into the data
 | each source's pull | `tools/feeds/sources/<module>.py` | one module per source (a feed file's `class:`) |
 | the wrappers | `tools/feeds/feed.sh`, `tools/windows/feed.ps1` | what cron, systemd and Task Scheduler run |
 
-The public-data refresh scripts that were in `tools/publicdata/` are folded into it: each is now a feed's source module in
-`tools/feeds/sources/`, and its old "refresh the committed demo snapshot" is `feed run <feed> --snapshot` (section 3.4). There is one
-way to pull external data.
+Every external source of the packs is pulled this way: each pack's source module in `tools/feeds/sources/` (gleif, us-equities, funds,
+world-economy, news-and-markets, market-data) is a feed's pull, and the same module refreshes its pack's committed demo snapshot with
+`feed run <feed> --snapshot` (section 3.4). There is one way to pull external data.
 
 **Where things are written**, all under the data folder (`DRISHTI_DATA_DIR`, else `./data`; never committed):
 
@@ -78,6 +78,14 @@ data/feeds/
 | Feed | Source | Datasets (pack: kinds) | Lake | Use | Daily at |
 |---|---|---|---|---|---|
 | `gleif` | GLEIF golden copy, LEI API, mapping files | gleif: lei-entity, lei-relationship, lei-mapping | `referencelake` | CC0, redistributable | 05:30 |
+| `funds` | SEC Form N-PORT, N-CEN, risk/return summaries; Nasdaq Trader; GLEIF | funds: fund, fund-holder, index-funds | `capitalmarket` | public domain | 06:15 |
+| `world-economy` | World Bank WDI and WGI, IMF WEO, UNDP HDI, CIA Factbook | world-economy: economy, macro-indicator, economic-forecast, labour-market, fiscal-position, region-economy, jurisdiction, party, office-holder, election, region, social-indicator | `worldlake` | **internal only** (the IMF forecasts) | 06:45 |
+| `us-equities` | SEC EDGAR; index members from SPY, DIA, QQQ and IWM N-PORT holdings (S&P 500, Dow 30, Nasdaq-100, Russell 2000); Nasdaq Trader; GLEIF; Wikidata | us-equities: us-company, index-membership, filing-feed, filing, financial-fact | `capitalmarket` | public domain, CC0 | 07:00 |
+| `news-and-markets` | Yahoo Finance quotes, Google News headlines (through Drishti's own live connectors) | news-and-markets: quote, news | `newslake` | **internal only** | 07:30 |
+| `market-data` | ECB euro reference rates, US Treasury par curve, SOFR, euro short-term rate | market-data: fx-spot, ir-curve, rate-fixing (each under its own date) | `capitalmarket` | attribution | weekdays 18:30 |
+| `yahoo-prices` | Yahoo Finance daily prices of the us-equities companies (through a running server's connector) | us-equities: price-history | `capitalmarket` | **internal only**, off as shipped | weekdays 22:30 |
+
+The funds feed runs before us-equities on purpose: its N-PORT download cache gives us-equities its index members.
 
 `drishti.py feed list` prints the same from the feed files. Each feed's source, data contract (with JSON examples) and licence are its
 pack's README and the [External data](EXTERNAL_DATA.md) page.
@@ -149,8 +157,8 @@ is refused, and a feed whose key's variable is not set exits 2 naming it.
 
 ### 3.4 `--snapshot`: the committed demo snapshot
 
-A feed whose pack ships a committed snapshot (the demo data in `data/testdata/<pack>/`) refreshes it with `--snapshot`, exactly as the
-old refresh scripts did: the same files in the same places, the pack's own check afterwards, nothing loaded. Internal-only data
+A feed whose pack ships a committed snapshot (the demo data in `data/testdata/<pack>/`) refreshes it with `--snapshot`: the pack's
+generator writes its files where they live (the samples and guide, `data/testdata/<pack>/`), its check runs, nothing is loaded. Internal-only data
 (section 9) is written into the repository only with `--internal-ok`.
 
 ```bash

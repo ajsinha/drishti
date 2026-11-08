@@ -101,16 +101,16 @@ tracking ETF holds stay in the pack, in no index.
 
 ## Refreshing the data
 
-The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/EXTERNAL_DATA.md`, us-equities):
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guides: `docs/guides/FEEDS_GUIDE.md`; `docs/guides/EXTERNAL_DATA.md`, us-equities):
 
 ```bash
-python3 tools/publicdata/us_equities.py status                 # licences, last refreshed, cached size
-python3 tools/publicdata/us_equities.py refresh --dry-run      # what would be fetched; changes nothing
-python3 tools/publicdata/us_equities.py refresh                # the network (about 1,100 SEC and 500 GLEIF calls), then make.py and --check
-python3 tools/publicdata/us_equities.py refresh --scope TSLA,FILINGS:40,YEARS:15   # a wider build in the data folder, not this pack
+python3 tools/drishti.py feed status us-equities                 # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run us-equities --dry-run      # what would be fetched; changes nothing
+python3 tools/drishti.py feed run us-equities --snapshot                # the network (about 1,100 SEC and 500 GLEIF calls), then make.py and --check
+python3 tools/drishti.py feed run us-equities --snapshot -- --scope TSLA,FILINGS:40,YEARS:15   # a wider build in the data folder, not this pack
 ```
 
-`tools/publicdata/us-equities.sh` and `tools/windows/publicdata-us-equities.ps1` run the same script. Underneath it are the
+`tools/feeds/feed.sh run us-equities` and `tools/windows/feed.ps1 run us-equities` run the same command. Underneath it are the
 generator's two steps, which can also be run by hand:
 
 ```bash
@@ -510,42 +510,43 @@ Nested `ANALYTICS`:
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `USEQ` | `us-company` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy); Wikidata: index membership and company facts (CC0 1.0); Nasdaq Trader symbol directory (public symbol directory files); GLEIF LEI records (each company's LEI) (CC0 1.0) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/us-company/` → `lake demo` → connector `us-equities-store` |
-| `IDX` | `index-membership` | external: Wikidata: index membership and company facts (CC0 1.0) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/index-membership/` → `lake demo` → connector `us-equities-store` |
+| `USEQ` | `us-company` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy); Wikidata: index membership and company facts (CC0 1.0); Nasdaq Trader symbol directory (public symbol directory files); GLEIF LEI records (each company's LEI) (CC0 1.0) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/us-company/` → `lake demo` → connector `us-equities-store` |
+| `IDX` | `index-membership` | external: Wikidata: index membership and company facts (CC0 1.0) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/index-membership/` → `lake demo` → connector `us-equities-store` |
 | `SIC` | `sic-sector` | computed by Drishti: the derived connector us-equities-groupings over the kind us-company; see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
-| `EDGAR` | `filing-feed` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/filing-feed/` → `lake demo` → connector `us-equities-store` |
-| `FILING` | `filing` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/filing/` → `lake demo` → connector `us-equities-store` |
-| `FACT` | `financial-fact` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/financial-fact/` → `lake demo` → connector `us-equities-store` |
-| `PXH` | `price-history` | external: Yahoo Finance daily prices (the us-equities-prices connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `tools/publicdata/us_equities.py` | read live by connector `us-equities-prices` (plugin `yfinance`) when it is switched on; nothing is committed |
+| `EDGAR` | `filing-feed` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/filing-feed/` → `lake demo` → connector `us-equities-store` |
+| `FILING` | `filing` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/filing/` → `lake demo` → connector `us-equities-store` |
+| `FACT` | `financial-fact` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/financial-fact/` → `lake demo` → connector `us-equities-store` |
+| `PXH` | `price-history` | external: Yahoo Finance daily prices (the us-equities-prices connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `drishti.py feed run us-equities` | read live by connector `us-equities-prices` (plugin `yfinance`) when it is switched on; nothing is committed |
 
 ### External sources
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| SEC EDGAR: tickers, submissions, XBRL company facts | https://data.sec.gov | public domain (US Government work); EDGAR fair access policy | no | `python3 tools/publicdata/us_equities.py refresh sec` |
-| Wikidata: index membership and company facts | https://query.wikidata.org/sparql | CC0 1.0 | no | `python3 tools/publicdata/us_equities.py refresh wikidata` |
-| Nasdaq Trader symbol directory | https://www.nasdaqtrader.com/dynamic/SymDir/ | public symbol directory files | no | `python3 tools/publicdata/us_equities.py refresh nasdaq` |
-| GLEIF LEI records (each company's LEI) | https://api.gleif.org/api/v1 | CC0 1.0 | no | `python3 tools/publicdata/us_equities.py refresh gleif` |
-| Yahoo Finance daily prices (the us-equities-prices connector) | https://finance.yahoo.com | Yahoo terms: personal use, no redistribution | **yes** | `python3 tools/publicdata/us_equities.py refresh prices` |
+| SEC EDGAR: tickers, submissions, XBRL company facts | https://data.sec.gov | public domain (US Government work); EDGAR fair access policy | no | `python3 tools/drishti.py feed run us-equities -- sec` |
+| Wikidata: index membership and company facts | https://query.wikidata.org/sparql | CC0 1.0 | no | `python3 tools/drishti.py feed run us-equities -- wikidata` |
+| Nasdaq Trader symbol directory | https://www.nasdaqtrader.com/dynamic/SymDir/ | public symbol directory files | no | `python3 tools/drishti.py feed run us-equities -- nasdaq` |
+| GLEIF LEI records (each company's LEI) | https://api.gleif.org/api/v1 | CC0 1.0 | no | `python3 tools/drishti.py feed run us-equities -- gleif` |
+| Yahoo Finance daily prices (the us-equities-prices connector) | https://finance.yahoo.com | Yahoo terms: personal use, no redistribution | **yes** | `python3 tools/drishti.py feed run us-equities -- prices` |
 
 **Internal only:** Yahoo Finance daily prices (the us-equities-prices connector). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
 
 ```bash
-python3 tools/publicdata/us_equities.py status                           # each source: licence, internal only or not, last refreshed (offline)
-python3 tools/publicdata/us_equities.py refresh --dry-run                # what would be fetched and written; changes nothing
-python3 tools/publicdata/us_equities.py refresh                          # the committed pack: data/testdata/us-equities, samples/ and this guide, then make.py --check
-python3 tools/publicdata/us_equities.py refresh --offline                # the same from the download cache only
-python3 tools/publicdata/us_equities.py refresh --scope TSLA,FILINGS:40  # a widened build in <data>/publicdata/us-equities
+python3 tools/drishti.py feed status us-equities                          # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run us-equities --dry-run                   # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run us-equities                             # pull today's data and load it into the lake `capitalmarket` (what the daily schedule runs)
+python3 tools/drishti.py feed run us-equities --snapshot                  # refresh the committed pack instead: data/testdata/us-equities, samples/ and this guide, then make.py --check
+python3 tools/drishti.py feed run us-equities --snapshot --offline        # the same from the download cache only
+python3 tools/drishti.py feed run us-equities -- --scope TSLA,FILINGS:40  # a widened pull of more companies and filings
 ```
 
-The same through the wrappers: `tools/publicdata/us-equities.sh status` on Linux and macOS, `.\tools\windows\publicdata-us-equities.ps1 status` on Windows (every argument is passed on).
+The same through the wrappers: `tools/feeds/feed.sh run us-equities` on Linux and macOS, `.\tools\windows\feed.ps1 run us-equities` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
 
 ### Into the lake, checking, offline
 
 - **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../docs/guides/TOOLS.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

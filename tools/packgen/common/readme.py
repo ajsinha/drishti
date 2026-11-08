@@ -541,12 +541,12 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if F.glob("contracts/*.contract.yaml"):
         where = f"[{guide_files[0]}]({guide_files[0]})" if guide_files else "the pack's guide"
         out += [f"Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and "
-                f"its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, {where}: *Data contracts* and "
+                f"the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, {where}: *Data contracts* and "
                 "*Data retrieval*.", ""]
     ext = [s for s in sources if (s.get("name") or "").strip() and not str(s.get("licence", "")).startswith("Proprietary")]
     if ext:
         out += ["External data: " + "; ".join(f"{s['name']}" + (" (**internal only**)" if s.get("internal-only") else "") for s in ext) +
-                ". Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, "
+                ". Each source's URL, licence and data feed are on the External data help page, "
                 "[docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).", ""]
     # -- enabling
     out += ["## Enabling and dependencies", ""]

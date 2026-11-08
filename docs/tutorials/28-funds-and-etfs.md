@@ -37,7 +37,7 @@ About 25 minutes.
 
 **Where this data comes from.** External, public data: the SEC's Form N-PORT, Form N-CEN and prospectus risk/return summary data sets
 and its ticker files (U.S. public domain), the Nasdaq Trader symbol directory (a public file) and GLEIF's relationship records (CC0),
-fetched by `tools/publicdata/funds.py` and committed as a 5.6 MB gzipped snapshot under `data/testdata/funds`. Nothing is internal-only
+fetched by `drishti.py feed run funds` and committed as a 5.6 MB gzipped snapshot under `data/testdata/funds`. Nothing is internal-only
 and no prices are used. Each source, its licence and how to refresh it: [External data](../guides/EXTERNAL_DATA.md#funds) and
 [the guide's Part III](../guides/FUNDS_GUIDE.md#12-the-sources-and-their-licences).
 
@@ -58,11 +58,11 @@ and no prices are used. Each source, its licence and how to refresh it: [Externa
 **From the command line.**
 
 ```bash
-python3 tools/publicdata/funds.py status
+python3 tools/drishti.py feed status funds
 ```
 
 ```text
-$ python3 tools/publicdata/funds.py status
+$ python3 tools/drishti.py feed status funds
 committed pack: 200 funds in 5 parts, data retrieved 2026-10-26
 SOURCE   LICENCE                                           USE          LAST REFRESHED       CACHED
 tickers  Public domain (U.S. Government work); SEC fair a  committable  2026-10-26T19:37:15  1.7 MB
@@ -436,15 +436,15 @@ Further in the guide: [section 7](../guides/FUNDS_GUIDE.md#7-commands-search-com
 **From the command line.** On Linux and macOS (on Windows, `.\tools\windows\publicdata-funds.ps1` takes the same arguments):
 
 ```bash
-tools/publicdata/funds.sh refresh --dry-run      # what would be fetched; changes nothing
-tools/publicdata/funds.sh refresh                # about 700 MB of downloads the first time, kept in the data folder; then make.py --check
+tools/feeds/feed.sh run funds --dry-run      # what would be fetched; changes nothing
+tools/feeds/feed.sh run funds --snapshot                # about 700 MB of downloads the first time, kept in the data folder; then make.py --check
 python3 tools/drishti.py lake demo               # rebuild the lake
 ```
 
 ```text
-$ tools/publicdata/funds.sh refresh --dry-run
+$ tools/feeds/feed.sh run funds --dry-run
 dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
-  tickers (Public domain (U.S. Government work); SEC fair access policy; committable): 2 request(s), cache <data>/publicdata/cache/funds
+  tickers (Public domain (U.S. Government work); SEC fair access policy; committable): 2 request(s), cache <data>/feeds/sources/cache/funds
     https://www.sec.gov/files/company_tickers_mf.json
     https://www.sec.gov/files/company_tickers_exchange.json
   ...

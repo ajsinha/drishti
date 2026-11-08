@@ -265,7 +265,7 @@ def write_snapshot(testdata: pathlib.Path, kind: str, docs: list[dict], captured
     for old in folder.glob("*.jsonl.gz"):
         old.unlink()
     key = KINDS[kind][0]
-    path = folder / f"{kind}.{captured:%Y-%m-%d}.jsonl.gz"
+    path = folder / f"{kind}.{captured.astimezone():%Y-%m-%d}.jsonl.gz"      # this machine's calendar: never a name "in the future"
     lines = [json.dumps(d, ensure_ascii=False, separators=(",", ":"), sort_keys=False) for d in sorted(docs, key=lambda d: str(d.get(key)))]
     with open(path, "wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=9, mtime=0, filename="") as gz:
         gz.write(("\n".join(lines) + "\n").encode("utf-8"))
@@ -311,7 +311,7 @@ def run(a, say=print, sleep=time.sleep) -> int:
     pack_dir = pathlib.Path(a.packs) / PACK
     testdata = pathlib.Path(a.testdata)
     want = targets(pack_dir)
-    for kind, ids in (getattr(a, "extra", None) or {}).items():        # tools/publicdata/news_and_markets.py --scope: more tickers and topics
+    for kind, ids in (getattr(a, "extra", None) or {}).items():        # drishti.py feed run news-and-markets --scope: more tickers and topics
         want[kind] += [i for i in ids if i not in want[kind]]
     kinds = [k for k in KINDS if not a.only or k in a.only.split(",")]
     total = sum(len(want[k]) for k in kinds)

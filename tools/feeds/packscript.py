@@ -18,7 +18,7 @@ funds.py, world_economy.py, news_and_markets.py, official_market_data.py; each k
 A run builds the pack's data into the run's work folder (the source's ``refresh --out <work>``, which never touches the repository),
 then reads the dated files the build wrote (``<work>/testdata/<pack>/<kind>/<kind>.<date>.jsonl.gz`` or tars; tools/lake/feedfiles.py)
 and emits each kind's rows as the feed file's dataset of that kind. ``--snapshot`` runs the source's refresh into its committed place
-(data/testdata and the pack's samples) exactly as the old refresh script did, nothing loaded. Arguments after ``--`` on the command
+(data/testdata and the pack's samples) where the pack keeps it, nothing loaded. Arguments after ``--`` on the command
 line go to the source (``feed run gleif -- --scope GROUP:<lei>``); the feed file's ``options.args`` are given first."""
 from __future__ import annotations
 

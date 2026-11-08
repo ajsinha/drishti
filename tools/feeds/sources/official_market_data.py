@@ -324,8 +324,6 @@ def refresh(a, log=print) -> int:
     man.finish(out, files, sys.argv[1:], not problems and not run.http.failed)
     for f in files:
         log(f"wrote {f}")
-    if files:
-        log("load: python3 tools/drishti.py feed run market-data (pulls and loads into capitalmarket; docs/guides/FEEDS_GUIDE.md)")
     return 1 if not files else 2 if (problems or run.http.failed or len(done) < len(selected)) else 0
 
 

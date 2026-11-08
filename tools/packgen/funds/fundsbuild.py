@@ -224,7 +224,7 @@ def build(cache: Path, us: dict[str, dict], indexes: dict[str, dict], retrieved:
     ETFS.update(R.etfs(cache))
     nport_zip = R.newest(cache / "nport", "_nport.zip")
     if nport_zip is None:
-        raise SystemExit(f"no N-PORT data set in {cache / 'nport'}: run tools/publicdata/funds.py refresh first")
+        raise SystemExit(f"no N-PORT data set in {cache / 'nport'}: run drishti.py feed run funds first")
     log(f"  N-PORT {nport_zip.name}")
     with zipfile.ZipFile(nport_zip) as zf:
         funds = R.nport_funds(zf)

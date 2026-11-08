@@ -202,9 +202,9 @@ Screens (Sutras):
 | Yahoo Finance (yfinance connector) | Unofficial endpoint; terms restrict use and forbid redistribution | yes | quote, read live when the yfinance connector is on |
 | Captured snapshot of the same quotes and headlines (data/testdata) | As above; committed for the offline demo machine by the owner's choice | yes | the offline demo lake |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/news-and-markets.md](guides/news-and-markets.md): *Data contracts* and *Data retrieval*.
+Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/news-and-markets.md](guides/news-and-markets.md): *Data contracts* and *Data retrieval*.
 
-External data: Google News RSS (news connector) (**internal only**); Yahoo Finance (yfinance connector) (**internal only**); Captured snapshot of the same quotes and headlines (data/testdata) (**internal only**). Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
+External data: Google News RSS (news connector) (**internal only**); Yahoo Finance (yfinance connector) (**internal only**); Captured snapshot of the same quotes and headlines (data/testdata) (**internal only**). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
 
 ## Enabling and dependencies
 
@@ -225,7 +225,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`, `D
 ## Refreshing the data
 
 The topics and companies are written by `config/packs/news-and-markets/tools/make_samples.py`; the offline snapshot by
-`tools/publicdata/news_and_markets.py`.
+`drishti.py feed run news-and-markets`.
 
 The data feed `news-and-markets` (config/feeds/news-and-markets.yaml) pulls `quote`, `news`: `python3 tools/drishti.py feed run news-and-markets` fetches them daily into `data/feeds/news-and-markets/<date>/` and loads them into the lake `newslake` (internal use only); `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 

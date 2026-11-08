@@ -348,3 +348,8 @@ def test_the_wrappers_exist_and_run_the_feed_command():
     assert "tools/drishti.py feed" in sh and "drishti-console/.venv" in sh
     assert "tools\\drishti.py" in ps and "feed" in ps and "exit $LASTEXITCODE" in ps
     assert not list((ROOT / "tools").glob("publicdata")), "tools/publicdata folded into tools/feeds"
+
+
+def test_every_feed_has_its_generated_readme():
+    import feedreadme
+    assert feedreadme.main(["--check"]) == 0, "run python3 tools/feeds/feedreadme.py"

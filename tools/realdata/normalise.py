@@ -41,7 +41,7 @@ import yaml
 HERE = Path(__file__).resolve().parent
 DATASET = HERE / "dataset"
 ENV_DATASET = "DRISHTI_REALDATA_DATASET"      # a build that must not touch the committed dataset (--no-imf) points the generators here
-ENV_SOURCES = "DRISHTI_REALDATA_SOURCES"      # a widened build (tools/publicdata/world_economy.py --years/--scope) reads its own sources.yaml
+ENV_SOURCES = "DRISHTI_REALDATA_SOURCES"      # a widened build (drishti.py feed run world-economy --years/--scope) reads its own sources.yaml
 
 
 def dataset_dir() -> Path:

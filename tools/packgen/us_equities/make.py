@@ -488,16 +488,16 @@ tracking ETF holds stay in the pack, in no index.
 
 ## Refreshing the data
 
-The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/EXTERNAL_DATA.md`, us-equities):
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guides: `docs/guides/FEEDS_GUIDE.md`; `docs/guides/EXTERNAL_DATA.md`, us-equities):
 
 ```bash
-python3 tools/publicdata/us_equities.py status                 # licences, last refreshed, cached size
-python3 tools/publicdata/us_equities.py refresh --dry-run      # what would be fetched; changes nothing
-python3 tools/publicdata/us_equities.py refresh                # the network (about 1,100 SEC and 500 GLEIF calls), then make.py and --check
-python3 tools/publicdata/us_equities.py refresh --scope TSLA,FILINGS:40,YEARS:15   # a wider build in the data folder, not this pack
+python3 tools/drishti.py feed status us-equities                 # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run us-equities --dry-run      # what would be fetched; changes nothing
+python3 tools/drishti.py feed run us-equities --snapshot                # the network (about 1,100 SEC and 500 GLEIF calls), then make.py and --check
+python3 tools/drishti.py feed run us-equities --snapshot -- --scope TSLA,FILINGS:40,YEARS:15   # a wider build in the data folder, not this pack
 ```
 
-`tools/publicdata/us-equities.sh` and `tools/windows/publicdata-us-equities.ps1` run the same script. Underneath it are the
+`tools/feeds/feed.sh run us-equities` and `tools/windows/feed.ps1 run us-equities` run the same command. Underneath it are the
 generator's two steps, which can also be run by hand:
 
 ```bash
@@ -547,7 +547,7 @@ def main(argv: list[str]) -> int:
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     p.add_argument("--check", action="store_true")
     p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/us-equities; "
-                                               "tools/publicdata/us_equities.py points a widened build at the data folder)")
+                                               "drishti.py feed run us-equities points a widened build at the data folder)")
     p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed "
                                                   "pack; beside a widened build's pack folder otherwise)")
     a = p.parse_args(argv)

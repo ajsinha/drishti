@@ -378,7 +378,7 @@ def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     p.add_argument("--only", default="wikidata,trackers,nasdaq,sec,gleif")
-    p.add_argument("--funds-cache", type=Path, default=ROOT / "data" / "publicdata" / "cache" / "funds",
+    p.add_argument("--funds-cache", type=Path, default=ROOT / "data" / "feeds" / "sources" / "cache" / "funds",
                    help="the funds pack's download cache, whose N-PORT data sets give the index members (trackers)")
     p.add_argument("--limit", type=int, help="the first N companies only (a quick try)")
     a = p.parse_args(argv)

@@ -601,7 +601,7 @@ Screens (Sutras):
 |---|---|---|---|
 | Synthetic sample data (tools/packgen/banking) | Proprietary (part of Drishti); fictitious names and figures | no | every document in samples/ and the demo lake |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/counterparty-risk.md](guides/counterparty-risk.md): *Data contracts* and *Data retrieval*.
+Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/counterparty-risk.md](guides/counterparty-risk.md): *Data contracts* and *Data retrieval*.
 
 ## Enabling and dependencies
 

@@ -256,7 +256,7 @@ class Prices(B.Source):
         folder.mkdir(parents=True, exist_ok=True)
         for old in folder.glob("*.jsonl.gz"):
             old.unlink()
-        f = folder / f"{PRICE_KIND}.{captured:%Y-%m-%d}.jsonl.gz"          # the load rules' name: <table>.<YYYY-MM-DD>
+        f = folder / f"{PRICE_KIND}.{captured.astimezone():%Y-%m-%d}.jsonl.gz"   # the load rules' name: <table>.<YYYY-MM-DD> (local: never "in the future")
         docs = sorted(({**d, "SNAPSHOT": True, "SNAPSHOT_CAPTURED_AT": captured.isoformat().replace("+00:00", "Z"),
                         "SNAPSHOT_NOTE": "internal use only: Yahoo Finance prices may not be redistributed"} for d in run.prices),
                       key=lambda d: str(d.get("PRICE_ID") or d.get("ID") or d.get("TICKER") or ""))

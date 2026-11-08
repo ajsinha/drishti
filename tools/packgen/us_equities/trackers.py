@@ -132,7 +132,7 @@ def extract(funds_cache: Path, cache: Path, log=print) -> dict:
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--funds-cache", type=Path, default=FUNDS_CACHE)
-    p.add_argument("--cache", type=Path, default=ROOT / "data" / "publicdata" / "cache" / "us-equities")
+    p.add_argument("--cache", type=Path, default=ROOT / "data" / "feeds" / "sources" / "cache" / "us-equities")
     a = p.parse_args(argv)
     extract(a.funds_cache, a.cache)
     return 0

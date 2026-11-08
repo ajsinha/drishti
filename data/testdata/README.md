@@ -337,7 +337,7 @@ filing-feed, filing, financial-fact) and `gleif/<kind>/<kind>.<date>.jsonl.gz` (
   off. Their `samples/` folders keep only a few reference documents for their READMEs and guides; nothing is served from there.
   Both packs are off by default: add `us-equities,gleif` to `DRISHTI_PACKS`.
 - **Writing it.** The packs' generators write the snapshots and their `testdata.yaml` entries (`tools/testdata/publicsnap.py`):
-  `tools/packgen/us_equities/make.py`, `tools/packgen/gleif/make.py`, run by the refresh scripts `tools/publicdata/us_equities.py`
+  `tools/packgen/us_equities/make.py`, `tools/packgen/gleif/make.py`, run by the data feeds `drishti.py feed run us-equities`
   and `gleif.py` ([PUBLIC_DATA.md](../../docs/guides/PUBLIC_DATA.md)); `make.py --check` without a cache checks the committed
   snapshot. `make_testdata.py` keeps both folders as they are and lists them.
 - **Licences.** SEC EDGAR is public domain, GLEIF and Wikidata CC0, the Nasdaq Trader directory a public file; no prices, index

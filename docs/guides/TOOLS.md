@@ -1595,7 +1595,7 @@ inbox. The wrappers `tools/feeds/feed.sh` and `tools/windows/feed.ps1` run the s
   [--offline] [--set NAME=VALUE] [-- SOURCE ARGS]`: pull (incrementally, from the feed's state), write
   `<data>/feeds/<feed>/<date>/<table>.<date>.jsonl.gz` with a manifest, load into the feed's lake, replacing the dates it brings; one
   log line and one ledger line (`<data>/feeds/ledger.jsonl`) per run. `--snapshot` refreshes the committed demo snapshot in
-  `data/testdata` instead (the old refresh scripts' job). Exit codes: 0 ok, 1 failed, 2 refused, 3 locked, 4 partial.
+  `data/testdata` instead. Exit codes: 0 ok, 1 failed, 2 refused, 3 locked, 4 partial.
 - `feed status [<feed>] [--runs N] [--json]`: per feed the last run, the last success, rows, duration and failures (exit 1 when a
   feed's last run failed).
 - `feed schedule --cron | --systemd | --windows [<feed> ...] [--log-dir DIR]`: ready-to-use daily entries, one per enabled feed.
