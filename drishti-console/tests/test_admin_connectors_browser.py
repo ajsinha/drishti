@@ -25,6 +25,7 @@ import pytest
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
+import select_helpers as S  # noqa: E402
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from core.backend import BackendError  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
@@ -230,7 +231,7 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     page.click("[data-new]")
     dlg = page.locator("[data-edit-dialog]")
     dlg.locator("[data-f-name]").wait_for()
-    assert dlg.locator("[data-f-plugin] option").all_inner_texts() == ["file", "jdbc"]
+    assert S.values(page, "[data-edit-dialog] [data-f-plugin]") == ["file", "jdbc"]               # drishti-inputs' Select
     assert dlg.locator("[data-setting='root']").count() == 1                                      # the default plugin's own fields
     dlg.locator("[data-f-plugin]").select_option("jdbc")
     for s in ("url", "user", "password", "pool-size", "tls.enabled", "tls.ca-file", "tls.truststore-password"):
@@ -291,7 +292,7 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     dlg = page.locator("[data-edit-dialog]")
     dlg.locator("[data-f-description]").wait_for()
     assert dlg.locator("[data-f-name]").get_attribute("readonly") is not None                     # the name is the file name: it does not change
-    assert dlg.locator("[data-f-plugin]").is_disabled()
+    assert dlg.locator("[data-f-plugin] .di-select-control").get_attribute("aria-disabled") == "true"
     assert dlg.locator("[data-setting='user']").input_value() == "drishti"
     dlg.locator("[data-tab='yaml']").click()
     yaml = dlg.locator("[data-yaml]")
@@ -416,7 +417,7 @@ def test_the_page_fits_a_phone_and_the_dark_theme_with_big_targets(browser, conn
     box = dlg.bounding_box()
     assert box["x"] >= 0 and box["x"] + box["width"] <= 391
     assert page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth + 1")
-    for sel in ("[data-save]", "[data-test]", "[data-tab='yaml']", "[data-close]", "[data-kind-add]", "[data-f-name]", "[data-f-plugin]"):
+    for sel in ("[data-save]", "[data-test]", "[data-tab='yaml']", "[data-close]", "[data-kind-add]", "[data-f-name]", "[data-f-plugin] .di-select-control"):
         b = dlg.locator(sel).first.bounding_box()
         assert b["height"] >= 44 - 1, (sel, b)                                                     # 44px touch targets
     colour = page.evaluate("() => getComputedStyle(document.querySelector('[data-edit-dialog]')).color")
