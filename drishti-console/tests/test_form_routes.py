@@ -14,6 +14,7 @@
 
 """Query by form (FORM <pack>), the console's side: the reserved word, type-ahead, the form for every field type, criteria in the address,
 the command the server compiled, the results grid, regex refusals, saved searches. Against a stand-in server."""
+import html
 import json
 import re
 
@@ -59,7 +60,7 @@ def test_type_ahead_offers_only_packs_with_kinds_then_their_kinds(cl):
 
 def qf(page):
     """The form the page draws (drishti-inputs' Form): its schema and value, sent with the page."""
-    return json.loads(re.search(r'<script type="application/json" data-qf-schema>(.*?)</script>', page, re.S).group(1))
+    return json.loads(html.unescape(re.search(r'data-qf-schema="([^"]*)"', page).group(1)))
 
 
 def named(q):

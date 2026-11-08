@@ -40,8 +40,7 @@
     {% if info.form.inferred %}<p class="qf-note text-muted-d">{{ info.pack }} does not declare a form for {{ info.kind | replace('-', ' ') }}, so these fields are inferred from its search columns and Sutra.</p>{% endif %}
     {% if not any_indexed %}<p class="qf-note text-muted-d">No field of this kind is kept as an indexed column: every search reads the documents.</p>{% endif %}
     {# the fields: drishti-inputs' Form, live inside this GET form (drishti_form.js); each control carries the address's own name (op., v., v2., cs.) #}
-    <div class="qf-fields-host" data-qf-fields></div>
-    <script type="application/json" data-qf-schema>{{ qf | tojson }}</script>
+    <div class="qf-fields-host" data-qf-fields data-qf-schema="{{ qf | tojson | forceescape }}"></div>
     <noscript><p class="qf-note">This form is drawn by the browser: with scripts off, type the search in the command line (FORM {{ info.pack }} shows its words).</p></noscript>
     <div class="qf-result-opts">
       <label class="qf-ro">Sort by <select name="order"><option value="">the source's order</option>{% for f in sortable %}
