@@ -53,12 +53,12 @@ public final class MrCubeExtras {
     private final VarPivotProvider provider;
     private final MrSensitivities sensitivities;
 
-    MrCubeExtras(VarService svc, PivotCore core, VarPivotProvider provider) {
+    MrCubeExtras(VarService svc, PivotCore core, VarPivotProvider provider, com.ash.drishti.banking.RiskLimits limits) {
         this.svc = svc;
         this.whatIf = new VarWhatIf(svc);
         this.core = core;
         this.provider = provider;
-        this.sensitivities = new MrSensitivities(provider.props(), provider.frtb());
+        this.sensitivities = new MrSensitivities(provider.props(), provider.frtb(), limits);
     }
 
     VarPivotProvider provider() {

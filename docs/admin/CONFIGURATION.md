@@ -1026,7 +1026,7 @@ by the site.
 | `drishti.lenses` | `risk,world,market,trading` (`DRISHTI_LENSES`; empty turns lenses off) | The editions a person may open as a lens on a full instance ("Open Drishti Risk", "Open Drishti World", "Open Drishti Market", "Open Drishti Trading"), comma list: `risk,world,market,trading` offers the four, and a person inside one switches to another. A lens hides, it does not secure. Ignored with an edition. |
 
 The console's side: `editions.dir` (`DRISHTI_EDITIONS_DIR`, default `../config/editions`); an `edition:` block in its
-`application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words; an edition's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`, Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`; Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:` block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`; the console's own `trading.people` in its `application.local.yaml` adds to the edition file's and wins for a name in both), `trading.match-records` (true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice), `trading.near-limit` (0.8), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a person's View as choice is their `tradingView` setting ([EDITIONS.md section 12](EDITIONS.md#12-drishti-trading)); `lens.roles` is the hook for
+`application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words; an edition's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`, Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`; Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:` block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`; the console's own `trading.people` in its `application.local.yaml` adds to the edition file's and wins for a name in both), `trading.match-records` (true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a person's View as choice is their `tradingView` setting ([EDITIONS.md section 12](EDITIONS.md#12-drishti-trading)); `lens.roles` is the hook for
 role-based access to the lens link (read, not wired). Its own feature switches, each on by default and preset by an edition through
 `config/editions/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
 `features.datamap`, `features.data` (Export data, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
@@ -1513,6 +1513,12 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
 [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#calc-python-snippets).
 
+### `drishti.risk` — one limit rule for the banking module
+
+| Key | Default | Meaning |
+|---|---|---|
+| `limit-near` | `0.8` | Where a figure stands against its limit, one rule for every limit the banking module holds a figure to: a VaR limit (each scope and node, `limitStatus`; the official record's nodes; a what-if's use before and after), a counterparty's credit limit and its tenor buckets in the pre-deal check, and a sensitivity limit cell. **within** below this share, **near** from it (still within: the warning), **breach** over 100%. The screens show the server's status; none computes its own. In `config/engines/var.yaml`; restart to apply. |
+
 ### `drishti.var` — the VaR engine
 
 The VaR engine (the complete guide [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the explorer, the data contract in Part II, how the
@@ -1614,14 +1620,13 @@ per path, each CSA's collateral per path with the margin period of risk, as the 
 captures: the ones people make, and the official end-of-day captures of every netting set, counterparty, group and hierarchy node, which
 it also publishes to `risk-results/exposure-official` and `exposure-official-cpty`. The netting-set and counterparty pages show its
 figures as they open. The pre-deal what-if, exact (method `paths`) or the conservative `addon` proxy, and the pre-deal check are the same engine's: no compute
-pool; the check's one setting is `limit-near`.
+pool; near and breach follow `drishti.risk.limit-near` (the `drishti.risk` section).
 
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` (`DRISHTI_EXPOSURE_ENABLED`) | The engine at all. Off: every exposure request answers `403 DRS-5002` (*the exposure engine is switched off on this server*), and the pages show no exposure. |
 | `confidence` | `[0.95, 0.99]` | The PFE confidences every answer computes (any `q` in (0.5, 1) may be asked per request). |
 | `limit-confidence` | `0.95` | The PFE a credit limit is set on: the default `q` of an answer and of the official capture. |
-| `limit-near` | `0.8` | The pre-deal check says **near** from this share of the credit limit or of a tenor bucket's limit (still within, a warning); over 100% a breach. |
 | `rank-rule` | `kth` | `kth` (the ceil(P q)-th smallest exposure) or `interpolated`. |
 | `collateral-model` | `lagged` | `lagged` (what the CSA calls at the look-back point a margin period of risk earlier; today's collateral where there is none), `current` (today's collateral on every path) or `none`. The hot file's exposure matrices are built with it; another model per request is computed from the value matrices. |
 | `im-model` | `current` | `current` (the initial margin held today, the collateral holding's `IM_HELD`, on every path) or `none`. |
@@ -2710,9 +2715,9 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,190 settings in 20 areas, and 335 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,189 settings in 20 areas, and 335 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
-Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,759, **expert** 413. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
+Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,758, **expert** 413. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
 
 | Area | Settings |
 |---|---|
@@ -2723,7 +2728,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [The console's other files](#the-consoles-other-files) | 106 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 535 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 138 |
-| [Editions: `config/editions/`](#editions-configeditions) | 70 |
+| [Editions: `config/editions/`](#editions-configeditions) | 69 |
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
 | [Write-back: `config/edit/`](#write-back-configedit) | 18 |
@@ -3737,6 +3742,12 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.engines.var.enabled` | boolean | `true` | `DRISHTI_VAR_ENABLED` | server (each node its own) | run the VaR engine on this node: /api/v1/var, VAR, SMAT, PLAY VAR, regulatory VaR (live) | live |  | admin |
 | `drishti.engines.var.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  | admin |
 
+#### `drishti.risk`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
+|---|---|---|---|---|---|---|---|---|
+| `drishti.risk.limit-near` | number | `0.8` |  | server (each node its own) | one rule for every limit the banking module holds a figure to (VaR limits, the pre-deal check's credit limit and buckets, sensitivity limits): near from this share, a breach over 100% | restart |  | admin |
+
 #### `drishti.var`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
@@ -3941,7 +3952,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 |---|---|---|---|---|---|---|---|---|
 | `drishti.ccr.exposure.confidence` | list | `[0.95, 0.99]` |  | server (each node its own) | PFE confidences computed for every answer (any q in (0.5, 1) may be asked) | restart |  | everyday |
 | `drishti.ccr.exposure.limit-confidence` | number | `0.95` |  | server (each node its own) | the PFE credit limits are set on; the default q of an answer | restart |  | everyday |
-| `drishti.ccr.exposure.limit-near` | number | `0.8` |  | server (each node its own) | the pre-deal check says near from this share of a limit (or a tenor bucket's limit); over 100% a breach | restart |  | admin |
 | `drishti.ccr.exposure.rank-rule` | string | `kth` |  | server (each node its own) | kth (the ceil(P q)-th smallest exposure) or interpolated | restart |  | admin |
 | `drishti.ccr.exposure.collateral-model` | string | `lagged` |  | server (each node its own) | lagged (called at the look-back point), current (today's collateral on every path) or none | restart |  | admin |
 | `drishti.ccr.exposure.im-model` | string | `current` |  | server (each node its own) | current (the initial margin held today on every path) or none | restart |  | admin |
@@ -5580,7 +5590,6 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `trading.match-records` | boolean | `true` |  | an edition (server and console) | fall back to a matching trader record (TRADER\_ID = TRDR-&lt;USER&gt;, or the same NAME) | restart |  | admin |
 | `trading.landing-by-role` | map | `{ desk-head: desk, trader: trader }` |  | an edition (server and console) | the same {role: landing} hook for the trading role: below the person's own choice | restart |  | admin |
 | `trading.live-statuses` | list | `[NEW, VALIDATED, AMENDED]` |  | an edition (server and console) | a trade counts in DV01, top lists and the check when its status is one of these | restart |  | admin |
-| `trading.near-limit` | number | `0.8` |  | an edition (server and console) | a book at or above this share of its VaR limit is "near limit"; above 1 it breaches (the new-trade check's counterparty half: the exposure engine's limit-near) | restart |  | admin |
 | `trading.limit-days` | integer | `5` |  | an edition (server and console) | the Desk head's limit use by book: this many business dates (the official records) | restart |  | admin |
 | `trading.pnl-var-days` | integer | `60` |  | an edition (server and console) | the Desk head's P&amp;L against VaR: this many days of the desk's official history | restart |  | admin |
 | `trading.max-rows` | integer | `20000` |  | an edition (server and console) | the most trade valuations read per date for a scope (more: the figures say partial) | restart |  | admin |

@@ -88,7 +88,7 @@ operations (COLL, MC) …").
 | *What did my books make yesterday?* | **Built**: **P&L today**, the MtM change of every trade valued on both the business date and the business day before, summed over my books; no valuations the day before: no number, said ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading), the Trader desk) | Product control's struck P&L (actual, with cash, fees and reserves) is not received: the figure is MtM change only. The bank's P&L feed is planned |
 | *Why did it move?* | **Partly**: **Overnight movers** (the trades whose MtM moved most) on the Desk head landing; the trade events (new, amended, cancelled) on the Trader desk | A P&L explain (market by risk factor, time, new and amended trades, unexplained): the contract is proposed and parked ([PNL.md section 1](../contracts/PNL.md#1-summary)); section 5.4 |
 | *What is my VaR and how close am I to my limit?* | **Built**: **My VaR** (the union of my books, `BOOK:A + BOOK:B`), labelled intraday when updates were applied; **Limit use**: the highest of my books' VaR ÷ its `var-limit` (EDITIONS.md section 14) | Limits other than VaR (DV01, CS01, vega, stop-loss, notional): not built (section 5.7); 10-day and other confidences (**built**: [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) |
-| *Did any of my books breach?* | **Built** for VaR limits: **Breaches** and **Near limit** tiles (Desk head; `trading.near-limit` 0.8); **Limit use by book** over 5 business dates from the official records | A breach as a record the desk explains (RO2 of the oversight analysis; section 5.6) |
+| *Did any of my books breach?* | **Built** for VaR limits: **Breaches** and **Near limit** tiles (Desk head; the server's `limitStatus`, `drishti.risk.limit-near` 0.8); **Limit use by book** over 5 business dates from the official records | A breach as a record the desk explains (RO2 of the oversight analysis; section 5.6) |
 | *Did yesterday's P&L exceed VaR?* | **Partly**: **P&L against VaR**, the desk's official history (hypothetical P&L against the VaR before it), last 60 days, exceptions circled; **left out** without official history (EDITIONS.md section 14) | The bank's actual and hypothetical P&L (planned); section 5.3 |
 | *What did I book yesterday, and is it right?* | **Built**: **Trades today** (new, amended, cancelled) and **Today's blotter**; on the demo data "new" reads 0 (no trade is booked on its business date) | New trades on the demo data (section 5.1) |
 
@@ -155,7 +155,7 @@ operations (COLL, MC) …").
 |---|---|---|
 | VaR limit use per book and desk | **Built** | `var-limit` ([VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)); Limit use tile |
 | Limit use history by book (official) | **Built**: 5 business dates; a missing record shows "—" | Desk head |
-| Near-limit threshold | **Built**: `trading.near-limit` 0.8 | A different number from the VaR explorer's amber 75% and red 90% ([VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen)); section 9, decision 7 |
+| Near-limit threshold | **Built**: `drishti.risk.limit-near` 0.8, the server's one rule for VaR limits, the pre-deal check and sensitivity limits | A different number from the VaR explorer's amber 75% and red 90% ([VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen)); section 9, decision 7 |
 | Sensitivity, stop-loss, notional limits | **Not built** | RO3 to RO6 of the oversight analysis |
 | A breach the desk explains | **Not built** | RO2 of the oversight analysis; section 5.6 |
 
@@ -230,7 +230,7 @@ person's edition or lens shows `TRD`), cached two minutes per person, date and s
 |---|---|---|
 | **Desk P&L today** | As P&L today, over the desk, with the best book | As above |
 | **Desk VaR** and limit use | `DESK:<id>` from the VaR engine | — |
-| **Breaches**, **Near limit** | Books above 100% and at or above `trading.near-limit` | — |
+| **Breaches**, **Near limit** | Books whose server status is `breach` and `near` (`drishti.risk.limit-near`) | — |
 | **Largest counterparty** | Its share of the desk's **positive MtM** over live trades (current exposure before netting and collateral) | Exposure: the engine accepts `DESK:` as a `partial` scope that cuts netting sets, recomputed in seconds per touched set ([EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes)); what it lacks is a desk's **share of each counterparty's netted, collateralised exposure** and a one-call ranking. Section 5.2 |
 | **Limit use by book** | Last `trading.limit-days` (5) business dates, each cell VaR ÷ limit from that date's **official record**, each cell printing its percentage | A date without a record: "—", named under the grid; a role that sees only some nodes: "not available" |
 | **By trader** | Each trader's P&L and live trades from the valuations' `TRADER_ID`; VaR as the sum of their trades' component VaR in the desk | With `TRADER_ID` masked: "—", record counts with a star, the reason said; beyond `max-parts` the largest only |
@@ -424,7 +424,7 @@ no intraday figure, said.
 ### 5.10 TL10: watch my books
 
 A **Watch** action on the Trader desk and Desk head that creates, for the person, alert rules on numbers for each of their books' VaR
-limit use at `trading.near-limit` and at 100% (reusing the alert machinery: inbox, email, chat, hysteresis and cooldown,
+limit use at `drishti.risk.limit-near` and at 100% (reusing the alert machinery: inbox, email, chat, hysteresis and cooldown,
 [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers)), on the official run and, when the engine supports it, on intraday updates.
 One click, removable, visible in Alerts. **Size** S. **Tests:** the rules created match the books; a crafted use above the threshold
 notifies once with cooldown.
@@ -437,7 +437,7 @@ on the Desk head ("MTD −3.1m · stop-loss 10m · 31%") and a line on the Trade
 
 ### 5.12 TL12: limit use statistics on the Desk head
 
-Per book over the month and the year, from the official records (built): average, peak, days at or above `near-limit`, days in breach,
+Per book over the month and the year, from the official records (built): average, peak, days at or above `drishti.risk.limit-near`, days in breach,
 the date of the peak. A card under **Limit use by book**, and the same figures as a BI report for the limit review. Computed when asked
 from the official table, never stored. **Size** S. **Tests:** the statistics over a crafted month; a missing record counted as missing,
 never as zero.
@@ -477,7 +477,7 @@ No public data is needed. None of this data leaves the bank.
 | **Drishti Risk** ([RISK_LENS.md](RISK_LENS.md)) | The same five packs and engines, the VaR and exposure explorers, `var-limit`, the official records | The scenario inputs (`SPV`, `FXS`, `SSET`, `VOFF`), exposure runs and paths (`XRUN`, `XPATH`, `XOFC`), collateral (`COLL`, `MC`), agreements, the data map, the bank-wide Risk map | To see the bank or another desk, the hierarchies, a node's official record, or exposure in depth |
 | **Drishti Market** ([MARKET_LENS.md](MARKET_LENS.md)) | The market data commands a trader reads (`CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`) | The Quality checks, fixings, vol cubes, correlations, the moves in σ | When a P&L move looks like a data problem: is the curve stale or jumping? |
 | **Drishti World** ([WORLD_LENS.md](WORLD_LENS.md)) | Nothing: no pack in common | Macro economics (left out by design, `trading.yaml`) | For context: an economy's data, a company's filings, a counterparty's legal-entity group |
-| **Drishti Oversight** (proposed; OVERSIGHT_LENS.md) | The limit use by book over N days, the P&L-against-VaR card, `near-limit`, "my" turned into **coverage** | Governance actions other than explaining a breach | Never for a trader; a desk head sees their breaches' review there |
+| **Drishti Oversight** (proposed; OVERSIGHT_LENS.md) | The limit use by book over N days, the P&L-against-VaR card, `drishti.risk.limit-near`, "my" turned into **coverage** | Governance actions other than explaining a breach | Never for a trader; a desk head sees their breaches' review there |
 
 **Shared design rules.** "My" chooses scope and never widens access (the same rule the Oversight analysis reuses as coverage); a figure
 the data cannot give is left out or labelled, never invented; the engines are unchanged under every lens
@@ -638,7 +638,7 @@ phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md sec
 | T13 | Tile: Desk P&L today (B) | **+3.2m** *best: BOOK-COMM-2 +2.1m* | valuations by book | — | — | **Built** |
 | T14 | Tile: Desk VaR (B) | **14.6m** *within the desk limit (71%)* | `DESK:<id>` from the VaR engine | — | — | **Built** |
 | T15 | Tile: Breaches (B) | **1** red, *BOOK-COMM-1 at 259% of its limit* | books above 100% | — | — | **Built** |
-| T16 | Tile: Near limit (B) | **2** amber *(> 80%) books* | `trading.near-limit` (0.8) | — | — | **Built** |
+| T16 | Tile: Near limit (B) | **2** amber *(> 80%) books* | the server's `limitStatus` (`drishti.risk.limit-near`, 0.8) | — | — | **Built** |
 | T17 | Tile: Largest counterparty (B) | **31%** *of desk exposure · CP-NORTHPLAINS* | the share of the desk's positive MtM | — | — | **Partly built**: a share of **positive MtM**, not of exposure (TL2) |
 | T18 | Card: Limit use by book (B) | *VaR ÷ limit, last 5 days*: a grid books × dates (09-24 … 09-30), BOOK-COMM-1 212% … 259% red, BOOK-COMM-2 78% … 86% amber, BOOK-COMM-3 green, BOOK-COMM-4 40% … 81%; *each cell says its percentage; colour only repeats it* | `/api/home/trading/limits` (each date's official record; `trading.limit-days`) | — | — | **Built** ("—" for a date without a record, named) |
 | T19 | Card: By trader (B) | Trader, P&L, VaR, Trades: K. Moreau +2.4m 6.9m 9; R. Okafor +1.1m 4.2m 5; J. Varga −0.3m 3.1m 2 | `/api/home/trading/traders` (`TRADER_ID`; component VaR) | click a trader | — | **Built** (masked: "—" and the reason) |

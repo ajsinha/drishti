@@ -45,8 +45,8 @@ public class ExposurePreDealController {
 
     private final ExposurePreDeal preDeal;
 
-    ExposurePreDealController(ExposureService svc) {
-        this.preDeal = new ExposurePreDeal(svc, new ExposureWhatIf(svc));
+    ExposurePreDealController(ExposureService svc, com.ash.drishti.banking.RiskLimits limits) {
+        this.preDeal = new ExposurePreDeal(svc, new ExposureWhatIf(svc), limits);
     }
 
     @PostMapping

@@ -245,6 +245,8 @@ class VarApiTest {
         assertThat(one.get("horizon").asText()).isEqualTo("1D");
         assertThat(one.get("method").isNull()).isTrue();
         assertThat(one.get("limitUse").asDouble()).isEqualTo(540.0 / 5000);
+        assertThat(one.get("limitStatus").asText()).isEqualTo("within");                 // the server says where it stands (drishti.risk.limit-near)
+        assertThat(one.get("limitNear").asDouble()).isEqualTo(0.8);
         assertThat(one.at("/lens/default").asBoolean()).isTrue();
         JsonNode sq = getJson("/api/v1/risk/var/scope?horizon=10d&method=sqrt10", "BANK", rita);
         assertThat(sq.get("var").asLong()).isEqualTo(Math.round(540 * Math.sqrt(10)));
@@ -253,6 +255,7 @@ class VarApiTest {
         assertThat(sq.get("method").asText()).isEqualTo("SQRT10");
         assertThat(sq.get("scenarios").asInt()).isEqualTo(20);
         assertThat(sq.get("limitUse").isNull()).isTrue();
+        assertThat(sq.get("limitStatus").isNull()).isTrue();                              // not comparable: no status either
         assertThat(sq.get("limitComparable").asBoolean()).isFalse();
         assertThat(sq.get("limitNote").asText()).isEqualTo("limit is for 1-day 99%: not comparable");
         assertThat(sq.at("/backtest/applicable").asBoolean()).isFalse();
@@ -374,6 +377,8 @@ class VarApiTest {
         assertThat(h.get("rows").get(1).get("var").asDouble()).isEqualTo(390);
         JsonNode record = getJson("/api/v1/risk/var/official", "", rita);
         String deskCapture = record.at("/nodes/MGMT~DESK-X/captureId").asText();
+        assertThat(record.get("limitNear").asDouble()).isEqualTo(0.8);                        // each node's status read with the record
+        record.get("nodes").forEach(n -> assertThat(n.has("limitStatus")).as(n.toString()).isTrue());
         assertThat(var("CAPTURE:" + deskCapture)).isEqualTo(390);                          // an official capture's members, as a scope
         mvc.perform(get("/api/v1/risk/var/official").header("Authorization", as("yan", "desk-y"))).andExpect(status().isForbidden());
         assertThat(published()).isEqualTo(18);
@@ -634,6 +639,16 @@ class VarApiTest {
         assertThat(w.at("/items/0/componentVar").asLong()).isEqualTo(600);
         assertThat(w.get("engine").asText()).contains("Java");
         assertThat(w.get("confidence").asDouble()).isEqualTo(0.99);
+        // the what-if on a scope with a limit: its use before and after and the status after, the server's (the Trading landing shows them)
+        JsonNode wb = json.readTree(mvc.perform(post("/api/v1/risk/var/what-if").param("asOf", prev).header("Authorization", rita)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"scope\": \"BANK\", \"items\": [{\"copyOf\": \"T1\", \"factor\": -1}]}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        double lim = wb.at("/limit/limit").asDouble();
+        assertThat(lim).as(wb.toString()).isPositive();
+        assertThat(wb.at("/limit/useBefore").asDouble()).isEqualTo(wb.at("/before/var").asDouble() / lim, org.assertj.core.data.Offset.offset(1e-9));
+        assertThat(wb.at("/limit/useAfter").asDouble()).isEqualTo(wb.at("/after/var").asDouble() / lim, org.assertj.core.data.Offset.offset(1e-9));
+        assertThat(wb.at("/limit/status").asText()).isEqualTo(new com.ash.drishti.banking.RiskLimits(null).status(wb.at("/limit/useAfter").asDouble()));
+        assertThat(wb.at("/limit/near").asDouble()).isEqualTo(0.8);
         // a copy of any scope (DESK-Y is 50V: the bank 40U + 60V without it is DESK-X again), and a P&L priced elsewhere: the same
         StringBuilder minus50v = new StringBuilder();
         for (double x : VarLakeFixture.V) {
