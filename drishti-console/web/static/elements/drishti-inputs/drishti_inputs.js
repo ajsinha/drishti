@@ -833,17 +833,16 @@
         complete: o.complete, lint: o.lint, keys: o.keys });
       ta.hidden = true;
       ta.setAttribute('data-di-code-upgraded', '');
-      let quiet = false;
+      let quiet = false, committed = editor.getValue();           // committed: the text as the page last set it or the person last left it
       Object.defineProperty(ta, 'value', {
         configurable: true,
         get: () => editor.getValue(),
-        set: (v) => { native.set.call(ta, v); quiet = true; try { editor.setValue(v); } finally { quiet = false; } }
+        set: (v) => { native.set.call(ta, v); quiet = true; try { editor.setValue(v); } finally { quiet = false; } committed = editor.getValue(); }   // the page's own text is no edit: no "change" on leaving
       });
       editor.on('change', (c) => {
         native.set.call(ta, c.value);
         if (!quiet && c.origin !== 'setValue') { ta.dispatchEvent(new doc.defaultView.Event('input', { bubbles: true })); }
       });
-      let committed = editor.getValue();                          // leaving the editor after an edit is a "change" on the text area, as a text area's is
       Promise.resolve(editor.ready).then(() => { if (editor.cm) { editor.cm.on('blur', () => { if (editor.getValue() !== committed) { committed = editor.getValue(); ta.dispatchEvent(new doc.defaultView.Event('change', { bubbles: true })); } }); } });
       ta.focus = () => editor.focus();                            // the page's focus() on its text area reaches the editor
       ta.drishtiCode = editor;
