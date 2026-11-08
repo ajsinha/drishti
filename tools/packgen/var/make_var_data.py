@@ -27,7 +27,7 @@ keeps its move on every date: factors.Market ``back``), one book moved between d
     stress-*          the stress scenario set HS-STRESS-2008 (stress.py): its scenario set, P&L vectors, scenario PVs and scenario FX in
                       files of their own (stress-cob...) beside the normal set's, under the same table and date, for stressed VaR
     var-limit/        the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (a few left without one,
-                      shown blank), every node of MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book), and every
+                      shown blank), every node of MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book; LEGAL's ids are paths), and every
                       system basket's (hierarchy PORTFOLIO): the one home of every VaR limit. The server builds the three hierarchies from the
                       rows' promoted columns (DIVISION, LEGAL_ENTITY, DESK, TT_BOOK, LIMIT_LETTER), every row carrying each of them
     desk-pnl/         the desks' daily actual and hypothetical P&L for regulatory backtesting (desk_pnl.py): 260 business days to the
@@ -159,8 +159,11 @@ class Demo:
         nodes: dict[str, dict] = {}
 
         def node(hier, level, name_id, parent, name, ref=None):
-            nid = f"{hier}~{name_id}"
-            nodes[nid] = {"NODE_ID": nid, "HIERARCHY": hier, "LEVEL": level, "PARENT_ID": parent, "NAME": name, "REF": ref,
+            # MGMT's ids are the values (ids: leaf); LEGAL's the path below its root (ids: path, LEGAL~LE-NY/DESK-RATES/BOOK-RATES-1), as
+            # the server builds them, so a desk booking into two legal entities is two nodes. SEED_ID (the value's own id) seeds the limit.
+            seed = f"{hier}~{name_id}"
+            nid = seed if hier == "MGMT" or not parent or nodes[parent]["LEVEL"] == "bank" else f"{parent}/{name_id}"
+            nodes[nid] = {"NODE_ID": nid, "SEED_ID": seed, "HIERARCHY": hier, "LEVEL": level, "PARENT_ID": parent, "NAME": name, "REF": ref,
                           "CHILDREN": [], "BOOKS": []}
             if parent:
                 nodes[parent]["CHILDREN"].append(nid)
@@ -197,8 +200,8 @@ class Demo:
         tight = {"DESK-STRUCT", "BOOK-RATES-2", "BOOK-FX-3", "LE-TKY"}
         for nid, n in self.nodes.items():
             v = VM.var(self.node_vector(nid)[:self.n])
-            r = F.seeded("limit", nid)
-            head = (1.04 + 0.06 * r.random()) if nid.split("~")[1] in tight else (1.2 + 0.7 * r.random())
+            r = F.seeded("limit", n["SEED_ID"])                      # the value's own id: a LEGAL path keeps the limit it had as a leaf
+            head = (1.04 + 0.06 * r.random()) if n["SEED_ID"].split("~")[1] in tight else (1.2 + 0.7 * r.random())
             n["LIMIT_VAR"] = nice(v * head)
         # one board-approved firm-wide limit: both hierarchies split the same bank, so their roots carry the management root's limit
         for n in self.nodes.values():

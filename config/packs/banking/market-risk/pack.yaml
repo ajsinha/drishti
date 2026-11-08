@@ -888,6 +888,6 @@ system-baskets:
 hierarchies:
   MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
           root: { id: BANK, name: Drishti Bank }, limits: var-limit }
-  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf,
-           root: { id: BANK, name: Drishti Bank }, limits: var-limit }
+  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path,
+           root: { id: BANK, name: Drishti Bank }, limits: var-limit }   # path: a desk booking into two legal entities is two nodes
   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }

@@ -29,6 +29,11 @@
   refused saying what replaces it. With no hierarchy configured the engines build no tree. A connector file written before still naming
   the kind is kept as it is, the kind listed as obsolete. The demo lake needs a rebuild (it holds a `risk-hierarchy` table no connector reads).
   [VAR_GUIDE.md section 15.14](docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns).
+- **LEGAL's node ids are paths** (`ids: path` in the market-risk pack): `LEGAL~LE-NY`, `LEGAL~LE-NY/DESK-RATES`,
+  `LEGAL~LE-NY/DESK-RATES/BOOK-RATES-1`, so a desk booking into two legal entities on a date is a node under each and never refuses the
+  date (with `ids: leaf` it was `DRS-5213`). MGMT keeps leaf ids, LL is unchanged, `LE:LE-NY` still means the trades booked to the entity,
+  and every VaR, ES, component and limit is as before (golden test). A site whose `var-limit` rows of LEGAL name desks or books by leaf id
+  (`LEGAL~DESK-RATES`) re-keys them to the path; the demo's rows are re-keyed.
 - **The `portfolio` kind is removed: the system baskets are managed in Drishti.** The bank's own baskets (`PORT:<id>`, the *System
   baskets* list) no longer come from a data feed: they are kept in the basket store beside people's baskets, under the system scope
   (`var/system-baskets/<ID>.json` in the content store; the one Drishti database later, with people's baskets), created, edited and

@@ -785,7 +785,7 @@ market-risk pack configures three hierarchies over them:
 hierarchies:
   MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
           root: { id: BANK, name: Drishti Bank }, limits: var-limit }
-  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf,
+  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path,
            root: { id: BANK, name: Drishti Bank }, limits: var-limit }
   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
 ```
@@ -857,7 +857,7 @@ whose trades sit under both letters is split in two, one part per letter: `POS:P
        hierarchies:
          MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
                  root: { id: BANK, name: Drishti Bank }, limits: var-limit }
-         LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf,
+         LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path,
                   root: { id: BANK, name: Drishti Bank }, limits: var-limit }
          LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
          PG: { title: Product groups, levels: "PRODUCT_GROUP > DESK", word: PG }

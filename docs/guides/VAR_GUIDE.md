@@ -1275,7 +1275,7 @@ date by `ScopeResolver` to a set of trade ordinals.
 | `BANK` | none (`BANK:x` is accepted and `x` ignored) | node `MGMT~BANK`, the Management tree's root |
 | `LE:<id>` | a legal entity (`LE-NY` or `NY`) | the trades whose booking `LEGAL_ENTITY` is it ([section 5.5](#55-scope-words-by-a-trades-attribute)); the node `LEGAL~<id>` (else `LEGAL~LE-<id>`) gives its children, limit and history |
 | `DIV:<id>` | a division | `MGMT~<id>`, else `MGMT~DIV-<id>` |
-| `DESK:<id>` | a desk | `MGMT~<id>`, `MGMT~DESK-<id>`, `LEGAL~<id>`, `LEGAL~DESK-<id>` (first found) |
+| `DESK:<id>` | a desk | `MGMT~<id>`, `MGMT~DESK-<id>`, then a leaf-id LEGAL's `LEGAL~<id>`, `LEGAL~DESK-<id>` (first found; the pack's LEGAL has path ids: its desks are `NODE:LEGAL~LE-NY/DESK-RATES`) |
 | `BOOK:<id>` | a book | `MGMT~<id>`, else `MGMT~BOOK-<id>` |
 | `NODE:<node id>` | a full node id | that node (as written, then upper case) |
 | `POS:<id>[,<id>…]` | position ids | every trade of each position |
@@ -3102,7 +3102,7 @@ Any number of hierarchies may be configured; the market-risk pack ships three:
 | Hierarchy | Levels | Node ids | What it is |
 |---|---|---|---|
 | `MGMT` | `DIVISION > DESK > TT_BOOK` | leaf (`MGMT~DESK-RATES`, `MGMT~BOOK-RATES-1`) | management: bank, division, desk, book. The **primary hierarchy**: the planner and the history use it |
-| `LEGAL` | `LEGAL_ENTITY > DESK > TT_BOOK` | leaf (`LEGAL~LE-NY`, `LEGAL~DESK-RATES`) | legal entities: bank, legal entity, desk, book |
+| `LEGAL` | `LEGAL_ENTITY > DESK > TT_BOOK` | path (`LEGAL~LE-NY`, `LEGAL~LE-NY/DESK-RATES`, `LEGAL~LE-NY/DESK-RATES/BOOK-RATES-1`) | legal entities: bank, legal entity, desk, book; a desk booking into two legal entities is a node under each |
 | `LL` | `LIMIT_LETTER > DESK` | path (`LL~LL-0003`, `LL~LL-0003/DESK-RATES`) | the **limit letters**: the letter of authority each trade's VaR limit is granted under |
 
 **Where they are configured.** The market-risk pack's manifest, `hierarchies:` beside `positions:` (generated from
@@ -3116,7 +3116,7 @@ empty. MGMT and LEGAL are the pack's, never a built-in of the engine. The exposu
 hierarchies:
   MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
           root: { id: BANK, name: Drishti Bank }, limits: var-limit }
-  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf,
+  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path,
            root: { id: BANK, name: Drishti Bank }, limits: var-limit }
   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
 ```
@@ -3127,7 +3127,7 @@ hierarchies:
 | `levels` | none (required) | the level columns, top first: `"DIVISION > DESK > TT_BOOK"` or a list. Each must be a promoted column of every source the engine reads (below) |
 | `level-names` | each column in lower case (`limit-letter`, `desk`) | the level of each column's nodes (`division > desk > book`); also the **reference kind** a node's display name is read from (below) |
 | `root` | `{id: BANK, name: <title>}` | the root's own id (the node `MGMT~BANK`) and name; `drishti.var.root-name` (every hierarchy) and `drishti.var.root-names` (one) win over it |
-| `ids` | `path` | `path`: a node's id is its path (`LL~LL-0003/DESK-RATES`); `leaf`: its own value (`MGMT~DESK-RATES`), refused at load (`DRS-5213`) when a value sits under two parents on the date (a desk booking into two legal entities: use `ids: path` for that hierarchy) |
+| `ids` | `path` | `path`: a node's id is its path (`LL~LL-0003/DESK-RATES`); `leaf`: its own value (`MGMT~DESK-RATES`), refused at load (`DRS-5213`) when a value sits under two parents on the date (use `ids: path` for a hierarchy where that may happen) |
 | `word` | none | the scope word naming the hierarchy's nodes: `LL:LL-0003`, `LL:LL-0003/DESK-RATES`, `LL:0003` (the word's own prefix, as `DESK:RATES`). Not one of the engine's words (`BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET WHERE CAPTURE NSET GROUP`). Every node is also `NODE:<id>` |
 | `limits` | none | the kind the nodes' VaR limits come from: `var-limit` ([section 15.15](#1515-var-limit-the-nodes-var-limits)). A node without a row has no limit (blank, never zero) |
 | `empty-label` | `drishti.var.hierarchy.empty-label` (`(Blank)`) | the name of a (Blank) node (below) |
