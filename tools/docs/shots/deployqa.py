@@ -118,7 +118,7 @@ def exposure(c: Ctx):
 @shot("10-bi-report.jpg", also=("11-mr-cube.jpg",))
 def bi(c: Ctx):
     signin(c)
-    page(c, "10-bi-report.jpg", "/bi/r/trades-overview", height=1000, settle=8000)
+    page(c, "10-bi-report.jpg", "/bi/r/file:report:trades-overview", height=1000, settle=8000)
     typed(c, "11-mr-cube.jpg", "MCUBE", settle=8000, height=1000)
 
 
@@ -164,12 +164,11 @@ def rehearsal_admin(c: Ctx):
     c.save("31-pack-coverage.jpg")
 
 
-@shot("32-endur-deal.jpg", also=("33-trading-form.jpg", "34-counterparty.jpg"))
+@shot("32-endur-deal.jpg", also=("33-trading-form.jpg",))
 def rehearsal_pages(c: Ctx):
     signin(c)
     page(c, "32-endur-deal.jpg", "/v/trade/1000001", wait="body", height=1000, settle=5000)
     page(c, "33-trading-form.jpg", "/form/trading", height=1000, settle=2500)
-    page(c, "34-counterparty.jpg", "/v/counterparty-trades/CP-NORTHPLAINS", wait="body", height=1000, settle=5000)
 
 
 # ---- the banking module off (the server restarted with DRISHTI_MODULES_BANKING_ENABLED=false) ---------------------------------------------------
@@ -185,13 +184,13 @@ def banking_off(c: Ctx):
 @shot("20-net-members.jpg", also=("21-net-drained.jpg", "22-var-while-drained.jpg", "23-health-net.jpg", "24-inbox-owner.jpg"))
 def cluster(c: Ctx):
     signin(c)
-    page(c, "20-net-members.jpg", "/admin/net", height=1100, settle=4000)
+    page(c, "20-net-members.jpg", "/admin/net", height=1500, settle=4000)
     node = os.environ.get("DRISHTI_SHOTS_DRAIN", "")
     token = os.environ.get("DRISHTI_SHOTS_DRAIN_TOKEN", "")
     if node:
         drain(node, token, True)
     try:
-        page(c, "21-net-drained.jpg", "/admin/net", height=1100, settle=6000)
+        page(c, "21-net-drained.jpg", "/admin/net", height=1500, settle=8000)
         typed(c, "22-var-while-drained.jpg", "VAR BANK", settle=6000, height=1000)
     finally:
         if node:

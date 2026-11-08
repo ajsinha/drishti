@@ -391,8 +391,8 @@ $ curl -s -H "Authorization: Bearer $(cat ~/drishti-token)" http://<host>:18480/
  "functions":{"off":[…]}}
 ```
 
-**You should see** the modules banking, capitalmarkets and economy listed as loaded (the core is always on), `off` empty, and the
-lenses this person may open. `GET /api/v1/admin/modules` (administrators) adds each module's switch, licence and whether a restart is
+**You should see** the modules core, economy, capitalmarkets and banking listed as loaded, `off` empty, and the lenses this person
+may open. `GET /api/v1/admin/modules` (administrators) adds each module's switch, licence and whether a restart is
 needed ([OPERATIONS_GUIDE.md › Engines, modules and editions](guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)).
 
 ### 8.3 Sign in, and a token for the command line
@@ -422,7 +422,7 @@ doctor: 0 red, 0 yellow
 ### 8.4 The Home of each lens
 
 **In the UI.** Home (the logo, top left) → **Open Drishti Risk**: the risk Home with the bank's VaR and exposure cards and the risk
-commands; **Open Drishti World**: the world Home (economies, markets, news). **Leave the lens** returns to the full product.
+commands; then **Switch to Drishti World**: the world Home (economies, markets, news). **Leave Drishti World** returns to the full product.
 
 ![Home through the Risk lens](img/deploy/02-home-risk.jpg)
 
@@ -553,8 +553,16 @@ curl -s -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: applic
 
 Or for one run only: `DRISHTI_MODULES_BANKING_ENABLED=false` in the server's environment. Restart the server.
 
-**You should see** `GET /api/v1/modules` list banking under `off`; Home offers no Risk or Trading lens; the Engines menu has no VaR,
-exposure, FRTB-SA or SIMM; `VAR BANK` answers that the function is not available, and the API answers `404 DRS-1025`:
+**You should see** `GET /api/v1/modules` list banking under `off` with its reason; the Engines menu gone from the top bar (its engines
+are the banking module's); Home offering no Risk or Trading lens; `VAR BANK` answering *VAR is not available to you: ask your
+administrator (the module 'Banking and risk' is not on here …)*; and the risk API answering `404 DRS-1025`:
+
+```text
+$ curl -s -H "Authorization: Bearer $ADMIN_TOKEN" "http://<host>:18480/api/v1/risk/var/scope?scope=BANK"
+{"type":"about:blank","title":"module off","status":404,"detail":"DRS-1025 the module 'banking' is not on here: switched off (setting drishti.modules.banking.enabled) …","code":"DRS-1025","module":"banking"}
+```
+
+In a cluster switch a module on every node alike ([section 10.5](#105-secrets)).
 
 ![With banking off: VAR is not available](img/deploy/15-banking-off.jpg)
 
@@ -562,8 +570,8 @@ Set `enabled: true` (or remove the variable), restart, and repeat 8.6: VaR answe
 
 ### 8.12 The phone layout
 
-Open the console on a phone (or the browser's device toolbar at 390 px wide): the top bar folds into a menu, Home and every view are one
-column with no sideways scroll, and the function keys become a scrolling row.
+Open the console on a phone (or the browser's device toolbar at 390 px wide): Home and every view are one
+column with no sideways scroll: the top bar wraps, controls and tiles stack, and the function keys become a scrolling row.
 
 | | |
 |---|---|
@@ -748,7 +756,10 @@ DRISHTI_NET_DIR=$PWD/cluster/b/net DRISHTI_DATA_DIR=$PWD/cluster/b/data DRISHTI_
 Windows: set the same variables with `$env:…` and run `tools\windows\start-server.ps1`. **You should see** in each server's log:
 
 ```text
-«NET_LOG»
+INFO  … GossipConnector : net: gossip port 36009 open (8 platform threads of its own; gossip, probes and digests only)
+INFO  … NetService      : net: node drishti-b joined Drishti*net at http://<host-b>:18480 (incarnation 1, seeds [http://<host-a>:18480], 0 saved members, gossip on port 36009)
+INFO  … NetService      : net: member drishti-a joined
+INFO  … NetService      : net: member drishti-c joined
 ```
 
 **The local three on one machine.** `drishti-stack/start.sh` starts three servers and a console from `drishti-stack/stack.yaml`, with the
@@ -766,7 +777,11 @@ hash ring is green.
 
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py net members --server http://<host-a>:18480 --token-file ~/drishti-token
-«NET_MEMBERS»
+3 member(s); this node drishti-a
+  node                   state  address                    version   tags  latency  incarnation
+  drishti-a (this node)  alive  http://<host-a>:18480      2.9.11.g        -        1
+  drishti-b              alive  http://<host-b>:18480      2.9.11.g        4.0 ms   1
+  drishti-c              alive  http://<host-c>:18480      2.9.11.g        4.1 ms   1
 ```
 
 **2 · Gossip health.** **Admin → Health** on each node: the Drishti\*net line (members alive and suspect, requests forwarded and failed,
@@ -783,6 +798,15 @@ curl -s -H "Authorization: Bearer $ADMIN_TOKEN" http://<host-c>:18480/api/v1/adm
 ```
 
 (Windows: `deploy\bin\drishti-node.ps1 drain`; Linux: `deploy/bin/drishti-node.sh drain`; a personal token needs the `node:drain` scope.)
+The drain answers at once with what it is handing over; `safeToStop` turns true within a few seconds:
+
+```text
+{"node":"drishti-c","drained":true,"since":"2026-11-08T12:59:44Z","safeToStop":false,
+ "parts":[{"name":"net","draining":true,"detail":"drained: waiting 5 s for every peer to hear it","safeToStop":false},
+          {"name":"var-shards","draining":false,"detail":"VaR sharding is off on this server: no shards to hand over","safeToStop":true}],
+ "readiness":{"status":"OUT_OF_SERVICE","enabled":true,"waitingFor":{}}}
+```
+
 **You should see** the node marked drained on Admin → Cluster, and `VAR BANK` still answer, from the other nodes:
 
 ![Admin → Cluster with one node drained](img/deploy/21-net-drained.jpg)
@@ -958,7 +982,7 @@ which sets none of the demo settings). Then:
 | | |
 |---|---|
 | ![An ENDUR deal: ticket, legs, cash flows](img/deploy/32-endur-deal.jpg) **1. An ENDUR deal** | ![Forms → Trading](img/deploy/33-trading-form.jpg) **2. Forms → Trading** |
-| ![A counterparty's trades](img/deploy/34-counterparty.jpg) **4. A counterparty** | |
+
 
 The pictures are of the synthetic data, loaded exactly as in 11.2.
 
