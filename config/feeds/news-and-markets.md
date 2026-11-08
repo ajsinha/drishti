@@ -75,7 +75,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"QUOTE_ID": "QUOTE-AAPL", "SYMBOL": "AAPL", "NAME": "Apple Inc.", "EXCHANGE": "NasdaqGS", "CURRENCY": "USD", "INSTRUMENT_TYPE": "EQUITY", "PRICE": 343.46, "PREVIOUS_CLOSE": 342.0, "CHANGE": 1.4599999999999795, "CHANGE_PCT": 0.4269005847953157, "DAY_LOW": 340.46, "DAY_HIGH": 347.82, "FIFTY_TWO_WEEK_LOW": 243.42, "FIFTY_TWO_WEEK_HIGH": 348.15, "VOLUME": 59852690.0, "MARKET_STATE": "CLOSED", "AS_OF": "2026-10-16 16:00 America/New_York (snapshot captured 2026-1…", "DAY_RANGE": "340.46 – 347.82", "FIFTY_TWO_WEEK_RANGE": "243.42 – 348.15", "HISTORY_RANGE": "1y", "INTERVAL": "1d", "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance", "SNAPSHOT_CAPTURED_AT": "2026-10-18T03:24:33Z"}
 ```
 
-The contract: `config/packs/news-and-markets/contracts/quote.contract.yaml` ([news-and-markets](../../docs/contracts/packs/news-and-markets.md)).
+The contract: `config/packs/economy/news-and-markets/contracts/quote.contract.yaml` ([news-and-markets](../../docs/contracts/packs/news-and-markets.md)).
 
 ### news
 
@@ -106,4 +106,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"NEWS_ID": "NEWS-Alphabet", "ENTITY": "Alphabet", "EDITION": "en-US", "RELEVANCE_FILTER": "on", "COUNT": 15, "FETCHED_AT": "2026-10-18 03:25 UTC (snapshot captured 2026-10-18)", "FETCHED": 100, "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Google News", "SNAPSHOT_CAPTURED_AT": "2026-10-18T03:24:33Z"}
 ```
 
-The contract: `config/packs/news-and-markets/contracts/news.contract.yaml` ([news-and-markets](../../docs/contracts/packs/news-and-markets.md)).
+The contract: `config/packs/economy/news-and-markets/contracts/news.contract.yaml` ([news-and-markets](../../docs/contracts/packs/news-and-markets.md)).

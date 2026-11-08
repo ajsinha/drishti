@@ -60,7 +60,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"COUNTRY_ID": "OECD-AUS", "NAME": "Australia", "ISO3": "AUS", "COUNTRY_NAME": "Australia", "LEADING_INDICATOR": 99.9505, "LEADING_INDICATOR_PERIOD": "2026-09", "UNEMPLOYMENT": 4.718349, "UNEMPLOYMENT_PERIOD": "2026-09", "INFLATION": 4.34, "INFLATION_PERIOD": "2026-09", "GDP_GROWTH": 0.419502713, "GDP_GROWTH_PERIOD": "2026-Q2", "MEASURE_COUNT": 4}
 ```
 
-The contract: `config/packs/oecd/contracts/oecd-country.contract.yaml` ([oecd](../../docs/contracts/packs/oecd.md)).
+The contract: `config/packs/economy/oecd/contracts/oecd-country.contract.yaml` ([oecd](../../docs/contracts/packs/oecd.md)).
 
 ### oecd-series
 
@@ -92,4 +92,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"SERIES_ID": "OECDS-USA-CLI", "NAME": "United States · Composite leading indicator", "OECD_COUNTRY": "OECD-USA", "ISO3": "USA", "COUNTRY_NAME": "United States", "MEASURE": "CLI", "TITLE": "Composite leading indicator", "UNIT": "index, long-term average = 100", "DATAFLOW": "OECD.SDD.STES,DSD_STES@DF_CLI,", "FREQUENCY": "monthly", "LATEST": 100.9993, "LATEST_PERIOD": "2026-09", "PREVIOUS": 100.9464, "PREVIOUS_PERIOD": "2026-08", "CHANGE": 0.0529}
 ```
 
-The contract: `config/packs/oecd/contracts/oecd-series.contract.yaml` ([oecd](../../docs/contracts/packs/oecd.md)).
+The contract: `config/packs/economy/oecd/contracts/oecd-series.contract.yaml` ([oecd](../../docs/contracts/packs/oecd.md)).

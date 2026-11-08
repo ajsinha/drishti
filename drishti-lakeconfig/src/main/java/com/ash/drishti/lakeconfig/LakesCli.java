@@ -113,7 +113,7 @@ public final class LakesCli {
             }
             case "add-entry" -> {
                 String lake = need(o, "lake");
-                Path file = dir.resolve(lake + ".yaml");
+                Path file = Lakes.file(dir, lake);
                 Lakes.read(dir, System::getenv).get(lake);
                 String kind = need(o, "kind");
                 LakeTable t = PackEntry.read(Path.of(need(o, "pack")), kind, o.get("connector")).toTable(kind);
@@ -124,7 +124,7 @@ public final class LakesCli {
             }
             case "pack-tables" -> {
                 String lake = need(o, "lake");
-                Path file = dir.resolve(lake + ".yaml");
+                Path file = Lakes.file(dir, lake);
                 List<Path> roots = new ArrayList<>();
                 for (String p : need(o, "packs").split(",")) {
                     roots.add(Path.of(p.strip()));

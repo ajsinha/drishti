@@ -69,6 +69,12 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
         }
     }
 
+    /** The same settings with other token declarations: the core's with every module's that is on ({@link ModuleTokenScopes}). */
+    public SecurityProperties withTokens(List<String> readPosts, Map<String, TokenScope> scopes) {
+        return new SecurityProperties(enabled, secret, clockSkew, roles, redact, readPosts, scopes, tokenNever, tokenWriteMaxDays, maskCopies,
+                maskCopiesMinLength, maskCopiesMaxNodes, maskCopiesMaxValues);
+    }
+
     /** Whether a personal API token may POST to the path: it is on the {@code token-read-posts} allow-list. */
     public boolean tokenMayPost(String path) {
         var matcher = new org.springframework.util.AntPathMatcher();

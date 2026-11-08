@@ -34,7 +34,7 @@ import java.util.function.Function;
 public final class OfficialReaders {
 
     /**
-     * The lake of each publisher's results (config/lakes/var-official.yaml, ccr-official.yaml): its format, root and storage are the
+     * The lake of each publisher's results (config/lakes/banking/var-official.yaml, ccr-official.yaml): its format, root and storage are the
      * publisher's own settings, so a reader that names it needs only its plugin made Iceberg when the publisher writes Iceberg.
      */
     static final Map<String, String> LAKES = collect(OfficialResults::lakes);

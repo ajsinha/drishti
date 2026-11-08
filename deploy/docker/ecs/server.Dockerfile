@@ -25,7 +25,7 @@ WORKDIR /opt/drishti
 COPY drishti-server/target/drishti-server-*-exec.jar app.jar
 # shipped packs live outside the EFS paths, so a mount never hides them; installed packs go to data/packs/installed (EFS)
 COPY config/packs/ shipped/packs/
-COPY config/editions/ /opt/drishti/config/editions/
+COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/ui-kit/ shipped/ui-kit/
 COPY deploy/docker/ecs/server-entrypoint.sh bin/entrypoint.sh
 COPY deploy/bin/drishti-node.sh bin/drishti-node.sh

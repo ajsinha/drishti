@@ -258,7 +258,7 @@ is missing. Numbers are written as Java doubles, so a value such as `0.0402` may
 
 ### 4.1 The pack form, as shipped
 
-`config/packs/market-data/pack.yaml` suggests the five connectors as templates (two shown; the other three differ only in name, switch,
+`config/packs/banking/market-data/pack.yaml` suggests the five connectors as templates (two shown; the other three differ only in name, switch,
 `kinds` and `feed`). At the first start the server writes each one to `config/connectors/<name>.yaml` (`nyfed-sofr-feed.yaml`,
 `fred-feed.yaml`, …), and those files are then the site's; the file form is in [As a connector file](#as-a-connector-file):
 
@@ -467,7 +467,7 @@ for all of them.
 To keep more than the window (years of SOFR fixings, every Treasury curve), archive the feed's documents into a dated store under the
 **same ids**, for example a daily job that reads `GET /api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?asOf=<date>` and writes the
 document as a row for that business date into the market domain of the lake: `drishti.py lake build --from <the day's JSON Lines>
---pack config/packs/market-data --kind rate-fixing --connector market-store --key INDEX_ID --as-of <date> --lake data/delta/demo` (the
+--pack config/packs/banking/market-data --kind rate-fixing --connector market-store --key INDEX_ID --as-of <date> --lake data/delta/demo` (the
 `lake build` command, [TOOLS.md](../guides/TOOLS.md); give the key the field name the archived document uses, `indexId` for a feed
 document today, see the known gap).
 
@@ -763,7 +763,7 @@ Health and what happens when a feed is unreachable are in [section 8](#8-failure
 
 ### Configuration by example
 
-`config/packs/market-data/pack.yaml` declares all five connectors, each off until its variable is set
+`config/packs/banking/market-data/pack.yaml` declares all five connectors, each off until its variable is set
 ([section 4.1](#41-the-pack-form-as-shipped)); every setting is in [section 12](#12-settings).
 
 The SOFR document (feed field names; the pack's lake document `FIX-SOFR` has the same content in UPPER_SNAKE, section 3.6):

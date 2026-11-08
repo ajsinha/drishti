@@ -14,7 +14,7 @@
 
 """Generates the glossary source of the world-economy pack, tools/packgen/world/about.yaml, from two inputs: the indicator
 vocabulary in sources.yaml (term = name, means = def, unit) and the hand-written kind and field descriptions in
-tools/realdata/about/<pack>.kinds.yaml. The pack generators copy the result into config/packs/<pack>/config/about.yaml.
+tools/realdata/about/<pack>.kinds.yaml. The pack generators copy the result into config/packs/<domain>/<pack>/config/about.yaml.
 
     python3 tools/realdata/about.py            write the about.yaml
     python3 tools/realdata/about.py --check    fail if it differs from what would be written

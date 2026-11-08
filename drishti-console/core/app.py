@@ -536,6 +536,7 @@ def create_app(settings: Settings) -> FastAPI:
         return _modules_state.modules_for_page(ed.name if ed is not None and ed.active else None)
 
     templates.env.globals["page_modules"] = _page_modules
+    templates.env.globals["module_on"] = _modules_state.module_on          # a module's part of a page (the World landing's capital markets)
     templates.env.globals["screen_parts"] = _modules_state.screen_parts   # a module's parts of a core screen (the Pivot's MR lens)
     from core import menus as _menus
 
@@ -562,7 +563,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.cluster = pool if pool.enabled else None
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
-    # the console learns the server's edition, lenses and branding from its about answer (docs/admin/EDITIONS.md › The design as built, section 5.1)
+    # the console learns the server's edition, lenses and branding from its about answer (docs/admin/LENSES.md › The design)
     app.state.backend_watch.on_about = lambda s, about: app.state.editions.learn(about) if s.id == catalogue.default and _real_backend(app) else None
     from core.user_stamps import UserStamps
 
@@ -621,7 +622,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.business_dates = BusinessDates()
     from core.facts import FactsService
 
-    app.state.facts = FactsService(settings)                  # Home's fact of the day (config/packs/<pack>/config/facts.yaml)
+    app.state.facts = FactsService(settings)                  # Home's fact of the day (config/packs/<domain>/<pack>/config/facts.yaml)
     app.state.templates = templates
     from starlette.requests import ClientDisconnect
 
@@ -654,7 +655,7 @@ def create_app(settings: Settings) -> FastAPI:
     if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (tools/fetch-pyodide.sh)
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
-    app.include_router(edition_routes.router)              # an edition's landings and the lens (EDITIONS.md › The design as built, sections 7, 8)
+    app.include_router(edition_routes.router)              # an edition's landings and the lens (LENSES.md › The design)
     from core import plugins as _plugins
     # the domain modules' routers (C1, DOMAIN_MODULES.md section 5): each plugins/<module>/plugin.yaml lists its own, in order; before the
     # core's terminal and pivot routes, as they always were; while a module is off its routes answer 404 (core/modules.py)

@@ -159,7 +159,7 @@ schemas:
     change: live
     maps: [templates]
     keys:
-      - { key: templates, type: map, default: "{}", meaning: "Core starter workspaces by name (packs add their own in config/packs/<pack>/config/workspaces.yaml)" }
+      - { key: templates, type: map, default: "{}", meaning: "Core starter workspaces by name (packs add their own in config/packs/<domain>/<pack>/config/workspaces.yaml)" }
       - { key: "templates.*", type: map, meaning: "One starter workspace: its layout and panes, as blank below" }
       - { key: blank, type: map, default: shipped, meaning: "What a new, blank workspace starts as" }
       - { key: blank.layout, type: string, default: 2col, meaning: "Its layout: 2col, 3col, 2x2 or 1+2" }
@@ -202,9 +202,9 @@ schemas:
       - { key: "snippets[].example.*", type: map, meaning: "A worked example the tests run: inputs (tables), params and the expected output" }
   report-definition:
     area: reports
-    title: "A report definition: `config/reports/<report>.yaml` (docs/guides/VAR_GUIDE.md section 18.14)"
-    file: "config/reports/*.yaml"
-    files: ["config/reports/*.yaml"]
+    title: "A report definition: `config/reports/banking/<report>.yaml` (docs/guides/VAR_GUIDE.md section 18.14)"
+    file: "config/reports/banking/*.yaml"
+    files: ["config/reports/banking/*.yaml"]
     applies: server
     change: live (read when a run is made)
     keys:
@@ -291,6 +291,10 @@ schemas:
     change: restart (a module's beans, engines, jobs and API load at start)
     keys:
       - { key: enabled, type: boolean, default: "the manifest's (true)", meaning: "false: the module is off here (Admin -> Modules writes it); drishti.modules.<id>.enabled wins over it" }
+      - { key: module, type: map, default: "none", meaning: "The module named at this site: a server without the module's jar knows it and leaves it off as not installed (its packs, lakes, tables, models and reports in its domain folders are not read); with the jar, the jar's manifest wins and this is ignored" }
+      - { key: module.id, type: string, default: "none", meaning: "The module's id (banking)" }
+      - { key: module.domain, type: string, default: "none", meaning: "Its domain: the folder name of its packs, lakes, tables and reports (config/packs/banking/)" }
+      - { key: module.title, type: string, default: "none", meaning: "Its name on Admin -> Modules" }
   lake-file:
     area: connectors
     title: "A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)"
@@ -316,7 +320,7 @@ schemas:
   pack:
     area: packs
     title: "`pack.yaml`"
-    file: config/packs/<pack>/pack.yaml
+    file: config/packs/<domain>/<pack>/pack.yaml
     files: ["config/packs/*/pack.yaml", "examples/packs/*/pack.yaml"]
     applies: the pack
     change: live
@@ -465,7 +469,7 @@ schemas:
 # Environment variables no settings file above names: read by the packs' manifests, the server's profile files, the code or the tools.
 # by: server, console, packs, profile, tools.
 env:
-  # the packs' connectors (config/packs/<pack>/pack.yaml)
+  # the packs' connectors (config/packs/<domain>/<pack>/pack.yaml)
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
   - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/admin/OPERATIONS.md)" }
   - { name: DRISHTI_LAKES_DIR, by: server, default: "./config/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }

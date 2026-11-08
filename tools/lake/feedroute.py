@@ -27,8 +27,14 @@ from __future__ import annotations
 
 import hashlib
 import pathlib
+import sys
 from dataclasses import dataclass
 from datetime import date
+
+_CONSOLE = pathlib.Path(__file__).resolve().parents[2] / "drishti-console"
+if str(_CONSOLE) not in sys.path:
+    sys.path.insert(0, str(_CONSOLE))
+from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
 
 READY = ".ready"
 #: the keys of a .ready file, in the documentation's order: the same list as the inbox's (drishti-dataload ReadyNote.KEYS; a test compares them)
@@ -153,7 +159,7 @@ def pack_tables(pack: pathlib.Path) -> list[tuple[str, str, str | None]]:
 
 def _packs(root) -> list[pathlib.Path]:
     root = pathlib.Path(root)
-    return [p for p in sorted(root.iterdir()) if (p / "pack.yaml").is_file()] if root.is_dir() else []
+    return list(pack_dirs(root).values()) if root.is_dir() else []
 
 
 def resolve(table: str, packs_root, pack=None, kind: str | None = None, connector: str | None = None) -> Target:

@@ -46,4 +46,4 @@ datasets:
 options:
   args: []
 snapshot:
-  note: refreshes config/packs/funds (samples) and data/testdata/funds
+  note: refreshes config/packs/capitalmarkets/funds (samples) and data/testdata/funds

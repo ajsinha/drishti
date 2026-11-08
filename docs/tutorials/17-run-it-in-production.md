@@ -177,7 +177,7 @@ config/bi/themes/
 $ tar tzf /backup/drishti/drishti-20261013-0130.tgz | grep -E '^config/tables/' | head -6
 config/tables/
 config/tables/bi/
-config/tables/bi/counterparty-exposure.model.yaml
+config/tables/banking/counterparty-exposure.model.yaml
 config/tables/bi/counterparty_exposure_counterparties.table.yaml
 config/tables/bi/counterparty_exposure_netting_sets.table.yaml
 config/tables/bi/counterparty_exposure_official.table.yaml

@@ -25,9 +25,9 @@ already names the work (cited as such).
 market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; built). The proposed risk cubes that would serve this lens as a screen are designed in [MR_CUBE_LENS.md](MR_CUBE_LENS.md) and [CCR_CUBE_LENS.md](CCR_CUBE_LENS.md) (see the design). Drishti Risk is the first edition
 and the oldest lens; this is its product document, and it draws the line between Risk and the proposed Oversight lens (section 7.1).
 
-**Read with:** [EDITIONS.md sections 4 and 7](../admin/EDITIONS.md#4-what-drishti-risk-shows) (what the lens shows and its three
-landings), [EDITIONS.md](../admin/EDITIONS.md) (how to run it), the edition file
-[`config/editions/risk.yaml`](../../config/editions/risk.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built),
+**Read with:** [LENSES.md section 5](../admin/LENSES.md#5-drishti-risk) (what the lens shows and its three
+landings), [LENSES.md](../admin/LENSES.md) (how to run it), the edition file
+[`config/lenses/banking/risk.yaml`](../../config/lenses/banking/risk.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built),
 [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine),
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store),
 [REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md) (the regulatory foundation and the reports) and the contracts [STR.md](../contracts/STR.md)
@@ -57,7 +57,7 @@ built nor planned; section 5 sketches it and section 8 proposes a row. **Hidden*
 ## 1. Who uses it
 
 Drishti Risk is "a one-stop shop to manage risk. VaR and Exposure first; liquidity, climate and more join as more lines here"
-([`config/editions/risk.yaml`](../../config/editions/risk.yaml), its header; [EDITIONS.md section 9](../admin/EDITIONS.md#9-decisions-product-owner),
+([`config/lenses/banking/risk.yaml`](../../config/lenses/banking/risk.yaml), its header; [LENSES.md section 15](../admin/LENSES.md#decisions-product-owner),
 decision 1). Its users sit **near the desks**: they know the books, talk to the traders every day and answer for the numbers.
 
 | Persona | Accountable for | What they need from the lens |
@@ -89,7 +89,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What is the bank's and each desk's VaR, and are we within limits?* | **Built**: the Risk desk landing's tiles (VaR and ES of BANK, limits in breach) and **VaR by desk with limit use**; the Risk map's hierarchy with limit use per node and the limit-use heat map ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)); the official records' `LIMIT` and `LIMIT_USE` ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) | Stressed VaR; other limit types (RO3 of the oversight analysis) |
+| *What is the bank's and each desk's VaR, and are we within limits?* | **Built**: the Risk desk landing's tiles (VaR and ES of BANK, limits in breach) and **VaR by desk with limit use**; the Risk map's hierarchy with limit use per node and the limit-use heat map ([LENSES.md section 5](../admin/LENSES.md#5-drishti-risk)); the official records' `LIMIT` and `LIMIT_USE` ([VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) | Stressed VaR; other limit types (RO3 of the oversight analysis) |
 | *Why did VaR move?* | **Partly**: compare a capture with now: the change, members added and removed, the components that moved most ([VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)); component VaRs add up exactly ([VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)); the scenario matrix across dates (**built**: `SMAT`, [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)) | The change **by cause** that adds up exactly: RO1 of the oversight analysis; on the Risk desk as RL4 (section 5.4) |
 | *Which scenario drives it, and who loses on it?* | **Built**: the P&L path tab, the 25 worst scenarios, the contributors on a scenario day ([VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs)) | — |
 | *Did yesterday's P&L exceed VaR?* | **Partly**: the Risk desk's backtest tile and the official-mode history: Drishti's derived hypothetical P&L against the VaR before it, the Basel light, Kupiec and Christoffersen ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)) | The bank's actual and hypothetical P&L (planned); section 5.3 |
@@ -155,8 +155,8 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Pre-deal what-if | **Built** | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) |
 | Official records | **Built** | [EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) |
 | Credit limits and their use | **Built as read**; stored limits sized on the retired profiles (use reads 0.1% to a few percent); LIM engine parked | [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items); [LIM.md](../contracts/LIM.md) |
-| EPE per node of a VaR hierarchy; credit-limit use per desk | **Not served** (left out of the Risk landings) | [EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings); section 5.6 |
-| CVA, SA-CCR, SIMM | **Hidden** (and CVA parked) | [EDITIONS.md section 4](../admin/EDITIONS.md#4-what-drishti-risk-shows) |
+| EPE per node of a VaR hierarchy; credit-limit use per desk | **Not served** (left out of the Risk landings) | [LENSES.md section 5](../admin/LENSES.md#5-drishti-risk); section 5.6 |
+| CVA, SA-CCR, SIMM | **Hidden** (and CVA parked) | [LENSES.md section 5](../admin/LENSES.md#5-drishti-risk) |
 | Wrong-way risk | **Not built** (proposed) | [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) section 5.13 |
 
 ### 3.3 Sensitivities
@@ -179,7 +179,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| Liquidity (days to liquidate, bid-offer cost) | **Not built**; "join as more lines" (EDITIONS.md decision 1) | RO10 of the oversight analysis |
+| Liquidity (days to liquidate, bid-offer cost) | **Not built**; "join as more lines" (LENSES.md decision 1) | RO10 of the oversight analysis |
 | Climate risk (transition and physical scenarios, financed emissions) | **Not built**; named as a future line only | section 5.8 |
 | Concentration by issuer, sector, country, currency, tenor | **Not built** as a view | RO8 of the oversight analysis |
 
@@ -188,7 +188,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Need | Status | Evidence or row |
 |---|---|---|
 | Entitlements per scope and kind, masks, audit per answer | **Built** | [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
-| A lens per person; edition per instance; RBAC later | **Built** (hides, does not secure); `lens.roles` not wired | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
+| A lens per person; edition per instance; RBAC later | **Built** (hides, does not secure); `lens.roles` not wired | [LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people) |
 | Breach records, commentary, approvals, RNIV, sign-off | **Not built**; proposed for the Oversight lens | RO2, RO7, RO11 |
 
 ---
@@ -199,7 +199,7 @@ One template, `home/risk_landing.html`, with `static/js/drishti_risk-landing.js`
 answer through the console's `/api/var/...` and `/api/exposure/...` (`scope`, `scope/history`, `tree`, `intraday/streams`, `official`,
 `baskets`). Not Sutras: a Sutra lays out one entity's view, and these pages span the engines with no entity; a "home" Sutra kind would be
 needed (product owner may ask later). No new panel kind (the heat map is a CSS grid of links). One column on a phone. All three mock-ups
-chosen by the product owner on 2026-10-29 ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)).
+chosen by the product owner on 2026-10-29 ([LENSES.md section 5](../admin/LENSES.md#5-drishti-risk)).
 
 ### 4.1 A: Risk desk (`desk`, the default)
 
@@ -318,7 +318,7 @@ children's; sharded equals single-server.
 
 ### 5.6 RL6: exposure on the VaR hierarchy
 
-**Left out of the landings** (EDITIONS.md section 7): EPE per node of a VaR hierarchy, and credit-limit use per desk. **Why it is not a
+**Left out of the landings** (LENSES.md section 5): EPE per node of a VaR hierarchy, and credit-limit use per desk. **Why it is not a
 sum:** exposure is netted and collateralised per netting set across desks, and PFE is not additive. **Design:** EPE and EE **allocated**
 to trades (on each path and date, the set's collateralised exposure shared among its trades in proportion to their positive value; EE
 and EPE then add across sets and up any hierarchy), summed by the VaR hierarchy's nodes (desk, book, legal entity); the map's node shows
@@ -346,7 +346,7 @@ replaces stored measures with computed ones, and [STR.md](../contracts/STR.md) p
 
 **Liquidity** follows RO10 of the oversight analysis (days to liquidate, bid-offer cost, share of volume, a liquidity ladder, VaR scaled
 by liquidity horizons), with the bank's volume and bid-offer data; in Risk as a **Liquidity** tab on the VaR page and a column on the map.
-**Climate** is named in `risk.yaml` and EDITIONS.md decision 1 only; a proposal for scoping: (1) **transition risk** as stress scenarios
+**Climate** is named in `risk.yaml` and LENSES.md decision 1 only; a proposal for scoping: (1) **transition risk** as stress scenarios
 (NGFS-style carbon-price and sector shocks) run through the stress engine (RO9) on the trades' sectors; (2) **physical risk** as
 concentration by the location of the issuer or collateral (RO8's country and region dimension); (3) **financed emissions** (PCAF) needs
 emissions data per issuer and is a balance-sheet measure more than a trading one. Each needs data the packs do not hold. **Size** L each;
@@ -542,10 +542,10 @@ names the candidate row that would build it. The gaps (on a mock-up, not in the 
 ![The Risk landing mock-ups: A Risk desk, B Command first, C Risk map](mockups/risk/risk-landing.png)
 
 [Open the mock-up](mockups/risk/risk-landing.html). **Chosen:** all three, as the person's choice of Home (`home.landings: [desk, command,
-map]`, `desk` the default) ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). The mock-up's footer
+map]`, `desk` the default) ([LENSES.md section 5](../admin/LENSES.md#5-drishti-risk)). The mock-up's footer
 proposed "pick one or combine"; the product owner kept all three. **Code:** [`risk_landing.html`](../../drishti-console/plugins/banking/templates/home/risk_landing.html),
 [`drishti_risk-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_risk-landing.js), [`drishti_risk-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_risk-landing.css),
-[`risk.yaml`](../../config/editions/risk.yaml) `home`. Figures on the mock-up are the demo's on 2026-09-30 where the guides quote them
+[`risk.yaml`](../../config/lenses/banking/risk.yaml) `home`. Figures on the mock-up are the demo's on 2026-09-30 where the guides quote them
 (VaR 112.04m, ES, the limit letter `LL-0003` 16.07m, EPE 945.58m); the rest are illustrative.
 
 **Interactions on the mock-up, and as built.** Every desk, counterparty, node and heat cell is a link to its scope (`/var?scope=…`,
@@ -687,13 +687,13 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · Engines · BI · Admin · Help** | the edition's top menus by id, in order (`menus.top`), [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | **Built**: `menus.top` in [`risk.yaml`](../../config/editions/risk.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens). The mock-up's VaR and Exposure menus are one **Engines** menu since 2.9.11.a (mock-up [engines-menu/A](../architecture/mockups/engines-menu/A.html)) |
+| X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · Engines · BI · Admin · Help** | the edition's top menus by id, in order (`menus.top`), [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml) | open a menu | **Built**: `menus.top` in [`risk.yaml`](../../config/lenses/banking/risk.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens). The mock-up's VaR and Exposure menus are one **Engines** menu since 2.9.11.a (mock-up [engines-menu/A](../architecture/mockups/engines-menu/A.html)) |
 | X2 | VaR column of the Engines menu | VaR explorer `VAR BANK`; Why it moved `VAR BANK EXPLAIN`; VaR Playground `PLAY VAR`; Scenario matrix `SMAT`; Regulatory reports; Backtesting `VAR BANK BACKTEST`; Stress window `SWIN BANK`; VaR results `VRES`; Official records `VOFF`; Hierarchies and limit letters `HIER` | the `engines` menu in [`sitemap.yaml`](../../drishti-console/config/sitemap.yaml), its `var` column; each item shown only when the edition keeps its command | click an item: its page or command | **Built**: the Playground, Regulatory reports and Backtesting items show once their screens are on the server (`route:`) |
 | X3 | Exposure column of the Engines menu | Exposure explorer `EXP`; A counterparty `EXP CPTY …`; A netting set `EXP NSET …` (Pre-deal check `PREDEAL`: the Counterparties menu) | its `exposure` column | click an item: its page or command | **Built**: A counterparty and A netting set put `EXP CPTY` and `EXP NSET` in the command line for the id |
 | X4 | Phone form | below 640 px the Engines menu's columns fold into a drawer, one engine open at a time | the bar's template and [`drishti_engines-menu.js`](../../drishti-console/web/static/js/drishti_engines-menu.js) | tap Engines, an engine, then an item | **Built** |
 
 On a phone (below 640 px) the Engines menu opens as a drawer: a row per running engine with its command word, the first open, a tap on another opens it and closes the first; each item 44 px high with its command beside it. The items marked *new* on the mock-up: the Stress window
-(`SWIN BANK`, [VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)) is in the menu; the VaR Playground and Backtesting items show once their screens are on the server. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
+(`SWIN BANK`, [VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)) is in the menu; the VaR Playground and Backtesting items show once their screens are on the server. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [LENSES.md](../admin/LENSES.md).
 
 ### 11.5 The VaR screen's layout (`var-layout/A.html`, `var-layout/A-drawer.html`)
 

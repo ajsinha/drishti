@@ -67,7 +67,7 @@ class TradingSutraNextEquivalenceTest extends PackSutraNextEquivalence {
     Map<String, String> screens() throws Exception {
         ObjectMapper json = new ObjectMapper();
         Map<String, String> first = new HashMap<>();
-        for (String line : Files.readAllLines(Path.of("..", "config", "packs", "trading", "samples", "trade.jsonl"), StandardCharsets.UTF_8)) {
+        for (String line : Files.readAllLines(Path.of("..", "config", "packs", "banking", "trading", "samples", "trade.jsonl"), StandardCharsets.UTF_8)) {
             if (!line.isBlank()) {
                 JsonNode t = json.readTree(line);
                 first.putIfAbsent(t.path("SOURCE_SYSTEM").asText() + "|" + t.path("PRODUCT_TYPE").asText(), t.path("TRADE_ID").asText());

@@ -56,7 +56,7 @@ Both worked on the trades **as you may see them**: masks and row rules were appl
 rows, so on the demo lake's 15,000 trade valuations it works on the first 10,000 (the server says so: `DRS-9022` is what a plain JSON answer of more rows
 is told); a Python measure for a figure over every row belongs in a model query, or in a Transform over grouped answers (step 8).
 
-The measure's source is a short YAML item, `config/bi/python/desk-pnl-volatility.python.yaml`:
+The measure's source is a short YAML item, `config/bi/python/banking/desk-pnl-volatility.python.yaml`:
 
 ```yaml
 python: desk-pnl-volatility
@@ -77,7 +77,7 @@ source: |
       return float(pnl.std(ddof=1))
 ```
 
-The **model** (`config/tables/bi/trades-basic.model.yaml`) says which groups it is called for (one number per desk) in a measure that is a Python item,
+The **model** (`config/tables/banking/trades-basic.model.yaml`) says which groups it is called for (one number per desk) in a measure that is a Python item,
 not an expression:
 
 ```yaml
@@ -380,7 +380,7 @@ CP-BRAMBLE           Bramble Asset Management      Asset management  6,448,473.6
 3 row(s)  as of 2026-10-26
 ```
 
-The item is `config/bi/python/pnl-vs-exposure.python.yaml` (the model queries hand their columns over as the models name them, `NAME` and `SECTOR`;
+The item is `config/bi/python/banking/pnl-vs-exposure.python.yaml` (the model queries hand their columns over as the models name them, `NAME` and `SECTOR`;
 the Transform renames them to the table's own `name` and `sector`); the reference is [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out).
 
 How would you write such a Transform? In the **Notebook**, with **two extracts**. Open the notebook **Desk P&L vs counterparty exposure, in pandas** (the Notebook box in the Extract card).

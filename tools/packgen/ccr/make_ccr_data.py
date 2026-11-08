@@ -52,6 +52,9 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files)
 import ccrmath as M  # noqa: E402
 import paths as PT  # noqa: E402
@@ -302,7 +305,7 @@ def update_manifest(testdata: Path, entries: list[dict]) -> None:
     path.write_text("\n".join(head) + "\n" + yaml.safe_dump(m, sort_keys=False, width=140), encoding="utf-8")
 
 
-SAMPLES = ROOT / "config" / "packs" / PACK / "samples"
+SAMPLES = pack_dir(PACK) / "samples"
 
 
 def samples(docs: dict[str, list[dict]]) -> dict[Path, str]:

@@ -49,7 +49,7 @@ cannot.
 
 A **data contract** writes down what each kind is: its grain (what one row means), its key, every field with its type, unit and
 meaning, the links to other kinds, where it is stored, how often it arrives, and for a computed kind its formulas. Every command has
-one (`config/packs/<pack>/contracts/<kind>.contract.yaml`), and the docs are generated from them.
+one (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`), and the docs are generated from them.
 
 ## 2. Glossary
 
@@ -116,7 +116,7 @@ has an id (an LEI, an ISIN, a ticker, a booking system's trade id). A computed k
 are fundamental, **8** engine inputs (`PNLV`, `SSET`, `HIER`, `PORT`, `XRUN`, `XPATH` and the compute demo's two), **1** is Drishti's own
 (`POS`, the derived positions) and **18** are computed (among them `VRES`, `EXP`, `LEIG`, `LEIC`, `SIC`, `ECG`, `CORRC`, `EQB`, `CTRD`).
 
-**One contract, read.** `drishti.py contract show NSET` (the netting-set kind, `config/packs/counterparty-risk/contracts/netting-set.contract.yaml`):
+**One contract, read.** `drishti.py contract show NSET` (the netting-set kind, `config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml`):
 
 ```text
 kind: netting-set   mnemonic: NSET   pack: counterparty-risk   class: fundamental   source: xva-engine

@@ -352,7 +352,7 @@ Each contract in this folder has the same sections, in this order, so any two ca
 ## 16. Contracts of every command
 
 Every command (mnemonic) of every pack has a **data contract of its own data**, so anyone can see the shape of what a command holds and
-act on it: one YAML file beside its pack, `config/packs/<pack>/contracts/<kind>.contract.yaml`, and a section of its pack's page under
+act on it: one YAML file beside its pack, `config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, and a section of its pack's page under
 [packs/](packs/README.md) (the index of every command, its class and status). The pages are generated from the YAML files; the YAML files
 are the contracts.
 

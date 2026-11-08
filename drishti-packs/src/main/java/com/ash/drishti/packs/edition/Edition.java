@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The edition a server runs (docs/admin/EDITIONS.md): a named bundle of settings, {@code config/editions/<name>.yaml}, that turns
+ * The edition a server runs (docs/admin/LENSES.md): a named bundle of settings, {@code config/lenses/<module>/<lens>.yaml}, that turns
  * Drishti into a focused product. {@link #NONE} (no {@code drishti.edition}) is the full Drishti: every test here answers "allowed", so
  * a server without an edition behaves exactly as before editions existed.
  *
@@ -47,7 +47,7 @@ public record Edition(String name, String title, List<String> packs, boolean all
         Map<String, String> features, List<String> adminPages, List<String> datasets, List<String> models, Map<String, String> branding) {
 
     /**
-     * The core's reserved words and console words an edition may switch (EDITIONS.md › The design as built, section 3). A domain module
+     * The core's reserved words and console words an edition may switch (LENSES.md › The design). A domain module
      * declares its own words in its manifest (banking: {@code VAR}, {@code EXP}); an edition switches those the same way.
      */
     public static final List<String> WORDS = List.of("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA");

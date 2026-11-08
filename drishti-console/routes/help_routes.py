@@ -24,6 +24,7 @@ from markupsafe import Markup
 from core import under_construction
 from core.backend import BackendError, drs_message
 from core.search import help_pages
+from core.edition import by_module
 from routes.common import ident, library, render
 
 router = APIRouter(include_in_schema=False)
@@ -35,7 +36,7 @@ def _edition(request):
 
 
 def shown(edition, guide, aliases: dict | None = None) -> bool:
-    """Whether the edition (or the person's lens) keeps a guide (EDITIONS.md › The design as built, section 5.8): its section listed (help.categories,
+    """Whether the edition (or the person's lens) keeps a guide (LENSES.md › The design): its section listed (help.categories,
     a section's id or an old name in help.yaml's aliases:), a Knowledge page or pack guide about one of its packs (help.knowledge for Knowledge
     pages, packs.enabled for pack guides), and an unlisted document only when the edition does not refuse them (help.unlisted-slugs: refuse).
     Without an edition: every guide."""
@@ -47,7 +48,7 @@ def shown(edition, guide, aliases: dict | None = None) -> bool:
     if not guide.listed and edition.refuse_unlisted:
         return False
     if guide.packs:
-        wanted = edition.knowledge_packs() if guide.category == "knowledge" else edition._get("packs.enabled")
+        wanted = edition.knowledge_packs() if guide.category == "knowledge" else by_module(edition._get("packs.enabled"))
         if isinstance(wanted, list) and not set(guide.packs) & {str(p) for p in wanted}:
             return False
     return True

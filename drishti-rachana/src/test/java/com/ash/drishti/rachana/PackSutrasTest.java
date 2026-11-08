@@ -36,7 +36,7 @@ class PackSutrasTest {
     static final Path KIT = Path.of("..", "config", "ui-kit");
 
     static Stream<Path> packs() throws Exception {
-        try (Stream<Path> s = Files.list(Path.of("..", "config", "packs"))) {
+        try (Stream<Path> s = com.ash.drishti.api.PackFolders.list(Path.of("..", "config", "packs")).stream()) {
             return s.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList().stream();
         }
     }

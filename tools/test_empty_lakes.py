@@ -19,10 +19,14 @@ public-sector module's packs read worldlake and newslake, which their daily feed
 lake files hold exactly those packs' tables, only those packs' connectors (and the feeds) name them, and the other lakes ship empty."""
 import pathlib
 import re
+import sys
 
 import yaml
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 NAMED = ("risklake", "newslake", "worldlake", "regulators", "capitalmarket", "referencelake")
 EMPTY = ("risklake", "regulators", "capitalmarket", "referencelake")
 WORD = re.compile(r"\b(" + "|".join(NAMED) + r")\b")
@@ -34,7 +38,7 @@ PUBLIC_SECTOR = {"world-development": "worldlake", "central-banks": "worldlake",
 def _connectors_lake_tables(lake: str) -> set[str]:
     out = set()
     for pack, where in PUBLIC_SECTOR.items():
-        m = yaml.safe_load((ROOT / "config" / "packs" / pack / "pack.yaml").read_text(encoding="utf-8"))
+        m = yaml.safe_load((pack_dir(pack) / "pack.yaml").read_text(encoding="utf-8"))
         for c in (m.get("connectors") or {}).values():
             s = c.get("settings") or {}
             if s.get("lake") == lake:
@@ -62,7 +66,7 @@ def test_worldlake_and_newslake_hold_exactly_the_public_sector_tables():
 
 def test_each_public_sector_pack_reads_its_lake_and_its_feed_loads_it():
     for pack, lake in PUBLIC_SECTOR.items():
-        m = yaml.safe_load((ROOT / "config" / "packs" / pack / "pack.yaml").read_text(encoding="utf-8"))
+        m = yaml.safe_load((pack_dir(pack) / "pack.yaml").read_text(encoding="utf-8"))
         assert m["domain"] == "economy", pack
         lakes = {(c.get("settings") or {}).get("lake") for c in (m.get("connectors") or {}).values()}
         assert lakes == {lake}, pack
@@ -76,7 +80,7 @@ def test_nothing_else_shipped_points_at_them():
     places = [*ROOT.glob("config/connectors/*.yaml"), *ROOT.glob("config/engines/*.yaml"), ROOT / "config" / "dataload.yaml",
               *ROOT.glob("config/packs/**/*.yaml"), *ROOT.glob("drishti-server/src/main/resources/**/*.yaml"),
               *ROOT.glob("drishti-stack/*.yaml")]
-    allowed = {ROOT / "config" / "packs" / p for p in PUBLIC_SECTOR}         # the public-sector packs' own files
+    allowed = {pack_dir(p) for p in PUBLIC_SECTOR}         # the public-sector packs' own files
     hits = []
     for f in places:
         if not f.is_file() or any(f.is_relative_to(a) for a in allowed):

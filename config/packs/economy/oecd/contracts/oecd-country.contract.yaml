@@ -1,0 +1,228 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the oecd-country kind (command OECD): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap oecd-country`; owned by people from then on: confirm the review points, then remove them.
+kind: oecd-country
+mnemonic: OECD
+pack: oecd
+version: '1.0'
+class: fundamental
+status: active
+title: OECD country
+description: 'One OECD member: the latest leading indicator, unemployment, inflation and growth, and the members on a map shaded by inflation.'
+source: 'public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/sources/)'
+grain: One row per oecd country, keyed by COUNTRY_ID.
+key:
+- COUNTRY_ID
+id-pattern:
+- ^OECD-
+dated-by: snapshot
+cadence:
+  frequency: daily
+  due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date
+storage:
+  connector: oecd-store
+  plugin: delta
+  domain: oecd
+  table: <root>/oecd/oecd-country/
+  test-data:
+  - config/packs/economy/oecd/samples
+fields:
+- name: COUNTRY_ID
+  type: id
+  presence: required
+  description: OECD- and the member's ISO 3166-1 alpha-3 code.
+  example: OECD-AUS
+  pattern: ^OECD-
+- name: NAME
+  type: text
+  presence: required
+  description: The member's name as the OECD writes it.
+  example: Australia
+- name: ISO3
+  type: text
+  presence: required
+  description: The member's ISO 3166-1 alpha-3 code (the OECD's REF_AREA), the key the map shades by.
+  example: AUS
+- name: COUNTRY_NAME
+  type: text
+  presence: optional
+  description: The member's name as the OECD writes it.
+  example: Australia
+- name: LEADING_INDICATOR
+  type: amount
+  presence: optional
+  unit: index, long-term average = 100
+  description: 'The composite leading indicator, amplitude adjusted: above 100 and rising, growth above trend ahead.'
+  example: 99.9505
+- name: LEADING_INDICATOR_PERIOD
+  type: text
+  presence: optional
+  description: The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter).
+  example: 2026-09
+- name: UNEMPLOYMENT
+  type: amount
+  presence: optional
+  unit: '% of labour force'
+  description: The harmonised unemployment rate, seasonally adjusted, ages 15 and over.
+  example: 4.718349
+- name: UNEMPLOYMENT_PERIOD
+  type: text
+  presence: optional
+  description: The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter).
+  example: 2026-09
+- name: INFLATION
+  type: rate
+  presence: optional
+  unit: '% a year'
+  description: Consumer price inflation, all items, on the same month a year before.
+  example: 4.34
+- name: INFLATION_PERIOD
+  type: text
+  presence: optional
+  description: The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter).
+  example: 2026-09
+- name: GDP_GROWTH
+  type: rate
+  presence: optional
+  unit: '%'
+  description: Real GDP growth on the previous quarter, seasonally adjusted.
+  example: 0.419502713
+- name: GDP_GROWTH_PERIOD
+  type: text
+  presence: optional
+  description: The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter).
+  example: 2026-Q2
+- name: MEASURES
+  type: record list
+  presence: required
+  description: 'Every measure the feed pulled for the member, one row each: MEASURE, TITLE, UNIT, LATEST, PERIOD, CHANGE and OECD_SERIES.'
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY.'
+- name: MEASURE_COUNT
+  type: integer
+  presence: required
+  description: How many measures have a value for the member.
+  example: 4
+nested:
+  MEASURES[]:
+  - name: MEASURE
+    type: text
+    presence: required
+    description: The measure's id in the feed's YAML (CLI, UNEMPLOYMENT, INFLATION, GDP_GROWTH).
+    example: CLI
+  - name: TITLE
+    type: text
+    presence: required
+    description: The measure's title in the feed's YAML.
+    example: Composite leading indicator
+  - name: UNIT
+    type: text
+    presence: required
+    description: What the measure is in.
+    example: index, long-term average = 100
+  - name: LATEST
+    type: amount
+    presence: required
+    description: The latest value.
+    example: 99.9505
+    unit: the row's UNIT
+  - name: PERIOD
+    type: text
+    presence: required
+    description: The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter).
+    example: 2026-09
+  - name: CHANGE
+    type: amount
+    presence: optional
+    description: The latest value less the previous period's.
+    example: -0.04308
+    unit: the row's UNIT
+  - name: OECD_SERIES
+    type: id
+    presence: required
+    description: The oecd-series page with the history (OECDS-<ISO3>-<measure>).
+    example: OECDS-AUS-CLI
+    pattern: ^OECDS-
+    link: oecd-series
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation whose published data the record holds.
+    example: OECD
+  - name: DATASET
+    type: text
+    presence: required
+    description: The OECD dataflow the record was built from.
+    example: OECD Data Explorer (SDMX)
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The business date of the feed's pull that wrote the record.
+    example: '2026-11-06'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse, as recorded in the feed's YAML.
+    example: 'OECD terms and conditions: data may be extracted, copied an…'
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: 'Source: OECD Data Explorer (CC BY 4.0).'
+  - name: URL
+    type: text
+    presence: required
+    description: The OECD Data Explorer's page for the dataflow.
+    example: https://data-explorer.oecd.org/
+  - name: INTERNAL_ONLY
+    type: boolean
+    presence: required
+    description: True when the source's terms forbid redistribution outside the organisation (Export data refuses the record).
+    example: false
+links:
+- field: MEASURES[].OECD_SERIES
+  kind: oecd-series
+validation:
+- rule: required
+  fields:
+  - COUNTRY_ID
+  - NAME
+  - ISO3
+  - MEASURES
+  - PROVENANCE
+  - MEASURE_COUNT
+- rule: unique
+  key:
+  - COUNTRY_ID
+  per: snapshot
+- rule: pattern
+  field: COUNTRY_ID
+  pattern: ^OECD-
+- rule: range
+  field: MEASURE_COUNT
+  min: 0
+- rule: link
+  field: MEASURES[].OECD_SERIES
+  kind: oecd-series
+notes:
+- Stored in the worldlake lake (config/lakes/worldlake.yaml), table <data>/delta/worldlake/oecd/oecd-country/, one JSONL.gz a business date loaded with
+  mode replace (a rerun of a day is idempotent).
+- 'Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256
+  and row count (DATA_LAKE_GUIDE.md section 4).'
+review: []

@@ -41,7 +41,7 @@ def run(PB, pack_dir: str, spec, docs: dict, known_fields: dict) -> None:
     about_dir = os.environ.get("DRISHTI_ABOUT_DIR")
     path = A.targets(Path(about_dir) if about_dir else None)[pack_dir]
     text = A.render(pack_dir, no_imf)
-    tests_base = PB.PACKS / spec.name
+    tests_base = PB.pack_dir(spec)
     problems = []
     if check:
         if not path.exists() or path.read_text(encoding="utf-8") != text:

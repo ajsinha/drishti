@@ -738,7 +738,7 @@ scenario picker and the details; the full matrix is on a larger screen. Nothing 
 ![The scenario matrix on a 390 px phone: the glance form](../tutorials/img/t25/21-scenario-matrix-phone.jpg)
 
 **Editions.** `SMAT` is part of Drishti Risk and Drishti Trading (`commands.words.SMAT: on`); Drishti Market and Drishti World leave it
-out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers the link ([EDITIONS.md](../admin/EDITIONS.md)).
+out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers the link ([LENSES.md](../admin/LENSES.md)).
 From the command line: `drishti.py var matrix <id> [--days N] [--by trade] [--csv]` ([section 10](#10-the-command-line)); the API:
 `GET /api/v1/risk/var/matrix` ([section 11.1](#111-the-endpoints)).
 
@@ -1373,7 +1373,7 @@ explorer's entitlements (computed as the person asking: their nodes, masks and a
 (open question 12): `var-result`, fields `VAR` with `CONFIDENCE` (never `VAR_99`); the retired kind name `var` is not reused. The
 designs' `var-contribution`, `var-path` and `var-history` are not separate kinds: a `var-result` carries the parts (`CHILDREN`), the
 worst scenarios and the vector, and the explorer and the API serve paths and histories. Contract:
-`config/packs/market-risk/contracts/var-result.contract.yaml` (class `computed`). The **pre-deal what-if** is the same engine's, asked
+`config/packs/banking/market-risk/contracts/var-result.contract.yaml` (class `computed`). The **pre-deal what-if** is the same engine's, asked
 through the VaR API (`POST /api/v1/risk/var/what-if`, [section 8.2](#82-the-what-if-the-java-engine)), not a kind.
 
 **Ids.** The id is the scope text. Like every computed id ([ComputeRef](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)), a
@@ -2128,7 +2128,7 @@ VaR differs or adds to them. Other contracts reuse VaR's model (the scope gramma
 guide's sections.
 
 **Sources of truth checked:** `tools/packgen/var/make_var_data.py`, `positions.py`, `portfolios.py`, `factors.py`, `varmath.py`, `rules.py`;
-`config/packs/market-risk/pack.yaml`, `config/packs/market-risk/config/about.yaml`, the pack's `samples/`; the test data in
+`config/packs/banking/market-risk/pack.yaml`, `config/packs/banking/market-risk/config/about.yaml`, the pack's `samples/`; the test data in
 `data/testdata/market-risk/` and its entries in `data/testdata/testdata.yaml`; `drishti-compute` (packages
 `com.ash.drishti.compute.vector` and `com.ash.drishti.banking.compute.var`); `drishti-server` (package `com.ash.drishti.banking.var`); the Delta
 plugin's vector reader (`DeltaTable.vectors`, `DeltaSourcePlugin.vectorColumns`); `tools/lake/stage.py` and `tools/lake/writers.py`;
@@ -2224,7 +2224,7 @@ promoted column's type, or `doc` when the field is only in the document. How the
 | `portfolio` | `portfolio` (`portfolio`) | `PORTFOLIO_ID` | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER` | none |
 | `position` (served, not stored) | `position` (`position`) | `POSITION_ID` | (the `var-positions` connector) | none |
 
-The connector's layout in the market-risk pack (`config/packs/market-risk/pack.yaml`):
+The connector's layout in the market-risk pack (`config/packs/banking/market-risk/pack.yaml`):
 
 ```yaml
 connectors:
@@ -2543,7 +2543,7 @@ scopes, captures and the official record do not know which form it came in (the 
 
 **Grain:** one row per trade, business date and scenario set. **Key:** `SCENARIO_PV_ID` (`SPV-<TRADE_ID>-<SCENARIO_SET_ID>`), command
 `SPV`. **Table:** `risk/scenario-pv/`, the vector column `SCENARIO_PV` (`list<double>`), the same promoted trade columns as `pnl-vector`
-plus those below. Contract: `config/packs/market-risk/contracts/scenario-pv.contract.yaml`.
+plus those below. Contract: `config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml`.
 
 | Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
 |---|---|---|---|---|---|---|---|
@@ -2579,7 +2579,7 @@ neither, or whose history does not cover every scenario day and the day before t
 `fx` says per currency where its rates came from (`supplied`, `derived`) and today's rate. The market-data pack's demo history is 30
 days, so the demo **supplies** its scenario FX (AUD, CAD, CHF, EUR, GBP, JPY); a bank with 510 days of FX history needs to send none.
 `scenario-pv` and `fx-scenario` are inputs (their data-load signal reloads the date, and they enter the hot file's digest); `fx-spot` is
-read when a date loads, not watched. Contract: `config/packs/market-risk/contracts/fx-scenario.contract.yaml`.
+read when a date loads, not watched. Contract: `config/packs/banking/market-risk/contracts/fx-scenario.contract.yaml`.
 
 **On the test data.** The Endur trades (1,339: 1,089 USD, 246 EUR, 4 CAD) come as scenario PVs: a factor-model move,
 valued in the trade's currency (`tools/packgen/var/scenario_fx.py`). A USD trade's P&L from its scenario PVs is its P&L
@@ -2713,7 +2713,7 @@ A pricing system sends a business day's trades in either form, side by side: **P
 when it has it; during the day, only the changed trades (section 8.4); per trade or per position (section 15.13). **This is the
 contract a pricing system sends:** every record leads with what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`); JSONL, one
 JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly the fields of its kind's contract
-(`config/packs/market-risk/contracts/{scenario-pv,pnl-vector,fx-scenario}.contract.yaml`, which say the same), no other. Sample lines
+(`config/packs/banking/market-risk/contracts/{scenario-pv,pnl-vector,fx-scenario}.contract.yaml`, which say the same), no other. Sample lines
 (the vector cut to its first 3 values here: a row carries all 509):
 
 ```text
@@ -2746,7 +2746,7 @@ JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly
 
 The files go under `<data folder>/pvgen/` by default (`morning-<date>/`, `intraday-<date>/`). The morning run of the test data's date is
 the engine's to the unit (`check.py` on it: VaR 112,041,646, ES 160,143,809; with `--all-vectors` 112,035,906 and 160,132,107).
-The committed intraday sample (`config/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`: three amended Endur trades,
+The committed intraday sample (`config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`: three amended Endur trades,
 one new, one cancelled) loads with `drishti.py var intraday --load <file> --date <the lake's date>`. `make_var_data.py` takes the same
 `--pv-systems`, `--pnl-systems` and `--all-vectors`: the P&L-vector generation is whole, for any system.
 
@@ -3599,7 +3599,7 @@ with a check cell against the engine's factor VaR to the cent.
 
 ### 18.14 Regulatory reports: definitions, runs, checks and sign-off
 
-Reports are produced **automatically, with human sign-off**: one YAML definition per report in `config/reports/`
+Reports are produced **automatically, with human sign-off**: one YAML definition per report in `config/reports/banking/`
 (`drishti.regulatory.reports-dir`), a run that reads the official records, fills every cell, runs the checks and **freezes** the result
 with each cell's lineage, a maker-checker-approver sign-off (one person a step), and files in xlsx, csv and PDF released after the last
 approval (`VarReports`, `VarReportSignoff`; `VAR REPORT <report> <period>`, `drishti.py var report`). The pilot pack is
@@ -3748,7 +3748,7 @@ No vectors and no trade or position rows are published; the capture itself keeps
 
 **In BI.** The published table is also the read-only kind `var-official` (`VOFF`) of the market-risk pack, served by the Delta
 connector `var-results` for BI and other readers (still no engine reads it; the guard allows only a read-only connector of computed
-kinds). The sample report **Market risk: VaR** (`config/bi/reports/market-risk-var.report.yaml`, model `market-risk-var`;
+kinds). The sample report **Market risk: VaR** (`config/bi/reports/banking/market-risk-var.report.yaml`, model `market-risk-var`;
 [BI_GUIDE.md](BI_GUIDE.md)) shows the bank's VaR and ES, VaR by desk and by legal entity, the bank and a desk over time, and every node
 with its limit use, from the latest result version of each date; it never adds VaRs across nodes.
 
@@ -4908,7 +4908,7 @@ annual report's trading VaR table (built); the US needs 10-day VaR and stressed 
 | Where | Status | What it shows of VaR |
 |---|---|---|
 | **The full product** (no edition) | built | the VaR explorer (`VAR BANK <GO>`, [section 3](#3-the-explorer-screen-by-screen)) with the Horizon, Confidence, ES and Reporting currency pickers; the position and portfolio pages; the computed kind `VRES` and the what-if under the basket's sheet; the scenario matrix `SMAT`; the official records (`VOFF`); BI's VaR datasets; the API and the CLI |
-| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([EDITIONS.md](../admin/EDITIONS.md#7-drishti-risks-home-three-landings), [RISK_LENS.md](../lenses/RISK_LENS.md#31-var)) |
+| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([LENSES.md](../admin/LENSES.md#5-drishti-risk), [RISK_LENS.md](../lenses/RISK_LENS.md#31-var)) |
 | **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/TRADING_LENS.md#44-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
 | **Drishti Market** and **Drishti World** | built | no VaR (`VAR` and `SMAT` off) |
 | A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md)) |

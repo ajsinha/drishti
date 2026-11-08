@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The picture of the gleif pack's guide (config/packs/gleif/guides/gleif.md), written to its guides/images/.
+"""The picture of the gleif pack's guide (config/packs/core/gleif/guides/gleif.md), written to its guides/images/.
 
 The pack is off by default, so this script starts its own scratch server and console with it on (18760/18761 unless
 DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT say otherwise), takes the picture and stops them (build the server first):
@@ -36,7 +36,7 @@ ROOT = Path(__file__).resolve().parents[3]
 PACKS = "core,us-equities,gleif"
 SERVER_PORT = int(os.environ.get("DRISHTI_SHOTS_SERVER_PORT", 18760))
 CONSOLE_PORT = int(os.environ.get("DRISHTI_SHOTS_CONSOLE_PORT", 18761))
-OUT = ROOT / "config" / "packs" / "gleif" / "guides" / "images"
+OUT = ROOT / "config" / "packs" / "core" / "gleif" / "guides" / "images"
 JPM = "8I5DZWZKVSZI1NUHU748"
 
 

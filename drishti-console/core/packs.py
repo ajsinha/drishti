@@ -14,7 +14,7 @@
 
 """The console side of domain packs: which packs are enabled (asked of the server, the single source of truth)
 and what each contributes to the console: example commands, workspace starters and help guides, read from
-``config/packs/<name>/``. Cached per user for ``ui.user_cache_seconds`` (10 s) and read again at once on every worker after a
+``config/packs/<domain>/<name>/`` (core/pack_paths.py). Cached per user for ``ui.user_cache_seconds`` (10 s) and read again at once on every worker after a
 change (core/user_stamps.py); falls back to ``packs.enabled`` when the server is unreachable."""
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ import time
 from pathlib import Path
 
 import yaml
+from core.pack_paths import pack_dir
 from core.servers import scoped
 from core.user_stamps import EVERYONE, NONE as NO_STAMPS
 
@@ -32,10 +33,11 @@ log = logging.getLogger(__name__)
 
 def default_enabled(console_dir: Path) -> str:
     """The packs the server enables when DRISHTI_PACKS is not set and no edition names them: the one list the server reads from its jar,
-    config/editions/default-packs.yaml (docs/admin/EDITIONS.md › The design as built, section 5.1)."""
+    config/packs/default-packs.yaml, by module (docs/admin/LENSES.md › The design)."""
+    from core.edition import by_module
     try:
-        f = (console_dir / "../config/editions/default-packs.yaml").resolve()
-        return ",".join(str(p) for p in (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("packs") or [])
+        f = (console_dir / "../config/packs/default-packs.yaml").resolve()
+        return ",".join(by_module((yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("packs")))
     except (OSError, yaml.YAMLError):
         return ""
 
@@ -120,7 +122,7 @@ class Packs:
     def _load(self, name: str) -> dict | None:
         roots = [self.installed] if self.installed.is_dir() else []
         for root in [*roots, self.dir, *self.extra]:      # installed packs, then the shipped ones, then the extra folders: as on the server
-            pdir = (root / name).resolve()
+            pdir = pack_dir(name, root).resolve()          # the pack's folder, directly in the root or in a domain folder of it
             manifest = pdir / "pack.yaml"
             if str(pdir).startswith(str(root)) and manifest.exists():
                 break

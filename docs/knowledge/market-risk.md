@@ -128,7 +128,7 @@ stored results from upstream engines (fundamental, not computed by Drishti):
    trade-valuation TVAL TVAL-<trade>      (per trade: MTM, 1-day P&L, DV01, its netting set)
 ```
 
-The links are the packs' contract link columns (`config/packs/market-risk/contracts/*.contract.yaml`): `pnl-vector.TRADE_ID → trade`,
+The links are the packs' contract link columns (`config/packs/banking/market-risk/contracts/*.contract.yaml`): `pnl-vector.TRADE_ID → trade`,
 `LEGAL_ENTITY → legal-entity`, `DESK → desk`, `TT_BOOK → book`, `COUNTERPARTY → counterparty`; `position.TRADE_IDS → trade`;
 `risk-hierarchy.NODE_ID → risk-hierarchy` (its children); `stress-result.SCENARIO → stress-scenario`, `DESK → desk`;
 `frtb-sensitivity.BOOK → book`; `trade-valuation.NETTING_SET → netting-set`, which is where market risk meets

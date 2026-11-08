@@ -36,10 +36,10 @@ class TokenScopeGuardTest {
 
     @Autowired @org.springframework.beans.factory.annotation.Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping mappings;
     @Autowired SecurityProperties props;
+    @Autowired TokenScopes scopes;
 
     @Test
     void everyNonGetEndpointDeclaresItsTokenScope() {
-        TokenScopes scopes = new TokenScopes(props);
         List<String> undeclared = new ArrayList<>();
         int checked = 0;
         for (RequestMappingInfo info : mappings.getHandlerMethods().keySet()) {
@@ -64,6 +64,7 @@ class TokenScopeGuardTest {
         assertThat(checked).as("non-GET endpoints found").isGreaterThan(50);
         assertThat(undeclared).as("add each to token-read-posts, a token-scopes entry or token-never in application.yaml").isEmpty();
         assertThat(props.tokenScopes()).containsKeys("design:write", "design:approve", "packs:admin", "bi:write", "bi:approve", "bi:admin");
+        assertThat(scopes.all()).as("no module's scope without the module").containsKey("compute:write").doesNotContainKey("risk:write");
         assertThat(props.tokenNever()).noneMatch(p -> p.matches("\\S+ /api/v1/\\*\\*"));   // no blanket never
     }
 }

@@ -74,7 +74,7 @@ class EconomyModuleOffTest {
         List<String> theirs = new ArrayList<>();
         ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
         for (String p : PUBLIC_SECTOR) {
-            JsonNode pack = yaml.readTree(Path.of(System.getProperty("drishti.packs.dir", "../config/packs"), p, "pack.yaml").toFile());
+            JsonNode pack = yaml.readTree(com.ash.drishti.api.PackFolders.of(Path.of(System.getProperty("drishti.packs.dir", "../config/packs")), p).resolve("pack.yaml").toFile());
             assertThat(pack.path("domain").asText()).as(p).isEqualTo("economy");
             pack.path("connectors").fieldNames().forEachRemaining(theirs::add);
         }

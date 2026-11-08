@@ -13,8 +13,13 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # config/modules/banking.yaml: the banking module at this site (docs/architecture/ACCESS_MODEL.md, docs/admin/OPERATIONS.md › Modules).
-# The module's manifest ships in its jar (drishti-banking: META-INF/drishti/module.yaml); this file holds the administrator's switch only.
+# The module's manifest ships in its jar (drishti-banking: META-INF/drishti/module.yaml); this file holds the administrator's switch and
+# the module's name.
 # Admin -> Modules writes it; the setting drishti.modules.banking.enabled (DRISHTI_MODULES_BANKING_ENABLED) wins over it. A change takes
 # effect at the next start: off, no bean, engine, job or API of the module loads, its packs and connectors do not load, its functions
 # (VAR, EXP, TRD ...) are gone, and its API answers 404 DRS-1025.
 enabled: true
+
+# The module named here too, so a server without its jar knows it and leaves it off as "not installed": the packs, lakes, tables, models
+# and reports in its banking folders are not read (a server with the jar takes the manifest in the jar and ignores this block).
+module: { id: banking, domain: banking, title: Banking and risk }

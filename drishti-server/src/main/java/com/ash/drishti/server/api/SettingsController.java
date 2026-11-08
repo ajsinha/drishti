@@ -102,13 +102,13 @@ public class SettingsController {
                     }
                     next.put("locale", v.asText());
                 }
-                case "lens", "homeLanding" -> {          // the edition a person opened as a lens; their choice of an edition's landing (EDITIONS.md 8)
+                case "lens", "homeLanding" -> {          // the edition a person opened as a lens; their choice of an edition's landing (LENSES.md 8)
                     if (!v.asText().matches("[a-z0-9][a-z0-9-]{0,63}")) {
                         throw bad(e.getKey() + " is an edition or landing name (lower-case letters, digits and dashes)");
                     }
                     next.put(e.getKey(), v.asText());
                 }
-                case "tradingView" -> {                 // Drishti Trading's "View as": a trader or a desk (EDITIONS.md 14); never widens access
+                case "tradingView" -> {                 // Drishti Trading's "View as": a trader or a desk (LENSES.md 14); never widens access
                     if (!v.asText().matches("(trader|desk):[A-Za-z0-9][A-Za-z0-9._~-]{0,79}")) {
                         throw bad("tradingView is trader:<trader id> or desk:<desk id>");
                     }
@@ -242,7 +242,7 @@ public class SettingsController {
         out.set("refresh", s.path("refresh").isObject() ? s.get("refresh") : json.createObjectNode());
         out.set("pinned", s.path("pinned").isArray() ? s.get("pinned") : json.createArrayNode());
         out.set("savedSearches", s.path("savedSearches").isArray() ? s.get("savedSearches") : json.createArrayNode());
-        out.set("lens", s.path("lens").isTextual() ? s.get("lens") : json.nullNode());                  // EDITIONS.md 8: the console reads them back
+        out.set("lens", s.path("lens").isTextual() ? s.get("lens") : json.nullNode());                  // LENSES.md 8: the console reads them back
         out.set("homeLanding", s.path("homeLanding").isTextual() ? s.get("homeLanding") : json.nullNode());
         out.set("tradingView", s.path("tradingView").isTextual() ? s.get("tradingView") : json.nullNode());   // Drishti Trading's View as
         out.set("varView", s.path("varView").isObject() ? s.get("varView") : json.nullNode());        // the VaR page's lens (2.9.7)

@@ -14,7 +14,7 @@
 
 """Writes the banking packs' sample data and, as separate steps, the dated rows the loaders put into the lake and the other stores.
 
-    python3 tools/packgen/banking/make_data.py                 write config/packs/<pack>/samples (the latest business date): catalog.jsonl
+    python3 tools/packgen/banking/make_data.py                 write config/packs/<domain>/<pack>/samples (the latest business date): catalog.jsonl
                                                                 and samples/<kind>.jsonl, one document a line (--sample-part-mb N splits
                                                                 a kind above N MB into <kind>.part-001.jsonl ..., default 50), the trading
                                                                 pack's Sutra tests and the file connector's sample feed (<data>/feeds/fixing.jsonl)
@@ -58,7 +58,9 @@ import schema as TSCHEMA  # noqa: E402
 import tests as TT  # noqa: E402  (the trading pack's Sutra tests, one sample per deal Sutra)
 
 ROOT = Path(__file__).resolve().parents[3]
-PACKS = ROOT / "config" / "packs"
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
 import packsamples as SAMPLES  # noqa: E402  (samples/<kind>.jsonl, one document a line)
@@ -215,7 +217,7 @@ def sample_files(docs: dict) -> dict[Path, str]:
             catalogs.setdefault(pack, []).append({"kind": kind, "id": id_, "title": t, "subtitle": sub})
     for pack, kinds in by_pack.items():
         for name, text in SAMPLES.files(kinds, catalogs[pack], SAMPLES.part_mb(sys.argv)).items():
-            out[PACKS / pack / "samples" / name] = text
+            out[pack_dir(pack) / "samples" / name] = text
     return out
 
 
@@ -282,13 +284,13 @@ def main() -> None:
     if problems:
         raise SystemExit("banking data is inconsistent:\n  " + "\n  ".join(problems[:40]))
     files = sample_files(docs)
-    targets = [PACKS / p / "samples" for p in layout.PACKS]
+    targets = [pack_dir(p) / "samples" for p in layout.PACKS]
     existing = {f for t in targets if t.exists() for f in t.rglob("*.json*")}    # the JSONL files, and any older <kind>/<id>.json
     # the VaR engine's reference samples are tools/packgen/var/make_var_data.py's (from the committed test data), not this generator's
-    existing = {f for f in existing if not (f.parent == PACKS / "market-risk" / "samples" and f.name.split(".")[0] in VK.KINDS)}
+    existing = {f for f in existing if not (f.parent == pack_dir("market-risk") / "samples" and f.name.split(".")[0] in VK.KINDS)}
     # and the intraday sample of tools/pvgen (VAR_GUIDE.md section 15.12): a batch file the scripts write, not a banking document
-    existing = {f for f in existing if f.parent != PACKS / "market-risk" / "samples" / "intraday"}
-    existing = {f for f in existing if not (f.parent == PACKS / "counterparty-risk" / "samples" and f.name.split(".")[0] in XK.KINDS)}
+    existing = {f for f in existing if f.parent != pack_dir("market-risk") / "samples" / "intraday"}
+    existing = {f for f in existing if not (f.parent == pack_dir("counterparty-risk") / "samples" and f.name.split(".")[0] in XK.KINDS)}
     if "--check" in sys.argv:
         stale = [str(f) for f, t in files.items() if not f.exists() or f.read_text(encoding="utf-8") != t] + TT.stale(docs["trade"])
         extra = [str(f) for f in existing - set(files)]

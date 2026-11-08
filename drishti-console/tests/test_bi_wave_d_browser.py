@@ -59,7 +59,7 @@ model: fp-desk
 version: 1.0.0
 title: Desk with field parameters
 tables:
-  trade: { table: bi.trades_basic_trade, role: fact }
+  trade: { table: banking.trades_basic_trade, role: fact }
 measures:
   MTM:      { expr: "sum(trade.MTM)" }
   NOTIONAL: { expr: "sum(trade.NOTIONAL)" }

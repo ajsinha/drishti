@@ -50,7 +50,7 @@ class ShippedInRachanaTest {
     static List<Shipped> shipped() throws IOException {
         List<Shipped> out = new ArrayList<>();
         ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
-        for (String dir : List.of("../config/tables/bi")) {
+        for (String dir : List.of("../config/tables/bi", "../config/tables/banking")) {
             try (Stream<Path> files = Files.list(Path.of(dir))) {
                 for (Path f : files.filter(p -> p.toString().endsWith(".yaml")).sorted().toList()) {
                     walk(yaml.readTree(f.toFile()), f.getFileName().toString(), "", out);

@@ -270,7 +270,7 @@ All under `drishti.lake.memory` (environment `DRISHTI_LAKE_MEMORY_…`; command 
 A memory table has the Delta connector's layout: `id` (string, the key), `doc` (string, the document as JSON), `business_date` (date,
 the partition), and one string column per `columns` entry; Parquet files compressed with zstd at level 3 (Snappy with `codec: snappy`
 gives byte-equal files to the disk lake's), row groups of 256 KB, a checkpoint every 10 commits, `keep-versions` versions readable.
-The pack's own data contracts (`config/packs/<pack>/contracts/`) describe the documents; holding them in memory changes nothing in them.
+The pack's own data contracts (`config/packs/<domain>/<pack>/contracts/`) describe the documents; holding them in memory changes nothing in them.
 
 Iceberg: the Iceberg engine reads and writes through the same `mem://` store (`warehouse: mem://<store>/…`), and the Iceberg connector
 keeps a memory warehouse off every disk as the Delta connector does; the replenish jobs write Delta.

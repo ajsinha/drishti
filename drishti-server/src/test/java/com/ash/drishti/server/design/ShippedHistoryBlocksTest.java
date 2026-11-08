@@ -42,7 +42,7 @@ class ShippedHistoryBlocksTest {
     void everyShippedBlockIsCleanAndNamesRealFields() throws IOException {
         List<String> found = new ArrayList<>();
         int blocks = 0;
-        try (Stream<Path> dirs = Files.list(PACKS)) {
+        try (Stream<Path> dirs = com.ash.drishti.api.PackFolders.list(PACKS).stream()) {
             for (Path dir : dirs.sorted().toList()) {
                 Path manifest = dir.resolve("pack.yaml");
                 if (!Files.isRegularFile(manifest)) {

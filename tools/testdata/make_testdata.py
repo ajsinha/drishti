@@ -41,6 +41,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 import capture_market as CM  # noqa: E402
 import history as H  # noqa: E402
 import marketdays as MK  # noqa: E402
@@ -54,7 +57,7 @@ KEEP = (CM.PACK, *PS.PACKS)   # real, dated snapshots (capture_market.py, the us
 
 
 def has_samples(pack: str, kind: str) -> bool:
-    d = ROOT / "config" / "packs" / pack / "samples"
+    d = pack_dir(pack) / "samples"
     return any(d.glob(f"{kind}.jsonl*")) or (d / kind).is_dir()
 
 
@@ -63,7 +66,7 @@ def delta_connectors(packs_dir: Path) -> dict[str, tuple[str, str]]:
     import yaml
     out = {}
     for pack in PACKS:
-        spec = yaml.safe_load((packs_dir / pack / "pack.yaml").read_text(encoding="utf-8"))
+        spec = yaml.safe_load((pack_dir(pack, packs_dir) / "pack.yaml").read_text(encoding="utf-8"))
         for name, c in (spec.get("connectors") or {}).items():
             if c.get("plugin") != "delta" or (c.get("settings") or {}).get("union"):
                 continue
@@ -76,7 +79,7 @@ def table_of(packs_dir: Path, pack: str, connector: str, kind: str) -> str:
     """The lake table a pack's Delta connector writes a kind into: its lake entry (settings.lake-tables, <domain>.<table>, of the kind:
     the pack's lake: block, DATA_LAKE_GUIDE.md), else its settings.table.<kind> (the older connector form), else the kind: a feed file's name."""
     import yaml
-    spec = yaml.safe_load((packs_dir / pack / "pack.yaml").read_text(encoding="utf-8"))
+    spec = yaml.safe_load((pack_dir(pack, packs_dir) / "pack.yaml").read_text(encoding="utf-8"))
     st = ((spec.get("connectors") or {}).get(connector) or {}).get("settings") or {}
     entries = st.get("lake-tables") or []
     entries = [x.strip() for x in entries.split(",")] if isinstance(entries, str) else [str(x).strip() for x in entries]
@@ -161,7 +164,7 @@ def main(argv=None) -> int:
     for pack in FROM_SAMPLES:
         for kind, (pk, connector) in sorted(owners.items()):
             if pk == pack and has_samples(pack, kind):
-                datasets.append({"samples": f"config/packs/{pack}/samples", "pack": pack, "kind": kind, "connector": connector})
+                datasets.append({"samples": f"{pack_dir(pack).relative_to(ROOT).as_posix()}/samples", "pack": pack, "kind": kind, "connector": connector})
     datasets += CM.captured_datasets(Path(a.captured_from) if a.captured_from else out)
     datasets += PS.datasets(Path(a.captured_from) if a.captured_from else out)
     write_manifest(out, days.dates, datasets)

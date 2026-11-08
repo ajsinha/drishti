@@ -7,7 +7,7 @@ RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
 COPY drishti-server/target/drishti-server-*-exec.jar app.jar
 COPY config/packs/ config/packs/
-COPY config/editions/ /opt/drishti/config/editions/
+COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/ui-kit/ config/ui-kit/
 COPY config/alerts/ config/alerts/
 COPY --chmod=0555 deploy/bin/drishti-node.sh /opt/drishti/bin/drishti-node.sh

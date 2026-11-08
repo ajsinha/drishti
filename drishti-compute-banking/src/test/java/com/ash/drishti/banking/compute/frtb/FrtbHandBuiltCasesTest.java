@@ -41,8 +41,8 @@ class FrtbHandBuiltCasesTest {
     static FrtbParams params;
 
     static Path capital() {
-        Path p = Path.of("..", "config", "packs", "market-risk", "capital");
-        return Files.isDirectory(p) ? p : Path.of("config", "packs", "market-risk", "capital");
+        Path p = Path.of("..", "config", "packs", "banking", "market-risk", "capital");
+        return Files.isDirectory(p) ? p : Path.of("config", "packs", "banking", "market-risk", "capital");
     }
 
     @BeforeAll

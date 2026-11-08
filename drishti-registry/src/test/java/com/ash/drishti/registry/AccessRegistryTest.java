@@ -172,6 +172,21 @@ class AccessRegistryTest {
     }
 
     @Test
+    void theShippedBankingFileNamesTheModuleAndTheJarStillWins() throws IOException {
+        // config/modules/banking.yaml names the module: without its jar, banking is known and not installed (its domain's packs stay off);
+        // with the jar (here the test manifest on the class path), the jar's manifest is the module and the file only switches it
+        String shipped = java.nio.file.Files.readString(Path.of("..", "config", "modules", "banking.yaml"));
+        write(modules.resolve("banking.yaml"), shipped);
+        EmbeddedAccessRegistry r = registry();
+        assertThat(r.module("banking").orElseThrow().installed()).isTrue();
+        assertThat(r.moduleOn("banking")).isTrue();
+        write(modules.resolve("gov.yaml"), shipped.replace("id: banking, domain: banking", "id: gov, domain: gov"));
+        r = registry();
+        assertThat(r.module("gov").orElseThrow().reason()).contains("not installed");
+        assertThat(r.packOn("budget", "gov")).isFalse();
+    }
+
+    @Test
     void rolesOpenLensesAndActions() throws IOException {
         write(access.resolve("roles.yaml"), """
                 roles:

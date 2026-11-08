@@ -62,7 +62,7 @@ public class PublicAboutController {
         m.put("version", build.map(BuildProperties::getVersion).orElse("dev"));
         m.put("notice", branding.notice());
         m.put("tagline", branding.tagline());
-        m.put("edition", edition.instance().about());       // the console learns the edition here (EDITIONS.md › The design as built, section 5.1)
+        m.put("edition", edition.instance().about());       // the console learns the edition here (LENSES.md › The design)
         m.put("lenses", edition.lensNames());               // the editions a person may open as a lens (none with an edition)
         com.ash.drishti.server.engines.EngineCluster c = cluster.getIfAvailable();   // what the console shows or hides (COMPUTE_ENGINES.md 5.2)
         m.put("engines", c == null ? null : c.about());

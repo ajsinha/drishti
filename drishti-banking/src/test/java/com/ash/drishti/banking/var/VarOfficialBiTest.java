@@ -70,8 +70,8 @@ class VarOfficialBiTest {
     static {
         try {
             Path to = com.ash.drishti.server.TestRun.root().resolve("var-bi-folder");
-            for (String f : List.of("../tables/bi/market_risk_var_official.table.yaml", "../tables/bi/market_risk_var_latest.table.yaml",
-                    "../tables/bi/market-risk-var.model.yaml", "reports/market-risk-var.report.yaml")) {
+            for (String f : List.of("../tables/banking/market_risk_var_official.table.yaml", "../tables/banking/market_risk_var_latest.table.yaml",
+                    "../tables/banking/market-risk-var.model.yaml", "reports/banking/market-risk-var.report.yaml")) {
                 Path dest = to.resolve(f.replace("../", ""));                  // the table layer's files under tables/, BI's report beside
                 Files.createDirectories(dest.getParent());
                 Files.copy(Path.of("../config/bi", f), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);

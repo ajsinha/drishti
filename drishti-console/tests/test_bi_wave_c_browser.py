@@ -61,11 +61,11 @@ class Stack(bi_report_stack.ReportStack):
     def prepare(self, work):
         python = work / "config/bi/python"
         python.mkdir(parents=True, exist_ok=True)
-        for f in (ROOT / "config/bi/python").glob("*.python.yaml"):
+        for f in (ROOT / "config/bi/python").glob("*/*.python.yaml"):
             (python / f.name).write_text(f.read_text(encoding="utf-8"))
         reports = work / "config/bi/reports"
-        reports.joinpath("python-desk-risk.report.yaml").write_text((ROOT / "config/bi/reports/python-desk-risk.report.yaml").read_text(encoding="utf-8"))
-        reports.joinpath("python-wall.report.yaml").write_text((ROOT / "config/bi/reports/python-wall.report.yaml").read_text(encoding="utf-8"))     # a board: a report with board pages (2.4.0)
+        reports.joinpath("python-desk-risk.report.yaml").write_text((ROOT / "config/bi/reports/banking/python-desk-risk.report.yaml").read_text(encoding="utf-8"))
+        reports.joinpath("python-wall.report.yaml").write_text((ROOT / "config/bi/reports/banking/python-wall.report.yaml").read_text(encoding="utf-8"))     # a board: a report with board pages (2.4.0)
 
 
 @pytest.fixture(scope="module")
@@ -136,7 +136,7 @@ def test_vega_lite_is_translated_and_drawn_by_drishti_chart_under_the_strict_pol
 
 def test_a_specification_that_loads_a_url_is_not_drawn(stack, browser):
     page = sign_in(browser, "wes", "/bi/catalogue")
-    body = open(ROOT / "config/bi/reports/python-desk-risk.report.yaml", encoding="utf-8").read().replace("report: python-desk-risk", "report: vega-url").replace("sample: true", "sample: false")
+    body = open(ROOT / "config/bi/reports/banking/python-desk-risk.report.yaml", encoding="utf-8").read().replace("report: python-desk-risk", "report: vega-url").replace("sample: true", "sample: false")
     body = body.replace("        wells: { axis: [trade.DESK], values: [MTM, Trades] }\n        format:\n          spec:\n", "        wells: { axis: [trade.DESK], values: [MTM, Trades] }\n        format:\n          spec:\n            data: { url: 'http://127.0.0.1:1/x.json' }\n")
     s, item = api(page, "POST", "/workspaces/me/items", {"kind": "report", "title": "Vega url", "body": body})
     assert s in (200, 201), item

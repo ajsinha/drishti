@@ -91,7 +91,7 @@ def shoot(out: Path, captures: Path) -> None:
         got["phone_order"] = phone.evaluate("[...document.querySelector('#rep').shadowRoot.querySelectorAll('.bi-vis')].map(v => v.dataset.visual)")
         phone.context.close()
 
-        body = (T.ROOT / "config/bi/reports/live-trading-desk.report.yaml").read_text()
+        body = (T.ROOT / "config/bi/reports/banking/live-trading-desk.report.yaml").read_text()
         body = (body.split("layouts:")[0] + "pages:" + body.split("\npages:", 1)[1]).replace("report: live-trading-desk", "report: phone-shots")
         status, made = S.api("POST", "/bi/workspaces/me/items", "wes", ["live-writer"], {"kind": "report", "title": "Live trading desk (phone)", "description": "", "body": body})
         assert status in (200, 201), made

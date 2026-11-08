@@ -17,7 +17,7 @@
 
 # Data contracts of the central-banks pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/central-banks/guides/central-banks.md](../../../config/packs/central-banks/guides/central-banks.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/economy/central-banks/guides/central-banks.md](../../../config/packs/economy/central-banks/guides/central-banks.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -30,7 +30,7 @@ One central bank: its policy rate, the last move, the rate's history and the mar
 
 |  |  |
 |---|---|
-| Contract | [central-bank.contract.yaml](../../../config/packs/central-banks/contracts/central-bank.contract.yaml) · version 1.0 |
+| Contract | [central-bank.contract.yaml](../../../config/packs/economy/central-banks/contracts/central-bank.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/feeds/sources/) |
@@ -40,7 +40,7 @@ One central bank: its policy rate, the last move, the rate's history and the mar
 | Dated by | `snapshot` |
 | Cadence | daily (due: the central-banks feed's schedule (15 22 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `centralbank-store` (plugin `delta`), table `<root>/centralbank/central-bank/` |
-| Test data | config/packs/central-banks/samples |
+| Test data | config/packs/economy/central-banks/samples |
 | Worked example | [central-banks/central-bank](../samples/central-banks/central-bank.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -115,7 +115,7 @@ One central-bank or market series from FRED or the Bank of Canada: the history, 
 
 |  |  |
 |---|---|
-| Contract | [rate-series.contract.yaml](../../../config/packs/central-banks/contracts/rate-series.contract.yaml) · version 1.0 |
+| Contract | [rate-series.contract.yaml](../../../config/packs/economy/central-banks/contracts/rate-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/feeds/sources/) |
@@ -125,7 +125,7 @@ One central-bank or market series from FRED or the Bank of Canada: the history, 
 | Dated by | `snapshot` |
 | Cadence | daily (due: the central-banks feed's schedule (15 22 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `centralbank-store` (plugin `delta`), table `<root>/centralbank/rate-series/` |
-| Test data | config/packs/central-banks/samples |
+| Test data | config/packs/economy/central-banks/samples |
 | Worked example | [central-banks/rate-series](../samples/central-banks/rate-series.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

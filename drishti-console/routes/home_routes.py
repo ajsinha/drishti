@@ -51,7 +51,7 @@ async def landing(request: Request):
             back = {"href": target, "label": back_label(target)}
     me = getattr(request.state, "identity", None)
     facts_on = me is not None and request.app.state.facts.enabled
-    raw_cards = ed.home_cards if ed.lens and ed.home_cards is not None else settings.get("ui.home_cards") or []
+    raw_cards = ed.home_cards if ed.active and ed.home_cards is not None else settings.get("ui.home_cards") or []   # the lens's (registry)
     cards = [c for c in home_cards(raw_cards, active) if ed.typed_shown(c["cmd"])] if me is not None else []
     if me is not None and ed.active and (landing := edition_routes.landing_for(request, ed)) is not None:
         return await edition_routes.render_landing(request, ed, landing, cards)        # the edition's landing (home.landing, the person's choice)
@@ -109,7 +109,7 @@ def back_label(path: str) -> str:
 
 @router.get("/manifest.webmanifest", include_in_schema=False)
 def manifest(request: Request):
-    """The web manifest, from configuration (EDITIONS.md › The design as built, section 5.10): the product's name (an edition's or a lens's), its tagline and
+    """The web manifest, from configuration (LENSES.md › The design): the product's name (an edition's or a lens's), its tagline and
     copyright, its icons (the eye's unless ui.apple_touch_icon / ui.favicon name others). Replaces the fixed static file."""
     g = request.app.state.templates.env.globals
     ed = edition_routes.edition_of(request)

@@ -78,7 +78,7 @@ public record RegulatoryProperties(String fiscalYearEnd, String pnlKind, Backtes
         pnlKind = pnlKind == null || pnlKind.isBlank() ? "desk-pnl" : pnlKind.strip();
         backtesting = backtesting == null ? new Backtesting(null, null, null, null, null, null) : backtesting;
         averageDays = averageDays == null || averageDays < 1 ? 60 : averageDays;
-        reportsDir = reportsDir == null || reportsDir.isBlank() ? "./config/reports" : reportsDir.strip();
+        reportsDir = reportsDir == null || reportsDir.isBlank() ? "./config/reports/banking" : reportsDir.strip();
         syntheticHistory = syntheticHistory != null && syntheticHistory;
     }
 

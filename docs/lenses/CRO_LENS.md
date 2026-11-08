@@ -29,7 +29,7 @@ recommendation of [section 5.1](#51-the-layouts-decided).
 **Read with:** [OVERSIGHT_LENS.md](OVERSIGHT_LENS.md) (the second line that works beneath the CRO; its RO1 VaR change explanation and RO2
 breach workflow are this lens's two largest dependencies), [MR_CUBE_LENS.md](MR_CUBE_LENS.md) and [CCR_CUBE_LENS.md](CCR_CUBE_LENS.md)
 (the drill targets, and the `risk-limit` and `credit-limit` contracts this lens reads), [RISK_LENS.md](RISK_LENS.md),
-[MARKET_LENS.md](MARKET_LENS.md) and [WORLD_LENS.md](WORLD_LENS.md) (the other lenses it links to), [EDITIONS.md](../admin/EDITIONS.md)
+[MARKET_LENS.md](MARKET_LENS.md) and [WORLD_LENS.md](WORLD_LENS.md) (the other lenses it links to), [LENSES.md](../admin/LENSES.md)
 (how lenses and editions work), [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (phone tiers) and the plan's themed phases in
 [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md).
 
@@ -93,7 +93,7 @@ summarises; every figure opens the lens that owns it.
 | **CEO, board risk committee members** | read the brief or the board pack; on a phone, the tiles and the one-paragraph answer | none (read-only, a later role) |
 | **Internal audit, supervisors** | reproduce what the CRO saw on a given date (time travel), the approvals and their trail | none |
 
-The CRO lens is **a lens** ([EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses)): `Open Drishti CRO` from Views and Home on a full
+The CRO lens is **a lens** ([LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people)): `Open Drishti CRO` from Views and Home on a full
 instance, and the command word `CRO` (proposed) for its landing. It **reads**; its only actions are governance actions (approve, reject,
 comment, escalate), and only for people with the power to take them ([section 10](#10-the-lens-design)).
 
@@ -129,8 +129,8 @@ comment, escalate), and only for people with the power to take them ([section 10
 | Peak PFE by counterparty, connected group (`GROUP:`), legal entity, against the stored credit limit | **Built**; group limits on the group's own PFE and limits by tenor are CC4 | [EXPOSURE_GUIDE sections 3.3, 4](../guides/EXPOSURE_GUIDE.md#4-scopes); [CCR_CUBE_LENS section 7.10](CCR_CUBE_LENS.md#710-c9-credit-limit-lim-existing-extended) |
 | Official end-of-day exposure results | **Built** | [EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) |
 | Top-10 concentration (share of bank EPE in the ten largest) | **Partly**: EPE per counterparty is served (the `tree` answer); the share and its limit are not a measure | [EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md); [OVERSIGHT_LENS section 3.7](OVERSIGHT_LENS.md#37-concentration-and-liquidity) |
-| A within / near / breach state against a limit | **Built** on the Trading landing: `breach` above 1, `near` at or above `drishti.risk.limit-near` (0.8), `within` below: the server's status on every VaR answer (`limitStatus`), the landing only shows it; the Risk landing's limits in breach | [EDITIONS.md sections 7, 14](../admin/EDITIONS.md#7-drishti-risks-home-three-landings) |
-| Headline tiles of VaR, ES, backtest, EPE, peak PFE and limits in breach | **Built** (Drishti Risk's desk landing) | [EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings) |
+| A within / near / breach state against a limit | **Built** on the Trading landing: `breach` above 1, `near` at or above `drishti.risk.limit-near` (0.8), `within` below: the server's status on every VaR answer (`limitStatus`), the landing only shows it; the Risk landing's limits in breach | [LENSES.md sections 5, 6](../admin/LENSES.md#5-drishti-risk) |
+| Headline tiles of VaR, ES, backtest, EPE, peak PFE and limits in breach | **Built** (Drishti Risk's desk landing) | [LENSES.md section 5](../admin/LENSES.md#5-drishti-risk) |
 | Compare with an earlier capture; component VaR that adds up | **Built** | [VAR_GUIDE sections 6, 18.3](../guides/VAR_GUIDE.md#6-captures-and-compare) |
 | VaR change explanation by cause (window roll, market, trades in and out) | **Not built**, designed (RO1, MC12) | [OVERSIGHT_LENS section 4.1](OVERSIGHT_LENS.md#41-ro1-var-change-explanation) |
 | A breach as a record (status, age, action, escalation) | **Not built**, designed (RO2) | [OVERSIGHT_LENS section 4.2](OVERSIGHT_LENS.md#42-ro2-breaches-and-escalation) |
@@ -141,7 +141,7 @@ comment, escalate), and only for people with the power to take them ([section 10
 | LCR, NSFR, survival horizon | **Not built**. Example records exist (`examples/packs/liquidity-risk`, camelCase, not loaded); liquidity is a measure of the balance-sheet roadmap | [IMPLEMENTATION_PLAN, balance sheet and regulatory](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory); [OVERSIGHT_LENS section 4.10](OVERSIGHT_LENS.md#410-ro10-liquidity) |
 | CET1 ratio, RWA | **Not built**; nothing in the packs (stored `sa-ccr` and `frtb-sensitivity` charges are partial RWA inputs only) | — |
 | Financed emissions | **Not built**. Example records (`examples/packs/climate-risk`, `financed-emissions`); **climate risk is out of scope as a computed measure** (product owner, 2026-10-25) | [IMPLEMENTATION_PLAN, balance sheet and regulatory](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory) |
-| News and market moves | **Built** (news-and-markets pack; the World lens's desk) | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) |
+| News and market moves | **Built** (news-and-markets pack; the World lens's desk) | [LENSES.md section 8](../admin/LENSES.md#8-drishti-world) |
 | News relevance to the book ("headlines touching the book") | **Not built** (WL9) | [WORLD_LENS section 5.9](WORLD_LENS.md#59-wl9-news-relevance) |
 | VaR at stake of a market move or a bad data point | **Proposed** | [MARKET_LENS section 5.1](MARKET_LENS.md#51-ml1-who-uses-each-item-and-what-is-at-stake) |
 | Macro signals (economies, forecasts) | **Built** (world-economy pack; IMF data internal demos only) | [WORLD_LENS.md](WORLD_LENS.md) |
@@ -149,7 +149,7 @@ comment, escalate), and only for people with the power to take them ([section 10
 | Ask: questions in words | **Partly**: *Ask about this page* and BI's *ask the data* on the AI layer ([AI.md section 7](../admin/AI.md#7-ask-on-the-ai-layer); [BI_GUIDE section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)); an answer across the engines with linked figures **not built**; AI is off in every edition today | |
 | Time travel: an earlier date's official figures | **Partly**: official records and history per date ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)); "as at the last board" across every metric **not built** | |
 | Board pack PDF | **Proposed** | [OVERSIGHT_LENS section 4.11](OVERSIGHT_LENS.md#411-ro11-the-daily-risk-report-and-the-committee-pack) |
-| Lenses and editions (a file per edition, a lens per person) | **Built** | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
+| Lenses and editions (a file per edition, a lens per person) | **Built** | [LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people) |
 | Phone tiers | **Design** | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) |
 
 **Verified in code (2026-10-31):** no class in `drishti-server/src/main`, `drishti-compute/src/main` or the console's `core` and
@@ -359,7 +359,7 @@ story can be shown, and whether to add a second synthetic member to the generato
 ## 7. Data needed: the complete list
 
 Every contract follows the repository's conventions ([docs/contracts/README.md](../contracts/README.md)): one contract YAML per kind in
-`config/packs/<pack>/contracts/<kind>.contract.yaml` with `kind`, `mnemonic`, `class` (`fundamental`, `input`, `drishti-owned`,
+`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml` with `kind`, `mnemonic`, `class` (`fundamental`, `input`, `drishti-owned`,
 `computed`), `grain`, `key`, `dated-by`, `cadence`, `storage` and `fields`; data delivered as **JSON Lines, gzipped**, in
 `data/testdata/<domain>/<kind>/*.jsonl.gz` for the demo, loaded into Delta (or Iceberg) partitioned by `business_date`; field names in
 Endur-style UPPER_SNAKE. The CRO lens is small in data volume (hundreds of rows a day) and wide in sources.
@@ -727,7 +727,7 @@ treasurer's and finance's spreadsheets). Only claims we can **show** in a demo a
 | Item | Value (proposed) |
 |---|---|
 | Lens id | `cro` (`drishti.lenses: risk,world,market,trading,cro`; the link **Open Drishti CRO**) |
-| Edition file | `config/editions/cro.yaml` (an edition and a lens from one file, as the others) |
+| Edition file | `config/lenses/cro.yaml` (an edition and a lens from one file, as the others) |
 | Mnemonic | `CRO` (the landing); `CRO BRIEF`, `CRO DETAIL`; checked against every pack's mnemonics |
 | Landing | `appetite` (B); tabs `brief` (C) and `detail` (A); the phone layout (decided) |
 | Links out | MCUBE, CCUBE, Oversight, Market, World (each opens in that lens, back returns) |

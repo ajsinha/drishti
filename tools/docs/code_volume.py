@@ -27,6 +27,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
 README = ROOT / "README.md"
 BEGIN, END = "<!-- code-volume:begin -->", "<!-- code-volume:end -->"
 TOLERANCE = 0.10
@@ -68,7 +71,7 @@ def measure() -> dict:
             continue
     pom = (ROOT / "pom.xml").read_text(encoding="utf-8")
     return {"lines": lines, "files": count, "modules": len(re.findall(r"<module>", pom)),
-            "packs": len([p for p in (ROOT / "config" / "packs").iterdir() if (p / "pack.yaml").exists()]),
+            "packs": len(pack_dirs()),
             "tutorials": len(list((ROOT / "docs" / "tutorials").glob("[0-9][0-9]-*.md")))}
 
 

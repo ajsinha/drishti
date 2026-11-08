@@ -65,6 +65,9 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files)
 import factors as F  # noqa: E402
 import scenario_fx as SFX  # noqa: E402
@@ -95,7 +98,7 @@ PART_BYTES = 1_200_000                       # compressed bytes per file: the ve
 #: daily P&L (260 dates of one run) one archive; a kind whose date holds the stress set's file too (scenario-set, fx-scenario) one
 #: archive of its dates; every other kind one file per date, <kind>.<YYYY-MM-DD>.jsonl.gz
 TARS = {"pnl-vector": "date", "scenario-pv": "date", "desk-pnl": "table"}
-PACK_YAML = ROOT / "config" / "packs" / PACK / "pack.yaml"
+PACK_YAML = pack_dir(PACK) / "pack.yaml"
 
 
 def business_days(end: str, n: int) -> list[str]:
@@ -359,8 +362,8 @@ def write(out: Path, ds: list[Demo], with_samples: bool = True) -> list[dict]:
 
 
 FOLDERS = tuple(f"{PACK}/{k}" for k in (*KEYS, *RETIRED))
-SAMPLES = ROOT / "config" / "packs" / PACK / "samples"
-TESTS = ROOT / "config" / "packs" / PACK / "tests"
+SAMPLES = pack_dir(PACK) / "samples"
+TESTS = pack_dir(PACK) / "tests"
 
 
 def retired_samples(want: dict[Path, str] | None = None) -> list[Path]:
@@ -403,7 +406,7 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
                     picks[kind] = picks[kind] + [row]
                     break
     out = {SAMPLES / f"{k}.jsonl": "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in v) for k, v in picks.items()}
-    # the pack's Sutra tests (tests/<kind>/cases.jsonl and expect.yaml: java -jar <server> sutra test config/packs/market-risk). The VaR
+    # the pack's Sutra tests (tests/<kind>/cases.jsonl and expect.yaml: java -jar <server> sutra test config/packs/banking/market-risk). The VaR
     # figures of these pages are the engine's, added when the page is opened: a test of the stored document checks the rest.
     head = "".join(f"# {ln}".rstrip() + "\n" for ln in (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines())
     expect = {"position": "noErrors: true\nnonEmpty: [trades, where]\n", "portfolio": "noErrors: true\nnonEmpty: [definition]\n"}

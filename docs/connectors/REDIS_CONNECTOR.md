@@ -184,7 +184,7 @@ The pack declares the fields to promote on the connector that stores the kind, e
 packs' settings, so the same declaration applies:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
+# config/packs/banking/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
   trade-endur:
     settings:

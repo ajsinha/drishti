@@ -44,7 +44,7 @@ import fetch as F  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))
 import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
-PACK = ROOT / "config" / "packs" / "gleif"
+PACK = ROOT / "config" / "packs" / "core" / "gleif"
 DEFAULT_CACHE = ROOT / "data" / "cache" / "gleif"
 SOURCE = "GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)"
 LICENCE = "CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)"
@@ -80,8 +80,8 @@ def _addr(a: dict | None) -> str:
 def _other_packs() -> tuple[dict[str, str], dict[str, str]]:
     """core's legal entities and counterparties by LEI: {LEI: ENTITY_ID}, {LEI: COUNTERPARTY_ID} (fictional, so none match today)."""
     out: tuple[dict[str, str], dict[str, str]] = ({}, {})
-    for f, key, into in ((ROOT / "config/packs/core/samples/legal-entity.jsonl", "ENTITY_ID", out[0]),
-                         (ROOT / "config/packs/core/samples/counterparty.jsonl", "COUNTERPARTY_ID", out[1])):
+    for f, key, into in ((ROOT / "config/packs/core/core/samples/legal-entity.jsonl", "ENTITY_ID", out[0]),
+                         (ROOT / "config/packs/core/core/samples/counterparty.jsonl", "COUNTERPARTY_ID", out[1])):
         if f.is_file():
             for line in f.read_text(encoding="utf-8").splitlines():
                 if line.strip():
@@ -330,7 +330,7 @@ A bare LEI (twenty characters) opens its entity.
 **The cap.** The committed data keeps at most {cap} entities a group, the nearest levels first (the size of the snapshot); {capped} groups are
 larger in GLEIF and their page says so (`MEMBERS_IN_GLEIF`, from the ultimate parent's `GLEIF_GROUP_SIZE`). The computation itself has no
 cap: a group page counts and lists every entity of the group the lake holds. The formulas are in
-[GROUPINGS_ANALYTICS_GUIDE.md](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
+[GROUPINGS_ANALYTICS_GUIDE.md](../../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
 consolidation relationships only (`IS_DIRECTLY_CONSOLIDATED_BY`, `IS_ULTIMATELY_CONSOLIDATED_BY`); fund management, sub-fund, feeder
 and branch relationships are not ownership and are left out. A member whose direct parent is not reported hangs under the ultimate
 parent in the tree. An entity with no reported parent may carry a reporting exception (controlled by natural persons, not
@@ -441,14 +441,14 @@ def main(argv: list[str], extra: list[str] | None = None, cap: int | None = None
     p = argparse.ArgumentParser(description="Build the gleif pack from the fetched cache (no network).")
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     p.add_argument("--check", action="store_true")
-    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/gleif; "
+    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/core/gleif; "
                                                "drishti.py feed run gleif points a widened build at the data folder)")
     p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed "
                                                   "pack; beside a widened build's pack folder otherwise)")
     a = p.parse_args(argv)
     global PACK
-    PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "gleif"
-    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "gleif")
+    PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "core" / "gleif"
+    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "core" / "gleif")
     F.reduce_rr(a.cache)                                     # offline: the relationship file from the downloaded golden copy
     if (a.cache / "reduced" / "rr.json").is_file():
         docs = build(a.cache, extra, cap)

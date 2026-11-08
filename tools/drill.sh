@@ -210,7 +210,7 @@ gate_static() {
     "python3 tools/api_docs.py check-python")          # every public Python function, class and method has a docstring and type hints
   # (tools/test_no_hidden_names.py runs in the tool tests only: its pack-make case needs the server jar, which the gate runs before)
   local gen
-  for gen in $(grep -l -- "--check" config/packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do checks+=("python3 $gen --check"); done   # generated pack content is current
+  for gen in $(grep -l -- "--check" config/packs/*/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do checks+=("python3 $gen --check"); done   # generated pack content is current
   all_of "${checks[@]}"
 }
 

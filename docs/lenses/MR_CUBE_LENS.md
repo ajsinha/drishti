@@ -101,7 +101,7 @@ maps, ladders, a time-travel slider, provenance on every cell) that a vendor cub
 | **Product control** | hypothetical and actual P&L against the risk-theoretical P&L, restatements, corrections | none today |
 | **Model validation** | the scenario set, proxies, NMRF, PLA statistics, the provenance of every number | none today |
 
-The MR Cube is **a lens** ([EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses)): `Open Drishti MR Cube` from Views and Home on a full
+The MR Cube is **a lens** ([LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people)): `Open Drishti MR Cube` from Views and Home on a full
 instance, and a cube **screen** (`MCUBE <GO>`, the command word the product owner chose on 2026-10-31) inside Drishti Risk, Trading and Oversight. It
 hides what a cube user does not need (Build, Studio, the World and Market packs' menus) and keeps the VaR explorer, SMAT, the
 counterparty cube and BI one click away.
@@ -456,7 +456,7 @@ by the Delta connector, tested with the demo switched off); shipped **configurat
 | 8 | FX rates (`fx-spot`, `fx-scenario`) | the reporting currency; sensitivities summed in USD | POC | market data; the risk engine for scenario FX | currency × date | existing | existing demo | [7.4](#74-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) |
 | 9 | Position sensitivities (`position-sensitivity`) | ladders, heat map, SBM, explain overlay, SIMM (CCR cube) | POC (synthetic); sensitivities and capital | the same engine and run as the scenario PVs | position × date × batch; daily, intraday | new | **new generator** `tools/packgen/var/sensitivities.py`, from `factors.py`'s loadings so the first-order P&L matches the vectors → `data/testdata/market-risk/position-sensitivity/` | [7.9](#79-d8-position-sensitivity-sens-new) |
 | 10 | Factor dictionary (`risk-factor`) and bucket grids (`sensitivity-buckets.yaml`) | factor parts and bucket grids for ladders and SBM; liquidity horizons and modellability for IMA | POC (names, grids); advanced market risk (IMA attributes) | the FRTB engine or the market-data system | factor, slowly changing | new | **new generator** `tools/packgen/var/risk_factors.py` (the demo's forty-odd factors and their curve points) → `data/testdata/market-risk/risk-factor/`; the grids as pack configuration | [7.10](#710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new) |
-| 11 | FRTB parameters: risk weights, correlations (ρ, γ), curvature shocks, DRC and RRAO weights | SBM, DRC, RRAO | Sensitivities and capital | the Basel text (MAR21 to MAR23) and the jurisdiction's rule | parameter set, per regulatory change | new | **configuration** shipped from the public text (`config/packs/market-risk/frtb/*.yaml`, BCBS first) | [8.3](#83-frtb-standardised-approach-mc5-to-mc7) |
+| 11 | FRTB parameters: risk weights, correlations (ρ, γ), curvature shocks, DRC and RRAO weights | SBM, DRC, RRAO | Sensitivities and capital | the Basel text (MAR21 to MAR23) and the jurisdiction's rule | parameter set, per regulatory change | new | **configuration** shipped from the public text (`config/packs/banking/market-risk/frtb/*.yaml`, BCBS first) | [8.3](#83-frtb-standardised-approach-mc5-to-mc7) |
 | 12 | Issuers and ratings (`issuer`, `credit-curve`, the counterparty's `RATING`) | heat map by issuer, DRC credit quality, concentration | Sensitivities and capital | the security master and the credit system | issuer × date | existing | existing demo (`data/testdata/core/issuer`, `data/testdata/market-data/credit-curve`) | [7.8](#78-d7-market-data-existing-read-for-explain-and-pricing) |
 | 13 | Calendars (`calendar`) | business days for the time-travel slider, the 10-day windows, backtesting's 250 days | POC | the bank's calendar service | calendar, yearly | existing | existing demo (`data/testdata/core/calendar`) | — |
 | 14 | IMA P&L vectors (`ima-pnl-vector`) | ES by liquidity horizon, stressed calibration, IMCC | Advanced market risk | the FRTB IMA engine | position × date × subset; daily, stressed weekly | new | **new generator** `tools/packgen/var/ima_vectors.py` (the factor model with factor groups switched off per subset) | [7.11](#711-d10-ima-pnl-vector-new-pl-vectors-per-risk-class-and-liquidity-horizon) |
@@ -501,7 +501,7 @@ sensitivities** (row 9) light up tab C's ladder and the heat map.
 ### The contracts in detail
 
 **This is the heart of the cube.** Every contract below follows the repository's conventions ([docs/contracts/README.md](../contracts/README.md)):
-one contract YAML per kind in `config/packs/<pack>/contracts/<kind>.contract.yaml` with `kind`, `mnemonic`, `class` (`fundamental`,
+one contract YAML per kind in `config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml` with `kind`, `mnemonic`, `class` (`fundamental`,
 `input`, `drishti-owned`, `computed`), `grain`, `key`, `dated-by`, `cadence`, `storage` (Delta or Iceberg table, `vectors`) and `fields`
 (name, type, presence, unit, description, example); data delivered as **JSON Lines, gzipped**, in `data/testdata/<domain>/<kind>/*.jsonl.gz`
 for the demo, loaded by `lake build` or the parallel loader into Delta (or Iceberg), partitioned by `business_date`; trade fields in
@@ -531,7 +531,7 @@ Endur-style UPPER_SNAKE names. Sizes are at **2.3M positions** (about 10M trades
 ### 7.2 D1 `trade` (TRD): existing, read as dimensions
 
 **Grain:** one row per trade per business date. **Key:** `TRADE_ID`. **Storage:** Delta, `<root>/trading/trade_<system>/`, partitioned by
-business date (`config/packs/trading/contracts/trade.contract.yaml`, version 1.1). **Sources:** Endur, Murex, Calypso (the demo's three
+business date (`config/packs/banking/trading/contracts/trade.contract.yaml`, version 1.1). **Sources:** Endur, Murex, Calypso (the demo's three
 booking systems). **Frequency:** daily snapshot, intraday amendments. **Size at 2.3M positions:** about 10M trades, about 3 KB a trade
 as JSON with legs and events (30 GB a day of JSON, about 3 GB in Parquet)².
 
@@ -647,7 +647,7 @@ the same measure, scope and bucket refused unless one is `TEMPORARY`; `var-limit
 
 ### 7.8 D7 Market data: existing, read for explain and pricing
 
-The market-data pack's contracts (`config/packs/market-data/contracts/`): `ir-curve` (key `CURVE_ID`, `CURRENCY`, `CURVE_TYPE`, `INDEX`,
+The market-data pack's contracts (`config/packs/banking/market-data/contracts/`): `ir-curve` (key `CURVE_ID`, `CURRENCY`, `CURVE_TYPE`, `INDEX`,
 `POINTS[]` 1M to 30Y, `FORWARDS[]`, `INTERPOLATION`, `DAY_COUNT`, `CALENDAR`, `AS_OF`, `BUILT_AT`, `SOURCES`), `credit-curve` (`CURVE_ID`,
 `ISSUER`, `POINTS[]` 6M to 10Y, `SPREAD_5Y` bp, `RECOVERY`, `PD_1Y`, `SENIORITY`, `DOC_CLAUSE`, `CURRENCY`), `fx-spot`, `fx-forward-curve`,
 `inflation-curve`, `equity`, `equity-index`, `dividend-curve`, `commodity-curve`, `repo-curve`, and the vol surfaces (`ir-vol-cube`,
@@ -752,7 +752,7 @@ start, overlaps refused). A **bank's factor mapping** (its names → the standar
 never guessed.
 
 ```yaml
-# config/packs/market-risk/sensitivity-buckets.yaml (proposed, illustrative)
+# config/packs/banking/market-risk/sensitivity-buckets.yaml (proposed, illustrative)
 grids:
   BANK-IR-TENOR:
     applies-to: {RISK_CLASS: GIRR, MEASURE: DV01}
@@ -889,19 +889,19 @@ QLRisk), or `{SENSITIVITIES}` (a sparse list as D8, for the delta-gamma estimate
 
 | File | Kind | Mnemonic (proposed) | Class | Pack | New or extended |
 |---|---|---|---|---|---|
-| `config/packs/market-risk/contracts/position-sensitivity.contract.yaml` | `position-sensitivity` | `SENS` | input | market-risk | new |
-| `config/packs/market-risk/contracts/risk-factor.contract.yaml` | `risk-factor` | `RFAC` | fundamental | market-risk | new |
-| `config/packs/market-risk/contracts/ima-pnl-vector.contract.yaml` | `ima-pnl-vector` | `IMAV` | input | market-risk | new |
-| `config/packs/market-risk/contracts/desk-pnl.contract.yaml` | `desk-pnl` | `DPNL` | input | market-risk | new (planned) |
-| `config/packs/market-risk/contracts/risk-limit.contract.yaml` | `risk-limit` | `RLIM` | fundamental | market-risk | new (RO3) |
-| `config/packs/market-risk/contracts/scenario-pnl.contract.yaml` | `scenario-pnl` | `SPNL` | input | market-risk | new (STR.md) |
-| `config/packs/market-risk/contracts/default-risk.contract.yaml` | `default-risk` | `DRCI` | input | market-risk | new (FRTB.md) |
-| `config/packs/market-risk/contracts/residual-risk.contract.yaml` | `residual-risk` | `RRAI` | input | market-risk | new (FRTB.md) |
-| `config/packs/market-risk/contracts/cube-correction.contract.yaml` | `cube-correction` | `CCOR` | drishti-owned | market-risk | new |
-| `config/packs/market-risk/contracts/frtb-sa-result.contract.yaml` | `frtb-sa-result` | `FRSA` | computed | market-risk | new (replaces stored `frtb-sensitivity`) |
-| `config/packs/market-risk/contracts/ima-result.contract.yaml` | `ima-result` | `IMAR` | computed | market-risk | new |
+| `config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml` | `position-sensitivity` | `SENS` | input | market-risk | new |
+| `config/packs/banking/market-risk/contracts/risk-factor.contract.yaml` | `risk-factor` | `RFAC` | fundamental | market-risk | new |
+| `config/packs/banking/market-risk/contracts/ima-pnl-vector.contract.yaml` | `ima-pnl-vector` | `IMAV` | input | market-risk | new |
+| `config/packs/banking/market-risk/contracts/desk-pnl.contract.yaml` | `desk-pnl` | `DPNL` | input | market-risk | new (planned) |
+| `config/packs/banking/market-risk/contracts/risk-limit.contract.yaml` | `risk-limit` | `RLIM` | fundamental | market-risk | new (RO3) |
+| `config/packs/banking/market-risk/contracts/scenario-pnl.contract.yaml` | `scenario-pnl` | `SPNL` | input | market-risk | new (STR.md) |
+| `config/packs/banking/market-risk/contracts/default-risk.contract.yaml` | `default-risk` | `DRCI` | input | market-risk | new (FRTB.md) |
+| `config/packs/banking/market-risk/contracts/residual-risk.contract.yaml` | `residual-risk` | `RRAI` | input | market-risk | new (FRTB.md) |
+| `config/packs/banking/market-risk/contracts/cube-correction.contract.yaml` | `cube-correction` | `CCOR` | drishti-owned | market-risk | new |
+| `config/packs/banking/market-risk/contracts/frtb-sa-result.contract.yaml` | `frtb-sa-result` | `FRSA` | computed | market-risk | new (replaces stored `frtb-sensitivity`) |
+| `config/packs/banking/market-risk/contracts/ima-result.contract.yaml` | `ima-result` | `IMAR` | computed | market-risk | new |
 | `pnl-vector`, `scenario-pv`, `scenario-set`, `stress-scenario`, `trade` | existing | | | | extended (optional fields above) |
-| `config/packs/market-risk/sensitivity-buckets.yaml` | configuration | | | market-risk | new |
+| `config/packs/banking/market-risk/sensitivity-buckets.yaml` | configuration | | | market-risk | new |
 
 The mnemonics are placeholders: each must be checked against every pack's mnemonics at build. The CCR cube's list is in
 [CCR_CUBE_LENS.md section 7](CCR_CUBE_LENS.md#7-data-and-contracts).
@@ -1052,24 +1052,24 @@ shares the cube core built here.
 
 ### 12.1 The lens
 
-A lens is an edition file opened by one person on a full instance ([EDITIONS.md section 8 of the design as built](../admin/EDITIONS.md#8-lenses)):
+A lens is an edition file opened by one person on a full instance ([LENSES.md section 3](../admin/LENSES.md#3-offer-lenses-to-people)):
 the server offers it in `drishti.lenses` (on by default today: `risk,world,market,trading`), the console's **Open Drishti …** link sets the
 person's `lens` setting, and every call carries `X-Drishti-Lens` so the command line, FUNC, the type-ahead and BI follow the file
 (`drishti-console/core/edition.py`, `drishti-server/.../edition/EditionContext.java`). A lens hides; it does not secure.
 
 | Item | MR Cube lens |
 |---|---|
-| Lens id and file | `mrcube`, `config/editions/mrcube.yaml` (new) |
+| Lens id and file | `mrcube`, `config/lenses/mrcube.yaml` (new) |
 | Title, link | **Drishti MR Cube**; **Open Drishti MR Cube** in Views and on Home |
 | Home | **decided: layout A (pivot first) is the landing; B (tail and attribution) and C (sensitivities and what-if) are tabs of the same page**, one data request feeding the three |
 | Mnemonics on | `MCUBE` (the cube), `VAR`, `SMAT`, `EXP` and `CCUBE` (to cross to the counterparty cube), `FUNC`, `WHAT`, `BI` |
 | Kinds allowed | trades and books (`TRD`, `BOOK`, `DESK`, `POS`), VaR (`VRES`, `VOFF`, `VLIM`, `PNLV`, `SPV`, `HIER`, `PORT`), sensitivities (`SENS`, `RFAC` when built), counterparties read for drill (`CPTY`, `NSET`), the market data explain reads (`CRV`, `FX`, `CDS`, `EQ`) |
 | Hidden | Build, Studio, the designer, Calc, Python, forms, the data map, World and Market packs' menus, Admin pages but users, packs, health, audit |
-| Switches | the edition's `words:` map, as `SMAT: on` today: `{MCUBE: on, CCUBE: on, VAR: on, EXP: on, SMAT: on, BI: on, FUNC: on, WHAT: on, FORM: off, DATAMAP: off, RUPAKA: off}`; a new feature preset **`cube`** in `config/editions/features.yaml` (`server: [drishti.cube.enabled]`, `console: [features.cube]`, proposed) |
+| Switches | the edition's `words:` map, as `SMAT: on` today: `{MCUBE: on, CCUBE: on, VAR: on, EXP: on, SMAT: on, BI: on, FUNC: on, WHAT: on, FORM: off, DATAMAP: off, RUPAKA: off}`; a new feature preset **`cube`** in `config/lenses/features.yaml` (`server: [drishti.cube.enabled]`, `console: [features.cube]`, proposed) |
 | Relation to other lenses | **Risk**: `MCUBE` and `CCUBE` switched on as screens (a chip on the Command-first landing); **Trading**: `MCUBE` on, opening on the person's own desk scope; **Oversight** (proposed): the MR Cube is its explorer landing; the MR Cube lens is for people who live in the cube (the regulatory capital team, risk analysts) |
 
 ```yaml
-# config/editions/mrcube.yaml (proposed sketch, not created)
+# config/lenses/mrcube.yaml (proposed sketch, not created)
 edition: mrcube
 title: Drishti MR Cube
 description: Market risk as a cube: any rows and columns, correct totals, the tail, sensitivities and why it moved

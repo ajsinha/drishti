@@ -33,7 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * A server started with {@code drishti.edition=world} (Drishti World, config/editions/world.yaml; docs/admin/EDITIONS.md): the five
+ * A server started with {@code drishti.edition=world} (Drishti World, config/lenses/economy/world.yaml; docs/admin/LENSES.md): the five
  * public-data packs alone (allow-only: another is refused with DRS-1017), the packs' own commands in FUNC and the type-ahead (VaR and
  * exposure words off), the BI datasets of the world-economy pack only, and the About answers and branding.
  */
@@ -108,7 +108,7 @@ class EditionWorldServerTest {
         assertThat(ids).isNotEmpty();
         assertThat(ids).allSatisfy(id -> assertThat(WORLD_DATASETS).contains(id.substring(id.lastIndexOf(':') + 1)));
         assertThat(ids).contains("file:table:bi.world_economics_economies");
-        assertThat(mvc.perform(get("/api/v1/bi/items/file:table:bi.market_risk_var_latest")).andReturn().getResponse().getStatus()).isEqualTo(404);
+        assertThat(mvc.perform(get("/api/v1/bi/items/file:table:banking.market_risk_var_latest")).andReturn().getResponse().getStatus()).isEqualTo(404);
         List<String> items = new ArrayList<>();
         getJson("/api/v1/bi/catalogue").path("items").forEach(i -> items.add(i.path("id").asText()));
         assertThat(items).contains("file:report:world-economics").doesNotContain("file:report:market-risk-var", "file:report:trades-overview");

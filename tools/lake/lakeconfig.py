@@ -52,7 +52,8 @@ def is_lake_name(ref: str | None, folder: pathlib.Path | None = None) -> bool:
     """Whether ``ref`` names a lake of the lake folder (a plain name with its file there) rather than a folder (the old form)."""
     if not ref or not set(ref) <= NAME_CHARS:
         return False
-    return ((folder or lakes_dir()) / f"{ref}.yaml").is_file()
+    d = folder or lakes_dir()                                     # the folder or one of its domain folders (Lakes.files)
+    return (d / f"{ref}.yaml").is_file() or any(d.glob(f"*/{ref}.yaml"))
 
 
 def _version_key(v: str) -> tuple:
@@ -161,7 +162,7 @@ def dump(folder: pathlib.Path | None = None) -> dict:
 DEMO_ROOT_ENV = "DRISHTI_DELTA_ROOT"
 #: the demo lake's root as config/lakes/demo.yaml writes it (a connector or a lake file that names the demo lake's folder)
 DEMO_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${drishti.data.dir:./data}/delta/demo}"
-#: the official results' root as config/lakes/var-official.yaml and ccr-official.yaml write it (the publisher's default)
+#: the official results' root as config/lakes/banking/var-official.yaml and ccr-official.yaml write it (the publisher's default)
 OFFICIAL_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${drishti.data.dir:./data}/delta}"
 
 

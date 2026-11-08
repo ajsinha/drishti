@@ -1,0 +1,46 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Migrated from config/bi/datasets/counterparty-exposure-official.dataset.yaml by drishti.py tables migrate (docs/architecture/BI_FOUNDATION_2911E.md section 4).
+rachana: 3
+table: banking.counterparty_exposure_official
+was: counterparty-exposure-official
+version: 1.0.0
+title: Exposure official results (every version)
+description: "The official end-of-day exposure (EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, one row per scope, business date and result version (a restated date adds a version), as published to risk-results/exposure-official-cpty."
+sample: true
+endorsement: promoted
+tags: [sample, counterparty-risk, exposure]
+from: { kind: exposure-official-cpty, connector: exposure-results }
+columns:
+  HIERARCHY:      { path: "$.HIERARCHY", type: string }
+  NODE_ID:        { path: "$.NODE_ID", type: string }
+  NODE_NAME:      { path: "$.NODE_NAME", type: string, masked: true }
+  PARENT_ID:      { path: "$.PARENT_ID", type: string }
+  LEVEL:          { path: "$.LEVEL", type: string }
+  COUNTERPARTY:   { path: "$.COUNTERPARTY", type: string, references: counterparty }
+  LEGAL_ENTITY:   { path: "$.LEGAL_ENTITY", type: string }
+  RESULT_VERSION: { path: "$.RESULT_VERSION", type: integer }
+  RUN_ID:         { path: "$.RUN_ID", type: string }
+  CE:             { path: "$.CE", type: decimal, format: amount0 }
+  EPE:            { path: "$.EPE", type: decimal, format: amount0 }
+  EEPE:           { path: "$.EEPE", type: decimal, additive: false, format: amount0 }
+  PEAK_EE:        { path: "$.PEAK_EE", type: decimal, additive: false, format: amount0 }
+  PEAK_PFE_95:    { path: "$.PEAK_PFE_95", type: decimal, additive: false, format: amount0 }
+  PEAK_PFE_99:    { path: "$.PEAK_PFE_99", type: decimal, additive: false, format: amount0 }
+  EAD_IMM:        { path: "$.EAD_IMM", type: decimal, additive: false, format: amount0 }
+  NETTING_SETS:   { path: "$.NETTING_SETS", type: integer }
+  TRADES:         { path: "$.TRADES", type: integer }
+refresh: { on-load: true }
+materialize: on-load

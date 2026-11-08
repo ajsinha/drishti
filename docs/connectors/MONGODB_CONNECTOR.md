@@ -160,7 +160,7 @@ pack declares them on `trade-endur`; the `mongodb` profile (`SPRING_PROFILES_ACT
 to the MongoDB plugin and keeps the pack's settings:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
+# config/packs/banking/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
   trade-endur:
     settings:

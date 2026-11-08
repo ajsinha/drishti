@@ -33,11 +33,17 @@ def _pages(section: dict) -> list:
     return [g for grp in section["groups"] for g in grp["guides"]]
 
 
+def _sections() -> list:
+    """help.yaml's sections with every module's (core.modules.help_pages), in Help's order (core.menus.help_sections)."""
+    from core import menus, modules
+    pages = {s["id"]: s for s in [*yaml.safe_load(HELP.read_text(encoding="utf-8"))["sections"], *modules.help_pages()]}
+    return [{**pages[h["id"]], **h} for h in menus.help_sections(CONSOLE) if h["id"] in pages]
+
+
 def _categories() -> list:
     """help.yaml's sections with the pages everyone may see: a page with `roles:` (administrators only, such as the internal competitive
     analysis) is not in the customer-facing map, nor a section with `roles:` (Internal)."""
-    heads = {h["id"]: h for h in yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))["help-sections"]}
-    secs = [{**s, **heads[s["id"]]} for s in yaml.safe_load(HELP.read_text(encoding="utf-8"))["sections"]]   # names: the sitemap's
+    secs = _sections()                                                     # names: the sitemap's and the modules'
     out = [{**s, "guides": [g for g in _pages(s) if not g.get("roles")]} for s in secs if not s.get("roles")]
     return [s for s in out if s["guides"]]
 
@@ -54,7 +60,7 @@ def _map_rows() -> list:
 
 
 def test_every_help_entry_has_a_title_that_parsed_whole():
-    for s in yaml.safe_load(HELP.read_text(encoding="utf-8"))["sections"]:
+    for s in _sections():
         for g in _pages(s):
             assert isinstance(g.get("title"), str) and g["title"], g
             assert set(g) <= {"slug", "doc", "title", "icon", "kind", "summary", "packs", "roles", "engine", "pair"}, f"{g.get('slug')}: unexpected keys {sorted(set(g))} (an unquoted comma in a title?)"

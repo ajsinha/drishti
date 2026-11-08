@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Drishti Risk's Home (home/risk_landing.html; EDITIONS.md › The design as built, section 7): fills the landing's panels from the engines' answers, through the
+/* Drishti Risk's Home (home/risk_landing.html; LENSES.md › The design): fills the landing's panels from the engines' answers, through the
    console's own /api/var/... and /api/exposure/...: the BANK headline (VaR, ES), its backtest (scope/history), the exposure headline (EPE,
    peak PFE), the hierarchy tree (VaR, limit use per node), the exposure tree (EPE and credit-limit use per counterparty), the intraday streams
    and the official records. Each panel is painted when its answer arrives; one refused or empty says so in place and the others carry on.

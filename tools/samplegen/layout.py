@@ -38,12 +38,16 @@ from __future__ import annotations
 
 import json
 import pathlib
+import sys
 from dataclasses import dataclass, field
 from collections.abc import Callable
 from datetime import date
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PACKS = ROOT / "config" / "packs"
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import manifests  # noqa: E402  (the one rule for where a pack's folder is)
 DOUBLE, STRING = "double", "string"
 ONE_FILE = 1 << 40                             # target file size for one write: never cut by bytes, only by file-rows
 
@@ -88,11 +92,11 @@ def _view(manifest: dict) -> dict:
 
 
 def layouts_for_domain(domain: str, packs: pathlib.Path = PACKS) -> dict[str, Layout]:
-    """Every kind's layout declared by a Delta connector of `domain` in config/packs/*/pack.yaml."""
+    """Every kind's layout declared by a Delta connector of `domain` in the packs' pack.yaml files."""
     import yaml
 
     out: dict[str, Layout] = {}
-    for f in sorted(packs.glob("*/pack.yaml")):
+    for f in manifests(packs):
         manifest = _view(yaml.safe_load(f.read_text(encoding="utf-8")) or {})
         for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else manifest.get("connector-templates") or {}).values():
             settings = conn.get("settings") or {}
@@ -112,7 +116,7 @@ def layouts_by_table(domain: str, packs: pathlib.Path = PACKS) -> dict[str, tupl
     import yaml
 
     out: dict[str, tuple[str, Layout]] = {}
-    for f in sorted(packs.glob("*/pack.yaml")):
+    for f in manifests(packs):
         manifest = _view(yaml.safe_load(f.read_text(encoding="utf-8")) or {})
         for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else manifest.get("connector-templates") or {}).values():
             settings = conn.get("settings") or {}

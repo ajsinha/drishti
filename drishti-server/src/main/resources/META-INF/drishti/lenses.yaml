@@ -22,12 +22,28 @@ lenses:
     functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE, USEQ, IDX, SIC, EDGAR, FILING,
       FACT, PXH, LEI, LEIG, LEIR, LEIC, LEIM, FUND, HELD, TRACK,
       PRESS, PREL, GDELT]               # the public sector's free news (official press releases, GDELT world events)
+    cards:                               # Home's quick cards: each opens its command; one whose function is off is not shown
+      - { title: "An economy: growth, inflation, debt, labour, forecasts", cmd: ECON CAN, icon: globe }
+      - { title: "A company: financials, filings, index membership", cmd: USEQ AAPL, icon: building }
+      - { title: "A legal entity group: parent and children", cmd: LEIG HWUPKR0MPOU8FGXBT394, icon: diagram-3 }
+      - { title: "A fund: holdings, the index it tracks", cmd: FUND SPY, icon: briefcase }
+    chips: [ECON USA, ECG ECG-WLD, REGE REGE-US-NY, USEQ MSFT, SIC 3674, IDX SP500, LEIC US, FUND QQQ, TOPIC RATES, NEWS rates, DATAMAP]   # Home's chips (shown only while their function is on)
   # the economy module's Public sector lens: development indicators, central banks, national statistics, the OECD, official news, world events
   - id: publicsector
     title: Public sector
     modules: [economy]
     functions: [WDI, WDIS, CBANK, CBSER, NSTAT, OECD, OECDS, PRESS, PREL, GDELT]
-    menus: [views, bi, admin, help]   # the top menus by id; its Home cards wait for the lens home (none yet: the product's Home)
+    menus: [views, bi, admin, help]   # the top menus by id
+    cards:                            # Home's quick cards: each opens its command; one whose function is off is not shown
+      - { title: "A country's development: the world map by GDP per head", cmd: WDI WDI-CAN, icon: globe }
+      - { title: "One indicator's history", cmd: WDIS WDIS-IND-NY_GDP_MKTP_KD_ZG, icon: graph-up }
+      - { title: "A central bank: policy rate and last move", cmd: CBANK CBANK-BOC, icon: bank }
+      - { title: "A rate series", cmd: CBSER CBSER-FRED-DGS10, icon: activity }
+      - { title: "Statistics Canada", cmd: NSTAT NSTAT-V41690973, icon: table }
+      - { title: "OECD members by inflation", cmd: OECD OECD-CAN, icon: map }
+      - { title: "Official press releases", cmd: PRESS PRESS-FED, icon: newspaper }
+      - { title: "The world's news by tone (GDELT)", cmd: GDELT GDELT-CAN, icon: broadcast }
+    chips: [WDI WDI-USA, CBANK CBANK-FED, OECD OECD-USA, PRESS PRESS-ECB]   # Home's chips (the same rule as the cards)
     help: [docs-guides-public-sector-guide, docs-tutorials-46-public-sector-data, world-development-pack, central-banks-pack,
       national-statistics-pack, oecd-pack, official-news-pack, gdelt-events-pack, external-data]
   - id: cio

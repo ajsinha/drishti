@@ -23,6 +23,6 @@
 #   partition  partition columns after business_date (lake build --partition-by), or - for none
 #
 # table                  kind    pack                   connector       landing                 date   partition
-trading/trade_endur      trade   config/packs/trading   trade-endur     {date}/endur/           -      PRODUCT_TYPE
-trading/trade_calypso    trade   config/packs/trading   trade-calypso   {date}/calypso/         -      PRODUCT_TYPE
-trading/trade_murex      trade   config/packs/trading   trade-murex     {date}/murex/           -      PRODUCT_TYPE
+trading/trade_endur      trade   config/packs/banking/trading   trade-endur     {date}/endur/           -      PRODUCT_TYPE
+trading/trade_calypso    trade   config/packs/banking/trading   trade-calypso   {date}/calypso/         -      PRODUCT_TYPE
+trading/trade_murex      trade   config/packs/banking/trading   trade-murex     {date}/murex/           -      PRODUCT_TYPE

@@ -31,7 +31,7 @@ from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and he
 from wb_live import _stack
 
 ROOT = Path(__file__).resolve().parents[2]
-SAMPLE = ROOT / "config" / "packs" / "core" / "samples" / "issuer.jsonl"
+SAMPLE = ROOT / "config" / "packs" / "core" / "core" / "samples" / "issuer.jsonl"
 VALUES = [{"measure": "count()", "as": "Rows"}, {"measure": "count(BONDS.COUPON)", "as": "Coupons"}]
 
 

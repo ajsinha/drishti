@@ -219,7 +219,23 @@ public final class YamlAccessStore implements AccessStore {
                         continue;
                     }
                     out.add(new Lens(String.valueOf(m.get("id")), ModuleManifest.str(m.get("title")), ModuleManifest.list(m.get("modules")),
-                            ModuleManifest.list(m.get("functions")), ModuleManifest.str(m.get("home")), ModuleManifest.list(m.get("menus")), ModuleManifest.list(m.get("help")), source));
+                            ModuleManifest.list(m.get("functions")), ModuleManifest.str(m.get("home")), ModuleManifest.list(m.get("menus")), ModuleManifest.list(m.get("help")), cards(m.get("cards")),
+                            ModuleManifest.list(m.get("chips")), source));
+                }
+            }
+        }
+        return out;
+    }
+
+    /** A lens's Home cards: a list of {title, cmd, icon}, each value a string; anything else is left out. */
+    private static List<Map<String, String>> cards(Object o) {
+        List<Map<String, String>> out = new ArrayList<>();
+        if (o instanceof List<?> l) {
+            for (Object c : l) {
+                if (c instanceof Map<?, ?> m && m.get("cmd") != null) {
+                    Map<String, String> card = new java.util.LinkedHashMap<>();
+                    m.forEach((k, v) -> { if (k != null && v != null) card.put(String.valueOf(k), String.valueOf(v)); });
+                    out.add(card);
                 }
             }
         }

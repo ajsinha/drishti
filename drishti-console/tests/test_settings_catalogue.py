@@ -128,7 +128,7 @@ def test_every_key_of_the_config_files_is_a_row():
     every = _row_keys(_generated())
     for rel in ("config/store/store.yaml", "config/runs/runs.yaml", "config/edit/edit.yaml", "config/edit/lanes.yaml",
                 "config/edit/policy.yaml", "config/edit/retention.yaml", "config/net.examples/node.yaml", "config/net.examples/gossip.yaml",
-                "config/net.examples/routing.yaml", "config/ui-kit/brand.yaml", "config/editions/default-packs.yaml"):
+                "config/net.examples/routing.yaml", "config/ui-kit/brand.yaml", "config/packs/default-packs.yaml"):
         entries = [e for e in S.read_commented_yaml(ROOT / rel) if not e.section]
         missing = [e.key for e in entries if e.key not in every and not any(e.key.startswith(c + ".") for c in ("themes",))]
         assert not missing, f"{rel}: {missing}"

@@ -271,7 +271,7 @@ same scope, the same trades, the same masks (an aggregate-only viewer gets node-
 ## 7. The computed contract
 
 Parametric VaR is a computed figure of the existing kind, not a new kind: **`var-result` (VRES) version 1.3** gains optional fields
-(present when the measure is enabled and not asked away), documented in `config/packs/market-risk/contracts/var-result.contract.yaml`
+(present when the measure is enabled and not asked away), documented in `config/packs/banking/market-risk/contracts/var-result.contract.yaml`
 and generated into [docs/contracts/packs/market-risk.md](../contracts/packs/market-risk.md#vres-var-of-a-scope-computed-var-result).
 
 | Field | Type | Presence | Meaning |

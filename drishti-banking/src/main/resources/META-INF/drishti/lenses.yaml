@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The lenses the banking module ships (docs/architecture/ACCESS_MODEL.md, docs/lenses/): each names the modules it needs (offered only
-# while they are all on) and the functions it bundles (the editions' command lists, config/editions/<lens>.yaml). A site's
+# while they are all on) and the functions it bundles (the editions' command lists, config/lenses/<lens>.yaml). A site's
 # config/access/lenses.yaml adds lenses or replaces one of these by its id.
 lenses:
   - id: risk
@@ -22,17 +22,35 @@ lenses:
     home: home/risk_landing.html
     functions: [CPTY, GRP, LE, BOOK, DESK, TRDR, CCP, TRD, CTRD, PTRD, LTRD, FX, HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VOFF, AGR, CSA,
       NSET, LIM, COLL, MC, XRUN, XPATH, EXP, PREDEAL, XOFC, NSMTM, CPMTM, VAR, PVAR, SMAT, SWIN, FRSA, SIMM, MCUBE]
+    cards:                               # Home's quick cards: each opens its command; one whose function is off is not shown
+      - { title: VaR of the bank, cmd: VAR BANK, icon: shield-check }
+      - { title: VaR of the rates desk, cmd: VAR DESK RATES, icon: bar-chart-line }
+      - { title: VaR results by desk, cmd: VRES DESK:RATES, icon: table }
+      - { title: Exposure of a counterparty, cmd: EXP CPTY:CP-ALDERSHOT, icon: graph-up }
+    chips: [VAR BANK, VAR DESK RATES, EXP BANK, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES, HIER, VOFF]   # Home's chips (shown only while their function is on)
   - id: trading
     title: Trading
     modules: [banking]
     home: home/trading_landing.html
     functions: [TRD, CTRD, PTRD, LTRD, ITRD, BOOK, DESK, TRDR, POS, VLIM, VRES, TVAL, PNLV, HIER, PORT, DPNL, PNL, SENS, CPTY, GRP, NSET, NSMTM,
       CPMTM, LIM, PREDEAL, EXP, CRV, REPO, FIX, IRV, CPV, FX, FXF, FXV, EQ, EQX, CMD, CMDC, BND, CDS, VAR]
+    cards:                               # Home's quick cards: each opens its command; one whose function is off is not shown
+      - { title: "A book: its trades, positions and MtM", cmd: BOOK BOOK-RATES-1, icon: journal-text }
+      - { title: "My book's VaR, path and contributions", cmd: VAR BOOK BOOK-RATES-1, icon: shield-check }
+      - { title: "A counterparty's trades", cmd: CTRD CP-ALDERSHOT, icon: people }
+      - { title: "A trade's valuation: MtM, P&L, DV01", cmd: TVAL TVAL-1000001, icon: cash-coin }
+    chips: [TRD 1000001, BOOK BOOK-RATES-1, CTRD CP-ALDERSHOT, POS BOOK-RATES-1, VAR DESK DESK-RATES, EXP CPTY:CP-ALDERSHOT, CRV CRV-USD-OIS]   # Home's chips (shown only while their function is on)
   - id: market
     title: Market
     modules: [capitalmarkets, banking]   # capital markets' functions over the market-data pack (the banking module's while its engines read it)
     home: home/market_landing.html
     functions: [CRV, REPO, IRV, CPV, FIX, INF, INFC, FX, FXF, FXV, CDS, BND, EQ, EQX, DIV, EQV, CMD, CMDC, CMDV, CORR, CORRC, EQB, USEQ, IDX, SIC, EDGAR, FILING, FACT, PXH, FUND, HELD, TRACK]
+    cards:                               # Home's quick cards: each opens its command; one whose function is off is not shown
+      - { title: "A curve: points, zero rates, discount factors, forwards, history", cmd: CRV CRV-USD-OIS, icon: graph-up }
+      - { title: "An FX vol surface by expiry and delta", cmd: FXV FXV-EURUSD, icon: grid-3x3 }
+      - { title: "The swaption vol cube", cmd: IRV IRV-USD, icon: box }
+      - { title: "Rate fixings, with the curve they feed", cmd: FIX FIX-SOFR, icon: calendar3 }
+    chips: [CRV CRV-USD-OIS, CRV CRV-CAD-GOVT, FXF FXF-EURUSD, FXV FXV-USDJPY, IRV IRV-USD, CDS CDS-SOLARIS, INFC INFC-USCPI, CMDC CMDC-WTI, CORR CORR-G10FX, DATAMAP]   # Home's chips (shown only while their function is on)
   - id: cro
     title: Chief risk officer
     modules: [banking]

@@ -96,7 +96,7 @@ The document of a computed kind, for `path-sum-java` of `BOOK-FX` (the values ar
 
 ## Examples
 
-The compute-demo sample pack's Java connector (`config/packs/compute-demo/pack.yaml`, as written to `config/connectors/path-sum-java.yaml`):
+The compute-demo sample pack's Java connector (`config/packs/core/compute-demo/pack.yaml`, as written to `config/connectors/path-sum-java.yaml`):
 
 ```yaml
 plugin: reactive

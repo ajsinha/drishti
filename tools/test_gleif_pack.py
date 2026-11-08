@@ -25,7 +25,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GEN = ROOT / "tools" / "packgen" / "gleif"
-PACK = ROOT / "config" / "packs" / "gleif"
+PACK = ROOT / "config" / "packs" / "core" / "gleif"
 FX = ROOT / "tools" / "feeds" / "tests" / "fixtures" / "gleif"
 sys.path[:0] = [str(ROOT / "tools" / "feeds" / "sources"), str(ROOT / "tools" / "feeds")]
 from gleif import F  # noqa: E402  (the generator's fetch.py by path: other packs have a fetch module too)

@@ -31,9 +31,9 @@ counterparty-risk contracts, in the order of the roadmap:
 The shared rules of every contract are in [README.md](README.md). Where a rule is the same as VaR's (scope grammar, captures,
 provenance, entitlements, the reactive connector), this page refers to [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) and states only the difference.
 
-**Sources read for this contract (2026-10-25):** `config/packs/counterparty-risk/contracts/*.contract.yaml`, its `samples/`,
-`data/testdata/counterparty-risk/`, `config/packs/core/contracts/counterparty.contract.yaml` and `counterparty-group.contract.yaml`,
-`config/packs/market-risk/contracts/trade-valuation.contract.yaml`, `config/packs/trading/contracts/trade.contract.yaml`,
+**Sources read for this contract (2026-10-25):** `config/packs/banking/counterparty-risk/contracts/*.contract.yaml`, its `samples/`,
+`data/testdata/counterparty-risk/`, `config/packs/core/core/contracts/counterparty.contract.yaml` and `counterparty-group.contract.yaml`,
+`config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml`, `config/packs/banking/trading/contracts/trade.contract.yaml`,
 `tools/packgen/banking/data_results.py` (`credit_results`, `reference`), `tools/testdata/universe.py`, `tools/contracts.policy.yaml`.
 
 ## Contents
@@ -184,7 +184,7 @@ products no master agreement nets (cash, bonds held, loans, deposits): they are 
 
 ### 3.4 `agreement`: master agreements (kept, moved)
 
-Unchanged from today's kind (`config/packs/counterparty-risk/contracts/agreement.contract.yaml`) except: moved to `risk/agreement/`,
+Unchanged from today's kind (`config/packs/banking/counterparty-risk/contracts/agreement.contract.yaml`) except: moved to `risk/agreement/`,
 `CLOSE_OUT_NETTING` becomes an enum (`ENFORCEABLE`, `NOT_ENFORCEABLE`, `UNDER_REVIEW`), and `NETTING_SETS` (id list, derived) is added
 for navigation. The engines read `AGREEMENT_ID`, `COUNTERPARTY`, `CLOSE_OUT_NETTING`, `ELECTIONS.TERMINATION_CURRENCY` (the currency of
 close-out, used by COLL for the FX haircut) and `ELECTIONS.SET_OFF`.
@@ -563,7 +563,7 @@ Memory: about 80 MB per date at a large bank (§7.1), shared by every counterpar
 
 Old links keep working: `/v/netting-set/NS-ALDERSHOT-FRA` opens the kept record with its computed panels. The Sutra
 `netting-set.v1.sutra.yaml` reads the computed kind; the Calc snippets that read the stored figures (`netting_collateral.py`,
-`mtm_concentration.py`, `concentration_hhi.py` in `config/packs/counterparty-risk/python/`) read `nset-figures` instead.
+`mtm_concentration.py`, `concentration_hhi.py` in `config/packs/banking/counterparty-risk/python/`) read `nset-figures` instead.
 
 **Guard test:** fails when `netting-set` or `counterparty` (or any input or fundamental kind) carries `NET_MTM`, `PFE_PEAK`, `EE_PEAK`,
 `UTILISATION`, `CVA`, `EAD` (README.md section 14). The contract YAMLs already mark the netting-set figures `derived`, to be retired;

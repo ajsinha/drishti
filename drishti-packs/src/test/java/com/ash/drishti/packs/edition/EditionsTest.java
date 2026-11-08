@@ -30,10 +30,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
-/** The edition layer (docs/admin/EDITIONS.md): the shipped risk edition file, the property layer and its place, the one default pack list. */
+/** The edition layer (docs/admin/LENSES.md): the shipped risk edition file, the property layer and its place, the one default pack list. */
 class EditionsTest {
 
-    static final Path DIR = Path.of("../config/editions");
+    static final Path DIR = Path.of("../config/lenses");
     static final String PRODUCT_DEFAULTS = "Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'";
 
     static StandardEnvironment env(Map<String, Object> site, Map<String, Object> product) {
@@ -55,7 +55,7 @@ class EditionsTest {
 
     @Test
     void theDefaultPackListIsTheOneFile() throws Exception {
-        String file = Files.readString(DIR.resolve("default-packs.yaml"));
+        String file = Files.readString(Path.of("../config/packs/default-packs.yaml"));   // by module
         assertThat(Editions.defaultPacks()).isNotEmpty().allSatisfy(p -> assertThat(file).contains(p));
         assertThat(PackPaths.DEFAULT_ENABLED).isEqualTo(String.join(",", Editions.defaultPacks()));
     }
@@ -78,7 +78,7 @@ class EditionsTest {
 
     @Test
     void theRiskEditionIsALayerUnderTheSiteAndAboveTheProductDefaults() {
-        StandardEnvironment env = env(map("drishti.edition", "risk", "drishti.editions.dir", DIR.toString(),
+        StandardEnvironment env = env(map("drishti.edition", "risk", "drishti.lens-dir", DIR.toString(),
                 "drishti.edition-spec.commands.also-allow[0]", "FRTB"),
                 map("drishti.packs.enabled", "${DRISHTI_PACKS:default}", "drishti.branding.product", "${DRISHTI_PRODUCT:Drishti}"));
         new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
@@ -101,7 +101,7 @@ class EditionsTest {
         assertThat(risk.wordOn("RUPAKA")).isFalse();
         assertThat(risk.wordOn("VAR")).isTrue();
         assertThat(risk.wordOn("EXP")).isTrue();
-        assertThat(risk.datasetShown("bi.market_risk_var_latest")).isTrue();
+        assertThat(risk.datasetShown("banking.market_risk_var_latest")).isTrue();
         assertThat(risk.datasetShown("trades-basic-trade")).isFalse();
         assertThat(risk.modelShown("market-risk-var@1")).isTrue();
         assertThat(risk.modelShown("trades-basic")).isFalse();
@@ -112,7 +112,7 @@ class EditionsTest {
 
     @Test
     void theSitesVariableStillWinsOverTheEditionsPacks() {
-        StandardEnvironment env = env(map("drishti.edition", "risk", "drishti.editions.dir", DIR.toString(), "DRISHTI_PACKS", "core,trading"),
+        StandardEnvironment env = env(map("drishti.edition", "risk", "drishti.lens-dir", DIR.toString(), "DRISHTI_PACKS", "core,trading"),
                 map("drishti.packs.enabled", "${DRISHTI_PACKS:default}"));
         new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
         assertThat(env.getProperty("drishti.packs.enabled")).isEqualTo("core,trading");
@@ -120,21 +120,21 @@ class EditionsTest {
 
     @Test
     void aMissingEditionFileStopsTheStartWithWhatToDo() {
-        StandardEnvironment env = env(map("drishti.edition", "nope", "drishti.editions.dir", DIR.toString()), map());
+        StandardEnvironment env = env(map("drishti.edition", "nope", "drishti.lens-dir", DIR.toString()), map());
         assertThatThrownBy(() -> new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication()))
-                .hasMessageContaining("no edition file").hasMessageContaining("DRISHTI_EDITIONS_DIR");
-        StandardEnvironment bad = env(map("drishti.edition", "../etc", "drishti.editions.dir", DIR.toString()), map());
+                .hasMessageContaining("no edition file").hasMessageContaining("DRISHTI_LENS_DIR");
+        StandardEnvironment bad = env(map("drishti.edition", "../etc", "drishti.lens-dir", DIR.toString()), map());
         assertThatThrownBy(() -> new EditionEnvironmentPostProcessor().postProcessEnvironment(bad, new SpringApplication()))
                 .hasMessageContaining("not an edition name");
     }
 
     @Test
     void lensesAreReadFromTheirFilesOnAFullInstanceOnly() {
-        StandardEnvironment full = env(map("drishti.lenses", "risk,missing", "drishti.editions.dir", DIR.toString()), map());
+        StandardEnvironment full = env(map("drishti.lenses", "risk,missing", "drishti.lens-dir", DIR.toString()), map());
         Map<String, Edition> lenses = Editions.lenses(full);
         assertThat(lenses).containsOnlyKeys("risk");
         assertThat(lenses.get("risk").commandShown("FRTB")).isFalse();
-        StandardEnvironment edition = env(map("drishti.edition", "risk", "drishti.lenses", "risk", "drishti.editions.dir", DIR.toString()), map());
+        StandardEnvironment edition = env(map("drishti.edition", "risk", "drishti.lenses", "risk", "drishti.lens-dir", DIR.toString()), map());
         assertThat(Editions.lenses(edition)).isEmpty();
     }
 }

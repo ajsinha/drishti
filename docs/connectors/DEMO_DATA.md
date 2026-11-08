@@ -26,7 +26,7 @@ fictitious, all deterministic:
 |---|---|---|---|
 | **The test data** | `data/testdata/` (committed, about 138 MB of `.jsonl.gz`, 2,863 files, measured 2026-10-28) | sixty business days of every dataset the seven packs read: up to 5,000 trades a day per source system (ENDUR, CALYPSO, MUREX), counterparties, market data, agreements, netting sets, risk results; a first-day snapshot and each later day's changes | `tools/testdata/make_testdata.py` (`--check` says whether the files are current) |
 | **The demo lakes** | `data/delta/demo/` (generated, never committed) | the test data as Delta tables, one per dataset, sixty daily snapshots each: what the packs' connectors read | `drishti.py lake demo` (one command, about 15 minutes) |
-| **The samples** | `config/packs/<pack>/samples/<kind>.jsonl` (committed) | a few hundred documents a pack, the same shape, that the `demo` source serves live and ticking, with no store at all | `tools/packgen/banking/make_data.py` and each pack's generator |
+| **The samples** | `config/packs/<domain>/<pack>/samples/<kind>.jsonl` (committed) | a few hundred documents a pack, the same shape, that the `demo` source serves live and ticking, with no store at all | `tools/packgen/banking/make_data.py` and each pack's generator |
 
 The other stores (PostgreSQL, DuckDB, Iceberg, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files) are loaded with the samples (ten business
 days) and, for scale tests, a generated trade book: the scripts in [the other stores](#postgresql).
@@ -313,7 +313,7 @@ each value that **starts with** an old name followed by a comma (a branch keeps 
 |---|---|---|
 | `core/legal-entity` (test data, lake `reference/legal-entity`) | `NAME` | the four legal entities |
 | `market-risk/risk-hierarchy` (test data, lake `risk/risk-hierarchy`) | `NAME` | the bank, at the top of both trees |
-| `config/packs/core/samples` | `legal-entity.jsonl` `NAME`, `catalog.jsonl` subtitles | the four legal entities |
+| `config/packs/core/core/samples` | `legal-entity.jsonl` `NAME`, `catalog.jsonl` subtitles | the four legal entities |
 | the retired example packs (`examples/packs/climate-risk`, `liquidity-risk`, `operational-risk`; `finance`) | `legalEntityName`, `legalEntity.name` | the legal entities |
 
 So after an edit rebuild those two datasets (`--only core/legal-entity,market-risk/risk-hierarchy`, or a full `lake demo`). The
@@ -324,7 +324,7 @@ engine): the VaR tree's top name is set there.
 
 ## The samples
 
-The packs' samples in `config/packs/<pack>/samples/` are what the `demo` source serves live: one JSON Lines file per kind
+The packs' samples in `config/packs/<domain>/<pack>/samples/` are what the `demo` source serves live: one JSON Lines file per kind
 (`<kind>.jsonl`, one document a line, split into `<kind>.part-001.jsonl` … only above about 50 MB) and a `catalog.jsonl` listing every
 sample's kind, id, title and subtitle (the type-ahead's text). The five banking packs' samples are written by
 

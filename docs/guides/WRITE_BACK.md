@@ -80,7 +80,7 @@ correction kept beside the source, an owned record, or an amendment sent through
 
 ## 1. A form beside the table
 
-The book desk's trades (`config/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`) carry this form. Open
+The book desk's trades (`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`) carry this form. Open
 `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk` and click a trade.
 
 ![The form beside the book desk's trades: the counterparty locked, a warning under the notional and the Draft · not saved badge](img/designer/form-beside.jpg)

@@ -172,6 +172,8 @@
 - **A pack filled by a feed counts as served without the demo connector**: `PacksServedWithoutDemoTest` accepts a Delta connector
   reading the lake an enabled feed loads the kind into (the six public-sector packs, `worldlake` and `newslake`); PACK_DEVELOPER_GUIDE
   step 16 says so.
+- **A table's `highlight`**: a `table` panel accepts `highlight` (an expression per row, as a ladder has), which the GLEIF entity's
+  parents chain uses for the entity itself; Rachana refused it with DRS-2023 (`PackSutrasTest`; RACHANA_REFERENCE's table options).
 - Tests brought up to date: the demo lake's trades by `PRODUCT_TYPE` (Endur) and `PRODUCT_GROUP` (Calypso, Murex); the engines' and
   publishers' sources found in their domain modules; `css_visual_check.py` names the demo lake's variable through `lakeconfig`; importing
   `drishti-stack/stack.py` in a test leaves no `__pycache__` in the checkout.
@@ -229,6 +231,43 @@
   `META-INF/drishti/engines.yaml` (and the console's `plugins/banking/engines.yaml`), their jar files in its `engines/`; a server without
   the module lists none of them. Rule 4 of the boundaries as a check: `tools/domain_strings.py` counts the banking names in the core's
   code against an allow list that only shrinks. `EngineRegistryTest` and `EngineFilesTest` run in drishti-banking (they use its engines).
+- **Domain modules, phase 2 (second half): the banking module's configuration in its own places.**
+  - **Packs in domain folders**: the shipped packs are `config/packs/<domain>/<pack>` (`core/{core,gleif,compute-demo}`,
+    `banking/{trading,market-data,market-risk,counterparty-risk}`, `economy/{world-economy,news-and-markets}`,
+    `capitalmarkets/{us-equities,funds}`); a pack's `domain:` names its folder. One rule says where a pack is: a packs root holds packs
+    directly or one level down in domain folders (a folder with no `pack.yaml` of its own), in Java `com.ash.drishti.api.PackFolders`
+    (the pack loader, the reloader and its watchers, Admin -> Packs, deploy and roll back, the Sutra CLI, the lake files' pack tables) and
+    in Python `drishti-console/core/pack_paths.py` (the console, the tools, the generators, the tests). `drishti.packs.dir` is unchanged
+    (`config/packs`); installed and example packs stay flat. Upgrade: a site's own pack folder under `config/packs` keeps working where it
+    is; links to `config/packs/<pack>/...` in a site's documents need the domain folder.
+  - **Token declarations from the module**: the banking module's read-only POSTs and its `risk:write` scope are in its jar
+    (`META-INF/drishti/token-scopes.yaml`), merged by the core (`ModuleTokenScopes`) only while the module is on: with banking off no
+    token can be given `risk:write`. The core's new `compute:write` scope keeps your what-if sandboxes and cancels your own computations
+    (`risk:write` still does too).
+  - **Help's Risk measures section** is the banking plugin's (`drishti-console/plugins/banking/help.yaml`: its head, placed after Get
+    started, and its pages); the core's `help.yaml` and the sitemap no longer name it.
+  - **Banking lakes, reports, BI items, tables and models in banking folders**: `config/lakes/banking/{var,ccr}-official.yaml` (a lake
+    file may sit in a domain folder; the jar copies are drishti-banking's, listed in its `drishti/lakes/shipped.txt`), the regulatory
+    report definitions `config/reports/banking/` (`drishti.regulatory.reports-dir`'s default), `config/bi/reports/banking/`,
+    `config/bi/python/banking/`, `config/bi/notebooks/banking/` and `config/tables/banking/` (the banking tables are `banking.<name>`,
+    were `bi.<name>`; a site's model or report naming `bi.trading_risk_trades` and the other moved tables needs the new name). A domain
+    folder named after a module is read only while the module is on: with banking off, BI lists none of its reports, tables or models.
+  - **Editions folded into lenses**: `config/editions/` is gone. A lens's file is `config/lenses/<module>/<lens>.yaml` (risk, trading,
+    market: banking; world: economy), the feature presets `config/lenses/features.yaml`, the folder `drishti.lens-dir`
+    (`DRISHTI_LENS_DIR`, was `DRISHTI_EDITIONS_DIR`; the console's `lens.dir`). A lens names its packs by module, so World is economy
+    with capital markets: with capitalmarkets off, its packs, functions, cards and the World landing's companies, filings and funds are
+    gone. Home's cards and chips are the registry lens's (`cards:`, `chips:` in the module's `lenses.yaml`, answered per person by
+    `/api/v1/modules`), each shown only while its function is on; the Public sector lens has its eight cards and four chips.
+    `drishti.edition` and `drishti.lenses` are unchanged. Upgrade: move a site's own edition file to `config/lenses/<module>/`.
+    The guide is now the lenses guide, [LENSES.md](docs/admin/LENSES.md) (was LENSES.md; Help → Lenses guide, the old address
+    `editions` redirects): what a lens is, an instance lens and people's lenses, each shipped lens (Risk, Trading, Market, World,
+    Public sector) with its modules, packs, cards and chips, customising, your own lens, clusters, troubleshooting, upgrading, the design.
+  - **A server without the banking jar**: `config/modules/banking.yaml` names the module (`module: {id, domain, title}`), so a server
+    built or started without drishti-banking knows it and shows it off as *not installed*: none of its packs, lakes, tables, models or
+    reports load (they used to load, and their engine connectors failed). With the jar, the jar's manifest is the module, as before.
+  - **The command line's examples follow the person**: the placeholder (`TRD MX-20000001, CPTY north …`, a lens's `menus.placeholder`)
+    keeps only the examples whose function the person may use; with banking off its examples go, with capitalmarkets off World's `USEQ`
+    and `FUND` ones (none left: blank). Admin -> Engines' menu line no longer names banking's engines.
 - **Static assets by module**: each module's console part is `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words,
   pages, templates, static files, and the parts it adds to a core screen). An off module's scripts, styles and Elements library are not
   served (404), and neither to a person whose lens does not use the module (the World lens gets no banking file). The Elements manifest
@@ -2857,7 +2896,7 @@
   engine's stress P&L, every 250-day window valued as a stressed VaR, the worst against the window in use, an alert past a threshold,
   proposals approved by a second person.
 - **The lenses' own menus** (`menus.top`, subject menus in `config/menus.yaml`): Risk, Trading, Market and World put their subject menus
-  in the top bar, each item showing its command. `PLAY` and `DATA` are edition words (EDITIONS.md).
+  in the top bar, each item showing its command. `PLAY` and `DATA` are edition words (LENSES.md).
 - **One benchmark document** ([BENCHMARK.md](docs/admin/BENCHMARK.md)) replaces SCALE_BENCHMARK and BENCHMARK_2_9_7; figures still to
   be measured say so.
 - **Three machines on premises and on AWS** ([CLUSTER_DEPLOYMENT.md section 16](docs/architecture/CLUSTER_DEPLOYMENT.md)): why three,
@@ -3051,7 +3090,7 @@
   tutorial, and **External data** is its own listed page again, [EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md) (was PUBLIC_DATA.md),
   with PACK_DEVELOPER_GUIDE Parts VI and VII and DATA_GUIDE section 4 linking to them. The lens documents live in
   [docs/lenses/](docs/lenses/README.md) with an index: Risk, Trading, Market, World and the proposed Oversight lens
-  (`OVERSIGHT_LENS.md`, was RISK_OVERSIGHT.md), linked from each edition's section of EDITIONS.md and listed once in the help centre
+  (`OVERSIGHT_LENS.md`, was RISK_OVERSIGHT.md), linked from each edition's section of LENSES.md and listed once in the help centre
   (*Lenses*); their citations of branches now cite the merged sections (VAR_GUIDE 18.6 and 3.9, CLIENT_RENDERER 10.1). The editions
   document no longer says the exposure engine has no desk scope (`DESK:` is a `partial` scope since 2.9.0; what is missing is
   **allocated** exposure). The help centre has 50 pages; old addresses redirect. The no-hidden-names check reads `name + ".lock"` as
@@ -3309,7 +3348,7 @@
   masked for a role without raw, said); P&L against VaR from the official history (left out, with a note, without one); overnight
   movers. **Explorer**: the command line, chips, grouped commands, recent Trading commands. Read-only routes
   `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and `POST /api/home/trading/check` (`DRS-4023` unless the
-  edition or lens shows the commands), `plugins/banking/trading_landing.py` (EDITIONS.md section 14).
+  edition or lens shows the commands), `plugins/banking/trading_landing.py` (LENSES.md section 6).
 - **Four lenses by default**: `drishti.lenses` is `risk,world,market,trading` (server `application.yaml`, the stack, Docker, the AWS
   example); Open, Leave and Switch to across all four; no design link inside the Trading lens.
 - **Tests**: `EditionTradingServerTest` (the lens through the real settings API, its commands, `ECON`, `SCN`, `COLL`, `FRTB` refused with
@@ -3369,7 +3408,7 @@
   (else the largest moves; else none, said so). Explorer: counts and commands by asset class, recents of the edition. Quality: stale
   (`quality.stale-days`, 2 business days), gaps (missing tenors), discount factors and negative forwards, vol surfaces (no vol at or below
   zero; ATM total variance rising with expiry), by severity with the clean share; the impact on VaR and valuations is a note, not a figure
-  (EDITIONS.md section 13).
+  (LENSES.md section 7).
 - **Three lenses**: `drishti.lenses: risk,world,market`; the product owner's stack runs it (`drishti-stack/stack.yaml`).
 - **Tests**: `EditionMarketServerTest`; `EditionTwoLensesServerTest` now with three lenses and the Market lens through the real settings
   API; `test_market_landing.py` (each check against data with known stale, gap, forward and surface problems); five Market cases in
@@ -3384,7 +3423,7 @@
 - **Its Home**: the three approved mock-ups, World desk (default), Explorer and World map, in the terminal look with a teal accent; every
   figure from the packs' own answers through one thin read-only route, `/api/home/search` (the server's search grammar, refused with
   `DRS-4023` for a command the edition or lens hides), and `/api/raw`. What the packs do not serve (an index level, FX, elections by date,
-  G7/G20 groups as such, day-on-day changes) is replaced by the nearest real figure or left out (EDITIONS.md section 12).
+  G7/G20 groups as such, day-on-day changes) is replaced by the nearest real figure or left out (LENSES.md section 8).
 - **Landings generalised**: each edition names its landings, the page that draws them and their titles (`home.landings`, `home.template`,
   `home.titles`); a file that names no template keeps Drishti Risk's page. Drishti Risk's landings are unchanged.
 - **Two lenses**: `drishti.lenses: risk,world` gives each person "Open Drishti Risk" and "Open Drishti World" (Views and the product's Home,
@@ -3483,7 +3522,7 @@ The product owner's decisions on [COMPUTED_ATTRIBUTES.md](docs/architecture/COMP
   edition (two-member test).
 - **Branding**: the console takes the server's product name and tagline (one source; its own `ui.product` still wins); `ui.logo`,
   `ui.favicon`, `ui.apple_touch_icon`; a generated `/manifest.webmanifest`; `{product}` in help titles and summaries.
-- Docs: [EDITIONS.md](docs/admin/EDITIONS.md#13-the-design-as-built) (the design as built), [EDITIONS_GUIDE.md](docs/admin/EDITIONS.md) (the how-to,
+- Docs: [LENSES.md](docs/admin/LENSES.md#15-the-design) (the design as built), [EDITIONS_GUIDE.md](docs/admin/LENSES.md) (the how-to,
   in the help centre), CONFIGURATION (`drishti.edition`, `drishti.lenses`, the console's keys), OPERATIONS (Editions), API_GUIDE and
   TROUBLESHOOTING (`DRS-1017`, `DRS-4023`). Docker and ECS pass `DRISHTI_EDITION`.
 
@@ -4928,7 +4967,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   to the current design (BI_DESIGN.md); `test_docs_rot.py` exempts the archive from the rot checks, refuses a link into it on a line that
   does not say it is history, and checks the help centre neither lists nor searches it.
 
-- **The gleif pack** ([its guide](config/packs/gleif/guides/gleif.md), [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [PUBLIC_DATA.md](docs/guides/EXTERNAL_DATA.md),
+- **The gleif pack** ([its guide](config/packs/core/gleif/guides/gleif.md), [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [PUBLIC_DATA.md](docs/guides/EXTERNAL_DATA.md),
   gleif): Legal Entity Identifiers and who owns whom, from GLEIF (CC0, attribution appreciated), off by default (`DRISHTI_PACKS`).
   9,512 legal entities in 540 ownership groups across 132 countries: the groups of the us-equities companies with an LEI and of 114
   large financial institutions (the FSB's G-SIBs, other large banks, insurers, asset managers, market infrastructures), each the
@@ -5008,7 +5047,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 - The UI Board work is kept on branch ui-board-preview; not in this release.
 - **Grid: `@` suggests the opened cells**: the formula bar's suggestions list the cells a click opens (`@A2a.`, `@A2a1.`) with
   their events and fields, and inside an opened cell offer `@parent.` with what its parent emits (`@parent.open.ref`).
-- **The us-equities pack** ([its guide](config/packs/us-equities/guides/us-equities.md), [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#the-packs-that-ship)):
+- **The us-equities pack** ([its guide](config/packs/capitalmarkets/us-equities/guides/us-equities.md), [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#the-packs-that-ship)):
   real public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500 as Wikidata records their membership (479 companies
   with SEC filings): `us-company` (CIK, ticker, exchange and listing market, SIC with its description and division, LEI from GLEIF,
   headquarters, founded, website, index memberships, ten years of annual 10-K XBRL financials, the latest 20 filings), `filing` (9,561,

@@ -102,8 +102,11 @@ class PackSpec:
 
 
 def pack_dir(spec: PackSpec) -> Path:
-    """Where the pack is written: config/packs/<name>, or examples/packs/<name> for a retired example pack."""
-    return (EXAMPLES if spec.retired and not os.environ.get("DRISHTI_PACKS_OUT") else PACKS) / spec.name
+    """Where the pack is written: its domain's folder, config/packs/<domain>/<name> (core when it names none), or
+    examples/packs/<name> for a retired example pack."""
+    if spec.retired and not os.environ.get("DRISHTI_PACKS_OUT"):
+        return EXAMPLES / spec.name
+    return PACKS / (spec.domain or "core") / spec.name
 
 
 def _generated(spec: PackSpec, what: str) -> str:

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra tests of the world-economy pack (config/packs/<pack>/tests/): a few real documents per kind, copied
+"""The Sutra tests of the world-economy pack (config/packs/<domain>/<pack>/tests/): a few real documents per kind, copied
 from the generated samples, an expect.yaml per kind and the help-coverage ratchet. Which documents and what they expect is in
 pack_tests.yaml; the documents come from build_docs, so a data refresh updates the tests with the packs.
 
@@ -30,7 +30,9 @@ ROOT = HERE.parent.parent
 import sys  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
 import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
-PACKS = ROOT / "config" / "packs"
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 COVERAGE_NOTE = "# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).\n"
 
 
@@ -43,9 +45,9 @@ def header() -> str:
 
 
 def files(pack: str, docs: dict, base: Path | None = None) -> dict[Path, str]:
-    """Everything under <base>/tests for the pack (base defaults to config/packs/<pack>); kinds without documents (--no-imf) are skipped,
+    """Everything under <base>/tests for the pack (base defaults to config/packs/<domain>/<pack>); kinds without documents (--no-imf) are skipped,
     and so are sample ids a narrower build has no document for."""
-    tests = (base or PACKS / pack) / "tests"
+    tests = (base or pack_dir(pack)) / "tests"
     cfg, out = spec()[pack], {}
     for kind, t in cfg["kinds"].items():
         cases = [(sid, docs[kind][sid]) for sid in t["samples"] if sid in (docs.get(kind) or {})]
@@ -59,7 +61,7 @@ def files(pack: str, docs: dict, base: Path | None = None) -> dict[Path, str]:
 
 def write(pack: str, docs: dict, base: Path | None = None) -> int:
     want = files(pack, docs, base)
-    tests = (base or PACKS / pack) / "tests"
+    tests = (base or pack_dir(pack)) / "tests"
     for stale in {f for f in tests.rglob("*") if f.is_file()} - set(want) if tests.exists() else ():
         stale.unlink()
     for f, text in want.items():
@@ -71,6 +73,6 @@ def write(pack: str, docs: dict, base: Path | None = None) -> int:
 
 def check(pack: str, docs: dict, base: Path | None = None) -> list[str]:
     want = files(pack, docs, base)
-    tests = (base or PACKS / pack) / "tests"
+    tests = (base or pack_dir(pack)) / "tests"
     have = {f for f in tests.rglob("*") if f.is_file()} if tests.exists() else set()
     return [str(f) for f, t in want.items() if not f.exists() or f.read_text(encoding="utf-8") != t] + [str(f) for f in have - set(want)]

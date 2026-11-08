@@ -26,7 +26,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_data_stack  # noqa: E402
 from bi_data_stack import CONSOLE_URL, PASSWORD, trade  # noqa: E402
 
-DATASET = "file:table:bi.trades_basic_trade"     # the table the sample model trades-basic reads (the table layer's, shipped in config/tables)
+DATASET = "file:table:banking.trades_basic_trade"     # the table the sample model trades-basic reads (the table layer's, shipped in config/tables)
 MODEL = "trades-basic@1"
 
 

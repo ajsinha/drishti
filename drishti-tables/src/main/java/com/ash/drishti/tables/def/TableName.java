@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 /**
  * Names of tables and models (BI_FOUNDATION_2911E.md Q11). A table is {@code <domain>.<name>}: both parts lower case, letters, digits and
  * underscores, starting with a letter, so SQL clients and Flight read them unquoted ({@code trading.trade_legs}). A migrated BI dataset
- * goes to the domain {@code bi} with its hyphens as underscores ({@code trading-risk-trades} is {@code bi.trading_risk_trades}); a pack's
+ * goes to the domain {@code bi} with its hyphens as underscores ({@code trading-risk-trades} is {@code banking.trading_risk_trades}); a pack's
  * generated dataset {@code pack.trading.trade} is {@code trading.trade}. A model keeps BI's name ({@code trading-risk}: lower case,
  * hyphens), since reports, boards and bookmarks name it with its major ({@code trading-risk@1}).
  */
@@ -55,7 +55,7 @@ public final class TableName {
         return dot > 0 ? name.substring(0, dot) : null;
     }
 
-    /** A BI dataset's table name: {@code trading-risk-trades} is {@code bi.trading_risk_trades}; {@code pack.trading.trade} is {@code trading.trade}. */
+    /** A BI dataset's table name: {@code trading-risk-trades} is {@code banking.trading_risk_trades}; {@code pack.trading.trade} is {@code trading.trade}. */
     public static String ofDataset(String dataset) {
         if (dataset.startsWith("pack.") && dataset.chars().filter(c -> c == '.').count() == 2) {
             return dataset.substring("pack.".length()).toLowerCase(Locale.ROOT).replace('-', '_');

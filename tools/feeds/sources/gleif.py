@@ -16,7 +16,7 @@
 
     python3 tools/drishti.py feed status gleif
     python3 tools/drishti.py feed run gleif --dry-run
-    python3 tools/drishti.py feed run gleif --snapshot                        the committed pack (config/packs/gleif)
+    python3 tools/drishti.py feed run gleif --snapshot                        the committed pack (config/packs/core/gleif)
     python3 tools/drishti.py feed run gleif --snapshot --offline              rebuild the pack from the cache only
     python3 tools/drishti.py feed run gleif --snapshot -- --scope GROUP:784F5XWPLTWKTBV3E584,CAP:600
                                                                             a widened build in <data>/datafeeds/sources/gleif
@@ -83,7 +83,7 @@ finally:
         sys.modules.pop("fetch", None)
 
 PACK = "gleif"
-COMMITTED = B.ROOT / "config" / "packs" / PACK
+COMMITTED = B.pack_dir(PACK)
 CC0, CC0_URL = "CC0 1.0 (attribution appreciated)", "https://www.gleif.org/en/meta/lei-data-terms-of-use"
 
 
@@ -495,7 +495,7 @@ def main(argv: list[str] | None = None) -> int:
             when = ents[0].get("PROVENANCE", {}).get("RETRIEVED_AT", "?") if ents else "-"
             print(f"committed pack: {n} entities, golden copy of {when}")
             return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "datafeeds" / "sources" / "cache" / PACK,
-                            "config/packs/gleif; a widened build <data>/datafeeds/sources/gleif/packs/gleif")
+                            "config/packs/core/gleif; a widened build <data>/datafeeds/sources/gleif/packs/gleif")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)

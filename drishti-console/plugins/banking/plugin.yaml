@@ -31,6 +31,7 @@ registers: [plugins.banking.build_types, plugins.banking.routes.trading_routes]
 code: [plugins.banking.trading_landing, plugins.banking.market_landing, plugins.banking.risk_api]
 
 # its compute engines: their words, console pages, menus, Help pages, tiles and lenses are the engine catalogue's (config/engines.yaml)
+help: help.yaml
 engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
 # its own command words beyond the engines' (the playgrounds, the counterparty cube)
 words: [PLAY, "PLAY FRTB", "PLAY SIMM", CCUBE, FRSA, SIMM, MCUBE, SENS, RFAC]

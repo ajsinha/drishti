@@ -75,7 +75,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"ECONOMY_ID": "ECON-ABW", "NAME": "Aruba", "ISO3": "ABW", "REGION_NAME": "Latin America & Caribbean", "INCOME_NAME": "High income", "CURRENCY": "AFA", "CAPITAL": "Oranjestad", "YEAR": "2024", "GDP_USD_BN": 4.16759, "GDP_PER_CAPITA": 38590.6, "GROWTH": 6.81078, "INFLATION": 4.25746, "UNEMPLOYMENT": 13.351, "DEBT_TO_GDP": 48, "CURRENT_ACCOUNT": 5.19137, "RESERVES_USD_BN": 2.23143, "TRADE_SHARE": 164.139, "POPULATION_M": 0.108785, "REGION_GROUP": "ECG-LCN", "INCOME_GROUP": "ECG-HIC", "LABOUR": "LABR-AFG", "FISCAL": "FISC-ABW", "OUTLOOK": "FCST-ABW-WEO"}
 ```
 
-The contract: `config/packs/world-economy/contracts/economy.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/economy.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### macro-indicator
 
@@ -106,7 +106,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"INDICATOR_ID": "MACRO-ABW-AGRICULTURE", "NAME": "Aruba · Agriculture, value added", "INDICATOR": "Agriculture, value added", "COUNTRY_NAME": "Aruba", "UNIT": "% of GDP", "DEFINITION": "Value added of agriculture, forestry and fishing as a share…", "LATEST": 0.0395295, "LATEST_YEAR": "2023", "PREVIOUS": 0.0341749, "PREVIOUS_YEAR": "2022", "RANK": 193, "OF_COUNT": 196, "ECONOMY": "ECON-ABW"}
 ```
 
-The contract: `config/packs/world-economy/contracts/macro-indicator.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/macro-indicator.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### economic-forecast
 
@@ -133,7 +133,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"FORECAST_ID": "FCST-ABW-WEO", "ECONOMY_NAME": "Aruba", "VINTAGE": "IMF World Economic Outlook, April 2026 edition", "GROWTH_2027": 2, "INFLATION_2027": 2, "DEBT_2030": 50.3, "ECONOMY": "ECON-ABW"}
 ```
 
-The contract: `config/packs/world-economy/contracts/economic-forecast.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/economic-forecast.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### labour-market
 
@@ -161,7 +161,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"LABOUR_ID": "LABR-AFG", "ECONOMY_NAME": "Afghanistan", "YEAR": "2025", "UNEMPLOYMENT": 13.351, "PARTICIPATION": 37.457, "YOUTH_UNEMPLOYMENT": 16.785, "EMPLOYMENT_RATIO": 32.457, "FEMALE_PARTICIPATION": 5.086, "VULNERABLE": 81.7702, "ECONOMY": "ECON-AFG"}
 ```
 
-The contract: `config/packs/world-economy/contracts/labour-market.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/labour-market.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### fiscal-position
 
@@ -189,7 +189,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"FISCAL_ID": "FISC-ABW", "ECONOMY_NAME": "Aruba", "YEAR": "2025", "DEBT": 63.6, "BALANCE": 1.9, "REVENUE": 13.0393, "SPENDING": 39.2201, "MILITARY": 1.82793, "ECONOMY": "ECON-ABW"}
 ```
 
-The contract: `config/packs/world-economy/contracts/fiscal-position.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/fiscal-position.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### region-economy
 
@@ -218,7 +218,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"REGION_ID": "REGE-AU-ACT", "NAME": "Australian Capital Territory", "REGION_CODE": "AU-ACT", "ISO3": "AUS", "COUNTRY_NAME": "Australia", "YEAR": "2023", "POPULATION_M": 0.46, "POPULATION": 460000, "GDP_USD_BN": 33, "GDP_PER_CAPITA": 71739, "SOURCE": "Illustrative, rounded from public figures (ABS Australian D…", "ECONOMY": "ECON-AUS"}
 ```
 
-The contract: `config/packs/world-economy/contracts/region-economy.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/region-economy.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### jurisdiction
 
@@ -258,7 +258,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"JURISDICTION_ID": "JUR-ABW", "NAME": "Aruba", "ISO3": "ABW", "OFFICIAL_NAME": "Country of Aruba", "CAPITAL": "Oranjestad", "REGION_NAME": "Latin America & Caribbean", "POPULATION_M": 0.108785, "AREA_KM2": 180.0, "GOVERNMENT_TYPE": "parliamentary democracy; part of the Kingdom of the Netherl…", "CURRENCY": "AFA", "INDEPENDENCE": "none (part of the Kingdom of the Netherlands)", "LEGISLATURE_NAME": "Legislature (Staten)", "LEGISLATURE_STRUCTURE": "unicameral", "REGION": "REGN-LCN", "CHIEF_OF_STATE": "OFFC-ABW-COS", "HEAD_OF_GOVERNMENT": "OFFC-ABW-HOG", "LAST_ELECTION": "ELEC-ARG-LOW"}
 ```
 
-The contract: `config/packs/world-economy/contracts/jurisdiction.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/jurisdiction.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### party
 
@@ -286,7 +286,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"PARTY_ID": "PARTY-ARG-01", "NAME": "Union for the Homeland (UP)", "COUNTRY_NAME": "Argentina", "SEATS": 48, "SEAT_SHARE": 37.5, "CHAMBER": "Chamber of Deputies (Cámara de Diputados)", "RANK": 1, "TOTAL_SEATS": 128, "ELECTION_DATE": "10/22/2023", "ELECTION": "ELEC-ARG-LOW", "JURISDICTION": "JUR-ARG"}
 ```
 
-The contract: `config/packs/world-economy/contracts/party.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/party.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### office-holder
 
@@ -316,7 +316,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"OFFICE_ID": "OFFC-ABW-COS", "COUNTRY_NAME": "Aruba", "ROLE": "Chief of state", "HOLDER": "King WILLEM-ALEXANDER of the Netherlands; represented by Go…", "SINCE": "30 April 2013", "PUBLISHED": "King WILLEM-ALEXANDER of the Netherlands (since 30 April 20…", "PROCESS": "the monarchy is hereditary; governor general appointed by t…", "ELECTION_HELD": "6 December 2024", "NEXT_ELECTION": "by December 2028", "RESULTS": "Mike EMAN (AVP) elected prime minister; percent of Staten v…", "GOVERNMENT_TYPE": "parliamentary democracy; part of the Kingdom of the Netherl…", "CABINET": "Council of Ministers elected by the Legislature (Staten)", "JURISDICTION": "JUR-ABW"}
 ```
 
-The contract: `config/packs/world-economy/contracts/office-holder.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/office-holder.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### election
 
@@ -347,7 +347,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"ELECTION_ID": "ELEC-ABW-EXE", "TITLE": "Aruba · executive (head of state)", "COUNTRY_NAME": "Aruba", "CHAMBER": "Executive", "DATE": "2024-12-06", "DATE_TEXT": "6 December 2024", "SYSTEM": "the monarchy is hereditary; governor general appointed by t…", "TERM": "4 years", "WINNER": "King WILLEM-ALEXANDER of the Netherlands; represented by Go…", "NEXT_ELECTION": "by December 2028", "WOMEN": "42.4%", "SEATS_TEXT": "257 (all directly elected)", "JURISDICTION": "JUR-ABW"}
 ```
 
-The contract: `config/packs/world-economy/contracts/election.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/election.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### region
 
@@ -376,7 +376,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"REGION_ID": "REGN-EAS", "NAME": "East Asia & Pacific", "COUNTRIES": 37, "POPULATION_M": 2390.87, "LIFE_EXPECTANCY": 76.7379, "YEAR": "2024", "INTERNET": 88.4, "WOMEN_PARLIAMENT": 23.3498, "URBAN": 64.771}
 ```
 
-The contract: `config/packs/world-economy/contracts/region.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/region.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### social-indicator
 
@@ -408,4 +408,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"INDICATOR_ID": "SOCI-ABW-EDUCATION-SPEND", "NAME": "Aruba · Government expenditure on education", "INDICATOR": "Government expenditure on education", "COUNTRY_NAME": "Aruba", "THEME": "Society", "LATEST": 3.61856, "LATEST_YEAR": "2021", "UNIT": "% of GDP", "CHANGE_5Y": -1.8728, "SOURCE_NAME": "World Bank, World Development Indicators", "DEFINITION": "General government spending on education, as a share of GDP.", "REGION_NAME": "Latin America & Caribbean", "JURISDICTION": "JUR-ABW"}
 ```
 
-The contract: `config/packs/world-economy/contracts/social-indicator.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
+The contract: `config/packs/economy/world-economy/contracts/social-indicator.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).

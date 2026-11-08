@@ -107,6 +107,14 @@ public final class Catalogue {
      * its problems, so {@code tables check} reports it; it resolves nothing.
      */
     public static Catalogue load(Path root, ItemStore store) throws IOException {
+        return load(root, store, d -> true);
+    }
+
+    /**
+     * As {@link #load(Path, ItemStore)}, reading a domain's folder only while {@code domainOn} says its domain is on (a module that is off
+     * brings no table or model: docs/architecture/DOMAIN_MODULES.md section 8).
+     */
+    public static Catalogue load(Path root, ItemStore store, java.util.function.Predicate<String> domainOn) throws IOException {
         Catalogue c = new Catalogue();
         if (root != null && Files.isDirectory(root)) {
             try (Stream<Path> walk = Files.walk(root, 2)) {
@@ -117,6 +125,9 @@ public final class Catalogue {
                     }
                     String label = root.relativize(f).toString().replace('\\', '/');
                     String folder = f.getParent().equals(root) ? null : f.getParent().getFileName().toString();
+                    if (folder != null && !domainOn.test(folder)) {
+                        continue;
+                    }
                     c.read(file.endsWith(".table.yaml") ? Entry.TABLE : Entry.MODEL, Files.readString(f), label, folder);
                 }
             }

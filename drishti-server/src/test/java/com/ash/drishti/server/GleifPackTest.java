@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 class GleifPackTest extends PublicPacksOnLakes {
 
-    static final Path PACK = Path.of("../config/packs/gleif");
+    static final Path PACK = Path.of("../config/packs/core/gleif");
     static final String JPM = "8I5DZWZKVSZI1NUHU748";
     static final String APPLE = "HWUPKR0MPOU8FGXBT394";
 

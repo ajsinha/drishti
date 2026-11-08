@@ -60,6 +60,8 @@ public final class TablesService {
     private static final Logger LOG = LoggerFactory.getLogger(TablesService.class);
 
     private final Path root;
+    /** Whether a domain folder of the tables is read (false for an off module's: {@link #domains}). */
+    private volatile java.util.function.Predicate<String> domainOn = d -> true;
     private final DataViewService data;
     private final com.ash.drishti.engine.source.SourceRouter router;
     private final EditionCommands edition;
@@ -72,6 +74,12 @@ public final class TablesService {
 
     /** The catalogue as last read, with the stamp of the files it was read from and the names refused. */
     private record Loaded(String stamp, Catalogue catalogue, List<Problem> problems, Set<String> refused) {}
+
+    /** Reads a domain folder only while its domain's module is on (docs/architecture/DOMAIN_MODULES.md section 8). */
+    public TablesService domains(java.util.function.Predicate<String> on) {
+        this.domainOn = on == null ? d -> true : on;
+        return this;
+    }
 
     public TablesService(Path root, DataViewService data, com.ash.drishti.engine.source.SourceRouter router,
             EditionCommands edition, java.util.function.BooleanSupplier enforce, long maxRows, long scanWarnRows, Clock clock) {
@@ -265,7 +273,7 @@ public final class TablesService {
             Catalogue c;
             List<Problem> problems = new ArrayList<>();
             try {
-                c = Catalogue.load(root, items);
+                c = Catalogue.load(root, items, domainOn);
                 problems.addAll(c.check());
             } catch (IOException | RuntimeException e) {
                 LOG.warn("virtual tables under {} could not be read: {}", root, e.getMessage());

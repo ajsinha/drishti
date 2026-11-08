@@ -74,11 +74,11 @@ class ExposureOfficialBiTest {
     static {
         try {
             Path to = com.ash.drishti.server.TestRun.root().resolve("exposure-bi-folder");
-            List<String> files = new ArrayList<>(List.of("../tables/bi/counterparty_exposure_official.table.yaml",
-                    "../tables/bi/counterparty_exposure_official_netting_sets.table.yaml", "../tables/bi/counterparty_exposure_official_counterparties.table.yaml",
-                    "../tables/bi/trading-risk.model.yaml", "reports/counterparty-risk.report.yaml"));
+            List<String> files = new ArrayList<>(List.of("../tables/banking/counterparty_exposure_official.table.yaml",
+                    "../tables/banking/counterparty_exposure_official_netting_sets.table.yaml", "../tables/banking/counterparty_exposure_official_counterparties.table.yaml",
+                    "../tables/banking/trading-risk.model.yaml", "reports/banking/counterparty-risk.report.yaml"));
             for (String t : List.of("trades", "netting_sets", "counterparties", "desks", "books")) {
-                files.add("../tables/bi/trading_risk_" + t + ".table.yaml");
+                files.add("../tables/banking/trading_risk_" + t + ".table.yaml");
             }
             for (String f : files) {
                 Path dest = to.resolve(f.replace("../", ""));                  // the table layer's files under tables/, BI's report beside

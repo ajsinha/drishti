@@ -128,7 +128,7 @@ public class NetConfiguration {
             com.ash.drishti.engine.time.BusinessDates dates, com.ash.drishti.server.api.RequestActivity activity,
             com.ash.drishti.server.security.SecurityProperties security, com.ash.drishti.packs.edition.Edition edition) {
         DigestService d = new DigestService(net, packs, packAccess, mnemonics, sources, () -> dates.calendar().name(), activity, security);
-        if (edition.active()) {                 // every member should run the same edition: Admin -> Net warns when they do not (EDITIONS.md 6)
+        if (edition.active()) {                 // every member should run the same edition: Admin -> Net warns when they do not (LENSES.md 6)
             d.service(com.ash.drishti.net.digest.CapabilityTable.EDITION_SERVICE, edition::name);
         }
         return d;

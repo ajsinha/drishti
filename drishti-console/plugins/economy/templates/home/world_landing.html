@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Drishti World's Home (the product owner's mock-ups A, B and C, 2026-10-29; EDITIONS.md › The design as built, section 7): A "desk" (headline tiles, the
+{# Drishti World's Home (the product owner's mock-ups A, B and C, 2026-10-29; LENSES.md › The design): A "desk" (headline tiles, the
    economies that moved, today's news by topic, quick cards), B "explorer" (a big command line across economies, companies, entities and
    funds, chips, a counts strip, recents, Knowledge, Data map, Learn) and C "map" (regions and country groups with a group and measure
    switch, US sectors by revenue, the largest funds, what changed). A shell: every figure is the packs' own answer (/api/home/search, the
@@ -50,10 +50,11 @@
     {% if chips %}<div class="wl-chips">{% for c in chips %}<a class="wl-chip mono" href="{{ go(c) }}">{{ c }}</a>{% endfor %}</div>{% endif %}
     <div class="wl-strip" data-wl-counts>
       <span>Economies <b class="mono" data-wl-count="ECON">…</b></span>
-      <span>US companies <b class="mono" data-wl-count="USEQ">…</b></span>
+      {% set cm = module_on('capitalmarkets') %}{# the World lens is economy with capital markets: their parts only while that module is on #}
+      {% if cm %}<span>US companies <b class="mono" data-wl-count="USEQ">…</b></span>{% endif %}
       <span>Legal entities <b class="mono" data-wl-count="LEI">…</b></span>
-      <span>Funds and ETFs <b class="mono" data-wl-count="FUND">…</b></span>
-      <span>Filings <b class="mono" data-wl-count="FILING">…</b></span>
+      {% if cm %}<span>Funds and ETFs <b class="mono" data-wl-count="FUND">…</b></span>
+      <span>Filings <b class="mono" data-wl-count="FILING">…</b></span>{% endif %}
       <span>News topics <b class="mono" data-wl-count="TOPIC">…</b></span>
     </div>
   </section>
@@ -83,7 +84,7 @@
     <p class="wl-note" data-wl-map-note>Each economy's own figures (ECON), weighted by GDP; each tile opens its group or economy.</p>
   </section>
   <div class="wl-cols">
-    <section class="wl-card" aria-labelledby="wlSecH"{{ part(PP, 'card-1') }}>
+    {% if cm %}<section class="wl-card" aria-labelledby="wlSecH"{{ part(PP, 'card-1') }}>
       <h2 id="wlSecH">US sectors<small>revenue of the companies, by SIC division</small></h2>
       <div class="wl-bars" data-wl-sectors><p class="wl-muted">…</p></div>
     </section>
@@ -91,7 +92,7 @@
       <h2 id="wlFundH">Largest funds<small>FUND, by net assets</small></h2>
       <table class="wl-table"><thead><tr><th scope="col">Fund</th><th scope="col">Tracks</th><th scope="col" class="n">Holdings</th><th scope="col" class="n">Assets</th></tr></thead>
         <tbody data-wl-funds><tr><td colspan="4" class="wl-muted">…</td></tr></tbody></table>
-    </section>
+    </section>{% endif %}
     <section class="wl-card" aria-labelledby="wlChgH"{{ part(PP, 'table') }}>
       <h2 id="wlChgH">What changed<small>the latest of each source</small></h2>
       <ul class="wl-feed" data-wl-changes><li class="wl-muted">…</li></ul>
@@ -102,8 +103,8 @@
     <a class="wl-tile" href="{{ go('ECG ECG-WLD') }}" data-wl-tile="world"><span class="k">World GDP growth</span><span class="v mono" data-wl-world>…</span><span class="s" data-wl-world-s></span></a>
     <a class="wl-tile" href="{{ go('QUOTE where PRICE > 0 order by CHANGE_PCT desc') }}" data-wl-tile="breadth"><span class="k">Quotes up · down</span><span class="v mono" data-wl-breadth>…</span><span class="s" data-wl-breadth-s></span></a>
     <a class="wl-tile" href="{{ go('QUOTE where PRICE > 0 order by CHANGE_PCT desc') }}" data-wl-tile="mover"><span class="k">Biggest mover</span><span class="v mono" data-wl-mover>…</span><span class="s" data-wl-mover-s></span></a>
-    <a class="wl-tile" href="{{ go('EDGAR 8-K') }}" data-wl-tile="filings"><span class="k">New SEC filings</span><span class="v mono" data-wl-filings>…</span><span class="s" data-wl-filings-s></span></a>
-    <a class="wl-tile" href="{{ go('FUND where NET_ASSETS > 0 order by NET_ASSETS desc') }}" data-wl-tile="funds"><span class="k">Funds and ETFs</span><span class="v mono" data-wl-funds-n>…</span><span class="s" data-wl-funds-s></span></a>
+    {% if module_on('capitalmarkets') %}<a class="wl-tile" href="{{ go('EDGAR 8-K') }}" data-wl-tile="filings"><span class="k">New SEC filings</span><span class="v mono" data-wl-filings>…</span><span class="s" data-wl-filings-s></span></a>{% endif %}
+    {% if module_on('capitalmarkets') %}<a class="wl-tile" href="{{ go('FUND where NET_ASSETS > 0 order by NET_ASSETS desc') }}" data-wl-tile="funds"><span class="k">Funds and ETFs</span><span class="v mono" data-wl-funds-n>…</span><span class="s" data-wl-funds-s></span></a>{% endif %}
   </section>
   <div class="wl-cols">
     <section class="wl-card" aria-labelledby="wlMovedH"{{ part(PP, 'table') }}>

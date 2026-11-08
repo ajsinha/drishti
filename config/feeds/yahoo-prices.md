@@ -55,4 +55,4 @@ A company's daily prices.
 | `VOLUME` | unknown | optional | The session's traded volume in shares (Yahoo regularMarketVolume). |
 | `ANALYTICS` | record | derived | Computed from the closes when the history is read (PXH analytics): nested ANALYTICS |
 
-The contract: `config/packs/us-equities/contracts/price-history.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
+The contract: `config/packs/capitalmarkets/us-equities/contracts/price-history.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).

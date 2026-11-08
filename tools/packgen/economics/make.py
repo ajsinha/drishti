@@ -18,7 +18,7 @@ positions and the World Bank regions and income groups. The documents come from 
 nothing is invented, and each document carries its source, dataset, retrieval date and licence.
 
     The kinds, documents and pack settings of the economics half of the world-economy pack: tools/packgen/world/make.py joins them
-    with the other half and writes config/packs/world-economy (running this file runs that one).
+    with the other half and writes config/packs/economy/world-economy (running this file runs that one).
     python3 tools/realdata/realdata.py all             refresh the data, then write both packs
 """
 from __future__ import annotations

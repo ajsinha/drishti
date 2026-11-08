@@ -86,7 +86,7 @@ class VarDataTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.rules = P.Rules.of_pack(ROOT / "config" / "packs" / "market-risk" / "pack.yaml")
+        cls.rules = P.Rules.of_pack(ROOT / "config" / "packs" / "banking" / "market-risk" / "pack.yaml")
         cls.vector_rows = docs("pnl-vector")
         cls.pv_rows = docs("scenario-pv")
         cls.fx = {r["CURRENCY"]: r for r in docs("fx-scenario")}
@@ -258,7 +258,7 @@ class VarDataTest(unittest.TestCase):
                 "POSITION_RULE": VarDataTest.rules.derive(t0["TRADE_ID"], t0["TT_BOOK"], t0["PRODUCT_GROUP"], t0["PRODUCT_TYPE"], t0.get)["POSITION_RULE"]}
 
     def test_the_samples_are_the_servers_derived_positions(self):
-        sample = [json.loads(x) for x in (ROOT / "config" / "packs" / "market-risk" / "samples" / "position.jsonl").read_text().splitlines() if x]
+        sample = [json.loads(x) for x in (ROOT / "config" / "packs" / "banking" / "market-risk" / "samples" / "position.jsonl").read_text().splitlines() if x]
         self.assertEqual(len(sample), 2)
         for p in sample:
             ts = self.positions[p["POSITION_ID"]]

@@ -289,7 +289,7 @@ def test_the_report_at_390_pixels_uses_its_phone_layout_in_the_element_and_in_th
 
 
 def test_the_designers_phone_tab_arranges_a_page_with_a_390_pixel_preview(stack, browser):
-    body = (ROOT / "config/bi/reports/live-trading-desk.report.yaml").read_text()
+    body = (ROOT / "config/bi/reports/banking/live-trading-desk.report.yaml").read_text()
     body = body.split("layouts:")[0] + "pages:" + body.split("\npages:", 1)[1]                      # the shipped report without its phone layout: a draft to arrange
     body = body.replace("report: live-trading-desk", "report: phone-draft")
     status, made = S.api("POST", "/bi/workspaces/me/items", "wes", ["live-writer"], {"kind": "report", "title": "Phone draft", "description": "", "body": body})

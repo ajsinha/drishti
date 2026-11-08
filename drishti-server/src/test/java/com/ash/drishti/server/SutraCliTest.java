@@ -332,7 +332,7 @@ class SutraCliTest {
         assertThat(r.code()).as(r.err()).isZero();
         assertThat(r.err()).contains("warning DRS-2055 1 of 1 Sutras have no doc: block");
         for (String documented : List.of("market-data", "news-and-markets", "trading")) {     // every pack Sutra carries one now
-            Run d = run("lint", ROOT.resolve("config/packs/" + documented).toString(), "--docs");
+            Run d = run("lint", com.ash.drishti.api.PackFolders.of(ROOT.resolve("config/packs"), documented).toString(), "--docs");
             assertThat(d.code()).as(d.err()).isZero();
             assertThat(d.err()).as(documented).doesNotContain("have no doc: block");
         }
@@ -392,7 +392,7 @@ class SutraCliTest {
     @Test
     void sutraTestPassesOverEveryShippedPacksTestsAndTheExamples() throws IOException {
         List<String> targets = new ArrayList<>();
-        try (Stream<Path> packs = Files.list(ROOT.resolve("config/packs"))) {
+        try (Stream<Path> packs = com.ash.drishti.api.PackFolders.list(ROOT.resolve("config/packs")).stream()) {
             packs.filter(p -> Files.isDirectory(p.resolve("tests"))).sorted().forEach(p -> targets.add(p.toString()));
         }
         assertThat(targets).as("packs with a tests/ folder").hasSizeGreaterThanOrEqualTo(3);

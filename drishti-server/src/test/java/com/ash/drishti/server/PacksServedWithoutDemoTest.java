@@ -59,7 +59,7 @@ class PacksServedWithoutDemoTest {
         Set<String> fed = fedKinds();
         List<String> unserved = new ArrayList<>();
         Set<String> packs = new HashSet<>();
-        try (Stream<Path> dirs = Files.list(PACKS)) {
+        try (Stream<Path> dirs = com.ash.drishti.api.PackFolders.list(PACKS).stream()) {
             for (Path dir : dirs.filter(d -> Files.isRegularFile(d.resolve("pack.yaml"))).sorted().toList()) {
                 String pack = dir.getFileName().toString();
                 packs.add(pack);

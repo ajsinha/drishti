@@ -16,7 +16,7 @@
 stream (the trading pack's `trading-stream` connector, switched on with DRISHTI_STREAM_TRADING=true).
 
     uv run --with kafka-python python tools/samplegen/stream.py [--bootstrap localhost:9092] [--topic drishti.trading.trades]
-                                                                [--samples config/packs/trading/samples] [--rate 5] [--seconds 0]
+                                                                [--samples config/packs/banking/trading/samples] [--rate 5] [--seconds 0]
 
 Each trade is published once, keyed by its TRADE_ID (the topic is the state: the latest message per trade wins), then `--rate` random
 trades per second get a new PRICE (a trade carries no MTM: that is the market-risk pack's trade valuation) and a new SOURCE_UPDATE_TIME.
@@ -41,7 +41,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bootstrap", default="localhost:9092")
     ap.add_argument("--topic", default="drishti.trading.trades")
-    ap.add_argument("--samples", default="config/packs/trading/samples")
+    ap.add_argument("--samples", default="config/packs/banking/trading/samples")
     ap.add_argument("--rate", type=float, default=5.0)
     ap.add_argument("--seconds", type=float, default=0.0)
     a = ap.parse_args()

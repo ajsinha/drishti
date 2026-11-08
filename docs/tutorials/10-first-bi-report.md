@@ -345,7 +345,7 @@ You should see twelve slices and the title `(top 12)`, ENDUR's `ComSwap` the lar
 
 ![The Overview page after choosing the bookmark: a chip trade.DESK: DESK-FX, all visuals answering for that desk](img/t10/19-bookmark.jpg)
 
-You should see the page filtered to `DESK-FX` (`1,428` trades, notional `372,842,213,118`, MTM `-681,989,222`) with a chip, as if you had made the choice yourself. **From the command line**: `python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures Trades,Notional,MTM --where trade.DESK=DESK-FX` prints the same three numbers. **In the YAML** the bookmark is `- { name: FX desk only, page: overview, slicers: {}, filters: [{ field: trade.DESK, op: in, values: [DESK-FX] }] }` (`config/bi/reports/trades-overview.report.yaml`). A bookmark is written in the designer, not captured from what a reader has chosen on screen in the viewer.
+You should see the page filtered to `DESK-FX` (`1,428` trades, notional `372,842,213,118`, MTM `-681,989,222`) with a chip, as if you had made the choice yourself. **From the command line**: `python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures Trades,Notional,MTM --where trade.DESK=DESK-FX` prints the same three numbers. **In the YAML** the bookmark is `- { name: FX desk only, page: overview, slicers: {}, filters: [{ field: trade.DESK, op: in, values: [DESK-FX] }] }` (`config/bi/reports/banking/trades-overview.report.yaml`). A bookmark is written in the designer, not captured from what a reader has chosen on screen in the viewer.
 
 **Slicer or click?** Both filter. A **slicer** is a choice you make on purpose from a list, it stays visible, and it can be page or report wide. A **click on a mark** (a bar, a slice, a country) is exploring: it filters the **other** visuals of the page, it highlights what you picked, and it is gone when you click again.
 Click the `DESK-FX` bar on the Overview page:
@@ -391,7 +391,7 @@ MX-30001342      DESK-RATES   OIS                  91,875,065.38
 3 row(s)  as of 2026-10-26
 ```
 
-**In the YAML** the drill-through is two lines of `config/bi/reports/counterparty-risk.report.yaml`: the bar's `drillthrough: { page: counterparty, field: counterparties.NAME }` and the target page's `drillthrough: { fields: [counterparties.NAME] }`.
+**In the YAML** the drill-through is two lines of `config/bi/reports/banking/counterparty-risk.report.yaml`: the bar's `drillthrough: { page: counterparty, field: counterparties.NAME }` and the target page's `drillthrough: { fields: [counterparties.NAME] }`.
 
 ## Step 10 · On a phone
 
@@ -455,7 +455,7 @@ $ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.
 ["2 fact tables, each aggregated alone at the query's fields and then joined: [trades, counterparties, set_exposure]","a measure that combines measures of different grains is worked out over the joined results: P&L per exposure"]
 ```
 
-**In the YAML** (`config/tables/bi/trading-risk.model.yaml`), the part that makes it work:
+**In the YAML** (`config/tables/banking/trading-risk.model.yaml`), the part that makes it work:
 
 ```yaml
 datasets:
@@ -477,7 +477,7 @@ measures:
   P&L per exposure:   { expr: "measure('P&L 1d') / measure('Exposure (EE peak)')", format: signed2 }
 ```
 
-and the report (`config/bi/reports/pnl-vs-exposure.report.yaml`) only says `model: trading-risk@1`. When the two numbers live in **two models**
+and the report (`config/bi/reports/banking/pnl-vs-exposure.report.yaml`) only says `model: trading-risk@1`. When the two numbers live in **two models**
 (each with its own row rules), a report can still read both side by side and link their fields: that is [tutorial 18](18-several-datasets-in-one-report.md).
 The same table made by a Python Transform is in [tutorial 14](14-python-and-analyse.md); the reference is
 [BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification) and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/BI_GUIDE.md#16-reports-over-several-datasets).

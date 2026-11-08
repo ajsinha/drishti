@@ -43,6 +43,10 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import lakeconfig  # noqa: E402  (where the lakes are: config/lakes/<lake>.yaml)
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+
 SYSTEMS = ("endur", "calypso", "murex")
 STORES = ("delta", "iceberg")
 DOMAIN = "trading"
@@ -308,7 +312,7 @@ def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Pat
     """trade-<system>.yaml for its store: the trading pack's template (one source system of the union, table trade_<system>) with
     plugin and root set; ``engine: native`` for Iceberg."""
     import yaml
-    pack = yaml.safe_load((ROOT / "config" / "packs" / "trading" / "pack.yaml").read_text(encoding="utf-8"))
+    pack = yaml.safe_load((ROOT / "config" / "packs" / "banking" / "trading" / "pack.yaml").read_text(encoding="utf-8"))
     tpl = _template(pack, f"trade-{system}", store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
     if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)
@@ -387,7 +391,7 @@ def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: path
     root set; ``engine: native`` for Iceberg. ``pair`` (pack, connector): by default the domain's first."""
     import yaml
     pack_name, name = pair or DOMAIN_STORES[domain][0]
-    pack = yaml.safe_load((ROOT / "config" / "packs" / pack_name / "pack.yaml").read_text(encoding="utf-8"))
+    pack = yaml.safe_load((pack_dir(pack_name) / "pack.yaml").read_text(encoding="utf-8"))
     tpl = _template(pack, name, store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
     if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)

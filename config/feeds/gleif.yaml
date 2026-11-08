@@ -51,5 +51,5 @@ datasets:                              # each dataset the feed writes: its rows'
 options:                               # free settings the feed's class reads (run.option); --set NAME=VALUE overrides one
   args: []                             # arguments given to the source before the command line's (e.g. [--scope, "NAME:allianz,CAP:200"])
 snapshot:                              # what --snapshot does: refresh the committed demo snapshot instead of loading
-  note: refreshes config/packs/gleif (samples, guide) and data/testdata/gleif, as the pack's generator writes them   # a line for the docs
+  note: refreshes config/packs/core/gleif (samples, guide) and data/testdata/gleif, as the pack's generator writes them   # a line for the docs
 # keys: {api_key: ${SOME_API_KEY}}     # (GLEIF needs none) API keys as environment variables only: a key written in a file is refused
