@@ -19,6 +19,8 @@
 
 ### Docs
 
+- **Kernel and modules, decided:** the owner accepted every recommendation (Q1–Q20) on 2026-11-08; section 13 of
+  [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) is now the decisions list.
 - **Kernel and modules, the developer's side (design):** [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) gains the
   module developer path (a Maven multi-module project per module, the kernel API `provided`, the `drishti-module-maven-plugin`, the
   archetype behind `module new`, the `module run` dev loop, the conformance suite C1–C15, the release path, a start-to-delivery table),
