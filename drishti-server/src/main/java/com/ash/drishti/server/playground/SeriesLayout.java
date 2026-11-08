@@ -19,7 +19,7 @@ import com.ash.drishti.server.dist.XlsxWriter;
 import java.util.List;
 
 /**
- * Where a playground's items (positions) and points (scenarios) sit on a sheet (VAR_PLAYGROUND.md section 3): <b>items as columns</b>
+ * Where a playground's items (positions) and points (scenarios) sit on a sheet (docs/guides/VAR_GUIDE.md section 3): <b>items as columns</b>
  * (scenarios down, positions across, as the screen shows them) while the columns fit a spreadsheet, <b>items as rows</b> (positions down,
  * scenarios across) beyond that. Every formula is written through this, so the same generator serves both. Besides the items a sheet has
  * <b>series</b>: one value per point (the portfolio, its rank, the 10-day sums), after the items (columns) or above them (rows).

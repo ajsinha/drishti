@@ -25,7 +25,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The {@code parametric} blocks of the VaR answers (docs/architecture/PARAMETRIC_VAR.md sections 6, 8 and 9; VAR_GUIDE.md section 18.15):
+ * The {@code parametric} blocks of the VaR answers (docs/guides/VAR_GUIDE.md sections 6, 8 and 9; VAR_GUIDE.md section 18.15):
  * the headline's, a tree node's, the P&amp;L path's curve, the contributions' columns and the correlation matrix, each figure with the
  * {@code describe} lines its <b>?</b> shows. Every number is computed here, in the server; the browser places text and draws the points.
  * A cross-check, never official: {@code official} is always false.

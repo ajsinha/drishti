@@ -41,7 +41,7 @@ One publisher of official news (a central bank, a regulator, a government): its 
 | Cadence | daily (due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `officialnews-store` (plugin `delta`), table `<root>/officialnews/release-source/` |
 | Test data | config/packs/economy/official-news/samples |
-| Worked example | [official-news/release-source](../samples/official-news/release-source.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [official-news/release-source](../samples/official-news.md#release-source) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -126,7 +126,7 @@ One official press release: its title, publisher, date, summary and the link to 
 | Cadence | daily (due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `officialnews-store` (plugin `delta`), table `<root>/officialnews/press-release/` |
 | Test data | config/packs/economy/official-news/samples |
-| Worked example | [official-news/press-release](../samples/official-news/press-release.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [official-news/press-release](../samples/official-news.md#press-release) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

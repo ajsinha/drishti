@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): the toggle's bar, the three tiles,
+/* Parametric VaR on the VaR explorer (docs/guides/VAR_GUIDE.md; VAR_GUIDE.md section 3.12): the toggle's bar, the three tiles,
    the tree's Parametric and Gap columns (drishti-grid cells: blue, the gap in the warning colour) and the ? (the normal curve is
    drishti-risk's P&L distribution). Theme tokens only. */
 .vp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8); margin: var(--d-sp-6) 0; }

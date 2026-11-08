@@ -315,7 +315,7 @@ You should see both commands answer in one line. Keep `desk-quotes`: tutorial 5 
 
 - [Tutorial 5 · Build a pack from your data](05-build-a-pack.md) gives the `desk-quote` kind a screen.
 - [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) is the reference, with an example for every store; [TLS.md](../connectors/TLS.md) the shared TLS settings;
-  [POSTGRES_CONNECTOR.md](../connectors/POSTGRES_CONNECTOR.md) the real thing, with its own pool and a loader.
+  [POSTGRES_CONNECTOR.md](../../plugins/drishti-plugin-jdbc/README.md) the real thing, with its own pool and a loader.
 - To try a real PostgreSQL, start your own throwaway container and point a connector at it; never aim a tutorial at a database that matters.
 
 ## If something goes wrong

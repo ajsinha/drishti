@@ -31,7 +31,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * The formulas a generated workbook may hold (the playgrounds, docs/architecture/VAR_PLAYGROUND.md section 10): only functions that
+ * The formulas a generated workbook may hold (the playgrounds, docs/guides/VAR_GUIDE.md section 10): only functions that
  * Excel, LibreOffice Calc and Google Sheets share, so one file recalculates the same in all three. Never Excel-365-only dynamic arrays
  * ({@code FILTER}, {@code SORT}, {@code SEQUENCE}, {@code LET}, {@code LAMBDA}, {@code XLOOKUP}), volatile {@code INDIRECT} or
  * {@code OFFSET}, structured references or macros. {@link #check} refuses a formula that names anything else; {@link #scan} lists every

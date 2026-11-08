@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: Aerospike Enterprise over mutual TLS with certificate (PKI) log-in. tls-name is the name the server certificate carries
-# (the server's tls-name). Copy to config/connectors/aerospike-tls.yaml. See docs/connectors/AEROSPIKE_CONNECTOR.md, section Security.
+# (the server's tls-name). Copy to config/connectors/aerospike-tls.yaml. See plugins/drishti-plugin-aerospike/README.md, section Security.
 plugin: aerospike
 kinds: [trade]
 description: Trades in Aerospike over mutual TLS

@@ -25,7 +25,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
- * The lake files' check at start (docs/architecture/LAKE_CONFIG.md section 6; docs/guides/DATA_LAKE_GUIDE.md section 8): each lake file is
+ * The lake files' check at start (docs/architecture/DATA_ARCHITECTURE.md section 6; docs/guides/DATA_LAKE_GUIDE.md section 8): each lake file is
  * read and every table of it on a local disk compared with its Delta log or Iceberg metadata (format, partition columns, promoted
  * columns). A difference is logged as a warning, never rewritten; a lake file the reader refuses is logged with its reason. A connector
  * that names an unknown lake fails when it starts, with the reason on Admin -> Connectors. {@code drishti.py lake check} runs the same.

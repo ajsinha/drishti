@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The Iceberg connector's caches on disk, kept across restarts (the Delta connector's design, ICEBERG_CONNECTOR.md section "Disk
+ * The Iceberg connector's caches on disk, kept across restarts (the Delta connector's design, plugins/drishti-plugin-iceberg/README.md section "Disk
  * caches"): each business date's id map written once and memory-mapped ({@link MappedIdMap}, under {@code cache/<connector>/idmaps},
  * {@code id-map-disk.enabled}, default true), and documents already read in a RocksDB store ({@link DiskCache}, under
  * {@code cache/<connector>/docs}, {@code doc-disk-cache.enabled}, default true; {@code doc-disk-cache.max-gb} 1, {@code .ttl} 12h,
@@ -70,7 +70,7 @@ final class IcebergDiskCaches implements AutoCloseable {
         this(sourceName, ctx, false);
     }
 
-    /** With {@code memoryOnly} (a warehouse at {@code mem://}, IN_MEMORY_LAKE.md section 8): no id-map files and no document cache on disk. */
+    /** With {@code memoryOnly} (a warehouse at {@code mem://}, docs/architecture/DATA_ARCHITECTURE.md section 8): no id-map files and no document cache on disk. */
     IcebergDiskCaches(String sourceName, SourceContext ctx, boolean memoryOnly) {
         this.sourceName = sourceName;
         this.idMapFolder = memoryOnly ? null : com.ash.drishti.api.IdMapFolder.of(sourceName, ctx);

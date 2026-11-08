@@ -124,7 +124,7 @@ BI answer the same whatever the storage. Every other dataset stays in Delta.
   (sum of `QUANTITY` by source system, currency and product type). Measured on 2026-10-21: **18 answers, the same** (only timings, the
   data-version stamps and the table generation in the provenance panel differ, as they name the storage).
 - **Maintenance:** `lake maintain` for the Delta tables; the Iceberg tables with `IcebergLoader --keep-days` or the Iceberg maintenance of
-  [ICEBERG_CONNECTOR.md, section 9](ICEBERG_CONNECTOR.md#9-retention-and-maintenance).
+  [ICEBERG_CONNECTOR.md, section 9](../../plugins/drishti-plugin-iceberg/README.md#retention-and-maintenance).
 - **Default:** an option; the demo default is Delta.
 
 ## The sizes
@@ -158,7 +158,7 @@ loads them (rewriting the whole lake the packs read, in the layout each declares
 `tools/samplegen/bulk_trades.py` writes the book as one JSONL file a day (`<data>/build/bulk/murex/trade_murex.<date>.jsonl.gz`, the load rules' name) and loads each
 with `lake build`, replacing **one source system's** trade table (`trade_murex`, or `--system CALYPSO`) and leaving every other table as
 it is (`--no-lake` stops after the JSONL). Neither step rewrites the packs' samples, the Sutra tests or the feed. The server reads the demo lake, `data/delta/demo` (or `DRISHTI_DELTA_ROOT`), and
-picks a new load up within a minute; no restart is needed. The layout: [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md).
+picks a new load up within a minute; no restart is needed. The layout: [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md).
 
 For your own export (a large JSON array or JSON Lines of real trades), `drishti.py lake build` streams it into a Delta table with flat
 memory, partitions and promoted columns ([TOOLS.md](../guides/TOOLS.md)).
@@ -177,7 +177,7 @@ The profile is deprecated; the same connectors as files are in `config/connector
 [CONNECTOR_FILES.md, section 4](CONNECTOR_FILES.md#4-examples-one-per-store)). Measured in an earlier release: the samples in 2 s, a
 million trades × 3 days in about 3 minutes and 11 GB. User and password come from `--user`/`--password`, else
 `DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`. The samples' load recreates each domain's table; a running server sees a new
-load within a minute. Layout and design: [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md).
+load within a minute. Layout and design: [POSTGRES_CONNECTOR.md](../../plugins/drishti-plugin-jdbc/README.md).
 
 ## Apache Iceberg
 
@@ -187,7 +187,7 @@ tools/load-iceberg.sh ./data/iceberg --trades 10000        # and a book, for a l
 SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-Design: [ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md). (`load-iceberg.sh` builds the plugin with Maven; on Windows use
+Design: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md). (`load-iceberg.sh` builds the plugin with Maven; on Windows use
 `tools\windows\load-iceberg.ps1`, or put the demo lakes' trades in Iceberg with `build_demo_lakes.py --store`: [above](#mixed-delta-and-iceberg-storage).)
 
 ## DuckDB
@@ -200,7 +200,7 @@ SPRING_PROFILES_ACTIVE=duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -
 
 No server to run: one file holds every data domain, and the server reads it in-process. Each load writes a new file and renames it
 over the old one, so it can run while the server answers; the server picks it up within 10 s. The database defaults to
-`DRISHTI_DUCKDB_PATH`, else `data/duckdb/drishti.duckdb`. Design: [DUCKDB_CONNECTOR.md](DUCKDB_CONNECTOR.md).
+`DRISHTI_DUCKDB_PATH`, else `data/duckdb/drishti.duckdb`. Design: [DUCKDB_CONNECTOR.md](../../plugins/drishti-plugin-duckdb/README.md).
 
 ## MongoDB
 
@@ -211,7 +211,7 @@ tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000        # 
 SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-Design: [MONGODB_CONNECTOR.md](MONGODB_CONNECTOR.md).
+Design: [MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md).
 
 ## Redis
 
@@ -225,7 +225,7 @@ DRISHTI_REDIS_URI=redis://localhost:6380 SPRING_PROFILES_ACTIVE=redis DRISHTI_PA
 
 (Port 6380 on the host leaves a Redis you already run on 6379 alone.) Redis holds everything in memory: about 1 GB per million trades
 a day, so keep large books for a server. Each load replaces the business days it carries (`--merge` adds to them instead). Design:
-[REDIS_CONNECTOR.md](REDIS_CONNECTOR.md).
+[REDIS_CONNECTOR.md](../../plugins/drishti-plugin-redis/README.md).
 
 ## Aerospike
 
@@ -237,7 +237,7 @@ SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk jav
 ```
 
 `--ttl-days N` lets Aerospike expire each day after N days. The default namespace of the Docker image keeps data in memory and is too
-small for a million-trade book; see [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md#4-loading).
+small for a million-trade book; see [AEROSPIKE_CONNECTOR.md](../../plugins/drishti-plugin-aerospike/README.md#loading).
 
 ## Apache Cassandra
 
@@ -250,7 +250,7 @@ cp config/connectors.examples/cassandra/*.yaml config/connectors/               
 ```
 
 Each business day is written under a new generation and switched to at the end, so a reload never shows half a day. `--ttl-days N`
-expires cells after N days; `--keep-days N` drops the older days. See [CASSANDRA_CONNECTOR.md](CASSANDRA_CONNECTOR.md#4-loading).
+expires cells after N days; `--keep-days N` drops the older days. See [CASSANDRA_CONNECTOR.md](../../plugins/drishti-plugin-cassandra/README.md#loading).
 
 ## JSON-lines files (no store at all)
 
@@ -260,7 +260,7 @@ tools/load-files.sh --trades 10000               # and 10,000 trades a day for 3
 SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](FILE_CONNECTOR.md).
+One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](../../plugins/drishti-plugin-file/README.md).
 
 ## Your own JSONL
 
@@ -355,7 +355,7 @@ feeds: …/data/feeds/fixing.jsonl
 
 ### Live walks by kind
 
-A live sample ticks while someone watches it (the `demo` source, [DEMO_CONNECTOR.md](DEMO_CONNECTOR.md#74-coherent-walks-a-group-that-moves-together)).
+A live sample ticks while someone watches it (the `demo` source, [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md#coherent-walks-a-group-that-moves-together)).
 Its `_meta.walk` (the `_meta` block keeps its lower-case keys; the paths inside the walk are the document's UPPER_SNAKE names) moves a headline **and everything that must agree with it**, so a table, a chart and a headline never
 disagree. The specs are built by `tools/packgen/common/walks.py` from the finished sample; `DemoPackWalksTest` ticks every sample of
 every kind below 40 times and checks the identities in the second column. The kinds of the seven packs that walk:

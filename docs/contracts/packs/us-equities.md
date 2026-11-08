@@ -47,7 +47,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/us-company/` |
 | Columns | `TICKER`, `NAME`, `LEI_LEGAL_NAME`, `CIK`, `LEI`, `EXCHANGE`, `INDEX_TEXT`, `SECTOR`, `SIC`, `SIC_DESCRIPTION`, `STATE_OF_INCORPORATION`, `REVENUE` |
 | Test data | data/testdata/us-equities/us-company |
-| Worked example | [us-equities/us-company](../samples/us-equities/us-company.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [us-equities/us-company](../samples/us-equities.md#us-company) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -197,7 +197,7 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/index-membership/` |
 | Columns | `INDEX`, `NAME`, `MEMBERS` |
 | Test data | data/testdata/us-equities/index-membership |
-| Worked example | [us-equities/index-membership](../samples/us-equities/index-membership.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [us-equities/index-membership](../samples/us-equities.md#index-membership) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -335,7 +335,7 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/filing-feed/` |
 | Columns | `FEED`, `NAME`, `FILINGS` |
 | Test data | data/testdata/us-equities/filing-feed |
-| Worked example | [us-equities/filing-feed](../samples/us-equities/filing-feed.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [us-equities/filing-feed](../samples/us-equities.md#filing-feed) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -413,7 +413,7 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/filing/` |
 | Columns | `ACCESSION`, `COMPANY`, `COMPANY_NAME`, `FORM`, `FILED`, `REPORT_DATE` |
 | Test data | data/testdata/us-equities/filing |
-| Worked example | [us-equities/filing](../samples/us-equities/filing.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [us-equities/filing](../samples/us-equities.md#filing) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -476,7 +476,7 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/financial-fact/` |
 | Columns | `FACT_ID`, `COMPANY`, `COMPANY_NAME`, `CONCEPT`, `LABEL`, `LATEST`, `LATEST_YEAR` |
 | Test data | data/testdata/us-equities/financial-fact |
-| Worked example | [us-equities/financial-fact](../samples/us-equities/financial-fact.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [us-equities/financial-fact](../samples/us-equities.md#financial-fact) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

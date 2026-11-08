@@ -363,6 +363,6 @@ once a day; **Delete permanently** needs the name typed. Everything above is in 
 | users are signed out every few minutes | `DRISHTI_SESSION_SECRET` differs between console instances, or the proxy drops the cookie (`DRISHTI_SECURE_COOKIE=true` needs https) |
 | `FATAL: sorry, too many clients already` | database pools exceed `max_connections`: step 6 |
 | `OutOfMemoryError` or a heap above 90% for long | raise `-Xmx`, lower a cache (Admin → Caches), check live streams (`drishti.live.max-streams`) |
-| a connector is `DOWN` | Admin → Health names it and the error; it is retried by itself with growing waits; **Retry all now** tries at once ([runbook](../admin/runbooks/source-down.md)) |
-| live views lag | [runbook: live latency high](../admin/runbooks/live-latency-high.md) |
+| a connector is `DOWN` | Admin → Health names it and the error; it is retried by itself with growing waits; **Retry all now** tries at once ([runbook](../admin/OPERATIONS.md#171-source-down-or-slow)) |
+| live views lag | [runbook: live latency high](../admin/OPERATIONS.md#173-live-latency-high-or-live-views-stop-ticking) |
 | a restore does not show the users | the unpacked `data/identity/backup.db` was not renamed to `drishti.db`, or the owner is wrong |

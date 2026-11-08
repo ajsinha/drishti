@@ -54,12 +54,12 @@ whoever writes the production query that must emit the same JSON Lines: [docs/co
 
 ## Quick start: five steps
 
-On Windows, offline, with your own ENDUR files: [How to QA in Windows Environment using Custom Data](../../docs/qa/windows-custom-data.md).
+On Windows, offline, with your own ENDUR files: [How to QA in Windows Environment using Custom Data](../../docs/architecture/TEST_HARNESS.md#9-manual-qa-on-windows-offline-with-your-own-trade-files).
 
 1. **Clone** the repository (`git clone …`, then `cd drishti`).
 2. **Install** once: the console's Python with its requirements (PyYAML, deltalake and pyarrow among them),
    `python3 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt`,
-   and the server jar: the run configuration **Drishti build server jar** (or `./mvnw -q package -DskipTests -pl drishti-server -am`).
+   and the server jar: the run configuration **Drishti build server jar** (or `./mvnw -q package -DskipTests -pl drishti-app -am`).
 3. **Build the demo lakes**: the run configuration **Build demo lakes**, or
 
    ```bash

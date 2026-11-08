@@ -47,7 +47,7 @@ settings:
 auth: None (no API key). tls.* for an https:// mirror or proxy on a private CA; proxy.* for an outbound proxy.
 licence: No client library (the JDK's HttpClient and XML parser, Jackson). Google's terms govern the feed; headlines and links belong to their publishers.
 windows: Works the same on Windows (pure Java).
-doc: docs/connectors/NEWS.md
+doc: plugins/drishti-plugin-news/README.md
 ---
 # The news connector
 
@@ -145,7 +145,134 @@ $.ITEMS`. An annotated copy is `config/connectors.examples/other/news.yaml`. The
 
 ## See also
 
-- [The full news connector document](../../docs/connectors/NEWS.md): the pipeline step by step, settings, tests.
-- [The yfinance connector](../../docs/connectors/YFINANCE.md) (the same pattern for quotes) and
+- Below: [turning it on](#turning-it-on), [the pipeline step by step](#the-pipeline-step-by-step), [health, errors and retries](#health-errors-and-retries), [using it from a pack](#using-it-from-a-pack), [how it is built](#how-it-is-built), [tests](#tests).
+- [The yfinance connector](../drishti-plugin-yfinance/README.md) (the same pattern for quotes) and
   [connectors that compute data on demand](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
 - [Connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS (and the outbound proxy)](../../docs/connectors/TLS.md), [packs](../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
+
+## Turning it on
+
+`config/connectors/news.yaml` does not exist until a pack that uses it (`news-and-markets`) is loaded; the server then writes it **once**
+from the pack's template, with `enabled: ${DRISHTI_NEWS_ENABLED:false}`. Set `DRISHTI_NEWS_ENABLED=true`, or `enabled: true` in the
+file, or press Enable in Admin → Connectors. Enabling or disabling the file is live (no restart); a new plugin jar needs a restart, as for
+every plugin (the plugin ships inside `drishti-server`).
+
+**Privacy.** Every time a headline list is not in the cache, the entity's name (and the edition's language and country) is sent to
+`news.google.com`. For a company or a country that is harmless; for a client, a counterparty under review or an internal project name it
+may not be: switching it on is a decision for the site. Behind a mirror, set `base-url` to it; HTTPS on a private CA takes the shared
+[`tls.*`](../../docs/connectors/TLS.md) settings.
+
+**Ids.** `NEWS-Federal_Reserve` gives the newest headlines that name the Federal Reserve (or an alias), `NEWS-Toyota@ja-JP` the same from
+the Japanese edition, `NEWS-Federal_Reserve~all` everything the feed returned, without the relevance filter (the publisher lists and
+de-duplication still apply). Nothing is listed ahead of time, so `NEWS <GO>` has no list; `NEWS NEWS-<any name>` works for any name.
+
+## The pipeline step by step
+
+`NewsPipeline` runs these steps; each reports what it kept, and the document carries the report (`PIPELINE`), so a reader can see why a
+headline is not there.
+
+| Step | What it does | Setting |
+|---|---|---|
+| fetch | `GET <base-url>?q=<query>&hl=<language>&gl=<COUNTRY>&ceid=<COUNTRY>:<language>`, the query being `query-template` with `{name}` replaced | `base-url`, `language`, `country`, `query-template` |
+| parse | RSS 2.0 into items: title (Google's trailing ` - Publisher` removed), publisher, link (http or https only, so `javascript:` is dropped), time (RFC 1123), snippet (tags and entities removed, a repeat of the title dropped) | `max-bytes` |
+| relevance | keep an item only if its **title** names the entity or one of its aliases, as whole words, ignoring case and accents | `relevance` (`title` or `off`), `aliases.<Name>` |
+| sources | drop a publisher on the deny list; with an allow list, keep only those | `deny-sources`, `allow-sources` |
+| order | newest first; items without a usable date last | |
+| duplicates | the same address, or the same normalised headline from the same publisher, is kept once (the newest) | |
+| limit | at most this many | `max-items` |
+
+The web call's answer, before any step, is cached per name and edition for `cache-ttl-seconds`, in a cache of at most
+`cache-max-entities` names (least recently used leave first). The relevance setting applies on every read, so `NEWS-x` and `NEWS-x~all`
+share one web call. Concurrent reads of one name wait for a single call. If the web fails but an older answer is held, the older answer
+is served and health says why.
+
+## Outbound proxy
+
+The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](../../docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
+A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}`
+placeholder, never a literal. Google News is reached through the proxy when one applies; the first request of a name and every retry use
+it. Health ends `via proxy host:port (source)`. Tested in `NewsProxyTest` (through the proxy with a login, no-proxy bypass, the site
+default, `proxy: none`) against a fake proxy and the fake news server.
+
+## Health, errors and retries
+
+Start never fails because the web is unreachable, and nothing is fetched at start. Health is `UP` until a call fails, then
+`DOWN: <reason> (tried again on the next request)`, and `UP` again at the next success.
+
+| Situation | What happens |
+|---|---|
+| connection failure, timeout, HTTP 429, HTTP 5xx | repeated up to `retries` times with the shared retry shape (`drishti.retry.*`: exponential backoff with jitter; here `retry-initial`, `retry-max`, `retry-factor`, `retry-jitter`); then the read fails, or serves the older cached answer if there is one |
+| any other HTTP 4xx (403, 404) | fails at once: waiting will not change it |
+| response over `max-bytes` | fails at once, naming the limit |
+| not RSS (HTML error page, broken XML) | fails: `the response is not a readable RSS feed` |
+| RSS with a DOCTYPE or entities | refused: the parser never resolves a DOCTYPE, external entity or include (no XXE) |
+| a name nothing is written about | an empty list: a valid document with `COUNT: 0` |
+
+A failed read never returns "not held": it throws, so a view says the source failed rather than that there is no news.
+
+**Linked panels and the link budget.** A page that reads headlines through `source: link(...)` waits for them at most
+`drishti.graph.link-budget` (40 ms by default). A web call takes longer, so the first view of a name shows its news panels as *pending*
+and the next view (within `cache-ttl-seconds`) shows the headlines. A site using this pack sets the budget to a second or two
+(`drishti.graph.link-budget: 2s`, [PERFORMANCE.md](../../docs/admin/PERFORMANCE.md)). While the connector is off the panels stay empty
+with the reason (`waiting for NEWS-...`).
+
+## Using it from a pack
+
+A pack names the connector, routes the kind, and gives the entity the id of its news:
+
+```yaml
+connectors:
+  news: { plugin: news, enabled: "${DRISHTI_NEWS_ENABLED:false}", kinds: [news], settings: { relevance: title, aliases.Federal_Reserve: "Fed, FOMC" } }
+routes: { news: news }
+```
+
+```yaml
+# the entity's document:  {"TOPIC_ID": "TOPIC-FED", "NAME": "Federal Reserve", "NEWS_ID": "NEWS-Federal_Reserve", ...}
+# its Sutra:
+  - id: headlines
+    kind: table
+    source: "link($.NEWS_ID, 'news')"
+    rows: $.ITEMS
+    columns:
+      - { label: Published, bind: "@.PUBLISHED" }
+      - { label: Source, bind: "@.SOURCE" }
+      - { label: Headline, bind: "@.TITLE" }
+      - { label: Link, bind: "@.LINK" }       # a web address in a cell is shown as a link that opens in a new tab
+```
+
+The shipped example is the `news-and-markets` sample pack: fifteen topics (central banks, countries, companies, themes) and twenty
+listed companies with a quote, a price chart and these headlines
+([PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#sample-packs)).
+
+**Offline.** In offline mode (`DRISHTI_OFFLINE=true`, [CONFIGURATION](../../docs/admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet))
+this connector never starts, whatever its file says, and shows *off (offline mode)* in Admin → Connectors. The `news-and-markets` pack's
+`news-store` then serves `news` from a snapshot captured through this connector (`drishti.py testdata capture-market`;
+[PACK_DEVELOPER_GUIDE.md](../../docs/guides/PACK_DEVELOPER_GUIDE.md#news-and-markets-and-world-economy-offline)); it can also be held in
+the in-memory lake ([DATA_LAKE_GUIDE.md section 13](../../docs/guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake)).
+
+## How it is built
+
+Everything is in `plugins/drishti-plugin-news/src/main/java/com/ash/drishti/plugin/news/`; the module depends on `drishti-api`, Jackson
+and `drishti-common` (the shared retry policy), and is Spring-free.
+
+| Class | Job |
+|---|---|
+| `NewsSourcePlugin` | the `SourcePlugin`: parses the id, asks the cache, builds the document, reports health and cache statistics |
+| `NewsSettings` | every setting, validated once at start; nothing is a constant in the code |
+| `HttpFetcher` | one bounded GET with the retry loop; reads at most `max-bytes` |
+| `RssParser` | RSS to `NewsItem`s with XXE switched off |
+| `NewsPipeline` | relevance, sources, order, duplicates, limit, each reporting its counts |
+| `BoundedCache` | the least-recently-used map with a fixed capacity |
+
+Nothing is stored, so `fetch` does the work; it is safe to call from many virtual threads at once (the cache has one lock held only for
+map operations, and a call in flight is shared); it never holds a thread longer than its timeout; and it reports through `health()` and
+`cacheStats()`. The pattern: [connectors that compute data on demand](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
+
+## Tests
+
+No test calls Google. `FakeNewsServer` is a local HTTP server that serves canned RSS and, by the name asked for, a feed with an XXE
+attempt, an oversized body, a slow response, two 503s then success, a 429 then success, a 403 and text that is not XML.
+`NewsSourcePluginTest` checks the filtering, de-duplication, sorting and normalisation, the aliases, the lists, the request shape, the
+cache (hits, TTL 0, the bound), each failure above, bad settings and the contract of an on-demand source (not dated, `UP`,
+`lastUpdate`). `drishti-console/tests/test_news_browser.py` opens a company page and a topic page in Chromium over the real server with
+the fakes behind it, and the same pages with the connectors off.

@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The flat virtual table offered for a table a data load created (VIRTUAL_TABLES.md section 10, V8; DATA_LAKE_GUIDE.md section 5.6): one
+ * The flat virtual table offered for a table a data load created (docs/architecture/ARCHITECTURE.md section 10, V8; DATA_LAKE_GUIDE.md section 5.6): one
  * column per scalar field the sample's documents hold (a nested object's scalars one level down, {@code INDEX.NAME} as {@code INDEX_NAME}),
  * each typed from its values; the id field as the key when it is unique in the sample; each list of objects named as a grain the person
  * may choose instead (one row per element). Never saved by itself: the person accepts it (one click), edits it, or ignores it.

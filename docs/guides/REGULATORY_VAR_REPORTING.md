@@ -482,7 +482,7 @@ larger.
 business days 2025-10-01 to 2026-09-30: **3** exceptions against APL and **3** against HPL at 99% (2025-12-29, 2026-01-07, 2026-01-13);
 8 and 10 at 97.5% (expected 6.25); **green**, multiplier **3.00**. The inflation and money-market desks have 6 each at 99%: **amber**, 3.50.
 
-**Its playground.** The backtest is a tab of the playground frame ([VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md)): the node's
+**Its playground.** The backtest is a tab of the playground frame ([VAR_PLAYGROUND.md](VAR_GUIDE.md)): the node's
 250 tested days as data, each exception a formula (`=IF(P&L < −VaR, 1, 0)`), the counts as `COUNTIF`, the zone and the multiplier a
 lookup into the configured table, and a check cell against the engine's answer.
 

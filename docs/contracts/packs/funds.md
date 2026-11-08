@@ -43,7 +43,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/fund/` |
 | Columns | `TICKER`, `NAME`, `TYPE`, `TICKERS`, `ADVISER`, `INDEX_ID`, `NET_ASSETS`, `EXPENSE_RATIO`, `HOLDING_COUNT`, `REPORT_DATE`, `RANK` |
 | Test data | data/testdata/funds/fund |
-| Worked example | [funds/fund](../samples/funds/fund.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [funds/fund](../samples/funds.md#fund) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -410,7 +410,7 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/fund-holder/` |
 | Columns | `TICKER`, `NAME`, `FUNDS`, `TOTAL_VALUE`, `PCT_OF_SHARES` |
 | Test data | data/testdata/funds/fund-holder |
-| Worked example | [funds/fund-holder](../samples/funds/fund-holder.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [funds/fund-holder](../samples/funds.md#fund-holder) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -498,7 +498,7 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/index-funds/` |
 | Columns | `INDEX`, `NAME`, `FUNDS`, `TOTAL_NET_ASSETS` |
 | Test data | data/testdata/funds/index-funds |
-| Worked example | [funds/index-funds](../samples/funds/index-funds.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [funds/index-funds](../samples/funds.md#index-funds) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

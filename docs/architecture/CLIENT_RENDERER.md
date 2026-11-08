@@ -453,7 +453,7 @@ reader's own arrangement (Customize, `user-can-arrange`) stays a console feature
 tables scroll inside themselves, and no screen scrolls sideways; the parity suite checks 390 and 1280 px in every theme. Targets are
 44 px on a narrow container and on any coarse pointer.
 
-**The phone tiers hook** ([MOBILE_DISPLAY.md](MOBILE_DISPLAY.md)). Designed for now, built when tiers are: the renderer sends
+**The phone tiers hook** ([MOBILE_DISPLAY.md](../guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)). Designed for now, built when tiers are: the renderer sends
 `X-Drishti-Device` when the host gives `device` (the server will then bind only must and glance panels); a panel's resolved tier
 (`phone: {tier, from}`) is written as `data-tier` on its frame; a panel the server sends as a stub (more, desk) is a panel with `wire.waits`
 today ("Loading…") and becomes, with tiers, a row of "More on this page" that loads `GET …/panels/<id>` on tap through the same

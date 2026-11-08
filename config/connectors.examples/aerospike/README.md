@@ -26,7 +26,7 @@ files:
 - reference-store.yaml
 - risk-store.yaml
 - trading-store.yaml
-doc: docs/connectors/AEROSPIKE_CONNECTOR.md
+doc: plugins/drishti-plugin-aerospike/README.md
 ---
 # The aerospike connector templates
 
@@ -112,6 +112,6 @@ seconds. The trading pack routes `trade` to `trade-endur`: save `trading-store.y
 
 ## See also
 
-- [The Aerospike connector document](../../../docs/connectors/AEROSPIKE_CONNECTOR.md): layout, loading, TTL retention, sizing, security.
+- [The aerospike connector README](../../../plugins/drishti-plugin-aerospike/README.md): layout, loading, TTL retention, sizing, security.
 - [Connector files](../../../docs/connectors/CONNECTOR_FILES.md) (copying examples, the trade connectors' names) and [TLS](../../../docs/connectors/TLS.md).
 - [The demo data](../../../docs/connectors/DEMO_DATA.md) (the samples loaded into every store).

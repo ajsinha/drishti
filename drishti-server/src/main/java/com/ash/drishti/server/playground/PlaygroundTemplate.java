@@ -34,7 +34,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 /**
- * A playground's workbook template (docs/architecture/VAR_PLAYGROUND.md section 5), kept in the repository as text: {@code template.properties}
+ * A playground's workbook template (docs/guides/VAR_GUIDE.md section 5), kept in the repository as text: {@code template.properties}
  * (its name, version and the cell formats by name), {@code xl/styles.xml} (the look), {@code docProps/core.xml} and {@code docProps/app.xml}
  * (the document's properties, with {@code {{PRODUCT}}}, {@code {{COPYRIGHT}}}, {@code {{OWNER}}} placeholders filled from the branding
  * configuration) and {@code explain.txt} (the words of the Explain tab). The sheets and their formulas are generated for the count asked

@@ -965,7 +965,7 @@ figures after Excel or LibreOffice recalculates it. The workbook equal to the en
 and 500 positions, is tested on every build.
 
 **Further in the guide:** [VAR_GUIDE.md section 3.10](../guides/VAR_GUIDE.md#310-the-var-playground-play-var) and
-[VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md) (every tab and every formula).
+[VAR_PLAYGROUND.md](../guides/VAR_GUIDE.md) (every tab and every formula).
 
 ## Next steps
 

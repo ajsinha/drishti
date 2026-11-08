@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Admin → Lakes and Admin → Health for the in-memory lake (docs/guides/IN_MEMORY_LAKE_GUIDE.md section 9): the stores and tables the
+"""Admin → Lakes and Admin → Health for the in-memory lake (docs/guides/DATA_LAKE_GUIDE.md section 9): the stores and tables the
 server holds in memory only, drawn from GET /api/v1/admin/lakes/memory; nothing when the server has no memory store; and
 drishti.py lake memory's text.
 

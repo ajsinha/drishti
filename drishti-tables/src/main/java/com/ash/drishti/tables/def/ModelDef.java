@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A model of the layer (BI_FOUNDATION_2911E.md section 3.3): virtual tables under aliases (Q10), related many-to-one, with measures in
+ * A model of the layer (docs/architecture/BI_DESIGN.md section 3.3): virtual tables under aliases (Q10), related many-to-one, with measures in
  * Rachana's aggregate scope, hierarchies, model security that only tightens, and the keys BI's models have kept as written. MQ asks it
  * as it asks a BI model today.
  *

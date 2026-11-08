@@ -41,7 +41,7 @@ One OECD member: the latest leading indicator, unemployment, inflation and growt
 | Cadence | daily (due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `oecd-store` (plugin `delta`), table `<root>/oecd/oecd-country/` |
 | Test data | config/packs/economy/oecd/samples |
-| Worked example | [oecd/oecd-country](../samples/oecd/oecd-country.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [oecd/oecd-country](../samples/oecd.md#oecd-country) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -119,7 +119,7 @@ One OECD measure of one member by period: the history, the latest value and the 
 | Cadence | daily (due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `oecd-store` (plugin `delta`), table `<root>/oecd/oecd-series/` |
 | Test data | config/packs/economy/oecd/samples |
-| Worked example | [oecd/oecd-series](../samples/oecd/oecd-series.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [oecd/oecd-series](../samples/oecd.md#oecd-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

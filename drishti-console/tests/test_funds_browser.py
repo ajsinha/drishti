@@ -48,7 +48,7 @@ def stack(tmp_path_factory):
     jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     if not jars or not Path(java).exists():
-        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
     tmp = tmp_path_factory.mktemp("fundsstack")
     work, lake = tmp / "server", tmp / "delta"
     work.mkdir()

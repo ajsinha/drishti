@@ -30,7 +30,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Records the fixtures of 2.9.11.e's one parity proof (docs/architecture/BI_FOUNDATION_2911E.md section 5.3) from the code it runs on:
+ * Records the fixtures of 2.9.11.e's one parity proof (docs/architecture/BI_DESIGN.md section 5.3) from the code it runs on:
  * every case of {@link BiFoundationCases} (models, rows each person sees, reports) and the live replay ({@link BiFoundationLive}), one JSON
  * file per model and report under {@code src/test/resources/bi/foundation-parity/}, keys sorted so a diff is readable. It extends what
  * {@code BiParityRecorder} (2.9.11.b) does from the totals of one dataset to every answer and every person. Runs only when asked:

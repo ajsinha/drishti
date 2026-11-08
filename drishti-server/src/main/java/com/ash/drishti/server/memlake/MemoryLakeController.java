@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin, Lakes for the in-memory lake (IN_MEMORY_LAKE.md section 12) and {@code drishti.py lake memory}: {@code GET
+ * Admin, Lakes for the in-memory lake (docs/architecture/DATA_ARCHITECTURE.md section 12) and {@code drishti.py lake memory}: {@code GET
  * /api/v1/admin/lakes/memory} every store and table (cap, use, bytes, rows, version, refills, evictions, refusals, compaction, the
  * compression ratio, health); {@code GET …/memory/jobs} the runs, newest first; {@code POST …/memory/refill/{table}} a run now (audited).
  */
@@ -66,7 +66,7 @@ public class MemoryLakeController {
     /**
      * Every lake of the lake files (config/lakes/, docs/guides/DATA_LAKE_GUIDE.md) and its tables, read-only: Admin -> Lakes lists them above the
      * memory stores. A lake file the reader refuses is shown as the refusal, so the page always opens. {@code check=true} adds the
-     * comparison of each local table with its lake file (LAKE_CONFIG.md section 6).
+     * comparison of each local table with its lake file (docs/architecture/DATA_ARCHITECTURE.md section 6).
      */
     @GetMapping("/api/v1/admin/lakes/files")
     public Map<String, Object> lakeFiles(@RequestParam(name = "check", required = false, defaultValue = "false") boolean check,

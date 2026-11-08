@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The phone display (docs/architecture/MOBILE_DISPLAY.md), the console side.
+"""The phone display (docs/guides/PACK_DEVELOPER_GUIDE.md), the console side.
 
 Every panel of an entity page gets a **phone tier**: ``must`` (shown in full, first), ``glance`` (shown in a compact form: a few rows, a
 sparkline, the first figures), ``more`` (not sent; a row under *More on this page*, loaded when tapped) or ``desk`` (not on a phone;
@@ -22,7 +22,7 @@ named under *On desktop*). The tier is configured, never coded, resolved per pan
 2. the fragment's ``doc.phone`` and 3. the Sutra's ``phone:`` (both carried by the server in the ViewModel's ``phone``);
 4. the site (``ui.phone.rules``), the pack (``ui.phone.packs``) and the edition or lens (its ``phone.rules``), each of which may also cap
    (``max: glance``): a cap wins over every layer, the strictest cap of all;
-5. the person's own pins: decided for later (MOBILE_DISPLAY.md section 11), not in this build.
+5. the person's own pins: decided for later (docs/guides/PACK_DEVELOPER_GUIDE.md section 11), not in this build.
 
 The browser says what it is (``X-Drishti-Device`` on a request, or the ``drishti-device`` cookie static/js/drishti_phone.js keeps from the screen
 width); the console never guesses from the user agent. A phone gets the must and glance panels only (glance ones cut on the console
@@ -42,7 +42,7 @@ HEADER = "X-Drishti-Device"
 COOKIE = "drishti-device"
 ALL_COOKIE = "drishti-phone-all"
 
-# Layer 1: the tier of a panel kind (MOBILE_DISPLAY.md section 4, decided 2026-10-31: tables and charts glance).
+# Layer 1: the tier of a panel kind (docs/guides/PACK_DEVELOPER_GUIDE.md section 4, decided 2026-10-31: tables and charts glance).
 KIND_DEFAULTS = {
     "kv": "must", "status": "must", "metric": "must", "gauge": "must",
     "table": "glance", "ladder": "glance", "line": "glance", "area": "glance", "hbar": "glance", "candlestick": "glance",
@@ -178,7 +178,7 @@ def plan(request, vm: dict, panels: list[dict], dev: str, pack_list: list | None
             "why": [{"id": p.get("id"), "title": p.get("title") or p.get("id"), **tiers.get(str(p.get("id") or ""), {})} for p in panels]}
 
 
-# ---- pages beyond Sutra pages (MOBILE_DISPLAY.md section 8): the VaR and exposure pages and the edition landings ------------------
+# ---- pages beyond Sutra pages (docs/guides/PACK_DEVELOPER_GUIDE.md section 8): the VaR and exposure pages and the edition landings ------------------
 
 # Each page's parts with their default tier and their name in *More on this page*. The site sets its own in ui.phone.pages.<page>, an
 # edition in its phone.pages.<page> (a landing also in home.phone); either may cap with max (a part never above it).
@@ -234,7 +234,7 @@ def page_parts(request, page: str) -> dict | None:
             "more": [k for k, v in tiers.items() if v == "more"], "desk": [k for k, v in tiers.items() if v == "desk"]}
 
 
-# ---- the compact forms (MOBILE_DISPLAY.md section 5.3) ---------------------------------------------------------------------------
+# ---- the compact forms (docs/guides/PACK_DEVELOPER_GUIDE.md section 5.3) ---------------------------------------------------------------------------
 
 _NUM = re.compile(r"^\(?([-+−]?)\s*[$€£¥]?\s*([0-9][0-9,]*\.?[0-9]*)\s*(k|m|mm|bn|b|t|%)?\)?$", re.I)
 _SCALE = {"k": 1e3, "m": 1e6, "mm": 1e6, "bn": 1e9, "b": 1e9, "t": 1e12, "%": 1.0}

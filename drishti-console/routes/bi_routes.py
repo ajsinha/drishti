@@ -352,7 +352,7 @@ async def proxy(request: Request, path: str):
             status, answer = await request.app.state.backend.bi_async("POST", "/" + path, ident(request), body, asked[0], wait=asked[1], **params)
         except BackendError as e:
             return _problem(e)
-        # an answer given by a run comes as JSON and goes as JSON: the console writes no Arrow of its own (ARROW_FLIGHT.md decided 5)
+        # an answer given by a run comes as JSON and goes as JSON: the console writes no Arrow of its own (docs/architecture/DATA_ARCHITECTURE.md decided 5)
         return Response(status_code=204) if answer is None else JSONResponse(answer, status_code=status, headers={"Cache-Control": "no-store"})
     if arrow:
         try:

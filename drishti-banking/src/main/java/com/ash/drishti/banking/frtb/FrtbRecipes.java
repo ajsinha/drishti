@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Saved playground runs (SENSITIVITIES_AND_FRTB_SA.md section 12.1a, FRTB_SA_GUIDE.md section 8.3): a recipe records the scope and date,
+ * Saved playground runs (docs/guides/FRTB_SA_GUIDE.md section 12.1a, FRTB_SA_GUIDE.md section 8.3): a recipe records the scope and date,
  * the knowledge time the inputs were read at, the digest of the engine's input, the parameter files themselves (their bytes and hash),
  * every switch and override, the engine version and the figures. {@code PLAY FRTB RUN <id>} reads the inputs as known then, runs the
  * recorded parameters and choices and compares: equal digests give byte-equal figures, and a difference is named, never hidden.

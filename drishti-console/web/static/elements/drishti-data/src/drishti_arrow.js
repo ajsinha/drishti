@@ -22,7 +22,7 @@
 
    Where the bytes come from: Flight over HTTP when the server offers it (a POST of the ticket to its do-get address, an Arrow stream
    back; ArrowClient asks the server's capabilities once), else Arrow over HTTP (Accept: application/vnd.apache.arrow.stream), else JSON.
-   The Drishti server answers Arrow over HTTP today; its Flight service is gRPC (ARROW_FLIGHT.md), which a browser cannot speak. */
+   The Drishti server answers Arrow over HTTP today; its Flight service is gRPC (docs/architecture/DATA_ARCHITECTURE.md), which a browser cannot speak. */
 import { staticUrl, loadScript } from '../../drishti-core/src/drishti_index.js';
 
 /** The media type of an Arrow IPC stream. */

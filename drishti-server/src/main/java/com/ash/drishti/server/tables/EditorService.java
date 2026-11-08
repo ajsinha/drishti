@@ -61,7 +61,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 /**
- * The editors of tables, virtual tables, semantic models and Python-driven tables (EDITORS.md sections 1 to 4) on the table layer: the
+ * The editors of tables, virtual tables, semantic models and Python-driven tables (docs/architecture/SHARED_SCREENS.md sections 1 to 4) on the table layer: the
  * objects a person may open, each definition's YAML and document, the checks as typed (the layer's own, with every problem at its line), the
  * Text toggle's statement, a live preview read on the server as the person may see the source (rows, totals by the pivot engine, checks,
  * the cost of a join across connectors), a model's measures with the engine's "adds up?", the Access matrix, impact, history, and saving
@@ -133,7 +133,7 @@ public final class EditorService {
         }
     }
 
-    /** Editing: administrators and BI authors (VIRTUAL_TABLES.md V9: the power to edit BI datasets). */
+    /** Editing: administrators and BI authors (docs/architecture/ARCHITECTURE.md V9: the power to edit BI datasets). */
     boolean mayEdit(Principal p) {
         return !securityOn || entitlements.isAdmin(p) || access.has(p, BiAccess.AUTHOR);
     }
@@ -528,7 +528,7 @@ public final class EditorService {
     static final int SAMPLE_INPUT_ROWS = 5_000;
 
     /**
-     * A Python-driven table's sample run (EDITORS.md section 4): each input read as {@code p} may see it on {@code date} (a table by its name, or a
+     * A Python-driven table's sample run (docs/architecture/SHARED_SCREENS.md section 4): each input read as {@code p} may see it on {@code date} (a table by its name, or a
      * model query), the build function {@code source} run once on the compute pool with them ({@code build(inputs, params)}), and its rows checked
      * against the table's output contract (the columns and their types, the keys unique, the never-empty columns). Needs bi-author.
      */
@@ -811,7 +811,7 @@ public final class EditorService {
     }
 
     /**
-     * The cost of the table's look-ups across connectors (EDITORS.md section 2): each side's rows as read now, the memory they take, the time
+     * The cost of the table's look-ups across connectors (docs/architecture/SHARED_SCREENS.md section 2): each side's rows as read now, the memory they take, the time
      * the read took, and a warning above {@code drishti.tables.scan-warn-rows} when the table does not filter.
      */
     private Map<String, Object> cost(TableDef t, Catalogue over, Counting counting, TableReads.Read read, long ms, ViewerContext who) {

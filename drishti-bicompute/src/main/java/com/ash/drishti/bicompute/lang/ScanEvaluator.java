@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The SQL form of a compiled expression over a scan (BI_FOUNDATION_2911E.md 2.6): a row expression is its SQL per row; an aggregate is
+ * The SQL form of a compiled expression over a scan (docs/architecture/BI_DESIGN.md 2.6): a row expression is its SQL per row; an aggregate is
  * the engine's {@link AggFunction} state computed by the database ({@link AggFunction#sqlState}, the input set to null where the
  * measure's condition is not true) and finished by the engine ({@link AggFunction#fromSql}), as the tabular provider computes a cell; a
  * {@link Lowered.Shape} is its SQL over its parts' values. The same results as {@link RowsEvaluator}'s, which the differential test

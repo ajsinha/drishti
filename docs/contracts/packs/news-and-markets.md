@@ -43,7 +43,7 @@ A topic and the news about it: headlines (newest first) with their publishers an
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `news-store` (plugin `delta`), table `<root>/news/news-topic/` |
 | Test data | config/packs/economy/news-and-markets/samples |
-| Worked example | [news-and-markets/news-topic](../samples/news-and-markets/news-topic.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [news-and-markets/news-topic](../samples/news-and-markets.md#news-topic) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -97,7 +97,7 @@ The headlines for one name, as the news connector computed them: newest first, f
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Storage | connector `news` (plugin `news`) |
 | Test data | data/testdata/news-and-markets/news |
-| Worked example | [news-and-markets/news](../samples/news-and-markets/news.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [news-and-markets/news](../samples/news-and-markets.md#news) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -196,7 +196,7 @@ A listed company: its live quote and price history (yfinance connector) and its 
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `news-store` (plugin `delta`), table `<root>/news/listed-company/` |
 | Test data | config/packs/economy/news-and-markets/samples |
-| Worked example | [news-and-markets/listed-company](../samples/news-and-markets/listed-company.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [news-and-markets/listed-company](../samples/news-and-markets.md#listed-company) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -254,7 +254,7 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Storage | connector `yfinance` (plugin `yfinance`) |
 | Test data | data/testdata/news-and-markets/quote |
-| Worked example | [news-and-markets/quote](../samples/news-and-markets/quote.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Worked example | [news-and-markets/quote](../samples/news-and-markets.md#quote) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 

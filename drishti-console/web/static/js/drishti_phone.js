@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The phone display (docs/architecture/MOBILE_DISPLAY.md, core/phone.py), the browser side.
+/* The phone display (docs/guides/PACK_DEVELOPER_GUIDE.md, core/phone.py), the browser side.
  *
  * - Tells the console what this screen is: the drishti-device cookie (phone below 640 px, tablet to 1000 px, desk above), from the width
  *   at load and on rotation. An entity page drawn for another class is drawn again once (a first visit, a phone turned sideways).

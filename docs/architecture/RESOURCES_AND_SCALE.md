@@ -27,7 +27,7 @@ how it scales. Where it overlaps an older document, this one decides; the older 
 [section 16.2](ARCHITECTURE.md#162-choosing-a-data-mechanism) and [16.3](ARCHITECTURE.md#163-how-memory-mapped-data-follows-the-lake),
 [VAR_SHARDING.md](VAR_SHARDING.md) (the shard machinery), [VAR_GUIDE.md sections 25 to 27](../guides/VAR_GUIDE.md#25-one-business-date-in-memory)
 (the VaR date in memory and the hot file), [EXPOSURE_GUIDE.md section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file),
-[DELTA_CONNECTOR.md section 9](../connectors/DELTA_CONNECTOR.md#9-memory), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap),
+[DELTA_CONNECTOR.md section 9](../../plugins/drishti-plugin-delta/README.md#memory), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap),
 [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built), [BENCHMARK.md](../admin/BENCHMARK.md), [PERFORMANCE.md](../admin/PERFORMANCE.md) and
 [OPERATIONS.md section 12.1a](../admin/OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run).
 
@@ -597,7 +597,7 @@ override: [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protectio
 
 ### 5.8 The in-memory lake, measured
 
-Memory-only feeds ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md), [the guide](../guides/IN_MEMORY_LAKE_GUIDE.md)) are Delta tables held in
+Memory-only feeds ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk), [the guide](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake)) are Delta tables held in
 direct memory, outside the heap and outside the cache budget: each memory store is its own hard cap (an off-heap pool beside the heap
 pools of section 5.2; a gauge of its own in busy protection) and the JVM's direct-memory limit is 256 MB plus the stores' caps (section
 5.6). Measured on the demo tables (`MemoryRatiosTest`, at most 10,000 rows a table from `data/testdata`; the same rows sorted by key, one

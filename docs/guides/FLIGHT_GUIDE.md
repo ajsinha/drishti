@@ -22,10 +22,10 @@ belongs to, without a JSON step and without copying the lake: the kinds of every
 vectors and the in-memory lake, each with the same entitlements, masks, busy protection and audit as the screens.
 
 The exact form of every request, its schema and its errors are in the [reference](FLIGHT_REFERENCE.md); a hands-on walk from a token to a
-pandas DataFrame is [tutorial 35](../tutorials/35-data-out-with-arrow-flight.md); the clients have their own pages
-([Python](flight/PYTHON.md), [Java](flight/JAVA.md), [JDBC](flight/JDBC.md), [ODBC](flight/ODBC.md)).
+pandas DataFrame is [tutorial 35](../tutorials/35-data-out-with-arrow-flight.md); the clients have their own sections
+in the reference ([Python](FLIGHT_REFERENCE.md#71-python), [Java](FLIGHT_REFERENCE.md#72-java), [JDBC](FLIGHT_REFERENCE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program), [ODBC](FLIGHT_REFERENCE.md#74-odbc-excel-power-bi-tableau)).
 Working examples to start from, every one read only (Python notebooks from a token to VaR scenario P&L, a live stream, DuckDB and the
-in-memory lake; Java; Excel through Python) are in [examples/clients](../../examples/clients/README.md). Later: C#/.NET, R and Go client pages (the service already answers any Flight client). The design and its decisions are [ARROW_FLIGHT.md](../architecture/ARROW_FLIGHT.md).
+in-memory lake; Java; Excel through Python) are in [examples/clients](../../examples/clients/README.md). Later: C#/.NET, R and Go client sections (the service already answers any Flight client). How the service is built and why: [DATA_ARCHITECTURE.md section 11](../architecture/DATA_ARCHITECTURE.md#11-arrow-flight-drishtis-data-to-any-client).
 
 ## Contents
 
@@ -114,7 +114,7 @@ measure call). Full detail per form: [FLIGHT_REFERENCE.md](FLIGHT_REFERENCE.md).
 | `model` | `{"model": "trades-basic", "query": {"select": {"fields": [...], "measures": [...]}, "where": [...], "sort": [...], "limit": 50}}` | MQ, BI's model queries | the query's answer |
 | `pivot` | the view, as `POST /api/v1/pivot/query` takes it | the pivot engine | one per cell and measure |
 | `measure` | `measure('var.scenarios', 'DESK:RATES', date: 2026-09-30)` or `{"measure": "var.parts", "scope": "DESK:RATES", "by": "position"}` | the VaR engine, computed when asked | one per scenario; one per part with its vector |
-| `lake` | `{"lake": "feeds", "kind": "news.headlines", "cursor": "SEQ"}` | the lake configuration ([LAKE_CONFIG.md](../architecture/LAKE_CONFIG.md)), then the kind's reader | the table's rows; appends live |
+| `lake` | `{"lake": "feeds", "kind": "news.headlines", "cursor": "SEQ"}` | the lake configuration ([DATA_LAKE_GUIDE.md section 2](DATA_LAKE_GUIDE.md#2-the-lake-file-every-key)), then the kind's reader | the table's rows; appends live |
 
 **VaR's numbers are the engine's.** A scope's vector is float64, as the engine sums; a position's or trade's row is float32, as the hot
 file keeps it ([VAR_GUIDE.md](VAR_GUIDE.md), section 26), and the schema's metadata says which (`drishti.pnl.precision`). The vectors are
@@ -335,7 +335,7 @@ type: `TABLE`. A tool's browse never fails on a model the person may not read: i
 (`UNIMPLEMENTED`, read only); `EXPLAIN` (the BI SQL console answers it); a statement that names no model (`DRS-5603`, with how to name
 one). Prepared statements are read only and stateless: preparing returns the result's schema, executing reads it.
 
-Clients: the [JDBC page](flight/JDBC.md) (DBeaver, DataGrip, any JDBC program; the driver is one jar) and the [ODBC page](flight/ODBC.md)
+Clients: [JDBC](FLIGHT_REFERENCE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program) (DBeaver, DataGrip, any JDBC program; the driver is one jar) and [ODBC](FLIGHT_REFERENCE.md#74-odbc-excel-power-bi-tableau)
 (an installer, so not on machines where nothing may be installed). The statements and the catalog calls are in the
 [reference](FLIGHT_REFERENCE.md#6-flight-sql), section 6.
 

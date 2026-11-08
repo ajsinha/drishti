@@ -76,7 +76,7 @@
   function opInfo(type, op) { var l = OPS[type] || OPS.text; for (var i = 0; i < l.length; i++) { if (l[i][0] === op) { return l[i]; } } return null; }
   function num(s) { return s == null ? NaN : (function (v) { return v.n == null ? NaN : v.n; })(value(norm(s))); }
 
-  /* "Above / below average": the average is the server's (ONE_GRAMMAR.md section 5: the browser computes no figure). The column's
+  /* "Above / below average": the average is the server's (docs/architecture/ARCHITECTURE.md section 5: the browser computes no figure). The column's
      numbers go to the pivot engine (POST /api/pivot/inline, avg(V)); its answer is kept per list of numbers (the last AVG_KEEP lists), so
      a redraw asks nothing. Until it answers no row is hidden; refused, no row matches and the reason is kept (api.averageProblem). */
   var AVG = {}, AVG_ORDER = [], AVG_KEEP = 50;

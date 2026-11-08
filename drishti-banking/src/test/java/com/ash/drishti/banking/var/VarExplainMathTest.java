@@ -29,7 +29,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 /**
- * The states and steps of "why VaR moved" (VAR_GUIDE.md section 3.11; OVERSIGHT_LENS.md section 4.1's tests) on crafted vectors where
+ * The states and steps of "why VaR moved" (VAR_GUIDE.md section 3.11; docs/lenses/README.md section 4.1's tests) on crafted vectors where
  * each cause alone moves VaR by a known amount: one trade out, one in, one restated vector, one book moved, a rolled window. Each step
  * equals it and the others are zero; on random inputs the steps telescope to the change and the last state is the later date's scope.
  */

@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The layer's materialisations (BI_FOUNDATION_2911E.md 3.4): live by key from pushed entities, and on-load Parquet per business date. */
+/** The layer's materialisations (docs/architecture/BI_DESIGN.md 3.4): live by key from pushed entities, and on-load Parquet per business date. */
 class MaterializationTest {
 
     @TempDir Path store;

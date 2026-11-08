@@ -92,7 +92,7 @@ settings:
 **You should see** `data/iceberg/risk/<kind>/metadata` and `data` folders for the seven VaR kinds, `data/delta/demo/risk` empty, and
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
 
-**Further:** [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the connector, sections 18 and 19),
+**Further:** [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (the connector, sections 18 and 19),
 [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage) (mixed storage).
 
 ## Step 2 · Publish the official results to Iceberg

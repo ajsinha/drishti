@@ -90,7 +90,7 @@ final class VarViews {
         return svc;
     }
 
-    /** Parametric VaR beside historical (PARAMETRIC_VAR.md; null or off: no parametric block). */
+    /** Parametric VaR beside historical (docs/guides/VAR_GUIDE.md; null or off: no parametric block). */
     private VarParametric parametric;
 
     VarViews parametric(VarParametric p) {
@@ -290,7 +290,7 @@ final class VarViews {
         out.put("lens", lensNote(s));
         Map<String, Object> pBlock = pHeadline(s);
         if (pBlock != null) {
-            out.put("parametric", pBlock);                             // the cross-check beside historical (PARAMETRIC_VAR.md section 6)
+            out.put("parametric", pBlock);                             // the cross-check beside historical (docs/guides/VAR_GUIDE.md section 6)
         }
         if (lens(s).stressed()) {                                      // the 12-week average over the node's official records
             out.put("stressAverage", stressAverage(s));
@@ -900,7 +900,7 @@ final class VarViews {
         return contributions(p, scope, date, by, scenario, ccy, lens, false);
     }
 
-    /** The same, {@code matrix}: with the parts' correlation and covariance matrix (parametric, PARAMETRIC_VAR.md section 3). */
+    /** The same, {@code matrix}: with the parts' correlation and covariance matrix (parametric, docs/guides/VAR_GUIDE.md section 3). */
     Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario, String ccy, VarLens lens, boolean matrix) {
         VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
         VarBook b = s.date().book();

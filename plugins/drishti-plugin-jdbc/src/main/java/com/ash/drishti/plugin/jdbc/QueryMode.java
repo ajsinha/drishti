@@ -57,7 +57,7 @@ import java.util.regex.Pattern;
 
 /**
  * Query mode: your own schema, read with your own SQL, several queries per kind (see
- * {@code docs/connectors/JDBC_QUERIES.md}). For each kind:
+ * {@code plugins/drishti-plugin-jdbc/README.md}). For each kind:
  *
  * <ul>
  *   <li>{@code query.<kind>}: the entity; its first row is the document (each column a field, or a column named

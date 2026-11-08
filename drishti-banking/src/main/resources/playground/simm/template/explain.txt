@@ -15,7 +15,7 @@
 # The Explain tab of the SIMM Playground workbook, one entry a row: a line "## <title>" then its text (lines starting with "#" are
 # dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
 # PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
-# entries name the tab and the column, never a cell. The design is docs/architecture/SENSITIVITIES_AND_FRTB_SA.md (sections 4, 8, 12.2,
+# entries name the tab and the column, never a cell. The design is docs/guides/FRTB_SA_GUIDE.md (sections 4, 8, 12.2,
 # 13.1 case 6, 16). SIMM's risk weights, correlations and thresholds are ISDA's and licensed: no licensed number appears in this file.
 # Every worked number below uses a toy parameter set, said so where it is used; the bank's own export fills Config from its licence.
 ## In plain words: what this workbook answers

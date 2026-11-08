@@ -16,7 +16,7 @@
 package com.ash.drishti.banking.compute.simm;
 
 /**
- * The aggregation formulas of ISDA SIMM (SENSITIVITIES_AND_FRTB_SA.md sections 4 and 8, docs/guides/SIMM_GUIDE.md section 5): the
+ * The aggregation formulas of ISDA SIMM (docs/guides/FRTB_SA_GUIDE.md sections 4 and 8, docs/guides/SIMM_GUIDE.md section 5): the
  * concentration factor, the bucket's K with f_kl, the capped bucket net, the sum across buckets with g_bc and the residual bucket outside
  * the root, the curvature scaling SF(t), θ and λ, and the product class's margin with ψ. {@link Simm} computes every figure through these;
  * the design's hand-built cases 6 and 11 prove them with toy parameters.

@@ -293,7 +293,7 @@ public final class XlsxWriter {
     }
 
     /**
-     * A formula cell with its cached result (the playgrounds, VAR_PLAYGROUND.md section 5): the formula is the generator's, checked against
+     * A formula cell with its cached result (the playgrounds, docs/guides/VAR_GUIDE.md section 5): the formula is the generator's, checked against
      * {@link XlsxFormulas#ALLOWED} (never text a person typed), and the cached value lets a viewer that does not recalculate show the right
      * number. A NaN or infinite result is cached as {@code #NUM!}.
      *

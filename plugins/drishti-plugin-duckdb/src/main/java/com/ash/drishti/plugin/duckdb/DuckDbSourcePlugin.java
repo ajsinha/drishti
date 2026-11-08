@@ -60,7 +60,7 @@ import java.util.concurrent.TimeUnit;
  * {@code kinds}, {@code pool-size} (4), {@code refresh-seconds} (10), {@code scan-threads} (4),
  * {@code columns-cache-mb} (1024), {@code columns-seconds} (300), {@code max-load-rows} (200000), {@code reverse-index}
  * (true), {@code memory-limit} (1GB), {@code threads} (DuckDB's default: every core) and {@code source-name}
- * ({@code duckdb}). See {@code docs/connectors/DUCKDB_CONNECTOR.md}.
+ * ({@code duckdb}). See {@code plugins/drishti-plugin-duckdb/README.md}.
  */
 public final class DuckDbSourcePlugin implements SourcePlugin {
 

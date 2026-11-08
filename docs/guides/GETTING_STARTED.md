@@ -135,7 +135,7 @@ committed).
 ## Step 3 · Build the server
 
 ```bash
-./mvnw -q package -DskipTests -pl drishti-server -am
+./mvnw -q package -DskipTests -pl drishti-app -am
 ```
 
 The first build downloads its libraries and takes several minutes; later builds take about a minute (measured: 1 min 12 s on a
@@ -560,7 +560,7 @@ mvn -v                                  # "Apache Maven 3.9.…" and "Java versi
 
 mvn -q package -DskipTests              # build (add -o to work offline once ~/.m2 is filled)
 mvn -q verify                           # build, every test and every rule
-mvn -q -pl drishti-server -am package -DskipTests    # the server and what it needs
+mvn -q -pl drishti-app -am package -DskipTests    # the server and what it needs
 ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
 
@@ -658,7 +658,7 @@ nothing to type. Every one uses `$PROJECT_DIR$` (the repository root), the proje
 | **Drishti server** | `DrishtiApplication` of module `drishti-server`, working directory = the repository root, the seven packs (`DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`), sign-in on with the documented development administrator (`drishti-dev-admin` / `drishti-dev-admin123`), `DRISHTI_EXTERNAL_LIB=$PROJECT_DIR$/external_lib`, `-Xmx2g`. Data in `./data`. | 18480 |
 | **Drishti server (QA profile)** | The same, with **its own data folder `data/qa/data`** (git-ignored) so QA never touches `./data` or another stack. | **18580** |
 | **Drishti server (debug-friendly)** | The QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti` and `-Xmx1g`: for stepping through code without logging in (pair it with a console whose sign-in is off too). | 18580 |
-| **Drishti build server jar** | Maven: `package -DskipTests -pl drishti-server -am`; produces `drishti-server/target/drishti-server-<version>-exec.jar`. | |
+| **Drishti build server jar** | Maven: `package -DskipTests -pl drishti-app -am`; produces `drishti-server/target/drishti-server-<version>-exec.jar`. | |
 | **Build demo lakes** (PyCharm) | `drishti.py lake demo`: the seven packs' tables in the demo lake, `data/delta/demo`, sixty business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); about 15 minutes and 3.4 GB ([measured](../connectors/DEMO_DATA.md)); the sixty days end on today's business date. Then start **Drishti server (demo lakes)**. | |
 | **Drishti server (demo lakes)** | **Drishti server** with the samples off (`DRISHTI_DEMO_ENABLED=false`), so every page reads the demo lakes, and `-Xmx4g` (15,000 trades a day over sixty days and the BI tables of them). | 18480 |
 | **QA pack make (from JSON)**, **QA lake build (big JSON to Delta)**, **QA server smoke**, **QA doctor** (PyCharm) | The command-line tools of [CLI_GUIDE.md](CLI_GUIDE.md) as Python run configurations in `drishti-console/run-configs/`. Edit **Parameters** to point at your file (see section 6). | against 18580 |
@@ -956,8 +956,8 @@ wrong.
 
 Why it works without Hadoop: the Delta Lake connector reads through its **native engine** (module `drishti-deltalake`), which uses
 Java's own file access for local disk and the AWS SDK for S3. Hadoop's local file system, and with it `winutils.exe`, is never used.
-See [DELTA_CONNECTOR.md › Engines](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop). The Iceberg connectors do the same
-through **drishti-iceberg**, Drishti's own Iceberg engine ([ICEBERG_CONNECTOR.md › Engines](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library)),
+See [DELTA_CONNECTOR.md › Engines](../../plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop). The Iceberg connectors do the same
+through **drishti-iceberg**, Drishti's own Iceberg engine ([ICEBERG_CONNECTOR.md › Engines](../../plugins/drishti-plugin-iceberg/README.md#engines-and-caches)),
 the default engine.
 
 > **Status.** The native engine is tested on Linux on every build, including its Windows path rules (drive letters, backslashes, UNC
@@ -994,7 +994,7 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 git clone https://github.com/ajsinha/drishti.git
 cd drishti
 $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
-.\mvnw.cmd -q package -DskipTests -pl drishti-server -am
+.\mvnw.cmd -q package -DskipTests -pl drishti-app -am
 dir drishti-server\target\*-exec.jar
 ```
 
@@ -1128,7 +1128,7 @@ still needs `winutils.exe` on Windows; it is only for tables in Azure, Google Cl
 | What | Why | Instead |
 |---|---|---|
 | `engine: hadoop` on a local lake | Hadoop's local file system needs `winutils.exe` | `engine: native` (the default) |
-| Replacing a DuckDB file while the server reads it | Windows cannot rename a file over one that is open ([DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md)) | load into a new file and switch the connector's `path`, or stop the server first |
+| Replacing a DuckDB file while the server reads it | Windows cannot rename a file over one that is open ([DUCKDB_CONNECTOR.md](../../plugins/drishti-plugin-duckdb/README.md)) | load into a new file and switch the connector's `path`, or stop the server first |
 | The bash scripts in `tools\*.sh` (`load-postgres.sh`, `drill.sh`, …) | they need bash | `tools\windows\*.ps1` for the server and the console, `tools\drishti.py` for lakes and packs; for the others, the Python tools they call run as they are (`python tools\…`), or use Git Bash or WSL |
 | `docker compose` deployments (`deploy\`) | Linux containers | Docker Desktop runs them as on Linux; the jar runs natively as above |
 

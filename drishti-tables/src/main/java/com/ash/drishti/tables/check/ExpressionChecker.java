@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Checks one expression of a table or model in its scope (BI_FOUNDATION_2911E.md section 2.2). {@link LayerExpressionChecker} is
+ * Checks one expression of a table or model in its scope (docs/architecture/BI_DESIGN.md section 2.2). {@link LayerExpressionChecker} is
  * <b>Rachana's checked mode</b> (part A of 2.9.11.e: types, scopes, {@code in}, {@code ^}, lists, named arguments, the filter-context
  * functions) with the names of the table or model, plus the layer's own two rules; {@link #andThen} chains another checker after it.
  */
@@ -46,7 +46,7 @@ public interface ExpressionChecker {
         };
     }
 
-    /** The scopes of BI_FOUNDATION_2911E.md section 2.2. */
+    /** The scopes of docs/architecture/BI_DESIGN.md section 2.2. */
     enum Scope {
         /** A table's column {@code expr}, its {@code filter}: the source ({@code $}, {@code @}, {@code ^}) and {@code param.x}; no aggregates. */
         ROW,

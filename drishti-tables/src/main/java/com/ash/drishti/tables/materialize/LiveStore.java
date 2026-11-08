@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * The layer's live materialisation (BI_FOUNDATION_2911E.md 3.4, Q14): a live table's rows in memory by key, maintained from the entities
+ * The layer's live materialisation (docs/architecture/BI_DESIGN.md 3.4, Q14): a live table's rows in memory by key, maintained from the entities
  * its source pushes. Each entity's document becomes its row through the table's own definition (paths, filter, calculated columns), as a
  * preview reads it; a row whose values did not change keeps its sequence; a deleted entity's row goes; retention keeps at most
  * {@code rows} rows (the oldest updated go first) and none older than {@code age}. Every change takes the next {@code update_seq} and its

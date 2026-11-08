@@ -16,7 +16,7 @@
 # deploy/aws/delta-s3: the Delta Lake on S3 connector's AWS resources
 
 The AWS side of the **Delta Lake on S3 connector** (the `delta` plugin with `root: s3://<bucket>/<prefix>`,
-[DELTA_CONNECTOR.md section 17](../../../docs/connectors/DELTA_CONNECTOR.md#17-delta-lake-on-aws-s3)): a bucket, the lake's prefix in
+[DELTA_CONNECTOR.md section 17](../../../plugins/drishti-plugin-delta/README.md#delta-lake-on-aws-s3)): a bucket, the lake's prefix in
 it, and the IAM policy the server (read) and the loaders (read, write and delete) need. Python with `boto3`, so it runs the same on
 Linux, macOS and Windows with no AWS CLI; the `.sh` and `.ps1` files only start the Python with the console's environment
 (`drishti-console/.venv`), else `DRISHTI_PYTHON` or `python3`.

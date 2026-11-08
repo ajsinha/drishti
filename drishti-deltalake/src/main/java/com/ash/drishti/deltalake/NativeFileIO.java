@@ -101,7 +101,7 @@ public final class NativeFileIO implements FileIO {
             return s3();
         }
         if (com.ash.drishti.lakeio.StorageProviders.supports(path)) {
-            return com.ash.drishti.lakeio.StorageProviders.storage(path);    // mem://, the in-memory lake (IN_MEMORY_LAKE.md): never a disk
+            return com.ash.drishti.lakeio.StorageProviders.storage(path);    // mem://, the in-memory lake (docs/architecture/DATA_ARCHITECTURE.md): never a disk
         }
         throw new UnsupportedOperationException("the native Delta engine reads local disk, S3 (s3://, s3a://) and memory (mem://), not " + scheme
                 + "://; set the connector's engine to hadoop for this lake");

@@ -80,7 +80,7 @@ mkdir -p "$D/data/logs" "$D/data/dumps"
 # the stop hook (CD2, CLUSTER_DEPLOYMENT.md section 4.6): on ECS's SIGTERM the node drains first (forwarded work and VaR shards handed over,
 # at most DRISHTI_DRAIN_WAIT, 90 s, inside the task's stopTimeout of 120 s), then Java gets the signal and shuts down gracefully. The
 # drain needs DRISHTI_DRAIN_TOKEN (a personal API token with node:drain, from Secrets Manager); the rolling runner drains before the stop
-# direct memory (IN_MEMORY_LAKE.md section 3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
+# direct memory (docs/architecture/DATA_ARCHITECTURE.md section 3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
 # exchange, BI answers as Arrow, Arrow Flight when its engine is on) live there. The image has no Python, so the task definition sets the
 # figures tools/lake/memory_caps.py prints (--stores-only, --arrow-only): DRISHTI_LAKE_MEMORY_MB and DRISHTI_ARROW_MB (default 512, the
 # exchange's budget; with Flight on, memory_caps.py adds its memory.total-mb). The limit becomes 256 MB plus both (the later flag wins), and

@@ -90,7 +90,7 @@ public final class MongoLayout {
 
     /** How the entity's document is stored. */
     public enum DocFormat {
-        /** The JSON text: served as it is stored, no conversion (the default, see MONGODB_CONNECTOR.md). */
+        /** The JSON text: served as it is stored, no conversion (the default, see plugins/drishti-plugin-mongodb/README.md). */
         STRING,
         /** An embedded BSON document: queryable in MongoDB, converted to JSON on every read. */
         BSON

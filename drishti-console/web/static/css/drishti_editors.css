@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The editors' shell and editors (docs/architecture/EDITORS.md): three panes, the live YAML below the editor, the preview with checks.
+/* The editors' shell and editors (docs/architecture/SHARED_SCREENS.md): three panes, the live YAML below the editor, the preview with checks.
    Colours only from the theme tokens (light, dark and every theme); the panes' widths from the shared resize component (--ed-left,
    --ed-right); one column below 640 px. */
 .ed-modes { display: inline-flex; border: 1px solid var(--d-border); border-radius: var(--d-radius-4); overflow: hidden; }
