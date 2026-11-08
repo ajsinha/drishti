@@ -25,9 +25,7 @@
     Only tables {{ PRODUCT }}'s lake build made can be maintained; a table another system publishes is its publisher's to maintain.</p>
   {% if maint %}
   <div class="mt-bar" role="toolbar" aria-label="Choose tables">
-    <label class="mt-check"><input type="checkbox" data-mt-all> Select all</label>
-    <label class="loads-field mt-domain">Select a domain<select class="studio-in" data-mt-domain><option value="">—</option>
-      {% for d in maint.tables | selectattr("owned") | map(attribute="domain") | unique | sort %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></label>
+    <div class="mt-picks" data-di-form="{{ admin_form('lake.pick', maint.tables | selectattr("owned") | map(attribute="domain") | unique | sort | list) }}"></div>{# drishti-inputs' Forms from the server's schemas (core/admin_forms.py) #}
     <span class="mt-count" data-mt-count aria-live="polite">No table selected</span>
     <button type="button" class="btn-pill" data-mt-dry disabled>Dry run</button>
     <button type="button" class="btn-pill btn-accent" data-mt-run disabled>Maintain now</button>
@@ -69,12 +67,7 @@
   <details class="lk-step mt-panel" data-mt-settings-panel>
     <summary><h3>Settings for the selected tables</h3></summary>
     <p class="text-muted-d">Saved per table in <span class="mono">{{ maint.configFile }}</span>, the file <span class="mono">lake maintain</span> reads; a blank keeps the default.</p>
-    <div class="lk-grid">
-      <label class="loads-field">Retention (business days; blank keeps every date)<input class="studio-in" type="number" min="1" inputmode="numeric" data-mt-set="keep-business-days" placeholder="keep all"></label>
-      <label class="loads-field">Target file size (MB)<input class="studio-in" type="number" min="1" max="4096" inputmode="numeric" data-mt-set="target-file-mb" placeholder="{{ maint.defaults['target-file-mb'] }}"></label>
-      <label class="loads-field">Vacuum files unused for (hours; blank: no vacuum)<input class="studio-in" type="number" min="0" inputmode="numeric" data-mt-set="vacuum-hours" placeholder="{{ maint.defaults['vacuum-hours'] }}"></label>
-      <label class="loads-check mt-check"><input type="checkbox" data-mt-set="checkpoint" checked> Write a checkpoint</label>
-    </div>
+    <div class="mt-settings" data-di-form="{{ admin_form('lake.settings', maint.defaults) }}"></div>
     <p class="lk-warn" data-mt-vacuum-warn hidden>Below {{ maint.vacuumSafeHours }} hours (7 days), vacuum removes files a reader or a "known at" view may still be using.</p>
     <p><button type="button" class="btn-pill btn-accent" data-mt-save disabled>Save for the selected tables</button></p>
   </details>
@@ -86,22 +79,8 @@
       <thead><tr><th scope="col">Name</th><th scope="col">When</th><th scope="col">Tables</th><th scope="col">Next</th><th scope="col">Last run</th><th scope="col">Actions</th></tr></thead>
       <tbody></tbody></table></div>
     <h4>New schedule for the selected tables</h4>
-    <div class="lk-grid">
-      <label class="loads-field">Name<input class="studio-in" data-mt-sname autocomplete="off" placeholder="nightly"></label>
-      <fieldset class="mt-when"><legend>When</legend>
-        <label class="mt-check"><input type="radio" name="mtWhen" value="time" data-mt-mode checked> At a time</label>
-        <label class="mt-check"><input type="radio" name="mtWhen" value="after-build" data-mt-mode> After every build of the table</label></fieldset>
-    </div>
-    <div data-mt-timepick>
-      <fieldset class="mt-days"><legend>Days</legend>
-        {% for d in ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] %}<label class="mt-check"><input type="checkbox" data-mt-day value="{{ d }}"{% if d in ["tue", "wed", "thu", "fri", "sat"] %} checked{% endif %}> {{ d | title }}</label>{% endfor %}
-      </fieldset>
-      <div class="lk-grid">
-        <label class="loads-field">Time ({{ maint.zone }})<input class="studio-in" type="time" data-mt-at value="02:30"></label>
-        <label class="loads-field">Cron text (minute hour day month weekday)<input class="studio-in mono" data-mt-cron autocomplete="off" spellcheck="false" value="30 2 * * 2,3,4,5,6"></label>
-      </div>
-      <p class="text-muted-d" data-mt-friendly>Tue–Sat 02:30</p>
-    </div>
+    <div class="mt-schedule" data-di-form="{{ admin_form('lake.schedule', maint.zone) }}"></div>
+    <p class="text-muted-d" data-mt-friendly>Tue–Sat 02:30</p>
     <p class="text-muted-d">A run missed while the console was stopped runs once when it starts again (the history marks it as a catch-up).</p>
     <p><button type="button" class="btn-pill btn-accent" data-mt-add disabled>Create the schedule</button></p>
   </details>

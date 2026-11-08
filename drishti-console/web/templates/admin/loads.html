@@ -47,9 +47,7 @@
 
   <h2 class="ws-h" id="history">History</h2>
   <form class="adm-bar loads-filter" method="get" action="/admin/packs/{{ pack }}/loads" role="search" aria-label="Filter the loads">
-    <label>Kind <select name="kind" data-filter-kind><option value="">all</option>{% for k in kinds %}<option{% if k == f_kind %} selected{% endif %}>{{ k }}</option>{% endfor %}</select></label>
-    <label>Status <select name="status"><option value="">all</option><option{% if f_status == 'ready' %} selected{% endif %}>ready</option><option{% if f_status == 'failed' %} selected{% endif %}>failed</option></select></label>
-    <label>Date <input type="date" name="date" value="{{ f_date }}"></label>
+    <div data-di-form="{{ admin_form('loads.filter', kinds, f_kind, f_status, f_date) }}"></div>{# drishti-inputs' Form, embedded: kind, status and date as before (core/admin_forms.py) #}
     <button class="btn-pill btn-ghost" type="submit">Filter</button>
     {% if f_kind or f_status or f_date %}<a class="fk" href="/admin/packs/{{ pack }}/loads">Clear</a>{% endif %}
   </form>
@@ -84,14 +82,7 @@
       (<span class="mono">POST /api/v1/packs/{{ pack }}/loads</span>): the caches of the kind are refreshed, the data checked, alert rules
       evaluated, people told; the VaR and exposure engines reload the date. A <b>ready</b> load is passed on once to every other member of
       the cluster. Audited.</p>
-    <form data-announce-form>
-      <label class="loads-field">Kind<select name="kind" required>{% for kk in config.kinds %}<option>{{ kk }}</option>{% endfor %}</select></label>
-      <label class="loads-field">Business date<input name="businessDate" type="date" required></label>
-      <label class="loads-field">Status<select name="status"><option>ready</option><option>failed</option></select></label>
-      <label class="loads-field">Rows (optional)<input name="rows" type="number" min="0"></label>
-      <label class="loads-field">Batch id (optional)<input name="batchId" maxlength="100"></label>
-      <label class="loads-field">Note (optional)<input name="note" maxlength="500"></label>
-    </form>
+    <div data-announce-form data-di-form="{{ admin_form('loads.announce', config.kinds) }}"></div>
     <p class="adm-msg" data-announce-msg role="status" aria-live="polite"></p>
     <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-accent" data-announce-send>Announce</button></div>
   </dialog>
@@ -100,24 +91,7 @@
     <div class="ds-head"><h2 id="cfgTitle">Expectations settings &middot; {{ pack }}</h2>
       <button type="button" class="btn-pill btn-ghost" data-config-close aria-label="Close the settings">Close</button></div>
     <p class="text-muted-d">Saved as an override file beside the load history; the pack's own files are not changed. Settings take effect at the next check.</p>
-    <form data-config-form>
-      <label class="loads-field">Tell these roles (comma separated)<input name="roles" value="{{ config.config.notify.roles | join(', ') }}"></label>
-      <label class="loads-field">and these users<input name="users" value="{{ config.config.notify.users | join(', ') }}"></label>
-      <label class="loads-check"><input type="checkbox" name="email"{% if config.config.notify.email %} checked{% endif %}> also send an email (needs the email channel)</label>
-      <label class="loads-field">Smoke test: open this many sample entities after each ready load (0 = off)<input name="smoke" type="number" min="0" value="{{ config.config.smoke }}"></label>
-      <fieldset class="loads-expect"><legend>Expected each business day</legend>
-        <table class="tbl ds-tbl" data-plain data-expect-rows><thead><tr><th scope="col">Kind</th><th scope="col">Due by (HH:mm)</th><th scope="col">Time zone</th><th scope="col">Calendar</th><th></th></tr></thead>
-          <tbody>{% for k, e in config.config.expect.items() %}
-            <tr><td><select name="x-kind">{% for kk in config.kinds %}<option{% if kk == k %} selected{% endif %}>{{ kk }}</option>{% endfor %}</select></td>
-              <td><input name="x-by" value="{{ e.by }}" size="6" aria-label="Due by"></td><td><input name="x-zone" value="{{ e.zone or '' }}" placeholder="server zone" aria-label="Time zone"></td>
-              <td><input name="x-cal" value="{{ e.calendar or '' }}" placeholder="server calendar" aria-label="Calendar"></td>
-              <td><button type="button" class="fk" data-expect-remove>Remove</button></td></tr>{% endfor %}</tbody></table>
-        <button type="button" class="fk" data-expect-add>Add a kind</button>
-      </fieldset>
-    </form>
-    <template data-expect-template><tr><td><select name="x-kind">{% for kk in config.kinds %}<option>{{ kk }}</option>{% endfor %}</select></td>
-      <td><input name="x-by" value="19:00" size="6" aria-label="Due by"></td><td><input name="x-zone" placeholder="server zone" aria-label="Time zone"></td>
-      <td><input name="x-cal" placeholder="server calendar" aria-label="Calendar"></td><td><button type="button" class="fk" data-expect-remove>Remove</button></td></tr></template>
+    <div data-config-form data-di-form="{{ admin_form('loads.config', config.kinds, config.config) }}"></div>
     <p class="adm-msg" data-config-msg role="status" aria-live="polite"></p>
     <div class="adm-dlg-actions ds-actions">
       <button type="button" class="btn-pill btn-ghost" data-config-reset>Reset to the pack's own settings</button>

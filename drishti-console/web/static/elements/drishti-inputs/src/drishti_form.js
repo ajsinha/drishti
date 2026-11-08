@@ -480,4 +480,19 @@ export class Form extends InputBase {
   showErrors(errors) { this.server = Object.assign({}, errors); Object.keys(errors).forEach((p) => this.touched.add(p)); this.refresh(); }
 }
 
+/**
+ * A form whose schema, value and plain options the server sent as JSON in the host's data-di-form attribute (a server-built schema:
+ * the console's admin forms, core/admin_forms.py); the page adds what JSON cannot carry (onSubmit, check, widgets). The form is kept on
+ * the host as host.diForm, so a page's later script finds it.
+ * @param {HTMLElement} host
+ * @param {FormOptions} [options] merged over the server's
+ * @returns {Form}
+ */
+export function formFromData(host, options) {
+  if (host.diForm) { return host.diForm; }
+  const spec = JSON.parse(host.getAttribute('data-di-form') || '{}');
+  host.diForm = new Form(host, Object.assign(spec, options));
+  return host.diForm;
+}
+
 function CSS_ESCAPE(s) { return String(s).replace(/([^\w-])/g, '\\$1'); }

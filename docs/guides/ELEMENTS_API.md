@@ -7808,6 +7808,17 @@ Problems from elsewhere shown at once, without marking every field tried (a live
 
 Returns `void`.
 
+#### `formFromData(host, options)`
+
+A form whose schema, value and plain options the server sent as JSON in the host's data-di-form attribute (a server-built schema: the console's admin forms, core/admin_forms.py); the page adds what JSON cannot carry (onSubmit, check, widgets). The form is kept on the host as host.diForm, so a page's later script finds it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `FormOptions` | merged over the server's |
+
+Returns `Form`.
+
 ### drishti_form-fields.js
 
 #### `defineWidget(name, factory)`

@@ -30,6 +30,7 @@ from urllib.parse import quote
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from core.admin_forms import admin_form
 from core.backend import drs_advice, drs_message
 from core.edition import hidden_hint as _hidden_hint
 from core.config import Settings
@@ -470,6 +471,7 @@ def create_app(settings: Settings) -> FastAPI:
         return local_when(instant, zone, zone_label(zone))
 
     templates.env.globals["when_local"] = when_local
+    templates.env.globals["admin_form"] = admin_form                 # an Admin form's schema for drishti-inputs (core/admin_forms.py)
 
     @pass_context
     def product(ctx, text):

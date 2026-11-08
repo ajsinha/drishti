@@ -19,33 +19,12 @@ nothing. The model's measures and the filters' fields arrive from the server aft
 are an array of objects the page turns into the hidden ``model_query`` field."""
 from __future__ import annotations
 
+from core.form_schema import check as _check, select as _sel, text as _text   # the shared field helpers: every control named as before
+
 REDUCE = [("", "one cell"), ("first", "the first row"), ("sum", "the sum of all rows"), ("max", "the largest row"), ("min", "the smallest row"),
           ("avg", "the average of the rows"), ("count", "the number of rows"), ("last", "the last row")]
 FILTER_OPS = [("eq", "is"), ("ne", "is not"), ("in", "is one of"), ("not-in", "is none of"), ("gt", "is above"), ("ge", "is at least"), ("lt", "is below"),
               ("le", "is at most"), ("contains", "contains")]
-
-
-def _sel(title: str, name: str, choices, hook=None, **more) -> dict:
-    """A select of (value, words) pairs, submitted under ``name``."""
-    out = {"type": "string", "title": title, "name": name, "widget": "select", "allowEmpty": False,
-           "enum": [c[0] for c in choices], "enumLabels": [c[1] for c in choices]}
-    if hook:
-        out["hook"] = hook
-    out.update(more)
-    return out
-
-
-def _text(title: str, name: str, hook=None, **more) -> dict:
-    out = {"type": "string", "title": title, "name": name, "hook": hook or {"class": "mono"}}
-    out.update(more)
-    return out
-
-
-def _check(title: str, name: str, hook=None) -> dict:
-    out = {"type": "boolean", "title": title, "name": name, "nameValue": "on"}
-    if hook:
-        out["hook"] = hook
-    return out
 
 
 def _group(kind: str, when: str, field: str, title: str, props: dict, description: str = "") -> dict:

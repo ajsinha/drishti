@@ -14,8 +14,10 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Admin → Packs → Data loads: the expectations settings dialog. The tables and filters are plain server-rendered HTML; this only
-   saves and resets the settings (same-origin /admin/api/loads/...), and adds two keys: "/" focuses the kind filter, "e" opens settings. */
+/* Admin → Packs → Data loads: the expectations settings dialog. The tables are server-rendered HTML; the filter, the settings and the
+   announcement are drishti-inputs' Forms from the server's schemas (core/admin_forms.py; the filter embedded in the page's GET form). This
+   saves and resets the settings (same-origin /admin/api/loads/...), announces a load, and adds two keys: "/" focuses the kind filter,
+   "e" opens settings. */
 (function () {
   'use strict';
   var root = document.querySelector('[data-loads]');
@@ -23,26 +25,25 @@
   var pack = root.getAttribute('data-pack');
   var dlg = root.querySelector('[data-config-dialog]');
   var msg = root.querySelector('[data-config-msg]');
-  var form = root.querySelector('[data-config-form]');
-  var rows = root.querySelector('[data-expect-rows] tbody');
+  var I = window.Drishti.elements.inputs;
+  root.querySelectorAll('.loads-filter [data-di-form]').forEach(function (h) { I.formFromData(h); });
+  var form = I.formFromData(root.querySelector('[data-config-form]'));
   function say(text, bad) { msg.textContent = text; msg.classList.toggle('t-bad', !!bad); msg.classList.toggle('t-ok', !bad); }
   function csv(s) { return s.split(',').map(function (x) { return x.trim(); }).filter(Boolean); }
   function openDialog() {
     if (dlg.showModal) { dlg.showModal(); } else { dlg.setAttribute('open', ''); }
-    var first = form.elements.roles; if (first) { first.focus(); }
+    var first = form.form.querySelector('[name=roles]'); if (first) { first.focus(); }
   }
   function closeDialog() { if (dlg.close) { dlg.close(); } else { dlg.removeAttribute('open'); } }
   function collect() {
-    var expect = {};
-    Array.prototype.forEach.call(rows.querySelectorAll('tr'), function (tr) {
-      var kind = tr.querySelector('[name=x-kind]').value, e = { by: tr.querySelector('[name=x-by]').value.trim() };
-      var zone = tr.querySelector('[name=x-zone]').value.trim(), cal = tr.querySelector('[name=x-cal]').value.trim();
+    var v = form.getValue(), expect = {};
+    (v.expect || []).forEach(function (x) {
+      var e = { by: String(x.by || '').trim() }, zone = String(x.zone || '').trim(), cal = String(x.calendar || '').trim();
       if (zone) { e.zone = zone; }
       if (cal) { e.calendar = cal; }
-      expect[kind] = e;
+      expect[x.kind] = e;
     });
-    return { notify: { roles: csv(form.elements.roles.value), users: csv(form.elements.users.value), email: form.elements.email.checked },
-             smoke: parseInt(form.elements.smoke.value || '0', 10), expect: expect };
+    return { notify: { roles: csv(v.roles || ''), users: csv(v.users || ''), email: !!v.email }, smoke: v.smoke || 0, expect: expect };
   }
   function send(method, body) {
     return fetch('/admin/api/loads/' + encodeURIComponent(pack) + '/config', { method: method, headers: { 'Content-Type': 'application/json' },
@@ -52,6 +53,7 @@
   root.querySelector('[data-config-open]').addEventListener('click', openDialog);
   root.querySelector('[data-config-close]').addEventListener('click', closeDialog);
   root.querySelector('[data-config-save]').addEventListener('click', function () {
+    if (!form.validate().ok) { say('Check the settings marked above.', true); return; }
     say('Saving...');
     send('PUT', collect()).then(function (res) {
       if (res.ok) { location.reload(); } else { say((res.body.code ? res.body.code + ' ' : '') + (res.body.detail || 'could not save'), true); }
@@ -62,31 +64,22 @@
       if (res.ok) { location.reload(); } else { say(res.body.detail || 'could not reset', true); }
     });
   });
-  root.querySelector('[data-expect-add]').addEventListener('click', function () {
-    var t = root.querySelector('[data-expect-template]');
-    rows.appendChild(t.content.cloneNode(true));
-    var added = rows.querySelectorAll('tr'); added[added.length - 1].querySelector('select').focus();
-  });
-  rows.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-expect-remove]');
-    if (b) { b.closest('tr').remove(); }
-  });
   // Announce a load (2.9.7, O4): the same POST /api/v1/packs/{pack}/loads an ETL makes, through the console as this administrator
   var ann = root.querySelector('[data-announce-dialog]');
   if (ann) {
-    var af = ann.querySelector('[data-announce-form]');
+    var af = I.formFromData(ann.querySelector('[data-announce-form]'));
     var am = ann.querySelector('[data-announce-msg]');
     root.querySelector('[data-announce-open]').addEventListener('click', function () {
       if (ann.showModal) { ann.showModal(); } else { ann.setAttribute('open', ''); }
-      af.elements.kind.focus();
+      var k = af.form.querySelector('[name=kind]'); if (k) { k.focus(); }
     });
     ann.querySelector('[data-announce-close]').addEventListener('click', function () { if (ann.close) { ann.close(); } else { ann.removeAttribute('open'); } });
     ann.querySelector('[data-announce-send]').addEventListener('click', function () {
-      if (!af.elements.businessDate.value) { am.textContent = 'Choose the business date.'; af.elements.businessDate.focus(); return; }
-      var body = { kind: af.elements.kind.value, businessDate: af.elements.businessDate.value, status: af.elements.status.value };
-      if (af.elements.rows.value) { body.rows = parseInt(af.elements.rows.value, 10); }
-      if (af.elements.batchId.value.trim()) { body.batchId = af.elements.batchId.value.trim(); }
-      if (af.elements.note.value.trim()) { body.note = af.elements.note.value.trim(); }
+      if (!af.validate().ok) { am.textContent = 'Choose the kind and the business date.'; return; }
+      var v = af.getValue(), body = { kind: v.kind, businessDate: v.businessDate, status: v.status || 'ready' };
+      if (typeof v.rows === 'number' && !isNaN(v.rows)) { body.rows = v.rows; }
+      if (v.batchId && String(v.batchId).trim()) { body.batchId = String(v.batchId).trim(); }
+      if (v.note && String(v.note).trim()) { body.note = String(v.note).trim(); }
       am.textContent = 'Announcing...';
       fetch('/admin/api/packs/' + encodeURIComponent(pack) + '/loads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); })

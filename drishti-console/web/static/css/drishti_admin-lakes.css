@@ -28,8 +28,8 @@
 .lk-runs td { white-space: normal; overflow-wrap: anywhere; font-size: var(--d-fs-12_8); }
 /* Maintain: the toolbar over the tables, the run, settings, schedules and history (drishti_admin-lake-maintain.js) */
 .mt-intro { max-width: 70rem; }
+.mt-picks { min-width: 0; }                                                      /* drishti-inputs' Forms (core/admin_forms.py) */
 .mt-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--d-sp-8) var(--d-sp-16); margin: var(--d-sp-8) 0; }
-.mt-bar .loads-field { margin: 0; }
 .mt-count { color: var(--d-muted); min-width: 10rem; }
 .mt-check { display: inline-flex; align-items: center; gap: var(--d-sp-5_6); min-height: 44px; min-width: 44px; cursor: pointer; }
 .mt-check input { width: 18px; height: 18px; }
@@ -45,8 +45,6 @@
 .mt-panel summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
 .mt-panel summary h3, .mt-run h3 { font-size: var(--d-fs-16); margin: var(--d-sp-8) 0; display: inline; }
 .mt-panel h4 { font-size: var(--d-fs-15_2); margin: var(--d-sp-12_8) 0 var(--d-sp-4_8); }
-.mt-when, .mt-days { border: 0; padding: 0; margin: var(--d-sp-4_8) 0; display: flex; flex-wrap: wrap; gap: 0 var(--d-sp-14_4); }
-.mt-when legend, .mt-days legend { font-size: var(--d-fs-13_6); color: var(--d-muted); padding: 0; width: 100%; }
 .mt-result td, .mt-history td, .mt-history th { white-space: normal; overflow-wrap: anywhere; font-size: var(--d-fs-13_6); }
 .mt-paused { color: var(--d-warn); font-size: var(--d-fs-12_8); font-weight: 400; }
 .mt-actions { display: flex; flex-wrap: wrap; gap: var(--d-sp-4_8); }

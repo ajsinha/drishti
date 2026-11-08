@@ -117,7 +117,7 @@ def test_settings_are_edited_saved_and_reset_from_the_keyboard(browser, loads_co
     assert page.evaluate("document.activeElement.name") == "roles"                                 # focus lands in the dialog
     dialog.locator("[name=roles]").fill("admin, risk-ops")
     dialog.locator("[data-expect-add]").click()
-    new = dialog.locator("[data-expect-rows] tbody tr").nth(1)
+    new = dialog.locator("[data-expect-row]").nth(1)                                             # a repeatable row of the settings Form
     new.locator("[name=x-kind]").select_option("curve")
     new.locator("[name=x-by]").fill("08:30")
     new.locator("[name=x-zone]").fill("Europe/London")
