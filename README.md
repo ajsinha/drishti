@@ -56,14 +56,14 @@ Access is decided in one place, the **access registry**: licence → module → 
 - **A module** is on when it is installed, licensed and enabled (`config/modules/<module>.yaml`, or `/api/v1/admin/modules` with a
   reason, audited). A module that is off
   loads no bean, engine, job, pack or API, and its pages, menus, commands, Help pages and Build items are gone from every door of the
-  console ([OPERATIONS_GUIDE.md section 22](docs/guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)).
+  console ([ADMIN_GUIDE.md section 22](docs/guides/ADMIN_GUIDE.md#22-modules-on-or-off), [OPERATIONS_GUIDE.md section 6.5](docs/guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)).
 - **Packs name their domain** and live in its folder: `config/packs/<domain>/<pack>` (core, banking, capitalmarkets, economy).
 - **A function** is a command word (`VAR`, `TRD`, `WDI` …), the finest unit of access: each belongs to one module, and an administrator
   can switch any one off.
 - **A lens** is what a person works in: its modules, functions, Home cards and chips. Shipped lenses: Risk, Trading, Market, CRO, the
   market-risk and counterparty-risk cubes (banking); World and Public sector (economy); CIO and Oversight (core). A lens file is
-  `config/lenses/<module>/<lens>.yaml` ([LENSES.md](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is)). **Editions are now lenses**: the former Risk, Trading, Market
-  and World editions are these lenses, and `drishti.edition` still runs a whole instance as one lens.
+  `config/lenses/<module>/<lens>.yaml` ([ADMIN_GUIDE.md section 12](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is)); `drishti.edition` runs a
+  whole instance as one lens and `drishti.lenses` offers several to people.
 
 ## Risk, computed and explained
 
@@ -116,7 +116,10 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 - **Business intelligence on the table layer**: tables and models written in Rachana (Build › Tables & models, with the YAML live
   beside the form), reports and boards, row rules across facts, governance and distribution, and the **Notebook** with one Python
   runtime on the server's sandboxed pool ([TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md), [REPORTS_GUIDE.md](docs/guides/REPORTS_GUIDE.md),
-  [tutorial 18](docs/tutorials/18-tables-and-models.md), [tutorial 8, Part A](docs/tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)).
+  [NOTEBOOK_GUIDE.md](docs/guides/NOTEBOOK_GUIDE.md), [tutorial 18](docs/tutorials/18-tables-and-models.md), [tutorial 8](docs/tutorials/08-reports-and-dashboards.md),
+  [tutorial 9](docs/tutorials/09-notebook-and-python.md)).
+- **Corrections and approvals**: correct a record in a form, the one Approvals queue with four eyes, the edit log and the audit trail
+  ([APPROVALS_GUIDE.md](docs/guides/APPROVALS_GUIDE.md), [tutorial 11](docs/tutorials/11-correct-and-approve.md)).
 - **One grammar.** Rachana paths and expressions are used in Sutras, search, the Pivot, BI and custom functions; the **function
   catalogue** lists every function with its rules and its Excel, SAS and MATLAB counterparts ([FUNCTIONS.md](docs/guides/FUNCTIONS.md),
   [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md)).
@@ -150,7 +153,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 
 - **Connectors**: Delta Lake and Apache Iceberg (Drishti's own engines, no Hadoop, local disk or S3), JDBC databases, DuckDB, MongoDB,
   Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds
-  ([docs/guides/DATA_GUIDE.md section 8](docs/guides/DATA_GUIDE.md#8-connectors), [tutorial 15](docs/tutorials/15-connect-your-data.md)). The plugins,
+  ([DATA_GUIDE.md section 8](docs/guides/DATA_GUIDE.md#8-connectors), [tutorial 15](docs/tutorials/15-connect-your-data.md)). The plugins,
   `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`, `feeds`, `news`, `yfinance`.
 - **Lakes, each in its own folder**, each described by one lake file (`config/lakes/<lake>.yaml`: where it is, every table's partitions,
   columns, load mode and retention):
@@ -176,7 +179,7 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   inbox), `drishti.py feed list|run|status|schedule`, and Admin → Data loads → Feeds with an alert when a run fails. The data goes under
   `data/datafeeds/`. Feeds: World Bank WDI, central banks, Statistics Canada, OECD, official news, GDELT, GLEIF, US equities, funds,
   market data and, for internal use only, the IMF forecasts, Yahoo prices and market headlines ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md)).
-- **In-memory lakes** (`mem://`) for data that never touches disk, such as news ([IN_MEMORY_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake)).
+- **In-memory lakes** (`mem://`) for data that never touches disk, such as news ([DATA_LAKE_GUIDE.md section 13](docs/guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake), [tutorial 16, Part D](docs/tutorials/16-load-your-own-data-into-a-new-lake.md#part-d--news-held-in-memory-only)).
 - **Data contracts**: one per mnemonic, stating what the upstream engines deliver and what Drishti answers ([docs/contracts/](docs/contracts/README.md)).
 
 ## Data out
@@ -185,7 +188,8 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   clients, over TLS, read only, with the reader's entitlements and masks ([FLIGHT_GUIDE.md](docs/guides/FLIGHT_GUIDE.md),
   [tutorial 17](docs/tutorials/17-data-out-with-arrow-flight.md)). Single-node reads are tested; the three-node end to end is under
   construction. Client examples: [examples/clients/](examples/clients/README.md).
-- **REST API** under `/api/v1` with API tokens; the banking engines under `/api/v1/risk/…` ([API_REFERENCE.md](docs/guides/API_REFERENCE.md)).
+- **REST API** under `/api/v1` with API tokens; the banking engines under `/api/v1/risk/…` ([API_REFERENCE.md](docs/guides/API_REFERENCE.md));
+  writing your own connector, plugin or module: [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md).
 - **Embedding**: live views, panels and reports inside other web applications ([EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md),
   [tutorial 20](docs/tutorials/20-embed-drishti.md)).
 
@@ -195,15 +199,15 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
   for a developer machine and turned on for any shared one ([ADMIN_GUIDE.md](docs/guides/ADMIN_GUIDE.md), [tutorial 21](docs/tutorials/21-run-it-in-production.md)).
 - **Admin → Configuration**: every setting in three tiers (everyday, admin, expert), with its value in effect and where it came from; a
   change is a proposal a second administrator approves. Every setting is listed in [CONFIGURATION.md](docs/admin/CONFIGURATION.md).
-- **Modules and engines on or off** per node ([OPERATIONS_GUIDE.md section 22](docs/guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions); Admin → Engines,
-  [section 21](docs/guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off)).
+- **Modules and engines on or off** per node (Admin → Engines, [ADMIN_GUIDE.md section 21](docs/guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off);
+  [section 22](docs/guides/ADMIN_GUIDE.md#22-modules-on-or-off)).
 - **Clustering** (Drishti\*net, off by default): servers join by gossip, any member answers any request, VaR shards across members
-  ([OPERATIONS_GUIDE.md section 18](docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 22](docs/tutorials/22-a-cluster-of-three.md)).
+  ([CLUSTER_GUIDE.md](docs/guides/CLUSTER_GUIDE.md), with sizing and tuning; [tutorial 22](docs/tutorials/22-a-cluster-of-three.md)).
 - **Linear algebra**: OpenBLAS is bundled for Linux and Windows x86-64, **off as shipped**; turn it on per node after measuring
-  ([OPERATIONS_GUIDE.md section 2.1](docs/guides/OPERATIONS_GUIDE.md#149-native-libraries-blas)).
+  ([OPERATIONS_GUIDE.md section 14.9](docs/guides/OPERATIONS_GUIDE.md#149-native-libraries-blas)).
 - **Deployment** by hand, with systemd, Docker Compose ([deploy/docker/compose.yaml](deploy/docker/compose.yaml)), AWS ECS, and on
   Windows with Java and Python only ([OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md)). Prometheus metrics; an **AI layer** and an **MCP
-  client**, both off by default, with masking and audit of every call ([AI_GUIDE.md](docs/guides/AI_GUIDE.md)).
+  client**, both off by default, with masking and audit of every call ([AI_GUIDE.md](docs/guides/AI_GUIDE.md), [tutorial 10](docs/tutorials/10-ai-assistant.md)).
 
 ## Run it
 
@@ -232,7 +236,7 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 
 Then open http://localhost:17480/t and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`. Security is off in this
 start, which is meant for one developer machine; the tutorials run with sign-in
-([OPERATIONS_GUIDE.md, Step 8](docs/guides/OPERATIONS_GUIDE.md#27-sign-in-change-the-admin-password-first-views)).
+([OPERATIONS_GUIDE.md section 2.7](docs/guides/OPERATIONS_GUIDE.md#27-sign-in-change-the-admin-password-first-views)).
 
 - **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads (`lake demo|build|check|undo`), feeds
   (`feed run|status|schedule`), Elements (`elements pack|dist`), approvals, VaR, exposure and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md)).
@@ -240,8 +244,8 @@ start, which is meant for one developer machine; the tutorials run with sign-in
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (`tools/windows/start-server.ps1`; Java and Python only),
   [Docker](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
   [IDEs](docs/guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).
-- **Lenses, not editions**: to run an instance as one lens set `drishti.edition` (for example `risk`); offer several with `drishti.lenses`.
-  A site's own edition file moves to `config/lenses/<module>/` ([LENSES.md section 14](docs/guides/ADMIN_GUIDE.md#122-where-a-lens-is-defined)).
+- **One lens for an instance**: set `drishti.edition` (for example `risk`); offer several with `drishti.lenses`. A site's own lens file
+  lives in `config/lenses/<module>/` ([ADMIN_GUIDE.md section 12.2](docs/guides/ADMIN_GUIDE.md#122-where-a-lens-is-defined)).
 
 ## Measured performance
 
@@ -260,20 +264,25 @@ figure are in [BENCHMARK.md](docs/admin/BENCHMARK.md).
 
 ## Documentation
 
-The map of every document is [docs/README.md](docs/README.md); the console's Help centre holds the same guides, and shows each person
-only those of the modules they may use.
+The map of every document is [docs/README.md](docs/README.md). Each major feature has **one guide and one tutorial**; the console's Help
+centre holds the same pages, grouped by domain and lens, and shows each person only those of the modules they may use. Every old Help
+address still opens the page and section that took its subject over.
 
-| You want to… | Start with |
-|---|---|
-| use Drishti | [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md), [REPORTS_GUIDE.md](docs/guides/REPORTS_GUIDE.md) |
-| work with economies and the public sector | [PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md), [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md), [EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md) |
-| add data or an industry | [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md), [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md) |
-| build screens or use the libraries | [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies), [EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md) |
-| run and administer it | [OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine), [OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md), [LENSES.md](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is), [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
-| develop on it | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [API_REFERENCE.md](docs/guides/API_REFERENCE.md), [CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md) |
+| You want to… | Guides | Tutorials |
+|---|---|---|
+| find anything, pivot, report, analyse | [USER_GUIDE](docs/guides/USER_GUIDE.md), [PIVOT_GUIDE](docs/guides/PIVOT_GUIDE.md), [REPORTS_GUIDE](docs/guides/REPORTS_GUIDE.md), [NOTEBOOK_GUIDE](docs/guides/NOTEBOOK_GUIDE.md), [AI_GUIDE](docs/guides/AI_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md) | [1](docs/tutorials/01-first-15-minutes.md), [7](docs/tutorials/07-pivot-cubes-and-explain.md), [8](docs/tutorials/08-reports-and-dashboards.md), [9](docs/tutorials/09-notebook-and-python.md), [10](docs/tutorials/10-ai-assistant.md), [11](docs/tutorials/11-correct-and-approve.md) |
+| measure risk | [VAR_GUIDE](docs/guides/VAR_GUIDE.md), [REGULATORY_VAR_REPORTING](docs/guides/REGULATORY_VAR_REPORTING.md), [EXPOSURE_GUIDE](docs/guides/EXPOSURE_GUIDE.md), [FRTB_SA_GUIDE](docs/guides/FRTB_SA_GUIDE.md), [SIMM_GUIDE](docs/guides/SIMM_GUIDE.md), [GROUPINGS_ANALYTICS_GUIDE](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | [2](docs/tutorials/02-var-from-the-bank-to-a-trade.md), [3](docs/tutorials/03-exposure-from-the-bank-to-a-trade.md), [4](docs/tutorials/04-frtb-sa.md), [5](docs/tutorials/05-simm.md), [6](docs/tutorials/06-groupings-and-analytics.md) |
+| work with world and public data | [FUNDS_GUIDE](docs/guides/FUNDS_GUIDE.md), [PUBLIC_SECTOR_GUIDE](docs/guides/PUBLIC_SECTOR_GUIDE.md), [EXTERNAL_DATA](docs/guides/EXTERNAL_DATA.md) | [12](docs/tutorials/12-a-day-of-bank-data.md), [13](docs/tutorials/13-world-data.md), [14](docs/tutorials/14-public-sector-data.md) |
+| bring data in and take it out | [DATA_GUIDE](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE](docs/guides/DATA_LAKE_GUIDE.md), [FLIGHT_GUIDE](docs/guides/FLIGHT_GUIDE.md), [the data contracts](docs/contracts/README.md) | [15](docs/tutorials/15-connect-your-data.md), [16](docs/tutorials/16-load-your-own-data-into-a-new-lake.md), [17](docs/tutorials/17-data-out-with-arrow-flight.md) |
+| build tables, packs, screens; embed; extend | [TABLES_GUIDE](docs/guides/TABLES_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md), [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md) | [18](docs/tutorials/18-tables-and-models.md), [19](docs/tutorials/19-build-a-pack-and-a-screen.md), [20](docs/tutorials/20-embed-drishti.md) |
+| install, operate, scale, administer | [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md), [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) | [21](docs/tutorials/21-run-it-in-production.md), [22](docs/tutorials/22-a-cluster-of-three.md) |
 
-**Learn by doing**: [the tutorials](docs/tutorials/README.md) run on the shipped demo data and show the UI, the command line and the YAML
-at every step. **Where it's going**: [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#the-roadmap-from-2911c-product-owner-2026-11-04-supersedes-every-later-release-table-in-this-file).
+**References**, one home each: [CONFIGURATION](docs/admin/CONFIGURATION.md), [API_REFERENCE](docs/guides/API_REFERENCE.md),
+[CLI_REFERENCE](docs/guides/CLI_REFERENCE.md) and [COMMAND_CATALOG](docs/guides/COMMAND_CATALOG.md), [FUNCTIONS](docs/guides/FUNCTIONS.md),
+[RACHANA_REFERENCE](docs/guides/RACHANA_REFERENCE.md), [ELEMENTS_API](docs/guides/ELEMENTS_API.md), [FLIGHT_REFERENCE](docs/guides/FLIGHT_REFERENCE.md),
+[BENCHMARK](docs/admin/BENCHMARK.md), [the Knowledge primers](docs/knowledge/README.md). The design is in
+[ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md); where it is going, in
+[IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#the-roadmap-from-2911c-product-owner-2026-11-04-supersedes-every-later-release-table-in-this-file).
 What changed and when: [RELEASE_NOTES.md](RELEASE_NOTES.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Project facts
@@ -297,17 +306,17 @@ What changed and when: [RELEASE_NOTES.md](RELEASE_NOTES.md) and [CHANGELOG.md](C
 | Language | Lines | Files |
 |---|---|---|
 | Java, product | 431k | 2,159 |
-| Java, tests | 163k | 1,031 |
-| Python, product (console, tools, loaders, feeds) | 142k | 726 |
-| Python, tests | 105k | 597 |
+| Java, tests | 164k | 1,032 |
+| Python, product (console, tools, loaders, feeds) | 142k | 727 |
+| Python, tests | 105k | 598 |
 | JavaScript, product (console and Elements) | 125k | 486 |
 | JavaScript, tests | 4k | 22 |
 | CSS | 19k | 114 |
 | HTML (templates and pages) | 34k | 328 |
-| YAML: configuration, Sutras, data contracts | 111k | 1,411 |
-| Markdown: guides, tutorials, design | 272k | 489 |
+| YAML: configuration, Sutras, data contracts | 111k | 1,412 |
+| Markdown: guides, tutorials, design | 225k | 301 |
 
-About **750k lines of product code** and **273k lines of tests** (36% of the product code), with **272k lines of documentation**.
+About **750k lines of product code** and **273k lines of tests** (36% of the product code), with **225k lines of documentation**.
 
 | What | Count |
 |---|---|
@@ -323,8 +332,8 @@ About **750k lines of product code** and **273k lines of tests** (36% of the pro
 | Connector plugins | 19 |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,511: Java 948, console 247, browser 177, tools 117, JavaScript 22 |
-| Documents under docs/ | 360 (35 guides, 41 tutorials) |
+| Test files | 1,513: Java 949, console 248, browser 177, tools 117, JavaScript 22 |
+| Documents under docs/ | 172 (32 guides, 22 tutorials) |
 
 <!-- code-volume:end -->
 

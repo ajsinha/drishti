@@ -13,6 +13,36 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.h — release notes (draft)
+
+*Not released yet.* **The documentation, rewritten: one guide and one tutorial for each major feature, Help grouped by domain and lens.**
+
+## What changes for readers
+
+- **22 tutorials, one per feature**, numbered in the order you would take them ([the index](docs/tutorials/README.md)): the first 15
+  minutes; VaR, exposure, FRTB-SA, SIMM and groupings; pivot and cubes, reports and dashboards, the Notebook, AI, corrections and
+  approvals; a day of bank data, world data, the public sector, connecting your data, loading your own lake, data out; tables, a pack and
+  a screen, embedding; production and a cluster of three. Tutorials that covered parts of one feature are now parts of one tutorial;
+  every step still shows the screen, the command line and the YAML.
+- **The combined guides**: [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md) (install, run, deploy, troubleshoot, the runbooks),
+  [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) (several servers, AWS, sizing, tuning), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) (people,
+  roles, lenses, switches), [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [REPORTS_GUIDE](docs/guides/REPORTS_GUIDE.md),
+  [NOTEBOOK_GUIDE](docs/guides/NOTEBOOK_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md),
+  [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md), [API_REFERENCE](docs/guides/API_REFERENCE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md)
+  and [AI_GUIDE](docs/guides/AI_GUIDE.md); connectors, connector files, TLS and the demo data are sections of
+  [DATA_GUIDE](docs/guides/DATA_GUIDE.md); the MR cube is a section of the [Pivot guide](docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset).
+  The Knowledge pages are four: the glossary and the [risk](docs/knowledge/risk.md), [data](docs/knowledge/data.md) and
+  [world](docs/knowledge/world.md) primers. Design notes moved out of the user guides into the architecture documents.
+- **Help by domain and lens**: each Help page belongs to a domain module; while a module is off for you, its pages are not listed,
+  searched or opened (banking's risk pages, capital markets' funds pages, the economy's public-sector pages), and a page may name the
+  lenses that show it.
+- **Old addresses still work**: every retired Help address (`/help/<old page>`, an old tutorial number, an old guide) opens the page and
+  the section that took its subject over; links in bookmarks and other documents keep working.
+
+## Upgrade
+
+Nothing to do. Pictures of steps that changed are retaken after the release's screenshot run; a step waiting for its picture says so.
+
 # Drishti 2.9.11.g — release notes (draft)
 
 *Not released yet.* **Industries as modules, opened through lenses; the public sector, the first new domain, filled every day by
