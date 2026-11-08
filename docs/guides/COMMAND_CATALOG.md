@@ -82,7 +82,7 @@ A pack's code typed alone opens the pack's overview.
 | `MRSK` | `market-risk` | Value at risk, stress testing, FRTB sensitivities and P&L explain. |
 | `NWMK` | `news-and-markets` | Sample pack: fifteen news topics (central banks, countries, companies, themes) and twenty listed companies, with headlines (Google News) and quotes and price history (Yahoo Finance) fetched on demand. Internal demonstration only: Yahoo's endpoint is unofficial and its terms restrict use; names leave the network when the connectors are on. Off until the connectors are enabled; offline (DRISHTI_OFFLINE=true, or the connectors off) the demo lake serves a captured snapshot of the same quotes and headlines. |
 | `TRDS` | `trading` | Trades in 125 products across rates, FX, credit, equity, commodities, inflation, fixed income, securities financing, money markets and structured products. |
-| `USEQS` | `us-equities` | Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only. |
+| `USEQS` | `us-equities` | Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA, IWM). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only. |
 | `WRLD` | `world-economy` | Real public economic data for about 200 economies: output, growth, prices, jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts, and World Bank regions and income groups; and governments and societies: government type, office holders, elections, parties with seats, and social and governance indicators (CIA World Factbook, World Bank, UNDP). |
 
 ## Compute demo (`compute-demo`)
@@ -238,7 +238,7 @@ Trades in 125 products across rates, FX, credit, equity, commodities, inflation,
 
 ## US equities (`us-equities`)
 
-Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only.
+Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA, IWM). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only.
 
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
