@@ -325,7 +325,7 @@ def test_the_drawn_screen_keeps_every_figure_and_the_explanation_is_the_one_expl
         # the tree stays on the left, with its VaR and ES columns; a click on a node moves the page
         hdr = pg.locator(".vx-tree .dg-hrow.dg-hleaf").first.inner_text()
         assert "VaR USD" in hdr and "ES" in hdr and "Limit" in hdr
-        assert pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-FX"]').is_visible()
+        pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-FX"]').wait_for(state="visible")    # the tree opens to the desks once its rows arrive
         tree_box = pg.locator(".vx-tree-panel").bounding_box()
         main_box = pg.locator(".vx-main").bounding_box()
         assert tree_box["x"] < main_box["x"]

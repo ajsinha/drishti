@@ -177,11 +177,8 @@ body.shr-open { overflow: hidden; }
 /* Admin > Collaboration */
 .acol-sec { margin: 0 0 var(--d-sp-25_6); }
 .acol-sec h2 { font-size: var(--d-fs-16_8); margin: 0 0 var(--d-sp-4_8); }
-.acol-form { display: flex; flex-wrap: wrap; gap: var(--d-sp-8) var(--d-sp-12_8); align-items: flex-end; margin: var(--d-sp-8) 0 var(--d-sp-12_8); }
-.acol-form label { display: flex; flex-direction: column; gap: var(--d-sp-2_4); color: var(--d-muted); font-size: var(--d-fs-13_12); min-width: 8rem; }
-.acol-form .studio-in { width: 100%; }
-.acol-form .acol-wide { flex: 1 1 18rem; }
-.acol-check { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: var(--d-sp-5_6); min-width: 0 !important; margin: var(--d-sp-3_2) 0; }
+.acol-form { margin: var(--d-sp-8) 0 var(--d-sp-12_8); }                        /* drishti-inputs' Form (core/admin_forms.py) */
+.acol-check { margin: var(--d-sp-3_2) 0; }
 .acol-comments { margin-top: var(--d-sp-12_8); padding: var(--d-sp-9_6) var(--d-sp-12_8); border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
 .acol-comments h3 { font-size: var(--d-fs-15_2); margin: 0 0 var(--d-sp-4_8); }
 .acol-comments h3:focus { outline: 2px solid var(--d-accent); outline-offset: 2px; }
@@ -194,8 +191,6 @@ body.shr-open { overflow: hidden; }
 .acol-state { color: var(--d-muted); }
 .acol-c.hidden .acol-state { color: var(--d-bad); }
 .acol-text { margin: var(--d-sp-3_2) 0; overflow-wrap: anywhere; white-space: pre-wrap; }
-.acol-reason { display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4); margin-top: var(--d-sp-4_8); }
-.acol-reason .studio-in { flex: 1 1 14rem; }
+.acol-reason { margin-top: var(--d-sp-4_8); }
 .acol-problems { list-style: none; padding: 0; margin: var(--d-sp-4_8) 0 0; font-size: var(--d-fs-13_6); }
-@media (max-width: 640px) { .acol-form label { min-width: 100%; } .acol-form .btn-pill { width: 100%; } }
 .share-picture img { display: block; max-width: 100%; margin-top: var(--d-sp-6_4); border: 1px solid var(--d-border); }

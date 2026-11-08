@@ -93,7 +93,7 @@ def test_a_load_is_announced_from_the_page(client, backend, monkeypatch):
     console as its source and only the known fields passed on."""
     with_loads(backend, monkeypatch, [])
     page = client.get("/admin/packs/trading/loads").text
-    assert "data-announce-open" in page and "data-announce-dialog" in page and "<option>curve</option>" in page
+    assert "data-announce-open" in page and "data-announce-dialog" in page and "&#34;curve&#34;" in page.split("data-announce-form")[1].split("</div>")[0]   # the kinds in the Form's schema
     sent = []
 
     async def announce_load(pack, body, ident):

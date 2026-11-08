@@ -164,9 +164,10 @@ async def subscribe_save(request: Request):
     name = f.get("name", "").strip()
     hooks = [x for x in parsed.get("webhooks", []) if x]
     form = {"name": name, "title": f.get("title", ""), "target": target, "schedule": f.get("schedule", ""), "format": f.get("format", "html"), "date": f.get("date", "today"),
-            "recipients": ", ".join(recipients), "narrative": f.get("narrative") == "on", "webhooks": hooks, "sms": f.get("sms") == "on"}
+            "recipients": ", ".join(recipients), "narrative": f.get("narrative") == "on", "webhooks": hooks, "sms": f.get("sms") == "on",
+            "enabled": f.get("enabled") == "on"}
     body = {"title": form["title"], "target": target, "schedule": form["schedule"], "format": form["format"], "date": form["date"], "recipients": recipients,
-            "enabled": f.get("enabled", "on") == "on", "narrative": form["narrative"], "webhooks": hooks, "sms": form["sms"]}
+            "enabled": form["enabled"], "narrative": form["narrative"], "webhooks": hooks, "sms": form["sms"]}
     try:
         if f.get("phone", "").strip():                               # a number typed here is the person's own: kept for texts (blank leaves the one on file)
             await request.app.state.backend.set_phone(f["phone"].strip(), ident(request))

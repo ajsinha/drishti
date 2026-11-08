@@ -24,8 +24,10 @@
    - Page: first, previous, next, last and rows per page (remembered per browser, 25 by default); ▲ ▼ move a row; a zoomed panel
      (drishti:table-fit) fits its table to the height. All of these sit in the panel's heading, never under the table.
    - Keys: ↑ ↓ move (turning pages), PgUp/PgDn page, Home/End jump, Enter opens, K charts (options.openChart).
+   - Pick rows: a table with data-select="multiple" (drishti_doc-select.js): a checkbox per row, Select all in the heading.
    A table with data-plain is left as it is (a form laid out as a table). */
 import { textSortKey, compareTextKeys } from '../../drishti-core/src/drishti_index.js';
+import { rowSelection } from './drishti_doc-select.js';
 
 var SIZES = [25, 50, 100, 250];
 var MIN_FIT = 5;
@@ -102,6 +104,7 @@ export function consoleTables(root, options) {
     var heads = t.tHead && t.tHead.rows.length ? Array.prototype.slice.call(t.tHead.rows[0].cells) : [];
     var k = keyOf(t);
     var st = state[k] || (state[k] = { page: 0, sel: -1, col: -1, dir: 0, q: '', cols: {}, open: false, f: {} });
+    rowSelection(t, { rows: all });                                    // data-select: a checkbox per row, Select all in the heading
 
     function all() { return Array.prototype.slice.call(body.rows); }
     function visible() { return all().filter(function (r) { return !r.__out; }); }

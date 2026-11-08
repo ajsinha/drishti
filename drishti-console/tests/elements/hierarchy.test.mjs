@@ -198,6 +198,19 @@ test('the outline: a filter keeps the matches and the nodes above them; Enter op
   assert.ok(Object.isFrozen(T.OUTLINE_TONES) && T.OUTLINE_TONES.includes('warn'));
 });
 
+test('one outline: drishti-designer\'s Outline is drishti-tree\'s TreeOutline; nested nodes read as rows with their own fields', async () => {
+  const K = await import('../../web/static/elements/drishti-designer/src/drishti_index.js');
+  assert.equal(K.Outline, T.TreeOutline);
+  assert.equal(K.moveNode, T.moveNode);
+  const src = T.nodesSource([{ id: 's', label: 'Section', fixed: true, cls: 'ol-sec', attrs: { 'data-ol-sec': 'a' }, children: [{ id: 'p', label: 'Trades', detail: 'A table' }] }]);
+  assert.deepEqual(src.rows.map((r) => [r.id, r.parent, r.label]), [['s', null, 'Section'], ['p', 's', 'Trades']]);
+  assert.equal(src.rows[0].children, undefined);
+  assert.equal(src.rows[0].fixed, true);
+  const m = new T.HierarchyModel(src);
+  assert.equal(m.node('p').data.detail, 'A table');
+  assert.equal(m.node('p').parent.id, 's');
+});
+
 test('the lists the gallery reads, and the bundle registers the same API', () => {
   assert.deepEqual(T.TREE_MODES, ['grid', 'org', 'sunburst', 'icicle']);
   assert.ok(Object.isFrozen(T.TREE_EVENTS) && T.TREE_EVENTS.includes('proposal') && T.TREE_EVENTS.includes('selectionChanged'));

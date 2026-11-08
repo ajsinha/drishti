@@ -33,7 +33,7 @@
   <section class="pnl"><header class="pnl-h"><h3>{{ 'Change it' if editing else 'What to watch, and when to tell you' }}</h3></header><div class="pnl-b">
     <form class="alert-form al-form" method="post" action="{{ '/alerts/measure/' ~ (alert.name | urlencode) if editing else '/alerts/new' }}" data-alert-form>
       <p class="text-muted-d wide2" data-name-rule>Name: Letters, digits, spaces, dots, dashes and underscores; start with a letter or digit; up to 64 characters.</p>
-      <div class="wide2" data-alert-fields{% if form_json %} data-schema="{{ form_json }}"{% endif %}></div>{# drishti-inputs' Form from the server's schema (core/alert_form.py), embedded: every control named as before #}
+      {{ form_host or '' }}{# drishti-inputs' Form from the server's schema (core/alert_form.py), embedded: every control named as before #}
       <p class="text-muted-d wide2" data-visual-titles aria-live="polite"></p>
       <p class="text-muted-d wide2" data-visual-cells aria-live="polite"></p>
       <input type="hidden" name="state" value="{{ f.state or '' }}">
