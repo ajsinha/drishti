@@ -275,6 +275,45 @@ class VarMrCubeApiTest {
     }
 
     @Test
+    void theCatalogueSaysEachFieldsGroupFolderHiddenAndFunctionsAndEachHierarchyOnce() throws Exception {
+        JsonNode cat = call(as("rita", "risk"), get("/api/v1/pivot/catalogue").param("source", "var"), null, 200);
+        JsonNode mgmt = null;
+        for (JsonNode h : cat.path("hierarchies")) {
+            if ("MGMT".equals(h.path("id").asText())) {
+                mgmt = h;
+            }
+        }
+        assertThat(mgmt).as("MGMT is one item of the catalogue's hierarchies: " + cat.path("hierarchies")).isNotNull();
+        assertThat(mgmt.path("levels").findValuesAsText("field")).contains("MGMT.DESK", "MGMT.BOOK");
+        assertThat(mgmt.path("levels").findValuesAsText("label")).contains("Desk", "Book");
+        assertThat(cat.path("hierarchies").findValuesAsText("id")).contains("POSITIONS");
+        for (JsonNode f : cat.path("fields")) {
+            String name = f.path("name").asText();
+            if (name.startsWith("MGMT.")) {
+                assertThat(f.path("group").asText()).as(name).isEqualTo("hierarchy");
+                assertThat(f.path("hierarchy").asText()).as(name).isEqualTo("MGMT");
+                assertThat(f.path("hidden").asBoolean()).as(name + ": offered through its hierarchy").isTrue();
+            }
+            if ("CURRENCY".equals(name) || "RISK_CLASS".equals(name)) {
+                assertThat(f.path("group").asText()).isEqualTo("field");
+                assertThat(f.path("hidden").asBoolean()).as(name).isFalse();
+            }
+            assertThat(f.path("functions").size()).as(name + ": the VaR source's values are its own measures").isZero();
+        }
+        for (JsonNode m : cat.path("measures")) {
+            assertThat(m.path("group").asText()).isEqualTo("measure");
+            assertThat(m.path("folder").asText()).as(m.path("name").asText()).isNotBlank();
+            assertThat(m.path("functions").size()).isZero();
+            if ("var".equals(m.path("name").asText()) || "es".equals(m.path("name").asText())) {
+                assertThat(m.path("perCell").asBoolean()).as("VaR is computed per cell, never summed").isTrue();
+                assertThat(m.path("folder").asText()).isEqualTo("VaR");
+            }
+        }
+        assertThat(cat.path("showAs").findValuesAsText("id")).contains("pct-grand", "rank", "diff").doesNotContain("running");
+        assertThat(cat.path("notes").has("folders")).as("the metadata is lifted out of the notes").isFalse();
+    }
+
+    @Test
     void aCellsTailAndItsTradesAndTheLensAsTheViewsOptions() throws Exception {
         String rita = as("rita", "risk");
         Map<String, Object> v = view(List.of("MGMT.DESK"), List.of(), Map.of("var()", "VaR"), Map.of());

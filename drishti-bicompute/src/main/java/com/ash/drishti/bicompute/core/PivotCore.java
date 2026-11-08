@@ -188,7 +188,10 @@ public final class PivotCore {
         return out;
     }
 
-    /** A source's fields, native measures and dates, and the built-in functions when the provider offers them. */
+    /**
+     * A source's fields, native measures and dates, and the built-in functions when the provider offers them; each field and measure with
+     * its group, display folder, hidden flag and the functions valid for it, the source's hierarchies and the show-as forms (CatalogueMeta).
+     */
     public Map<String, Object> catalogue(Viewer v, String source, String date) {
         PivotProvider p = provider(source);
         PivotProvider.Catalogue c = p.catalogue(v, source, date);
@@ -207,6 +210,7 @@ public final class PivotCore {
         m.put("defaultView", c.notes() == null ? null : c.notes().get("defaultView"));
         m.put("capabilities", p.capabilities());
         m.put("limits", Map.of("maxCells", settings.maxCells(), "maxHolisticCells", settings.maxHolisticCells(), "busyCells", settings.busyCells()));
+        CatalogueMeta.put(m, c, p.capabilities().builtIns());          // the field list's metadata: groups, folders, hidden, hierarchies, functions
         return m;
     }
 
