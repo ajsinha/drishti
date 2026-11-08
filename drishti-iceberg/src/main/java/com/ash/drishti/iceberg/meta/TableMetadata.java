@@ -61,6 +61,7 @@ public final class TableMetadata {
     private final List<LogEntry> metadataLog = new ArrayList<>();
     private final Map<String, String> properties = new LinkedHashMap<>();
     private final Map<String, Long> refs = new LinkedHashMap<>();
+    private final Map<String, Long> allRefs = new LinkedHashMap<>();
 
     public TableMetadata(ObjectNode json) {
         this.json = json;
@@ -90,6 +91,7 @@ public final class TableMetadata {
         json.path("metadata-log").forEach(e -> metadataLog.add(new LogEntry(e.path("timestamp-ms").asLong(), 0, e.path("metadata-file").asText())));
         json.path("properties").fields().forEachRemaining(e -> properties.put(e.getKey(), e.getValue().asText()));
         json.path("refs").fields().forEachRemaining(e -> {
+            allRefs.put(e.getKey(), e.getValue().path("snapshot-id").asLong());
             if ("branch".equals(e.getValue().path("type").asText("branch")) || e.getKey().equals("main")) {
                 refs.put(e.getKey(), e.getValue().path("snapshot-id").asLong());
             }
@@ -250,6 +252,11 @@ public final class TableMetadata {
     /** The branches and their snapshots ({@code main} first when present). */
     public Map<String, Long> refs() {
         return Collections.unmodifiableMap(refs);
+    }
+
+    /** Every named reference, branches and tags, and its snapshot (a snapshot a tag names is never expired: {@code Operations.expireSnapshots}). */
+    public Map<String, Long> allRefs() {
+        return Collections.unmodifiableMap(allRefs);
     }
 
     /**

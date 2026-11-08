@@ -131,7 +131,7 @@ public final class Operations {
             all.sort((a, b) -> Long.compare(b.timestampMs(), a.timestampMs()));
             Set<Long> keep = new HashSet<>();
             keep.add(current.get().snapshotId());
-            keep.addAll(base.refs().values());
+            keep.addAll(base.allRefs().values());                // every branch's and tag's snapshot, as the Apache library keeps them
             for (int i = 0; i < Math.min(retainLast, all.size()); i++) {
                 keep.add(all.get(i).snapshotId());
             }

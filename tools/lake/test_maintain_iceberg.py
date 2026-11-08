@@ -85,6 +85,24 @@ class CommandTest(unittest.TestCase):
         with mock.patch("stores.loader_command", lambda data, jar=None, java=None, main=None: ["<launcher>", main]):
             return maintain_iceberg.command("/l/risk/pnl-vector", conf, date(2026, 10, 16), dry, False, floor, Path("/d"))
 
+    def test_the_current_metadata_is_found_as_the_java_engine_finds_it(self):
+        import gzip
+        import json
+        with tempfile.TemporaryDirectory() as tmp:
+            m = Path(tmp) / "t" / "metadata"
+            m.mkdir(parents=True)
+            (m / "v1.metadata.json").write_text(json.dumps({"v": 1}), encoding="utf-8")
+            (m / "v2.gz.metadata.json").write_bytes(gzip.compress(json.dumps({"v": 2}).encode()))
+            (m / "version-hint.text").write_text("2", encoding="utf-8")
+            self.assertEqual(maintain_iceberg.current_metadata(m.parent), {"v": 2})     # the hint names a gzip-compressed version
+            (m / "version-hint.text").unlink()
+            self.assertEqual(maintain_iceberg.current_metadata(m.parent), {"v": 2})     # no hint: the highest version
+            c = Path(tmp) / "c" / "metadata"                                            # a catalog's NNNNN-uuid names (pyiceberg, JDBC, Glue)
+            c.mkdir(parents=True)
+            for n in (1, 3, 2):
+                (c / f"0000{n}-6418b978-aec7-43d5-b905-ef8a020e82db.metadata.json").write_text(json.dumps({"v": n}), encoding="utf-8")
+            self.assertEqual(maintain_iceberg.current_metadata(c.parent), {"v": 3})
+
     def test_the_settings_become_the_maintenance_options(self):
         cmd = self.command({"keep-business-days": 260, "compact": True, "vacuum-hours": 168, "orphan-hours": 12,
                             "storage-options": {"AWS_ENDPOINT_URL": "http://127.0.0.1:9000", "AWS_REGION": "us-east-1"}}, dry=True, floor=2557)
