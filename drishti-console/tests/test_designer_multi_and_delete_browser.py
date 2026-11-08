@@ -169,7 +169,7 @@ def test_a_report_with_no_dataset_asks_for_one_in_the_designer(stack, browser):
     page.select_option("[data-pick-dataset]", index=1)
     page.click("[data-pick-dataset-go]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
-    expect(page.locator("[data-state]")).to_have_text("Unsaved changes")                                # the picked dataset is in the draft, not yet saved
+    expect(page.locator("[data-status]")).to_have_text("Unsaved changes")                                # the picked dataset is in the draft, not yet saved
     assert page.locator("[data-fields-tree] [data-table]").count() > 0                                # the dataset's fields are listed: there is something to draw
     clean(page)
 
