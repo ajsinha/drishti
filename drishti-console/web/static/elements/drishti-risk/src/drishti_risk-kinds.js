@@ -160,8 +160,8 @@ export function eepeOf(tenors, ee) {
 
 /**
  * The exposure profile: EE and PFE over the tenors (a log axis by default), EEPE over the first year, the limit, a breach of it marked.
- * @param {Object} spec x (tenor in years), ee, pfe, eepe (the server's), limit, log (default true), more (further series drawn as given:
- *   the uncollateralised EE, the paths' fan)
+ * @param {Object} spec x (tenor in years), ee, pfe, eepe (the server's; false: none drawn, for an answer that has none, e.g. a proxy),
+ *   limit, log (default true), more (further series drawn as given: the uncollateralised EE, the paths' fan, a profile before a change)
  * @param {Object[]} rows
  * @param {Object} env
  * @returns {Object}
@@ -169,8 +169,9 @@ export function eepeOf(tenors, ee) {
 export function buildExposureProfile(spec, rows, env) {
   const xf = fieldOf(spec.x) || 'tenor', ef = fieldOf(spec.ee) || 'ee', pf = fieldOf(spec.pfe) || 'pfe', th = env.theme;
   const sorted = rows.slice().sort((a, b) => num(a[xf]) - num(b[xf]));
-  let eepe = given(spec.eepe, sorted), computed = false;
-  if (eepe === null) { eepe = eepeOf(sorted.map((r) => num(r[xf])), sorted.map((r) => r[ef])); computed = true; }
+  const noEepe = spec.eepe === false;
+  let eepe = noEepe ? null : given(spec.eepe, sorted), computed = false;
+  if (eepe === null && !noEepe) { eepe = eepeOf(sorted.map((r) => num(r[xf])), sorted.map((r) => r[ef])); computed = true; }
   const limit = given(spec.limit, sorted), log = spec.log !== false;
   const s = Object.assign({}, spec, { kind: 'area', x: { field: xf, type: log ? 'log' : 'value', title: 'tenor', format: tenorText }, y: Object.assign({ format: 'money' }, spec.y),
     series: [{ field: ef, name: 'EE', tone: 'link', opacity: 0.16 }, { field: pf, name: spec.pfeTitle || 'PFE 95%', tone: 'accent', opacity: 0.1 }].concat(spec.more || []),
@@ -183,7 +184,7 @@ export function buildExposureProfile(spec, rows, env) {
     first.markLine.data.push([{ coord: [x0, eepe], lineStyle: { color: toneColour(th, 'good'), type: 'solid', width: 2 }, label: { show: true, formatter: 'EEPE ' + env.fmt(eepe), color: toneColour(th, 'good'), position: 'end', fontFamily: th.font, fontSize: th.size.font } }, { coord: [1, eepe] }]);
   }
   b.option.xAxis.axisLabel.formatter = (v) => tenorText(v);
-  b.legend.push({ name: 'EEPE ' + env.fmt(eepe), colour: toneColour(th, 'good'), style: 'line' });
+  if (eepe !== null) { b.legend.push({ name: 'EEPE ' + env.fmt(eepe), colour: toneColour(th, 'good'), style: 'line' }); }
   if (limit !== null) { b.legend.push({ name: 'limit ' + env.fmt(limit), colour: toneColour(th, 'bad'), style: 'dash' }); }
   b.legendStatic = false;
   const peak = Math.max.apply(null, sorted.map((r) => num(r[pf]) || 0).concat([0]));

@@ -15,7 +15,7 @@
 #}
 {# The exposure explorer (EXPOSURE_GUIDE.md section 3; the approved combined mock-up): the command line with the switches and the run;
    the breadcrumb with Back; the scope tree (bank, legal entities, counterparties, netting sets, the open set's trades) with each node's
-   peak PFE; the headline tiles (each explained by the one Explain, drishti-insight); the profile chart (drishti-risk on drishti-chart); tabs (their tables drishti-grid, terminal layout) that change with the scope's level. A shell: drishti_exposure-explorer.js fills every
+   peak PFE; the headline tiles (each explained by the one Explain, drishti-insight); the profile chart (drishti-risk on drishti-chart); tabs (their tables drishti-grid, terminal layout) that change with the scope's level; at a counterparty or a netting set, Pre-deal check › opens Counterparties → Pre-deal check. A shell: drishti_exposure-explorer.js fills every
    panel from /api/exposure/... and moves the whole screen to a scope in place. #}
 {% extends "base.html" %}
 {% block title %}Exposure · {{ scope }} · {{ PRODUCT }}{% endblock %}
@@ -66,7 +66,8 @@
       <div class="xx-actions" data-xx-actions>
         <button type="button" class="btn btn-sm xx-btn" data-xx-explain data-explain-primary aria-keyshortcuts="E" title="Explain the peak PFE: the formula with its values, the inputs and lineage (E); every tile has its own">Explain ›</button>
         <a class="btn btn-sm xx-btn" data-xx-csv href="#">Download the profile (CSV)</a> <a class="btn btn-sm xx-btn" data-xx-jsonl href="#" title="A grid date a line">JSONL</a>
-        <button type="button" class="btn btn-sm xx-btn" data-xx-capture-side>Capture exposure</button></div>
+        <button type="button" class="btn btn-sm xx-btn" data-xx-capture-side>Capture exposure</button>
+        <a class="btn btn-sm xx-btn" data-xx-predeal href="/predeal" hidden title="Counterparties → Pre-deal check: does a new trade fit this counterparty's credit limit?">Pre-deal check ›</a></div>
     </section>
   </div>
   {{ foot(PP, request.url | string) }}

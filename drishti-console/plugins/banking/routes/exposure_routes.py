@@ -21,7 +21,9 @@ CP-ALDERSHOT``, ``EXP GROUP GRP-ALDERSHOT``, ``EXP LE LE-NY``, ``EXP TRD <trade>
 (``EXP CPTY:CP-X - NSET:NS-X-FRA``). The computed kind ``exposure-result`` stays an ordinary kind (``/v/exposure-result/<scope>``,
 the API, the CLI); the explorer is its main screen. The stored ``exposure-profile`` kind was retired in 2.9.0: an old id (``EXP
 EXP-ALDERSHOT-FRA``) and an old link (``/v/exposure-profile/EXP-ALDERSHOT-FRA``) open the same netting set in the explorer, with a
-notice."""
+notice. ``PREDEAL <counterparty> LIKE <trade> <notional>`` opens Counterparties → Pre-deal check
+(``/predeal``, EXPOSURE_GUIDE.md section 18.9), which asks the server's pre-deal service; the explorer's old Pre-deal tab is gone and its
+address (``/exposure?scope=...&tab=predeal``) opens the check."""
 from __future__ import annotations
 
 from urllib.parse import quote
@@ -94,9 +96,29 @@ def _problem(e: BackendError) -> JSONResponse:
     return busy_problem(e, e.status)                               # a busy refusal keeps its Retry-After and words (busy protection)
 
 
+def predeal_page(command: str = "", counterparty: str = "", netting_set: str = "") -> str:
+    """The address of Counterparties → Pre-deal check: a typed command, or the counterparty and the netting set to start from."""
+    q = [("command", command), ("counterparty", counterparty), ("nettingSet", netting_set)]
+    rest = "&".join(f"{k}={quote(v, safe=':')}" for k, v in q if v)
+    return "/predeal" + ("?" + rest if rest else "")
+
+
+def _from_scope(scope: str) -> tuple[str, str]:
+    """The counterparty and netting set an explorer scope names (``CPTY:CP-X``, ``NSET:NS-X``), for the old Pre-deal tab's address."""
+    s = (scope or "").strip()
+    if s.upper().startswith("CPTY:"):
+        return s[5:].split(",")[0], ""
+    if s.upper().startswith("NSET:"):
+        return "", s[5:].split(",")[0]
+    return "", ""
+
+
 @router.get("/exposure")
-async def page(request: Request, scope: str = "", capture: str = ""):
-    """The explorer's shell; its panels load in place (no full-page reload when drilling)."""
+async def page(request: Request, scope: str = "", capture: str = "", tab: str = ""):
+    """The explorer's shell; its panels load in place (no full-page reload when drilling). The old Pre-deal tab's address opens the check."""
+    if tab.lower() in ("predeal", "pre-deal"):
+        cp, ns = _from_scope(scope)
+        return RedirectResponse(predeal_page(counterparty=cp, netting_set=ns), status_code=303)
     me = getattr(request.state, "identity", None)
     return render(request, "terminal/exposure.html", scope=scope or "BANK", capture=capture, user=(me.user if me else "") or "",
                   screen="exposure")
@@ -132,9 +154,17 @@ async def api_get(request: Request, path: str):
         return _problem(e)
 
 
+@router.get("/predeal")
+async def predeal(request: Request, command: str = "", counterparty: str = "", nettingSet: str = ""):  # noqa: N803 - the API's name
+    """Counterparties → Pre-deal check: a shell; plugins/banking/static/js/drishti_exposure-predeal.js asks the server's pre-deal service
+    (``POST /api/exposure/predeal``) and draws its answer on Drishti Elements; every number is the server's."""
+    return render(request, "terminal/predeal.html", command=command, counterparty=counterparty.upper(), netting_set=nettingSet.upper(),
+                  as_of=request.query_params.get("asOf", ""), screen="predeal")
+
+
 @router.post("/api/exposure/{path:path}")
 async def api_post(request: Request, path: str):
-    if path not in ("captures", "what-if"):
+    if path not in ("captures", "predeal"):
         return JSONResponse({"code": "DRS-1001", "detail": f"no exposure endpoint {path}"}, status_code=404)
     q = request.query_params
     try:
@@ -150,19 +180,12 @@ def redirect_for(typed: str) -> RedirectResponse | None:
     return RedirectResponse(where, status_code=303) if where else None
 
 
-#: what ``PREDEAL`` typed says until the Counterparties → Pre-deal check screen is built on the Drishti Elements libraries (registry item
-#: ``pre-deal-screen``); the check itself is the server's and answers now
-PREDEAL_PENDING = ("PREDEAL: the Counterparties → Pre-deal check screen is under construction (it is built on the Drishti Elements "
-                   "libraries); the check answers now from POST /api/v1/risk/exposure/predeal and drishti.py exposure predeal \"PREDEAL "
-                   "<counterparty> LIKE <trade> <notional>\" (EXPOSURE_GUIDE.md section 18.9)")
-
-
 def predeal_redirect(typed: str) -> RedirectResponse | None:
-    """``PREDEAL …`` typed: said, in words, until its screen is built (the server's pre-deal service answers the API and the CLI)."""
-    words = typed.split()
+    """``PREDEAL …`` typed: Counterparties → Pre-deal check, the command made at once when it names more than the word."""
+    words = typed.replace("<GO>", "").replace("<go>", "").split()
     if not words or words[0].upper() != "PREDEAL":
         return None
-    return RedirectResponse(f"/t?error={quote(PREDEAL_PENDING)}", status_code=303)
+    return RedirectResponse(predeal_page(command=" ".join(words) if len(words) > 1 else ""), status_code=303)
 
 
 # ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2) ----------------------------------------------------------------------

@@ -15,15 +15,14 @@
 """The exposure explorer in a real browser (docs/guides/EXPOSURE_GUIDE.md section 3), over the committed exposure run (the run
 XR-2026-09-30-01's eight netting sets, 627 trades, 200 paths, 24 grid dates: lake demo --exposure committed, the quick one) with the netting sets, CSAs, collateral balances,
 credit limits, counterparties, groups and legal entities beside it, built into a scratch lake (lake demo --only those kinds, as the
-guide's pictures do in tools/docs/shots/_exp.py, with the committed run) and served by the Delta connector, the demo connector OFF (both pre-deal
-methods run in the server's exposure engine):
+guide's pictures do in tools/docs/shots/_exp.py, with the committed run) and served by the Delta connector, the demo connector OFF (the pre-deal
+check runs in the server's exposure engine):
 
 - EXP BANK <GO> opens the explorer on the bank: the scope tree, the counterparty board; a click on a counterparty moves every panel in
   place (the breadcrumb, the tiles, its Netting sets tab); a netting set's Collateral tab shows its CSA and the signed "Effect of
   collateral"; its Trades tab opens a trade "In its netting set" with its netting benefit; Back returns to the set;
-- By tenor; the q 95/99 and collateralised switches change the figures; the pre-deal what-if (on a netting set, and on a counterparty
-  into the netting set picked, its largest first) by the proxy (addon) and by the exact
-  method (paths);
+- By tenor; the q 95/99 and collateralised switches change the figures; no Pre-deal tab: Pre-deal check › opens Counterparties →
+  Pre-deal check at the counterparty, where a booked trade copied by the exact method is checked by the server;
 - a netting set the run does not cover says so (no figures); on a phone the explorer does not scroll sideways; F1 opens the guide.
 
 Takes no pictures. Skipped when Playwright, Chromium, the built server jar or a JDK is missing, or the lake cannot be built."""
@@ -40,7 +39,6 @@ import pytest
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
-from select_helpers import choose, value, values  # <drishti-select>: drishti-inputs' Select
 
 ROOT = Path(__file__).resolve().parents[2]
 #: the kinds the exposure engine reads (as tools/docs/shots/_exp.py builds them)
@@ -204,60 +202,26 @@ def test_by_tenor_and_the_switches_change_the_figures(stack, browser):
     pg.close()
 
 
-def test_the_pre_deal_what_if_by_the_proxy_and_by_the_paths(stack, browser):
-    pg = open_exp(browser, str(stack), "/exposure?scope=" + SET)
-    painted(pg, SET)
-    tab(pg, "predeal")
-    wait(pg, "!!document.querySelector('[data-xx-candidate]') && document.querySelector('[data-xx-candidate]').component.options.length > 0")
-    choose(pg, "[data-xx-method]", "addon")
-    pg.locator("[data-xx-whatif]").click()
-    wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'addon'", PAINT_S)
-    out = pg.locator("[data-xx-whatif-out]").text_content()
-    assert "Peak PFE after" in out and "proxy" in out
-    assert pg.evaluate("document.querySelector('[data-xx-whatif-out] drishti-grid').grid.model.rowCount()") == len(head(pg, "profile"))
-
-    # the exact method: the candidate's paths netted and collateralised with the set by the server's exposure engine
-    pg.evaluate("delete document.querySelector('[data-exposure]').dataset.whatif")
-    choose(pg, "[data-xx-method]", "paths")
-    pg.locator("[data-xx-factor]").fill("-1")                                # the unwind of a booked trade
-    pg.locator("[data-xx-whatif]").click()
-    wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'paths'"
-             " || /failed/.test(document.querySelector('[data-xx-whatif-out]').parentNode.parentNode.innerText)", 300)
-    assert pg.get_attribute("[data-exposure]", "data-whatif") == "paths", pg.locator("[data-xx-whatif-out]").inner_text()[:300]
-    out = pg.locator("[data-xx-whatif-out]").text_content()
-    assert "Peak PFE after" in out and "exact" in out
-    pg.close()
-
-
-def test_the_pre_deal_what_if_on_a_counterparty(stack, browser):
-    """The counterparty's Pre-deal tab: the netting set the new trade goes into (its largest first), the candidate from that set, the
-    counterparty's figures; another set lists its own trades; the same result layout as a netting set's."""
+def test_pre_deal_check_opens_from_a_counterparty_and_the_server_answers(stack, browser):
+    """The explorer has no Pre-deal tab (one way): Pre-deal check › on a counterparty opens Counterparties → Pre-deal check at it; a
+    booked trade of its largest netting set, copied by the exact method, is checked by the server's pre-deal service, its verdict drawn
+    (the full screen: test_predeal_browser.py)."""
     pg = open_exp(browser, str(stack), "/exposure?scope=" + CPTY)
     painted(pg, CPTY)
-    tab(pg, "predeal")
-    wait(pg, "!!document.querySelector('[data-xx-predeal-set]') && document.querySelector('[data-xx-predeal-set]').component.options.length > 1 && document.querySelector('[data-xx-candidate]').component.options.length > 0")
-    sets = values(pg, "[data-xx-predeal-set]")
-    peaks = {r["nettingSet"]: r["peakPfe"] for r in head(pg, "byNettingSet")}
-    assert sets[0] == "NSET:" + max(peaks, key=lambda k: peaks[k] or 0)          # the largest by peak PFE, picked by default
-    assert value(pg, "[data-xx-whatif-scope]") == CPTY            # the counterparty's figures by default
-    first = ",".join(values(pg, "[data-xx-candidate]"))
-    choose(pg, "[data-xx-predeal-set]", sets[1])
-    wait(pg, "(c => !c.o.disabled && c.options.map(o => o.value).join(',') !== %r)(document.querySelector('[data-xx-candidate]').component)" % first, PAINT_S)
-    assert "pre-deal what-if" in pg.locator("[data-xx-pane]").inner_text().lower()
-    choose(pg, "[data-xx-method]", "addon")
-    pg.locator("[data-xx-whatif]").click()
-    wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'addon'", PAINT_S)
-    assert pg.get_attribute("[data-exposure]", "data-whatif-scope") == CPTY
-    out = pg.locator("[data-xx-whatif-out]").text_content()
-    assert "Peak PFE after" in out and "proxy" in out
-    pg.evaluate("delete document.querySelector('[data-exposure]').dataset.whatif")
-    choose(pg, "[data-xx-method]", "paths")
-    pg.locator("[data-xx-factor]").fill("-1")
-    pg.locator("[data-xx-whatif]").click()
-    wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'paths'"
-             " || /failed/.test(document.querySelector('[data-xx-whatif-out]').parentNode.parentNode.innerText)", 300)
-    assert pg.get_attribute("[data-exposure]", "data-whatif") == "paths", pg.locator("[data-xx-whatif-out]").inner_text()[:300]
-    assert "exact" in pg.locator("[data-xx-whatif-out]").text_content()
+    assert pg.locator('[data-xx-tabs] [data-tab="predeal"]').count() == 0
+    link = pg.locator("[data-xx-predeal]")
+    assert link.is_visible() and link.get_attribute("href") == "/predeal?counterparty=" + CPTY.split(":", 1)[1]
+    link.click()
+    wait(pg, "document.querySelector('[data-predeal]') && document.querySelector('[data-predeal]').dataset.ready === '1'"
+             " && +(document.querySelector('[data-predeal]').dataset.trades || 0) > 0", PAINT_S)
+    assert pg.input_value("[data-pd-counterparty]") == CPTY.split(":", 1)[1]
+    like = pg.eval_on_selector("[data-pd-like]", "s => [...s.options].map(o => o.value).filter(Boolean)")
+    pg.select_option("[data-pd-like]", like[0])
+    pg.locator("[data-pd-check]").click()
+    wait(pg, "!!document.querySelector('[data-predeal]').dataset.decision"
+             " || !document.querySelector('[data-pd-notice]').hidden", 300)
+    assert pg.get_attribute("[data-predeal]", "data-decision") in ("approve", "refer", "decline"), pg.locator("[data-pd-notice]").inner_text()
+    assert "PREDEAL " + CPTY.split(":", 1)[1] + " LIKE " + like[0] in pg.locator("[data-pd-word]").inner_text()
     pg.close()
 
 

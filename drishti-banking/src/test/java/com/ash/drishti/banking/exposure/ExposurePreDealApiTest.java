@@ -269,6 +269,24 @@ class ExposurePreDealApiTest {
     }
 
     @Test
+    void theOneExplainTellsHowTheCheckWasMadeWithoutAuditingItAgain() throws Exception {
+        String rita = as("rita", "risk");
+        JsonNode x = check(rita, DAY, "PREDEAL CP-1 LIKE A 5M");
+        assertThat(x.at("/limit/status").asText()).isEqualTo("within");                          // a limit of 1e12: far from near
+        assertThat(x.at("/limit/near").asDouble()).isEqualTo(0.8);                               // limit-near's default
+        assertThat(x.at("/limit/headroomBefore").asLong()).isEqualTo(1_000_000_000_000L - x.at("/limit/before").asLong());
+        assertThat(x.at("/exposure/with/ead").asLong()).isEqualTo(Math.round(1.4 * x.at("/exposure/with/eepe").asDouble()));   // alpha x EEPE
+        assertThat(x.at("/exposure/incremental/ead").asLong()).isEqualTo(x.at("/exposure/with/ead").asLong() - x.at("/exposure/base/ead").asLong());
+        long audited = audit.recent(500, "CPTY:CP-1").stream().filter(e -> e.action().equals("ccr-predeal")).count();
+        JsonNode e = json.readTree(mvc.perform(get("/api/v1/explain").header("Authorization", rita).param("kind", "predeal").param("measure", "headroom")
+                .param("command", x.get("command").asText()).param("date", DAY.toString())).andExpect(status().isOk()).andReturn().getResponse()
+                .getContentAsString());
+        assertThat(e.toString()).contains("headroom = limit − with").contains("use = with ÷ limit").contains("approve");
+        assertThat(e.at("/value").asLong()).as(e.toString()).isEqualTo(x.at("/limit/headroomAfter").asLong());
+        assertThat(audit.recent(500, "CPTY:CP-1").stream().filter(v -> v.action().equals("ccr-predeal")).count()).isEqualTo(audited);
+    }
+
+    @Test
     void theCommandGrammar() throws Exception {
         String rita = as("rita", "risk");
         JsonNode a = check(rita, DAY, "predeal cpty cp-1 like a 5m <GO>");
