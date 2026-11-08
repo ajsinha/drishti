@@ -137,12 +137,23 @@ final class NativeLayout {
     /** The index of the {@code business_date} identity field in the table's current spec. */
     static int dateIndex(PartitionSpec spec, Schema schema) {
         NestedField date = schema.field(IcebergLayout.DATE);
+        int found = -1;
         for (int i = 0; i < spec.fields().size(); i++) {
-            if (date != null && spec.fields().get(i).sourceId() == date.id() && spec.fields().get(i).transform() instanceof Transform.Identity) {
-                return i;
+            PartitionSpec.Field f = spec.fields().get(i);
+            if (found < 0 && date != null && f.sourceId() == date.id() && f.transform() instanceof Transform.Identity) {
+                found = i;
+            } else if (!(f.transform() instanceof Transform.Void)) {
+                // a file's partition tuple must hold every field's value (the spec): this writer computes only the date's, so a
+                // table another engine re-partitioned is refused rather than given files whose other values read as null
+                throw new IllegalStateException("not in the layout: the partition spec " + spec.specId() + " has the field '" + f.name() + "' ("
+                        + f.transform() + ") beside the identity partition on " + IcebergLayout.DATE + "; Drishti writes only tables partitioned by "
+                        + IcebergLayout.DATE + " alone (write this table with engine: library, or restore its spec)");
             }
         }
-        throw new IllegalStateException("not in the layout: no identity partition on " + IcebergLayout.DATE);
+        if (found < 0) {
+            throw new IllegalStateException("not in the layout: no identity partition on " + IcebergLayout.DATE);
+        }
+        return found;
     }
 
     /** The business date of a data or delete file (null for another spec without the date). */

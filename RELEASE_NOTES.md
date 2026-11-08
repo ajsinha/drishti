@@ -207,6 +207,11 @@ Follow these steps when upgrading an installation of 2.9.11.d.
     files again (mode replace). Tables of plain values (letters, digits, `_`, `-`), tables loaded before then or by the other engines
     need nothing. Lakes now follow the Delta protocol's path rules exactly
     ([DATA_LAKE_GUIDE.md section 14](docs/guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
+14. **Iceberg connectors with `engine: library` whose `root` holds a space, a `%` or non-ASCII letters**: the library engine kept that
+    lake in a folder spelled the way `java.nio` encodes it (`my%20lake` beside `my lake`). It now uses the folder the root names. Move
+    the tables from the encoded folder into the named one (or set `root` to the encoded folder's name), then restart. Nothing else
+    changes for Iceberg users: tables written by other engines with special partition values, which failed with *no such file*, now
+    read. Lakes follow the Iceberg spec ([DATA_LAKE_GUIDE.md section 15](docs/guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance)).
 
 ### Removed endpoints and screens
 

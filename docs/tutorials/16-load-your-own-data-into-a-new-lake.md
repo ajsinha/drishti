@@ -1377,8 +1377,12 @@ settings:
 **You should see** `data/iceberg/risk/<kind>/metadata` and `data` folders for the seven VaR kinds, `data/delta/demo/risk` empty, and
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
 
+These are standard Apache Iceberg v2 tables: Spark, Trino, Snowflake or pyiceberg read them as they are. To try it with pyiceberg,
+see [the data lake guide, section 15.5](../guides/DATA_LAKE_GUIDE.md#155-check-it-yourself).
+
 **Further:** [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (the connector, sections 18 and 19),
-[../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage) (mixed storage).
+[../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage) (mixed storage). What Drishti reads and writes of the Iceberg spec:
+[DATA_LAKE_GUIDE.md section 15](../guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
 ## Step 31 · Publish the official results to Iceberg
 
