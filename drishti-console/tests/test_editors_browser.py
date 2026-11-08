@@ -236,7 +236,7 @@ def test_copy_as_a_draft_save_propose_and_history(pg):
     assert pg.is_disabled("[data-act=propose]")
     pg.click("[data-act=save]")
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-save-go]')")
-    wait(pg, "document.querySelector('[data-save-ws]').options.length > 1")
+    wait(pg, "document.querySelector('[data-save-ws]').component.options.length > 1")
     pg.select_option("[data-save-ws]", label="Editors Desk")
     pg.fill("[data-save-msg]", "a copy to change")
     pg.click("[data-save-go]")

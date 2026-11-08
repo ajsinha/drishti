@@ -85,7 +85,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
 
 **What it reads.** The market-risk pack's connector `risk-store` keeps the P&L vector as a `list<double>` column of the `pnl-vector`
 table, and the trades a batch sends as **scenario PVs** in their own currency as the `list<double>` column `SCENARIO_PV` of
-the `scenario-pv` table, with each currency's scenario FX in `fx-scenario` (`config/packs/market-risk/pack.yaml`):
+the `scenario-pv` table, with each currency's scenario FX in `fx-scenario` (`config/packs/banking/market-risk/pack.yaml`):
 
 ```yaml
 connectors:
@@ -624,7 +624,7 @@ A **limit letter** is the letter of authority a trade's VaR limit is granted und
 hierarchy built from it, beside MGMT and LEGAL from the `risk-hierarchy` rows:
 
 ```yaml
-# config/packs/market-risk/pack.yaml (generated from tools/packgen/banking/kept/market-risk.yaml); drishti.var.hierarchies wins over it
+# config/packs/banking/market-risk/pack.yaml (generated from tools/packgen/banking/kept/market-risk.yaml); drishti.var.hierarchies wins over it
 hierarchies:
   MGMT:  { title: Management, source: risk-hierarchy, limits: var-limit }
   LEGAL: { title: Legal entities, source: risk-hierarchy, limits: var-limit }
@@ -843,7 +843,7 @@ drishti:
     smat:
       max-days: 60          # the most business dates one matrix reads; more asked: this many, and the page says so
 
-# config/editions/risk.yaml and trading.yaml: SMAT on; market.yaml and world.yaml: off (the command answers DRS-4023)
+# config/lenses/banking/risk.yaml and trading.yaml: SMAT on; market.yaml and world.yaml: off (the command answers DRS-4023)
 commands:
   words: { VAR: on, EXP: on, SMAT: on }
 ```
@@ -955,7 +955,7 @@ drishti:
       export-choices: [100, 500, 1000, 10000, 0]   # the export's drop-down (0: All)
       export-max-cells: 20000000     # the most cells one export holds on the server
 
-# config/editions/risk.yaml and trading.yaml: PLAY on; market.yaml and world.yaml: off (the command answers DRS-4023)
+# config/lenses/banking/risk.yaml and trading.yaml: PLAY on; market.yaml and world.yaml: off (the command answers DRS-4023)
 commands:
   words: { VAR: on, SMAT: on, PLAY: on }
 ```

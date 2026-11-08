@@ -17,13 +17,13 @@
    here names a pack, a kind or a person. #}
 <div class="disc" id="discPanel" role="tabpanel" aria-labelledby="discTab" data-tab-panel="discussion" data-disc-panel hidden>
   <div class="disc-bar">
-    <label>Show <select class="studio-select" data-disc-filter aria-label="Show threads that are"><option value="">All threads</option><option value="open">Open</option><option value="resolved">Resolved</option></select></label>
+    <label>Show <drishti-select data-disc-filter label="Show threads that are"><option value="">All threads</option><option value="open">Open</option><option value="resolved">Resolved</option></drishti-select></label>
     <p class="disc-scope" data-disc-scope hidden>On <b data-disc-scope-name></b> <button type="button" class="fk" data-disc-scope-clear>Show all</button></p>
   </div>
   <div class="disc-list" data-disc-list aria-label="Threads"></div>
   <form class="disc-form" data-disc-form>
     <h3 class="disc-h">New thread</h3>
-    <label class="disc-l">About <select class="studio-select" data-disc-anchor></select></label>
+    <label class="disc-l">About <drishti-select data-disc-anchor label="About"></drishti-select></label>
     <div class="disc-box">
       <label class="sr-only" for="discBody">Your comment</label>
       <textarea id="discBody" class="studio-in" aria-label="Your comment" rows="3" data-disc-body maxlength="2000" placeholder="Write a comment. @ to mention a person or a role, { to quote a value"></textarea>

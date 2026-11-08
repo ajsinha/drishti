@@ -14,7 +14,7 @@
 
 """Did you know: the Home page's fact of the day (docs/guides/USER_GUIDE.md, "Home: the fact of the day").
 
-Every fact is declared by the pack it needs, in ``config/packs/<pack>/config/facts.yaml``, and computed from the server's answers on the
+Every fact is declared by the pack it needs, in ``config/packs/<domain>/<pack>/config/facts.yaml``, and computed from the server's answers on the
 business date: the steps fetch (``var``, ``exposure``, ``search``, ``raw``), pick a row (``pick`` with ``where`` and ``order``) or compute
 a value (``let``); ``when`` says what makes it surprising; ``text``, ``why`` and the picture are filled from the result. No number is
 written in a fact: a fact whose condition does not hold today is not shown. Results are kept per server, user, business date and set of
@@ -36,6 +36,7 @@ import yaml
 
 from core import engine_figures as engine
 from core.facts_expr import FORMATS, Expr, ExprError, Template, fmt, overlap_rows
+from core.pack_paths import pack_dirs
 
 log = logging.getLogger(__name__)
 
@@ -256,8 +257,9 @@ def load_pack(pack: dict) -> tuple[list[Fact], list[str]]:
 def check(packs_dir: Path) -> dict[str, list[str]]:
     """Every pack's facts file under ``packs_dir``, checked: ``{pack: [problems]}`` (empty lists when all is well)."""
     out = {}
-    for d in sorted(p for p in Path(packs_dir).iterdir() if (p / FILE).is_file()):
-        out[d.name] = load_pack({"name": d.name, "dir": d})[1]
+    for name, d in pack_dirs(packs_dir).items():
+        if (d / FILE).is_file():
+            out[name] = load_pack({"name": name, "dir": d})[1]
     return out
 
 

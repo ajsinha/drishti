@@ -321,8 +321,8 @@ the Java tool:
                      java on the PATH)
 
 examples:
-  drishti.py sutra lint config/packs/market-risk --strict
-  drishti.py sutra test config/packs/market-risk --junit build/market-risk.xml
+  drishti.py sutra lint config/packs/banking/market-risk --strict
+  drishti.py sutra test config/packs/banking/market-risk --junit build/market-risk.xml
   drishti.py sutra shape samples/ --out build
   drishti.py sutra design samples/ --kind ticket
 Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.
@@ -587,24 +587,24 @@ counterparty-mine/counterparty-mine.v1.sutra.yaml:7 DRS-2021 unknown panel kind 
 $ echo $?
 1
 
-$ drishti-console/.venv/bin/python tools/drishti.py sutra test config/packs/market-risk
+$ drishti-console/.venv/bin/python tools/drishti.py sutra test config/packs/banking/market-risk
      frtb-sensitivity: help coverage 9/9 (100%)
-ok   config/packs/market-risk/sutras/market-risk/frtb-sensitivity.v1.sutra.yaml (2 samples)
+ok   config/packs/banking/market-risk/sutras/market-risk/frtb-sensitivity.v1.sutra.yaml (2 samples)
      pnl-explain: help coverage 4/4 (100%)
-ok   config/packs/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml (2 samples)
+ok   config/packs/banking/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml (2 samples)
 …    (stress-result and stress-scenario likewise)
-skip config/packs/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml (no samples)
+skip config/packs/banking/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml (no samples)
      var: help coverage 5/5 (100%)
-ok   config/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
+ok   config/packs/banking/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
 ```
 
-`sutra lint config/packs/trading` prints `ok` for each of the pack's 134 Sutras (blocks expanded) in about seven seconds; `sutra test config/packs/trading` renders each against the samples in its
+`sutra lint config/packs/banking/trading` prints `ok` for each of the pack's 134 Sutras (blocks expanded) in about seven seconds; `sutra test config/packs/banking/trading` renders each against the samples in its
 `tests/` folder.
 
 #### The tests convention
 
 ```
-config/packs/<pack>/
+config/packs/<domain>/<pack>/
   sutras/.../irs-fixfloat.v1.sutra.yaml
   tests/irs-fixfloat/         <- one folder per Sutra, named by the Sutra's name (the `sutra:` line)
     cases.jsonl               <- the cases, one a line: {"case": "MX-20000001", "document": {...}}; the kind comes from the Sutra's `match.kind`
@@ -674,7 +674,7 @@ Publish `sutra-tests.xml` with your CI's JUnit report step. A Sutra whose panels
 when it ends, and no port is opened.
 
 `sutra test docs/guides/examples` passes with the seven packs (the `linked-sources` example reads `CP-SUMMIT`, `NS-SUMMIT-NY` and `DESK-FI` from them); without them its failure line says `NS-SUMMIT-NY
-not found`, which means the pack holding that entity is not enabled. `sutra test config/packs/<pack>` reports `skip (no samples)` for a Sutra with no `tests/<sutra>/` folder; that is not a failure.
+not found`, which means the pack holding that entity is not enabled. `sutra test config/packs/<domain>/<pack>` reports `skip (no samples)` for a Sutra with no `tests/<sutra>/` folder; that is not a failure.
 
 **Limits.** The CLI keeps the server's input limits: a file over `drishti.builder.max-file-mb` (5 MB by default) is refused with one line that names it, text that is not UTF-8 says so, an engine that
 cannot start (for example a pack that is not found: set `DRISHTI_PACKS_DIR`) ends with `sutra: ...` and exit `1`, never a stack trace. `--kind` is a name (letters, digits, `.`, `_`, `-`, up to 64),
@@ -740,7 +740,7 @@ Try it without touching anything of yours: `DRISHTI_JAR=... DRISHTI_PORT=18974 d
 
 ### `pack new`: a complete pack from JSON Lines
 
-Writes `config/packs/<name>/` (or `--out`): `pack.yaml` (kinds, mnemonics, columns, and with a date a connector, routes and the
+Writes `config/packs/<domain>/<name>/` (or `--out`): `pack.yaml` (kinds, mnemonics, columns, and with a date a connector, routes and the
 optional `ingest:` block), `samples/`, one Sutra per kind or `--match` group, `tests/<sutra>/` with `expect.yaml`,
 `config/about.yaml` (kind titles and glossary entries with `TODO` text for you to fill in) and a `README.md`; then it runs
 `sutra lint` and `sutra test` on it. With a dated store option it also **writes your documents into that store**, so the pack
@@ -777,7 +777,7 @@ options:
                         pack description
   --mnemonic MNEMONIC   kind=MNEMONIC,kind2=M2 (default: initials of the kind,
                         upper case)
-  --out OUT             default config/packs/<name>
+  --out OUT             default config/packs/<domain>/<name>
   --force               overwrite an existing --out folder
   --catalog-samples CATALOG_SAMPLES
                         documents per kind kept in samples/ (default 25)
@@ -1272,7 +1272,7 @@ The offline path: no server API and no token. Full guide with real output, promo
 [OPERATIONALISING.md](OPERATIONALISING.md).
 
 ```bash
-drishti.py pack bundle config/packs/trading --out dist                  # trading-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
+drishti.py pack bundle config/packs/banking/trading --out dist                  # trading-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
 drishti.py pack verify dist/trading-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
 drishti.py pack deploy dist/trading-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
 drishti.py pack rollback trading --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]

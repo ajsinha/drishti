@@ -118,7 +118,7 @@ def load(a) -> int:
     total = 0.0
     for kind in a.kinds.split(","):
         cmd = [py if Path(py).exists() else sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "build", "--from", str(Path(a.data) / kind),
-               "--pack", str(ROOT / "config" / "packs" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", KEYS[kind],
+               "--pack", str(ROOT / "config" / "packs" / "banking" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", KEYS[kind],
                "--mode", "overwrite-dates", "--lake", a.lake, "--engine", a.engine, "-q"]     # each file's (tar folder's) date: the load rules
         for s in a.loader_set or []:
             cmd += ["--loader-set", s]

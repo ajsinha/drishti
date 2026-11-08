@@ -82,7 +82,7 @@ jurisdiction       JUR JUR-<ISO3>            government, capital, population, le
    │  ELECTIONS, LAST_ELECTION ─► election ELEC     PARTIES ─► party PARTY     SOCIAL_INDICATORS ─► social-indicator SOCI
 ```
 
-The links are the contract link columns of `config/packs/world-economy/contracts/` and `config/packs/core/contracts/counterparty.contract.yaml`
+The links are the contract link columns of `config/packs/economy/world-economy/contracts/` and `config/packs/core/core/contracts/counterparty.contract.yaml`
 (`ECONOMY → economy`). Companies link the same way: a listed company's and a US company's `ECONOMY` is its home economy.
 
 **Id conventions.** Economies use the ISO 3166 three-letter code: `ECON-GBR`, `FCST-GBR-WEO`, `FISC-GBR`, `JUR-GBR`. Country groups

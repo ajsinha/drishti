@@ -35,6 +35,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir as _pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 FEEDS = ROOT / "tools" / "feeds"
 FIXTURES = FEEDS / "tests" / "fixtures" / "publicsector"
 AS_OF = date(2026, 11, 6)                  # the business date the fixtures were recorded for
@@ -119,7 +122,7 @@ def build() -> dict[Path, str]:
     """Every file this generator owns: {path: text}."""
     out: dict[Path, str] = {}
     for feed, (pack, kinds) in PACKS.items():
-        pack_dir = ROOT / "config" / "packs" / pack
+        pack_dir = _pack_dir(pack)
         got = pull(feed)
         docs, catalog = {}, []
         for kind, (wanted, n) in kinds.items():
@@ -150,7 +153,7 @@ def main(argv: list[str]) -> int:
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(t, encoding="utf-8")
     for pack, _ in PACKS.values():                      # samples the packs no longer hold
-        sd = ROOT / "config" / "packs" / pack / "samples"
+        sd = _pack_dir(pack) / "samples"
         for f in sd.glob("*.jsonl"):
             if f not in want:
                 f.unlink()

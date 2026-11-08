@@ -248,7 +248,7 @@ GIRR AUD                                         VEGA                       235,
 ```yaml
 drishti:
   frtb:
-    sensitivity-kind: position-sensitivity   # served by risk-store (config/packs/market-risk/pack.yaml)
+    sensitivity-kind: position-sensitivity   # served by risk-store (config/packs/banking/market-risk/pack.yaml)
     factor-kind: risk-factor
     default-risk-kind: default-risk          # none served: "DRC not computed", never 0
     rrao-from-positions: true

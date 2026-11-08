@@ -53,11 +53,14 @@
     s.appendChild(F.sparkline(document, xs, undefined, "dg"));
     return s;
   }
-  function limitBar(use) {
+  /** The limit's bar: its tone the server's status (within, near, breach), its near tick the server's rule (drishti.risk.limit-near). */
+  var LIMIT_TONE = { within: "ok", near: "warn", breach: "bad" };
+  function limitBar(use, status, near) {
     if (!isNum(use)) { return ""; }
-    var cls = use > 1 ? "bad" : use >= 0.8 ? "warn" : "ok";
+    var cls = (status && LIMIT_TONE[status]) || "";
     return '<span class="mr-lbar ' + cls + '" title="' + pct(use) + ' of the limit"><span class="f" style="width:' + Math.min(100, use * 100 / 1.2).toFixed(1)
-      + '%"></span><b class="tick" style="left:' + (80 / 1.2).toFixed(1) + '%"></b><b class="tick full" style="left:' + (100 / 1.2).toFixed(1) + '%"></b></span>';
+      + '%"></span>' + (isNum(near) ? '<b class="tick" style="left:' + (near * 100 / 1.2).toFixed(1) + '%"></b>' : "")
+      + '<b class="tick full" style="left:' + (100 / 1.2).toFixed(1) + '%"></b></span>';
   }
   /** The server's scenario P&L of a scope as drishti-risk's P&L distribution: its bins, its VaR and ES (V and E on the lines). */
   function histogram(box, d, height) {
@@ -122,7 +125,7 @@
       box.innerHTML = [
         tile("VaR " + pct(h.confidence, 1) + " " + (h.lens || "") + " · " + h.scope, money(h.var), (h.k ? h.k + "th worst of " + h.scenarios : "") + " · " + esc(h.currency || "")),
         tile("ES " + pct(h.esConfidence, 1), money(h.es), "mean of the " + (h.esCount || "?") + " worst"),
-        tile("Limit use", isNum(h.limitUse) ? pct(h.limitUse) : "—", isNum(h.limit) ? "of " + money(h.limit) : esc(h.limitNote || "no VaR limit on this scope"), limitBar(h.limitUse)),
+        tile("Limit use", isNum(h.limitUse) ? pct(h.limitUse) : "—", isNum(h.limit) ? "of " + money(h.limit) : esc(h.limitNote || "no VaR limit on this scope"), limitBar(h.limitUse, h.limitStatus, h.limitNear)),
         tile("Σ " + ((a.rowDimensions || [])[0] || "rows").toLowerCase() + " − total", isNum(div) ? money(div) : "—", "diversification" + (first ? " (" + esc(first.label) + ")" : "")),
         tile("Stressed VaR", isNum(h.stressedVar) ? money(h.stressedVar) : "—", esc(isNum(h.stressedVar) ? "the scope on the stress set" : h.stressedNote || "")),
         tile("Data", esc((h.batches || []).join(", ") || "—") + esc(intraday), "data version " + esc(h.dataVersion || "?") + " · " + (h.trades || 0).toLocaleString("en-US")
@@ -320,11 +323,9 @@
   }
 
   function tabC() {
-    var pick = $("[data-mr-grid-pick]");
-    sens($("[data-mr-ladder]"), { grid: pick.value || "BANK-IR-TENOR" }, function (box, s) {
-      if (!pick.options.length) {
-        (s.grids || []).forEach(function (g) { var o = el("option", "", g); o.selected = g === s.grid; pick.appendChild(o); });
-      }
+    var pick = $("[data-mr-grid-pick]").component;                    // drishti-inputs' Select, filled with the grids on the first answer
+    sens($("[data-mr-ladder]"), { grid: pick.getValue() || "BANK-IR-TENOR" }, function (box, s) {
+      if (!pick.options.length) pick.setOptions(s.grids || [], s.grid);
       if (!s.rows.length) { note(box, "No GIRR delta of the scope on " + s.date + "."); return; }
       var scale = 0;
       s.rows.forEach(function (r) { r.cells.forEach(function (c) { scale = Math.max(scale, Math.abs(c.net || 0), c.limit || 0); }); });
@@ -390,7 +391,7 @@
     f.trade.value = "";
     whatIf();
   });
-  $("[data-mr-grid-pick]").addEventListener("change", tabC);
+  $("[data-mr-grid-pick]").addEventListener("drishti:change", tabC);
   var K = window.Drishti.keys, answered = function () { return !!st.answer; };
   K.register({ id: "mr.horizon", keys: ["H", "Shift+H"], scope: "screen", area: "mr-lens", group: "Market risk", description: "Switch the horizon: 1 day or 10 days",
     when: answered, run: function () { setLens("horizon", opts().horizon ? "1d" : "10d"); } });

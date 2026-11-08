@@ -31,6 +31,9 @@ from pathlib import Path
 
 from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, java_cmd, listening, register
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 
 OUT = ROOT / "docs" / "connectors" / "img" / "connector_files"
 DEAD_DB = 59997                              # nothing listens here: the connector below is meant to be DOWN
@@ -48,7 +51,7 @@ def start_servers(work: Path) -> list:
     packs = work / "packs"
     packs.mkdir()
     for name in ("core", "market-data", "trading"):
-        (packs / name).symlink_to(ROOT / "config" / "packs" / name)
+        (packs / name).symlink_to(pack_dir(name))
     (packs / "desk-demo").mkdir()
     (packs / "desk-demo" / "pack.yaml").write_text(
         "pack: desk-demo\nversion: 1.0.0\ntitle: Desk demo\ndescription: Quotes read from a stream somebody has not set up yet.\n"

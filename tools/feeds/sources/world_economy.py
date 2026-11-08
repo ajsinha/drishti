@@ -65,7 +65,7 @@ finally:
 
 PACK = "world-economy"
 GENERATOR = B.ROOT / "tools" / "packgen" / "world" / "make.py"
-COMMITTED = [N.DATASET, B.ROOT / "config" / "packs" / PACK, B.ROOT / "tools" / "packgen" / "world"]
+COMMITTED = [N.DATASET, B.pack_dir(PACK), B.ROOT / "tools" / "packgen" / "world"]
 IMF_WHY = ("the IMF's terms allow reuse with attribution, but commercial reuse needs the IMF's permission; "
            "the owner kept it for internal demos only (2026-10-10)")
 
@@ -274,7 +274,7 @@ def refresh(a, log=print) -> int:
     cfg, widened = plan_cfg(probe, selected, a.dry_run)
     out, committed = resolve_out(a, no_imf, widened)
     carried = selected + ([] if no_imf or any(s.name == "imf" for s in selected) else [SOURCES[1]])   # the dataset joins every cached source
-    B.guard_out(carried, B.ROOT / "config" / "packs" / PACK if committed else out, a.internal_ok)
+    B.guard_out(carried, B.pack_dir(PACK) if committed else out, a.internal_ok)
     run = B.Run(PACK, a, out, log)
     run.cfg = cfg
     where = "the committed dataset and pack (" + ", ".join(str(p.relative_to(B.ROOT)) for p in COMMITTED) + ")" if committed else str(out)

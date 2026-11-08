@@ -177,7 +177,7 @@ class VarTestDataPrecisionTest {
     static void load() throws IOException {
         Path repo = root();
         Path data = repo.resolve("data/testdata/market-risk");
-        Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("config/packs/market-risk/pack.yaml").toFile(), Map.class);
+        Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("config/packs/banking/market-risk/pack.yaml").toFile(), Map.class);
         PositionRules rules = PositionRules.of((Map<?, ?>) pack.get("positions"));
         List<LocalDate> scen = new ArrayList<>();
         lines(data.resolve("scenario-set"), n -> n.path("SCENARIO_DATES").forEach(d -> scen.add(LocalDate.parse(d.asText()))));

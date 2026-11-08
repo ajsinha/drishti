@@ -138,5 +138,5 @@ annotated copy is `config/connectors.examples/other/yfinance.yaml`. There is no 
 ## See also
 
 - [The full yfinance document](../../docs/connectors/YFINANCE.md): how each figure is worked out, settings, tests.
-- [The us-equities pack's guide](../../config/packs/us-equities/guides/us-equities.md#prices-internal-use-only) (prices: internal use only).
+- [The us-equities pack's guide](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md#prices-internal-use-only) (prices: internal use only).
 - [The news connector](../../docs/connectors/NEWS.md), [connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS (and the outbound proxy)](../../docs/connectors/TLS.md).

@@ -52,4 +52,4 @@ datasets:
 options:
   args: []
 snapshot:
-  note: refreshes config/packs/us-equities (samples, guide) and data/testdata/us-equities
+  note: refreshes config/packs/capitalmarkets/us-equities (samples, guide) and data/testdata/us-equities

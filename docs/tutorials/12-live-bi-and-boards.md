@@ -140,7 +140,7 @@ settings:
 ## Step 2 · A live table
 
 Open **Datasets** and **Live trading desk** (a version 1 dataset: its page is the 2.1 one, with **Layers**). Its trade table is declared with `mode: live`
-over the `market-risk` pack's **trade valuations** (`config/tables/bi/live_trading_trade.table.yaml` and its model `config/tables/bi/live-trading.model.yaml`):
+over the `market-risk` pack's **trade valuations** (`config/tables/banking/live_trading_trade.table.yaml` and its model `config/tables/banking/live-trading.model.yaml`):
 
 ```yaml
 tables:
@@ -301,7 +301,7 @@ $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: ap
  "live":{"generation":36,"state":"live","tables":[{"table":"trade","kind":"trade-valuation","state":"live","rows":2000,"applied":18829,...}]}}
 ```
 
-**The YAML** of the two live visuals of the page (the report is `config/bi/reports/live-trading-desk.report.yaml`): a bar is any bar, the rolling line is
+**The YAML** of the two live visuals of the page (the report is `config/bi/reports/banking/live-trading-desk.report.yaml`): a bar is any bar, the rolling line is
 its own type, and nothing says "live" because the dataset does:
 
 ```yaml
@@ -353,7 +353,7 @@ file:report:desk-wall report    promoted  published v1   Desk wall  (Shipped con
   tags: sample, trading, counterparty-risk, live, streaming, tutorial   views: 0   audience: {'roles': [], 'users': [], 'packs': []}
 ```
 
-(`--body` prints its YAML: [config/bi/reports/desk-wall.report.yaml](../../config/bi/reports/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report until you convert it:
+(`--body` prints its YAML: [config/bi/reports/banking/desk-wall.report.yaml](../../config/bi/reports/banking/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report until you convert it:
 `python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](../guides/BI_GUIDE.md#2312-from-a-board-item-to-a-board-page)).
 
 ## Step 5 · Kiosk mode

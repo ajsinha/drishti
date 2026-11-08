@@ -16,7 +16,7 @@ markets, fiscal positions, country groups, regional economies) and the politics-
 jurisdictions, parties, office holders, elections, regions, social and governance indicators) in one pack. A core counterparty's
 `economy` field (its country of risk) opens the country's economy here.
 
-    python3 tools/packgen/world/make.py            write config/packs/world-economy
+    python3 tools/packgen/world/make.py            write config/packs/economy/world-economy
     python3 tools/packgen/world/make.py --check    fail if the pack differs from what would be written
     python3 tools/realdata/realdata.py all         refresh the data, then write the pack
 """

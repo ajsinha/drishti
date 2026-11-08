@@ -17,7 +17,7 @@
 
 # Data contracts of the world-development pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/world-development/guides/world-development.md](../../../config/packs/world-development/guides/world-development.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/economy/world-development/guides/world-development.md](../../../config/packs/economy/world-development/guides/world-development.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -30,7 +30,7 @@ One country's World Development Indicators: the latest of each, the world map sh
 
 |  |  |
 |---|---|
-| Contract | [development-profile.contract.yaml](../../../config/packs/world-development/contracts/development-profile.contract.yaml) · version 1.0 |
+| Contract | [development-profile.contract.yaml](../../../config/packs/economy/world-development/contracts/development-profile.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/feeds/sources/) |
@@ -40,7 +40,7 @@ One country's World Development Indicators: the latest of each, the world map sh
 | Dated by | `snapshot` |
 | Cadence | daily (due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `development-store` (plugin `delta`), table `<root>/development/development-profile/` |
-| Test data | config/packs/world-development/samples |
+| Test data | config/packs/economy/world-development/samples |
 | Worked example | [world-development/development-profile](../samples/world-development/development-profile.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -117,7 +117,7 @@ One World Development Indicator of one country by year: the history, the latest 
 
 |  |  |
 |---|---|
-| Contract | [development-series.contract.yaml](../../../config/packs/world-development/contracts/development-series.contract.yaml) · version 1.0 |
+| Contract | [development-series.contract.yaml](../../../config/packs/economy/world-development/contracts/development-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/feeds/sources/) |
@@ -127,7 +127,7 @@ One World Development Indicator of one country by year: the history, the latest 
 | Dated by | `snapshot` |
 | Cadence | daily (due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `development-store` (plugin `delta`), table `<root>/development/development-series/` |
-| Test data | config/packs/world-development/samples |
+| Test data | config/packs/economy/world-development/samples |
 | Worked example | [world-development/development-series](../samples/world-development/development-series.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

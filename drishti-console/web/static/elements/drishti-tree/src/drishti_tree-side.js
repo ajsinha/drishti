@@ -17,7 +17,7 @@
    measure with ◆ on a non-additive one, "Σ children" beside it where the measure asks, labelled as not a figure of the measure, the
    children's count), its actions (Explain, expand or collapse, expand everything below, zoom in on a partition, and in the edit mode
    "Move to" for the keyboard), the Explain sheet's place, the edit mode's proposal (its moves, Submit for review, Undo last, Discard),
-   the legend of a measure's bands, and the status line. Built with drishti-core's element maker; nothing inline. */
+   the legend of a bar's statuses, and the status line. Built with drishti-core's element maker; nothing inline. */
 import { h, toneColour } from '../../drishti-core/src/drishti_index.js';
 import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 
@@ -86,17 +86,14 @@ function proposalBox(t) {
   ]);
 }
 
-/** @private the bands of the measure that colours the nodes, and what ◆ means */
+/** @private the statuses of the bar that colours the nodes (its tones, in its words), and what ◆ means */
 function legend(t) {
   const doc = t.doc, m = t.model, out = [];
   const cm = t.colourBy && m.measure(t.colourBy);
-  if (cm && cm.bar && cm.bar.bands) {
-    let lo = null;
-    const items = cm.bar.bands.map((b, i) => {
-      const words = i === cm.bar.bands.length - 1 && lo !== null ? '≥ ' + t.text(cm.field, lo) : (lo === null ? '< ' : t.text(cm.field, lo) + ' – ') + t.text(cm.field, b.to);
-      lo = b.to;
-      return h(doc, 'span', { cls: 'dt-lg' }, [h(doc, 'span', { cls: 'dt-sw', style: { 'background-color': toneColour(t.theme, b.tone) } }), words]);
-    });
+  if (cm && cm.bar && cm.bar.status && cm.bar.tones) {
+    const said = cm.bar.words || {};
+    const items = Object.keys(cm.bar.tones).map((s) =>
+      h(doc, 'span', { cls: 'dt-lg' }, [h(doc, 'span', { cls: 'dt-sw', style: { 'background-color': toneColour(t.theme, cm.bar.tones[s]) } }), said[s] || s]));
     out.push(h(doc, 'h3', { cls: 'dt-sec', text: cm.label }), h(doc, 'div', { cls: 'dt-legend' }, items));
   }
   if (m.measures.some((x) => x.additive === false)) {

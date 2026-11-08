@@ -46,7 +46,7 @@ PY = sys.executable
 #: the generators whose source is read (data generators; tests and fixtures under them are skipped)
 GENERATORS = ["tools/packgen/**/*.py", "tools/samplegen/*.py", "tools/testdata/*.py", "tools/realdata/*.py", "tools/feeds/*.py", "tools/feeds/sources/*.py",
               "tools/sutragen.py", "tools/schemapack.py", "tools/bench/trades.py", "tools/convertcmd.py", "tools/pvgen/*.py",
-              "config/packs/*/tools/*.py",
+              "config/packs/*/*/tools/*.py",
               "examples/packs/*/tools/*.py"]
 
 #: files that write a store on purpose: the loaders (generating and loading are separate steps; these are the loading step)
@@ -196,7 +196,7 @@ class RunTheGenerators(unittest.TestCase):
 
     def test_a_pack_generator_writes_jsonl_samples_and_sutra_cases(self):
         self.run_tool("tools/packgen/genomics/make.py", env={"DRISHTI_PACKS_OUT": str(self.d / "packs")})
-        pack = self.d / "packs" / "genomics"
+        pack = next(self.d.glob("packs/*/genomics"))             # written in its domain's folder, <out>/<domain>/genomics
         self.assert_jsonl(pack / "samples", 3)
         self.assertTrue((pack / "samples" / "catalog.jsonl").is_file())
         if (pack / "tests").is_dir():

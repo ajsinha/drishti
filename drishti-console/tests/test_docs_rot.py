@@ -54,7 +54,7 @@ from core.guides import GithubSlugger  # noqa: E402
 # Markdown that is not documentation a reader opens: vendored libraries' notes, test resources, the generator's
 # README fragments (they are pasted into the packs' READMEs, which are checked) and the parallel gleif build.
 NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-plugin-feeds/src/test/",
-            "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/gleif/")
+            "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
 HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md", "docs/qa/")
 
@@ -224,14 +224,14 @@ def tracked_set() -> frozenset[str]:
 
 def _pack_roots(rel: str) -> list[str]:
     """Where a pack-relative path (``sutras/x.sutra.yaml``, ``config/formats.yaml``) may live for this document."""
-    m = re.match(r"((?:config|examples)/packs/[^/]+)/", rel)
-    return [m.group(1)] if m else []
+    return [r for r in pack_roots_all() if rel.startswith(r + "/")]
 
 
 @functools.lru_cache(maxsize=None)
 def pack_roots_all() -> tuple[str, ...]:
-    return tuple(sorted({re.match(r"((?:config|examples)/packs/[^/]+)/", p).group(1) for p in tracked()
-                         if re.match(r"(?:config|examples)/packs/[^/]+/", p)}))
+    """Every pack folder: a folder holding a pack.yaml under config/packs (in its domain folder, core.pack_paths) or examples/packs."""
+    return tuple(sorted({p[: -len("/pack.yaml")] for p in tracked()
+                         if re.match(r"(?:config|examples)/packs/(?:[^/]+/)?[^/]+/pack\.yaml$", p)}))
 
 
 def ignored(paths: list[str]) -> set[str]:
@@ -573,7 +573,7 @@ RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DAT
 def packs() -> list[dict]:
     out = []
     for p in tracked():
-        if re.match(r"(config/|examples/|docs/guides/examples/)packs?/[^/]+/pack\.yaml$", p) or re.match(r"drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
+        if re.match(r"(config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?[^/]+/pack\.yaml$", p) or re.match(r"drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
             try:
                 out.append(yaml.safe_load(read(p)) or {})
             except yaml.YAMLError:

@@ -67,6 +67,7 @@ td.fm-changed { background: color-mix(in srgb, var(--d-warn) 16%, transparent); 
 td.fm-warned { box-shadow: inset 0 0 0 1px var(--d-warn); }
 .fm-was { display: block; font-size: var(--d-fs-11_2); color: var(--d-muted); font-style: italic; }
 .fm-cell-in { width: 100%; min-width: 6rem; padding: var(--d-sp-1_6) var(--d-sp-4); font-size: inherit; }
+.fm-pick.fm-cell-in { display: block; padding: 0; }                                  /* an enum or lookup cell: drishti-inputs' Select */
 tr.fm-why td { padding: var(--d-sp-2_4) var(--d-sp-8) var(--d-sp-5_6); border-top: 0; background: var(--d-surface-2); }
 .fm-review { position: fixed; inset: 0; z-index: var(--d-z-popover); display: grid; place-items: center; background: color-mix(in srgb, var(--d-bg) 55%, transparent); }
 .fm-review-box { width: min(34rem, calc(100vw - 2rem)); max-height: 80vh; overflow: auto; padding: var(--d-sp-16); border-radius: var(--d-radius);

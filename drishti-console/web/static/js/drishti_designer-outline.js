@@ -138,9 +138,8 @@
   function ask(d, parent) {
     var p = null;
     state.sections.forEach(function (s) { s.panels.forEach(function (x) { if (x.index === d.index) { p = x; } }); });
-    var where = el('select', { 'class': 'dz-pill', 'aria-label': 'where it opens', 'data-ol-place': '' });
-    Object.keys(state.places).forEach(function (k) { where.appendChild(el('option', { value: k, text: state.places[k] })); });
-    where.value = 'detail-below';
+    var where = el('drishti-select', { 'class': 'dz-select', 'data-ol-place': '' });              // drishti-inputs' Select
+    where.options = { label: 'where it opens', value: 'detail-below', options: Object.keys(state.places).map(function (k) { return { value: k, label: state.places[k] }; }) };
     detail.innerHTML = '';
     detail.appendChild(el('h3', { 'class': 'dz-h', text: 'Open it on a click' }));
     detail.appendChild(el('div', { 'class': 'dz-sentence' }, ['a row in ', el('b', { text: parent.title }), ' shows ', el('b', { text: (p || {}).title || 'the panel' }), ' in ', where]));
@@ -149,15 +148,14 @@
         step({ op: 'nest', index: d.index, under: parent.id, place: where.value }).then(function () {   // the new child picked: its settings shown
           if (p && items['c:' + p.id]) { picks.set(['c:' + p.id], 'step'); } }); } } }),
       el('button', { type: 'button', 'class': 'dz-btn', text: 'Cancel', on: { click: function () { detail.innerHTML = ''; } } })]));
-    where.focus();
+    where.component.focus();
   }
 
   function settingSelect(label, options, value, onChange, attr) {
-    var s = el('select', { 'class': 'dz-pill', 'aria-label': label });
+    var s = el('drishti-select', { 'class': 'dz-select' });                  // drishti-inputs' Select
     s.setAttribute(attr, '');
-    options.forEach(function (o) { s.appendChild(el('option', { value: o[0], text: o[1] })); });
-    s.value = String(value);
-    s.addEventListener('change', function () { onChange(s.value); });
+    s.options = { label: label, value: options.some(function (o) { return String(o[0]) === String(value); }) ? String(value) : undefined, options: options.map(function (o) { return { value: o[0], label: o[1] }; }) };
+    s.addEventListener('drishti:change', function () { onChange(s.value); });
     return el('label', { 'class': 'ol-set' }, [label + ' ', s]);
   }
 

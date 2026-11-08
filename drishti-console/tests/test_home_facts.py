@@ -23,6 +23,7 @@ import yaml
 
 from core.facts import FactsService, Fetcher, check, compute, links, load_pack, parse, rotate
 from core.facts_expr import Expr, ExprError, Template, fmt
+from core.pack_paths import pack_dir
 import engine_fakes  # noqa: E402
 
 PACKS = Path(__file__).resolve().parents[2] / "config" / "packs"
@@ -33,7 +34,7 @@ PACKS = Path(__file__).resolve().parents[2] / "config" / "packs"
 def test_every_shipped_facts_file_is_clean_and_there_are_at_least_six_facts_across_three_domains():
     problems = check(PACKS)
     assert problems and all(v == [] for v in problems.values()), problems
-    facts = [f for name in problems for f in load_pack({"name": name, "dir": PACKS / name})[0]]
+    facts = [f for name in problems for f in load_pack({"name": name, "dir": pack_dir(name, PACKS)})[0]]
     assert len(facts) >= 6
     assert {f.pack for f in facts} >= {"market-risk", "counterparty-risk", "funds"}
     assert len({f.id for f in facts}) == len(facts)
@@ -45,7 +46,7 @@ def test_no_number_is_written_into_a_shipped_fact_sentence():
     """The sentences are templates: every figure comes from {expressions}, never from the file."""
     import re
     for name in check(PACKS):
-        doc = yaml.safe_load((PACKS / name / "config" / "facts.yaml").read_text())
+        doc = yaml.safe_load((pack_dir(name, PACKS) / "config" / "facts.yaml").read_text())
         for item in doc["items"]:
             for key in ("text", "why"):
                 literal = re.sub(r"\{[^{}]*\}", "", item.get(key) or "")
@@ -133,16 +134,21 @@ class FakeFetcher:
         return self.answers[key]
 
 
+def _status(use):
+    """The stand-in server's limit status (RiskLimits, drishti.risk.limit-near 0.8): the fact reads it, never a use of its own."""
+    return None if use is None else "breach" if use > 1 else "near" if use >= 0.8 else "within"
+
+
 def _tree(book_use, desk_use):
     return {"hierarchies": ["MGMT"], "nodes": [
         {"id": "MGMT~DESK-COMM", "name": "Commodities", "level": "desk", "parent": None, "var": 19_000_000, "limit": 25_000_000,
-         "limitUse": desk_use},
+         "limitUse": desk_use, "limitStatus": _status(desk_use)},
         {"id": "MGMT~BOOK-COMM-1", "name": "BOOK-COMM-1", "level": "book", "parent": "MGMT~DESK-COMM", "var": 6_465_756,
-         "limit": 2_500_000, "limitUse": book_use}]}
+         "limit": 2_500_000, "limitUse": book_use, "limitStatus": _status(book_use)}]}
 
 
 def _book_fact():
-    facts, _ = load_pack({"name": "market-risk", "dir": PACKS / "market-risk"})
+    facts, _ = load_pack({"name": "market-risk", "dir": pack_dir("market-risk", PACKS)})
     return next(f for f in facts if f.id == "book-over-limit-desk-within")
 
 
@@ -192,8 +198,8 @@ def test_links_rotation_and_the_fetcher_date():
 
 def test_a_fact_whose_pack_is_off_is_not_eligible():
     svc = FactsService()
-    ccr = {"name": "counterparty-risk", "dir": PACKS / "counterparty-risk"}
-    mr = {"name": "market-risk", "dir": PACKS / "market-risk"}
+    ccr = {"name": "counterparty-risk", "dir": pack_dir("counterparty-risk", PACKS)}
+    mr = {"name": "market-risk", "dir": pack_dir("market-risk", PACKS)}
     alone = {f.id for f in svc.eligible([ccr])}
     assert "collateral-raises-exposure" in alone and "var-versus-peak-pfe" not in alone     # it needs market-risk too
     assert "var-versus-peak-pfe" in {f.id for f in svc.eligible([ccr, mr])}

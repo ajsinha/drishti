@@ -86,7 +86,7 @@ def test_no_address_is_listed_twice_outside_the_lens_subject_menus():
 
 
 def test_each_lens_draws_no_address_twice():
-    for f in sorted((CONSOLE.parent / "config" / "editions").glob("*.yaml")):
+    for f in sorted((CONSOLE.parent / "config" / "lenses").glob("*/*.yaml")):   # each lens in its module's folder
         top = ((yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("menus") or {}).get("top")
         if not top:
             continue
@@ -130,7 +130,9 @@ def test_banking_entries_are_tagged_for_the_domain_split():
         needs = {str(r).split(":", 1)[1] for r in it.get("requires") or [] if str(r).startswith(("word:", "cmd:"))}
         if needs & BANKING_WORDS or c.get("engine"):
             assert _domain(m, c, it) == "banking", f"{it['id']}: a banking entry without domain: banking"
-    assert next(s for s in SPEC["help-sections"] if s["id"] == "risk").get("domain") == "banking"
+    from core import menus
+    assert "risk" not in {s["id"] for s in SPEC["help-sections"]}, "the risk section is the banking module's (plugins/banking/help.yaml)"
+    assert next(s for s in menus.help_sections(CONSOLE) if s["id"] == "risk").get("domain") == "banking"
 
 
 def test_the_build_registry_is_one_list_by_domain(pages):

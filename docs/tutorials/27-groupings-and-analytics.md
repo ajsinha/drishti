@@ -82,7 +82,7 @@ Members (a click opens one beside)  (table, members, F3)
   ...
 ```
 
-**In YAML.** The page is a derived connector of the gleif pack, `config/packs/gleif/pack.yaml`:
+**In YAML.** The page is a derived connector of the gleif pack, `config/packs/core/gleif/pack.yaml`:
 
 ```yaml
 gleif-groupings:
@@ -224,7 +224,7 @@ Key figures
   Not in USD  1 not summed
 ```
 
-**In YAML.** `config/packs/us-equities/pack.yaml`, the connector `us-equities-groupings`:
+**In YAML.** `config/packs/capitalmarkets/us-equities/pack.yaml`, the connector `us-equities-groupings`:
 
 ```yaml
     sic-sector:
@@ -275,7 +275,7 @@ Key figures
 ```
 
 **In YAML.** No connector: the company page's strip computes the ratios from the record's facts,
-`config/packs/us-equities/sutras/us-company.v1.sutra.yaml`:
+`config/packs/capitalmarkets/us-equities/sutras/us-company.v1.sutra.yaml`:
 
 ```yaml
   - { label: Net margin, bind: "$.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null", fmt: margin1, tone: sign }
@@ -318,7 +318,7 @@ Key figures
   Inflation (median)    3.10%
 ```
 
-**In YAML.** `config/packs/world-economy/pack.yaml`, the connector `macro-groupings` (written by `tools/packgen/economics/make.py`):
+**In YAML.** `config/packs/economy/world-economy/pack.yaml`, the connector `macro-groupings` (written by `tools/packgen/economics/make.py`):
 
 ```yaml
     country-group:
@@ -386,7 +386,7 @@ correlation-engine CORR-EU-EQ~estimator=kendall  REFUSED  (req-mvpm72cq-292c1a84
   estimator kendall is not allowed for correlation-result; allowed: pearson, ledoit-wolf
 ```
 
-**In YAML.** The page's panels read the computed kind with the page's controls (`config/packs/market-data/sutras/market-data/correlation-matrix.v1.sutra.yaml`):
+**In YAML.** The page's panels read the computed kind with the page's controls (`config/packs/banking/market-data/sutras/market-data/correlation-matrix.v1.sutra.yaml`):
 
 ```yaml
 controls:
@@ -443,7 +443,7 @@ equity-analytics EQ-CSCA  FAILED  (req-mvpm72j5-a7a17e82f69a)
 ```
 
 **In YAML.** The market-data pack's `equity-analytics` connector reads the equity and the index it names
-(`config/packs/market-data/pack.yaml`, written by `tools/packgen/banking/corr_kinds.py`):
+(`config/packs/banking/market-data/pack.yaml`, written by `tools/packgen/banking/corr_kinds.py`):
 
 ```yaml
     reads:
@@ -475,7 +475,7 @@ $ drishti.py view get price-history/PX-AAPL
 drishti: the server said 404 DRS-1001: DRS-1001 no source holds price-history/PX-AAPL (asked file; us-equities-prices, which kind 'price-history' is routed to, is disabled)
 ```
 
-**In YAML.** The prices and their analytics come from one live connector, off until a site turns it on (`config/packs/us-equities/pack.yaml`):
+**In YAML.** The prices and their analytics come from one live connector, off until a site turns it on (`config/packs/capitalmarkets/us-equities/pack.yaml`):
 
 ```yaml
   us-equities-prices:

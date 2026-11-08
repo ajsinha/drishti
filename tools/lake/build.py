@@ -72,6 +72,10 @@ import jsonstream  # noqa: E402
 import stage  # noqa: E402
 import writers  # noqa: E402
 
+if str(HERE.parents[1] / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(HERE.parents[1] / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+
 EXIT_OK, EXIT_FAILED, EXIT_PARTIAL, EXIT_LOCKED = 0, 1, 2, 3
 MODES = ("overwrite-dates", "overwrite-partitions", "append")
 STATE = "_drishti-lake"
@@ -300,7 +304,7 @@ def _plan_only(a, p, summary, started, say) -> tuple[int, dict]:
 
 def _pack_dir(name: str) -> pathlib.Path:
     p = pathlib.Path(name)
-    return p if (p / "pack.yaml").is_file() else PACKS_ROOT / name
+    return p if (p / "pack.yaml").is_file() else pack_dir(name, PACKS_ROOT)
 
 
 def _run_tars(a, say, summary, started, lake) -> tuple[int, dict]:

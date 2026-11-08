@@ -648,7 +648,7 @@ stream reader) under a partition; Drishti uses the database it already has for t
 
 ## 5. VaR sharding in depth (built)
 
-Built, **off by default** (no `sharding:` block in `config/packs/market-risk/pack.yaml`, no `drishti.var.sharding.enabled`). The
+Built, **off by default** (no `sharding:` block in `config/packs/banking/market-risk/pack.yaml`, no `drishti.var.sharding.enabled`). The
 full design is [VAR_SHARDING.md](VAR_SHARDING.md); this section is the deployment view.
 
 ### 5.1 What is sharded and what is copied
@@ -699,7 +699,7 @@ member's skeleton off the heap: owners and coordinators from `-Xmx36g` to about 
 ### 5.6 Settings for a production cluster
 
 ```yaml
-# config/packs/market-risk/pack.yaml (or drishti.var.sharding.* in application.yaml, which wins)
+# config/packs/banking/market-risk/pack.yaml (or drishti.var.sharding.* in application.yaml, which wins)
 sharding:
   enabled: true
   key: [LEGAL_ENTITY, DESK]
@@ -3311,7 +3311,7 @@ The tables file has one line per table: its folder, kind, pack, the pack's conne
 business date), the business-date field (`-` for the day being loaded) and the partition column:
 
 ```
-trading/trade_endur      trade   config/packs/trading   trade-endur     {date}/endur/           -      PRODUCT_TYPE
+trading/trade_endur      trade   config/packs/banking/trading   trade-endur     {date}/endur/           -      PRODUCT_TYPE
 ```
 
 #### Step 2: the buckets
@@ -3568,7 +3568,7 @@ day's previous files. A reader sees the old day or the new day, never a mixture,
           for each table of LAKE_TABLES_FILE:
             flock  /opt/drishti/data/lake-locks/<domain>--<table>.lock     (another load, backfill or maintenance: exit 3)
             aws s3 sync   s3://landing/<date>/<source>/  →  scratch/in/<table>/
-            drishti.py lake build   --from scratch/in/<table> -r --kind trade --pack config/packs/trading --connector trade-endur
+            drishti.py lake build   --from scratch/in/<table> -r --kind trade --pack config/packs/banking/trading --connector trade-endur
                                     --lake scratch/lake --domain trading --table trade_endur --mode overwrite-dates
                                     --batch-rows 250000 --as-of <date> --partition-by PRODUCT_TYPE --no-stamp --summary …
             aws s3 sync   scratch/lake/trading/trade_endur/  →  s3://lake/lake/trading/trade_endur/   --exclude "_delta_log/*"

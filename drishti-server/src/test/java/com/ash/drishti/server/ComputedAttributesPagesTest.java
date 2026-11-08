@@ -65,7 +65,7 @@ class ComputedAttributesPagesTest {
     }
 
     private static List<JsonNode> samples(String pack, String kind) throws Exception {
-        return Files.readAllLines(PACKS.resolve(pack).resolve("samples").resolve(kind + ".jsonl")).stream().filter(l -> !l.isBlank()).map(l -> {
+        return Files.readAllLines(com.ash.drishti.api.PackFolders.of(PACKS, pack).resolve("samples").resolve(kind + ".jsonl")).stream().filter(l -> !l.isBlank()).map(l -> {
             try {
                 return JSON.readTree(l);
             } catch (Exception e) {

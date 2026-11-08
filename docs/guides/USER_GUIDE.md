@@ -182,7 +182,7 @@ it changes); a test holds every page of the console to an entry or to the page i
 | Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 
-Each entry shows its command beside its name and runs it as if you had typed it, so a menu never holds anything the command line does not; an entry ending in `…` (*A counterparty*, *A country*) puts its words in the command line for you to type the id. An entry shows only when the edition keeps its command, and the VaR Playground and Backtesting entries only once those screens are on the server. With more than six menus in the bar they show as icons below 1750 pixels wide, so the command line keeps its room. Administrators set the menus in the edition's file ([EDITIONS.md](../admin/EDITIONS.md)).
+Each entry shows its command beside its name and runs it as if you had typed it, so a menu never holds anything the command line does not; an entry ending in `…` (*A counterparty*, *A country*) puts its words in the command line for you to type the id. An entry shows only when the edition keeps its command, and the VaR Playground and Backtesting entries only once those screens are on the server. With more than six menus in the bar they show as icons below 1750 pixels wide, so the command line keeps its room. Administrators set the menus in the edition's file ([LENSES.md](../admin/LENSES.md)).
 
 **On a phone** the subject menus fold into one menu named after the edition (**Trading**, **Market**, **World**), first in the
 bar: a column per subject, each entry with its command beside it ([On a phone](#on-a-phone)).
@@ -481,7 +481,7 @@ Details: [EXPOSURE_GUIDE.md section 7](EXPOSURE_GUIDE.md#7-pre-deal-what-if) and
 date, and how the kinds join. Nothing on it is drawn by hand; it is inferred each time from what is loaded:
 
 - **Domains and kinds** come from the packs switched on for you: each pack's kinds, titled by their data contracts
-  (`config/packs/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
+  (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
   what-ifs) is drawn as a **diamond** (a stored kind is a square): it is computed on demand and never stored, so it has no count.
 - **Joins** are what the contracts declare: their `links:`, their fields' `link:` and the fields a pack's `graph.fields` names (the
   trade's `COUNTERPARTY` → counterparty, `PORTFOLIO` → book, `TRADER_ID` → trader; the P&L vector's and the exposure paths' `TRADE_ID`
@@ -1550,7 +1550,7 @@ its pages (44 px rows, the command on the right), one engine at a time. Engines 
 **Who decides.** Every tier is configured, never coded: a panel kind has a default (tables and charts at a glance, provenance and notes
 under *More*, pivot grids on the desktop), a screen's author sets each panel's tier in its Sutra
 ([RACHANA_REFERENCE.md, phone](RACHANA_REFERENCE.md#phone-what-goes-to-a-phone)), and an administrator sets and caps tiers for the site
-and the edition ([CONFIGURATION.md](../admin/CONFIGURATION.md), `ui.phone`; [EDITIONS.md](../admin/EDITIONS.md), `phone:`). A cap
+and the edition ([CONFIGURATION.md](../admin/CONFIGURATION.md), `ui.phone`; [LENSES.md](../admin/LENSES.md), `phone:`). A cap
 wins: a site that says "never more than glance" for a heavy panel keeps it so, whatever a screen says.
 
 ## Keyboard
@@ -3204,7 +3204,7 @@ python:                         # Calc on this pack's kinds (Alt+C on a view)
   dir: python                   # optional: where snippet files are (default python/)
 ```
 
-Snippets can also be files, `config/packs/<pack>/python/*.py`, read in name order after those in `pack.yaml`. A file starts
+Snippets can also be files, `config/packs/<domain>/<pack>/python/*.py`, read in name order after those in `pack.yaml`. A file starts
 with comment lines naming it; what comes after them is the code (the copyright header above them is not):
 
 ```python
@@ -3237,7 +3237,7 @@ computes.
 
 The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
-`config/packs/<pack>/python/` files: change the source and run the generator, see
+`config/packs/<domain>/<pack>/python/` files: change the source and run the generator, see
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
@@ -3810,7 +3810,7 @@ cells:
 
 A cell is `sql` or `python`. A notebook saved with a `slice` cell opens with that cell left out and a line saying so: slicing is the Pivot's. A notebook may
 also carry the catalogue's keys (`sample`, `tags`, `endorsement`, `owner`, `audience`); a shipped one is
-`config/bi/notebooks/pnl-vs-exposure-pandas.notebook.yaml`.
+`config/bi/notebooks/banking/pnl-vs-exposure-pandas.notebook.yaml`.
 
 ### 6. Promote
 

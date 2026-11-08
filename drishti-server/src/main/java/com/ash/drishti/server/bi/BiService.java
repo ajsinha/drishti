@@ -84,7 +84,7 @@ public final class BiService {
     private com.ash.drishti.server.edition.EditionBi editionBi = com.ash.drishti.server.edition.EditionBi.NONE;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
-    void editionBi(com.ash.drishti.server.edition.EditionBi e) {   // EDITIONS.md 5.5; setter injection: optional, NONE without an edition
+    void editionBi(com.ash.drishti.server.edition.EditionBi e) {   // LENSES.md 5.5; setter injection: optional, NONE without an edition
         this.editionBi = e == null ? com.ash.drishti.server.edition.EditionBi.NONE : e;
     }
 
@@ -1312,7 +1312,7 @@ public final class BiService {
         boolean admin = access.has(p, BiAccess.ADMIN);
         List<BiStore.Item> all = new ArrayList<>(store.published());
         all.addAll(folder.items());
-        return all.stream().filter(i -> visible(i, p, mine, myPacks, admin) && editionBi.shown(i)).toList();   // EDITIONS.md 5.5
+        return all.stream().filter(i -> visible(i, p, mine, myPacks, admin) && editionBi.shown(i)).toList();   // LENSES.md 5.5
     }
 
     /** The published items the caller may see, searched, filtered and sorted; certified ones first (unless sorted by title). */

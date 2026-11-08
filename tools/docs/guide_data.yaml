@@ -496,7 +496,7 @@ guides:
         guide: "[14](#14-country-group)"
         sample_note: |
           no sample in the demo data (`data/testdata`); the world-economy pack ships its public data with the pack
-          (`config/packs/world-economy/samples/`).
+          (`config/packs/economy/world-economy/samples/`).
         about: |
           `REGION_GROUP`, `INCOME_GROUP`, `GDP_USD_BN`, `POPULATION_M`, `GROWTH`, `INFLATION`, `YEAR` and `GDP_PATH`: the country groups (ECG).
       - kind: correlation-matrix

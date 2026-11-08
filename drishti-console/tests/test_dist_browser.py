@@ -111,7 +111,7 @@ def test_export_subscribe_run_now_and_the_list(stack, browser, smtp, tmp_path):
     assert "Trades overview" in page.inner_text("main, .adm")
     page.fill('input[name="name"]', "Morning desk pack")
     page.fill('input[name="recipients"]', "rita, hana, ann")
-    page.select_option('select[name="format"]', "html")
+    page.select_option('drishti-select[name="format"]', "html")
     page.click("[data-when] summary")                                                   # the schedule text sits under Advanced
     page.fill('input[name="schedule"]', "business-days 07:30")
     page.click("[data-subscribe-form] button[type=submit]")
@@ -149,7 +149,7 @@ def test_export_subscribe_run_now_and_the_list(stack, browser, smtp, tmp_path):
     smtp.messages.clear()
     page.goto(CONSOLE_URL + "/reports/subscribe?type=report&id=" + REPORT + "&page=overview&title=PDF+pack")
     page.fill('input[name="recipients"]', "rita")
-    page.select_option('select[name="format"]', "pdf")
+    page.select_option('drishti-select[name="format"]', "pdf")
     page.click("[data-subscribe-form] button[type=submit]")
     page.wait_for_url("**/reports?msg=**")
     page.locator('tr[data-row-name="PDF pack"]').get_by_role("button", name="Run now").click()

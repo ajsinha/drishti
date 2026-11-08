@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The sitemap (config/sitemap.yaml, 2.9.11.e): the top bar's menus, the Admin pages' tab strip, the BI rail, Help's sections, the footer
-and the command line's placeholder, as data (docs/admin/EDITIONS.md › The design as built, section 5.4): each item's ``requires:`` and
+and the command line's placeholder, as data (docs/admin/LENSES.md › The design): each item's ``requires:`` and
 the edition's (or the person's lens's) ``menus:`` lists decide what one request shows; nothing is kept per person.
 Read again when the file changes. The lens items ("Open Drishti Risk", "Leave Drishti Risk") are added here, from the lenses the server
 offers. The Engines menu (``engines: true``) has a column per compute engine, drawn for the engines running in the cluster that the person's
@@ -398,7 +398,8 @@ def bi_rail(request, ctx: dict) -> list[dict]:
 
 def help_sections(console_dir: Path) -> list[dict]:
     """Help's sections in order (``help-sections:``): ``{id, name, icon, blurb, roles, domain}``."""
-    return [dict(s) for s in _spec(console_dir).get("help-sections") or [] if isinstance(s, dict) and s.get("id")]
+    from core import modules
+    return modules.help_heads([dict(s) for s in _spec(console_dir).get("help-sections") or [] if isinstance(s, dict) and s.get("id")])
 
 
 def spec_of(console_dir: Path) -> dict:
@@ -409,8 +410,21 @@ def spec_of(console_dir: Path) -> dict:
 def placeholder(request) -> str:
     edition = _edition(request)
     if edition.lens and edition.placeholder:
-        return edition.placeholder
-    return str(request.app.state.settings.get("ui.placeholder") or _spec(_console_dir(request)).get("placeholder") or "")
+        text = edition.placeholder
+    else:
+        text = str(request.app.state.settings.get("ui.placeholder") or _spec(_console_dir(request)).get("placeholder") or "")
+    return shown_examples(text, edition.typed_shown)
+
+
+def shown_examples(text: str, shown) -> str:
+    """The command line's placeholder with only the examples this person may type (``TRD MX-1, ECON CAN …  then <GO>`` with banking
+    off: ``ECON CAN …  then <GO>``); none left: blank."""
+    head, dots, tail = text.partition("…")
+    items = [x.strip() for x in head.split(",") if x.strip()]
+    kept = [x for x in items if shown(x)]
+    if len(kept) == len(items):
+        return text
+    return (", ".join(kept) + " " + dots + tail) if kept else ""
 
 
 def _console_dir(request) -> Path:

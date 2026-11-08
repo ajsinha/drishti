@@ -280,9 +280,9 @@
   function drawSlicers() {
     var box = $("[data-pv-slicers]"), list = state.slicers;
     var pick = $("[data-pv-slicer-add]");
-    if (pick && state.catalogue) {
-      pick.innerHTML = '<option value="">Add a slicer…</option>' + (state.catalogue.fields || []).filter(function (f) { return f.type !== "number" && !/^_|~/.test(f.name) && list.indexOf(f.name) < 0; })
-        .map(function (f) { return '<option value="' + esc(f.name) + '">' + esc(f.label || f.name) + '</option>'; }).join("");
+    if (pick && state.catalogue) {                                       // drishti-inputs' Select (<drishti-select>)
+      pick.component.setOptions([{ value: "", label: "Add a slicer…" }].concat((state.catalogue.fields || []).filter(function (f) { return f.type !== "number" && !/^_|~/.test(f.name) && list.indexOf(f.name) < 0; })
+        .map(function (f) { return { value: f.name, label: f.label || f.name }; })), "");
     }
     box.hidden = !list.length;
     if (!list.length) { box.innerHTML = ""; return; }
@@ -526,9 +526,9 @@
   function open(source, date, view) {
     return call("GET", "/catalogue?source=" + encodeURIComponent(source) + (date ? "&date=" + encodeURIComponent(date) : "")).then(function (c) {
       state.catalogue = c;
-      var ds = $("[data-pv-date]");
-      ds.innerHTML = (c.dates || []).slice().reverse().map(function (d) { return '<option' + (d === c.date ? " selected" : "") + '>' + esc(d) + '</option>'; }).join("") || '<option value="">current</option>';
-      $("[data-pv-compare]").innerHTML = '<option value="">off</option>' + (c.dates || []).slice().reverse().filter(function (d) { return d !== c.date; }).map(function (d) { return "<option>" + esc(d) + "</option>"; }).join("");
+      var dates = (c.dates || []).slice().reverse();                     // the date and Compare: drishti-inputs' Selects
+      $("[data-pv-date]").component.setOptions(dates.length ? dates : [{ value: "", label: "current" }], dates.indexOf(c.date) >= 0 ? c.date : dates.length ? dates[0] : "");
+      $("[data-pv-compare]").component.setOptions([{ value: "", label: "off" }].concat(dates.filter(function (d) { return d !== c.date; })), "");
       var preset = presetView();
       if (!view && (c.defaultView || preset)) {
         view = JSON.parse(JSON.stringify(c.defaultView || {source: source, rows: [], columns: [], values: [{measure: "var()", as: "VaR"}]}));
@@ -589,10 +589,9 @@
 
   function boot() {
     call("GET", "/sources").then(function (s) {
-      var sel = $("[data-pv-source]");
       var src = root.getAttribute("data-source");
-      sel.innerHTML = '<option value="">choose…</option>' + (s.sources || []).map(function (x) {
-        return '<option value="' + esc(x.source) + '"' + (x.source === src ? " selected" : "") + '>' + esc(x.title) + ' (' + esc(x.source) + ')</option>'; }).join("");
+      $("[data-pv-source]").component.setOptions([{ value: "", label: "choose…" }].concat((s.sources || []).map(function (x) {
+        return { value: x.source, label: x.title + " (" + x.source + ")" }; })), (s.sources || []).some(function (x) { return x.source === src; }) ? src : "");
       var id = root.getAttribute("data-view-id");
       if (id) {
         return call("GET", "/views/" + id).then(function (v) {
@@ -610,20 +609,20 @@
 
   function again() { if (state.grid) { state.grid.model.runPivot(); } }
 
-  $("[data-pv-source]").onchange = function () { if (this.value) { state.fields = []; open(this.value, ""); } };
-  $("[data-pv-date]").onchange = function () { var v = viewBody(); v.date = this.value; open(v.source, this.value, v); };
-  $("[data-pv-compare]").onchange = again;
-  $("[data-pv-subtotals]").onchange = function () { if (state.grid) { state.grid.model.setPivotOptions({subtotals: this.value}); } };
+  $("[data-pv-source]").addEventListener("drishti:change", function () { if (this.value) { state.fields = []; open(this.value, ""); } });
+  $("[data-pv-date]").addEventListener("drishti:change", function () { var v = viewBody(); v.date = this.value; open(v.source, this.value, v); });
+  $("[data-pv-compare]").addEventListener("drishti:change", again);
+  $("[data-pv-subtotals]").addEventListener("drishti:change", function () { if (state.grid) { state.grid.model.setPivotOptions({subtotals: this.value}); } });
   $("[data-pv-chart]").onclick = chart;
   $("[data-pv-save]").onclick = function () { save(false); };
   $("[data-pv-share]").onclick = function () { save(true); };
   $("[data-pv-path]").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); addPath(this.value); } });
   $("[data-pv-path-add]").onclick = function () { addPath($("[data-pv-path]").value); };
-  $("[data-pv-slicer-add]").onchange = function () {
+  $("[data-pv-slicer-add]").addEventListener("drishti:change", function () {
     if (!this.value) { return; }
     state.slicers = state.slicers.filter(function (d) { return d !== this.value; }, this).concat([this.value]);
     drawSlicers();
-  };
+  });
   $("[data-pv-export-open]").onclick = function () {
     var p = $("[data-pv-export]");
     p.hidden = !p.hidden;

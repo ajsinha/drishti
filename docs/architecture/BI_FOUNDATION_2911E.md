@@ -339,7 +339,7 @@ stored items keep their place in the item store (Q16).
 | Dataset key (`rachana: 2`, and `rachana: 1` tables) | Virtual table key (planned) | Note |
 |---|---|---|
 | `rachana: 2`, `expressions: 2` | `rachana: 3` (planned) | the language version: Rachana expressions; `expressions:` goes (Q25) |
-| `dataset: trading-risk-trades` | `table: bi.trading_risk_trades` | naming rule of Q11; `was: trading-risk-trades` kept for one release (Q18) |
+| `dataset: trading-risk-trades` | `table: banking.trading_risk_trades` | naming rule of Q11; `was: trading-risk-trades` kept for one release (Q18) |
 | `version`, `id`, `title`, `description`, `owner`, `sample`, `endorsement`, `tags`, `ai`, `layout` | the same | stable ids and semver unchanged |
 | `source: { kind, pack, connector }` | `from: { kind, pack, connector }` | any kind any connector serves |
 | `source: { kind, each: LEGS }` | `from: { kind }` + `grain: $.LEGS[*]` | |
@@ -375,9 +375,9 @@ Built-in columns: `id`, `business_date`, `index` (under a grain), `update_seq` a
 A migrated sample, `trading-cashflows-cashflows`:
 
 ```yaml
-# config/tables/bi/trading_cashflows_cashflows.table.yaml  (planned)
+# config/tables/banking/trading_cashflows_cashflows.table.yaml  (planned)
 rachana: 3                                   # planned
-table: bi.trading_cashflows_cashflows
+table: banking.trading_cashflows_cashflows
 was: trading-cashflows-cashflows             # one release only (planned)
 version: 1.0.0
 title: "Trade legs and cashflows: cashflows"
@@ -396,9 +396,9 @@ materialize: on-load
 and `trading-risk-trades` with its rule and mask:
 
 ```yaml
-# config/tables/bi/trading_risk_trades.table.yaml  (planned)
+# config/tables/banking/trading_risk_trades.table.yaml  (planned)
 rachana: 3                                   # planned
-table: bi.trading_risk_trades
+table: banking.trading_risk_trades
 from: { kind: trade-valuation, connector: risk-store }
 keys: [VALUATION_ID]
 columns:
@@ -424,7 +424,7 @@ depends on the order columns are read and the compiler can push it to the fastes
 | Model key | Layer model key (planned) | Note |
 |---|---|---|
 | `model`, `version`, `id`, `title`, `description`, `owner`, `endorsement`, `tags`, `sample`, `lifecycle`, `layout`, `ai`, `golden`, `contract`, `perspectives` | the same | consumers bind by name and major as today (`trading-risk@1`) |
-| `datasets: { trades: { dataset: trading-risk-trades, role: fact } }` | `tables: { trades: { table: bi.trading_risk_trades, role: fact } }` | **aliases kept** (Q10), so every measure, field and rule text keeps `trades.MTM` |
+| `datasets: { trades: { dataset: trading-risk-trades, role: fact } }` | `tables: { trades: { table: banking.trading_risk_trades, role: fact } }` | **aliases kept** (Q10), so every measure, field and rule text keeps `trades.MTM` |
 | `datasets.x.dataset: pack.trading.trade@^1` | `tables.x.table: trading.trade@^1` | the pack's generated table (3.6) |
 | `relationships[]` (`id`, `from`, `to`, `cardinality`, `direction`, `active`, `name`, `suggested`) | the same | `from` and `to` are `alias.COLUMN`; validation `DRS-9122` to `DRS-9124` unchanged |
 | `measures.X: { expr, format, description, currency, additive, id }` | the same, `expr` in Rachana | aggregate scope |
@@ -444,10 +444,10 @@ rachana: 3                                   # planned
 model: trading-risk
 version: 1.0.0
 tables:
-  trades:         { table: bi.trading_risk_trades, role: fact }
-  netting_sets:   { table: bi.trading_risk_netting_sets, role: fact }
-  counterparties: { table: bi.trading_risk_counterparties, role: dimension }
-  desks:          { table: bi.trading_risk_desks, role: dimension }
+  trades:         { table: banking.trading_risk_trades, role: fact }
+  netting_sets:   { table: banking.trading_risk_netting_sets, role: fact }
+  counterparties: { table: banking.trading_risk_counterparties, role: dimension }
+  desks:          { table: banking.trading_risk_desks, role: dimension }
 relationships:
   - { from: trades.DESK, to: desks.id }
   - { from: trades.NETTING_SET, to: netting_sets.id, active: false }
@@ -696,7 +696,7 @@ Each with a recommendation. Q30 collects what this deeper look suggests changing
 | Q8 | **The parent element.** A table of cash flows reads its leg's fields (`^.LEG_ID` in BI today); Rachana has `$` and `@` only | **Add `^`** (the element's parent; `^^` its parent) to Rachana's paths |
 | Q9 | **Dataset row rules and masks** move onto the virtual table and apply to **every** reader (Flight, the pivot, BI), not only through models (VIRTUAL_TABLES section 7 says the model adds them) | **On the table**: otherwise a Flight read of a table would show a desk-head every desk |
 | Q10 | **Aliases in models** (`tables: { trades: { table: … } }`) instead of full names in measures (`sum(trading.trade_legs.NOTIONAL_USD)`, VIRTUAL_TABLES section 4) | **Aliases**: every measure, field, rule and report keeps its text; three-part names are long and read as paths |
-| Q11 | **Names of migrated datasets.** `trading-risk-trades` becomes `bi.trading_risk_trades` (domain `bi` for every migrated dataset, underscores for SQL clients); pack datasets `pack.trading.trade` become `trading.trade` | **Yes**: mechanical and predictable; an administrator may move a table to another domain later (a rename the tool does) |
+| Q11 | **Names of migrated datasets.** `trading-risk-trades` becomes `banking.trading_risk_trades` (domain `bi` for every migrated dataset, underscores for SQL clients); pack datasets `pack.trading.trade` become `trading.trade` | **Yes**: mechanical and predictable; an administrator may move a table to another domain later (a rename the tool does) |
 | Q12 | **Built-in column names.** BI's `businessDate`, `updateSeq`, `updatedAt` or the lake's `business_date`, `update_seq`, `updated_at` | **The lake's**, one name across the lake, Flight and SQL clients; the tool rewrites every reference |
 | Q13 | **Tables that are not flat** (V3): SQL queries, Python Transforms, a model's answer, `grain.keep`, `group:` | **Allowed as sources**; `keys` with `keep: { latest: … }` de-duplicates; `group:` becomes a summary table (`from: { model, query }`), the one way to aggregate into a table |
 | Q14 | **Materialisation** (V4): VIRTUAL_TABLES section 6 has `none`, `on-load`, `rollup` | **Add `live`** (in-memory, `rows`, `age`); `direct` is `none` over a SQL source; **history moves to the model** (it samples measures) |

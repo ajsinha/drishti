@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Drishti Risk's Home (home/risk_landing.html; EDITIONS.md › The design as built, section 7): fills the landing's panels from the engines' answers, through the
+/* Drishti Risk's Home (home/risk_landing.html; LENSES.md › The design): fills the landing's panels from the engines' answers, through the
    console's own /api/var/... and /api/exposure/...: the BANK headline (VaR, ES), its backtest (scope/history), the exposure headline (EPE,
    peak PFE), the hierarchy tree (VaR, limit use per node), the exposure tree (EPE and credit-limit use per counterparty), the intraday streams
    and the official records. Each panel is painted when its answer arrives; one refused or empty says so in place and the others carry on.
@@ -40,7 +40,9 @@
   }
   var money = F.formatter("compact", { decimals: function (a, u) { return u === "k" ? 1 : !u ? 0 : 2; } });
   function pct(u) { return u === null || u === undefined || isNaN(u) ? "—" : Math.round(u * 100) + "%"; }
-  function tone(u) { return u === null || u === undefined || isNaN(u) ? "" : u >= 1 ? "r" : u >= 0.8 ? "w" : "ok"; }
+  /** A limit's tone from the server's status (within, near by drishti.risk.limit-near, breach); none without a status. */
+  var TONE = { within: "ok", near: "w", breach: "r" };
+  function tone(status) { return (status && TONE[status]) || ""; }
   function text(sel, v) { $$(sel).forEach(function (el) { el.textContent = v; }); }
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
   function said(target, err) {
@@ -48,13 +50,13 @@
     target.textContent = "";
     target.appendChild(el(target.tagName === "UL" ? "li" : "p", "rl-muted", "Not available: " + err.message));
   }
-  function useBar(u) {
+  function useBar(u, status) {
     var wrap = el("span", "rl-use");
-    var track = el("span", "rl-track"), fill = el("span", "rl-fill " + tone(u));
+    var track = el("span", "rl-track"), fill = el("span", "rl-fill " + tone(status));
     fill.style.width = Math.max(0, Math.min(1, u || 0)) * 100 + "%";
     track.appendChild(fill);
     wrap.appendChild(track);
-    wrap.appendChild(el("span", "rl-pill " + tone(u), pct(u)));
+    wrap.appendChild(el("span", "rl-pill " + tone(status), pct(u)));
     return wrap;
   }
   function link(href, label) { var a = el("a", "", label); a.href = href; return a; }
@@ -65,7 +67,7 @@
       columns: [{ field: "name", header: o.name, width: 200, cellRenderer: function (x) { return link(x.row.href, x.value); } },
         R.figureColumn("figure", o.figure, { format: money, width: 100 }),
         R.figureColumn("use", "Limit use", { format: pct, width: 170, cellRenderer: function (x) {
-          return x.value === null || x.value === undefined ? el("span", "rl-muted", "no limit") : useBar(x.value); } })] });
+          return x.value === null || x.value === undefined ? el("span", "rl-muted", "no limit") : useBar(x.value, x.row.status); } })] });
   }
 
   var breaches = { var: null, credit: null };
@@ -122,13 +124,14 @@
     var c = counterparties(t);
     text("[data-rl-cpty]", String(c.cptys.length));
     text("[data-rl-cpty-s]", c.sets + " netting sets");
-    breaches.credit = c.cptys.filter(function (n) { return n.limit && n.limit.use >= 1; }).length;
+    breaches.credit = c.cptys.filter(function (n) { return n.limit && n.limit.status === "breach"; }).length;
     paintBreaches();
     var body = $("[data-rl-cptys]");
     if (!body) return;
     var rows = c.cptys.filter(function (n) { return n.epe !== undefined; })
       .sort(function (a, b) { return ((b.limit && b.limit.use) || 0) - ((a.limit && a.limit.use) || 0) || (b.epe || 0) - (a.epe || 0); }).slice(0, 8)
-      .map(function (n) { return { id: n.scope, scope: n.scope, name: n.label || n.id, href: "/exposure?scope=" + encodeURIComponent(n.scope), figure: n.epe, use: n.limit ? n.limit.use : null }; });
+      .map(function (n) { return { id: n.scope, scope: n.scope, name: n.label || n.id, href: "/exposure?scope=" + encodeURIComponent(n.scope), figure: n.epe, use: n.limit ? n.limit.use : null,
+        status: n.limit ? n.limit.status : null }; });
     ranked(body, rows, { title: "Exposure by counterparty", name: "Counterparty", figure: "EPE", empty: "No counterparty exposure on this date" });
   }).catch(function (e) { text("[data-rl-cpty]", "—"); breaches.credit = null; said($("[data-rl-cptys]"), e); });
 
@@ -136,7 +139,7 @@
   var hierarchy = root.getAttribute("data-hierarchy") || "MGMT";
   function paintTree(t) {
     var nodes = t.nodes || [];
-    breaches.var = nodes.filter(function (n) { return n.limitUse !== null && n.limitUse !== undefined && n.limitUse >= 1; }).length;
+    breaches.var = nodes.filter(function (n) { return n.limitStatus === "breach"; }).length;
     paintBreaches();
     var desks = $("[data-rl-desks]");
     if (desks) {
@@ -144,7 +147,7 @@
       var list = (leafLevel.length ? leafLevel : nodes.filter(function (n) { return n.depth === 2; }))
         .sort(function (a, b) { return (b.limitUse || 0) - (a.limitUse || 0) || (b.var || 0) - (a.var || 0); }).slice(0, 8)
         .map(function (n) { return { id: n.scope, scope: n.scope, name: n.name || n.id, href: "/var?scope=" + encodeURIComponent(n.scope) + "&hierarchy=" + hierarchy, figure: n.var,
-          use: n.limitUse === undefined ? null : n.limitUse }; });
+          use: n.limitUse === undefined ? null : n.limitUse, status: n.limitStatus || null }; });
       ranked(desks, list, { title: "VaR by desk", name: "Desk", figure: "VaR", empty: "No desks in " + hierarchy });
     }
     var tree = $("[data-rl-tree]");
@@ -171,7 +174,7 @@
       if (!cells.length) heat.appendChild(el("p", "rl-muted", "No limits set in " + hierarchy));
       cells.forEach(function (n) {
         var a = link("/var?scope=" + encodeURIComponent(n.scope) + "&hierarchy=" + hierarchy, "");
-        a.className = "rl-cell " + tone(n.limitUse);
+        a.className = "rl-cell " + tone(n.limitStatus);
         a.appendChild(el("b", "", n.name || n.id));
         a.appendChild(el("span", "", "VaR " + pct(n.limitUse)));
         heat.appendChild(a);
@@ -183,7 +186,7 @@
   function paintHierarchy(box, nodes) {
     var rows = nodes.map(function (n) {
       return { ID: n.id, PARENT: n.parent || null, LABEL: n.name || n.id, LEVEL: n.level, scope: n.scope, VAR: n["var"], LIMIT_USE: n.limitUse,
-        LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit" };
+        LIMIT_STATUS: n.limitStatus, LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit" };
     });
     var opts = R.varHierarchyTree(rows, { title: "Node", label: "VaR hierarchy " + hierarchy, chrome: false, openDepth: 2, fields: ["VAR", "LIMIT_USE"],
       measures: { VAR: { label: "VaR", childSum: false, column: { width: 84 } }, LIMIT_USE: { label: "Limit use", column: { width: 120 } } },

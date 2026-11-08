@@ -275,7 +275,7 @@ public final class ModelDefParser {
             String ref = d.isTextual() ? d.asText() : LayerYaml.text(d, "table", "");
             Semver.Ref r = Semver.Ref.parse(ref);
             if (ref.isBlank() || r == null) {
-                y.error("DRS-9120", path + ".table", "a table reference is its name (bi.trading_risk_trades), or name@version, not '" + ref + "'");
+                y.error("DRS-9120", path + ".table", "a table reference is its name (banking.trading_risk_trades), or name@version, not '" + ref + "'");
                 return;
             }
             String role = d.isObject() ? LayerYaml.text(d, "role", "fact") : "fact";

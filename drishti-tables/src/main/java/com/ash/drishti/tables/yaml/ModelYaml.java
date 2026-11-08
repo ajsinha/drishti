@@ -98,7 +98,7 @@ public final class ModelYaml {
     private static Map<String, ModelDef.Use> tables(JsonNode t, Yaml y) {
         Map<String, ModelDef.Use> out = new LinkedHashMap<>();
         if (t == null || t.isNull()) {
-            y.error(TableCodes.UNREADABLE, "tables", "a model reads tables: tables: { trades: { table: bi.trading_risk_trades, role: fact } }");
+            y.error(TableCodes.UNREADABLE, "tables", "a model reads tables: tables: { trades: { table: banking.trading_risk_trades, role: fact } }");
             return out;
         }
         if (t.isArray()) {                                                  // VIRTUAL_TABLES.md section 4's list form: the alias is the table's own name

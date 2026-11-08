@@ -101,7 +101,7 @@ correlation-matrix  CORR CORR-<set>   EQUITY_IDS ─► equity, FX_IDS ─► fx
 correlation-result  CORR CORR-<set>[~window=N~estimator=pearson | ledoit-wolf]   computed from the factors' daily closes
 ```
 
-The links are the market-data pack's contract link columns (`config/packs/market-data/contracts/*.contract.yaml`). Every curve and
+The links are the market-data pack's contract link columns (`config/packs/banking/market-data/contracts/*.contract.yaml`). Every curve and
 surface is kept per business date, so `CRV CRV-USD-OIS <GO>` on yesterday's date shows yesterday's curve.
 
 **Id conventions.** A kind's prefix and the instrument: `CRV-USD-OIS`, `FX-EURUSD`, `FXV-EURUSD`, `FIX-SOFR`, `CDS-BUND`, `EQ-CSCA`,

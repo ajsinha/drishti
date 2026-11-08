@@ -22,7 +22,7 @@ Per date, under <out>/<kind>/: ``pnl-vector`` (509 USD P&Ls a trade from a 40-fa
 ``portfolio`` (--portfolios: a HIERARCHY portfolio per book and desk, RULE portfolios, and BASKET portfolios, --big-baskets of them with
 --basket-size positions) and ``var-limit`` (the bank, divisions and desks). The trade ids are the same on every date (the second date's
 vectors move a little), so two open dates hold the same positions. Deterministic for a --seed. Never writes into the repository.
-Load with ``drishti.py lake build --pack config/packs/market-risk --connector risk-store --kind <kind> ...`` (tools/bench/var_bench.py).
+Load with ``drishti.py lake build --pack config/packs/banking/market-risk --connector risk-store --kind <kind> ...`` (tools/bench/var_bench.py).
 """
 from __future__ import annotations
 

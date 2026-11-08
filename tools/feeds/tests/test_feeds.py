@@ -101,7 +101,7 @@ def test_every_shipped_feed_file_parses_and_names_its_class():
         assert s.licence.url.startswith("http"), s.name
         assert (ROOT / "config" / "lakes" / f"{s.lake}.yaml").is_file(), f"{s.name}: lake {s.lake} has no config/lakes file"
         for d in s.datasets.values():
-            assert (ROOT / "config" / "packs" / d.pack / "pack.yaml").is_file(), f"{s.name}: pack {d.pack}"
+            assert (FB.K.pack_dir(d.pack) / "pack.yaml").is_file(), f"{s.name}: pack {d.pack}"
 
 
 def test_internal_only_sources_say_so():

@@ -172,7 +172,7 @@ do not ([USER_GUIDE.md](../guides/USER_GUIDE.md#9-roles-who-may-use-calc)). Ever
 layouts*. A pack declares one like this:
 
 ```yaml
-# config/packs/world-economy/pack.yaml
+# config/packs/economy/world-economy/pack.yaml
 roles:
   economist:
     kinds: [economy, macro-indicator, economic-forecast, labour-market, fiscal-position, country-group, ...]

@@ -16,7 +16,8 @@
 
 A request's scope lives in context variables the middleware sets: the server it runs against (``servers.CURRENT``), the session's
 pin in a pool of servers (``cluster.SESSION``), the lens (``edition._lens``), the share it was opened through (``collab._share``),
-the business date and "known at" (``asof``) and the app's engines (``engines._current``). Work started for the request in a task
+the business date and "known at" (``asof``), the app's engines (``engines._current``), the app's modules (``modules._current``) and the
+person's module answer (``modules._person``: per request, never shared between people). Work started for the request in a task
 of its own (a live channel's subscriptions, a pack job) must run with exactly these values, never with the defaults of a fresh
 context: those name the FIRST server, so a stream opened for a person signed in on another server would read that server's data
 with their token. :func:`snapshot` captures every one of them; :func:`run_in` starts a task in a fresh context holding the
@@ -33,11 +34,12 @@ import contextvars
 from types import MappingProxyType
 from typing import Any, Coroutine, Mapping
 
-from core import asof, cluster, collab, edition, engines, servers
+from core import asof, cluster, collab, edition, engines, modules, servers
 
 VARS: tuple[contextvars.ContextVar, ...] = (servers.CURRENT, cluster.SESSION, edition._lens, collab._share, asof._current, asof._known,
-                                           engines._current)
-# what crosses to another worker (JSON): every variable but the app's engines, which the receiving worker has its own of
+                                           engines._current, modules._current, modules._person)
+# what crosses to another worker (JSON): every variable but the app's engines and modules, which the receiving worker has its own of,
+# and the person's module answer, which it asks its server for again (it is that person's, per request)
 _WIRE: dict[str, contextvars.ContextVar] = {"server": servers.CURRENT, "session": cluster.SESSION, "lens": edition._lens,
                                            "share": collab._share, "asof": asof._current, "known": asof._known}
 
@@ -81,6 +83,8 @@ def from_wire(wire: dict | None, app=None) -> Snapshot:
                                               asof._current: asof.clean(wire.get("asof")), asof._known: asof.clean_known(wire.get("known"))}
     eds = getattr(getattr(app, "state", None), "editions", None)
     out[engines._current] = getattr(eds, "engines", None) or engines._current.get()
+    out[modules._current] = getattr(eds, "modules", None) or modules._current.get()
+    out[modules._person] = None                                          # asked again for this person on the receiving worker
     return MappingProxyType(out)
 
 

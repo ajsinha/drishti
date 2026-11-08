@@ -58,9 +58,10 @@ body.tc-open { overflow: hidden; }
 .tc-type:focus-visible, .tc-srm:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
 .tc-f { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr); gap: var(--d-sp-4_8) var(--d-sp-8); align-items: center; }
 .tc-f > label { font-size: var(--d-fs-13_12); color: var(--d-muted); }
-.tc-f select, .tc-f input[type="number"], .tc-sctl select { min-width: 0; width: 100%; padding: var(--d-sp-3_2) var(--d-sp-5_6); font-size: var(--d-fs-13_6); background: var(--d-surface);
+.tc-pick { display: block; min-width: 0; width: 100%; font-size: var(--d-fs-13_6); }   /* drishti-inputs' Select: its look is the library's */
+.tc-f input[type="number"] { min-width: 0; width: 100%; padding: var(--d-sp-3_2) var(--d-sp-5_6); font-size: var(--d-fs-13_6); background: var(--d-surface);
   color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); }
-.tc-f select:focus-visible, .tc-f input:focus-visible, .tc-sctl select:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.tc-f input:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 .tc-top { grid-template-columns: 4.6rem 4.5rem auto; }
 .tc-top .tc-hint { grid-column: 2 / -1; }
 .tc-hint, .tc-note { font-size: var(--d-fs-12); color: var(--d-muted); margin: 0; }
@@ -88,7 +89,7 @@ body.tc-open { overflow: hidden; }
   .tc-side { border-left: 0; border-top: 1px solid var(--d-border); overflow: visible; }
   .tc-sheet > summary { display: list-item; padding: var(--d-sp-9_6) var(--d-sp-14_4); min-height: 44px; font-weight: 600; cursor: pointer; }
   .tc-type, .tc-x, .tc-help, .tc-srm, .tc-actions .fk, .tc-all { min-height: 44px; }
-  .tc-f select, .tc-f input[type="number"], .tc-sctl select { min-height: 44px; }
+  .tc-pick .di-control, .tc-f input[type="number"] { min-height: 44px; }
   .tc-actions { padding: var(--d-sp-6_4) var(--d-sp-9_6); flex-wrap: nowrap; overflow-x: auto; }
   .tc-exports { flex-wrap: nowrap; }
   .tc-actions .fk { flex: 0 0 auto; }

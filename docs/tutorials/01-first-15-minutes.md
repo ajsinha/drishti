@@ -301,7 +301,7 @@ You should see one card for each pack that offers a form. Pick **Trading**, kind
 
 You should see a form with a box, a list or a set of tick boxes for each field people search by, grouped as **Identity** (trade id, source system, counterparty), **Product**
 (product type, sub type, status, buy / sell), **Where** (currency, legal entity, portfolio, trader), **Money** (quantity) and **Dates** (trade date, maturity date). Tutorial 3
-uses it. The form is written in the pack (`form:` in `config/packs/trading/pack.yaml`):
+uses it. The form is written in the pack (`form:` in `config/packs/banking/trading/pack.yaml`):
 
 ```yaml
 form:

@@ -17,7 +17,7 @@
 
 # Data contracts of the official-news pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/official-news/guides/official-news.md](../../../config/packs/official-news/guides/official-news.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/economy/official-news/guides/official-news.md](../../../config/packs/economy/official-news/guides/official-news.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -30,7 +30,7 @@ One publisher of official news (a central bank, a regulator, a government): its 
 
 |  |  |
 |---|---|
-| Contract | [release-source.contract.yaml](../../../config/packs/official-news/contracts/release-source.contract.yaml) · version 1.0 |
+| Contract | [release-source.contract.yaml](../../../config/packs/economy/official-news/contracts/release-source.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Federal Reserve Board; European Central Bank; Bank of Canada; Bank of England; US Securities and Exchange Commission; OSFI; US Federal Register; Canada Gazette, Part II; Canada Gazette, Part I, pulled by the official-news feed (config/feeds/official-news.yaml, tools/feeds/sources/) |
@@ -40,7 +40,7 @@ One publisher of official news (a central bank, a regulator, a government): its 
 | Dated by | `snapshot` |
 | Cadence | daily (due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `officialnews-store` (plugin `delta`), table `<root>/officialnews/release-source/` |
-| Test data | config/packs/official-news/samples |
+| Test data | config/packs/economy/official-news/samples |
 | Worked example | [official-news/release-source](../samples/official-news/release-source.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -115,7 +115,7 @@ One official press release: its title, publisher, date, summary and the link to 
 
 |  |  |
 |---|---|
-| Contract | [press-release.contract.yaml](../../../config/packs/official-news/contracts/press-release.contract.yaml) · version 1.0 |
+| Contract | [press-release.contract.yaml](../../../config/packs/economy/official-news/contracts/press-release.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Federal Reserve Board; European Central Bank; Bank of Canada; Bank of England; US Securities and Exchange Commission; OSFI; US Federal Register; Canada Gazette, Part II; Canada Gazette, Part I, pulled by the official-news feed (config/feeds/official-news.yaml, tools/feeds/sources/) |
@@ -125,7 +125,7 @@ One official press release: its title, publisher, date, summary and the link to 
 | Dated by | `snapshot` |
 | Cadence | daily (due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `officialnews-store` (plugin `delta`), table `<root>/officialnews/press-release/` |
-| Test data | config/packs/official-news/samples |
+| Test data | config/packs/economy/official-news/samples |
 | Worked example | [official-news/press-release](../samples/official-news/press-release.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

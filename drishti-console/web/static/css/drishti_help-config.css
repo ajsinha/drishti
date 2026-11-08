@@ -23,8 +23,7 @@
 .cfg-search .bi-search { color: var(--d-muted); }
 .cfg-search input[type="search"] { flex: 1 1 18rem; min-width: 0; background: var(--d-surface); color: var(--d-ink);
   border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-6_4) var(--d-sp-9_6); }
-.cfg-search select { flex: 0 1 16rem; min-width: 0; max-width: 100%; background: var(--d-surface); color: var(--d-ink);
-  border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-5_6) var(--d-sp-8); }
+.cfg-search drishti-select { flex: 0 1 16rem; min-width: 0; max-width: 100%; }          /* drishti-inputs' Select: its look is the library's */
 .cfg-count { color: var(--d-muted); font-size: var(--d-fs-13_6); margin: var(--d-sp-6_4) 0 var(--d-sp-12_8); }
 .cfg-page .help-article { min-width: 0; }
 .cfg-ref.cfg-filtered .cfg-wrap[data-cfg-empty], .cfg-ref.cfg-filtered h4:has(+ .cfg-wrap[data-cfg-empty]) { display: none; }
@@ -35,7 +34,7 @@
 /* A phone: a row is a card, each cell under its column's name. */
 @media (max-width: 760px) {
   .cfg-search { top: 52px; }
-  .cfg-search select { flex-basis: 100%; }
+  .cfg-search drishti-select { flex-basis: 100%; }
   .cfg-wrap { overflow-x: visible; }
   .cfg-tbl, .cfg-tbl tbody, .cfg-tbl tr, .cfg-tbl td { display: block; width: 100%; }
   .cfg-tbl thead { display: none; }

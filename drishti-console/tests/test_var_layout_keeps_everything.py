@@ -178,7 +178,7 @@ class LayoutBackend(FakeBackend):
         return {"scope": scope, "canonical": scope, "kind": kind, "label": scope, "node": "MGMT~BANK", "businessDate": "2026-10-28",
                 "var": VAR, "es": ES, "k": 6, "esCount": 13, "scenarios": 509, "confidence": 0.99, "esConfidence": 0.975,
                 "sumStandalone": 228200000.0, "diversification": 69704660.0, "children": 2, "childKind": "desk", "limit": 200000000.0,
-                "limitUse": 0.792, "backtest": {"days": 250, "exceptions": 2, "light": "green"}, "currency": "USD", "empty": False,
+                "limitUse": 0.792, "limitStatus": "within", "backtest": {"days": 250, "exceptions": 2, "light": "green"}, "currency": "USD", "empty": False,
                 "trades": 120, "terms": [], "ancestors": [], "lens": {"horizon": "1D", "method": "", "label": "1-day", "confidence": 0.99,
                                                                      "esConfidence": 0.975, "set": ""},
                 "provenance": dict(PROV, scope=scope)}
@@ -190,12 +190,12 @@ class LayoutBackend(FakeBackend):
         if path == "/scope":
             return self.head(params.get("scope", "BANK"))
         if path == "/tree":
-            nodes = [{"id": "BANK", "scope": "NODE:MGMT~BANK", "name": "BANK", "depth": 0, "var": VAR, "es": ES, "limitUse": 0.79, "expandable": True,
+            nodes = [{"id": "BANK", "scope": "NODE:MGMT~BANK", "name": "BANK", "depth": 0, "var": VAR, "es": ES, "limitUse": 0.79, "limitStatus": "within", "expandable": True,
                       "level": "bank"},
                      {"id": "D1", "parent": "BANK", "scope": "NODE:MGMT~DESK-RATES", "name": "Rates", "depth": 1, "var": 72400000.0, "es": 78554000.0,
-                      "limitUse": 0.5, "expandable": False, "level": "desk"},
+                      "limitUse": 0.5, "limitStatus": "within", "expandable": False, "level": "desk"},
                      {"id": "D2", "parent": "BANK", "scope": "NODE:MGMT~DESK-FX", "name": "FX", "depth": 1, "var": 38600000.0, "es": 41881000.0,
-                      "limitUse": 0.4, "expandable": False, "level": "desk"}]
+                      "limitUse": 0.4, "limitStatus": "within", "expandable": False, "level": "desk"}]
             return {"nodes": nodes, "businessDate": "2026-10-28", "hierarchies": ["MGMT"],
                     "portfolios": [{"id": "PF-USD-RATES", "name": "USD rates", "type": "BASKET", "scope": "PORT:PF-USD-RATES", "owner": "rates-risk"},
                                    {"id": "PF-EM-SOV", "name": "EM sovereign exposure", "type": "RULE", "scope": "PORT:PF-EM-SOV", "owner": "risk"}]}

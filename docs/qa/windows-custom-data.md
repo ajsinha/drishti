@@ -250,7 +250,7 @@ C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.
    the one thing that names your file — the path after `--from`; its business date comes from its name — for example:
 
    ```
-   lake build --from C:\Users\asinh09\drishti-private\endur\trade_endur.2026-10-15.jsonl --pack $PROJECT_DIR$/../config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake $PROJECT_DIR$/../data/delta/demo
+   lake build --from C:\Users\asinh09\drishti-private\endur\trade_endur.2026-10-15.jsonl --pack $PROJECT_DIR$/../config/packs/banking/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake $PROJECT_DIR$/../data/delta/demo
    ```
 
    → **OK** → ▶ (Run).
@@ -258,7 +258,7 @@ C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.
    Terminal instead (one line, from any folder; full paths, so `$PROJECT_DIR$` is not needed):
 
    ```
-   C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake build --from C:\Users\asinh09\drishti-private\endur\trade_endur.2026-10-15.jsonl --pack C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta
+   C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake build --from C:\Users\asinh09\drishti-private\endur\trade_endur.2026-10-15.jsonl --pack C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\banking\trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta
    ```
 
    What the options mean: `--from` your file (its business date is the date in its name; `--as-of 2026-10-15` would give it
@@ -283,7 +283,7 @@ replaces the date). Your file must be JSON Lines (one trade a line, as `.jsonl`)
   ```yaml
   source:
     files: 'C:\Users\asinh09\drishti-private\endur\trade_endur.2026-10-15.jsonl'
-    pack: 'C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\trading'
+    pack: 'C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\banking\trading'
     connector: trade-endur
     partition-by: [PRODUCT_TYPE]
   target:
@@ -658,7 +658,7 @@ Save as `C:\Users\asinh09\drishti-private\load-pv.yaml` (the market-risk pack's 
 ```yaml
 source:
   files: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\testdata\market-risk\scenario-pv\scenario-pv-2026-09-30.tar'
-  pack: 'C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\market-risk'
+  pack: 'C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\banking\market-risk'
   id: SCENARIO_PV_ID
 target:
   format: delta
@@ -675,9 +675,9 @@ memory: {budget-mb: 512, spill-dir: 'C:\Users\asinh09\IdeaProjects\drishti-orig\
 | 3 | The same command with `--set memory.budget-mb=16` at the end | the same rows; `spilled` above 0 MB in the memory line (the rows sorted on disk); the table the same |
 | 4 | With `--set target.format=iceberg --set target.lake=C:\Users\asinh09\IdeaProjects\drishti-orig\data\scratch-iceberg` | `data\scratch-iceberg\risk\scenario-pv\metadata` exists; the same rows |
 | 5 | Open `data\scratch-lake\_drishti-lake\runs\` | the run's `<run>.json` (the summary: `throughput`, `memory`) and `<run>.manifest.json` (each file with its first and last `LEGAL_ENTITY`, `DESK`, id) |
-| 6 | `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\scenario-pv --pack config\packs\market-risk --kind scenario-pv --key SCENARIO_PV_ID --mode overwrite-dates --lake data\scratch-lake2 --engine java` | `engine: java-loader`, 5,369 rows over the three dates (each tar's folders), exit 0: `lake build` driving the loader |
+| 6 | `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\scenario-pv --pack config\packs\banking\market-risk --kind scenario-pv --key SCENARIO_PV_ID --mode overwrite-dates --lake data\scratch-lake2 --engine java` | `engine: java-loader`, 5,369 rows over the three dates (each tar's folders), exit 0: `lake build` driving the loader |
 | 7 | Put a line `{not json` into a copy of one file, load it with `--set rejects.file=data\tmp\rejects.jsonl` | exit 2, `rejected 1: not JSON (…)` with `e.g. <file>:<line>`; the line in `data\tmp\rejects.jsonl` |
-| 8 | Into Iceberg through `lake build`: `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\pnl-vector-2026-09-30.tar --pack config\packs\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch2 --format iceberg --engine java` (or the Java loader on its own, row 4: `target.format: iceberg`) | the rows and no rejects, `engine: java-loader`; `data\iceberg\scratch2\pnl-vector\metadata` exists |
+| 8 | Into Iceberg through `lake build`: `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\pnl-vector-2026-09-30.tar --pack config\packs\banking\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch2 --format iceberg --engine java` (or the Java loader on its own, row 4: `target.format: iceberg`) | the rows and no rejects, `engine: java-loader`; `data\iceberg\scratch2\pnl-vector\metadata` exists |
 
 Delete `data\scratch-lake`, `data\scratch-lake2`, `data\scratch-iceberg` and `data\iceberg\scratch2` afterwards (the server does not read them).
 
@@ -696,7 +696,7 @@ Delete `data\scratch-lake`, `data\scratch-lake2`, `data\scratch-iceberg` and `da
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |
 | `lake build` says `no id (field 'id' is missing…)` | The parameters lack `--key TRADE_ID`: copy the line of step 3.2 again. |
 | `lake build` says `give --lake DIR (the Delta root the connector reads)` | The parameters lack `--lake`: copy the line of step 3.2 again (it ends with `--lake $PROJECT_DIR$/../data/delta/demo`, or the full path in a terminal). |
-| `lake build` says `no such file or folder` for `config\packs\trading` or writes a `data\delta` inside `drishti-console` | A relative path run from PyCharm's Terminal (it opens in `drishti-console`): use the full-path line of step 3.2. Delete a stray `drishti-console\data` folder if one was made. |
+| `lake build` says `no such file or folder` for `config\packs\banking\trading` or writes a `data\delta` inside `drishti-console` | A relative path run from PyCharm's Terminal (it opens in `drishti-console`): use the full-path line of step 3.2. Delete a stray `drishti-console\data` folder if one was made. |
 | PowerShell says `lake` is not recognized | `lake …` is not a command of its own: run it as `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake …`, or use the PyCharm configuration (step 2.2, *What these configurations run*). |
 | The run configurations are not in the drop-down | PyCharm must open `drishti-orig\drishti-console` (its configurations are in `drishti-console\run-configs`); IntelliJ must open `drishti-orig` (`run-configs`). See step 2.2. |
 | ENDUR pages still show synthetic trades | Step 3.2 point 1 was skipped: stop the server, delete `data\delta\trading\trade_endur`, load your files again, start the server. |

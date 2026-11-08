@@ -199,7 +199,8 @@ that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](C
 | `approve` | `POST /approvals/{kind}/{id}/approve`, `/reject` and `/withdraw`: every kind your roles let you decide in the one queue (report sign-offs, stress windows, compute packages and questions stay a person's, in the console) | the kind's own rules (never your own) |
 | `design:approve` | approve or reject proposed Sutras | the approver or admin role |
 | `packs:admin` | load, unload, deploy and roll back packs; create, change, test and delete connectors; Retry now | the admin role |
-| `risk:write` | save and delete your VaR baskets, capture VaR results, keep sandboxes, cancel your own computations | any user who can open the scope |
+| `risk:write` | the banking module's (offered while it is on): save and delete your VaR baskets, capture VaR results, keep sandboxes, cancel your own computations | any user who can open the scope |
+| `compute:write` | keep your what-if sandboxes, cancel your own computations | any user |
 | `loads:write` | announce that a batch of data has landed ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) | the owner's roles open the kind |
 | `bi:write` | create, edit, propose, publish and delete BI items; restore versions ([BI_GUIDE.md](BI_GUIDE.md)) | the `bi-author` power and a workspace role |
 | `bi:approve` | approve or reject proposed BI items, endorse, import a bundle | the approve power or `bi-steward` |
@@ -1271,7 +1272,7 @@ curl -s $B/calc/settings
 | `GET` | `/about` | `{product, version, built, java, uptimeSeconds, sutras, sources, securityEnabled, packs, copyright}` |
 | `GET` | `/packs` | every installed pack `{name, version, title, description, console, kinds, links, assigned, active}` (assigned/active for the caller; `links` is the pack's `graph.fields`, `{FIELD: {kind, label}}`, what the Sutra designer offers as linked records) |
 | `GET` | `/packs/{name}/overview` | as-of. One pack's start page: `{name, code, title, description, version, extends, kinds: [{kind, mnemonic, label, count, more, failed, example, columns}]}`, only the kinds the caller may open (`name` may be the pack code, `FIN`); `400` when the pack is not switched on for the caller |
-| `GET` | `/packs/{name}/readme` | The pack's README (the README standard, `config/packs/<pack>/README.md`): `{pack, title, version, meta, markdown}`, `meta` its YAML front matter (`pack`, `version`, `summary`, `kinds`, `commands`, `depends-on`, `sources` with licences and `internal-only`, `refresh`), `markdown` the text after it; the Data structures of kinds the caller may not open are left out (and from `meta.kinds` and `meta.commands`); `400` when the pack is not switched on for the caller, `404` when it has no README |
+| `GET` | `/packs/{name}/readme` | The pack's README (the README standard, `config/packs/<domain>/<pack>/README.md`): `{pack, title, version, meta, markdown}`, `meta` its YAML front matter (`pack`, `version`, `summary`, `kinds`, `commands`, `depends-on`, `sources` with licences and `internal-only`, `refresh`), `markdown` the text after it; the Data structures of kinds the caller may not open are left out (and from `meta.kinds` and `meta.commands`); `400` when the pack is not switched on for the caller, `404` when it has no README |
 | `GET` | `/packs/{name}/coverage` | as-of; `kind` (optional). Which Sutra lays out which data: for each kind with Sutras, the fields they match on and show panels by (`when:`), and every combination of them in the data (every connector serving the kind): `{pack, kinds: [{kind, fields, combinations, none, several, failed, rows: [{values, count, example, sutras, shown, state}]}]}`, `state` `one`, `none` (inferred) or `several`. Admin → Packs → a pack shows it as *Sutra coverage* |
 | `GET` | `/sources` | `{sources: [{name, version, kinds, live, search, reverseLookup, health}], failures: {name: reason}}`; `kinds: []` means the source serves any kind |
 | `GET` | `/sutras` | every loaded Sutra `{name, latest, versions, domain, kind, where, priority}` |
@@ -1993,7 +1994,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-1025 | 404 | module off | the module of this path is not on here: not installed, not licensed or switched off (Admin → Modules, [OPERATIONS.md](../admin/OPERATIONS.md) section 22); its API, new and old paths, answers in words, never 403 |
 | DRS-1026 | 404 | function off | the function (command word) behind this path is off here: its module is off or an administrator switched it off (Admin → Commands) |
 | DRS-1027 | 403 | function not allowed | the person may not use this function (per-person grants and denials, from 2.9.11.i; today every person may use every function that is on) |
-| DRS-1017 | 403 | edition pack refused | the server's edition lists its packs with allow-only ([EDITIONS.md](../admin/EDITIONS.md)): Admin → Packs load, Deploy archive (a failed check) and the registry install refuse any other pack. Add the pack to the edition's packs, or set `drishti.edition-spec.packs.allow-only=false` |
+| DRS-1017 | 403 | edition pack refused | the server's edition lists its packs with allow-only ([LENSES.md](../admin/LENSES.md)): Admin → Packs load, Deploy archive (a failed check) and the registry install refuse any other pack. Add the pack to the edition's packs, or set `drishti.edition-spec.packs.allow-only=false` |
 | DRS-1015 | 503 | connector restarting | the connector the kind is routed to is being restarted (its file changed, a retry) and was not back within 30 s; a read waits that long for it (and for any connector of the kind being restarted) before answering; try again |
 | DRS-2001 | 422 | sutra parse | the Sutra text cannot be parsed |
 | DRS-2002 | 422 | sutra invalid | the Sutra parsed but has problems (listed in `problems`) |
@@ -3303,7 +3304,7 @@ For example `GET /api/v1/risk/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30` a
 | `POST /api/v1/risk/var/official/synthetic-history?days=` | administrators, on a demo server (`drishti.regulatory.synthetic-history`): seeds synthetic official records before the oldest one, each marked `synthetic` and never published ([VAR_GUIDE.md section 18.10](VAR_GUIDE.md#1810-period-statistics)) |
 | `GET /api/v1/risk/var/backtesting?scope=&asOf=&format=` | the regulatory backtest of a node: the official VaR of the day before at 99% and 97.5% against the bank's actual and hypothetical P&L (`desk-pnl`) and the risk-theoretical P&L over 250 days; counts, zone, multiplier, rows, exceptions with the desks that drove them, the desks below; `format=xlsx` a workbook ([VAR_GUIDE.md section 18.11](VAR_GUIDE.md#1811-backtesting-for-regulation)) |
 | `GET /api/v1/risk/var/statistics?scope=&period=&measure=` | a node's period end, average, high and low over the official records of `FY2026`, `FY2026Q1` or a date range; the 60-day and 12-week stressed averages; missing records named ([VAR_GUIDE.md section 18.10](VAR_GUIDE.md#1810-period-statistics)) |
-| `GET /api/v1/risk/var/reports` | the report definitions (`config/reports/`) and each one's newest run of its current period ([VAR_GUIDE.md section 18.14](VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
+| `GET /api/v1/risk/var/reports` | the report definitions (`config/reports/banking/`) and each one's newest run of its current period ([VAR_GUIDE.md section 18.14](VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
 | `POST /api/v1/risk/var/reports/{report}/runs?period=` | generates and freezes the next run of a period: cells with their lineage, checks, facts |
 | `GET /api/v1/risk/var/reports/{report}/runs/{period}?version=` | a run with its sign-off record |
 | `POST /api/v1/risk/var/reports/{report}/runs/{period}/narrative` | `{version, narrative}`: the maker's text, before the maker signs |
@@ -3526,7 +3527,7 @@ source then offers the hierarchy levels (`MGMT.DESK`), `RISK_CLASS`, `POSITION`,
 
 | Call | Does |
 |---|---|
-| `POST /api/v1/risk/mr/headline` | `{view}`: the view's scope's `var`, `es`, `k`, `esCount`, `lens`, `limit`, `limitUse`, `stressedVar`, `dataVersion`, `batches`, `trades`, `positions`, `provenance` |
+| `POST /api/v1/risk/mr/headline` | `{view}`: the view's scope's `var`, `es`, `k`, `esCount`, `lens`, `limit`, `limitUse`, `limitStatus` (within, near, breach), `limitNear`, `stressedVar`, `dataVersion`, `batches`, `trades`, `positions`, `provenance` |
 | `POST /api/v1/risk/mr/detail` | `{view, coords}`: one cell's tail: `edges`, `counts`, `var`, `es`, `k`, `varDate`, `tail`, `trades`, `positions`, `scope` |
 | `POST /api/v1/risk/mr/history` | `{view}`: the sparklines: `dates`, `series` by cell key of the first measure |
 | `GET /api/v1/risk/mr/versions` | the time-travel slider's stops: dates and their batches |

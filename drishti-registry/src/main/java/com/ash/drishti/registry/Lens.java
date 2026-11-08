@@ -30,7 +30,8 @@ import java.util.List;
  * @param help    its Help pages (slugs)
  * @param source  where it was declared, in words
  */
-public record Lens(String id, String title, List<String> modules, List<String> functions, String home, List<String> menus, List<String> help, String source) {
+public record Lens(String id, String title, List<String> modules, List<String> functions, String home, List<String> menus, List<String> help,
+        List<java.util.Map<String, String>> cards, List<String> chips, String source) {
 
     public Lens {
         id = ModuleManifest.norm(id);
@@ -40,6 +41,10 @@ public record Lens(String id, String title, List<String> modules, List<String> f
         home = home == null ? "" : home.strip();
         menus = menus == null ? List.of() : List.copyOf(menus);
         help = help == null ? List.of() : List.copyOf(help);
+        // Home's quick cards ({title, cmd, icon}): each opens its command; one whose function is off for the person is not shown
+        cards = cards == null ? List.of() : cards.stream().map(java.util.Map::copyOf).toList();
+        // Home's chips: commands typed with one click (WDI WDI-USA); one whose function is off for the person is not shown
+        chips = chips == null ? List.of() : chips.stream().map(String::strip).filter(c -> !c.isEmpty()).toList();
         source = source == null ? "" : source;
     }
 }

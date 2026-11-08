@@ -181,7 +181,7 @@ The layout belongs to the kind, so the pack that owns the kind declares it, on t
 from three booking systems, so the trading pack declares three connectors that serve the one kind `trade`, each reading its own
 table under the domain (`table.trade`), each one slice of a **union** (`union: true`: ids are unique across them, and a read, a
 search, a type-ahead and a BI table ask all three; see [CONNECTORS.md](CONNECTORS.md#several-connectors-for-one-kind-a-union)). The
-template (`config/packs/trading/pack.yaml`, written by `tools/packgen/banking/make_packs.py`) becomes, at the first start,
+template (`config/packs/banking/trading/pack.yaml`, written by `tools/packgen/banking/make_packs.py`) becomes, at the first start,
 `config/connectors/trade-endur.yaml` and its two siblings, which are then the site's files ([As a connector file](#as-a-connector-file)):
 
 ```yaml
@@ -1052,7 +1052,7 @@ write_deltalake("data/delta/demo/trading/trade", table, mode="overwrite",
 # the seven packs' lakes from the committed test data: sixty business days ending today (data/testdata/README.md)
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 # or one pack's samples into one domain (tools/samplegen/lake.py: JSONL rows, then loaded; section 5)
-drishti-console/.venv/bin/python tools/samplegen/lake.py --samples config/packs/market-data/samples --root data/delta/demo --domain market --days 10
+drishti-console/.venv/bin/python tools/samplegen/lake.py --samples config/packs/banking/market-data/samples --root data/delta/demo --domain market --days 10
 java -jar drishti-server/target/drishti-server-*-exec.jar          # DRISHTI_PACKS unset: the seven packs
 ```
 
@@ -1068,7 +1068,7 @@ java -jar drishti-server/target/drishti-server-*-exec.jar          # DRISHTI_PAC
 
 ### Configuration by example
 
-**The pack's suggested template**, as shipped in `config/packs/trading/pack.yaml` (abridged; the layout keys are in [section 4](#4-declaring-the-layout-in-a-pack)); the
+**The pack's suggested template**, as shipped in `config/packs/banking/trading/pack.yaml` (abridged; the layout keys are in [section 4](#4-declaring-the-layout-in-a-pack)); the
 file `config/connectors/trade-endur.yaml` written from it at the first start has the same settings, and `trade-calypso` and `trade-murex` differ only in
 their table and source name:
 
@@ -1093,7 +1093,7 @@ routes:
   trade: trade-endur                      # a single-entity read asks trade-endur first, then the other union members
 ```
 
-Reference data that changes rarely is `effective` (from `config/packs/core/pack.yaml`):
+Reference data that changes rarely is `effective` (from `config/packs/core/core/pack.yaml`):
 
 ```yaml
 connectors:

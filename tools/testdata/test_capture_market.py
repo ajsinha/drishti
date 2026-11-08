@@ -86,7 +86,7 @@ class CaptureMarketTest(unittest.TestCase):
         self.td = self.tmp / "testdata"
         self.td.mkdir()
         (self.td / "testdata.yaml").write_text("# the header\n# stays\n\nbusiness-dates: ['2026-09-30']\nas-of: '2026-09-30'\ndatasets:\n"
-                                               "- {samples: config/packs/news-and-markets/samples, pack: news-and-markets, kind: news-topic, connector: news-store}\n"
+                                               "- {samples: config/packs/economy/news-and-markets/samples, pack: news-and-markets, kind: news-topic, connector: news-store}\n"
                                                "- {folder: news-and-markets/quote, pack: news-and-markets, kind: quote, connector: news-store, key: QUOTE_ID, snapshot: old}\n",
                                                encoding="utf-8")
         old = self.td / CM.PACK / "quote"

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Drishti Trading's Home (home/trading_landing.html; EDITIONS.md › The design as built, section 14): paints the landing from the console's answers, which
+/* Drishti Trading's Home (home/trading_landing.html; LENSES.md › The design): paints the landing from the console's answers, which
    core/trading_landing.py works out from the servers' own, read as the person: /api/home/trading/me (whose figures: the trader or desk,
    their books, and the View as picker when they may pick), then valuations (P&L today, by book and trader, movers, DV01, the largest
    counterparty), blotter (today's trades), risk (VaR, limits, positions), limits (limit use by book over the last business dates),
@@ -96,18 +96,14 @@
     root.setAttribute("data-tl-scope", s.kind ? s.kind + ":" + s.id : "");
     var form = $("[data-tl-viewas]");
     if (form && s.canPick && m.options) {
-      var sel = $("[data-tl-as]");
+      var sel = $("[data-tl-as]").component, list = sel.options.slice(), picked;   // drishti-inputs' Select: the traders and the desks in groups
       [["Traders", "trader", m.options.traders || []], ["Desks", "desk", m.options.desks || []]].forEach(function (g) {
-        if (!g[2].length) return;
-        var og = el("optgroup"); og.label = g[0];
         g[2].forEach(function (o) {
-          var opt = el("option", "", o.name === o.id ? o.id : o.name + " · " + o.id);
-          opt.value = g[1] + ":" + o.id;
-          if (s.kind === g[1] && s.id === o.id) opt.selected = true;
-          og.appendChild(opt);
+          list.push({ value: g[1] + ":" + o.id, label: o.name === o.id ? o.id : o.name + " · " + o.id, group: g[0] });
+          if (s.kind === g[1] && s.id === o.id) picked = g[1] + ":" + o.id;
         });
-        sel.appendChild(og);
       });
+      sel.setOptions(list, picked);
       form.hidden = false;
     }
     return s;
@@ -118,8 +114,7 @@
     var s = m.scope;
     if (!$("[data-tl-check-card]")) return;
     if (!m.check) $("[data-tl-check-card]").hidden = true;
-    var book = $("[data-tl-book]");
-    (s.books || []).forEach(function (b) { var o = el("option", "", b); o.value = b; book.appendChild(o); });
+    $("[data-tl-book]").component.setOptions(s.books || []);
     get("/api/home/trading/valuations" + FOR).then(function (v) {
       if (!v.available) throw new Error(v.reason);
       $$("[data-tl-date]").forEach(function (e) { e.textContent = v.businessDate + (v.dataDate && v.dataDate !== v.businessDate ? " (the latest valuations are of " + v.dataDate + ")" : ""); });
@@ -133,11 +128,7 @@
         $("[data-tl-tile='dv01']").hidden = false;
         tile("dv01", money(v.dv01, true), "per bp, " + F.formatNumber(v.dv01Trades) + " live trades");
       }
-      var prod = $("[data-tl-product]");
-      prod.textContent = "";
-      prod.appendChild(el("option", "", v.products.length ? "Pick a product…" : "no product in your books"));
-      prod.firstChild.value = "";
-      v.products.forEach(function (p) { var o = el("option", "", p); o.value = p; prod.appendChild(o); });
+      $("[data-tl-product]").component.setOptions([{ value: "", label: v.products.length ? "Pick a product…" : "no product in your books" }].concat(v.products), "");
       var dl = $("[data-tl-cps]");
       v.counterparties.forEach(function (c) { var o = el("option"); o.value = c; dl.appendChild(o); });
       quick(s, v);
@@ -214,6 +205,7 @@
   var WORDS = { ok: "fits", near: "near", breach: "breaches" };
   function runCheck() {
     var f = $("[data-tl-check]"), btn = $("[data-tl-check-go]");
+    if (!f.product.value) { $("[data-tl-product]").component.focus(); return; }     // a product is needed (a Select has no native required)
     var body = { product: f.product.value, side: f.side.value, notional: f.notional.value, counterparty: f.counterparty.value, book: f.book.value };
     var vb = $("[data-tl-verdict-var]"), xb = $("[data-tl-verdict-exp]");
     btn.disabled = true;

@@ -255,7 +255,8 @@ From top to bottom:
   marked and opens the no-paths state ([section 13](#13-troubleshooting)). On a touch screen the + and − are a finger's size.
 - **The tiles** (the headline): **Peak PFE** at the chosen q (with its tenor and date), **EPE** (first year, time-weighted), **EEPE**
   (running max of EE), **EAD (IMM, info)** (α 1.4 × EEPE), and either **Limit used** (a counterparty with a stored credit limit: peak PFE
-  at the limit's confidence over the limit, coloured by use) or **Collateral effect** (EE at the peak tenor against the
+  at the limit's confidence over the limit, in the tone of the limit's status as the server says it: within, near from
+  `drishti.risk.limit-near`, breach over 100%) or **Collateral effect** (EE at the peak tenor against the
   uncollateralised EE: "−65%" when collateral lowers it by 65%, "+452%" when posted collateral raises it, as on NS-ALDERSHOT-LDN, where
   the bank has posted 111.1m after haircut). A trade's tiles are different: **Peak PFE alone** (the trade as if it had no netting set), **EE contribution**
   (its share of its netting set's EE at the set's peak date), **Netting benefit** (alone minus contribution) and **Desk**.
@@ -290,7 +291,8 @@ On a phone the panels stack: the command line, the tree, then the tiles and the 
 ### 3.3 The tabs
 
 - **Counterparties** (the board): one row per counterparty: a small EE profile, peak PFE, EPE, the stored **limit** and **used**
-  (the computed peak PFE at the limit's confidence over the limit), the number of netting sets; 25 rows at a time, largest first; a row
+  (the computed peak PFE at the limit's confidence over the limit, its bar and chip in the tone of the server's status), the number of
+  netting sets; 25 rows at a time, largest first; a row
   opens the counterparty. The limit is the `credit-limit` record read as stored (`drishti.ccr.exposure.kinds.limit`); LIM stays parked,
   see [section 28](#28-open-items) on its low utilisation.
 - **Legal entities** (bank): per legal entity its EE profile, peak PFE, EPE, netting sets and share of the bank's peak.
@@ -1104,7 +1106,8 @@ sets with their EPE and peak PFE; sets without paths marked `noPaths`), `GET /re
 /official` (administrators), `POST /reload` (administrators). Answers are camelCase (`epe`, `peakPfe`, `profile[].pfe99` ...); the computed
 kind spells the same fields in UPPER_SNAKE. **Part 2** added `distribution?bands=true` (the path fan: the 5, 25, 50, 75 and 95%
 quantiles at every primary date), `contributions?alone=true` (by trade: each trade's peak PFE alone) and `&profile=true` (by trade: its EE
-contribution at every primary date), the answer's `ancestors`, the counterparty's stored `limit` (`kinds.limit`), the netting set's
+contribution at every primary date), the answer's `ancestors`, the counterparty's stored `limit` (`kinds.limit`; with `use`, its `status` within, near or breach and `near`, the setting
+`drishti.risk.limit-near`), the netting set's
 `collateral` (with `atPeak`), a trade's attributes, the tree's EE lines, tenors, bank and legal-entity nodes, and `POST /what-if` with
 `method: paths`. The full table is [section 11](#11-the-api). `contributions` rows: `{key, scope, label, kind, value, pct, incremental}`, with `total`,
 `date`, `parts`, `truncated`. Captures are ids `XCAP-<yyyymmdd>-<n>`, kept per owner in the content store (`exposure/captures/`); a
@@ -1511,7 +1514,7 @@ largest value). `lake demo` moves the run id, the rows' ids and the grid dates w
 | the console | `drishti-console` | `drishti-console/plugins/banking/routes/exposure_routes.py` (`EXP` and `/exposure`, stored-profile ids), `drishti-console/plugins/banking/templates/terminal/exposure.html`, `drishti-console/plugins/banking/static/js/drishti_exposure-explorer.js`, drishti-risk's grid and chart presets (Drishti Elements, `static/elements/drishti-risk/`), `drishti-console/plugins/banking/static/css/drishti_exposure.css`; tests `tests/test_exposure_routes.py`, `tests/test_exposure_explorer_browser.py` (the explorer in a browser) |
 | the CLI | `tools/expcli.py` (`drishti.py exposure`) | tests `tools/test_expcli.py` |
 | test data | `tools/packgen/ccr/` | `paths.py`, `ccrmath.py` (the reference maths in Python), `make_ccr_data.py` (`--check`, `--full`, `--reconcile`), `test_ccr_data.py` |
-| the pack | `config/packs/counterparty-risk/pack.yaml` (written by `tools/packgen/banking/ccr_kinds.py`) | kinds `simulation-run`, `exposure-path`, `exposure-result`; connectors `exposure-store` (Delta) and `exposure-engine` (reactive) |
+| the pack | `config/packs/banking/counterparty-risk/pack.yaml` (written by `tools/packgen/banking/ccr_kinds.py`) | kinds `simulation-run`, `exposure-path`, `exposure-result`; connectors `exposure-store` (Delta) and `exposure-engine` (reactive) |
 
 Everything runs on one node; sharding across Drishti\*net is planned ([section 26](#26-one-date-in-memory-and-the-hot-file),
 26.2 "Sharding").

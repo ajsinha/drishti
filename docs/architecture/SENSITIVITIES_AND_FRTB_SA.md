@@ -76,7 +76,7 @@ figure can be opened in a playground that shows the same calculation as spreadsh
 
 ## 2. Position sensitivities: the input
 
-The contract is [`config/packs/market-risk/contracts/position-sensitivity.contract.yaml`](../../config/packs/market-risk/contracts/position-sensitivity.contract.yaml)
+The contract is [`config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml`](../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml)
 (generated reference: [the market-risk contracts](../contracts/packs/market-risk.md), [a sample record explained](../contracts/samples/market-risk/position-sensitivity.md)).
 
 ### 2.1 The record
@@ -164,7 +164,7 @@ other risk kinds.
 
 ## 3. The factor dictionary and the naming standard
 
-The contract is [`config/packs/market-risk/contracts/risk-factor.contract.yaml`](../../config/packs/market-risk/contracts/risk-factor.contract.yaml)
+The contract is [`config/packs/banking/market-risk/contracts/risk-factor.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml)
 ([a sample record explained](../contracts/samples/market-risk/risk-factor.md)).
 
 ### 3.1 The naming standard
@@ -267,7 +267,7 @@ gives a different figure (hand-built case 9).
 ### 5.1 Delta, per risk class
 
 The method is section 4's for every class; what differs is the factor, the bucket, the risk weight and the correlation. Parameter tables are
-in the market-risk pack's [`capital/frtb-sa-sbm.yaml`](../../config/packs/market-risk/capital/frtb-sa-sbm.yaml), each value with its paragraph.
+in the market-risk pack's [`capital/frtb-sa-sbm.yaml`](../../config/packs/banking/market-risk/capital/frtb-sa-sbm.yaml), each value with its paragraph.
 
 | Class | Factors and bucket | Risk weight | Within a bucket (ρ) | Across buckets (γ) |
 |---|---|---|---|---|
@@ -380,7 +380,7 @@ portfolio, the three scenarios are compared at the desk (MAR21.7(2)(b)).
 Non-securitisations (MAR22), from per-obligor jump-to-default amounts. The inputs are the `default-risk` input of
 [FRTB.md section 3.3](../contracts/FRTB.md#33-default-risk-the-drc-inputs-optional) (obligor, seniority, notional, market value, credit
 quality), or, where the bank sends none, derived from the trade records and the issuer master. Parameters:
-[`capital/frtb-sa-drc-rrao.yaml`](../../config/packs/market-risk/capital/frtb-sa-drc-rrao.yaml).
+[`capital/frtb-sa-drc-rrao.yaml`](../../config/packs/banking/market-risk/capital/frtb-sa-drc-rrao.yaml).
 
 1. **Gross jump-to-default per position** (MAR22.9 to MAR22.14): `JTD_long = max( LGD · notional + P&L, 0 )`,
    `JTD_short = min( LGD · notional + P&L, 0 )`, the notional positive for a long and negative for a short credit exposure (long means
@@ -700,8 +700,8 @@ between the issuers. Issuer X nets CS01 −4,000 over its tenors, so `CR_X = sqr
 
 | File (draft here; the market-risk pack's configuration at build) | Holds | Source |
 |---|---|---|
-| [`capital/frtb-sa-sbm.yaml`](../../config/packs/market-risk/capital/frtb-sa-sbm.yaml) | the SBM risk weights, correlations, scenario formulas and curvature rules per class | Basel MAR21 |
-| [`capital/frtb-sa-drc-rrao.yaml`](../../config/packs/market-risk/capital/frtb-sa-drc-rrao.yaml) | LGDs, maturity scaling, DRC risk weights, RRAO weights and the product-type mapping | Basel MAR22, MAR23 |
+| [`capital/frtb-sa-sbm.yaml`](../../config/packs/banking/market-risk/capital/frtb-sa-sbm.yaml) | the SBM risk weights, correlations, scenario formulas and curvature rules per class | Basel MAR21 |
+| [`capital/frtb-sa-drc-rrao.yaml`](../../config/packs/banking/market-risk/capital/frtb-sa-drc-rrao.yaml) | LGDs, maturity scaling, DRC risk weights, RRAO weights and the product-type mapping | Basel MAR22, MAR23 |
 | [`capital-parameters/simm.yaml`](capital-parameters/simm.yaml) | the SIMM structure with every licensed number empty | ISDA SIMM methodology (licensed, per version) |
 
 **Rules.** One file per regime (Basel, a jurisdiction's variant) and per SIMM version; each names its regime or version, its effective

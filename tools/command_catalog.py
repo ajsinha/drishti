@@ -29,6 +29,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import manifests  # noqa: E402  (the one rule for where a pack's folder is)
 PACKS = ROOT / "config" / "packs"
 BUILTIN = Path(__file__).resolve().parent / "commands.builtin.yaml"
 OUT = ROOT / "docs" / "guides" / "COMMAND_CATALOG.md"
@@ -71,7 +74,7 @@ def _change(contract: dict) -> str:
 def packs() -> list[dict]:
     """Each pack with a mnemonic: its code, title, description, examples and, per mnemonic, its kind, label and contract."""
     out = []
-    for path in sorted(PACKS.glob("*/pack.yaml")):
+    for path in manifests(PACKS):
         pack = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         mnemonics = pack.get("mnemonics") or {}
         if not mnemonics:

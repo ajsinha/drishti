@@ -97,7 +97,7 @@ CREATE TABLE trading.entity_dates (kind VARCHAR, business_date DATE, rows BIGINT
                                    PRIMARY KEY (kind, business_date));
 ```
 
-The promoted columns are the trading pack's `layout.trade.columns` (sixteen, `config/packs/trading/pack.yaml`); a column is `DOUBLE`
+The promoted columns are the trading pack's `layout.trade.columns` (sixteen, `config/packs/banking/trading/pack.yaml`); a column is `DOUBLE`
 when the first value the loader meets is a number, else `VARCHAR`. The other domains (`reference`, `market`, `risk`, `credit`,
 `collateral`) have the same two tables with their own promoted columns. One row, for one trade on one day (the document shortened;
 written by `tools/load-duckdb.sh` from the samples, `tools/packgen/banking/make_data.py`):
@@ -147,7 +147,7 @@ trading pack declares them on `trade-endur`; the `duckdb` profile (`SPRING_PROFI
 connector to the `duckdb` plugin and keeps the pack's settings, so the declaration applies unchanged:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
+# config/packs/banking/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
   trade-endur:
     settings:

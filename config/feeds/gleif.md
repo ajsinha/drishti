@@ -91,7 +91,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"LEI": "HWUPKR0MPOU8FGXBT394", "NAME": "Apple Inc.", "LEGAL_FORM": "For-Profit Corporation General Stock", "JURISDICTION": "US-CA", "LEI_COUNTRY": "US", "COUNTRY_NAME": "United States of America (the)", "LEGAL_ADDRESS": "C/O C T Corporation System, 330 N. Brand Blvd, Suite 700, 9…", "LEGAL_CITY": "Glendale", "HQ_ADDRESS": "One Apple Park Way, 95014 Cupertino, US-CA, US", "REGISTERED_AS": "806592", "ENTITY_STATUS": "ACTIVE", "CREATED": "1977-01-03", "REGISTRATION_STATUS": "ISSUED", "INITIAL_REGISTRATION": "2012-06-06", "LAST_UPDATE": "2026-03-03", "NEXT_RENEWAL": "2027-03-08", "RENEWAL_LATE": false, "MANAGING_LOU": "Bloomberg Finance L.P.", "BICS": "APLEUS66XXX", "BIC_COUNT": 1, "ISIN_COUNT": 949, "LEI_GROUP": "HWUPKR0MPOU8FGXBT394", "CHILD_COUNT": 8, "DIRECT_CHILDREN_GLEIF": 8, "ULTIMATE_CHILDREN_GLEIF": 20, "GLEIF_GROUP_SIZE": 173, "SEGMENT": "US equities", "US_COMPANY": "AAPL", "US_COMPANY_NAME": "Apple Inc.", "RENEWAL": "Late: renewal was due 2024-10-07 (lapsed)", "DIRECT_PARENT": "549300COKYB5EGSU1838", "ULTIMATE_PARENT": "549300B2Q47IR0CR5B54", "OPENCORPORATES": "nl/34153487", "HQ_COUNTRY": "US", "MIC": "MAQI", "CATEGORY": "Fund", "SUCCESSOR": "724500ZSA7ZOZHUXBS53"}
 ```
 
-The contract: `config/packs/gleif/contracts/lei-entity.contract.yaml` ([gleif](../../docs/contracts/packs/gleif.md)).
+The contract: `config/packs/core/gleif/contracts/lei-entity.contract.yaml` ([gleif](../../docs/contracts/packs/gleif.md)).
 
 ### lei-relationship
 
@@ -122,7 +122,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"RELATIONSHIP_ID": "LEIREL-010PWNH4K3BLIC3I7R03-DIRECT", "LEVEL": "Direct", "CHILD_ENTITY": "010PWNH4K3BLIC3I7R03", "PARENT_ENTITY": "549300COKYB5EGSU1838", "RELATIONSHIP_STATUS": "ACTIVE", "START": "2017-12-06", "END": "2025-06-30", "REGISTRATION_STATUS": "LAPSED", "INITIAL_REGISTRATION": "2023-08-08", "LAST_UPDATE": "2024-10-07", "NEXT_RENEWAL": "2024-10-07", "LEI_GROUP": "549300B2Q47IR0CR5B54", "ACCOUNTING_STANDARD": "IFRS"}
 ```
 
-The contract: `config/packs/gleif/contracts/lei-relationship.contract.yaml` ([gleif](../../docs/contracts/packs/gleif.md)).
+The contract: `config/packs/core/gleif/contracts/lei-relationship.contract.yaml` ([gleif](../../docs/contracts/packs/gleif.md)).
 
 ### lei-mapping
 
@@ -147,4 +147,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"IDENTIFIER": "WABTUS3WXXX", "TYPE": "BIC", "ENTITY_LEI": "06BTX5UWZD0GQ5N5Y745", "ENTITY_NAME": "WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION", "COUNTRY": "US", "LEI_GROUP": "06BTX5UWZD0GQ5N5Y745", "MAPPING_FILE": "LEI-BIC-20260925.zip", "ISIN_COUNT": 909}
 ```
 
-The contract: `config/packs/gleif/contracts/lei-mapping.contract.yaml` ([gleif](../../docs/contracts/packs/gleif.md)).
+The contract: `config/packs/core/gleif/contracts/lei-mapping.contract.yaml` ([gleif](../../docs/contracts/packs/gleif.md)).

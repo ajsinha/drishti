@@ -133,7 +133,7 @@ keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }
 | `panels` | The body. Each has an `id`, a `kind` and the options of that kind; `area: right` puts one in the side column. `{ use: legs@1 }` inserts a shared block ([section 7](#7-how-packs-ship-sutras)). |
 | `keys` | Function keys: `F2`-`F12` go to panels (a panel's own `key:`), links (`link(...)`), `impact` (F8) or `raw` (F9). |
 
-A Sutra lives in a Sutra folder of a pack (`config/packs/<pack>/sutras/`, any sub-folders) or of the site (`./sutras`, setting `drishti.rachana.dirs`). Problems report the file's own line and column.
+A Sutra lives in a Sutra folder of a pack (`config/packs/<domain>/<pack>/sutras/`, any sub-folders) or of the site (`./sutras`, setting `drishti.rachana.dirs`). Problems report the file's own line and column.
 Every key and its default is in the [reference](RACHANA_REFERENCE.md#top-level).
 
 ## 2. Your first Sutra: a counterparty
@@ -810,7 +810,7 @@ and writes the one line at the top. Without it, each panel kind has its default 
 [USER_GUIDE.md, On a phone](USER_GUIDE.md#on-a-phone).
 
 Put the blocks of 4.2 to 4.7 together under one `panels:` and you have a complete trade view. The [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated) is the same layout
-with every line commented, and the trading pack's `config/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses; it is built from shared blocks ([section
+with every line commented, and the trading pack's `config/packs/banking/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses; it is built from shared blocks ([section
 7](#7-how-packs-ship-sutras)).
 
 ## 5. Matching several Sutras
@@ -961,7 +961,7 @@ directory is read recursively and Drishti infers nothing from a folder name; eac
 nothing](RACHANA_REFERENCE.md#folders-mean-nothing)). The trading pack, whose trades come from three source systems in one common schema, keeps:
 
 ```text
-config/packs/trading/sutras/
+config/packs/banking/trading/sutras/
   common/      deal-ticket, legs, flow-schedule, events, payments, deal-footer  (*.v1.block.yaml, shared panels)
   endur/       one Sutra per Endur product type (5): endur-comswap matches "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'"
   calypso/     one Sutra per Calypso product type (51): govt-bond, repo, fx-forward, cds-single …
@@ -1083,7 +1083,7 @@ All the problems of a file are reported at once. `sutra lint` (section 15) and t
 | `{ id: group, kind: graph, title: Group, agreements and netting sets, … }` | `DRS-2023 option 'agreements and netting sets' is not valid for 'graph' panels` (in `{ }` a comma ends the value) | quote it: `title: "Group, agreements and netting sets"` |
 | `where: "@.ID == ctl.set"` with no control `set` | `DRS-2036 'ctl.set' reads a control the Sutra does not declare (it has no controls:)` | declare the control (section 13a) |
 | `{ use: deal-ticket@3 }` | `DRS-2048 no block deal-ticket@3 (blocks: deal-footer, deal-ticket, events, legs, flow-schedule, payments)` | a version that exists, or `use: deal-ticket` for the newest |
-| saving `counterparty@1` from the workbench | `DRS-2028 counterparty@1 is already defined in …/config/packs/core/sutras/…/counterparty.v1.sutra.yaml` | new name, or `version: 2` |
+| saving `counterparty@1` from the workbench | `DRS-2028 counterparty@1 is already defined in …/config/packs/core/core/sutras/…/counterparty.v1.sutra.yaml` | new name, or `version: 2` |
 | no `rachana:` line | `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top` | add `rachana: 1` as the first key |
 | `rachana: 2` | `DRS-2009 'rachana: 2' is not a language version this server reads (it reads 1)` | `rachana: 1` |
 | `notes:` followed by a list | `DRS-2012 'notes' is plain text` | `notes: \|` and indented text |
@@ -1181,7 +1181,7 @@ What to know, in the order you will meet it:
 
 Every pack screen is now written in the **Sutra Next** grammar ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms)): panels come from
 the **Drishti UI kit** (`config/ui-kit/`, loaded whatever packs are enabled) or from a pack's own fragments, and they talk to each
-other through events. The trading pack's book desk (`config/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`, open it as
+other through events. The trading pack's book desk (`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`, open it as
 `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`) shows all of it in one screen; shortened:
 
 ```yaml

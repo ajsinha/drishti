@@ -17,7 +17,7 @@
 
 # Data contracts of the oecd pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/oecd/guides/oecd.md](../../../config/packs/oecd/guides/oecd.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/economy/oecd/guides/oecd.md](../../../config/packs/economy/oecd/guides/oecd.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -30,7 +30,7 @@ One OECD member: the latest leading indicator, unemployment, inflation and growt
 
 |  |  |
 |---|---|
-| Contract | [oecd-country.contract.yaml](../../../config/packs/oecd/contracts/oecd-country.contract.yaml) · version 1.0 |
+| Contract | [oecd-country.contract.yaml](../../../config/packs/economy/oecd/contracts/oecd-country.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/sources/) |
@@ -40,7 +40,7 @@ One OECD member: the latest leading indicator, unemployment, inflation and growt
 | Dated by | `snapshot` |
 | Cadence | daily (due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `oecd-store` (plugin `delta`), table `<root>/oecd/oecd-country/` |
-| Test data | config/packs/oecd/samples |
+| Test data | config/packs/economy/oecd/samples |
 | Worked example | [oecd/oecd-country](../samples/oecd/oecd-country.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -108,7 +108,7 @@ One OECD measure of one member by period: the history, the latest value and the 
 
 |  |  |
 |---|---|
-| Contract | [oecd-series.contract.yaml](../../../config/packs/oecd/contracts/oecd-series.contract.yaml) · version 1.0 |
+| Contract | [oecd-series.contract.yaml](../../../config/packs/economy/oecd/contracts/oecd-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/sources/) |
@@ -118,7 +118,7 @@ One OECD measure of one member by period: the history, the latest value and the 
 | Dated by | `snapshot` |
 | Cadence | daily (due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Storage | connector `oecd-store` (plugin `delta`), table `<root>/oecd/oecd-series/` |
-| Test data | config/packs/oecd/samples |
+| Test data | config/packs/economy/oecd/samples |
 | Worked example | [oecd/oecd-series](../samples/oecd/oecd-series.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

@@ -87,7 +87,7 @@ Two corollaries:
 | Failure | What happens | Seen in Drishti |
 |---|---|---|
 | **Two numbers for one thing** | The stored total and the total of the members differ, and the reader cannot tell which is right | `netting-set.LIMIT` differs from the counterparty's `credit-limit.LIMIT` on all 76 netting sets of the test data, and both are drawn as "the limit" (F7) |
-| **Stale** | The members move and the stored total does not | In the live demo, `trade-valuation.MTM` and the netting set's `TRADES[].MTM` walk independently (`_meta.walk` in `config/packs/market-risk/samples/trade-valuation.jsonl` and `config/packs/counterparty-risk/samples/netting-set.jsonl`), so the net MtM drifts away from the trades it claims to sum (F2) |
+| **Stale** | The members move and the stored total does not | In the live demo, `trade-valuation.MTM` and the netting set's `TRADES[].MTM` walk independently (`_meta.walk` in `config/packs/banking/market-risk/samples/trade-valuation.jsonl` and `config/packs/banking/counterparty-risk/samples/netting-set.jsonl`), so the net MtM drifts away from the trades it claims to sum (F2) |
 | **Not reproducible** | Nobody can rebuild the number from its inputs, so nobody can explain it | `netting-set.UTILISATION` matches no ratio of any of the set's own fields on any of the 76 sets (F8) |
 | **Masks and entitlements bypassed** | A stored total over trades the reader may not see leaks their sum | A stored `NET_MTM` is visible to anyone who can open the netting set, whatever trades they are entitled to; the VaR and exposure engines compute "as the caller" ([DATA_ARCHITECTURE.md › Reactive connectors, section 4](DATA_ARCHITECTURE.md#4-what-a-reactive-connector-is): inputs are read as the requesting user) |
 | **Wrong method frozen in** | A stored figure fixes a method that the measure's definition forbids | the group utilisation adds PFE peaks of members (F17); SIMM's total adds risk-class margins without the ψ correlations (F20) |
@@ -104,9 +104,9 @@ one than it needs.
 
 | Mechanism | Built example | Where it runs | When it refreshes | Scope | Entitlements | Limits | Cost |
 |---|---|---|---|---|---|---|---|
-| **Sutra expression** (Rachana-EL in a `bind:`, `title:`, `when:`) | `size($.DEFINITION.MEMBERS)` in `config/packs/market-risk/sutras/market-risk/portfolio.v1.sutra.yaml` (panel `definition`, "Members named"); `max($.TRADES[*].NOTIONAL)` in the netting-set Sutra's slider (`netting-set.v1.sutra.yaml` controls) | In the server, as the page is built from one document | Every time the page renders | One document only | The reader's, on the document already fetched | Closed function set: `size`, `sum`, `min`, `max`, `abs`, `first`, `last`, `flatten`, `group`, `coalesce`, `nonblank`, `days`, `today`, comparisons and arithmetic; no `sqrt`, `exp`, `round` ([RACHANA_REFERENCE.md, Functions](../guides/RACHANA_REFERENCE.md)) | Negligible |
-| **Derived kind** (`plugin: derived`) | `config/packs/trading/pack.yaml` lines 191–240: `counterparty-trades` grouped by `$.COUNTERPARTY` from `trade`; also `gleif-groupings`, `us-equities-groupings`, `macro-groupings` | In the server (`drishti-engine/.../source/derived/DerivedSourcePlugin.java`), reading every member through the router | Once per business date and data version, else every `refresh` (trading: `60s`; default `30s`); a reader never waits for a rebuild (served stale, refreshed behind) | Set: one page per group key (plus `also-group-by` keys) | **Built once per date and shared by every reader** (`DerivedSourcePlugin.java` javadoc): not per-reader | `max-scan` 50,000 documents read per kind by default (`GROUPINGS_ANALYTICS_GUIDE.md` › Part VII. Groupings and analytics, computed, section 24); `max-members` caps the listed members and rows, not the aggregates (`DerivedKind.java` javadoc); aggregates `count`, `sum`, `avg`, `median`, `min`, `max`, `distinct`, `first`; `where`, `then`, `sort`, `tree`; no join to another kind | One pass over the kind per date; pages in heap or on disk |
-| **Reactive engine** (`plugin: reactive`) | `var-engine` (`config/packs/market-risk/pack.yaml` lines 345–390, Java `VarResultEngine`; the VaR what-if is the same engine's, `POST /api/v1/risk/var/what-if`), `exposure-engine` (`config/packs/counterparty-risk/pack.yaml` lines 269–334, Java `ExposureResultEngine`; the exposure what-if is the same engine's, `POST /api/v1/risk/exposure/what-if`) | Java in the server or Python on the compute pools ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) | On request; cached (`results: 2000, ttl: 1h` for VaR); recomputed on `data-version` triggers of the listed input kinds, coalesced (`quiet: 250ms, max-wait: 2s` VaR; `1s / 10s` exposure) | Any scope in the scope grammar, any business date, parameters (`ccy`, `q`, `collateral`) | **As the requesting user** | `timeout: 60s`, `max-inflight-per-user` 4 (VaR, EXP) or 2 (what-if); exposure `max-scope-netting-sets` 20,000 (EXPOSURE_GUIDE.md section 18.1) | Memory-mapped hot files per date; milliseconds warm |
+| **Sutra expression** (Rachana-EL in a `bind:`, `title:`, `when:`) | `size($.DEFINITION.MEMBERS)` in `config/packs/banking/market-risk/sutras/market-risk/portfolio.v1.sutra.yaml` (panel `definition`, "Members named"); `max($.TRADES[*].NOTIONAL)` in the netting-set Sutra's slider (`netting-set.v1.sutra.yaml` controls) | In the server, as the page is built from one document | Every time the page renders | One document only | The reader's, on the document already fetched | Closed function set: `size`, `sum`, `min`, `max`, `abs`, `first`, `last`, `flatten`, `group`, `coalesce`, `nonblank`, `days`, `today`, comparisons and arithmetic; no `sqrt`, `exp`, `round` ([RACHANA_REFERENCE.md, Functions](../guides/RACHANA_REFERENCE.md)) | Negligible |
+| **Derived kind** (`plugin: derived`) | `config/packs/banking/trading/pack.yaml` lines 191–240: `counterparty-trades` grouped by `$.COUNTERPARTY` from `trade`; also `gleif-groupings`, `us-equities-groupings`, `macro-groupings` | In the server (`drishti-engine/.../source/derived/DerivedSourcePlugin.java`), reading every member through the router | Once per business date and data version, else every `refresh` (trading: `60s`; default `30s`); a reader never waits for a rebuild (served stale, refreshed behind) | Set: one page per group key (plus `also-group-by` keys) | **Built once per date and shared by every reader** (`DerivedSourcePlugin.java` javadoc): not per-reader | `max-scan` 50,000 documents read per kind by default (`GROUPINGS_ANALYTICS_GUIDE.md` › Part VII. Groupings and analytics, computed, section 24); `max-members` caps the listed members and rows, not the aggregates (`DerivedKind.java` javadoc); aggregates `count`, `sum`, `avg`, `median`, `min`, `max`, `distinct`, `first`; `where`, `then`, `sort`, `tree`; no join to another kind | One pass over the kind per date; pages in heap or on disk |
+| **Reactive engine** (`plugin: reactive`) | `var-engine` (`config/packs/banking/market-risk/pack.yaml` lines 345–390, Java `VarResultEngine`; the VaR what-if is the same engine's, `POST /api/v1/risk/var/what-if`), `exposure-engine` (`config/packs/banking/counterparty-risk/pack.yaml` lines 269–334, Java `ExposureResultEngine`; the exposure what-if is the same engine's, `POST /api/v1/risk/exposure/what-if`) | Java in the server or Python on the compute pools ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) | On request; cached (`results: 2000, ttl: 1h` for VaR); recomputed on `data-version` triggers of the listed input kinds, coalesced (`quiet: 250ms, max-wait: 2s` VaR; `1s / 10s` exposure) | Any scope in the scope grammar, any business date, parameters (`ccy`, `q`, `collateral`) | **As the requesting user** | `timeout: 60s`, `max-inflight-per-user` 4 (VaR, EXP) or 2 (what-if); exposure `max-scope-netting-sets` 20,000 (EXPOSURE_GUIDE.md section 18.1) | Memory-mapped hot files per date; milliseconds warm |
 | **Engine figures on a stored page** | `VarFigures` puts the VaR engine's answer under `$.VAR_ENGINE` on the position and portfolio pages; `ExposureFigures` puts the exposure engine's under `$.EXPOSURE_ENGINE` on the netting-set and counterparty pages (`drishti-banking/.../var/VarFigures.java`, `.../exposure/ExposureFigures.java`; EXPOSURE_GUIDE.md section 22) | Server, as the page opens | As the engine's cache | The page's own entity as a scope (`POS:`, `PORT:`, `NSET:`, `CPTY:`) | As the reader | As the engine | As the engine |
 | **BI measure** | `config/bi/models/trading-risk.model.yaml`: `MTM: sum(trades.MTM)`, `Exposure (PFE peak): sum(cpty_exposure.PEAK_PFE_95)` with a "never a sum of PFEs" description | The BI engine over datasets (`refresh: { on-load: true }`) | On load of the dataset | Any slice of a dataset, for analysis | Dataset row filters and masks (`trading-risk-trades.dataset.yaml`: `desk-head` rows, `masked: [COUNTERPARTY]`) | Additive measures only are safe; a non-additive figure must come from an engine's published result, as the exposure measures do | Columnar scan |
 
@@ -116,10 +116,10 @@ one than it needs.
 |---|---|---|---|
 | Fundamental | stored kind with a contract | — | worked out by a page |
 | Derived within one document | Sutra expression | — | stored beside its inputs |
-| Derived across documents | derived kind, bound by a panel's `source:` (as `config/packs/compute-demo/sutras/path-book.v1.sutra.yaml` binds `path-sum` with `$src`) | the measure's engine when per-reader totals or arbitrary scopes are needed | stored on a member or a parent record |
+| Derived across documents | derived kind, bound by a panel's `source:` (as `config/packs/core/compute-demo/sutras/path-book.v1.sutra.yaml` binds `path-sum` with `$src`) | the measure's engine when per-reader totals or arbitrary scopes are needed | stored on a member or a parent record |
 | Computed | reactive engine; engine figures on the stored page | BI only over the engine's published official results | stored on a fundamental record; summed in BI when non-additive |
 
-**The real derived-kind pattern** (verbatim excerpt, `config/packs/trading/pack.yaml` lines 191–214):
+**The real derived-kind pattern** (verbatim excerpt, `config/packs/banking/trading/pack.yaml` lines 191–214):
 
 ```yaml
   trade-pages:
@@ -149,7 +149,7 @@ one than it needs.
 ```
 
 (The `NOTIONAL` above sums first-leg notionals across currencies; its Sutra labels it honestly, "Notional (all currencies)",
-`config/packs/trading/sutras/.../counterparty-trades.v1.sutra.yaml` line 40. Section 7.3 proposes a rule for this.)
+`config/packs/banking/trading/sutras/.../counterparty-trades.v1.sutra.yaml` line 40. Section 7.3 proposes a rule for this.)
 
 ---
 
@@ -160,8 +160,8 @@ These are the definitions the formulas in sections 4, 5 and 8 assume. Each is a 
 | Symbol | Definition (proposal) | Source of today's rule |
 |---|---|---|
 | *d* | the business date asked for (`asOf`), else the newest date present | [contracts README section 6](../contracts/README.md#6-dates-as-of-and-restatements) |
-| **Live**(*t*, *d*) | `TRADE_STATUS` ∈ {`NEW`, `VALIDATED`, `AMENDED`} **and** `MATURITY_DATE` ≥ *d* (or empty) | the market-risk pack's `positions.live-statuses` (`config/packs/market-risk/pack.yaml` line 736) and its "has not matured" rule (comment, lines 730–734); NSET.md section 6.2 `drishti.ccr.live-statuses` |
-| MTM(*t*, *d*) | `trade-valuation.MTM` of trade *t* on *d*, USD, dirty, bank's side, positive = asset | `config/packs/market-risk/contracts/trade-valuation.contract.yaml` (`MTM`, unit USD) |
+| **Live**(*t*, *d*) | `TRADE_STATUS` ∈ {`NEW`, `VALIDATED`, `AMENDED`} **and** `MATURITY_DATE` ≥ *d* (or empty) | the market-risk pack's `positions.live-statuses` (`config/packs/banking/market-risk/pack.yaml` line 736) and its "has not matured" rule (comment, lines 730–734); NSET.md section 6.2 `drishti.ccr.live-statuses` |
+| MTM(*t*, *d*) | `trade-valuation.MTM` of trade *t* on *d*, USD, dirty, bank's side, positive = asset | `config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml` (`MTM`, unit USD) |
 | NS(*t*, *d*) | the netting set of *t* on *d*: today `trade-valuation.NETTING_SET`; once NSET is built, `netting-set-member` | NSET.md section 3.3 |
 | FX(*a*→*b*, *d*) | the market-data pack's close mid for *d* | TVAL.md section 6.2 (`fx-rate`), COLL.md section 5 |
 | Σ over a set | float64 accumulation; a member with no value is **counted as missing**, never as 0 | TVAL.md section 5 ("never taken as 0 MtM silently") |
@@ -215,8 +215,8 @@ Legend for every table in sections 4 and 5:
   **P3** cosmetic or naming.
 - **Grain / scope:** the grain the value belongs to, and the scopes it should be answerable for.
 
-The pack has 16 kinds (`config/packs/market-risk/pack.yaml` lines 25–41) and 7 Sutras
-(`config/packs/market-risk/sutras/market-risk/`). Kinds without a Sutra (pnl-vector, scenario-pv, fx-scenario, scenario-set,
+The pack has 16 kinds (`config/packs/banking/market-risk/pack.yaml` lines 25–41) and 7 Sutras
+(`config/packs/banking/market-risk/sutras/market-risk/`). Kinds without a Sutra (pnl-vector, scenario-pv, fx-scenario, scenario-set,
 risk-hierarchy, var-limit, var-result, var-official) open on the generic page; their fields are listed by role.
 
 ### 4.1 `trade-valuation` (TVAL)
@@ -248,7 +248,7 @@ Sutra `trade-valuation.v1.sutra.yaml` (strip lines 36–43, panel `valuation` li
 ### 4.2 `position` (POS), derived by Drishti
 
 Sutra `position.v1.sutra.yaml` (strip lines 41–48); contract class `drishti-owned`
-(`config/packs/market-risk/contracts/position.contract.yaml`: "derived (never stored)"); served by `var-positions`
+(`config/packs/banking/market-risk/contracts/position.contract.yaml`: "derived (never stored)"); served by `var-positions`
 (`pack.yaml` lines 330–334, 459); rules `positions:` (`pack.yaml` lines 735–746). This kind is already the target pattern.
 
 | Shown as | Field | Today | Should be | How | Grain / scope | Pri. |
@@ -369,7 +369,7 @@ Sutra `pnl-explain.v1.sutra.yaml` (strip lines 35–39, waterfall lines 42–52 
 
 ## 5. Counterparty credit risk pack, kind by kind
 
-The pack has 14 kinds (`config/packs/counterparty-risk/pack.yaml` lines 24–38) and 10 Sutras in three folders. The core pack's
+The pack has 14 kinds (`config/packs/banking/counterparty-risk/pack.yaml` lines 24–38) and 10 Sutras in three folders. The core pack's
 `counterparty` and `counterparty-group` carry counterparty-risk figures too and are included (5.11, 5.12).
 
 ### 5.0 The dependency chain (as it should be; proposal)
@@ -574,8 +574,8 @@ collateral model, MPOR, flags, note).
 
 ### 5.11 Core `counterparty` (CPTY figures)
 
-Sutra `config/packs/core/sutras/.../counterparty.v1.sutra.yaml` line 44 binds `$.NET_MTM`. Contract
-`config/packs/core/contracts/counterparty.contract.yaml` lines 103–107: `NET_MTM` is "the sum of the NET_MTM of its netting sets";
+Sutra `config/packs/core/core/sutras/.../counterparty.v1.sutra.yaml` line 44 binds `$.NET_MTM`. Contract
+`config/packs/core/core/contracts/counterparty.contract.yaml` lines 103–107: `NET_MTM` is "the sum of the NET_MTM of its netting sets";
 `NETTING_SETS[].NET_MTM` copies each set's. Both hold on the test data (`CP-ALDERSHOT`: 520,405,666 = Σ of its four sets). Plan of record:
 `parked.split.counterparty` (figures `NET_MTM`, `NETTING_SETS[].NET_MTM`).
 
@@ -588,7 +588,7 @@ Sutra `config/packs/core/sutras/.../counterparty.v1.sutra.yaml` line 44 binds `$
 
 ### 5.12 Core `counterparty-group` (GRP figures)
 
-Sutra `config/packs/core/sutras/.../counterparty-group.v1.sutra.yaml` lines 37–38 bind `$.LIMIT`, `$.UTILISATION`. Contract
+Sutra `config/packs/core/core/sutras/.../counterparty-group.v1.sutra.yaml` lines 37–38 bind `$.LIMIT`, `$.UTILISATION`. Contract
 `counterparty-group.contract.yaml` lines 54–64: `LIMIT` is "the sum of its members' credit limits", `UTILISATION` "the members' used
 amounts over LIMIT". Both hold on 23 of 23 groups. Plan of record: `parked.split.counterparty-group` (figure `UTILISATION`).
 
@@ -616,7 +616,7 @@ cached; **trig** recomputed on the `data-version` trigger of an input kind.
 a live tick in the demo) moves its data version. A derived kind rebuilds that date's pages on its next read after the version moves,
 or after `refresh` when the source cannot report a version; readers get the previous pages meanwhile. A reactive engine drops the
 date's cached answers on its `triggers:` (`data-version` of the listed kinds, coalesced) and recomputes on the next ask; subscribers are
-pushed the new answer. VaR additionally takes intraday scenario PVs from files or Kafka (`pv-updates`, `config/packs/market-risk/pack.yaml`
+pushed the new answer. VaR additionally takes intraday scenario PVs from files or Kafka (`pv-updates`, `config/packs/banking/market-risk/pack.yaml`
 lines 335–344, off as shipped). A Sutra expression is recomputed on every render.
 
 **Edge-case vocabulary used below.** *Missing*: a member expected on *d* with no row: counted and shown, never 0. *Mixed ccy*: members in
@@ -688,7 +688,7 @@ date order to the final business date 2026-09-30 (the `cob-*` files for the sing
 | F20 | **SIMM total is a plain sum, at the wrong grain** | `TOTAL = Σ RISK_CLASSES[].IM` on 24 of 24; one record per counterparty naming one netting set (`SIMM-ALDERSHOT` → `NS-ALDERSHOT-FRA`) while all four Aldershot netting sets link `SIMM-ALDERSHOT` | overstated IM; IM attributed to one set | SIMM engine per netting set (5.8) |
 | F21 | **Option values break the sign convention** | in `pnl-vector` on 2026-09-30, 20 short warrants, 16 short short-term-rate future options and 10 short commodity future options have `PV > 0`; 23 long listed equity options have `PV ≤ 0` (README section 7: value positive for an asset) | signs of positions and exposures unreliable for these products | a sign check in validation (7.4) |
 | F22 | **Product named three ways** | `trade-valuation.PRODUCT_TYPE` `TRIPARTY_REPO`; `netting-set.TRADES[].PRODUCT` and `exposure-path.PRODUCT` "Tri-party repo"; `ASSET_CLASS` in CCR vs `PRODUCT_GROUP` in market risk for the same grouping | joins and filters across pages fail | codes stored, labels from a lookup (7.2) |
-| F23 | **Two maturity-bucket sets** | netting-set `MATURITY_BUCKET` 0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+ (`netting-set.contract.yaml`; TVAL.md setting) vs credit-limit buckets 0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+ (`samples/credit-limit.jsonl`) | a 2.5-year trade is in "2-5Y" on one page and "1-3Y" on another | one bucket set per purpose, named (open question 10). **Applied:** two named sets in `config/packs/counterparty-risk/config/maturity-buckets.yaml` |
+| F23 | **Two maturity-bucket sets** | netting-set `MATURITY_BUCKET` 0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+ (`netting-set.contract.yaml`; TVAL.md setting) vs credit-limit buckets 0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+ (`samples/credit-limit.jsonl`) | a 2.5-year trade is in "2-5Y" on one page and "1-3Y" on another | one bucket set per purpose, named (open question 10). **Applied:** two named sets in `config/packs/banking/counterparty-risk/config/maturity-buckets.yaml` |
 | F24 | **SA-CCR add-ons do not follow the trades** | add-on asset classes match the set's trade asset classes on 7 of 76; securities-financing-only sets carry interest-rate add-ons; SACCR.md section 5 excludes SFTs | EAD not explainable from the trades | SACCR engine (5.7) |
 | F25 | **Book named four ways** | `PORTFOLIO` (trade-valuation, pnl-vector: a book id), `TT_BOOK` (pnl-vector, position), `BOOK` (netting-set trades, frtb-sensitivity, pnl-explain, stress `BY_BOOK`), while `portfolio` is also a kind (`PF-…`) of a different thing; the TVAL Sutra links `PORTFOLIO` as a `book` (line 54) | "portfolio" means two things in one pack | `BOOK` (or `TT_BOOK`) for the book everywhere; `PORTFOLIO` only for `PF-` (open question 11) (decided: `PORTFOLIO` keeps its name; descriptions say it holds the book id; open question 11) |
 
@@ -793,7 +793,7 @@ a trade of a live status past its maturity date stays visible as a data-quality 
 ### 8.1 Derived kinds, counterparty-risk pack
 
 ```yaml
-# PROPOSAL, NOT APPLIED: a connector for config/packs/counterparty-risk/pack.yaml (connectors:), with routes nset-mtm and cpty-mtm.
+# PROPOSAL, NOT APPLIED: a connector for config/packs/banking/counterparty-risk/pack.yaml (connectors:), with routes nset-mtm and cpty-mtm.
   ccr-derived:
     plugin: derived
     enabled: ${DRISHTI_LAKE_ENABLED:true}
@@ -866,7 +866,7 @@ Fallback if (a) fails: `cpty-mtm` from `trade-valuation` grouped by `$.COUNTERPA
 ### 8.2 Derived kinds, market-risk pack
 
 ```yaml
-# PROPOSAL, NOT APPLIED: a connector for config/packs/market-risk/pack.yaml (connectors:), with route stress-scenario-pnl.
+# PROPOSAL, NOT APPLIED: a connector for config/packs/banking/market-risk/pack.yaml (connectors:), with route stress-scenario-pnl.
   mr-derived:
     plugin: derived
     enabled: ${DRISHTI_LAKE_ENABLED:true}
@@ -1049,10 +1049,10 @@ The product owner decided every open question on 2026-10-29 (analysis decisions 
 
 | Area | Files |
 |---|---|
-| Market-risk pack | `config/packs/market-risk/pack.yaml`; `sutras/market-risk/*.sutra.yaml` (7); `contracts/*.contract.yaml` (16); `samples/*.jsonl` |
-| Counterparty-risk pack | `config/packs/counterparty-risk/pack.yaml`; `sutras/*/*.sutra.yaml` (10); `contracts/*.contract.yaml` (14); `samples/*.jsonl` |
-| Core pack | `config/packs/core/contracts/counterparty.contract.yaml`, `counterparty-group.contract.yaml`; the counterparty and counterparty-group Sutras |
-| Trading pack | `config/packs/trading/pack.yaml` (connector `trade-pages`) |
+| Market-risk pack | `config/packs/banking/market-risk/pack.yaml`; `sutras/market-risk/*.sutra.yaml` (7); `contracts/*.contract.yaml` (16); `samples/*.jsonl` |
+| Counterparty-risk pack | `config/packs/banking/counterparty-risk/pack.yaml`; `sutras/*/*.sutra.yaml` (10); `contracts/*.contract.yaml` (14); `samples/*.jsonl` |
+| Core pack | `config/packs/core/core/contracts/counterparty.contract.yaml`, `counterparty-group.contract.yaml`; the counterparty and counterparty-group Sutras |
+| Trading pack | `config/packs/banking/trading/pack.yaml` (connector `trade-pages`) |
 | Engines and mechanisms | `docs/guides/VAR_GUIDE.md`, `docs/guides/EXPOSURE_GUIDE.md`, `docs/guides/GROUPINGS_ANALYTICS_GUIDE.md` (sections 18, 19, 24), `docs/architecture/DATA_ARCHITECTURE.md`, `docs/guides/RACHANA_REFERENCE.md` (functions), `drishti-engine/.../source/derived/DerivedKind.java`, `DerivedSourcePlugin.java`, `drishti-banking/.../exposure/ExposureLoader.java`, `config/ui-kit/fragments/data-provenance.v1.fragment.yaml` |
 | Plan and policy | `docs/architecture/IMPLEMENTATION_PLAN.md` ("The computed-measures roadmap"), `tools/contracts.policy.yaml`, `docs/contracts/README.md` (sections 3, 6, 7, 10, 11, 14) |
 | Measure contracts | `docs/contracts/NSET.md`, `SACCR.md`, `COLL.md`, `MC.md`, `LIM.md`, `GRP.md`, `CVA.md`, `WWR.md`, `TVAL.md`, `STR.md`, `FRTB.md`, `PNL.md`, `SIMM.md` (sections 5 and 6 of each) |
@@ -1071,7 +1071,7 @@ direct. Everything not listed here is still the analysis.
 
 | Step | Built | Where |
 |---|---|---|
-| Q1 `nset-mtm` (`NSMTM`) | One page per netting set from the trade valuations of a live status (`TRADE_STATUS` NEW, VALIDATED, AMENDED, a `NETTING_SET`): `NET_MTM`, `TRADE_COUNT`, `GROSS_POSITIVE_MTM`, `GROSS_NEGATIVE_MTM`, `CE_UNCOLLATERALISED`, `NETTING_BENEFIT`, `NET_TO_GROSS`, `BY_PRODUCT_GROUP`, the member rows `TRADES[]` (each with `LIVE`), `PAST_MATURITY_COUNT`, `PAST_MATURITY_MTM`, `PAST_MATURITY`, `SUM_CURRENCY`, `CURRENCY_NOTE` | connector `ccr-derived` of the counterparty-risk pack (generated from `tools/packgen/banking/ccr_kinds.py`); contract `config/packs/counterparty-risk/contracts/nset-mtm.contract.yaml` |
+| Q1 `nset-mtm` (`NSMTM`) | One page per netting set from the trade valuations of a live status (`TRADE_STATUS` NEW, VALIDATED, AMENDED, a `NETTING_SET`): `NET_MTM`, `TRADE_COUNT`, `GROSS_POSITIVE_MTM`, `GROSS_NEGATIVE_MTM`, `CE_UNCOLLATERALISED`, `NETTING_BENEFIT`, `NET_TO_GROSS`, `BY_PRODUCT_GROUP`, the member rows `TRADES[]` (each with `LIVE`), `PAST_MATURITY_COUNT`, `PAST_MATURITY_MTM`, `PAST_MATURITY`, `SUM_CURRENCY`, `CURRENCY_NOTE` | connector `ccr-derived` of the counterparty-risk pack (generated from `tools/packgen/banking/ccr_kinds.py`); contract `config/packs/banking/counterparty-risk/contracts/nset-mtm.contract.yaml` |
 | Q2 `cpty-mtm` (`CPMTM`) | One page per counterparty, from the trade valuations directly (check (a) of section 8: a derived kind cannot read another of its connector): `NET_MTM`, `TRADE_COUNT`, gross parts, `NETTING_SETS` (`group()` rows: label, value, count), `NETTING_SET_COUNT`, `CE_UNCOLLATERALISED` = Σ over the sets of max(set net, 0), by `group(...)[?@.value > 0]`, `PAST_MATURITY_COUNT` | the same connector; contract `cpty-mtm.contract.yaml` |
 | Pages | Netting set: panel **Computed from the trade valuations, beside the stored figures** (`F4`: computed, stored and difference of net MtM and trades; gross parts, netting benefit, net-to-gross, uncollateralised CE, the two checks of section 8.3, past-maturity count, sum currency), **Net MTM by product group (computed)**, **Live-status trades past their maturity date** (data quality: in no total). Counterparty (the core pack's Sutra): **Computed from the trade valuations** and **Netting sets (computed)**. The strip's *Utilisation* is gone (Q5) | `tools/packgen/banking/risk_data.py` → `netting-set.v1.sutra.yaml`, `counterparty.v1.sutra.yaml` |
 | Q3 checks | Panels **Checks** on: the collateral balance (held, posted and net after haircut from the positions, haircut taken), the credit limit (headroom, utilisation = used ÷ limit and its difference from the stored one), SA-CCR (the EAD identity α(RC + multiplier × add-on) and its difference, add-on = Σ by asset class), the stress result (limit use, status OK or BREACH, headroom, Σ P&L by book); the netting set's checks (members' MtM, CE from the stored figures) are in its computed panel | the same generator |
@@ -1106,7 +1106,7 @@ scenario sets and exposure paths are unchanged by it, so **VAR BANK on 2026-09-3
 | Collateral after haircut | F3 | `collateral-balance.HELD`, `POSTED`, `NET` = Σ of the positions' `VALUE` (market value less haircut); `netting-set.COLLATERAL` = that `NET`. Across the 76 balances the holdings' market value is 6,304.4m and their value after haircut 6,229.6m; `HELD + POSTED` is now 6,229.6m (was 6,304.4m) |
 | One CSA per agreement and legal entity | decision 9 | `CSA-<counterparty>-<legal entity>` (CSA-ALDERSHOT-FRA …), one per netting set's legal entity, with `LEGAL_ENTITY`; `netting-set.CSA`, `collateral-balance.CSA` and `margin-call.CSA` name it; `agreement.CSA` became the list `CSAS`; the counterparty's hierarchy draws each CSA under the agreement and over the set it governs |
 | Numeric CSA terms with a currency | section 5.3 | `CSA_CURRENCY` (USD), `MTA_US`, `MTA_THEM`, `MARGIN_FREQUENCY_DAYS` (1), `MPOR_DAYS` (10) beside `MTA` and `FREQUENCY`; the text `MPOR` is gone. The values are the old ones, so no exposure figure moves for this |
-| One maturity-bucket set per purpose | decision 10, F23 | `display` (0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+) and `limit` (0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+) in `config/packs/counterparty-risk/config/maturity-buckets.yaml`, read by the generator; the data's buckets did not change |
+| One maturity-bucket set per purpose | decision 10, F23 | `display` (0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+) and `limit` (0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+) in `config/packs/banking/counterparty-risk/config/maturity-buckets.yaml`, read by the generator; the data's buckets did not change |
 | VaR limits only in `var-limit` | decision 8, F6 | `risk-hierarchy` and `portfolio` carry no `LIMIT_VAR`; `var-limit` holds every LL, MGMT and LEGAL node's limit and, as hierarchy `PORTFOLIO`, every portfolio's, in USD; the market-risk pack's `hierarchies:` read MGMT and LEGAL limits from `var-limit` (`limits: var-limit`) and the VaR engine a portfolio's from its `PORTFOLIO` row (a record that still carries `LIMIT_VAR` is read as a fallback). Same values: no limit use moves |
 | A group's own approved limit | decision 7, F17 | `counterparty-group.LIMIT` is the group's own limit: a group of several counterparties is approved for 60 to 90% of its members' limits added (never below the largest), a group of one keeps its member's. Only GRP-MERIDIAN has two members: in the samples its limit 775,000,000 → 495,000,000 and its stored utilisation (Σ used ÷ limit) 61% → 96% |
 | `netting-set.UTILISATION` dropped | decision 13, F8 | the field, its strip cell, its history column and BI's *Max utilisation* (the live-exposure report's card and table now show *Trades* and the largest net MTM) |

@@ -42,7 +42,7 @@
         <td class="rpt-actions">{% if c.stage != 'resolved' %}
           {% if c.stage == 'raised' %}<form method="post" action="/alerts/raised/acknowledge"><input type="hidden" name="id" value="{{ c.id }}"><button class="fk dist-act" type="submit" data-ack>Acknowledge</button></form>{% endif %}
           <form method="post" action="/alerts/raised/snooze"><input type="hidden" name="id" value="{{ c.id }}"><label class="visually-hidden" for="sn-{{ loop.index }}">Snooze for</label>
-            <select id="sn-{{ loop.index }}" name="for" class="studio-select">{% for v, w in [('1h', '1 hour'), ('4h', '4 hours'), ('1d', '1 day'), ('0', 'no longer')] %}<option value="{{ v }}">{{ w }}</option>{% endfor %}</select>
+            <drishti-select id="sn-{{ loop.index }}" name="for" label="Snooze for">{% for v, w in [('1h', '1 hour'), ('4h', '4 hours'), ('1d', '1 day'), ('0', 'no longer')] %}<option value="{{ v }}">{{ w }}</option>{% endfor %}</drishti-select>
             <button class="fk dist-act" type="submit" data-snooze>Snooze</button></form>
           <form method="post" action="/alerts/raised/resolve"><input type="hidden" name="id" value="{{ c.id }}"><label class="visually-hidden" for="rs-{{ loop.index }}">Note</label>
             <input id="rs-{{ loop.index }}" name="note" class="studio-in" placeholder="Note (optional)" maxlength="500"><button class="fk dist-act" type="submit" data-resolve>Resolve</button></form>
@@ -77,7 +77,7 @@
       <label>Kind<input name="kind" class="studio-in mono" value="{{ kind }}" required></label>
       <label>Id<input name="id" class="studio-in mono" value="{{ id }}" required></label>
       <label class="wide">When (Rachana-EL over the entity)<input name="when" class="studio-in mono" placeholder="$.utilisation > 0.8" required></label>
-      <label>Severity<select name="severity" class="studio-select"><option>info</option><option selected>warn</option><option>critical</option></select></label>
+      <label>Severity<drishti-select name="severity" label="Severity"><option>info</option><option selected>warn</option><option>critical</option></drishti-select></label>
       <label class="wide">Message (optional template)<input name="message" class="studio-in mono" placeholder="${$.NETTING_SET_ID}: ${fmt($.UTILISATION, 'pct0')}"></label>
       <button type="submit" class="btn-pill btn-accent">Save rule</button>
     </form>

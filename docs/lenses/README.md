@@ -17,7 +17,7 @@
 
 An **edition** turns a whole instance into a focused product (`drishti.edition`); a **lens** offers the same focus to one person on a
 full instance (`drishti.lenses`, *Open Drishti Risk* in Views and Home). How both are set up, switched and customised is
-[EDITIONS.md](../admin/EDITIONS.md). The documents here are the **product view** of each lens: who uses it, the questions they ask by
+[LENSES.md](../admin/LENSES.md). The documents here are the **product view** of each lens: who uses it, the questions they ask by
 the day, month and year, what the lens answers today (each statement cites the guide or file it was read from), the gaps, the
 proposals and the data each proposal needs. Their proposals are candidates in the
 [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not started.

@@ -42,9 +42,15 @@ HEADER = """<!--
 """
 
 
+def _where(pack: str) -> str:
+    """A pack's folder as the repository names it: config/packs/<domain>/<pack>."""
+    d = FB.K.pack_dir(pack)
+    return d.relative_to(ROOT).as_posix() if d.is_relative_to(ROOT) else d.as_posix()
+
+
 def contract(pack: str, kind: str) -> dict:
     import yaml
-    f = ROOT / "config" / "packs" / pack / "contracts" / f"{kind}.contract.yaml"
+    f = FB.K.pack_dir(pack) / "contracts" / f"{kind}.contract.yaml"
     return (yaml.safe_load(f.read_text(encoding="utf-8")) or {}) if f.is_file() else {}
 
 
@@ -103,7 +109,7 @@ def render(spec: FB.FeedSpec) -> str:
             out += [_cell(ds.description)[:1].upper() + _cell(ds.description)[1:] + ".", ""]
         fields = [f for f in c.get("fields") or [] if f.get("name")]
         if not fields:
-            out += [f"No contract yet: `config/packs/{ds.pack}/contracts/{ds.kind}.contract.yaml` (`drishti.py contract bootstrap {ds.kind}`).", ""]
+            out += [f"No contract yet: `{_where(ds.pack)}/contracts/{ds.kind}.contract.yaml` (`drishti.py contract bootstrap {ds.kind}`).", ""]
             continue
         out += ["| Field | Type | Presence | Meaning |", "|---|---|---|---|"]
         out += [f"| `{f['name']}` | {_cell(f.get('type'))} | {_cell(f.get('presence'))} | {_cell(f.get('description'))} |" for f in fields]
@@ -111,7 +117,7 @@ def render(spec: FB.FeedSpec) -> str:
         if ex:
             out += ["", "One row (JSON Lines: one object a line; the values are the contract's examples):", "", "```json",
                     json.dumps(ex, ensure_ascii=False), "```"]
-        out += ["", f"The contract: `config/packs/{ds.pack}/contracts/{ds.kind}.contract.yaml` "
+        out += ["", f"The contract: `{_where(ds.pack)}/contracts/{ds.kind}.contract.yaml` "
                 f"([{ds.pack}](../../docs/contracts/packs/{ds.pack}.md)).", ""]
     return "\n".join(out).rstrip("\n") + "\n"
 

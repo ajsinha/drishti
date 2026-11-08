@@ -45,8 +45,8 @@
     dlg = document.createElement('dialog');
     dlg.className = 'hist-dlg';
     dlg.innerHTML = '<header class="hist-h"><h3 data-h></h3><span class="hist-tools">'
-      + '<select data-days aria-label="Business days"><option value="10">10 days</option><option value="30" selected>30 days</option>'
-      + '<option value="90">90 days</option><option value="250">250 days</option></select>'
+      + '<drishti-select data-days label="Business days"><option value="10">10 days</option><option value="30" selected>30 days</option>'
+      + '<option value="90">90 days</option><option value="250">250 days</option></drishti-select>'
       + '<a class="fk" data-alert-me href="/alerts/new" title="Be told when this number crosses a limit, moves too far or does not arrive">Alert me</a>'
       + '<button type="button" class="fk" data-note title="Discuss this field">Discuss</button>'
       + '<button type="button" class="fk" data-close aria-label="Close">×</button></span></header>'
@@ -59,7 +59,7 @@
       dlg.close();
       if (window.Drishti.discussion) { window.Drishti.discussion.open({ path: current.path }); }
     });
-    dlg.querySelector('[data-days]').addEventListener('change', function () { load(); });
+    dlg.querySelector('[data-days]').addEventListener('drishti:change', function () { load(); });   // drishti-inputs' Select
     // Raw document opens the viewer on this page at the field (drishti_raw-viewer.js); a Ctrl/⌘ or middle click still opens the JSON in a tab
     dlg.querySelector('[data-origin]').addEventListener('click', function (e) {
       var a = e.target.closest('[data-raw-open]');

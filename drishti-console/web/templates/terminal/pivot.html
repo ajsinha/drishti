@@ -41,10 +41,10 @@
     The {{ cube.title }} is a preset of this Pivot: its source, the CCR provider (each netting set's exposure paths, netted and collateralised first), is not built yet.
     Meanwhile the <a href="/exposure">Exposure explorer</a> (<span class="mono">EXP</span>) has every counterparty's computed exposure.</p>{% endif %}
   <div class="pv-bar" role="toolbar" aria-label="Pivot controls">
-    <label class="pv-chip">Source <select data-pv-source aria-label="Source"></select></label>
-    <label class="pv-chip">Date <select data-pv-date aria-label="Business date"></select></label>
-    <label class="pv-chip">Compare <select data-pv-compare aria-label="Compare with a date"><option value="">off</option></select></label>
-    <label class="pv-chip">Subtotals <select data-pv-subtotals aria-label="Subtotals"><option value="below">below</option><option value="above">above</option></select></label>
+    <label class="pv-chip">Source <drishti-select data-pv-source label="Source"></drishti-select></label>
+    <label class="pv-chip">Date <drishti-select data-pv-date label="Business date"></drishti-select></label>
+    <label class="pv-chip">Compare <drishti-select data-pv-compare label="Compare with a date"><option value="">off</option></drishti-select></label>
+    <label class="pv-chip">Subtotals <drishti-select data-pv-subtotals label="Subtotals"><option value="below">below</option><option value="above">above</option></drishti-select></label>
     <button type="button" class="pv-chip" data-pv-chart title="Chart the selection (G)">Chart <kbd>G</kbd></button>
     <button type="button" class="pv-chip" data-pv-export-open title="Export (X)" aria-expanded="false">Export <kbd>X</kbd></button>
     <button type="button" class="pv-chip" data-pv-save title="Save the view (private until shared)">Save view</button>
@@ -76,7 +76,7 @@
       <div class="pv-paths">
         <label class="pv-chip">Path <input class="pv-input mono" data-pv-path placeholder="$.LEGS[0].CURRENCY" aria-label="A path read from each document, added to Rows"></label>
         <button type="button" class="pv-btn" data-pv-path-add>Add to Rows</button>
-        <label class="pv-chip">Slicer <select data-pv-slicer-add aria-label="Add a slicer"><option value="">Add a slicer…</option></select></label>
+        <label class="pv-chip">Slicer <drishti-select data-pv-slicer-add label="Add a slicer"><option value="">Add a slicer…</option></drishti-select></label>
         <span data-pv-paths></span>
       </div>
     </section>
@@ -104,8 +104,8 @@
       <label>Second cell <input class="pv-input" data-pf-to placeholder="the same cell" aria-label="Second cell"></label>
       <div class="pf-date"><span class="pv-sub">First date</span><span data-pf-from-date></span></div>
       <div class="pf-date"><span class="pv-sub">Second date</span><span data-pf-to-date></span></div>
-      <label>Split by <select data-pf-by aria-label="Split the difference by"></select></label>
-      <label>Order <select data-pf-order aria-label="Order of the steps"><option value="member">by member</option><option value="size">largest first</option></select></label>
+      <label>Split by <drishti-select data-pf-by label="Split the difference by"></drishti-select></label>
+      <label>Order <drishti-select data-pf-order label="Order of the steps"><option value="member">by member</option><option value="size">largest first</option></drishti-select></label>
       <button type="button" class="pv-btn primary" data-pf-explain title="Opens the one Explain at Why it moved: the steps that add up">Explain ›</button>
     </div>
   </section>
@@ -125,9 +125,9 @@
     <h3>Playground</h3>
     <div class="pf-form">
       <label>Name <input class="pv-input" data-pf-name value="wret" aria-label="Function name"></label>
-      <label>Language <select data-pf-lang aria-label="Language"><option value="formula">formula (Rachana)</option><option value="sql">SQL macro</option><option value="python">Python</option><option value="java">Java plug-in</option></select></label>
+      <label>Language <drishti-select data-pf-lang label="Language"><option value="formula">formula (Rachana)</option><option value="sql">SQL macro</option><option value="python">Python</option><option value="java">Java plug-in</option></drishti-select></label>
       <label>Inputs <input class="pv-input" data-pf-inputs value="r, w" aria-label="Inputs, comma separated"></label>
-      <label>Kind <select data-pf-kind aria-label="Kind"><option>mergeable</option><option>sketch</option><option>holistic</option></select></label>
+      <label>Kind <drishti-select data-pf-kind label="Kind"><option>mergeable</option><option>sketch</option><option>holistic</option></drishti-select></label>
       <label>Entry <input class="pv-input" data-pf-entry placeholder="Python: the class; Java: the jar" aria-label="Entry"></label>
       <label class="pf-wide">Code <textarea class="pv-input pf-code" data-pf-code data-di-code="rachana" rows="6" aria-label="Code">sum(r * w) / sum(w)</textarea></label>
       <label class="pf-wide">Sample rows (CSV with a header) <textarea class="pv-input pf-code" data-pf-sample rows="5" aria-label="Sample rows">r,w,g

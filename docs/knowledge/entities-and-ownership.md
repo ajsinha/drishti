@@ -91,7 +91,7 @@ lei-relationship  LEIR LEIREL-<child LEI>-DIRECT | -ULTIMATE   CHILD_ENTITY, PAR
 lei-mapping    LEIM <ISIN | BIC | MIC>   ENTITY_LEI ─► lei-entity, LEI_GROUP ─► lei-group
 ```
 
-The links are the contract link columns of `config/packs/core/contracts/` and `config/packs/gleif/contracts/`. A counterparty's `LEI`
+The links are the contract link columns of `config/packs/core/core/contracts/` and `config/packs/core/gleif/contracts/`. A counterparty's `LEI`
 and a legal entity's `LEI` are plain fields, not links: the demo's counterparties are fictitious, so their LEIs are not in the GLEIF
 snapshot. With real counterparties the same code finds the GLEIF record (`LEI <code> <GO>`) and its group.
 

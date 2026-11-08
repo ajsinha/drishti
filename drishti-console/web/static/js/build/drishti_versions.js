@@ -26,7 +26,8 @@
 
   WB.Versions = function (box, store, base) {
     var url = '/build/designs/' + encodeURIComponent(store.state.id);
-    var pick = WB.el('select', 'studio-in', null, { id: 'wbCompareWith' }), label = WB.el('label', null, 'Compare the design with', { for: 'wbCompareWith' });
+    var pick = WB.el('drishti-select', null, null, { id: 'wbCompareWith' }), label = WB.el('span', null, 'Compare the design with');   // drishti-inputs' Select
+    pick.options = { label: 'Compare the design with', options: [] };
     var out = WB.el('div', 'wb-diff', null, { role: 'region', 'aria-label': 'Differences', tabindex: '0' });
     var restore = WB.el('button', 'btn-pill btn-ghost', 'Restore this version', { type: 'button', 'data-restore': '' });
     var head = WB.el('p', 'wb-sum', 'Pick what to compare with.', { role: 'status' });
@@ -37,15 +38,14 @@
 
     function when(at) { return at ? new Date(at).toLocaleTimeString() : ''; }
     function fill() {
-      var keep = pick.value;
-      pick.textContent = '';
-      if (base) { pick.appendChild(WB.el('option', null, 'The live Sutra ' + base + ' (where this design came from)', { value: 'base' })); }
+      var keep = pick.value, opts = [];
+      if (base) { opts.push({ value: 'base', label: 'The live Sutra ' + base + ' (where this design came from)' }); }
       list.slice().reverse().forEach(function (v) {
         if (v.current) { return; }
-        pick.appendChild(WB.el('option', null, 'Version ' + v.n + (v.n === 0 ? ': as it started' : ': after ' + v.ops) + (v.at ? ' · ' + when(v.at) : ''), { value: String(v.n) }));
+        opts.push({ value: String(v.n), label: 'Version ' + v.n + (v.n === 0 ? ': as it started' : ': after ' + v.ops) + (v.at ? ' · ' + when(v.at) : '') });
       });
-      if (!pick.options.length) { pick.appendChild(WB.el('option', null, 'Nothing earlier to compare with yet', { value: '' })); }
-      if (keep && Array.prototype.some.call(pick.options, function (o) { return o.value === keep; })) { pick.value = keep; }
+      if (!opts.length) { opts.push({ value: '', label: 'Nothing earlier to compare with yet' }); }
+      pick.component.setOptions(opts, keep && opts.some(function (o) { return o.value === keep; }) ? keep : opts[0].value);
     }
     function compare(against) {
       var mine = ++seq;
@@ -72,7 +72,7 @@
         list = r.body.versions || []; base = r.body.base || base; fill(); return compare(pick.value);
       });
     }
-    pick.addEventListener('change', function () { compare(pick.value); });
+    pick.addEventListener('drishti:change', function () { compare(pick.value); });
     restore.addEventListener('click', function () {
       var against = pick.value;
       var text = against === 'base'

@@ -32,6 +32,9 @@ from _var import choose, open_var, painted
 from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, Ctx, register
 from shotlib import start_servers as _start
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
 
 shot = register("varskip")
 SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false"}   # marks the guide as one that runs on its own (--guide varskip)
@@ -41,10 +44,10 @@ KINDS = ",".join(f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-s
 def start_servers(work) -> list:
     packs = work / "packs"
     packs.mkdir()
-    for p in (ROOT / "config" / "packs").iterdir():
-        if p.name != "market-risk":
-            (packs / p.name).symlink_to(p)
-    shutil.copytree(ROOT / "config" / "packs" / "market-risk", packs / "market-risk")
+    for name, p in pack_dirs().items():
+        if name != "market-risk":
+            (packs / name).symlink_to(p)
+    shutil.copytree(ROOT / "config" / "packs" / "banking" / "market-risk", packs / "market-risk")
     manifest = packs / "market-risk" / "pack.yaml"
     manifest.write_text("".join(line for line in manifest.read_text(encoding="utf-8").splitlines(keepends=True)
                                 if line.strip() != "- LIMIT_LETTER"), encoding="utf-8")

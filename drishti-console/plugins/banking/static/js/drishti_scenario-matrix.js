@@ -313,16 +313,9 @@
   }
 
   function fillPick() {
-    var pick = $("[data-sm-pick]");
-    pick.textContent = "";
     var rows = S.view.slice(0, 200);
     if (S.selRow && !rows.some(function (r) { return key(r) === S.selRow; })) { var s = selectedRow(); if (s) { rows.unshift(s); } }
-    rows.forEach(function (r) {
-      var o = el("option", null, key(r));
-      o.value = key(r);
-      pick.appendChild(o);
-    });
-    if (S.selRow) { pick.value = S.selRow; }
+    $("[data-sm-pick]").component.setOptions(rows.map(key), S.selRow || undefined);     // drishti-inputs' Select
   }
 
   // --------------------------------------------------------------------------------------------------------- the chart
@@ -526,12 +519,9 @@
   }
 
   function fillSort() {
-    var sel = $("[data-sm-sort]");
-    sel.textContent = "";
-    var o = el("option", null, "worst on the newest date"); o.value = "worst-last"; sel.appendChild(o);
-    cols().slice().reverse().forEach(function (c) { var x = el("option", null, "worst on " + c.date); x.value = c.date; sel.appendChild(x); });
-    var d = el("option", null, S.by === "trade" ? "by trade" : "by scenario day (newest first)"); d.value = "day"; sel.appendChild(d);
-    sel.value = S.sort;
+    $("[data-sm-sort]").component.setOptions([{ value: "worst-last", label: "worst on the newest date" }]      // drishti-inputs' Select
+      .concat(cols().slice().reverse().map(function (c) { return { value: c.date, label: "worst on " + c.date }; }))
+      .concat([{ value: "day", label: S.by === "trade" ? "by trade" : "by scenario day (newest first)" }]), S.sort);
   }
 
   function meta(a) {
@@ -627,8 +617,8 @@
     ev.currentTarget.classList.toggle("on", S.tailOnly);
     if (S.answer) { drawAll(); }
   });
-  $("[data-sm-sort]").addEventListener("change", function (ev) { S.sort = ev.target.value; if (S.answer) { drawAll(); } });
-  $("[data-sm-pick]").addEventListener("change", function (ev) { select(ev.target.value, null, true); });
+  $("[data-sm-sort]").addEventListener("drishti:change", function (ev) { S.sort = ev.detail.value; if (S.answer) { drawAll(); } });
+  $("[data-sm-pick]").addEventListener("drishti:change", function (ev) { select(ev.detail.value, null, true); });
   // the grid's own events: a click on a cell selects its row and date; the arrow keys move the grid's focus, and the selection with it
   var scroll = $("[data-sm-scroll]");
   function fromGrid(rowIndex, colId) {

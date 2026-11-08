@@ -535,7 +535,7 @@ key; a model version different from the CSA's flagged.
 
 `counterparty` (CPTY): key `COUNTERPARTY_ID`, `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY`, `TYPE`, `COUNTRY_OF_RISK`, `UEN`, `GROUP`,
 `CREDIT_LIMIT`, `CREDIT_CURVE`, `LEGAL_ENTITY`, `HIERARCHY`, `KYC` (with `PD_1Y`). `counterparty-group` (GRP): `GROUP_ID`, `NAME`, `LIMIT`
-(the group's own approved limit, decision 7), `MEMBERS[]`; `UTILISATION` becomes computed. GLEIF (`config/packs/gleif/contracts/`):
+(the group's own approved limit, decision 7), `MEMBERS[]`; `UTILISATION` becomes computed. GLEIF (`config/packs/core/gleif/contracts/`):
 `lei-entity` (`LEI`, `NAME`, `LEI_GROUP`, `DIRECT_PARENT`, `ULTIMATE_PARENT`, `PARENTS[]`, `ENTITY_STATUS`, `REGISTRATION_STATUS`) and
 `lei-relationship` (`CHILD_ENTITY`, `PARENT_ENTITY`, `LEVEL` direct or ultimate, `RELATIONSHIP_STATUS`, `START`, `END`, `LEI_GROUP`).
 **Sources:** the bank's client master (UEN), the credit system (ratings, limits), GLEIF's golden copy (public). **The cube adds to
@@ -673,19 +673,19 @@ adds `cva` (before, after, incremental), `saccrEad` (incremental, from the candi
 
 | File | Kind | Mnemonic (proposed) | Class | New or extended |
 |---|---|---|---|---|
-| `config/packs/counterparty-risk/contracts/saccr-trade.contract.yaml` | `saccr-trade` | `SACT` | input | new (SACCR.md) |
-| `config/packs/counterparty-risk/contracts/collateral-holding.contract.yaml` | `collateral-holding` | `CHLD` | fundamental | new (COLL.md) |
-| `config/packs/counterparty-risk/contracts/im-history.contract.yaml` | `im-history` | `IMH` | input | new |
-| `config/packs/counterparty-risk/contracts/credit-path.contract.yaml` | `credit-path` | `XCRP` | input | new (WWR.md) |
-| `config/packs/counterparty-risk/contracts/wwr-flag.contract.yaml` | `wwr-flag` | `WWRF` | fundamental | new |
-| `config/packs/counterparty-risk/contracts/cva-proxy-map.contract.yaml` | `cva-proxy-map` | `CPXY` | fundamental | new |
-| `config/packs/counterparty-risk/contracts/cva-sensitivity.contract.yaml` | `cva-sensitivity` | `CVAS` | input | new |
-| `config/packs/counterparty-risk/contracts/simm-addon.contract.yaml` | `simm-addon` | `SIMA` | input | new (SIMM.md) |
-| `config/packs/counterparty-risk/contracts/crif-external.contract.yaml` | `crif-external` | `CRIF` | input | new (SIMM.md) |
-| `config/packs/counterparty-risk/contracts/exposure-allocation.contract.yaml` | `exposure-allocation` | `XALC` | computed | new (allocated EE, EPE, PFE share by trade, desk, book) |
-| `config/packs/counterparty-risk/contracts/saccr-result.contract.yaml` | `saccr-result` | `SACR` | computed | new (replaces stored `sa-ccr`) |
-| `config/packs/counterparty-risk/contracts/simm-result.contract.yaml` | `simm-result` | `SIMR` | computed | new (replaces stored `simm`) |
-| `config/packs/counterparty-risk/contracts/cva-result.contract.yaml` | `cva-result` | `CVAR` | computed | new (replaces stored `cva`) |
+| `config/packs/banking/counterparty-risk/contracts/saccr-trade.contract.yaml` | `saccr-trade` | `SACT` | input | new (SACCR.md) |
+| `config/packs/banking/counterparty-risk/contracts/collateral-holding.contract.yaml` | `collateral-holding` | `CHLD` | fundamental | new (COLL.md) |
+| `config/packs/banking/counterparty-risk/contracts/im-history.contract.yaml` | `im-history` | `IMH` | input | new |
+| `config/packs/banking/counterparty-risk/contracts/credit-path.contract.yaml` | `credit-path` | `XCRP` | input | new (WWR.md) |
+| `config/packs/banking/counterparty-risk/contracts/wwr-flag.contract.yaml` | `wwr-flag` | `WWRF` | fundamental | new |
+| `config/packs/banking/counterparty-risk/contracts/cva-proxy-map.contract.yaml` | `cva-proxy-map` | `CPXY` | fundamental | new |
+| `config/packs/banking/counterparty-risk/contracts/cva-sensitivity.contract.yaml` | `cva-sensitivity` | `CVAS` | input | new |
+| `config/packs/banking/counterparty-risk/contracts/simm-addon.contract.yaml` | `simm-addon` | `SIMA` | input | new (SIMM.md) |
+| `config/packs/banking/counterparty-risk/contracts/crif-external.contract.yaml` | `crif-external` | `CRIF` | input | new (SIMM.md) |
+| `config/packs/banking/counterparty-risk/contracts/exposure-allocation.contract.yaml` | `exposure-allocation` | `XALC` | computed | new (allocated EE, EPE, PFE share by trade, desk, book) |
+| `config/packs/banking/counterparty-risk/contracts/saccr-result.contract.yaml` | `saccr-result` | `SACR` | computed | new (replaces stored `sa-ccr`) |
+| `config/packs/banking/counterparty-risk/contracts/simm-result.contract.yaml` | `simm-result` | `SIMR` | computed | new (replaces stored `simm`) |
+| `config/packs/banking/counterparty-risk/contracts/cva-result.contract.yaml` | `cva-result` | `CVAR` | computed | new (replaces stored `cva`) |
 | `simulation-run`, `exposure-path`, `csa`, `credit-limit`, `counterparty-group`, `trade-valuation` | existing | | | extended (optional fields above) |
 | `position-sensitivity` | shared with the MR cube | `SENS` | input | new (MR_CUBE_LENS section 7.17) |
 
@@ -861,7 +861,7 @@ ids, saved views, `cube-core.js`. The POC rows are CCP1 to CCP6 in the plan.
 
 | Item | CCR Cube lens |
 |---|---|
-| Lens id and file | `ccrcube`, `config/editions/ccrcube.yaml` (new), offered by `drishti.lenses` like the four built lenses |
+| Lens id and file | `ccrcube`, `config/lenses/ccrcube.yaml` (new), offered by `drishti.lenses` like the four built lenses |
 | Title, link | **Drishti CCR Cube**; **Open Drishti CCR Cube** in Views and on Home |
 | Home | **decided: layout A (limit board) is the landing; B (netting-set drill) and C (pre-deal and XVA) are tabs**; a netting set clicked on A opens B in place |
 | Mnemonics on | `CCUBE`, `EXP` (its explorer's Pre-deal tab is the pre-deal), `MCUBE` and `VAR` (to cross to the market risk cube), `FUNC`, `WHAT`, `BI` |
@@ -871,7 +871,7 @@ ids, saved views, `cube-core.js`. The POC rows are CCP1 to CCP6 in the plan.
 | Relation to other lenses | **Risk**: `CCUBE` on as a screen, a chip beside `EXP BANK`; **Trading**: off (Trading's largest-counterparty tile reads allocated exposure through the same endpoint); **Oversight** (proposed): the concentration view (its decision 6) reads the CCR Cube |
 
 ```yaml
-# config/editions/ccrcube.yaml (proposed sketch, not created)
+# config/lenses/ccrcube.yaml (proposed sketch, not created)
 edition: ccrcube
 title: Drishti CCR Cube
 description: Counterparty exposure as a cube: limits by tenor with headroom, groups on the legal tree, allocation by desk, pre-deal

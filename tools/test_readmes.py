@@ -44,7 +44,7 @@ R = _load("drishti_pack_readme", ROOT / "tools" / "packgen" / "common" / "readme
 PACKS_CLI = _load("drishti_pack_readme_cli", ROOT / "tools" / "packgen" / "readme.py")
 CONN = _load("drishti_connector_readmes", ROOT / "tools" / "connector_readmes.py")
 
-PACKS = sorted(d for d in (ROOT / "config" / "packs").iterdir() if (d / "pack.yaml").is_file())
+PACKS = list(R.PP.pack_dirs().values())
 TYPES = CONN.type_readmes()
 TEMPLATES = CONN.template_readmes()
 
@@ -98,7 +98,7 @@ def test_the_validator_catches_what_the_standard_forbids(tmp_path):
 
 
 def test_a_pack_readme_data_structure_table_names_fields_types_and_nested_lists():
-    text = (ROOT / "config" / "packs" / "trading" / "README.md").read_text(encoding="utf-8")
+    text = (ROOT / "config" / "packs" / "banking" / "trading" / "README.md").read_text(encoding="utf-8")
     meta, body = R.split(text)
     assert meta["pack"] == "trading" and "trade" in meta["kinds"] and meta["commands"]["TRD"] == "trade"
     data = R.sections(body)["Data structures"]

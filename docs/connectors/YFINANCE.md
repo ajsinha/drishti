@@ -56,7 +56,7 @@ DRISHTI_YFINANCE_ENABLED=true        # or enabled: true in config/connectors/yfi
 
 The `us-equities` pack carries a second connector on the same plugin, `us-equities-prices` (`id-prefix: PX-`, `kind: price-history`,
 a year of daily bars), off unless `DRISHTI_US_EQUITIES_PRICES_ENABLED=true`. It is for **internal use only**: free price feeds forbid
-redistribution, and the pack commits no prices ([the pack's guide](../../config/packs/us-equities/guides/us-equities.md#prices-internal-use-only)).
+redistribution, and the pack commits no prices ([the pack's guide](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md#prices-internal-use-only)).
 
 Enabling and disabling the file is live; a new plugin jar needs a restart (the plugin ships inside `drishti-server`). An annotated copy
 is [`config/connectors.examples/other/yfinance.yaml`](../../config/connectors.examples/other/yfinance.yaml). To use a proxy or a mirror, set

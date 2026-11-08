@@ -67,4 +67,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"SERIES_ID": "NSTAT-V1", "NAME": "Population of Canada", "VECTOR": "v1", "TITLE": "Population of Canada", "MEMBERS": "Canada", "GEOGRAPHY": "Canada", "TABLE_ID": "17-10-0009-01", "TABLE_TITLE": "Population estimates, quarterly", "TOPIC": "Population", "FREQUENCY": "quarterly", "UNIT": "persons", "SCALE": "units", "LATEST": 41798407.0, "LATEST_PERIOD": "2026-07-01", "PREVIOUS": 41718064.0, "PREVIOUS_PERIOD": "2026-04-01", "CHANGE": 80343.0, "CHANGE_PCT": 0.1926, "YEAR_ON_YEAR_PCT": 0.4553, "RELEASED": "2026-09-23T08:30"}
 ```
 
-The contract: `config/packs/national-statistics/contracts/statistics-series.contract.yaml` ([national-statistics](../../docs/contracts/packs/national-statistics.md)).
+The contract: `config/packs/economy/national-statistics/contracts/statistics-series.contract.yaml` ([national-statistics](../../docs/contracts/packs/national-statistics.md)).

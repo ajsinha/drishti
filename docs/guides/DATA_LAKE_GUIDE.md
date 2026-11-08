@@ -776,7 +776,7 @@ The rows are in the lake; nothing shows them until a connector names it.
 **Demo and real never mix.** Each lake has its own folder and its own file, and a connector reads one lake. Three rules keep a server
 from showing demo data beside yours:
 
-- **The packs' samples step aside.** Every pack ships sample documents (`config/packs/<pack>/samples/`), served by the `demo` connector,
+- **The packs' samples step aside.** Every pack ships sample documents (`config/packs/<domain>/<pack>/samples/`), served by the `demo` connector,
   which answers any kind and, on a live read, before the lakes. Once a kind's routed connector, or any Delta or Iceberg connector serving
   it, names a lake other than `demo`, the samples no longer answer for that kind: not by id (`TRD 1000001`, a demo ComSwap, is not
   found once `trade-endur` reads risklake), not in a search. A kind whose connectors all read `demo` keeps its samples, so a demo server
@@ -1045,7 +1045,7 @@ An S3-compatible store adds `endpoint:` and `path-style: true` under `storage:`.
 file's `tables:`), and its connector templates name the lake and their entries. When a writer first meets a kind its lake file lacks,
 the pack's entry is copied in once and said so; from then on the lake file is the truth.
 
-**The official results** are lakes of their own: `config/lakes/var-official.yaml` and `ccr-official.yaml` take their format, root and
+**The official results** are lakes of their own: `config/lakes/banking/var-official.yaml` and `ccr-official.yaml` take their format, root and
 storage from the publishers' settings (`drishti.var.official.*`, `drishti.ccr.exposure.official.*`), so BI's readers follow wherever the
 results are published.
 

@@ -78,6 +78,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "bench"))
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 from javacmd import java_cmd  # noqa: E402
 import hostaddr  # noqa: E402
 import soak_check  # noqa: E402
@@ -118,7 +121,7 @@ def pack_closure(packs: str, packs_dir: Path) -> list[str]:
     def add(p: str) -> None:
         if p in out:
             return
-        spec = yaml.safe_load((packs_dir / p / "pack.yaml").read_text(encoding="utf-8")) or {}
+        spec = yaml.safe_load((pack_dir(p, packs_dir) / "pack.yaml").read_text(encoding="utf-8")) or {}
         for e in spec.get("extends") or []:
             add(e)
         out.append(p)
@@ -136,7 +139,7 @@ def connector_files(lake: Path, packs: str, packs_dir: Path = ROOT / "config" / 
     import yaml
     out = {}
     for p in pack_closure(packs, packs_dir):
-        raw = yaml.safe_load((packs_dir / p / "pack.yaml").read_text(encoding="utf-8")) or {}
+        raw = yaml.safe_load((pack_dir(p, packs_dir) / "pack.yaml").read_text(encoding="utf-8")) or {}
         sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
         import packlake                               # where a lake-form template's tables are: the pack's lake: entries
         spec = packlake.view(raw)

@@ -298,7 +298,7 @@ def test_every_header_has_a_funnel_that_opens_a_menu_with_counts_select_all_and_
     assert items.all_inner_texts() == ["Credit\n3", "Equity\n2", "FX\n3", "Rates\n4"]
     assert m.locator(".cf-all").inner_text().strip() == "(Select all)"
     assert [x.strip() for x in m.locator(".cf-sort .cf-act").all_inner_texts()] == ["Sort A→Z", "Sort Z→A"]
-    assert [o.strip() for o in m.locator(".cf-op option").all_inner_texts()][:3] == ["(no condition)", "Equals", "Does not equal"]
+    assert m.locator(".cf-op").evaluate("e => e.component.options.map((o) => o.label)")[:3] == ["(no condition)", "Equals", "Does not equal"]
 
 
 def test_a_checklist_filter_hides_rows_and_the_funnel_shows_what_it_does(page):
@@ -362,7 +362,7 @@ def test_number_conditions_in_the_menu(page):
 
 def test_date_conditions_in_the_menu(page):
     m = menu_for(page, "Booked")
-    assert [o.strip() for o in m.locator(".cf-op option").all_inner_texts()][1:4] == ["Today", "Yesterday", "This week"]
+    assert m.locator(".cf-op").evaluate("e => e.component.options.map((o) => o.label)")[1:4] == ["Today", "Yesterday", "This week"]
     m.get_by_role("button", name="Cancel").click()
     assert [x.strip() for x in menu_for(page, "Booked").locator(".cf-sort .cf-act").all_inner_texts()] == ["Sort oldest→newest", "Sort newest→oldest"]
     page.keyboard.press("Escape")

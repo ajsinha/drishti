@@ -21,7 +21,7 @@ drishti:
       enabled: ${DRISHTI_FRTB_ENABLED:true}   # run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live)
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
   frtb:                              # position sensitivities and FRTB-SA, computed for any scope (docs/guides/FRTB_SA_GUIDE.md section 9)
-    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./config/packs/market-risk/capital}   # frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/)
+    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./config/packs/banking/market-risk/capital}   # frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/)
     default-risk-kind: default-risk  # the DRC inputs; none served: "DRC not computed", never 0
     residual-risk-kind: residual-risk   # the RRAO inputs; none served: derived from the positions' product types and notionals
     rrao-from-positions: true        # derive the RRAO from PRODUCT_TYPE (the parameter file's mapping) and the VaR book's notionals

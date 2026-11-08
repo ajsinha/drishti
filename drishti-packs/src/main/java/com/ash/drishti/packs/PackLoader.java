@@ -62,7 +62,7 @@ public final class PackLoader {
      * loads after it). A missing pack or a cycle stops the server with a clear message.
      */
     public List<Pack> load(Path dir, List<String> enabled) {
-        return load(List.of(dir), enabled);
+        return load(com.ash.drishti.api.PackFolders.roots(dir), enabled);   // the folder and its domain folders
     }
 
     /**
@@ -92,14 +92,14 @@ public final class PackLoader {
     public static List<Path> dirs(String packsDir, String installedDir, String extraDirs) {
         List<Path> out = new ArrayList<>();
         if (installedDir != null && !installedDir.isBlank() && Files.isDirectory(Path.of(installedDir))) {
-            out.add(Path.of(installedDir).toAbsolutePath().normalize());
+            out.addAll(com.ash.drishti.api.PackFolders.roots(Path.of(installedDir).toAbsolutePath().normalize()));
         }
-        out.add(Path.of(packsDir).toAbsolutePath().normalize());
+        out.addAll(com.ash.drishti.api.PackFolders.roots(Path.of(packsDir).toAbsolutePath().normalize()));   // the packs folder and its domain folders
         if (extraDirs != null) {
             for (String e : extraDirs.split(",")) {
                 Path x = e.isBlank() ? null : Path.of(e.trim()).toAbsolutePath().normalize();
                 if (x != null && Files.isDirectory(x) && !out.contains(x)) {
-                    out.add(x);
+                    out.addAll(com.ash.drishti.api.PackFolders.roots(x));
                 }
             }
         }
@@ -116,7 +116,7 @@ public final class PackLoader {
     /** The names of the pack folders (those holding a {@code pack.yaml}) in the folders, the first folder winning a name. */
     public static List<String> folders(List<Path> dirs) {
         java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>();
-        for (Path d : dirs) {
+        for (Path d : dirs.stream().flatMap(x -> com.ash.drishti.api.PackFolders.roots(x).stream()).distinct().toList()) {
             if (!Files.isDirectory(d)) {
                 continue;
             }

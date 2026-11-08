@@ -63,7 +63,7 @@ class AboutPacksTest {
 
     private List<String> kindsOf(String pack) throws IOException {
         List<String> out = new ArrayList<>();
-        yaml.readTree(Files.readString(PACKS_DIR.resolve(pack).resolve("pack.yaml"))).path("kinds").forEach(k -> out.add(k.asText()));
+        yaml.readTree(Files.readString(com.ash.drishti.api.PackFolders.of(PACKS_DIR, pack).resolve("pack.yaml"))).path("kinds").forEach(k -> out.add(k.asText()));
         return out;
     }
 
@@ -92,7 +92,7 @@ class AboutPacksTest {
         List<String> failures = new ArrayList<>();
         int rendered = 0;
         for (String pack : PACKS) {
-            Path samples = PACKS_DIR.resolve(pack).resolve("samples");
+            Path samples = com.ash.drishti.api.PackFolders.of(PACKS_DIR, pack).resolve("samples");
             for (String kind : kindsOf(pack)) {
                 AboutText t = catalog.forKind(kind).orElseThrow();
                 {
@@ -130,7 +130,7 @@ class AboutPacksTest {
     void everyGuideTheTextPointsToExistsInTheHelpCentre() throws IOException {
         Set<String> slugs = new HashSet<>();
         List<Path> helpFiles = new ArrayList<>(List.of(Path.of("..", "drishti-console", "config", "help.yaml")));
-        try (Stream<Path> packs = Files.list(PACKS_DIR)) {
+        try (Stream<Path> packs = com.ash.drishti.api.PackFolders.list(PACKS_DIR).stream()) {
             packs.map(p -> p.resolve("config").resolve("help.yaml")).filter(Files::isRegularFile).forEach(helpFiles::add);
         }
         for (Path f : helpFiles) {

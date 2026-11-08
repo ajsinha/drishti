@@ -34,7 +34,7 @@ doc: docs/connectors/DEMO_CONNECTOR.md
 # The demo connector
 
 Plugin `demo` (`plugins/drishti-plugin-demo`: `DemoSourcePlugin`, `DemoTicker`, `DemoWalk`): the samples each enabled pack ships in
-`config/packs/<pack>/samples/`, so a server with nothing installed shows working screens. It is the `default-route`, tried after a
+`config/packs/<domain>/<pack>/samples/`, so a server with nothing installed shows working screens. It is the `default-route`, tried after a
 kind's own route. **Switch it off in production** (`DRISHTI_DEMO_ENABLED=false`): it serves made-up data under real-looking names.
 
 ## What it reads
@@ -63,7 +63,7 @@ Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `un
 The samples folder of a pack:
 
 ```
-config/packs/<pack>/samples/
+config/packs/<domain>/<pack>/samples/
 ├── catalog.jsonl     {"kind": "bond", "id": "BND-BRVERD054608", "title": "BND-BRVERD054608", "subtitle": "Bond (security master) · …"}, one a line
 ├── <kind>.jsonl      one document a line, in the catalogue's order (above about 50 MB: <kind>.part-001.jsonl, …)
 └── …                 the older layout, <kind>/<id>.json, is still read

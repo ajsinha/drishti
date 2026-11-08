@@ -184,7 +184,9 @@ def test_every_request_scoped_context_variable_is_carried():
     listed = {f"{v.name}" for v in request_context.VARS}
     names = {"servers.CURRENT": "drishti_server", "cluster.SESSION": "drishti_cluster_session", "edition._lens": "drishti_lens",
              "collab._share": "drishti_share", "asof._current": "drishti_asof", "asof._known": "drishti_knownat",
-             "engines._current": "drishti_console_engines"}
+             "engines._current": "drishti_console_engines",
+             # the split's module state (core/modules.py): the app's modules, and the person's answer, set per request (never shared)
+             "modules._current": "drishti_console_modules", "modules._person": "drishti_console_modules_person"}
     assert found == set(names), found                                   # a new one: add it to VARS (and to the wire if it must cross workers)
     assert listed == set(names.values())
 

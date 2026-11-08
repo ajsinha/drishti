@@ -37,7 +37,7 @@
 .sm-segb:focus-visible, .sm-chip:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
 .sm-chip { background: none; font-size: var(--d-fs-12_5); padding: var(--d-sp-4) var(--d-sp-10); border: 1px solid var(--d-border); border-radius: var(--d-radius-13); color: var(--d-muted); }
 .sm-chip.on, .sm-chip[aria-pressed="true"] { border-color: var(--d-warn); color: var(--d-warn); }
-.sm-chip select { background: transparent; color: var(--d-ink); border: 0; font-size: var(--d-fs-12_5); max-width: 220px; }
+.sm-chip drishti-select { font-size: var(--d-fs-12_5); max-width: 220px; }   /* drishti-inputs' Select: its look is the library's */
 .sm-chip a { color: var(--d-link); }
 .sm-notice { margin: 0; padding: var(--d-sp-6) var(--d-sp-10); border: 1px solid var(--d-warn); border-radius: var(--d-radius-4); color: var(--d-ink); background: var(--d-surface); font-size: var(--d-fs-12_5); }
 .sm-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: var(--d-sp-12); align-items: start; }
@@ -61,7 +61,7 @@
 .sm-legend .sw-tail { box-shadow: inset 0 0 0 2px var(--d-warn); }
 .sm-legend .sw-sel { outline: 2px solid var(--d-link); outline-offset: -2px; }
 .sm-pick { display: none; gap: var(--d-sp-6); align-items: center; font-size: var(--d-fs-12); color: var(--d-muted); margin-bottom: var(--d-sp-6); }
-.sm-pick select { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-3); font: var(--d-fs-12) var(--d-font-mono); max-width: 100%; }
+.sm-pick drishti-select { font: var(--d-fs-12) var(--d-font-mono); max-width: 100%; }
 .sm-chart { min-height: 120px; }                 /* a drishti-chart: its own axes, lines, marks and theme */
 .sm-chart-ctrls { display: flex; flex-wrap: wrap; gap: var(--d-sp-6) var(--d-sp-8); margin: 0 0 var(--d-sp-6); }
 .sm-chart-ctrls .sm-segb { padding: var(--d-sp-3) var(--d-sp-10); font-size: var(--d-fs-12); }

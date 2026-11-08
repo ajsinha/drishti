@@ -24,6 +24,8 @@ from pathlib import Path
 
 import markdown
 
+from core.pack_paths import pack_dir
+
 _LINK = re.compile(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', re.S)
 _SAFE = re.compile(r"^(?:https?:|mailto:)", re.I)
 
@@ -63,10 +65,10 @@ def render(text: str, source: Path | None = None, library=None) -> str:
 
 
 def source_of(docs_dir: Path, kind: str, name: str, meta: dict | None = None) -> Path:
-    """Where a README sits in the repository: config/packs/<pack>/README.md; plugins/<x>/README.md; docs/connectors/types/<t>/README.md."""
+    """Where a README sits in the repository: config/packs/<domain>/<pack>/README.md; plugins/<x>/README.md; docs/connectors/types/<t>/README.md."""
     root = Path(docs_dir).parent
     if kind == "pack":
-        return root / "config" / "packs" / name / "README.md"
+        return pack_dir(name, root / "config" / "packs") / "README.md"
     if (meta or {}).get("category") == "built-in":
         return root / "docs" / "connectors" / "types" / name / "README.md"
     return root / "plugins" / f"drishti-plugin-{name}" / "README.md"

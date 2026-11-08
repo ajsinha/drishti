@@ -80,7 +80,7 @@ public record ModelDef(String name, String version, Map<String, Object> about, M
      * One table of the model under its alias.
      *
      * @param alias the name measures, fields and rules use ({@code trades})
-     * @param table the table and version range ({@code bi.trading_risk_trades}, {@code trading.trade@^1})
+     * @param table the table and version range ({@code banking.trading_risk_trades}, {@code trading.trade@^1})
      * @param role {@code fact} (added up) or {@code dimension} (groups and filters)
      */
     public record Use(String alias, TableName.Ref table, String role) {

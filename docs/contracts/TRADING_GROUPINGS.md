@@ -17,9 +17,9 @@ over the scope engine**: every trade, paged, sorted and filtered on the server, 
 [section 16](#16-open-questions-and-the-change-table). The shared rules are in [README.md](README.md); the scope grammar, captures,
 baskets and entitlements are VaR's ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
 
-**Sources read for this contract (2026-10-25):** `config/packs/trading/pack.yaml` (the connector `trade-pages`, its four kinds'
-`group-by`, `max-members: 1000`, `fields` and `rows`), `config/packs/trading/contracts/{counterparty-trades,portfolio-trades,legal-entity-trades,index-trades,trade}.contract.yaml`,
-the Sutras `config/packs/trading/sutras/pages/*-trades.v1.sutra.yaml`, the trade test data `data/testdata/trades/{endur,calypso,murex}/`
+**Sources read for this contract (2026-10-25):** `config/packs/banking/trading/pack.yaml` (the connector `trade-pages`, its four kinds'
+`group-by`, `max-members: 1000`, `fields` and `rows`), `config/packs/banking/trading/contracts/{counterparty-trades,portfolio-trades,legal-entity-trades,index-trades,trade}.contract.yaml`,
+the Sutras `config/packs/banking/trading/sutras/pages/*-trades.v1.sutra.yaml`, the trade test data `data/testdata/trades/{endur,calypso,murex}/`
 (15,000 trades on 2026-09-30).
 
 ## Contents
@@ -339,7 +339,7 @@ books, two indexes on the second leg, every status, events inside and outside ea
 
 ### 13.2 How the retired records were made
 
-`config/packs/trading/pack.yaml`, connector `trade-pages` (`plugin: derived`, `refresh: 60s`, `store: disk`): for each kind,
+`config/packs/banking/trading/pack.yaml`, connector `trade-pages` (`plugin: derived`, `refresh: 60s`, `store: disk`): for each kind,
 `group-by` one expression over the trade master (`$.COUNTERPARTY`, `$.PORTFOLIO`, `$.LEGAL_ENTITY`, `nonblank($.LEGS[0].INDEX.NAME,
 $.LEGS[1].INDEX.NAME)`), `members: TRADE_IDS` capped at **1,000** (`max-members`), `fields` (`count`, `sum first($.LEGS).NOTIONAL`,
 `distinct`, `max $.MATURITY_DATE`, `PAY_nD` sums over events with `days(today(), @.EVENT_DATE)` between 0 and n) and `rows` (13 columns
@@ -380,11 +380,11 @@ The four mnemonics stay (familiar to users) and open the page with their scope w
 
 | Item | Removed |
 |---|---|
-| Kinds | `counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades` from `config/packs/trading/pack.yaml` (`kinds`, routes, `columns`, `form` entries) |
+| Kinds | `counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades` from `config/packs/banking/trading/pack.yaml` (`kinds`, routes, `columns`, `form` entries) |
 | Connector | `trade-pages` (`plugin: derived`) and its settings; its disk store under the data folder is deleted at first start |
-| Sutras | `config/packs/trading/sutras/pages/{counterparty-trades,portfolio-trades,legal-entity-trades,index-trades}.v1.sutra.yaml` |
-| Contracts | the four `config/packs/trading/contracts/*-trades.contract.yaml` (a contract for the computed `trade-scope` replaces them) |
-| Docs | their sections in the trading pack's README, guide (`config/packs/trading/guides/trading.md`) and `about.yaml` |
+| Sutras | `config/packs/banking/trading/sutras/pages/{counterparty-trades,portfolio-trades,legal-entity-trades,index-trades}.v1.sutra.yaml` |
+| Contracts | the four `config/packs/banking/trading/contracts/*-trades.contract.yaml` (a contract for the computed `trade-scope` replaces them) |
+| Docs | their sections in the trading pack's README, guide (`config/packs/banking/trading/guides/trading.md`) and `about.yaml` |
 | Guard test | fails when one of the four kinds or a `derived` connector over `trade` with `max-members` returns |
 
 ### 14.3 Reconciliation

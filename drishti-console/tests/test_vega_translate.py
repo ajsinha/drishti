@@ -32,9 +32,9 @@ CHART = CONSOLE / "web" / "static" / "elements" / "drishti-chart" / "drishti_cha
 
 def _shipped():
     """The two shipped specifications: the report's vega-lite visual (its rows the wells') and what the pnl-vega Python item returns."""
-    report = yaml.safe_load((ROOT / "config/bi/reports/python-desk-risk.report.yaml").read_text(encoding="utf-8"))
+    report = yaml.safe_load((ROOT / "config/bi/reports/banking/python-desk-risk.report.yaml").read_text(encoding="utf-8"))
     bar = next(v for p in report["pages"] for v in p["visuals"] if v["id"] == "mtm-by-desk")["format"]["spec"]
-    item = yaml.safe_load((ROOT / "config/bi/python/pnl-vega.python.yaml").read_text(encoding="utf-8"))
+    item = yaml.safe_load((ROOT / "config/bi/python/banking/pnl-vega.python.yaml").read_text(encoding="utf-8"))
     pd = pytest.importorskip("pandas")
     scope = {}
     exec(compile(item["source"], "pnl-vega", "exec"), scope)       # the shipped item's own function, over a known table

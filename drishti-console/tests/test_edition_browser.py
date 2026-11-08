@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Risk's three Home landings in a browser (EDITIONS.md › The design as built, section 7): the console with the stand-in server answering the engines'
+"""Drishti Risk's three Home landings in a browser (LENSES.md › The design): the console with the stand-in server answering the engines'
 VaR and exposure calls as the engines shape them (port 17962). Each landing fills its panels from those answers, fits a phone without
 sideways scrolling, and draws in every theme; skipped when Playwright or its Chromium is missing."""
 import threading
@@ -31,14 +31,14 @@ import engine_fakes  # noqa: E402
 PORT = worker_port(17962)
 THEMES = ["terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"]
 TREE = {"hierarchy": "MGMT", "title": "Management", "hierarchies": ["MGMT", "LEGAL", "LL"], "businessDate": "2026-09-30", "currency": "USD",
-        "nodes": [{"id": "MGMT~BANK", "scope": "NODE:MGMT~BANK", "name": "BANK", "level": "bank", "depth": 0, "var": 112_040_000, "limitUse": 0.78},
-                  {"id": "MGMT~DIV-MARKETS", "scope": "NODE:MGMT~DIV-MARKETS", "name": "DIV-MARKETS", "level": "division", "depth": 1, "var": 101_600_000, "limitUse": 0.81},
-                  {"id": "MGMT~DESK-COMM", "scope": "NODE:MGMT~DESK-COMM", "name": "DESK-COMM", "level": "desk", "depth": 2, "var": 41_200_000, "limitUse": 1.08},
-                  {"id": "MGMT~DESK-RATES", "scope": "NODE:MGMT~DESK-RATES", "name": "DESK-RATES", "level": "desk", "depth": 2, "var": 33_800_000, "limitUse": 0.86},
-                  {"id": "MGMT~DESK-FX", "scope": "NODE:MGMT~DESK-FX", "name": "DESK-FX", "level": "desk", "depth": 2, "var": 19_500_000, "limitUse": 0.61}]}
+        "nodes": [{"id": "MGMT~BANK", "scope": "NODE:MGMT~BANK", "name": "BANK", "level": "bank", "depth": 0, "var": 112_040_000, "limitUse": 0.78, "limitStatus": "within"},
+                  {"id": "MGMT~DIV-MARKETS", "scope": "NODE:MGMT~DIV-MARKETS", "name": "DIV-MARKETS", "level": "division", "depth": 1, "var": 101_600_000, "limitUse": 0.81, "limitStatus": "near"},
+                  {"id": "MGMT~DESK-COMM", "scope": "NODE:MGMT~DESK-COMM", "name": "DESK-COMM", "level": "desk", "depth": 2, "var": 41_200_000, "limitUse": 1.08, "limitStatus": "breach"},
+                  {"id": "MGMT~DESK-RATES", "scope": "NODE:MGMT~DESK-RATES", "name": "DESK-RATES", "level": "desk", "depth": 2, "var": 33_800_000, "limitUse": 0.86, "limitStatus": "near"},
+                  {"id": "MGMT~DESK-FX", "scope": "NODE:MGMT~DESK-FX", "name": "DESK-FX", "level": "desk", "depth": 2, "var": 19_500_000, "limitUse": 0.61, "limitStatus": "within"}]}
 EXP_TREE = {"groups": [{"id": "(no group)", "children": [
-    {"scope": "CPTY:CP-ALDERSHOT", "id": "CP-ALDERSHOT", "label": "Aldershot", "epe": 88_600_000, "limit": {"use": 1.04}, "children": [{}, {}]},
-    {"scope": "CPTY:CP-SUMMIT", "id": "CP-SUMMIT", "label": "Summit", "epe": 40_700_000, "limit": {"use": 0.44}, "children": [{}]}]}]}
+    {"scope": "CPTY:CP-ALDERSHOT", "id": "CP-ALDERSHOT", "label": "Aldershot", "epe": 88_600_000, "limit": {"use": 1.04, "status": "breach"}, "children": [{}, {}]},
+    {"scope": "CPTY:CP-SUMMIT", "id": "CP-SUMMIT", "label": "Summit", "epe": 40_700_000, "limit": {"use": 0.44, "status": "within"}, "children": [{}]}]}]}
 
 
 class RiskBackend(FakeBackend):

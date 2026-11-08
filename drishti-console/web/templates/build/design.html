@@ -158,7 +158,7 @@
           <p class="text-muted-d wb-about-intro">The <strong>controls</strong> of this screen: dropdowns over the record's own data, date and number ranges, a search box. Panels read them as <code>ctl.&lt;id&gt;</code> in <code>rows</code>, <code>where</code>, <code>limit</code> and <code>title</code>; readers' choices are in the address, so a link reproduces them. They are the <code>controls:</code> section of the Sutra.
             <a href="/help/rachana-reference#the-controls-tab" class="lnk">How it works</a></p>
           <div class="wb-about-bar"><label for="wbCtlKind" class="visually-hidden">Kind of control to add</label>
-            <select id="wbCtlKind" class="studio-in" data-ctl-new-kind><option>dropdown</option><option>multi-select</option><option>cascading</option><option>toggle</option><option>segmented</option><option>date</option><option>date-range</option><option>number-range</option><option>top-n</option><option>search</option></select>
+            <drishti-select id="wbCtlKind" data-ctl-new-kind label="Kind of control to add"><option>dropdown</option><option>multi-select</option><option>cascading</option><option>toggle</option><option>segmented</option><option>date</option><option>date-range</option><option>number-range</option><option>top-n</option><option>search</option></drishti-select>
             <button type="button" class="btn-pill btn-ghost" data-ctl-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Add control</button>
             <button type="button" class="btn-pill btn-ghost" data-ctl-starter title="A search box in the header of the first table"><i class="bi bi-magic" aria-hidden="true"></i> Starter</button>
             <span class="text-muted-d" data-ctl-status role="status"></span></div>
@@ -199,7 +199,7 @@
     <span class="wb-group" role="group" aria-label="Preview width">
       <button type="button" class="btn-pill btn-ghost" data-width="desktop" aria-pressed="true"><i class="bi bi-laptop" aria-hidden="true"></i> Desktop</button>
       <button type="button" class="btn-pill btn-ghost" data-width="phone" aria-pressed="false"><i class="bi bi-phone" aria-hidden="true"></i> Phone</button></span>
-    <span class="wb-group"><label for="wbTheme">Theme</label> <select id="wbTheme" class="studio-in" data-theme-pick><option value="">(current)</option></select></span>
+    <span class="wb-group"><label for="wbTheme">Theme</label> <drishti-select id="wbTheme" data-theme-pick label="Theme"><option value="">(current)</option></drishti-select></span>
     <span class="wb-group"><label class="btn-pill btn-ghost" for="wbPreviewFile"><i class="bi bi-upload" aria-hidden="true"></i> Preview with a file…
       <input id="wbPreviewFile" class="bs-file" type="file" accept=".json,.jsonl,application/json" data-preview-file></label>
       <span data-file-chip hidden><button type="button" class="btn-pill btn-ghost" data-file-clear>Back to the samples</button></span></span>

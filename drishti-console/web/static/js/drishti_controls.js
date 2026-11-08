@@ -95,13 +95,16 @@
       var set = function () {};            // updates the widget to the current value
       var focusEl = null;
       if (d.kind === 'dropdown' || d.kind === 'cascading' || d.kind === 'top-n') {
-        var s = el('select', 'ctl-in', null, { id: id });
-        if (!d.required && d.kind !== 'top-n') { s.appendChild(el('option', null, '(all)', { value: '' })); }
-        (d.options || []).forEach(function (o) { s.appendChild(el('option', null, o.label || o.value, { value: o.value })); });
-        s.value = cur[d.id];
-        s.addEventListener('change', function () { change(d.id, s.value); });
-        wrap.appendChild(label); wrap.appendChild(s); focusEl = s;
-        set = function () { s.value = cur[d.id]; };
+        var shost = el('drishti-select', 'ctl-select');                   // drishti-inputs' Select (the label names its control)
+        var choices = (!d.required && d.kind !== 'top-n' ? [{ value: '', label: '(all)' }] : [])
+          .concat((d.options || []).map(function (o) { return { value: String(o.value), label: o.label || String(o.value) }; }));
+        var known = function (v) { return choices.some(function (o) { return o.value === String(v); }) ? String(v) : ''; };
+        var s = new I.Select(shost, { options: choices, value: known(cur[d.id]), label: d.label || d.id });
+        shost.component = s;
+        s.control.id = id;
+        s.on('change', function (e) { change(d.id, String(e.value)); });
+        wrap.appendChild(label); wrap.appendChild(shost); focusEl = s.control;
+        set = function () { s.setValue(known(cur[d.id])); };
       } else if (d.kind === 'multi-select') {
         wrap = el('div', 'ctl ctl-multi', null, { 'data-ctl': d.id });
         wrap.appendChild(el('span', 'ctl-l', d.label || d.id, { id: id + '-l' }));

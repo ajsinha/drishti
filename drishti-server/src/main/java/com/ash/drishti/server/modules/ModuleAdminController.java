@@ -222,6 +222,8 @@ public class ModuleAdminController {
         m.put("modules", l.modules());
         m.put("functions", l.functions());
         m.put("home", l.home());
+        m.put("cards", l.cards());
+        m.put("chips", l.chips());                                     // Home's chips (the same rule)                                     // Home's quick cards (the console shows those whose function is on)
         return m;
     }
 }

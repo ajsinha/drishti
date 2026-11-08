@@ -88,7 +88,7 @@ public final class ArtifactPaths {
     public List<PackFolder> packFolders() {
         List<PackFolder> out = new ArrayList<>();
         for (Path root : PackLoader.dirs(packs.toString(), installed.toString())) {
-            String area = root.equals(installed) ? "installed" : "packs";
+            String area = root.startsWith(installed) ? "installed" : "packs";   // the roots include the domain folders (PackPaths.roots)
             if (!Files.isDirectory(root)) {
                 continue;
             }

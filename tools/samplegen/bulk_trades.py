@@ -31,7 +31,7 @@ python3 tools/packgen/banking/make_data.py --lake data/delta/demo (with uv run -
 writes loader rows instead ({"domain", "kind", "id", "date", "doc", "columns"}: the document and the fields the trading
 pack promotes, by path), for tools/load-aerospike.sh and the other stores' loaders.
 
-The trades are the system's sample trades (config/packs/trading/samples/trade.jsonl, written by make_data.py, in the common
+The trades are the system's sample trades (config/packs/banking/trading/samples/trade.jsonl, written by make_data.py, in the common
 schema of tools/packgen/trades/schema.py), kept as they are, and clones of them. A clone continues the system's numbering
 from a higher range than the samples (MX-30000000 ..., CLY-4000000 ..., tools/packgen/banking/booking.py), so ids never
 collide, keeps its template's product, portfolio, counterparty and legal entity (so every link still opens) and scales its
@@ -70,7 +70,7 @@ from samplegen.dates import Calendar  # noqa: E402
 from samplegen.lake import business_days, walk  # noqa: E402
 from samplegen.layout import Layout, infer_types, layouts_for_domain, promote  # noqa: E402
 
-TEMPLATES = ROOT / "config" / "packs" / "trading" / "samples"            # trade.jsonl
+TEMPLATES = ROOT / "config" / "packs" / "banking" / "trading" / "samples"            # trade.jsonl
 AS_OF = date(2026, 9, 30)                      # the banking lake's newest business date (data_names.AS_OF)
 PLACEHOLDER = "\u0000ID\u0000"
 # amounts that grow with the trade's size; rates, dates, counts and discount factors stay as they are
@@ -301,7 +301,7 @@ def load(files: list[Path], days: list[date], root: Path, system: str, engine: s
         shutil.rmtree(table)
     worst, t0 = 0, time.time()
     for f, d in zip(files, days):
-        args = LB.build_parser().parse_args(["--from", str(f), "--pack", str(ROOT / "config" / "packs" / "trading"), "--kind", "trade",
+        args = LB.build_parser().parse_args(["--from", str(f), "--pack", str(ROOT / "config" / "packs" / "banking" / "trading"), "--kind", "trade",
                                              "--connector", f"trade-{system.lower()}", "--key", "TRADE_ID", "--mode", "overwrite-dates",
                                              "--partition-by", "PRODUCT_TYPE", "--lake", str(root), "--engine", engine, "-q"])
         code, summary = LB.run(args, say=lambda *x, **k: None)

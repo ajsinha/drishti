@@ -90,10 +90,9 @@ export function startApprovals(win) {
     return get('list?' + q).then(function (d) {
       if (mine !== loads) { return; }
       state.list = d;
-      var kinds = $('[data-ap-kind]');
-      if (kinds.options.length === 1) {
-        (d.kinds || []).filter(function (k) { return k.enabled; }).forEach(function (k) { kinds.appendChild(h('option', { value: k.kind }, k.label)); });
-        kinds.value = state.kind;
+      var kinds = $('[data-ap-kind]').component;                // drishti-inputs' Select (<drishti-select>): Every kind, then the enabled kinds
+      if (kinds && kinds.options.length === 1) {
+        kinds.setOptions(kinds.options.concat((d.kinds || []).filter(function (k) { return k.enabled; }).map(function (k) { return { value: k.kind, label: k.label }; })), state.kind);
       }
       $('[data-ap-inbox]').textContent = d.inbox ? String(d.inbox) : '';
       $('[data-ap-meta]').textContent = d.inbox + ' waiting for you' + (d.dueSoon ? ', ' + d.dueSoon + ' due soon' : '') + '. The maker never approves their own; everything is audited.';
@@ -248,7 +247,7 @@ export function startApprovals(win) {
 
   $$('[data-ap-box]').forEach(function (b) { b.addEventListener('click', function () { state.box = b.getAttribute('data-ap-box'); remember(); load(); }); });
   $$('[data-ap-group]').forEach(function (b) { b.addEventListener('click', function () { state.group = b.getAttribute('data-ap-group'); remember(); load(); }); });
-  $('[data-ap-kind]').addEventListener('change', function (e) { state.kind = e.target.value; remember(); load(); });
+  $('[data-ap-kind]').addEventListener('drishti:change', function (e) { state.kind = e.detail.value || ''; remember(); load(); });
   $('[data-ap-refresh]').addEventListener('click', function () { load(); if (state.open) { open(state.open.kind, state.open.id); } });
   ['approve', 'reject', 'withdraw'].forEach(function (a) { $('[data-ap-act="' + a + '"]').addEventListener('click', function () { act(a); }); });
   $('[data-ap-ask]').addEventListener('submit', function (e) {

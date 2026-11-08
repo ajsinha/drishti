@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The trading pack's Sutra tests (config/packs/trading/tests/<sutra>/cases.jsonl, one {case, document} a line): one sample trade per
+"""The trading pack's Sutra tests (config/packs/banking/trading/tests/<sutra>/cases.jsonl, one {case, document} a line): one sample trade per
 deal Sutra (per PRODUCT_TYPE, from every source system), each with an expect.yaml (no errors, the legs panel filled, the about text
 renders) and the help-coverage ratchet."""
 from __future__ import annotations
@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[3]
 import sys  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
 import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
-TESTS = ROOT / "config" / "packs" / "trading" / "tests"
+TESTS = ROOT / "config" / "packs" / "banking" / "trading" / "tests"
 HEADER = "".join(f"# {line}".rstrip() + "\n" for line in (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines())
 COVERAGE_NOTE = "# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).\n"
 EXPECT = "\nnoErrors: true\nnonEmpty: [legs, ticket]\nhelp: { about: true }\n"
@@ -42,7 +42,7 @@ def files(trades: dict[str, dict]) -> dict[Path, str]:
         if t["SOURCE_SYSTEM"] == "ENDUR" and t.get("LEGAL_ENTITY") and t["PRODUCT_SUB_TYPE"] not in subs:
             subs[t["PRODUCT_SUB_TYPE"]] = t
     names = []
-    for f in sorted((ROOT / "config" / "packs" / "trading" / "sutras").rglob("*.sutra.yaml")):
+    for f in sorted((ROOT / "config" / "packs" / "banking" / "trading" / "sutras").rglob("*.sutra.yaml")):
         text = f.read_text(encoding="utf-8")
         m = MATCH.search(text)
         if not m or m.group(1) not in by_type:

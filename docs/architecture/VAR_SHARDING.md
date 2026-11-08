@@ -259,7 +259,7 @@ cannot read the updates:
 What is sharded is the market-risk pack's (no block: off):
 
 ```yaml
-# config/packs/market-risk/pack.yaml (or the pack's settings): off without it
+# config/packs/banking/market-risk/pack.yaml (or the pack's settings): off without it
 sharding:
   enabled: true
   key: [LEGAL_ENTITY, DESK]          # ranges cut along this order; a desk is never split ([LEGAL_ENTITY] also allowed)

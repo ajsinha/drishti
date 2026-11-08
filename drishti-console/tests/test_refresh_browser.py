@@ -29,6 +29,8 @@ from pathlib import Path
 
 import pytest
 
+import select_helpers
+
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
 from docshots import docs_img
@@ -134,7 +136,7 @@ def test_pause_resume_a_slower_interval_and_pause_all_are_remembered(stack, brow
     pg.click(box + " [data-refresh-toggle]")                  # resumed: fetched at once
     wait(pg, "Drishti.refresh.state().trades.fetched > %d" % t, seconds=3)
     assert pg.locator(box + " [data-refresh-toggle]").get_attribute("aria-pressed") == "false"
-    options = pg.eval_on_selector(box + " [data-refresh-every]", "s => [...s.options].map(o => +o.value)")
+    options = [int(v) for v in select_helpers.values(pg, box + " [data-refresh-every]")]
     assert options[0] == 2 and min(options) == 2                # never faster than the Sutra's interval or the minimum
     pg.select_option(box + " [data-refresh-every]", "10")
     assert pg.evaluate("Drishti.refresh.state().trades.chosen") == 10

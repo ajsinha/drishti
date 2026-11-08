@@ -17,7 +17,7 @@ read from the funds pack's cache: refresh funds first), the Nasdaq Trader symbol
 
     python3 tools/drishti.py feed status us-equities
     python3 tools/drishti.py feed run us-equities --dry-run
-    python3 tools/drishti.py feed run us-equities --snapshot                  the committed pack (config/packs/us-equities)
+    python3 tools/drishti.py feed run us-equities --snapshot                  the committed pack (config/packs/capitalmarkets/us-equities)
     python3 tools/drishti.py feed run us-equities --snapshot --offline -- sec gleif  rebuild the pack from the cache only
     python3 tools/drishti.py feed run us-equities --snapshot -- --scope TSLA,CIK:1318605,FILINGS:40,YEARS:15
                                                                             a widened build in <data>/datafeeds/sources/us-equities
@@ -84,7 +84,7 @@ sys.path.insert(0, str(B.ROOT / "tools" / "testdata"))
 sys.path.insert(0, str(B.ROOT / "tools"))
 
 PACK = "us-equities"
-COMMITTED = B.ROOT / "config" / "packs" / PACK
+COMMITTED = B.pack_dir(PACK)
 PRICE_KIND = "price-history"
 FILINGS, YEARS = F.FILINGS, F.YEARS        # the committed pack: 20 recent filings a company, 10 fiscal years
 
@@ -585,7 +585,7 @@ def main(argv: list[str] | None = None) -> int:
             cos = _companies(COMMITTED)
             print(f"committed pack: {len(cos)} companies, data retrieved {cos[0].get('PROVENANCE', {}).get('RETRIEVED_AT', '?') if cos else '-'}")
             return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "datafeeds" / "sources" / "cache" / PACK,
-                            "config/packs/us-equities; a widened build <data>/datafeeds/sources/us-equities/packs/us-equities; prices "
+                            "config/packs/capitalmarkets/us-equities; a widened build <data>/datafeeds/sources/us-equities/packs/us-equities; prices "
                             "<data>/datafeeds/sources/us-equities/prices")
         return refresh(a)
     except B.Refusal as e:

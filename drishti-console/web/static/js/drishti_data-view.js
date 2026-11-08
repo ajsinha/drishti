@@ -118,7 +118,7 @@
     });
   }
   if (dateSel) {
-    dateSel.addEventListener("change", function () { sel.date = dateSel.value; shown = sel.date.slice(0, 7); drawCal(); changed(); });
+    dateSel.addEventListener("drishti:change", function () { sel.date = dateSel.value; shown = sel.date.slice(0, 7); drawCal(); changed(); });
   }
 
   // ---- columns -------------------------------------------------------------------------------------------------------------------
@@ -153,15 +153,15 @@
     lines.forEach(function (l, i) {
       var unary = l.op === "is empty" || l.op === "is not empty";
       h += '<div class="dv-line" data-line="' + i + '"><span class="dv-and">' + (i ? "AND" : "") + "</span>" +
-        '<select data-f aria-label="Attribute">' + columns.map(function (c) { return '<option' + (c === l.field ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
-        '</select><select data-o aria-label="Operator">' + OPS.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === l.op ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
-        '</select><input data-v aria-label="Value" class="mono" placeholder="' + (l.op === "in" ? "a, b, c" : "value") + '" value="' + esc(l.value) + '"' + (unary ? " hidden" : "") + ">" +
+        '<drishti-select data-f label="Attribute">' + columns.map(function (c) { return '<option' + (c === l.field ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
+        '</drishti-select><drishti-select data-o label="Operator">' + OPS.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === l.op ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
+        '</drishti-select><input data-v aria-label="Value" class="mono" placeholder="' + (l.op === "in" ? "a, b, c" : "value") + '" value="' + esc(l.value) + '"' + (unary ? " hidden" : "") + ">" +
         (l.op === "between" ? '<span class="dv-and">and</span><input data-v2 aria-label="Second value" class="mono" value="' + esc(l.value2) + '">' : "") +
         '<button type="button" class="dv-x" data-rm aria-label="Remove this line">×</button></div>';
     });
     linesBox.innerHTML = h;
   }
-  linesBox.addEventListener("change", edit);
+  linesBox.addEventListener("drishti:change", edit);                     // the attribute and the operator: drishti-inputs' Selects
   linesBox.addEventListener("input", edit);
   function edit(e) {
     var row = e.target.closest("[data-line]");
@@ -172,7 +172,7 @@
     if (e.target.hasAttribute("data-o")) { redraw = true; l.op = e.target.value; }   // the value boxes follow the operator (none, one, two)
     if (e.target.hasAttribute("data-v")) { l.value = e.target.value; }
     if (e.target.hasAttribute("data-v2")) { l.value2 = e.target.value; }
-    if (redraw && e.type === "change") { drawLines(); }
+    if (redraw && e.type === "drishti:change") { drawLines(); }
     changed();
   }
   linesBox.addEventListener("click", function (e) {

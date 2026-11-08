@@ -98,9 +98,9 @@
       li.appendChild(head);
       var body = WB.el('div', 'wbf-body');
       body.appendChild(labelled('Label', input(f, 'label')));
-      var type = WB.el('select', 'wbf-in', null, { 'aria-label': f.path + ' type' });
-      Object.keys(TYPES).forEach(function (t) { var o = WB.el('option', null, t, { value: t }); if (t === f.type) { o.selected = true; } type.appendChild(o); });
-      type.addEventListener('change', function () { f.type = type.value; cleanOps(f); if (f.type !== 'enum') { delete f.values; } changed(true); });
+      var type = WB.el('drishti-select', 'wbf-pick');                    // drishti-inputs' Select
+      type.options = { label: f.path + ' type', options: Object.keys(TYPES), value: TYPES[f.type] !== undefined ? f.type : undefined };
+      type.addEventListener('drishti:change', function () { f.type = type.value; cleanOps(f); if (f.type !== 'enum') { delete f.values; } changed(true); });
       body.appendChild(labelled('Type', type));
       body.appendChild(labelled('Group', input(f, 'group')));
       body.appendChild(labelled('Default', input(f, 'default')));
@@ -168,8 +168,9 @@
         box.appendChild(lab);
         var id = 'wbfp-' + f.path.replace(/[^A-Za-z0-9]/g, '-'); lab.setAttribute('for', id);
         if ((f.operators || []).length > 1) {
-          var sel = WB.el('select', 'qf-op', null, { 'aria-label': f.label + ': how to compare' });
-          f.operators.forEach(function (o) { sel.appendChild(WB.el('option', null, OPS[o] || o, { value: o })); }); row.appendChild(sel);
+          var sel = WB.el('drishti-select', 'qf-op');                     // the preview's operator: drishti-inputs' Select
+          sel.options = { label: f.label + ': how to compare', options: f.operators.map(function (o) { return { value: o, label: OPS[o] || o }; }) };
+          row.appendChild(sel);
         }
         var v;
         if (f.type === 'enum' || f.type === 'bool') {

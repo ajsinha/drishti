@@ -53,7 +53,7 @@ class DeclaredMasksTest {
         assertThat(entitlements.raw(plain)).isTrue();                    // the installation's own masks: none for anyone
         assertThat(entitlements.rawPower(plain)).isFalse();
         assertThat(entitlements.rawPower(raw)).isTrue();
-        Dataset ds = Layered.dataset(Files.readString(Path.of("../config/tables/bi/trading_risk_counterparties.table.yaml"))).dataset();
+        Dataset ds = Layered.dataset(Files.readString(Path.of("../config/tables/banking/trading_risk_counterparties.table.yaml"))).dataset();
         String table = ds.tables().keySet().iterator().next();
         assertThat(datasets.masks(plain, ds).masked(table, "NAME")).isTrue();
         assertThat(datasets.masks(plain, ds).masked(table, "RATING")).isTrue();

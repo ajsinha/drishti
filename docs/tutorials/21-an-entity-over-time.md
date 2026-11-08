@@ -240,7 +240,7 @@ The full schema is in [DATA_ARCHITECTURE.md › History queries: an entity over 
 you check any pack (an unknown key is a warning, a bad value the error `DRS-2061`):
 
 ```
-$ drishti.py sutra lint config/packs/trading --strict
+$ drishti.py sutra lint config/packs/banking/trading --strict
 ```
 
 In the UI, a pack with a bad block shows its problem on Admin → Packs (and Health marks the pack DEGRADED) as soon as it is loaded: at the

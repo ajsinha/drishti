@@ -18,7 +18,7 @@
     python3 tools/realdata/realdata.py normalise [--cache DIR]                           raw cache -> tools/realdata/dataset/*.jsonl
     python3 tools/realdata/realdata.py about                                              sources.yaml + about/*.kinds.yaml -> tools/packgen/*/about.yaml
     python3 tools/realdata/realdata.py write                                              dataset -> the two packs, their glossary and their Sutra tests
-    python3 tools/realdata/realdata.py tests                                              the packs' Sutra tests only (config/packs/*/tests)
+    python3 tools/realdata/realdata.py tests                                              the packs' Sutra tests only (config/packs/<domain>/<pack>/tests)
     python3 tools/realdata/realdata.py docs                                               the generated tables of docs/guides/EXTERNAL_DATA.md
     python3 tools/realdata/realdata.py all       [--cache DIR] [--refresh]                fetch, normalise, about, write, docs: everything committed
     python3 tools/realdata/realdata.py check     [--cache DIR]                           fail if anything committed differs from what `all` would write

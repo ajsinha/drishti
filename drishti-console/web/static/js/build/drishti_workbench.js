@@ -136,11 +136,11 @@ store.state.baseMoved = init.baseMoved || null;
       store.emit('say', b.dataset.width === 'phone' ? 'Phone width.' : 'Desktop width.');
     });
   });
-  var themeSel = $('[data-theme-pick]'), choices = $$('[data-theme-choice]', document);
+  var themeSel = $('[data-theme-pick]'), choices = $$('[data-theme-choice]', document);       // drishti-inputs' Select: (current), then the themes
   if (choices.length) {
-    choices.forEach(function (c) { themeSel.appendChild(WB.el('option', null, c.textContent.trim(), { value: c.dataset.themeChoice })); });
-    themeSel.value = document.documentElement.getAttribute('data-theme') || '';
-    themeSel.addEventListener('change', function () { var c = choices.filter(function (x) { return x.dataset.themeChoice === themeSel.value; })[0]; if (c) { c.click(); window.dispatchEvent(new Event('resize')); } });
+    themeSel.component.setOptions(themeSel.component.options.concat(choices.map(function (c) { return { value: c.dataset.themeChoice, label: c.textContent.trim() }; })),
+      document.documentElement.getAttribute('data-theme') || '');
+    themeSel.addEventListener('drishti:change', function (e) { var c = choices.filter(function (x) { return x.dataset.themeChoice === e.detail.value; })[0]; if (c) { c.click(); window.dispatchEvent(new Event('resize')); } });
   } else { themeSel.parentNode.hidden = true; }
 
   // ---- preview with a file ----------------------------------------------------------------------------------------------------

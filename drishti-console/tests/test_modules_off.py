@@ -95,6 +95,18 @@ def test_banking_off_is_gone_from_every_door(backend, monkeypatch):
     assert c.get("/static/js/drishti_world-landing.js").status_code == 200                           # another module's still are
 
 
+def test_the_command_lines_examples_are_only_what_the_person_may_type(backend, monkeypatch):
+    """The placeholder keeps the examples whose function is on: the server lists a module's functions as off with it (TRD, CPTY)."""
+    off = _answer(off_modules=("banking",), functions=(("TRD", "banking"), ("CPTY", "banking")))
+    t = _client(_console(backend, monkeypatch, BANKING_OFF, off)).get("/t").text
+    assert "TRD MX-" not in t.split('id="cmdInput"')[1].split(">")[0] and "CPTY north" not in t.split('id="cmdInput"')[1].split(">")[0]
+    t = _client(_console(backend, monkeypatch, ALL_ON, _answer())).get("/t").text
+    assert 'placeholder="TRD MX-20000001, CPTY north' in t
+    from core.menus import shown_examples
+    assert shown_examples("ECON CAN, USEQ AAPL, LEIC US …  then <GO>", lambda x: not x.startswith("USEQ")) == "ECON CAN, LEIC US …  then <GO>"
+    assert shown_examples("TRD 1, CPTY a …  then <GO>", lambda x: False) == ""
+
+
 def test_banking_on_draws_every_door_again(backend, monkeypatch):
     app = _console(backend, monkeypatch, ALL_ON, _answer())
     c = _client(app)

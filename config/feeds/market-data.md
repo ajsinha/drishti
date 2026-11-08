@@ -58,7 +58,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"PAIR": "FX-AUDUSD", "PAIR_NAME": "AUD/USD", "MID": 0.661, "BID": 0.66097, "ASK": 0.66103, "CHANGE_1D": -0.01092, "SPOT_DATE": "2026-10-02", "FX_FORWARD_CURVE": "FXF-AUDUSD", "FX_VOL_SURFACE": "FXV-AUDUSD"}
 ```
 
-The contract: `config/packs/market-data/contracts/fx-spot.contract.yaml` ([market-data](../../docs/contracts/packs/market-data.md)).
+The contract: `config/packs/banking/market-data/contracts/fx-spot.contract.yaml` ([market-data](../../docs/contracts/packs/market-data.md)).
 
 ### ir-curve
 
@@ -90,7 +90,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"CURVE_ID": "CRV-AUD-BASIS", "CURRENCY": "AUD", "CURVE_TYPE": "Cross-currency basis", "INDEX": "AONIA", "TEN_Y": 0.042199999999999994, "SLOPE_2S_10S": 51.2, "AS_OF": "2026-09-30", "INTERPOLATION": "Log-linear on discount factors", "DAY_COUNT": "ACT/365F", "CALENDAR": "CAL-GBLO", "FIXING_INDEX": "FIX-AONIA", "BUILT_AT": "2026-09-30T18:02:41Z"}
 ```
 
-The contract: `config/packs/market-data/contracts/ir-curve.contract.yaml` ([market-data](../../docs/contracts/packs/market-data.md)).
+The contract: `config/packs/banking/market-data/contracts/ir-curve.contract.yaml` ([market-data](../../docs/contracts/packs/market-data.md)).
 
 ### rate-fixing
 
@@ -114,4 +114,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"INDEX_ID": "FIX-AONIA", "NAME": "AUD Overnight Index Average", "LATEST": 0.03806, "ADMINISTRATOR": "RBA", "TENOR": "Overnight", "CURRENCY": "AUD"}
 ```
 
-The contract: `config/packs/market-data/contracts/rate-fixing.contract.yaml` ([market-data](../../docs/contracts/packs/market-data.md)).
+The contract: `config/packs/banking/market-data/contracts/rate-fixing.contract.yaml` ([market-data](../../docs/contracts/packs/market-data.md)).

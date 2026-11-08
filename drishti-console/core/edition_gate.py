@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Route gating by module, edition, lens and feature switch (docs/admin/EDITIONS.md › The design as built, sections 5.3, 5.6 and 5.9;
+"""Route gating by module, edition, lens and feature switch (docs/admin/LENSES.md › The design;
 docs/architecture/ACCESS_MODEL.md: a module that is off is gone, its pages and APIs too): a page whose module is off, or whose word,
 feature or Admin page the edition (or the person's lens) hides, or that a console ``features.*`` switch turns off, answers the console's
 404 page (or a 404 problem under /api). Called by the auth gate (core/app.py) once the person's edition is known. Without an edition and

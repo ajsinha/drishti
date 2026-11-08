@@ -202,7 +202,7 @@ APL, HPL, RTPL the actual, hypothetical and risk-theoretical P&L ([4.6](#46-back
 
 **Who:** every listed Canadian bank (and a US bank's §217.212 table, [3.9](#39-217212-market-risk-disclosures-us)). **Frequency:**
 annual, with quarterly updates to shareholders; fiscal year end October 31 for the D-SIBs. **Deadline:** with the annual report.
-**Drishti:** `config/reports/annual-report-var.yaml` (type `var-table`); `VAR REPORT annual-report-var FY2026 <GO>`. **Output:** xlsx,
+**Drishti:** `config/reports/banking/annual-report-var.yaml` (type `var-table`); `VAR REPORT annual-report-var FY2026 <GO>`. **Output:** xlsx,
 csv, PDF; the table in thousands. **Status: Built**; rows by risk type **Built — needs the bank's data**.
 
 | Item | Identifier | Definition and formula | Inputs (contract) | Demo | Status |
@@ -220,7 +220,7 @@ csv, PDF; the table in thousands. **Status: Built**; rows by risk type **Built �
 
 **Who:** a US filer under subpart F (quarterly count); an OSFI internal-model bank (bank-wide and desk); every bank for its own model
 governance. **Frequency:** daily figures, counted quarterly over the last 250 business days. **Drishti:**
-`config/reports/var-backtesting-chart.yaml` (type `backtesting-chart`); `VAR BANK BACKTEST <GO>`. **Output:** xlsx, csv, PDF (chart, zone,
+`config/reports/banking/var-backtesting-chart.yaml` (type `backtesting-chart`); `VAR BANK BACKTEST <GO>`. **Output:** xlsx, csv, PDF (chart, zone,
 exceptions). **Status: Built — needs the bank's data.**
 
 | Item | Identifier | Definition and formula | Inputs (contract) | Demo | Status |
@@ -579,11 +579,11 @@ freezes the result with each figure's lineage and records the sign-off; people w
 
 ### 6.1 Report definitions
 
-One YAML file per report in `drishti.regulatory.reports-dir` (`config/reports/`), read when asked; a wrong field is refused naming the
+One YAML file per report in `drishti.regulatory.reports-dir` (`config/reports/banking/`), read when asked; a wrong field is refused naming the
 file and the field. The shipped pilot:
 
 ```yaml
-# config/reports/annual-report-var.yaml
+# config/reports/banking/annual-report-var.yaml
 report: annual-report-var                     # the file's name
 title: Trading VaR by risk type (annual report)
 type: var-table                               # rows of official nodes; or backtesting-chart (with node:)
@@ -852,5 +852,5 @@ Opened and read on 2026-10-30 unless noted.
 - Federal Reserve, [press release of 19 March 2026](https://www.federalreserve.gov/newsevents/pressreleases/bcreg20260319a.htm), [fact sheet](https://www.federalreserve.gov/newsevents/pressreleases/files/fact-sheet-20260319.pdf); Federal Register [2026-05959, 91 FR 14952](https://www.federalregister.gov/documents/2026/03/27/2026-05959/regulatory-capital-rule-category-i-and-ii-banking-organizations-banking-organizations-with); [OCC bulletin 2026-9](https://www.occ.gov/news-issuances/bulletins/2026/bulletin-2026-9.html). No final rule found.
 - Volcker 2019 amendments: [OCC bulletin 2019-56](https://www.occ.gov/news-issuances/bulletins/2019/bulletin-2019-56.html), [SEC release 2019-207](https://www.sec.gov/newsroom/press-releases/2019-207), [Federal Register 2019-22695](https://www.federalregister.gov/documents/2019/11/14/2019-22695/prohibitions-and-restrictions-on-proprietary-trading-and-certain-interests-in-and-relationships-with).
 
-**Drishti:** [VAR_GUIDE.md](VAR_GUIDE.md), [the market-risk contracts](../contracts/packs/market-risk.md), `config/reports/`,
+**Drishti:** [VAR_GUIDE.md](VAR_GUIDE.md), [the market-risk contracts](../contracts/packs/market-risk.md), `config/reports/banking/`,
 [FRTB.md](../contracts/FRTB.md), [PNL.md](../contracts/PNL.md), [STR.md](../contracts/STR.md).

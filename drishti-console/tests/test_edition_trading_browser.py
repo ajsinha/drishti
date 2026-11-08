@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Trading's three Home landings in a browser (EDITIONS.md › The design as built, section 14): the console with the stand-in server of trading_fake.py
+"""Drishti Trading's three Home landings in a browser (LENSES.md › The design): the console with the stand-in server of trading_fake.py
 (port 17980), the person mapped to A. Shah's books. Each landing fills its panels from those answers, fits a phone without sideways
 scrolling, passes the page-width audit, asks no host but the console (every library is vendored), and draws in every theme with its green
 accent; the new-trade check answers end to end; skipped when Playwright or its Chromium is missing."""
@@ -134,9 +134,9 @@ def test_the_check_box_answers_end_to_end(browser, trading_console):
     page = _page(ctx)
     try:
         page.goto(f"{trading_console}/?landing=trader", wait_until="load")
-        page.wait_for_function("() => document.querySelectorAll('[data-tl-product] option').length === 3")
+        page.wait_for_function("() => (document.querySelector('[data-tl-product]').component || {options: []}).options.length === 3")
         page.select_option("[data-tl-product]", "IR_SWAP")
-        page.select_option("[data-tl-check] select[name=side]", "S")
+        page.select_option("[data-tl-check] drishti-select[name=side]", "S")
         page.fill("[data-tl-check] input[name=notional]", "250m")
         page.fill("[data-tl-check] input[name=counterparty]", "CP-ALDERSHOT")
         page.click("[data-tl-check-go]")

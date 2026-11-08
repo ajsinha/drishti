@@ -301,9 +301,7 @@ public final class LakeFiles {
             if (!Files.isDirectory(root)) {
                 continue;
             }
-            try (Stream<Path> s = Files.list(root)) {
-                s.map(d -> d.resolve("pack.yaml")).filter(Files::isRegularFile).sorted().forEach(out::add);
-            }
+            com.ash.drishti.api.PackFolders.list(root).stream().map(d -> d.resolve("pack.yaml")).forEach(out::add);   // and its domain folders
         }
         return out;
     }
@@ -319,10 +317,10 @@ public final class LakeFiles {
         if (!Lakes.validName(name)) {
             throw new IllegalArgumentException("lake " + name + ": a lake's name is lower-case letters, digits, '-' and '_' ([a-z0-9][a-z0-9_-]*)");
         }
-        Path file = lakesDir.resolve(name + ".yaml");
-        if (Files.exists(file)) {
+        if (Files.exists(Lakes.file(lakesDir, name))) {
             return false;
         }
+        Path file = lakesDir.resolve(name + ".yaml");                     // a new lake: in the folder itself
         ObjectNode root = JsonNodeFactory.instance.objectNode();
         root.put("lake", name);
         root.put("format", "delta");
@@ -669,14 +667,24 @@ public final class LakeFiles {
         if (names.isEmpty()) {
             return null;
         }
-        for (String lake : Lakes.SHIPPED) {
+        // every lake file in the folder (a module's lakes sit in its own subfolder, shipped by that module's jar), then the jar's own
+        java.util.Set<String> lakes = new java.util.LinkedHashSet<>();
+        for (Path f : Lakes.files(lakesDir)) {
+            lakes.add(f.getFileName().toString().replaceFirst("\\.yaml$", ""));
+        }
+        lakes.addAll(Lakes.SHIPPED);
+        for (String lake : lakes) {
             if (lake.equals("demo")) {
                 continue;
             }
-            Path f = lakesDir.resolve(lake + ".yaml");
+            Path f = Lakes.file(lakesDir, lake);
             JsonNode root = null;
             if (Files.isRegularFile(f)) {
-                root = YAML.readTree(Files.readString(f));
+                try {
+                    root = YAML.readTree(Files.readString(f));
+                } catch (com.fasterxml.jackson.core.JacksonException e) {
+                    continue;                                       // not a lake file this can read: it owns nothing
+                }
             } else {
                 try (java.io.InputStream in = LakeFiles.class.getClassLoader().getResourceAsStream("drishti/lakes/" + lake + ".yaml")) {
                     root = in == null ? null : YAML.readTree(in);
@@ -701,7 +709,7 @@ public final class LakeFiles {
     private static String unique(String base, java.util.Collection<String> taken, Path lakesDir) {
         String n = base;
         int i = 2;
-        while (taken.contains(n) || Files.exists(lakesDir.resolve(n + ".yaml"))) {
+        while (taken.contains(n) || Files.exists(Lakes.file(lakesDir, n))) {
             n = base + "-" + i++;
         }
         return n;

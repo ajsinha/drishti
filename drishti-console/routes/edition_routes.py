@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""An edition's Home landings and the lens (docs/admin/EDITIONS.md › The design as built, sections 7 and 8; docs/admin/EDITIONS.md).
+"""An edition's Home landings and the lens (docs/admin/LENSES.md › The design; docs/admin/LENSES.md).
 
 Landings: an edition lists the landings it offers (``home.landings``: Drishti Risk's ``desk``, ``command`` and ``map``, Drishti World's
 ``desk``, ``explorer`` and ``map``, Drishti Market's ``desk``, ``explorer`` and ``quality``, Drishti Trading's ``trader``, ``desk`` and
@@ -66,7 +66,7 @@ def landing_for(request, ed: Edition) -> str | None:
     chosen = str(mine.get("homeLanding") or "")
     if chosen in offered:
         return chosen
-    # a module's rule, below the person's own choice (Drishti Trading: the trading role picks the first landing; EDITIONS.md 14)
+    # a module's rule, below the person's own choice (Drishti Trading: the trading role picks the first landing; LENSES.md section 6)
     if (by_rule := plugins.landing_by_rules(request, ed, offered, me, mine)) is not None:
         return by_rule
     return ed.landing if ed.landing in offered else offered[0]
@@ -79,7 +79,7 @@ async def render_landing(request, ed: Edition, landing: str, cards: list):
     ``command``) and their recent commands of the edition (World's ``explorer``)."""
     titles = ed.landing_titles()
     offered = [{"id": x, "title": titles[x], "href": f"/home/landing/{x}"} for x in ed.landings()]
-    chips = [str(c) for c in (ed._get("home.chips") or []) if ed.typed_shown(str(c))]
+    chips = [str(c) for c in ed.home_chips if ed.typed_shown(str(c))]          # the lens's (registry), each only while its function is on
     monitors, recents = [], []
     backend, me = request.app.state.backend, ident(request)
     if landing == "command":                              # Risk's B: the person's monitors

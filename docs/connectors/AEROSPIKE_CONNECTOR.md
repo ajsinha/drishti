@@ -125,7 +125,7 @@ trading pack declares them on `trade-endur`; the `aerospike` profile (`SPRING_PR
 connector to the Aerospike plugin and keeps the pack's settings, so the same declaration applies:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
+# config/packs/banking/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
   trade-endur:
     settings:

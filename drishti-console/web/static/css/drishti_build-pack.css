@@ -50,7 +50,9 @@
 .pk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: var(--d-sp-9_6) var(--d-sp-16); margin: var(--d-sp-9_6) 0; }
 .pk-field { display: flex; flex-direction: column; gap: var(--d-sp-3_2); min-width: 0; }
 .pk-field label { font-size: var(--d-fs-13_6); font-weight: 600; }
-.pk-field input, .pk-field select, .pk-field textarea { width: 100%; box-sizing: border-box; }
+.pk-field input, .pk-field textarea { width: 100%; box-sizing: border-box; }
+.pk-select { max-width: 100%; }                                                  /* drishti-inputs' Select (PackUI.select) */
+.pk-field .pk-select { display: block; }
 .pk-hint { margin: 0; font-size: var(--d-fs-12_48); }
 .pk-field.pk-warn .pk-hint { color: var(--d-warn); }
 .pk-links { margin-top: var(--d-sp-6_4); }

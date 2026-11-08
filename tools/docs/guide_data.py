@@ -26,7 +26,7 @@ touched.
 
 Deterministic: the last file of the glob in sort order (or the first, ``pick: first``), the first tar member in sort order (or the first
 matching ``member``), the first record (or the first matching ``where``). Synthetic only: samples are read from data/testdata and nowhere
-else. Field names come from the data contracts (config/packs/<pack>/contracts/<kind>.contract.yaml): a shown field the contract does not
+else. Field names come from the data contracts (config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml): a shown field the contract does not
 have, a ``fields`` entry the record does not have, a contract key the record lacks, or a link to a heading the guide does not have fails
 ``--check``.
 """
@@ -45,6 +45,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
 SPEC = Path(__file__).resolve().with_name("guide_data.yaml")
 TESTDATA = ROOT / "data" / "testdata"
 CONTRACTS = ROOT / "config" / "packs"
@@ -65,7 +68,7 @@ STRING_MAX = 160        # a longer string is cut, ending in …
 def contracts() -> dict[str, dict]:
     """kind -> its contract (with ``_pack``)."""
     out = {}
-    for f in sorted(CONTRACTS.glob("*/contracts/*.contract.yaml")):
+    for f in (f for d in pack_dirs(CONTRACTS).values() for f in sorted(d.glob("contracts/*.contract.yaml"))):
         doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         if doc.get("kind"):
             doc["_pack"] = f.parts[-3]

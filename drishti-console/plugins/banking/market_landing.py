@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Market's Home figures (docs/admin/EDITIONS.md › The design as built, section 13): the Market desk's tiles, USD curves and biggest moves, and the
+"""Drishti Market's Home figures (docs/admin/LENSES.md › The design): the Market desk's tiles, USD curves and biggest moves, and the
 Quality landing's checks, worked out here from the market-data pack's own answers (the server's search, raw documents, business date and
 one field's history), read-only, with the person's identity, lens and date box. Nothing is invented: a figure the data does not hold is
 None, a day-over-day change is given only when both business days hold real data (a history point whose data date is its date), and the
@@ -36,7 +36,7 @@ from core import engine_figures as engine
 from core.backend import BackendError
 from core.user_cache import LRU, user_key
 
-#: the market-data pack's kinds and their commands (config/packs/market-data/pack.yaml)
+#: the market-data pack's kinds and their commands (config/packs/banking/market-data/pack.yaml)
 COMMANDS = {"ir-curve": "CRV", "repo-curve": "REPO", "fx-spot": "FX", "fx-forward-curve": "FXF", "fx-vol-surface": "FXV", "ir-vol-cube": "IRV",
             "cap-vol-surface": "CPV", "equity": "EQ", "equity-index": "EQX", "dividend-curve": "DIV", "equity-vol-surface": "EQV",
             "credit-curve": "CDS", "inflation-index": "INF", "inflation-curve": "INFC", "commodity": "CMD", "commodity-curve": "CMDC",

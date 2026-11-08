@@ -126,7 +126,7 @@ def main(out: Path, captures: Path) -> None:
                 smtp.messages.clear()
                 page.goto(CONSOLE_URL + "/reports/subscribe?type=report&id=" + REPORT + "&page=overview&title=PDF+pack")
                 page.fill('input[name="recipients"]', "rita")
-                page.select_option('select[name="format"]', "pdf")
+                page.select_option('drishti-select[name="format"]', "pdf")
                 page.click("[data-when] summary")
                 page.fill('input[name="schedule"]', "monthly last 18:00 business")
                 page.click("[data-subscribe-form] button[type=submit]")

@@ -93,8 +93,8 @@ drishti:
       tables:                     # the store news: config/lakes/news.yaml
         - { name: news,  store: news, source: { file: data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz },  key: [NEWS_ID],  every: 15m, warm-up: 1, pin: true }
         - { name: quote, store: news, source: { file: data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz }, key: [QUOTE_ID], every: 15m, warm-up: 2 }
-        - { name: news-topic,     store: news, source: { file: config/packs/news-and-markets/samples/news-topic.jsonl },     key: [TOPIC_ID],   warm-up: 3 }
-        - { name: listed-company, store: news, source: { file: config/packs/news-and-markets/samples/listed-company.jsonl }, key: [COMPANY_ID], warm-up: 4 }
+        - { name: news-topic,     store: news, source: { file: config/packs/economy/news-and-markets/samples/news-topic.jsonl },     key: [TOPIC_ID],   warm-up: 3 }
+        - { name: listed-company, store: news, source: { file: config/packs/economy/news-and-markets/samples/listed-company.jsonl }, key: [COMPANY_ID], warm-up: 4 }
 ```
 
 A live site points `source` at its feed instead: `url:` (a vendor's REST feed answering JSON Lines, `headers:` with `${ENV}` secrets), or

@@ -130,7 +130,7 @@ A derived page, for the group key `CP-MERIDIAN-RE` of `counterparty-trades` (the
 
 ## Examples
 
-The trading pack's connector (`config/packs/trading/pack.yaml`, shortened):
+The trading pack's connector (`config/packs/banking/trading/pack.yaml`, shortened):
 
 ```yaml
 connectors:

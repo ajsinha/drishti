@@ -81,7 +81,7 @@ class CliLauncherScratchTest {
         ProcessBuilder pb = new ProcessBuilder(cmd).directory(work.toFile()).redirectErrorStream(true);
         pb.environment().keySet().removeIf(k -> k.startsWith("DRISHTI_"));
         pb.environment().putAll(Map.of("DRISHTI_PACKS_DIR", REPO.resolve("config/packs").toString(), "DRISHTI_PACKS", "trading",
-                "DRISHTI_EDITIONS_DIR", REPO.resolve("config/editions").toString()));
+                "DRISHTI_LENS_DIR", REPO.resolve("config/lenses").toString()));
         Path log = jvmTmp.resolve("run.log");
         pb.redirectOutput(log.toFile());
         Process proc = pb.start();

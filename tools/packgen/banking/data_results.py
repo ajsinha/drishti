@@ -58,7 +58,7 @@ def _bucket_sets() -> dict[str, list[tuple[float | None, str]]]:
     """The named maturity-bucket sets of the counterparty-risk pack's configuration (config/maturity-buckets.yaml; decision 10 of
     docs/architecture/COMPUTED_ATTRIBUTES.md): display (a trade list's MATURITY_BUCKET) and limit (a credit limit's tenor buckets)."""
     import yaml
-    f = Path(__file__).resolve().parents[3] / "config" / "packs" / "counterparty-risk" / "config" / "maturity-buckets.yaml"
+    f = Path(__file__).resolve().parents[3] / "config" / "packs" / "banking" / "counterparty-risk" / "config" / "maturity-buckets.yaml"
     sets = (yaml.safe_load(f.read_text(encoding="utf-8")) or {})["maturity-buckets"]
     return {name: [(b.get("below-years"), b["label"]) for b in v["buckets"]] for name, v in sets.items()}
 

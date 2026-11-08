@@ -23,7 +23,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GEN = ROOT / "tools" / "packgen" / "us_equities"
-PACK = ROOT / "config" / "packs" / "us-equities"
+PACK = ROOT / "config" / "packs" / "capitalmarkets" / "us-equities"
 sys.path[:0] = [str(ROOT / "tools" / "feeds" / "sources"), str(ROOT / "tools" / "feeds")]
 from us_equities import F  # noqa: E402  (the generator's fetch.py by path: tools/realdata has a fetch module too)
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))

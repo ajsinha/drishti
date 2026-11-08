@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
 import packsamples  # noqa: E402  (samples/trade.jsonl)
 
 shot = register("deep")
-SAMPLES = ROOT / "config" / "packs" / "trading" / "samples"
+SAMPLES = ROOT / "config" / "packs" / "banking" / "trading" / "samples"
 
 
 def sample(product: str, legs: int) -> str:

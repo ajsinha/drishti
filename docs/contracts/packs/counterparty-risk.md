@@ -17,7 +17,7 @@
 
 # Data contracts of the counterparty-risk pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/counterparty-risk/guides/counterparty-risk.md](../../../config/packs/counterparty-risk/guides/counterparty-risk.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/banking/counterparty-risk/guides/counterparty-risk.md](../../../config/packs/banking/counterparty-risk/guides/counterparty-risk.md), shows the same contracts (generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -43,7 +43,7 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 
 |  |  |
 |---|---|
-| Contract | [agreement.contract.yaml](../../../config/packs/counterparty-risk/contracts/agreement.contract.yaml) · version 1.0 |
+| Contract | [agreement.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/agreement.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | legal-docs |
@@ -110,7 +110,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 |  |  |
 |---|---|
-| Contract | [csa.contract.yaml](../../../config/packs/counterparty-risk/contracts/csa.contract.yaml) · version 1.0 |
+| Contract | [csa.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/csa.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | legal-docs |
@@ -186,7 +186,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 
 |  |  |
 |---|---|
-| Contract | [netting-set.contract.yaml](../../../config/packs/counterparty-risk/contracts/netting-set.contract.yaml) · version 1.0 |
+| Contract | [netting-set.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | xva-engine |
@@ -290,7 +290,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 
 |  |  |
 |---|---|
-| Contract | [credit-limit.contract.yaml](../../../config/packs/counterparty-risk/contracts/credit-limit.contract.yaml) · version 1.0 |
+| Contract | [credit-limit.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/credit-limit.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | limits-system |
@@ -357,7 +357,7 @@ Credit, debit and funding valuation adjustments with sensitivities.
 
 |  |  |
 |---|---|
-| Contract | [cva.contract.yaml](../../../config/packs/counterparty-risk/contracts/cva.contract.yaml) · version 1.0 |
+| Contract | [cva.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/cva.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | xva-engine |
@@ -432,7 +432,7 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 
 |  |  |
 |---|---|
-| Contract | [sa-ccr.contract.yaml](../../../config/packs/counterparty-risk/contracts/sa-ccr.contract.yaml) · version 1.0 |
+| Contract | [sa-ccr.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/sa-ccr.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | capital-engine |
@@ -509,7 +509,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 
 |  |  |
 |---|---|
-| Contract | [collateral-balance.contract.yaml](../../../config/packs/counterparty-risk/contracts/collateral-balance.contract.yaml) · version 1.0 |
+| Contract | [collateral-balance.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/collateral-balance.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | collateral-system |
@@ -574,7 +574,7 @@ A variation or initial margin call and its settlement status.
 
 |  |  |
 |---|---|
-| Contract | [margin-call.contract.yaml](../../../config/packs/counterparty-risk/contracts/margin-call.contract.yaml) · version 1.0 |
+| Contract | [margin-call.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/margin-call.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | collateral-system |
@@ -647,7 +647,7 @@ Initial margin by risk class and product class.
 
 |  |  |
 |---|---|
-| Contract | [simm.contract.yaml](../../../config/packs/counterparty-risk/contracts/simm.contract.yaml) · version 1.0 |
+| Contract | [simm.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/simm.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | margin-engine |
@@ -708,7 +708,7 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 
 |  |  |
 |---|---|
-| Contract | [simulation-run.contract.yaml](../../../config/packs/counterparty-risk/contracts/simulation-run.contract.yaml) · version 1.0 |
+| Contract | [simulation-run.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/simulation-run.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py) |
@@ -778,7 +778,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 
 |  |  |
 |---|---|
-| Contract | [exposure-path.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-path.contract.yaml) · version 1.1 |
+| Contract | [exposure-path.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/exposure-path.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py) |
@@ -857,7 +857,7 @@ The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) a
 
 |  |  |
 |---|---|
-| Contract | [exposure-result.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-result.contract.yaml) · version 1.0 |
+| Contract | [exposure-result.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/exposure-result.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.banking.exposure.ExposureResultEngine) |
@@ -917,7 +917,7 @@ The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE,
 
 |  |  |
 |---|---|
-| Contract | [exposure-official-cpty.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-official-cpty.contract.yaml) · version 1.1 |
+| Contract | [exposure-official-cpty.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/exposure-official-cpty.contract.yaml) · version 1.1 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the official end-of-day exposure capture (ExposureOfficial), appended by ExposurePublisher to risk-results/exposure-official-cpty |
@@ -986,7 +986,7 @@ A netting set's MtM totals derived from the trade valuations of its live trades,
 
 |  |  |
 |---|---|
-| Contract | [nset-mtm.contract.yaml](../../../config/packs/counterparty-risk/contracts/nset-mtm.contract.yaml) · version 1.0 |
+| Contract | [nset-mtm.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/nset-mtm.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation |
@@ -1060,7 +1060,7 @@ A counterparty's MtM totals derived from the trade valuations of its live trades
 
 |  |  |
 |---|---|
-| Contract | [cpty-mtm.contract.yaml](../../../config/packs/counterparty-risk/contracts/cpty-mtm.contract.yaml) · version 1.0 |
+| Contract | [cpty-mtm.contract.yaml](../../../config/packs/banking/counterparty-risk/contracts/cpty-mtm.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation |

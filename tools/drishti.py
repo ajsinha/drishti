@@ -320,8 +320,8 @@ def cmd_pack_new(a, extra) -> int:
     rc = PFJ.run(a)
     if rc or not a.load:
         return rc
-    out = (a.out or ROOT / "config" / "packs" / a.name).resolve()
-    if out.parent != (ROOT / "config" / "packs").resolve():
+    out = (a.out or ROOT / "config" / "packs" / (getattr(a, "pack_domain", None) or "core") / a.name).resolve()
+    if out.parent.parent != (ROOT / "config" / "packs").resolve():           # config/packs/<domain>/<pack>
         print(f"drishti: --load: the server reads packs from its own packs folder (drishti.packs.dir) or installed-dir; {out} is elsewhere, "
               f"so the server only finds it if that folder is its pack folder.", file=sys.stderr)
     return server_pack_change(a, "load", a.name)

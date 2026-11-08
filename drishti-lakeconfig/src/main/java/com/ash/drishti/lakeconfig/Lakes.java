@@ -126,8 +126,8 @@ public final class Lakes {
         java.util.Set<String> names = new java.util.TreeSet<>();
         Path d = dir();
         if (Files.isDirectory(d)) {
-            try (Stream<Path> files = Files.list(d)) {
-                for (Path f : files.filter(f -> f.getFileName().toString().endsWith(".yaml")).toList()) {
+            try {
+                for (Path f : files(d)) {
                     Matcher m = NAMED.matcher(Files.readString(f));
                     while (m.find()) {
                         names.add(m.group(1));
@@ -172,12 +172,47 @@ public final class Lakes {
         return read(dir(), properties);
     }
 
-    /** Every {@code *.yaml} of {@code dir} (none when the folder does not exist: a server with no lake file). */
+    /**
+     * The lake files of a folder: its {@code *.yaml} and those of its <b>domain folders</b> one level down ({@code config/lakes/banking/
+     * var-official.yaml}, docs/architecture/DOMAIN_MODULES.md section 8), in name order. A lake's name is its file's, wherever it is.
+     */
+    public static List<Path> files(Path dir) throws IOException {
+        List<Path> out = new java.util.ArrayList<>();
+        if (dir == null || !Files.isDirectory(dir)) {
+            return out;
+        }
+        List<Path> folders = new java.util.ArrayList<>(List.of(dir));
+        try (Stream<Path> s = Files.list(dir)) {
+            s.filter(Files::isDirectory).sorted().forEach(folders::add);
+        }
+        for (Path d : folders) {
+            try (Stream<Path> s = Files.list(d)) {
+                s.filter(f -> Files.isRegularFile(f) && f.getFileName().toString().endsWith(".yaml")).sorted().forEach(out::add);
+            }
+        }
+        return out;
+    }
+
+    /** A lake's file in a folder or one of its domain folders ({@link #files}); {@code <dir>/<name>.yaml} (not there) when none holds it. */
+    public static Path file(Path dir, String name) {
+        try {
+            for (Path f : files(dir)) {
+                if (f.getFileName().toString().equals(name + ".yaml")) {
+                    return f;
+                }
+            }
+        } catch (IOException e) {
+            // an unreadable folder holds no lake
+        }
+        return dir.resolve(name + ".yaml");
+    }
+
+    /** Every {@code *.yaml} of {@code dir} and its domain folders (none when the folder does not exist: a server with no lake file). */
     public static Lakes read(Path dir, Function<String, String> env) {
         Map<String, Lake> out = new TreeMap<>();
         if (dir != null && Files.isDirectory(dir)) {
-            try (Stream<Path> files = Files.list(dir)) {
-                for (Path f : files.filter(f -> f.getFileName().toString().endsWith(".yaml")).sorted().toList()) {
+            try {
+                for (Path f : files(dir)) {
                     Lake l = readFile(f, env);
                     out.put(l.name(), l);
                 }
@@ -200,8 +235,34 @@ public final class Lakes {
         return new Lakes(out, dir);
     }
 
-    /** The lakes shipped in this module's jar ({@code drishti/lakes/<name>.yaml}, a copy of {@code config/lakes/<name>.yaml}). */
-    public static final List<String> SHIPPED = List.of("demo", "var-official", "ccr-official");
+    /** The index each jar that ships lakes carries: one lake name per line ({@code #} comments). */
+    public static final String SHIPPED_INDEX = "drishti/lakes/shipped.txt";
+
+    /**
+     * The lakes shipped in the jars on the class path ({@code drishti/lakes/<name>.yaml}, each a copy of the repository's lake file): the
+     * core's demo lake, and a module's own (the banking module's official results) only when its jar is there. Each jar lists its lakes in
+     * {@value #SHIPPED_INDEX}.
+     */
+    public static final List<String> SHIPPED = shipped(Lakes.class.getClassLoader());
+
+    static List<String> shipped(ClassLoader loader) {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        try {
+            for (java.net.URL u : java.util.Collections.list(loader.getResources(SHIPPED_INDEX))) {
+                try (java.io.InputStream in = u.openStream()) {
+                    for (String line : new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).split("\\R")) {
+                        String n = line.replaceFirst("#.*", "").strip();
+                        if (!n.isEmpty()) {
+                            out.add(n);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("cannot read " + SHIPPED_INDEX, e);
+        }
+        return List.copyOf(out);
+    }
 
     /** Lakes built in code (tests, a tool that was handed one lake). */
     public static Lakes of(Lake... lakes) {

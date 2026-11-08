@@ -52,7 +52,7 @@
     </span>
     <button type="button" class="sm-chip on" data-sm-outline aria-pressed="true" title="Outline each date's VaR scenario and ES tail (also marked V and E)">Tail outlined <span data-sm-tail-label></span></button>
     <button type="button" class="sm-chip" data-sm-tailonly aria-pressed="false" title="Only the scenarios in some date's tail">Only tail scenarios</button>
-    <label class="sm-chip sm-sort">Sort <select data-sm-sort aria-label="Sort the scenarios"><option value="day">by scenario day</option></select></label>
+    <label class="sm-chip sm-sort">Sort <drishti-select data-sm-sort label="Sort the scenarios"><option value="day">by scenario day</option></drishti-select></label>
     <span class="sm-chip sm-export">Export <a href="#" data-sm-csv download>CSV</a> · <a href="#" data-sm-arrow download>Arrow</a></span>
   </div>
   <p class="sm-notice" data-sm-notice role="status" hidden></p>
@@ -70,7 +70,7 @@
     </section>
     <section class="sm-card sm-side" aria-labelledby="smChartTitle">
       <h2 id="smChartTitle"><span data-sm-chart-title>Select a scenario</span><span class="sm-sub" data-sm-chart-sub></span></h2>
-      <label class="sm-pick">Scenario <select data-sm-pick aria-label="The scenario selected"></select></label>
+      <label class="sm-pick">Scenario <drishti-select data-sm-pick label="The scenario selected"></drishti-select></label>
       <div class="sm-chart-ctrls">
       <span class="sm-seg sm-cview" role="group" aria-label="Chart view">
         <button type="button" class="sm-segb" data-sm-chart-view="scenarios" aria-pressed="true" title="The selected date's scenarios, in the order of their days">Scenarios</button>
