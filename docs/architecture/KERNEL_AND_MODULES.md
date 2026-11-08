@@ -46,7 +46,7 @@ Worked examples (files, not product code) are in `docs/architecture/kernel-and-m
 10. [Offloading a module: everything disappears](#10-offloading-a-module-everything-disappears)
 11. [Security](#11-security)
 12. [Migration, with banking as the proving ground](#12-migration-with-banking-as-the-proving-ground)
-13. [Open questions for the owner](#13-open-questions-for-the-owner)
+13. [Decisions](#13-decisions)
 14. [What moves from DOMAIN_MODULES.md](#14-what-moves-from-domain_modulesmd)
 15. [Mock-ups](#15-mock-ups)
 
@@ -343,8 +343,8 @@ the registry (other kernel parts ask the registry). Every field:
 
 **The full banking example:** [examples/banking/module.yaml](kernel-and-modules/examples/banking/module.yaml). It lists the two jars
 (`drishti-banking`, `drishti-compute-banking`), the six engines, the Python package `drishti_banking` with its items, the five packs (with
-`banking-reference`, open question Q1), the 30-odd data needs, the console plugin and `drishti-risk`, the six lenses, 60 functions, the
-Home cards, the market-data feed (open question Q6), the seven guides and nine tutorials, the settings schema, the licence feature
+`banking-reference`, decision Q1), the 30-odd data needs, the console plugin and `drishti-risk`, the six lenses, 60 functions, the
+Home cards, the market-data feed (decision Q6), the seven guides and nine tutorials, the settings schema, the licence feature
 `banking`, the optional `capitalmarkets` dependency and the kernel range.
 
 Representative stub files with real-looking content:
@@ -1631,9 +1631,11 @@ domains after the line. P5 later. The rows are in [IMPLEMENTATION_PLAN.md](IMPLE
 | Windows QA (no .exe) | the packager and loader are Java + Python only; `.dmod` is a zip; signature checks in Java; tests run on Windows |
 | Docs churn (guides move into modules) | guides keep their slugs; Help merges them; the docs gates read module docs |
 
-## 13. Open questions for the owner
+## 13. Decisions
 
-| # | Question | Recommendation |
+The owner accepted every recommendation on 2026-11-08; each row below is a decision.
+
+| # | Question | Decision (2026-11-08) |
 |---|---|---|
 | Q1 | The core pack's finance entities (`book`, `desk`, `trader`, `counterparty`, `legal-entity`, …): kernel or banking? (was D1) | move them to a **`banking-reference` pack in the banking module**; the kernel keeps `calendar` and generic entities (organisation, person, location); GLEIF stays kernel |
 | Q2 | Bindings file vs connectors' `kinds:` lists | **`config/bindings.yaml` is the one home**; `kinds:` read for one release, then removed |
@@ -1642,7 +1644,7 @@ domains after the line. P5 later. The rows are in [IMPLEMENTATION_PLAN.md](IMPLE
 | Q5 | Java isolation without a Security Manager: accept review + tests, or run untrusted modules out of process | **in process for Drishti-signed and partner modules**; out-of-process modules (a gRPC/Flight boundary) only if a third-party marketplace is wanted (P5+) |
 | Q6 | The market-data pack and feed: banking or capital markets | **capital markets owns market data** (pack and feed); banking `requires: capitalmarkets` (optional today, required once its engines read it); closes DOMAIN_MODULES D6's interim |
 | Q7 | Who signs: one Drishti key for everything, or publisher certificates under a Drishti root | **a root + publisher certificates** (Drishti, then partners), revocation list per release |
-| Q8 | Split i | **DECIDED (owner, 2026-11-08): three releases**: i1 foundations (data standards, P1, drill under 60 minutes, memory and speed); i2 modules on one node (P2); i3 cluster and white label (P3); P4 in j |
+| Q8 | Split i | **three releases**: i1 foundations (data standards, P1, drill under 60 minutes, memory and speed); i2 modules on one node (P2); i3 cluster and white label (P3); P4 in j |
 | Q9 | Repository layout: banking's sources stay in this repository under `modules/banking/` or move to their own repository | **stay in this repository** (one drill, one history) but build separately into a `.dmod`; a separate repository when a partner module exists |
 | Q10 | Default distribution of the repo's build | **`drishti.finance`** (today's product); `drishti.genomics` as a sample only, never shipped to customers |
 | Q11 | The kernel API version's start | **1.0 at the end of P2** (P1's API is 0.x and may change freely) |
