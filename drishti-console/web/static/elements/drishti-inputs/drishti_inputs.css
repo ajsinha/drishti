@@ -230,5 +230,27 @@
 .di-upgraded { display: inline-block; vertical-align: middle; min-width: 11rem; }
 .di-upgraded[hidden] { display: none; }
 .di-upgraded-checks { display: block; max-width: 24rem; width: 100%; }
+/* a note that does not stop a submit (a warning), where a problem would be */
+.di-msg.di-note { color: var(--d-ink); }
+.di-msg.di-note::before { content: "⚠ "; color: var(--d-warn); }
+.di-warned .di-field, .di-warned .di-control { border-color: var(--d-warn); }
+
+/* times, dates with times, a money amount's currency, rows of checkboxes, a live form, steps */
+.di-time-pop .di-listbox { max-height: 16rem; overflow: auto; min-width: 7rem; }
+.di-time .di-field, .di-time .di-control { min-width: 6.5rem; }
+.di-datetime-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
+.di-datetime-row .di-datetime-date { flex: 1 1 10rem; }
+.di-datetime-row .di-datetime-time { flex: 0 1 7.5rem; }
+.di-zone, .di-unit { color: var(--d-muted); font-size: 0.9em; white-space: nowrap; align-self: center; }
+.di-adorned { padding-right: 8px; }
+.di-checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.di-live { max-width: none; }
+.di-names[hidden] { display: none; }
+.di-steps-box { display: flex; flex-direction: column; gap: 4px; }
+.di-steps { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+.di-step { padding: 2px 10px; border-radius: 999px; border: 1px solid var(--d-border); color: var(--d-muted); }
+.di-step.di-current { border-color: var(--d-accent); color: var(--d-ink); font-weight: 600; }
+.di-step.di-done { color: var(--d-ok, var(--d-ink)); }
+
 /* a finger's size on a touch screen: every field, button and option at least 44 px high */
 @media (pointer: coarse) { .di-control, .di-field, .di-inline-field, .di-btn, .di-chip-btn, .di-option, .di-preset, .di-icon-btn, .di-chip-x { min-height: 44px; } }

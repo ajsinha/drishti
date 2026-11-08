@@ -155,7 +155,6 @@ IMPORTANT_ALLOW = {
     "drishti_explain.css|.dx-pop.dx-sheet|left": _INLINE,
     "drishti_explain.css|.dx-pop.dx-sheet|top": _INLINE,
     "drishti_explain.css|@media print .dx-page-head .dx-btn|display": _PRINT,
-    "drishti_form.css|.qf-enum .qf-dep-off|display": _HIDE,
     "drishti_gradients.css|@media print body|background": _PRINT,
     "drishti_history.css|@media (prefers-reduced-motion: reduce) .hx *|transition": _MOTION,
     "drishti_layout.css|.pnl-off|display": _HIDE,
@@ -216,7 +215,7 @@ IMPORTANT_ALLOW = {
     "drishti_theme.css|@media (prefers-reduced-motion: reduce) *|animation": _MOTION,
     "drishti_theme.css|@media (prefers-reduced-motion: reduce) *|transition": _MOTION,
 }
-IMPORTANT_CEILING = 97   # 2.9.11.e: 149 before the token pass; lower it with every entry that leaves the list
+IMPORTANT_CEILING = 96   # 2.9.11.e: 149 before the token pass; lower it with every entry that leaves the list
 
 
 def important_keys(name: str, text: str) -> list:

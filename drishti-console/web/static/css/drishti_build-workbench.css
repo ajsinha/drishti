@@ -199,8 +199,6 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-dropped { margin: 0 0 var(--d-sp-6_4); }
 .wb-cap-set { border: 0; padding: 0; margin: 0 0 var(--d-sp-4_8); }
 .wb-cap { font-size: var(--d-fs-12_8); float: none; width: auto; margin: 0; }
-.wb-inline { display: flex; align-items: center; gap: var(--d-sp-6_4); }
-.wb-obj { display: grid; gap: var(--d-sp-4); margin-left: var(--d-sp-8); }
 
 /* Adding a panel (product owner): the header button, the kind grid, the grip and the arrival highlight */
 .wb-add-panel { font-weight: 700; }

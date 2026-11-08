@@ -14,6 +14,10 @@
 
 """Query by form (FORM <pack>), the console's side: the reserved word, type-ahead, the form for every field type, criteria in the address,
 the command the server compiled, the results grid, regex refusals, saved searches. Against a stand-in server."""
+import html
+import json
+import re
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -54,14 +58,34 @@ def test_type_ahead_offers_only_packs_with_kinds_then_their_kinds(cl):
     assert cl.get("/api/search", params={"in": "command", "q": "FORM nothing "}).json()["items"] == []
 
 
+def qf(page):
+    """The form the page draws (drishti-inputs' Form): its schema and value, sent with the page."""
+    return json.loads(html.unescape(re.search(r'data-qf-schema="([^"]*)"', page).group(1)))
+
+
+def named(q):
+    """Every field of the form's schema by the name the address gives it."""
+    out = {}
+
+    def walk(s):
+        for v in (s.get("properties") or {}).values():
+            if v.get("name"):
+                out.setdefault(v["name"], []).append(v)
+            walk(v)
+    walk(q["schema"])
+    return out
+
+
 def test_the_form_has_an_input_for_every_type(cl):
     page = cl.get("/form/trading").text
-    assert 'name="v.tradeId"' in page and "<textarea" in page                                  # id: paste a list
-    assert 'name="op.counterparty.name"' in page and "matches regex" in page and 'name="cs.counterparty.name"' in page    # text: operators and case
-    assert page.count('name="v.book"') == 3 and "BOOK-CREDIT-1" in page                        # enum: a checkbox per known value
-    assert 'name="v2.mtm"' in page and 'inputmode="decimal"' in page and "250k, 1.5m, 2bn" in page    # amount: between has a second box
-    assert 'type="date"' in page and 'list="qf-presets"' in page and "last 5 business days" in page   # date: pickers and relative presets
-    assert 'type="radio"' in page and 'name="v.isActive"' in page                              # bool
+    f = named(qf(page))
+    assert f["v.tradeId"][0]["format"] == "textarea"                                            # id: paste a list
+    assert "matches regex" in f["op.counterparty.name"][0]["enumLabels"] and "cs.counterparty.name" in f    # text: operators and case
+    assert len(f["v.book"][0]["items"]["enum"]) == 3 and f["v.book"][0]["widget"] == "checkboxes" and "BOOK-CREDIT-1" in page   # enum: a checkbox per value
+    assert "v2.mtm" in f and f["v2.mtm"][0]["hook"]["inputmode"] == "decimal" and f["v.mtm"][0]["placeholder"] == "250k, 1.5m, 2bn"   # amount: between
+    dates = [x for x in f.values() if x[0].get("type") == "date"]
+    assert dates and any("last 5 business days" in x["options"]["source"] for v in f.values() for x in v if x.get("widget") == "combobox")   # date: picker and presets
+    assert f["v.isActive"][0]["widget"] == "radio"                                              # bool
     assert "internalNote" not in page                                                           # hidden fields are not offered
     assert "Identity" in page and "Money" in page and "The legal name." in page                  # groups and help
     assert page.count("slower: not indexed") == 1                                               # only the counterparty is not an indexed column
@@ -89,7 +113,9 @@ def test_submitting_shows_the_command_and_the_results(cl, be):
     assert be.asked[-1].startswith("TRD where") and be.asked[-1].endswith("order by mtm desc limit 50")   # the ordinary search ran the command
     assert 'href="/v/trade/IRS-48213"' in page and 'class="tbl"' in page and "<b>2</b> of 36 trades match" in page    # the key cell opens the view
     assert "Watch as a monitor" in page and "Schedule a report" in page and "Save as named search" in page and "Share link" in page
-    assert 'value="mtm" selected' in page and 'value="50" selected' in page and 'value="BOOK-FI-1" checked' in page    # the form keeps what was asked
+    assert 'value="mtm" selected' in page and 'value="50" selected' in page                    # the form keeps what was asked
+    held = [g for grp in qf(page)["value"].values() for g in grp.values()]
+    assert {"op": "in", "v": ["BOOK-FI-1", "BOOK-FI-2"]} in held and any(g.get("v") == "1m" and g.get("v2") == "5m" for g in held)
 
 
 def test_criteria_come_from_the_address_only_when_filled_in():
