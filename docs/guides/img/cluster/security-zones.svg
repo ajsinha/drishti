@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+  A diagram of docs/guides/CLUSTER_GUIDE.md.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 400" width="980" height="400" role="img" aria-labelledby="t d">
+<title id="t">Security zones and ports</title>
+<desc id="d">Users reach the edge, the consoles and the app servers; the app servers reach the data; administrators and loaders have their own paths.</desc>
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5b7590"/></marker>
+<marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5b7590"/></marker>
+</defs>
+<rect x="0.75" y="0.75" width="978.5" height="398.5" rx="14" fill="#ffffff" stroke="#d5dde7" stroke-width="1.5"/>
+<text x="24" y="34" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="16" font-weight="700" fill="#12324f">Security zones and ports</text>
+<rect x="24" y="70" width="110" height="56" rx="8" fill="#eef1f5" stroke="#aab6c4" stroke-width="1.2"/>
+<text x="79.0" y="102.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#2f3d4e" text-anchor="middle">USERS</text>
+<rect x="214" y="70" width="190" height="56" rx="8" fill="#fdf2e1" stroke="#e0b36e" stroke-width="1.2"/>
+<text x="309.0" y="92.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#8a4b08" text-anchor="middle">EDGE</text>
+<text x="309.0" y="112.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">LB, WAF, TLS</text>
+<rect x="484" y="70" width="140" height="56" rx="8" fill="#f0ecfa" stroke="#ab9ad8" stroke-width="1.2"/>
+<text x="554.0" y="102.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#4b3a8a" text-anchor="middle">CONSOLES</text>
+<rect x="700" y="70" width="150" height="56" rx="8" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="775.0" y="92.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#1b4a73" text-anchor="middle">APP</text>
+<text x="775.0" y="112.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">servers</text>
+<path d="M 136 98 L 212 98" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="174.0" y="90" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="700" fill="#5b6878" text-anchor="middle">443</text>
+<path d="M 406 98 L 482 98" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="444.0" y="90" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="700" fill="#5b6878" text-anchor="middle">17480</text>
+<path d="M 626 98 L 698 98" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="662.0" y="90" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="700" fill="#5b6878" text-anchor="middle">18480 TLS</text>
+<path d="M 850 84 C 905 70, 905 128, 852 116" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<path d="M 740 126 L 740 228" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="800" y="152" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#5b6878" text-anchor="start">18480 + gossip port:</text>
+<text x="800" y="168" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#5b6878" text-anchor="start">member to member only</text>
+<rect x="560" y="230" width="396" height="74" rx="8" fill="#e3f3f0" stroke="#7fbcb1" stroke-width="1.2"/>
+<text x="572" y="252" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#0f5e57" text-anchor="start">DATA</text>
+<text x="572" y="272" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">lake (S3 endpoint / NFS), PostgreSQL 5432,</text>
+<text x="572" y="290" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="start">Kafka 9092/9094, content store</text>
+<rect x="24" y="330" width="230" height="52" rx="8" fill="#fbe9ec" stroke="#dd9aa6" stroke-width="1.2"/>
+<text x="139.0" y="360.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">ADMIN HOST (bastion)</text>
+<path d="M 254 356 L 318 356" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="326" y="361" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="600" fill="#1d2430" text-anchor="start">everything, audited</text>
+<rect x="400" y="240" width="120" height="52" rx="8" fill="#e6f4e6" stroke="#8cc28c" stroke-width="1.2"/>
+<text x="460.0" y="270.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">LOADERS</text>
+<path d="M 520 266 L 558 266" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="400" y="316" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#5b6878" text-anchor="start">DATA only (no user ingress)</text>
+</svg>

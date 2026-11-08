@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+  A diagram of docs/guides/CLUSTER_GUIDE.md.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 500" width="940" height="500" role="img" aria-labelledby="t d">
+<title id="t">Drishti*net: any node answers</title>
+<desc id="d">A client calls any node; that node's router answers locally, forwards the view, reads the document from another node or scatters a search; nodes gossip membership and capabilities.</desc>
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5b7590"/></marker>
+<marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5b7590"/></marker>
+</defs>
+<rect x="0.75" y="0.75" width="938.5" height="498.5" rx="14" fill="#ffffff" stroke="#d5dde7" stroke-width="1.5"/>
+<text x="24" y="34" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="16" font-weight="700" fill="#12324f">Drishti*net: any node answers</text>
+<rect x="24" y="56" width="300" height="44" rx="8" fill="#eef1f5" stroke="#aab6c4" stroke-width="1.2"/>
+<text x="174.0" y="82.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">console / Elements / API client</text>
+<rect x="420" y="56" width="220" height="44" rx="8" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="530.0" y="82.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#1b4a73" text-anchor="middle">any node (say B)</text>
+<path d="M 324 78 L 418 78" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<path d="M 530 100 L 530 132" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="24" y="134" width="892" height="200" rx="10" fill="#f7f9fc" stroke="#aab6c4" stroke-width="1.2"/>
+<text x="40" y="158" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">B's router</text>
+<circle cx="54" cy="188" r="11" fill="#1b4a73"/>
+<text x="54" y="192.5" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+<text x="78" y="192" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="600" fill="#1d2430" text-anchor="start">local sources</text>
+<circle cx="54" cy="226" r="11" fill="#1b4a73"/>
+<text x="54" y="230.5" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+<text x="78" y="230" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="600" fill="#1d2430" text-anchor="start">kind's pack not here</text>
+<path d="M 250 226 L 292 226" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="300" y="230" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">forward the whole request</text>
+<path d="M 500 226 L 582 226" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="588" y="212" width="34" height="28" rx="6" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="605" y="231" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#1b4a73" text-anchor="middle">A</text>
+<rect x="700" y="212" width="196" height="28" rx="14" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="798" y="231" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="600" fill="#0f5e57" text-anchor="middle">view forwarding</text>
+<circle cx="54" cy="264" r="11" fill="#1b4a73"/>
+<text x="54" y="268.5" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+<text x="78" y="268" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="600" fill="#1d2430" text-anchor="start">pack here, data not</text>
+<path d="M 250 264 L 292 264" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="300" y="268" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">read the document from</text>
+<path d="M 500 264 L 582 264" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<rect x="588" y="250" width="34" height="28" rx="6" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="605" y="269" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#1b4a73" text-anchor="middle">C</text>
+<rect x="700" y="250" width="196" height="28" rx="14" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="798" y="269" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="600" fill="#0f5e57" text-anchor="middle">data forwarding</text>
+<circle cx="54" cy="302" r="11" fill="#1b4a73"/>
+<text x="54" y="306.5" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+<text x="78" y="306" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="600" fill="#1d2430" text-anchor="start">search / type-ahead</text>
+<path d="M 250 302 L 292 302" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="300" y="306" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">scatter to A, C; merge</text>
+<rect x="700" y="288" width="196" height="28" rx="14" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="798" y="307" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="600" fill="#0f5e57" text-anchor="middle">scatter-gather</text>
+<rect x="60" y="362" width="200" height="64" rx="8" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="160.0" y="387.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#1b4a73" text-anchor="middle">node A</text>
+<text x="160.0" y="409.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">packs: trading</text>
+<rect x="370" y="362" width="200" height="64" rx="8" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="470.0" y="387.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#1b4a73" text-anchor="middle">node B</text>
+<text x="470.0" y="409.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">packs: core, risk</text>
+<rect x="680" y="362" width="200" height="64" rx="8" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="780.0" y="387.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#1b4a73" text-anchor="middle">node C</text>
+<text x="780.0" y="409.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">packs: trading, market</text>
+<path d="M 264 394 L 366 394" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)" marker-start="url(#ahs)"/>
+<text x="315.0" y="386" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#5b6878" text-anchor="middle">gossip</text>
+<path d="M 574 394 L 676 394" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)" marker-start="url(#ahs)"/>
+<text x="625.0" y="386" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#5b6878" text-anchor="middle">gossip</text>
+<text x="470" y="462" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#5b6878" text-anchor="middle">every node keeps the members, their states and capability digests;</text>
+<text x="470" y="482" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#5b6878" text-anchor="middle">saved to &lt;data dir&gt;/net/peers.json</text>
+</svg>

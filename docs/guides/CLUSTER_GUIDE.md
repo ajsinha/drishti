@@ -52,18 +52,7 @@ Drishti\*net makes several Drishti servers act as one. Each server (a **node**) 
 and data it serves. A request one node cannot answer is answered by another, and the console never knows which: a person connected to any
 node sees the same pages. Nodes may host different packs or overlapping ones, and may share a lake or read lakes of their own.
 
-```text
-      console / Elements / API client  ──►  any node (say B)
-                                              │
-               ┌──────────── B's router ───────┴──────────────────────────────┐
-               │ 1. local sources                                              │
-               │ 2. kind's pack not here ──► forward the whole request ──► A   │  view forwarding
-               │ 3. pack here, data not  ──► read the document from ──────► C  │  data forwarding
-               │ 4. search / type-ahead  ──► scatter to A, C; merge            │  scatter-gather
-               └────────────────────────────────────────────────────────────────┘
-   A ◄──gossip──► B ◄──gossip──► C        every node: members, states, capability digests;
-   (packs: trading)  (core, risk)  (trading, market)   saved to <data dir>/net/peers.json
-```
+![Drishti*net routing: a client calls any node (say B); B's router answers from local sources, forwards the whole request to A when the kind's pack is not here (view forwarding), reads the document from C when the pack is here but the data is not (data forwarding), and scatters a search or type-ahead to A and C and merges (scatter-gather); A, B and C gossip members, states and capability digests, saved to <data dir>/net/peers.json](img/cluster/net-routing.svg)
 
 **It is off by default.** A server with no `config/net/` folder, or whose `node.yaml` does not say `enabled: true`, is a single server: no
 thread gossips, no peer is asked, nothing is forwarded, and the cluster's endpoints answer `404 DRS-5050`. Every server process is the same
@@ -492,27 +481,7 @@ machine drained for an upgrade still leaves two copies of everything, so a secon
 machines work for pilots and UAT but leave no spare: a failure leaves one copy and no machine to rebuild a second. More than three is
 section 4's estate.
 
-```text
-                         users (browsers, embedding hosts, API clients)
-                                │ HTTPS 443
-                ┌───────────────▼─────────────────────────────────────────┐
-                │ load balancer (a pair + VIP, or an ALB): health /readyz │  no stickiness (section 7.4)
-                └───────┬───────────────────┬───────────────────┬─────────┘
-         ┌──────────────▼──────┐ ┌──────────▼──────────┐ ┌──────▼──────────────┐
-         │ machine 1  (zone a) │ │ machine 2  (zone b) │ │ machine 3  (zone c) │
-         │ console, 4 workers  │ │ console, 4 workers  │ │ console, 4 workers  │
-         │ server: owner and   │ │ server: owner and   │ │ server: owner and   │
-         │ coordinator; ~2/3 of│ │ coordinator; ~2/3 of│ │ coordinator; ~2/3 of│
-         │ the shards; every   │ │ the shards; every   │ │ the shards; every   │
-         │ node's aggregate    │ │ node's aggregate    │ │ node's aggregate    │
-         │ hot files: NVMe/EBS │ │ hot files: NVMe/EBS │ │ hot files: NVMe/EBS │
-         └───────┬─────────────┘ └──────────┬──────────┘ └─────────────┬───────┘
-                 │◄──── Drishti*net: gossip + signed member calls ────►│
-         ┌───────▼────────────────────────────▼────────────────────────▼───────┐
-         │ LAKE on shared storage: S3, or S3-compatible (MinIO …), or NAS/SAN  │
-         │ POSTGRESQL primary + standby (Patroni), or RDS Multi-AZ             │
-         └─────────────────────────────────────────────────────────────────────┘
-```
+![Three machines in production: users over HTTPS 443 to a load balancer (a pair + VIP, or an ALB; health /readyz; no stickiness), three machines in zones a, b and c each running a console with 4 workers and a server that is owner and coordinator (about 2/3 of the shards, every node's aggregate, hot files on NVMe/EBS), joined by Drishti*net gossip and signed member calls, over a shared lake (S3, S3-compatible or NAS/SAN) and PostgreSQL primary + standby (Patroni) or RDS Multi-AZ](img/cluster/three-machines.svg)
 
 | Piece | On premises | On AWS | Why it must be shared |
 |---|---|---|---|
@@ -585,35 +554,7 @@ Every action and every save is in the audit log with the node it was made on. Th
 
 ### 4.1 The estate in one picture
 
-```text
-                               users (browsers, embedding hosts, API clients)
-                                      │ HTTPS 443, SSO (OIDC) at the console or the edge
-  EDGE      ┌─────────────────────────▼───────────────────────────────────┐
-            │ load balancer pair (ALB, or F5/HAProxy x2 + VIP), TLS, WAF   │  health: console /readyz
-            └──────────────┬───────────────────┬──────────────────────────┘
-  CONSOLES   ┌─────────────▼──┐ ┌──────────────▼─┐ ┌────────────────┐   live channels relayed between them
-             │ console 1      │ │ console 2      │ │ console 3 (N+1)│   4 worker processes each
-             └───────┬────────┘ └───────┬────────┘ └───────┬────────┘
-                     │ backend.urls + discovery (any server answers any scope)    HTTPS 18480
-  APP     ┌──────────▼────────────────────▼────────────────────▼─────────────────────────────────────────────────┐
-  (one    │ COORDINATORS (VaR coordinator-only, entity pages)                            x2-3                     │
-  Drishti │ VaR SHARD OWNERS (rows of S0..Sn, 2 replicas, 2 zones)                       x6 at 2.3M, x16 at 10M   │
-  *net)   │ EXPOSURE SERVER (one today)                                                                         │
-  gossip  │ BI AND REPORTING servers (Rūpaka, BI runs, scheduled reports)               x2-3                     │
-  + signed│ DATA-SERVING servers (entity pages, search, type-ahead, data map, World, Market)  x2-3             │
-  calls   │ PYTHON COMPUTE pools (exposure what-if, VaR engine pools) on servers or hosts of their own          │
-          └─────┬──────────────────────┬───────────────────────────┬───────────────────────────┬───────────────┘
-                │ Parquet reads         │ JDBC                      │ Kafka (PV topic)          │ content store
-  DATA    ┌─────▼──────────────┐ ┌──────▼──────────────────┐ ┌──────▼─────────────┐ ┌──────────▼───────────────┐
-          │ LAKE: S3 or shared │ │ Drishti database:       │ │ Kafka (bank's, or  │ │ content store: PostgreSQL│
-          │ file system; Delta │ │ PostgreSQL primary +    │ │ MSK), 3 brokers    │ │ or S3 (or a shared mount)│
-          │ or Iceberg         │ │ standby                 │ └────────────────────┘ └──────────────────────────┘
-          └─────▲──────────────┘ └─────────────────────────┘     SECRETS: vault / Secrets Manager
-                │ one commit a date
-  LOAD    ┌─────┴──────────────────────────┐
-          │ LOADERS: drishti-lakeload jobs │──── data-load signal (POST /packs/{pack}/loads) to one member, forwarded to all
-          └────────────────────────────────┘
-```
+![The estate: users over HTTPS 443 with SSO to the edge load balancer pair, three consoles (N+1), the app tier of one Drishti*net (coordinators, VaR shard owners, the exposure server, BI and reporting servers, data-serving servers, Python compute pools) reaching the lake by Parquet reads, the Drishti database by JDBC, Kafka for the PV topic and the content store; loaders write one commit a date to the lake and send the data-load signal to one member, forwarded to all](img/cluster/estate.svg)
 
 All servers are members of one Drishti\*net and any of them answers any request: a request reaching the "wrong" server is forwarded or
 scattered to shard owners. Roles exist to size and isolate work (a whole-bank BI run must never slow a VaR answer), not for correctness.
@@ -907,16 +848,7 @@ Defaults throughout (gossip 1 s / 5 s / 30 s; `stable-seconds` 30, `grace-second
 
 **A node failure** (owner A of shards S2 and S5, replicas B and C; T_b = 2 min for illustration):
 
-```text
- t=0s      A crashes ─────────────── last heartbeat
- t=0-5s    calls to A for S2/S5: refused at once ──► next member (B for S2, C for S5) answers      [no gap for users]
- t=5-8s    A suspect on every member; B and C asked first
- t=35-38s  A dead; the view without A stable 30 s ──► new owners: S2 → {B, D}, S5 → {C, E}
- t=37-40s  D and E start building S2 and S5 from the lake
- t≈160s    D and E announce ready ──► two ready owners again                                    [replica count restored]
- A restarts at t=10min: joins when ready ─► joining ≤ 30 s ─► view stable 30 s ─► owns S2, S5 again ─► builds ─► ready
-           ─► after 30 s grace D and E release them
-```
+![Timeline of a node failure: A crashes at t=0; calls for S2 and S5 go to B and C at once (no gap for users); A is suspect at 5-8 s and dead at 35-38 s, when S2 moves to B and D and S5 to C and E; D and E build from the lake and are ready at about 160 s (replica count restored); A restarting at 10 min joins, owns S2 and S5 again, builds, is ready, and after 30 s grace D and E release them](img/cluster/node-failure-timeline.svg)
 
 A rolling upgrade of one node is section 8.2.
 
@@ -1087,18 +1019,7 @@ retention above the longest open date's age.
 
 ## 9. The daily cycle across the cluster
 
-```text
- 04:00-07:00  overnight runs land: scenario PVs, P&L vectors, exposure paths
- 07:00        loader: drishti-lakeload, one commit a date, files cut by LEGAL_ENTITY, DESK + a manifest
- 07:10        signal: POST /packs/market-risk/loads {status: ready} to ONE member ──► forwarded to every live member
- 07:10-07:20  each owner builds ITS shard books of the new date from the lake (file skipping by key range); announces ready
-              every member puts the date together (its shards + the skeleton) and swaps it in; the old date answers meanwhile
-              currency shard books built from the USD ones
- 07:20        official end-of-day capture of the date
- 07:20-       intraday: file batches and Kafka windows (5 min) applied by every member on its own signal; no shard moves
- any time     the version watch (30 s) reloads a date whose lake version moved without a signal
- warm-up      hot files kept across restarts; a restarted member maps them again
-```
+![The daily cycle: overnight runs land 04:00-07:00, the loader commits at 07:00, the data-load signal at 07:10 is forwarded to every member, owners build their shard books 07:10-07:20 and every member swaps the date in, the official end-of-day capture at 07:20, intraday updates after, the version watch at any time, and hot files kept across restarts](img/cluster/daily-cycle.svg)
 
 Timing (estimate): the loader's 2.3M load 1 to 5 minutes; shard books in parallel across owners, each about 1/6 of a single server's build.
 
@@ -1115,13 +1036,7 @@ Timing (estimate): the loader's 2.3M load 1 to 5 minutes; shard books in paralle
   start that a second server cannot verify.
 - **Lenses** are per person and session; **editions** per member, equal on all.
 
-```text
-  USERS ──443──► EDGE (LB, WAF, TLS) ──17480──► CONSOLES ──18480 TLS──► APP (servers)
-                                                                          │ 18480 + gossip port: member to member only
-                                                                          ├──► DATA: lake (S3 endpoint / NFS), PostgreSQL 5432,
-                                                                          │          Kafka 9092/9094, content store
-  ADMIN HOST (bastion) ──► everything, audited          LOADERS ──► DATA only (no user ingress)
-```
+![Security zones and ports: users to the edge on 443, the edge to the consoles on 17480, the consoles to the app servers on 18480 with TLS; app servers talk member to member on 18480 and the gossip port and reach the data (lake, PostgreSQL 5432, Kafka 9092/9094, content store); the admin host reaches everything, audited; loaders reach the data only](img/cluster/security-zones.svg)
 
 | Control | Production rule |
 |---|---|
@@ -1307,13 +1222,7 @@ console needs no internet; the Python is compiled at build time for the read-onl
 (so the balancer reaches it) and never advertises an address. 2 vCPU, 4 GB, `DRISHTI_CONSOLE_WORKERS=4`; it starts once its server is healthy
 (`dependsOn … HEALTHY`); health `/healthz`.
 
-```text
- ECS: start task ─ mount EFS access points ─ inject secrets
-   server: check mounts (else exit 78) ─ task.lock (else exit 78) ─ real IPv4 ─ first start? write node.yaml + peers/<seed>.yaml
-           ─ java ─ join through the seeds, advertising http://<task IP>:18480 ─ users, roles and state caught up from peers ─ readiness UP
-   console (server HEALTHY): same mount checks ─ backend = http://<task IP>:18480 ─ run
- ECS: register drishti-a.drishti.local → task IP in Cloud Map; the target group marks the console healthy; users reach it
-```
+![A node task starting on ECS: ECS starts the task, mounts the EFS access points and injects secrets; the server checks mounts and task.lock (else exit 78), finds its real IPv4, writes node.yaml and the seed's peer file on first start, starts Java, joins through the seeds advertising its task IP, catches up users, roles and state and reports readiness; the console starts once the server is healthy; ECS registers the task IP in Cloud Map and the target group marks the console healthy](img/cluster/ecs-task-start.svg)
 
 ### 12.5 S3 and Drishti\*net on ECS
 
@@ -1343,14 +1252,7 @@ for AWS S3 Tables: Python with `boto3`, so they run on Windows too.
 **Drishti\*net on ECS.** `deploy/aws/ecs/setup-cloud-map.sh` creates the namespace `drishti.local` and a service per node (run it twice: the
 namespace takes a minute); `register.sh` sets each server's `DRISHTI_NET_SEEDS` from `DRISHTI_NET_SEED_NODES`.
 
-```text
-   drishti-c starts (first time):
-     DRISHTI_NET_SEEDS = http://drishti-a.drishti.local:18480,http://drishti-b.drishti.local:18480
-       └─► entry point writes config/net/peers/drishti-a.yaml and drishti-b.yaml
-     server resolves drishti-a.drishti.local → 10.0.1.23 (a real address; loopback would be refused)
-       └─► gossips with drishti-a, advertising http://10.0.3.17:18480 (its own task address)
-     every member now lists drishti-c; the console of any node discovers it
-```
+![drishti-c starting for the first time on ECS: DRISHTI_NET_SEEDS names drishti-a and drishti-b by Cloud Map name, the entry point writes their peer files, the server resolves drishti-a to a real address and gossips with it advertising its own task address, and every member then lists drishti-c](img/cluster/ecs-seeds.svg)
 
 Seeds are named by Cloud Map names, which resolve to task addresses; what members advertise stays an IP, resolved at every start, so a task
 that comes back with a new address advertises the new one. A node's identity is its service (node id, access points, Cloud Map name), so a
@@ -1563,25 +1465,7 @@ nothing expires inside the 7 years.
 
 ### 13.1 The picture, and why S3
 
-```text
-  SOURCES (ENDUR, CALYPSO, MUREX, reference)        dumps: JSON / JSON Lines / .gz
-          ▼
-  ┌── S3: <org>-drishti-<env>-landing ── 2026-10-20/endur/*.jsonl.gz … ──┐   kept LANDING_KEEP_DAYS (30)
-                 │ EventBridge Scheduler, 22:30 New York, Monday to Friday
-                 ▼
-  ┌── ECS task "loader" ── load-day.sh, per table, under the table's lock (EFS) ─────────────────────────┐
-  │  1 aws s3 sync   landing → EFS scratch      2 lake build → a scratch Delta table (promoted, sorted)   │
-  │  3 aws s3 sync   data files → s3://…-lake/lake/<domain>/<table>/business_date=…/                      │
-  │  4 lake publish  ONE Delta commit on S3 (conditional PUT)   5 metrics: LoadSucceeded, LoadSeconds …   │
-  └──────────────┬───────────────────────────────────────────────────────────────────────────────────────┘
-                 ▼
-  ┌── S3: <org>-drishti-<env>-lake (THE LAKE): _delta_log/ + business_date=…/PRODUCT_TYPE=…/part-….parquet ──┐
-  │  versioning · SSE-KMS · only through the VPC endpoint · Standard → Standard-IA (90 d) → Glacier IR (2 y)  │
-  └──────────────┬──────────────────────────────────────────────▲──────────────────────────────────────────┘
-                 │ ranged GETs (task role, gateway endpoint)       │ checkpoint, retention, vacuum ("maintenance", nightly)
-                 ▼
-  ECS services drishti-a, -b, -c: the Delta connector, native engine, root s3://…-lake/lake; caches on EFS or NVMe
-```
+![The Delta lake in S3: source dumps land in the landing bucket, an EventBridge-scheduled loader task syncs to EFS scratch, builds a scratch Delta table, syncs the data files to the lake bucket and publishes one Delta commit with a conditional PUT, then writes metrics; the ECS node services read the lake with ranged GETs; nightly maintenance checkpoints, applies retention and vacuums](img/cluster/s3-lake.svg)
 
 | | Amazon S3 | Amazon EFS |
 |---|---|---|
@@ -1774,12 +1658,7 @@ table); `checkpoint: true`; `vacuum-hours` = `LAKE_VACUUM_HOURS` (168; S3 keeps 
 re-laying instead). `--force-foreign` is needed because `lake maintain` treats every `s3://` table as foreign; these are Drishti's (written by
 `lake publish`), and the history marks the runs *forced*. `lake maintain` itself: [the operations guide](OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling).
 
-```text
- business date age:   0 ───────── 90 days ─────────────── 2 years ────────────────── LAKE_KEEP_BUSINESS_DAYS ──► removed
- storage class:       Standard    │ Standard-IA             │ Glacier Instant Retrieval │ by lake maintain, then vacuum,
-                                  │ (TIER_IA_AFTER_DAYS)    │ (TIER_GLACIER_IR_AFTER_DAYS)│ then noncurrent expiry
- read latency:        ms          │ ms                      │ ms                         │
-```
+![Storage tiers by business date age: S3 Standard up to 90 days, Standard-IA to two years, Glacier Instant Retrieval to LAKE_KEEP_BUSINESS_DAYS, then removed by lake maintain, vacuum and noncurrent expiry; reads take milliseconds in every tier](img/cluster/storage-tiers.svg)
 
 S3 lifecycle rules move objects at an age since writing, which is wrong for a restated or backfilled day, so `setup-lifecycle.sh` writes
 per table one rule a business month with **dates** (a month's files move when its last day is 90 days old, to Glacier IR at two years; a year
@@ -2007,22 +1886,7 @@ the lake and Drishti\*net.
 
 ### 15.1 Where each kind of data lives
 
-```text
-                       ┌──────────────────────────── one server (JVM) ────────────────────────────┐
-  the lake             │  JAVA HEAP (-Xmx)                       OFF-HEAP, MAPPED (not -Xmx)        │
-  (Delta / Iceberg,    │  • the skeleton of each open VaR date   • VaR hot files (float32 rows)     │
-   Parquet; S3 or      │  • exposure set statistics, index       • exposure hot files               │
-   local)              │  • answer caches                        • Delta / Iceberg id maps          │
-        │ Parquet      │  • connector caches: id maps, columns,  • multi-day type-ahead segments    │
-        │ decode       │    documents, day parts                 DIRECT (-XX:MaxDirectMemorySize)   │
-        ▼              │  • layouts, fingerprints, expressions   • I/O buffers (8 MB pool), Kafka   │
-  ┌───────────┐ read   │  • live topics, view streams            NATIVE (malloc)                    │
-  │ connectors│──────► │  • identity, settings, pack access      • RocksDB, DuckDB, the JVM itself  │
-  └───────────┘        └────────────┬───────────────────────────────────────────┬──────────────────┘
-  LOCAL DISK under the data folder  │ page faults                               │ writes
-  var/hot/   ccr/hot/   cache/<connector>/idmaps   cache/<connector>/docs   index/   derived/   bi-store/   bi-runs/   tmp/
-  OPERATING SYSTEM PAGE CACHE: the pages of every mapped and recently read file; shared, evictable, not counted in -Xmx
-```
+![Where each kind of data lives in one server: the lake is decoded by the connectors into the Java heap (skeletons, statistics, answer and connector caches, layouts, live topics, identity); off-heap mapped files hold VaR and exposure hot files, id maps and type-ahead segments; direct memory holds I/O buffers; native memory RocksDB, DuckDB and the JVM; below, the local disk under the data folder and the operating system's page cache](img/cluster/memory-tiers.svg)
 
 | Tier | Holds | Bounded by | Survives a restart |
 |---|---|---|---|

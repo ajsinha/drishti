@@ -15,6 +15,15 @@
 -->
 # Changelog
 
+## Unreleased
+
+### Docs
+
+- **The cluster guide draws its pictures:** the eleven box-drawing diagrams of [CLUSTER_GUIDE.md](docs/guides/CLUSTER_GUIDE.md) (Drishti\*net
+  routing, three machines, the estate, a node failure, the daily cycle, security zones, an ECS task starting, ECS seeds, the lake in S3,
+  storage tiers, where data lives in memory) are self-contained SVG diagrams in `docs/guides/img/cluster/`, vectors in the regenerated PDF;
+  `test_guide_images` accepts SVG diagrams (viewBox, title, nothing loaded from elsewhere) and keeps box drawings out of the guide.
+
 ## 2.9.11.g (2026-11-08)
 
 The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2.9.11.g: every entry of the four is here.

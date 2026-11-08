@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+  A diagram of docs/guides/CLUSTER_GUIDE.md.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 410" width="980" height="410" role="img" aria-labelledby="t d">
+<title id="t">The daily cycle across the cluster</title>
+<desc id="d">From the overnight runs to the loader, the data-load signal, shard books, the end-of-day capture and intraday updates.</desc>
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5b7590"/></marker>
+<marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5b7590"/></marker>
+</defs>
+<rect x="0.75" y="0.75" width="978.5" height="408.5" rx="14" fill="#ffffff" stroke="#d5dde7" stroke-width="1.5"/>
+<text x="24" y="34" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="16" font-weight="700" fill="#12324f">The daily cycle across the cluster</text>
+<path d="M 140 75 L 140 367" stroke="#8fb0d6" stroke-width="2"/>
+<rect x="24" y="63" width="106" height="24" rx="12" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="77.0" y="80" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="700" fill="#1b4a73" text-anchor="middle">04:00–07:00</text>
+<circle cx="140" cy="75" r="5" fill="#1b4a73"/>
+<text x="158" y="78" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">overnight runs land: scenario PVs, P&amp;L vectors, exposure paths</text>
+<rect x="24" y="99" width="106" height="24" rx="12" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="77.0" y="116" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="700" fill="#1b4a73" text-anchor="middle">07:00</text>
+<circle cx="140" cy="111" r="5" fill="#1b4a73"/>
+<text x="158" y="114" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">loader: drishti-lakeload, one commit a date, files cut by LEGAL_ENTITY, DESK + a manifest</text>
+<rect x="24" y="135" width="106" height="24" rx="12" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="77.0" y="152" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="700" fill="#1b4a73" text-anchor="middle">07:10</text>
+<circle cx="140" cy="147" r="5" fill="#1b4a73"/>
+<text x="158" y="150" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" text-anchor="start"><tspan font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-weight="400" fill="#1d2430">signal: POST /packs/market-risk/loads {status: ready} to ONE member </tspan><tspan font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-weight="700" fill="#1b4a73">→ </tspan><tspan font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-weight="400" fill="#1d2430">forwarded to every live member</tspan></text>
+<rect x="24" y="171" width="106" height="24" rx="12" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="77.0" y="188" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="700" fill="#1b4a73" text-anchor="middle">07:10–07:20</text>
+<circle cx="140" cy="183" r="5" fill="#1b4a73"/>
+<text x="158" y="186" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">each owner builds ITS shard books of the new date from the lake (file skipping by key range); announces ready</text>
+<text x="158" y="206" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">every member puts the date together (its shards + the skeleton) and swaps it in; the old date answers meanwhile</text>
+<text x="158" y="226" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">currency shard books built from the USD ones</text>
+<rect x="24" y="247" width="106" height="24" rx="12" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="77.0" y="264" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="700" fill="#1b4a73" text-anchor="middle">07:20</text>
+<circle cx="140" cy="259" r="5" fill="#1b4a73"/>
+<text x="158" y="262" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">official end-of-day capture of the date</text>
+<rect x="24" y="283" width="106" height="24" rx="12" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="77.0" y="300" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="700" fill="#1b4a73" text-anchor="middle">07:20–</text>
+<circle cx="140" cy="295" r="5" fill="#1b4a73"/>
+<text x="158" y="298" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">intraday: file batches and Kafka windows (5 min) applied by every member on its own signal; no shard moves</text>
+<rect x="24" y="319" width="106" height="24" rx="12" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="77.0" y="336" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="700" fill="#1b4a73" text-anchor="middle">any time</text>
+<circle cx="140" cy="331" r="5" fill="#1b4a73"/>
+<text x="158" y="334" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">the version watch (30 s) reloads a date whose lake version moved without a signal</text>
+<rect x="24" y="355" width="106" height="24" rx="12" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="77.0" y="372" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="700" fill="#1b4a73" text-anchor="middle">warm-up</text>
+<circle cx="140" cy="367" r="5" fill="#1b4a73"/>
+<text x="158" y="370" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="400" fill="#1d2430" text-anchor="start">hot files kept across restarts; a restarted member maps them again</text>
+</svg>

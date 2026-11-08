@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+  A diagram of docs/guides/CLUSTER_GUIDE.md.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="1000" height="600" role="img" aria-labelledby="t d">
+<title id="t">Where each kind of data lives</title>
+<desc id="d">Inside one server: the Java heap, off-heap mapped files, direct buffers and native memory; below it the local disk under the data folder and the operating system's page cache.</desc>
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5b7590"/></marker>
+<marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5b7590"/></marker>
+</defs>
+<rect x="0.75" y="0.75" width="998.5" height="598.5" rx="14" fill="#ffffff" stroke="#d5dde7" stroke-width="1.5"/>
+<text x="24" y="34" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="16" font-weight="700" fill="#12324f">Where each kind of data lives</text>
+<rect x="24" y="70" width="196" height="90" rx="8" fill="#e3f3f0" stroke="#7fbcb1" stroke-width="1.2"/>
+<text x="36" y="92" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="700" fill="#0f5e57" text-anchor="start">the lake</text>
+<text x="36" y="112" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">Delta / Iceberg, Parquet;</text>
+<text x="36" y="130" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">S3 or local</text>
+<path d="M 122 160 L 122 226" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="130" y="198" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#5b6878" text-anchor="start">Parquet decode</text>
+<rect x="24" y="228" width="196" height="46" rx="8" fill="#eef1f5" stroke="#aab6c4" stroke-width="1.2"/>
+<text x="122.0" y="255.55" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" font-weight="400" fill="#1d2430" text-anchor="middle">connectors</text>
+<path d="M 220 251 L 256 251" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="236" y="242" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="600" fill="#5b6878" text-anchor="middle">read</text>
+<rect x="258" y="54" width="718" height="344" rx="12" fill="#f7f9fc" stroke="#aab6c4" stroke-width="1.2"/>
+<text x="274" y="78" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">one server (JVM)</text>
+<rect x="274" y="92" width="330" height="290" rx="8" fill="#e8f0fa" stroke="#8fb0d6" stroke-width="1.2"/>
+<text x="286" y="114" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="700" fill="#1b4a73" text-anchor="start">JAVA HEAP (-Xmx)</text>
+<text x="286" y="135" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• the skeleton of each open VaR date</text>
+<text x="286" y="154" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• exposure set statistics, index</text>
+<text x="286" y="173" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• answer caches</text>
+<text x="286" y="192" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• connector caches: id maps, columns,</text>
+<text x="286" y="211" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">   documents, day parts</text>
+<text x="286" y="230" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• layouts, fingerprints, expressions</text>
+<text x="286" y="249" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• live topics, view streams</text>
+<text x="286" y="268" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• identity, settings, pack access</text>
+<rect x="618" y="92" width="344" height="130" rx="8" fill="#e3f3f0" stroke="#7fbcb1" stroke-width="1.2"/>
+<text x="630" y="114" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="700" fill="#0f5e57" text-anchor="start">OFF-HEAP, MAPPED (not -Xmx)</text>
+<text x="630" y="135" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• VaR hot files (float32 rows)</text>
+<text x="630" y="154" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• exposure hot files</text>
+<text x="630" y="173" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• Delta / Iceberg id maps</text>
+<text x="630" y="192" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• multi-day type-ahead segments</text>
+<rect x="618" y="230" width="344" height="72" rx="8" fill="#fdf2e1" stroke="#e0b36e" stroke-width="1.2"/>
+<text x="630" y="252" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="700" fill="#8a4b08" text-anchor="start">DIRECT (-XX:MaxDirectMemorySize)</text>
+<text x="630" y="273" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• I/O buffers (8 MB pool), Kafka</text>
+<rect x="618" y="310" width="344" height="72" rx="8" fill="#f0ecfa" stroke="#ab9ad8" stroke-width="1.2"/>
+<text x="630" y="332" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13.5" font-weight="700" fill="#4b3a8a" text-anchor="start">NATIVE (malloc)</text>
+<text x="630" y="353" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12.5" font-weight="400" fill="#1d2430" text-anchor="start">• RocksDB, DuckDB, the JVM itself</text>
+<path d="M 440 438 L 440 400" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="450" y="424" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#5b6878" text-anchor="start">page faults</text>
+<path d="M 790 400 L 790 438" fill="none" stroke="#5b7590" stroke-width="1.6" marker-end="url(#ah)"/>
+<text x="800" y="424" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="12" font-weight="400" fill="#5b6878" text-anchor="start">writes</text>
+<rect x="24" y="440" width="952" height="82" rx="10" fill="#eef1f5" stroke="#aab6c4" stroke-width="1.2"/>
+<text x="40" y="464" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="14" font-weight="700" fill="#2f3d4e" text-anchor="start">LOCAL DISK under the data folder</text>
+<rect x="40" y="478" width="74.4" height="26" rx="6" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="77.2" y="496" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="12" font-weight="500" fill="#1d2430" text-anchor="middle">var/hot/</text>
+<rect x="122.4" y="478" width="74.4" height="26" rx="6" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="159.60000000000002" y="496" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="12" font-weight="500" fill="#1d2430" text-anchor="middle">ccr/hot/</text>
+<rect x="204.8" y="478" width="191.2" height="26" rx="6" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="300.4" y="496" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="12" font-weight="500" fill="#1d2430" text-anchor="middle">cache/&lt;connector&gt;/idmaps</text>
+<rect x="404.0" y="478" width="176.6" height="26" rx="6" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="492.3" y="496" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="12" font-weight="500" fill="#1d2430" text-anchor="middle">cache/&lt;connector&gt;/docs</text>
+<rect x="588.6" y="478" width="59.8" height="26" rx="6" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="618.5" y="496" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="12" font-weight="500" fill="#1d2430" text-anchor="middle">index/</text>
+<rect x="656.4" y="478" width="74.4" height="26" rx="6" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="693.6" y="496" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="12" font-weight="500" fill="#1d2430" text-anchor="middle">derived/</text>
+<rect x="738.8" y="478" width="81.7" height="26" rx="6" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="779.65" y="496" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="12" font-weight="500" fill="#1d2430" text-anchor="middle">bi-store/</text>
+<rect x="828.5" y="478" width="74.4" height="26" rx="6" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="865.7" y="496" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="12" font-weight="500" fill="#1d2430" text-anchor="middle">bi-runs/</text>
+<rect x="910.9" y="478" width="45.2" height="26" rx="6" fill="#ffffff" stroke="#c9d3de" stroke-width="1.2"/>
+<text x="933.5" y="496" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="12" font-weight="500" fill="#1d2430" text-anchor="middle">tmp/</text>
+<rect x="24" y="534" width="952" height="50" rx="10" fill="#fdf2e1" stroke="#e0b36e" stroke-width="1.2"/>
+<text x="40" y="564" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-size="13" text-anchor="start"><tspan font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-weight="700" fill="#8a4b08">OPERATING SYSTEM PAGE CACHE: </tspan><tspan font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif" font-weight="400" fill="#1d2430">the pages of every mapped and recently read file; shared, evictable, not counted in -Xmx</tspan></text>
+</svg>
