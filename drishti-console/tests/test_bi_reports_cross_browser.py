@@ -29,7 +29,7 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_report_stack  # noqa: E402
-from bi_report_helpers import card_value, chart, clean, click_mark, grid_rows, open_report, settled, sign_in  # noqa: E402
+from bi_report_helpers import card_value, chart, clean, click_mark, grid_rows, open_report, pick_in_dropdown_slicer, settled, sign_in  # noqa: E402
 from bi_report_stack import api  # noqa: E402
 
 COUNTERPARTY = "file:report:counterparty-risk"
@@ -94,8 +94,7 @@ def test_a_report_scope_slicer_filters_every_visual_through_the_relationships(st
     page = sign_in(browser, "rita")
     open_report(page, COUNTERPARTY)
     settled(page)
-    page.click('[data-visual="sector"] summary')
-    page.check('[data-visual="sector"] [data-slicer-value="Banking"]')
+    pick_in_dropdown_slicer(page, "sector", "Banking")                    # the dropdown slicer: drishti-inputs' MultiSelect
     settled(page)
     want = engine("rita", ["risk"], {"measures": ["Exposure (EE peak)"], "filters": [{"field": "counterparties.SECTOR", "op": "in", "values": ["Banking"]}]})["rows"][0][0]
     assert card_value(page, "ee") == int(want)
