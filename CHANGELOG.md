@@ -123,6 +123,17 @@
 
 ## 2.9.11.e (unreleased)
 
+- **No bespoke UI, the editors' rows on drishti-grid editing** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  the model editor's tables, relationships, measures (the ? card and the engine's "adds up?" as drawn cells), hierarchies, row rules,
+  fields and access matrix, and the table editor's source and look-ups and its columns checklist are drishti-grid with cell editing through
+  one helper (`E.rowGrid`, `drishti_editor-formula.js` 59 → 92 lines; `drishti_editor-model.js` 332 → 340 and `drishti_editor-table.js`
+  276 → 266, their hand-made tables, inputs and selects deleted). **drishti-grid** gains the `code` cell editor: a formula cell is
+  drishti-inputs' one-line `CodeEditor` (the column's `codeMode` and `complete` hook) when that library is on the page; a cell editor started
+  out of view takes the focus when its cell is drawn. Admin › Lakes: a file's fields with their Classifier and Promote checkboxes are a
+  drishti-grid with editing (`drishti_admin-lakes.js` 231 → 236), so the kit guard's hand-made-form allow-list is 2 → 1 (a BI transform's
+  parameters). A problem without a level in the editors' YAML is an error. Tests: the editors', the lakes' and the workbench's browser
+  files follow the grids and the kit's palette.
+
 - **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the Build workbench's inspector is drishti-designer's `Inspector` (one live `Form` from the Rachana schema; `build/drishti_inspector.js`
   286 → 242 lines) and its palette the kit's `Palette` (`build/drishti_palette.js` 80 → 63); its expression fields are `Form`'s new

@@ -45,6 +45,8 @@ test('text read as values: numbers in a locale and loosely, dates, yes and no, a
   assert.match(G.parseCellText(col({ options: ['Rates'] }), 'Equity').error, /not one of Rates/);
   assert.equal(G.parseCellText(col({}), '').value, null);
   assert.deepEqual(['text', 'number', 'date', 'checkbox', 'select'], [G.editorOf({ type: 'text' }), G.editorOf({ type: 'number' }), G.editorOf({ type: 'date' }), G.editorOf({ type: 'boolean' }), G.editorOf({ type: 'text', options: ['a'] })]);
+  assert.equal(G.editorOf({ type: 'text', editor: 'code' }), 'code');                       // a formula: drishti-inputs' one-line CodeEditor when it is on the page
+  assert.equal(G.parseCellText({ header: 'F', type: 'text', editor: 'code' }, ' sum(t.MTM) ').value, 'sum(t.MTM)');
   assert.equal(G.validateCell({ header: 'Quantity', required: true }, null, {}), 'Quantity is required');
   assert.equal(G.validateCell({ header: 'Quantity', min: 0 }, -1, {}), 'Quantity must be at least 0');
   assert.equal(G.validateCell({ header: 'Note', maxLength: 3 }, 'long', {}), 'Note may have at most 3 characters');

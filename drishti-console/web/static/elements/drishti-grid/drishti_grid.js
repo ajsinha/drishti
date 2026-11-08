@@ -2586,7 +2586,7 @@
   /* ---- src/drishti_grid-edit.js ---- */
   __m["src/drishti_grid-edit.js"] = (function () {
     var parseNumberText = __lib("drishti-core").parseNumberText;
-    const EDITORS = Object.freeze(['text', 'number', 'date', 'select', 'checkbox']);
+    const EDITORS = Object.freeze(['text', 'number', 'date', 'select', 'checkbox', 'code']);
     function editorOf(col) {
       if (col.editor && EDITORS.indexOf(col.editor) >= 0) { return col.editor; }
       if (col.type === 'boolean') { return 'checkbox'; }
@@ -4947,6 +4947,18 @@
           this.input.setAttribute('aria-describedby', msg.id);
           picker.on('change', () => Promise.resolve().then(() => { if (this.at && this.picker === picker) { this.commit({ dr: 0, dc: 0 }); } }));
           if (o && o.initial) { this.input.value = o.initial; }
+        } else if (ed === 'code' && loaded('drishti-inputs') && loaded('drishti-inputs').CodeEditor) {
+          const host = h(this.doc, 'div', { cls: 'dg-editor-code' });
+          box.appendChild(host);
+          const code = this.code = new (loaded('drishti-inputs').CodeEditor)(host, { mode: col.codeMode || 'rachana', singleLine: true, lineNumbers: false, height: 'auto',
+            tabLeaves: true, lineWrapping: false, label: label, complete: col.complete || null, value: o && o.initial ? o.initial : cur === null || cur === undefined ? '' : String(cur) });
+          this.input = { focus: () => code.focus(), setAttribute: (k, val) => host.setAttribute(k, val), get value() { return code.getValue(); } };
+          Promise.resolve(code.ready).then(() => {
+            if (this.code !== code || !code.cm) { return; }
+            code.cm.getInputField().setAttribute('aria-describedby', msg.id);
+            code.focus();
+            code.cm.setCursor(code.cm.lineCount(), 0);
+          });
         } else {
           const inp = this.input = h(this.doc, 'input', { cls: 'dg-editor-input' + (ed === 'number' ? ' dg-num' : ''), attrs: { type: ed === 'date' ? 'date' : 'text', 'aria-label': label,
             'aria-describedby': msg.id, inputmode: ed === 'number' ? 'decimal' : null, spellcheck: 'false', autocomplete: 'off' } });
@@ -4970,16 +4982,19 @@
         const v = this.view, cell = this.doc.getElementById(v.uid + '-r' + this.at.r + '-c' + this.at.c);
         if (!cell) { this.el.style.visibility = 'hidden'; return; }
         const a = v.body.area.getBoundingClientRect(), r = cell.getBoundingClientRect();
+        const shown = this.el.style.visibility === 'hidden';               // a cell scrolled into view after editing started (out of view at first)
         this.el.style.visibility = 'visible';
+        if (shown && this.input && !this.el.contains(this.doc.activeElement)) { this.doc.defaultView.setTimeout(() => { if (this.at && this.input) { this.input.focus(); } }, 0); }
         this.el.style.left = (r.left - a.left) + 'px';
         this.el.style.top = (r.top - a.top) + 'px';
-        this.el.style.width = Math.max(r.width, this.at.ed === 'date' ? 150 : 60) + 'px';
+        this.el.style.width = Math.max(r.width, this.at.ed === 'date' ? 150 : this.at.ed === 'code' ? 220 : 60) + 'px';
         this.el.style.height = r.height + 'px';
       }
       key(e) {
         if (!this.at) { return; }
         const k = e.key;
         if (this.picker && this.picker.pop.isOpen() && (k === 'Escape' || k === 'ArrowDown' || k === 'ArrowUp')) { return; }   /* the calendar's own */
+        if (this.code && this.code.pop.isOpen() && (k === 'Escape' || k === 'Enter' || k === 'Tab' || k === 'ArrowDown' || k === 'ArrowUp')) { return; }   /* the completion's own */
         if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.cancel(); return; }
         if (k === 'Enter') { e.preventDefault(); e.stopPropagation(); this.commit({ dr: e.shiftKey ? -1 : 1, dc: 0 }); return; }
         if (k === 'Tab') { e.preventDefault(); e.stopPropagation(); this.commit({ dr: 0, dc: e.shiftKey ? -1 : 1 }); }
@@ -4989,6 +5004,7 @@
         const a = this.doc.activeElement;
         if (this.el && this.el.contains(a)) { return; }
         if (this.picker && this.picker.pop.el && this.picker.pop.el.contains(a)) { return; }
+        if (this.code && this.code.pop.el && this.code.pop.el.contains(a)) { return; }
         this.commit(null, true);
       }
       read() {
@@ -5036,6 +5052,7 @@
         const at = this.at;
         this.at = null;
         if (this.picker) { this.picker.close(); this.picker = null; }
+        if (this.code) { this.code.pop.close(); this.code = null; }
         if (this.el) { this.el.remove(); this.el = null; }
         if (at) { this.view.model.live.emit('cellEditStopped', { row: at.r, col: at.c, saved: !!saved }); }
         this.view.body.schedule();

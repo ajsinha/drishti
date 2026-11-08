@@ -21,7 +21,7 @@
 {% block body_class %}terminal ed-page{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_editors.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_editors.css?v={{ ASSET_V }}">{% endblock %}
 {% block content %}
 <div class="ed" data-editors data-kind="{{ kind }}" data-name="{{ name }}" data-item="{{ item }}" data-new="{{ new }}"
      data-python-runs="{{ 'true' if python_runs else 'false' }}" data-python-why="{{ python_why }}" data-user="{{ me.user if me else '' }}"></div>{# drishti-designer's DesignerShell draws the header, the panes and the dialog here #}

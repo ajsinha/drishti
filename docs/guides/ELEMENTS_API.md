@@ -3432,7 +3432,7 @@ Returns `function(): void`: disconnects.
 
 #### `EDITORS`
 
-The editors a column may name; a column without one gets its type's.
+The editors a column may name; a column without one gets its type's. 'code' is a formula: drishti-inputs' one-line CodeEditor (the column's codeMode, default Rachana, and its complete hook) when that library is on the page, else text.
 
 #### `editorOf(col)`
 
@@ -5765,6 +5765,9 @@ A row as the grid sees it at a display index.
 | `[filterable=true]` | `boolean` |  |
 | `[resizable=true]` | `boolean` |  |
 | `[editable=false]` | `boolean` | a person may change its values (setCellValue) |
+| `[editor]` | `('text'\|'number'\|'date'\|'select'\|'checkbox'\|'code')` | the cell editor (default: by type); 'code' is a one-line formula |
+| `[codeMode='rachana']` | `string` | the code editor's mode (rachana, yaml, python, text) for editor 'code' |
+| `[complete]` | `function(Object): (Array\|Promise&lt;Array&gt;)` | the code editor's completion hook for editor 'code' (drishti-inputs' CodeEditor) |
 | `[aggFunc]` | `string` | the aggregation of a value column (sum, count, min, max, avg, first, last, distinct, or a server measure) |
 | `[additive]` | `boolean` | whether its figures may be summed: false for VaR, ES, ratios (a total is asked of the server); default: true for numbers |
 | `[aggregate]` | `string` | 'server': the same as additive false (ELEMENTS.md's name) |

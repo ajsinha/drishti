@@ -118,7 +118,11 @@ Mock-up: [g6-apikeys.html](mockups/editors/g6-apikeys.html); all three options.
 - **Built from Drishti Elements, never by hand** ([ELEMENTS.md section 3.1](ELEMENTS.md#31-standing-rule-no-bespoke-ui)): every pane of
   fields is drishti-inputs' `Form` (live, with the formula widget for a Rachana field: the table's name, rows and look-ups, the model's
   Overview and masks, the Build workbench's inspector through drishti-designer's `Inspector`); the rows of a table of settings (a model's
-  tables, relationships, measures, hierarchies and row rules) move onto drishti-grid's editing.
+  tables, relationships, measures, hierarchies, row rules, fields and access matrix; a table's source and look-ups and its columns
+  checklist) are drishti-grid with cell editing (`E.rowGrid`): Enter, F2, a double click or typing edits a cell, Enter saves, Escape
+  cancels, Ctrl+Z undoes; a select of the offered values, a checkbox that turns at once, and a formula cell that is drishti-inputs'
+  one-line Rachana code editor completing from the editor's names and the functions (the grid's `code` editor). Each edit, paste or undo
+  is one change of the document; a row's ?, Remove and the engine's "adds up?" are cells the editor draws.
 - **One entitlement service**: row rules and masks are enforced on the server for every reader (BI, Pivot, VaR, Flight, the API).
 - **Computed on the server**: previews, totals and Python runs happen on the server; the console only displays.
 - **Under construction**: an editor or a part of one that depends on unbuilt work is hidden or marked from the registry

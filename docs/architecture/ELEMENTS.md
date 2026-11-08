@@ -1186,8 +1186,8 @@ table editor, `/build/tables?new=table`; "the model designer" in two notes means
 |---|---|---|
 | Build workbench (`build/drishti_*.js`) | canvas (flow `LayoutCanvas`), drags (`DragHub`), YAML tab (`YamlPane`, schema assistant), about box (`CodeEditor`), the form and controls tabs' re-ordering (`sortableList`), the inspector (`Inspector`: one live `Form` from the Rachana schema), its expressions (the `Form`'s formula widget, completing from `WB.expr.candidates`), the palette (`Palette`); undo stays the server's operation log | the data-shape tree (`drishti_build-shape-tree.js` → `Outline`) |
 | BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`) | the Fields and Visualizations panes (→ `Palette`), the Format pane (→ `Inspector`), the device orders' model (→ `LayoutModel` breakpoints), the expression editor (`drishti_bi-expr-editor.js` → `CodeEditor`) |
-| Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`), the name, rows and look-up dialog (`Form`), every formula field (the `Form`'s formula widget) and the statement (`CodeEditor`, through `drishti_editor-formula.js`) | the source and look-up rows, the columns checklist (→ `Form`, drishti-grid editing) |
-| Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML, the measures', hierarchies' and row rules' formulas (`CodeEditor`), the Overview's name, title and words and the masks (live `Form`s) | the rows of the tables, relationships, measures, hierarchies and row rules, and the access matrix (→ drishti-grid editing) |
+| Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`), the name, rows and look-up dialog (`Form`), every formula field (the `Form`'s formula widget) and the statement (`CodeEditor`, through `drishti_editor-formula.js`), the source and look-up rows and the columns checklist (drishti-grid editing) | |
+| Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML, the Overview's name, title and words and the masks (live `Form`s), the rows of the tables, relationships, measures (the ? card, "adds up?"), hierarchies, row rules, fields and the access matrix (drishti-grid editing; formulas in the grid's `code` cell editor) | |
 | Python table and model editor (`drishti_editor-python.js`) | the shell, the YAML | the code beside its contract (→ `CodeEditor` Python), the templates |
 | + New steps (`drishti_editor-new.js`) | the shell | the guided steps (→ `Form`) |
 | Sutra screen designer: Customize, Grid, Outline, Describe (`drishti_designer*.js`, `templates/designer/`) | the drags (`trackPointer`, `DragHub`), the Grid's formula bar (`CodeEditor` with completion), the Outline mode's tree (`Outline`), the columns checklist (`Form`'s checkboxes) | the panel handles (→ `LayoutCanvas` flow), the Grid's cells (→ `LayoutCanvas` grid), the settings and forms panels (→ `Inspector`) |
@@ -1228,6 +1228,13 @@ one-line `CodeEditor` with the host's completion), the hand-made completion list
 page's `DragHub`. The table editor's own formula widget folded into the `Form`'s. A new rule in `test_designer_kit_guard.py`: no
 console script draws a label and an input in a loop over a schema's properties or fields (an inspector or form pane made by hand); its
 allow-list (2: a lake's classifier and promote checkboxes, a BI transform's parameters) only shrinks and ends at 0.
+
+**Fifth pass (the rows, wip/e-panes-2).** A document's rows are drishti-grid with cell editing through the editors' one helper
+(`E.rowGrid`): the model editor's tables, relationships, measures, hierarchies, row rules, fields and access matrix, the table editor's
+source and look-ups and its columns checklist, and Admin › Lakes' fields with their Classifier and Promote checkboxes. drishti-grid gained
+the **`code` cell editor** (drishti-inputs' one-line `CodeEditor` in the column's `codeMode`, completing through its `complete` hook; the
+completion keeps its own Enter, Tab and Escape) so a formula in a row is the same editor as everywhere else. The hand-made form allow-list
+is 1 (a BI transform's parameters, the BI builder's).
 
 ## 13. Risks
 
