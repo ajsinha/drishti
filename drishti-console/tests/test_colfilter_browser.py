@@ -181,10 +181,15 @@ def menu_for(page, name, panel="tbl"):
 def condition(page, name, label, a=None, b=None, panel="tbl"):
     m = menu_for(page, name, panel)
     m.locator(".cf-op").select_option(label=label)
-    if a is not None:
-        m.locator(".cf-a").fill(a)
-    if b is not None:
-        m.locator(".cf-b").fill(b)
+    for cls, v in ((".cf-a", a), (".cf-b", b)):
+        if v is None:
+            continue
+        if m.locator(cls).get_attribute("type") == "hidden":                     # a date: drishti-inputs' date picker, typed into as a person does
+            field = m.locator(cls + " + .di-upgraded .di-field")
+            field.fill(v)
+            field.press("Tab")                                                      # leaving the field takes the date
+        else:
+            m.locator(cls).fill(v)
     m.get_by_role("button", name="OK").click()
     page.wait_for_selector(".cf-menu", state="detached")
 
@@ -371,7 +376,7 @@ def test_date_conditions_in_the_menu(page):
     assert ids(page) == ["T06", "T07", "T10"]
     m = menu_for(page, "Booked")
     m.locator(".cf-op").select_option(label="Between")
-    assert m.locator(".cf-a").get_attribute("type") == "date" and m.locator(".cf-b").is_visible()
+    assert m.locator(".cf-a + .di-upgraded .di-field").is_visible() and m.locator(".cf-b + .di-upgraded .di-field").is_visible()   # two date pickers
     m.get_by_role("button", name="Cancel").click()
 
 
