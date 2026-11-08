@@ -1063,7 +1063,15 @@ Drishti screen draws that many today.
   leave the tree, their open state remembered; `outlineFilter`); the rows answer a tree's keys (`outlineKey` on `keyMove`: Home and
   End, Right and Left to open, close and go up, Enter or Space opens a branch or shows a leaf's detail); `detail(node, box)` fills the
   box under the tree (Enter or a click; Enter again or Escape closes it); `onKey(node, event)` is the host's keys first; `nodeAt(el)`
-  names the node under a pointer for the host's drag.
+  names the node under a pointer for the host's drag. **The one outline** (2.9.11.e: drishti-designer's own outline folded in and deleted;
+  the kit re-exports this one as `Outline`, so drishti-designer requires drishti-tree): a designer's structure as nested nodes (`nodes`,
+  `setNodes`; a node's `detail` a muted mark, its `icon`, `fixed` for a heading or a "drop here" row that is never dragged but is a place to
+  drop on, `cls` and the host's `data-*` `attrs` on its row; every row carries `data-node`); a `selection` (the kit's `Selection`) followed
+  both ways (a click or the arrows pick, Shift or Ctrl add, every picked row marked `dt-picked`; a pick elsewhere opens the way to it); moves
+  by a drag (a line before or after a row, or onto it: inside) or Alt+arrows (Alt+Up and Down among siblings, Alt+Right into the node
+  before, Alt+Left out of the parent), the host's `canDrop(id, target, where)` deciding (true, false or why in words) and the `move` event
+  `{id, target, where, parent}` asking it to do the move; `open` (Enter on a leaf, a double click) and `toggle` events; `readOnly`. A node
+  that gains children opens, as at the start. `flattenTree`, `findNode`, `isWithin`, `moveNode` and `nodesSource` work on plain nested nodes.
 - **The table tree** (`TreePanel`, `treeTables`, `readTableTree`, `isChain`; `drishti_tree-panel.js`): a server's table with rows
   nested under rows (`table.tbl-tree`, a Sutra table or ladder with `children:`) read from its DOM (each row's depth, the server's open
   state, every cell's text, tone class and content: links and badges kept as drawn; the footer's lines) and drawn in two modes:
@@ -1155,7 +1163,8 @@ under 530 lines each, typed JSDoc, the bundle by `tools/elements/build.py`, `Dri
   rows are re-ordered by dragging (the workbench's form and controls cards, the BI designer's device orders). `Palette` (categories, search, a
   disabled entry says why, drag or Enter). `Inspector` (drishti-inputs' `Form` from the schema the host gives for the selection, live:
   each valid edit is a "change"; several items show the fields they share, a field whose values differ marked mixed). `Outline` (the
-  structure as a tree: the tree view's keys, a drag before, after or into another item, Alt+arrows; the host's `canDrop` says why not).
+  structure as a tree: drishti-tree's `TreeOutline`, re-exported, 8.8: the tree view's keys, a drag before, after or into another item,
+  Alt+arrows; the host's `canDrop` says why not).
   `YamlPane` (drishti-inputs' `CodeEditor` in YAML mode: written again when the model changes, the cursor and scroll kept; read after
   a pause through the host's `fromYaml`, the server's or `readYaml`; a problem said at its line while the design keeps its last good
   version; lint and completion hooks). `DesignerShell` (EDITORS.md section 1): the header (where you are, the name, the status with
@@ -1376,7 +1385,7 @@ table editor, `/build/tables?new=table`; "the model designer" in two notes means
 | Admin › Connectors, Drishti*net (`templates/admin/_connector_dialogs.html`, `net.html`) | | the YAML areas (→ `YamlPane`) |
 | Reader layout mode, arranging a screen, workspaces (`drishti_layout.js`, `drishti_screen-grid.js`, `drishti_workspace.js`) | | the pointer moves (→ `LayoutCanvas`, `trackPointer`) |
 | Forms, record forms, subscriptions (`drishti_form.js`, `drishti_record-forms.js`, `drishti_subscribe-when.js`), the table editor's fields, BI's Format pane, the Build inspector's structured options (`build/drishti_forms.js`) | `Form` (live, embedded, steps, named fields, hooks, custom widgets, time, date-and-time, money: 8.2, "The forms on Form"); the alert form (`drishti_alert-form.js`: the server's schema from `core/alert_form.py`, embedded in its POST form) | the record forms' cells (→ drishti-grid editing) |
-| Packs, lake files, lenses, editions, engines, settings (`drishti_pack-new.js`, `drishti_admin-*.js`) | a lake file's fields (drishti-grid editing) | their forms (→ `Form` with four eyes); the survey of 2026-11-07 counts native controls in `templates/admin/`: collab 23, loads 19, embedding 16, `_lake_maintain` 14, roles 11, net 11, lakes 11, users 10, capacity, artifacts, access, `_connector_dialogs` 6 each, health and configuration 5, packs, pack_detail, connectors, `_uninstall_dialog` 3, edits and caches 2, inbox, engines, compute, audit 1; and in scripts `drishti_admin-connectors.js` 8, `-lake-maintain.js` and `-embedding.js` 3 |
+| Packs, lake files, lenses, editions, engines, settings (`drishti_pack-new.js`, `drishti_admin-*.js`) | a lake file's fields (drishti-grid editing); Admin › Collaboration, Data loads, Embedding and Lakes › Maintain (`Form` from `core/admin_forms.py`, sixth pass) | their forms (→ `Form` with four eyes); the survey of 2026-11-07 counts native controls in `templates/admin/`: collab 23, loads 19, embedding 16, `_lake_maintain` 14, roles 11, net 11, lakes 11, users 10, capacity, artifacts, access, `_connector_dialogs` 6 each, health and configuration 5, packs, pack_detail, connectors, `_uninstall_dialog` 3, edits and caches 2, inbox, engines, compute, audit 1; and in scripts `drishti_admin-connectors.js` 8, `-lake-maintain.js` and `-embedding.js` 3 |
 | Approvals' change views (`drishti_approvals.js`, `build/_diff.html`) | | the diffs (→ drishti-inputs' `CodeDiff`) |
 
 **Second pass (the allow-list from 19 to 3).** On drishti-core's `trackPointer` (now with pointer capture) or the kit's `DragHub`: the
@@ -1393,8 +1402,9 @@ above (inspectors and forms) are not drags or code areas, so the guard does not 
 a new line, Esc goes back; its suggestions are the editor's completion hook); the Outline mode draws its tree with the kit's `Outline`
 (sections and the "Drop a panel here" rows as fixed nodes, the host's `data-ol-*` attributes on the rows; a move becomes the server's
 step: move, un-nest, or nest after asking where it opens). The editors' formula fields are `CodeEditor`s through `<input data-di-code>`.
-The workbench's data-shape tree is on drishti-tree's `TreeOutline` (8.8): **the allow-list is empty**. Next: the kit's `Outline`
-and drishti-tree's `TreeOutline` fold into one component (never two implementations side by side).
+The workbench's data-shape tree is on drishti-tree's `TreeOutline` (8.8): **the allow-list is empty**. The kit's `Outline` and
+drishti-tree's `TreeOutline` are now one component (wip/e-admin-1: `drishti_outline.js`, 286 lines, deleted; `drishti_tree-outline.js`
+292 → 526 lines with the nested nodes, the selection, the moves and the drag; the kit re-exports it; never two side by side).
 
 **Fourth pass (the panes, wip/e-panes).** The Build workbench's inspector is the kit's `Inspector`: one live `Form` whose schema is made
 from the Rachana schema (sections Required, the kind's options, Placement and heading; lists as repeatable groups; a tabs panel's body
@@ -1429,6 +1439,25 @@ before (`routes/alert_routes.body_from` unchanged): the source, condition and tr
 `data-when` hooks kept), the model's measures and the filters' fields arrive through `setOptions`, and the filters are an array of objects
 the page writes into the hidden `model_query` (`drishti_alert-form.js` 218 → 191 lines, `alert_form.html` 163 → 69, `core/alert_form.py` new, 168: the hand-made groups,
 the filter rows and the swapped column select deleted).
+
+
+**Sixth pass (the Admin forms, part 1, and the menus; wip/e-admin-1).** The Admin screens' forms are `Form`s from schemas the server
+builds (`core/admin_forms.py`; the field helpers in `core/form_schema.py`, which the alert form now shares): a template carries
+`data-di-form="{{ admin_form('collab.hold') }}"` and drishti-inputs' `formFromData(host, {onSubmit})` draws it, the form kept on the host
+as `host.diForm`. Every control keeps its name and data hook. Admin › Collaboration: the thread search, Only hidden comments, Active
+holds only, the legal hold (the scope's own fields through `when`, the reason required), the compliance export, the chain check and a
+comment's hide reason (`collab.html` 139 → 109 lines, `drishti_admin-collab.js` 316 → 311). Data loads: the history's filter embedded
+in its GET form, Announce a load, and the expectations with each expected kind a repeatable row (`loads.html` 130 → 100,
+`drishti_admin-loads.js` 104 → 97; the row template deleted). Embedding: the filter, a new application (the JWK set shown for a key
+through `when`, the scopes a row of checkboxes, the id following the name), the secret shown once, rotate's grace period (`embedding.html`
+125 → 104, `drishti_admin-embedding.js` 136 → 134). Lakes › Maintain: Select all and the domain, the settings, a new schedule (the days a
+row of checkboxes, the time picker, the cron text; `_lake_maintain.html` 115 → 94, `drishti_admin-lake-maintain.js` 329 → 326). A guard,
+`test_admin_forms_guard.py`: no Admin template writes a raw `<input>`, `<select>` or `<textarea>` (a hidden input is not a field); its
+allow-list (the templates still moving, with their counts) only shrinks: Lakes › Maintain's row picks (2, → drishti-grid's row selection)
+and the second Admin pass's templates (roles, net, lakes, users, connectors and the rest). The Build workbench's menus (Add panel, Bind
+field, File, Ship, the command palette, a dropped field's kinds) are drishti-inputs' `Listbox` under a search ranked by `searchOptions`
+(`build/drishti_menus.js` 132 → 119 lines; the hand-made listbox and its CSS deleted); `Listbox` gained `followActive` (the active option
+is the selected one), and `searchOptions` ranks a label that is the word first.
 
 ## 13. Risks
 
