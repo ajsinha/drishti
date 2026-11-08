@@ -211,6 +211,19 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  Users, Roles, Access, Audit, Configuration (search and *Propose a change*), Connectors (the list's filters and the connector editor),
+  Artifacts (filters, a BI file), Packs (the archive, the signature, the breaking-change box), a pack's *Load a data file*, Lakes,
+  Drishti*net (seed, map filter, *Explain a request*, nodes per role, this node's tags, the file's YAML), Capacity (the plan's inputs, the
+  growth sliders, the workbook's inputs), Health's busy override, Engines, Edits, Compute, Inbox, Caches, the uninstall dialogs and the
+  banking module's Scopes draw no control of their own: the server builds each form's schema (`core/admin_forms.py`, `core/form_kit.py`,
+  new; a template calls `admin_form(...)`), every field keeps its old name and data attributes, so routes, scripts and tests read the
+  same names. **Fixed with it**: an unticked box in a JSON body is `false`, never missing (a role's powers, a user's *Enabled*, Lakes'
+  *Bind* and *Tell*); a new user without a first password, a role or user name that does not fit, an Edits switch without a reason are
+  said in words and not sent. Capacity's and the connector editor's hand-made fields, the connector's extra rows and datalist and their
+  CSS deleted. **drishti-inputs**: a form the server drew (`data-di-form`, `formOf`, `upgradeForms`; an embedded `Form` stops its
+  page form's submit while a field has a problem), the field types `file` and `range`, a text field's `password` and `search`
+  formats, `maxLength`, `mono`, `suggest`, the `inline` layout.
 - **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
   field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice

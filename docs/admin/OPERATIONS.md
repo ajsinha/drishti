@@ -863,6 +863,18 @@ files. The tier of each setting lives in one place, `tools/settings_schemas.yaml
 writes CONFIGURATION.md's *Tier* column; `--check` fails when an area has no tier or a listed key or pattern matches nothing. The API is
 `/api/v1/admin/settings/proposals` ([API_GUIDE.md](../guides/API_GUIDE.md)); Help → Configuration stays the reference, for everyone.
 
+### The Admin screens' forms
+
+Every field on the Admin screens (Users, Roles, Access, Configuration, Connectors, Artifacts, Packs and a pack's page, Lakes,
+Drishti*net, Capacity, Health's busy override, Engines, Edits, Compute, Inbox, Caches, the uninstall dialogs) is drawn by one form
+component from a description the console sends with the page, so they behave alike: a field's problem is said in words under it
+(a role or user name that does not fit its pattern, a new user without a first password, a missing reason) and nothing is sent until
+it is fixed; a date is the business-date picker; a box left unticked is saved as **off** (a role's powers, a user's *Enabled*, a lake
+build's *Bind* and *Tell the server*), never as "not said". In the connector editor the plugin's settings are grouped as before, a
+required one says *(required)*, a credential is masked and must be a `${ENV_VAR}` or `file:` reference (said under the field), and
+the settings the plugin has no field for are rows with *Add setting*, *Remove* and the arrows to reorder. The server checks every
+change again: who may do what is decided there, not by the form.
+
 ## 7. Running as services (systemd)
 
 ### 7.1 An environment file
