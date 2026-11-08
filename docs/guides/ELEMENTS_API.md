@@ -10358,7 +10358,9 @@ A node of the outline.
 | `[detail]` | `string` | a short note after the label (its kind, "opens on a click") |
 | `[icon]` | `string` |  |
 | `[children]` | `OutlineNode[]` |  |
-| `[fixed]` | `boolean` | cannot be dragged |
+| `[fixed]` | `boolean` | cannot be dragged (a heading, a "drop here" row: still a place to drop on) |
+| `[cls]` | `string` | more classes on its row (the host's look: a drop row, a heading) |
+| `[attrs]` | `Object&lt;string, string&gt;` | the host's own data-* attributes on its row (its selectors: data-panel="trades"); other names are left out, the row's role and state stay the outline's |
 
 #### `PaletteEntry` : `Object`
 

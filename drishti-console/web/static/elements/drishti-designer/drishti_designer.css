@@ -158,7 +158,9 @@ body.dd-dragging, body.dd-dragging * { cursor: grabbing; user-select: none; }
 .dd-node[aria-selected="true"] { background: var(--d-accent-tint); }
 .dd-node:focus-visible { box-shadow: inset 0 0 0 2px var(--d-link); }
 .dd-twisty { width: 1em; color: var(--d-muted); text-align: center; }
-.dd-node-detail { font-size: 11px; color: var(--d-muted); }
+.dd-node-detail { font-size: 11px; color: var(--d-muted); overflow-wrap: anywhere; }
+.dd-node { flex-wrap: wrap; }
+.dd-node-label { overflow-wrap: anywhere; }
 .dd-node.dd-drop-before { border-top-color: var(--d-accent); }
 .dd-node.dd-drop-after { border-bottom-color: var(--d-accent); }
 .dd-node.dd-drop-inside { background: var(--d-surface-2); box-shadow: inset 0 0 0 1px var(--d-accent); }

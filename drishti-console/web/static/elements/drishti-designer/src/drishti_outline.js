@@ -30,7 +30,10 @@ import { trackPointer } from '../../drishti-core/src/drishti_index.js';
  * @property {string} [detail] a short note after the label (its kind, "opens on a click")
  * @property {string} [icon]
  * @property {OutlineNode[]} [children]
- * @property {boolean} [fixed] cannot be dragged
+ * @property {boolean} [fixed] cannot be dragged (a heading, a "drop here" row: still a place to drop on)
+ * @property {string} [cls] more classes on its row (the host's look: a drop row, a heading)
+ * @property {Object<string, string>} [attrs] the host's own data-* attributes on its row (its selectors: data-panel="trades"); other
+ *   names are left out, the row's role and state stay the outline's
  */
 
 /**
@@ -169,6 +172,8 @@ export class Outline {
         h(doc, 'span', { cls: 'dd-node-label', text: n.label }),
         n.detail ? h(doc, 'span', { cls: 'dd-node-detail', text: n.detail }) : null]);
       li.style.setProperty('--dd-level', String(r.level - 1));
+      if (n.cls) { n.cls.split(/\s+/).filter(Boolean).forEach((c) => li.classList.add(c)); }
+      Object.keys(n.attrs || {}).forEach((k) => { if (/^data-(?!dd-)[\w-]+$/.test(k) && n.attrs[k] !== null && n.attrs[k] !== undefined) { li.setAttribute(k, String(n.attrs[k])); } });
       this.tree.appendChild(li);
     });
     this.mark();

@@ -850,6 +850,8 @@
             h(doc, 'span', { cls: 'dd-node-label', text: n.label }),
             n.detail ? h(doc, 'span', { cls: 'dd-node-detail', text: n.detail }) : null]);
           li.style.setProperty('--dd-level', String(r.level - 1));
+          if (n.cls) { n.cls.split(/\s+/).filter(Boolean).forEach((c) => li.classList.add(c)); }
+          Object.keys(n.attrs || {}).forEach((k) => { if (/^data-(?!dd-)[\w-]+$/.test(k) && n.attrs[k] !== null && n.attrs[k] !== undefined) { li.setAttribute(k, String(n.attrs[k])); } });
           this.tree.appendChild(li);
         });
         this.mark();

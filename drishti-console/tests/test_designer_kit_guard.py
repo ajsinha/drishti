@@ -55,7 +55,6 @@ AUTHORING_ONLY = {"tree", "undo"}
 # file (relative to drishti-console/web) -> the rules it still breaks (each the designer or editor still being moved onto the kit)
 ALLOWED = {
     "templates/build/design.html": {"tree"},                      # the workbench's data-shape tree (drishti_build-shape-tree.js)
-    "templates/designer/outline.html": {"tree"},                  # the Sutra designer's Outline mode
 }
 
 COMMENT = re.compile(r"/\*.*?\*/|(?<![:\\'\"])//[^\n]*|\{#.*?#\}|<!--.*?-->", re.S)
@@ -105,7 +104,7 @@ def test_the_allow_list_only_shrinks():
 
 def test_the_allow_list_is_capped():
     """The list never grows past what it was when the rule was made (2026-11-07): new files cannot be added to it."""
-    assert len(ALLOWED) <= 2 and sum(len(r) for r in ALLOWED.values()) <= 2
+    assert len(ALLOWED) <= 1 and sum(len(r) for r in ALLOWED.values()) <= 1
 
 
 def test_the_guard_finds_what_it_looks_for():
