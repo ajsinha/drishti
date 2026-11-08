@@ -253,6 +253,14 @@ abstract class IdentityStoreContract {
         assertThat(roles.find("credit-analyst").orElseThrow().calc()).isTrue();
         assertThat(roles.find("credit-analyst").orElseThrow().layout()).isTrue();
         assertThat(roles.find("credit-analyst").orElseThrow().mayOpen("trade")).isTrue();
+        // a module permission round-trips by its own name (var:system-baskets, ACCESS_MODEL.md section 8); an unknown one is not kept
+        roles.save(new RoleDefinition("basket-keeper", "", List.of("*"), false, false, false, false, false, true, true, false, false, null, null,
+                Set.of(), false, Set.of("var:system-baskets", "var:nothing")), "ops", Set.of("admin"));
+        roles.refresh();
+        assertThat(roles.find("basket-keeper").orElseThrow().permissions()).containsExactly("var:system-baskets");
+        assertThat(roles.find("basket-keeper").orElseThrow().holds("var:system-baskets")).isTrue();
+        assertThat(roles.find("credit-analyst").orElseThrow().holds("var:system-baskets")).isFalse();
+        assertThat(roles.delete("basket-keeper", "ops")).isTrue();
         assertThatThrownBy(() -> roles.save(new RoleDefinition("admin", "", List.of("*"), false, false, false, false, false, true, true, false, false, null, null), "ops",
                 Set.of("admin"))).hasMessageContaining("built-in");
         assertThatThrownBy(() -> roles.save(new RoleDefinition("Bad Name", "", List.of("*"), false, false, false, false, false, true, true, false, false, null, null), "ops",

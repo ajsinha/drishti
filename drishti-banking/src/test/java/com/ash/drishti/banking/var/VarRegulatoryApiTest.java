@@ -57,8 +57,8 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.risk-lake.plugin=delta",
         "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit", "drishti.sources.connectors.risk-lake.kinds[3]=portfolio",
-        "drishti.sources.connectors.risk-lake.kinds[4]=desk-pnl",
+        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
+        "drishti.sources.connectors.risk-lake.kinds[3]=desk-pnl",
         "drishti.sources.connectors.risk-lake.settings.domain=risk",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,"
                 + "LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,COUNTERPARTY,DIRECTION,QUANTITY,PV,"
@@ -73,7 +73,7 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.var.hierarchies.MGMT.limits=var-limit", "drishti.var.hierarchies.LEGAL.title=Legal entity",
         "drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "drishti.var.hierarchies.LEGAL.ids=leaf",
         "drishti.var.hierarchies.LEGAL.limits=var-limit",
-        "drishti.sources.routes.portfolio=risk-lake", "drishti.sources.routes.desk-pnl=risk-lake",
+        "drishti.sources.routes.desk-pnl=risk-lake",
         "drishti.var.official.on-start=false", "drishti.var.official.publish=false", "drishti.var.currencies=USD",
         "drishti.regulatory.synthetic-history=true", "drishti.regulatory.backtesting.window=25",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",

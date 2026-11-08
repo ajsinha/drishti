@@ -151,13 +151,18 @@ final class VarLakeFixture {
         // the MGMT (desk > book) and LEGAL (legal entity) trees are built from the rows' promoted columns (HIERARCHIES); their limits are
         // var-limit rows
         table(root, work, "var-limit", "LIMIT_ID", limits(day), List.of("HIERARCHY", "NODE_ID", "LIMIT_VAR"), null);
-        List<Map<String, Object>> ports = List.of(
-                Map.of("PORTFOLIO_ID", "PF-EUR", "BUSINESS_DATE", day.toString(), "NAME", "Euro", "TYPE", "RULE", "OWNER", "risk",
-                        "DEFINITION", Map.of("RULE", "CURRENCY == 'EUR'"), "LIMIT_VAR", 400.0),
-                Map.of("PORTFOLIO_ID", "PF-MIX", "BUSINESS_DATE", day.toString(), "NAME", "Mix", "TYPE", "BASKET", "OWNER", "risk",
-                        "DEFINITION", Map.of("MEMBERS", List.of(Map.of("POSITION_ID", POS_B), Map.of("TRADE_ID", "T4"), Map.of("TRADE_ID", "T5")))));
-        table(root, work, "portfolio", "PORTFOLIO_ID", ports, List.of("NAME", "TYPE"), null);
         return root;
+    }
+
+    /**
+     * The fixture's system baskets (VAR_GUIDE.md section 5.7), kept in the basket store, never in the lake: PF-EUR, a rule, and PF-MIX, a
+     * basket of a position and two trades. Imported (an import of what is there already changes nothing).
+     */
+    static void systemBaskets(VarService svc) {
+        svc.saved().system().importDoc(Map.of("system-baskets", List.of(
+                Map.of("id", "PF-EUR", "name", "Euro", "type", "rule", "owner", "risk", "rule", "CURRENCY == 'EUR'"),
+                Map.of("id", "PF-MIX", "name", "Mix", "type", "basket", "owner", "risk",
+                        "members", List.of(Map.of("position", POS_B), Map.of("trade", "T4"), Map.of("trade", "T5"))))), true, "test", null, null);
     }
 
     /** The VaR limits of the MGMT and LEGAL nodes (var-limit rows, USD). */
