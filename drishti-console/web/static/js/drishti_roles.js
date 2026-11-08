@@ -105,52 +105,46 @@
   if (!root) { return; }
   var msg = root.querySelector('[data-msg]'), dlg = root.querySelector('[data-dialog]'), form = root.querySelector('[data-form]');
   var dmsg = root.querySelector('[data-dlg-msg]'), editing = null;
+  var F = window.Drishti.elements.inputs.formOf(root.querySelector('[data-role-fields]'));   // the server's schema (core/admin_forms.py)
+  var POWERS = ['raw', 'author', 'approve', 'admin', 'calc', 'edit', 'layout'];
 
   function post(url, body) {
     return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); });
   }
   function say(el, text, bad) { el.textContent = text; el.classList.toggle('t-bad', !!bad); el.classList.toggle('t-ok', !bad); }
-  function kindsVisible() { root.querySelectorAll('[data-kinds]').forEach(function (el) { el.hidden = form.elements.all.checked; }); }
+  function kindsVisible() { root.querySelectorAll('fieldset[data-kinds]').forEach(function (el) { el.hidden = !!F.getField('all'); }); }
 
   function open(role) {
     editing = role;
-    form.reset();
     say(dmsg, '');
     root.querySelector('[data-title]').textContent = role ? 'Edit ' + role.name : 'New role';
-    form.elements.name.value = role ? role.name : '';
-    form.elements.name.readOnly = !!role;
-    if (role) {
-      form.elements.description.value = role.description || '';
-      form.elements.all.checked = role.kinds.indexOf('*') >= 0;
-      form.elements.kinds.value = role.kinds.filter(function (k) { return k !== '*'; }).join('\n');
-      ['raw', 'author', 'approve', 'admin', 'calc', 'edit'].forEach(function (f) { form.elements[f].checked = !!role[f]; });
-      form.elements.layout.checked = role.layout !== false;                // on unless the role says otherwise
-    }
+    F.schema.properties.name.readOnly = !!role;
+    var powers = {};
+    POWERS.forEach(function (k) { powers[k] = role ? (k === 'layout' ? role.layout !== false : !!role[k]) : k === 'layout'; });   // layouts: on unless the role says otherwise
+    F.setValue({ name: role ? role.name : '', description: role ? role.description || '' : '', all: !!role && role.kinds.indexOf('*') >= 0,
+      kinds: role ? role.kinds.filter(function (k) { return k !== '*'; }).join('\n') : '', powers: powers });
     kindsVisible();
     dlg.showModal();
   }
 
-  form.elements.all.addEventListener('change', kindsVisible);
+  F.on('change', function (e) { if (e.path === 'all') { kindsVisible(); } });
   root.querySelectorAll('[data-pack-kinds]').forEach(function (b) {
     b.addEventListener('click', function () {
-      var have = form.elements.kinds.value.split(/\s+/).filter(Boolean);
+      var have = String(F.getField('kinds') || '').split(/\s+/).filter(Boolean);
       b.getAttribute('data-pack-kinds').split(' ').filter(Boolean).forEach(function (k) { if (have.indexOf(k) < 0) { have.push(k); } });
-      form.elements.kinds.value = have.join('\n');
+      F.setField('kinds', have.join('\n'));
     });
   });
   root.querySelector('[data-new]').addEventListener('click', function () { open(null); });
   root.querySelector('[data-cancel]').addEventListener('click', function () { dlg.close(); });
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    var f = form.elements;
-    var body = {
-      description: f.description.value.trim(),
-      kinds: f.all.checked ? ['*'] : f.kinds.value.split(/[\s,]+/).filter(Boolean),
-      raw: f.raw.checked, author: f.author.checked, approve: f.approve.checked, admin: f.admin.checked, calc: f.calc.checked,
-      layout: f.layout.checked, edit: f.edit.checked
-    };
-    post('/admin/api/roles/' + encodeURIComponent(f.name.value.trim()), body).then(function (res) {
+    if (!F.validate().ok) { return; }
+    var body = { description: String(F.getField('description') || '').trim(),
+      kinds: F.getField('all') ? ['*'] : String(F.getField('kinds') || '').split(/[\s,]+/).filter(Boolean) };
+    POWERS.forEach(function (k) { body[k] = F.getField('powers.' + k) === true; });     // an unticked power is false, never left out
+    post('/admin/api/roles/' + encodeURIComponent(String(F.getField('name') || '').trim()), body).then(function (res) {
       if (res.ok) { dlg.close(); say(msg, (editing ? 'Saved ' : 'Created ') + res.body.name + '.'); setTimeout(function () { location.reload(); }, 400); }
       else { say(dmsg, Drishti.drsMessage(res.body), true); }
     });

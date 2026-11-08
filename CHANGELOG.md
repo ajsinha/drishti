@@ -144,6 +144,21 @@
   status, the inbox route's `.ready` and tar, the java and python routes into a temporary lake, the command line and the schedule
   output; Admin → Feeds in the console and the server; one `--live` smoke per feed for a person to run.
 
+### Fixes (the train's bulk drill)
+
+- **Drishti's lake writer and a partition value with a space**: Kernel hands a partition's folder percent-encoded
+  (`PRODUCT_GROUP=Fixed%20income`); the writer wrote the file there while every read looked in `Fixed income`, so a Calypso or Murex
+  trade load by `PRODUCT_GROUP` failed with "the write failed, nothing was committed". The writer now decodes a `file:` URI exactly as the
+  reads do (`LakeWriterTest`).
+- **The public-sector feeds keep their working history as JSON Lines** (the data standard): a series' points, the kept releases and
+  GDELT's per-day country aggregates under `<data>/datafeeds/<feed>/history/` are `.jsonl`, a row a line.
+- **A pack filled by a feed counts as served without the demo connector**: `PacksServedWithoutDemoTest` accepts a Delta connector
+  reading the lake an enabled feed loads the kind into (the six public-sector packs, `worldlake` and `newslake`); PACK_DEVELOPER_GUIDE
+  step 16 says so.
+- Tests brought up to date: the demo lake's trades by `PRODUCT_TYPE` (Endur) and `PRODUCT_GROUP` (Calypso, Murex); the engines' and
+  publishers' sources found in their domain modules; `css_visual_check.py` names the demo lake's variable through `lakeconfig`; importing
+  `drishti-stack/stack.py` in a test leaves no `__pycache__` in the checkout.
+
 ## 2.9.11.h (unreleased)
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
@@ -242,6 +257,23 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  Users, Roles, Access, Audit, Configuration (search and *Propose a change*), Connectors (the list's filters and the connector editor),
+  Artifacts (filters, a BI file), Packs (the archive, the signature, the breaking-change box), a pack's *Load a data file*, Lakes,
+  Drishti*net (seed, map filter, *Explain a request*, nodes per role, this node's tags, the file's YAML), Capacity (the plan's inputs, the
+  growth sliders, the workbook's inputs), Health's busy override, Engines, Edits, Compute, Inbox, Caches, the uninstall dialogs and the
+  banking module's Scopes draw no control of their own: the server builds each form's schema (`core/admin_forms.py`, `core/form_kit.py`,
+  new; a template calls `admin_form(...)`), every field keeps its old name and data attributes, so routes, scripts and tests read the
+  same names. **Fixed with it**: an unticked box in a JSON body is `false`, never missing (a role's powers, a user's *Enabled*, Lakes'
+  *Bind* and *Tell*); a new user without a first password, a role or user name that does not fit, an Edits switch without a reason are
+  said in words and not sent. Capacity's and the connector editor's hand-made fields, the connector's extra rows and datalist and their
+  CSS deleted. **drishti-inputs**: a form the server drew (`data-di-form`, `formOf`, `upgradeForms`; an embedded `Form` stops its
+  page form's submit while a field has a problem), the field types `file` and `range`, a text field's `password` and `search`
+  formats, `maxLength`, `mono`, `suggest`, the `inline` layout.
+- **Selects on drishti-inputs' `Select`** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  drishti-grid's select cell editor opens a `Select` on the value (a pick saves; `Select` gains a `pick` event); FRTB-SA's and SIMM's
+  playground choices (method switches, *Compare with*, *By*, *Side*) are `<drishti-select>`s. Tests pick through `tests/select_helpers.py`;
+  Playwright's `select_option` and `input_value` work on a `<drishti-select>` (installed by `conftest.py`).
 - **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
   field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice
@@ -371,6 +403,23 @@
   guard's allow-list from 2 files to 1.
   BI's Visualizations are drishti-designer's `Palette`; the wells' Add a field a `Form` select. drishti-designer: a palette entry's own
   data attributes (`attrs`, data-* only) and the search field's (`searchAttrs`).
+  **The last two hand-made parts of the BI designer are on Drishti Elements** (ELEMENTS.md 12.3: *still their own* is empty). **BI
+  Studio is drishti-designer's `DesignerShell`** for the report (and board) and theme designers: the header (BI › Studio › Reports, the
+  name, the status pill, the designer's actions with their `data-*` hooks, + New), the Explorer as the shell's objects (links, a status
+  badge), the open items above the designer, Problems and Query in a dock under it, the left rail folding away; the three layouts
+  (studio, side by side, terminal with `DESIGN>` and the function keys) remembered per person in this browser; a workspace that
+  requires review proposes through the shell's Propose for review with a note for the reviewer. drishti-designer: the shell's `docs`,
+  `dock` and `collapsible` parts, link, toggle and choice actions with the host's `attrs`, `setLabel`, `showAction`, objects with an
+  `href` and a `badge`, the status in the host's words; its title stash renamed `data-dd-title` (no clash with a host's `data-title`).
+  Deleted: `templates/bi/_studio.html` (42 lines), the designers' hand-made headers, the Studio's Explorer, tabs and dock CSS
+  (`drishti_bi-studio.css` 75 → 54 lines; the header rules of `drishti_bi-design.css`); `drishti_bi-studio.js` 162 → 161 lines, now a
+  host of the kit with no DOM of its own. **The Fields pane is drishti-tree's `TreeOutline`** (the one tree component): a field a
+  button (a click or Enter adds it; dragged through the page's `DragHub`), the badges (masked, this report only, default or model, the
+  time function) as marks with their `data-*` attributes, Move to the model a link, a date's parts and Hierarchies closed at the start,
+  one branch per added dataset with its remove action; the hand-made `details`/`ul` tree, its search code and its CSS (13 rules)
+  deleted. drishti-tree's outline: `button`, `activate`, `wire`, `attrs`, `actions`, `startOpen`, `fill`, a mark's `href` and `attrs`.
+  drishti-grid: a bare grid (`chrome: false`) draws no wells. Tests follow person-visible behaviour (a field one level under its
+  folder by `aria-level`); `tests/dnd.py` (an HTML5 drag helper, dead since the kit's pointer drags) deleted.
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never

@@ -32,11 +32,9 @@
     if (text !== undefined && text !== null) { e.textContent = String(text); }
     return e;
   }
-  function option(sel, value, label, selected) {
-    var o = el('option', { value: value }, label);
-    if (selected) { o.selected = true; }
-    sel.appendChild(o);
-  }
+  // the steps' fields: drishti-inputs' Forms from the server's schemas (core/admin_forms.py); the lists are filled here as the server answers
+  var I = window.Drishti.elements.inputs, KF = I.formOf($('[data-lake-fields]')), TF = I.formOf($('[data-lake-target]'));
+  function fileForm() { return I.formOf($('[data-field-of=file]')); }
   function show(step) { $('[data-step="' + step + '"]').hidden = false; }
   function fmt(n) { return window.Drishti.elements.core.formatNumber(Number(n || 0), { maxDecimals: 3 }); }
   function mb(n) { return window.Drishti.elements.core.formatBytes(n); }
@@ -51,8 +49,8 @@
   }
 
   // 1. the file ---------------------------------------------------------------------------------------------------
-  $('[data-file]').addEventListener('change', function (ev) {
-    var f = ev.target.files && ev.target.files[0];
+  fileForm().on('change', function () {
+    var input = $('[data-file]'), f = input && input.files && input.files[0];
     if (!f) { return; }
     var max = Number(root.getAttribute('data-max-mb')) * 1048576;
     if (f.size > max) { say('The file is ' + mb(f.size) + ', over the ' + root.getAttribute('data-max-mb') + ' MB this console takes (lakes.max_upload_mb).', true); return; }
@@ -89,12 +87,9 @@
     var s = scan.suggest || {};
     $('[data-scan-note]').textContent = 'Read ' + fmt(scan.documents) + ' documents' + (scan.limited ? ' (the first ones; the build reads them all)' : '') +
       (scan.rejected ? ', ' + fmt(scan.rejected) + ' not usable' : '') + '. Suggested choices are selected; change any of them.';
-    var key = $('[data-key]');
-    key.textContent = '';
     var scalar = scan.fields.filter(function (f) { return !f.types.array && !f.types.object; });
-    scalar.forEach(function (f) {
-      option(key, f.path, f.path + (f.many || f.distinct === f.present ? '' : ' (repeats)'), f.path === (s.key || [])[0]);
-    });
+    KF.setOptions('key', scalar.map(function (f) { return f.path; }), scalar.map(function (f) { return f.path + (f.many || f.distinct === f.present ? '' : ' (repeats)'); }));
+    KF.setField('key', (s.key || [])[0] && scalar.some(function (f) { return f.path === s.key[0]; }) ? s.key[0] : (scalar[0] ? scalar[0].path : ''));
     businessDate();
     var classes = s.partitionBy || [];
     state.rows = scan.fields.map(function (f) {                       // the file's fields as drishti-grid rows: Classifier and Promote are checkbox cells
@@ -127,12 +122,12 @@
   // The business date by the load rules (docs/guides/DATA_LAKE_GUIDE.md): a date given here, else the file name's, else the
   // business today; never a field of the rows.
   function businessDate() {
-    var u = state.upload || {}, given = $('[data-lake-asof]').value;
+    var u = state.upload || {}, given = KF.getField('asOf');
     $('[data-date-said]').textContent = given ? given + ', the date given here'
       : u.nameDate ? u.nameDate + ', from the file name (' + u.name + ')'
       : (u.businessToday || 'today') + ', the business today: the file name carries no date (name it <table>.YYYY-MM-DD.jsonl, or give one)';
   }
-  $('[data-lake-asof]').addEventListener('input', businessDate);
+  KF.on('change', function (e) { if (e.path === 'asOf') { businessDate(); } });
   function picked(kind) {
     return (state.rows || []).filter(function (r) { return !r.nested && r[kind]; }).map(function (r) { return r.path; });   // the grid edits its rows in place
   }
@@ -141,28 +136,35 @@
   function targets() {
     return api('GET', '/admin/api/lakes/targets').then(function (t) {
       state.targets = t;
-      var table = $('[data-table]'), rootSel = $('[data-root]'), pack = $('[data-pack]');
-      table.textContent = ''; rootSel.textContent = ''; pack.textContent = '';
-      option(table, '', 'A new lake (table)', true);
-      t.tables.forEach(function (x, i) { option(table, String(i), x.domain + ' / ' + x.kind + (x.partitionBy.length ? ' (by ' + x.partitionBy.join(', ') + ')' : '') + ' in ' + x.root); });
-      t.roots.forEach(function (r, i) { option(rootSel, r, r, i === 0); });
-      option(pack, '', 'No pack (bind and announce later)', !t.connectors.length);
+      var packs = [['', 'No pack (bind and announce later)']], firstPack = '';
       t.connectors.forEach(function (c, i) {
         (c.packs.length ? c.packs : ['']).forEach(function (p) {
-          option(pack, JSON.stringify({ pack: p, connector: c.name }), (p || '(no pack)') + ' · connector ' + c.name + (c.kinds.length ? ' (' + c.kinds.join(', ') + ')' : ''), i === 0);
+          var v = JSON.stringify({ pack: p, connector: c.name });
+          if (i === 0 && !firstPack) { firstPack = v; }
+          packs.push([v, (p || '(no pack)') + ' · connector ' + c.name + (c.kinds.length ? ' (' + c.kinds.join(', ') + ')' : '')]);
         });
       });
-      if (!$('[data-kind]').value && state.upload) { $('[data-kind]').value = state.upload.name.replace(/\..*$/, '').toLowerCase().replace(/[^a-z0-9_-]/g, '-').slice(0, 40); }
+      var P = TF.schema.properties;
+      P.table['enum'] = [''].concat(t.tables.map(function (x, i) { return String(i); }));
+      P.table.enumLabels = ['A new lake (table)'].concat(t.tables.map(function (x) { return x.domain + ' / ' + x.kind + (x.partitionBy.length ? ' (by ' + x.partitionBy.join(', ') + ')' : '') + ' in ' + x.root; }));
+      P.root['enum'] = t.roots.slice();
+      P.pack['enum'] = packs.map(function (p) { return p[0]; }); P.pack.enumLabels = packs.map(function (p) { return p[1]; });
+      var kind = TF.getField('kind') || (state.upload ? state.upload.name.replace(/\..*$/, '').toLowerCase().replace(/[^a-z0-9_-]/g, '-').slice(0, 40) : '');
+      TF.setValue(Object.assign({}, TF.values, { table: '', root: t.roots[0] || '', kind: kind, pack: firstPack }));
       show('target');
     }).catch(function (e) { say(e.message, true); });
   }
-  $('[data-table]').addEventListener('change', function (ev) {
-    var x = state.targets.tables[Number(ev.target.value)];
+  function fixed(on, values) {                                          // an existing lake fixes its root, domain and kind
+    ['root', 'domain', 'kind'].forEach(function (k) { TF.schema.properties[k].readOnly = on; });
+    TF.setValue(Object.assign({}, TF.values, values || {}));
+  }
+  TF.on('change', function (ev) {
+    if (ev.path !== 'table') { return; }
+    var x = ev.value === '' || ev.value === undefined ? null : state.targets.tables[Number(ev.value)];
     var warn = $('[data-target-warn]');
     warn.hidden = true;
-    if (!x) { $('[data-domain]').disabled = false; $('[data-kind]').disabled = false; $('[data-root]').disabled = false; return; }
-    $('[data-root]').value = x.root; $('[data-domain]').value = x.domain; $('[data-kind]').value = x.kind;
-    ['[data-domain]', '[data-kind]', '[data-root]'].forEach(function (s) { $(s).disabled = true; });
+    if (!x) { fixed(false); return; }
+    fixed(true, { root: x.root, domain: x.domain, kind: x.kind });
     state.rows = (state.rows || []).map(function (r) { return Object.assign({}, r, { classifier: !r.nested && x.partitionBy.indexOf(r.path.replace(/\./g, '__')) >= 0 }); });
     if (state.grid) { drawFields(); }
     warn.textContent = 'This lake is partitioned by ' + (['business_date'].concat(x.partitionBy).join(', ')) + '; the classifiers are set to match it.';
@@ -171,11 +173,11 @@
 
   // 4. run -------------------------------------------------------------------------------------------------------------
   $('[data-run]').addEventListener('click', function () {
-    var chosen = $('[data-pack]').value ? JSON.parse($('[data-pack]').value) : {};
-    var body = { upload: state.upload && state.upload.id, root: $('[data-root]').value, domain: $('[data-domain]').value.trim(), kind: $('[data-kind]').value.trim(),
-      key: $('[data-key]').value, asOf: $('[data-lake-asof]').value || null, partitionBy: picked('classifier'),
-      promote: picked('promote'), mode: $('[data-mode]').value, pack: chosen.pack || null, connector: chosen.connector || null,
-      bind: !!chosen.connector && $('[data-bind]').checked, signal: !!chosen.pack && $('[data-signal]').checked };
+    var t = function (k) { return TF.getField(k); }, chosen = t('pack') ? JSON.parse(t('pack')) : {};
+    var body = { upload: state.upload && state.upload.id, root: t('root') || '', domain: String(t('domain') || '').trim(), kind: String(t('kind') || '').trim(),
+      key: KF.getField('key') || '', asOf: KF.getField('asOf') || null, partitionBy: picked('classifier'),
+      promote: picked('promote'), mode: t('mode'), pack: chosen.pack || null, connector: chosen.connector || null,
+      bind: !!chosen.connector && t('bind') === true, signal: !!chosen.pack && t('signal') === true };     // an unticked box is false
     say('');
     $('[data-run]').disabled = true;
     api('POST', '/admin/api/lakes/jobs', body).then(function (job) {

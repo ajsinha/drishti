@@ -244,6 +244,12 @@
 .di-zone, .di-unit { color: var(--d-muted); font-size: 0.9em; white-space: nowrap; align-self: center; }
 .di-adorned { padding-right: 8px; }
 .di-checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.di-mono { font-family: var(--d-font-mono); }
+.di-range { flex: 1; min-width: 6rem; accent-color: var(--d-accent); }
+.di-range-out { min-width: 3.5rem; text-align: right; font-variant-numeric: tabular-nums; color: var(--d-muted); align-self: center; }
+.di-file { padding: 3px 6px; }
+.di-inline .di-form-body { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 12px; }
+.di-inline .di-form-field { margin: 0; }
 .di-live { max-width: none; }
 .di-names[hidden] { display: none; }
 .di-steps-box { display: flex; flex-direction: column; gap: 4px; }

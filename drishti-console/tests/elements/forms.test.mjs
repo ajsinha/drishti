@@ -70,5 +70,16 @@ test('dependent lists: the values offered follow what the field they depend on h
 test('the bundle carries the pickers and the form\'s new names', () => {
   const B = require('../../web/static/elements/drishti-inputs/drishti_inputs.js');
   ['TimePicker', 'DateTimePicker', 'parseTime', 'parseDateTime', 'timeSlots', 'defineWidget', 'applyHook', 'currencyOf', 'offeredValues',
-    'upgradeTimeInput', 'upgradeDateTimeInput'].forEach((n) => assert.equal(typeof B[n], 'function', n));
+    'upgradeTimeInput', 'upgradeDateTimeInput', 'formOf', 'upgradeForms'].forEach((n) => assert.equal(typeof B[n], 'function', n));
+});
+
+test('a form the server drew: a host without a schema is left alone, the same Form answers twice, no root is no forms', () => {
+  assert.equal(I.FORM_HOST_SELECTOR, '[data-di-form][data-schema]');
+  assert.equal(I.formOf(null), null);
+  assert.equal(I.formOf({ getAttribute: () => 'not json' }), null);
+  assert.equal(I.formOf({ getAttribute: () => '{"value": {}}' }), null);       // no schema: nothing to draw
+  const made = {};
+  assert.equal(I.formOf({ diForm: made }), made);                              // made once; the page's script and the page's upgrade share it
+  assert.deepEqual(I.upgradeForms(null), []);
+  assert.deepEqual(I.upgradeForms({ querySelectorAll: () => [] }), []);
 });

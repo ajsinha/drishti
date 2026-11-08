@@ -33,6 +33,12 @@
   function words(b) { return (b.code ? b.code + ' ' : '') + (b.detail || 'the server refused'); }
   function show(d) { if (d.showModal) { d.showModal(); } else { d.setAttribute('open', ''); } }
   function hide(d) { if (d.close) { d.close(); } else { d.removeAttribute('open'); } }
+  /** a dialog's one field: drishti-inputs' Form the server drew (core/admin_forms.py); its change goes to whoever listens now (form.hear) */
+  function formOf(box) {
+    var F = window.Drishti.elements.inputs.formOf(box.querySelector('[data-di-form]'));
+    if (!F.heard) { F.heard = true; F.on('change', function () { if (F.hear) { F.hear(); } }); }
+    return F;
+  }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text !== undefined) { e.textContent = text; } return e; }
 
   function flash(text, bad) {
@@ -76,24 +82,25 @@
   function typed(opts) {
     return new Promise(function (resolve) {
       if (!typedDlg) { resolve(window.confirm(opts.text)); return; }
-      var input = typedDlg.querySelector('[data-typed-input]'), yes = typedDlg.querySelector('[data-typed-yes]'), msg = typedDlg.querySelector('[data-typed-msg]');
+      var TF = formOf(typedDlg), yes = typedDlg.querySelector('[data-typed-yes]'), msg = typedDlg.querySelector('[data-typed-msg]');
+      var said = function () { return String(TF.getField('typed') || '').trim(); };
       typedDlg.querySelector('[data-typed-title]').textContent = opts.title;
       typedDlg.querySelector('[data-typed-text]').textContent = opts.text;
       typedDlg.querySelector('[data-typed-name]').textContent = opts.name;
       yes.textContent = opts.ok || 'Go ahead';
-      input.value = '';
+      TF.setValue({ typed: '' });
       msg.textContent = '';
       yes.disabled = true;                                                                  // until the exact name is typed
-      input.oninput = function () { yes.disabled = input.value.trim() !== opts.name; };
-      function finish(v) { yes.onclick = null; input.oninput = null; typedDlg.querySelector('[data-typed-no]').onclick = null; typedDlg.onclose = null; hide(typedDlg); resolve(v); }
+      TF.hear = function () { yes.disabled = said() !== opts.name; };
+      function finish(v) { yes.onclick = null; TF.hear = null; typedDlg.querySelector('[data-typed-no]').onclick = null; typedDlg.onclose = null; hide(typedDlg); resolve(v); }
       yes.onclick = function () {
-        if (input.value.trim() !== opts.name) { msg.textContent = 'The name does not match.'; msg.classList.add('t-bad'); input.focus(); return; }
-        finish(input.value.trim());
+        if (said() !== opts.name) { msg.textContent = 'The name does not match.'; msg.classList.add('t-bad'); TF.focusField('typed'); return; }
+        finish(said());
       };
       typedDlg.querySelector('[data-typed-no]').onclick = function () { finish(false); };
       typedDlg.onclose = function () { resolve(false); };
       show(typedDlg);
-      input.focus();
+      TF.focusField('typed');
     });
   }
 
@@ -126,22 +133,24 @@
     var q = '?kind=' + encodeURIComponent(kind) + '&subtype=' + encodeURIComponent(sub) + '&name=' + encodeURIComponent(name);
     var $ = function (s) { return dlg.querySelector(s); };
     var title = $('[data-art-title]'), text = $('[data-art-text]'), host = $('[data-art-impact]'), notes = $('[data-art-notes]'), msg = $('[data-art-msg]');
-    var casRow = $('[data-art-cascade-row]'), cas = $('[data-art-cascade]'), casLabel = $('[data-art-cascade-label]'), typedRow = $('[data-art-typed-row]'), typedIn = $('[data-art-typed]');
+    var casRow = $('[data-art-cascade-row]'), typedRow = $('[data-art-typed-row]'), CF = formOf(casRow), YF = formOf(typedRow);
+    var cascaded = function () { return CF.getField('cascade') === true; }, typedName = function () { return String(YF.getField('typed') || '').trim(); };
+    var casLabel = function (words) { CF.schema.properties.cascade.title = words; CF.setValue({ cascade: false }); };
     var go = $('[data-art-go]'), dis = $('[data-art-disable]'), keep = $('[data-art-keep]');
     $('[data-art-name]').textContent = name;
     title.textContent = (mode === 'disable' ? 'Disable ' : 'Uninstall ') + what + ' ' + name;
     text.textContent = 'Checking what depends on it...';
     host.textContent = ''; notes.textContent = ''; msg.textContent = ''; msg.classList.remove('t-bad');
-    casRow.hidden = true; typedRow.hidden = true; cas.checked = false; typedIn.value = '';
-    casLabel.textContent = 'Also disable or uninstall what depends on it';
+    casRow.hidden = true; typedRow.hidden = true; YF.setValue({ typed: '' });
+    casLabel('Also disable or uninstall what depends on it');
     go.hidden = true; dis.hidden = true; go.disabled = false; dis.disabled = false;
     var impact = null;
 
     function refresh() {
-      var blocked = impact && impact.blocked, cascade = cas.checked;
+      var blocked = impact && impact.blocked, cascade = cascaded();
       typedRow.hidden = !(mode === 'uninstall' && blocked && cascade);
       go.hidden = mode === 'uninstall' && ((impact && impact.templated) || (blocked && !cascade));   // in use: only Disable until the dependants are chosen too
-      go.disabled = mode === 'uninstall' && blocked && !(cascade && typedIn.value.trim() === name);
+      go.disabled = mode === 'uninstall' && blocked && !(cascade && typedName() === name);
       go.textContent = mode === 'disable' ? 'Disable' : blocked ? 'Uninstall with what depends on it' : 'Uninstall';
     }
     function run(action, cascade, confirmName) {
@@ -160,17 +169,17 @@
           mode = 'disable';
           title.textContent = 'Disable ' + what + ' ' + name;
           text.textContent = 'Disabling keeps ' + name + ' on disk and switches it off. The packs that build on it have to be switched off with it.';
-          casLabel.textContent = 'Also disable the packs that build on it';
-          casRow.hidden = false; cas.checked = false; dis.hidden = true; go.hidden = false;
+          casLabel('Also disable the packs that build on it');
+          casRow.hidden = false; dis.hidden = true; go.hidden = false;
         }
         go.disabled = false; dis.disabled = false; refresh();
       });
     }
     keep.onclick = function () { hide(dlg); };
-    cas.onchange = refresh;
-    typedIn.oninput = refresh;
-    dis.onclick = function () { run('disable', mode === 'disable' ? cas.checked : false, ''); };
-    go.onclick = function () { run(mode === 'disable' ? 'disable' : 'uninstall', cas.checked, typedIn.value.trim()); };
+    CF.hear = refresh;
+    YF.hear = refresh;
+    dis.onclick = function () { run('disable', mode === 'disable' ? cascaded() : false, ''); };
+    go.onclick = function () { run(mode === 'disable' ? 'disable' : 'uninstall', cascaded(), typedName()); };
     show(dlg);
 
     fetch(API + 'impact' + q).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); }).then(function (res) {
@@ -185,7 +194,7 @@
           ? 'Disabling keeps ' + name + ' on disk and switches it off. These depend on it and stop working while it is off.'
           : 'Disabling keeps ' + name + ' on disk and switches it off. Nothing depends on it.';
         casRow.hidden = !(what === 'pack' && impact.blocked);
-        casLabel.textContent = 'Also disable the packs that build on it';
+        casLabel('Also disable the packs that build on it');
       } else if (impact.configPinned) {
         text.textContent = name + ' is named in drishti.packs.enabled (DRISHTI_PACKS), so it can only be disabled here: it stays on disk, switched off. To remove it, take it out of that setting and restart.';
       } else if (impact.templated) {

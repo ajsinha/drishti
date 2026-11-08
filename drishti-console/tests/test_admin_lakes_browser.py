@@ -102,7 +102,7 @@ def test_a_file_becomes_a_lake_bound_and_announced(browser, lakes_console, tmp_p
     page.locator("[data-step=fields]").wait_for(state="visible", timeout=30000)
     assert page.locator("[data-key]").input_value() == "TRADE_ID"
     assert "2026-10-16, from the file name" in page.locator("[data-date-said]").inner_text()
-    day = page.locator("[data-lake-asof] + .di-upgraded input")                                  # drishti-inputs' date picker over the field
+    day = page.locator("[data-lake-asof]")                                                       # the Form's date picker
     day.fill("2026-10-15")                                                                       # another date, given: said, then put back
     day.press("Enter")
     assert "2026-10-15, the date given here" in page.locator("[data-date-said]").inner_text()

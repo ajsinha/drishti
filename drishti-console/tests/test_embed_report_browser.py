@@ -320,7 +320,7 @@ def test_the_designers_phone_tab_arranges_a_page_with_a_390_pixel_preview(stack,
     text = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
     assert "phone:" in text and "hide: [rolling, losses, latest]" in text.replace("  ", " ") or "hide:" in text
     page.click("[data-save]")
-    page.wait_for_function("() => document.querySelector('[data-state]').textContent === 'Saved'", timeout=20000)
+    page.wait_for_function("() => document.querySelector('[data-status]').textContent === 'Saved'", timeout=20000)
     # back to automatic removes the entry
     page.click('[data-tab="phone"]')
     page.click("[data-phone-reset]")

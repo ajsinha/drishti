@@ -346,7 +346,7 @@ def test_designer_change_a_well_set_a_filter_check_save_and_reload(stack, browse
     page.fill("[data-format-title]", "Notional by desk, USD")
     page.press("[data-format-title]", "Enter")
     page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved")
+    expect(page.locator("[data-status]")).to_have_text("Saved")
     page.goto(CONSOLE_URL + "/bi/design/" + draft)
     page.wait_for_selector("[data-design-root][data-ready=yes]")
     saved = model(page)["pages"][0]

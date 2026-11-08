@@ -50,11 +50,7 @@
 
   <form class="cfe-search" method="get" action="/admin/configuration" role="search" data-cfe-search>
     <input type="hidden" name="tier" value="{{ tier }}">
-    <label class="visually-hidden" for="cfeQ">Search settings</label>
-    <input id="cfeQ" name="q" type="search" value="{{ q }}" placeholder="A key, an environment variable or words: confidence, DRISHTI_PORT, lens" data-cfe-q>
-    <label class="visually-hidden" for="cfeArea">Area</label>
-    <select id="cfeArea" name="area" data-cfe-area><option value="">Every area</option>
-      {% for id, title in areas %}<option value="{{ id }}"{% if id == area %} selected{% endif %}>{{ title }}</option>{% endfor %}</select>
+    {{ admin_form('config_search', q=q, area=area, areas=areas) }}
     <button class="btn-pill btn-ghost" type="submit">Search</button>
   </form>
   <p class="cfe-count" data-cfe-count aria-live="polite">{{ matched }} setting{{ '' if matched == 1 else 's' }}{% if matched > page_rows %}, the first {{ page_rows }} shown: search to narrow{% endif %}.</p>
@@ -76,8 +72,7 @@
     <form method="dialog" data-propose-form>
       <h2 id="cfeDlgH">Propose a change</h2>
       <p><code data-dlg-key></code> <span class="text-muted-d" data-dlg-was></span></p>
-      <label for="cfeValue">New value</label><input id="cfeValue" name="value" required maxlength="2000" data-dlg-value>
-      <label for="cfeReason">Why (the approver reads it)</label><textarea id="cfeReason" name="reason" rows="3" required maxlength="500" data-dlg-reason></textarea>
+      {{ admin_form('config_propose') }}
       <p class="cfe-dlg-note text-muted-d">Nothing changes until a second administrator approves. A server or engine setting is written to the server's application.local.yaml and read at its next start.</p>
       <p class="cfe-dlg-error" role="alert" data-dlg-error hidden></p>
       <div class="cfe-dlg-btns"><button type="button" class="btn-pill btn-ghost" data-dlg-cancel>Cancel</button><button type="submit" class="btn-pill btn-accent" data-dlg-send>Propose</button></div>

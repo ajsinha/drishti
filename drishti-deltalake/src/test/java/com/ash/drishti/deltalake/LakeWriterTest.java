@@ -119,6 +119,23 @@ class LakeWriterTest {
         assertTrue(read(table).get("2026-10-02|300").contains("\"TRADE_ID\":300"));
     }
 
+    /** A partition value with a space (the Calypso and Murex trades by PRODUCT_GROUP: "Fixed income"): Kernel hands its folder
+     *  percent-encoded; the file is written in the folder the reads decode it to, and a re-run replaces it. */
+    @Test
+    void aPartitionValueWithASpaceIsWrittenWhereItIsRead() throws IOException {
+        Path table = tmp.resolve("lake/trading/trade_calypso");
+        run(manifest(table, "overwrite-dates", stage("a.rows", 0, 5, "Fixed income", 1.0).toString(), "2026-10-01", "Fixed income",
+                stage("b.rows", 5, 3, "FX", 1.0).toString(), "2026-10-01", "FX"), new ByteArrayOutputStream());
+        assertTrue(Files.isDirectory(table.resolve("business_date=2026-10-01/PRODUCT_TYPE=Fixed income")));
+        assertTrue(Files.notExists(table.resolve("business_date=2026-10-01/PRODUCT_TYPE=Fixed%20income")));
+        assertEquals(8, read(table).size());
+        run(manifest(table, "overwrite-partitions", stage("c.rows", 100, 2, "Fixed income", 1.0).toString(), "2026-10-01", "Fixed income"),
+                new ByteArrayOutputStream());
+        Map<String, String> rows = read(table);
+        assertEquals(2 + 3, rows.size());
+        assertTrue(rows.containsKey("2026-10-01|100") && !rows.containsKey("2026-10-01|0"));
+    }
+
     @Test
     void aNewTableTakesTheManifestsPropertiesAndLongColumns() throws IOException {
         Path table = tmp.resolve("lake/risk-results/var-official");

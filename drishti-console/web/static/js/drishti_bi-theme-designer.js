@@ -48,7 +48,7 @@
   function change(fn) {
     fn(model);
     dirty = true;
-    q('[data-state]').textContent = 'Unsaved changes';
+    if (B.studio && B.studio.state) { B.studio.state('Unsaved changes', item && item.status); }
     draw();
   }
 
@@ -159,7 +159,7 @@
     return B.busy(btn, () => check().then((r) => {
       if (!r.valid) { throw new Error('Fix the errors first: ' + (r.problems.find((p) => p.level === 'error') || {}).message); }
       return B.saveItem(itemId, { body: yamlOf(model), title: model.title }, item && item.etag, btn);
-    }).then((it) => { item = it; dirty = false; q('[data-state]').textContent = 'Saved'; B.near(btn, 'Saved. Publish it so that reports read this version.', false); }))
+    }).then((it) => { item = it; dirty = false; if (B.studio && B.studio.state) { B.studio.state('Saved', it.status); } B.near(btn, 'Saved. Publish it so that reports read this version.', false); }))
       .catch((e) => { if (!e.cancelled) { B.near(btn, e.message, true); } });
   }
 
@@ -201,7 +201,7 @@
     start();
     draw();
     if (B.studio && B.studio.attach) { B.studio.attach(item); }
-    q('[data-state]').textContent = item.status === 'published' ? 'Published' : 'Draft';
+    if (B.studio && B.studio.state) { B.studio.state(item.status === 'published' ? 'Published' : 'Draft', item.status); }
     q('[data-theme-root]').setAttribute('data-ready', 'yes');
   }).catch((e) => say(e.message, true));
 })();

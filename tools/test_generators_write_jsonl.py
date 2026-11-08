@@ -54,7 +54,9 @@ LOADERS = {"tools/samplegen/layout.py", "tools/samplegen/load_rows.py"}
 
 #: written file names that are not data: manifests, state, download caches, test oracles and run summaries (they stay as they are)
 ALLOWED_NAMES = {"MANIFEST.json", "manifest.json", "meta.json", "cache-index.json", "testdata.yaml", "trackers.json", "factbook_ref.json",
-                 "fetch.json", "rr.json", "wikidata.json", "reference.json", "last-run.json", "help-coverage.txt", "expect.yaml"}
+                 "fetch.json", "rr.json", "wikidata.json", "reference.json", "last-run.json", "help-coverage.txt", "expect.yaml",
+                 "index.json"}   # index.json: the recorded responses' index (request key -> raw response file) of a feed's test fixtures
+                                 # (tools/feeds/sources/publicsector.py Recorder), a manifest like cache-index.json, not data
 
 #: non-data files a pack generator writes beside its samples (the pack itself, its docs)
 NON_DATA_SUFFIXES = (".yaml", ".yml", ".md", ".txt", ".sutra.yaml", ".svg", ".png", ".jpg", ".html", ".css", ".js", ".py")

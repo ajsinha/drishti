@@ -52,21 +52,9 @@
   <dialog class="adm-dialog" data-dialog aria-labelledby="roleTitle">
     <form method="dialog" data-form>
       <h2 id="roleTitle" data-title>New role</h2>
-      <label>Name<input name="name" class="studio-in" required pattern="[a-z][a-z0-9-]{1,63}" autocomplete="off" placeholder="credit-analyst"></label>
-      <label>Description<input name="description" class="studio-in" placeholder="Reads counterparties and credit curves"></label>
-      <label class="chk"><input type="checkbox" name="all"> Opens every kind</label>
-      <label data-kinds>Kinds it opens (one per line, or pick by pack below)
-        <textarea name="kinds" class="studio-in" rows="4" placeholder="counterparty&#10;credit-curve"></textarea></label>
+      {{ admin_form('role') }}{# drishti-inputs' Form from the server's schema (core/admin_forms.py): name, words, kinds, powers #}
       <fieldset data-kinds><legend>Add every kind of a pack</legend>
         {% for p in packs %}<button type="button" class="fk" data-pack-kinds="{{ (p.kinds or []) | join(' ') }}">{{ p.title or p.name }}</button>{% endfor %}</fieldset>
-      <fieldset><legend>Powers</legend>
-        <label class="chk"><input type="checkbox" name="raw"> See every field unmasked (raw JSON, views, search)</label>
-        <label class="chk"><input type="checkbox" name="author"> Author Sutras (save and propose from the workbench)</label>
-        <label class="chk"><input type="checkbox" name="approve"> Approve proposed Sutras</label>
-        <label class="chk"><input type="checkbox" name="admin"> Administer users, roles and caches</label>
-        <label class="chk"><input type="checkbox" name="calc"> Use Calc: Python in the browser on what the role opens</label>
-        <label class="chk"><input type="checkbox" name="edit"> Submit edits: change records through forms that save (write-back, when editing is on)</label>
-        <label class="chk"><input type="checkbox" name="layout" checked> Customise layouts: arrange a view's panels for themselves (Alt+L)</label></fieldset>
       <p class="adm-msg" data-dlg-msg role="alert"></p>
       <div class="adm-dlg-actions"><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button>
         <button type="submit" class="btn-pill btn-accent">Save</button></div>

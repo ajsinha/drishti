@@ -68,8 +68,7 @@
         <td>{% for cmd, ps in (c.problems or {}).items() %}{% for p in ps %}<div class="text-danger-d">{{ p }}</div>{% endfor %}{% endfor %}{% if not c.problems %}none{% endif %}</td>
         <td><form method="post" action="/admin/edits/connectors/{{ c.connector }}" class="d-inline">
           <input type="hidden" name="on" value="{{ 'false' if c.on else 'true' }}">
-          <label class="visually-hidden" for="why-{{ loop.index }}">Why</label>
-          <input id="why-{{ loop.index }}" name="reason" class="form-control form-control-sm d-inline-block w-auto" placeholder="Why" required maxlength="500">
+          {{ admin_form('field', key='reason', name='reason', title='Why', required=True, maxLength=500, placeholder='Why', layout='inline') }}
           <button class="btn btn-sm {{ 'btn-outline-danger' if c.on else 'btn-primary' }}" type="submit" data-writes-switch="{{ c.connector }}">{{ 'Switch off' if c.on else 'Switch on' }}</button>
         </form> <span class="cmp-k {{ 'added' if c.on else 'removed' }}">{{ 'on' if c.on else 'off' }}</span></td></tr>
     {% endfor %}</tbody></table></div>

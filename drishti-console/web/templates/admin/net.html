@@ -100,8 +100,7 @@ secret: ${DRISHTI_NET_SECRET}
     </div>
 
     <form class="net-seed" data-seed-form>
-      <label class="loads-field" for="netSeed">Add a seed (host:port or an address): tried at once and saved as a peer file
-        <input class="studio-in mono" id="netSeed" data-seed autocomplete="off" spellcheck="false" placeholder="drishti-b.internal:8480"></label>
+      {{ admin_form('field', key='seed', title='Add a seed (host:port or an address): tried at once and saved as a peer file', mono=True, hook={'data-seed': ''}, placeholder='drishti-b.internal:8480') }}
       <button type="submit" class="btn-pill btn-accent">Add seed</button>
     </form>
 
@@ -171,8 +170,7 @@ secret: ${DRISHTI_NET_SECRET}
     <ul class="net-warnings" data-warnings>
       {% for w in caps.warnings or [] %}<li class="t-warn" data-warning="{{ w.what }}">{{ w.text }}</li>{% endfor %}
     </ul>
-    <label class="loads-field net-filter" for="netMapFilter">Filter by kind, mnemonic, pack or node
-      <input class="studio-in" id="netMapFilter" data-map-filter autocomplete="off" spellcheck="false" placeholder="trade, TRD, trading, n-a"></label>
+    <div class="net-filter">{{ admin_form('field', key='q', title='Filter by kind, mnemonic, pack or node', format='search', hook={'data-map-filter': ''}, placeholder='trade, TRD, trading, n-a') }}</div>
     <div class="tbl-wrap"><table class="tbl adm-tbl net-map" data-map>
       <caption class="visually-hidden">Kind to the nodes that render it and the nodes that hold its data</caption>
       <thead><tr><th scope="col">Kind</th><th scope="col">Pack</th><th scope="col">Rendered by</th><th scope="col">Data held by</th><th scope="col">A search asks</th></tr></thead>
@@ -198,12 +196,7 @@ secret: ${DRISHTI_NET_SECRET}
       not here, older here, or served to peers only here); or answered here with the document read from a peer (the data is elsewhere). For a role:
       only the nodes it may reach are considered.</p>
     <form class="net-explain" data-explain-form>
-      <label class="loads-field" for="netExKind">Kind<input class="studio-in mono" id="netExKind" data-ex-kind autocomplete="off" spellcheck="false" placeholder="trade"></label>
-      <label class="loads-field" for="netExId">Id (optional)<input class="studio-in mono" id="netExId" data-ex-id autocomplete="off" spellcheck="false" placeholder="IRS-48213"></label>
-      <label class="loads-field" for="netExQ">or a search<input class="studio-in mono" id="netExQ" data-ex-q autocomplete="off" spellcheck="false" placeholder="TRD where mtm > 1m"></label>
-      <label class="loads-field" for="netExRole">As the role<select class="studio-in" id="netExRole" data-ex-role><option value="">mine</option>
-        {% for r in access.byRole or [] %}<option value="{{ r.role }}">{{ r.role }}</option>{% endfor %}</select></label>
-      <label class="loads-check"><input type="checkbox" data-ex-dated> A past business date (a peer with another calendar is left out)</label>
+      {{ admin_form('net_explain', roles=(access.byRole or []) | map(attribute='role') | list) }}
       <button type="submit" class="btn-pill btn-accent">Explain</button>
     </form>
     <div class="net-explained" data-explained aria-live="polite" hidden>
@@ -250,7 +243,6 @@ secret: ${DRISHTI_NET_SECRET}
       search, a type-ahead or a forwarded request never reaches a node outside its role's list, and a node refuses a forwarded request whose roles may
       not reach it. Saved to <span class="mono">access.yaml</span> and <span class="mono">node.yaml</span> (checked first, the previous text kept),
       applied at once, and told to the other nodes in this node's digest.</p>
-    <datalist id="netChoices">{% for c in access.choices or [] %}<option value="{{ c }}">{% endfor %}</datalist>
     <form data-access-form>
       <div class="tbl-wrap"><table class="tbl adm-tbl net-access" data-access>
         <caption class="visually-hidden">Nodes per role</caption>
@@ -258,20 +250,14 @@ secret: ${DRISHTI_NET_SECRET}
         <tbody>
         {% for r in access.byRole or [] %}
           <tr data-role="{{ r.role }}"><th scope="row" class="mono">{{ r.role }}</th>
-            <td><label class="visually-hidden" for="netRole-{{ loop.index }}">Nodes {{ r.role }} may reach</label>
-              <input class="studio-in mono" id="netRole-{{ loop.index }}" data-role-nodes="{{ r.role }}" value="{{ r.nodes | join(', ') }}" list="netChoices" autocomplete="off" spellcheck="false" placeholder="every node"></td>
+            <td>{{ admin_form('field', key='nodes', title='Nodes ' ~ r.role ~ ' may reach', mono=True, value=r.nodes | join(', '), hook={'data-role-nodes': r.role}, placeholder='every node', suggest=access.choices or [], layout='inline') }}</td>
             <td>{% for n in r.reaches %}<span class="net-tag mono">{{ n }}</span>{% else %}<span class="t-warn">no node</span>{% endfor %}</td></tr>
         {% else %}
           <tr><td colspan="3" class="text-muted-d">No roles to show.</td></tr>
         {% endfor %}
         </tbody>
       </table></div>
-      <div class="lk-grid net-node-fields">
-        <label class="loads-field" for="netTags">This node's tags (comma-separated)
-          <input class="studio-in mono" id="netTags" data-node-tags value="{{ (access.tags or []) | join(', ') }}" autocomplete="off" spellcheck="false" placeholder="region:emea, tier:risk"></label>
-        <label class="loads-field" for="netPeerOnly">Packs served to peers only (comma-separated)
-          <input class="studio-in mono" id="netPeerOnly" data-node-peer-only value="{{ (access.peerOnlyPacks or []) | join(', ') }}" autocomplete="off" spellcheck="false" placeholder="market-risk"></label>
-      </div>
+      <div class="net-node-fields">{{ admin_form('net_node', tags=access.tags or [], peer_only=access.peerOnlyPacks or []) }}</div>
       <p><button type="submit" class="btn-pill btn-accent">Save access</button></p>
     </form>
   </section>
@@ -315,8 +301,7 @@ secret: ${DRISHTI_NET_SECRET}
       </ul>
       <div class="net-editor" data-editor hidden>
         <h2 class="net-h2 mono" data-editing></h2>
-        <label class="visually-hidden" for="netYaml">The file's YAML</label>
-        <textarea class="studio-in mono net-yaml" id="netYaml" data-yaml data-di-code="yaml" rows="16" spellcheck="false" autocomplete="off" wrap="off"></textarea>
+        {{ admin_form('field', key='yaml', kind='area', title="The file's YAML", rows=16, mono=True, hook={'data-yaml': '', 'data-di-code': 'yaml', 'class': 'net-yaml'}) }}
         <ul class="net-problems" data-problems aria-live="polite"></ul>
         <div class="net-actions">
           <button type="button" class="btn-pill" data-check>Check</button>

@@ -48,7 +48,7 @@ import { drawField, defaultWidget, writeNames } from './drishti_form-fields.js';
  * @property {string} [doneText='Saved'] what the form says once onSubmit answered ('': nothing, for a page that shows the answer itself,
  *   such as a check)
  * @property {boolean} [readOnly=false]
- * @property {('stacked'|'columns')} [layout='stacked']
+ * @property {('stacked'|'columns'|'inline')} [layout='stacked'] inline: the fields side by side in a row (a filter bar's search and lists)
  * @property {string} [locale] how numbers are read and shown
  * @property {boolean} [live=false] no Save or Reset: each change is the host's at once (a designer's inspector, a property pane)
  * @property {boolean} [embedded=false] no <form> element of its own (the fields sit inside a page's server form, which submits the fields
@@ -89,7 +89,7 @@ export class Form extends InputBase {
     this.at = 0;
     if (this.o.embedded) { this.o.live = true; }
     this.pathAttr = this.o.pathAttr || 'data-path';
-    this.form = this.el(this.o.embedded ? 'div' : 'form', { cls: 'di-form-el' + (this.o.layout === 'columns' ? ' di-columns' : '') + (this.o.live ? ' di-live' : ''),
+    this.form = this.el(this.o.embedded ? 'div' : 'form', { cls: 'di-form-el' + (this.o.layout === 'columns' ? ' di-columns' : this.o.layout === 'inline' ? ' di-inline' : '') + (this.o.live ? ' di-live' : ''),
       attrs: { novalidate: this.o.embedded ? null : true, role: this.o.embedded ? 'group' : null, 'aria-label': this.o.label || this.schema.title || 'Form' } });
     if (!this.o.embedded) { this.form.addEventListener('submit', (e) => { e.preventDefault(); this.submit(); }); }
     host.appendChild(this.form);

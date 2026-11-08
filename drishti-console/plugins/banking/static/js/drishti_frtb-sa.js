@@ -174,21 +174,19 @@
         if (tab.dataset.frTab === "contrib") { contrib(); }
       }
     });
-    $("[data-fr-by]").addEventListener("change", contrib);
+    $("[data-fr-by]").addEventListener("drishti:change", contrib);
   }
 
   // ------------------------------------------------------------------------------------------------------------ the playground
   function choices(list) {
     $("[data-fr-choices]").innerHTML = '<h3>Choices <span>every method choice is a switch; the default is the decided one</span></h3>' + list.map(function (s) {
-      return '<label class="fr-switch' + (s.value !== s.default ? " changed" : "") + '"><b class="mono">' + esc(s.name) + "</b> <select data-fr-sw=\"" + esc(s.name) + "\">"
+      return '<label class="fr-switch' + (s.value !== s.default ? " changed" : "") + '"><b class="mono">' + esc(s.name) + "</b> <drishti-select data-fr-sw=\"" + esc(s.name) + "\" label=\"" + esc(s.name) + "\">"
         + s.options.map(function (o) { return "<option" + (o === s.value ? " selected" : "") + ">" + esc(o) + "</option>"; }).join("")
-        + '</select> <span class="muted">default ' + esc(s.default) + " · " + esc(s.rule) + "</span><small>" + esc(s.why) + "</small></label>";
+        + '</drishti-select> <span class="muted">default ' + esc(s.default) + " · " + esc(s.rule) + "</span><small>" + esc(s.why) + "</small></label>";
     }).join("");
-    var cmp = $("[data-fr-compare]"), keep = cmp.value;
-    cmp.innerHTML = '<option value="">(none)</option>' + list.map(function (s) {
-      return s.options.filter(function (o) { return o !== s.value; }).map(function (o) { return '<option value="' + esc(s.name + "=" + o) + '">' + esc(s.name + ": " + o) + "</option>"; }).join("");
-    }).join("");
-    cmp.value = keep;
+    var cmp = $("[data-fr-compare]"), keep = cmp.value, flips = [{ value: "", label: "(none)" }];   // drishti-inputs' Select: refilled, the choice kept
+    list.forEach(function (s) { s.options.filter(function (o) { return o !== s.value; }).forEach(function (o) { flips.push({ value: s.name + "=" + o, label: s.name + ": " + o }); }); });
+    cmp.component.setOptions(flips, flips.some(function (f) { return f.value === keep; }) ? keep : "");
   }
   function diff(d, alt) {
     var pane = $("[data-fr-diff]");
@@ -252,7 +250,7 @@
   }
   function playground() {
     play();
-    root.addEventListener("change", function (ev) {
+    root.addEventListener("drishti:change", function (ev) {     // the choices are drishti-inputs' Selects
       var sw = ev.target.closest("[data-fr-sw]");
       if (sw) { state.choices[sw.dataset.frSw] = sw.value; recipe = ""; play(); }
       if (ev.target.matches("[data-fr-compare]")) { recipe = ""; play(); }
