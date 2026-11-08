@@ -165,24 +165,24 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `CBANK` | `central-bank` | external: FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) (FRED API terms; the default series are US government works (public domain)); Bank of Canada Valet API (Bank of Canada terms: free use with attribution) — refreshed by `tools/feeds/publicsector/run.py` | the daily feed `central-banks` → `<data>/delta/worldlake/centralbank/central-bank/` (lake `worldlake`) → connector `centralbank-store`; nothing is committed but a few documents in `samples/` for the tests |
-| `CBSER` | `rate-series` | external: FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) (FRED API terms; the default series are US government works (public domain)); Bank of Canada Valet API (Bank of Canada terms: free use with attribution) — refreshed by `tools/feeds/publicsector/run.py` | the daily feed `central-banks` → `<data>/delta/worldlake/centralbank/rate-series/` (lake `worldlake`) → connector `centralbank-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `CBANK` | `central-bank` | external: FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) (FRED API terms; the default series are US government works (public domain)); Bank of Canada Valet API (Bank of Canada terms: free use with attribution) — refreshed by `drishti.py feed run central-banks` | the daily feed `central-banks` → `<data>/delta/worldlake/centralbank/central-bank/` (lake `worldlake`) → connector `centralbank-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `CBSER` | `rate-series` | external: FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) (FRED API terms; the default series are US government works (public domain)); Bank of Canada Valet API (Bank of Canada terms: free use with attribution) — refreshed by `drishti.py feed run central-banks` | the daily feed `central-banks` → `<data>/delta/worldlake/centralbank/rate-series/` (lake `worldlake`) → connector `centralbank-store`; nothing is committed but a few documents in `samples/` for the tests |
 
 ### External sources
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) | https://api.stlouisfed.org/fred | FRED API terms; the default series are US government works (public domain) | no | `python3 tools/feeds/publicsector/run.py run central-banks` |
-| Bank of Canada Valet API | https://www.bankofcanada.ca/valet | Bank of Canada terms: free use with attribution | no | `python3 tools/feeds/publicsector/run.py run central-banks` |
+| FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) | https://api.stlouisfed.org/fred | FRED API terms; the default series are US government works (public domain) | no | `python3 tools/drishti.py feed run central-banks` |
+| Bank of Canada Valet API | https://www.bankofcanada.ca/valet | Bank of Canada terms: free use with attribution | no | `python3 tools/drishti.py feed run central-banks` |
 
 ```bash
-python3 tools/feeds/publicsector/run.py run central-banks --dry-run  # what the feed would pull; writes nothing
-python3 tools/feeds/publicsector/run.py run central-banks            # pull what is new into <data>/feeds/central-banks/out/<date>/ (JSONL.gz with .ready files)
-python3 tools/feeds/publicsector/run.py run central-banks --inbox    # the same into the data inbox: the server loads it into the lake (daily, from cron)
-python3 tools/feeds/publicsector/run.py run central-banks --load     # pull, then load into the lake at once (drishti.py lake build)
+python3 tools/drishti.py feed run central-banks --dry-run     # what the feed would pull; writes nothing
+python3 tools/drishti.py feed run central-banks               # pull what is new into <data>/feeds/central-banks/<date>/ and load it (the parallel loader)
+python3 tools/drishti.py feed run central-banks --load inbox  # the same through the data inbox: the server loads it
+python3 tools/drishti.py feed status central-banks            # its last runs, rows and errors (the ledger)
 ```
 
-The same through the wrappers: `tools/feeds/publicsector/run.sh run central-banks` on Linux and macOS, `.\tools\windows\feeds-publicsector.ps1 run central-banks` on Windows. The feed's YAML is `config/feeds/central-banks.yaml` (sources, licences, schedule, selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) explains it.
+The same through the wrappers: `tools/feeds/feed.sh run central-banks` on Linux and macOS, `.\tools\windows\feed.ps1 run central-banks` on Windows. The feed file is `config/feeds/central-banks.yaml` (its sources and their licences in `options.sources`, the schedule, the selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) and the [External data feeds guide](../../../../docs/guides/FEEDS_GUIDE.md) explain it.
 
 ### Into the lake, checking, offline
 

@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Writes the public-sector packs' samples and READMEs (docs/guides/PUBLIC_SECTOR_GUIDE.md): each feed is run on its recorded
-fixtures (tools/feeds/publicsector/tests/fixtures, never the network) with the tests' narrower selection, a few documents of each
+fixtures (tools/feeds/tests/fixtures/publicsector, never the network) with the tests' narrower selection, a few documents of each
 kind are kept as the pack's samples (samples/<kind>.jsonl and catalog.jsonl), and the README is rendered from the pack, the samples
 and its intro (tools/packgen/publicsector/readme/<pack>.intro.md).
 
@@ -23,21 +23,25 @@ and its intro (tools/packgen/publicsector/readme/<pack>.intro.md).
 """
 from __future__ import annotations
 
+import gzip
 import importlib.util
 import json
+import os
 import sys
 import tempfile
+from datetime import date
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
-FEEDS = ROOT / "tools" / "feeds" / "publicsector"
-FIXTURES = FEEDS / "tests" / "fixtures"
-AS_OF = "2026-11-06"                       # the business date the fixtures were recorded for
-sys.path.insert(0, str(FEEDS))
-import base  # noqa: E402
-import run as feedrun  # noqa: E402
+FEEDS = ROOT / "tools" / "feeds"
+FIXTURES = FEEDS / "tests" / "fixtures" / "publicsector"
+AS_OF = date(2026, 11, 6)                  # the business date the fixtures were recorded for
+for _p in (FEEDS, FEEDS / "sources"):
+    sys.path.insert(0, str(_p))
+import feedbase as FB  # noqa: E402
+import publicsector as PS  # noqa: E402
 
 
 def _load(name: str, path: Path):
@@ -70,13 +74,19 @@ TITLE_FIELDS = {"development-profile": ("WDI", "INCOME_GROUP"), "development-ser
 
 
 def pull(feed: str) -> dict[str, list[dict]]:
-    """The feed's documents from its recorded fixtures, with the tests' selection, in a scratch state folder."""
-    spec = base.load_spec(feed)
-    narrow = yaml.safe_load((FEEDS / "tests" / "selection.yaml").read_text(encoding="utf-8")) or {}
-    spec["selection"] = {**(spec.get("selection") or {}), **(narrow.get(feed) or {})}
+    """The feed's documents (by kind) from one drishti-feeds run on its recorded fixtures, with the tests' selection, in a scratch folder."""
+    spec = FB.load_spec(feed)
+    narrow = yaml.safe_load((FIXTURES / "selection.yaml").read_text(encoding="utf-8")) or {}
+    os.environ.setdefault("DRISHTI_FRED_API_KEY", "recorded")    # the fixtures answer FRED whatever the key
     with tempfile.TemporaryDirectory(prefix="publicsector-") as tmp:
-        f = feedrun.feed_class(feed)(spec, base.Fetch(opener=base.Fixtures(FIXTURES / feed)), AS_OF, log=lambda *_: None)
-        return f.pull({"dir": tmp})
+        run = FB.FeedRun(spec, AS_OF, sets=narrow.get(feed) or {}, root=Path(tmp), opener=PS.Fixtures(FIXTURES / feed), log=lambda *_: None,
+                         sleep=lambda s: None)
+        FB.feed_class(spec)(spec).pull(run)
+        out = {}
+        for f in run.finish():
+            with gzip.open(f["path"], "rt", encoding="utf-8") as fh:
+                out[f["kind"]] = [json.loads(line) for line in fh if line.strip()]
+        return out
 
 
 def key_of(pack_dir: Path, kind: str) -> str:

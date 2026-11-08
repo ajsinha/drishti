@@ -100,22 +100,22 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `NSTAT` | `statistics-series` | external: Statistics Canada Web Data Service (Statistics Canada Open Licence) — refreshed by `tools/feeds/publicsector/run.py` | the daily feed `national-statistics` → `<data>/delta/worldlake/statistics/statistics-series/` (lake `worldlake`) → connector `statistics-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `NSTAT` | `statistics-series` | external: Statistics Canada Web Data Service (Statistics Canada Open Licence) — refreshed by `drishti.py feed run national-statistics` | the daily feed `national-statistics` → `<data>/delta/worldlake/statistics/statistics-series/` (lake `worldlake`) → connector `statistics-store`; nothing is committed but a few documents in `samples/` for the tests |
 
 ### External sources
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| Statistics Canada Web Data Service | https://www150.statcan.gc.ca/t1/wds/rest | Statistics Canada Open Licence | no | `python3 tools/feeds/publicsector/run.py run national-statistics` |
+| Statistics Canada Web Data Service | https://www150.statcan.gc.ca/t1/wds/rest | Statistics Canada Open Licence | no | `python3 tools/drishti.py feed run national-statistics` |
 
 ```bash
-python3 tools/feeds/publicsector/run.py run national-statistics --dry-run  # what the feed would pull; writes nothing
-python3 tools/feeds/publicsector/run.py run national-statistics            # pull what is new into <data>/feeds/national-statistics/out/<date>/ (JSONL.gz with .ready files)
-python3 tools/feeds/publicsector/run.py run national-statistics --inbox    # the same into the data inbox: the server loads it into the lake (daily, from cron)
-python3 tools/feeds/publicsector/run.py run national-statistics --load     # pull, then load into the lake at once (drishti.py lake build)
+python3 tools/drishti.py feed run national-statistics --dry-run     # what the feed would pull; writes nothing
+python3 tools/drishti.py feed run national-statistics               # pull what is new into <data>/feeds/national-statistics/<date>/ and load it (the parallel loader)
+python3 tools/drishti.py feed run national-statistics --load inbox  # the same through the data inbox: the server loads it
+python3 tools/drishti.py feed status national-statistics            # its last runs, rows and errors (the ledger)
 ```
 
-The same through the wrappers: `tools/feeds/publicsector/run.sh run national-statistics` on Linux and macOS, `.\tools\windows\feeds-publicsector.ps1 run national-statistics` on Windows. The feed's YAML is `config/feeds/national-statistics.yaml` (sources, licences, schedule, selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) explains it.
+The same through the wrappers: `tools/feeds/feed.sh run national-statistics` on Linux and macOS, `.\tools\windows\feed.ps1 run national-statistics` on Windows. The feed file is `config/feeds/national-statistics.yaml` (its sources and their licences in `options.sources`, the schedule, the selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) and the [External data feeds guide](../../../../docs/guides/FEEDS_GUIDE.md) explain it.
 
 ### Into the lake, checking, offline
 

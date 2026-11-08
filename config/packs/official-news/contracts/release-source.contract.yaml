@@ -23,7 +23,7 @@ status: active
 title: Official press releases
 description: 'One publisher of official news (a central bank, a regulator, a government): its latest releases newest first, each a link, and its terms.'
 source: 'public data: Federal Reserve Board; European Central Bank; Bank of Canada; Bank of England; US Securities and Exchange Commission; OSFI; US Federal
-  Register; Canada Gazette, Part II; Canada Gazette, Part I, pulled by the official-news feed (config/feeds/official-news.yaml, tools/feeds/publicsector/)'
+  Register; Canada Gazette, Part II; Canada Gazette, Part I, pulled by the official-news feed (config/feeds/official-news.yaml, tools/feeds/sources/)'
 grain: One row per official press releases, keyed by SOURCE_ID.
 key:
 - SOURCE_ID

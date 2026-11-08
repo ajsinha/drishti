@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: OECD series
 description: 'One OECD measure of one member by period: the history, the latest value and the change.'
-source: 'public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/publicsector/)'
+source: 'public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/sources/)'
 grain: One row per oecd series, keyed by SERIES_ID.
 key:
 - SERIES_ID

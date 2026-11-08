@@ -15,7 +15,7 @@
 -->
 ---
 generator: tools/packgen/publicsector/make.py
-refresh: python3 tools/feeds/publicsector/run.py run oecd
+refresh: python3 tools/drishti.py feed run oecd
 sources:
 - name: OECD Data Explorer SDMX API
   licence: 'OECD terms and conditions: data may be extracted, copied and redistributed, also commercially, with the source acknowledged (CC BY 4.0 for OECD
@@ -29,4 +29,4 @@ The OECD members' business cycle, jobs, prices and growth from the OECD Data Exp
 
 ## Refreshing the data
 
-The **oecd** feed (`config/feeds/oecd.yaml`: its sources, licences, schedule `0 12 * * *` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `worldlake` lake: `python3 tools/feeds/publicsector/run.py run oecd --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run oecd`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **oecd** feed (`config/feeds/oecd.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 07:00 local time, and its selection in `options`) pulls what is new into `<data>/feeds/oecd/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run oecd` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run oecd`, `.\tools\windows\feed.ps1 run oecd`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.

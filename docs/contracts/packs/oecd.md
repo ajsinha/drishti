@@ -33,7 +33,7 @@ One OECD member: the latest leading indicator, unemployment, inflation and growt
 | Contract | [oecd-country.contract.yaml](../../../config/packs/oecd/contracts/oecd-country.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/publicsector/) |
+| Source | public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/sources/) |
 | Grain | One row per oecd country, keyed by COUNTRY_ID. |
 | Key | `COUNTRY_ID` |
 | Id pattern | `^OECD-` |
@@ -111,7 +111,7 @@ One OECD measure of one member by period: the history, the latest value and the 
 | Contract | [oecd-series.contract.yaml](../../../config/packs/oecd/contracts/oecd-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/publicsector/) |
+| Source | public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/sources/) |
 | Grain | One row per oecd series, keyed by SERIES_ID. |
 | Key | `SERIES_ID` |
 | Id pattern | `^OECDS-` |

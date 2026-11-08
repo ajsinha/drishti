@@ -33,7 +33,7 @@ One central bank: its policy rate, the last move, the rate's history and the mar
 | Contract | [central-bank.contract.yaml](../../../config/packs/central-banks/contracts/central-bank.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/feeds/publicsector/) |
+| Source | public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/feeds/sources/) |
 | Grain | One row per central bank, keyed by BANK_ID. |
 | Key | `BANK_ID` |
 | Id pattern | `^CBANK-` |
@@ -118,7 +118,7 @@ One central-bank or market series from FRED or the Bank of Canada: the history, 
 | Contract | [rate-series.contract.yaml](../../../config/packs/central-banks/contracts/rate-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/feeds/publicsector/) |
+| Source | public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/feeds/sources/) |
 | Grain | One row per central bank series, keyed by SERIES_ID. |
 | Key | `SERIES_ID` |
 | Id pattern | `^CBSER-` |

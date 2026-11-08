@@ -116,22 +116,22 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `GDELT` | `event-country` | external: GDELT 1.0 daily event files (GDELT terms: free for any use with a citation) — refreshed by `tools/feeds/publicsector/run.py` | the daily feed `gdelt-events` → `<data>/delta/newslake/gdelt/event-country/` (lake `newslake`) → connector `gdelt-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `GDELT` | `event-country` | external: GDELT 1.0 daily event files (GDELT terms: free for any use with a citation) — refreshed by `drishti.py feed run gdelt-events` | the daily feed `gdelt-events` → `<data>/delta/newslake/gdelt/event-country/` (lake `newslake`) → connector `gdelt-store`; nothing is committed but a few documents in `samples/` for the tests |
 
 ### External sources
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| GDELT 1.0 daily event files | https://data.gdeltproject.org/events/ | GDELT terms: free for any use with a citation | no | `python3 tools/feeds/publicsector/run.py run gdelt-events` |
+| GDELT 1.0 daily event files | https://data.gdeltproject.org/events/ | GDELT terms: free for any use with a citation | no | `python3 tools/drishti.py feed run gdelt-events` |
 
 ```bash
-python3 tools/feeds/publicsector/run.py run gdelt-events --dry-run  # what the feed would pull; writes nothing
-python3 tools/feeds/publicsector/run.py run gdelt-events            # pull what is new into <data>/feeds/gdelt-events/out/<date>/ (JSONL.gz with .ready files)
-python3 tools/feeds/publicsector/run.py run gdelt-events --inbox    # the same into the data inbox: the server loads it into the lake (daily, from cron)
-python3 tools/feeds/publicsector/run.py run gdelt-events --load     # pull, then load into the lake at once (drishti.py lake build)
+python3 tools/drishti.py feed run gdelt-events --dry-run     # what the feed would pull; writes nothing
+python3 tools/drishti.py feed run gdelt-events               # pull what is new into <data>/feeds/gdelt-events/<date>/ and load it (the parallel loader)
+python3 tools/drishti.py feed run gdelt-events --load inbox  # the same through the data inbox: the server loads it
+python3 tools/drishti.py feed status gdelt-events            # its last runs, rows and errors (the ledger)
 ```
 
-The same through the wrappers: `tools/feeds/publicsector/run.sh run gdelt-events` on Linux and macOS, `.\tools\windows\feeds-publicsector.ps1 run gdelt-events` on Windows. The feed's YAML is `config/feeds/gdelt-events.yaml` (sources, licences, schedule, selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) explains it.
+The same through the wrappers: `tools/feeds/feed.sh run gdelt-events` on Linux and macOS, `.\tools\windows\feed.ps1 run gdelt-events` on Windows. The feed file is `config/feeds/gdelt-events.yaml` (its sources and their licences in `options.sources`, the schedule, the selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) and the [External data feeds guide](../../../../docs/guides/FEEDS_GUIDE.md) explain it.
 
 ### Into the lake, checking, offline
 

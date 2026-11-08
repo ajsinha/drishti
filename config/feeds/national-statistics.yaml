@@ -13,22 +13,47 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The national-statistics feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): Statistics Canada's Web Data Service by vector into
-# worldlake, for the national-statistics pack. Pull: tools/feeds/publicsector/national_statistics.py. Daily (StatCan releases at 08:30
-# Eastern); incremental (the last three periods merged into the kept history; no newer release, nothing written). No key.
+# worldlake, for the national-statistics pack. Class: tools/feeds/sources/national_statistics.py. Daily (StatCan releases at 08:30
+# Eastern); incremental (from a quarter before each vector's last period, merged into the kept history; no newer release, nothing
+# written). No key.
 # A vector's frequency is read from WDS; `frequency:` overrides it (daily, weekly, monthly, quarterly, annual ...).
 # A vector is one series of one table (find it on the table's page: "Add/Remove data" -> "Display vector identifier").
+# Run: python3 tools/drishti.py feed run national-statistics (FEEDS_GUIDE.md); options.sources holds each source's licence and terms; the rest of
+# options is the default selection.
 feed: national-statistics
 title: Statistics Canada (Web Data Service)
-module: publicsector
-pack: national-statistics
+description: 'The public-sector module''s national-statistics pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Statistics Canada''s headline statistics by vector
+  from its Web Data Service (Statistics Canada Open Licence): the consumer price index, unemployment, monthly GDP, population, housing starts and the overnight
+  money market rate. Each series shows its latest value, the change on the period and on the year, and its history. Filled daily by the national-statistics
+  feed into the worldlake lake; more vectors are a line each in the feed''s YAML.'
+class: national_statistics.NationalStatisticsFeed
+source:
+  provider: Statistics Canada
+  url: https://www.statcan.gc.ca/en/developers/wds
+  pause: 0.5
+  retries: 3
+  timeout: 90
+  cache-hours: 12
 lake: worldlake
-pull: tools/feeds/publicsector/national_statistics.py
-schedule: { cadence: daily, cron: "0 14 * * 1-5", timezone: UTC }   # after the 08:30 Eastern releases
-tables:
-  - { kind: statistics-series, connector: statistics-store, table: statistics.statistics-series, key: SERIES_ID }
-keys: []
-limits: { pause-seconds: 0.5, timeout-seconds: 90 }     # WDS allows 50 requests a second per IP; the feed makes two a run
-sources:
+load: java
+enabled: true
+schedule:
+  at: 09:00
+  days: weekdays
+licence:
+  name: Statistics Canada Open Licence
+  url: https://www.statcan.gc.ca/en/terms-conditions/open-licence
+  redistribution: attribution
+  internal-only: false
+  attribution: 'Source: Statistics Canada (Statistics Canada Open Licence).'
+datasets:
+  statistics-series:
+    pack: national-statistics
+    kind: statistics-series
+    key: SERIES_ID
+options:
+  module: publicsector
+  sources:
   - id: statcan
     name: Statistics Canada Web Data Service (WDS)
     title: Statistics Canada
@@ -37,15 +62,44 @@ sources:
     licence: Statistics Canada Open Licence
     redistributable: true
     internal-only: false
-    attribution: "Source: Statistics Canada, <table>. Reproduced and distributed on an \"as is\" basis with the permission of Statistics Canada (Statistics Canada Open Licence)."
-selection:
-  history-periods: 60          # five years of a monthly series, fifteen of a quarterly one
-  # the default vectors: Canada's headline statistics, one a theme (prices, jobs, output, people, housing, money markets)
+    attribution: 'Source: Statistics Canada, <table>. Reproduced and distributed on an "as is" basis with the permission of Statistics Canada (Statistics
+      Canada Open Licence).'
+  history-years: 5
+  history-periods: 60
   vectors:
-    - { vector: 41690973, title: "Consumer price index, all-items (Canada)", unit: "index 2002=100", topic: Prices, table-title: "Consumer Price Index, monthly, not seasonally adjusted" }
-    - { vector: 41690914, title: "Consumer price index, all-items, seasonally adjusted (Canada)", unit: "index 2002=100", topic: Prices, table-title: "Consumer Price Index, monthly, seasonally adjusted" }
-    - { vector: 2062815, title: "Unemployment rate (Canada, seasonally adjusted)", unit: "%", topic: Labour, table-title: "Labour force characteristics, monthly, seasonally adjusted" }
-    - { vector: 65201210, title: "GDP at basic prices, all industries (chained 2017 dollars, SAAR)", unit: "CAD", topic: Output, table-title: "Gross domestic product (GDP) at basic prices, by industry, monthly" }
-    - { vector: 1, title: "Population of Canada", unit: persons, frequency: quarterly, topic: Population, table-title: "Population estimates, quarterly" }
-    - { vector: 52300157, title: "Housing starts, all areas (Canada, SAAR)", unit: "units", topic: Housing, table-title: "Canada Mortgage and Housing Corporation, housing starts, all areas, Canada and provinces, seasonally adjusted at annual rates, monthly" }
-    - { vector: 39050, title: "Overnight money market financing rate", unit: "%", topic: Money markets, table-title: "Financial market statistics, last Wednesday unless otherwise stated, Bank of Canada" }
+  - vector: 41690973
+    title: Consumer price index, all-items (Canada)
+    unit: index 2002=100
+    topic: Prices
+    table-title: Consumer Price Index, monthly, not seasonally adjusted
+  - vector: 41690914
+    title: Consumer price index, all-items, seasonally adjusted (Canada)
+    unit: index 2002=100
+    topic: Prices
+    table-title: Consumer Price Index, monthly, seasonally adjusted
+  - vector: 2062815
+    title: Unemployment rate (Canada, seasonally adjusted)
+    unit: '%'
+    topic: Labour
+    table-title: Labour force characteristics, monthly, seasonally adjusted
+  - vector: 65201210
+    title: GDP at basic prices, all industries (chained 2017 dollars, SAAR)
+    unit: CAD
+    topic: Output
+    table-title: Gross domestic product (GDP) at basic prices, by industry, monthly
+  - vector: 1
+    title: Population of Canada
+    unit: persons
+    frequency: quarterly
+    topic: Population
+    table-title: Population estimates, quarterly
+  - vector: 52300157
+    title: Housing starts, all areas (Canada, SAAR)
+    unit: units
+    topic: Housing
+    table-title: Canada Mortgage and Housing Corporation, housing starts, all areas, Canada and provinces, seasonally adjusted at annual rates, monthly
+  - vector: 39050
+    title: Overnight money market financing rate
+    unit: '%'
+    topic: Money markets
+    table-title: Financial market statistics, last Wednesday unless otherwise stated, Bank of Canada

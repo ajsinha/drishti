@@ -38,7 +38,7 @@ sources:
   licence: Statistics Canada Open Licence
   internal-only: false
   used-for: statistics-series
-refresh: python3 tools/feeds/publicsector/run.py run national-statistics
+refresh: python3 tools/drishti.py feed run national-statistics
 generated-by: tools/packgen/publicsector/make.py
 ---
 # The national-statistics pack
@@ -63,35 +63,35 @@ Fields, from 7 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `SERIES_ID` | string | `NSTAT-V1` | NSTAT-V and the Statistics Canada vector number. |
-| `NAME` | string | `Population of Canada` | The series' title in the feed's YAML, as NAME for search. |
-| `VECTOR` | string | `v1` | The Statistics Canada vector id (v and a number): one series of one table. |
-| `TITLE` | string | `Population of Canada` | The series' title in the feed's YAML. |
-| `MEMBERS` | string | `Canada` | The table's dimension members that make the series, as Statistics Canada names them (Canada;All-items). |
-| `GEOGRAPHY` | string | `Canada` | The series' first member: its geography. |
-| `TABLE_ID` | string | `17-10-0009-01` | The Statistics Canada table number (18-10-0004-01). |
-| `TABLE_TITLE` | string | `Population estimates, quarterly` | The table's title in the feed's YAML. |
-| `TOPIC` | string | `Population` | The theme the feed's YAML gives the series (Prices, Labour, Output, Population, Housing, Money markets). |
-| `FREQUENCY` | string | `quarterly` | How often the series is published (Statistics Canada's frequency code, or the feed's YAML when it says). |
-| `UNIT` | string | `persons` | What the value measures, from the feed's YAML (an index, %, CAD, persons, units). |
-| `SCALE` | string | `units` | The scalar factor the values carry (units, thousands, millions). |
-| `LATEST` | number | `41798407.0` | The latest published value, in the unit and scale shown. |
-| `LATEST_PERIOD` | date | `2026-07-01` | The reference period of the latest value (its first day). |
-| `PREVIOUS` | number | `41718064.0` | The value of the period before. |
-| `PREVIOUS_PERIOD` | date | `2026-04-01` | The reference period of the previous value. |
 | `CHANGE` | number | `80343.0` | The latest value less the previous one. |
 | `CHANGE_PCT` | number | `0.1926` | The change on the period in per cent. (%) |
-| `YEAR_ON_YEAR_PCT` | number | `0.4553` | The change on the same period a year before, in per cent; empty when the history is shorter. (%) |
-| `RELEASED` | timestamp | `2026-09-23T08:30` | When Statistics Canada released the latest value (Eastern time). |
+| `FREQUENCY` | string | `quarterly` | How often the series is published (Statistics Canada's frequency code, or the feed's YAML when it says). |
+| `GEOGRAPHY` | string | `Canada` | The series' first member: its geography. |
 | `HISTORY` | list of objects |  | The value by reference period, oldest first, over the feed's history-periods (PERIOD, VALUE). |
+| `LATEST` | number | `41798407.0` | The latest published value, in the unit and scale shown. |
+| `LATEST_PERIOD` | date | `2026-07-01` | The reference period of the latest value (its first day). |
+| `MEMBERS` | null |  | The table's dimension members that make the series, as Statistics Canada names them (Canada;All-items). |
+| `NAME` | string | `Population of Canada` | The series' title in the feed's YAML, as NAME for search. |
+| `PREVIOUS` | number | `41718064.0` | The value of the period before. |
+| `PREVIOUS_PERIOD` | date | `2026-04-01` | The reference period of the previous value. |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `RELEASED` | timestamp | `2026-09-23T08:30` | When Statistics Canada released the latest value (Eastern time). |
+| `SCALE` | string | `units` | The scalar factor the values carry (units, thousands, millions). |
+| `SERIES_ID` | string | `NSTAT-V1` | NSTAT-V and the Statistics Canada vector number. |
+| `TABLE_ID` | string | `17-10-0009-01` | The Statistics Canada table number (18-10-0004-01). |
+| `TABLE_TITLE` | string | `Population estimates, quarterly` | The table's title in the feed's YAML. |
+| `TITLE` | string | `Population of Canada` | The series' title in the feed's YAML. |
+| `TOPIC` | string | `Population` | The theme the feed's YAML gives the series (Prices, Labour, Output, Population, Housing, Money markets). |
+| `UNIT` | string | `persons` | What the value measures, from the feed's YAML (an index, %, CAD, persons, units). |
+| `VECTOR` | string | `v1` | The Statistics Canada vector id (v and a number): one series of one table. |
+| `YEAR_ON_YEAR_PCT` | number | `0.4553` | The change on the same period a year before, in per cent; empty when the history is shorter. (%) |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
 | `HISTORY[]` | `PERIOD` (date): The reference period (its first day)., `VALUE` (number): The published value for that period. |
-| `PROVENANCE` | `SOURCE` (string): The organisation whose published data the record holds., `DATASET` (string): The Statistics Canada table and vector the record was built from., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): The table's page on the Statistics Canada website., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record). |
+| `PROVENANCE` | `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `DATASET` (string): The Statistics Canada table and vector the record was built from., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `SOURCE` (string): The organisation whose published data the record holds., `URL` (string): The table's page on the Statistics Canada website. |
 
 ## Screens and commands
 
@@ -138,7 +138,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **national-statistics** feed (`config/feeds/national-statistics.yaml`: its sources, licences, schedule `0 14 * * 1-5` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `worldlake` lake: `python3 tools/feeds/publicsector/run.py run national-statistics --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run national-statistics`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **national-statistics** feed (`config/feeds/national-statistics.yaml`: its sources and their licences in `options.sources`, its schedule, weekdays at 09:00 local time, and its selection in `options`) pulls what is new into `<data>/feeds/national-statistics/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run national-statistics` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run national-statistics`, `.\tools\windows\feed.ps1 run national-statistics`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+
+The data feed `national-statistics` (config/feeds/national-statistics.yaml) pulls `statistics-series`: `python3 tools/drishti.py feed run national-statistics` fetches them daily into `data/feeds/national-statistics/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 

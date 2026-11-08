@@ -12,17 +12,17 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The oecd feed: the OECD Data Explorer's SDMX REST API (SDMX-JSON 2.0), for the oecd pack (config/feeds/oecd.yaml). One request a
-measure for every selected country. Incremental: later pulls ask from three periods before each measure's last one, merged into the
-kept history (history/<measure>-<country>.json); nothing newer, nothing written. Writes the oecd-country kind (one a country: the latest
-of each measure) and the oecd-series kind (one a country and measure: the history)."""
+"""The oecd feed (config/feeds/oecd.yaml): the OECD Data Explorer's SDMX REST API (SDMX-JSON 2.0), for the oecd pack. One request a
+measure for every selected country. Incremental: later runs ask from three periods before each measure's last one, merged into the kept
+history (history/<measure>-<country>.json); nothing newer, nothing emitted. Emits the oecd-country kind (one a country: the latest of
+each measure) and the oecd-series kind (one a country and measure: the history)."""
 from __future__ import annotations
 
 import json
 import urllib.parse
-from pathlib import Path
 
-from base import FeedError, PublicFeed, change, ident, number
+from feedbase import Feed, FeedError
+from publicsector import History, change, ident, need, number, provenance
 
 API = "https://sdmx.oecd.org/public/rest/data"
 ACCEPT = "application/vnd.sdmx.data+json; charset=utf-8; version=2"
@@ -36,9 +36,8 @@ def parse_sdmx(msg: dict) -> list[dict]:
     out = []
     for ds in data.get("dataSets") or []:
         for key, vals in (ds.get("observations") or {}).items():
-            idx = [int(i) for i in key.split(":")]
             row = {}
-            for d, i in zip(dims, idx):
+            for d, i in zip(dims, (int(x) for x in key.split(":"))):
                 values = d.get("values") or []
                 if i >= len(values):
                     row = {}
@@ -51,85 +50,78 @@ def parse_sdmx(msg: dict) -> list[dict]:
     return out
 
 
-class Oecd(PublicFeed):
-    name = "oecd"
+class OecdFeed(Feed):
+    def _url(self, run, m: dict, start: str) -> str:
+        key = m["key"].replace("{countries}", "+".join(run.option("countries", [])))
+        return f"{API}/{urllib.parse.quote(m['dataflow'], safe=',@')}/{key}?startPeriod={start}&dimensionAtObservation=AllDimensions"
 
-    def pull(self, state: dict) -> dict[str, list[dict]]:
-        sel = self.selection
-        countries = sel.get("countries") or []
-        keep = int(sel.get("history-periods", 60))
-        known = state.setdefault("measures", {})
-        home = Path(state["dir"]) / "history"
+    def _start(self, run, m: dict) -> str:
+        restart = (run.state.get("measures", {}).get(m["id"]) or {}).get("restart")
+        return restart if restart and not run.since else (run.since.strftime("%Y-%m") if run.since else run.option("start-period", "2020-01"))
+
+    def plan(self, run):
+        return [self._url(run, m, self._start(run, m)) for m in run.option("measures", [])]
+
+    def pull(self, run):
+        countries = run.option("countries", [])
+        keep = int(run.option("history-periods", 72))
+        known = run.state.setdefault("measures", {})
         series, profiles, newer = [], {}, False
-        for m in sel.get("measures") or []:
-            start = (known.get(m["id"]) or {}).get("restart") if not state.get("force") else None
-            start = start or sel.get("start-period", "2020-01")
-            key = m["key"].replace("{countries}", "+".join(countries))
-            url = f"{API}/{urllib.parse.quote(m['dataflow'], safe=',@')}/{key}?startPeriod={start}&dimensionAtObservation=AllDimensions"
-            obs = parse_sdmx(json.loads(self.fetch.raw(url, headers={"Accept": ACCEPT})))
+        for m in run.option("measures", []):
+            raw = need(run.get_bytes(self._url(run, m, self._start(run, m)), accept=ACCEPT), f"OECD {m['id']}")
+            obs = parse_sdmx(json.loads(raw))
             by: dict[str, dict] = {}
             for o in obs:
                 area = o["dims"].get("REF_AREA", (None, None))
                 skey = tuple(sorted((k, v[0]) for k, v in o["dims"].items() if k != "TIME_PERIOD"))
                 c = by.setdefault(area[0], {"name": area[1], "series": {}})
-                c["series"].setdefault(skey, []).append((o["period"], o["value"]))
-            last_periods = []
+                c["series"].setdefault(skey, {})[o["period"]] = o["value"]
+            lasts = []
             for iso3, c in by.items():
                 if countries and iso3 not in countries:
                     continue
                 pts = max(c["series"].values(), key=len)            # a wildcard key may answer several series: the fullest one
-                file = home / f"{ident(m['id'])}-{iso3}.json"
-                hist = self._merge(file, pts, keep)
+                hist = History(run, f"{ident(m['id'])}-{iso3}").merge(pts, keep=keep, key="PERIOD")
                 if not hist:
                     continue
-                prior = (known.get(m["id"]) or {}).get("last", {}).get(iso3)
-                newer = newer or hist[-1]["PERIOD"] != prior
-                last_periods.append((iso3, hist[-1]["PERIOD"], hist[-4]["PERIOD"] if len(hist) > 3 else hist[0]["PERIOD"]))
+                newer = newer or hist[-1]["PERIOD"] != (known.get(m["id"]) or {}).get("last", {}).get(iso3)
+                lasts.append((iso3, hist[-1]["PERIOD"], hist[-4]["PERIOD"] if len(hist) > 3 else hist[0]["PERIOD"]))
                 sid = f"OECDS-{iso3}-{ident(m['id'])}"
                 latest, prev = hist[-1], (hist[-2] if len(hist) > 1 else None)
+                flow = m["dataflow"].split(",")[1]
                 series.append({"SERIES_ID": sid, "NAME": f"{c['name']} · {m['title']}", "OECD_COUNTRY": f"OECD-{iso3}", "ISO3": iso3,
                                "COUNTRY_NAME": c["name"], "MEASURE": m["id"], "TITLE": m["title"], "UNIT": m.get("unit"),
                                "DATAFLOW": m["dataflow"], "FREQUENCY": m.get("frequency"), "LATEST": latest["VALUE"],
                                "LATEST_PERIOD": latest["PERIOD"], "PREVIOUS": prev["VALUE"] if prev else None,
                                "PREVIOUS_PERIOD": prev["PERIOD"] if prev else None,
                                "CHANGE": change(latest["VALUE"], prev["VALUE"] if prev else None), "HISTORY": hist,
-                               "PROVENANCE": self.provenance(dataset=f"OECD {m['dataflow'].split(',')[1]}",
-                                                             url=f"https://data-explorer.oecd.org/?lc=en&df[ds]=dsDisseminateFinalDMZ&df[id]={urllib.parse.quote(m['dataflow'].split(',')[1])}")})
-                p = profiles.setdefault(iso3, self._country(iso3, c["name"]))
+                               "PROVENANCE": provenance(run, "oecd", f"OECD {flow}",
+                                                        f"https://data-explorer.oecd.org/?lc=en&df[ds]=dsDisseminateFinalDMZ&df[id]={urllib.parse.quote(flow)}")})
+                p = profiles.setdefault(iso3, self._country(run, iso3, c["name"]))
                 p[m["field"]] = latest["VALUE"]
                 p[m["field"] + "_PERIOD"] = latest["PERIOD"]
                 p["MEASURES"].append({"MEASURE": m["id"], "TITLE": m["title"], "UNIT": m.get("unit"), "LATEST": latest["VALUE"],
                                       "PERIOD": latest["PERIOD"], "CHANGE": change(latest["VALUE"], prev["VALUE"] if prev else None),
                                       "OECD_SERIES": sid})
-            if last_periods:
-                known[m["id"]] = {"last": {i: p for i, p, _ in last_periods}, "restart": min(r for _, _, r in last_periods)}
+            if lasts:
+                known[m["id"]] = {"last": {i: p for i, p, _ in lasts}, "restart": min(r for _, _, r in lasts)}
         if not series:
             raise FeedError("the OECD answered no observation for the selection: check config/feeds/oecd.yaml")
-        if not newer and state.get("lastRun") and not state.get("force"):
-            self.log("  no newer period since the last pull")
-            return {}
-        state.pop("force", None)
+        if not newer and run.state.get("lastRun") and not run.since:
+            run.log("  no newer period since the last run")
+            return
         for p in profiles.values():
             p["MEASURE_COUNT"] = len(p["MEASURES"])
-        return {"oecd-country": list(profiles.values()), "oecd-series": series}
+        run.emit("oecd-country", profiles.values())
+        run.emit("oecd-series", series)
+        for d in ("oecd-country", "oecd-series"):
+            run.mark(d, run.business_date)
 
-    def _country(self, iso3: str, name: str) -> dict:
+    def _country(self, run, iso3: str, name: str) -> dict:
         p = {"COUNTRY_ID": f"OECD-{iso3}", "NAME": name, "ISO3": iso3, "COUNTRY_NAME": name}
-        for m in self.selection.get("measures") or []:
+        for m in run.option("measures", []):
             p[m["field"]] = None
             p[m["field"] + "_PERIOD"] = None
         p["MEASURES"] = []
-        p["PROVENANCE"] = self.provenance(dataset="OECD Data Explorer (SDMX)", url="https://data-explorer.oecd.org/")
+        p["PROVENANCE"] = provenance(run, "oecd", "OECD Data Explorer (SDMX)", "https://data-explorer.oecd.org/")
         return p
-
-    @staticmethod
-    def _merge(file: Path, pts: list, keep: int) -> list[dict]:
-        try:
-            kept = {h["PERIOD"]: h["VALUE"] for h in json.loads(file.read_text(encoding="utf-8"))}
-        except (OSError, ValueError):
-            kept = {}
-        kept.update(dict(pts))
-        hist = [{"PERIOD": k, "VALUE": v} for k, v in sorted(kept.items())][-keep:]
-        file.parent.mkdir(parents=True, exist_ok=True)
-        file.write_text(json.dumps(hist, separators=(",", ":")) + "\n", encoding="utf-8")
-        return hist

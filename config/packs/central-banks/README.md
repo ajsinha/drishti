@@ -44,7 +44,7 @@ sources:
   licence: 'Bank of Canada terms of use: free to use, copy, distribute and transmit with attribution; inside a paid service, tell buyers the data is free on bankofcanada.ca'
   internal-only: false
   used-for: central-bank, rate-series
-refresh: python3 tools/feeds/publicsector/run.py run central-banks
+refresh: python3 tools/drishti.py feed run central-banks
 generated-by: tools/packgen/publicsector/make.py
 ---
 # The central-banks pack
@@ -70,28 +70,28 @@ Fields, from 2 sample documents:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `BANK_ID` | string | `CBANK-BOC` | CBANK- and the bank's short id in the feed's YAML (FED, BOC). |
-| `NAME` | string | `Bank of Canada` | The central bank's name. |
 | `COUNTRY` | string | `CAN` | The ISO 3166-1 alpha-3 code of the bank's country. |
 | `COUNTRY_NAME` | string | `Canada` | The bank's country. |
 | `CURRENCY` | string | `CAD` | The ISO 4217 code of the bank's currency. |
-| `WEBSITE` | string | `https://www.bankofcanada.ca` | The bank's website. |
+| `LAST_MOVE_BP` | number | `25.0` | The size of that move: the new rate less the old one, in basis points (negative for a cut). (bp) |
+| `LAST_MOVE_DATE` | date | `2026-10-29` | The first date the policy rate took its current value, within the history window; empty when it did not move in the window. |
+| `NAME` | string | `Bank of Canada` | The central bank's name. |
+| `POLICY_HISTORY` | list of objects |  | The policy rate by date over the window, oldest first (DATE, VALUE). |
 | `POLICY_RATE` | number | `2.5` | The latest value of the bank's policy-rate series (the Fed: the target range's upper limit; the Bank of Canada: the target for the overnight rate). (%) |
 | `POLICY_RATE_DATE` | date | `2026-11-05` | The date of that value. |
 | `POLICY_SERIES` | string | `CBSER-BOC-V39079` | The rate-series page of the policy rate.; link to `rate-series` |
-| `LAST_MOVE_DATE` | date | `2026-10-29` | The first date the policy rate took its current value, within the history window; empty when it did not move in the window. |
-| `LAST_MOVE_BP` | number | `25.0` | The size of that move: the new rate less the old one, in basis points (negative for a cut). (bp) |
-| `POLICY_HISTORY` | list of objects |  | The policy rate by date over the window, oldest first (DATE, VALUE). |
-| `SERIES` | list of objects |  | Every series of the bank the feed follows, one row each: RATE_SERIES, TITLE, LATEST, DATE, CHANGE, UNIT. |
 | `PRESS` | string | `PRESS-BOC` | The bank's publisher page in the official-news pack (PRESS-<id>).; link to `release-source` |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `SERIES` | list of objects |  | Every series of the bank the feed follows, one row each: RATE_SERIES, TITLE, LATEST, DATE, CHANGE, UNIT. |
+| `WEBSITE` | string | `https://www.bankofcanada.ca` | The bank's website. |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
 | `POLICY_HISTORY[]` | `DATE` (date): The observation's date (a monthly series is dated the first of its month)., `VALUE` (number): The observation, in the series' unit. |
-| `SERIES[]` | `RATE_SERIES` (string): The rate-series page (CBSER-<source>-<code>)., `TITLE` (string): The series' title in the feed's YAML., `LATEST` (number): The series' latest value, in its unit., `DATE` (date): The date of the latest value., `CHANGE` (number): The latest value less the previous observation., `UNIT` (string): What the series measures. |
-| `PROVENANCE` | `SOURCE` (string): The organisation whose published data the record holds., `DATASET` (string): The source and the series (or the bank) the record was built from., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): The source's page for this record., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record). |
+| `PROVENANCE` | `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `DATASET` (string): The source and the series (or the bank) the record was built from., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `SOURCE` (string): The organisation whose published data the record holds., `URL` (string): The source's page for this record. |
+| `SERIES[]` | `CHANGE` (number): The latest value less the previous observation., `DATE` (date): The date of the latest value., `LATEST` (number): The series' latest value, in its unit., `RATE_SERIES` (string): The rate-series page (CBSER-<source>-<code>)., `TITLE` (string): The series' title in the feed's YAML., `UNIT` (string): What the series measures. |
 
 Links: `POLICY_SERIES` → `rate-series`, `PRESS` → `release-source`.
 
@@ -105,33 +105,33 @@ Fields, from 13 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `SERIES_ID` | string | `CBSER-BOC-AVG_INTWO` | CBSER-, the source (FRED or BOC) and the source's series code with dots as underscores. |
-| `NAME` | string | `CORRA, Canadian overnight repo rate aver…` | The series' title, as NAME for search. |
-| `SOURCE` | string | `Bank of Canada` | The source the series is read from: FRED (Federal Reserve Bank of St. Louis) or the Bank of Canada. |
-| `CODE` | string | `AVG.INTWO` | The series' code at its source (DGS10, V39079). |
 | `CENTRAL_BANK` | string | `CBANK-BOC` | The central-bank page the series belongs to (CBANK-<id>).; link to `central-bank` |
-| `TITLE` | string | `CORRA, Canadian overnight repo rate aver…` | The series' title in the feed's YAML, else the source's own. |
-| `DESCRIPTION` | string | `A measure of the cost of overnight gener…` | The source's description of the series (FRED's notes, the Valet description), cut at 600 characters. |
-| `UNIT` | string | `%` | What the series measures (%, percentage points, an index, USD millions, CAD per USD). |
-| `FREQUENCY` | string | `Business daily` | How often the source publishes the series, in its own words. |
-| `LATEST` | number | `2.52` | The latest observation, in the series' unit. |
-| `LATEST_DATE` | date | `2026-11-05` | The date of the latest observation. |
-| `PREVIOUS` | number | `2.52` | The observation before the latest one. |
-| `PREVIOUS_DATE` | date | `2026-11-04` | The date of the previous observation. |
 | `CHANGE` | number | `0.0` | The latest observation less the previous one, in the series' unit. |
 | `CHANGE_1Y` | number | `0.25` | The latest observation less the last one at least a year before it; empty when the window is shorter. |
+| `CODE` | string | `AVG.INTWO` | The series' code at its source (DGS10, V39079). |
+| `DESCRIPTION` | string | `A measure of the cost of overnight gener…` | The source's description of the series (FRED's notes, the Valet description), cut at 600 characters. |
+| `FREQUENCY` | string | `Business daily` | How often the source publishes the series, in its own words. |
 | `HIGH` | number | `2.56` | The highest observation in the history window. |
-| `LOW` | number | `2.24` | The lowest observation in the history window. |
-| `OBSERVATIONS` | integer | `273` | How many observations the history holds. |
 | `HISTORY` | list of objects |  | The observations over the window (the feed's history-days), oldest first (DATE, VALUE). |
+| `LATEST` | number | `2.52` | The latest observation, in the series' unit. |
+| `LATEST_DATE` | date | `2026-11-05` | The date of the latest observation. |
+| `LOW` | number | `2.24` | The lowest observation in the history window. |
+| `NAME` | string | `CORRA, Canadian overnight repo rate aver…` | The series' title, as NAME for search. |
+| `OBSERVATIONS` | integer | `273` | How many observations the history holds. |
+| `PREVIOUS` | number | `2.52` | The observation before the latest one. |
+| `PREVIOUS_DATE` | date | `2026-11-04` | The date of the previous observation. |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `SERIES_ID` | string | `CBSER-BOC-AVG_INTWO` | CBSER-, the source (FRED or BOC) and the source's series code with dots as underscores. |
+| `SOURCE` | string | `Bank of Canada` | The source the series is read from: FRED (Federal Reserve Bank of St. Louis) or the Bank of Canada. |
+| `TITLE` | string | `CORRA, Canadian overnight repo rate aver…` | The series' title in the feed's YAML, else the source's own. |
+| `UNIT` | string | `%` | What the series measures (%, percentage points, an index, USD millions, CAD per USD). |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
 | `HISTORY[]` | `DATE` (date): The observation's date (a monthly series is dated the first of its month)., `VALUE` (number): The observation, in the series' unit. |
-| `PROVENANCE` | `SOURCE` (string): The organisation whose published data the record holds., `DATASET` (string): The source and the series (or the bank) the record was built from., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): The source's page for this record., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record). |
+| `PROVENANCE` | `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `DATASET` (string): The source and the series (or the bank) the record was built from., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `SOURCE` (string): The organisation whose published data the record holds., `URL` (string): The source's page for this record. |
 
 Links: `CENTRAL_BANK` → `central-bank`.
 
@@ -184,7 +184,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **central-banks** feed (`config/feeds/central-banks.yaml`: its sources, licences, schedule `15 22 * * 1-5` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `worldlake` lake: `python3 tools/feeds/publicsector/run.py run central-banks --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run central-banks`. It needs `DRISHTI_FRED_API_KEY` in the environment (never in a file); without it the feed exits 3. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **central-banks** feed (`config/feeds/central-banks.yaml`: its sources and their licences in `options.sources`, its schedule, weekdays at 18:15 local time, and its selection in `options`) pulls what is new into `<data>/feeds/central-banks/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run central-banks` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run central-banks`, `.\tools\windows\feed.ps1 run central-banks`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. FRED needs a free key in `DRISHTI_FRED_API_KEY` (never in a file); without it the FRED series are left out, said in the run's log, and the Bank of Canada's still load. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+
+The data feed `central-banks` (config/feeds/central-banks.yaml) pulls `central-bank`, `rate-series`: `python3 tools/drishti.py feed run central-banks` fetches them daily into `data/feeds/central-banks/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 

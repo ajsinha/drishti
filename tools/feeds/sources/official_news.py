@@ -12,10 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The official-news feed: press releases and notices of central banks, regulators and governments from their own RSS 2.0, RSS 1.0
-(RDF) and Atom feeds and the US Federal Register's API, for the official-news pack (config/feeds/official-news.yaml). Incremental: a
+"""The official-news feed (config/feeds/official-news.yaml): press releases and notices of central banks, regulators and governments from their own RSS 2.0, RSS 1.0
+(RDF) and Atom feeds and the US Federal Register's API, for the official-news pack; each publisher's
+terms are its entry in the feed file's options.sources. Incremental: a
 release already kept (by its link) is not added again; the kept releases (history/<publisher>.json) are trimmed to `keep-days` and
-`keep-per-source`; no new release anywhere, nothing written. Writes the press-release kind (one a release: title, date, link, summary)
+`keep-per-source`; no new release anywhere, nothing emitted. Emits the press-release kind (one a release: title, date, link, summary)
 and the release-source kind (one a publisher: its terms and its latest releases with their links)."""
 from __future__ import annotations
 
@@ -28,7 +29,8 @@ from datetime import date, datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
-from base import FeedError, PublicFeed
+from feedbase import Feed, FeedError
+from publicsector import provenance, sources, tolerate
 
 _TAG = re.compile(r"<[^>]+>")
 _COMMENT = re.compile(r"<!--.*?-->", re.S)
@@ -111,29 +113,30 @@ def release_id(publisher: str, link: str) -> str:
     return f"PREL-{publisher}-{hashlib.sha1(link.encode()).hexdigest()[:10].upper()}"
 
 
-class OfficialNews(PublicFeed):
-    name = "official-news"
+class OfficialNewsFeed(Feed):
+    def plan(self, run):
+        return [s["feed"] for s in sources(run) if s.get("enabled", True) is not False]
 
-    def pull(self, state: dict) -> dict[str, list[dict]]:
-        sel = self.selection
-        keep_days, keep_n = int(sel.get("keep-days", 90)), int(sel.get("keep-per-source", 100))
-        cutoff = (date.fromisoformat(self.as_of) - timedelta(days=keep_days)).isoformat()
-        home = Path(state["dir"]) / "history"
-        releases, sources, added, failed = [], [], 0, []
-        seen = state.setdefault("seen", {})                  # every release id ever kept, by publisher (bounded): dropped ones stay seen
-        for s in self.spec.get("sources") or []:
-            if s.get("enabled", True) is False:
-                continue
+    def pull(self, run):
+        keep_days, keep_n = int(run.option("keep-days", 90)), int(run.option("keep-per-source", 100))
+        cutoff = (run.business_date - timedelta(days=keep_days)).isoformat()
+        releases, pubs, added, failed = [], [], 0, []
+        seen = run.state.setdefault("seen", {})               # every release id ever kept, by publisher (bounded): dropped ones stay seen
+        live = [s for s in sources(run) if s.get("enabled", True) is not False]
+        for s in live:
+            got = None
             try:
-                raw = self.fetch.raw(s["feed"], headers={"Accept": "application/rss+xml, application/atom+xml, application/xml, application/json, */*"})
+                raw = run.get_bytes(s["feed"], accept="application/rss+xml, application/atom+xml, application/xml, application/json, */*")
+                if raw is None:
+                    tolerate(run, s["feed"])                   # one publisher down never fails the others: its kept releases stay
+                    raise FeedError("no answer after the retries")
                 got = parse_federal_register(raw) if s.get("format") == "federal-register" else parse_feed(raw)
             except (FeedError, ET.ParseError, ValueError) as e:
                 failed.append(f"{s['id']}: {e}")
-                self.log(f"  {s['id']}: {e}")
-                got = None
-            file = home / f"{s['id']}.json"
+                run.log(f"  {s['id']}: {e} (its kept releases are shown)")
+            hist = Path(run.folder) / "history" / f"{s['id']}.json"
             try:
-                kept = {r["URL"]: r for r in json.loads(file.read_text(encoding="utf-8"))}
+                kept = {r["URL"]: r for r in json.loads(hist.read_text(encoding="utf-8"))}
             except (OSError, ValueError):
                 kept = {}
             known = seen.setdefault(s["id"], [])
@@ -141,31 +144,33 @@ class OfficialNews(PublicFeed):
                 rid = release_id(s["id"], it["link"])
                 if it["link"] not in kept and rid not in known:
                     added += 1
-                    kept[it["link"]] = self._release(s, it)
+                    kept[it["link"]] = self._release(run, s, it)
                     known.append(rid)
             del known[:-2000]
-            mine = sorted((r for r in kept.values() if (r.get("PUBLISHED") or self.as_of) >= cutoff),
+            mine = sorted((r for r in kept.values() if (r.get("PUBLISHED") or run.business_date.isoformat()) >= cutoff),
                           key=lambda r: r.get("PUBLISHED") or "", reverse=True)[:keep_n]
-            file.parent.mkdir(parents=True, exist_ok=True)
-            file.write_text(json.dumps(mine, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+            hist.parent.mkdir(parents=True, exist_ok=True)
+            hist.write_text(json.dumps(mine, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
             releases += mine
-            sources.append(self._source(s, mine, got is None))
-        if failed and len(failed) == len(sources):
+            pubs.append(self._source(run, s, mine, got is None))
+        if live and len(failed) == len(live):
             raise FeedError("every publisher failed: " + "; ".join(failed))
-        if added == 0 and state.get("lastRun") and not state.get("force"):
-            self.log("  no new release since the last pull")
-            return {}
-        state.pop("force", None)
-        return {"press-release": releases, "release-source": sources}
+        if added == 0 and run.state.get("lastRun") and not run.since:
+            run.log("  no new release since the last run")
+            return
+        run.emit("press-release", releases)
+        run.emit("release-source", pubs)
+        for d in ("press-release", "release-source"):
+            run.mark(d, run.business_date)
 
-    def _release(self, s: dict, it: dict) -> dict:
+    def _release(self, run, s: dict, it: dict) -> dict:
         return {"RELEASE_ID": release_id(s["id"], it["link"]), "TITLE": it["title"], "PUBLISHED": it["published"],
                 "DATE": (it["published"] or "")[:10] or None, "URL": it["link"], "SUMMARY": it["summary"], "CATEGORY": it["category"],
                 "RELEASE_SOURCE": f"PRESS-{s['id']}", "PUBLISHER_NAME": s["title"], "PUBLISHER_TYPE": s["type"], "COUNTRY": s["country"],
                 "INTERNAL_ONLY": bool(s.get("internal-only")),
-                "PROVENANCE": self.provenance(s["id"], dataset=f"{s['title']}: {s.get('feed-title') or 'press releases'}", url=it["link"])}
+                "PROVENANCE": provenance(run, s["id"], f"{s['title']}: {s.get('feed-title') or 'press releases'}", it["link"])}
 
-    def _source(self, s: dict, mine: list[dict], failed: bool) -> dict:
+    def _source(self, run, s: dict, mine: list[dict], failed: bool) -> dict:
         cats: dict[str, int] = {}
         for r in mine:
             c = (r.get("CATEGORY") or "Uncategorised").split(" · ")[0]
@@ -178,4 +183,4 @@ class OfficialNews(PublicFeed):
                 "LATEST": [{"PUBLISHED": r["PUBLISHED"], "TITLE": r["TITLE"], "URL": r["URL"], "CATEGORY": r.get("CATEGORY"),
                             "PRESS_RELEASE": r["RELEASE_ID"]} for r in mine[:25]],
                 "BY_CATEGORY": [{"CATEGORY": k, "COUNT": v} for k, v in sorted(cats.items(), key=lambda kv: -kv[1])][:12],
-                "PROVENANCE": self.provenance(s["id"], dataset=f"{s['title']}: {s.get('feed-title') or 'press releases'}", url=s.get("url"))}
+                "PROVENANCE": provenance(run, s["id"], f"{s['title']}: {s.get('feed-title') or 'press releases'}", s.get("url"))}

@@ -40,7 +40,7 @@ sources:
   licence: CC BY 4.0
   internal-only: false
   used-for: development-profile, development-series
-refresh: python3 tools/feeds/publicsector/run.py run world-development
+refresh: python3 tools/drishti.py feed run world-development
 generated-by: tools/packgen/publicsector/make.py
 ---
 # The world-development pack
@@ -65,35 +65,35 @@ Fields, from 12 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `PROFILE_ID` | string | `WDI-AUS` | WDI- and the country's ISO 3166 alpha-3 code. |
-| `NAME` | string | `Australia` | The economy's name as the World Bank writes it. |
-| `ISO3` | string | `AUS` | The country's ISO 3166-1 alpha-3 code, the key the map shades by. |
-| `ISO2` | string | `AU` | The country's ISO 3166-1 alpha-2 code (the World Bank's own id). |
-| `COUNTRY_NAME` | string | `Australia` | The economy's name as the World Bank writes it. |
-| `REGION` | string | `East Asia & Pacific` | The World Bank region the economy belongs to (East Asia & Pacific, Sub-Saharan Africa ...). |
-| `INCOME_GROUP` | string | `High income` | The World Bank income group by GNI per head (Low, Lower middle, Upper middle, High income). |
 | `CAPITAL` | string | `Canberra` | The capital city as the World Bank lists it. |
-| `POPULATION` | number | `27614411.0` | Total population, mid-year (SP.POP.TOTL), the latest year with a value. (persons) |
-| `GDP_PER_CAPITA` | number | `65129.7227990563` | GDP divided by mid-year population, current US dollars (NY.GDP.PCAP.CD), the latest year. (USD) |
-| `GDP_GROWTH` | number | `1.35039785076631` | Annual growth of GDP at constant prices (NY.GDP.MKTP.KD.ZG), the latest year. (% a year) |
-| `INFLATION` | number | `2.87403791660173` | Consumer price inflation (FP.CPI.TOTL.ZG), the latest year. (% a year) |
-| `UNEMPLOYMENT` | number | `4.09` | Unemployed share of the labour force, ILO modelled estimate (SL.UEM.TOTL.ZS), the latest year. (% of labour force) |
-| `LIFE_EXPECTANCY` | number | `83.0512195121951` | Life expectancy at birth (SP.DYN.LE00.IN), the latest year. (years) |
-| `POVERTY_HEADCOUNT` | number | `0.9` | Share living below the World Bank's international poverty line (SI.POV.DDAY), the latest survey year. (% of population) |
-| `ELECTRICITY_ACCESS` | number | `100.0` | Share of the population with access to electricity (EG.ELC.ACCS.ZS), the latest year. (% of population) |
-| `INTERNET_USERS` | number | `96.13140106` | Share of the population using the internet (IT.NET.USER.ZS), the latest year. (% of population) |
 | `CENTRAL_GOVERNMENT_DEBT` | number | `57.8834285733848` | Central government debt, total (GC.DOD.TOTL.GD.ZS), the latest year; empty for most economies that do not report it. (% of GDP) |
-| `INDICATORS` | list of objects |  | Every indicator the feed pulled for the economy, one row each: INDICATOR, UNIT, LATEST, YEAR, CODE and WDI_SERIES. |
-| `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `COUNTRY_NAME` | string | `Australia` | The economy's name as the World Bank writes it. |
 | `DATA_YEAR` | string | `2025` | The most recent year any indicator of the economy has a value for. |
+| `ELECTRICITY_ACCESS` | number | `100.0` | Share of the population with access to electricity (EG.ELC.ACCS.ZS), the latest year. (% of population) |
+| `GDP_GROWTH` | number | `1.35039785076631` | Annual growth of GDP at constant prices (NY.GDP.MKTP.KD.ZG), the latest year. (% a year) |
+| `GDP_PER_CAPITA` | number | `65129.7227990563` | GDP divided by mid-year population, current US dollars (NY.GDP.PCAP.CD), the latest year. (USD) |
+| `INCOME_GROUP` | string | `High income` | The World Bank income group by GNI per head (Low, Lower middle, Upper middle, High income). |
+| `INDICATORS` | list of objects |  | Every indicator the feed pulled for the economy, one row each: INDICATOR, UNIT, LATEST, YEAR, CODE and WDI_SERIES. |
 | `INDICATOR_COUNT` | integer | `10` | How many indicators have at least one value for the economy. |
+| `INFLATION` | number | `2.87403791660173` | Consumer price inflation (FP.CPI.TOTL.ZG), the latest year. (% a year) |
+| `INTERNET_USERS` | number | `96.13140106` | Share of the population using the internet (IT.NET.USER.ZS), the latest year. (% of population) |
+| `ISO2` | string | `AU` | The country's ISO 3166-1 alpha-2 code (the World Bank's own id). |
+| `ISO3` | string | `AUS` | The country's ISO 3166-1 alpha-3 code, the key the map shades by. |
+| `LIFE_EXPECTANCY` | number | `83.0512195121951` | Life expectancy at birth (SP.DYN.LE00.IN), the latest year. (years) |
+| `NAME` | string | `Australia` | The economy's name as the World Bank writes it. |
+| `POPULATION` | number | `27614411.0` | Total population, mid-year (SP.POP.TOTL), the latest year with a value. (persons) |
+| `POVERTY_HEADCOUNT` | number | `0.9` | Share living below the World Bank's international poverty line (SI.POV.DDAY), the latest survey year. (% of population) |
+| `PROFILE_ID` | string | `WDI-AUS` | WDI- and the country's ISO 3166 alpha-3 code. |
+| `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `REGION` | string | `East Asia & Pacific` | The World Bank region the economy belongs to (East Asia & Pacific, Sub-Saharan Africa ...). |
+| `UNEMPLOYMENT` | number | `4.09` | Unemployed share of the labour force, ILO modelled estimate (SL.UEM.TOTL.ZS), the latest year. (% of labour force) |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `INDICATORS[]` | `INDICATOR` (string): The indicator's name as the World Bank publishes it., `UNIT` (string): What the value measures (the feed's YAML names it)., `LATEST` (number): The latest published value, in the unit shown., `YEAR` (string): The calendar year of the latest value., `CODE` (string): The indicator's code in the World Bank API (SP.POP.TOTL)., `WDI_SERIES` (string): The development-series page with the history (WDIS-<ISO3>-<code>). |
-| `PROVENANCE` | `SOURCE` (string): The organisation whose published data the record holds., `DATASET` (string): The named dataset and its vintage (the release the numbers come from)., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): The source's page for this record., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record). |
+| `INDICATORS[]` | `CODE` (string): The indicator's code in the World Bank API (SP.POP.TOTL)., `INDICATOR` (string): The indicator's name as the World Bank publishes it., `LATEST` (number): The latest published value, in the unit shown., `UNIT` (string): What the value measures (the feed's YAML names it)., `WDI_SERIES` (string): The development-series page with the history (WDIS-<ISO3>-<code>)., `YEAR` (string): The calendar year of the latest value. |
+| `PROVENANCE` | `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `DATASET` (string): The named dataset and its vintage (the release the numbers come from)., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `SOURCE` (string): The organisation whose published data the record holds., `URL` (string): The source's page for this record. |
 
 ### `development-series`
 
@@ -105,29 +105,29 @@ Fields, from 16 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `SERIES_ID` | string | `WDIS-CAN-EG_ELC_ACCS_ZS` | WDIS-, the country's ISO alpha-3 code and the indicator's code with its dots as underscores. |
-| `NAME` | string | `Canada · Access to electricity (% of pop…` | The country and the indicator, as one name. |
-| `WDI_PROFILE` | string | `WDI-CAN` | The country's development-profile page (WDI-<ISO3>).; link to `development-profile` |
-| `ISO3` | string | `CAN` | The country's ISO 3166-1 alpha-3 code. |
+| `CHANGE` | number | `0.0` | The latest value less the previous one, in the unit shown. |
 | `COUNTRY_NAME` | string | `Canada` | The economy's name as the World Bank writes it. |
-| `INDICATOR_CODE` | string | `EG.ELC.ACCS.ZS` | The indicator's code in the World Bank API. |
-| `INDICATOR` | string | `Access to electricity (% of population)` | The indicator's name as the World Bank publishes it. |
-| `UNIT` | string | `% of population` | What the value measures (the feed's YAML names it). |
 | `DEFINITION` | string | `Access to electricity is the percentage …` | The World Bank's source note for the indicator, cut at 600 characters. |
+| `HISTORY` | list of objects |  | The value by year, oldest first, over the feed's window (YEAR, VALUE). |
+| `INDICATOR` | string | `Access to electricity (% of population)` | The indicator's name as the World Bank publishes it. |
+| `INDICATOR_CODE` | string | `EG.ELC.ACCS.ZS` | The indicator's code in the World Bank API. |
+| `ISO3` | string | `CAN` | The country's ISO 3166-1 alpha-3 code. |
 | `LATEST` | number | `100.0` | The latest published value, in the unit shown. |
 | `LATEST_YEAR` | string | `2024` | The calendar year of the latest value. |
+| `NAME` | string | `Canada · Access to electricity (% of pop…` | The country and the indicator, as one name. |
 | `PREVIOUS` | number | `100.0` | The value of the year before the latest one with a value; empty for a one-year series. |
 | `PREVIOUS_YEAR` | string | `2023` | The year of the previous value. |
-| `CHANGE` | number | `0.0` | The latest value less the previous one, in the unit shown. |
-| `HISTORY` | list of objects |  | The value by year, oldest first, over the feed's window (YEAR, VALUE). |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `SERIES_ID` | string | `WDIS-CAN-EG_ELC_ACCS_ZS` | WDIS-, the country's ISO alpha-3 code and the indicator's code with its dots as underscores. |
+| `UNIT` | string | `% of population` | What the value measures (the feed's YAML names it). |
+| `WDI_PROFILE` | string | `WDI-CAN` | The country's development-profile page (WDI-<ISO3>).; link to `development-profile` |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `HISTORY[]` | `YEAR` (string): The calendar year of the value., `VALUE` (number): The published value for that year, in the unit shown. |
-| `PROVENANCE` | `SOURCE` (string): The organisation whose published data the record holds., `DATASET` (string): The named dataset and its vintage (the release the numbers come from)., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): The source's page for this record., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record). |
+| `HISTORY[]` | `VALUE` (number): The published value for that year, in the unit shown., `YEAR` (string): The calendar year of the value. |
+| `PROVENANCE` | `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `DATASET` (string): The named dataset and its vintage (the release the numbers come from)., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `SOURCE` (string): The organisation whose published data the record holds., `URL` (string): The source's page for this record. |
 
 Links: `WDI_PROFILE` → `development-profile`.
 
@@ -179,7 +179,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **world-development** feed (`config/feeds/world-development.yaml`: its sources, licences, schedule `30 6 * * *` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `worldlake` lake: `python3 tools/feeds/publicsector/run.py run world-development --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run world-development`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **world-development** feed (`config/feeds/world-development.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 06:30 local time, and its selection in `options`) pulls what is new into `<data>/feeds/world-development/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run world-development` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run world-development`, `.\tools\windows\feed.ps1 run world-development`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+
+The data feed `world-development` (config/feeds/world-development.yaml) pulls `development-profile`, `development-series`: `python3 tools/drishti.py feed run world-development` fetches them daily into `data/feeds/world-development/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 

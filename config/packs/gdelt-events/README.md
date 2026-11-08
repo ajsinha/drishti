@@ -38,7 +38,7 @@ sources:
   licence: 'GDELT terms of use: free and open for any use, commercial included, with a citation of the GDELT Project and a link to it'
   internal-only: false
   used-for: event-country
-refresh: python3 tools/feeds/publicsector/run.py run gdelt-events
+refresh: python3 tools/drishti.py feed run gdelt-events
 generated-by: tools/packgen/publicsector/make.py
 ---
 # The gdelt-events pack
@@ -63,34 +63,34 @@ Fields, from 13 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `EVENT_COUNTRY_ID` | string | `GDELT-AUS` | GDELT- and the country's ISO 3166-1 alpha-3 code (the CAMEO country code of the event's first actor). |
-| `NAME` | string | `Australia` | The country's name (Natural Earth). |
-| `ISO3` | string | `AUS` | The country's ISO 3166-1 alpha-3 code, the key the map shades by. |
+| `AVG_GOLDSTEIN` | number | `1.0946` | The average Goldstein scale of the day's events: the theoretical impact of the event type on a country's stability, -10 (most conflictual) to +10 (most cooperative). |
+| `AVG_TONE` | number | `-2.8054` | GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by mentions. |
+| `AVG_TONE_WINDOW` | number | `-2.2956` | The mention-weighted average tone over the window. |
+| `BY_CATEGORY` | list of objects |  | The day's events by CAMEO root category, the most first (CODE, CATEGORY, EVENTS, AVG_TONE). |
+| `CONFLICT_SHARE` | number | `25.0` | The share of the day's events in CAMEO's quad classes 3 and 4 (verbal and material conflict). (%) |
+| `COOPERATION_SHARE` | number | `75.0` | The share in quad classes 1 and 2 (verbal and material cooperation). (%) |
 | `COUNTRY_NAME` | string | `Australia` | The country's name (Natural Earth). |
 | `DATE` | date | `2026-11-05` | The latest day the feed read (the events added to GDELT that day). |
 | `EVENTS` | integer | `92` | The day's events whose first actor is the country. |
-| `MENTIONS` | integer | `4410` | How many times those events were mentioned across the day's coverage. |
-| `AVG_TONE` | number | `-2.8054` | GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by mentions. |
-| `AVG_GOLDSTEIN` | number | `1.0946` | The average Goldstein scale of the day's events: the theoretical impact of the event type on a country's stability, -10 (most conflictual) to +10 (most cooperative). |
-| `CONFLICT_SHARE` | number | `25.0` | The share of the day's events in CAMEO's quad classes 3 and 4 (verbal and material conflict). (%) |
-| `COOPERATION_SHARE` | number | `75.0` | The share in quad classes 1 and 2 (verbal and material cooperation). (%) |
 | `EVENTS_WINDOW` | integer | `160` | The events over the days the history holds. |
-| `AVG_TONE_WINDOW` | number | `-2.2956` | The mention-weighted average tone over the window. |
-| `TONE_CHANGE` | number | `-0.5098` | The day's average tone less the window's: below zero, coverage turned more negative. |
-| `WINDOW_DAYS` | integer | `2` | How many days of the window have events for the country. |
-| `BY_CATEGORY` | list of objects |  | The day's events by CAMEO root category, the most first (CODE, CATEGORY, EVENTS, AVG_TONE). |
+| `EVENT_COUNTRY_ID` | string | `GDELT-AUS` | GDELT- and the country's ISO 3166-1 alpha-3 code (the CAMEO country code of the event's first actor). |
 | `HISTORY` | list of objects |  | The country's events and average tone by day over the window, oldest first (DATE, EVENTS, AVG_TONE). |
-| `TOP_STORIES` | list of objects |  | The day's most-mentioned events' source articles (MENTIONS, URL, CATEGORY), links to the originals. |
+| `ISO3` | string | `AUS` | The country's ISO 3166-1 alpha-3 code, the key the map shades by. |
+| `MENTIONS` | integer | `4410` | How many times those events were mentioned across the day's coverage. |
+| `NAME` | string | `Australia` | The country's name (Natural Earth). |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `TONE_CHANGE` | number | `-0.5098` | The day's average tone less the window's: below zero, coverage turned more negative. |
+| `TOP_STORIES` | list of objects |  | The day's most-mentioned events' source articles (MENTIONS, URL, CATEGORY), links to the originals. |
+| `WINDOW_DAYS` | integer | `2` | How many days of the window have events for the country. |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `BY_CATEGORY[]` | `CODE` (string): The CAMEO root event code (01 to 20)., `CATEGORY` (string): The CAMEO root category's name (Consult, Protest, Fight ...)., `EVENTS` (integer): The day's events in that category., `AVG_TONE` (number): GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by mentions. |
-| `HISTORY[]` | `DATE` (date): The day., `EVENTS` (integer): That day's events whose first actor is the country., `AVG_TONE` (number): GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by mentions. |
-| `TOP_STORIES[]` | `MENTIONS` (integer): How often the event was mentioned., `URL` (string): The first article GDELT found reporting the event: a link to the publisher's site., `CATEGORY` (string): The event's CAMEO root category. |
-| `PROVENANCE` | `SOURCE` (string): The GDELT Project., `DATASET` (string): The GDELT 1.0 daily event file of the latest day., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `LICENCE` (string): GDELT's terms of use, as recorded in the feed's YAML., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): GDELT's data page., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (false for GDELT). |
+| `BY_CATEGORY[]` | `AVG_TONE` (number): GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by mentions., `CATEGORY` (string): The CAMEO root category's name (Consult, Protest, Fight ...)., `CODE` (string): The CAMEO root event code (01 to 20)., `EVENTS` (integer): The day's events in that category. |
+| `HISTORY[]` | `AVG_TONE` (number): GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by mentions., `DATE` (date): The day., `EVENTS` (integer): That day's events whose first actor is the country. |
+| `PROVENANCE` | `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `DATASET` (string): The GDELT 1.0 daily event file of the latest day., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (false for GDELT)., `LICENCE` (string): GDELT's terms of use, as recorded in the feed's YAML., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `SOURCE` (string): The GDELT Project., `URL` (string): GDELT's data page. |
+| `TOP_STORIES[]` | `CATEGORY` (string): The event's CAMEO root category., `MENTIONS` (integer): How often the event was mentioned., `URL` (string): The first article GDELT found reporting the event: a link to the publisher's site. |
 
 ## Screens and commands
 
@@ -137,7 +137,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **gdelt-events** feed (`config/feeds/gdelt-events.yaml`: its sources, licences, schedule `30 8 * * *` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `newslake` lake: `python3 tools/feeds/publicsector/run.py run gdelt-events --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run gdelt-events`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **gdelt-events** feed (`config/feeds/gdelt-events.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 04:30 local time, and its selection in `options`) pulls what is new into `<data>/feeds/gdelt-events/<date>/` and loads it into the `newslake` lake: `python3 tools/drishti.py feed run gdelt-events` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run gdelt-events`, `.\tools\windows\feed.ps1 run gdelt-events`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+
+The data feed `gdelt-events` (config/feeds/gdelt-events.yaml) pulls `event-country`: `python3 tools/drishti.py feed run gdelt-events` fetches them daily into `data/feeds/gdelt-events/<date>/` and loads them into the lake `newslake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 

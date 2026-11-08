@@ -160,23 +160,23 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `WDI` | `development-profile` | external: World Bank World Development Indicators API (v2) (CC BY 4.0) — refreshed by `tools/feeds/publicsector/run.py` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-profile/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
-| `WDIS` | `development-series` | external: World Bank World Development Indicators API (v2) (CC BY 4.0) — refreshed by `tools/feeds/publicsector/run.py` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-series/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `WDI` | `development-profile` | external: World Bank World Development Indicators API (v2) (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-profile/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `WDIS` | `development-series` | external: World Bank World Development Indicators API (v2) (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-series/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
 
 ### External sources
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| World Bank World Development Indicators API (v2) | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/feeds/publicsector/run.py run world-development` |
+| World Bank World Development Indicators API (v2) | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/drishti.py feed run world-development` |
 
 ```bash
-python3 tools/feeds/publicsector/run.py run world-development --dry-run  # what the feed would pull; writes nothing
-python3 tools/feeds/publicsector/run.py run world-development            # pull what is new into <data>/feeds/world-development/out/<date>/ (JSONL.gz with .ready files)
-python3 tools/feeds/publicsector/run.py run world-development --inbox    # the same into the data inbox: the server loads it into the lake (daily, from cron)
-python3 tools/feeds/publicsector/run.py run world-development --load     # pull, then load into the lake at once (drishti.py lake build)
+python3 tools/drishti.py feed run world-development --dry-run     # what the feed would pull; writes nothing
+python3 tools/drishti.py feed run world-development               # pull what is new into <data>/feeds/world-development/<date>/ and load it (the parallel loader)
+python3 tools/drishti.py feed run world-development --load inbox  # the same through the data inbox: the server loads it
+python3 tools/drishti.py feed status world-development            # its last runs, rows and errors (the ledger)
 ```
 
-The same through the wrappers: `tools/feeds/publicsector/run.sh run world-development` on Linux and macOS, `.\tools\windows\feeds-publicsector.ps1 run world-development` on Windows. The feed's YAML is `config/feeds/world-development.yaml` (sources, licences, schedule, selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) explains it.
+The same through the wrappers: `tools/feeds/feed.sh run world-development` on Linux and macOS, `.\tools\windows\feed.ps1 run world-development` on Windows. The feed file is `config/feeds/world-development.yaml` (its sources and their licences in `options.sources`, the schedule, the selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) and the [External data feeds guide](../../../../docs/guides/FEEDS_GUIDE.md) explain it.
 
 ### Into the lake, checking, offline
 

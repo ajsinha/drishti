@@ -15,7 +15,7 @@
 -->
 ---
 generator: tools/packgen/publicsector/make.py
-refresh: python3 tools/feeds/publicsector/run.py run central-banks
+refresh: python3 tools/drishti.py feed run central-banks
 sources:
 - name: FRED API (Federal Reserve Bank of St. Louis)
   licence: 'FRED API terms of use; each series keeps its owner''s terms. The default series are US government works (Federal Reserve Board, US Treasury,
@@ -34,4 +34,4 @@ Policy rates and the market series around them: the Federal Reserve's target ran
 
 ## Refreshing the data
 
-The **central-banks** feed (`config/feeds/central-banks.yaml`: its sources, licences, schedule `15 22 * * 1-5` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `worldlake` lake: `python3 tools/feeds/publicsector/run.py run central-banks --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run central-banks`. It needs `DRISHTI_FRED_API_KEY` in the environment (never in a file); without it the feed exits 3. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **central-banks** feed (`config/feeds/central-banks.yaml`: its sources and their licences in `options.sources`, its schedule, weekdays at 18:15 local time, and its selection in `options`) pulls what is new into `<data>/feeds/central-banks/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run central-banks` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run central-banks`, `.\tools\windows\feed.ps1 run central-banks`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. FRED needs a free key in `DRISHTI_FRED_API_KEY` (never in a file); without it the FRED series are left out, said in the run's log, and the Bank of Canada's still load. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.

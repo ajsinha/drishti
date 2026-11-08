@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: National statistic
 description: 'One Statistics Canada series by vector: the latest value, the change on the period and the year, the history.'
-source: 'public data: Statistics Canada, pulled by the national-statistics feed (config/feeds/national-statistics.yaml, tools/feeds/publicsector/)'
+source: 'public data: Statistics Canada, pulled by the national-statistics feed (config/feeds/national-statistics.yaml, tools/feeds/sources/)'
 grain: One row per national statistic, keyed by SERIES_ID.
 key:
 - SERIES_ID

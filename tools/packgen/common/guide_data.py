@@ -191,7 +191,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             used_ext += [i for i in o["external"] if i not in used_ext]
             origin = "external: " + "; ".join(_ext(s, o["external"]))
             scripts = sorted({s["external"][i]["script"] for i in o["external"]})
-            origin += " — refreshed by " + ", ".join(f"`{x}`" for x in scripts)
+            origin += " — refreshed by " + ", ".join(f"`{x}`" if x != "tools/drishti.py" else f"`drishti.py feed run {o.get('feed')}`" for x in scripts)
             lake = _feed_lake(o, c, conn) if o.get("feed") else None
         elif not o.get("generator"):                # a kind data_retrieval.yaml does not describe (a widened local pack): say so
             origin, lake = "not described in tools/packgen/common/data_retrieval.yaml", None
@@ -225,7 +225,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
         out += table(["Source", "Where", "Licence", "Internal only", "Refresh"], [[
             e["title"], e["url"], e["licence"], "**yes**" if e.get("internal") else "no",
             f"`python3 {e['script']} refresh {e['source']}`" if e["script"].startswith("tools/publicdata/") else
-            f"`python3 {e['script']} run {e['source']}`" if e["script"].startswith("tools/feeds/") else f"`{e['script']}` {e['source']}"]
+            f"`python3 tools/drishti.py feed run {e['source']}`" if e["script"] == "tools/drishti.py" else f"`{e['script']}` {e['source']}"]
             for e in (s["external"][i] for i in used_ext)])
         internal = [s["external"][i]["title"] for i in used_ext if s["external"][i].get("internal")]
         if internal:
@@ -241,17 +241,18 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             out += ["```bash"] + [f"python3 {sc} {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
                     f"The same through the wrappers: `tools/publicdata/{info['wrapper']}.sh status` on Linux and macOS, "
                     f"`.\\tools\\windows\\publicdata-{info['wrapper']}.ps1 status` on Windows (every argument is passed on).", ""]
-    feeds = sorted({s["external"][i]["source"] for i in used_ext if s["external"][i]["script"].startswith("tools/feeds/")})
+    feeds = sorted({s["external"][i]["source"] for i in used_ext if s["external"][i]["script"] == "tools/drishti.py"})
     for feed in feeds:
-        ex = [(f"run {feed} --dry-run", "what the feed would pull; writes nothing"),
-              (f"run {feed}", f"pull what is new into <data>/feeds/{feed}/out/<date>/ (JSONL.gz with .ready files)"),
-              (f"run {feed} --inbox", "the same into the data inbox: the server loads it into the lake (daily, from cron)"),
-              (f"run {feed} --load", "pull, then load into the lake at once (drishti.py lake build)")]
-        w = max(len(f"python3 tools/feeds/publicsector/run.py {e[0]}") for e in ex) + 2
-        out += ["```bash"] + [f"python3 tools/feeds/publicsector/run.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
-                f"The same through the wrappers: `tools/feeds/publicsector/run.sh run {feed}` on Linux and macOS, "
-                f"`.\\tools\\windows\\feeds-publicsector.ps1 run {feed}` on Windows. The feed's YAML is `config/feeds/{feed}.yaml` (sources, "
-                "licences, schedule, selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) explains it.", ""]
+        ex = [(f"feed run {feed} --dry-run", "what the feed would pull; writes nothing"),
+              (f"feed run {feed}", f"pull what is new into <data>/feeds/{feed}/<date>/ and load it (the parallel loader)"),
+              (f"feed run {feed} --load inbox", "the same through the data inbox: the server loads it"),
+              (f"feed status {feed}", "its last runs, rows and errors (the ledger)")]
+        w = max(len(f"python3 tools/drishti.py {e[0]}") for e in ex) + 2
+        out += ["```bash"] + [f"python3 tools/drishti.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
+                f"The same through the wrappers: `tools/feeds/feed.sh run {feed}` on Linux and macOS, `.\\tools\\windows\\feed.ps1 run {feed}` "
+                f"on Windows. The feed file is `config/feeds/{feed}.yaml` (its sources and their licences in `options.sources`, the schedule, "
+                "the selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) and the "
+                "[External data feeds guide](../../../../docs/guides/FEEDS_GUIDE.md) explain it.", ""]
     if used_gen:
         out += ["### Generators", ""]
         out += table(["Generator", "Writes", "Check"], [[f"`{s['generators'][g]['run']}`", s["generators"][g]["what"],

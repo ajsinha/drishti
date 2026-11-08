@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: Central bank
 description: 'One central bank: its policy rate, the last move, the rate''s history and the market series around it.'
-source: 'public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/feeds/publicsector/)'
+source: 'public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/feeds/sources/)'
 grain: One row per central bank, keyed by BANK_ID.
 key:
 - BANK_ID

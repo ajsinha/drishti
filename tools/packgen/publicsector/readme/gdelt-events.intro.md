@@ -15,7 +15,7 @@
 -->
 ---
 generator: tools/packgen/publicsector/make.py
-refresh: python3 tools/feeds/publicsector/run.py run gdelt-events
+refresh: python3 tools/drishti.py feed run gdelt-events
 sources:
 - name: GDELT 1.0 daily event files
   licence: 'GDELT terms of use: free and open for any use, commercial included, with a citation of the GDELT Project and a link to it'
@@ -28,4 +28,4 @@ What the world's news reported about each country yesterday, from the GDELT Proj
 
 ## Refreshing the data
 
-The **gdelt-events** feed (`config/feeds/gdelt-events.yaml`: its sources, licences, schedule `30 8 * * *` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `newslake` lake: `python3 tools/feeds/publicsector/run.py run gdelt-events --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run gdelt-events`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **gdelt-events** feed (`config/feeds/gdelt-events.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 04:30 local time, and its selection in `options`) pulls what is new into `<data>/feeds/gdelt-events/<date>/` and loads it into the `newslake` lake: `python3 tools/drishti.py feed run gdelt-events` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run gdelt-events`, `.\tools\windows\feed.ps1 run gdelt-events`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.

@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: OECD country
 description: 'One OECD member: the latest leading indicator, unemployment, inflation and growth, and the members on a map shaded by inflation.'
-source: 'public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/publicsector/)'
+source: 'public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/sources/)'
 grain: One row per oecd country, keyed by COUNTRY_ID.
 key:
 - COUNTRY_ID

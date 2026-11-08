@@ -152,27 +152,27 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `PRESS` | `release-source` | external: Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API) (public domain (US Government works)); Press releases of the European Central Bank and the Bank of Canada (RSS) (free reuse with the source acknowledged); News of the Bank of England and OSFI, the Canada Gazette (RSS) (non-commercial or internal use only without permission; **internal only**) — refreshed by `tools/feeds/publicsector/run.py` | the daily feed `official-news` → `<data>/delta/newslake/officialnews/release-source/` (lake `newslake`) → connector `officialnews-store`; nothing is committed but a few documents in `samples/` for the tests |
-| `PREL` | `press-release` | external: Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API) (public domain (US Government works)); Press releases of the European Central Bank and the Bank of Canada (RSS) (free reuse with the source acknowledged); News of the Bank of England and OSFI, the Canada Gazette (RSS) (non-commercial or internal use only without permission; **internal only**) — refreshed by `tools/feeds/publicsector/run.py` | the daily feed `official-news` → `<data>/delta/newslake/officialnews/press-release/` (lake `newslake`) → connector `officialnews-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `PRESS` | `release-source` | external: Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API) (public domain (US Government works)); Press releases of the European Central Bank and the Bank of Canada (RSS) (free reuse with the source acknowledged); News of the Bank of England and OSFI, the Canada Gazette (RSS) (non-commercial or internal use only without permission; **internal only**) — refreshed by `drishti.py feed run official-news` | the daily feed `official-news` → `<data>/delta/newslake/officialnews/release-source/` (lake `newslake`) → connector `officialnews-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `PREL` | `press-release` | external: Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API) (public domain (US Government works)); Press releases of the European Central Bank and the Bank of Canada (RSS) (free reuse with the source acknowledged); News of the Bank of England and OSFI, the Canada Gazette (RSS) (non-commercial or internal use only without permission; **internal only**) — refreshed by `drishti.py feed run official-news` | the daily feed `official-news` → `<data>/delta/newslake/officialnews/press-release/` (lake `newslake`) → connector `officialnews-store`; nothing is committed but a few documents in `samples/` for the tests |
 
 ### External sources
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API) | https://www.federalreserve.gov/feeds/press_all.xml | public domain (US Government works) | no | `python3 tools/feeds/publicsector/run.py run official-news` |
-| Press releases of the European Central Bank and the Bank of Canada (RSS) | https://www.ecb.europa.eu/rss/press.html | free reuse with the source acknowledged | no | `python3 tools/feeds/publicsector/run.py run official-news` |
-| News of the Bank of England and OSFI, the Canada Gazette (RSS) | https://www.bankofengland.co.uk/rss/news | non-commercial or internal use only without permission | **yes** | `python3 tools/feeds/publicsector/run.py run official-news` |
+| Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API) | https://www.federalreserve.gov/feeds/press_all.xml | public domain (US Government works) | no | `python3 tools/drishti.py feed run official-news` |
+| Press releases of the European Central Bank and the Bank of Canada (RSS) | https://www.ecb.europa.eu/rss/press.html | free reuse with the source acknowledged | no | `python3 tools/drishti.py feed run official-news` |
+| News of the Bank of England and OSFI, the Canada Gazette (RSS) | https://www.bankofengland.co.uk/rss/news | non-commercial or internal use only without permission | **yes** | `python3 tools/drishti.py feed run official-news` |
 
 **Internal only:** News of the Bank of England and OSFI, the Canada Gazette (RSS). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
 
 ```bash
-python3 tools/feeds/publicsector/run.py run official-news --dry-run  # what the feed would pull; writes nothing
-python3 tools/feeds/publicsector/run.py run official-news            # pull what is new into <data>/feeds/official-news/out/<date>/ (JSONL.gz with .ready files)
-python3 tools/feeds/publicsector/run.py run official-news --inbox    # the same into the data inbox: the server loads it into the lake (daily, from cron)
-python3 tools/feeds/publicsector/run.py run official-news --load     # pull, then load into the lake at once (drishti.py lake build)
+python3 tools/drishti.py feed run official-news --dry-run     # what the feed would pull; writes nothing
+python3 tools/drishti.py feed run official-news               # pull what is new into <data>/feeds/official-news/<date>/ and load it (the parallel loader)
+python3 tools/drishti.py feed run official-news --load inbox  # the same through the data inbox: the server loads it
+python3 tools/drishti.py feed status official-news            # its last runs, rows and errors (the ledger)
 ```
 
-The same through the wrappers: `tools/feeds/publicsector/run.sh run official-news` on Linux and macOS, `.\tools\windows\feeds-publicsector.ps1 run official-news` on Windows. The feed's YAML is `config/feeds/official-news.yaml` (sources, licences, schedule, selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) explains it.
+The same through the wrappers: `tools/feeds/feed.sh run official-news` on Linux and macOS, `.\tools\windows\feed.ps1 run official-news` on Windows. The feed file is `config/feeds/official-news.yaml` (its sources and their licences in `options.sources`, the schedule, the selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) and the [External data feeds guide](../../../../docs/guides/FEEDS_GUIDE.md) explain it.
 
 ### Into the lake, checking, offline
 

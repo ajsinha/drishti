@@ -15,7 +15,7 @@
 -->
 ---
 generator: tools/packgen/publicsector/make.py
-refresh: python3 tools/feeds/publicsector/run.py run national-statistics
+refresh: python3 tools/drishti.py feed run national-statistics
 sources:
 - name: Statistics Canada Web Data Service (WDS)
   licence: Statistics Canada Open Licence
@@ -28,4 +28,4 @@ Statistics Canada's headline statistics by vector from its Web Data Service (Sta
 
 ## Refreshing the data
 
-The **national-statistics** feed (`config/feeds/national-statistics.yaml`: its sources, licences, schedule `0 14 * * 1-5` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `worldlake` lake: `python3 tools/feeds/publicsector/run.py run national-statistics --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run national-statistics`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **national-statistics** feed (`config/feeds/national-statistics.yaml`: its sources and their licences in `options.sources`, its schedule, weekdays at 09:00 local time, and its selection in `options`) pulls what is new into `<data>/feeds/national-statistics/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run national-statistics` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run national-statistics`, `.\tools\windows\feed.ps1 run national-statistics`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.

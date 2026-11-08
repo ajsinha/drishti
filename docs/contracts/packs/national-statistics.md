@@ -32,7 +32,7 @@ One Statistics Canada series by vector: the latest value, the change on the peri
 | Contract | [statistics-series.contract.yaml](../../../config/packs/national-statistics/contracts/statistics-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: Statistics Canada, pulled by the national-statistics feed (config/feeds/national-statistics.yaml, tools/feeds/publicsector/) |
+| Source | public data: Statistics Canada, pulled by the national-statistics feed (config/feeds/national-statistics.yaml, tools/feeds/sources/) |
 | Grain | One row per national statistic, keyed by SERIES_ID. |
 | Key | `SERIES_ID` |
 | Id pattern | `^NSTAT-` |

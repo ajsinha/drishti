@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: World events by country
 description: 'What the world''s news reported about one country yesterday (GDELT): events, tone, conflict, categories, the world map by tone, the top stories.'
-source: 'public data: The GDELT Project, pulled by the gdelt-events feed (config/feeds/gdelt-events.yaml, tools/feeds/publicsector/)'
+source: 'public data: The GDELT Project, pulled by the gdelt-events feed (config/feeds/gdelt-events.yaml, tools/feeds/sources/)'
 grain: One row per world events by country, keyed by EVENT_COUNTRY_ID.
 key:
 - EVENT_COUNTRY_ID

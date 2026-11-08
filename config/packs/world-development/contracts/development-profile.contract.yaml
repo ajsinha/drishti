@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: Development profile
 description: 'One country''s World Development Indicators: the latest of each, the world map shaded by GDP per head, each series one click away.'
-source: 'public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/feeds/publicsector/)'
+source: 'public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/feeds/sources/)'
 grain: One row per development profile, keyed by PROFILE_ID.
 key:
 - PROFILE_ID

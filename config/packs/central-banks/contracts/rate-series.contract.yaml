@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: Central bank series
 description: 'One central-bank or market series from FRED or the Bank of Canada: the history, the latest value, the change on the day and on the year.'
-source: 'public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/feeds/publicsector/)'
+source: 'public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/feeds/sources/)'
 grain: One row per central bank series, keyed by SERIES_ID.
 key:
 - SERIES_ID

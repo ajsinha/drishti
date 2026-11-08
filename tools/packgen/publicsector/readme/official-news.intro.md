@@ -15,7 +15,7 @@
 -->
 ---
 generator: tools/packgen/publicsector/make.py
-refresh: python3 tools/feeds/publicsector/run.py run official-news
+refresh: python3 tools/drishti.py feed run official-news
 sources:
 - name: Federal Reserve Board press releases (RSS)
   licence: Public domain (US government work); cite the Board as the source
@@ -61,4 +61,4 @@ Press releases and notices from the publishers' own feeds: the Federal Reserve, 
 
 ## Refreshing the data
 
-The **official-news** feed (`config/feeds/official-news.yaml`: its sources, licences, schedule `0 23 * * *` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `newslake` lake: `python3 tools/feeds/publicsector/run.py run official-news --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run official-news`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **official-news** feed (`config/feeds/official-news.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 19:00 local time, and its selection in `options`) pulls what is new into `<data>/feeds/official-news/<date>/` and loads it into the `newslake` lake: `python3 tools/drishti.py feed run official-news` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run official-news`, `.\tools\windows\feed.ps1 run official-news`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.

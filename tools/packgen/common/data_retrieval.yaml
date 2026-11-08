@@ -84,25 +84,25 @@ external:
                  licence: "CC0 1.0", internal: false, script: tools/publicdata/funds.py, source: gleif }
   # the public-sector module's feeds (config/feeds/<feed>.yaml; `source` is the feed): daily, incremental, into worldlake or newslake
   wdi: { title: "World Bank World Development Indicators API (v2)", url: "https://api.worldbank.org/v2", licence: "CC BY 4.0",
-         internal: false, script: tools/feeds/publicsector/run.py, source: world-development }
+         internal: false, script: tools/drishti.py, source: world-development }
   fred: { title: "FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY)", url: "https://api.stlouisfed.org/fred",
           licence: "FRED API terms; the default series are US government works (public domain)", internal: false,
-          script: tools/feeds/publicsector/run.py, source: central-banks }
+          script: tools/drishti.py, source: central-banks }
   boc-valet: { title: "Bank of Canada Valet API", url: "https://www.bankofcanada.ca/valet", licence: "Bank of Canada terms: free use with attribution",
-               internal: false, script: tools/feeds/publicsector/run.py, source: central-banks }
+               internal: false, script: tools/drishti.py, source: central-banks }
   statcan-wds: { title: "Statistics Canada Web Data Service", url: "https://www150.statcan.gc.ca/t1/wds/rest", licence: "Statistics Canada Open Licence",
-                 internal: false, script: tools/feeds/publicsector/run.py, source: national-statistics }
+                 internal: false, script: tools/drishti.py, source: national-statistics }
   oecd-sdmx: { title: "OECD Data Explorer SDMX API", url: "https://sdmx.oecd.org/public/rest", licence: "OECD terms: reuse with the source acknowledged (CC BY 4.0)",
-               internal: false, script: tools/feeds/publicsector/run.py, source: oecd }
+               internal: false, script: tools/drishti.py, source: oecd }
   press-public: { title: "Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API)", url: "https://www.federalreserve.gov/feeds/press_all.xml",
-                  licence: "public domain (US Government works)", internal: false, script: tools/feeds/publicsector/run.py, source: official-news }
+                  licence: "public domain (US Government works)", internal: false, script: tools/drishti.py, source: official-news }
   press-attributed: { title: "Press releases of the European Central Bank and the Bank of Canada (RSS)", url: "https://www.ecb.europa.eu/rss/press.html",
-                      licence: "free reuse with the source acknowledged", internal: false, script: tools/feeds/publicsector/run.py, source: official-news }
+                      licence: "free reuse with the source acknowledged", internal: false, script: tools/drishti.py, source: official-news }
   press-noncommercial: { title: "News of the Bank of England and OSFI, the Canada Gazette (RSS)", url: "https://www.bankofengland.co.uk/rss/news",
-                         licence: "non-commercial or internal use only without permission", internal: true, script: tools/feeds/publicsector/run.py,
+                         licence: "non-commercial or internal use only without permission", internal: true, script: tools/drishti.py,
                          source: official-news }
   gdelt: { title: "GDELT 1.0 daily event files", url: "https://data.gdeltproject.org/events/", licence: "GDELT terms: free for any use with a citation",
-           internal: false, script: tools/feeds/publicsector/run.py, source: gdelt-events }
+           internal: false, script: tools/drishti.py, source: gdelt-events }
 
 # The refresh scripts (tools/publicdata/): their wrappers' pack name and the examples each guide shows besides status and --dry-run.
 scripts:

@@ -72,7 +72,7 @@ sources:
   licence: 'Government of Canada terms: non-commercial reproduction permitted; commercial reproduction needs permission'
   internal-only: true
   used-for: release-source, press-release
-refresh: python3 tools/feeds/publicsector/run.py run official-news
+refresh: python3 tools/drishti.py feed run official-news
 generated-by: tools/packgen/publicsector/make.py
 ---
 # The official-news pack
@@ -97,30 +97,30 @@ Fields, from 9 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `SOURCE_ID` | string | `PRESS-BOC` | PRESS- and the publisher's id in the feed's YAML (FED, ECB, BOC, BOE, SEC, OSFI, FEDREG, GAZETTE1, GAZETTE2). |
-| `NAME` | string | `Bank of Canada` | The publisher's name. |
-| `PUBLISHER_TYPE` | string | `central bank` | What the publisher is. |
+| `BY_CATEGORY` | list of objects |  | The kept releases counted by category (CATEGORY, COUNT), the largest first. |
 | `COUNTRY` | string | `CAN` | The ISO 3166-1 alpha-3 code of the publisher's country (EMU for the euro area). |
-| `WEBSITE` | string | `https://www.bankofcanada.ca/press/press-…` | The publisher's page of releases. |
 | `FEED_URL` | string | `https://www.bankofcanada.ca/content_type…` | The address the feed reads (RSS, Atom, or the Federal Register's API). |
-| `LICENCE` | string | `Bank of Canada terms of use: free to use…` | The publisher's terms of reuse, as recorded in the feed's YAML. |
-| `TERMS_URL` | string | `https://www.bankofcanada.ca/terms/` | The publisher's terms page. |
 | `INTERNAL_ONLY` | boolean | `false` | True when the publisher's terms allow no commercial reuse: the record stays inside the organisation (Export data refuses it). |
-| `WHY_INTERNAL` | string | `The Bank of England allows personal and …` | Why the publisher's releases are internal only, in words; empty when they are not. |
-| `RELEASES` | integer | `5` | How many releases are kept (the last keep-days, at most keep-per-source). |
 | `LAST_PUBLISHED` | timestamp | `2026-11-05T16:00:19Z` | When the newest kept release was published (UTC). |
 | `LAST_PULL` | string | `ok` | ok, or failed (the kept releases are shown) when the publisher's feed could not be read. |
 | `LATEST` | list of objects |  | The newest 25 releases, newest first: PUBLISHED, TITLE, URL, CATEGORY and PRESS_RELEASE. |
-| `BY_CATEGORY` | list of objects |  | The kept releases counted by category (CATEGORY, COUNT), the largest first. |
+| `LICENCE` | string | `Bank of Canada terms of use: free to use…` | The publisher's terms of reuse, as recorded in the feed's YAML. |
+| `NAME` | string | `Bank of Canada` | The publisher's name. |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `PUBLISHER_TYPE` | string | `central bank` | What the publisher is. |
+| `RELEASES` | integer | `5` | How many releases are kept (the last keep-days, at most keep-per-source). |
+| `SOURCE_ID` | string | `PRESS-BOC` | PRESS- and the publisher's id in the feed's YAML (FED, ECB, BOC, BOE, SEC, OSFI, FEDREG, GAZETTE1, GAZETTE2). |
+| `TERMS_URL` | string | `https://www.bankofcanada.ca/terms/` | The publisher's terms page. |
+| `WEBSITE` | string | `https://www.bankofcanada.ca/press/press-…` | The publisher's page of releases. |
+| `WHY_INTERNAL` | string | `The Bank of England allows personal and …` | Why the publisher's releases are internal only, in words; empty when they are not. |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `LATEST[]` | `PUBLISHED` (timestamp): When the release was published (UTC)., `TITLE` (string): The release's title., `URL` (string): The release on the publisher's site., `CATEGORY` (string): The publisher's category for it, where its feed gives one., `PRESS_RELEASE` (string): The release's page in Drishti (PREL-...). |
 | `BY_CATEGORY[]` | `CATEGORY` (string): The category, Uncategorised when the feed gives none., `COUNT` (integer): How many kept releases have that category. |
-| `PROVENANCE` | `SOURCE` (string): The publisher., `DATASET` (string): The publisher's feed the record was read from., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `LICENCE` (string): The publisher's terms of reuse, as recorded in the feed's YAML., `ATTRIBUTION` (string): The credit line to repeat when the release is shown or republished., `URL` (string): The original on the publisher's site., `INTERNAL_ONLY` (boolean): True when the publisher's terms allow no commercial reuse: the record stays inside the organisation (Export data refuses it). |
+| `LATEST[]` | `CATEGORY` (string): The publisher's category for it, where its feed gives one., `PRESS_RELEASE` (string): The release's page in Drishti (PREL-...)., `PUBLISHED` (timestamp): When the release was published (UTC)., `TITLE` (string): The release's title., `URL` (string): The release on the publisher's site. |
+| `PROVENANCE` | `ATTRIBUTION` (string): The credit line to repeat when the release is shown or republished., `DATASET` (string): The publisher's feed the record was read from., `INTERNAL_ONLY` (boolean): True when the publisher's terms allow no commercial reuse: the record stays inside the organisation (Export data refuses it)., `LICENCE` (string): The publisher's terms of reuse, as recorded in the feed's YAML., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `SOURCE` (string): The publisher., `URL` (string): The original on the publisher's site. |
 
 ### `press-release`
 
@@ -132,25 +132,25 @@ Fields, from 18 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `RELEASE_ID` | string | `PREL-FED-0224349908` | PREL-, the publisher's id and the first ten hex digits of the SHA-1 of the release's address. |
-| `TITLE` | string | `Federal Reserve Board announces terminat…` | The release's title as the publisher's feed gives it. |
-| `PUBLISHED` | timestamp | `2026-11-05T16:00:00Z` | When the release was published, in UTC. |
-| `DATE` | date | `2026-11-05` | The day it was published (UTC). |
-| `URL` | string | `https://www.federalreserve.gov/newsevent…` | The release on the publisher's site: open it for the full text. |
-| `SUMMARY` | string | `Federal Reserve Board announces terminat…` | The summary the publisher's feed gives, as plain text cut at 400 characters; empty when the feed gives none. |
 | `CATEGORY` | string | `Enforcement Actions` | The publisher's category (the Federal Register: the document type and agencies). |
-| `RELEASE_SOURCE` | string | `PRESS-FED` | The publisher's page (PRESS-<id>).; link to `release-source` |
-| `PUBLISHER_NAME` | string | `Federal Reserve Board` | The publisher's name. |
-| `PUBLISHER_TYPE` | string | `central bank` | What the publisher is. |
 | `COUNTRY` | string | `USA` | The ISO 3166-1 alpha-3 code of the publisher's country (EMU for the euro area). |
+| `DATE` | date | `2026-11-05` | The day it was published (UTC). |
 | `INTERNAL_ONLY` | boolean | `false` | True when the publisher's terms allow no commercial reuse: the record stays inside the organisation (Export data refuses it). |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `PUBLISHED` | timestamp | `2026-11-05T16:00:00Z` | When the release was published, in UTC. |
+| `PUBLISHER_NAME` | string | `Federal Reserve Board` | The publisher's name. |
+| `PUBLISHER_TYPE` | string | `central bank` | What the publisher is. |
+| `RELEASE_ID` | string | `PREL-FED-0224349908` | PREL-, the publisher's id and the first ten hex digits of the SHA-1 of the release's address. |
+| `RELEASE_SOURCE` | string | `PRESS-FED` | The publisher's page (PRESS-<id>).; link to `release-source` |
+| `SUMMARY` | string | `Federal Reserve Board announces terminat…` | The summary the publisher's feed gives, as plain text cut at 400 characters; empty when the feed gives none. |
+| `TITLE` | string | `Federal Reserve Board announces terminat…` | The release's title as the publisher's feed gives it. |
+| `URL` | string | `https://www.federalreserve.gov/newsevent…` | The release on the publisher's site: open it for the full text. |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `PROVENANCE` | `SOURCE` (string): The publisher., `DATASET` (string): The publisher's feed the record was read from., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `LICENCE` (string): The publisher's terms of reuse, as recorded in the feed's YAML., `ATTRIBUTION` (string): The credit line to repeat when the release is shown or republished., `URL` (string): The original on the publisher's site., `INTERNAL_ONLY` (boolean): True when the publisher's terms allow no commercial reuse: the record stays inside the organisation (Export data refuses it). |
+| `PROVENANCE` | `ATTRIBUTION` (string): The credit line to repeat when the release is shown or republished., `DATASET` (string): The publisher's feed the record was read from., `INTERNAL_ONLY` (boolean): True when the publisher's terms allow no commercial reuse: the record stays inside the organisation (Export data refuses it)., `LICENCE` (string): The publisher's terms of reuse, as recorded in the feed's YAML., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `SOURCE` (string): The publisher., `URL` (string): The original on the publisher's site. |
 
 Links: `RELEASE_SOURCE` → `release-source`.
 
@@ -210,7 +210,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **official-news** feed (`config/feeds/official-news.yaml`: its sources, licences, schedule `0 23 * * *` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `newslake` lake: `python3 tools/feeds/publicsector/run.py run official-news --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run official-news`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **official-news** feed (`config/feeds/official-news.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 19:00 local time, and its selection in `options`) pulls what is new into `<data>/feeds/official-news/<date>/` and loads it into the `newslake` lake: `python3 tools/drishti.py feed run official-news` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run official-news`, `.\tools\windows\feed.ps1 run official-news`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+
+The data feed `official-news` (config/feeds/official-news.yaml) pulls `release-source`, `press-release`: `python3 tools/drishti.py feed run official-news` fetches them daily into `data/feeds/official-news/<date>/` and loads them into the lake `newslake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 

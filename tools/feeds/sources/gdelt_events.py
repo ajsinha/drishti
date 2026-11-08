@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The gdelt-events feed: the GDELT 1.0 daily event files (one zipped tab-separated file a day, every event the world's news reported
-that day, coded with CAMEO), for the gdelt-events pack (config/feeds/gdelt-events.yaml). Incremental: only the days after the last one
+"""The gdelt-events feed (config/feeds/gdelt-events.yaml): the GDELT 1.0 daily event files (one zipped tab-separated file a day, every event the world's news reported
+that day, coded with CAMEO), for the gdelt-events pack. Incremental: only the days after the last one
 processed (at most `backfill-days`) are downloaded; each day is reduced at once to per-country aggregates (history/days/<day>.json),
-and the raw file is not kept. Writes the event-country kind (one a country: the latest day's events, tone and Goldstein scale, the
+and the raw file is not kept. Emits the event-country kind (one a country: the latest day's events, tone and Goldstein scale, the
 share of conflict, the events by CAMEO category, the daily history over `history-days`, the most-mentioned stories' links)."""
 from __future__ import annotations
 
@@ -25,7 +25,8 @@ import zipfile
 from datetime import date, timedelta
 from pathlib import Path
 
-from base import FeedError, PublicFeed
+from feedbase import Feed, FeedError
+from publicsector import provenance, tolerate
 
 DAILY = "https://data.gdeltproject.org/events/{day}.export.CSV.zip"
 # the GDELT 1.0 event record's columns (the codebook, 58 tab-separated fields since 2013-04-01)
@@ -85,55 +86,58 @@ def aggregate(lines, max_rows: int | None = None, top: int = 5) -> dict:
     return out
 
 
-class GdeltEvents(PublicFeed):
-    name = "gdelt-events"
+class GdeltEventsFeed(Feed):
+    def _days(self, run) -> list[date]:
+        last_day = run.business_date - timedelta(days=1)          # a day's file is complete the morning after
+        backfill = int(run.option("backfill-days", 7))
+        done = run.state.get("lastDay")
+        if run.since:
+            start = run.since
+        elif done:
+            start = max(date.fromisoformat(done) + timedelta(days=1), last_day - timedelta(days=backfill - 1))
+        else:
+            start = last_day - timedelta(days=backfill - 1)
+        return [start + timedelta(days=i) for i in range((last_day - start).days + 1)]
 
-    def pull(self, state: dict) -> dict[str, list[dict]]:
-        sel = self.selection
-        days_dir = Path(state["dir"]) / "history" / "days"
-        last_day = date.fromisoformat(self.as_of) - timedelta(days=1)          # a day's file is complete the morning after
-        backfill = int(sel.get("backfill-days", 7))
-        done = state.get("lastDay") if not state.get("force") else None
-        start = max(date.fromisoformat(done) + timedelta(days=1), last_day - timedelta(days=backfill - 1)) if done else last_day - timedelta(days=backfill - 1)
+    def plan(self, run):
+        return [DAILY.format(day=d.strftime("%Y%m%d")) for d in self._days(run)]
+
+    def pull(self, run):
+        days_dir = Path(run.folder) / "history" / "days"
         fetched = []
-        d = start
-        while d <= last_day:
+        for d in self._days(run):
             day = d.strftime("%Y%m%d")
-            try:
-                raw = self.fetch.raw(DAILY.format(day=day))
-            except FeedError as e:
-                self.log(f"  {day}: {e}")            # GDELT skips a day now and then: the next pull tries it no more
-                d += timedelta(days=1)
+            raw = run.get_bytes(DAILY.format(day=day), name=f"gdelt-{day}.zip")
+            if raw is None:
+                tolerate(run, DAILY.format(day=day))
+                run.log(f"  {day}: no file (GDELT skips a day now and then): left out")
                 continue
             with zipfile.ZipFile(io.BytesIO(raw)) as z:
-                name = z.namelist()[0]
-                with z.open(name) as fh:
-                    agg = aggregate(io.TextIOWrapper(fh, encoding="utf-8", errors="replace"), sel.get("rows-per-day"), int(sel.get("top-stories", 5)))
+                with z.open(z.namelist()[0]) as fh:
+                    agg = aggregate(io.TextIOWrapper(fh, encoding="utf-8", errors="replace"), run.option("rows-per-day"),
+                                    int(run.option("top-stories", 5)))
             days_dir.mkdir(parents=True, exist_ok=True)
             (days_dir / f"{d.isoformat()}.json").write_text(json.dumps(agg, separators=(",", ":")) + "\n", encoding="utf-8")
             fetched.append(d.isoformat())
-            d += timedelta(days=1)
         if not fetched:
-            if done:
-                self.log("  no new GDELT day since the last pull")
-                return {}
+            if run.state.get("lastDay"):
+                run.log("  no new GDELT day since the last run")
+                return
             raise FeedError("no GDELT daily file could be read for the backfill window")
-        state["lastDay"] = fetched[-1]
-        state.pop("force", None)
-        window = int(sel.get("history-days", 30))
-        floor = (date.fromisoformat(fetched[-1]) - timedelta(days=window - 1)).isoformat()
+        run.state["lastDay"] = fetched[-1]
+        floor = (date.fromisoformat(fetched[-1]) - timedelta(days=int(run.option("history-days", 30)) - 1)).isoformat()
         days = {}
         for f in sorted(days_dir.glob("*.json")):
             if f.stem < floor:
                 f.unlink()                            # outside the window: the feed's folder stays small
                 continue
             days[f.stem] = json.loads(f.read_text(encoding="utf-8"))
-        return {"event-country": self._docs(days, fetched[-1], int(sel.get("min-events", 20)))}
+        run.emit("event-country", self._docs(run, days, fetched[-1], int(run.option("min-events", 20))))
+        run.mark("event-country", run.business_date)
 
-    def _docs(self, days: dict, latest: str, min_events: int) -> list[dict]:
-        today_ = days.get(latest) or {}
+    def _docs(self, run, days: dict, latest: str, min_events: int) -> list[dict]:
         docs = []
-        for iso3, a in today_.items():
+        for iso3, a in (days.get(latest) or {}).items():
             if a["events"] < min_events:
                 continue
             hist, ev30, tw30, m30 = [], 0, 0.0, 0
@@ -158,5 +162,5 @@ class GdeltEvents(PublicFeed):
                                 for k, v in cats],
                 "HISTORY": hist,
                 "TOP_STORIES": [{"MENTIONS": m, "URL": url, "CATEGORY": CAMEO_ROOT.get(root, root)} for m, url, root in a["top"]],
-                "PROVENANCE": self.provenance(dataset=f"GDELT 1.0 daily events {latest}", url="https://www.gdeltproject.org/data.html")})
+                "PROVENANCE": provenance(run, "gdelt", f"GDELT 1.0 daily events {latest}", "https://www.gdeltproject.org/data.html")})
         return docs

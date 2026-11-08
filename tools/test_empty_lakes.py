@@ -67,8 +67,9 @@ def test_each_public_sector_pack_reads_its_lake_and_its_feed_loads_it():
         lakes = {(c.get("settings") or {}).get("lake") for c in (m.get("connectors") or {}).values()}
         assert lakes == {lake}, pack
         feed = yaml.safe_load((ROOT / "config" / "feeds" / f"{pack}.yaml").read_text(encoding="utf-8"))
-        assert feed["lake"] == lake and feed["pack"] == pack and feed["module"] == "publicsector", pack
-        assert {t["connector"] for t in feed["tables"]} <= set(m["connectors"]), pack
+        assert feed["lake"] == lake and feed["options"]["module"] == "publicsector", pack
+        assert {d["pack"] for d in feed["datasets"].values()} == {pack}, pack
+        assert {d["kind"] for d in feed["datasets"].values()} == set(m["kinds"]), pack
 
 
 def test_nothing_else_shipped_points_at_them():

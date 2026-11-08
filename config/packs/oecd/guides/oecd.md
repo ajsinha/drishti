@@ -153,23 +153,23 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `OECD` | `oecd-country` | external: OECD Data Explorer SDMX API (OECD terms: reuse with the source acknowledged (CC BY 4.0)) — refreshed by `tools/feeds/publicsector/run.py` | the daily feed `oecd` → `<data>/delta/worldlake/oecd/oecd-country/` (lake `worldlake`) → connector `oecd-store`; nothing is committed but a few documents in `samples/` for the tests |
-| `OECDS` | `oecd-series` | external: OECD Data Explorer SDMX API (OECD terms: reuse with the source acknowledged (CC BY 4.0)) — refreshed by `tools/feeds/publicsector/run.py` | the daily feed `oecd` → `<data>/delta/worldlake/oecd/oecd-series/` (lake `worldlake`) → connector `oecd-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `OECD` | `oecd-country` | external: OECD Data Explorer SDMX API (OECD terms: reuse with the source acknowledged (CC BY 4.0)) — refreshed by `drishti.py feed run oecd` | the daily feed `oecd` → `<data>/delta/worldlake/oecd/oecd-country/` (lake `worldlake`) → connector `oecd-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `OECDS` | `oecd-series` | external: OECD Data Explorer SDMX API (OECD terms: reuse with the source acknowledged (CC BY 4.0)) — refreshed by `drishti.py feed run oecd` | the daily feed `oecd` → `<data>/delta/worldlake/oecd/oecd-series/` (lake `worldlake`) → connector `oecd-store`; nothing is committed but a few documents in `samples/` for the tests |
 
 ### External sources
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| OECD Data Explorer SDMX API | https://sdmx.oecd.org/public/rest | OECD terms: reuse with the source acknowledged (CC BY 4.0) | no | `python3 tools/feeds/publicsector/run.py run oecd` |
+| OECD Data Explorer SDMX API | https://sdmx.oecd.org/public/rest | OECD terms: reuse with the source acknowledged (CC BY 4.0) | no | `python3 tools/drishti.py feed run oecd` |
 
 ```bash
-python3 tools/feeds/publicsector/run.py run oecd --dry-run  # what the feed would pull; writes nothing
-python3 tools/feeds/publicsector/run.py run oecd            # pull what is new into <data>/feeds/oecd/out/<date>/ (JSONL.gz with .ready files)
-python3 tools/feeds/publicsector/run.py run oecd --inbox    # the same into the data inbox: the server loads it into the lake (daily, from cron)
-python3 tools/feeds/publicsector/run.py run oecd --load     # pull, then load into the lake at once (drishti.py lake build)
+python3 tools/drishti.py feed run oecd --dry-run     # what the feed would pull; writes nothing
+python3 tools/drishti.py feed run oecd               # pull what is new into <data>/feeds/oecd/<date>/ and load it (the parallel loader)
+python3 tools/drishti.py feed run oecd --load inbox  # the same through the data inbox: the server loads it
+python3 tools/drishti.py feed status oecd            # its last runs, rows and errors (the ledger)
 ```
 
-The same through the wrappers: `tools/feeds/publicsector/run.sh run oecd` on Linux and macOS, `.\tools\windows\feeds-publicsector.ps1 run oecd` on Windows. The feed's YAML is `config/feeds/oecd.yaml` (sources, licences, schedule, selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) explains it.
+The same through the wrappers: `tools/feeds/feed.sh run oecd` on Linux and macOS, `.\tools\windows\feed.ps1 run oecd` on Windows. The feed file is `config/feeds/oecd.yaml` (its sources and their licences in `options.sources`, the schedule, the selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) and the [External data feeds guide](../../../../docs/guides/FEEDS_GUIDE.md) explain it.
 
 ### Into the lake, checking, offline
 

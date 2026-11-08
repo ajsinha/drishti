@@ -13,27 +13,54 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The official-news feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): press releases and notices of central banks, regulators and
-# governments from their own feeds into newslake, for the official-news pack. Pull: tools/feeds/publicsector/official_news.py. Daily;
+# governments from their own feeds into newslake, for the official-news pack. Class: tools/feeds/sources/official_news.py. Daily;
 # incremental (a release already kept is not added again; no new release, nothing written). No key.
 # Each publisher below is a source with its own terms. A publisher whose terms allow no commercial reuse is internal-only: its releases
 # carry INTERNAL_ONLY true, Export data refuses them (internal-only-data off) and they never leave the organisation. The flags are the
 # owner's reading of each site's terms on 2026-11-07 (the terms: links); legal review may widen or narrow them here.
+# Run: python3 tools/drishti.py feed run official-news (FEEDS_GUIDE.md); options.sources holds each source's licence and terms; the rest of
+# options is the default selection.
 feed: official-news
 title: Official press releases (central banks, regulators, governments)
-module: publicsector
-pack: official-news
+description: 'The public-sector module''s official-news pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Press releases and notices from the publishers'' own
+  feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank of England, the SEC, OSFI, the US Federal Register and the Canada
+  Gazette. A publisher''s page lists its latest releases newest first, each a link to the original, with its terms; a release''s page gives its title, date,
+  summary and link. Each publisher''s terms are recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases
+  are internal only. Filled daily by the official-news feed into the newslake lake.'
+class: official_news.OfficialNewsFeed
+source:
+  provider: Federal Reserve Board, European Central Bank, Bank of Canada, Bank of England, US Securities and Exchange Commission, OSFI, US Federal Register,
+    Canada Gazette, Part II, Canada Gazette, Part I
+  url: https://www.federalreserve.gov/newsevents/pressreleases.htm
+  pause: 1
+  retries: 3
+  timeout: 60
+  cache-hours: 12
 lake: newslake
-pull: tools/feeds/publicsector/official_news.py
-schedule: { cadence: daily, cron: "0 23 * * *", timezone: UTC }
-tables:
-  - { kind: release-source, connector: officialnews-store, table: officialnews.release-source, key: SOURCE_ID }
-  - { kind: press-release, connector: officialnews-store, table: officialnews.press-release, key: RELEASE_ID }
-keys: []
-limits: { pause-seconds: 1, timeout-seconds: 60 }
-selection:
-  keep-days: 90                # releases older than this are dropped from the lake's latest date
-  keep-per-source: 100
-sources:
+load: java
+enabled: true
+schedule:
+  at: '19:00'
+  days: daily
+licence:
+  name: 'per publisher (options.sources): public domain, reuse with attribution, or internal only (Bank of England, OSFI, Canada Gazette)'
+  url: https://www.federalreserve.gov/disclaimer.htm
+  redistribution: attribution
+  internal-only: false
+  attribution: Each release names its publisher (PROVENANCE.ATTRIBUTION).
+  notes: the releases of a publisher whose terms allow no commercial reuse carry INTERNAL_ONLY true; Export data refuses them
+datasets:
+  release-source:
+    pack: official-news
+    kind: release-source
+    key: SOURCE_ID
+  press-release:
+    pack: official-news
+    kind: press-release
+    key: RELEASE_ID
+options:
+  module: publicsector
+  sources:
   - id: FED
     name: Federal Reserve Board press releases (RSS)
     title: Federal Reserve Board
@@ -42,10 +69,10 @@ sources:
     url: https://www.federalreserve.gov/newsevents/pressreleases.htm
     feed: https://www.federalreserve.gov/feeds/press_all.xml
     terms: https://www.federalreserve.gov/disclaimer.htm
-    licence: "Public domain (US government work); cite the Board as the source"
+    licence: Public domain (US government work); cite the Board as the source
     redistributable: true
     internal-only: false
-    attribution: "Source: Board of Governors of the Federal Reserve System."
+    attribution: 'Source: Board of Governors of the Federal Reserve System.'
   - id: ECB
     name: European Central Bank press releases (RSS)
     title: European Central Bank
@@ -54,10 +81,10 @@ sources:
     url: https://www.ecb.europa.eu/press/pr/html/index.en.html
     feed: https://www.ecb.europa.eu/rss/press.html
     terms: https://www.ecb.europa.eu/services/disclaimer/html/index.en.html
-    licence: "ECB copyright: free use with the ECB cited as the source; inside a paid product, buyers told the information is free on ecb.europa.eu"
+    licence: 'ECB copyright: free use with the ECB cited as the source; inside a paid product, buyers told the information is free on ecb.europa.eu'
     redistributable: true
     internal-only: false
-    attribution: "Source: European Central Bank."
+    attribution: 'Source: European Central Bank.'
   - id: BOC
     name: Bank of Canada press releases (RSS)
     title: Bank of Canada
@@ -66,10 +93,11 @@ sources:
     url: https://www.bankofcanada.ca/press/press-releases/
     feed: https://www.bankofcanada.ca/content_type/press-releases/feed/
     terms: https://www.bankofcanada.ca/terms/
-    licence: "Bank of Canada terms of use: free to use, copy, distribute and transmit with attribution; inside a paid service, tell buyers it is free on bankofcanada.ca"
+    licence: 'Bank of Canada terms of use: free to use, copy, distribute and transmit with attribution; inside a paid service, tell buyers it is free on
+      bankofcanada.ca'
     redistributable: true
     internal-only: false
-    attribution: "Source: Bank of Canada."
+    attribution: 'Source: Bank of Canada.'
   - id: BOE
     name: Bank of England news (RSS)
     title: Bank of England
@@ -78,11 +106,11 @@ sources:
     url: https://www.bankofengland.co.uk/news
     feed: https://www.bankofengland.co.uk/rss/news
     terms: https://www.bankofengland.co.uk/legal
-    licence: "Bank of England copyright: download, display or print for personal or internal non-commercial use; other re-use needs its permission"
+    licence: 'Bank of England copyright: download, display or print for personal or internal non-commercial use; other re-use needs its permission'
     redistributable: false
     internal-only: true
-    why-internal: "The Bank of England allows personal and internal non-commercial use only; anything else needs its written permission."
-    attribution: "Source: Bank of England."
+    why-internal: The Bank of England allows personal and internal non-commercial use only; anything else needs its written permission.
+    attribution: 'Source: Bank of England.'
   - id: SEC
     name: US Securities and Exchange Commission press releases (RSS)
     title: US Securities and Exchange Commission
@@ -91,10 +119,10 @@ sources:
     url: https://www.sec.gov/newsroom/press-releases
     feed: https://www.sec.gov/news/pressreleases.rss
     terms: https://www.sec.gov/privacy
-    licence: "Public domain (US government work)"
+    licence: Public domain (US government work)
     redistributable: true
     internal-only: false
-    attribution: "Source: US Securities and Exchange Commission."
+    attribution: 'Source: US Securities and Exchange Commission.'
   - id: OSFI
     name: Office of the Superintendent of Financial Institutions news (RSS)
     title: OSFI
@@ -103,11 +131,12 @@ sources:
     url: https://www.osfi-bsif.gc.ca/en/news
     feed: https://www.osfi-bsif.gc.ca/en/rss.xml
     terms: https://www.osfi-bsif.gc.ca/en/terms-conditions
-    licence: "Government of Canada terms (OSFI): non-commercial reproduction with the title, author and source URL; commercial redistribution needs written permission"
+    licence: 'Government of Canada terms (OSFI): non-commercial reproduction with the title, author and source URL; commercial redistribution needs written
+      permission'
     redistributable: false
     internal-only: true
-    why-internal: "OSFI permits non-commercial reproduction only; commercial redistribution needs its written permission."
-    attribution: "Source: Office of the Superintendent of Financial Institutions."
+    why-internal: OSFI permits non-commercial reproduction only; commercial redistribution needs its written permission.
+    attribution: 'Source: Office of the Superintendent of Financial Institutions.'
   - id: FEDREG
     name: US Federal Register documents (API)
     title: US Federal Register
@@ -115,13 +144,13 @@ sources:
     country: USA
     format: federal-register
     url: https://www.federalregister.gov/
-    feed: "https://www.federalregister.gov/api/v1/documents.json?per_page=50&order=newest&fields[]=title&fields[]=html_url&fields[]=publication_date&fields[]=abstract&fields[]=type&fields[]=agencies&fields[]=document_number"
+    feed: https://www.federalregister.gov/api/v1/documents.json?per_page=50&order=newest&fields[]=title&fields[]=html_url&fields[]=publication_date&fields[]=abstract&fields[]=type&fields[]=agencies&fields[]=document_number
     feed-title: newest documents
     terms: https://www.federalregister.gov/reader-aids/developer-resources/rest-api
-    licence: "Public domain (US government works published by the Office of the Federal Register)"
+    licence: Public domain (US government works published by the Office of the Federal Register)
     redistributable: true
     internal-only: false
-    attribution: "Source: Federal Register (federalregister.gov)."
+    attribution: 'Source: Federal Register (federalregister.gov).'
   - id: GAZETTE2
     name: Canada Gazette, Part II (RSS)
     title: Canada Gazette, Part II
@@ -131,11 +160,11 @@ sources:
     feed: https://gazette.gc.ca/rss/p2-eng.xml
     feed-title: official regulations
     terms: https://www.canada.ca/en/transparency/terms.html
-    licence: "Government of Canada terms: non-commercial reproduction permitted; commercial reproduction needs permission"
+    licence: 'Government of Canada terms: non-commercial reproduction permitted; commercial reproduction needs permission'
     redistributable: false
     internal-only: true
-    why-internal: "Government of Canada content may be reproduced for non-commercial purposes only without permission."
-    attribution: "Source: Canada Gazette, Government of Canada."
+    why-internal: Government of Canada content may be reproduced for non-commercial purposes only without permission.
+    attribution: 'Source: Canada Gazette, Government of Canada.'
   - id: GAZETTE1
     name: Canada Gazette, Part I (RSS)
     title: Canada Gazette, Part I
@@ -145,8 +174,10 @@ sources:
     feed: https://gazette.gc.ca/rss/p1-eng.xml
     feed-title: notices and proposed regulations
     terms: https://www.canada.ca/en/transparency/terms.html
-    licence: "Government of Canada terms: non-commercial reproduction permitted; commercial reproduction needs permission"
+    licence: 'Government of Canada terms: non-commercial reproduction permitted; commercial reproduction needs permission'
     redistributable: false
     internal-only: true
-    why-internal: "Government of Canada content may be reproduced for non-commercial purposes only without permission."
-    attribution: "Source: Canada Gazette, Government of Canada."
+    why-internal: Government of Canada content may be reproduced for non-commercial purposes only without permission.
+    attribution: 'Source: Canada Gazette, Government of Canada.'
+  keep-days: 90
+  keep-per-source: 100

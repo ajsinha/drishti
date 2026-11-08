@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: Development indicator series
 description: 'One World Development Indicator of one country by year: the history, the latest value and the change.'
-source: 'public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/feeds/publicsector/)'
+source: 'public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/feeds/sources/)'
 grain: One row per development indicator series, keyed by SERIES_ID.
 key:
 - SERIES_ID

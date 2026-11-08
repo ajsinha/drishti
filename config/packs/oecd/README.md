@@ -40,7 +40,7 @@ sources:
   licence: 'OECD terms and conditions: data may be extracted, copied and redistributed, also commercially, with the source acknowledged (CC BY 4.0 for OECD data since July 2024)'
   internal-only: false
   used-for: oecd-country, oecd-series
-refresh: python3 tools/feeds/publicsector/run.py run oecd
+refresh: python3 tools/drishti.py feed run oecd
 generated-by: tools/packgen/publicsector/make.py
 ---
 # The oecd pack
@@ -66,27 +66,27 @@ Fields, from 10 sample documents:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `COUNTRY_ID` | string | `OECD-AUS` | OECD- and the member's ISO 3166-1 alpha-3 code. |
-| `NAME` | string | `Australia` | The member's name as the OECD writes it. |
-| `ISO3` | string | `AUS` | The member's ISO 3166-1 alpha-3 code (the OECD's REF_AREA), the key the map shades by. |
 | `COUNTRY_NAME` | string | `Australia` | The member's name as the OECD writes it. |
-| `LEADING_INDICATOR` | number | `99.9505` | The composite leading indicator, amplitude adjusted: above 100 and rising, growth above trend ahead. (index, long-term average = 100) |
-| `LEADING_INDICATOR_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
-| `UNEMPLOYMENT` | number | `4.718349` | The harmonised unemployment rate, seasonally adjusted, ages 15 and over. (% of labour force) |
-| `UNEMPLOYMENT_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
-| `INFLATION` | number | `4.34` | Consumer price inflation, all items, on the same month a year before. (% a year) |
-| `INFLATION_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
 | `GDP_GROWTH` | number | `0.419502713` | Real GDP growth on the previous quarter, seasonally adjusted. (%) |
 | `GDP_GROWTH_PERIOD` | string | `2026-Q2` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
+| `INFLATION` | number | `4.34` | Consumer price inflation, all items, on the same month a year before. (% a year) |
+| `INFLATION_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
+| `ISO3` | string | `AUS` | The member's ISO 3166-1 alpha-3 code (the OECD's REF_AREA), the key the map shades by. |
+| `LEADING_INDICATOR` | number | `99.9505` | The composite leading indicator, amplitude adjusted: above 100 and rising, growth above trend ahead. (index, long-term average = 100) |
+| `LEADING_INDICATOR_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
 | `MEASURES` | list of objects |  | Every measure the feed pulled for the member, one row each: MEASURE, TITLE, UNIT, LATEST, PERIOD, CHANGE and OECD_SERIES. |
-| `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
 | `MEASURE_COUNT` | integer | `4` | How many measures have a value for the member. |
+| `NAME` | string | `Australia` | The member's name as the OECD writes it. |
+| `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `UNEMPLOYMENT` | number | `4.718349` | The harmonised unemployment rate, seasonally adjusted, ages 15 and over. (% of labour force) |
+| `UNEMPLOYMENT_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `MEASURES[]` | `MEASURE` (string): The measure's id in the feed's YAML (CLI, UNEMPLOYMENT, INFLATION, GDP_GROWTH)., `TITLE` (string): The measure's title in the feed's YAML., `UNIT` (string): What the measure is in., `LATEST` (number): The latest value., `PERIOD` (string): The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter)., `CHANGE` (number): The latest value less the previous period's., `OECD_SERIES` (string): The oecd-series page with the history (OECDS-<ISO3>-<measure>). |
-| `PROVENANCE` | `SOURCE` (string): The organisation whose published data the record holds., `DATASET` (string): The OECD dataflow the record was built from., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): The OECD Data Explorer's page for the dataflow., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record). |
+| `MEASURES[]` | `CHANGE` (number): The latest value less the previous period's., `LATEST` (number): The latest value., `MEASURE` (string): The measure's id in the feed's YAML (CLI, UNEMPLOYMENT, INFLATION, GDP_GROWTH)., `OECD_SERIES` (string): The oecd-series page with the history (OECDS-<ISO3>-<measure>)., `PERIOD` (string): The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter)., `TITLE` (string): The measure's title in the feed's YAML., `UNIT` (string): What the measure is in. |
+| `PROVENANCE` | `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `DATASET` (string): The OECD dataflow the record was built from., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `SOURCE` (string): The organisation whose published data the record holds., `URL` (string): The OECD Data Explorer's page for the dataflow. |
 
 ### `oecd-series`
 
@@ -98,30 +98,30 @@ Fields, from 10 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `SERIES_ID` | string | `OECDS-USA-CLI` | OECDS-, the member's ISO alpha-3 code and the measure's id. |
-| `NAME` | string | `United States · Composite leading indica…` | The member and the measure, as one name. |
-| `OECD_COUNTRY` | string | `OECD-USA` | The member's oecd-country page (OECD-<ISO3>).; link to `oecd-country` |
-| `ISO3` | string | `USA` | The member's ISO 3166-1 alpha-3 code. |
+| `CHANGE` | number | `0.0529` | The latest value less the previous one. |
 | `COUNTRY_NAME` | string | `United States` | The member's name as the OECD writes it. |
-| `MEASURE` | string | `CLI` | The measure's id in the feed's YAML. |
-| `TITLE` | string | `Composite leading indicator` | The measure's title in the feed's YAML. |
-| `UNIT` | string | `index, long-term average = 100` | What the measure is in. |
 | `DATAFLOW` | string | `OECD.SDD.STES,DSD_STES@DF_CLI,` | The OECD dataflow (agency, id, version) the series is read from. |
 | `FREQUENCY` | string | `monthly` | Monthly or quarterly, from the feed's YAML. |
+| `HISTORY` | list of objects |  | The value by period, oldest first, over the feed's history-periods (PERIOD, VALUE). |
+| `ISO3` | string | `USA` | The member's ISO 3166-1 alpha-3 code. |
 | `LATEST` | number | `100.9993` | The latest value, in the unit shown. |
 | `LATEST_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
+| `MEASURE` | string | `CLI` | The measure's id in the feed's YAML. |
+| `NAME` | string | `United States · Composite leading indica…` | The member and the measure, as one name. |
+| `OECD_COUNTRY` | string | `OECD-USA` | The member's oecd-country page (OECD-<ISO3>).; link to `oecd-country` |
 | `PREVIOUS` | number | `100.9464` | The previous period's value. |
 | `PREVIOUS_PERIOD` | string | `2026-08` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
-| `CHANGE` | number | `0.0529` | The latest value less the previous one. |
-| `HISTORY` | list of objects |  | The value by period, oldest first, over the feed's history-periods (PERIOD, VALUE). |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
+| `SERIES_ID` | string | `OECDS-USA-CLI` | OECDS-, the member's ISO alpha-3 code and the measure's id. |
+| `TITLE` | string | `Composite leading indicator` | The measure's title in the feed's YAML. |
+| `UNIT` | string | `index, long-term average = 100` | What the measure is in. |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
 | `HISTORY[]` | `PERIOD` (string): The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter)., `VALUE` (number): The value for that period, in the unit shown. |
-| `PROVENANCE` | `SOURCE` (string): The organisation whose published data the record holds., `DATASET` (string): The OECD dataflow the record was built from., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): The OECD Data Explorer's page for the dataflow., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record). |
+| `PROVENANCE` | `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `DATASET` (string): The OECD dataflow the record was built from., `INTERNAL_ONLY` (boolean): True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)., `LICENCE` (string): The terms under which the source allows reuse, as recorded in the feed's YAML., `RETRIEVED_AT` (date): The business date of the feed's pull that wrote the record., `SOURCE` (string): The organisation whose published data the record holds., `URL` (string): The OECD Data Explorer's page for the dataflow. |
 
 Links: `OECD_COUNTRY` → `oecd-country`.
 
@@ -172,7 +172,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **oecd** feed (`config/feeds/oecd.yaml`: its sources, licences, schedule `0 12 * * *` UTC and selection) pulls what is new, writes one JSONL.gz a kind with its `.ready` file and loads it into the `worldlake` lake: `python3 tools/feeds/publicsector/run.py run oecd --inbox` (the server's data inbox loads it) or `--load` (at once); `--dry-run` shows what it would ask. On Windows: `.\tools\windows\feeds-publicsector.ps1 run oecd`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **oecd** feed (`config/feeds/oecd.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 07:00 local time, and its selection in `options`) pulls what is new into `<data>/feeds/oecd/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run oecd` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run oecd`, `.\tools\windows\feed.ps1 run oecd`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+
+The data feed `oecd` (config/feeds/oecd.yaml) pulls `oecd-country`, `oecd-series`: `python3 tools/drishti.py feed run oecd` fetches them daily into `data/feeds/oecd/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 
