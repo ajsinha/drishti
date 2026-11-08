@@ -1,0 +1,61 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# EXAMPLE (design, not built): a Sutra of the genomics sample module (tier 1, declarative, no code), at
+# packs/genomics/sutras/variant-call.v1.sutra.yaml inside genomics-0.1.0.dmod (docs/architecture/KERNEL_AND_MODULES.md
+# section 9.1). Rachana grammar 1, the same format banking's Sutras use. The data is read through the kernel's bindings (data/needs.yaml);
+# the carrier counts come from the module's computed kind variant-summary (a KindProvider). Removing the module removes the Sutra, its
+# match, its search entries and its links (section 10.3).
+rachana: 1
+sutra: variant-call
+version: 1
+description: "One variant in one cohort: where it is, what it does, how frequent it is and who carries it."
+doc:
+  summary: "A variant call: position, gene and consequence, allele frequency against the cohort, carriers and their QC"
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/variant-call/chr17:43044295:G:A"
+    - "VARIANT chr17:43044295"
+match: { kind: variant-call, priority: 20, when: "module_on('genomics')" }
+title: { pill: "Genomics · Variant", id: $.VARIANT_ID, with: $.GENE }
+strip:
+  - { label: Gene, bind: $.GENE }
+  - { label: Consequence, bind: $.CONSEQUENCE }
+  - { label: Allele frequency, bind: $.VARIANT_SUMMARY.AF, fmt: pct2, emphasis: true }
+  - { label: Carriers, bind: $.VARIANT_SUMMARY.CARRIERS }
+  - { label: HWE p, bind: $.VARIANT_SUMMARY.HWE_P, fmt: sci2 }
+  - { label: Cohort, bind: $.COHORT_ID, link: cohort }
+panels:
+  - id: carriers
+    kind: table
+    title: "Its carriers (samples with at least one alternate allele)"
+    code: CARR
+    key: F2
+    rows: $.VARIANT_SUMMARY.CARRIER_ROWS
+    empty: "No carriers in this cohort"
+    columns:
+      - { label: Sample, bind: "@.SAMPLE_ID", link: true }
+      - { label: Genotype, bind: "@.GT" }
+      - { label: Depth, bind: "@.DP" }
+      - { label: QC, bind: "@.QC_STATUS", tone: "qc(@.QC_STATUS)" }
+  - use: explainer-note@1
+    with:
+      title: In the variant explorer
+      area: right
+      text: "Every variant of this cohort, filtered and charted: VARX ${$.COHORT_ID} <GO>."
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
+keys: { F7: "link($.COHORT_ID, 'cohort')", F9: raw }

@@ -1,0 +1,57 @@
+EXAMPLE (design, not built): removing the genomics module from a 3-node cluster, four eyes, and what disappears
+(docs/architecture/KERNEL_AND_MODULES.md section 10). P2 behaviour: every surface disappears at once on approval (hot); the module's
+code leaves the processes at the next rolling restart; its files stay until `module prune`; data and saved work stay.
+
+# Administrator 1 (alice) proposes
+$ python3 tools/drishti.py module remove genomics --reason "Study closed; licence not renewed (ticket LAB-311)"
+Removal report for genomics 0.1.0 (Example Labs)
+  Dependents        none (no installed module requires genomics)
+  Pages             5 routes (/m/genomics/..., alias /variants) -> 410 with the "no longer installed" page
+  Words             8 (SAMPLE COHORT VARIANT VARX AF HWE LD QC)       Menus 2 entries · Home cards 2 · chips 3 · lens cohorts
+  Help              section Genomics (6 pages), 1 guide, 1 tutorial, 14 glossary terms, 212 search entries
+  Server            API /api/v1/genomics (7 endpoints) · engine allele-frequency · 1 KindProvider (variant-summary) · 2 Python items
+                    1 pivot provider · 1 explainer · 2 AI tools · 1 export · 3 health checks · 1 cache group (88 MB)
+  Jobs and feeds    1 scheduled job (nightly cohort refresh, next 02:00) · feeds none
+  Users' work       14 saved views, 3 workspaces, 2 dashboards, 1 BI report, 6 bookmarks, 2 scheduled exports, 1 alert
+                    -> kept, marked "needs module genomics"; schedules and alerts paused; restored on reinstall
+  Data              lake genolake untouched (4 tables, 1.2 TB); bindings sample, cohort, variant-call kept (orphaned: no module needs them)
+  Open now          9 people have genomics pages open on 3 nodes; 2 API calls in flight; 0 jobs running
+Proposed as change CHG-2026-1108-0057 (module remove genomics 0.1.0). A second administrator must approve.
+
+# Administrator 2 (bob) approves
+$ python3 tools/drishti.py approvals approve CHG-2026-1108-0057 --reason "Agreed with the lab lead"
+Approved. Cluster config v318 -> v319 (genomics: REMOVED)
+
+[10:42:07.112] gate      genomics LEAVING on drishti-main, drishti-2, drishti-3 (config v319 confirmed by 3/3)
+[10:42:07.118] gate      new requests refused: pages 410, API DRS-1028 "module genomics is not installed", words "not available"
+[10:42:07.130] tell      module.leaving published (bus + drishti-net); 9 open tabs notified through their live channel
+[10:42:07.131] drain     2 API calls in flight ... finished in 0.84 s (limit 30 s)
+[10:42:07.990] drain     scheduled job genomics.cohort-refresh suspended (not running); Python runs 0
+[10:42:08.004] withdraw  SPIs: 1 compute engine, 1 KindProvider, 1 pivot provider, 1 explainer, 2 AI tools, 1 export, 3 health checks
+[10:42:08.019] withdraw  caches: group genomics (88 MB) cleared; pivot, BI and Explain entries tagged genomics: 1,206 dropped
+[10:42:08.051] withdraw  content: pack genomics (3 kinds, 3 Sutras), lens cohorts, 8 functions, 2 menu entries, 2 Home cards, 3 chips
+[10:42:08.073] withdraw  Help: section Genomics, 6 pages, 1 guide, 1 tutorial, 14 glossary terms; search: 212 entries removed
+[10:42:08.090] console   route table v41 -> v42 on 3 consoles: 5 routes and 1 alias -> tombstones; template namespace genomics: dropped
+[10:42:08.094] console   static /m/genomics/static/0.1.0/ withdrawn (410); Elements manifest: drishti-genomics removed; hooks: 0 left
+[10:42:08.102] console   settings page and designer palette entries (2 panel types) removed
+[10:42:08.140] server    GenomicsModule.stop() ok · child context closed (7 endpoints unmapped) · Python path entry removed
+[10:42:08.141] server    class loader: kept until the rolling restart (P2); unreachable from every registry (checked: 0 references)
+[10:42:08.388] saved     29 artefacts marked "needs module genomics" (none changed, none deleted); 2 exports and 1 alert paused;
+                         owners notified (7 people)
+[10:42:08.402] record    audit AUD-2026-1108-88412 · metrics genomics.* series ended · Health: genomics REMOVED (by alice, approved by bob)
+[10:42:08.405] cluster   fingerprint 9b1e… -> 4c07… on 3/3 nodes · module.removed published
+RESTART RECOMMENDED (not required) on 3 nodes to release the module's code; files kept in /data/drishti/modules/genomics/0.1.0
+until `module prune`; tombstones kept 365 days (reinstall restores everything marked).
+
+$ python3 tools/drishti.py module list
+ID              VERSION  STATE      PUBLISHER         LICENCE   NEEDS          TAINT
+banking         3.0.0    LOADED     drishti           ok        37/41 bound    -
+capitalmarkets  1.3.0    LOADED     drishti           ok        12/12 bound    -
+economy         1.4.0    LOADED     drishti           ok        9/9 bound      -
+genomics        0.1.0    REMOVED    example-labs      -         -              -     (2026-11-08 10:42, CHG-2026-1108-0057; restart to unload code)
+
+$ curl -s -o /dev/null -w "%{http_code}\n" https://drishti-main.lab.internal:17480/m/genomics/variants/BRCA-2026
+410
+$ curl -s https://drishti-main.lab.internal:18480/api/v1/genomics/variants -H "Authorization: Bearer $TOKEN"
+{"type":"https://drishti/errors/DRS-1028","title":"Module not installed","status":410,"code":"DRS-1028",
+ "detail":"The genomics module is not installed on this instance.","module":"genomics"}

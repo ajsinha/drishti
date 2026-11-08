@@ -19,6 +19,19 @@
 
 ### Docs
 
+- **Kernel and modules, the developer's side (design):** [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) gains the
+  module developer path (a Maven multi-module project per module, the kernel API `provided`, the `drishti-module-maven-plugin`, the
+  archetype behind `module new`, the `module run` dev loop, the conformance suite C1–C15, the release path, a start-to-delivery table),
+  module UI (Sutras, composed pages from Elements in a per-module sandboxed template namespace, a domain library; the template context,
+  the API proxy, static assets with SRI, declared routes in a live route table, aliases and reserved names), offloading a module (the
+  ordered unload sequence, every surface and how it goes, open tabs, in-flight work, saved artefacts kept and marked, 410 for removed and
+  404 for off, the absence suite), modules in a cluster (explicit opt-in placement per node or role and per part with resource classes,
+  singletons, heavy-work guards, copies only to placed nodes, two-phase activation, drift in a node × module matrix, the console fed by the
+  registry and kernel-served bundles, rolling upgrades pinned per session) and deployment through one API from `drishti.py module deploy`
+  (plan/apply) and Admin → Modules → Deploy; the kernel work split into three releases (i1 foundations, i2 modules on one node, i3 cluster
+  and white label; module trust in j), also in IMPLEMENTATION_PLAN.md and ACCESS_MODEL.md; five new SVG diagrams and the phases redrawn,
+  genomics and banking project examples, placement and deployment-plan examples, removal and deployment transcripts, the "module removed"
+  and "Deploy" mock-ups, open questions Q12–Q20 (Q8 decided); sections renumbered (security is now 11); the PDF regenerated.
 - **The cluster guide draws its pictures:** the eleven box-drawing diagrams of [CLUSTER_GUIDE.md](docs/guides/CLUSTER_GUIDE.md) (Drishti\*net
   routing, three machines, the estate, a node failure, the daily cycle, security zones, an ECS task starting, ECS seeds, the lake in S3,
   storage tiers, where data lives in memory) are self-contained SVG diagrams in `docs/guides/img/cluster/`, vectors in the regenerated PDF;
