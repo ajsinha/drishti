@@ -203,6 +203,36 @@ def test_cells_edited_like_a_spreadsheet_with_reasons_under_the_row(stack, brows
     pg.close()
 
 
+def test_an_enum_cell_opens_its_select_on_the_value_and_a_pick_saves_it(stack, browser):
+    """A choice cell is drishti-inputs' Select: it opens on the cell's value, a click on an option keeps it (and moves on), Escape leaves
+    the cell as it was."""
+    pg = page(browser, stack, LIMIT)
+    forget_drafts(pg, stack)
+    pg.evaluate("""() => { const f = JSON.parse(document.querySelector('#p-buckets').getAttribute('data-form'));
+      const b = f.fields.find((x) => x.id === 'bucket'); b.readonly = false; delete b.reason; b.type = 'enum';
+      const seen = [...new Set(f.rows.map((r) => r.values.bucket))];
+      b.options = seen.concat(['30Y']).map((v) => ({ value: v, label: v })); window.__first = f.rows[0].values.bucket;
+      Drishti.forms.reset('buckets', f); }""")
+    cell = "#p-buckets tr[data-frow='0'] td[data-fcell='bucket']"
+    first = pg.evaluate("window.__first")
+    pg.click(cell)
+    pg.wait_for_selector(".di-select-pop [role=listbox]")                    # opened at once, on the cell's value
+    assert pg.locator(cell + " drishti-select").count() == 1
+    assert pg.locator(".di-select-pop [role=option][aria-selected=true]").inner_text().strip() == first
+    pg.keyboard.press("Escape")                                              # the list closes, the cell still edits
+    pg.keyboard.press("Escape")                                              # and a second Escape leaves it unchanged
+    pg.wait_for_selector(cell + " drishti-select", state="detached")
+    assert "fm-changed" not in (pg.get_attribute(cell, "class") or "")
+    pg.click(cell)
+    pg.wait_for_selector(".di-select-pop [role=listbox]")
+    pg.locator(".di-select-pop [role=option]", has_text="30Y").click()     # a pick saves the cell
+    pg.wait_for_selector(cell + " drishti-select", state="detached")
+    assert "30Y" in pg.inner_text(cell) and "fm-changed" in pg.get_attribute(cell, "class")
+    assert pg.locator("#p-buckets .fm-toolbar [data-fm-badge]").inner_text() == "1 change not saved"
+    assert pg.locator(".di-select-pop").count() == 0
+    pg.close()
+
+
 def test_new_in_a_guided_drawer_with_a_live_hint(stack, browser):
     pg = page(browser, stack, DESK)
     forget_drafts(pg, stack)
@@ -348,5 +378,5 @@ def test_a_phone_stacks_the_form_and_the_drawer_fills_the_screen(stack, browser)
     pg.click("[data-fm-new]")
     d = pg.locator("[data-fm-drawer]").bounding_box()
     assert d["x"] <= 1 and d["width"] >= 388
-    assert pg.locator("[data-fm-drawer] .fm-fields .di-field").first.bounding_box()["height"] >= 36
+    assert pg.locator("[data-fm-drawer] .fm-fields .di-control, [data-fm-drawer] .fm-fields .di-field").first.bounding_box()["height"] >= 36
     pg.close()
