@@ -1014,6 +1014,17 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
 - **RELEASE_NOTES 2.9.11.g**: the 2.9.11.e draft and the f and g work as one section: what changes for risk users, what is new, the
   upgrade steps (lenses for editions, packs in domain folders, the `/api/v1/risk` paths, settings renamed, the feeds' data root, the lake
   files, Elements without a CDN), the removed endpoints and the renamed screens, and the quality figures.
+- **Decks refreshed for 2.9.11.g** (docs/publications; chapters, no release numbers, labels only on what is not built). The
+  Design-and-Evidence deck has seventeen chapters, four of them new: *Drishti Elements* (the eleven libraries, eighteen parallel
+  implementations folded into one, the designer kit and the libraries in a bank's own applications without a CDN), *Pre-deal and one
+  limit rule* (approve, refer or decline from the exposure paths; within, near and breach from the server), *Modules, lenses and
+  access* (the access registry from licence to permission, the four modules, the ten lenses, editions as lenses; it replaces *Shape
+  it*) and *Feeds and public data* (drishti-feeds and the thirteen feeds, the public sector with tutorial 46's picture). The VaR
+  Engine deck gains the same four chapters (*Modules, lenses and access* in place of *Editions*); the Drishti-on-AWS deck a chapter
+  *Feeds and modules* (the feeds into the S3 lakes; one image with modules per deployment) and its public-data slide on drishti-feeds.
+  Every deck: the lens files under `config/lenses/<module>/`, the under-construction registry with the pre-deal check's SA-CCR part, and
+  the roadmap with this train built and the next steps in order (docs and onboarding, trust and controls, memory and speed,
+  counterparty engines and stress, collateral and margin, CVA, hardening).
 
 ### Fixes (the train's bulk drill)
 
