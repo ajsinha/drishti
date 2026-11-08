@@ -71,7 +71,7 @@ def f_pluck(xs: Any, key: str) -> list:
 
 
 def f_engine(*_args: Any) -> Any:
-    """``sum`` and ``overlap`` are the server's (ONE_GRAMMAR.md section 5): :meth:`Expr.eval_async` asks the engine for each call and
+    """``sum`` and ``overlap`` are the server's (docs/architecture/ARCHITECTURE.md section 5): :meth:`Expr.eval_async` asks the engine for each call and
     the evaluator reads its answer; nothing here adds up a figure. Evaluated without the engine's answer, a call is None."""
     return None
 

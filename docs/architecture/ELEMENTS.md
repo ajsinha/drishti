@@ -324,7 +324,7 @@ written from AG Grid's public documentation only, never its source code, type fi
 looks and behaves like drishti-grid. Every option not taken in full is reported once in the console (named, with drishti-grid's way) and
 by `reportUnsupported()`; the adapter never fails silently.
 
-**As built** (2.9.11.e, drishti-grid 0.4.0; the migration guide: [AG_GRID_MIGRATION_GUIDE.md](../guides/AG_GRID_MIGRATION_GUIDE.md)):
+**As built** (2.9.11.e, drishti-grid 0.4.0; the migration guide: [AG_GRID_MIGRATION_GUIDE.md](../guides/ELEMENTS_IN_YOUR_APP.md#9-moving-an-ag-grid-enterprise-pivot-app)):
 
 - **The mapping's one home is the code**: `AG_MAPPING` and `AG_NOT_COVERED` in `drishti_grid-ag-map.js`, each row an option group with
   its state (mapped, partial, unsupported, no-op) and its drishti-grid form. The gallery's AG Grid tab and the migration guide's option
@@ -594,7 +594,7 @@ library with its module: an unlicensed module's library is not served, its kinds
     zoned); rows as views (each holds its row number; `toObject()` copies, the grid's edits copy only the row they change);
     `toGrid()` gives column definitions from the types. **Flight over HTTP** when the server's capabilities name a `do-get` address (the
     ticket POSTed, an Arrow stream back); else **Arrow over HTTP**; else JSON, read into the same frame. The Drishti server answers
-    Arrow over HTTP today; its Flight service is gRPC ([ARROW_FLIGHT.md](ARROW_FLIGHT.md)), which browsers cannot speak, so the
+    Arrow over HTTP today; its Flight service is gRPC ([ARROW_FLIGHT.md](DATA_ARCHITECTURE.md#11-arrow-flight-drishtis-data-to-any-client)), which browsers cannot speak, so the
     Flight path serves servers or gateways that offer it over HTTP.
   - The grid's own SSE and WebSocket feeds (`eventSourceFeed`, `webSocketFeed`) are gone: the connection has one home, `LiveClient`.
 - **Cell editing in drishti-grid 0.3.0** (`drishti_grid-edit.js`, the model; `drishti_grid-editors.js`, the editors): a leaf's cell
@@ -1289,7 +1289,7 @@ generated, never written twice) every library has:
 | **API reference** (every option, event, method, type and CSS custom property) | library | Help → Developer → Elements, and the gallery's API tab | **generated** from typed JSDoc by `tools/elements/api_ref.py`; `--check` fails the build when a public member has no description or a type is missing |
 | **Tutorial** (one task end to end: a pivot over your own data, a chart with Explain, a world map with drill) | library | `docs/tutorials/`, numbered with the others | written, with screenshots from the gallery |
 | **Live gallery** (runnable examples) | component | `/elements/gallery/<library>/<component>` | the examples are files the tests also run (section 10) |
-| **Migration guide from AG Grid Enterprise (pivot)** | drishti-grid | [`docs/guides/AG_GRID_MIGRATION_GUIDE.md`](../guides/AG_GRID_MIGRATION_GUIDE.md) | written; its option table is **generated** from the adapter's mapping (`AG_MAPPING` in `drishti_grid-ag-map.js`, the one home) by `tools/docs/elements_api.py` |
+| **Migration guide from AG Grid Enterprise (pivot)** | drishti-grid | [`docs/guides/ELEMENTS_IN_YOUR_APP.md`](../guides/ELEMENTS_IN_YOUR_APP.md#9-moving-an-ag-grid-enterprise-pivot-app) | written; its option table is **generated** from the adapter's mapping (`AG_MAPPING` in `drishti_grid-ag-map.js`, the one home) by `tools/docs/elements_api.py` |
 | **Theming guide** | the family | `docs/guides/elements/theming.md` | written (planned); the list of tokens is generated from drishti-core's token file |
 | **Accessibility guide** | the family | `docs/guides/elements/accessibility.md` | written (planned); each component's keyboard table is generated from its keymap registration |
 | **Changelog** | library | `static/elements/<library>/CHANGELOG.md`, shown on the gallery's Changelog tab | written per release; the product `CHANGELOG.md` links it rather than repeating it |
@@ -1660,7 +1660,7 @@ an edit mode where a node is dragged to a new parent and the moves become one pr
 
 **g7, the designer kit** ([g7-designer-kit.html](mockups/elements/g7-designer-kit.html)): one shell on which every designer is built
 (Sutra screens, BI reports, forms, semantic models, tables, Python tables and models, the Build workbench's YAML), with the header
-of [EDITORS.md](EDITORS.md) section 1. The page shows the same kit as the BI report designer and, by a switch, as the form designer:
+of [EDITORS.md](SHARED_SCREENS.md#7-the-editors-one-pattern-for-every-object-people-author) section 1. The page shows the same kit as the BI report designer and, by a switch, as the form designer:
 only the palette, the schemas and the preview's widgets change. Shared: a layout canvas (drag, drop, resize, snap to the 12-column
 grid, multi-select, align and distribute, undo and redo, keyboard moves); a searchable palette; an inspector generated from the
 component's schema (required fields, validation as typed, fields shown only when they apply); the outline as a tree in g6's style,

@@ -590,8 +590,8 @@ server; busy protection.**
   collect and post, compared with the counterparty's call; **`PLAY SIMM`** with its workbook. The bank loads its licensed ISDA parameter
   file; Drishti ships none of ISDA's numbers.
 - **Position sensitivities and the risk-factor dictionary** as data kinds, with their data contracts ([FRTB](docs/contracts/FRTB.md),
-  [FRTB data structures](docs/contracts/FRTB_DATA_STRUCTURES.md), [SIMM](docs/contracts/SIMM.md)).
-- **The in-memory lake** ([IN_MEMORY_LAKE_GUIDE](docs/guides/IN_MEMORY_LAKE_GUIDE.md), tutorial 31): Delta tables held only in the
+  [FRTB data structures](docs/contracts/FRTB.md), [SIMM](docs/contracts/SIMM.md)).
+- **The in-memory lake** ([IN_MEMORY_LAKE_GUIDE](docs/guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake), tutorial 31): Delta tables held only in the
   server's memory for feeds that by contract may never touch a disk, under a hard cap, refilled by server jobs, compacted automatically;
   nothing of them reaches a disk (proved by a marker scan), downloads allowed and audited. News first.
 - **Compute engines switched on or off per server** (Admin → Engines, [OPERATIONS section 21](docs/admin/OPERATIONS.md)): each engine
@@ -663,7 +663,7 @@ groundwork.**
   refused for room remembered for five minutes so a crowd of requests makes one load; a date in use (read in the last two minutes)
   is never closed for room. **Pinned dates** (month-, quarter-, year- and
   fiscal-year-ends on the New York and Toronto calendars, the stress window, named dates), off by default.
-- **The phone display** ([MOBILE_DISPLAY](docs/architecture/MOBILE_DISPLAY.md)): every panel has a phone tier (must, glance, more,
+- **The phone display** ([MOBILE_DISPLAY](docs/guides/PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)): every panel has a phone tier (must, glance, more,
   desk); a phone gets the must and glance panels, a tablet everything but the desk panels, a desktop is unchanged; *Show everything*
   and *Why these panels*; the tiers set in the grammar (`phone:`), by the site and by the edition. The lens menus fold into one menu on a
   phone.
@@ -772,7 +772,7 @@ days.**
   `sharding:` block each date is cut into legal-entity and desk ranges, owned by two members each (rendezvous hashing, no consensus
   protocol); every member keeps every node's aggregate, so bank and desk totals answer even with a shard's owners down; other scopes sum
   one partial per shard, never a partial VaR (`DRS-5215`); handover and drain for scale-in. Equal to one server to the cent.
-- **The parallel lake loader** ([PARALLEL_LOADER](docs/architecture/PARALLEL_LOADER.md), [TOOLS 4.13](docs/guides/TOOLS.md)): a
+- **The parallel lake loader** ([PARALLEL_LOADER](docs/architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload), [TOOLS 4.13](docs/guides/TOOLS.md)): a
   config-driven, multi-threaded Java loader of JSON Lines from a folder or S3 into Delta or Iceberg, memory bounded, one commit per
   date. `lake build` keeps the Python path as the default; `--engine java` asks for the loader. Both follow one duplicate-record rule:
   the latest `COMPUTED_AT` wins (else the last read), the others counted, never a failure.
@@ -806,7 +806,7 @@ limit letters; connector files that upgrade themselves safely.**
   (`LIMIT_LETTER > DESK`) with their limits (`var-limit`); a letter may hold part of a book (the positions split, and said); `VAR SCOPE
   LL:LL-0011`, the VaR page's hierarchy select, official VaR and exposure records for every hierarchy. Data without the column skips
   that hierarchy alone, with a warning (`DRS-5211`, Admin → Health, *not available* in the select); the rest answers as before.
-- **Iceberg, as a full alternative to Delta** ([ICEBERG_CONNECTOR 18–19](docs/connectors/ICEBERG_CONNECTOR.md),
+- **Iceberg, as a full alternative to Delta** ([ICEBERG_CONNECTOR 18–19](plugins/drishti-plugin-iceberg/README.md),
   [tutorial 29](docs/tutorials/29-var-on-iceberg.md)): VaR, intraday (files and Kafka) and exposure read from Iceberg, equal to Delta
   to the cent (VAR BANK 112,041,646 on 2026-09-30 on both); `lake build --format iceberg`, `build_demo_lakes.py --store risk=iceberg`;
   Admin → Lakes and `lake maintain` for Iceberg (the Format column, snapshot expiry, orphan files, the 7-year floor); official results
@@ -1122,11 +1122,11 @@ known bugs fixed.** ([BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
   (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), tutorial 20).
 - **Field parameters in a report's wells:** a reader's slicer switches which field or measure a visual draws.
 - **Apache Cassandra connector** (`cassandra`): Cassandra 4 and 5, ScyllaDB, Astra; a day appears whole or not at all
-  ([CASSANDRA_CONNECTOR.md](docs/connectors/CASSANDRA_CONNECTOR.md)).
+  ([CASSANDRA_CONNECTOR.md](plugins/drishti-plugin-cassandra/README.md)).
 - **drishti-iceberg:** Drishti's own Apache Iceberg engine with no Hadoop, so Iceberg runs on Windows; it is the default
   engine (`engine: library` brings back the old one), and faster: a connector starts in 637 ms (1.8 s before), a trade on a
   past day reads in 94 ms (353 ms). **`iceberg-external`** reads Iceberg tables Drishti did not write (Spark, Flink, Trino,
-  Snowflake, Glue) ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), [ICEBERG_EXTERNAL_CONNECTOR.md](docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
+  Snowflake, Glue) ([DRISHTI_ICEBERG.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), [ICEBERG_EXTERNAL_CONNECTOR.md](plugins/drishti-plugin-iceberg-external/README.md)).
 - **Three themes:** Green Terminal, Crimson Terminal and Blue Terminal (ten in all); every text colour passes the contrast
   rule on every ground, labels on button fills too.
 - **Known bugs fixed:** a Drishti*net cluster never ends with no enabled administrator; members advertise only a real
@@ -1233,7 +1233,7 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
   itself, no hidden files, everything Drishti writes under the data folder.
 - **A page explains itself:** the Sutra and connector named in *How this view was built* and *About this page* open in
   the designer and on the connector's page, at one click.
-- **Docs verified for this release:** [docs/qa/2.3.0-docs-verification.md](docs/qa/QA_HISTORY.md#5-2026-10-17-the-230-documentation-verification) lists
+- **Docs verified for this release:** [docs/qa/2.3.0-docs-verification.md](CHANGELOG.md) lists
   every guide, tutorial and help page with what was checked and how to re-check it.
 
 - **Offline demos:** `DRISHTI_OFFLINE=true` (set by the *Drishti server (demo lakes)* run configuration) starts no
@@ -1241,7 +1241,7 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
   2026-10-18) that `lake demo` builds into the lake. World economy data was already offline.
 - **Ids are text everywhere:** a numeric `TRADE_ID` in a file is read as its exact text; ids may hold letters, dashes and
   underscores; nothing expects a prefix. Older lakes with numeric id columns still read.
-- **[How to QA in Windows Environment using Custom Data](docs/qa/windows-custom-data.md):** an offline
+- **[How to QA in Windows Environment using Custom Data](docs/architecture/TEST_HARNESS.md#9-manual-qa-on-windows-offline-with-your-own-trade-files):** an offline
   Windows demo with your own ENDUR files replacing the synthetic ENDUR trades, with screenshots; a *Load ENDUR file into
   the lake* run configuration; every Python run configuration uses the project interpreter (works on Windows).
 - **Security fix:** field masks match whatever the case or naming style (a camelCase mask masks the UPPER_SNAKE field);

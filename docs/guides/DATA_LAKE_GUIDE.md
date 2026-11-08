@@ -914,14 +914,14 @@ each) starts to earn its folders.
 When the bank's tables already sit in a lakehouse that Databricks, Spark, Trino or Snowflake writes, Drishti reads them in place, with its
 own readers inside the server (Delta Kernel and drishti-iceberg): **no Databricks cluster, Spark or warehouse is needed to read**. The
 tables need the shape of section 1 (`id`, `doc`, `business_date`, promoted columns); a Spark job that writes it is in
-[DELTA_CONNECTOR.md section 5](../connectors/DELTA_CONNECTOR.md#5-writing-the-lake). Each day sorted by `id` (on Databricks,
+[DELTA_CONNECTOR.md section 5](../../plugins/drishti-plugin-delta/README.md#writing-the-lake). Each day sorted by `id` (on Databricks,
 `OPTIMIZE … ZORDER BY (id)` or liquid clustering on `id`) reads fastest.
 
 ### 10.1 Built
 
 **Delta by storage path.** The lake file's `root` is the folder above the domains: `s3://bucket/prefix` (the default `native` engine),
 or `abfs://…` (Azure) and `gs://…` (Google Cloud) with the connector setting `engine: hadoop`
-([DELTA_CONNECTOR.md section 16](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop)). Credentials: S3 from the AWS default
+([DELTA_CONNECTOR.md section 16](../../plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop)). Credentials: S3 from the AWS default
 chain (a task or instance role) or `${ENV}` references; Azure and Google Cloud through `hadoop.<key>` settings; a private CA through
 `tls.*`. With Unity Catalog, point the root at an external table's location and give the server read access to that storage.
 
@@ -950,7 +950,7 @@ settings:
 Catalog's Iceberg REST catalog, with **vended credentials**: the catalog hands the server each table's own temporary credentials
 (`vended-credentials: true`, the default), so the server needs no storage keys of its own. Apache Polaris, Snowflake Open Catalog, AWS
 Glue's Iceberg REST endpoint, Nessie, Lakekeeper and Gravitino are read the same way
-([ICEBERG_CONNECTOR.md section 4](../connectors/ICEBERG_CONNECTOR.md#4-catalogs-path-based-tables-and-rest-catalogs)):
+([ICEBERG_CONNECTOR.md section 4](../../plugins/drishti-plugin-iceberg/README.md#catalogs-and-storage)):
 
 ```yaml
 # config/lakes/uc-risk.yaml
@@ -966,7 +966,7 @@ tables:
 ```
 
 AWS Glue and S3 Tables through their REST endpoints with SigV4 are built and **not yet run on AWS**
-([ICEBERG_CONNECTOR.md section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need)). Iceberg format
+([ICEBERG_CONNECTOR.md section 19](../../plugins/drishti-plugin-iceberg/README.md#aws-glue)). Iceberg format
 version 3 is refused by name: write format version 2.
 
 **Delta features.** Delta Kernel 4.4 checks a table's protocol before reading; a reader feature it does not support is **refused by
@@ -983,8 +983,8 @@ name** (the table and the feature named), never read wrongly.
 | Parquet codecs BROTLI, LZO | refused, naming the table, the file and the codec | rewrite as Snappy, ZSTD or LZ4_RAW |
 
 Check a connector against the real store before it serves anyone: `drishti.py connector test <file>` tries it and says what failed, in
-words. Every setting: [DELTA_CONNECTOR.md section 14](../connectors/DELTA_CONNECTOR.md#14-settings),
-[ICEBERG_CONNECTOR.md section 15](../connectors/ICEBERG_CONNECTOR.md#15-settings).
+words. Every setting: [DELTA_CONNECTOR.md section 14](../../plugins/drishti-plugin-delta/README.md#settings),
+[ICEBERG_CONNECTOR.md section 15](../../plugins/drishti-plugin-iceberg/README.md#settings).
 
 ### 10.2 Planned (not built)
 
@@ -994,7 +994,7 @@ words. Every setting: [DELTA_CONNECTOR.md section 14](../connectors/DELTA_CONNEC
 |---|---|---|
 | **Unity Catalog for Delta** | a table found by its name, `catalog.schema.table`; Unity Catalog's credential vending; Unity Catalog's grants as the permissions | read Delta by storage path (external tables), or the same table as Iceberg through Unity's REST endpoint (UniForm) |
 | **Delta Sharing** | read tables a provider shares through the Delta Sharing protocol | not supported |
-| **Plain tables without the `id`/`doc` shape** | read a table of ordinary columns directly, driven by per-table configuration | a small job writes a Drishti-shaped copy beside it ([DELTA_CONNECTOR.md section 5](../connectors/DELTA_CONNECTOR.md#5-writing-the-lake)) |
+| **Plain tables without the `id`/`doc` shape** | read a table of ordinary columns directly, driven by per-table configuration | a small job writes a Drishti-shaped copy beside it ([DELTA_CONNECTOR.md section 5](../../plugins/drishti-plugin-delta/README.md#writing-the-lake)) |
 
 ## 11. Archives: zip and tar
 

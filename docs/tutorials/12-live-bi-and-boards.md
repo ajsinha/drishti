@@ -37,7 +37,7 @@ About 30 minutes.
   configuration **Drishti server (demo lakes)** and set `DRISHTI_DEMO_ENABLED` to `true`, or start the server with it
   ([data/testdata/README.md](../../data/testdata/README.md), "The demo ticker"). The demo source then moves every live sample that someone is watching
   (a view, a live visual or a board tile open) every 400 ms; a sample answers before the lake for an id both hold, and the lakes still answer every other id. With a
-  real source the same pages follow your own live connector ([DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md), [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).
+  real source the same pages follow your own live connector ([DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md), [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).
 
 ## What you will learn
 
@@ -59,7 +59,7 @@ You should see the key figures at the top (`10Y` and `2s10s`: about `4.13%` and 
 ![The same page a few seconds later: other 10Y and 2s10s figures, the chart redrawn, every row of the table changed](img/t12/02-curve-later.jpg)
 
 You should see other figures for `10Y` and `2s10s` (a few hundredths of a percent and a few tenths of a basis point away), the chart with a new shape and **every row of the table changed**, not just the 10Y cell: the quote, the zero rate and the discount factor of each tenor. A real market does not move one number: when the 10-year rate ticks, the whole curve, its forwards, its
-discount factors and its slope tick with it, and the demo does the same (a "coherent walk": one random draw moves a headline and everything that depends on it; [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md) section 7.4). The command line prints the same view as text, as of the moment you ask:
+discount factors and its slope tick with it, and the demo does the same (a "coherent walk": one random draw moves a headline and everything that depends on it; [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) section 7.4). The command line prints the same view as text, as of the moment you ask:
 
 ```text
 $ python3 tools/drishti.py view get ir-curve/CRV-USD-BASIS
@@ -118,7 +118,7 @@ source md-hub gen 29  layout Sutra ir-curve v1 + inference  built in 1.74 ms
 You should see the table form of the same page, asked with the ticker **on**: the source line names `md-hub` (the demo source of the market-data
 samples, which answers before the lake) and `gen 29`, the number of times this curve has ticked; `As of` is the sample's own date. Ask again a minute later
 with the page still open in the browser and the figures and the generation have moved; ask with no page open and they have not: the demo moves only the
-entities someone is watching (a live view, a live BI visual or a board tile subscribes to them; [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md) section 7.1). With the
+entities someone is watching (a live view, a live BI visual or a board tile subscribes to them; [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) section 7.1). With the
 ticker **off** the same command reads the lake: the source line names `market-store` (the `market-data` pack's Delta connector), the figures are the
 lake's close of the last business day, and nothing moves. That is **live data**: a connector that **pushes**
 changes instead of waiting to be asked. BI uses it through a live table. **The YAML** of a source that pushes is a connector's file; the demo's ticking needs
@@ -522,7 +522,7 @@ measure of the model (`Desk P&L volatility: { python: desk-pnl-volatility, input
 
 - [Tutorial 13](13-govern-bi.md): publish with a review, certify, and see what a change would break.
 - [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5) is the live-table reference.
-- [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md) and [DEMO_DATA.md](../connectors/DEMO_DATA.md) say exactly what ticks and how.
+- [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) and [DEMO_DATA.md](../connectors/DEMO_DATA.md) say exactly what ticks and how.
 
 ## If something goes wrong
 

@@ -32,7 +32,7 @@
 {% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-parametric.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-basket.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-layout.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'var') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'var') %}{# the phone display (docs/guides/PACK_DEVELOPER_GUIDE.md 8) #}
 {{ back(request) }}
 <div class="vx" data-var data-tab="{{ tab or 'path' }}" data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-admin="{{ 'true' if admin else '' }}" data-ccy="{{ ccy }}"
      data-h="{{ lens.h if lens else '' }}" data-m="{{ lens.m if lens else '' }}" data-q="{{ lens.q if lens else '' }}" data-esq="{{ lens.esq if lens else '' }}"
@@ -118,7 +118,7 @@
     <section class="vx-main">
       <nav class="vx-crumb" aria-label="Scope path" data-vx-crumb></nav>
       <div class="vx-tiles" data-vx-tiles aria-live="polite"{{ part(PP, 'tiles') }}></div>
-      {# parametric VaR (docs/architecture/PARAMETRIC_VAR.md, VAR_GUIDE.md section 3.12): a toggle on the explorer (PVAR opens it with the
+      {# parametric VaR (docs/guides/VAR_GUIDE.md, VAR_GUIDE.md section 3.12): a toggle on the explorer (PVAR opens it with the
          toggle on); on, the three tiles, the tree's Parametric and Gap columns and the normal curve over the P&L histogram (N), each
          figure's ? from the server's describe lines #}
       <div class="vp-bar" data-vp-bar>

@@ -118,7 +118,7 @@ public final class ReportService implements AutoCloseable {
         } catch (RuntimeException e) {
             throw bad("the query does not parse: " + e.getMessage());
         }
-        // a scheduled report delivers rows: never of data held in memory only (IN_MEMORY_LAKE.md section 8; only downloads leave)
+        // a scheduled report delivers rows: never of data held in memory only (docs/architecture/DATA_ARCHITECTURE.md section 8; only downloads leave)
         com.ash.drishti.memlake.Retention.current().require(com.ash.drishti.memlake.Retention.Sink.REPORT,
                 java.util.List.of(picked.head()), "This report");
         String schedule = body.path("schedule").asText("");

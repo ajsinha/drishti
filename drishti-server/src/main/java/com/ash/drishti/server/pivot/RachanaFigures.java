@@ -31,7 +31,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
 /**
- * The server's figures for Rachana's {@code measure(...)} and {@code cell(...)} (ONE_GRAMMAR.md part 3), registered into the engine at
+ * The server's figures for Rachana's {@code measure(...)} and {@code cell(...)} (docs/architecture/ARCHITECTURE.md part 3), registered into the engine at
  * start ({@link PivotConfiguration}). Both are answered by the pivot engine for the person of the request being answered (their
  * entitlements, masks and the aggregate-only minimum apply as on the Pivot screen); nothing is computed here:
  *

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The stream the server sends for an answer asked as Arrow (``ArrowAnswers`` in drishti-server, the official Arrow Java library), written
-here with pyarrow for the console's tests only: the console itself never writes Arrow from JSON (ARROW_FLIGHT.md decided 5), it passes the
+here with pyarrow for the console's tests only: the console itself never writes Arrow from JSON (docs/architecture/DATA_ARCHITECTURE.md decided 5), it passes the
 server's bytes through. The answer's big table is the record batch, the rest of the answer rides in the schema's metadata
 (``drishti.answer``), and ``drishti.table`` says where the table goes back; repeated text as a dictionary, as the server writes it."""
 from __future__ import annotations

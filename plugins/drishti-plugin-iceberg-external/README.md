@@ -65,7 +65,7 @@ settings:
 auth: As the iceberg connector's; S3 keys (${ENV} or file:), the AWS chain or vended credentials; a REST catalog takes credential (OAuth2 id:secret), token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
 licence: Drishti's own Iceberg engine (drishti-iceberg, no Hadoop) with Jackson (Apache-2.0), bundled.
 windows: Works the same on Windows (drishti-iceberg, no Hadoop and no winutils.exe; Windows paths under root are fine).
-doc: docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md
+doc: plugins/drishti-plugin-iceberg-external/README.md
 ---
 # The iceberg-external connector
 
@@ -174,22 +174,147 @@ settings:
       id: CPTY_ID                                   # no date: current only
 ```
 
-A ready-made file is `config/connectors.examples/other/iceberg-external-risk-mart.yaml`. `tables: auto` with `namespace: risk_mart`
-serves every table of the namespace (`TRADE_EVENTS` becomes the kind `trade-events`). `StarterSchemas` and `tools/drishti.py pack make`
-draft a pack from the tables' schemas (the full document, section 9).
+`tables:` sits under `settings:` (flattened to `tables.trade.table`, `tables.trade.links.COUNTERPARTY`, … as in every connector
+file). A ready-made file is [`config/connectors.examples/other/iceberg-external-risk-mart.yaml`](../../config/connectors.examples/other/iceberg-external-risk-mart.yaml).
+More kinds in the same file:
+
+```yaml
+    trade:
+      mode: snapshot                                # or effective (a row only when the entity changes)
+      links: { COUNTERPARTY: counterparty, PORTFOLIO: portfolio }
+    market-quote:
+      table: market.quotes
+      date: QUOTE_TS
+      date-from: day                                # the business date of a timestamp
+      date-zone: Europe/London
+```
+
+**Where a path-based table's current version comes from.** `table: risk_mart.trades` is the folder `<root>/risk_mart/trades`. Its
+current version is the one `metadata/version-hint.text` names (`vN.metadata.json`, as Hadoop tables and the `iceberg` loader write
+them), or, for a table a catalog wrote (pyiceberg, a JDBC or Glue catalog, Spark through one: `00003-<uuid>.metadata.json` and no
+hint), the metadata file with the highest sequence number, as Iceberg's own readers take it; a later commit is seen at the next
+refresh (`refresh-seconds`). A folder with neither is not served and Health says what it looked for and what the folder holds.
+
+Settings read beside the generated table: the catalog and storage settings (`catalog`, `root`, `uri`, `warehouse`, `credential`,
+`token`, `scope`, `oauth2-server-uri`, `prefix`, `catalog.<key>`, `metadata-location.<kind>`, `relocate`, `vended-credentials`, `s3.*`,
+`tls.*`, `proxy.*`) work exactly as [the iceberg connector's](../drishti-plugin-iceberg/README.md#catalogs-and-storage); every setting
+with its environment variable is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#iceberg-external-tls-proxy).
+
+## Two Iceberg connectors
+
+| | `iceberg` (Drishti tables) | `iceberg-external` (anyone's tables) |
+|---|---|---|
+| Tables | written by Drishti's loader in Drishti's layout | written by Spark, Flink, Trino, Snowflake, Glue, dbt, pyiceberg, in any layout |
+| The document | the `doc` column | **the row** as JSON, or a JSON column (`document: column:<name>`) |
+| The id | the `id` column | one column or several; by default the table's **identifier fields** |
+| The business date | `business_date` | a date column, a timestamp's day, by default the partition spec's date; none: **current only** |
+| Searchable fields | the columns the pack promotes | **every primitive column**, nested struct fields to `depth` (2) |
+| Writes | the loader and maintenance | **never** |
+
+Both read through drishti-iceberg, Drishti's own Iceberg engine with no Hadoop
+([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)); why
+there are two is in [DATA_ARCHITECTURE.md, Two connectors](../../docs/architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables).
+
+## Ids, dates and modes
+
+**The id.** Without `id`, the table's identifier fields (Iceberg v2's `identifier-field-ids`, which Snowflake, Flink upserts and
+pyiceberg set). A table with neither is not served: Health and Admin → Connectors name it.
+
+**The business date.** A timestamp without a zone is its own day. Without `date` or a date partition the kind is **current only**:
+every read is the current snapshot, whatever date is asked, and documents carry no business date. A file whose partition is the date
+belongs to that day exactly; otherwise its days come from the date column's bounds in the manifest (or from reading that column),
+and its rows are checked one by one.
+
+**Modes.** `snapshot` (the default): a read for a date takes the newest day on or before it, within `lookback-days`. `effective`: a
+read takes each entity's latest row on or before the date.
+
+**Rows.** Times are ISO-8601 with a fraction of a second only when there is one (six digits); each snapshot is read with the schema it
+had, so time travel shows the old column names.
+
+## Searches, type-ahead and reverse links
+
+Every primitive column is a searchable field without a pack declaring it (nested struct fields to `depth`: `ADDRESS.CITY`):
+`columnar(kind)` lists them, and a day's fields are read from those columns alone (no document is built) and kept
+(`columns-cache-mb`). Type-ahead lists the newest day's ids (every day's for `effective` kinds); a table with no date is bounded by
+`max-index-rows` and marked `partial` beyond it. `links` names columns whose values are ids of other kinds: a reverse lookup (*who
+refers to CP-1?*) reads those columns.
+
+## One entity at scale
+
+- A table **sorted or bucketed by its id** (a sort order, a `bucket(id)` partition, or files whose id bounds do not overlap): the
+  day's files are pruned with the id by their partitions and column bounds, and the remaining file is read with the id as a Parquet
+  row-group filter (and the page index): one row group.
+- An **unsorted** table pays once per snapshot and day: the id columns of the day's files are read into an **id index** (id to file,
+  about 60 B an id, `id-index-mb`; least-used days dropped first), and later reads open the one file. Health suggests sorting the
+  table when one day's index passes `id-index-warn-rows`.
+- Footers, manifests and delete files are read once and kept ([the native engine's caches](../drishti-plugin-iceberg/README.md#engines-and-caches)).
+
+## Deletes and time travel
+
+Merge-on-read deletes from Spark, Flink and Trino are applied by every read: **position deletes** of the file's partition at or after
+its data sequence number, **equality deletes** of its partition (or global ones) after it. *Known at* reads the snapshot that was
+current then, from the snapshot log, with that snapshot's schema; expired snapshots are no longer reachable.
+
+## Discovery: tables auto
+
+```yaml
+settings:
+  catalog: rest
+  uri: https://polaris.example.com/api/catalog
+  tables: auto
+  namespace: risk_mart
+```
+
+Every table of the namespace becomes a kind: its name in lower case with `-` for `_` (`TRADE_EVENTS` is `trade-events`), its id from
+its identifier fields, its date from its partition spec. A table with no id is listed in Health (and Admin → Connectors) as needing
+one and is not served until `tables.<kind>.id` names it. Kinds configured under `tables.<kind>` are served beside the discovered ones.
+
+## Make a pack
+
+A kind's fields come from the table's schema, so a starter pack can be drafted from it. `StarterSchemas` writes each served kind's
+document as a JSON Schema, with the id (`x-drishti-role: key`), the business date (`x-drishti-role: date`) and the `links`
+(`x-drishti-link`), and the pack maker turns the schemas into a pack (the kind, its fields, a Sutra listing them, links), to edit like
+any pack ([SCHEMA_TO_PACK_GUIDE.md](../../docs/guides/SCHEMA_TO_PACK_GUIDE.md)):
+
+```bash
+java -cp "$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg-external -Dmdep.outputFile=/dev/stdout):plugins/drishti-plugin-iceberg-external/target/classes" \
+  com.ash.drishti.plugin.icebergext.StarterSchemas --out build/risk-mart-schemas \
+  --set catalog=rest --set uri=https://polaris.example.com/api/catalog --set tables=auto --set namespace=risk_mart
+tools/drishti.py pack make --schema build/risk-mart-schemas --name risk-mart
+```
+
+## Limits
+
+- **Read-only.** Maintenance (compaction, expiring snapshots) is the owners'.
+- **Local disk and S3 only**: tables in Azure, Google Cloud Storage or HDFS are not read; a REST catalog with an S3-compatible store
+  in front of them works.
+- **Format version 3, encrypted tables, ORC and Avro data files** are refused by name; branches and tags other than `main` are not read.
+- **Effective kinds are not read as columns** (each entity's latest row would have to be resolved across days).
+- `engine: library` is refused (it is the `iceberg` connector's only).
 
 ## Troubleshooting
 
 - `DEGRADED: trade: no table risk_mart.trades: looked in <root>/risk_mart/trades/metadata for version-hint.text, v<N>.metadata.json and
-  a catalog's NNNNN-<uuid>.metadata.json (the folder is empty)`: the table is not where `table` says; fix `root` or `tables.<kind>.table`.
+  a catalog's NNNNN-<uuid>.metadata.json (the folder is empty)` (or `the folder does not exist`, or `it holds
+  00001-abc.metadata.json.tmp`): the table is not where `table` says; fix `root` or `tables.<kind>.table`.
 - `… no id: the table has no identifier fields; set tables.<kind>.id`: name the id columns.
 - Any configured table not served makes the connector `DEGRADED`; the tables it does serve answer as usual.
 - First lookup of a day slow: the table is unsorted and its id index is being built; Health suggests sorting it past
   `id-index-warn-rows`.
 - Type-ahead `partial` on a table with no date: it passed `max-index-rows`.
+- Catalog, S3, TLS and proxy errors read as [the iceberg connector's](../drishti-plugin-iceberg/README.md#troubleshooting).
+
+## How it is tested
+
+`IcebergExternalPluginTest` serves the shapes other engines write from the pyiceberg-written fixtures (`tools/iceberg/fixtures.py`): a
+Spark-style trade table (partitioned by the day of a timestamp, unsorted, a merge-on-read position delete), a Snowflake-style
+counterparty table (identifier fields, a nested struct, a map, decimals, timestamptz, an equality delete), a current-only reference
+table, a table renamed and evolved, an unsorted table read through its id index, and `tables: auto` naming a table without an id.
+Each checks one entity, a search over a column, type-ahead, a reverse link and time travel, and compares the documents with
+pyiceberg's rows converted by the rules of [Data structure](#data-structure).
 
 ## See also
 
-- [The full iceberg-external document](../../docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md): rows as documents, ids, dates, deletes, discovery.
-- [The iceberg connector](../../docs/connectors/ICEBERG_CONNECTOR.md) (catalogs, `s3.*`, `relocate`) and [Connector files](../../docs/connectors/CONNECTOR_FILES.md).
+- [The iceberg connector](../drishti-plugin-iceberg/README.md) (catalogs, `s3.*`, `relocate`, engines) and [Connector files](../../docs/connectors/CONNECTOR_FILES.md).
+- [Connectors](../../docs/connectors/CONNECTORS.md#apache-iceberg) (which connector when).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

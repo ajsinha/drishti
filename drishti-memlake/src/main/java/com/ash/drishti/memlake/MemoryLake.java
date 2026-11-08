@@ -50,7 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The in-memory lake of this node (docs/architecture/IN_MEMORY_LAKE.md): its memory stores, the tables their replenish jobs fill (on a
+ * The in-memory lake of this node (docs/architecture/DATA_ARCHITECTURE.md): its memory stores, the tables their replenish jobs fill (on a
  * schedule, on the source's signal, at start in warm-up order, and at once after an eviction), the eviction ladder each store runs when a
  * write needs room (section 6), and what Admin, Lakes, Health and {@code drishti.py lake memory} show. Logs carry ids and counts only, never
  * a value of the data.

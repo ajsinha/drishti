@@ -18,7 +18,7 @@ package com.ash.drishti.tables;
 /**
  * The table layer's problem codes (docs/guides/TROUBLESHOOTING.md, "Virtual tables"). The language's own codes are kept where the problem
  * is the language's: {@code DRS-9127} (an aggregate in row or rule scope), {@code DRS-9152} (an unknown name), {@code DRS-9122}
- * (relationships), as BI_FOUNDATION_2911E.md section 2.1 decides.
+ * (relationships), as docs/architecture/BI_DESIGN.md section 2.1 decides.
  */
 public final class TableCodes {
 
@@ -51,7 +51,7 @@ public final class TableCodes {
     /** A file in BI's old form found where the layer reads ({@code rachana: 2} under {@code config/tables}). */
     public static final String OLD_FORM = "DRS-9614";
     /**
-     * A read refused (VIRTUAL_TABLES.md section 10): a business date the source does not hold, a known-at time the source cannot travel to,
+     * A read refused (docs/architecture/ARCHITECTURE.md section 10): a business date the source does not hold, a known-at time the source cannot travel to,
      * more rows than a read may stage, a source form read only by its runner, a condition over a masked column, a table the reader may not
      * see.
      */
@@ -65,7 +65,7 @@ public final class TableCodes {
     public static final String UNKNOWN_NAME = "DRS-9152";
     /** BI's: a relationship's ends (unknown alias or column, key types that differ). */
     public static final String RELATIONSHIP = "DRS-9122";
-    /** The migration refused an item or an expression (BI_FOUNDATION_2911E.md section 4.2). */
+    /** The migration refused an item or an expression (docs/architecture/BI_DESIGN.md section 4.2). */
     public static final String MIGRATION_REFUSED = "DRS-9195";
     /** A server found a file in an old form and refused it, naming the command to run (section 4.3). */
     public static final String MIGRATE_FIRST = "DRS-9196";

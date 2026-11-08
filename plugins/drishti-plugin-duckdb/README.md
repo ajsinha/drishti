@@ -324,6 +324,6 @@ Limits:
 
 ## See also
 
-- [The PostgreSQL connector](../../docs/connectors/POSTGRES_CONNECTOR.md) (the table mode it mirrors) and [Connector files](../../docs/connectors/CONNECTOR_FILES.md).
+- [The PostgreSQL connector](../drishti-plugin-jdbc/README.md) (the table mode it mirrors) and [Connector files](../../docs/connectors/CONNECTOR_FILES.md).
 - [The demo data](../../docs/connectors/DEMO_DATA.md) (data of any size) and [the data lake guide](../../docs/guides/DATA_LAKE_GUIDE.md) (load rules).
 - [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).

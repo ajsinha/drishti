@@ -33,7 +33,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
- * A model query answered by the layer through part A's one compiler (BI_FOUNDATION_2911E.md 3.5): measures of the engine's aggregates with
+ * A model query answered by the layer through part A's one compiler (docs/architecture/BI_DESIGN.md 3.5): measures of the engine's aggregates with
  * {@code where =}, a measure of measures, {@code count(alias)}, the fields of a dimension through the join, a date part, filters, the
  * table's rules and masks per reader, a reader no rule names, {@code fx} from the installation's source and {@code related} through the
  * join; figures worked by hand.

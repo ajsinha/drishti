@@ -19,7 +19,7 @@ import com.ash.drishti.tables.check.ExpressionChecker;
 import java.util.List;
 
 /**
- * The migration's pluggable step: one DEL expression into Rachana text (BI_FOUNDATION_2911E.md sections 2.4, 2.5 and 4.1). DEL is parsed by
+ * The migration's pluggable step: one DEL expression into Rachana text (docs/architecture/BI_DESIGN.md sections 2.4, 2.5 and 4.1). DEL is parsed by
  * the old parser kept inside the tool (read, never evaluated), mapped to Rachana's tree by part A's mapping and printed by Rachana's
  * printer. The server implements it ({@code server.bi.expr.DelTablesTranslator}: DEL's parser, part A's {@code DelToRachana}); this module
  * never reads DEL.

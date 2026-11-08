@@ -49,7 +49,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
- * What the connector keeps in memory for one data domain of the file (see {@code docs/connectors/DUCKDB_CONNECTOR.md}):
+ * What the connector keeps in memory for one data domain of the file (see {@code plugins/drishti-plugin-duckdb/README.md}):
  * each kind's business dates (from the loader's dates table), the newest day's ids for type-ahead, and days of
  * promoted columns for searches, pick lists, derived kinds, impact and reverse lookups, kept by memory. The file is
  * opened read-only, so nothing in it changes until a load replaces it: the catalogue is read again only when

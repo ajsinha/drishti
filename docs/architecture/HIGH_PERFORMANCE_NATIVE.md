@@ -228,7 +228,7 @@ Java 21 build stays the reference until Java 21 is retired.
 | Part | How |
 |---|---|
 | The seam | each hot path sits behind a small Java interface (for example `VarKernels`: sum a scope's rows, select the k-th, sum many scopes; `ExposureKernels`; `HotFileReader`; `GzipReader`; `JsonIntake`). Today's code becomes the **baseline** implementation of each, unchanged |
-| The accelerated module | `drishti-native` ([DRISHTI_NATIVE.md](DRISHTI_NATIVE.md)) holds the Java 25 implementations beside its Java 21 ones (no separate `drishti-accel` module): `MemorySegment` readers, Vector API kernels, the FFM bindings to BLAS, libdeflate and zstd. It is built only by a Maven profile active on JDK 25 (`<activation><jdk>[25,)</jdk></activation>`); a Java 21 build leaves it out, and nothing else depends on it at compile time |
+| The accelerated module | `drishti-native` ([DRISHTI_NATIVE.md](ARCHITECTURE.md#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks)) holds the Java 25 implementations beside its Java 21 ones (no separate `drishti-accel` module): `MemorySegment` readers, Vector API kernels, the FFM bindings to BLAS, libdeflate and zstd. It is built only by a Maven profile active on JDK 25 (`<activation><jdk>[25,)</jdk></activation>`); a Java 21 build leaves it out, and nothing else depends on it at compile time |
 | Discovery | `java.util.ServiceLoader` finds the accelerated implementations when the module is on the class path; each says what it needs (the Java version, the incubator module, a native library on disk) and is offered only when that is present |
 | The choice | `drishti.native.mode`: **`auto`** (the default) uses each accelerated implementation whose needs are met and keeps the baseline for the rest; `off` uses the baseline everywhere, also on a Java 25 build; `on` fails the start when an enabled implementation cannot load. Per-path switches (section 9.3) can still turn one path off. On a machine without the native libraries (the Windows QA machine) `auto` quietly keeps the baseline for those paths and says so |
 | The canary | at start each chosen implementation answers a fixed check against the baseline (the parity rule of section 6.2); a mismatch drops it back to the baseline and is logged and shown |
@@ -558,7 +558,7 @@ The Python path stages each JSON line in Python (`tools/lake/stage.py`, `jsonstr
 `deltalake`) commits the table; that staging is one Python thread, hence the 9 times gap. Two routes close it:
 
 1. **Where a JVM exists** (the server's machine, the drill, AWS loaders): make `--engine java` (the parallel loader,
-   [PARALLEL_LOADER.md](PARALLEL_LOADER.md)) the default for large inputs; the knob exists (`--java-above-mb`). No new dependency.
+   [PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)) the default for large inputs; the knob exists (`--java-above-mb`). No new dependency.
 2. **Where no JVM exists** (an analyst's Python environment): a Polars staging path. `pl.scan_ndjson` reads JSON Lines on every core into
    Arrow, the reject rules of `stage.py` become Polars expressions, and `deltalake.write_deltalake` commits the Arrow table. The rules must
    give exactly the same rows and rejects as `stage.py` (a parity test over the test data). Expected: within about 2 times of the Java

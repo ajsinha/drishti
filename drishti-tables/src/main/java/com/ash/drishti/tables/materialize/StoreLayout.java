@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Where an on-load table's files live (BI_FOUNDATION_2911E.md section 3.4): {@code <store>/<domain>/<name>/v<major>/<business date>/part-*.parquet}
+ * Where an on-load table's files live (docs/architecture/BI_DESIGN.md section 3.4): {@code <store>/<domain>/<name>/v<major>/<business date>/part-*.parquet}
  * under the layer's store ({@code drishti.tables.store-dir}, planned; by default {@code <data>/tables}). The shape is BI's cached layer's,
  * keyed by the table's name and major instead of the dataset's item key, so a new major never reads an old major's files. The files are
  * a cache: rebuilt at will, never the truth, never written into a lake's own tables.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Parametric VaR in a real browser (docs/architecture/PARAMETRIC_VAR.md section 15; VAR_GUIDE.md section 3.12), over the market-risk
+"""Parametric VaR in a real browser (docs/guides/VAR_GUIDE.md section 15; VAR_GUIDE.md section 3.12), over the market-risk
 pack's committed VaR data built into a scratch lake:
 
 - ``PVAR BANK`` (an alias) opens the explorer with the Parametric toggle on: the three tiles (parametric VaR, parametric ES, the fat-tail

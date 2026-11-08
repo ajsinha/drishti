@@ -294,10 +294,10 @@ FRAGMENT_DOCS = {
     "payments": ("The netted payment ladder (cash events by date, paid below the line, received above) and the same payments by "
                  "month, both on the right. Use it on any deal screen whose trade carries EVENTS with amounts and dates.", ""),
 }
-# each shared fragment's tier on a phone (docs/architecture/MOBILE_DISPLAY.md), written into its doc:
+# each shared fragment's tier on a phone (docs/guides/PACK_DEVELOPER_GUIDE.md), written into its doc:
 PHONE = {"deal-ticket": "must", "legs": "{ tier: glance, tab: 0 }", "flow-schedule": "{ tier: glance, rows: 5 }", "events": "more",
          "payments": "more", "payments-metrics": "must", "trade-table": "{ tier: glance, rows: 5 }"}
-PHONE_NOTE = "  # on a phone (docs/architecture/MOBILE_DISPLAY.md): a use or a Sutra's phone: overrides it"
+PHONE_NOTE = "  # on a phone (docs/guides/PACK_DEVELOPER_GUIDE.md): a use or a Sutra's phone: overrides it"
 
 
 def _phone(name: str) -> list[str]:

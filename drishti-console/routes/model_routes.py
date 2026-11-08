@@ -69,7 +69,7 @@ async def dataset_page(request: Request, name: str):
     return _page(request, "bi/layer_dataset.html", "models", item=name)
 
 
-# The model designer and the dataset wizards are gone: tables and models are written in Build › Tables & models (EDITORS.md), one way per job.
+# The model designer and the dataset wizards are gone: tables and models are written in Build › Tables & models (docs/architecture/SHARED_SCREENS.md), one way per job.
 # Their old addresses lead there.
 
 @router.get("/bi/md/{item:path}")

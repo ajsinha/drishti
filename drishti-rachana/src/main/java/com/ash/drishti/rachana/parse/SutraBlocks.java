@@ -491,7 +491,7 @@ public final class SutraBlocks {
     }
 
     /**
-     * A fragment's {@code doc.phone} (MOBILE_DISPLAY.md 5.4) put on each panel it brings that sets no phone tier of its own, marked
+     * A fragment's {@code doc.phone} (docs/guides/PACK_DEVELOPER_GUIDE.md 5.4) put on each panel it brings that sets no phone tier of its own, marked
      * {@code from: fragment} so the view can say which layer chose the tier; a use's own {@code phone:} still wins (it is put on after).
      */
     private static List<PNode> phoned(List<PNode> brought, PNode root) {

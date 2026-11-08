@@ -1226,7 +1226,7 @@ round's findings are fixed before the drill.
 5. **Scale.** Work classes and per-model shares, per-query memory, cost estimates and budgets, Micrometer metrics
    (6.8), model-shard ownership and the subscription directory for several Java nodes, no static shared state; a
    load test of 500 viewers on a real server (never locally).
-6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
+6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR.md](../../plugins/drishti-plugin-cassandra/README.md)).
 7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), steps I1–I5).
 
 **Console lane:**
@@ -1360,9 +1360,9 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
    the reader's parameter slicer switches the field or measure it draws; checked by the report schema.
    *Built:* `FieldParams` (`DRS-9037`), the report state's `params` (every model query of a report takes them as MQ v2 `params`), a field
    parameter of measures in MQ `select.measures` and `sort`; `FieldParamsApiTest` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/BI_GUIDE.md#21-field-parameters-in-a-well)).
-6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
+6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR.md](../../plugins/drishti-plugin-cassandra/README.md)).
    *Built:* plugin `cassandra` (Cassandra 4 and 5, ScyllaDB, Astra), its loader (a day appears whole) and every read path, equal to the
-   Delta connector over the same data ([CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
+   Delta connector over the same data ([CASSANDRA_CONNECTOR.md](../../plugins/drishti-plugin-cassandra/README.md)).
 7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), steps I1–I5),
    *Built*: `drishti-lakeio`, `drishti-iceberg` and the `native` engine of the Iceberg plugin (DATA_ARCHITECTURE.md).
 

@@ -298,7 +298,7 @@ cp -r /srv/stage/files/trading/2026-10-05 /srv/drishti/files/trading/.2026-10-05
 mv /srv/drishti/files/trading/.2026-10-05.part /srv/drishti/files/trading/2026-10-05
 ```
 
-A single file: write to `<kind>.jsonl.tmp`-style temporary name and `mv` it to `<kind>.jsonl` ([FILE_CONNECTOR.md](../connectors/FILE_CONNECTOR.md)).
+A single file: write to `<kind>.jsonl.tmp`-style temporary name and `mv` it to `<kind>.jsonl` ([FILE_CONNECTOR.md](../../plugins/drishti-plugin-file/README.md)).
 To replace a whole root: build `files.new/`, then `mv files files.old && mv files.new files` (a few milliseconds of "no directory" at worst, which the connector reports DOWN and recovers from at the next rescan), keep `files.old` for rollback.
 
 **Delta lake** (`DRISHTI_DELTA_ROOT`, layout `<root>/<domain>/<kind>/business_date=…/`). A Delta table is a folder of
@@ -307,7 +307,7 @@ Parquet files plus a `_delta_log`; the log decides what is visible, and a new co
 - **Ingest into the live lake with the tool** (`data ingest --lake`): it commits through Delta, so readers see the new version only when it is complete. This is the normal route for a daily load.
 - **Copy a finished lake or partitions:** build it in a stage folder, copy **the Parquet data files first and `_delta_log/` last** (the log is what makes files visible), for example `rsync -a stage/trading/trade_endur/ live/trading/trade_endur/ --exclude _delta_log && rsync -a stage/trading/trade_endur/_delta_log/ live/trading/trade_endur/_delta_log/`. Replacing a whole lake: `mv lake lake.old && mv lake.new lake`, then restart or wait for the connector (`refresh-seconds`, 10; the search index within about a minute). For `s3a://`, upload the same way (data first, log last) with `aws s3 sync`.
 
-Keep local test loads small ([DEMO_DATA.md](../connectors/DEMO_DATA.md)). For what the layout must be, see the manifest's `data.ingest` and [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md).
+Keep local test loads small ([DEMO_DATA.md](../connectors/DEMO_DATA.md)). For what the layout must be, see the manifest's `data.ingest` and [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md).
 
 ## 9. Check it after a deploy
 

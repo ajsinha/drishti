@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # TOY SIMM PARAMETERS: NOT ISDA'S. Round illustrative numbers invented for Drishti's tests and the worked examples of
-# docs/architecture/SENSITIVITIES_AND_FRTB_SA.md (section 13.1, cases 6 and 11) and docs/contracts/SIMM.md (section 15). They prove the
+# docs/guides/FRTB_SA_GUIDE.md (section 13.1, cases 6 and 11) and docs/contracts/SIMM.md (section 15). They prove the
 # engine's formulas, never the licensed values: no figure computed with this file is an initial margin. The structure is
 # docs/architecture/capital-parameters/simm.yaml (shipped with every number empty); a bank loads its own licensed file per version.
 

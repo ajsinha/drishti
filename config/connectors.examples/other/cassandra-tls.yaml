@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: Apache Cassandra over mutual TLS (client_encryption_options with require_client_auth: true) and a password log-in.
 # The node certificates must name the addresses the driver connects to (the contact points and the nodes' rpc addresses).
-# Copy to config/connectors/cassandra-tls.yaml. See docs/connectors/CASSANDRA_CONNECTOR.md, section Security.
+# Copy to config/connectors/cassandra-tls.yaml. See plugins/drishti-plugin-cassandra/README.md, section Security.
 plugin: cassandra
 kinds: [trade]
 description: Trades in Cassandra over mutual TLS

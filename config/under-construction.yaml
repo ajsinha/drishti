@@ -80,7 +80,7 @@ items:
   - id: pnl-explain-waterfall
     what: panel
     about: "The P&L explain's waterfall: a generator's stored steps that disagree with the Attribution bars on new trades (F19); the computed explain (by trade events, then by risk factor) is PNL.md's"
-    release: "the P&L explain (TRADING_LENS.md TL4, PNL.md)"
+    release: "the P&L explain (docs/lenses/README.md TL4, PNL.md)"
     treatment: under-construction
     sutras:
       - kind: pnl-explain

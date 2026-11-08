@@ -54,7 +54,7 @@ whoever writes the production query that must emit the same JSON Lines: [docs/co
 
 ## Quick start: five steps
 
-On Windows, offline, with your own ENDUR files: [How to QA in Windows Environment using Custom Data](../../docs/qa/windows-custom-data.md).
+On Windows, offline, with your own ENDUR files: [How to QA in Windows Environment using Custom Data](../../docs/architecture/TEST_HARNESS.md#9-manual-qa-on-windows-offline-with-your-own-trade-files).
 
 1. **Clone** the repository (`git clone …`, then `cd drishti`).
 2. **Install** once: the console's Python with its requirements (PyYAML, deltalake and pyarrow among them),

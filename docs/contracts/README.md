@@ -250,7 +250,7 @@ engine answers.
 ## 11. What Drishti answers: computed kinds, the API, captures
 
 - **Computed kinds:** each measure is served as an ordinary kind by a reactive connector (`plugin: reactive`,
-  [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)). It opens by command (`VAR DESK DESK-RATES <GO>`), by link
+  [REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)). It opens by command (`VAR DESK DESK-RATES <GO>`), by link
   (`/v/<kind>/<scope>`), by API, by CLI, by search, and to AI tools, with the same entitlements everywhere. Its id is the scope text.
 - **An API per measure** for programs and the explorer, under `/api/v1/<measure>` (VaR: `/api/v1/var`,
   [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1riskvar)). Every answer carries a **provenance** block: business date, the input

@@ -21,7 +21,7 @@ connectors:
 - delta
 files:
 - news-store.yaml
-doc: docs/guides/IN_MEMORY_LAKE_GUIDE.md
+doc: docs/guides/DATA_LAKE_GUIDE.md
 ---
 # In-memory lake connector template
 
@@ -90,7 +90,7 @@ python3 tools/drishti.py lake memory refill news
 
 ## See also
 
-- [The in-memory lake guide](../../../docs/guides/IN_MEMORY_LAKE_GUIDE.md) and [its design](../../../docs/architecture/IN_MEMORY_LAKE.md).
+- [The in-memory lake guide](../../../docs/guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake) and [its design](../../../docs/architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
 - [The delta connector README](../../../plugins/drishti-plugin-delta/README.md) and [Connector files](../../../docs/connectors/CONNECTOR_FILES.md).
 
 The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching

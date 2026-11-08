@@ -149,13 +149,13 @@ A Delta connector never writes per edit: write-back keeps corrections as overlay
 | `cache-mb` | int |  | Memory for whole days of small tables, in MB; not set: the shared cache of every Delta connector, 5 % of the heap; set: a cache of this connector's own |
 | `doc-cache-mb` | int |  | Memory for recently read documents, in MB; not set: the shared cache, 5 % of the heap; set: a cache of this connector's own |
 | `doc-disk-cache.enabled` | bool | `true` | Documents already read also kept on disk (RocksDB, one per connector): answered without decompressing Parquet pages, also after a restart |
-| `doc-disk-cache.dir` | path | `<data dir>/cache/<connector>/docs` | Documents read before, in a RocksDB on disk, kept across restarts (DELTA_CONNECTOR.md section 6.3) |
+| `doc-disk-cache.dir` | path | `<data dir>/cache/<connector>/docs` | Documents read before, in a RocksDB on disk, kept across restarts (plugins/drishti-plugin-delta/README.md › Opening one entity) |
 | `doc-disk-cache.max-gb` | number | `1` | Its size cap; the oldest files go first |
 | `doc-disk-cache.ttl` | duration | `12h` | Entries written longer ago go (compacted hourly) |
 | `doc-disk-cache.reset-at` | string | `02:00` | Daily clearing time |
 | `doc-disk-cache.zone` | string | `America/New_York` | Zone of the daily clearing |
 | `id-map-disk.enabled` | bool | `true` | Each table date id map written once per table version and memory-mapped: no heap per id, kept across restarts |
-| `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | Id maps written once per table version and date, read through a memory map (DELTA_CONNECTOR.md section 6.2) |
+| `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | Id maps written once per table version and date, read through a memory map (plugins/drishti-plugin-delta/README.md › The id map of a day) |
 | `id-map-disk.max-gb` | number | `5` | The most disk the id map files take; the least recently used beyond it are unmapped, then deleted, never a map in use (mapped, read or written in the last five minutes, a date open in VaR or exposure); a map alone over it is kept and warned about (OPERATIONS.md section 12.3) |
 | `id-map-disk.ttl` | duration |  | Off when empty or 0; at least 24h. Drops a map not used (mapped or read) for that long, give or take 10%; never the latest and previous dates, today, a date open in VaR or exposure (OPERATIONS.md section 12.3) |
 | `id-map-disk.idle-release` | duration | `30m` | A map not read for that long is unmapped (the file stays; the next read maps it again), never while a read is inside it nor for a date open in VaR or exposure: the cap then trims its file when the folder is over max-gb. At least 5m (OPERATIONS.md section 12.3) |
@@ -552,7 +552,7 @@ Hadoop class. Both engines read checkpoints, time travel, deletion vectors and p
 both; reads are equal within noise, the native one starts a table's first read faster. On S3 the native engine uses one pooled client
 per connector, `ListObjectsV2` and ranged GETs (a small read fetches at least `s3.read-block-kb`, 1 MiB, and serves the next small reads
 from it). A native connector with an `abfs://` or `gs://` root refuses to start, naming `hadoop`. Iceberg has its own engines
-([ICEBERG_CONNECTOR.md section 17](../../docs/connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library)).
+([ICEBERG_CONNECTOR.md section 17](../drishti-plugin-iceberg/README.md#engines-and-caches)).
 
 ### Parquet codecs
 

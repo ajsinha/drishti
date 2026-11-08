@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Why VaR moved (VAR_GUIDE.md section 3.11; OVERSIGHT_LENS.md section 4.1, RO1): a scope's VaR on two business dates (default: the
+ * Why VaR moved (VAR_GUIDE.md section 3.11; docs/lenses/README.md section 4.1, RO1): a scope's VaR on two business dates (default: the
  * business date before the newest, and the newest), split into causes that add up exactly to the change, with who drove each.
  *
  * <p>The two dates are opened through the engine ({@link VarService#date}, so both are counted in {@code hot-dates} and the least

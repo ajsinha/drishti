@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * {@code mem://}: the memory stores (docs/architecture/IN_MEMORY_LAKE.md section 3). Each store holds files as fixed-size chunks of
+ * {@code mem://}: the memory stores (docs/architecture/DATA_ARCHITECTURE.md section 3). Each store holds files as fixed-size chunks of
  * off-heap memory under a hard cap ({@link com.ash.drishti.memlake.store.ChunkPool}) and meets the {@link com.ash.drishti.lakeio.Storage}
  * contract exactly ({@link com.ash.drishti.memlake.store.MemoryStorage}). The lake engines reach it only through drishti-lakeio's
  * {@link com.ash.drishti.lakeio.StorageProviders}, which finds {@link com.ash.drishti.memlake.store.MemoryStorageProvider} on the class

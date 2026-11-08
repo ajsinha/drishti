@@ -175,7 +175,7 @@ public final class ScreenWire {
         this.augment = augment == null ? (d, at) -> d : augment;
     }
 
-    /** The table layer's reads for panels whose source is a virtual table (VIRTUAL_TABLES.md V13). */
+    /** The table layer's reads for panels whose source is a virtual table (docs/architecture/ARCHITECTURE.md V13). */
     public void tables(TableRows rows) {
         this.tables = rows == null ? TableRows.NONE : rows;
     }
@@ -528,7 +528,7 @@ public final class ScreenWire {
     }
 
     /**
-     * A virtual table's rows (VIRTUAL_TABLES.md V13) read for the screen's viewer on the screen's (or the source's {@code as-of}) business
+     * A virtual table's rows (docs/architecture/ARCHITECTURE.md V13) read for the screen's viewer on the screen's (or the source's {@code as-of}) business
      * date: the table layer applies the source's masks and rules, then the table's; {@code where} keeps rows ({@code @} each row, evaluated
      * with the screen's events), at most {@code limit}. What the viewer sees is also what a click follows: a table row carries no raw values.
      */

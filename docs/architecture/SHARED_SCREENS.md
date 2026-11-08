@@ -8,7 +8,7 @@
 
 Four screens that replace several today, chosen by the product owner from mock-ups, followed by the controls screens (section 6) and
 the editors (section 7). Each folds duplicates into one and deletes the old in the same release (*lean & streamlined*). The mock-ups are in
-[mockups/shared-screens/](mockups/shared-screens/) and open in a browser; the editors they lead to are in [EDITORS.md](EDITORS.md).
+[mockups/shared-screens/](mockups/shared-screens/) and open in a browser; the editors they lead to are in [EDITORS.md](#7-the-editors-one-pattern-for-every-object-people-author).
 
 ## Contents
 
@@ -91,7 +91,7 @@ and deletes what it replaces.
 
 The screens of the controls a risk function runs every day, chosen by the product owner from mock-ups (2026-11-05), built in 2.9.11.f
 (trust, RBAC, security and controls; the security rules themselves are settled in that release's design discussion). The mock-ups are
-in [mockups/controls/](mockups/controls/); people, roles and API keys are in [EDITORS.md](EDITORS.md) sections 5 and 6; the Approvals
+in [mockups/controls/](mockups/controls/); people, roles and API keys are in [EDITORS.md](#7-the-editors-one-pattern-for-every-object-people-author) sections 5 and 6; the Approvals
 queue and the Explain drawer they use are in [SHARED_SCREENS.md](SHARED_SCREENS.md).
 
 ### 6.1 Run status and sign-off

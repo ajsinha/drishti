@@ -118,8 +118,8 @@ the pre-deal limit decision, among others.
   ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), [tutorial 7](docs/tutorials/07-load-data-daily.md)).
 - **The data inbox** loads the files your ETL drops, by routing rules, with Admin → Data loads to watch, retry and undo
   ([tutorial 36](docs/tutorials/36-load-files-with-the-data-inbox.md)). For large loads, the parallel Java loader is multi-threaded and
-  memory-bounded ([PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md)).
-- **In-memory lakes** (`mem://`) for feeds that never touch disk, such as news ([IN_MEMORY_LAKE_GUIDE.md](docs/guides/IN_MEMORY_LAKE_GUIDE.md),
+  memory-bounded ([PARALLEL_LOADER.md](docs/architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)).
+- **In-memory lakes** (`mem://`) for feeds that never touch disk, such as news ([IN_MEMORY_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake),
   [tutorial 31](docs/tutorials/31-news-in-memory-only.md)).
 - **Data contracts**: one per mnemonic, stating what the upstream engines deliver and what Drishti answers
   ([docs/contracts/](docs/contracts/README.md)); `DATAMAP` shows what the packs hold today.

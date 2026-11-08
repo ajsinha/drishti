@@ -31,7 +31,7 @@ import java.util.Map;
 
 /**
  * "Why it moved" as a workbook of formulas (VAR_GUIDE.md section 3.11), on the VaR Playground's frame (its template, styles and checks,
- * docs/architecture/VAR_PLAYGROUND.md): Main (the inputs, each state's VaR worked from its column beside the engine's with a check, each
+ * docs/guides/VAR_GUIDE.md): Main (the inputs, each state's VaR worked from its column beside the engine's with a check, each
  * step as a difference of two cells, the add-up check), Data (values only: the two dates' scope P&amp;L and the churn's sums by scenario
  * day), States (each state's P&amp;L column, a formula over the one before and Data, and its ranks), Drivers (the engine's contributors),
  * Explain and Provenance. Every formula is checked against the common function set ({@link com.ash.drishti.server.dist.XlsxFormulas}).

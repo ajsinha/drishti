@@ -717,7 +717,7 @@ ksqlDB or a custom BI server computes keyed result rows (a total per desk, per d
 them: a screen per result, live delivery to many browsers, field masks, alerts, sharing and embedding, as for any kind.
 
 This needs no Drishti code. The producer writes each result row to a **compacted Kafka topic** as an envelope keyed `<kind>/<id>`
-([KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md)), and a pack declares the result kind, its command and a Kafka connector:
+([KAFKA_CONNECTOR.md](../../plugins/drishti-plugin-kafka/README.md)), and a pack declares the result kind, its command and a Kafka connector:
 
 ```yaml
 kinds:
@@ -772,7 +772,7 @@ drishti_live_streams 0.0
 drishti_live_topics 0.0
 ```
 
-If p99 stays above 40 ms, follow [runbooks/live-latency-high.md](../admin/runbooks/live-latency-high.md).
+If p99 stays above 40 ms, follow [runbooks/live-latency-high.md](../admin/OPERATIONS.md#173-live-latency-high-or-live-views-stop-ticking).
 Measured numbers are in [PERFORMANCE.md](../admin/PERFORMANCE.md).
 
 ### Settings
@@ -913,7 +913,7 @@ design agreed with the product owner, checked against the code on `develop` and 
 yet (drishti-iceberg and iceberg-external; Cassandra). Related: [ARCHITECTURE.md section 5](ARCHITECTURE.md#5-walk-through-one-request) (a command becomes a screen),
 [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (forwarding), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built) section 10 (slices and owners),
 [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap) (the history row of its table), [section 3](#3-drishti-iceberg-drishtis-own-apache-iceberg-engine),
-[CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md).
+[CASSANDRA_CONNECTOR.md](../../plugins/drishti-plugin-cassandra/README.md).
 
 ### 1. The ask
 
@@ -1862,8 +1862,8 @@ All five were decided by the product owner on 2026-10-20, before the build start
 
 ## 3. drishti-iceberg: Drishti's own Apache Iceberg engine
 
-Status: **built** (steps I1 to I6; `native` is the default engine, the library kept as `engine: library`; the Windows laptop run of step I5 is still to do). Modules `drishti-lakeio`, `drishti-iceberg`, `plugins/drishti-plugin-iceberg` (engines `native|library|auto`) and `plugins/drishti-plugin-iceberg-external`; measured in [ICEBERG_CONNECTOR.md section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library). Related: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the connector today),
-[DELTA_CONNECTOR.md section 16](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) (the same move made for
+Status: **built** (steps I1 to I6; `native` is the default engine, the library kept as `engine: library`; the Windows laptop run of step I5 is still to do). Modules `drishti-lakeio`, `drishti-iceberg`, `plugins/drishti-plugin-iceberg` (engines `native|library|auto`) and `plugins/drishti-plugin-iceberg-external`; measured in [ICEBERG_CONNECTOR.md section 17](../../plugins/drishti-plugin-iceberg/README.md#engines-and-caches). Related: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (the connector today),
+[DELTA_CONNECTOR.md section 16](../../plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop) (the same move made for
 Delta Lake), [GETTING_STARTED.md: Windows](../guides/GETTING_STARTED.md#drishti-on-windows).
 
 ### 1. The ask
@@ -1888,7 +1888,7 @@ protocol Drishti uses, with no Hadoop.
   them, as `DeltaNativeNoHadoopTest` does for Delta. (Hadoop's jars may stay on the class path while parquet-java names
   its types in signatures, exactly as for the native Delta engine.)
 - **Same connector, same settings.** Packs, connector files, the layout (`IcebergLayout`), the caches and every read path
-  in [ICEBERG_CONNECTOR.md section 7](../connectors/ICEBERG_CONNECTOR.md#7-how-the-connector-reads) are unchanged. Only
+  in [ICEBERG_CONNECTOR.md section 7](../../plugins/drishti-plugin-iceberg/README.md#how-the-connector-reads) are unchanged. Only
   what sits under them changes. A user sees a new `engine` setting and nothing else.
 - **Share with Delta.** File access (local disk, S3, byte ranges), the Parquet page codecs and the row-group reader
   already exist in `drishti-deltalake`; they move into a shared module and both engines use them.
@@ -2050,8 +2050,8 @@ From the shared module (today's `drishti-deltalake` classes, moved):
 
 `DRISHTI_ICEBERG_ENGINE` sets it for every connector, as `DRISHTI_DELTA_ENGINE` does for Delta. The loader and
 maintenance take `--engine`. All other settings (ICEBERG_CONNECTOR.md section 15) are unchanged. This table is the `iceberg`
-connector's; `iceberg-external` takes `native` or `auto` only and refuses `library` ([ICEBERG_EXTERNAL_CONNECTOR.md section 10](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#10-settings)).
-Implementation: [ICEBERG_CONNECTOR.md section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library).
+connector's; `iceberg-external` takes `native` or `auto` only and refuses `library` ([ICEBERG_EXTERNAL_CONNECTOR.md section 10](../../plugins/drishti-plugin-iceberg-external/README.md#settings)).
+Implementation: [ICEBERG_CONNECTOR.md section 17](../../plugins/drishti-plugin-iceberg/README.md#engines-and-caches).
 
 ### 11. Windows
 
@@ -2125,15 +2125,15 @@ it does not write**. Both run on `drishti-iceberg` (the `iceberg` connector also
 | Deletes, time travel | as section 7 | the same: merge-on-read position and equality deletes from Spark and Flink are applied; *known at* uses the snapshot log |
 
 The external connector's reference, which this section once held in full (configuration, rows as documents, reading at
-scale, settings, tests), is one document: [ICEBERG_EXTERNAL_CONNECTOR.md](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md). What
-was 15.1 *Configuration* is its [section 2](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#2-a-connector-file) and
-[section 8](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#8-discovery-tables-auto) (`tables: auto`); 15.2 *Rows as documents* is its
-[section 3](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#3-rows-as-documents) and *Make a pack* its
-[section 9](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#9-make-a-pack); 15.3 *Reading at scale* is its
-[sections 5 and 6](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#6-one-entity-at-scale); 15.4 *Settings* is its
-[section 10](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#10-settings) (generated settings: the plugin's
+scale, settings, tests), is one document: [ICEBERG_EXTERNAL_CONNECTOR.md](../../plugins/drishti-plugin-iceberg-external/README.md). What
+was 15.1 *Configuration* is its [section 2](../../plugins/drishti-plugin-iceberg-external/README.md#examples) and
+[section 8](../../plugins/drishti-plugin-iceberg-external/README.md#discovery-tables-auto) (`tables: auto`); 15.2 *Rows as documents* is its
+[section 3](../../plugins/drishti-plugin-iceberg-external/README.md#data-structure) and *Make a pack* its
+[section 9](../../plugins/drishti-plugin-iceberg-external/README.md#make-a-pack); 15.3 *Reading at scale* is its
+[sections 5 and 6](../../plugins/drishti-plugin-iceberg-external/README.md#one-entity-at-scale); 15.4 *Settings* is its
+[section 10](../../plugins/drishti-plugin-iceberg-external/README.md#settings) (generated settings: the plugin's
 [README](../../plugins/drishti-plugin-iceberg-external/README.md)); 15.5 *Tests* is its
-[section 12](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#12-how-it-is-tested).
+[section 12](../../plugins/drishti-plugin-iceberg-external/README.md#how-it-is-tested).
 
 ### 16. Vector columns and orphan files
 
@@ -2141,7 +2141,7 @@ was 15.1 *Configuration* is its [section 2](../connectors/ICEBERG_EXTERNAL_CONNE
 `list<double>` whose elements are optional: field ids are assigned after the promoted columns, the column's then its element's. The
 writer (`ParquetDataWriter`) writes a three-level list; a null element is written as an empty element group, so it reads back as null
 (never 0). The reader's list converter (`Converters.ListConverter`) gives a `List` with the nulls in place; the connector turns it into a
-`double[]` with NaN for null ([ICEBERG_CONNECTOR.md section 18](../connectors/ICEBERG_CONNECTOR.md#18-parity-with-delta-vectors-documents-and-disk-caches)).
+`double[]` with NaN for null ([ICEBERG_CONNECTOR.md section 18](../../plugins/drishti-plugin-iceberg/README.md#parity-with-delta-vectors-and-disk-caches)).
 Adding a vector column to an existing table (`Operations.addColumns`) gives the column the next id and its element the one after, and
 records the higher as `last-column-id`. Delta stays the default lake format; this is the Iceberg side of the same column.
 

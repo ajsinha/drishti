@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* The editors of the table layer (docs/architecture/EDITORS.md sections 1 to 4) on drishti-designer's DesignerShell: the objects with
+/* The editors of the table layer (docs/architecture/SHARED_SCREENS.md sections 1 to 4) on drishti-designer's DesignerShell: the objects with
    search | the editor with the live YAML (the kit's YamlPane over drishti-inputs' CodeEditor) below it | the live preview with checks, the
    Visual / YAML / Both toggle and the layout remembered per person (the server keeps them), and the header: the status with versions,
    Validate, Preview, History, Impact, Save draft and Propose for review (four eyes). A visual edit sends the document and

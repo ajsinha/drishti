@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The phone display (docs/architecture/MOBILE_DISPLAY.md): the tiers resolved over the layers with the site and edition caps, the
+"""The phone display (docs/guides/PACK_DEVELOPER_GUIDE.md): the tiers resolved over the layers with the site and edition caps, the
 compact forms cut on the console, a phone getting only must and glance panels, a *More* panel loaded on its own, a tablet keeping its
 layout less the desk panels, the desktop unchanged, and the lens menus folded into one on a phone (LX1 option C)."""
 import copy
@@ -206,7 +206,7 @@ def test_a_full_drishti_has_no_lens_menu(backend, monkeypatch):
     assert "data-lens-fold" not in _client(app).get("/t").text
 
 
-# ---- beyond Sutra pages: the VaR and exposure pages and the landings (MOBILE_DISPLAY.md section 8) --------------------------------
+# ---- beyond Sutra pages: the VaR and exposure pages and the landings (docs/guides/PACK_DEVELOPER_GUIDE.md section 8) --------------------------------
 
 def _tier(html: str, part: str) -> str | None:
     m = re.search(r'data-phone-part="%s" data-phone-tier="([a-z]+)"' % re.escape(part), html)

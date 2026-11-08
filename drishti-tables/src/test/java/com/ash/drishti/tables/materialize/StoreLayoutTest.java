@@ -27,7 +27,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Where on-load tables keep their files, what a retention drops, and a live table's bounds (BI_FOUNDATION_2911E.md section 3.4, Q14). */
+/** Where on-load tables keep their files, what a retention drops, and a live table's bounds (docs/architecture/BI_DESIGN.md section 3.4, Q14). */
 class StoreLayoutTest {
 
     @TempDir Path store;

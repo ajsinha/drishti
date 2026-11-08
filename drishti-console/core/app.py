@@ -551,7 +551,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core import engines as _engines_state
     templates.env.globals["engine_available"] = _engines_state.engine_available   # an engine running here or on a peer (Admin -> Data out: flight)
     from core import phone as _phone
-    templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (MOBILE_DISPLAY.md 8)
+    templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (docs/guides/PACK_DEVELOPER_GUIDE.md 8)
     templates.env.globals["phone_everything"] = _phone.everything
     app.state.servers = catalogue
     from core.backend_watch import BackendWatch
@@ -718,7 +718,7 @@ def create_app(settings: Settings) -> FastAPI:
         app.state.notebook_limits = Limits.from_settings(settings)     # the Notebook (docs/guides/USER_GUIDE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
         app.include_router(model_routes.router)
-        app.include_router(tables_editor_routes.router)     # Build › Tables & models: the editors on the table layer (EDITORS.md)
+        app.include_router(tables_editor_routes.router)     # Build › Tables & models: the editors on the table layer (docs/architecture/SHARED_SCREENS.md)
         app.include_router(python_routes.router)
         app.include_router(notebook_routes.router)         # the Notebook (/bi/notebook): SQL on the server, Python on its compute pool
         app.include_router(transform_routes.router)        # wave C: the Transform editor (/bi/transform), step by step

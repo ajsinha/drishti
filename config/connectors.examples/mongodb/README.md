@@ -26,7 +26,7 @@ files:
 - reference-store.yaml
 - risk-store.yaml
 - trading-store.yaml
-doc: docs/connectors/MONGODB_CONNECTOR.md
+doc: plugins/drishti-plugin-mongodb/README.md
 ---
 # MongoDB connector templates
 
@@ -94,5 +94,5 @@ other two off. Over TLS, see `config/connectors.examples/other/positions-mongo.y
 
 ## See also
 
-- [The MongoDB connector](../../../docs/connectors/MONGODB_CONNECTOR.md) and the [mongodb connector README](../../../plugins/drishti-plugin-mongodb/README.md).
+- [The MongoDB connector](../../../plugins/drishti-plugin-mongodb/README.md) and the [mongodb connector README](../../../plugins/drishti-plugin-mongodb/README.md).
 - [Connector files](../../../docs/connectors/CONNECTOR_FILES.md) (copying examples, the trade union note) and [Demo data](../../../docs/connectors/DEMO_DATA.md).

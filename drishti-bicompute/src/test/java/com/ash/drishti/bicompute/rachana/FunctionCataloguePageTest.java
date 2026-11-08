@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 /**
- * The one function catalogue page (ONE_GRAMMAR.md section 5): {@code docs/guides/FUNCTIONS.md} is what the registries give (Rachana's
+ * The one function catalogue page (docs/architecture/ARCHITECTURE.md section 5): {@code docs/guides/FUNCTIONS.md} is what the registries give (Rachana's
  * table and the engine's functions in it), and the registries and the reviewed catalogue (FUNCTION_CATALOGUE.md) name the same
  * functions: every registered function is in the catalogue, and every function the catalogue says Rachana or the engine has built
  * (sections 1 to 4 and 6 to 9) is registered. Regenerate the page with {@code -Ddrishti.functions.write=true}.

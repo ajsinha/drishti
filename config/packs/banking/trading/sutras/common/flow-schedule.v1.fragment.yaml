@@ -26,7 +26,7 @@ doc:
     rate-fmt: { type: format, default: price4, meaning: "The named format of rates and prices: pct4 for rates (a fraction a year), price4 for prices per unit" }
   emits: []
   expects: []
-  # on a phone (docs/architecture/MOBILE_DISPLAY.md): a use or a Sutra's phone: overrides it
+  # on a phone (docs/guides/PACK_DEVELOPER_GUIDE.md): a use or a Sutra's phone: overrides it
   phone: { tier: glance, rows: 5 }
   examples:
     - { use: flow-schedule@1, with: { rate-fmt: pct4 } }

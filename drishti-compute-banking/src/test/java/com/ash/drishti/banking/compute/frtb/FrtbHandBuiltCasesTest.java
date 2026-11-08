@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * The hand-built cases of SENSITIVITIES_AND_FRTB_SA.md section 13.1 against the engine, to the cent, with the market-risk pack's own
+ * The hand-built cases of docs/guides/FRTB_SA_GUIDE.md section 13.1 against the engine, to the cent, with the market-risk pack's own
  * parameter files. Cases 1 and 2 are written with MAR21.46's exact formula (the {@code girr-correlation} switch); the default, the
  * published table, is asserted beside them. Cases 6 and 11 are SIMM's aggregation formulas with toy parameters.
  */

@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
- * "Make a pack" (ICEBERG_EXTERNAL_CONNECTOR.md section 9): each served kind's document as a JSON Schema, from the table's
+ * "Make a pack" (plugins/drishti-plugin-iceberg-external/README.md section 9): each served kind's document as a JSON Schema, from the table's
  * schema: its fields (document names, types, docs as descriptions), the id ({@code x-drishti-role: key}), the business
  * date ({@code x-drishti-role: date}) and the {@code links} ({@code x-drishti-link}). The schemas feed the pack maker,
  * which drafts the kind, its fields and a Sutra listing them, to edit like any pack:

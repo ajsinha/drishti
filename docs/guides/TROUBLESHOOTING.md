@@ -334,7 +334,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 - **Cause:** the console cannot reach the server, or `DRISHTI_TOKEN_SECRET` differs between them, so the server
   refuses the console's service token. Clocks more than 30 seconds apart also cause it.
 - **Fix:** run the [first checks](#first-checks-run-these-first); set the same secret in both environments; check
-  the clocks (NTP). More in [runbooks/sign-in.md](../admin/runbooks/sign-in.md).
+  the clocks (NTP). More in [runbooks/sign-in.md](../admin/OPERATIONS.md#174-users-cannot-sign-in).
 
 ### I sign in and land back on the sign-in page
 
@@ -545,7 +545,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
   You should see `750 ['MX-20000001', 'MX-20000002', 'MX-20000003', 'MX-20000004', 'MX-20000005']` on the banking samples.
 - **Fix:** correct the id. If the list is empty for every id you try, the source that holds the kind may be
-  down (see [runbooks/source-down.md](../admin/runbooks/source-down.md)), or you picked a past date the source has no
+  down (see [runbooks/source-down.md](../admin/OPERATIONS.md#171-source-down-or-slow)), or you picked a past date the source has no
   data for.
 
 ### "DRS-1001 no source holds trade/MX-29999999"
@@ -597,7 +597,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   to read the exact error. Press **F9** to see the raw JSON and compare it with the panel's `rows:` path in the
   Sutra (Studio shows it).
 - **Fix:** if the data is right and the Sutra is wrong, fix the Sutra in the Build workbench; see
-  [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
+  [runbooks/sutra-broken.md](../admin/OPERATIONS.md#172-a-sutra-is-broken-or-an-edit-does-not-show).
 
 ### The About drawer says nothing about a number, or shows no "What you are looking at" sentence
 
@@ -617,7 +617,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Cause:** `pending`: the linked entity did not arrive within the 40 ms link budget (`drishti.graph.link-budget`); with
   Drishti*net, one that only a peer holds within routing.yaml's `link-budget` (1 s). `missing`: no source has it.
 - **Check:** `curl -s http://localhost:18480/api/v1/sources` for a source whose `health` is not `UP`.
-- **Fix:** a slow source: see [runbooks/source-down.md](../admin/runbooks/source-down.md). Open the link itself to see the
+- **Fix:** a slow source: see [runbooks/source-down.md](../admin/OPERATIONS.md#171-source-down-or-slow). Open the link itself to see the
   real error.
 
 ### Charts are blank
@@ -861,8 +861,8 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   rebuilt), while the search ran. The banner names each source and why; the API answer has `"partial": true` and
   `"failed": [{"source", "reason"}]`. Entities that source holds are missing from the results, so "0 of 0" is not
   "nothing matched".
-- **Fix:** follow the reason (a Delta table in BROTLI or LZO pages: [DELTA_CONNECTOR.md §16](../connectors/DELTA_CONNECTOR.md); LZ4 tables read normally); otherwise
-  **Admin → Health** shows the source's `lastError` ([source-down runbook](../admin/runbooks/source-down.md)).
+- **Fix:** follow the reason (a Delta table in BROTLI or LZO pages: [DELTA_CONNECTOR.md §16](../../plugins/drishti-plugin-delta/README.md); LZ4 tables read normally); otherwise
+  **Admin → Health** shows the source's `lastError` ([source-down runbook](../admin/OPERATIONS.md#171-source-down-or-slow)).
 
 ## Studio and Sutras
 
@@ -884,7 +884,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Cause and fix:** an invalid edit keeps the **last good version** live. Fix the reported line (Studio's
   Ctrl+Enter lists problems by line). With review on (the default), a saved Sutra is only a **proposal** until an
   approver approves it in **Studio → Reviews**. *How this view was built* shows the version actually used. See
-  [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
+  [runbooks/sutra-broken.md](../admin/OPERATIONS.md#172-a-sutra-is-broken-or-an-edit-does-not-show).
 
 ### Studio says "line 7 is indented with a tab"
 
@@ -918,7 +918,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Fix:** convert them, from the repository root: `python3 tools/rachana/md_to_yaml.py ./sutras --delete` (a file or
   a folder). You should see one `… .sutra.md -> … .sutra.yaml` line per file, then `{}` from `problems`. Rename a
   plain YAML Sutra to `<name>.v<N>.sutra.yaml`; move other YAML files out of the folder. A file without `rachana: 1`
-  at the top is `DRS-2009`: add it. See [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
+  at the top is `DRS-2009`: add it. See [runbooks/sutra-broken.md](../admin/OPERATIONS.md#172-a-sutra-is-broken-or-an-edit-does-not-show).
 
 ### Approving fails with `DRS-2007` or `DRS-2006`
 
@@ -941,7 +941,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 - **Check:** `curl -s http://localhost:18480/api/v1/admin/health | python3 -c "import json,sys; [print(p['name'], p['status'], p['sutraProblems'], p['connectorsDown']) for p in json.load(sys.stdin)['packs']]"`
 - **Fix:** Sutra problems: see *A Sutra edit has no effect*. A connector down: see
-  [runbooks/source-down.md](../admin/runbooks/source-down.md).
+  [runbooks/source-down.md](../admin/OPERATIONS.md#171-source-down-or-slow).
 
 
 ### A pack is *off* in Admin → Packs, or its users get `DRS-5002`
@@ -1008,7 +1008,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 ### A connector failed to start
 
 - **What you see:** Admin → Health says **DEGRADED**, and `failedToStart` names the connector with a reason.
-- **Fix:** follow [runbooks/source-down.md](../admin/runbooks/source-down.md), step 2.
+- **Fix:** follow [runbooks/source-down.md](../admin/OPERATIONS.md#171-source-down-or-slow), step 2.
 
 ### A connector, AI provider or MCP server fails behind a proxy: 407, CONNECT refused, "cannot connect to the proxy", DNS
 
@@ -1038,17 +1038,17 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
   [TLS.md, sections 8 and 11](../connectors/TLS.md#8-start-up-checks-and-their-messages).
 - **Fix:** put the issuing CA in `tls.ca-file` or `tls.truststore`; re-issue the server certificate with its names as SANs
   (last resort `tls.verify-hostname: false`, which warns at every start); give the client certificate and key for mutual
-  TLS. Per connector: [Kafka](../connectors/KAFKA_CONNECTOR.md#119-common-errors-and-fixes),
-  [ActiveMQ](../connectors/ACTIVEMQ_CONNECTOR.md#144-common-errors-and-fixes),
-  [RabbitMQ](../connectors/RABBITMQ_CONNECTOR.md#125-common-errors-and-fixes),
-  [Redis](../connectors/REDIS_CONNECTOR.md#security-tls-and-credentials),
-  [REST](../connectors/REST_CONNECTOR.md#tls-for-the-rest-connector),
-  [S3](../connectors/S3_CONNECTOR.md#tls-for-the-s3-connector),
-  [MongoDB](../connectors/MONGODB_CONNECTOR.md#security-tls-certificate-log-in-and-credentials),
-  [PostgreSQL](../connectors/POSTGRES_CONNECTOR.md#security-tls-and-credentials),
-  [Aerospike](../connectors/AEROSPIKE_CONNECTOR.md#security-tls-certificate-log-in-and-credentials),
-  [Delta](../connectors/DELTA_CONNECTOR.md#security-tls-and-credentials),
-  [Iceberg](../connectors/ICEBERG_CONNECTOR.md#security-tls-and-credentials).
+  TLS. Per connector: [Kafka](../../plugins/drishti-plugin-kafka/README.md#common-errors-and-fixes),
+  [ActiveMQ](../../plugins/drishti-plugin-activemq/README.md#tls-errors-and-fixes),
+  [RabbitMQ](../../plugins/drishti-plugin-rabbitmq/README.md#common-errors-and-fixes),
+  [Redis](../../plugins/drishti-plugin-redis/README.md#security-tls-and-credentials),
+  [REST](../../plugins/drishti-plugin-rest/README.md#tls-for-the-rest-connector),
+  [S3](../../plugins/drishti-plugin-s3/README.md#tls-for-the-s3-connector),
+  [MongoDB](../../plugins/drishti-plugin-mongodb/README.md#security-tls-certificate-log-in-and-credentials),
+  [PostgreSQL](../../plugins/drishti-plugin-jdbc/README.md#security-tls-and-credentials),
+  [Aerospike](../../plugins/drishti-plugin-aerospike/README.md#security),
+  [Delta](../../plugins/drishti-plugin-delta/README.md#security-tls-and-credentials),
+  [Iceberg](../../plugins/drishti-plugin-iceberg/README.md#security-tls-and-credentials).
 - **Also at start:** `tls.* is set but … is not https://` (or `not rediss://`, or `tls.enabled is not true`) means `tls.*`
   settings sit beside an address that is not TLS: the connector refuses to start rather than quietly connect in plain text.
   Change the address (`https://`, `rediss://`, `amqps://`, `ssl://`, `tls=true`) or remove the `tls.*` keys. Where a library
@@ -1072,7 +1072,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
   `schema-registry.url` an Avro message cannot be decoded; Protobuf is not supported; or the registry refused the
   credentials (they are the registry's key, not the Kafka one).
 - **Fix:** set `schema-registry.url` and `schema-registry.basic-auth: ${SR_KEY}:${SR_SECRET}`
-  ([KAFKA_CONNECTOR.md, 11.5](../connectors/KAFKA_CONNECTOR.md#115-schema-registry-and-the-confluent-wire-format)).
+  ([KAFKA_CONNECTOR.md, 11.5](../../plugins/drishti-plugin-kafka/README.md#schema-registry-and-the-confluent-wire-format)).
 
 ### A connector: symptom, check and fix
 
@@ -1520,7 +1520,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-5201` | a row of the date's P&L vectors was rejected when the VaR engine loaded the date (wrong length, a null or NaN, not USD): the answer's provenance lists the trade and the reason; fix the row upstream and reload the date |
 | `DRS-5204` | a VaR date cannot be built for room: on the mapped tier (the default) its hot file would leave the disk under the free-space guard (free disk where `drishti.var.tier.dir` points); on the heap tier its vectors exceed `drishti.var.memory-budget-mb` (raise it or the heap, or lower `drishti.var.hot-dates`). Remembered with `Retry-After` for `refusal-ttl-seconds`. Heap sizing: [VaR: OutOfMemoryError](#var-outofmemoryerror-with-dates-open-or-503-drs-5204-opening-a-date) |
 | `DRS-5218` | not enough free disk to build a date: the disk would fall under the guard (`drishti.disk.min-free-percent`, `min-free-gb`). See Admin → Health → Disk for which folder holds what; free space on that disk, lower a folder's cap (`drishti.var.tier.max-disk-gb`, `drishti.ccr.exposure.max-disk-gb`, `drishti.bi.query.store-max-gb`, a connector's `id-map-disk.max-gb`) or purge a date in Admin → Caches. The dates already open keep answering |
-| `DRS-5219` | the data is held in memory only by contract (an in-memory lake, `mem://`), and this would keep it: a scheduled report, a picture or an e-mail of a share, a note copying its values, an Ask about the page. Nothing was written; download the rows instead (the one way out, audited). See [the in-memory lake guide](IN_MEMORY_LAKE_GUIDE.md) |
+| `DRS-5219` | the data is held in memory only by contract (an in-memory lake, `mem://`), and this would keep it: a scheduled report, a picture or an e-mail of a share, a note copying its values, an Ask about the page. Nothing was written; download the rows instead (the one way out, audited). See [the in-memory lake guide](DATA_LAKE_GUIDE.md#13-the-in-memory-lake) |
 | `DRS-5208` | a PV record does not say what it is: add `VALUE_TYPE`, `GRAIN`, the id, `CURRENCY` and `SOURCE_SYSTEM` at the source, or `drishti.py var convert FILE --set ...` for an older file; if every record of a date is refused, check that the connector's layout promotes those columns (a `config/connectors/risk-store.yaml` from an older template: VAR_GUIDE.md section 8.4) |
 | `DRS-5209` | a record disagrees with its system's pin (`drishti.var.inputs`): the source changed what it sends, or the pin is wrong; fix one of them (the pin is read at start) |
 | `DRS-5212` | a `var-limit` row names a node the date does not have (a warning in the provenance; the row is unused): check its `NODE_ID` against the tree (`LL~LL-0003/DESK-RATES`; path ids unless the hierarchy says `ids: leaf`) |

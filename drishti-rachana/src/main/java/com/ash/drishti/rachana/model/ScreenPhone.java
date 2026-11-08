@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A screen's {@code phone:} block (MOBILE_DISPLAY.md section 5.2): the order of its must and glance panels on a phone, the tier of the
+ * A screen's {@code phone:} block (docs/guides/PACK_DEVELOPER_GUIDE.md section 5.2): the order of its must and glance panels on a phone, the tier of the
  * panels it does not name, and the one line shown at the top of the phone page.
  *
  * @param order the must and glance panels in phone order (ids); empty: the panels' own order
@@ -37,7 +37,7 @@ public record ScreenPhone(List<String> order, String defaultTier, String summary
     /** The key on a panel, on a use, in a fragment's {@code doc:} and at the top of a Sutra. */
     public static final String KEY = "phone";
 
-    /** The compact options of a glance panel, by the panel kinds each fits (MOBILE_DISPLAY.md section 5.3). */
+    /** The compact options of a glance panel, by the panel kinds each fits (docs/guides/PACK_DEVELOPER_GUIDE.md section 5.3). */
     public static final Map<String, Set<String>> COMPACT = Map.of(
             "rows", Set.of("table", "ladder", "hbar", "timeline", "links", "map", "waterfall"),
             "columns", Set.of("table", "ladder"),

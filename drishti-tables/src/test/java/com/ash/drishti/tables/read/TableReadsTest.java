@@ -37,7 +37,7 @@ import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 /**
- * Reading virtual tables (VIRTUAL_TABLES.md section 10): many tables over one kind from one shared read (V7), the reader's rules, masks and
+ * Reading virtual tables (docs/architecture/ARCHITECTURE.md section 10): many tables over one kind from one shared read (V7), the reader's rules, masks and
  * hidden columns, a caller's condition (a masked column refused in it), a table over a table, dates (latest, a date held, one not held,
  * an undated source as today, known-at refused where the source keeps no history), the row limit never cut short.
  */

@@ -376,7 +376,7 @@
 {% endif %}
 {%- endmacro %}
 
-{# The phone display (MOBILE_DISPLAY.md 5.3, core/phone.py): a glance chart as a sparkline with its last value and change, and the
+{# The phone display (docs/guides/PACK_DEVELOPER_GUIDE.md 5.3, core/phone.py): a glance chart as a sparkline with its last value and change, and the
    Show all of a compact panel (static/js/drishti_phone.js fetches the whole panel in its place). #}
 {% macro phone_spark(p) -%}
 {% set sp = p.phone.spark %}<div class="ph-spark" role="img" aria-label="{{ p.title or p.id }}: {% for l in sp.lines %}{{ l.label }} {{ l.last }}{% if l.change %}, {{ l.change }}{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}">

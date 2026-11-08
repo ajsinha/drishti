@@ -107,7 +107,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     private final Map<String, List<String>> vectorCols = new ConcurrentHashMap<>();
     /** Id maps and documents on disk, kept across restarts ({@code id-map-disk.enabled}, {@code doc-disk-cache.enabled}). */
     private IcebergDiskCaches disk;
-    /** The warehouse is in memory ({@code mem://}): nothing of it is written to a disk by this connector (IN_MEMORY_LAKE.md section 8). */
+    /** The warehouse is in memory ({@code mem://}): nothing of it is written to a disk by this connector (docs/architecture/DATA_ARCHITECTURE.md section 8). */
     private volatile boolean memoryOnly;
     /** Set when a data-load signal found a new snapshot: the next refresh rebuilds type-ahead. */
     private volatile boolean reindexDue;

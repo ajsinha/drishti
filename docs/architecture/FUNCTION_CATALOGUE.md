@@ -18,7 +18,7 @@
 *Product owner, 2026-11-03: "let us implement these functions, wherever possible using native and BLAS if it makes sense, then we
 should have a document with examples". This is the catalogue to review **before** the functions are built: every function Drishti has
 or will have, under its **one** name, with what it means, an example on the demo data's names, its Excel and SAS equivalents, where it
-runs and its status. The design is [ONE_GRAMMAR.md](ONE_GRAMMAR.md) (section 7); when the functions are built this becomes the user's
+runs and its status. The design is [ONE_GRAMMAR.md](ARCHITECTURE.md#23-one-grammar-one-engine) (section 7); when the functions are built this becomes the user's
 guide, each example then shown with its real result on the demo lake. Every function registered today, generated from the registries
 and checked against this page's names, is [FUNCTIONS.md](../guides/FUNCTIONS.md) (Help → Functions).*
 

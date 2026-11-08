@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The demo's factor dictionary (kind ``risk-factor``, docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 3): every risk factor the
+"""The demo's factor dictionary (kind ``risk-factor``, docs/guides/FRTB_SA_GUIDE.md section 3): every risk factor the
 demo sensitivities use, named by the factor naming standard, with its FRTB-SA and ISDA SIMM mapping and the names three source systems
 give it.
 

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** The view model's phone (MOBILE_DISPLAY.md 5): each panel's tier with the layer that set it, the order, the default, the summary line. */
+/** The view model's phone (docs/guides/PACK_DEVELOPER_GUIDE.md 5): each panel's tier with the layer that set it, the order, the default, the summary line. */
 class PhoneViewTest {
 
     private static Sutra parse(String text) {

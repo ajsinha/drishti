@@ -648,7 +648,7 @@ records never expire. In the generated book a day record takes about 7 KB of nam
 about 150 bytes (`asinfo -v sets/test/trading` and `sets/test/trading_ix`: `data_used_bytes` over `objects`); size
 the namespace for trades × days kept. Drishti's memory does not grow with the days kept: it holds one id per entity in the index set and the
 days of promoted bins in use (section 12). See
-[AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md) for the design.
+[AEROSPIKE_CONNECTOR.md](../../plugins/drishti-plugin-aerospike/README.md) for the design.
 
 ### 5.3 Live trades from Kafka
 
@@ -2127,7 +2127,7 @@ counts down) and no `OutOfMemoryError` in the log.
 ### 12.6 The in-memory lake: running memory-only feeds
 
 Feeds that may not be saved on a disk are held in memory stores (`drishti.lake.memory.*`; the
-[guide](../guides/IN_MEMORY_LAKE_GUIDE.md) sets one up end to end). What an operator does with them:
+[guide](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake) sets one up end to end). What an operator does with them:
 
 | Task | How |
 |---|---|
@@ -2139,7 +2139,7 @@ Feeds that may not be saved on a disk are held in memory stores (`drishti.lake.m
 | A store is full | Health amber, the run `refused`, the table at its previous version: raise `max-mb` (restart), unpin tables, or lower `keep-versions` |
 | Health red | a pinned table empty after the warm-up (its source: `jobs`), or the direct-memory limit below the caps (the start script) |
 | The host | no swap (or encrypted swap), no heap dump on out-of-memory unless to a RAM disk (`-XX:HeapDumpPath` on tmpfs), no JFR at launch, the temporary folder on a RAM disk: each is a host check on Health |
-| A cluster | `memory-stores: [<store>]` in the owner's `config/net/node.yaml`; the other nodes forward the pack's requests to it ([guide section 8](../guides/IN_MEMORY_LAKE_GUIDE.md#8-a-cluster-the-owner-node-binds-the-pack)) |
+| A cluster | `memory-stores: [<store>]` in the owner's `config/net/node.yaml`; the other nodes forward the pack's requests to it ([guide section 8](../guides/DATA_LAKE_GUIDE.md#138-a-cluster-the-owner-node-binds-the-pack)) |
 
 Nothing of a memory-only connector is written to the data folder (no document cache, id-map files or index segments), a scheduled report,
 a share's picture or e-mail and an Ask about its pages are refused (`DRS-5219`), a BI run's rows are not stored, DuckDB does not spill on
@@ -2762,7 +2762,7 @@ pack trading down: [] off: ['trading-stream']
 | `status` | `OK`; `DEGRADED` (something is down, failed to start, or a pack has problems); `DOWN` (every source is down). | — |
 | `failedToStart` | `{"<source>": "<reason>"}` for plugins that threw while starting. | Step 2 |
 | a source `DOWN` | It started but its health check fails now; `health` holds the plugin's reason. | Step 3 |
-| a source `DEGRADED` | It serves, but some of its data cannot be read: `health` names each table and date and why (a Delta date in BROTLI or LZO pages, a truncated Parquet file, a table log missing a commit). Reads of those dates fail with `DRS-1003`; searches over them say `partial: true`. | fix the data ([DELTA_CONNECTOR.md › Diagnosing](../connectors/DELTA_CONNECTOR.md#13-diagnosing)) |
+| a source `DEGRADED` | It serves, but some of its data cannot be read: `health` names each table and date and why (a Delta date in BROTLI or LZO pages, a truncated Parquet file, a table log missing a commit). Reads of those dates fail with `DRS-1003`; searches over them say `partial: true`. | fix the data ([DELTA_CONNECTOR.md › Diagnosing](../../plugins/drishti-plugin-delta/README.md#troubleshooting)) |
 | `connectorsDown` of a pack | That pack's connectors that are `DOWN`. | Step 3 |
 | `connectorsOff` of a pack | Connectors the pack declares that are not running: switched off (`trading-stream` until `DRISHTI_STREAM_TRADING=true`), idle because not configured, or failed to start. Off by design is normal. | Step 2 if you expected it on |
 
@@ -4014,7 +4014,7 @@ request, and throughput then grows with the workers; past the machine's cores, a
 
 ### 11. Reactive connectors
 
-A **reactive connector** (a connector file of plugin `reactive`, [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)) computes
+A **reactive connector** (a connector file of plugin `reactive`, [REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)) computes
 its kinds when a screen or a program asks, as the person asking, and sends a Python engine's work to a pool of this file: `engine.pool`
 names it; `engine.split` cuts a request over every worker of the pool, here and on the other nodes that serve it. A Java engine runs in
 the server instead; Drishti's own always may, any other only with

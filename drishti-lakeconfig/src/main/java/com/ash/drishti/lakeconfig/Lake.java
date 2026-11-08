@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * One lake: where it is and every table in it, from {@code config/lakes/<name>.yaml} (docs/architecture/LAKE_CONFIG.md section 3).
+ * One lake: where it is and every table in it, from {@code config/lakes/<name>.yaml} (docs/architecture/DATA_ARCHITECTURE.md section 3).
  * Values that named an environment variable ({@code ${AWS_REGION:us-east-1}}) are resolved; a secret is never in the file.
  *
  * @param name    the lake's name (the file's name); connectors and loaders refer to it

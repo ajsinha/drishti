@@ -2151,7 +2151,7 @@ refused (the code and its message on standard error) or some days could not be r
 ### `compute`: reactive connectors
 
 Asks a reactive connector for a computed kind as you, cancels one of your requests, sends an event to the triggers (administrators),
-lists your what-if sandboxes, and prints Admin's view of the reactive connectors ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)):
+lists your what-if sandboxes, and prints Admin's view of the reactive connectors ([REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)):
 
 ```text
 drishti.py compute run path-sum-java path-sum-java BOOK-FX --param delay-ms=20     the answer: state, request id, headline fields, stamp

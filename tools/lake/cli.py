@@ -21,7 +21,7 @@ the default; Apache Iceberg with `build --format iceberg`, and `maintain` for a 
     status     whether the lake's lock is held (lake maintain, or a load), and the last runs (from <lake>/_drishti-lake)
     demo       the demo lakes of the seven packs from the committed test data, data/testdata (tools/lake/demo.py)
     maintain   retention, compaction, checkpoints and vacuum, now or on schedules; --history (tools/lake/maintain.py; options passed through)
-    memory     the in-memory lake over REST: status, jobs, refill (tools/lake/memory_cli.py; docs/guides/IN_MEMORY_LAKE_GUIDE.md)
+    memory     the in-memory lake over REST: status, jobs, refill (tools/lake/memory_cli.py; docs/guides/DATA_LAKE_GUIDE.md)
     show       every lake of config/lakes/ and its tables, as the server reads them (tools/lake/lakeconfig.py; docs/guides/DATA_LAKE_GUIDE.md)
     check      connectors name known lakes; each lake file matches its tables on disk (format, partitions, promoted columns)
     migrate-config  lake files from connector files that still describe their lake; the connectors rewritten to lake: <name>
@@ -150,4 +150,4 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
             "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/admin/OPERATIONS.md")
     _mod("lakeconfig").register(sub, add)                               # lake show|check|migrate-config (2.9.11.c, DATA_LAKE_GUIDE.md)
     if ctx:
-        _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, IN_MEMORY_LAKE.md)
+        _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, docs/architecture/DATA_ARCHITECTURE.md)

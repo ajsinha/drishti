@@ -956,8 +956,8 @@ wrong.
 
 Why it works without Hadoop: the Delta Lake connector reads through its **native engine** (module `drishti-deltalake`), which uses
 Java's own file access for local disk and the AWS SDK for S3. Hadoop's local file system, and with it `winutils.exe`, is never used.
-See [DELTA_CONNECTOR.md › Engines](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop). The Iceberg connectors do the same
-through **drishti-iceberg**, Drishti's own Iceberg engine ([ICEBERG_CONNECTOR.md › Engines](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library)),
+See [DELTA_CONNECTOR.md › Engines](../../plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop). The Iceberg connectors do the same
+through **drishti-iceberg**, Drishti's own Iceberg engine ([ICEBERG_CONNECTOR.md › Engines](../../plugins/drishti-plugin-iceberg/README.md#engines-and-caches)),
 the default engine.
 
 > **Status.** The native engine is tested on Linux on every build, including its Windows path rules (drive letters, backslashes, UNC
@@ -1128,7 +1128,7 @@ still needs `winutils.exe` on Windows; it is only for tables in Azure, Google Cl
 | What | Why | Instead |
 |---|---|---|
 | `engine: hadoop` on a local lake | Hadoop's local file system needs `winutils.exe` | `engine: native` (the default) |
-| Replacing a DuckDB file while the server reads it | Windows cannot rename a file over one that is open ([DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md)) | load into a new file and switch the connector's `path`, or stop the server first |
+| Replacing a DuckDB file while the server reads it | Windows cannot rename a file over one that is open ([DUCKDB_CONNECTOR.md](../../plugins/drishti-plugin-duckdb/README.md)) | load into a new file and switch the connector's `path`, or stop the server first |
 | The bash scripts in `tools\*.sh` (`load-postgres.sh`, `drill.sh`, …) | they need bash | `tools\windows\*.ps1` for the server and the console, `tools\drishti.py` for lakes and packs; for the others, the Python tools they call run as they are (`python tools\…`), or use Git Bash or WSL |
 | `docker compose` deployments (`deploy\`) | Linux containers | Docker Desktop runs them as on Linux; the jar runs natively as above |
 

@@ -24,7 +24,7 @@ are built (phase 2's second half, section 8); the thin jar is designed, not buil
 ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md), the 2.9.11.e row and *Domains are modules*): the core knows no industry; each domain
 is a set of modules owning its compute, services and API, console screens and assets, Help, tutorials and packs; what a person sees
 follows role and lens; licences name modules. This document is the boundary list, the target layout, the dependency rules, the cycles
-that exist today and the order of the move. The native libraries' module, which every domain shares, is [DRISHTI_NATIVE.md](DRISHTI_NATIVE.md).
+that exist today and the order of the move. The native libraries' module, which every domain shares, is [DRISHTI_NATIVE.md](ARCHITECTURE.md#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks).
 
 ## 1. The two sides
 

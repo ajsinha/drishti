@@ -19,7 +19,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
- * Names of tables and models (BI_FOUNDATION_2911E.md Q11). A table is {@code <domain>.<name>}: both parts lower case, letters, digits and
+ * Names of tables and models (docs/architecture/BI_DESIGN.md Q11). A table is {@code <domain>.<name>}: both parts lower case, letters, digits and
  * underscores, starting with a letter, so SQL clients and Flight read them unquoted ({@code trading.trade_legs}). A migrated BI dataset
  * goes to the domain {@code bi} with its hyphens as underscores ({@code trading-risk-trades} is {@code banking.trading_risk_trades}); a pack's
  * generated dataset {@code pack.trading.trade} is {@code trading.trade}. A model keeps BI's name ({@code trading-risk}: lower case,

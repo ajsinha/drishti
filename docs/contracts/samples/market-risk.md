@@ -2082,8 +2082,8 @@ None: all 8,052 rows were read, and every field any of them has is in the record
 ### See also
 
 - Data contract: [SENS in the market-risk pack's contracts](../packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (`config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml`, the source of every meaning on this page).
-- [2. Position sensitivities: the input](../../architecture/SENSITIVITIES_AND_FRTB_SA.md#2-position-sensitivities-the-input)
-- [7.9 D8 `position-sensitivity` (SENS): new](../../lenses/MR_CUBE_LENS.md#79-d8-position-sensitivity-sens-new)
+- [20. position-sensitivity (SENS): every field](../../contracts/FRTB.md#20-position-sensitivity-sens-every-field)
+- [FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital](../../guides/FRTB_SA_GUIDE.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -2195,7 +2195,7 @@ Fields no record above has, found by reading all 867 rows, with how many rows fi
 ### See also
 
 - Data contract: [RFAC in the market-risk pack's contracts](../packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (`config/packs/banking/market-risk/contracts/risk-factor.contract.yaml`, the source of every meaning on this page).
-- [3. The factor dictionary and the naming standard](../../architecture/SENSITIVITIES_AND_FRTB_SA.md#3-the-factor-dictionary-and-the-naming-standard)
-- [7.10 D9 The factor dictionary (`risk-factor`) and the bucket mapping (`sensitivity-buckets.yaml`): new](../../lenses/MR_CUBE_LENS.md#710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new)
+- [21. risk-factor (RFAC): every field](../../contracts/FRTB.md#21-risk-factor-rfac-every-field)
+- [FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital](../../guides/FRTB_SA_GUIDE.md)
 - [Market risk](../../knowledge/market-risk.md)
 - [The test data and the demo lakes](../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

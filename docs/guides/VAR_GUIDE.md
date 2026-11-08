@@ -31,7 +31,7 @@ Drishti's implementation and the regulatory side; other documents link here. Any
 one table what Drishti receives, what it computes, what it keeps only as a cache and what it records officially. The rest of the guide
 keeps to those four words.
 
-**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md).
+**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../lenses/README.md#5-oversight-lens) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens).
 
 On 2026-10-26 this guide replaced five documents (this guide's first version, the explorer's page, the data contract `VAR.md`, the
 engine design and the data model); they were deleted (in git at tag v2.9.5). Where a design said otherwise,
@@ -804,7 +804,7 @@ VaR moved from one business date to the next; **Why it moved** says why, in caus
 each one. It is the **Why it moved** tab of the VaR figure's Explain (the drawer, or the page `VAR EXPLAIN <scope> <GO>`, or
 `VAR <scope> EXPLAIN [from] [to]`, opens), in three views (**Waterfall**, **Matrix**: the scope and each child node, the steps across,
 and **Sentences**) with the two dates to compare; it answers any scope the page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
-newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation).
+newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/README.md#531-ro1-var-change-explanation).
 
 **In plain words.** Drishti moves **one thing at a time** from yesterday's state to today's (the corrections to yesterday's data, the
 books that moved, the trades that left, the oldest day leaving the scenario window, the market, the newest day entering it, the new
@@ -1576,7 +1576,7 @@ feed the regulatory backtest of [section 18.11](#1811-backtesting-for-regulation
 ## 8. What-if and VaR as a kind
 
 The **computed kind** `var-result` of the market-risk pack makes VaR an ordinary kind, served by a reactive connector (`plugin: reactive`,
-[REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)): by command (`VRES DESK:RATES <GO>`), link (`/v/var-result/DESK:RATES`),
+[REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)): by command (`VRES DESK:RATES <GO>`), link (`/v/var-result/DESK:RATES`),
 the entities and compute APIs, the CLI (`drishti.py compute run var-engine var-result DESK:RATES`), search and the AI tools, with the
 explorer's entitlements (computed as the person asking: their nodes, masks and audit entry; cached per view signature). Names decided
 (open question 12): `var-result`, fields `VAR` with `CONFIDENCE` (never `VAR_99`); the retired kind name `var` is not reused. The
@@ -1585,7 +1585,7 @@ worst scenarios and the vector, and the explorer and the API serve paths and his
 `config/packs/banking/market-risk/contracts/var-result.contract.yaml` (class `computed`). The **pre-deal what-if** is the same engine's, asked
 through the VaR API (`POST /api/v1/risk/var/what-if`, [section 8.2](#82-the-what-if-the-java-engine)), not a kind.
 
-**Ids.** The id is the scope text. Like every computed id ([ComputeRef](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)), a
+**Ids.** The id is the scope text. Like every computed id ([ComputeRef](../connectors/types/reactive/README.md#reading-a-computed-kind)), a
 `~` inside it is written `%7E` (`NODE:MGMT%7EDESK-RATES`; prefer `DESK:RATES`, which needs none), `=` `%3D` (a `WHERE:` rule's `==`),
 and parameters ride after a `~` (`DESK:RATES~ccy=EUR`). A scope with a `/` (a basket) is read through the compute API's body,
 not a link.
@@ -1812,7 +1812,7 @@ run.
 A pricing system may publish the same updates to a **PV topic** instead of writing files; the two channels mix on one date, the latest
 `COMPUTED_AT` per trade winning across both. The market-risk pack's connector **`pv-updates`** (plugin `var-pv-stream`, **off by
 default**: `DRISHTI_VAR_PV_STREAM=true`) reads it like the Kafka connector (every partition from the beginning, no consumer group, its
-`bootstrap-servers`, security and `client.*` settings; [KAFKA_CONNECTOR.md section 17](../connectors/KAFKA_CONNECTOR.md#17-the-var-pv-topic-var-pv-stream)).
+`bootstrap-servers`, security and `client.*` settings; [KAFKA_CONNECTOR.md section 17](../../plugins/drishti-plugin-kafka/README.md#the-var-pv-topic-var-pv-stream)).
 
 ```text
 pricing system ──► PV topic (each message's value JSONL text: one or more records; the key not read)
@@ -5228,7 +5228,7 @@ Everything in this list is **design, not built**; the plan row that builds it is
 | The lake layout at bank scale: the sort by hierarchy, the partition by scenario set, file and row-group sizes, `BYTE_STREAM_SPLIT` + ZSTD | open question 7, [section 29.2](#292-the-layout-the-design-chose-and-what-is-built) |
 | Age-weighted and filtered methods; ES backtests (Acerbi–Székely) | [section 18.3](#183-decomposition-of-a-scope-into-parts), [section 18.4](#184-history-and-backtest) |
 | The batch's due time and completeness rule; the load checks still not made | open question 4, [section 20.3](#203-what-the-load-checks) |
-| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) |
+| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens) |
 | The common risk lake for every risk pack; the scope words `GROUP:` and `NSET:` | parked, [section 15.1](#151-where-they-live) |
 
 Built since this list was first written: regulatory backtesting, period statistics and the report framework with its pilot pack
@@ -5252,16 +5252,16 @@ annual report's trading VaR table (built); the US needs 10-day VaR and stressed 
 | Where | Status | What it shows of VaR |
 |---|---|---|
 | **The full product** (no edition) | built | the VaR explorer (`VAR BANK <GO>`, [section 3](#3-the-explorer-screen-by-screen)) with the Horizon, Confidence, ES and Reporting currency pickers; the position and portfolio pages; the computed kind `VRES` and the what-if under the basket's sheet; the scenario matrix `SMAT`; the official records (`VOFF`); BI's VaR datasets; the API and the CLI |
-| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([LENSES.md](../admin/LENSES.md#5-drishti-risk), [RISK_LENS.md](../lenses/RISK_LENS.md#31-var)) |
-| **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/TRADING_LENS.md#44-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
+| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([LENSES.md](../admin/LENSES.md#5-drishti-risk), [RISK_LENS.md](../lenses/README.md#12-what-it-answers-today)) |
+| **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/README.md#222-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
 | **Drishti Market** and **Drishti World** | built | no VaR (`VAR` and `SMAT` off) |
-| A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md)) |
-| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md)); the CRO's VaR against risk appetite ([CRO_LENS.md](../lenses/CRO_LENS.md)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../lenses/CIO_LENS.md)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md)) |
+| A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](PACK_DEVELOPER_GUIDE.md#part-ix-designing-for-phones)) |
+| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../lenses/README.md#5-oversight-lens)); the CRO's VaR against risk appetite ([CRO_LENS.md](../lenses/README.md#8-cro-lens)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../lenses/README.md#9-cio-lens)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../lenses/README.md#6-mr-cube-lens)) |
 
 Under every edition the engine is the same: any scope, any currency, intraday, official records, the what-if, the API and the CLI. The
 lens gaps that concern VaR (stressed VaR on the landings, horizon and confidence there, backtesting on the bank's P&L, why it moved) are
-listed in [RISK_LENS.md section 5](../lenses/RISK_LENS.md#5-gaps-with-design-sketches) and
-[TRADING_LENS.md section 5](../lenses/TRADING_LENS.md#5-gaps-with-design-sketches).
+listed in [RISK_LENS.md section 5](../lenses/README.md#13-gaps-and-proposals) and
+[TRADING_LENS.md section 5](../lenses/README.md#23-gaps-and-proposals).
 
 ## 34. Configuration keys
 

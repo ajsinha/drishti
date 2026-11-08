@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: Kafka over mutual TLS with PEM files (a private CA, cert-manager or Vault). The key may be encrypted: its password is
-# an environment reference or a file. Copy to config/connectors/kafka-mtls-pem.yaml. See docs/connectors/KAFKA_CONNECTOR.md.
+# an environment reference or a file. Copy to config/connectors/kafka-mtls-pem.yaml. See plugins/drishti-plugin-kafka/README.md.
 plugin: kafka
 kinds: [trade]
 description: Trades over mutual TLS, PEM certificates

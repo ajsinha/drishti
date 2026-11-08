@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Admin -> Capacity (templates/admin/capacity.html; mock-ups docs/architecture/mockups/capacity/ B and A). Every colour is a theme
-   token (drishti_tokens.css), so dark and light read the same; a state is said in words as well as colour; on a phone (MOBILE_DISPLAY.md) the
+   token (drishti_tokens.css), so dark and light read the same; a state is said in words as well as colour; on a phone (docs/guides/PACK_DEVELOPER_GUIDE.md) the
    must and glance parts stay, the more parts fold, the desk parts give way to one line saying where they are. */
 .cap { --cap-c1: var(--d-link); --cap-c2: var(--d-accent); --cap-c3: var(--d-ok); --cap-c4: var(--d-cap-violet); --cap-c5: var(--d-neg); --cap-c6: var(--d-cap-teal);
   --cap-c7: var(--d-muted); --cap-c8: var(--d-warn); min-width: 0; }

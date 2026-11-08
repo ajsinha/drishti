@@ -306,7 +306,7 @@ public final class PackLoader {
                 if (c.get("enabled") != null) {
                     props.put(base + ".enabled", c.get("enabled"));
                 }
-                List<String> ck = ConnectorFiles.kindNames(c.get("kinds"));       // a reactive connector's kinds are a mapping (REACTIVE_CONNECTOR.md)
+                List<String> ck = ConnectorFiles.kindNames(c.get("kinds"));       // a reactive connector's kinds are a mapping (docs/connectors/types/reactive/README.md)
                 for (int i = 0; i < ck.size(); i++) {
                     props.put(base + ".kinds[" + i + "]", ck.get(i));
                 }

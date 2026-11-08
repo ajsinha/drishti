@@ -175,13 +175,13 @@ apply` refuse a credential written in clear. There is no loader for these files:
 
 - [Connector files](../../../docs/connectors/CONNECTOR_FILES.md): the folder, the format, live reload, copying these examples.
 - [TLS and the outbound proxy](../../../docs/connectors/TLS.md): every `tls.*` and `proxy.*` setting and the start-up checks.
-- The plugins' documents: [Kafka](../../../docs/connectors/KAFKA_CONNECTOR.md), [ActiveMQ](../../../docs/connectors/ACTIVEMQ_CONNECTOR.md),
-  [RabbitMQ](../../../docs/connectors/RABBITMQ_CONNECTOR.md), [REST](../../../docs/connectors/REST_CONNECTOR.md),
-  [PostgreSQL](../../../docs/connectors/POSTGRES_CONNECTOR.md), [MongoDB](../../../docs/connectors/MONGODB_CONNECTOR.md),
-  [Redis](../../../docs/connectors/REDIS_CONNECTOR.md), [Aerospike](../../../docs/connectors/AEROSPIKE_CONNECTOR.md),
-  [Cassandra](../../../docs/connectors/CASSANDRA_CONNECTOR.md), [Delta Lake](../../../docs/connectors/DELTA_CONNECTOR.md),
-  [Iceberg](../../../docs/connectors/ICEBERG_CONNECTOR.md), [external Iceberg](../../../docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md),
-  [S3](../../../docs/connectors/S3_CONNECTOR.md), [news](../../../docs/connectors/NEWS.md), [yfinance](../../../docs/connectors/YFINANCE.md).
+- The plugins' documents: [Kafka](../../../plugins/drishti-plugin-kafka/README.md), [ActiveMQ](../../../plugins/drishti-plugin-activemq/README.md),
+  [RabbitMQ](../../../plugins/drishti-plugin-rabbitmq/README.md), [REST](../../../plugins/drishti-plugin-rest/README.md),
+  [PostgreSQL](../../../plugins/drishti-plugin-jdbc/README.md), [MongoDB](../../../plugins/drishti-plugin-mongodb/README.md),
+  [Redis](../../../plugins/drishti-plugin-redis/README.md), [Aerospike](../../../plugins/drishti-plugin-aerospike/README.md),
+  [Cassandra](../../../plugins/drishti-plugin-cassandra/README.md), [Delta Lake](../../../plugins/drishti-plugin-delta/README.md),
+  [Iceberg](../../../plugins/drishti-plugin-iceberg/README.md), [external Iceberg](../../../plugins/drishti-plugin-iceberg-external/README.md),
+  [S3](../../../plugins/drishti-plugin-s3/README.md), [news](../../../plugins/drishti-plugin-news/README.md), [yfinance](../../../plugins/drishti-plugin-yfinance/README.md).
 
 The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching
 file in [config/lakes.examples/other/](../../lakes.examples/other/): copy both (docs/guides/DATA_LAKE_GUIDE.md).

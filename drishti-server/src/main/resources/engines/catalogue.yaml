@@ -45,7 +45,7 @@ engines:
     console: [/admin/api/lakes/memory]
     words: []
     menus: []
-    help: [in-memory-lake-guide]
+    help: [docs-tutorials-31-news-in-memory-only]
     landings: []
     tiles: []
     lenses: []

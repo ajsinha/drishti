@@ -22,7 +22,7 @@ links to its own headlines (`newsId`), so `CPTY CP-NORTHBRIDGE` shows a *Headlin
 ## News
 
 A sample pack: fifteen topics (central banks, countries, companies and themes), and for each the news about it, **computed when you open the page**
-by the [news connector](../../../../../docs/connectors/NEWS.md) from Google News. The topic list is static reference data in `samples/news-topic.jsonl`
+by the [news connector](../../../../../plugins/drishti-plugin-news/README.md) from Google News. The topic list is static reference data in `samples/news-topic.jsonl`
 (written by `tools/make_samples.py`); the headlines are live.
 
 !!! warning "Off until you turn it on, and names leave your network when you do"
@@ -62,7 +62,7 @@ While the connector is off the headline panels are empty and say `waiting for NE
 - **Topics:** edit the list in `tools/make_samples.py` and run `python3 config/packs/economy/news-and-markets/tools/make_samples.py`; it rewrites `samples/` and the
   alias block of the connector template in `pack.yaml`. The connector file `config/connectors/news.yaml` is written once from the template and is yours
   after that; add `aliases.<Name_with_underscores>` lines to it for new topics.
-- **Filters:** `relevance`, `allow-sources`, `deny-sources`, `max-items`, `cache-ttl-seconds` and the rest in the connector file; see [NEWS.md](../../../../../docs/connectors/NEWS.md#6-settings).
+- **Filters:** `relevance`, `allow-sources`, `deny-sources`, `max-items`, `cache-ttl-seconds` and the rest in the connector file; see [NEWS.md](../../../../../plugins/drishti-plugin-news/README.md#settings).
 - **Another pack's entity:** give it a field holding `NEWS-<name>` and a panel with `source: "link($.newsId, 'news')"`; the companies here do so.
 
 ### Who can see it
@@ -75,8 +75,8 @@ is code rather than a store. See [Domain packs](../../../../../docs/guides/PACK_
 ## Markets
 
 A sample pack: twenty well-known listed companies, each with a **quote and a price chart** computed on demand by the
-[yfinance connector](../../../../../docs/connectors/YFINANCE.md) and the **news about the company** computed on demand by the
-[news connector](../../../../../docs/connectors/NEWS.md). The company list (ticker, name, other names,
+[yfinance connector](../../../../../plugins/drishti-plugin-yfinance/README.md) and the **news about the company** computed on demand by the
+[news connector](../../../../../plugins/drishti-plugin-news/README.md). The company list (ticker, name, other names,
 exchange, sector, country) is static reference data in `samples/listed-company.jsonl`, written by `config/packs/economy/news-and-markets/tools/make_samples.py`.
 
 !!! warning "Internal demonstrations only; off until you turn it on"
@@ -133,7 +133,7 @@ ticker is simply not found.
 ### Changing it
 
 - **Companies:** edit the list in `config/packs/economy/news-and-markets/tools/make_samples.py` and run it (it also rewrites the aliases of the news connector template).
-- **History:** `range` and `interval` in `config/connectors/yfinance.yaml` (for example `1y` and `1wk`); caching and retries in the same file; see [YFINANCE.md](../../../../../docs/connectors/YFINANCE.md#6-settings).
+- **History:** `range` and `interval` in `config/connectors/yfinance.yaml` (for example `1y` and `1wk`); caching and retries in the same file; see [YFINANCE.md](../../../../../plugins/drishti-plugin-yfinance/README.md#settings).
 - **Percent format:** the pack defines `pc2` (a value already in percent, with a sign and ` %`).
 
 ### Who can see it

@@ -77,7 +77,7 @@ SBM and DRC of securitisations and the correlation trading portfolio (their inpu
 | Its steps: buckets, WS, K, S, the scenario | in `FRSA` | `GET /api/v1/risk/frtb/sa/explain` | `drishti.py frtb explain` |
 | Contributions | in `FRSA` | `GET /api/v1/risk/frtb/sa/contributions` | `drishti.py frtb contributions` |
 | The playground and its recipes | `PLAY FRTB <scope>`, `PLAY FRTB RUN <recipe>` | `/api/v1/risk/frtb/playground` (and `.xlsx`) | `drishti.py play frtb` |
-| The official capture per filer and date (design) | | | `drishti.py frtb capture` |
+| The official capture per filer and date | not built yet | | |
 
 | Part | Status | Where |
 |---|---|---|
@@ -612,8 +612,8 @@ shown on the data-trust card and in the load report (codes proposed, range `DRS-
 | The element's `CURRENCY` has an FX rate on the date | the element | `DRS-5324` *no <ccy> rate on <date>; <n> elements of <source> are refused* |
 | The same factor and measure twice in a record | the record | `DRS-5325` *<SENSITIVITY_ID> carries <factor> <measure> twice; the record is refused* |
 | One full run per source and date | the second run | `DRS-5326` *<source> already delivered the full run of <date> (<batch>); <batch> is refused: send a restatement* |
-| Required fields, enums, the key pattern | the record | `DRS-5327` *<SENSITIVITY_ID>: <field> <is missing or has value v>; the record is refused* |
-| One grain per source and date | the records of the second grain | `DRS-5328` *<source> sent both POSITION and TRADE records for <date>; the TRADE records are refused* |
+| Required fields, enums, the key pattern | the record | planned: *<SENSITIVITY_ID>: <field> <is missing or has value v>; the record is refused* |
+| One grain per source and date | the records of the second grain | planned: *<source> sent both POSITION and TRADE records for <date>; the TRADE records are refused* |
 | A parameter file complete and in range | the file (the engine does not answer from it) | `DRS-5329` *<file>: <key> is <missing or v, outside min to max>; the parameter file is refused* |
 
 **Warnings** (the data is used; the warning is counted and shown):

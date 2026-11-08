@@ -56,7 +56,7 @@ public class ExprController {
     public Map<String, Object> functions(@RequestParam(required = false) String scope, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
         Scope s = Scope.of(scope);
-        Signatures cat = Signatures.get();                                       // Rachana's one catalogue (BI_FOUNDATION_2911E.md 2.5)
+        Signatures cat = Signatures.get();                                       // Rachana's one catalogue (docs/architecture/BI_DESIGN.md 2.5)
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("language", "Rachana");
         m.put("version", 3);

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# ISDA SIMM: the structure of one version's parameter file (docs/guides/SIMM_GUIDE.md section 4; docs/architecture/SENSITIVITIES_AND_FRTB_SA.md
+# ISDA SIMM: the structure of one version's parameter file (docs/guides/SIMM_GUIDE.md section 4; docs/guides/FRTB_SA_GUIDE.md
 # section 8). The SIMM risk weights, correlations, concentration thresholds, historical volatility ratios and currency groups are ISDA's
 # and licensed: Drishti ships none of them. A bank holding a SIMM licence copies this file once per version it uses into the folder
 # drishti.simm.parameters-dir (one file a version, `version` and `effective-from` as in ISDA's methodology document) and fills every null;

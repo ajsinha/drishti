@@ -267,7 +267,7 @@ built).
 | Exposure owner (PLANNED, of 8) | 250,000 sets, P = 5,000, G = 100 | 24g | 256 GB | 24 | 4 TB NVMe | footnote 4, ASSUMPTION on sets |
 | BI and reporting | any | 16g | 64 GB | 16 | 500 GB SSD (`bi-store`, `bi-runs` 20 GB) | ASSUMPTION |
 | Data-serving | any | 24g | 64 GB | 16 | 1 TB NVMe (id maps, index, documents) | ASSUMPTION |
-| Loader | 2.3M in 10 minutes | 40g | 64 GB | 32 | 50 GB NVMe spill | measured at 10K, estimated at 2.3M ([PARALLEL_LOADER.md section 11](PARALLEL_LOADER.md#11-measured-and-the-23m-estimate)) |
+| Loader | 2.3M in 10 minutes | 40g | 64 GB | 32 | 50 GB NVMe spill | measured at 10K, estimated at 2.3M ([PARALLEL_LOADER.md section 11](DATA_ARCHITECTURE.md#1010-measured-and-the-23m-estimate)) |
 | Console | 300–500 people | — | 8 GB | 4 | 20 GB | measured 69–70 pages/s a console |
 | PostgreSQL | any | — | 32 GB | 8 | 500 GB SSD | ASSUMPTION |
 
@@ -1261,7 +1261,7 @@ every statement here are in section 4.
 
 | Piece | On premises | On AWS | Why it must be shared |
 |---|---|---|---|
-| **The lake** | an S3-compatible object store (MinIO or the bank's own, with conditional writes; `s3.endpoint` and a private CA: [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md#security-tls-and-credentials)), or a NAS/SAN file system mounted at the same path on every machine | S3 (Delta or Iceberg), gateway endpoint | every member builds its shards and opens dates from the same data at the same version; a shard whose holders fail is rebuilt from it |
+| **The lake** | an S3-compatible object store (MinIO or the bank's own, with conditional writes; `s3.endpoint` and a private CA: [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md#security-tls-and-credentials)), or a NAS/SAN file system mounted at the same path on every machine | S3 (Delta or Iceberg), gateway endpoint | every member builds its shards and opens dates from the same data at the same version; a shard whose holders fail is rebuilt from it |
 | **The Drishti database** | PostgreSQL primary + streaming standby (Patroni or the bank's operator); a tested failover guide is PLANNED (`CD8`) | RDS PostgreSQL **Multi-AZ** | users, sessions, edits, run leases and identity on every member; **never the single-node SQLite default** in a cluster (section 8) |
 | **The load balancer** | a pair (HAProxy + keepalived VIP, or F5) | an ALB across three zones | routes on readiness: `GET /readyz` on the consoles, so a drained or starting member gets no users |
 | **Consoles** | one on each machine, all three behind the same balancer, the relay across hosts on (section 9.4) | the same, or a Fargate console service | a console lists all three servers (`backend.urls`, `discover: true`) and moves to another after two failures |
@@ -3131,7 +3131,7 @@ Settings in `deploy/aws/env` (from `env.example`): `ICEBERG_PREFIX` (`iceberg`),
 **Path-based tables or Glue.** A path-based table in S3 commits by a conditional create of its next metadata file, so two writers of one
 table are safe when the bucket honours `If-None-Match` (`check-conditional-writes.sh`); the scripts also hold one EFS lock per table. With
 Glue the catalog commits atomically and other engines (Athena, Spark) see the same tables. The server reads either through its
-connector file (`plugin: iceberg`; [ICEBERG_CONNECTOR.md section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need)).
+connector file (`plugin: iceberg`; [ICEBERG_CONNECTOR.md section 19](../../plugins/drishti-plugin-iceberg/README.md#aws-glue)).
 
 **How the product owner proves Glue (no AWS account is available to the build).**
 
@@ -3150,9 +3150,9 @@ connector file (`plugin: iceberg`; [ICEBERG_CONNECTOR.md section 19](../connecto
 **The AWS connectors' tool scripts (Python).** Two connectors have their own small set of scripts beside these, in Python with `boto3`
 (no AWS CLI, so they run on Windows too) with `.sh` and `.ps1` wrappers: [`deploy/aws/s3-tables/`](../../deploy/aws/s3-tables/README.md)
 for **AWS S3 Tables** (the `iceberg` connector with `catalog: s3tables`, the table bucket named by its ARN;
-[ICEBERG_CONNECTOR.md section 20](../connectors/ICEBERG_CONNECTOR.md#20-aws-s3-tables)) and
+[ICEBERG_CONNECTOR.md section 20](../../plugins/drishti-plugin-iceberg/README.md#aws-s3-tables)) and
 [`deploy/aws/delta-s3/`](../../deploy/aws/delta-s3/README.md) for **Delta Lake on S3** (the `delta` connector with
-`root: s3://<bucket>/<prefix>`; [DELTA_CONNECTOR.md section 17](../connectors/DELTA_CONNECTOR.md#17-delta-lake-on-aws-s3)). Each has
+`root: s3://<bucket>/<prefix>`; [DELTA_CONNECTOR.md section 17](../../plugins/drishti-plugin-delta/README.md#delta-lake-on-aws-s3)). Each has
 `create` (the bucket, the namespace or prefix, the IAM policy, attached to a role), `check` (the resources, then one table read end to
 end as Drishti reads it), `remove` (only what is asked, with `--yes`) and `policy` (the document, printed); each takes `--region`,
 `--profile`, `--env deploy/aws/env` and `--dry-run`, and never prints a credential. Their tests need no AWS account (botocore's
@@ -3192,7 +3192,7 @@ that is designed but not built, it says **planned** and names the step of [secti
 builds it.
 
 Related: [section 2](#appendix-b-drishti-on-aws-ecs-efs-and-s3) (ECS, EFS and the identical-path rule), [section 5](#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built)
-(500 GB a day for seven years), [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md) (how Drishti reads a Delta table),
+(500 GB a day for seven years), [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md) (how Drishti reads a Delta table),
 [OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain) (`lake maintain`), [TOOLS.md](../guides/TOOLS.md) (`lake build`,
 `lake publish`), [section 1](#appendix-a-drishtinet-many-servers-one-drishti) (several servers). Delta is the default; tables a deployment keeps in Apache Iceberg
 instead have their own scripts, `deploy/aws/iceberg/` ([section 2, its section 22](#22-iceberg-on-aws)); the two
@@ -3266,7 +3266,7 @@ hot, per-node state.
 
 | | Status | Where |
 |---|---|---|
-| Reading Delta tables in S3 (native engine, no Hadoop): file lists from the last checkpoint, id maps, one row group per read, footers cached, documents cached on disk | **built** | `drishti-deltalake`, `drishti-lakeio`, `plugins/drishti-plugin-delta`; [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md) |
+| Reading Delta tables in S3 (native engine, no Hadoop): file lists from the last checkpoint, id maps, one row group per read, footers cached, documents cached on disk | **built** | `drishti-deltalake`, `drishti-lakeio`, `plugins/drishti-plugin-delta`; [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md) |
 | `lake build`: a JSON export into a Delta table on local disk or EFS, the pack's promoted columns, partitions, sorted by id per partition that fits a batch | **built** | `tools/lake/build.py`, Drishti's Java writer in the server jar |
 | `lake publish`: a table `lake build` wrote, committed into a table in S3 as one commit (S3 conditional writes) | **built** (this release) | `tools/lake/publish.py`, `tools/lake/test_publish.py` |
 | `lake maintain` on an `s3://` root: retention, checkpoint and log cleanup, vacuum | **built** | `tools/lake/maintain.py` (with `--force-foreign`, section 9) |
@@ -3499,7 +3499,7 @@ a sustained rate.
 
 ### 6. Keys: the id, promoted columns and statistics
 
-Every row is one document ([DELTA_CONNECTOR.md section 3](../connectors/DELTA_CONNECTOR.md#3-what-is-on-disk)):
+Every row is one document ([DELTA_CONNECTOR.md section 3](../../plugins/drishti-plugin-delta/README.md#data-structure)):
 
 | Column | Type | Content |
 |---|---|---|
@@ -3517,7 +3517,7 @@ Every row is one document ([DELTA_CONNECTOR.md section 3](../connectors/DELTA_CO
 | **Search, pick lists, derived kinds, impact, links** | the day's column set: `id` and every promoted column, never `doc` | every field a search filters, sorts or shows **promoted**; a search on a field that is not promoted reads documents up to `drishti.search.max-scan` and says `partial` |
 | **File skipping** | per-file min and max in the log, per-row-group min and max in the footer | `delta.dataSkippingStatsColumns` = `id`, `business_date` and the promoted columns, never `doc` (it would put whole documents in the log). `lake build` sets it; `lake publish` carries it to the S3 table |
 
-Choosing what to promote is a pack decision ([DELTA_CONNECTOR.md section 4](../connectors/DELTA_CONNECTOR.md#4-declaring-the-layout-in-a-pack)).
+Choosing what to promote is a pack decision ([DELTA_CONNECTOR.md section 4](../../plugins/drishti-plugin-delta/README.md#declaring-the-layout-in-a-pack)).
 Adding a promoted column later changes the table's columns: `lake publish` refuses a day whose columns differ from the
 table's (`the columns differ from the target's (new [...], missing [...], other type [...])`); see runbook 13.4.
 
@@ -3528,7 +3528,7 @@ table's (`the columns differ from the target's (new [...], missing [...], other 
 | Setting | Value | Set by | Why |
 |---|---|---|---|
 | Rows per file | `layout.<kind>.file-rows` (250,000) | the pack | few files per day, each large enough for S3 (hundreds of MB) |
-| Row group | **1 MB** on AWS (`LAKE_ROW_GROUP_KB=1024` → `DRISHTI_LAKE_ROW_GROUP_KB`; every writer's sizes: [DELTA_CONNECTOR.md, Row-group size](../connectors/DELTA_CONNECTOR.md#row-group-size)) | `deploy/aws/env` | a single read fetches and decodes one row group: on S3 each GET costs 10–30 ms to the first byte, so 1 MB balances bytes moved against GETs; the page index narrows it further (`DRISHTI_LAKE_PAGE_KB`, 64) |
+| Row group | **1 MB** on AWS (`LAKE_ROW_GROUP_KB=1024` → `DRISHTI_LAKE_ROW_GROUP_KB`; every writer's sizes: [DELTA_CONNECTOR.md, Row-group size](../../plugins/drishti-plugin-delta/README.md#row-group-size)) | `deploy/aws/env` | a single read fetches and decodes one row group: on S3 each GET costs 10–30 ms to the first byte, so 1 MB balances bytes moved against GETs; the page index narrows it further (`DRISHTI_LAKE_PAGE_KB`, 64) |
 | Compression | Snappy (Drishti's Java writer and delta-rs) | the writer | the native engine also reads ZSTD, GZIP and LZ4_RAW |
 | Statistics | `id`, `business_date`, promoted columns | `lake build` | file and row-group skipping without documents in the log |
 | Checkpoint | every 10 commits (`delta.checkpointInterval`, set by `lake publish` on a new table) and after every maintenance run | `lake publish`, `lake maintain` | a reader replays the last checkpoint plus at most a few commits |
@@ -3548,7 +3548,7 @@ for each such partition. Three remedies, in order of preference:
    about 8 GB; the loader task has 30 GB).
 
 A Delta table written elsewhere (Spark, Databricks) sorts with `repartitionByRange(…, "id").sortWithinPartitions("id")`
-([DELTA_CONNECTOR.md section 5](../connectors/DELTA_CONNECTOR.md#5-writing-the-lake)). Range maps that use the log's per-file
+([DELTA_CONNECTOR.md section 5](../../plugins/drishti-plugin-delta/README.md#writing-the-lake)). Range maps that use the log's per-file
 id ranges instead of id maps, and Bloom filters on `id`, are **planned (Appendix E step S1)**.
 
 #### 7.3 One commit per day per table
@@ -3659,7 +3659,7 @@ script overrides the rule; `lake maintain` prints its warning and its history ma
 
 Never Glacier Flexible Retrieval or Deep Archive: their objects need a restore of hours before a read, and Drishti reads any
 day in milliseconds. Never an S3 expiry of current lake objects: removing a file a table version still names breaks the table
-([DELTA_CONNECTOR.md section 10](../connectors/DELTA_CONNECTOR.md#10-keeping-the-lake-in-shape)); only `lake maintain`
+([DELTA_CONNECTOR.md section 10](../../plugins/drishti-plugin-delta/README.md#keeping-the-lake-in-shape)); only `lake maintain`
 removes table files.
 
 #### 9.3 Compaction
@@ -3692,7 +3692,7 @@ of that minimum on the files it replaces. Reads from Standard-IA cost about USD 
 
 ### 10. Caches: EFS or local NVMe
 
-Drishti keeps small, bounded structures per table and day ([DELTA_CONNECTOR.md section 9](../connectors/DELTA_CONNECTOR.md#9-memory)):
+Drishti keeps small, bounded structures per table and day ([DELTA_CONNECTOR.md section 9](../../plugins/drishti-plugin-delta/README.md#memory)):
 
 | Cache | Where | Bounded by | After a restart |
 |---|---|---|---|
@@ -4000,7 +4000,7 @@ partition rebuilt when the data version it was read from changes.
 | Test | Result |
 |---|---|
 | `lake build`, 303,780 trades, one day | **42 s**; files of 3K–60K trades by product type |
-| Old writer layout | one Parquet row group per file (up to 60K trades); then 1 MB row groups, now 256 KB ([Row-group size](../connectors/DELTA_CONNECTOR.md#row-group-size)) |
+| Old writer layout | one Parquet row group per file (up to 60K trades); then 1 MB row groups, now 256 KB ([Row-group size](../../plugins/drishti-plugin-delta/README.md#row-group-size)) |
 | Single trade open, 300K, 4 GB heap (30 random ids, console) | p50 **0.09–0.14 s**, p95 **0.29–0.35 s**, 0 failures, also **during** a grouped-page rebuild |
 | Trading form, 300K | 0.45 s |
 | Grouped pages, 15K trades, one at a time (before) | **16.6 s** |
@@ -4091,7 +4091,7 @@ DOWN with that reason, its pages answer "unavailable", and the rest of the serve
   the dumps change too many fields every day (section 17).
 - **Partitions**: `business_date` + `PRODUCT_TYPE` for trades; `business_date` for reference data.
 - **Files**: sorted by id; at most `file-rows` (250,000) rows; small Parquet row groups (done; was one group per
-  file), sized in bytes by the lake writer: 256 KB by default, 1 MB on AWS ([DELTA_CONNECTOR.md, Row-group size](../connectors/DELTA_CONNECTOR.md#row-group-size)).
+  file), sized in bytes by the lake writer: 256 KB by default, 1 MB on AWS ([DELTA_CONNECTOR.md, Row-group size](../../plugins/drishti-plugin-delta/README.md#row-group-size)).
   Takes effect for data loaded after the change; Admin → Lakes → Maintain (compaction) rewrites older files.
 - **Promoted columns** cover every field a search, form, list, grouped page or BI table reads, including values
   inside arrays flattened at load time (for example the first leg's notional as `NOTIONAL`), so none of them needs a
@@ -4265,7 +4265,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | `max-scan` | `derived` connector | 50000 | members read one at a time, for sources that cannot read a day in one pass |
 | `<kind>.max-members` | `derived` connector | 1000 | members listed on a page; the count and totals cover every member |
 | `drishti.sources.fetch-timeout` | server | **10s** | longest single read (`DRS-1004`); also a panel's own source |
-| `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB` | `lake build` (Java writer) | **256**, **64** | Parquet row group and page size ([DELTA_CONNECTOR.md, Row-group size](../connectors/DELTA_CONNECTOR.md#row-group-size)) |
+| `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB` | `lake build` (Java writer) | **256**, **64** | Parquet row group and page size ([DELTA_CONNECTOR.md, Row-group size](../../plugins/drishti-plugin-delta/README.md#row-group-size)) |
 | `ingest.<kind>.flatten`, `ingest.<kind>.key` | pack (read by `lake build`) | none | flattened fields written as plain fields and promoted columns; the id field, so `--key` is optional |
 | `drishti.tmp-dir` / `DRISHTI_TMP_DIR` | server | **`<data dir>/tmp/server`** | temporary files (the console's: `<data dir>/tmp/console`) |
 | `server.workers` / `DRISHTI_CONSOLE_WORKERS` | console | **4** | worker processes sharing the console's port |
@@ -4962,7 +4962,7 @@ before a read.
 - Lifecycle transitions apply by **prefix and age** to data files only (`business_date=` partitions); the `_delta_log`
   folders, the register and the products' newest year stay in Standard.
 - **No S3 expiry on any table's files.** Removing files under a live table corrupts it
-  ([ICEBERG_CONNECTOR.md section 9](../connectors/ICEBERG_CONNECTOR.md#9-retention-and-maintenance) explains why).
+  ([ICEBERG_CONNECTOR.md section 9](../../plugins/drishti-plugin-iceberg/README.md#retention-and-maintenance) explains why).
   Retention past seven years drops the whole year's table (the year's folder), by the retention job, after the
   register marks the year expired.
 - The landing folder expires its dumps after 30 days (they are not a table).

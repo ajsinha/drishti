@@ -78,7 +78,7 @@ ui:
   # The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): Customize on every entity page and Describe under Build -> New screen. A
   # user's changes are their own Design, never the pack's Sutra. Off: pages and the screen designer are exactly as before.
   designer: ${DRISHTI_UI_DESIGNER:false}
-  # The phone display (docs/architecture/MOBILE_DISPLAY.md): each panel of a page goes to a phone as must (shown in full, first), glance
+  # The phone display (docs/guides/PACK_DEVELOPER_GUIDE.md): each panel of a page goes to a phone as must (shown in full, first), glance
   # (a compact form: five rows, a sparkline), more (loaded when tapped, under More on this page) or desk (named under On desktop). The
   # browser says what it is (the drishti-device cookie from the screen width, or an X-Drishti-Device header); a desktop is unchanged.
   phone:
