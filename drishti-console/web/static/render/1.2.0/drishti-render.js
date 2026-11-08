@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Render, the client-side renderer (docs/architecture/CLIENT_RENDERER.md): paints a Drishti screen from the server's ViewModel
+/* Drishti Render, the client-side renderer (docs/guides/EMBED_GUIDE.md): paints a Drishti screen from the server's ViewModel
    JSON, in the browser, with no build step and no framework. One import, one call:
 
      <script type="module">

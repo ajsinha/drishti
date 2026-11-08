@@ -113,7 +113,7 @@ public enum ErrorCode {
     AI_POLICY("DRS-4018", 403),
     /** No such model, provider, MCP server or tool. */
     AI_NOT_FOUND("DRS-4019", 404),
-    /** BI with AI (docs/guides/BI_GUIDE.md): the model's answer could not be used (not a valid report, not a query the engine accepts); nothing was changed. */
+    /** BI with AI (docs/guides/REPORTS_GUIDE.md): the model's answer could not be used (not a valid report, not a query the engine accepts); nothing was changed. */
     AI_ANSWER("DRS-4020", 422),
     /** History queries: a range of more business days than the kind's or the server's max-days. */
     HISTORY_RANGE_TOO_LARGE("DRS-4021", 400),
@@ -449,7 +449,7 @@ public enum ErrorCode {
     PYTHON_TESTS("DRS-9076", 422),
     /** BI: a Vega-Lite specification was not drawn (a url or loader in it, or a feature drishti-chart does not translate, named with what to use instead); raised by the page, in the visual's frame, and listed here so the code has one home. */
     VEGA_FAILED("DRS-9077", 422),
-    /** BI runs (docs/architecture/BI_DESIGN.md): no such run, or not one the caller may see. */
+    /** BI runs (docs/architecture/ARCHITECTURE.md §28): no such run, or not one the caller may see. */
     RUN_NOT_FOUND("DRS-9080", 404),
     /** BI runs: the caller has {@code queue.per-user} runs queued or running, or the node's queue is at {@code queue.max} (Retry-After). */
     RUN_QUEUE_FULL("DRS-9081", 429),
@@ -579,7 +579,7 @@ public enum ErrorCode {
     CONTENT_BAD_KEY("DRS-5058", 400),
     /** Content store: the backing store (database, bucket, shared folder) could not be reached or answered with an error. */
     CONTENT_UNAVAILABLE("DRS-5059", 503),
-    /** Compute workers (docs/architecture/PYTHON_COMPUTE.md): compute is off on this server ({@code compute.enabled}). */
+    /** Compute workers (docs/guides/NOTEBOOK_GUIDE.md): compute is off on this server ({@code compute.enabled}). */
     COMPUTE_OFF("DRS-9201", 503),
     /** Compute: refused before any work (unknown pool, requirements not approved, an environment not built, four eyes, a bad request). */
     COMPUTE_REFUSED("DRS-9202", 409),

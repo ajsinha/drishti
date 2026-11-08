@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Rupaka phase 2: the beans of the dataset query engine (BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 6 and 7). The engine is an embedded DuckDB and starts its
+ * Rupaka phase 2: the beans of the dataset query engine (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, sections 6 and 7). The engine is an embedded DuckDB and starts its
  * connection on the first query, so a server that never runs a BI query pays nothing.
  */
 @Configuration
@@ -69,7 +69,7 @@ public class BiQueryConfiguration {
         return q;
     }
 
-    /** The one Python runtime (PYTHON_COMPUTE.md section 19): every Python run of BI, tables and the Notebook, on the compute pool {@code python}; also the Transform runner. */
+    /** The one Python runtime (NOTEBOOK_GUIDE.md section 19): every Python run of BI, tables and the Notebook, on the compute pool {@code python}; also the Transform runner. */
     @Bean
     public com.ash.drishti.server.bi.python.PythonRuns pythonRuns(com.ash.drishti.compute.ComputeService compute, BiReportProperties report,
             com.ash.drishti.server.bi.transform.TransformProperties props, org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.AuditLog> audit) {
@@ -206,7 +206,7 @@ public class BiQueryConfiguration {
     public ExpectedValueRunner expectedValueRunner(BiService bi, DatasetService datasets, BiReportService reports, AuditLog audit) {
         bi.drawCheck(reports::errors);                                  // propose, approve and publish refuse a report that cannot be drawn
         ExpectedValueRunner runner = new ExpectedValueRunner(bi, datasets, reports, audit);
-        bi.testGate(runner::failures);                                   // publishing runs the item's tests (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14)
+        bi.testGate(runner::failures);                                   // publishing runs the item's tests (docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14)
         return runner;
     }
 

@@ -179,4 +179,4 @@ A smaller one is the help-desk example's `agent-load` (`where: $.STATUS != 'Clos
 
 - [Derived kinds in the pack modelling guide](../../../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds): keys, fields, links, dates, cost, storage.
 - [Connector files](../../CONNECTOR_FILES.md) and [Connectors and routes](../../CONNECTORS.md).
-- [The connector developer's guide](../../CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

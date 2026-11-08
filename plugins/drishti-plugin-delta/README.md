@@ -178,7 +178,7 @@ A Delta connector never writes per edit: write-back keeps corrections as overlay
 | `index.block-cache` | int | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none |
 | `index.kinds.*` | string |  | Per-kind override of any index setting (index.kinds.<kind>.days) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 Every key with its tier and whether it applies live: [CONFIGURATION.md, `delta`](../../docs/admin/CONFIGURATION.md#delta-tls-proxy); sizing the
@@ -644,4 +644,4 @@ set only when the endpoint is not on it). `https://` endpoints are tunnelled wit
 - [Several connectors for one kind (a union)](../../docs/connectors/CONNECTORS.md#several-connectors-for-one-kind-a-union), [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
 - [The data lake and data load guide](../../docs/guides/DATA_LAKE_GUIDE.md): lake files, loading, `.ready` files, maintenance.
 - [BENCHMARK.md, Trades at scale](../../docs/admin/BENCHMARK.md#8-trades-at-scale) and [OPERATIONS.md, Memory and caches](../../docs/admin/OPERATIONS.md#12-memory-and-caches).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

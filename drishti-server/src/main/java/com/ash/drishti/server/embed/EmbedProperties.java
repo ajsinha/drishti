@@ -21,7 +21,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code drishti.embed.*}: embedded views for other web applications (Drishti Elements, docs/architecture/CLIENT_RENDERER.md). Off by
+ * {@code drishti.embed.*}: embedded views for other web applications (Drishti Elements, docs/guides/EMBED_GUIDE.md). Off by
  * default: with {@code enabled} false there is no token endpoint and embed tokens are refused.
  *
  * @param enabled switch embedding on (needs {@code drishti.security.enabled})
@@ -38,7 +38,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param assertionMaxAge longest life of a client or subject assertion a host signs (its {@code exp} minus its {@code iat})
  * @param search the limits of {@code <drishti-search>} (scope {@code embed:search})
  * @param apps host applications declared in configuration (GitOps): read-only in Admin → Embedding, marked "from config"
- * @param signInWindow the renderer's optional sign-in window ({@code auth: 'popup'}, CLIENT_RENDERER.md section 10.1): the console runs the
+ * @param signInWindow the renderer's optional sign-in window ({@code auth: 'popup'}, EMBED_GUIDE.md section 10.1): the console runs the
  *     single sign-on in a window a registered host's page opened on a click, and this server makes that user's embed token (default on;
  *     needs {@code drishti.security.oidc}); false refuses it, and hosts keep the token exchange
  */

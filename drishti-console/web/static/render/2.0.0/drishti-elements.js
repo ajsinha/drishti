@@ -19,7 +19,7 @@
      <script type="module" src="(the console)/embed/v2/elements/2/drishti-elements.js"></script>
      <drishti-view kind="trade" entity="IRS-48213"></drishti-view>
 
-   The element API is 2.2's, unchanged (CLIENT_RENDERER.md section 19): DrishtiElements.configure({ tokenProvider }) or { auth: 'popup' },
+   The element API is 2.2's, unchanged (EMBED_GUIDE.md section 19): DrishtiElements.configure({ tokenProvider }) or { auth: 'popup' },
    the attributes, the properties, reload() and refresh(), the drishti:* events and the loading, empty and error slots. */
 import { VERSION, CONTRACTS } from './drishti-render.js';
 import { cfg, API, ELEMENTS_VERSION, define, invalidateToken, providerChanged, connectionCount, resolve, usePopup, serverOf, elementClasses } from '../../elements/drishti-renderer/src/drishti_index.js';

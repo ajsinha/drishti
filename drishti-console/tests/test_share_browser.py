@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Share with a note in a real browser, against a real server with sign-in on (COLLABORATION.md, build step 3): an author shares a trade
+"""Share with a note in a real browser, against a real server with sign-in on (ARCHITECTURE.md §31, build step 3): an author shares a trade
 view, pinned to a past date, with a colleague by keyboard alone; the colleague's bell shows the notice and opening it lands on the pinned date
 with the note and the masked field still masked; a recipient whose role no longer opens the kind gets the clean no-access page; the dialog
 is a full-screen sheet on a phone and gives the focus back.

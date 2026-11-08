@@ -1044,7 +1044,7 @@ Timing (ESTIMATED): the loader's 2.3M load 1 to 5 minutes (PARALLEL_LOADER secti
   `DRISHTI_CONSOLE_RELAY_KEY` for every console).
 - **Sign-in:** OIDC (`DRISHTI_OIDC_ENABLED`, issuer, client id) at the console, or at the LB; one `DRISHTI_TOKEN_SECRET` (or one issuer)
   for the cluster so every member accepts every token; one `DRISHTI_SESSION_SECRET` for every console.
-- **Embedding:** the token exchange (CLIENT_RENDERER.md) and the optional sign-in window (`auth: 'popup'`, CLIENT_RENDERER section 10.1, PLANNED
+- **Embedding:** the token exchange (EMBED_GUIDE.md) and the optional sign-in window (`auth: 'popup'`, CLIENT_RENDERER section 10.1, PLANNED
   row 2a). The embed signing key (`DRISHTI_EMBED_KEY_FILE`) **must be the same file on every member**: an empty setting makes a key at start
   that "a second server cannot verify" (CONFIGURATION.md).
 - **Lenses** (`drishti.lenses`) are per person and per session; editions (`drishti.edition`) are per member and must be equal on all
@@ -1554,7 +1554,7 @@ numbers.
 ## Appendix A. Drishti*net: many servers, one Drishti
 
 Status: **built** (see
-[BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)); the transport between nodes is described [below](#the-transport-between-nodes) and the
+[ARCHITECTURE.md §28 §12.2](ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)); the transport between nodes is described [below](#the-transport-between-nodes) and the
 content store followed ([11.2](#112-content-every-node-reaches-the-content-store)). What is built, and what changed from the design, is in [section 19](#19-built). Off by default. Names marked **(new)** do not exist
 in the code today; every other class, file or setting named here does.
 
@@ -1989,7 +1989,7 @@ N1–N7 were planned, in this order (N1–N5 the minimum for the release); secti
 
 #### The transport between nodes
 
-Decided by the product owner on 2026-10-20, built beside BI runs ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)) and chart any table
+Decided by the product owner on 2026-10-20, built beside BI runs ([ARCHITECTURE.md §28](ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) and chart any table
 ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#chart-any-table-the-design)). The transport stays **HTTP**, signed as in N3, through `PeerHttp`, which now has two lanes: a
 **control lane** for gossip, probes and digests and a **data lane** for everything else.
 
@@ -2164,7 +2164,7 @@ stack, pictures of the real pages), as the product owner asked:
 | `docs/tutorials/` (new tutorial) | a cluster of three on one machine, from the first seed to a console that falls over: every step with the UI, the CLI (`drishti.py net`) and the YAML |
 | `docs/admin/CONFIGURATION.md` | `drishti.net.dir`, `watch`, `poll`; the console's `backend.urls`, `discover`, `discover-every`, `check-every`, `fail-after`; every file's settings |
 | `docs/admin/OPERATIONS.md` | environment variables, ports, firewalls, health and metrics, `peers.json` and `servers.json`, backups |
-| `docs/guides/API_GUIDE.md` | the `/api/v1/net/*` endpoints, the hop and on-behalf-of headers, `nodes` in a search answer |
+| `docs/guides/API_REFERENCE.md` | the `/api/v1/net/*` endpoints, the hop and on-behalf-of headers, `nodes` in a search answer |
 | `docs/guides/CLI_GUIDE.md` | `drishti.py net list | check | add-peer | set` |
 | `docs/guides/TROUBLESHOOTING.md` | a node that will not join, a refused key, a suspect that flaps, a partial search naming a node, a console that keeps failing over |
 | `docs/guides/USER_GUIDE.md` | what a user sees: nothing changes, partial answers name a server, provenance for administrators |
@@ -2187,7 +2187,7 @@ stack, pictures of the real pages), as the product owner asked:
 
 #### BI runs on the cluster
 
-A BI run ([BI_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 13](BI_DESIGN.md#13-the-cluster)) is named after its member (`r-<node id>-…`). A heavy run of a model goes to
+A BI run ([ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job, section 13](ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) is named after its member (`r-<node id>-…`). A heavy run of a model goes to
 the model's owner (rendezvous hashing over the members alive, `RunCluster`), sent for the caller like a forwarded view (signed, one hop,
 on-behalf-of: the owner computes it with the caller's rights). A run's result, cancel and other actions go to the node that holds it
 (`RunForwardFilter`); the person's run list is scattered to the members alive and merged, a node that does not answer listed in
@@ -4327,7 +4327,7 @@ measurements.
 **Super scale is the architecture at every size** (product owner, 2026-10-20): one code path that scales down (a laptop: one
 node owns every slice) and up (many nodes), with external engines (Athena, Trino, Spark) as optional plug-ins. How every BI
 query uses it (tiers chosen from metadata, products and rollups first, heavy work as bounded background runs split over slice
-owners): see [BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job).
+owners): see [ARCHITECTURE.md §28](ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job).
 
 ### 1. The ask
 

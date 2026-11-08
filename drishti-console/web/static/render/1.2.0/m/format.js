@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Formats and tones (CLIENT_RENDERER.md section 6). The server formats every value a person reads; the renderer formats only what the
+/* Formats and tones (EMBED_GUIDE.md section 6). The server formats every value a person reads; the renderer formats only what the
    macros themselves compute: axis ticks (compact), a donut's share, a bar's width, a heat bucket, and the few raw numbers a chart's
    "Data" table prints. Those follow Python and Jinja exactly (round half to even, a float printed with its ".0"), so the library and the
    console's macros show the same characters. */

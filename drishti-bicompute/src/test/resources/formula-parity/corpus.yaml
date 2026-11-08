@@ -27,7 +27,7 @@ formulas:
 - {formula: "sum(PNL) / count()", from: "FormulaFunctionTest"}
 - {formula: "sum(PNL, where=DESK == 'FX') / sum(abs(PNL))", from: "FormulaFunctionTest"}
 - {formula: "sum(PNL) / sum(PNL, where=PNL > 100)", from: "FormulaFunctionTest"}
-- {formula: "sum(RATE_PCT * NOTIONAL) / sum(NOTIONAL)", from: "tutorial 37, CustomFunctionsTest, PivotFunctionsApiTest, pivot.html, API_GUIDE"}
+- {formula: "sum(RATE_PCT * NOTIONAL) / sum(NOTIONAL)", from: "tutorial 37, CustomFunctionsTest, PivotFunctionsApiTest, pivot.html, API_REFERENCE"}
 - {formula: "sum(RATE_PCT * NOTIONAL) / sum(abs(NOTIONAL))", from: "CustomFunctionsTest"}
 - {formula: "sum(PNL * NOTIONAL) / sum(NOTIONAL)", from: "FormulaFunctionTest"}
 - {formula: "stddev(PNL) / avg(NOTIONAL)", from: "FormulaFunctionTest"}

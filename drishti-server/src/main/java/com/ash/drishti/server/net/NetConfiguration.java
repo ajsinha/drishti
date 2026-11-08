@@ -273,7 +273,7 @@ public class NetConfiguration {
         return r;
     }
 
-    /** BI runs on the cluster (BI_DESIGN.md 13): the model owners over the members alive, calls for a person, the lease and adoption loop. */
+    /** BI runs on the cluster (ARCHITECTURE.md §28 13): the model owners over the members alive, calls for a person, the lease and adoption loop. */
     @Bean(destroyMethod = "close")
     public RunCluster runCluster(NetService net, com.ash.drishti.server.bi.runs.RunService runs, com.ash.drishti.server.bi.runs.RunsProperties props) {
         RunCluster c = new RunCluster(net, runs, props);
@@ -313,7 +313,7 @@ public class NetConfiguration {
         };
     }
 
-    /** After the caller is known: a run's own calls go to the node that holds it (BI_DESIGN.md 13.2). */
+    /** After the caller is known: a run's own calls go to the node that holds it (ARCHITECTURE.md §28 13.2). */
     @Bean
     public FilterRegistrationBean<RunForwardFilter> runForwardFilter(RunCluster cluster, com.ash.drishti.server.bi.runs.RunService runs, ForwardLog log) {
         FilterRegistrationBean<RunForwardFilter> r = new FilterRegistrationBean<>(new RunForwardFilter(cluster, runs, log));

@@ -492,7 +492,7 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `POST /api/v1/pivot/live`, `GET /live`, `GET /live/{id}/events`, `DELETE /live/{id}` | a live pivot: started (its first answer, id and node), listed, streamed (`answer`, `patch`, `reshape`, `status`), ended ([section 25](#25-live-pivots)) |
 | `GET, POST /api/v1/pivot/views/{owner}/{name}/comments`, `POST /comments/{id}/resolve`, `/reopen`, `DELETE /comments/{id}` | a saved view's cell comments ([section 26](#26-cell-comments)) |
 
-Details and the error codes: [API_GUIDE.md, Pivot engine](API_GUIDE.md#pivot-engine-apiv1pivot).
+Details and the error codes: [API_REFERENCE.md, Pivot engine](API_REFERENCE.md#23-pivot-engine-apiv1pivot).
 
 ## 15. The command line
 

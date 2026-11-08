@@ -18,7 +18,7 @@
 
 Connecting Drishti to your data means choosing a **connector** (one configured instance of a source plugin) and writing it down as a **connector file**. This page is the reference for
 every shipped plugin: what it is for, a connector file for it, and a link to its full document (how it reads, every setting, scale and limits, troubleshooting). To do it once with a worked example, follow
-[tutorial 4](../tutorials/04-connect-your-data.md). To write a plugin of your own: [CONNECTOR_DEVELOPER_GUIDE.md](CONNECTOR_DEVELOPER_GUIDE.md). The files, live reload, Admin and the API:
+[tutorial 4](../tutorials/04-connect-your-data.md). To write a plugin of your own: [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one). The files, live reload, Admin and the API:
 [CONNECTOR_FILES.md](CONNECTOR_FILES.md). TLS and the proxy: [TLS.md](TLS.md).
 
 ## One file per connector
@@ -107,8 +107,8 @@ trading pack ships its three trade connectors this way ([DELTA_CONNECTOR.md](../
 | the packs' sample entities | `demo` (runs as itself, no file) | [demo](#demo) |
 
 The comparison of what each can do (history, live ticks, search, reverse lookups) and the rules of thumb are in
-[Which connector should I use?](CONNECTOR_DEVELOPER_GUIDE.md#which-connector-should-i-use). To write a plugin of your own, see
-[The SourcePlugin SPI](CONNECTOR_DEVELOPER_GUIDE.md#the-sourceplugin-spi). All about the files, live reload, the Admin page, the API and the CLI:
+[Which connector should I use?](../guides/DEVELOPER_GUIDE.md#103-which-connector-should-i-use). To write a plugin of your own, see
+[The SourcePlugin SPI](../guides/DEVELOPER_GUIDE.md#105-the-sourceplugin-spi). All about the files, live reload, the Admin page, the API and the CLI:
 [CONNECTOR_FILES.md](CONNECTOR_FILES.md).
 
 ## Demo

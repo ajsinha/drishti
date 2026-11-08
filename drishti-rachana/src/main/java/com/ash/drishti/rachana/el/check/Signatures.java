@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The signatures of the functions checked mode knows (docs/architecture/BI_DESIGN.md 2.1 and 2.5): names, parameters (positional and named),
+ * The signatures of the functions checked mode knows (docs/architecture/ARCHITECTURE.md §28 2.1 and 2.5): names, parameters (positional and named),
  * the scopes a function may be written in, its types, and whether Rachana ({@code R}) or the pivot engine ({@code E}) computes it.
  * Loaded once from {@code rachana/el/signatures.yaml} on the class path (the shipped catalogue, {@link #get()}); {@link #parse} reads
  * any file of the same shape. Immutable

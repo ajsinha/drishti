@@ -49,7 +49,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * The wave W1 acceptance (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 10.4, criterion 1): <em>a report, an alert and an Analyse slice ask the same model
+ * The wave W1 acceptance (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 10.4, criterion 1): <em>a report, an alert and an Analyse slice ask the same model
  * through the same query language and get identical, per-reader masked answers</em>, over the whole stack with security on and a small lake read through a
  * real file connector. Three readers: rita (every desk, raw), hana (a desk-head: DESK-A's rows only) and ann (every desk, no raw: {@code mtm} is masked).
  * Also: a standing query's answer after the data changes equals the one-shot answer (section 5.8), and a dataset whose source is another model's answer
@@ -803,7 +803,7 @@ class ModelAcceptanceTest {
         a.path("rows").forEach(r -> assertThat(r.get(1).asText()).startsWith("TR-"));
     }
 
-    // ---- BI runs: Prefer: respond-async end to end (BI_DESIGN.md 6.1, 14.1) ------------------------------------------------
+    // ---- BI runs: Prefer: respond-async end to end (ARCHITECTURE.md §28 6.1, 14.1) ------------------------------------------------
 
     /** A question asked with {@code Prefer}: 200 (inline, today's body), or 202 then the stored result, or 409 DRS-9082 then confirm. */
     ResultActions callPrefer(String path, String who, Object body) throws Exception {
@@ -884,7 +884,7 @@ class ModelAcceptanceTest {
         assertThat(ok(call("GET", "/api/v1/bi/runs?mine=false&shared=true", reader("rita"), null)).path("runs")).isEmpty();
     }
 
-    /** BI_DESIGN › BI runs, 9.4: a run promoted to a snapshot dataset and a report, read through the model layer; only an author who ran it may promote it. */
+    /** ARCHITECTURE §28 › BI runs, 9.4: a run promoted to a snapshot dataset and a report, read through the model layer; only an author who ran it may promote it. */
     @Test @Order(18)
     void aRunPromotedToASnapshotIsReadThroughItsDraftDatasetAndReport() throws Exception {
         Map<String, Object> q = Map.of("mq", 1, "model", "acc-model@1", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")),
@@ -925,7 +925,7 @@ class ModelAcceptanceTest {
         assertThat(ok(call("GET", "/api/v1/bi/runs/" + id, reader("wes"), null)).path("promotedTo").asText()).isEqualTo(name + "@2");
     }
     /**
-     * BIR-06: a report visual is planned under {@code Prefer} as a model query is (BI_DESIGN › BI runs, 5, 6): sized as ad-hoc heavy above the confirm threshold it
+     * BIR-06: a report visual is planned under {@code Prefer} as a model query is (ARCHITECTURE §28 › BI runs, 5, 6): sized as ad-hoc heavy above the confirm threshold it
      * answers {@code 409 DRS-9082} with the estimate and a token, and confirmed it draws what the synchronous call draws; as an interaction it answers
      * {@code 409 DRS-9089} and nothing runs; without {@code Prefer} it answers {@code 200} as before. Settings tightened so this lake's day is "heavy".
      */
@@ -968,7 +968,7 @@ class ModelAcceptanceTest {
     @Autowired com.ash.drishti.server.bi.report.BiReportService reportService;
 
     /**
-     * BI_DESIGN › BI runs, 18.2b: the access profile a report visual's answer is shared under, on the real model: rob has rita's role, so her profile; ann (MTM
+     * ARCHITECTURE §28 › BI runs, 18.2b: the access profile a report visual's answer is shared under, on the real model: rob has rita's role, so her profile; ann (MTM
      * masked) and hana (her desk only) each have their own; a state naming the viewer has none (the answer stays personal). The reuse itself is
      * {@code RunSourcesReportTest} (this lake's connector gives no data version, so nothing over it is ever reused).
      */
@@ -988,7 +988,7 @@ class ModelAcceptanceTest {
         assertThat(reportService.accessProfile(new com.ash.drishti.server.security.Principal("rita", List.of("bi-risk")), REPORT, "main", "by-desk", mine)).isEmpty();
     }
 
-    /** BI_DESIGN › BI runs, 14.1: a rerun as of the same resolved date (the default) or the latest held now, and fresh (computed anew, never reused); its owner only. */
+    /** ARCHITECTURE §28 › BI runs, 14.1: a rerun as of the same resolved date (the default) or the latest held now, and fresh (computed anew, never reused); its owner only. */
     @Test @Order(21)
     void aRerunIsAskedAsOfTheSameDateOrTheLatestAndFreshComputesAnew() throws Exception {
         Map<String, Object> q = Map.of("mq", 1, "model", "acc-trades", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")),

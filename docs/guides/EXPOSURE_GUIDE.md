@@ -565,7 +565,7 @@ All under `/api/v1/risk/exposure`. Every `GET` takes `asOf` (the business date; 
 | `POST /official` | `asOf` | take the official capture now (administrators) |
 | `POST /reload` | | drop the loaded dates (administrators) |
 
-Codes: [section 21](#21-validation-errors-and-data-quality). The full endpoint list of Drishti is [API_GUIDE.md](API_GUIDE.md).
+Codes: [section 21](#21-validation-errors-and-data-quality). The full endpoint list of Drishti is [API_REFERENCE.md](API_REFERENCE.md).
 
 ## 12. Settings
 
@@ -665,7 +665,7 @@ internal model), and traders (what a new trade does to a counterparty's PFE befo
 
 **Methodology.** Monte Carlo exposure simulation post-processing as in Basel CRE53 (internal models method: EE, effective EE, EEPE,
 alpha 1.4) and the industry's PFE practice for limits. Drishti does **not** simulate markets or price trades: the paths are inputs
-(the contracts' README.md section 3). QLRisk may later produce them ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)).
+(the contracts' README.md section 3). QLRisk may later produce them ([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md)).
 
 ## 15. Inputs from upstream engines
 

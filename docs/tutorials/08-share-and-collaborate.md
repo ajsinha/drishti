@@ -124,7 +124,7 @@ You should see Vera's reply under your comment, any value she quotes shown as *s
 
 - [Tutorial 9 · Reports](09-reports.md) sends a view to people on a schedule.
 - [USER_GUIDE.md › Share a view with a note](../guides/USER_GUIDE.md#share-a-view-with-a-note), [Your inbox](../guides/USER_GUIDE.md#your-inbox) and [Discussion](../guides/USER_GUIDE.md#discussion) are the references.
-- Sharing, the inbox and discussions have no `drishti.py` command: they belong to people, and the API takes a signed-in session for them ([API_GUIDE.md](../guides/API_GUIDE.md)).
+- Sharing, the inbox and discussions have no `drishti.py` command: they belong to people, and the API takes a signed-in session for them ([API_REFERENCE.md](../guides/API_REFERENCE.md)).
   An administrator sets collaboration limits and the email channel in **Admin → Collaboration** ([OPERATIONS.md](../admin/OPERATIONS.md)).
 
 ## If something goes wrong

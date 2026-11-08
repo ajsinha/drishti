@@ -46,7 +46,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The pivot engine's custom functions, explanations and what-ifs (PIVOT_GUIDE.md; API_GUIDE.md "Pivot: custom functions, explain and
+ * The pivot engine's custom functions, explanations and what-ifs (PIVOT_GUIDE.md; API_REFERENCE.md "Pivot: custom functions, explain and
  * what-if"), under {@code /api/v1/pivot}: functions listed, read, tested in the playground (the harness, the states after each part and
  * merge, the cost, a pivot of the sample), saved as versions after the harness passes, submitted, approved by someone other than the
  * author, withdrawn; the difference between two cells or one cell on two dates in steps that add up; a view with a what-if overlay beside

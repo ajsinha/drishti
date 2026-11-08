@@ -56,11 +56,11 @@ About 45 minutes.
 
 A dataset keeps its rows in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 7](07-load-data-daily.md)), when someone
 asks, and on a **schedule** set on the dataset. A dataset is one table of the **model layer** (`rachana: 2`): it says where the rows come from and
-what one row is, and its measures live in a **model** over it ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)).
+what one row is, and its measures live in a **model** over it ([REPORTS_GUIDE.md section 23](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads)).
 
 **In the UI** there are two ways to set the schedule, and neither needs the YAML:
 
-- **In the dataset wizard** (**Models → New dataset**, the wizard of [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2)):
+- **In the dataset wizard** (**Models → New dataset**, the wizard of [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/REPORTS_GUIDE.md#510-a-table-of-your-own-step-by-step)):
   on the *Columns* step choose **Refresh** *business days at 06:30* (or *when new data loads*); the YAML of the *Save* step shows the line it writes,
   `refresh: business-days 06:30`.
 - **On the dataset's own page**, when it has no schedule: the **Refresh** section says *No refresh schedule* and, for an author who may edit the draft,
@@ -448,7 +448,7 @@ DESK-INFL,-1.28917764794E9
 and one line per desk, the largest MTM first. Large amounts are written in exponent form (`4.4844818514400015E9` is 4,484,481,851.44): spreadsheets read
 them as numbers. Every export carries your **business date and slicer choices**, is built as you (masked fields stay
 masked), and is audited; limits (rows per sheet, file size, time) are settings of `drishti.distribution.export.*`. There is no YAML: an export is a
-request, and a **subscription** (step 2) is the export written down. [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) has them.
+request, and a **subscription** (step 2) is the export written down. [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions) has them.
 
 ## Step 7 · Say what a number should be
 
@@ -540,7 +540,7 @@ fail  Every desk has trades: expected 1 or more, found 0
 
 You should see the same tests fail **as `viewer`**: the model's row rule names `admin`, `risk` and `bi-writer`, and a role no rule names sees no rows
 (the model designer's **Security** tab warns about exactly this, `DRS-9131`). A test run as a role is the quickest way to see what a reader gets. The
-same words work in a report and in a model; [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 17](../guides/BI_GUIDE.md#17-expected-values-tests) has every form of `expect`.
+same words work in a report and in a model; [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 17](../guides/REPORTS_GUIDE.md#912-expected-values-in-a-report) has every form of `expect`.
 
 ## Step 8 · Charts in the workbook, a summary in the mail, a webhook and a text
 
@@ -554,12 +554,12 @@ Four small things make what leaves Drishti more useful; none changes how you wor
 
 **A webhook and a text.** An administrator defines webhooks and one text gateway (`drishti.notify.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); the form then offers them by name, plus a field for your own mobile number:
 
-You should see a webhook per defined name and, once a gateway is set up, *Text each recipient who has given a number a link to it* (the picture is in [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/BI_GUIDE.md#6-webhooks-and-text-messages)). A webhook post is signed (`X-Drishti-Signature`) and holds the title and a link, never a figure; so does a text. The alert form has the same two boxes. In the subscription's YAML they are `webhooks: [ops]` and `sms: true`. [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/BI_GUIDE.md#6-webhooks-and-text-messages).
+You should see a webhook per defined name and, once a gateway is set up, *Text each recipient who has given a number a link to it* (the picture is in [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/REPORTS_GUIDE.md#184-webhooks-and-text-messages)). A webhook post is signed (`X-Drishti-Signature`) and holds the title and a link, never a figure; so does a text. The alert form has the same two boxes. In the subscription's YAML they are `webhooks: [ops]` and `sms: true`. [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/REPORTS_GUIDE.md#184-webhooks-and-text-messages).
 
 ## Next steps
 
 - [Tutorial 12](12-live-bi-and-boards.md): data that moves, and a wall of tiles that turn red.
-- [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): every schedule word, retries, alerts on models and fields, chat bridges, board notifications.
+- [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions): every schedule word, retries, alerts on models and fields, chat bridges, board notifications.
 - [CLI_GUIDE.md](../guides/CLI_GUIDE.md): `bi item`, `bi dataset refresh` and `bi mq` with every option.
 - [Tutorial 9](09-reports.md) for scheduled searches and the Reports page.
 

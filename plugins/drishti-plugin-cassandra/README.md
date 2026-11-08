@@ -362,4 +362,4 @@ Limits:
 
 - [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS](../../docs/connectors/TLS.md).
 - [The aerospike connector](../drishti-plugin-aerospike/README.md) (the closest design) and [the delta connector](../drishti-plugin-delta/README.md) (the same engine side).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

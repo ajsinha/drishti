@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Stage 7 and 8's entry (docs/architecture/BI_DESIGN.md sections 4.3 and 12.1): the optimised plan lowered to the engine request the SQL compiler takes
+ * Stage 7 and 8's entry (docs/architecture/ARCHITECTURE.md §28 sections 4.3 and 12.1): the optimised plan lowered to the engine request the SQL compiler takes
  * ({@code SqlCompiler} and {@code SqlEmitter} remain the SQL generator of the {@code Aggregate} and {@code Meet} fragments): the fields and measures of the
  * plan's answer, its order and limit, with the filters as the language resolved them (relative dates as dates, a {@code top} as the values it found: data the
  * plan never holds) and the measures the answer drops (the currency guard's).

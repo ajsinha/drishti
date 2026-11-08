@@ -27,7 +27,7 @@ This is the reference. The connector documents show complete configurations for 
 [ActiveMQ](../../plugins/drishti-plugin-activemq/README.md#security) (`ssl://`), [RabbitMQ](../../plugins/drishti-plugin-rabbitmq/README.md#security) (`amqps://`,
 client-certificate login), and for the rest see the [matrix](#connector-matrix) below, whose rows lead to each connector's Security
 section. A plugin author who wants the module in a new connector reads
-[the developer guide](CONNECTOR_DEVELOPER_GUIDE.md#tls-for-a-connector-the-shared-module).
+[the developer guide](../guides/DEVELOPER_GUIDE.md#108-tls-for-a-connector-the-shared-module).
 
 This page has two parts: [TLS](#connector-matrix), the shared `tls.*` settings, and the [outbound HTTP proxy](#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers), the shared `proxy:` block.
 
@@ -411,7 +411,7 @@ not leave it on).
 
 For plugin authors: the module is `com.ash.drishti.api.tls` (`TlsSettings`, `TlsContexts`, `TlsMaterial`, `Secrets`) in
 `drishti-api`; no Spring, no dependencies beyond the JDK. See
-[CONNECTOR_DEVELOPER_GUIDE.md](CONNECTOR_DEVELOPER_GUIDE.md#tls-for-a-connector-the-shared-module).
+[DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#108-tls-for-a-connector-the-shared-module).
 
 ## Outbound HTTP proxy for connectors, AI providers and MCP servers
 

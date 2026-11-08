@@ -72,7 +72,7 @@ is the job of your own ETL (or of a pipeline engine such as DishtaYantra). What 
 there**. One small signal, "this batch has landed", makes Drishti refresh what it caches, check the data is really readable, evaluate the
 alert rules on it, and tell the right people. Expectations then flag a batch that has *not* landed in time.
 
-Related: [API_GUIDE.md](API_GUIDE.md) (every endpoint, the error codes), [CLI_GUIDE.md](CLI_GUIDE.md) (the `drishti.py` program),
+Related: [API_REFERENCE.md](API_REFERENCE.md) (every endpoint, the error codes), [CLI_GUIDE.md](CLI_GUIDE.md) (the `drishti.py` program),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),
 [OPERATIONALISING.md](OPERATIONALISING.md) (shipping packs and data to servers).
 
@@ -89,7 +89,7 @@ With the signal, the same four things happen every time, in order, and each leav
 | views and date lists to include the new data now | drops the caches of the connectors that serve the kind and of the derived connectors built from it (the same thing Admin → Caches does): for a Delta connector its memory and disk caches and id map files; grouped pages kept on disk are rebuilt from the new data at once, the old pages serving meanwhile. Without the signal a Delta table's new version is seen within `refresh-seconds` (10 s) and grouped pages rebuild within `version-check` (10 s); the caches are keyed by table version, so nothing stale is served either way |
 | to know the data is really readable | counts the kind's entities on that business date and records `verified` or `not-found` |
 | alerts on the new numbers | evaluates every alert rule on the kind for that date, as each rule's owner may see it |
-| alerts on numbers, and subscriptions, that follow loads | an alert on a BI measure or a Sutra field whose trigger is `after-load` (and every "no data" alert), a board tile that notifies after loads, and a subscription with the schedule `after-load`, look `load-delay` (5 s) after a load that finished ready, once the BI layers have rebuilt ([BI_GUIDE.md](BI_GUIDE.md#43-when-it-looks-the-trigger)) |
+| alerts on numbers, and subscriptions, that follow loads | an alert on a BI measure or a Sutra field whose trigger is `after-load` (and every "no data" alert), a board tile that notifies after loads, and a subscription with the schedule `after-load`, look `load-delay` (5 s) after a load that finished ready, once the BI layers have rebuilt ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#192-when-it-fires-and-when-it-looks)) |
 | the right people told | one inbox notice (and the bell) each, and an email through the outbox if the pack asks for it |
 | to know when a batch did **not** come | an expectation per kind (`trade by 19:00 America/New_York`); a scheduler flags it late on Health and tells the same people |
 
@@ -779,7 +779,7 @@ it reaches the browser too, for the answers it was measured to win on, and nowhe
 
 | Path | Arrow | Since |
 |---|---|---|
-| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)) |
+| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md)) |
 | BI answers to the console's Python, Explore and Perspective-era clients | `?format=arrow` on `POST /bi/reports/{id}/query` and `POST /bi/mq`: the raw rows | 2.1 |
 | **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | built |
 | **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | built |

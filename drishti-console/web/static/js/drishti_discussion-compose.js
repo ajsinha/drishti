@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Writing a comment (COLLABORATION.md, Console design): the two pickers inside a comment box. `@` opens a type-ahead over the server's
+/* Writing a comment (ARCHITECTURE.md §31, Console design): the two pickers inside a comment box. `@` opens a type-ahead over the server's
    directory (users and roles, GET /api/directory, the list the share dialog uses); `{` opens the fields of this page, and choosing one
    writes a value quote such as {$.mtm}, which every reader sees as THEIR view of the number (masked as ••• when it is masked for them).
    Drawn with drishti-inputs' combobox parts: its type-ahead (the search waits for typing to pause, a late answer is dropped, the request

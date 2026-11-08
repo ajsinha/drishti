@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The optional sign-in window, auth: 'popup' (CLIENT_RENDERER.md section 10.1), for a host page WITHOUT a backend of its own (a static
+/* The optional sign-in window, auth: 'popup' (EMBED_GUIDE.md section 10.1), for a host page WITHOUT a backend of its own (a static
    intranet page, a SharePoint page): never a window on load. Without a token the screen shows a "Sign in to see this" button in place;
    its click opens ONE small window on the console (/embed/v2/sign-in), which runs the bank's single sign-on (OIDC with PKCE, the console's
    auth.oidc) and posts the embed token back to this page's exact origin. The token is kept in this module's memory only (never in

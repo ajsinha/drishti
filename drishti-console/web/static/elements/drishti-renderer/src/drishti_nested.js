@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The nested pivot in behaviours: 'console' (CLIENT_RENDERER.md section 7.4): a pivot panel by a list of fields (div.pv-tree-host, its
+/* The nested pivot in behaviours: 'console' (EMBED_GUIDE.md section 7.4): a pivot panel by a list of fields (div.pv-tree-host, its
    rows in data-pv-tree) is drawn again by drishti-grid's own grid with tree data: each row by its path, the groups open down to the
    Sutra's expand, every figure the server's text (the browser sums nothing: clientAggregation off), the total column and the grand total
    row as the server sent them. In 'library' mode the document table drishti-grid drew first stays. */

@@ -285,7 +285,7 @@ dependents never move and on a walk naming a path its sample lacks.
 
 ## Its place in routing
 
-The router ([how a request picks a connector](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#how-a-request-picks-a-connector))
+The router ([how a request picks a connector](../../docs/guides/DEVELOPER_GUIDE.md#how-a-request-picks-a-connector))
 tries a kind's route, then the `default-route` (`demo`), then every other connector serving the kind. The demo's manifest lists no
 kinds, so it is a candidate for **every** kind and answers "not held" for ids it has no sample of.
 
@@ -326,4 +326,4 @@ no credentials, network or TLS, and reads only the kinds and ids its catalogues 
   [the pack developer's guide](../../docs/guides/PACK_DEVELOPER_GUIDE.md#samples).
 - [Every demo setting in CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#demo) and
   [connector files](../../docs/connectors/CONNECTOR_FILES.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

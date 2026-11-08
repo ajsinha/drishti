@@ -29,10 +29,10 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * The engine's admission (docs/architecture/BI_DESIGN.md section 6.3): {@code slots} queries run at once; a waiting query is served by its <b>work class</b>
+ * The engine's admission (docs/architecture/ARCHITECTURE.md §28 section 6.3): {@code slots} queries run at once; a waiting query is served by its <b>work class</b>
  * (interactive before standing before background, then by arrival), within its person's share ({@code per-user}: standing and background work do not count
  * against it) and its model's share ({@code per-model-share} of the slots: one hot model cannot take the server). A query that waited {@code wait} is refused
- * {@code DRS-9025} (busy, retry). Each class but interactive also has a cap (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 10.1: {@code background-share},
+ * {@code DRS-9025} (busy, retry). Each class but interactive also has a cap (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 10.1: {@code background-share},
  * {@code standing-share} of the slots), so background work (runs, dataset refresh) never holds the slots interactive work needs: with 8 slots and
  * both shares at 0.25, at least 4 are always left for interactive questions. A waiter leaves the line at once when its thread is interrupted
  * (a cancelled run). Thread-safe.
@@ -181,7 +181,7 @@ public final class Admission {
             }
             waitedNanos.addAndGet(w.granted - w.arrived);
             if (w.cls == QueryContext.WorkClass.INTERACTIVE) {
-                recent.addLast(new long[] {System.nanoTime(), w.granted - w.arrived});   // the fairness signal (BI_DESIGN › BI runs, 17.2)
+                recent.addLast(new long[] {System.nanoTime(), w.granted - w.arrived});   // the fairness signal (ARCHITECTURE §28 › BI runs, 17.2)
                 while (recent.size() > 4096) {
                     recent.removeFirst();
                 }

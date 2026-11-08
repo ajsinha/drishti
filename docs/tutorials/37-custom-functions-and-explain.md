@@ -264,7 +264,7 @@ harness. Python functions never read memory-only data.
 
 Open a BI report with a matrix (the sample *trades overview*). Every total and subtotal row comes from the pivot engine's
 one statement over the model's rows: the average's total is the average over all the trades, a sum's total is the engine's sum. A
-year-to-date measure shows a dash in the total row; the answer's warnings say why ([BI_GUIDE.md section 3.2](../guides/BI_GUIDE.md#32-true-totals)).
+year-to-date measure shows a dash in the total row; the answer's warnings say why ([REPORTS_GUIDE.md section 3.2](../guides/REPORTS_GUIDE.md#97-true-totals)).
 
 **You should see** the matrix's totals and subtotals as before (the figures are the same: `BiParityTest`) and a dash, with its reason,
 where a measure has no total.

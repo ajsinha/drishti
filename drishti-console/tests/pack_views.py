@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Every Sutra of every shipped pack bound on its own sample by a real server: the ViewModels the render parity suites draw
-(test_render_parity_browser.py; CLIENT_RENDERER.md section 14).
+(test_render_parity_browser.py; EMBED_GUIDE.md section 14).
 
 ``drawable()`` lists, at collection, every pack Sutra that has a sample document (one test each). ``bind(server)`` asks a real server
 for each one's ViewModel (POST /api/v1/studio/preview). The ``pack_views`` fixture (conftest.py) binds them once per test run for every

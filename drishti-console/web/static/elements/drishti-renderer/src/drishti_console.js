@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* behaviours: 'console' (CLIENT_RENDERER.md section 7.4): the console's richer behaviours inside the container. From the libraries:
+/* behaviours: 'console' (EMBED_GUIDE.md section 7.4): the console's richer behaviours inside the container. From the libraries:
    the tree rows and the drill-down (drishti-grid's document table, behave.js) and the nested pivot, drawn by drishti-grid's own grid
    with tree data (nested.js). From the console, until their screens move onto the libraries (ELEMENTS.md section 12): the per-column
    filter funnels and Chart any table (drishti_tables.js, drishti_colfilter.js), Zoom (drishti_zoom.js) and the controls

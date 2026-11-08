@@ -130,7 +130,7 @@ scope=embed:view embed:about embed:report
 ```
 
 (Captured against a stack on ports 19590 and 19591 with the client authenticated by `private_key_jwt` instead of the secret: a
-`client_assertion` signed with the same demo key, `iss` = `sub` = `harbour-crm`; [API_GUIDE.md](../guides/API_GUIDE.md) lists both ways. The sample
+`client_assertion` signed with the same demo key, `iss` = `sub` = `harbour-crm`; [API_REFERENCE.md](../guides/API_REFERENCE.md) lists both ways. The sample
 host itself sends the secret, as above.)
 
 The token the page receives is a short **ES256** JWT; its header and claims are plain to read (here decoded from a real one):
@@ -284,12 +284,12 @@ The repository has the same page as **React, Vue and Angular** samples in `docs/
 
 ![The React sample: a search box, the view, its About body and the report, in one host page](img/t16/11-react-sample.jpg)
 
-You should see the search box above the view; type `1000001` (an ENDUR trade) and pick a result, and the view and the About body follow. The page keeps the strict policy of step 7. [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#react-angular-and-vue-sample-pages).
+You should see the search box above the view; type `1000001` (an ENDUR trade) and pick a result, and the view and the About body follow. The page keeps the strict policy of step 7. [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#71-the-sample-pages).
 
 ## Next steps
 
 - [Tutorial 17](17-run-it-in-production.md): the production checklist (security on, users, tokens, backups).
-- [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) section 5 and [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
+- [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions) section 5 and [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) cover embedding a report; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
 
 ## If something goes wrong
 

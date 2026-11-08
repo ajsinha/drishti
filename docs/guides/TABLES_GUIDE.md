@@ -21,7 +21,7 @@ and defines measures over them. Every consumer reads them the same way: BI, the 
 reference: every key, every check, the command line and the migration of BI's datasets and models; the hands-on walk-through is the
 [virtual tables tutorial](../tutorials/44-virtual-tables-and-models.md). The design, with its decisions, is
 [ARCHITECTURE.md section 24](../architecture/ARCHITECTURE.md#24-virtual-tables-the-central-table-layer); how BI reads the layer is
-[BI_DESIGN.md section 18](../architecture/BI_DESIGN.md#18-the-bi-foundation-bi-on-the-table-layer-and-rachana).
+[ARCHITECTURE.md §28 section 18](../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana).
 
 The outputs below are real: the shipped BI datasets and models as migrated into `config/tables/bi` (where they ship) beside the tutorial's own two tables and model, and the
 test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties).
@@ -210,7 +210,7 @@ on the exposure table keeps the exposure rows that share a key (a dimension both
 between the two) with the trades the desk head sees, so she sees the exposure of the counterparties her desks trade with and nothing
 more. BI's engine works it out over the other table with that table's own rules; a model where the two share no key refuses the question,
 and a table with such a rule read on its own shows that role no rows. `tables migrate` writes it wherever an old dataset's rule named
-another table (nobody sees more data after the upgrade; BI_DESIGN.md 8.5). A live table's history follows its table's rules the same way,
+another table (nobody sees more data after the upgrade; ARCHITECTURE.md §28 8.5). A live table's history follows its table's rules the same way,
 on its group columns.
 
 Before the table's own rules, a read is a read of the source as the reader: their row rules and masks on the source kind apply to every
@@ -519,10 +519,10 @@ tests:
 | **Runs** | on demand and kept per business date, or on each load of an input; the compute pool and the time and memory limits |
 | **Templates** | join and derive, resample a series, statistics per group, a file or feed from an approved source: each writes the code, the inputs and the contract |
 | **Notebook → Turn into table** | cells become the build function: `drishti.table("domain.name")` becomes an input, the imports move to the top, the last expression is returned, and the contract is proposed |
-| **Sample run** | reads each input as you may see it (a table by name, or a model query), runs the build function on the server's compute pool `python` (the strict sandbox of [BI_GUIDE.md section 34](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), section 7), and checks the rows against the contract: each contract column there and of its type, the keys unique and the never-empty columns filled, each failure said in words in the checks; the first 20 rows show. Needs `bi-author`; where the server cannot run Python safely (compute off, Windows) the button is off and says why. The Notebook's **Run cells on the server** turns the cells into a build function and runs it the same way |
+| **Sample run** | reads each input as you may see it (a table by name, or a model query), runs the build function on the server's compute pool `python` (the strict sandbox of [REPORTS_GUIDE.md section 34](NOTEBOOK_GUIDE.md#3-python-measures-and-visuals), section 7), and checks the rows against the contract: each contract column there and of its type, the keys unique and the never-empty columns filled, each failure said in words in the checks; the first 20 rows show. Needs `bi-author`; where the server cannot run Python safely (compute off, Windows) the button is off and says why. The Notebook's **Run cells on the server** turns the cells into a build function and runs it the same way |
 
 **Where the code runs.** On the server's compute pool `python`, never in the console or the browser, in the strict sandbox of
-[PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write): the inputs read as the person the run
+[NOTEBOOK_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime): the inputs read as the person the run
 is for (their row rules and masks), the pinned libraries only (`config/compute/locks/python.lock`), the build function's time and memory limits, no
 network (a file or feed from an approved source is read by the server and handed in as an input), files only in its own folder; every run is audited.
 When BI reads the table, the same function runs for the reader and its rows are checked against the contract: a column missing or of another type is
@@ -557,8 +557,8 @@ The same definitions are checked on the command line by `drishti.py tables check
 
 Every expression is written in one of four scopes, decided by where it stands: **row** (a column's `expr`, a `filter`), **rule** (a
 table's `rules`, a model's `security.rows`), **aggregate** (a model's measures, MQ `define` and `having`) and **context** (the first
-argument of `calc`, `share_of`, `parent_of`, `as_of`). What each scope may name: [BI_DESIGN.md section
-18.2](../architecture/BI_DESIGN.md#182-scopes-and-the-filter-context-in-rachana). Every function, with its arguments and where it runs:
+argument of `calc`, `share_of`, `parent_of`, `as_of`). What each scope may name: [ARCHITECTURE.md §28 section
+18.2](../architecture/ARCHITECTURE.md#284-the-expression-language-del-and-its-checks). Every function, with its arguments and where it runs:
 [FUNCTIONS.md](FUNCTIONS.md).
 
 A measure is evaluated per group of the answer in four layers: the reader's **security** (fixed: no function touches it), the **query**

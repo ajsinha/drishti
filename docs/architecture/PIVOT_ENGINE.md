@@ -31,9 +31,9 @@ cube then and build this capability first, then come back to MR cube". And: "we 
 there" ([section 10](#10-beyond-anything-out-there)).
 
 **Read with:** [MR_CUBE_LENS.md section 4](../lenses/README.md#65-the-shared-cube-core-mr-and-ccr) (the shared cube core this
-engine grows from), [CCR_CUBE_LENS.md](../lenses/README.md#7-ccr-cube-lens) (the second cube on it), [BI_GUIDE.md](../guides/BI_GUIDE.md) (the BI
+engine grows from), [CCR_CUBE_LENS.md](../lenses/README.md#7-ccr-cube-lens) (the second cube on it), [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md) (the BI
 query engine on DuckDB, rollups, true totals, run cards, Python measures), [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)
-(DEL, the expression language), [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the compute worker pools), [VAR_SHARDING.md](VAR_SHARDING.md)
+(DEL, the expression language), [NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md) (the compute worker pools), [VAR_SHARDING.md](VAR_SHARDING.md)
 (scatter and gather of partial sums across Drishti\*net), [COMPUTE_ENGINES.md](COMPUTE_ENGINES.md) (one file and one switch per engine),
 [IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk) (data that may never touch a disk), [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) (memory
 budgets and busy protection) and [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md).
@@ -119,14 +119,14 @@ Read from the guides and the code on 2026-11-02. The engine reuses every row of 
 
 | What | Where | Built | What the pivot engine takes from it |
 |---|---|---|---|
-| BI query engine: datasets, DEL compiled to parameterised SQL, row rules and masks, embedded DuckDB (`AnalyticEngine`, `DuckDbEngine`) | [BI_GUIDE.md section 30](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) | yes | the tabular provider's compiler, security and connection handling |
-| Layers and rollups: a rollup stores the **components** of its measures (sums, counts, minimums, maximums; `avg` as sum and count) per date and group, and a query is routed to the smallest layer that covers it | [BI_GUIDE.md, modes, layers and rollups](../guides/BI_GUIDE.md#7-modes-layers-and-rollups) | yes | aggregate awareness and the rollup store, extended to sketches |
-| True totals: a total of a measure that does not add up is one more query per level, never the sum of the figures shown | [BI_GUIDE.md, true totals](../guides/BI_GUIDE.md#32-true-totals) | yes | the rule, generalised to every provider |
-| Runs and run cards: a range estimate from Delta statistics, "why it is large", confirm above a minute or 500 million rows, run in background | [BI_GUIDE.md](../guides/BI_GUIDE.md) (runs) | yes | the scan estimate and the background job |
-| The `matrix` visual (rows × columns, subtotals at every level) | [BI_GUIDE.md](../guides/BI_GUIDE.md) | yes | replaced by the pivot engine's answer (it keeps its YAML; [section 6.2](#62-the-tabular-provider-duckdb)); the console's own slice of an extract is cut: slicing is the Pivot's, one analysis path, Pivot then Report |
+| BI query engine: datasets, DEL compiled to parameterised SQL, row rules and masks, embedded DuckDB (`AnalyticEngine`, `DuckDbEngine`) | [REPORTS_GUIDE.md section 30](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads) | yes | the tabular provider's compiler, security and connection handling |
+| Layers and rollups: a rollup stores the **components** of its measures (sums, counts, minimums, maximums; `avg` as sum and count) per date and group, and a query is routed to the smallest layer that covers it | [REPORTS_GUIDE.md, modes, layers and rollups](../guides/REPORTS_GUIDE.md#56-layers-rollups-and-refresh) | yes | aggregate awareness and the rollup store, extended to sketches |
+| True totals: a total of a measure that does not add up is one more query per level, never the sum of the figures shown | [REPORTS_GUIDE.md, true totals](../guides/REPORTS_GUIDE.md#97-true-totals) | yes | the rule, generalised to every provider |
+| Runs and run cards: a range estimate from Delta statistics, "why it is large", confirm above a minute or 500 million rows, run in background | [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md) (runs) | yes | the scan estimate and the background job |
+| The `matrix` visual (rows × columns, subtotals at every level) | [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md) | yes | replaced by the pivot engine's answer (it keeps its YAML; [section 6.2](#62-the-tabular-provider-duckdb)); the console's own slice of an extract is cut: slicing is the Pivot's, one analysis path, Pivot then Report |
 | The Pivot tab on a table or ladder (Rachana `pivot`) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#pivot-pivot-on-a-table-or-ladder), [USER_GUIDE.md](../guides/USER_GUIDE.md#pivot-slice-a-table-your-way) | yes | becomes a pivot view over the panel's rows |
-| Python measures in BI: `compute(table, params)` per group, sandboxed (isolated process, empty environment, no network, scratch folder only, CPU, memory, output limits, package allow-list) | [BI_GUIDE.md section 34](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [its sandbox](../guides/BI_GUIDE.md#7-the-sandbox-exactly) | yes | the sandbox's guards, unchanged; a Python measure is a holistic custom function |
-| Compute worker pools (`drishti-compute`): fork-server per worker on Linux, warm workers on Windows, Arrow IPC scratch transport, limits, fan-out over nodes | [PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool) | yes (C1 to C3) | the per-node pool that runs Python custom functions |
+| Python measures in BI: `compute(table, params)` per group, sandboxed (isolated process, empty environment, no network, scratch folder only, CPU, memory, output limits, package allow-list) | [REPORTS_GUIDE.md section 34](../guides/NOTEBOOK_GUIDE.md#3-python-measures-and-visuals), [its sandbox](../guides/NOTEBOOK_GUIDE.md#71-what-the-sandbox-enforces) | yes | the sandbox's guards, unchanged; a Python measure is a holistic custom function |
+| Compute worker pools (`drishti-compute`): fork-server per worker on Linux, warm workers on Windows, Arrow IPC scratch transport, limits, fan-out over nodes | [NOTEBOOK_GUIDE.md section 7](ARCHITECTURE.md#292-pools-and-workers) | yes (C1 to C3) | the per-node pool that runs Python custom functions |
 | VaR sharding: partial vectors per shard added in shard order, bit-equal to the whole (`ShardedMeasure`, `ShardGather.Combine`) | [VAR_SHARDING.md](VAR_SHARDING.md) | yes | the cluster merge, lifted into the core for every provider |
 | Busy protection: one admission gate refusing new heavy work politely | [RESOURCES_AND_SCALE.md section 5.7](RESOURCES_AND_SCALE.md#57-busy-protection-refuse-politely-before-the-heap-runs-out), [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over) | yes (unreleased) | every pivot passes the gate |
 | The in-memory lake: tables on `mem://`, DuckDB's spill switched off for them, the never-on-disk guard at every sink | [IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk) | yes (unreleased) | the rule that a memory-only table is never spilled or written for user code |
@@ -341,7 +341,7 @@ holistic for that measure.
 
 | Route | When | How |
 |---|---|---|
-| the BI layers | a BI dataset table (the `cached`, `rollup`, `live` layers of [BI_GUIDE.md](../guides/BI_GUIDE.md#7-modes-layers-and-rollups)) | the same DuckDB connection and Parquet files BI reads; nothing copied |
+| the BI layers | a BI dataset table (the `cached`, `rollup`, `live` layers of [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#56-layers-rollups-and-refresh)) | the same DuckDB connection and Parquet files BI reads; nothing copied |
 | direct lake scan | large Delta or Iceberg tables (hundreds of GB and more), which must not be copied into the BI columns layer | DuckDB's `delta` and `iceberg` extensions over the lake's files (local disk, EFS, S3), with the table's version pinned |
 | memory-only tables | tables on `mem://` | the server's Arrow reads, registered in DuckDB as Arrow views, DuckDB's temporary directory off (as BI does today) |
 
@@ -446,7 +446,7 @@ same path for existing datasets.
 | Route | What it reads | Cost | When |
 |---|---|---|---|
 | **promoted column** | a typed column of the table | a column scan: fast at any size | the field is in the connector's `layout.<kind>.columns` |
-| **dataset column** | a BI dataset's column (a `path:` into the document, or an `each:` table), extracted once per business date into the BI `cached` layer (Parquet) | a column scan after the first build | the field is declared in a dataset ([BI_GUIDE.md](../guides/BI_GUIDE.md), "Tables and columns") |
+| **dataset column** | a BI dataset's column (a `path:` into the document, or an `each:` table), extracted once per business date into the BI `cached` layer (Parquet) | a column scan after the first build | the field is declared in a dataset ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md), "Tables and columns") |
 | **ad-hoc path** | DuckDB's JSON functions over `doc` at query time (`json_extract_string(doc, '$.LEGS[*].CURRENCY')`) | every document parsed for the scanned dates | anything else; the scan estimate ([section 9.7](#97-scan-estimates-before-anything-runs)) shows the cost first, and a large one is refused with the cheaper route named ("promote `LEGS.CURRENCY`, or add it to the trades dataset") |
 
 The person never chooses the route: the field list shows the field once, and the engine takes the fastest route that holds it. An
@@ -606,7 +606,7 @@ suggests a sketch or a mergeable form. Holistic functions never run on cluster p
 ### 8.5 Python: the sandbox and the worker pool
 
 Python custom functions run in the node's **`pivot-fn` pool** (`drishti_compute.pivot_fn`, part of the compute SDK: its audit-hook
-guard and its Arrow codec, [PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool)), so the rows never leave the node that
+guard and its Arrow codec, [NOTEBOOK_GUIDE.md section 7](ARCHITECTURE.md#292-pools-and-workers)), so the rows never leave the node that
 scanned them:
 
 | Guard | How (unchanged from BI and compute unless said) |
@@ -720,7 +720,7 @@ Rollups may hold sketch states, so a distinct count by desk and month comes from
 
 ### 9.6 Rollups refreshed on load, chosen automatically
 
-BI's rollups ([BI_GUIDE.md](../guides/BI_GUIDE.md#7-modes-layers-and-rollups)) store **components** of measures per date and group. The
+BI's rollups ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#56-layers-rollups-and-refresh)) store **components** of measures per date and group. The
 pivot engine generalises them: a rollup stores **partial states** of any mergeable or sketch function (sums, counts, Welford parts, HLL
 registers, KLL summaries) at its grain. Because the states merge:
 
@@ -796,7 +796,7 @@ phases.
 | 7 | **Automatic insights** | on request or as a toggle: outliers (robust z-score against the cell's peers), sudden changes (against the cell's own history), concentration (a member's share above a threshold), flagged in the grid with the reason in words; computed by the engine, never guessed | P4 | M |
 | 8 | **Robust references to cells** | a stable name for a cell: `pivot://asha/desk-risk@4/Notional[DESK=RATES-NY, month=2026-10]` (view, version, measure, coordinates); survives re-sorting, new columns and a new date (it names coordinates, not positions); usable in DEL formulas (`pivot_ref(...)`), alerts, report cards and the Excel export (named ranges); a reference whose coordinate is gone says "not in the view", never 0 | P1 (names), P4 (formulas, Excel) | S, then M |
 | 9 | **Correctness Excel lacks** | non-additive totals right, currencies converted explicitly, units respected, masks before aggregation, no silent truncation, exact or ≈ always shown ([section 5.4](#54-correctness-excel-does-not-have)) | P1 | M (in the core) |
-| 10 | **Collaboration** | shared live views (the reader's entitlements), comments anchored to a cell's coordinates (survive re-sorts and new dates; [COLLABORATION.md](COLLABORATION.md)), **view versions** with a diff of definitions and restore (as built: [section 10.1](#101-as-built-live-pivots-the-screens-switches-and-cell-comments)) | P2 | S to M |
+| 10 | **Collaboration** | shared live views (the reader's entitlements), comments anchored to a cell's coordinates (survive re-sorts and new dates; [ARCHITECTURE.md §31](ARCHITECTURE.md#31-collaboration-write-back-and-approvals)), **view versions** with a diff of definitions and restore (as built: [section 10.1](#101-as-built-live-pivots-the-screens-switches-and-cell-comments)) | P2 | S to M |
 | 11 | **Terminal-grade experience** | keyboard first (`PIVOT <GO>`, every action a key, the Bloomberg-bar standard), instant first answers on big data through progressive answers and rollups | P1 (keys), P3 (progressive) | S, then in P3 |
 | 12 | **Expand and collapse, better than Excel** | nested rows and columns, lazy evaluation per expanded node, "expand by" a different dimension per member, ragged hierarchies, correct Others, inline drill to the rows ([section 11](#11-expand-and-collapse-nested-levels-better-than-excel)) | P1 (core), P2 (expand by, Others for holistic) | M, then M |
 | 13 | **Pick-and-choose charts** | select cells, a row, a column, a range or a level and chart it; the chart is suggested from the selection's shape, linked both ways to the pivot, and never stacks a non-additive measure ([section 14.3](#143-pivot-charts-pick-and-choose)) | P1 (pick, suggest, link), P4 (Excel charts bound to the PivotTable) | M, then S |
@@ -863,7 +863,7 @@ Phase P1 builds 1, 2, 4, 6, 7, 8 and 9 (size M); P2 builds 3, 5 (for holistic me
 Product owner (2026-11-02): the pivot engine is also BI's; there is no shadow mode and no old path kept: BI moves onto the engine where it
 makes sense and the aggregation code it replaces is removed. BI's own design stays: datasets and data models (D1), one model per report
 (D2), pack-generated datasets (D3), **MQ as the one way to ask a model for data** (D5), time modes (D6)
-([BI_DESIGN.md section 14](BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6)), its compiler of a model's rows (row rules,
+([ARCHITECTURE.md §28 section 14](ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana)), its compiler of a model's rows (row rules,
 masks, joins, layers, dates) and its security. What changes is **who aggregates**: one engine, one set of aggregation functions, the same
 correctness. Drishti's BI is Power BI-like, not a replica: where a Power BI semantic would cost scale or reuse, the engine's design is
 chosen and said here.

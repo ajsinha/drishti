@@ -185,7 +185,7 @@ looking at today's business date. Pick a past date in the top bar and every view
 The server streams over Server-Sent Events (SSE): a plain HTTP response that never ends, made of text
 events. `curl -N` (no buffering) shows them as they arrive. The examples run against a local server with
 security off (`drishti.security.enabled: false`); with security on, add an `Authorization: Bearer …`
-header (see [API_GUIDE.md](../guides/API_GUIDE.md)).
+header (see [API_REFERENCE.md](../guides/API_REFERENCE.md)).
 
 #### 1. Stream one view from the server
 
@@ -685,11 +685,11 @@ normally create rules from the console's Alerts page; see [USER_GUIDE.md](../gui
 
 ### Live BI: a report's live tables
 
-Business intelligence uses this machinery too (Rūpaka phase 5, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 12; the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A dataset table with `mode: live` ([BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5)) is **fed by the same
+Business intelligence uses this machinery too (Rūpaka phase 5, [ARCHITECTURE.md §28](ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) section 12; the pages are [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md) section 18). A dataset table with `mode: live` ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#57-live-tables)) is **fed by the same
 topics**: for each entity of its kind the engine subscribes through the source layer (the connector's `subscribe`, the same call a live view makes), applies each change to an in-memory table by key (batched every 100 ms, so ticks coalesce as they do for a view), and keeps a counter that grows with
 every change. It is **not** a view stream: it carries no panel patches and costs the entities' topics one more listener (`TopicHub`), not one more source subscription; a dataset that names a connector (`source: { connector: ... }`) subscribes through that connector directly instead, for a stream that keeps no state but ticks what a store serves.
 
-What reaches a browser is small. A report over such a table has one stream, `GET /api/v1/bi/reports/{id}/live` ([API_GUIDE.md](../guides/API_GUIDE.md#reports-apiv1bireports-phase-3)), relayed by the console's one channel as the subscription `bilive:<report id>`:
+What reaches a browser is small. A report over such a table has one stream, `GET /api/v1/bi/reports/{id}/live` ([API_REFERENCE.md](../guides/API_REFERENCE.md#10-reports-apiv1bireports)), relayed by the console's one channel as the subscription `bilive:<report id>`:
 
 | Event | Meaning |
 |---|---|
@@ -712,7 +712,7 @@ Pause, the "last update" time and the stale and disconnected states of the indic
 #### Results computed by a streaming producer
 
 A live table keeps the current rows of a kind and recomputes measures over them; it does not maintain heavy aggregates over a large stream
-incrementally (only the plain rollups a dataset declares, [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) section 20.11). That belongs in a **producer**: Pravaha, Flink,
+incrementally (only the plain rollups a dataset declares, [ARCHITECTURE.md §28](ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) section 20.11). That belongs in a **producer**: Pravaha, Flink,
 ksqlDB or a custom BI server computes keyed result rows (a total per desk, per desk and currency) and owns its arithmetic; Drishti **serves**
 them: a screen per result, live delivery to many browsers, field masks, alerts, sharing and embedding, as for any kind.
 
@@ -876,7 +876,7 @@ memory (although it still replays the topic from the beginning at start, `UP (ca
 ticks of open views while a store (Delta Lake, a database) serves the documents: such a
 view is live although its document came from the store, because a live connector declares that it pushes the kind
 (`SourcePlugin.pushes`), and it subscribes there.
-See [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) for every Kafka setting.
+See [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) for every Kafka setting.
 
 ### The demo source
 
@@ -1734,7 +1734,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 
 | Step | Builder | What | Done when (its own tests) | Docs in the same push |
 |---|---|---|---|---|
-| **H1** | A | The contract: `HistoryRequest`, `HistoryDay`, `HistoryRead`, `SourcePlugin.history` and `days` defaults, `HistoryReads.perDay`; `ConnectorInstance` delegation; the fixture `drishti-testkit/src/main/resources/history/trade-1000015-30.json` (and an equity one); `DatedSourceContract` history cases | every plugin that extends `DatedSourceContract` passes the new cases with the default | `docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md` (the SPI) |
+| **H1** | A | The contract: `HistoryRequest`, `HistoryDay`, `HistoryRead`, `SourcePlugin.history` and `days` defaults, `HistoryReads.perDay`; `ConnectorInstance` delegation; the fixture `drishti-testkit/src/main/resources/history/trade-1000015-30.json` (and an equity one); `DatedSourceContract` history cases | every plugin that extends `DatedSourceContract` passes the new cases with the default | `docs/guides/DEVELOPER_GUIDE.md` (the SPI) |
 | **H2** | A | `engine/history`: `HistoryProperties`, `HistoryWindow` (ranges, business days, baseline), `HistoryRows` (latest per day, `changed`, parts, summary, diff), `HistoryCache`, `HistorySpec` (+ `DRS-2061`), `HistoryService`; `SourceRouter.history` (read order, coverage, budget, partial) | unit tests (section 19.1) | CONFIGURATION (settings), API_GUIDE and TROUBLESHOOTING (codes) |
 | **H3** | A | `HistoryController.rows` (`/{kind}/{id}` and `/~`), the new `ErrorCode`s, masks, `AccessRecorder.ACTIONS`; `series` re-pointed at the service (260 becomes `max-days`); `HistoryDefinitions` reading `history:`; deploy and `sutra lint` checks | controller tests with a fake router: masks per row, rights, every error, the JSON equals the fixture's shape | API_GUIDE endpoint, PACK_DEVELOPER_GUIDE `history:` |
 | **H4** | A | Drishti\*net: `PeerSource.history`, `NetDataController` `/net/history`, merge by date | in-process cluster test (two nodes, a kind's dates split across them) | OPERATIONS.md routing table |
@@ -1745,7 +1745,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 | **H9** | B | Market shape: chart, headline numbers, range buttons, crosshair, embedded series | template tests with the equity fixture | USER_GUIDE |
 | **H10** | B | DIFF mode, export routes (csv, json, xlsx), share links and pick lists carrying the range | export tests (names, BOM, formula guard, masked values as served) | USER_GUIDE, API_GUIDE "console's own JSON routes" |
 | **H11** | B | `drishti.py history`, the Python client's `history()`, `PhraseParser` time phrases | `test_drishti_cli.py` cases, `PhraseParserTest` cases | CLI_GUIDE, USER_GUIDE plain words |
-| **H12** | A | BI source `history` (not built, section 15.4) | dataset parser and `DatasetSources` tests | BI_GUIDE.md |
+| **H12** | A | BI source `history` (not built, section 15.4) | dataset parser and `DatasetSources` tests | REPORTS_GUIDE.md |
 | **H13** | A + B | The shipped packs' `history:` blocks (section 6.3); help card; tutorial 21; CHANGELOG | `sutra lint` of every shipped pack clean | PACKS, tutorial 21, help |
 | **H14** | B, then both | Browser test and the benchmark (section 19.3, 19.4); then the release drill, once | both green under the 10K-trade cap | SCALE_STRATEGY history row, RELEASE_NOTES |
 
@@ -1810,13 +1810,13 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 | Document | What |
 |---|---|
 | `docs/guides/USER_GUIDE.md` › The command line | the range after the id (section 4), the history page, keys, changes only, DIFF, plain words |
-| `docs/guides/API_GUIDE.md` | `GET /api/v1/history/{kind}/{id}` with the JSON of section 8; `/net/history`; the codes in "Error code table"; the console's export routes |
+| `docs/guides/API_REFERENCE.md` | `GET /api/v1/history/{kind}/{id}` with the JSON of section 8; `/net/history`; the codes in "Error code table"; the console's export routes |
 | `docs/guides/CLI_GUIDE.md` | `drishti.py history` |
 | `docs/guides/PACK_DEVELOPER_GUIDE.md`, `docs/guides/PACK_DEVELOPER_GUIDE.md` | the `history:` block (section 6), with the shipped packs' blocks as examples |
 | `docs/admin/CONFIGURATION.md` | `drishti.history.*` (test_docs_settings.py) |
 | `docs/guides/TROUBLESHOOTING.md` | the six codes, each with its fix (test_docs_error_codes.py) |
 | `docs/admin/OPERATIONS.md` | `/net/history` in the routing section |
-| `docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md` and each connector's document | the SPI methods and each connector's fast path |
+| `docs/guides/DEVELOPER_GUIDE.md` and each connector's document | the SPI methods and each connector's fast path |
 | help cards | `drishti-console/config/help.yaml` (a "History" guide under the command line category) and the trading and market-data packs' `config/help.yaml` |
 | `CHANGELOG.md`, `RELEASE_NOTES.md` | each step's line |
 | `docs/architecture/CLUSTER_DEPLOYMENT.md` | the history row with the new measurements |
@@ -2160,10 +2160,10 @@ Status: **R1 to R4 built and built (2026-10-26); R5 and R6 planned, in no releas
 where it differs from the design below, is in [section 21](#21-built-r1-to-r4); the reference for people who write and run reactive
 connectors is [the reactive connector's README](../connectors/types/reactive/README.md) and [tutorial 23](../tutorials/23-computed-panels.md).
 Everything named below that section 21 does not list as built is **planned**. Related designs:
-[PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the workers that run the computations, `requires:` and approval),
+[NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md) (the workers that run the computations, `requires:` and approval),
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (a saved change
 can trigger a computation), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms) (screens that read many sources), [section 1](#1-live-updates) (how results reach
-the screen), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the connector SPI).
+the screen), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the connector SPI).
 
 ### 1. The ask, in one paragraph
 
@@ -2183,8 +2183,8 @@ for the same business date, and each panel says on its own if its source failed.
 | 3 | **A pack combines results from as many connectors as it wishes.** | Per-panel `source:` already exists ([RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 6](../guides/RACHANA_REFERENCE.md#6-sources-over-several-packs)); this design adds parameters, one pinned as-of per screen, and per-panel failure ([section 12](#12-one-screen-many-connectors)). |
 | 4 | **Reactive connectors compute on request and on events** (a write-back, a Kafka change, a schedule). | `triggers:` ([section 7](#7-triggers-computing-on-events)) with coalescing, incremental recompute, point-in-time stamps, ordering, idempotence and back-pressure. |
 | 5 | **Two users' write-backs or requests never mix their responses.** | A correlation id on every request and event, per-user sandboxes, cache keys that include the viewer's rights, masks applied per recipient ([section 9](#9-isolation-two-users-never-see-each-others-answers)). |
-| 6 | **The connector declares `requires:`** (Python, Java, plugins); an administrator approves before use. | The block, the locked environments and the approval are in [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md). |
-| 7 | **Python runs out of process, Java stays on 21, no FFI, no embedded CPython.** | A reactive connector's code runs in a worker process, never inside the server ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)). |
+| 6 | **The connector declares `requires:`** (Python, Java, plugins); an administrator approves before use. | The block, the locked environments and the approval are in [NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md). |
+| 7 | **Python runs out of process, Java stays on 21, no FFI, no embedded CPython.** | A reactive connector's code runs in a worker process, never inside the server ([NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md)). |
 
 ### 3. Four kinds of connector
 
@@ -2199,7 +2199,7 @@ for the same business date, and each panel says on its own if its source failed.
   says what it can do: `live`, `search`, `dated`); a planned `mode` field in the manifest makes it visible in Admin →
   Connectors and in the connector type's README front matter (`capabilities:` gains `compute`).
 - An **on-demand** connector is a reactive connector without triggers, without parameters beyond its id, and without workers: it stays
-  the light pattern of [the developer guide](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
+  the light pattern of [the developer guide](../guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand).
   A reactive connector is for computations that are heavy, parameterised, need their own libraries, or must react to events.
 
 ### 4. What a reactive connector is
@@ -2210,8 +2210,8 @@ A reactive connector is **a connector whose answer is a computation**. It has fi
 |---|---|---|
 | **kinds** | the kinds it answers (`var-result`, `var-contribution`, `what-if` …), each with its parameters and the shape of its result | [5](#5-the-connector-file) |
 | **inputs** (`reads:`) | which kinds of which connectors it reads, always **as the requesting user** | [6](#6-the-request-and-its-lifecycle) |
-| **engine** | where the code runs: a Python worker, a Java worker, or (trusted, light code only) in the server's own process | [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) |
-| **requires** | the libraries the engine needs, pinned, approved by an administrator | [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) |
+| **engine** | where the code runs: a Python worker, a Java worker, or (trusted, light code only) in the server's own process | [NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md) |
+| **requires** | the libraries the engine needs, pinned, approved by an administrator | [NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md) |
 | **triggers** | the events on which results are recomputed and pushed | [7](#7-triggers-computing-on-events) |
 
 Everything that already consumes connectors works on it without change: a Sutra panel's `source:`, BI datasets, history queries,
@@ -2267,8 +2267,8 @@ reads:                                  # the inputs, always read as the request
 engine:
   type: python                          # python | java | in-process (trusted Java only)
   entry: drishti_var.connector:VarEngine
-  pool: risk                            # a worker pool of config/compute/compute.yaml (PYTHON_COMPUTE.md)
-requires:                               # PYTHON_COMPUTE.md section 4; nothing runs until an administrator approves it
+  pool: risk                            # a worker pool of config/compute/compute.yaml (NOTEBOOK_GUIDE.md)
+requires:                               # NOTEBOOK_GUIDE.md section 4; nothing runs until an administrator approves it
   python:
     version: "3.12"
     lock: requires/var-engine.lock      # pinned wheels with sha256
@@ -2347,7 +2347,7 @@ Inside the server every read of a reactive kind becomes one **compute request**:
 | 5. **Cache and single flight** | A cached result for the key is answered at once. A request for a key already being computed **joins** that computation (one computation, many waiters, each answered under its own request id). | server, then the key's owner node ([section 14](#14-several-servers-drishtinet)) |
 | 6. **Admit** | The request takes a slot in its class's queue; a full queue answers *busy, try again* (interactive) or waits (event, batch) ([section 10](#10-coalescing-incremental-recompute-and-back-pressure)). | server |
 | 7. **Read the inputs as the user** | Each `reads:` kind is read through the normal router **as the requesting viewer**: kinds, row entitlements and field masks applied before a byte reaches the computation. Bulk inputs travel as Arrow (the existing `scan` SPI). | server |
-| 8. **Compute** | The request, the inputs and a scratch folder go to a worker of the connector's pool. The worker never fetches data itself and holds no credentials. | worker ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) |
+| 8. **Compute** | The request, the inputs and a scratch folder go to a worker of the connector's pool. The worker never fetches data itself and holds no credentials. | worker ([NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md)) |
 | 9. **Progress** | A long computation sends partial results (*desks 7 of 12 done*, a first estimate) on the requester's live channel; the panel paints them, marked *computing 58%*. | worker → server → console |
 | 10. **Stamp, validate, cache** | The result is validated against the kind's schema, stamped (pin, computedAt, engine and environment), and cached under its key. | server |
 | 11. **Answer** | The result goes to the request id that asked, and to every request id that joined it, each masked for its own viewer. | server |
@@ -2415,7 +2415,7 @@ next read. A trigger never computes for a screen nobody has open.
   "trigger": { "type": "write-back", "eventId": "chg-01JB3Z…" },               // absent for a plain request
   "computedAt": "2026-10-23T14:02:13.418Z",
   "engine": { "connector": "var-engine", "entry": "drishti_var.connector:VarEngine", "package": "drishti-var 0.1.0" },
-  "environment": "env-sha256:7f3c9a…",                    // the locked environment (PYTHON_COMPUTE.md section 5)
+  "environment": "env-sha256:7f3c9a…",                    // the locked environment (NOTEBOOK_GUIDE.md section 5)
   "resultHash": "sha256:…"
 }
 ```
@@ -2467,7 +2467,7 @@ make sure of it.
 4. **Masks are applied per recipient.** A result computed once for a signature is still passed through the recipient's field masks
    when it is sent (belt and braces: a signature mismatch can only hide, never reveal).
 5. **No state survives between requests in a worker.** A worker process handles one request at a time and is reset (or forked fresh)
-   between requests ([PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool)); a Python global, a cached object or a temp
+   between requests ([NOTEBOOK_GUIDE.md section 7](ARCHITECTURE.md#292-pools-and-workers)); a Python global, a cached object or a temp
    file of one request is never seen by the next.
 
 #### 9.2 Two traders, two amendments, the same second
@@ -2531,7 +2531,7 @@ is checked against a full recompute in the background; a difference beyond toler
 - **Per-user fairness:** at most `limits.max-inflight-per-user` requests of one user run at once; the rest queue behind other users'.
 - **Admission by cost:** a request declares (or the connector estimates) its size (for VaR: the number of positions in the scope); one
   over `limits.max-scope-positions` is refused before any read, with the size in the message, or sent as a BI run job
-  ([BI_DESIGN.md](BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)) if the caller allows.
+  ([ARCHITECTURE.md §28](ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) if the caller allows.
 
 ### 11. Caching
 
@@ -2710,8 +2710,8 @@ A token needs the planned `compute` scope. The CLI gains `drishti.py compute run
 | `kinds.<kind>.result.schema` | — | JSON schema each result must match |
 | `kinds.<kind>.incremental` | `false` | the engine can update a previous result from events |
 | `reads` | — | input kinds, read as the requester through the router |
-| `engine.type`, `engine.entry`, `engine.pool` | — | where the code runs ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) |
-| `requires` | — | libraries ([PYTHON_COMPUTE.md section 4](PYTHON_COMPUTE.md#4-requires-what-a-connector-needs-to-run)) |
+| `engine.type`, `engine.entry`, `engine.pool` | — | where the code runs ([NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md)) |
+| `requires` | — | libraries ([NOTEBOOK_GUIDE.md section 4](ARCHITECTURE.md#296-requirements-and-approval)) |
 | `triggers[]` | — | `on`, `kinds`, `affects`, `recompute`, `cron`, `zone` |
 | `triggers.dedupe-window` | `24h` | how long processed event ids are remembered |
 | `coalesce.quiet`, `coalesce.max-wait` | `250ms`, `2s` | burst handling |
@@ -2724,14 +2724,14 @@ A token needs the planned `compute` scope. The CLI gains `drishti.py compute run
 | `history.dated` | `true` | a picked business date computes on that date's inputs |
 
 The worker pools themselves are configured once per site, in the planned `config/compute/compute.yaml`
-([PYTHON_COMPUTE.md section 13](PYTHON_COMPUTE.md#13-configuration)).
+([NOTEBOOK_GUIDE.md section 13](ARCHITECTURE.md#292-pools-and-workers)).
 
 ### 18. Build plan
 
 | Step | Delivers | Accepted when |
 |---|---|---|
 | R1 (**built**) | the `reactive` plugin and `ComputeEngine` SPI; typed `params:` on `source:` (lint, view model); the compute request, key, pin and stamp; cache and single flight on one node; an **in-process Java** test engine | a panel reads a computed kind with params; two panels asking the same key cause one computation; a new data version gives a new key |
-| R2 (**built**) | the worker bridge to the Python pool ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) steps C1–C3); progress on the live channel; per-panel states | a Python engine computes a result for a panel, with *computing N%* shown, and a crash shows `failed` in that panel only |
+| R2 (**built**) | the worker bridge to the Python pool ([NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md) steps C1–C3); progress on the live channel; per-panel states | a Python engine computes a result for a panel, with *computing N%* shown, and a crash shows `failed` in that panel only |
 | R3 (**built**; `write-back` from the edit log since W6/W7, 2026-10-25, and through the events API) | triggers: `write-back`, `live`, `data-version`, `schedule`; `affects:`; coalescing; ordering by watermark; dedupe | 200 events for one key in a second cause at most 2 computations; an older result never replaces a newer; a redelivered event is ignored |
 | R4 (**built**, except per-event impacts: W6/V5) | isolation: view signatures in keys, per-recipient masks on push, per-event impacts, private sandboxes | the two-traders test of [section 19](#19-tests-1) passes |
 | R5 (planned) | `consistency: snapshot` and `freshest`; *Newer data · Update all* | a screen of five panels on three connectors shows one pin; an applied edit offers *Update all* and re-pins all panels together |
@@ -2751,7 +2751,7 @@ The worker pools themselves are configured once per site, in the planned `config
 - **Masks:** a field masked for a subscriber never appears in a pushed result.
 - **Cluster:** the R6 acceptance tests, plus a network split (results stay correct; late, never mixed).
 - **Windows:** everything except the native QuantLib-Java worker runs on the Windows QA machine
-  ([PYTHON_COMPUTE.md section 12](PYTHON_COMPUTE.md#12-windows)).
+  ([NOTEBOOK_GUIDE.md section 12](ARCHITECTURE.md#297-windows)).
 
 ### 20. Open questions for the product owner
 
@@ -2769,7 +2769,7 @@ The worker pools themselves are configured once per site, in the planned `config
 
 ### 21. Built: R1 to R4
 
-Built on the compute workers C1 to C3 ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)). The reference is
+Built on the compute workers C1 to C3 ([NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md)). The reference is
 [the reactive connector's README](../connectors/types/reactive/README.md); the sample is the `compute-demo` pack (not loaded by default).
 
 | Part | Implementation | Where |
@@ -3052,7 +3052,7 @@ nodes write the same document, a write is a small compare-and-set on this node's
 **Runs across nodes.** A run's status and result read from any node (the row and the result are in the store); `RunForwardFilter` still
 sends a run's actions to the node that holds it, and is kept for nodes whose runs store is `local`. The lease is a compare-and-set on the
 run's document: `renew` writes only while the row still names this node, `adopt` only while it is still the dead node's with its lease
-lapsed, so exactly one node wins (BI_DESIGN.md 13.3). A late save from a node that lost a run (a higher attempt on another node) is dropped.
+lapsed, so exactly one node wins (ARCHITECTURE.md §28 13.3). A late save from a node that lost a run (a higher attempt on another node) is dropped.
 A due schedule is taken by one node (`claim`: a compare-and-set on its `nextAt`), so a schedule fires once in a cluster.
 
 **One-time import at start.** With `content`, the server imports, once, the identity database's `drishti_bi_*` rows (marker
@@ -3243,7 +3243,7 @@ There is no second store to back up, secure, size or switch.
 | Collaboration: notes, shares, threads, comments, mentions, inbox and outbox | The **lakes** (Delta, Iceberg): source data, written only by the loader (`lake build`, `lake publish`) |
 | BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are legacy, read once by the import and kept ([section 5](#5-the-content-store-user-content-every-node-reaches) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([section 5](#5-the-content-store-user-content-every-node-reaches)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
 | Write-back (built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
-| Compute approvals (built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
+| Compute approvals (built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
 | Administrators' switches (built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#where-it-is-kept)). New tables only: the schema version does not move | |
 | Anything relational added later | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
 

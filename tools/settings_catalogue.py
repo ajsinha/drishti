@@ -130,7 +130,7 @@ AREAS = [
          "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),
     Area("runs", "BI runs: `config/runs/runs.yaml`",
-         "Every BI question as a bounded, visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)); `drishti.bi.runs.file` names the file. "
+         "Every BI question as a bounded, visible job ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)); `drishti.bi.runs.file` names the file. "
          "Ready-made variants: `config/runs.examples/`."),
     Area("edit", "Write-back: `config/edit/`",
          "Write-back's four files ([WRITE_BACK.md](../guides/WRITE_BACK.md): the administrator's guide and, in its section 16, "

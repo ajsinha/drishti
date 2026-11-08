@@ -327,4 +327,4 @@ fixing/X.csv --rows-document --out fixing.jsonl` writes the JSON Lines line that
   [Connector files](../../docs/connectors/CONNECTOR_FILES.md); ready-made files in `config/connectors.examples/files/`.
 - [Demo data](../../docs/connectors/DEMO_DATA.md) (the rows the loaders write) and
   [the data lake guide](../../docs/guides/DATA_LAKE_GUIDE.md) (the load rules).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

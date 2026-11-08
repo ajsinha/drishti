@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The chart kinds through the vendored ECharts (CLIENT_RENDERER.md section 7.3): line and area (the options of the console's view.js),
+/* The chart kinds through the vendored ECharts (EMBED_GUIDE.md section 7.3): line and area (the options of the console's view.js),
    waterfall, histogram, scatter, candlestick, graph and the donut (charts.js), the surface (heatmap, or 3D with the vendored ECharts GL)
    and the map (the vendored Natural Earth shapes through the console's geomap.js). Colours are the theme's tokens, read from the
    rendered view, so a theme change redraws them. Every tooltip formatter escapes what it prints: ECharts writes tooltips as markup. */

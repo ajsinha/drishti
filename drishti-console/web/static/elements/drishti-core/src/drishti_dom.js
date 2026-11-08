@@ -15,7 +15,7 @@
  */
 /* The small DOM parts every drawn component uses: an element maker (no markup strings, no style attributes, so a page with a strict CSP
    draws every component), placements that keep a floating element (a menu, a popover, a calendar) inside the window, and the rules for
-   drawing untrusted data (attrAllowed, safeUrl: the client renderer draws a ViewModel through them, CLIENT_RENDERER.md section 9). */
+   drawing untrusted data (attrAllowed, safeUrl: the client renderer draws a ViewModel through them, EMBED_GUIDE.md section 9). */
 
 /** Attribute names a drawing of untrusted data may set (with data-* and aria-*): never an event handler, a style or a script address. */
 const SAFE_ATTRS = new Set(('class id role title href target rel type name value placeholder for colspan rowspan scope tabindex hidden disabled '

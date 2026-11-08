@@ -2397,7 +2397,7 @@ This is the world-economy pack's `economy` Sutra. You should see, for `ECON ECON
 Australia highlighted; every country with an economy page (`ECON-ABW`, `ECON-AFG` …) opens it. The runnable version is the
 [map example](examples/map.md); its catalogue entry is [Panels: the twenty-two kinds, and developing a new one](#map). A BI report's map visual draws with the same shapes
 and drills from the world to a country and its regions:
-[BI_GUIDE.md](BI_GUIDE.md#31-the-map-funnel-histogram-box-plot-and-bubble).
+[REPORTS_GUIDE.md](REPORTS_GUIDE.md#94-the-map-funnel-histogram-box-plot-and-bubble).
 
 ### Events, sources and children (Sutra Next)
 
@@ -2433,7 +2433,7 @@ panels:
     columns: [ { label: Utilisation, bind: "$src[0].UTILISATION", fmt: pct0 } ]
 ```
 
-A click is evaluated on the server as the reader (`POST /api/v1/views/{kind}/{id}/events`, [API_GUIDE](API_GUIDE.md#events-and-child-panels-sutra-next));
+A click is evaluated on the server as the reader (`POST /api/v1/views/{kind}/{id}/events`, [API_GUIDE](API_REFERENCE.md#23-events-and-child-panels-sutra-next));
 what is drawn reads the payload as the reader saw it (a masked field `•••`, which never selects a record), and only a source lookup
 reads the stored value, for the same reader, by an opaque token. `?sutra=<name>` opens a view with another Sutra of its kind
 (`/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`, the worked screen). Problems: `DRS-2057` (events and sources), `DRS-2056`
@@ -2444,7 +2444,7 @@ reads the stored value, for the same reader, by an opaque token. `?sutra=<name>`
 A Sutra may declare **controls**: dropdowns, date ranges, a slider, a search box. The reader sets them on the screen; panels read their
 values in expressions as `ctl.<id>`, so the same Sutra shows a swap's events for one leg and one quarter, or a netting set's trades for one
 asset class. Controls only choose: they never write. The model is the one of
-[BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8.1](../architecture/BI_DESIGN.md#81-interactive-sutras-and-slicers-controls-view-state-and-filters), built once for the
+[ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 8.1](../architecture/ARCHITECTURE.md#289-reports-boards-and-controls), built once for the
 terminal.
 
 Every trade Sutra of the trading pack declares these two, read by the `events` block's events table:
@@ -3764,7 +3764,7 @@ Each kind below says what is special to it. These hold for all of them.
 
 - **Empty is not an error.** Real documents are incomplete. A panel whose data is missing or of the wrong shape is returned flagged `empty` and the console shows *No data available*. A list that is not a list, a row without the field asked for, and a value that is not a number are all left out quietly.
 - **A broken panel stays one panel.** When binding a panel throws, that panel carries an `error` and shows *No data available* with *The data did not have the shape this panel expects* and the reason on hover. The other panels and the view are unaffected. (Real documents rarely cause one; a bad expression is caught when the Sutra loads, `DRS-2101`.)
-- **Masked.** A user whose roles mask a field sees `•••` where its value would be, never a tone or a link, and a masked number is never added up, charted or used for a total. See the [field masks](API_GUIDE.md#field-masks).
+- **Masked.** A user whose roles mask a field sees `•••` where its value would be, never a tone or a link, and a masked number is never added up, charted or used for a total. See the [field masks](DEVELOPER_GUIDE.md#field-masks).
 - **No access.** A panel with `source:` that names an entity of a kind the user may not open is not fetched: it shows *No access to curve* (the kind it names) with a lock and holds none of that entity's values. Every kind but `links` and `provenance` takes `source`.
 - **Live.** A live view sends only the panels that changed. A `line` or `area` patch carries data and moves the existing chart; every other kind is re-rendered by the same macro as the first paint, so it looks identical after a tick.
 - **Phone.** Below 640 px every panel takes the whole width, one per row; tables scroll sideways inside their panel, charts resize, and a chart's numbers are in a collapsed **Data** section under it.
@@ -4165,7 +4165,7 @@ What to notice, because each is a rule for your own binder:
 You write **no code** for any of the three if you follow section 7, but you must understand them, because your tests
 should cover them.
 
-**Masks** (field masks by role: [API_GUIDE.md](API_GUIDE.md#field-masks)). The pipeline replaces masked values in the
+**Masks** (field masks by role: [API_REFERENCE.md](DEVELOPER_GUIDE.md#field-masks)). The pipeline replaces masked values in the
 document *before* binding (`ViewPipeline.seen(doc, redact)`); a masked value is a `DataNode` flagged masked whose
 text is `DataNode.MASK` (`•••`). `Binder.cell` turns it into a `Cell` with the mask as its text and **no tone and no
 link**, so the figure's colour cannot leak the sign. Your obligations:
@@ -6560,7 +6560,7 @@ of the same rows (`at`): the designer calls it on a field drop and shows the ran
 
 All under `/api/v1/builder`. Designing is not saving: shaping, drafting, suggesting, previewing and checking are open to every signed-in user and
 write nothing; the `author` power is needed to propose a Sutra. The stateless calls take the samples in the body; the workbench uses the
-per-design calls under `/builder/designs/{id}` (full list: [API_GUIDE.md](API_GUIDE.md#designs-your-work-kept-on-the-server)).
+per-design calls under `/builder/designs/{id}` (full list: [API_REFERENCE.md](API_REFERENCE.md#designs-your-work-kept-on-the-server)).
 
 | Endpoint | Does |
 |---|---|
@@ -7547,10 +7547,10 @@ Status: **console wiring built and built (2026-10-21):** the engine (C1), the di
 docs; see [section 24](#24-the-console-wiring-c3-c6-c7). **Not built yet (server lane):** `for=chart` on the records
 endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs; their release is not decided.
 Feature decided by the product owner, beside BI runs
-([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)). Written
+([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the pivot engine
 (drishti-bicompute on the server; `drishti_pivot-engine.js`, its browser client, and `drishti_pivot-grid.js`, its grid; [PIVOT_GUIDE.md](PIVOT_GUIDE.md)),
-the chart panels (`drishti_charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3) and
+the chart panels (`drishti_charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) section 3) and
 history queries ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)).
 
 ### 1. The ask
@@ -7587,8 +7587,8 @@ The product owner, 2026-10-20: **every table can be charted.**
 | Saved pivot views | `/api/pivot/views` (`/api/v1/pivot/views`) | Per-user pivot views (PIVOT_GUIDE.md), shareable with roles; a cell is addressable as `pivot://owner/name@v/Measure[DIM=V]`. |
 | Chart panels | `web/static/js/drishti_charts.js` (`window.Drishti.charts`) | `tokens(root)` reads `--d-*` from `<html>` or a shadow host, `palette(t)` (8 tokens), `compact()` numbers, `axis()`, `tooltip()`; a "Data" table under every chart for keyboards, screen readers and print; redraws on a theme change. |
 | Sutra chart kinds | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one): `line`, `area`, `hbar` (`shape: donut`), `scatter`, `histogram`, `waterfall` | One series per kind (or `area`'s list of bands); **no grouped or stacked bars, no combo, no second axis, no split, no Top N**. |
-| BI visuals | `drishti_bi-report.js`, `drishti_bi-grids.js`, BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
-| BI runs | [BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job), `POST /api/v1/bi/runs` | Every BI question through one pipeline: inline within about 2 s, otherwise a visible run; `interaction`, `supersedes`; results reused by fingerprint, data version and security signature. |
+| BI visuals | `drishti_bi-report.js`, `drishti_bi-grids.js`, REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
+| BI runs | [ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), `POST /api/v1/bi/runs` | Every BI question through one pipeline: inline within about 2 s, otherwise a visible run; `interaction`, `supersedes`; results reused by fingerprint, data version and security signature. |
 | History | `drishti_history-page.js`, `terminal/history.html`, `/export/history/{kind}/{id}.{csv,xlsx,json}` | One row per business day (at most `max-days`, 366); a `data-plain` table with its own document-level keys: **`k` is "previous day"** (vim style), `j` next, `C D E R P Y T 1 3 6 ?`. The market shape already draws one line (P cycles the field). |
 | Exports | `POST /export/grid.csv`, `POST /export/grid.xlsx` (`routes/export_routes.py`) | A grid the page computed (`{name, header, rows}`) as CSV (formula-safe) or Excel (bold frozen header, numbers as numbers). |
 | Dialogs | native `<dialog>` with `showModal()` (`drishti_history.js`, `drishti_share.js`, `drishti_colfilter.js`), a phone sheet in `drishti_collab.css`, focus trapped and returned (`drishti_share.js`), `drishti_zoom.js` `OVERLAYS` includes `dialog[open]` | A popup that Escape closes before the zoom, inside a ShadowRoot for an embedded view (the pivot's `layer`). |
@@ -7989,7 +7989,7 @@ Offered to users with BI author powers when the table maps to a BI model:
 | Search results of a kind a BI dataset serves (the pack's dataset whose table carries the kind) | a new draft report on that dataset, one page, the visual, the search's `where` as page filters when each term maps to a field; otherwise not offered |
 | Sutra tables, history, `dom` tables | not offered: their rows are a document's nested fields or one entity over time, not a model's table |
 
-The mapping to BI visual types (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3):
+The mapping to BI visual types (REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3):
 
 | Chart | BI visual | Wells and format |
 |---|---|---|
@@ -8195,13 +8195,13 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | Doc | What |
 |---|---|
 | [USER_GUIDE.md](USER_GUIDE.md) | a new section *Chart any table* (the icon and K, types, X, series, split, sort and Top N, chart all N, masks, save, export, keys, phone), linked from the table and Pivot sections and the history section |
-| [BI_GUIDE.md](BI_GUIDE.md) | charting a BI table, chart all N as a run, Open in BI and the combo axis rule, K beside kiosk |
+| [REPORTS_GUIDE.md](REPORTS_GUIDE.md) | charting a BI table, chart all N as a run, Open in BI and the combo axis rule, K beside kiosk |
 | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one) | the Chart icon on tables (*How a panel behaves*), `chart: false` on a table, and the new `chart` panel kind with its options, states and CSV |
 | this document, [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) | the `chart` kind's options; promotion from the popup |
 | `config/help.yaml` | the context help card `table-chart: user-guide#chart-any-table`, and the popup's `?` links it |
 | [Tutorial 21](../tutorials/21-an-entity-over-time.md) and the tables tutorial | a section *Chart it* with UI, keys and the resulting YAML of a promoted chart panel, with screenshots (desktop and phone) |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | the planned `drishti.charts.*` (with C2; none was built yet) |
-| [API_GUIDE.md](API_GUIDE.md) | `for=chart`, `/api/v1/me/charts`, `bi/drafts/from-chart` |
+| [API_REFERENCE.md](API_REFERENCE.md) | `for=chart`, `/api/v1/me/charts`, `bi/drafts/from-chart` |
 | [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) N7 | `charts` among the replicated namespaces |
 | this document | implementation notes; status to *built* |
 | CHANGELOG, RELEASE_NOTES | the release's entries |
@@ -8362,7 +8362,7 @@ text, in five layers, each hidden when it has nothing to say. Layers 3 and 4 nee
 `?` (anywhere on a view where focus is not in a text field) or `F1` on a view opens the drawer on the right. `F1` pressed
 again inside the drawer, or the *Full guide* link, goes to the screen guide exactly as today.
 
-The drawer is shared with Discussion ([COLLABORATION.md](../architecture/COLLABORATION.md), step 6): it has two tabs, *About* and *Discussion*. `?` and `F1`
+The drawer is shared with Discussion ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals), step 6): it has two tabs, *About* and *Discussion*. `?` and `F1`
 always open (or switch to) *About*; `Alt+N` opens *Discussion*. `F1` again is the guide only when *About* is the tab showing.
 
 ```
@@ -8992,7 +8992,7 @@ Where each part is changed is section 7; the design, the open decisions and the 
 | [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) | new section *About text and glossary* (the file, keys, resolution, inheritance, examples); a step in the help-desk walkthrough; `about` in *pack.yaml, key by key*; coverage in *Testing a pack* |
 | [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) | a short note: `description` is now shown in *About this page*; link to the pack guide section (no duplication) |
 | this document | `description` paragraph updated ("shown to users, never evaluated"); problem codes `DRS-2040`–`2047` |
-| [API_GUIDE.md](API_GUIDE.md) | the explain endpoints and PageContext contract; add explain to the §Field masks list of masked answers; codes `DRS-4006`–`4009` |
+| [API_REFERENCE.md](API_REFERENCE.md) | the explain endpoints and PageContext contract; add explain to the §Field masks list of masked answers; codes `DRS-4006`–`4009` |
 | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one) | `provenance`: points to *About this page* for the full story; anchors unchanged |
 | [USER_GUIDE.md › About this page](USER_GUIDE.md#about-this-page) | *About this page*: keys, layers, panel and field help |
 | [Screen designer and the Build workbench](#screen-designer-and-the-build-workbench) | the workbench *About* tab |

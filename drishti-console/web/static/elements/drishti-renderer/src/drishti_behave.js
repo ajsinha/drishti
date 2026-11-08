@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* What a rendered view does (CLIENT_RENDERER.md section 7.4): bar and gauge widths, tabs (click, arrows, Home, End), and clicks on rows
+/* What a rendered view does (EMBED_GUIDE.md section 7.4): bar and gauge widths, tabs (click, arrows, Home, End), and clicks on rows
    and bars that carry an event, which become drishti:row-click and drishti:select events. The tables' own behaviours (drill-down levels
    with their breadcrumb, and unless the host turns them off (tables: false) sorting, a filter box and paging) are drishti-grid's
    (enhanceDocTables); a table with rows nested under rows is drishti-tree's (treeTables: the tree grid or the org chart, its mode, open

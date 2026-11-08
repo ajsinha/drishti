@@ -666,7 +666,7 @@ An override the server cannot place (neither a template nor a file says which pl
 
 Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.packs.deploy`](../admin/CONFIGURATION.md#drishtipacksdeploy) (also at Help → Configuration in the console).
 
-The endpoints (`/api/v1/admin/packs/...` for deploy and history, `/api/v1/admin/connectors` for connectors; administrator only; a personal token needs `packs:admin`): [API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors) and [CONNECTOR_FILES.md, section 9](../connectors/CONNECTOR_FILES.md#9-the-rest-api).
+The endpoints (`/api/v1/admin/packs/...` for deploy and history, `/api/v1/admin/connectors` for connectors; administrator only; a personal token needs `packs:admin`): [API_REFERENCE.md](API_REFERENCE.md#220-deploying-a-pack-archive-and-the-packs-connectors) and [CONNECTOR_FILES.md, section 9](../connectors/CONNECTOR_FILES.md#9-the-rest-api).
 
 ### 17.7 Troubleshooting
 
@@ -944,5 +944,5 @@ $ printf 'dataset: lab-more\ntitle: x\n' | curl -s -X POST --data-binary @- -H '
 | A BI report is blank after its dataset was disabled | A hidden dataset is not in the catalogue; **Enable** it again. |
 | The page says *administrators only* | Only an administrator may use it; a token cannot (`token-never`). |
 
-See also: [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [BI_GUIDE.md](BI_GUIDE.md), [OPERATIONS.md](../admin/OPERATIONS.md),
-[API_GUIDE.md](API_GUIDE.md#administration-artifacts-apiv1adminartifacts), [TROUBLESHOOTING.md](TROUBLESHOOTING.md) and [tutorial 17](../tutorials/17-run-it-in-production.md).
+See also: [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [REPORTS_GUIDE.md](REPORTS_GUIDE.md), [OPERATIONS.md](../admin/OPERATIONS.md),
+[API_REFERENCE.md](API_REFERENCE.md#223-administration-artifacts-apiv1adminartifacts), [TROUBLESHOOTING.md](TROUBLESHOOTING.md) and [tutorial 17](../tutorials/17-run-it-in-production.md).

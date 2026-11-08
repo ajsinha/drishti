@@ -220,7 +220,7 @@ A pack's role is still needed to open its kinds. Giving Priya the *trading* pack
 ## API tokens
 
 People read Drishti from scripts, notebooks and Excel with personal API tokens they make on **My account → API
-tokens** ([API_GUIDE.md (clients)](../guides/API_GUIDE.md#clients-scripts-notebooks-and-excel)). What an administrator needs to know:
+tokens** ([API_REFERENCE.md (clients)](../guides/DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)). What an administrator needs to know:
 
 - A token acts as its owner, with the owner's roles and packs at the time of each call, and, unless it was
   made with a **write scope**, **only reads**: every `GET`, and the `POST`s that carry a query and change nothing, listed in
@@ -243,7 +243,7 @@ tokens** ([API_GUIDE.md (clients)](../guides/API_GUIDE.md#clients-scripts-notebo
 
 ## Embedding host applications
 
-Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)), without an iframe. An administrator allows it, one **host application** at a time. Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)); register applications on **Admin → Embedding** (`/admin/embedding`), or with the API ([API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application)), for example:
+Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>` ([EMBED_GUIDE.md](../architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements)), without an iframe. An administrator allows it, one **host application** at a time. Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)); register applications on **Admin → Embedding** (`/admin/embedding`), or with the API ([API_REFERENCE.md](../guides/API_REFERENCE.md#24-embedding-views-in-another-web-application)), for example:
 
 ```bash
 curl -s -X POST $SERVER/api/v1/admin/embed/apps -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{
@@ -284,7 +284,7 @@ many. The console's own service identity is not recorded. Through the API:
 
 ## BI powers (Rupaka)
 
-Business intelligence ([BI_GUIDE.md](../guides/BI_GUIDE.md)) has four powers of its own, granted on roles beside the six above. They are
+Business intelligence ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md)) has four powers of its own, granted on roles beside the six above. They are
 a list, `bi`, on a role: `drishti.security.roles.<role>.bi: [bi, bi-author]` in configuration or a pack, or, for a role you define,
 **Admin → BI settings** (a table of roles with four tick boxes each; built-in roles are read-only there) or the `bi` list of
 `PUT /api/v1/admin/role-definitions/{name}`. Saving a role in **Admin → Roles** keeps the BI powers it has.
@@ -367,7 +367,7 @@ or a pack opts in, has **no power of its own**:
   holds) under `share.undeliverable: tell`.
 - **Moderation** (`admin`): **Hide** a comment with a reason (readers see "Hidden by a moderator: <reason>"; the text stays in the record), **Lock** a
   thread (no new comments), and remove a whole thread for good with `DELETE /admin/collab/threads/{id}` (audited; refused with `423 DRS-7010`
-  under a legal hold). The API is in [API_GUIDE.md](../guides/API_GUIDE.md#comment-threads).
+  under a legal hold). The API is in [API_REFERENCE.md](../guides/API_REFERENCE.md#32-comment-threads).
 - **Compliance** (`roles.<role>.compliance`, a power of its own: an administrator does not have it unless the role does). A compliance officer
   reads any share and the full record of any thread (hidden and retracted comments, every revision, unscrubbed), places and releases **legal
   holds**, runs the **export** and **verifies** the hash chains. The runbooks (retention, holds, export, verify) are in
@@ -556,7 +556,7 @@ drishti:
 
 A page that shows Drishti views but has **no backend of its own** (a static intranet page, a SharePoint page) cannot run the token
 exchange. With single sign-on on, it can use the renderer's **sign-in window** (`auth: 'popup'`;
-[CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#a-page-without-a-backend-the-sign-in-window-auth)): the page shows *Sign in to see this*; on the click, one
+[EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#42-a-page-without-a-backend-the-sign-in-window)): the page shows *Sign in to see this*; on the click, one
 small window runs this same single sign-on and the page gets a short-lived, read-only, masked embed token, as from the exchange.
 
 What to set, once:
@@ -814,10 +814,10 @@ into the switches once, stamped with the time they were set.
 
 ### From a script
 
-What a user sees on Functions is `GET /api/v1/functions` ([API_GUIDE.md](../guides/API_GUIDE.md)): the commands the caller can use, by
+What a user sees on Functions is `GET /api/v1/functions` ([API_REFERENCE.md](../guides/API_REFERENCE.md)): the commands the caller can use, by
 pack, with nothing of the switches; a personal API token reads it too.
 
-The admin API is `/api/v1/admin/commands` ([API_GUIDE.md](../guides/API_GUIDE.md)): `GET` the list, `POST` a batch
+The admin API is `/api/v1/admin/commands` ([API_REFERENCE.md](../guides/API_REFERENCE.md)): `GET` the list, `POST` a batch
 `{"reason": "...", "changes": [{"scope": "command", "name": "FRTB", "on": false}]}`, `GET /history`, `GET /{code}/impact`. Like every
 admin endpoint that changes access, it is never for a personal API token: use the console, or `drishti.py server commands` where sign-in
 is off:

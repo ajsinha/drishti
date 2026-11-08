@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of BI Studio (BI_GUIDE.md section 26, wave C, 2.4.0), written to docs/guides/img/bistudio/.
+"""The pictures of BI Studio (REPORTS_GUIDE.md section 26, wave C, 2.4.0), written to docs/guides/img/bistudio/.
 
 They are made on the report browser tests' scratch stack (drishti-console/tests/bi_report_stack.py: the built server jar, the trading and market-risk
 packs, the model trades-basic over a small synthetic lake). Its ports come from DRISHTI_BI_REPORT_SERVER_PORT and DRISHTI_BI_REPORT_CONSOLE_PORT, so run:
@@ -33,7 +33,7 @@ shot = register("bistudio", ROOT / "docs" / "guides" / "img" / "bistudio")
 STACK = {}
 PASSWORD = "long-enough-pass-1"
 
-# The desk pack of BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 20: what the acceptance test builds in the designer without the YAML tab.
+# The desk pack of REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 20: what the acceptance test builds in the designer without the YAML tab.
 DESK_PACK = """rachana: 1
 report: desk-pack
 title: Desk pack

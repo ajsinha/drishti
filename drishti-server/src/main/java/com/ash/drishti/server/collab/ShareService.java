@@ -56,7 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Share with a note (COLLABORATION.md). What travels is the sender's words and a pin; data is never copied in, and what a person
+ * Share with a note (ARCHITECTURE.md §31). What travels is the sender's words and a pin; data is never copied in, and what a person
  * receives is computed for that person, when they look, from what they may see now.
  *
  * <p>Sending: the sender needs the {@code collaborate} power and the right to open the kind (and a shared panel's gate kind); the

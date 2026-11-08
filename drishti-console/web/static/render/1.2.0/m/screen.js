@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* One rendered screen in one container (CLIENT_RENDERER.md sections 4, 10, 11 and 12): it paints a ViewModel, applies live patches and
+/* One rendered screen in one container (EMBED_GUIDE.md sections 4, 10, 11 and 12): it paints a ViewModel, applies live patches and
    streamed messages, navigates in place with its own back stack, and tells the host what happens through drishti:* events on the
    container. A static ViewModel, a live one and a streamed (ephemeral, GenUI) one all go through the same paint and the same patch. */
 import { h, icon, str } from './dom.js';
@@ -47,7 +47,7 @@ export class Screen {
     if (!BEHAVIOURS.includes(o.behaviours)) { throw problem('DRS-9106', 'behaviours must be one of ' + BEHAVIOURS.join(', ') + ', not ' + o.behaviours, "Leave it out for the library's own, the default."); }
     if (o.bare) { o.shadow = false; }
     o.server = String(o.server || '').replace(/\/$/, '');
-    // 1.1.0: how the person gets in (CLIENT_RENDERER.md 10.1). 'token': the host's backend vouches (the token exchange); 'session': the console's
+    // 1.1.0: how the person gets in (EMBED_GUIDE.md 10.1). 'token': the host's backend vouches (the token exchange); 'session': the console's
     // own sign-in (its pages, same-origin hosts); 'popup': a host without a backend, through the console's single sign-on in a window on a click
     this.auth = o.auth || (typeof o.token === 'function' ? 'token' : 'session');
     if (!AUTH.includes(this.auth)) { throw problem('DRS-9108', 'auth must be one of ' + AUTH.join(', ') + ', not ' + this.auth, "Leave it out: 'token' when you give a token, else the console's session."); }
@@ -172,7 +172,7 @@ export class Screen {
     return this;
   }
 
-  // ---- auth: 'popup' (CLIENT_RENDERER.md 10.1): the screen once signed in, else the sign-in button in place; never a window on load ----
+  // ---- auth: 'popup' (EMBED_GUIDE.md 10.1): the screen once signed in, else the sign-in button in place; never a window on load ----
   async signedLoad(ref) {
     this.pendingRef = ref;
     if (await this.signin.get()) { this.gating = false; return this.load(ref, false); }
@@ -363,7 +363,7 @@ export class Screen {
   unsubscribe() { if (this.unsub) { this.unsub(); this.unsub = null; } }
 
   // ---- a streamed ViewModel (GenUI: an ephemeral Sutra bound on the server, panel by panel) ------------------------------
-  /** Applies one stream message: skeleton, panel-add, panel-replace, patch, done or error (CLIENT_RENDERER.md section 11). */
+  /** Applies one stream message: skeleton, panel-add, panel-replace, patch, done or error (EMBED_GUIDE.md section 11). */
   async apply(m) {
     if (!m || typeof m !== 'object') { return this; }
     switch (m.type) {

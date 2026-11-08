@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Makes the dataset tables behind live-table history (docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1 "History of a live table"). A live table with {@code live.history} gets a second table in the
+ * Makes the dataset tables behind live-table history (docs/guides/REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1 "History of a live table"). A live table with {@code live.history} gets a second table in the
  * model, named by {@code history.table} ({@code history} by default): a {@code ts} column (when the sample was taken), one column for each column it is grouped
  * by (the live table's own type) and one {@code decimal} column for each sampled measure. For each sampled measure it adds a measure {@code <name> history} that
  * adds up that column, so a line of the measure over time is {@code axis: history.ts, values: <name> history}. Nothing here reads data: the engine fills the table.
@@ -145,7 +145,7 @@ public final class Histories {
     }
 
     /**
-     * The security with each history table bound like its live table (BI_DESIGN.md 8.5, the owner's decision of 2026-11-07): a role that reads
+     * The security with each history table bound like its live table (ARCHITECTURE.md §28 8.5, the owner's decision of 2026-11-07): a role that reads
      * every row of the live table reads every sample; a role limited there reads the samples of the groups related to the live rows it sees
      * ({@code related_rows}, on the history's group columns); a role the live table's rules do not name reads none.
      */

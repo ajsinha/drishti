@@ -433,7 +433,7 @@ Scripts, notebooks, Excel and `tools/drishti.py` call the server with a **person
   connectors, …), then **Create**. The secret (`drk_<id>_<secret>`) is shown **once**: copy it into a file only you can read.
 - **Over the API** (with a session token, as the console does): `POST /api/v1/me/tokens` with
   `{"name": "laptop", "days": 30, "scopes": []}` answers `201` with the token's record and its `secret`
-  ([API_GUIDE.md](API_GUIDE.md#personal-api-tokens)).
+  ([API_REFERENCE.md](API_REFERENCE.md#28-personal-api-tokens)).
 
 Then give it to the command line in a file (never on the command line itself) and check it:
 
@@ -1175,7 +1175,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 |---|---|
 | Learn by doing | [the tutorials](../tutorials/README.md) |
 | Learn every feature of the console | [USER_GUIDE.md](USER_GUIDE.md) |
-| Build reports, models and boards in BI Studio | [BI_GUIDE.md](BI_GUIDE.md), [tutorial 10](../tutorials/10-first-bi-report.md) |
+| Build reports, models and boards in BI Studio | [REPORTS_GUIDE.md](REPORTS_GUIDE.md), [tutorial 10](../tutorials/10-first-bi-report.md) |
 | Run several servers as one cluster (Drishti\*net) | [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
 | Know which packs exist and what commands they offer | [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) |
 | Change how a screen looks | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |

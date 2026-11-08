@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* drishti-renderer (Drishti Elements library 7, renderer 2.0.0; CLIENT_RENDERER.md): Drishti screens from a static, live or streamed
+/* drishti-renderer (Drishti Elements library 7, renderer 2.0.0; EMBED_GUIDE.md): Drishti screens from a static, live or streamed
    (GenUI) ViewModel, drawn with the shared libraries: drishti-grid (tables, trees, drills, pivots; the nested pivot's tree data),
    drishti-chart (every chart, the only place an engine is called), drishti-core (the element maker and its rules for untrusted data,
    formats half up, the API client), drishti-data (the live client for streams and Elements' one connection per page); the insight

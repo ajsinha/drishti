@@ -493,7 +493,7 @@ An alert that never fires, fires twice, or tells too much. Work down; each row i
 | The history says `held`: `held back by the cooldown until …` | A second breach inside the cooldown | It fires when the cooldown ends if the condition still holds. Set `cooldown` (`0` for none) |
 | An after-load alert does not look after my load | The load was for another kind (`trigger.kind`), or the load did not finish `ready`, or `load-delay` has not passed | [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed); the history's `trigger` says `load` when a load looked |
 | A live alert never looks | Nothing changed, or the source is not live | The preview says `"live": false` for a source with no live table; a live alert looks `debounce` after the last change |
-| A "no data" alert fired on a weekend or holiday | It cannot: it only fires on business days of the server's calendar, from `by` in the business-date zone | Check `by` and the zone ([BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4.2](BI_GUIDE.md#42-when-it-fires-the-condition)) |
+| A "no data" alert fired on a weekend or holiday | It cannot: it only fires on business days of the server's calendar, from `by` in the business-date zone | Check `by` and the zone ([REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4.2](REPORTS_GUIDE.md#192-when-it-fires-and-when-it-looks)) |
 | It fired but nothing is in the inbox | Inbox was off for this alert, or `inbox.keep` pruned the row | The history's `delivered.inbox` says `ok`; the *Alerts* tab of the inbox lists the rows |
 | `delivered.email` says `skipped: no email address on file` | Your account has no address | An administrator sets it under Admin, Users (people cannot add their own) |
 | `delivered.email` says `retrying: attempt 1 of 4 failed (…); next try in 5 s`, then `sent (attempt 3 of 4)` | The mail server was unreachable and the shared retry policy (`drishti.retry.alerts.*`) is trying again; `emailAttempts` counts them | Nothing: it settles. A restart drops a pending retry (the history keeps the last text) |
@@ -576,7 +576,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   A list means the server is fine: refresh the page (see *typing does nothing* above). An empty list means no
   enabled pack has a mnemonic starting with that text, or every source missed the 30 ms budget.
 - **Fix:** for a custom source, declare `search` in the plugin and index ids in memory with `HitIndex`
-  ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md)). `/api/v1/sources` shows `"search": true` for sources that can suggest.
+  ([DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one)). `/api/v1/sources` shows `"search": true` for sources that can suggest.
 
 ### Type-ahead misses a corrected past day
 
@@ -789,7 +789,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Cause:** only sources that keep versions (Delta Lake, Iceberg) honour it; undated sources have one version. Delta
   resolves times from the `_delta_log` files' modification times, so a lake copied without preserving times loses its
   history.
-- **Fix:** copy lakes with `cp -p` or `rsync -t`. See [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+- **Fix:** copy lakes with `cp -p` or `rsync -t`. See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one).
 
 ### "DRS-1007 <connector> keeps no earlier versions"
 
@@ -990,7 +990,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   overall status stays **OK**.
 - **Fix:** nothing, if you do not use it. To use it, give it its settings under
   `settings:` in `config/connectors/<name>.yaml` (or the plugin's own `drishti.sources.plugins.<name>.settings`);
-  the server applies the file without a restart. See [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+  the server applies the file without a restart. See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one).
 
 ### A connector does not start, or a connector file is bad
 
@@ -1154,8 +1154,8 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 
 - **Cause:** with security on, the API description (`/api/docs`, `/api/docs/ui`) needs any valid user token.
   The metrics token is not accepted there.
-- **Fix:** send a user's token (`-H "Authorization: Bearer $TOKEN"`; see [API_GUIDE.md](API_GUIDE.md)), or read
-  [API_GUIDE.md](API_GUIDE.md) instead.
+- **Fix:** send a user's token (`-H "Authorization: Bearer $TOKEN"`; see [API_REFERENCE.md](API_REFERENCE.md)), or read
+  [API_REFERENCE.md](API_REFERENCE.md) instead.
 
 ## Alerts and monitors
 
@@ -1242,7 +1242,7 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 
 ### A 2.1 Perspective grid, pivot or chart is a plain table
 
-- **Cause:** no BI page loads WebAssembly ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3: the servers compute, the browser draws).
+- **Cause:** no BI page loads WebAssembly ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) principle P3: the servers compute, the browser draws).
   A `perspective-grid`, `perspective-pivot` or `perspective-chart` visual of a 2.1 report is drawn as Drishti's own grid of the server's answer.
 - **Fix:** none needed; to get a chart or a pivot back, change the visual to a `matrix` or a chart type in the designer (the server groups and totals it).
 
@@ -1269,7 +1269,7 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 
 ### A Vega-Lite visual is empty, says Not drawn, or a Python visual's Vega-Lite is refused
 
-* **"Not drawn: this Vega-Lite specification uses what drishti-chart does not draw ..."** The page has no Vega: drishti-chart translates the specification, and a feature it does not translate is refused rather than drawn wrong. The message names each feature (its path, `$.facet`, `$.layer[1].encoding.text`) with what to use instead; the full list is in [BI_GUIDE.md](BI_GUIDE.md#35-vega-lite-visuals). Rewrite the visual with that, or have a Python visual return a drishti-chart spec (`output: drishti-chart`).
+* **"Not drawn: this Vega-Lite specification uses what drishti-chart does not draw ..."** The page has no Vega: drishti-chart translates the specification, and a feature it does not translate is refused rather than drawn wrong. The message names each feature (its path, `$.facet`, `$.layer[1].encoding.text`) with what to use instead; the full list is in [REPORTS_GUIDE.md](REPORTS_GUIDE.md#96-vega-lite-visuals). Rewrite the visual with that, or have a Python visual return a drishti-chart spec (`output: drishti-chart`).
 * **"This chart could not be drawn: ..." or an empty chart.** An invalid specification (a field that is not in the rows: the rows are keyed by the text after the table's dot, `DESK` not `trade.DESK`, and a measure by its name; Check warns about a field no well supplies). Open the visual's YAML and the **Show the rows** button together to compare the names.
 * **"may not load anything from a URL or name a loader".** `data.url`, `url` or `loader` in a specification: remove it; the data is the rows of the wells, or `data.values` for a Python visual. A Python visual that returns one is `DRS-9073` from the sandbox.
 * **"drishti-chart did not load."** The page's `/static/elements/drishti-chart/drishti_chart.js` did not answer (a proxy, or a stale cache after an upgrade). Reload with the cache off.
@@ -1322,7 +1322,7 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 
 ### A query with measures of two tables answers `DRS-9020` *no many-to-one path*
 
-Since the several-facts query is built, measures of unrelated fact tables are asked together when the fields you group by are reachable many-to-one **from each fact** (a desk of the trades and a desk of the limits). The refusal now means: a field one fact cannot reach (group by a column of the other fact's table), a measure that mixes the facts in one expression, a window measure beside another fact, or a row rule on one fact that the other cannot honour. Group by a shared dimension, split the measure, or combine the facts in a composed dataset ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 3.1](BI_GUIDE.md#31-several-unrelated-fact-tables-in-one-query)).
+Since the several-facts query is built, measures of unrelated fact tables are asked together when the fields you group by are reachable many-to-one **from each fact** (a desk of the trades and a desk of the limits). The refusal now means: a field one fact cannot reach (group by a column of the other fact's table), a measure that mixes the facts in one expression, a window measure beside another fact, or a row rule on one fact that the other cannot honour. Group by a shared dimension, split the measure, or combine the facts in a composed dataset ([REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 3.1](REPORTS_GUIDE.md#53-relationships-and-how-a-question-joins)).
 
 ### A refresh shows `interrupted`, or runs at start-up
 
@@ -1331,7 +1331,7 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 ### A python measure is refused in a query
 
 - **Cause:** the SQL engine cannot run Python (`DRS-9013`).
-- **Fix:** show the measure in a **python visual** (`wells: { values: [<the measure>] }`); see [BI_GUIDE.md](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 5.
+- **Fix:** show the measure in a **python visual** (`wells: { values: [<the measure>] }`); see [REPORTS_GUIDE.md](NOTEBOOK_GUIDE.md#3-python-measures-and-visuals) section 5.
 
 ### A Python dataset's Transform will not run
 
@@ -1369,7 +1369,7 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 
 | Symptom | Cause | Check and fix |
 |---|---|---|
-| A figure from a "one" side table (netting-set exposure) was far bigger than the sum of its rows when asked beside a trade measure | before this fix each netting set was added once per trade that reached it | measures of different tables are now each worked out at their own table's grain and joined on the grouping ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 3](BI_GUIDE.md#3-relationships-and-how-queries-join), *Grain*); the same query now gives the true figure. If a query is refused (`DRS-9020`, "each must be computed at its own table's grain"), a field, filter or row rule of the query is not reachable many-to-one from one measure's table: ask for the two measures in separate queries |
+| A figure from a "one" side table (netting-set exposure) was far bigger than the sum of its rows when asked beside a trade measure | before this fix each netting set was added once per trade that reached it | measures of different tables are now each worked out at their own table's grain and joined on the grouping ([REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 3](REPORTS_GUIDE.md#53-relationships-and-how-a-question-joins), *Grain*); the same query now gives the true figure. If a query is refused (`DRS-9020`, "each must be computed at its own table's grain"), a field, filter or row rule of the query is not reachable many-to-one from one measure's table: ask for the two measures in separate queries |
 | A line over `history.ts` is empty, or shows one point | the live table has not been open long enough (one sample every `every`, 10 s by default), or the table was idle and closed (its history goes with it), or the sample fails | the dataset's Layers table (`GET /datasets/{id}/layers`) shows the history's `samples`, `lastSample` and `error`; keep a report open on the dataset |
 | A history query shows a desk-head only her desks' samples | the role has a row rule on the live table: the history keeps the samples of the groups related to the live rows she sees | by design (nobody sees more data after the upgrade) |
 | A history query is refused (`DRS-9020`, "related_rows ... cannot work out") for a desk-head | the history has no group columns (`by: []`), so its samples cannot be related to the rows she sees | by design (nobody else's figures leak); group the history by the column her rule reads, or chart it from the live table itself |
@@ -1391,10 +1391,10 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 
 | Symptom | Cause | Check and fix |
 |---|---|---|
-| A report that opened before shows warnings under **Problems** | an older `format:` key with a value the schema does not take, or a key no schema knows: a warning, so a stored report never stops opening | fix the value in the Format pane (it offers only what the server accepts), or remove the key; a bad value of a key of the typed format is `DRS-9032` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](BI_GUIDE.md#5-format)) |
+| A report that opened before shows warnings under **Problems** | an older `format:` key with a value the schema does not take, or a key no schema knows: a warning, so a stored report never stops opening | fix the value in the Format pane (it offers only what the server accepts), or remove the key; a bad value of a key of the typed format is `DRS-9032` ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](REPORTS_GUIDE.md#101-the-format-pane)) |
 | A theme cannot be saved or published (`DRS-9036`) | its palette is not 3 to 12 `#rrggbb` colours, a font family is not `sans`, `serif`, `mono` or `system`, or a visual default is not a format key of that family | the theme designer names the path; `POST /api/v1/bi/themes/validate` checks a file |
-| A 2.3 board is missing after the upgrade, or `/bi/b/<id>` opens the report viewer | stored boards became reports with board pages at the first start (`drishti.bi.migrate.on-start`, step `boards`; audited `bi-boards-migrated`), keeping their ids | Admin, BI settings lists what could not be converted; a board file still in a folder is read as a report until you run `drishti.py bi migrate --boards FILE... --write` ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](BI_GUIDE.md#2312-from-a-board-item-to-a-board-page)) |
-| A Transform's input is refused on validate (`DRS-9102` or `DRS-9108`) | a kind no pack declares, a field the kind lacks (the message lists its columns), or a misspelt key | pick the kind and fields from the editor's lists; a connector named on the input that is not running is `DRS-9026` ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17.1](BI_GUIDE.md#171-inputs-straight-from-a-connector)) |
+| A 2.3 board is missing after the upgrade, or `/bi/b/<id>` opens the report viewer | stored boards became reports with board pages at the first start (`drishti.bi.migrate.on-start`, step `boards`; audited `bi-boards-migrated`), keeping their ids | Admin, BI settings lists what could not be converted; a board file still in a folder is read as a report until you run `drishti.py bi migrate --boards FILE... --write` ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 12](REPORTS_GUIDE.md#146-designing-a-board)) |
+| A Transform's input is refused on validate (`DRS-9102` or `DRS-9108`) | a kind no pack declares, a field the kind lacks (the message lists its columns), or a misspelt key | pick the kind and fields from the editor's lists; a connector named on the input that is not running is `DRS-9026` ([REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17.1](NOTEBOOK_GUIDE.md#51-inputs-straight-from-a-connector)) |
 | A Transform's input has no rows, or a column reads `•••` | the input is read **as you**: a role that may not read the kind gets no rows, and a masked column arrives masked | by design; preview as a role that may read it, or ask for the entitlement |
 | The Transform editor's step preview stops at a step | that step raised: the editor shows the step's line and the error; a run past `bi.transform.timeout_seconds` (20) or `memory_mb` (512) is stopped | fix the step (the snippet's example shows its expected input), or lower `bi.transform.preview_rows` |
 | A form search says no data is loaded for the date | no source holds the kind on that business date (`noData`) | press **Search on** the newest date it names, or load the day ([USER_GUIDE.md](USER_GUIDE.md#query-by-form)) |
@@ -1493,7 +1493,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 
 ## Error codes
 
-Every code, with its HTTP status and what it means, is in one table: [API guide, Error code table](API_GUIDE.md#error-code-table). The Sutra and pack problem codes (`DRS-2004`, `DRS-2009`–`DRS-2059`) are explained in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes). This table keeps only the codes whose cause or fix needs more than the meaning.
+Every code, with its HTTP status and what it means, is in one table: [API guide, Error code table](API_REFERENCE.md#error-code-table). The Sutra and pack problem codes (`DRS-2004`, `DRS-2009`–`DRS-2059`) are explained in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes). This table keeps only the codes whose cause or fix needs more than the meaning.
 
 | Code | Cause and fix |
 |---|---|
@@ -1514,7 +1514,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-4016` | The AI provider or MCP server failed or timed out: Admin → AI shows its health; check its URL, key variable and TLS |
 | `DRS-4017` | Over the AI rate or cost limit for your user: wait, or ask an admin to raise the policy limit |
 | `DRS-4019` | The model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |
-| `DRS-4020` | BI with AI: the model's answer could not be used. A draft that did not pass the report check (after one repair) or an answer that is not a query is refused, nothing is changed: say it more plainly, name the measure or field, or try a stronger model (`drishti.bi.ai.model`). With the `mock` provider this is what a question no rule matches answers ([BI_GUIDE.md section 29](BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) section 7) |
+| `DRS-4020` | BI with AI: the model's answer could not be used. A draft that did not pass the report check (after one repair) or an answer that is not a query is refused, nothing is changed: say it more plainly, name the measure or field, or try a stronger model (`drishti.bi.ai.model`). With the `mock` provider this is what a question no rule matches answers ([REPORTS_GUIDE.md section 29](REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number) section 7) |
 | `DRS-4021` | history queries: the range spans more business days than `max-days` (the kind's, else `drishti.history.max-days`). Fix: narrow it with `FROM … TO …` |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |
 | `DRS-5201` | a row of the date's P&L vectors was rejected when the VaR engine loaded the date (wrong length, a null or NaN, not USD): the answer's provenance lists the trade and the reason; fix the row upstream and reload the date |
@@ -1547,16 +1547,16 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-9029` | the planner estimated more rows than the query's budget (HTTP 413): add a date filter, ask a rollup's fields, or raise `options.budget.rows` (the message has the estimate) |
 | `DRS-9030` | a report's YAML or a structure in it is not valid (HTTP 422): not YAML, an unknown visual type, a grid position that does not fit the 12 columns, a duplicate id, an operator that is not one, an image from another address. The problem names the path of the key; check it in the designer's YAML tab or with `POST /api/v1/bi/reports/validate`; publishing such a report is refused with this code |
 | `DRS-9031` | a report names a field, measure, hierarchy, page, bookmark or slicer that its dataset or the report does not have (HTTP 422); the message lists what exists. A dataset that changed under a report is the usual cause |
-| `DRS-9040` | publishing the dataset would break published reports (HTTP 409): a field, measure or hierarchy they use is removed or renamed. The message lists the reports and what each uses. Fix the reports first, publish the dataset with the names kept (add the new name beside the old), or have a `bi-admin` publish with `force` ([BI_GUIDE.md](BI_GUIDE.md#6-impact-what-breaks-if-i-change-this)) |
+| `DRS-9040` | publishing the dataset would break published reports (HTTP 409): a field, measure or hierarchy they use is removed or renamed. The message lists the reports and what each uses. Fix the reports first, publish the dataset with the names kept (add the new name beside the old), or have a `bi-admin` publish with `force` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#176-impact-what-breaks-if-i-change-this)) |
 | `DRS-9043` | publishing a report or dataset is refused (HTTP 409) because its expected values (`tests:`) fail or cannot run. The message names the first three: *expected 100 +- 1%, got 750*, or why one could not run (a masked figure, an answer of several rows that needs a `row:`, a role you do not hold). Run them yourself with **Check** (the designer) or *Run the tests* (the dataset page) as the role the test names, fix the item or the expected value and publish again; a `bi-admin` may publish with `force`, which the audit log records (`FORCED over N failing test(s)`). `drishti.bi.governance.refuse-failing-tests: false` turns the gate off. |
 | `DRS-9074` | Python does not run on this server now (HTTP 503), and the message says why: compute off, the pool `python` missing or not strict, the strict sandbox not available here (Windows, no Landlock), the interpreter not carrying the pinned versions, the pool's queue full, or `drishti.bi.transform.enabled: false` |
 | `DRS-9076` | a Python item's own tests failed, so it is not published (HTTP 422, raised by the console): Check shows each test (`passed`, `FAILED` with expected and got, or `could not run` with the DRS code); fix the item or the `expect:`, or a bi-admin publishes with `force`. A call made straight to the server is not gated |
 | `DRS-9077` | a Vega-Lite specification could not be drawn (shown in the visual's frame): it names a `url` or a `loader` (the data is the rows of the wells, or `data.values`), or it uses a feature drishti-chart does not translate (the frame names each with what to use instead) |
-| `DRS-9080` | no such BI run, or not one you may see (HTTP 404): check the id; a run shared with you needs its share ([BI_DESIGN.md](../architecture/BI_DESIGN.md#16-error-codes)) |
+| `DRS-9080` | no such BI run, or not one you may see (HTTP 404): check the id; a run shared with you needs its share ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) |
 | `DRS-9081` | too many runs (HTTP 429): you have `queue.per-user` (5) runs queued or running, or the node's queue is at `queue.max` (200); wait for one to finish or cancel one, then retry after `Retry-After` |
 | `DRS-9087` | the node that owns the run did not answer (HTTP 503): try again later, or *Re-run elsewhere* |
 | `DRS-9088` | the run result store is full (HTTP 507) and nothing can be removed: an administrator frees space or raises `store.max-bytes` |
-| `DRS-9100` | an expression in the old syntax (`[Measure]`, `&&`, `c ? a : b`, `true`, `sum(x, cond)`): refused by default (`drishti.bi.expr.legacy: refuse`; `warn` reads it while a site converts); the fix shows the DEL v2 text, and `drishti.py bi migrate --expressions FILE --write` converts whole files. Stored items are converted by the server at start; one that is still refused is listed in Admin, BI settings ([BI migrations](#bi-after-an-upgrade-migrations-of-stored-items)). Also a `rachana: 2` dataset's structure (Check, or HTTP 422 when it is published): an unknown key (a warning), no `source:` or two, a name starting `pack.` (those are the packs'), a `version:` that is not semver such as `1.0.0` ([BI_DESIGN.md › The model layer: the specification, section 1.11](../architecture/BI_DESIGN.md#111-dataset-problems)) |
+| `DRS-9100` | an expression in the old syntax (`[Measure]`, `&&`, `c ? a : b`, `true`, `sum(x, cond)`): refused by default (`drishti.bi.expr.legacy: refuse`; `warn` reads it while a site converts); the fix shows the DEL v2 text, and `drishti.py bi migrate --expressions FILE --write` converts whole files. Stored items are converted by the server at start; one that is still refused is listed in Admin, BI settings ([BI migrations](#bi-after-an-upgrade-migrations-of-stored-items)). Also a `rachana: 2` dataset's structure (Check, or HTTP 422 when it is published): an unknown key (a warning), no `source:` or two, a name starting `pack.` (those are the packs'), a `version:` that is not semver such as `1.0.0` ([ARCHITECTURE.md §28 › The model layer: the specification, section 1.11](../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana)) |
 | `DRS-9101` | a dataset column (Check): an unknown type, role, aggregate or additivity, `of:` naming no column, a `sum`/`avg` default on text, a query or Python dataset that declares no columns |
 | `DRS-9102` | a dataset source the server cannot use (Check): a pack or kind that is not enabled, a query parameter that is not `as-of`, `business-date`, `from` or `to`, a `:name` in the SQL that `params:` does not bind; a dataset that only the model layer reads, met where a version-1 dataset is read (ask it with `POST /api/v1/bi/mq` and `model: dataset:<name>`) |
 | `DRS-9103` | a time mode the source cannot give (Check): `live` over an array (`each`) or for a query or Python dataset, `history` with no `history:` block, a bad `every`, `age`, `storage` or `as-of` |
@@ -1565,8 +1565,8 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-9106` | a dataset's own security (Check): a rule naming another table's column (write it in a model), a mask naming no column |
 | `DRS-9108` | an input of a Python dataset, or the query of a `model` source, is not a model query (Check); the inner query's own code follows; or, when the dataset is read, the inner query's answer has no column for one the dataset declares (name the column's `path:` after a field or measure of the inner query) |
 | `DRS-9109` | a model reaches itself through a dataset whose source is a model (Check, or HTTP 422 when it is asked): the detail shows the loop, `model:a -> dataset:x -> model:a`; read the dataset from another model, or put its source's datasets into the model directly |
-| `DRS-9110` | a dataset whose root cannot be traced (Check): down its `extends` chain there is no source, or the root is a pack kind no enabled pack generates. Enable the pack, or extend a dataset that is published ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group)) |
-| `DRS-9120` | a data model's structure (Check, or HTTP 422 when it is published): a bad name, version, alias, lifecycle, a dataset not published at the version range it names, a rollup on no alias ([section 2.11](../architecture/BI_DESIGN.md#211-model-problems)) |
+| `DRS-9110` | a dataset whose root cannot be traced (Check): down its `extends` chain there is no source, or the root is a pack kind no enabled pack generates. Enable the pack, or extend a dataset that is published ([REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](REPORTS_GUIDE.md#510-a-table-of-your-own-step-by-step)) |
+| `DRS-9120` | a data model's structure (Check, or HTTP 422 when it is published): a bad name, version, alias, lifecycle, a dataset not published at the version range it names, a rollup on no alias ([section 2.11](../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana)) |
 | `DRS-9127` | an expression (DEL) that is not DEL v2 or does not fit where it is written: a Python construct DEL refuses (method calls, lambda, comprehensions, subscripts, assignment), a bare column outside an aggregate in a measure (*wrap it: sum(...)*), an aggregate in a derived column or rule, `x == None` (*write x is None*), a positional `where` (*name it: where=...*), types that do not mix; a model measure that does not compile (the engine's `DRS-9011` conditions, with the model's path), a measure with both `expr` and `python` or neither. Check it with `drishti.py bi expr validate` ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)) |
 | `DRS-9132` | a warning in Check: a measure hidden for some roles (`hidden-for`) reads columns those roles still see, so a default measure or a `define` over them works out the same number. Hide the columns too (the warning lists them for the model's `fields:` under `hidden-for`) |
 | `DRS-9131` | a warning in Check, never a refusal: a model's row rules (its own or its datasets') leave out roles that may read the dataset, so those readers see no rows of it (their answer says *you have no access to rows of <alias> in this model*). Add a rule for them (`where: "true"` to see every row) or leave them out on purpose |

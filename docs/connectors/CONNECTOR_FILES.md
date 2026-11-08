@@ -308,7 +308,7 @@ plugin file
 ```
 
 A plugin can declare its own settings (the `settingSpecs()` method of the source SPI, see
-[CONNECTOR_DEVELOPER_GUIDE.md](CONNECTOR_DEVELOPER_GUIDE.md)); the shipped plugins are described in `drishti/plugin-settings.yaml`
+[DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one)); the shipped plugins are described in `drishti/plugin-settings.yaml`
 inside the engine. A setting a plugin does not declare is a **warning** (a likely typo), never a refusal, because plugins also read
 free-form keys (`layout.*`, `mode.*`, `table.*`, `query.*`). Every key the shipped plugins read is declared in that file; a test
 (`PluginSettingsCatalogueSyncTest`) fails when a plugin reads one it does not declare, or when a setting is marked `required` that
@@ -1018,7 +1018,7 @@ curl -s http://localhost:18480/api/v1/admin/health | jq '.packs[] | {name, conne
 | `feed` | `UP`, `DOWN: <Exception>: <message>`, `DOWN: the feed returned no data (serving the last data)`, `DOWN: the feed returned no data` (`DOWN: not fetched yet` only before `start` has run: the first fetch is inside it) |
 
 Every connector recovers without restarting Drishti, and every one starts even when its store is down (see
-[Reconnecting and failures](CONNECTOR_DEVELOPER_GUIDE.md#reconnecting-and-failures)).
+[Reconnecting and failures](../guides/DEVELOPER_GUIDE.md#1010-reconnecting-and-failures)).
 
 ### Installed but not configured
 

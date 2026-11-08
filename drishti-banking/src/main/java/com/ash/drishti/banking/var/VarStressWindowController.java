@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The stress window selection's API (VAR_GUIDE.md section 18.9; API_GUIDE.md): the analysis of a node, and the frozen proposals with
+ * The stress window selection's API (VAR_GUIDE.md section 18.9; API_REFERENCE.md): the analysis of a node, and the frozen proposals with
  * the maker-checker decision is made in the one Approvals queue ({@code /api/v1/approvals}, kind {@code stress-window}).
  *
  * <pre>

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* BI Studio (BI_DESIGN.md section 8.1) is drishti-designer's DesignerShell (its look is the kit's: drishti_designer.css); here only what sits inside it:
+/* BI Studio (ARCHITECTURE.md §28 section 8.1) is drishti-designer's DesignerShell (its look is the kit's: drishti_designer.css); here only what sits inside it:
    the generated Format pane (sections), conditional formatting rules, Edit interactions on the canvas, and the theme designer. Colours are theme tokens;
    touch targets are 44 px on a coarse pointer. */
 .bi-studio.dd-shell { padding: 0; min-height: 0; }                                   /* the kit's DesignerShell inside the BI canvas: its own frame, no second padding */

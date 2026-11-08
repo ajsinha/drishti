@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/** Drishti Render 1.1.0: the client-side renderer, and Elements 2.1 (drishti-elements.js). docs/architecture/CLIENT_RENDERER.md, docs/guides/ELEMENTS.md. */
+/** Drishti Render 1.1.0: the client-side renderer, and Elements 2.1 (drishti-elements.js). docs/guides/EMBED_GUIDE.md, docs/guides/ELEMENTS.md. */
 
 /** A ViewModel as GET /api/v1/views/{kind}/{id} answers it (docs/architecture/VIEWMODEL.md); unknown fields are ignored. */
 export interface ViewModel {
@@ -47,7 +47,7 @@ export type Patch =
   | { op: 'provenance'; provenance: Record<string, unknown> }
   | { op: 'deleted'; at?: string }
   | { op: 'restored' };
-/** A message of a streamed screen (GenUI, an ephemeral Sutra bound on the server panel by panel): CLIENT_RENDERER.md section 11. */
+/** A message of a streamed screen (GenUI, an ephemeral Sutra bound on the server panel by panel): EMBED_GUIDE.md section 11. */
 export type StreamMessage =
   | { type: 'skeleton'; view: ViewModel }
   | { type: 'panel-add'; panel: Panel; after?: string }
@@ -96,7 +96,7 @@ export interface RenderOptions {
   subscribe?: boolean | string;
   /** A bearer token for the console (the token exchange of ELEMENTS.md section 8): a string or {token}. */
   token?: () => string | { token: string } | Promise<string | { token: string }>;
-  /** 1.1.0: how the person gets in (CLIENT_RENDERER.md 10.1). 'token' (the default with `token`): the host's backend vouches; 'session' (the
+  /** 1.1.0: how the person gets in (EMBED_GUIDE.md 10.1). 'token' (the default with `token`): the host's backend vouches; 'session' (the
       default without): the console's own sign-in; 'popup': a host without a backend: a "Sign in to see this" button in place, one window to the
       bank's single sign-on on its click, the token in memory only (views from `server`'s embed API v2; `live` off unless asked). */
   auth?: 'token' | 'popup' | 'session';

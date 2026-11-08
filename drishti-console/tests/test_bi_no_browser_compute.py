@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave B, console lane task 1 (docs/architecture/BI_DESIGN.md principle P3 and section 12.2, acceptance 3): no BI page computes. No BI page loads WebAssembly,
+"""Wave B, console lane task 1 (docs/architecture/ARCHITECTURE.md §28 principle P3 and section 12.2, acceptance 3): no BI page computes. No BI page loads WebAssembly,
 Pyodide, DuckDB-Wasm or a worker; every BI page has the strict policy without 'wasm-unsafe-eval'; the Slice of Analyse is worked out by the console and a Python
 cell runs on the console, never in the browser."""
 import re

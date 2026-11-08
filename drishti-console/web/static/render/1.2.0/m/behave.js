@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* What a rendered view does (CLIENT_RENDERER.md section 7.4): bar and gauge widths, tabs (click, arrows, Home, End), tree rows that open
+/* What a rendered view does (EMBED_GUIDE.md section 7.4): bar and gauge widths, tabs (click, arrows, Home, End), tree rows that open
    and close, drill-down levels with their breadcrumb (Esc goes up), the Table | Pivot switch, and, unless the host turns them off
    (tables: false), sorting, a filter box and paging on every table; clicks on rows and bars that carry an event become drishti:row-click
    and drishti:select events. Everything happens inside the container: no address change, no new window. */

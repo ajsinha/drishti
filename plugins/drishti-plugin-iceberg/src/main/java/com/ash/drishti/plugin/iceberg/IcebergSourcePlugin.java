@@ -966,7 +966,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's rows from the current snapshot's manifests: the sum of the {@code record_count} of its data files (docs/architecture/BI_DESIGN.md
+     * The date's rows from the current snapshot's manifests: the sum of the {@code record_count} of its data files (docs/architecture/ARCHITECTURE.md §28
      * section 4.1). The plan is the cached one the reads use; no data file is read. A date without files holds 0 rows. With delete files the
      * count is an upper bound (the deleted rows are still counted), which an estimate may be.
      */

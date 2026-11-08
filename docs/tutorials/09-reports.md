@@ -209,12 +209,12 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v
 Swap for Vera | after-load trade | pdf | vera | load
 ```
 
-You should see one line for each, its name, schedule, format or destination, recipients and which day's data. [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) lists the whole API (`PUT /api/v1/me/subscriptions/{name}` and friends, for a session, not a token) and the retry rules.
+You should see one line for each, its name, schedule, format or destination, recipients and which day's data. [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions) lists the whole API (`PUT /api/v1/me/subscriptions/{name}` and friends, for a session, not a token) and the retry rules.
 
 ## Next steps
 
-- [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): export formats (PDF, PNG, Excel, CSV), subscriptions in depth, alerts on numbers, boards, embedding a report in another web application.
-- [USER_GUIDE.md › Scheduled reports](../guides/BI_GUIDE.md#scheduled-reports) is the reference for the CSV reports.
+- [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions): export formats (PDF, PNG, Excel, CSV), subscriptions in depth, alerts on numbers, boards, embedding a report in another web application.
+- [USER_GUIDE.md › Scheduled reports](../guides/REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches) is the reference for the CSV reports.
 - Tutorial 3 made the search; tutorial 7 told Drishti when the data lands, which is what `after-load` waits for.
 
 ## If something goes wrong

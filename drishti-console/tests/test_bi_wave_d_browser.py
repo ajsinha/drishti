@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave D (BI_DESIGN.md section 12.2, 2.6.0), console lane, in Chromium over the real server and console (tests/bi_report_stack.py, security on, the small
+"""Wave D (ARCHITECTURE.md §28 section 12.2, 2.6.0), console lane, in Chromium over the real server and console (tests/bi_report_stack.py, security on, the small
 lake of trade valuations, plus a model with two field parameters written in the stack's BI folder):
 
 * field parameters in the Studio's wells: Build offers the model's field parameters (a parameter of fields in the axis well, one of measures in the values
@@ -53,7 +53,7 @@ def shoot(page, selector, name, max_height=760):
         else:
             page.screenshot(path=os.path.join(SHOTS, name + ".jpg"), quality=86, clip={"x": bb["x"], "y": bb["y"], "width": bb["width"], "height": max_height})
 
-# a model over the sample's valuations with a field parameter of fields and one of measures (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21)
+# a model over the sample's valuations with a field parameter of fields and one of measures (docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21)
 MODEL = """rachana: 3
 model: fp-desk
 version: 1.0.0

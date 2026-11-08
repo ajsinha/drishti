@@ -20,7 +20,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Execution, connectors and scale, {@code drishti.bi.exec.*} (wave B, docs/architecture/BI_DESIGN.md sections 6.3, 6.5, 6.6 and 6.7;
+ * Execution, connectors and scale, {@code drishti.bi.exec.*} (wave B, docs/architecture/ARCHITECTURE.md §28 sections 6.3, 6.5, 6.6 and 6.7;
  * docs/admin/CONFIGURATION.md). The server's slots and a person's share are {@code drishti.bi.query.max-concurrent} and {@code max-concurrent-per-user}.
  *
  * @param perModelShare the share of the slots one model may hold at once, 0 to 1
@@ -34,7 +34,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param connectors per connector name: overrides of {@code max-fragments} ({@code connectors.trading-store.max-fragments: 4})
  * @param node this Java node's name (several nodes: the shard owner of a model; empty: one node)
  * @param nodes every Java node of the site: name to its base URL ({@code java-1: http://10.0.0.5:18480}); empty: one node
- * @param backgroundShare BI runs (docs/architecture/BI_DESIGN.md 10.1): the most of the slots background work (runs, refresh) holds at once (0.25)
+ * @param backgroundShare BI runs (docs/architecture/ARCHITECTURE.md §28 10.1): the most of the slots background work (runs, refresh) holds at once (0.25)
  * @param standingShare the most of the slots standing-query maintenance holds at once (0.25)
  * @param fragmentsShare the most of a connector's {@code max-fragments} the layer builds of background runs hold (0.5)
  */

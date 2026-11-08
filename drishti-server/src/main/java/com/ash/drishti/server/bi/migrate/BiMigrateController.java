@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The migrations of stored BI items over HTTP, bi-admin only (docs/guides/API_GUIDE.md "BI migrations"; {@code drishti.py bi migrate --boards}):
+ * The migrations of stored BI items over HTTP, bi-admin only (docs/guides/API_REFERENCE.md "BI migrations"; {@code drishti.py bi migrate --boards}):
  * {@code POST /bi/migrate/boards} converts the stored 2.3 boards into reports with board pages ({@code {"dryRun": true}} lists them and changes
  * nothing); {@code GET /bi/migrate/problems} lists the items a migration left as they were. Stored datasets and models move into the table layer at
  * start ({@link BiMigration#start}); files by {@code drishti.py tables migrate}.

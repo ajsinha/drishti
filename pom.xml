@@ -345,7 +345,7 @@
   </build>
 
   <profiles>
-    <!-- Drishti Elements as a WebJar (docs/guides/ELEMENTS_IN_YOUR_APP.md): `mvn -P elements -pl drishti-elements package` writes
+    <!-- Drishti Elements as a WebJar (docs/guides/EMBED_GUIDE.md): `mvn -P elements -pl drishti-elements package` writes
          drishti-elements/target/drishti-elements-<train>.jar; the files come from tools/elements/cli.py webjar-tree (Python 3). -->
     <profile>
       <id>elements</id>

@@ -84,7 +84,7 @@ for since the start. Two connectors use it: `yfinance` (news-and-markets pack, k
 | `retry-factor` | string | `2` | Growth of the wait (2) |
 | `retry-jitter` | string | `0.2` | Random spread of the wait (0.2) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure

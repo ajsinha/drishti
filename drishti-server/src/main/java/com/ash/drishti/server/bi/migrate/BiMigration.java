@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The BI migrations of stored items (docs/guides/TROUBLESHOOTING.md "Migration problems"): every stored dataset and model into the table layer
- * ({@link com.ash.drishti.server.tables.StoredTablesMigration}, docs/architecture/BI_DESIGN.md 4.3), then the 2.3 boards into reports ({@link BoardUpgrade}).
+ * ({@link com.ash.drishti.server.tables.StoredTablesMigration}, docs/architecture/ARCHITECTURE.md §28 4.3), then the 2.3 boards into reports ({@link BoardUpgrade}).
  * Run once at start-up ({@code drishti.bi.migrate.on-start}); boards also by a bi-admin from the API or {@code drishti.py bi migrate --boards [--dry-run]}.
  * Runs are serialised; each is idempotent; what a run could not convert is listed in {@link MigrationProblems}, shown in Admin, BI settings and on
  * the item's page.
@@ -59,7 +59,7 @@ public final class BiMigration {
             return;
         }
         try {
-            tables(props.actor(), false);                                          // docs/architecture/BI_DESIGN.md 4.3: every stored dataset and model into the layer
+            tables(props.actor(), false);                                          // docs/architecture/ARCHITECTURE.md §28 4.3: every stored dataset and model into the layer
         } catch (RuntimeException e) {
             LOG.error("the table layer's migration of stored items at start-up failed; stored items are unchanged where it stopped: {}", e.toString(), e);
         }

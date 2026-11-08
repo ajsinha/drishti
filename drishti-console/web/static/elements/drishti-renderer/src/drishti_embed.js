@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Elements 2.x's page-wide parts (CLIENT_RENDERER.md sections 10.1 and 13): the host's token provider (asked once per token, kept until
+/* Elements 2.x's page-wide parts (EMBED_GUIDE.md sections 10.1 and 13): the host's token provider (asked once per token, kept until
    shortly before it expires, renewed after a 401), the sign-in window of auth 'popup', resolving a typed command, and one live connection
    per page and server: /embed/v2/channel, read by drishti-data's live client over fetch (an EventSource cannot send the bearer), its
    subscriptions added and removed by POST as elements come and go, reconnected with drishti-data's back-off. */
@@ -37,7 +37,7 @@ export const serverOf = () => (cfg.server || new URL(statics('')).origin).replac
 
 /**
  * auth 'popup' (configure({ auth: 'popup' }) or the auth="popup" attribute): the page's token comes from the console's sign-in window
- * (CLIENT_RENDERER.md 10.1) instead of a host backend; every element and the live channel share it.
+ * (EMBED_GUIDE.md 10.1) instead of a host backend; every element and the live channel share it.
  * @param {string} [server] the console (default the one that serves the library)
  * @returns {Object} the sign-in of that console
  */

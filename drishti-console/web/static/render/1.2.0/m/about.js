@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* About this page, drawn by the renderer from the server's explanation (JSON), a port of _macros/about.html and terminal/_about.html
-   (CONTEXT_HELP.md; CLIENT_RENDERER.md section 12): what you are looking at, what each number means, where the data came from, why the
+   (CONTEXT_HELP.md; EMBED_GUIDE.md section 12): what you are looking at, what each number means, where the data came from, why the
    page looks like this and where next. Every word is the server's, written as text. aboutBody() is the drawer's body (the console's own
    drawer uses it on the pages the renderer draws); aboutSheet() is the library's side sheet for other hosts, inside the container. */
 import { h, str, icon, clear } from './dom.js';

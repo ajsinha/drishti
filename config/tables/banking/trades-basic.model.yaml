@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Migrated from config/bi/models/trades-basic.model.yaml by drishti.py tables migrate (docs/architecture/BI_DESIGN.md section 4).
+# Migrated from config/bi/models/trades-basic.model.yaml by drishti.py tables migrate (docs/architecture/ARCHITECTURE.md §28 section 4).
 rachana: 3
 model: trades-basic
 version: 1.0.0
@@ -28,6 +28,6 @@ measures:
   MTM:                   { expr: sum(trade.MTM), format: signed0, description: "Mark-to-market in USD, signed." }
   Trades:                { expr: count(trade), description: Number of trades. }
   Average MTM per trade: { expr: "measure('MTM') / measure('Trades')", format: signed0, description: MTM divided by the number of trades (a measure built from measures). }
-  Desk P&L volatility:   { python: desk-pnl-volatility, inputs: [trade.PNL_1D], by: [trade.DESK], description: "Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/BI_GUIDE.md); a query cannot use it." }
+  Desk P&L volatility:   { python: desk-pnl-volatility, inputs: [trade.PNL_1D], by: [trade.DESK], description: "Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/REPORTS_GUIDE.md); a query cannot use it." }
 hierarchies:
   Desk and book: [trade.DESK, trade.PORTFOLIO]

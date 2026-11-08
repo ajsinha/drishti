@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The ViewModel's panel charts (CLIENT_RENDERER.md section 7.3), moved here from the client renderer (1.2.0's m/charts.js): the
+/* The ViewModel's panel charts (EMBED_GUIDE.md section 7.3), moved here from the client renderer (1.2.0's m/charts.js): the
    options of the console's drishti_view.js (line, area) and drishti_charts.js (waterfall, histogram, scatter, candlestick, graph,
    donut, the surface as a heatmap or in 3D), built from a panel's data and the console's colour tokens (--d-*). The series are the
    console's, point for point, so the renderer and the console's pages draw the same chart (the parity suite compares them); axis

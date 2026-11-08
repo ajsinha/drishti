@@ -104,7 +104,7 @@ Numbers move with whatever else the machine is doing. The same loop on the same 
 ran gave `n=200 p50=4.0 ms p99=8.3 ms max=12.5 ms`; the server-side `timings.total` stayed under 1 ms, so the
 difference was the busy client and network stack, not view building. Compare like with like.
 
-With security on, add `-H "Authorization: Bearer $TOKEN"` (see [API_GUIDE.md](../guides/API_GUIDE.md)). Run it from the
+With security on, add `-H "Authorization: Bearer $TOKEN"` (see [API_REFERENCE.md](../guides/API_REFERENCE.md)). Run it from the
 console's host to include the network path the console uses.
 
 ### 3. Server metrics (Prometheus)
@@ -517,7 +517,7 @@ Both are far below the 30 ms type-ahead budget; the cost of several days is memo
 
 ## BI runs: sized before anything is read
 
-A BI question asked with `Prefer: respond-async` is sized from metadata first (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 4): a built partition's `meta.json`, the
+A BI question asked with `Prefer: respond-async` is sized from metadata first (ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job, section 4): a built partition's `meta.json`, the
 connector's own row statistics (Delta add-action `numRecords`, Iceberg manifest `record_count`), then the rows per day earlier builds showed.
 No data file is opened and nothing is built to estimate (`RunPlannerTest` counts connector reads: 0). The synchronous cost refusal
 (`DRS-9029`, `drishti.bi.exec.max-estimated-rows`) uses the same metadata **before** any layer is built, so refusing a year of raw trades

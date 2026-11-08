@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The layer's materialisation (docs/architecture/BI_DESIGN.md section 3.4; docs/architecture/ARCHITECTURE.md section 6 as amended by Q14): how a table's rows are
+ * The layer's materialisation (docs/architecture/ARCHITECTURE.md §28 section 3.4; docs/architecture/ARCHITECTURE.md section 6 as amended by Q14): how a table's rows are
  * kept, behind one API every consumer asks. BI's cached, rollup and live layers move behind it in the switch (section 7.3, step 5):
  *
  * <table>

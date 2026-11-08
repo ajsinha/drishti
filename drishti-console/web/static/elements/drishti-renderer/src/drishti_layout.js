@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The screen grid (SUTRA_NEXT.md section 13; CLIENT_RENDERER.md section 8): without a layout the panels flow in two columns, main and
+/* The screen grid (SUTRA_NEXT.md section 13; EMBED_GUIDE.md section 8): without a layout the panels flow in two columns, main and
    right; with one, the named areas (a picture, a split, tabs, a sticky area) or the flow grid's sections. A port of core/screen_grid.py
    (arrange) and static/js/screen-grid.js (the picture, the tablet picture, the phone order, tabs, folds and the split), without the
    reader's own arrangement (Customize stays in the console). On a phone every grid is one column in the phone order; nothing scrolls

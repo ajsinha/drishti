@@ -21,7 +21,7 @@ import org.apache.arrow.flight.ErrorFlightMetadata;
 import org.apache.arrow.flight.FlightRuntimeException;
 
 /**
- * A Flight request refused, with Drishti's error code (API_GUIDE.md, the DRS-56xx codes and the codes the query layer already answers). It
+ * A Flight request refused, with Drishti's error code (API_REFERENCE.md, the DRS-56xx codes and the codes the query layer already answers). It
  * reaches the client as a Flight status whose description starts with the code ({@code DRS-5604: ...}) and whose metadata carries
  * {@code drishti-code}, so every client library can show and test it.
  */

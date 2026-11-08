@@ -91,7 +91,7 @@ Because ids are encoded, an id cannot change the path or add query parameters.
 | `timeout-ms` | int | `2000` | Connect timeout and request timeout, in milliseconds |
 | `header.*` | string |  | A request header: header.<Name> (header.Authorization: Bearer ${SERVICE_TOKEN}) |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 The site-wide settings summary is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#rest-tls-proxy). Server settings that
@@ -389,4 +389,4 @@ connector sends, build it by hand (`<base-url without trailing slashes><path wit
 ## See also
 
 - [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [TLS (and the outbound proxy)](../../docs/connectors/TLS.md).
-- [The connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the README standard).
+- [The connector developer's guide](../../docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

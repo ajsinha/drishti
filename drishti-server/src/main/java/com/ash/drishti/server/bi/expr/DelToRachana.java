@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A DEL tree as Rachana's (docs/architecture/BI_DESIGN.md 2.4), for the migration's DEL reader ({@link DelTablesTranslator}, kept until 2.9.14) and the
+ * A DEL tree as Rachana's (docs/architecture/ARCHITECTURE.md §28 2.4), for the migration's DEL reader ({@link DelTablesTranslator}, kept until 2.9.14) and the
  * migration of part B has its mapping: {@code and}/{@code or}/{@code not} are {@code &&}/{@code ||}/{@code !}, {@code a if c else b}
  * is {@code c ? a : b}, a chained comparison is its comparisons joined by {@code &&}, {@code x is None} is {@code x == null},
  * {@code **} and {@code //} are {@code power} and {@code floor(x / y)}, keywords are named arguments, and the renamed functions take

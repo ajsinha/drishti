@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Currency conversion (wave B, docs/architecture/BI_DESIGN.md section 3.3.4), from the model's FX rates ({@code fx: { rates, from, to, rate, date, base }}):
+ * Currency conversion (wave B, docs/architecture/ARCHITECTURE.md §28 section 3.3.4), from the model's FX rates ({@code fx: { rates, from, to, rate, date, base }}):
  * <ul>
  * <li>{@code fx(ccy, 'USD', at=d)}: the rate of one unit of {@code ccy} in USD, the latest on or before {@code d} (default: the row's business date) — a
  * pair as stored, its inverse, or through the base currency; 1 for the same currency; None when no rate is known;</li>

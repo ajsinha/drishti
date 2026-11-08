@@ -45,7 +45,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Drishti SQL over a model (docs/architecture/BI_DESIGN.md section 3.4): parse ({@link DsqlParser}), bind as the reader ({@link SqlBinder}), and answer.
+ * Drishti SQL over a model (docs/architecture/ARCHITECTURE.md §28 section 3.4): parse ({@link DsqlParser}), bind as the reader ({@link SqlBinder}), and answer.
  * An MQ-shaped statement is exactly one model query: same plan, same plan hash, same cache entry as the MQ (and the report visual) asking the same; its
  * answer's columns are renamed and ordered as the {@code SELECT} says. A composite statement's leaves are model queries answered as the reader, loaded into an
  * in-memory DuckDB that can read nothing else (no files, no network, no extensions), where the outer query runs; a join, filter, sort or partition on a column

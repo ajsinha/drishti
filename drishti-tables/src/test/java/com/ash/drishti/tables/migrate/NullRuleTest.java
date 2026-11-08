@@ -25,7 +25,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
- * Q1, decided as Rachana's rule (docs/architecture/BI_DESIGN.md section 8): Rachana says {@code null != 'X'} is true, DEL (and SQL) that it is
+ * Q1, decided as Rachana's rule (docs/architecture/ARCHITECTURE.md §28 section 8): Rachana says {@code null != 'X'} is true, DEL (and SQL) that it is
  * false; the migrator rewrites every comparison whose meaning would change, so BI's figures stay the same. Each case states the value DEL
  * gave for a missing operand and checks the rewritten text gives it under Rachana's rule.
  */

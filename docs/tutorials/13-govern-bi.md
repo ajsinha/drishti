@@ -281,7 +281,7 @@ YAML for lineage: it is worked out from the files, never written down.
 ## Step 7 · What breaks if I remove a field
 
 A model is a **contract**: reports bind to its major version (`trades-model@1`), and a change that takes away something they may use needs a **new major
-version** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)). Before changing a published model, ask.
+version** ([REPORTS_GUIDE.md section 23](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads)). Before changing a published model, ask.
 As ann open the model's designer, the **Contract** tab, and set **What consumers may use** to *only what is ticked below*: every field and measure
 consumers use today starts ticked. Untick `trade.PORTFOLIO`.
 
@@ -441,8 +441,8 @@ The YAML behind it is the connector's own file (`config/connectors/orders-lake.y
 ## Next steps
 
 - [Tutorial 14](14-python-and-analyse.md): Python in a measure, a visual and a notebook.
-- [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
-- [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer): models, their contract and their versions.
+- [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
+- [REPORTS_GUIDE.md section 23](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads): models, their contract and their versions.
 - [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md): roles and users in depth; tutorial 17 summarises them.
 
 ## If something goes wrong

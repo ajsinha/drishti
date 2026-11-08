@@ -19,8 +19,8 @@ Two things a Power BI or SSRS author expects are built. **Field parameters in a 
 down by and which measure it shows. **Statements**: a report page laid out on paper, page by page (paper size, margins, a header and footer with page
 numbers, page breaks, column titles on every page, groups kept together), made as a PDF or Excel and sent by a subscription to many people, **each made as
 that person**. This tutorial builds a model with two field parameters, a report whose chart the reader switches, and a monthly statement that bursts to a
-role. Each step shows the UI, the command line and the YAML. The references are [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/BI_GUIDE.md#21-field-parameters-in-a-well)
-and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader).
+role. Each step shows the UI, the command line and the YAML. The references are [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/REPORTS_GUIDE.md#11-field-parameters)
+and [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader).
 
 ## Time to complete
 
@@ -213,12 +213,12 @@ Move the report to a shared workspace and publish it (tutorial 13). Then on the 
 `role:desk-head` (or the people), *When* `monthly 1 07:30 business`, *Data for* `previous` (the business day before the run: the statement covers that
 month). **Run now** in the subscription's history: one mail per person, each with their own PDF, *Monthly statement October 2026 hana.pdf*; the history
 shows each delivery with `statement: true` and its page count. A desk head's statement holds their desk's trades only; an analyst's has MTM masked;
-two people with the same rights get the same pages but their name ([BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 2](../guides/BI_GUIDE.md#2-subscriptions)).
+two people with the same rights get the same pages but their name ([REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 2](../guides/REPORTS_GUIDE.md#183-subscriptions)).
 
 **From the command line.** A subscription is yours, so it is saved and run from the console while you are signed in: saving one
 (`PUT /api/v1/me/subscriptions/{name}`) or running it (`POST …/{name}/run`) with a personal API token answers `403 DRS-5002 API tokens
 may not call this endpoint`, whatever the token's scopes, because every `/me/**` write is never open to a token
-([API_GUIDE.md › Personal API tokens](../guides/API_GUIDE.md#personal-api-tokens)). A token can read it back once the console has saved it,
+([API_REFERENCE.md › Personal API tokens](../guides/API_REFERENCE.md#28-personal-api-tokens)). A token can read it back once the console has saved it,
 with its runs and deliveries:
 
 ```
@@ -227,7 +227,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $DRISHTI_SERVER/api/v1/me/su
 ```
 
 and make your own statement as a file, which only reads (step 5's `drishti.py bi statement file`, or
-`POST /api/v1/bi/reports/statement/file`, [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader)).
+`POST /api/v1/bi/reports/statement/file`, [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader)).
 
 **You should see:** after **Run now**, one mail per person in `role:desk-head`, each with their own PDF (*Monthly statement October 2026
 hana.pdf*), and in the subscription's history one delivery per person with `statement: true` and its page count; a desk head's PDF holds
@@ -241,7 +241,7 @@ only their desk's trades. On the command line, the subscription with `format: pd
 
 ## Next steps
 
-- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader): every key of a statement and how the layout decides where a page breaks.
-- [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): schedules, recipients and retries of a subscription.
-- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/BI_GUIDE.md#21-field-parameters-in-a-well): field parameters in every kind of well.
+- [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader): every key of a statement and how the layout decides where a page breaks.
+- [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions): schedules, recipients and retries of a subscription.
+- [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/REPORTS_GUIDE.md#11-field-parameters): field parameters in every kind of well.
 - [Tutorial 13](13-govern-bi.md): workspaces, publishing and who may see a shared report.

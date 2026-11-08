@@ -14,7 +14,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-<!-- The WebJar of Drishti Elements (docs/guides/ELEMENTS_IN_YOUR_APP.md, Install › A WebJar): the libraries' files under
+<!-- The WebJar of Drishti Elements (docs/guides/EMBED_GUIDE.md, Install › A WebJar): the libraries' files under
      META-INF/resources/webjars/drishti-elements/<version>/, so a Java web application (Spring Boot serves /webjars/** by itself) takes
      them as a Maven dependency. Built only in the profile `elements` (mvn -P elements -pl drishti-elements package); the files are
      written by tools/elements/cli.py webjar-tree (Python 3 with PyYAML: the same code as the zip and the npm tarballs, so the three

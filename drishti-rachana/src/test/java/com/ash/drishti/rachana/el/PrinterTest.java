@@ -21,7 +21,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/** The one spelling, printed (docs/architecture/BI_DESIGN.md Q4): printing a parsed expression gives its text, parentheses only where needed. */
+/** The one spelling, printed (docs/architecture/ARCHITECTURE.md §28 Q4): printing a parsed expression gives its text, parentheses only where needed. */
 class PrinterTest {
 
     @ParameterizedTest

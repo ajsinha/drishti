@@ -20,9 +20,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A parsed dataset, the semantic model of BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6 (immutable). Tables come from pack kinds by connector logical name, columns carry
+ * A parsed dataset, the semantic model of ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 6 (immutable). Tables come from pack kinds by connector logical name, columns carry
  * a document path and a type, relationships join tables, measures and calculated columns are Rachana-EL extended with aggregation, security
- * holds row rules per role and masked columns. Produced by {@link DatasetParser}; the YAML reference is docs/guides/BI_GUIDE.md.
+ * holds row rules per role and masked columns. Produced by {@link DatasetParser}; the YAML reference is docs/guides/REPORTS_GUIDE.md.
  *
  * @param name the {@code dataset:} name (the item's id is its catalogue id)
  * @param version the author's version number
@@ -46,7 +46,7 @@ public record Dataset(String name, int version, String title, String description
         Compose compose, Derived derived, List<ExpectedValue> tests, Model model) {
 
     /**
-     * What a data model adds for its expressions (wave B, docs/architecture/BI_DESIGN.md section 12.2 task 2): the business calendar its dates follow (null:
+     * What a data model adds for its expressions (wave B, docs/architecture/ARCHITECTURE.md §28 section 12.2 task 2): the business calendar its dates follow (null:
      * the pack's), the month its fiscal year starts, where its FX rates are, and the per-row currency column of each amount ({@code trades.notional} to
      * {@code trades.currency}, or an ISO code for a fixed currency).
      */
@@ -147,11 +147,11 @@ public record Dataset(String name, int version, String title, String description
      *     parent entity's id and {@code index} the element's position; null for one row per entity
      * @param mode {@code live}, {@code cached} or {@code direct}
      * @param onLoad rebuild the affected business date when a data-load signal for the kind arrives
-     * @param schedule cron text, stored (not scheduled: see BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.2)
+     * @param schedule cron text, stored (not scheduled: see ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.2)
      * @param columns by column name, in file order
      * @param live for {@code mode: live}: how many rows to keep and for how long (null: the server's defaults)
      * @param of for a history table ({@code mode: history}): the live table whose measures it samples; else null
-     * @param shape for a dataset that de-duplicates or groups its rows (docs/architecture/BI_DESIGN.md section 3.1): how, and the columns read before; else null
+     * @param shape for a dataset that de-duplicates or groups its rows (docs/architecture/ARCHITECTURE.md §28 section 3.1): how, and the columns read before; else null
      */
     public record Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns,
             Live live, String of, Shape shape) {
@@ -224,7 +224,7 @@ public record Dataset(String name, int version, String title, String description
     }
 
     /**
-     * What a live table keeps (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 12): at most {@code rows} rows (the oldest updated go first) and none that has not changed for {@code age}.
+     * What a live table keeps (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 12): at most {@code rows} rows (the oldest updated go first) and none that has not changed for {@code age}.
      * Either may be null: the server's {@code drishti.bi.live.max-rows} and no age limit.
      */
     public record Live(Integer rows, java.time.Duration age, History history) {
@@ -235,7 +235,7 @@ public record Dataset(String name, int version, String title, String description
     }
 
     /**
-     * A live table's history (docs/guides/BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1 "History of a live table"): every {@code every} the listed measures are worked out over the live table, grouped by
+     * A live table's history (docs/guides/REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1 "History of a live table"): every {@code every} the listed measures are worked out over the live table, grouped by
      * {@code by}, and appended to a bounded in-memory table queryable as the dataset table {@code table}; the newest {@code keep} samples are kept.
      *
      * @param table the name of the history table in the dataset ({@code history} when not given)
@@ -288,7 +288,7 @@ public record Dataset(String name, int version, String title, String description
     }
 
     /**
-     * A measure: an aggregate expression, or a Python measure (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): {@code python} names a Python item, {@code inputs} the columns its
+     * A measure: an aggregate expression, or a Python measure (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.8): {@code python} names a Python item, {@code inputs} the columns its
      * function reads and {@code by} the columns it is grouped by (all {@code table.column}). The query engine never runs one: the compute pool python does.
      */
     public record Measure(String name, String expr, String format, String description, String python, List<String> inputs, List<String> by) {
@@ -305,7 +305,7 @@ public record Dataset(String name, int version, String title, String description
 
     /**
      * Row rules and masked columns. {@code rows} are the rules of a version-1 dataset: they name any table and are joined into every query the reader runs
-     * (fail-closed). {@code tables} is the security of a data model (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 2.6): each entry is bound to its own table,
+     * (fail-closed). {@code tables} is the security of a data model (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, section 2.6): each entry is bound to its own table,
      * applied only where that table is read, and a dimension's rules reach the facts that reference it many-to-one. A dataset has one form or the other.
      */
     public record Security(List<RowRule> rows, List<String> masked, Map<String, TableSecurity> tables) {
@@ -349,7 +349,7 @@ public record Dataset(String name, int version, String title, String description
     public record RowRule(String role, String where) {}
 
     /**
-     * Scheduled refresh (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 7): the text is a schedule as the distribution subscriptions say it ({@code daily 06:00}, {@code business-days 07:30},
+     * Scheduled refresh (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 7): the text is a schedule as the distribution subscriptions say it ({@code daily 06:00}, {@code business-days 07:30},
      * {@code weekly mon 07:00}, {@code monthly last 18:00 business}, {@code hourly}, {@code cron <six fields>} or a five-field cron), or {@code after-load [kind]}:
      * not a time but the data load that finished ready.
      */

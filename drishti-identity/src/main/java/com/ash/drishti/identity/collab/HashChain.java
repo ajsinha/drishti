@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * The tamper-evidence chain of a thread's revisions: {@code hash = SHA-256(prevHash, the step's fields)}, the first step of a thread
- * chaining from the thread id. It is evidence of rewriting, not prevention (COLLABORATION.md, Data model).
+ * chaining from the thread id. It is evidence of rewriting, not prevention (ARCHITECTURE.md §31, Data model).
  */
 public final class HashChain {
 

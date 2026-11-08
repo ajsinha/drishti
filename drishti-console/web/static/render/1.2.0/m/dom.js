@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The only way the renderer makes DOM (docs/architecture/CLIENT_RENDERER.md section 9). Elements are created with createElement,
+/* The only way the renderer makes DOM (docs/guides/EMBED_GUIDE.md section 9). Elements are created with createElement,
    text goes in as text nodes, attributes through setAttribute after an allow-list: no innerHTML, no outerHTML, no insertAdjacentHTML,
    no eval and no new Function anywhere in the library (a test reads the sources). A value from the ViewModel can never become markup,
    an event handler, a style attribute or a script URL. */

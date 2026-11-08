@@ -22,7 +22,7 @@ its Cluster tab. How it was built, and where it differs from the text below, is 
 Companion to [LENSES.md](../admin/LENSES.md) (editions and lenses: what people may see), [USER_MANAGEMENT.md, Functions](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)
 (a command switched off for everyone), [OPERATIONS.md section 18](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)
 and [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md) (Drishti\*net: nodes, capability digests, routing),
-[PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the compute workers and their own file `config/compute/compute.yaml`) and
+[NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md) (the compute workers and their own file `config/compute/compute.yaml`) and
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting, generated).
 
 **What the product owner asked for (2026-11-02, in their words):** "using admin I will be able to enable or disable frtb saccr etc etc

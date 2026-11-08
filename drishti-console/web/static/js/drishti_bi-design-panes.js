@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 9): the designer's three panes. Fields: the dataset's tables, columns (dates open into their parts), measures and
+/* Rupaka phase 3 (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 9): the designer's three panes. Fields: the dataset's tables, columns (dates open into their parts), measures and
    hierarchies, with search, on drishti-tree's outline; drag one onto the canvas or press its button. Visualizations: the catalogue of visual types, then Build (the field wells of the
    selected visual) and Format (titles, labels, colours from the theme, axes, number formats, conditional formats, slicer and drill settings; with no visual
    selected, the page and the report). Filters: report, page and visual level; basic, advanced and top-N. Every action also has a button and a select, so
@@ -59,7 +59,7 @@
         rank: 'rank', dense_rank: 'dense rank', percent_rank: 'percent rank', moving_avg: 'moving average', moving_sum: 'moving sum', moving_min: 'moving min', moving_max: 'moving max' })[m[1]] || m[1] : null;
     }
 
-    /** The model's field properties inherited (BI_DESIGN.md 8.1): hidden fields and measures are left out, a perspective narrows the list, folders group. */
+    /** The model's field properties inherited (ARCHITECTURE.md §28 8.1): hidden fields and measures are left out, a perspective narrows the list, folders group. */
     const persp = (ds) => { const p = D.perspective && ds.perspectives && ds.perspectives[D.perspective]; return p && p.fields && p.measures ? p : null; };
     const shownMeasure = (ds, m) => !m.hidden && (!persp(ds) || m.local || persp(ds).measures.indexOf(m.name) >= 0);
     const shownField = (ds, t, c) => !c.hidden && (!persp(ds) || persp(ds).fields.indexOf(t.name + '.' + c.name) >= 0);
@@ -360,7 +360,7 @@
       settings('The visual', [
         ['title', text('Title', 'data-format-title'), v.title, (x) => setTop(v, 'title', trimmed(x))],
         ['alt', text('Alt text', 'data-format-alt', { description: 'What a screen reader says about it.' }), v.alt, (x) => setTop(v, 'alt', trimmed(x))],
-        group !== 'static' && group !== 'board' ? ['dataset', text('Dataset', { 'data-format-dataset': '', list: 'biDatasetNames' }, { placeholder: D.model.dataset,          // a visual may read a dataset of its own (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10)
+        group !== 'static' && group !== 'board' ? ['dataset', text('Dataset', { 'data-format-dataset': '', list: 'biDatasetNames' }, { placeholder: D.model.dataset,          // a visual may read a dataset of its own (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.10)
           description: 'Blank: the report\'s dataset (' + (D.dataset && D.dataset.title ? D.dataset.title + ', ' : '') + D.model.dataset + '). Another dataset: its fields are written in the wells in the YAML tab, and a link (Report, below the page) connects its slicers to the others.' }),
         v.dataset, (x) => setTop(v, 'dataset', trimmed(x))] : null
       ]);

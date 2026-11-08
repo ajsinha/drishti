@@ -270,4 +270,4 @@ it means; a live view sends only what moved; a comment belongs to a cell's coord
   [PIVOT_GUIDE.md, Documents](../guides/PIVOT_GUIDE.md#documents-paths-lists-and-grains).
 - Every setting, the API and the refusals: [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) sections 14 to 17.
 - Make a path a column read for everyone: promote it in the connector's `layout.<kind>.columns`
-  ([CONNECTORS.md](../connectors/CONNECTORS.md)) or add it to a BI dataset as a `path:` column ([BI_GUIDE.md](../guides/BI_GUIDE.md)).
+  ([CONNECTORS.md](../connectors/CONNECTORS.md)) or add it to a BI dataset as a `path:` column ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md)).

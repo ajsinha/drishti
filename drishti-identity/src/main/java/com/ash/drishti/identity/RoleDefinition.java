@@ -30,7 +30,7 @@ import java.util.List;
  * @param admin may administer users, roles, caches and packs
  * @param calc may use Calc: Python run in the browser on what the holder may open (USER_GUIDE.md)
  * @param layout may customise layouts: arrange a view's panels and keep the arrangement (USER_GUIDE.md, Layout mode)
- * @param collaborate may share, comment and mention (docs/architecture/COLLABORATION.md); true unless a role is marked otherwise
+ * @param collaborate may share, comment and mention (docs/architecture/ARCHITECTURE.md §31); true unless a role is marked otherwise
  * @param compliance may place legal holds, export the collaboration record and read any share; false unless granted
  * @param builtIn defined in configuration or a pack (read-only in the UI) rather than by an administrator
  * @param updatedAt last change (null for built-in roles)

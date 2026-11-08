@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Fan-out over Drishti*net (docs/architecture/PYTHON_COMPUTE.md section 7.6): the other members alive, each asked for its load on a pool
+ * Fan-out over Drishti*net (docs/guides/NOTEBOOK_GUIDE.md section 7.6): the other members alive, each asked for its load on a pool
  * (cached two seconds), and chunks run there on behalf of the request's viewer: signed, one hop, an on-behalf-of token naming the viewer, as
  * BI runs are forwarded ({@link RunCluster}). A member that cannot be reached answers {@code unavailable}, and fan-out runs the chunk here.
  */

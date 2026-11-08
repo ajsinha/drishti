@@ -23,7 +23,7 @@ the console's own help guides. For each one the checks below compare a name the 
 * a repository path written in backticks exists;
 * a ``drishti.py`` command and its sub-commands exist in the CLI's argparse tree;
 * a ``DRISHTI_*`` environment variable, a ``drishti.*`` server setting and a console ``application.yaml`` key exist;
-* a ``DRS-NNNN`` code is one the code has, and every code the code has is in the one error-code table (API_GUIDE's *Error code
+* a ``DRS-NNNN`` code is one the code has, and every code the code has is in the one error-code table (API_REFERENCE's *Error code
   table*, status and meaning; TROUBLESHOOTING keeps cause and fix only where needed) or RACHANA_REFERENCE;
 * a command word typed with ``<GO>`` is a pack's mnemonic, a pack code or a reserved word;
 * a kind named as a kind (``the `trade` kind``, ``kind `trade```, ``--kind trade``, ``/v/trade/``) is a kind of some pack.
@@ -365,7 +365,7 @@ CODE_SUFFIXES = (".java", ".py", ".js", ".ts", ".yaml", ".yml", ".sh", ".ps1", "
 ENV_EXAMPLES = {"DRISHTI_PG_PASSWORD", "DRISHTI_CI_TOKEN", "DRISHTI_CONSOLE__SECTION__KEY",
                 "DRISHTI_CONSOLE",   # tutorial 15: a shell variable holding the console's address, beside DRISHTI_SERVER
                 "DRISHTI_FIGURES_OUT", "DRISHTI_FIGURES_BASELINE"}   # read only by tests/test_var_family_figures_browser.py (ELEMENTS.md 12.2)
-# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (BI_GUIDE.md).
+# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (REPORTS_GUIDE.md).
 NOT_SETTINGS = {"layouts.phone.desk.order"}
 
 
@@ -557,10 +557,10 @@ def code_problems() -> list[str]:
         for m in _CODE.finditer(text):
             if m.group(0) not in known and m.group(0) not in EXAMPLE_NAMES.get(rel, ()):
                 bad.append(f"{rel}:{line_of(text, m.start())}: {m.group(0)} (not in the code)")
-    api = read("docs/guides/API_GUIDE.md")
+    api = read("docs/guides/API_REFERENCE.md")
     table = api.split("\n## Error code table", 1)[1].split("\n## ", 1)[0]
     listed = _ranges(table) | _ranges(read("docs/guides/RACHANA_REFERENCE.md"))
-    bad += [f"{c} is in the code and neither in API_GUIDE's error code table nor in RACHANA_REFERENCE" for c in sorted(codes_in_code() - listed)]
+    bad += [f"{c} is in the code and neither in API_REFERENCE's error code table nor in RACHANA_REFERENCE" for c in sorted(codes_in_code() - listed)]
     return bad
 
 

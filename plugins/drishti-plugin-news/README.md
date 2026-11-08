@@ -91,7 +91,7 @@ starts.
 | `retry-factor` | string | `2` | Growth of the wait (2) |
 | `retry-jitter` | string | `0.2` | Random spread of each wait, so many failing reads do not repeat together |
 
-Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
+Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md). It takes the shared `proxy.*` settings for an outbound HTTP proxy (DEVELOPER_GUIDE.md).
 <!-- settings:end -->
 
 ## Data structure
@@ -147,7 +147,7 @@ $.ITEMS`. An annotated copy is `config/connectors.examples/other/news.yaml`. The
 
 - Below: [turning it on](#turning-it-on), [the pipeline step by step](#the-pipeline-step-by-step), [health, errors and retries](#health-errors-and-retries), [using it from a pack](#using-it-from-a-pack), [how it is built](#how-it-is-built), [tests](#tests).
 - [The yfinance connector](../drishti-plugin-yfinance/README.md) (the same pattern for quotes) and
-  [connectors that compute data on demand](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
+  [connectors that compute data on demand](../../docs/guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand).
 - [Connector files](../../docs/connectors/CONNECTOR_FILES.md), [TLS (and the outbound proxy)](../../docs/connectors/TLS.md), [packs](../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which).
 
 ## Turning it on
@@ -266,7 +266,7 @@ and `drishti-common` (the shared retry policy), and is Spring-free.
 
 Nothing is stored, so `fetch` does the work; it is safe to call from many virtual threads at once (the cache has one lock held only for
 map operations, and a call in flight is shared); it never holds a thread longer than its timeout; and it reports through `health()` and
-`cacheStats()`. The pattern: [connectors that compute data on demand](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand).
+`cacheStats()`. The pattern: [connectors that compute data on demand](../../docs/guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand).
 
 ## Tests
 

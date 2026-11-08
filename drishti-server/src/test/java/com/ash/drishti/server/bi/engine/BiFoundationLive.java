@@ -33,7 +33,7 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 /**
- * The live replay of the 2.9.11.e parity proof (docs/architecture/BI_DESIGN.md section 5.1, "Live"): the test lake's live table
+ * The live replay of the 2.9.11.e parity proof (docs/architecture/ARCHITECTURE.md §28 section 5.1, "Live"): the test lake's live table
  * fed a fixed, deterministic sequence of ticks (updates by key, a new trade, a change applied twice), each applied to the live table directly (as the
  * feed does, without waiting on its thread), and its answers at fixed checkpoints, as risk, a desk-head and a reader without the raw
  * power. Uses only what BI has before the switch ({@link LiveTablesTest.LiveLake}, {@link QueryService}, the live table's {@code apply}), so

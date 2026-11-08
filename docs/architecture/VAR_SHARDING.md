@@ -295,7 +295,7 @@ Sharding needs the tiered memory (`drishti.var.tier.mode: mapped`, the default).
 | `POST /api/v1/risk/var/partial` | members only (signed) | a shard's part of a set summed here |
 | `GET /api/v1/risk/var/shards/skeleton?date=&ccy=&shard=&map=&digest=` | members only (signed) | a shard's skeleton |
 
-**API tokens** (`drishti.security.token-never` in application.yaml, TOKEN_SCOPES in API_GUIDE.md): both `POST`s are never open to a
+**API tokens** (`drishti.security.token-never` in application.yaml, TOKEN_SCOPES in API_REFERENCE.md): both `POST`s are never open to a
 personal API token. `/partial` reads data, but it is not a read `POST` for a token (`token-read-posts`): it is the members' own channel,
 signed with the cluster key and made with the caller's on-behalf-of token (the owner applies the caller's rights again), like
 `/compute/peer/**`; opening it to tokens would only add a door to that channel. `/shards/drain` is an administrator's action (the console,

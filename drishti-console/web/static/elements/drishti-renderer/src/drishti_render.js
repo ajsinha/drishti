@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* drishti-renderer, the client-side renderer (docs/architecture/CLIENT_RENDERER.md; Drishti Elements library 7): paints a Drishti screen
+/* drishti-renderer, the client-side renderer (docs/guides/EMBED_GUIDE.md; Drishti Elements library 7): paints a Drishti screen
    from the server's ViewModel JSON, in the browser, with no build step and no framework, drawing every panel with the shared libraries:
    tables, trees, drills and pivots with drishti-grid, charts with drishti-chart, formats, the element maker, keys and the API client
    with drishti-core, live streams with drishti-data's live client. One import, one call:

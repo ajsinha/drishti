@@ -67,7 +67,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS.md section 2.1](../admin/OPERATIONS.md#21-server-requirements-native-libraries-blas)) |
 | Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; section 4.14) |
 | See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
-| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)) |
+| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([NOTEBOOK_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime)) |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
 line for anything that repeats, runs at night, or lives in a pipeline: it has exit codes, a lock, a log line and a JSON summary,
@@ -1205,7 +1205,7 @@ functions|validate` (Rachana, the expression language), `bi migrate --boards` (2
 with `tables migrate`), `bi sql` (Drishti SQL over a model), `bi model list|describe|check|consumers`,
 `bi mq` (a model query), `bi item new|save|tests`, `bi dataset refresh` and `bi transform input|snippets|snippet` (Python data prep: a
 Transform's inputs as you see them, masked columns and a profile of each column, and the snippets the Transform editor offers; the commands are in
-`tools/bitransform.py`, loaded by `drishti.py`; [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor)). A write needs the
+`tools/bitransform.py`, loaded by `drishti.py`; [REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](NOTEBOOK_GUIDE.md#5-data-prep-the-transform-editor)). A write needs the
 `bi:write` scope.
 
 **BI runs (`tools/biruns.py`)**: `bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions`,
@@ -1215,7 +1215,7 @@ and `--async [--wait 2s] [--yes]` on `bi mq` and `bi sql`, which send `Prefer: r
 `bi runs share RUN --to WHO` prints each recipient's mode (sees the same, re-masked, recomputed as them; a refusal on stderr) and `unshare
 RUN WHO...` removes recipients; `bi runs schedule RUN "weekly mon 08:00"` and `schedules [list|edit ID WHEN|disable|enable|delete ID]`
 use the subscription grammar; `bi runs export RUN --format csv|xlsx --out FILE`; `bi runs suggestions [--model M] [accept|dismiss ID]`
-is the bi-admin's list of rollup suggestions. The guide with output: [BI_GUIDE.md section 28](BI_GUIDE.md#on-the-command-line).
+is the bi-admin's list of rollup suggestions. The guide with output: [REPORTS_GUIDE.md section 28](REPORTS_GUIDE.md#1512-on-the-command-line).
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py bi runs submit --mq year.mq.json --yes --wait 0
@@ -1311,7 +1311,7 @@ drishti-console/.venv/bin/python tools/drishti.py edits status
 ### 5.10b approvals
 
 The one Approvals queue from the terminal (`tools/approvalscli.py`; [USER_GUIDE.md › Approvals](USER_GUIDE.md#approvals), the API
-[API_GUIDE.md › Approvals](API_GUIDE.md#approvals-apiv1approvals)), as the caller: every four-eyes kind is decided here (`sutra`,
+[API_REFERENCE.md › Approvals](API_REFERENCE.md#13-approvals-apiv1approvals)), as the caller: every four-eyes kind is decided here (`sutra`,
 `change`, `bi`, `compute`, `function`, `stress-window`, `var-report`). A token needs the kind's scope (`edit`, `design:approve`, `bi:approve`,
 `pivot:approve`) or `approve`; report sign-offs, stress windows, compute packages and questions are a person's, never a token's.
 - `approvals list [--box inbox|sent|done|all] [--group data|screens|risk|access] [--kind KIND]`: waiting for you (the default), sent by you,
@@ -1577,7 +1577,7 @@ drishti-console/.venv/bin/python tools/drishti.py tables migrate --dry-run
 ### 5.18 elements
 
 Drishti Elements (the JavaScript and CSS libraries) for other applications (`tools/elements/cli.py`, with `dist.py`, `pack.py` and
-`dts.py` beside it; the guide [ELEMENTS_IN_YOUR_APP.md](ELEMENTS_IN_YOUR_APP.md)). Offline, Python only; nothing is published.
+`dts.py` beside it; the guide [EMBED_GUIDE.md](EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)). Offline, Python only; nothing is published.
 
 - `elements pack --libs core,grid,chart [--theme dark|light|<theme>] [--out DIR] [--include-domain banking] [--no-engines] [--maps]`:
   one `drishti-elements.js` and one `drishti-elements.css` with exactly the named libraries and the ones they require (deepest
@@ -1728,7 +1728,7 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/knowledge.py` | the Knowledge pages' glossaries (`docs/knowledge/`): writes each page's terms and the home's A to Z from `docs/knowledge/glossary.yaml`; `--check` fails when a page differs or the glossary is invalid (`tools/test_knowledge_pages.py`) |
 | `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [PACK_DEVELOPER_GUIDE.md Part IV](PACK_DEVELOPER_GUIDE.md#the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
 | `tools/packgen/common/guide_data.py` | every pack guide's *Data contracts* and *Data retrieval* sections (from the contracts and `data_retrieval.yaml`; the pack generators call it); run alone it writes compute-demo's guide and the generated block of the news-and-markets guide; `--check` fails when they are stale ([PACK_DEVELOPER_GUIDE.md Part IV](PACK_DEVELOPER_GUIDE.md#the-readme-standard)) |
-| `tools/connector_readmes.py` | the settings tables of every connector README (from `plugin-settings.yaml`) and the file tables of the template folders' READMEs; `--check` fails when one is stale ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-readme-standard)) |
+| `tools/connector_readmes.py` | the settings tables of every connector README (from `plugin-settings.yaml`) and the file tables of the template folders' READMEs; `--check` fails when one is stale ([DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#1014-the-readme-standard-for-connectors)) |
 | `tools/packgen/banking/make_data.py`, `make_packs.py`, `make_sutras.py`, `make_docs.py` | the banking packs: their sample data and lake, manifests, Sutras and guides, from one taxonomy |
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
 | `tools/packgen/genomics/make.py` | the genomics pack (public reference facts, synthetic samples) |
@@ -1774,7 +1774,7 @@ of Parquet.
 | `tools/domain_strings.py` | the domain boundaries' rule 4 ([DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
 | `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `drishti_bi.css` or the report CSS changes) |
-| `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (CLIENT_RENDERER.md section 13). A released version's folder never changes: a change means a new version folder |
+| `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (EMBED_GUIDE.md section 13). A released version's folder never changes: a change means a new version folder |
 | `tools/make_icons.py` | the console's favicon and app icons from the logo mark |
 | `tools/fetch-pyodide.sh` | installs the pinned, checksummed Pyodide runtime Calc serves from its own origin (no CDN) |
 | `tools/docs/screenshots.py` | regenerates the guides' screenshots (Playwright, scratch ports); `drishti.py docs shots` runs it |
@@ -1907,7 +1907,7 @@ the dependants along only when confirmed by name, and the uninstalled files kept
 ### 10.5 Admin → BI (`/admin/bi`) and the migration
 
 BI settings and governance; after an upgrade it lists the items the expression and model migration could not convert, with why
-(the terminal twin: `drishti.py tables migrate --dry-run`). Guide: [BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
+(the terminal twin: `drishti.py tables migrate --dry-run`). Guide: [REPORTS_GUIDE.md](REPORTS_GUIDE.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments).
 
 ### 10.6 Admin → Health (`/admin/health`) and Admin → Packs (`/admin/packs`)
 

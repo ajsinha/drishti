@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The first-start migration of stored items (docs/architecture/BI_DESIGN.md section 4.3, step 1; Q16, Q17): every BI dataset and model in the item
+ * The first-start migration of stored items (docs/architecture/ARCHITECTURE.md §28 section 4.3, step 1; Q16, Q17): every BI dataset and model in the item
  * store, in every workspace, becomes a {@code table} or {@code model} item of the layer under its id, <b>every version rewritten in place</b>
  * (consumers pinned to an old major read it), the draft too. Before anything is written each text is migrated with the latest of every other
  * item as its context (a derived dataset reads its base, a model its datasets); an item any of whose texts is refused is left as it is and

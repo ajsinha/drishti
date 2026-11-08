@@ -244,7 +244,7 @@ Every contract lists its own checks in its section 10. These hold for all:
 | One run per date | Rows of one date with different `BATCH_ID`s, or a vector table whose `SCENARIO_SET_ID` differs from the scenario set's: the date is not loaded, and the engine answers the previous date with a warning |
 | Completeness | Fewer rows than the contract's expectation (for example, fewer live trades valued than live trades booked): the load is `ready` but the date shows "incomplete" with the count missing |
 
-Errors use the platform's DRS codes ([API_GUIDE.md](../guides/API_GUIDE.md#error-code-table)). Each contract lists the codes its
+Errors use the platform's DRS codes ([API_REFERENCE.md](../guides/API_REFERENCE.md#error-code-table)). Each contract lists the codes its
 engine answers.
 
 ## 11. What Drishti answers: computed kinds, the API, captures
@@ -253,7 +253,7 @@ engine answers.
   [REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)). It opens by command (`VAR DESK DESK-RATES <GO>`), by link
   (`/v/<kind>/<scope>`), by API, by CLI, by search, and to AI tools, with the same entitlements everywhere. Its id is the scope text.
 - **An API per measure** for programs and the explorer, under `/api/v1/<measure>` (VaR: `/api/v1/var`,
-  [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1riskvar)). Every answer carries a **provenance** block: business date, the input
+  [API_REFERENCE.md](../guides/API_REFERENCE.md#19-var-engine-apiv1riskvar)). Every answer carries a **provenance** block: business date, the input
   tables' versions and batch ids, the scenario or parameter set, the rows read, unmapped rows, the computation time, and cache hit or miss.
 - **Captures:** a user may capture any answer as an immutable record (who, when, scope, note, the inputs' versions, the figures and the
   vectors needed to reproduce it). It is kept in the Drishti database or content store, reopened by id (`CAPTURE:<id>` as a scope), and

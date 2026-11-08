@@ -238,7 +238,7 @@ The token comes from `--token-file` (the file's text, trimmed), else the `DRISHT
 | The server | What to send |
 |---|---|
 | sign-in **off** (the default for local development) | nothing, or `--user NAME` (header `X-Drishti-User`) to be a named user. Every role is granted. |
-| sign-in **on** | a **signed token** whose `sub` is you and whose `roles` carry what you need; see [API_GUIDE.md](API_GUIDE.md) ("Security on" and "Minting a token for a script"). |
+| sign-in **on** | a **signed token** whose `sub` is you and whose `roles` carry what you need; see [API_REFERENCE.md](API_REFERENCE.md) ("Security on" and "Minting a token for a script"). |
 
 **Personal API tokens (`drk_…`, from My account → API tokens) read by default, and write only with a scope.** A token made
 without scopes only reads: it is enough for `server health`, `server packs list`, `design list|get|proposals` and
@@ -2282,7 +2282,7 @@ running version at four levels, breaking first. A `.sha256` file beside the arch
   (a kind or mnemonic removed or renamed) makes the command print the preview and exit 1 until you add `--accept-breaking`.
 - `--wait N` waits up to N seconds for the server to answer again after the restart (exit 1 if it does not).
 - Exit: 0 deployed or previewed; 1 refused by a check, breaking changes not accepted, or the server not back; 2 usage (no such file).
-- `--json` prints `{verification, result}`; the verification is the server's own answer ([API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors)).
+- `--json` prints `{verification, result}`; the verification is the server's own answer ([API_REFERENCE.md](API_REFERENCE.md#220-deploying-a-pack-archive-and-the-packs-connectors)).
 
 ```text
 $ python3 tools/drishti.py server packs deploy dist/helpdesk-0.2.0.tar.gz
@@ -2523,7 +2523,7 @@ deleted orders-lake (its text is kept in the connector folder's history/ folder)
 
 `connector reset NAME` prints `NAME is back to the pack's default (running)` and keeps your previous text in `connector history`. With `--json` every command prints
 the server's answer unchanged. Errors: `DRS-5031` invalid (422), `DRS-5032` stale version, existing file without `--if-match`, or in use without `--confirm`
-(409), `DRS-5033` no such connector (404); see [API_GUIDE.md](API_GUIDE.md#connectors-apiv1adminconnectors).
+(409), `DRS-5033` no such connector (404); see [API_REFERENCE.md](API_REFERENCE.md#222-connectors-apiv1adminconnectors).
 
 ### `net`: Drishti*net's config/net/ folder
 
@@ -2598,7 +2598,7 @@ Exit: 0 done, 1 refused or a file has an error, 2 usage (a bad peer name, a key 
 
 ### `bi`: workspaces and the catalogue (Rupaka)
 
-Business intelligence over REST ([BI_GUIDE.md](BI_GUIDE.md), [API_GUIDE.md](API_GUIDE.md#business-intelligence-rupaka-apiv1bi)), as the token's user sees it: the
+Business intelligence over REST ([REPORTS_GUIDE.md](REPORTS_GUIDE.md), [API_REFERENCE.md](API_REFERENCE.md#3-business-intelligence-apiv1bi)), as the token's user sees it: the
 server shows only what that person may open. Reads need no scope; `publish` needs a token with `bi:write` (and the user the `bi-author` power and the member role).
 
 ```
@@ -2641,7 +2641,7 @@ drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author 
 ### `bi expr`, `bi migrate`, `bi sql`: the BI languages
 
 Rachana, BI's expression language ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions); the functions in [FUNCTIONS.md](FUNCTIONS.md)),
-and Drishti SQL over REST, as the token's user (the server owns the one parser of each; [API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr)). Reads
+and Drishti SQL over REST, as the token's user (the server owns the one parser of each; [API_REFERENCE.md](API_REFERENCE.md#6-expressions-apiv1biexpr)). Reads
 need no scope.
 
 ```
@@ -2658,7 +2658,7 @@ BI's own dataset and model files (`rachana: 1` and `2`) and their old expression
 ### `bi model`, `bi mq`: models and model queries
 
 What the model designer and a report's visuals do, over REST as the token's user (the server checks every model and answers every query with your row
-rules and masks; [BI_GUIDE.md section 23](BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)). Reads need no scope.
+rules and masks; [REPORTS_GUIDE.md section 23](REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads)). Reads need no scope.
 
 ```
 drishti.py bi model list [--kind model|implicit|compat]          the models and datasets you may read, with the name@major a query uses
@@ -2676,7 +2676,7 @@ a table with its plan, its as-of date and the columns masked for you; `--json` p
 
 ### `bi transform`: a Transform's inputs as you, and the snippets
 
-What the Transform editor's inputs and snippets picker do ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor)). `input`
+What the Transform editor's inputs and snippets picker do ([REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](NOTEBOOK_GUIDE.md#5-data-prep-the-transform-editor)). `input`
 asks the server, as the token's user, for each input of a Python dataset (`POST /api/v1/bi/python/input`: a model query, or a pack kind read through a
 connector) and prints its rows, what is masked for you and a short profile of every column; `snippets` and `snippet` read the console's library
 (`drishti-console/config/prep-snippets.yaml`, no server) and print the step a snippet makes, each value written as a literal.
@@ -2733,12 +2733,12 @@ fail  Close to 100 trades: expected 100 ± 1%, found 750
 ### `bi runs`, `bi mq --async`, `bi sql --async`: BI runs
 
 `drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions` does what the BI
-Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user; `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [BI_GUIDE.md section 28](BI_GUIDE.md#on-the-command-line)
+Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user; `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [REPORTS_GUIDE.md section 28](REPORTS_GUIDE.md#1512-on-the-command-line)
 and [TOOLS.md section 5.7](TOOLS.md#57-bi).
 
 ### `bi statement`
 
-A report's statement pages ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+A report's statement pages ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
 tab previews and a subscription mails.
 
 ```
@@ -2842,7 +2842,7 @@ The script is registered for the names `drishti.py` and `drishti`, so an alias o
 The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
 check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
 screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
-[API_GUIDE.md](API_GUIDE.md).
+[API_REFERENCE.md](API_REFERENCE.md).
 
 | Command | Does | Endpoint |
 |---|---|---|

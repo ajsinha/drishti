@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Every panel kind (CLIENT_RENDERER.md section 7): the frame (the macro panel), its states (waits, denied, empty, error, computing,
+/* Every panel kind (EMBED_GUIDE.md section 7): the frame (the macro panel), its states (waits, denied, empty, error, computing,
    stale, failed, refused) and one builder per kind, ports of _macros/panels.html. Every table is drishti-grid's document table (the
    server's table, drawn by the grid: docTable, docDrill, docPivot, docPlainTable) with the renderer's cells as its hooks; charts are
    drishti-chart's panel charts, drawn from the container's data (a property, never an attribute of JSON) once the panel is in the page;

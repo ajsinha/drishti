@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The console's behaviours, as a library module (CLIENT_RENDERER.md section 7.4; behaviours: 'console'). The per-column filter funnels
+/* The console's behaviours, as a library module (EMBED_GUIDE.md section 7.4; behaviours: 'console'). The per-column filter funnels
    and Chart any table (tables.js, colfilter.js), the Pivot tab's grid (pivot-engine.js, pivot-grid.js, pivot.js), the nested-pivot grid
    (tree-rows.js), the drill-down (drill.js), Zoom (zoom.js) and the controls (multiselect.js, controls.js) are each ONE implementation:
    the console's own scripts, loaded once per page from the console that serves this library (vendored, never a CDN), with data-manual so

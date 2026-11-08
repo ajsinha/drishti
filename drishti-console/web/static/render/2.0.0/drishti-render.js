@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Render 2.0.0, the public entry of drishti-renderer (docs/architecture/CLIENT_RENDERER.md): the same API as 1.x, drawn with the
+/* Drishti Render 2.0.0, the public entry of drishti-renderer (docs/guides/EMBED_GUIDE.md): the same API as 1.x, drawn with the
    Drishti Elements libraries. One import, one call:
 
      <script type="module">

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Where ViewModels and frames come from (CLIENT_RENDERER.md section 10): the console's own JSON (/api/view/{kind}/{id}, the person's
+/* Where ViewModels and frames come from (EMBED_GUIDE.md section 10): the console's own JSON (/api/view/{kind}/{id}, the person's
    session) by default, with a bearer token when the host gives a token provider (the token exchange), and the device class
    (X-Drishti-Device) when the host says it. A view is read with drishti-core's API client and a stream is followed with drishti-data's
    live client (reconnect with back-off, resume from the last event id); the renderer keeps only what a ViewModel needs: its addresses,

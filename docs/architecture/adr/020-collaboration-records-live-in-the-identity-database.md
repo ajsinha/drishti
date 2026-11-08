@@ -54,5 +54,5 @@ the records prove.
 - Considered and rejected: a separate collaboration service and store (a second thing to back up, with no gain at this size); storing a rendered
   snapshot with the share (it would freeze rights at send time and leak to later readers); an in-memory queue (loses mail on a crash).
 
-Design and as-built notes: [COLLABORATION.md](../COLLABORATION.md). The whole path worked through on one trade:
-[HOW_IT_FITS.md §3.10](../COLLABORATION.md#share-and-discussion-end-to-end).
+Design and as-built notes: [ARCHITECTURE.md §31](../ARCHITECTURE.md#31-collaboration-write-back-and-approvals). The whole path worked through on one trade:
+[HOW_IT_FITS.md §3.10](../ARCHITECTURE.md#3111-share-and-discussion-end-to-end).

@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Locked Python environments (docs/architecture/PYTHON_COMPUTE.md section 5): one per lock, its id the sha256 of (interpreter version,
+ * Locked Python environments (docs/guides/NOTEBOOK_GUIDE.md section 5): one per lock, its id the sha256 of (interpreter version,
  * platform, lock text), built under {@code <data dir>/compute/envs/<id>/} with {@code python -m venv} and
  * {@code pip install --require-hashes --no-deps --only-binary=:all:} from the approved source only (no resolution, no source builds, no
  * index but the one named), then recorded in a manifest of hashes and made read-only. Never changed in place: a new lock is a new

@@ -24,7 +24,7 @@ settings:
 - 'reactive.spec'
 - 'source-name'
 auth: None of its own; it reads its inputs through the server's routing as the requesting viewer, and its workers hold no credentials.
-licence: Part of Drishti (drishti-compute); no client library. Python engines run in the compute workers (PYTHON_COMPUTE.md).
+licence: Part of Drishti (drishti-compute); no client library. Python engines run in the compute workers (NOTEBOOK_GUIDE.md).
 windows: Works the same on Windows; Python pools run in warm mode there (no fork). Java engines run in the server.
 doc: docs/connectors/types/reactive/README.md
 ---
@@ -68,7 +68,7 @@ the plugin as the one setting `reactive.spec` (the block as JSON). Admin → Con
 | `limits.wait` | `150ms` | How long a read waits for the result before answering *computing* (keep it under `drishti.graph.link-budget`) |
 | `limits.max-inflight-per-user`, `limits.event-queue`, `limits.max-input-rows`, `limits.dedupe-window` | `4`, `10000`, `1000000`, `24h` | Fairness and bounds |
 | `history.dated` | `true` | A picked business date computes on that date's inputs |
-| `requires` | none | The libraries it needs; nothing runs until an administrator approves (PYTHON_COMPUTE.md) |
+| `requires` | none | The libraries it needs; nothing runs until an administrator approves (NOTEBOOK_GUIDE.md) |
 | `source-name` (setting) | the connector's name | The name in provenance and Health |
 
 ## Data structure
@@ -143,7 +143,7 @@ values, chunk-rows: 20, reduce: { sum: [ROWS, SUM], tables: { total: [PNL] }, th
 ## See also
 
 - Below: [when to use one](#when-to-use-one), [writing the computation](#writing-the-computation), [reading a computed kind](#reading-a-computed-kind), [what happens on a read](#what-happens-on-a-read), [engines](#engines), [triggers](#triggers), [private sandboxes](#private-sandboxes), [the HTTP API](#the-http-api), [isolation](#isolation), [performance](#performance).
-- [Reactive connectors, the design](../../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [compute workers](../../../architecture/PYTHON_COMPUTE.md).
+- [Reactive connectors, the design](../../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [compute workers](../../../guides/NOTEBOOK_GUIDE.md).
 - [Operating compute](../../../admin/OPERATIONS.md#19-compute-workers) and [tutorial 23: computed panels](../../../tutorials/23-computed-panels.md).
 
 ## When to use one
@@ -151,7 +151,7 @@ values, chunk-rows: 20, reduce: { sum: [ROWS, SUM], tables: { total: [PNL] }, th
 | You need | Use |
 |---|---|
 | stored records (a lake, a database) | a static connector (`delta`, `jdbc`, ...) |
-| a value fetched from a service per id, light, no parameters | an on-demand connector ([developer guide](../../CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand)) |
+| a value fetched from a service per id, light, no parameters | an on-demand connector ([developer guide](../../../guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand)) |
 | a computation with typed parameters, over inputs read from other kinds, in Python or Java, possibly heavy, possibly fanned out over many workers, recomputed on events | **a reactive connector** |
 
 ## Writing the computation
@@ -201,7 +201,7 @@ Other panels of the screen are not affected by one computed panel's state.
 5. **Cache and single flight**: a cached result is answered at once; a read of a key already being computed joins it (one computation,
    each reader answered under their own request id).
 6. **Admit**: an interactive read over `limits.max-inflight-per-user` of the person's computations is refused as *busy*; the compute
-   pool's own fair queue orders the rest by class and person ([PYTHON_COMPUTE.md](../../../architecture/PYTHON_COMPUTE.md)).
+   pool's own fair queue orders the rest by class and person ([NOTEBOOK_GUIDE.md](../../../guides/NOTEBOOK_GUIDE.md)).
 7. **Read the inputs as the viewer** through the normal routing (kinds refused, field masks applied); more than `limits.max-input-rows`
    is refused before anything runs.
 8. **Compute** in the engine; **progress** goes to the request's events.
@@ -213,7 +213,7 @@ stopped when every reader has gone (the page closed).
 
 ## Engines
 
-**Python** (`engine.type: python`): an `Engine` of the worker SDK ([PYTHON_COMPUTE.md](../../../architecture/PYTHON_COMPUTE.md)) in a
+**Python** (`engine.type: python`): an `Engine` of the worker SDK ([NOTEBOOK_GUIDE.md](../../../guides/NOTEBOOK_GUIDE.md)) in a
 compute pool. Inputs arrive as Arrow tables (`inputs.table("values")`): each top-level field a column, a list of numbers of one length a
 fixed-size vector (a P&L path). Its `Result(rows=…, tables=…)` comes back as `RESULTS` and `TABLES`. With `split`, the input is cut into
 chunks spread over every worker of the pool and of the other Drishti*net nodes that serve it, and `reduce` adds the chunks' answers up;

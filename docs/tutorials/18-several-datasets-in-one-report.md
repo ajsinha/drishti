@@ -82,7 +82,7 @@ Exposure (EE peak)
 (The official results are a Delta table whose columns the pack's connector `exposure-results` promotes, so they are scanned as columns; the
 model `counterparty-exposure` reads the same dataset.)
 
-**The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](../guides/BI_GUIDE.md#14-derivation-subset-filter-grain-derive-group)). The part that matters here is the grain:
+**The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 14](../guides/REPORTS_GUIDE.md#510-a-table-of-your-own-step-by-step)). The part that matters here is the grain:
 
 ```yaml
 rachana: 2
@@ -255,7 +255,7 @@ warning: 2 fact tables, each aggregated alone at the query's fields and then joi
 warning: a measure that combines measures of different grains is worked out over the joined results: MTM per exposure
 ```
 
-The sector rows add up to the totals of step 1 (`3,210,381,876.57` and `2,663,018,256`), to the cent. The same question in **Drishti SQL** ([API_GUIDE.md › Drishti SQL](../guides/API_GUIDE.md#drishti-sql-apiv1bisql)): tables are the model's aliases, `JOIN` needs no `ON` (the model's relationships are used), a measure is `MEASURE('name')`:
+The sector rows add up to the totals of step 1 (`3,210,381,876.57` and `2,663,018,256`), to the cent. The same question in **Drishti SQL** ([API_REFERENCE.md › Drishti SQL](../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql)): tables are the model's aliases, `JOIN` needs no `ON` (the model's relationships are used), a measure is `MEASURE('name')`:
 
 ```text
 $ python3 tools/drishti.py bi sql "SELECT counterparty.SECTOR, MEASURE('MTM') AS mtm, MEASURE('Exposure (EE peak)') AS ee
@@ -269,7 +269,7 @@ Government           569,515,006.55  310,533,734.00
 warning: 2 fact tables, each aggregated alone at the query's fields and then joined: [trade, counterparty, netting_set]
 ```
 
-`shape mq`: the statement was one model query, compiled into the same plan a visual asks. In the designer, **Query of the selected visual** shows the bar's question as a model query or as this SQL, with **Run as SQL** ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 19](../guides/BI_GUIDE.md#19-languages-in-the-report-designer)): the visual, the model query and the SQL are one question, so they share one plan and one cached answer per reader.
+`shape mq`: the statement was one model query, compiled into the same plan a visual asks. In the designer, **Query of the selected visual** shows the bar's question as a model query or as this SQL, with **Run as SQL** ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 19](../guides/REPORTS_GUIDE.md#83-a-report-on-a-model-fields-own-measures-mq-or-sql)): the visual, the model query and the SQL are one question, so they share one plan and one cached answer per reader.
 
 **What "aggregated alone, then joined" protects you from.** Exposure has no trade in it and P&L has no netting set in it, so a sector's exposure is the sum of that sector's netting sets (76 in all) **once each**, however many trades the sector has; and a sector's MTM is the sum of its trades **once each**, however many netting sets its counterparties have. Add the eleven sector rows of either column and you get step 1's totals, which is the check to run on any model with two facts: the sum of the parts is the whole. A sector whose counterparties have exposure but no trades today keeps its exposure and shows no MTM (empty, not zero), because the join of the two answers keeps both sides.
 
@@ -393,7 +393,7 @@ columns:
   EXPOSURE_RANK: {type: decimal, role: attribute}
 ```
 
-Create it in the workspace (**New item**, kind *dataset*, **Paste YAML**, or the dataset wizard's *Python Transform* source, [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/BI_GUIDE.md#15-the-dataset-wizard-version-2)) and publish it. You should see its page say what one row is and where it comes from:
+Create it in the workspace (**New item**, kind *dataset*, **Paste YAML**, or the dataset wizard's *Python Transform* source, [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](../guides/REPORTS_GUIDE.md#510-a-table-of-your-own-step-by-step)) and publish it. You should see its page say what one row is and where it comes from:
 
 ![The dataset page of Counterparty table (Python): one row per counterparty, the key counterparty, the source the Python Transform Counterparty table, and the columns with their roles and default measures](img/t18/16-python-dataset.jpg)
 
@@ -415,7 +415,7 @@ Bramble Asset Management      Asset management  482,365,089.34  131,153,591.00
 3 row(s)  as of 2026-10-26
 ```
 
-The totals are step 1's, to the cent: the inputs are model queries, so they read all 15,000 trades (no extract is cut here). The Transform's answer is **kept per reader** (until an input changes or `drishti.bi.transform.cache-ttl` passes): a second reader has other rows and masks, so it runs again for them. It runs on the server's compute pool, in its strict sandbox (no network, its own folder, CPU, memory and time limits: [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 7](../guides/BI_GUIDE.md#7-the-sandbox-exactly)), never in the browser; a failure in the code is `DRS-9071` with Python's message, a missing declared column `DRS-9075`. Because its inputs are model queries, a Python dataset can never read more than its reader may: it receives answers that rules and masks have already shaped. When to choose which: **the model** for sums and ratios at any grain (no code; the default); **a Python dataset** when you need code (a rank, a clean-up, a statistical model) and can accept a table computed per reader at one grain; a report on that dataset then reads it through its implicit model, like any other.
+The totals are step 1's, to the cent: the inputs are model queries, so they read all 15,000 trades (no extract is cut here). The Transform's answer is **kept per reader** (until an input changes or `drishti.bi.transform.cache-ttl` passes): a second reader has other rows and masks, so it runs again for them. It runs on the server's compute pool, in its strict sandbox (no network, its own folder, CPU, memory and time limits: [REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 7](../guides/NOTEBOOK_GUIDE.md#71-what-the-sandbox-enforces)), never in the browser; a failure in the code is `DRS-9071` with Python's message, a missing declared column `DRS-9075`. Because its inputs are model queries, a Python dataset can never read more than its reader may: it receives answers that rules and masks have already shaped. When to choose which: **the model** for sums and ratios at any grain (no code; the default); **a Python dataset** when you need code (a rank, a clean-up, a statistical model) and can accept a table computed per reader at one grain; a report on that dataset then reads it through its implicit model, like any other.
 
 ## Step 7 · Two readers: each dataset is filtered as the reader, before anything is joined
 
@@ -480,7 +480,7 @@ You should see `Python visual draft saved in your workspace` **beside the button
 
 ## Step 9 · How this compares with Power BI
 
-You should see a short, honest table, not a scorecard (the claims about Power BI are the ones of [BI_DESIGN.md section 11](../architecture/BI_DESIGN.md#11-gap-check-against-power-bi), whose own knowledge of Power BI may be stale; check before you quote it):
+You should see a short, honest table, not a scorecard (the claims about Power BI are the ones of [ARCHITECTURE.md §28 section 11](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer), whose own knowledge of Power BI may be stale; check before you quote it):
 
 | | Power BI | Drishti |
 |---|---|---|
@@ -495,7 +495,7 @@ Where Drishti is **behind**: no bidirectional or many-to-many relationships yet,
 
 ## Next steps
 
-- [BI_GUIDE.md sections 23 and 24](../guides/BI_GUIDE.md#24-the-languages-in-the-console) for models and the model designer, [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions) for measures (fifty-odd recipes), [API_GUIDE.md › Drishti SQL](../guides/API_GUIDE.md#drishti-sql-apiv1bisql) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
+- [REPORTS_GUIDE.md sections 23 and 24](../guides/REPORTS_GUIDE.md#54-measures-the-expression-language) for models and the model designer, [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions) for measures (fifty-odd recipes), [API_REFERENCE.md › Drishti SQL](../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql) for Drishti SQL, [REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/NOTEBOOK_GUIDE.md#4-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
 - [Tutorial 13](13-govern-bi.md): a change to the model is set against the reports and datasets that read it (impact), and the model travels in an environments bundle.
 - [Tutorial 11](11-bi-that-runs-itself.md): a subscription or an alert on a measure of the model runs as its owner, and the reader's rules apply.
 

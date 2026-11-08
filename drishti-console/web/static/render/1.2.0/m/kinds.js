@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Every panel kind (CLIENT_RENDERER.md section 7): the frame (the macro panel), its states (waits, denied, empty, error, computing,
+/* Every panel kind (EMBED_GUIDE.md section 7): the frame (the macro panel), its states (waits, denied, empty, error, computing,
    stale, failed, refused) and one builder per kind, ports of _macros/panels.html. Charts are drawn by charts.js from the container's
    data (a property, never an attribute of JSON), after the panel is in the page. */
 import { h, str, icon } from './dom.js';

@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Stages 1 to 6 of the query pipeline (docs/architecture/BI_DESIGN.md section 4.1) after the language front ends: a bound question becomes the logical plan.
+ * Stages 1 to 6 of the query pipeline (docs/architecture/ARCHITECTURE.md §28 section 4.1) after the language front ends: a bound question becomes the logical plan.
  * Bind (the question's names and the engine's choice of tables: the fact of each measure, the dimensions its fields and filters reach, the dimensions whose
  * security reaches the facts), grain split (measures of different facts are aggregated each at its own grain, then met on the shared fields), then
  * {@link SecurityRewriter} (stage 4, before any optimisation), {@link Guards} (stage 5) and the {@link Optimiser} (stage 6). Pure; one call per question.

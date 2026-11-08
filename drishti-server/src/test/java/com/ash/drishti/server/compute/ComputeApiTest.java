@@ -38,7 +38,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Step C3 through the server (docs/architecture/PYTHON_COMPUTE.md section 16): a connector whose file has {@code requires:} stays off and
+ * Step C3 through the server (docs/guides/NOTEBOOK_GUIDE.md section 16): a connector whose file has {@code requires:} stays off and
  * says why until an administrator approves; the person who asked cannot approve it; approval starts it, revocation stops it again; each
  * decision is audited; Admin → Compute's data says compute is off as shipped.
  */

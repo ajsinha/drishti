@@ -202,7 +202,7 @@ Everything the product owner puts in files lives in one of two places, both rela
 |---|---|---|
 | `config/connectors/` | `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | One file per connector ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). |
 | `config/packs/` | `drishti.packs.dir` (`DRISHTI_PACKS_DIR`) | The domain packs. |
-| `config/bi/` | `drishti.bi.dir` (`DRISHTI_BI_DIR`) | Rupaka (BI) files: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/` (`config/bi/README.md`); shipped files are read-only items of the catalogue ([BI_GUIDE.md](../guides/BI_GUIDE.md)). |
+| `config/bi/` | `drishti.bi.dir` (`DRISHTI_BI_DIR`) | Rupaka (BI) files: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/` (`config/bi/README.md`); shipped files are read-only items of the catalogue ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md)). |
 | `data/` | `drishti.data.dir` (`DRISHTI_DATA_DIR`) | Everything written at run time. |
 
 `drishti.data.dir` is the umbrella for every runtime path. Each of these defaults to a folder under it, and each keeps its own
@@ -362,7 +362,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_OIDC_ISSUER` | `drishti.security.oidc.issuer` | empty | The OIDC issuer URL. |
 | `DRISHTI_OIDC_CLIENT_ID` | `drishti.security.oidc.client-id` | empty | The OIDC client id. |
 | `DRISHTI_ACCESS_LOG` | `drishti.access-log.enabled` | `true` | Record who looked at what (Admin → Access). |
-| `DRISHTI_COLLAB_ENABLED` | `drishti.collab.enabled` | `true` | Share with a note, the directory and the inbox ([COLLABORATION.md](../architecture/COLLABORATION.md)). |
+| `DRISHTI_COLLAB_ENABLED` | `drishti.collab.enabled` | `true` | Share with a note, the directory and the inbox ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). |
 | `DRISHTI_COLLAB_DIR` | `drishti.collab.dir` | `./data/collab` | Where the file store keeps shares and inbox rows (`drishti.collab.store: file`), and exports. |
 | (no variable) | `drishti.collab.store` | `content` | Where threads, notes, shares, the inbox, the outbox, holds and seals are kept: `content` (the content store, every node of a cluster; the database tables and `drishti.collab.dir` files are imported once), or one node only `jpa` (the identity database) or `file`. [DATA_ARCHITECTURE.md › The content store: user content every node reaches, section 9](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches). |
 | (no variable) | `drishti.audit.store` | `content` | The audit trail: `content` (per-node day segments in the content store, merged when read; `drishti_audit` imported once) or `jpa` (the identity database, one node). |
@@ -414,7 +414,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_EXPOSURE_HOT_DIR` | `drishti.ccr.exposure.hot-folder` | `./data/ccr/hot` | The exposure hot files' folder (one folder per business date); under the data folder unless set. |
 | `DRISHTI_EXPOSURE_TIER` | `drishti.ccr.exposure.tier` | `mapped` | Where a loaded date's matrices live: `mapped` (a memory-mapped float32 hot file per date) or `heap` (float64 on the heap). |
 | `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` | `true` | Capture every netting set, counterparty, group and hierarchy node officially at the end of each loaded date, and publish to `risk-results/exposure-official` and `exposure-official-cpty`. |
-| `DRISHTI_COMPUTE_PYTHON_WORKERS` | `compute.pools.python.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `python` on this node: every Python run of code people write (Python items and visuals, Python-driven tables, Notebook cells), in the strict sandbox ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)). |
+| `DRISHTI_COMPUTE_PYTHON_WORKERS` | `compute.pools.python.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `python` on this node: every Python run of code people write (Python items and visuals, Python-driven tables, Notebook cells), in the strict sandbox ([NOTEBOOK_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime)). |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
@@ -499,7 +499,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_VIEWS_REFRESH_MIN_SECONDS` | `views.refresh_min_seconds` | `5` | The fastest any panel refreshes (a Sutra's `refresh:`, [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 9](../guides/RACHANA_REFERENCE.md#9-live-panels-refresh-control-and-freshness)), in seconds (1 to 3600): a Sutra or a reader asking for faster gets this. |
 | `DRISHTI_UI_DESIGNER` | `ui.designer` | `false` | The Sutra designer: **Customize** on every entity page, **Describe** under Build, New screen, and the **Outline** and **Grid** modes ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid)). Off: pages and the Build workbench are unchanged. |
 | `DRISHTI_HOME_FACTS` | `ui.facts.enabled` | `true` | Home's **Did you know** tile, the fact of the day for a signed-in user ([USER_GUIDE.md](../guides/USER_GUIDE.md#home-the-fact-of-the-day)). `false`: no tile. |
-| `DRISHTI_EMBED_ENABLED` | `embed.enabled` | `false` | Serve `/embed/v1/` (Elements 1.x, HTML) and `/embed/v2/` (Elements 2.0 and the client-side renderer, the ViewModel as JSON) for host applications registered at the server (CLIENT_RENDERER.md). |
+| `DRISHTI_EMBED_ENABLED` | `embed.enabled` | `false` | Serve `/embed/v1/` (Elements 1.x, HTML) and `/embed/v2/` (Elements 2.0 and the client-side renderer, the ViewModel as JSON) for host applications registered at the server (EMBED_GUIDE.md). |
 | `DRISHTI_EMBED_SIGN_IN` | `embed.sign_in.enabled` | `true` | The sign-in window of `auth: 'popup'` (`/embed/v2/sign-in`), through `auth.oidc`. |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | Turn console sign-in on. |
 | `DRISHTI_SESSION_SECRET` | `auth.session_secret` | empty | The session cookie secret (at least 32 characters); environment only. |
@@ -521,7 +521,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | (no variable) | `bi.notebook.max_fields`, `sql_max_rows`, `sql_max_chars` | `60`, `5000`, `20000` | Most columns of an extract; most rows a SQL cell returns (run by the server); the longest SQL text. |
 | (no variable) | `bi.notebook.max_extracts` | `6` | Most further extracts in one notebook, besides the first (`extract("name")` in a Python cell; `DRS-9072`). |
 | (no variable) | `bi.notebook.cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars`, `max_cells` | `20`, `512`, `65536`, `60` | A Python cell's time and memory on the server's compute pool; the longest cell; the most cells in a notebook. |
-| `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | `bi.transform.preview_rows` | `1000` | The Transform editor ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor)): rows of each input its step-by-step run starts from, asked of the server as the person (10 to 50000; the server's `drishti.bi.transform.max-input-rows` also caps it). |
+| `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | `bi.transform.preview_rows` | `1000` | The Transform editor ([REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/NOTEBOOK_GUIDE.md#5-data-prep-the-transform-editor)): rows of each input its step-by-step run starts from, asked of the server as the person (10 to 50000; the server's `drishti.bi.transform.max-input-rows` also caps it). |
 | (no variable) | `bi.transform.timeout_seconds`, `memory_mb`, `snippets_file` | `20`, `512`, empty | The step run's time and memory (also capped by `drishti.bi.report.python-max-seconds`, `python-max-memory-mb`); a file of more data-prep snippets read after `drishti-console/config/prep-snippets.yaml`. |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
@@ -977,7 +977,7 @@ The token scope that opens these writes to a personal API token is `packs:admin`
 Platform UI vocabulary the server always loads, whatever packs are enabled ([RACHANA_REFERENCE.md, The Drishti UI
 kit](../guides/RACHANA_REFERENCE.md#3a-the-drishti-ui-kit)): the fragments every Sutra may use (`{ use: series-line@1 }`), the
 icons, images and logos, and the brand. Read with `GET /api/v1/ui-kit` and `GET /api/v1/ui-kit/assets/{path}`
-([API_GUIDE.md](../guides/API_GUIDE.md)).
+([API_REFERENCE.md](../guides/API_REFERENCE.md)).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1070,7 +1070,7 @@ servers). The environment variables of this section are in the [environment vari
 | `roles.<role>.admin` | `false` | May manage users, read the audit log, approve Sutras. |
 | `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([USER_GUIDE.md](../guides/USER_GUIDE.md#9-roles-who-may-use-calc)). |
 | `roles.<role>.layout` | `true` | May customise layouts: layout mode (`Alt+L`) and personal layouts ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). On unless set to `false`; the bundled `viewer` sets it to `false`. |
-| `roles.<role>.collaborate` | `true` | May share, comment and mention ([COLLABORATION.md](../architecture/COLLABORATION.md)). On unless set to `false`; a role saved by an earlier release keeps it without a migration. |
+| `roles.<role>.collaborate` | `true` | May share, comment and mention ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). On unless set to `false`; a role saved by an earlier release keeps it without a migration. |
 | `roles.<role>.compliance` | `false` | May read any share, place and release legal holds, export the collaboration record and verify hash chains (`/admin/collab/holds`, `/exports`, `/verify`). Not implied by `admin`: grant it to the compliance role. Moderation, retention runs and permanent removal are `admin`. |
 | `registered-users-only` | `true` | A signed bearer token is refused (`401`) when its user was deleted or disabled in the identity store, so a token never outlives the account; the console's own service identity is exempt. `false` trusts the token alone. |
 | `mask-copies` | `false` | Opt-in (`DRISHTI_MASK_COPIES`): after masking, exact copies of a masked field's value inside the other text of the same document also read `•••` ("Captured by J. Smith" with `trader` masked). Exact and case-sensitive; best effort. |
@@ -1132,7 +1132,7 @@ is listed too.
 
 ### `drishti.embed` — embedded views for other web applications
 
-Off by default. A host application's backend buys a short embed token at the server (RFC 8693); every embed call is checked against the registered application and the user, and always masks. See [API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application) for the exchange and [USER_MANAGEMENT.md](USER_MANAGEMENT.md#embedding-host-applications) for registering an application.
+Off by default. A host application's backend buys a short embed token at the server (RFC 8693); every embed call is checked against the registered application and the user, and always masks. See [API_REFERENCE.md](../guides/API_REFERENCE.md#24-embedding-views-in-another-web-application) for the exchange and [USER_MANAGEMENT.md](USER_MANAGEMENT.md#embedding-host-applications) for registering an application.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1144,7 +1144,7 @@ Off by default. A host application's backend buys a short embed token at the ser
 | `mask` | `always` | Embed calls mask the fields in `drishti.security.redact` whatever the user's roles say. Only `always` exists. |
 | `allow-wildcard-origins` | `false` | Let an application register `https://*.suffix` origins (review apps). |
 | `assertion-max-age` | `60s` | The longest life (`exp` minus `iat`) of a client assertion or user assertion a host signs. |
-| `sign-in-window` | `true` (`DRISHTI_EMBED_SIGN_IN_WINDOW`) | The renderer's optional sign-in window (`auth: 'popup'`, [CLIENT_RENDERER.md 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)): a registered host's page with no backend signs its user in through single sign-on in a window opened on a click, and this server makes the embed token (`POST /api/v1/embed/sign-in-window`, the console only). Needs `drishti.security.oidc`. `false` refuses it (`403 DRS-8003`); hosts keep the token exchange. |
+| `sign-in-window` | `true` (`DRISHTI_EMBED_SIGN_IN_WINDOW`) | The renderer's optional sign-in window (`auth: 'popup'`, [EMBED_GUIDE.md 10.1](../guides/EMBED_GUIDE.md#42-a-page-without-a-backend-the-sign-in-window)): a registered host's page with no backend signs its user in through single sign-on in a window opened on a click, and this server makes the embed token (`POST /api/v1/embed/sign-in-window`, the console only). Needs `drishti.security.oidc`. `false` refuses it (`403 DRS-8003`); hosts keep the token exchange. |
 | `scopes` | `embed:view`, `embed:about`, `embed:report`, `embed:search` | Each embed scope with the `METHOD path` patterns it opens. A token calls nothing else, and nothing writes (the one POST that reads, `POST /api/v1/bi/reports/*/query`, is listed in `embed:report`). Keys keep their colon in brackets: `[embed:view]`, `[embed:about]`, `[embed:report]`, `[embed:search]`. `embed:search` opens `GET /api/v1/embed/search` for `<drishti-search>` (a masked, read-only search across Drishti, cut to the application's kinds). `embed:report` opens a published BI report for `<drishti-report>` and only for a host application whose `kinds` list names `report:<id>` or `report:*`. |
 | `limits.tokens-per-minute` | `120` | Token requests per host application per minute (`429 DRS-8004`). |
 | `limits.views-per-minute` | `600` | The default `callsPerMinute` of a new application: calls per application per minute. |
@@ -1176,7 +1176,7 @@ Usage counters (tokens issued, calls, refusals by code, live streams, last use) 
 
 ### Console `embed` — the console's side of embedded views
 
-In the console's `config/application.yaml` (or `--embed.key=value`). Off by default; see [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design) (step 7).
+In the console's `config/application.yaml` (or `--embed.key=value`). Off by default; see [EMBED_GUIDE.md](../architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements) (step 7).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1190,11 +1190,11 @@ In the console's `config/application.yaml` (or `--embed.key=value`). Off by defa
 | `embed.recheck_seconds` | `60` | An open stream asks the server this often whether its token still passes (user, application, scopes). |
 | `embed.token_grace_seconds` | `30` | After a stream's token expires, how long the console waits for a fresh one (`POST /embed/v1/channel/{cid}/token`) before ending the stream with `DRS-8001`. |
 | `embed.compress_min_bytes` | `512` | Payloads smaller than this are not compressed (Brotli when installed, else gzip). |
-| `embed.sign_in.enabled` | `true` (`DRISHTI_EMBED_SIGN_IN`) | The sign-in window of `auth: 'popup'` on this console (`/embed/v2/sign-in`, [CLIENT_RENDERER.md 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window)). Needs `auth.oidc.enabled` and `auth.token_secret`; off, or without them, the window answers `DRS-8003` and pages keep the token exchange. |
+| `embed.sign_in.enabled` | `true` (`DRISHTI_EMBED_SIGN_IN`) | The sign-in window of `auth: 'popup'` on this console (`/embed/v2/sign-in`, [EMBED_GUIDE.md 10.1](../guides/EMBED_GUIDE.md#42-a-page-without-a-backend-the-sign-in-window)). Needs `auth.oidc.enabled` and `auth.token_secret`; off, or without them, the window answers `DRS-8003` and pages keep the token exchange. |
 | `embed.sign_in.redirect_uri` | empty | Where the provider sends the window back; empty: `<console>/embed/v2/sign-in/callback`. Register it at the provider beside `auth.oidc.redirect_uri`. |
 | `embed.sign_in.refresh` | `true` | Renew the window's token silently with the provider's refresh token while the SSO session lasts (the refresh token sealed with AES-GCM, held in the page's memory, unreadable there). `false`: the person clicks again when the token ends. |
 | `embed.sign_in.max_hours` | `0` | The longest a window sign-in is renewed; `0`: `auth.session_hours`. |
-| `embed.lifecycle` | empty | Announces the end of an embed API major: `{"1": {deprecation: 2027-01-01, sunset: 2027-07-01, link: https://drishti.example/migrating}}`. From the `deprecation` day every `/embed/v1/` answer carries `Deprecation: @<epoch>` (RFC 9745) and, whenever a `sunset` is set, `Sunset: <HTTP date>` (RFC 8594) and a `Link: <...>; rel="deprecation"`; from the `sunset` day the embed calls are `410 DRS-8006`. Nothing is announced by default. See [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#13-distribution-and-versioning). |
+| `embed.lifecycle` | empty | Announces the end of an embed API major: `{"1": {deprecation: 2027-01-01, sunset: 2027-07-01, link: https://drishti.example/migrating}}`. From the `deprecation` day every `/embed/v1/` answer carries `Deprecation: @<epoch>` (RFC 9745) and, whenever a `sunset` is set, `Sunset: <HTTP date>` (RFC 8594) and a `Link: <...>; rel="deprecation"`; from the `sunset` day the embed calls are `410 DRS-8006`. Nothing is announced by default. See [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle). |
 
 ### `drishti.security.oidc` — single sign-on
 
@@ -1662,13 +1662,13 @@ pool; the check's one setting is `limit-near`.
 
 ### `drishti.bi` — Rupaka (business intelligence), phase 1: the shell and the catalogue
 
-Workspaces, items, versions and the catalogue ([BI_GUIDE.md](../guides/BI_GUIDE.md)). Content lives in the identity database; the BI folder holds
+Workspaces, items, versions and the catalogue ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md)). Content lives in the identity database; the BI folder holds
 shipped, read-only files. The BI powers are granted on roles, see below.
 
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` | The BI endpoints answer. Off: `403 DRS-9006`, and the console (which asks the server) hides the BI menu. |
-| `dir` | `./config/bi` (`DRISHTI_BI_DIR`) | The BI folder: `reports/<id>.report.yaml`, `boards/<id>.board.yaml`, `notebooks/<id>.notebook.yaml`, `python/`. Shipped files appear as published, read-only items of the workspace *Shipped content*. Not inside a pack. See `config/bi/README.md` and [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase), "Where BI files live". |
+| `dir` | `./config/bi` (`DRISHTI_BI_DIR`) | The BI folder: `reports/<id>.report.yaml`, `boards/<id>.board.yaml`, `notebooks/<id>.notebook.yaml`, `python/`. Shipped files appear as published, read-only items of the workspace *Shipped content*. Not inside a pack. See `config/bi/README.md` and [ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer), "Where BI files live". |
 | `watch` | `auto` | How the BI folder is watched, live, with no restart: `auto` (file events with a polling safety net), `poll`, or `off` (the folder is read on the first request after `folder-refresh`). A file added appears, a file changed becomes the next version, a file deleted goes; a bad file keeps its last good version and is listed in Admin, BI settings and on Health. |
 | `folder-refresh` | `5s` | The polling interval of the watcher (with `watch: off`, how long one read is reused). |
 | `workspace-creation` | `authors` | Who creates shared workspaces: `authors` (`bi-author`), `stewards` (`bi-steward`) or `admins` (`bi-admin` only). An administrator can change it at run time in Admin, BI settings (kept in the identity database; it then overrides this). |
@@ -1691,8 +1691,8 @@ shipped, read-only files. The BI powers are granted on roles, see below.
 
 ### `drishti.bi.query` — the dataset query engine (phase 2)
 
-The embedded DuckDB that answers dataset queries ([BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13) and the layers it keeps. It starts its connection on the first query. Every limit
-answers with its own code (the codes are in [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2)). Defaults are what a laptop can carry.
+The embedded DuckDB that answers dataset queries ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads), [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md) section 13) and the layers it keeps. It starts its connection on the first query. Every limit
+answers with its own code (the codes are in [API_REFERENCE.md](../guides/API_REFERENCE.md#4-datasets-and-the-query-engine-apiv1bi)). Defaults are what a laptop can carry.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1722,7 +1722,7 @@ answers with its own code (the codes are in [API_GUIDE.md](../guides/API_GUIDE.m
 
 ### `drishti.bi.report` — reports (phase 3)
 
-How many rows each kind of visual asks the engine for ([BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 11). The engine's own limits (`drishti.bi.query.*`, above) still apply on top; a visual's own `limit:` replaces the default of its kind.
+How many rows each kind of visual asks the engine for ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) section 11). The engine's own limits (`drishti.bi.query.*`, above) still apply on top; a visual's own `limit:` replaces the default of its kind.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1734,14 +1734,14 @@ How many rows each kind of visual asks the engine for ([BI_GUIDE.md](../guides/B
 | `distribution-rows` | `20000` | Most members a **histogram** or **box plot** reads (the server bins or summarises them; the picture is a few dozen rows). |
 | `totals-max-rows` | `2000` | Most rows one level of **true totals** (a matrix's subtotal level or a table's total) may return. |
 | `perspective-rows` | `20000` | Most rows a 2.1 `perspective-*` visual is sent. The page draws them in Drishti's own grid (no Perspective, no WebAssembly); until then the browser held and pivoted them (the retest, in RUPAKA_POC.md, since deleted, measured 10,000 rows at 21 MB of JS heap). |
-| `python-rows` | `10000` | Most rows a **python visual** hands the Python runner ([BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), phase 6). |
+| `python-rows` | `10000` | Most rows a **python visual** hands the Python runner ([REPORTS_GUIDE.md](../guides/NOTEBOOK_GUIDE.md#3-python-measures-and-visuals), phase 6). |
 | `python-packages` | `pandas, numpy, pyarrow, scipy` | The packages a Python item's manifest may list (publishing refuses another: `DRS-9070`); only those `config/compute/locks/python.lock` pins are offered (a test holds the two together). |
 | `python-max-seconds` | `60` | The largest `timeout` a Python manifest may ask for. |
 | `python-max-memory-mb` | `1024` | The largest `memory` a Python manifest may ask for, in megabytes. |
 
 ### `drishti.bi.transform` — Python Transforms and composed datasets
 
-A **Python dataset** (or a Python-driven table) is made by a Python Transform, run on the server's compute pool `python` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write): `compute.pools.python` in `config/compute/compute.yaml`, its strict sandbox and pinned libraries); the server reads the inputs as the reader, hands them over as Arrow files and reads the frame back as Parquet, checked against the declared columns and types ([BI_GUIDE.md › Python in BI, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out)). The result is kept per reader and version of the inputs. The package allow-list, `timeout` and `memory` limits are the Python items' own (`drishti.bi.report.python-*`). `compose-source-max-rows` also limits a **composed** dataset's sources.
+A **Python dataset** (or a Python-driven table) is made by a Python Transform, run on the server's compute pool `python` ([NOTEBOOK_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime): `compute.pools.python` in `config/compute/compute.yaml`, its strict sandbox and pinned libraries); the server reads the inputs as the reader, hands them over as Arrow files and reads the frame back as Parquet, checked against the declared columns and types ([REPORTS_GUIDE.md › Python in BI, section 13](../guides/NOTEBOOK_GUIDE.md#4-transforms-a-table-in-a-table-out)). The result is kept per reader and version of the inputs. The package allow-list, `timeout` and `memory` limits are the Python items' own (`drishti.bi.report.python-*`). `compose-source-max-rows` also limits a **composed** dataset's sources.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1758,7 +1758,7 @@ A **Python dataset** (or a Python-driven table) is made by a Python Transform, r
 
 ### `drishti.bi.refresh` — scheduled dataset refresh
 
-A dataset's `refresh:` schedule rebuilds its columns and rollup layers ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.2](../guides/BI_GUIDE.md#72-scheduled-refresh)); a failed run is retried with the shared retry policy, area `bi` (`drishti.retry.bi.*`, falling back to `drishti.retry.*`: see Retries above).
+A dataset's `refresh:` schedule rebuilds its columns and rollup layers ([REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.2](../guides/REPORTS_GUIDE.md#56-layers-rollups-and-refresh)); a failed run is retried with the shared retry policy, area `bi` (`drishti.retry.bi.*`, falling back to `drishti.retry.*`: see Retries above).
 Times are in `drishti.business-date.zone`, business days by `drishti.business-date.calendar`.
 
 | Key | Default | Meaning |
@@ -1771,7 +1771,7 @@ Times are in `drishti.business-date.zone`, business days by `drishti.business-da
 
 ### `drishti.bi.ai` — BI with AI (stage 2)
 
-The BI hooks on the AI layer ([BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI.md](AI.md#1-model-providers));
+The BI hooks on the AI layer ([REPORTS_GUIDE.md section 29](../guides/REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI.md](AI.md#1-model-providers));
 the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring helpers `bi-suggest`, `bi-explain-checks` and `bi-helper`, and a subscription's narrative summary `subscription-narrative` (`drishti.ai.policy.features`, above).
 
 | Setting | Default | Meaning |
@@ -1789,8 +1789,8 @@ the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring
 
 ### `drishti.bi.live` — streaming BI (phase 5)
 
-Live tables kept in memory by the engine and the streams that tell browsers they changed ([BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5), [BI_GUIDE.md](../guides/BI_GUIDE.md#13-live-visuals), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles),
-[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` (Python runs on the server's compute pool: [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 9).
+Live tables kept in memory by the engine and the streams that tell browsers they changed ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#57-live-tables), [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#131-a-live-report), [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/REPORTS_GUIDE.md#14-boards-report-pages-of-live-tiles),
+[REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` (Python runs on the server's compute pool: [REPORTS_GUIDE.md](../guides/NOTEBOOK_GUIDE.md#3-python-measures-and-visuals) section 9).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1805,13 +1805,13 @@ Live tables kept in memory by the engine and the streams that tell browsers they
 | `stale-after` | `30s` | A feed that pushes but has delivered nothing for this long is shown as **stale**. |
 | `max-streams` | `100` | Live report streams open at once on the server (`429 DRS-9051`). |
 | `max-streams-per-user` | `10` | Live report streams open at once for one person (`429 DRS-9051`). A browser holds one per distinct report on its open reports and boards. |
-| `incremental-aggregates` | `true` | The rollups a dataset declares over a live table are kept by group as rows change (sums and counts by difference; a lost minimum or maximum is read again for its group alone), and a query a rollup can answer reads them ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5)). `false`: every measure of a live table is computed over its rows on each query. |
+| `incremental-aggregates` | `true` | The rollups a dataset declares over a live table are kept by group as rows change (sums and counts by difference; a lost minimum or maximum is read again for its group alone), and a query a rollup can answer reads them ([REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/REPORTS_GUIDE.md#57-live-tables)). `false`: every measure of a live table is computed over its rows on each query. |
 
 <a id="drishtibimq--the-model-layer-and-the-model-query-language-22-wave-w1"></a>
 ### `drishti.bi.mq` — the model layer and the model query language
 
-Data models, pack-generated datasets and the model query language (`mq: 1`) of [BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification): the bounds of one query and of
-standing queries (`POST /api/v1/bi/mq`, `/mq/subscribe`, [API_GUIDE.md](../guides/API_GUIDE.md#models-and-the-model-query-language-apiv1bi)). A standing query's
+Data models, pack-generated datasets and the model query language (`mq: 1`) of [ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana): the bounds of one query and of
+standing queries (`POST /api/v1/bi/mq`, `/mq/subscribe`, [API_REFERENCE.md](../guides/API_REFERENCE.md#5-models-and-the-model-query-language-apiv1bi)). A standing query's
 default throttle is `drishti.bi.live.frame`; its stream's heartbeat is `drishti.bi.live.status`.
 
 | Key | Default | Meaning |
@@ -1829,14 +1829,14 @@ default throttle is `drishti.bi.live.frame`; its stream's heartbeat is `drishti.
 | `maintenance-budget` | `250ms` | Per model, the time keeping its standing queries current may take in each second; past it the model's groups are recomputed every `tick` and say `tick` (status and the `drishti_bi_sq_mode` metric) until a second spends less than half of it. |
 | `tick` | `5s` | How often a standing query in tick mode is recomputed: windows, time intelligence and Python measures, and every query of a model over its maintenance budget. |
 
-Standing queries ([BI_DESIGN.md §4.6](../architecture/BI_DESIGN.md#46-standing-queries-and-incremental-maintenance)): subscriptions are grouped by plan hash and security
+Standing queries ([ARCHITECTURE.md §28 §4.6](../architecture/ARCHITECTURE.md#288-live-answers-and-standing-queries)): subscriptions are grouped by plan hash and security
 signature (one evaluation per group, `subscribers` in the subscribe answer); a group is kept current by difference (`sum`, `count`, `avg` of the live table's
 own columns, the reader's rules worked out per changed row), by asking the touched groups again (`min`, `max`, `distinct`, rules the engine works out), by
 asking the whole question again (contexts, fields of other tables, loads and refreshes), or on the tick. A group no subscriber reads stays 30 s.
 
 ### `drishti.bi.exec` — execution, connectors and scale
 
-How the query engine shares the server ([BI_DESIGN.md §6.3 to §6.7](../architecture/BI_DESIGN.md#63-concurrency-fairness-and-memory)): work classes and
+How the query engine shares the server ([ARCHITECTURE.md §28 §6.3 to §6.7](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)): work classes and
 slots, per-person and per-model shares, memory and cost budgets, per-connector fragment pools and circuit breakers, and the Java nodes of a site that runs
 more than one ([OPERATIONS.md, Scale](OPERATIONS.md#bi-scale)).
 
@@ -1854,12 +1854,12 @@ more than one ([OPERATIONS.md, Scale](OPERATIONS.md#bi-scale)).
 | `node` (`DRISHTI_BI_NODE`) | empty | This Java node's name when several Java nodes serve the site; empty: one node. |
 | `nodes.<name>` | (none) | Every Java node of the site, name to base URL (`nodes.java-1: http://10.0.0.5:18480`). Each model's shard (its live tables and standing queries) is owned by one node, chosen by consistent hashing over the names; another node forwards subscriptions to the owner (`503 DRS-9184` while the owner cannot be reached) and takes over a lost node's shards. *Implementation:* the directory, forwarding and failover are proven with two nodes in one process; the HTTP transport between Java nodes is not built yet, so run one Java node. |
 | `background-share` | `0.25` | (BI runs) The most of the slots **background** work (BI runs, dataset refresh) holds at once: with 8 slots, 2. Refresh enters admission as background work. A waiting background run is never refused for busy; it waits its turn. |
-| `standing-share` | `0.25` | The most of the slots standing-query maintenance holds at once. With both shares at 0.25, at least half the slots are always free for interactive questions ([BI_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 10](../architecture/BI_DESIGN.md#10-fairness-and-admission)). |
+| `standing-share` | `0.25` | The most of the slots standing-query maintenance holds at once. With both shares at 0.25, at least half the slots are always free for interactive questions ([ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job, section 10](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)). |
 | `fragments-share` | `0.5` | The most of a connector's `max-fragments` the layer builds of background work hold at once, so an interactive build of one date always finds a place. |
 
 ### BI runs: `config/runs/runs.yaml`
 
-Every BI question can run as a bounded, visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job), API in [API_GUIDE.md](../guides/API_GUIDE.md#bi-runs-apiv1biruns)).
+Every BI question can run as a bounded, visible job ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), API in [API_REFERENCE.md](../guides/API_REFERENCE.md#9-bi-runs-apiv1biruns)).
 Its settings have their own file; `application.yaml` holds only the pointer `drishti.bi.runs.file` (`DRISHTI_BI_RUNS_FILE`, default
 `./config/runs/runs.yaml`). Every key has its default, so a missing file or key means the default. Ready-made variants are in
 `config/runs.examples/` (`laptop.yaml`, `cluster.yaml`, `off.yaml`). Read at start; a change needs a restart.
@@ -1892,7 +1892,7 @@ Its settings have their own file; `application.yaml` holds only the pointer `dri
 
 ### `drishti.bi.plan` — the logical plan, the result cache and the guards
 
-Every question becomes one logical plan ([BI_DESIGN.md §3.6 and §4](../architecture/BI_DESIGN.md#4-query-architecture)); answers are cached by plan hash,
+Every question becomes one logical plan ([ARCHITECTURE.md §28 §3.6 and §4](../architecture/ARCHITECTURE.md#285-the-query-engine-and-the-plan)); answers are cached by plan hash,
 security signature and data generation (the L1 cache of §6.1: readers with identical effective security share an entry).
 
 | Key | Default | Meaning |
@@ -1904,7 +1904,7 @@ security signature and data generation (the L1 cache of §6.1: readers with iden
 
 ### `drishti.bi.sql` — Drishti SQL
 
-Read-only SQL over models ([API_GUIDE.md › Drishti SQL](../guides/API_GUIDE.md#drishti-sql-apiv1bisql)): `POST /api/v1/bi/sql`, SQL view datasets, models' SQL tests.
+Read-only SQL over models ([API_REFERENCE.md › Drishti SQL](../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql)): `POST /api/v1/bi/sql`, SQL view datasets, models' SQL tests.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1936,12 +1936,12 @@ item silently**: an item it cannot convert keeps its text and is listed in Admin
 
 | Key | Default | Meaning |
 |---|---|---|
-| `on-start` | `true` (`DRISHTI_BI_MIGRATE_ON_START`) | Run the migrations once at start, before the server takes requests: expressions in the old syntax become DEL v2 ([RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)), then `rachana: 1` datasets become datasets and models and their reports are rebound ([BI_DESIGN.md 8.3.1](../architecture/BI_DESIGN.md#831-implementation-task-6)): the dataset item becomes the model item (same id), each table a new dataset item of the same workspace, owner and audience; a role restricted on one table is never given rows it did not see. A published text that changes becomes the item's next published version (the old version stays in its version list); a draft stays a draft, a proposal stays proposed. `false` leaves stored items as they are: a bi-admin runs the same with `drishti.py bi migrate --expressions [--dry-run]`. |
+| `on-start` | `true` (`DRISHTI_BI_MIGRATE_ON_START`) | Run the migrations once at start, before the server takes requests: expressions in the old syntax become DEL v2 ([RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)), then `rachana: 1` datasets become datasets and models and their reports are rebound ([ARCHITECTURE.md §28 8.3.1](../architecture/ARCHITECTURE.md#2813-migrations-of-old-bi-files)): the dataset item becomes the model item (same id), each table a new dataset item of the same workspace, owner and audience; a role restricted on one table is never given rows it did not see. A published text that changes becomes the item's next published version (the old version stays in its version list); a draft stays a draft, a proposal stays proposed. `false` leaves stored items as they are: a bi-admin runs the same with `drishti.py bi migrate --expressions [--dry-run]`. |
 | `actor` | `system` | The name the saved states, the item's governance events and the audit log give the start-up run (a run from the API or CLI names the bi-admin who ran it). |
 
 ### `drishti.distribution`: export and subscriptions
 
-Export of a BI report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and subscriptions (email on a schedule), [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding). Mail goes through the server's
+Export of a BI report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and subscriptions (email on a schedule), [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#18-distribution-the-reports-page-export-and-subscriptions). Mail goes through the server's
 mail settings (`spring.mail.host`, `spring.mail.port`, `drishti.collab.email.from`, `drishti.collab.console-url`). Retries use the shared policy with its own area: `drishti.retry.distribution.*` (see Retries above), falling back to
 `drishti.retry.*`.
 
@@ -1974,7 +1974,7 @@ Under `drishti.distribution.subscriptions`:
 | `load-delay` | `5s` | After a data load, wait this long before an `after-load` subscription runs, so the BI layers rebuild |
 | `narrative-rows` | `15` | Most rows per table the model is shown when it writes a subscription's narrative summary (`narrative: true`; only in `drishti.bi.ai.values: aggregates`, and only from the recipient's own unmasked columns) |
 
-Under `drishti.distribution.statements` (statement pages: [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader)):
+Under `drishti.distribution.statements` (statement pages: [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](../guides/REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader)):
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1987,7 +1987,7 @@ Under `drishti.distribution.statements` (statement pages: [BI_GUIDE.md › Repor
 
 Every alert rule (a visual, a dataset or model measure, a Sutra field, a Rachana-EL rule on one entity), the notifications from board tiles,
 and the lifecycle of every alert raised (raised, acknowledged, resolved; snooze; owners), the platform alerts included
-([USER_GUIDE.md › Alerts](../guides/USER_GUIDE.md#alerts); [BI_GUIDE.md, section 4](../guides/BI_GUIDE.md#4-alerts-on-numbers)). Every key has a
+([USER_GUIDE.md › Alerts](../guides/USER_GUIDE.md#alerts); [REPORTS_GUIDE.md, section 4](../guides/REPORTS_GUIDE.md#19-alerts-on-numbers)). Every key has a
 default; change one in `application.yaml` or with `DRISHTI_ALERTS_*`.
 
 | Key | Default | Meaning |
@@ -2013,7 +2013,7 @@ default; change one in `application.yaml` or with `DRISHTI_ALERTS_*`.
 
 ### `drishti.notify` — webhooks and text messages for alerts and subscriptions
 
-Where an alert or a subscription may send besides the inbox, mail and the chat bridges ([BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/BI_GUIDE.md#6-webhooks-and-text-messages)). Nothing here is on until an administrator defines it: a person can pick only the **names** of the webhooks defined here, never type a URL, and a text goes only to a number its owner gave. Neither carries a figure
+Where an alert or a subscription may send besides the inbox, mail and the chat bridges ([REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/REPORTS_GUIDE.md#184-webhooks-and-text-messages)). Nothing here is on until an administrator defines it: a person can pick only the **names** of the webhooks defined here, never type a URL, and a text goes only to a number its owner gave. Neither carries a figure
 (a webhook post names the alert or subscription and where it opens; a text holds its title and a link, and only with `sms.include-values: true` the alert's one-line message). A `${ENV}` reference in a secret or a header is resolved from the process environment when the message is sent; a variable that is not set is a permanent failure that names the variable, never the value.
 
 | Key | Default | Meaning |
@@ -2055,7 +2055,7 @@ drishti:
 
 ### `drishti.bi.governance` — publishing and governance (phase 4)
 
-Saved states, review, certification, impact analysis and bundles ([BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments)).
+Saved states, review, certification, impact analysis and bundles ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments)).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2063,11 +2063,11 @@ Saved states, review, certification, impact analysis and bundles ([BI_GUIDE.md](
 | `preview-rows` | `20` | Rows of data a reviewer sees in the preview of a dataset or a report under review (at most 500). The reviewer's own row rules and masks apply. |
 | `refuse-breaking` | `true` | Refuse (`409 DRS-9040`) publishing a dataset change that removes or renames a field, measure or hierarchy a **published** report uses. A `bi-admin` can publish with `force`. Off: the publish goes ahead and answers with warnings. |
 | `revoke-certification` | `true` | Take certification away automatically from a certified dataset that changed incompatibly, and from certified reports broken by such a change; the owner and whoever certified are told. |
-| `refuse-failing-tests` | `true` | Refuse (`409 DRS-9043`) publishing or approving a report or dataset whose expected values (`tests:`) fail or cannot run; a `bi-admin` can publish with `force`. Off: Check still shows the results, a publish goes ahead ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 17](../guides/BI_GUIDE.md#17-expected-values-tests)). |
+| `refuse-failing-tests` | `true` | Refuse (`409 DRS-9043`) publishing or approving a report or dataset whose expected values (`tests:`) fail or cannot run; a `bi-admin` can publish with `force`. Off: Check still shows the results, a publish goes ahead ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 17](../guides/REPORTS_GUIDE.md#912-expected-values-in-a-report)). |
 | `bundle-max-bytes` | `8388608` | Largest BI bundle an import reads (`422 DRS-9041` above it). |
-| `imports-dir` | blank: `<drishti.data.dir>/bi/imports` | Where each import keeps what it replaced, one JSON file per import, so *Roll back this import* can put it back ([BI_GUIDE.md](../guides/BI_GUIDE.md#rolling-back-an-import)). Back it up with the identity database. |
+| `imports-dir` | blank: `<drishti.data.dir>/bi/imports` | Where each import keeps what it replaced, one JSON file per import, so *Roll back this import* can put it back ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#177-environments-bundles)). Back it up with the identity database. |
 | `imports-keep` | `20` | Imports whose replaced states are kept (the oldest go first). |
-| `pack-workspace` | `packs` | The shared workspace that holds the BI content of deployed packs (`config/bi` inside a pack archive); made at the first deploy that carries some ([BI_GUIDE.md](../guides/BI_GUIDE.md#bi-content-in-a-pack-archive)). |
+| `pack-workspace` | `packs` | The shared workspace that holds the BI content of deployed packs (`config/bi` inside a pack archive); made at the first deploy that carries some ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#178-bi-content-in-a-pack-archive)). |
 | `tell-people` | `true` | Tell people in the inbox (the bell) when a review is asked for (reviewers), decided (the author) or a certification is revoked (the owner and whoever certified). Off: no inbox rows; the audit log and the item's history still record everything. |
 
 ### `drishti.bi.poc` — removed
@@ -2162,7 +2162,7 @@ top, how long after its period a report run is due, and the size of the question
 
 ### `drishti.collab` — share with a note, and the inbox
 
-Design: [COLLABORATION.md](../architecture/COLLABORATION.md). A person writes a note on a view, picks people and roles from the
+Design: [ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals). A person writes a note on a view, picks people and roles from the
 directory, and Drishti notifies them in the app (always) and by email (off until configured); the link reopens the view
 pinned to the same business date and "known at" instant, with the **recipient's** rights. Shares, recipients and inbox rows are in
 the identity database (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, the thread, comment, revision, mention
@@ -2323,7 +2323,7 @@ file to write, and they override a file setting by setting until moved
 ([CONNECTOR_FILES.md section 11](../connectors/CONNECTOR_FILES.md#11-moving-off-applicationyaml-and-the-old-data-source-override)). The
 tables below use the same keys either way. Every plugin takes `source-name`, the name shown
 in provenance and health (default: the connector's name, or the plugin's name). Writing a plugin of your own is
-described in [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+described in [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one).
 
 Every plugin also takes **`stale-after`**: a duration (`15m`, `2h`, `4d`). When the connector has received nothing new
 for longer than that, it is *stale*: Admin → Health shows it in amber and turns the overall status `DEGRADED`, and
@@ -2569,7 +2569,7 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 
 ### `embed` — embedded views
 
-Off by default: with `enabled: false` nothing under `/embed/` exists. Host applications and tokens are the **server's** (`drishti.embed.*`, [API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application)); the console serves the embed routes, passes the embed token to the server on every call, and learns the registered origins for CORS from the server.
+Off by default: with `enabled: false` nothing under `/embed/` exists. Host applications and tokens are the **server's** (`drishti.embed.*`, [API_REFERENCE.md](../guides/API_REFERENCE.md#24-embedding-views-in-another-web-application)); the console serves the embed routes, passes the embed token to the server on every call, and learns the registered origins for CORS from the server.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -3154,7 +3154,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.collab.enabled` | boolean | `true` | `DRISHTI_COLLAB_ENABLED` | server | share with a note, the directory and the inbox (docs/architecture/COLLABORATION.md) | restart |  | admin |
+| `drishti.collab.enabled` | boolean | `true` | `DRISHTI_COLLAB_ENABLED` | server | share with a note, the directory and the inbox (docs/architecture/ARCHITECTURE.md §31) | restart |  | admin |
 | `drishti.collab.store` | string | `content` |  | server | content: the content store, every cluster node (default) \| jpa: the identity database, one node \| file: one server only | restart |  | admin |
 | `drishti.collab.dir` | string | `./data/collab` | `DRISHTI_COLLAB_DIR` | server | the file store, and exports | restart |  | admin |
 | `drishti.collab.console-url` | string | empty | `DRISHTI_CONSOLE_URL` | server | links in emails and shares; empty turns email off | restart |  | admin |
@@ -5647,7 +5647,7 @@ Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITEC
 
 ### BI runs: `config/runs/runs.yaml`
 
-Every BI question as a bounded, visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)); `drishti.bi.runs.file` names the file. Ready-made variants: `config/runs.examples/`.
+Every BI question as a bounded, visible job ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)); `drishti.bi.runs.file` names the file. Ready-made variants: `config/runs.examples/`.
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
@@ -6187,7 +6187,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_CALENDAR` | `drishti.business-date.calendar` | `USNY` | server | Every read is for a business date. The default is today in `zone`, rolled back to a business day of `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top bar; dated sources (Delta Lake, dated folders, databases with a date column) then read that date. USNY, GBLO, EUTA, JPTO, CATO or joint, e.g. USNY+GBLO |
 | `DRISHTI_CCR_DERIVED_ENABLED` | counterparty-risk's derived connector | `true` | packs | The counterparty-risk pack's derived kinds (netting-set and counterparty totals) on or off |
 | `DRISHTI_COLLAB_DIR` | `drishti.collab.dir` | `./data/collab` | server | the file store, and exports |
-| `DRISHTI_COLLAB_ENABLED` | `drishti.collab.enabled` | `true` | server | share with a note, the directory and the inbox (docs/architecture/COLLABORATION.md) |
+| `DRISHTI_COLLAB_ENABLED` | `drishti.collab.enabled` | `true` | server | share with a note, the directory and the inbox (docs/architecture/ARCHITECTURE.md §31) |
 | `DRISHTI_COMPUTE_ENABLED` | `compute.enabled` (compute) | `false` | compute | run compute workers; false (as shipped) starts none |
 | `DRISHTI_COMPUTE_SAMPLE_WORKERS` | `compute.pools.<pool>.workers.max` (compute) | `4` | compute | as many as this node should run: configuration only, no limit in the code |
 | `DRISHTI_CONNECTORS_DIR` | `drishti.sources.connectors-dir` | `./config/connectors` | server | Named connectors: several instances of a plugin, each with its own settings. They live in FILES, one per connector: &lt;connectors-dir&gt;/&lt;name&gt;.yaml the file name is the connector's logical name; packs refer to it by that name. The folder is watched: a changed file restarts only that connector, a new file starts one, a deleted file stops it. See docs/connectors/CONNECTOR\_FILES.md and Admin -&gt; Connectors. Ready-made files: config/connectors.examples/. created on first write |

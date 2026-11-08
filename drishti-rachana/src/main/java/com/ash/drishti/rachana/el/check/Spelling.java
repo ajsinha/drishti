@@ -19,7 +19,7 @@ import java.util.Map;
 
 /**
  * How the checker words a problem's fix: in Rachana's own spelling, or in DEL's while DEL is still read (its checker calls this one
- * until the migration of docs/architecture/BI_DESIGN.md part B deletes it). The rules are the same; only the words a person is told to write
+ * until the migration of docs/architecture/ARCHITECTURE.md §28 part B deletes it). The rules are the same; only the words a person is told to write
  * differ.
  */
 public enum Spelling {

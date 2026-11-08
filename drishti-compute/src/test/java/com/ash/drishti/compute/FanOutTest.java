@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * One request fanned out over many workers on several nodes and gathered in order (docs/architecture/PYTHON_COMPUTE.md section 7.6): the
+ * One request fanned out over many workers on several nodes and gathered in order (docs/guides/NOTEBOOK_GUIDE.md section 7.6): the
  * shape of pricing a batch of trades over 509 scenario days. A second compute service stands for another Drishti*net node.
  */
 class FanOutTest {

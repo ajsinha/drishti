@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Elements 2.1 (ELEMENTS.md section 19; CLIENT_RENDERER.md sections 10.1 and 13): <drishti-view> and <drishti-panel> drawn by the client-side
+/* Drishti Elements 2.1 (ELEMENTS.md section 19; EMBED_GUIDE.md sections 10.1 and 13): <drishti-view> and <drishti-panel> drawn by the client-side
    renderer from the ViewModel of the embed API v2 (/embed/v2/views/{kind}/{id}), beside Elements 1.x (HTML over /embed/v1, unchanged) for
    one release. The element API is 1.x's: the same attributes, properties, methods, events, slots, page-wide token provider and one live
    connection per page; only the inside changed. <drishti-screen> is an alias of <drishti-view>. */
@@ -27,7 +27,7 @@ const MODULE_ORIGIN = new URL(import.meta.url).origin;
 export const cfg = { server: MODULE_ORIGIN, tokenProvider: null, auth: null, retryMinMs: 2000, retryMaxMs: 30000, silenceMs: 30000, closeGraceMs: 1500 };
 
 /** 2.1: auth 'popup' (configure({ auth: 'popup' }) or the auth="popup" attribute): the page's token comes from the console's sign-in window
-    (CLIENT_RENDERER.md 10.1) instead of a host backend; every element and the live channel share it. */
+    (EMBED_GUIDE.md 10.1) instead of a host backend; every element and the live channel share it. */
 export function usePopup(server) {
   const si = signInFor(server || cfg.server);
   if (!cfg.tokenProvider || cfg.tokenProvider.popup !== si) {

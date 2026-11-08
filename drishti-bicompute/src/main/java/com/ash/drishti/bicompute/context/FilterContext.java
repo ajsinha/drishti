@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The filter-context algebra (BI_DESIGN.md 3.3.5, carried over word for word by docs/architecture/BI_DESIGN.md 2.3), owned by the engine: a
+ * The filter-context algebra (ARCHITECTURE.md §28 3.3.5, carried over word for word by docs/architecture/ARCHITECTURE.md §28 2.3), owned by the engine: a
  * measure is evaluated per group of an answer in four layers (1 security, 2 query, 3 group, 4 measure), and every function that needs
  * its aggregate in another context ({@code calc} with {@code ignore}, {@code keep} or {@code via}, {@code share_of}, {@code parent_of},
  * {@code avg_by}, {@code avg_over}, {@code as_of}, {@code latest}, {@code earliest}) becomes a <em>context sub-plan</em>: the same

@@ -241,7 +241,7 @@ is [COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md). Every setting is in
 
 ## 10. API and command line
 
-The grid is the pivot engine's API ([API_GUIDE.md, Pivot engine](API_GUIDE.md#pivot-engine-apiv1pivot)) with `"source": "var"`; the MR
+The grid is the pivot engine's API ([API_REFERENCE.md, Pivot engine](API_REFERENCE.md#23-pivot-engine-apiv1pivot)) with `"source": "var"`; the MR
 lens adds:
 
 | Request | What |

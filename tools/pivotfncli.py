@@ -142,7 +142,7 @@ def register(ps, srv, ctx: dict, view_args, body) -> None:
         for k in ("order", "price", "quantity"):
             if getattr(a, k):
                 b[k] = getattr(a, k)
-        out = api.json("POST", "/api/v1/explain", b)              # the one Explain, kind pivot (API_GUIDE.md, "Explain")
+        out = api.json("POST", "/api/v1/explain", b)              # the one Explain, kind pivot (API_REFERENCE.md, "Explain")
         if a.json:
             say_json(out)
             return 0

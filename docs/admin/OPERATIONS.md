@@ -731,7 +731,7 @@ Everything about users, roles and the identity database is in [USER_MANAGEMENT.m
 | `DRISHTI_REST_ENABLED` / `DRISHTI_REST_URL` | `false` / `http://localhost:9000/api` | the REST connector and its base URL (it reads `<base>/{kind}/{id}`) |
 | `DRISHTI_JDBC_ENABLED` | `false` | the single JDBC connector |
 | `DRISHTI_JDBC_URL`, `DRISHTI_JDBC_USER`, `DRISHTI_JDBC_PASSWORD` | empty | its connection |
-| `DRISHTI_ACTIVEMQ_ENABLED` | `false` | the ActiveMQ plugin (configure its settings in `application.local.yaml`; see [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md)) |
+| `DRISHTI_ACTIVEMQ_ENABLED` | `false` | the ActiveMQ plugin (configure its settings in `application.local.yaml`; see [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one)) |
 | `DRISHTI_RABBITMQ_ENABLED` | `false` | the RabbitMQ plugin (likewise) |
 | `DRISHTI_S3_ENABLED` | `false` | the S3 document plugin (likewise) |
 
@@ -861,7 +861,7 @@ Every step (proposed, approved, rejected, withdrawn, applied) is an audit entry 
 (connectors, packs, editions, the cluster folder, the content store, ...) show *in its file*: they are changed on their own screens or
 files. The tier of each setting lives in one place, `tools/settings_schemas.yaml` (`tiers`), from which `tools/settings_catalogue.py`
 writes CONFIGURATION.md's *Tier* column; `--check` fails when an area has no tier or a listed key or pattern matches nothing. The API is
-`/api/v1/admin/settings/proposals` ([API_GUIDE.md](../guides/API_GUIDE.md)); Help → Configuration stays the reference, for everyone.
+`/api/v1/admin/settings/proposals` ([API_REFERENCE.md](../guides/API_REFERENCE.md)); Help → Configuration stays the reference, for everyone.
 
 ### The Admin screens' forms
 
@@ -1079,7 +1079,7 @@ polling every `drishti.bi.folder-refresh`, 5 s). Copy a `*.report.yaml`, `*.data
 within seconds; edit it and the item moves to its next version; delete it and it is removed (an open page says so). A file that does not parse keeps its last good
 version and is reported with its message in Admin, BI settings and in the Health document (`bi`: `watch`, `shippedItems`, `problems`), so a bad deploy of a BI file
 never takes content away. On a shared network folder where file events do not arrive the polling covers it; use `poll` there. No restart is needed for any of it
-([BI_GUIDE.md](../guides/BI_GUIDE.md#10-shipped-content-settings-and-the-command-line)). Workspaces, items and versions made in the BI page live in the identity
+([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#46-shipped-content-the-samples-and-bi-settings)). Workspaces, items and versions made in the BI page live in the identity
 database: back it up with the rest ([section 10](#10-backups-and-restore)).
 
 ## 9. Production checklist
@@ -1181,7 +1181,7 @@ People schedule searches to be delivered as CSV (User guide, *Scheduled reports*
 
 ## 9a-2. Collaboration email and the outbox
 
-Shares can also be emailed ([COLLABORATION.md](../architecture/COLLABORATION.md)). It is off until you switch it on, and it never carries a
+Shares can also be emailed ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). It is off until you switch it on, and it never carries a
 data value.
 
 **Switch it on** (all three, or it stays off): `drishti.security.enabled: true` (the server refuses to start with email on and sign-in off),
@@ -1401,7 +1401,7 @@ at any time:
   as well.
 - The command line: `drishti.py var baskets --all [--owner <text>]` lists them; `drishti.py var basket-delete <name> --owner <user>
   --reason <text>` deletes one. The API: `GET /api/v1/var/admin/baskets?owner=` and `DELETE /api/v1/var/baskets/<owner>/<name>?reason=`
-  ([API_GUIDE.md](../guides/API_GUIDE.md)); a personal token needs the scope `risk:write`.
+  ([API_REFERENCE.md](../guides/API_REFERENCE.md)); a personal token needs the scope `risk:write`.
 - **Audit.** Every delete is one entry, action `var-basket-delete`, subject `<owner>/<name>`, actor the person who deleted it, detail
   *deleted by its owner* or *deleted by administrator `<user>`*, then the version, whom it was shared with and `reason=<text>` when one
   was given (Admin → Audit log, filter by `<owner>/<name>`).
@@ -1534,7 +1534,7 @@ drishti:
           # hadoop.fs.s3a.connection.maximum: "200"   # any Hadoop S3A setting, prefixed hadoop.
 ```
 
-The layout is `<root>/<domain>/<kind>/business_date=YYYY-MM-DD/`. See [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) for every
+The layout is `<root>/<domain>/<kind>/business_date=YYYY-MM-DD/`. See [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) for every
 Delta setting.
 
 **Sizing.** A laid-out trade table takes about 1.7 KB per trade per business day (Parquet, compressed): 1,000,000
@@ -1995,7 +1995,7 @@ which a line says are on a wide screen. Dark and light themes both. <kbd>F1</kbd
 
 ![Admin → Capacity on a phone (390 px)](img/capacity/phone.png)
 
-The endpoints (administrators; [API_GUIDE.md](../guides/API_GUIDE.md)): `GET /api/v1/admin/capacity` (the planner file as JSON),
+The endpoints (administrators; [API_REFERENCE.md](../guides/API_REFERENCE.md)): `GET /api/v1/admin/capacity` (the planner file as JSON),
 `GET /api/v1/admin/capacity/live` (the measured figures, `measuredAt`, and `inputs`: the planner inputs they stand for) and
 `GET /api/v1/admin/capacity.xlsx?inputs=plan|live|both&Trades=450000&…` (any input by its name; an unknown name is refused with the list).
 From a terminal:
@@ -2533,7 +2533,7 @@ AI provider or MCP server that failed stayed failed until someone edited a file 
 
 ### BI metrics
 
-The BI engine reports to Prometheus (`/actuator/prometheus`, [BI_DESIGN.md §6.8](../architecture/BI_DESIGN.md#68-slas-and-observability)):
+The BI engine reports to Prometheus (`/actuator/prometheus`, [ARCHITECTURE.md §28 §6.8](../architecture/ARCHITECTURE.md#285-the-query-engine-and-the-plan)):
 
 | Metric | Tags | What it says |
 |---|---|---|
@@ -2691,7 +2691,7 @@ Several servers can still serve BI together through **Drishti*net**: a report's 
 read, and its answer comes back unchanged ([section 18](#18-drishtinet-running-several-servers-as-one), section 7).
 
 **Python on the compute pool** (the plan's tier `python`: `PyTransform`, `PyAggregate`, `PyColumn`; Notebook cells, python visuals, Python-driven tables). Every
-Python run is the server's, on the pool `python` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)): each worker has imported pandas, NumPy and pyarrow once and forks one child per
+Python run is the server's, on the pool `python` ([NOTEBOOK_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime)): each worker has imported pandas, NumPy and pyarrow once and forks one child per
 request, held by the strict sandbox (no network, Landlock, the item's limits), so a call costs a fork (milliseconds), not an interpreter start. To run Python:
 
 ```
@@ -2720,7 +2720,7 @@ answers and the refusals by code, and fails over the SLAs of §6.8.
 Four runbooks for the incidents an operator meets most; [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) has everything else.
 Each gives the symptoms, the diagnosis step by step, the fixes and how to verify. The examples use `http://localhost:18480` for the
 server and `http://localhost:17480` for the console. With security on, add `-H "Authorization: Bearer $TOKEN"` to server calls (an
-admin's token for `/api/v1/admin/*`; see [API_GUIDE.md](../guides/API_GUIDE.md)).
+admin's token for `/api/v1/admin/*`; see [API_REFERENCE.md](../guides/API_REFERENCE.md)).
 
 ### 17.1 Source down or slow
 
@@ -3577,7 +3577,7 @@ from B to A, p50 76 ms, p99 370 ms; HTTP/2 used **1**, p50 68 ms, p99 117 ms ([C
 
 #### BI runs on the cluster
 
-A heavy BI run ([BI_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 13](../architecture/BI_DESIGN.md#13-the-cluster)) runs on its model's owner, chosen among the members
+A heavy BI run ([ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job, section 13](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) runs on its model's owner, chosen among the members
 alive; the console may ask any node. The run's id names its node (`r-<node id>-…`); its result and actions are answered by that node from
 any node, and the Runs tab lists your runs of every node (a node that does not answer is named in `nodes.failed`). To have a dead
 node's unfinished runs adopted by another, give the cluster **one identity database** (PostgreSQL); the lease is
@@ -3799,14 +3799,14 @@ run for hours: how to run a two-hour soak, and what its report holds, is in
 
 Compute workers run Python computations for connectors outside the server's JVM: a pool of worker processes per kind of work, data
 handed to them as Arrow files already read and masked as the person who asked, from a locked environment of libraries an administrator
-approved. The design, with the reasons behind each choice, is [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md); the module is
+approved. The design, with the reasons behind each choice, is [NOTEBOOK_GUIDE.md](../guides/NOTEBOOK_GUIDE.md); the module is
 `drishti-compute` ([its README](../../drishti-compute/README.md)).
 
 **It is off as shipped.** With `compute.enabled: false` (the default in `config/compute/compute.yaml`) no worker starts and every compute
 request is refused with `DRS-9201`. Approvals work either way, so requirements can be reviewed before compute is switched on.
 
 **Python for code people write runs here too**, on the pool `python` (Python items and visuals, Python-driven tables and models, Notebook
-cells: [PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)), so with compute off
+cells: [NOTEBOOK_GUIDE.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime)), so with compute off
 none of it runs and each says so. That pool is `isolation: strict`: Linux only (user namespaces and Landlock, kernel 5.13 or later; check
 with `unshare --user --map-root-user --net true`), fork mode; its interpreter must carry exactly the versions of
 `config/compute/locks/python.lock` (or build its locked environment from that lock). To change the libraries, edit `locks/python.in`, run
@@ -3964,7 +3964,7 @@ with the file named. An environment is never changed in place: a new lock is a n
 
 The same data is `GET /api/v1/admin/compute`; decisions are `POST /api/v1/approvals/compute/{id}/approve|reject|revoke` with
 `{"reason": "..."}`, a build `POST /api/v1/admin/compute/pools/{pool}/build`, a test `POST .../pools/{pool}/test`, a cancel
-`POST /api/v1/admin/compute/running/{id}/cancel` ([API_GUIDE.md](../guides/API_GUIDE.md)).
+`POST /api/v1/admin/compute/running/{id}/cancel` ([API_REFERENCE.md](../guides/API_REFERENCE.md)).
 
 ### 8. Windows
 
@@ -4493,7 +4493,7 @@ var already running; frtb-sa on (live). Written to config/engines/frtb-sa.yaml.
 `list` (`--cluster`: every node side by side; `--json`), `show <id>` (state, memory, needs, used by, what it hides; `--sources`: where the
 switch comes from), `on <id>... [--with-needs]`, `off <id>... [--with-dependents]` (both need `--reason`; `--node` changes another node),
 `history`. `drishti.py admin engines` is the same command. Exit codes: 0 done, 2 refused, 3 not running anywhere. The API behind them is
-in [API_GUIDE.md](../guides/API_GUIDE.md) (`/api/v1/admin/engines`, and the codes `DRS-1020` to `DRS-1024` in its error code table).
+in [API_REFERENCE.md](../guides/API_REFERENCE.md) (`/api/v1/admin/engines`, and the codes `DRS-1020` to `DRS-1024` in its error code table).
 
 ## 22. Modules on or off
 

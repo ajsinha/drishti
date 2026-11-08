@@ -61,7 +61,12 @@ sections:
       - title: "Business intelligence"
         words: [BI]
         guides:
-          - { slug: bi-guide, doc: guides/BI_GUIDE.md, title: "Business intelligence (Rupaka)", icon: bar-chart-line, summary: "BI <GO> and the BI menu, the rail (Models, Designer, Analyse, Transforms, Python console), BI Studio (Explorer, tabs, Problems and Query), the catalogue by kind (Reports, Boards, Models, Datasets, Python, All), workspaces with roles, publish and review, certify, shipped files and BI settings; what is built and what is not." }
+          - { slug: bi-guide, pair: docs-tutorials-10-first-bi-report, doc: guides/REPORTS_GUIDE.md, title: "Reports and dashboards", icon: bar-chart-line, summary: "Pivot → Report and the BI pages: the designer and BI Studio, visuals, models over tables, boards and live reports, statements and field parameters, background runs, AI in reports, publishing and governance, schedules, export, subscriptions, alerts and the Reports page." }
+          - { slug: docs-tutorials-10-first-bi-report, doc: tutorials/10-first-bi-report.md, title: "Reports tutorial: your first report", icon: mortarboard, kind: tutorial, summary: "Hands-on steps from a model to a published report, each in the UI, on the command line and in YAML." }
+          - { slug: notebook-guide, pair: docs-tutorials-14-python-and-analyse, doc: guides/NOTEBOOK_GUIDE.md, title: "Notebook and Python", icon: journal-code, summary: "The Notebook (SQL and Python on the server), Python measures and visuals in reports, data prep in the Transform editor, the Python console, the command line and the administrator's compute pool." }
+          - { slug: docs-tutorials-14-python-and-analyse, doc: tutorials/14-python-and-analyse.md, title: "Notebook tutorial: Python and the Notebook", icon: mortarboard, kind: tutorial, summary: "Hands-on steps with the Notebook and Python in a report, each in the UI, on the command line and in YAML." }
+          - { slug: approvals-guide, pair: docs-tutorials-24-correct-a-trade-and-approve-it, doc: guides/APPROVALS_GUIDE.md, title: "Corrections and approvals", icon: pencil-square, summary: "Correct a record in a form or a cell, drafts and submitting, the one Approvals queue, where a change goes, the edit log and Admin → Edits, writing back to a source, audit and retention." }
+          - { slug: docs-tutorials-24-correct-a-trade-and-approve-it, doc: tutorials/24-correct-a-trade-and-approve-it.md, title: "Approvals tutorial: correct a trade and approve it", icon: mortarboard, kind: tutorial, summary: "Hands-on steps: correct a trade, submit it, approve it and read the audit trail, each in the UI, on the command line and in YAML." }
       - title: "Pivot"
         words: [PIVOT, MCUBE]
         guides:
@@ -115,15 +120,14 @@ sections:
     groups:
       - title: "Packs and Sutras"
         guides:
-          - { slug: pack-developer-guide, doc: guides/PACK_DEVELOPER_GUIDE.md, title: Pack developer guide, icon: hammer, summary: "Build a domain pack end to end: pack.yaml, kinds, links, roles and masks, Sutras, samples, tests, extending a parent pack." }
-          - { slug: sutra-developer-guide, doc: guides/SUTRA_DEVELOPER_GUIDE.md, title: "Rachana guide: writing Sutras", icon: mortarboard, summary: "Writing Sutras end to end: anatomy, matching and priority, labels, paths and expressions, source, row groups, inference, testing and CI, UI-kit fragments (name@N, pack/name@N) with doc: docstrings, events and children, per-panel sources, refresh, layout: and form:, the Build workbench, and the common mistakes with their codes." }
+          - { slug: build-guide, pair: docs-tutorials-05-build-a-pack, doc: guides/BUILD_GUIDE.md, title: "Packs and screens", icon: hammer, summary: "Build a pack end to end: from a schema or JSON Lines, pack.yaml, kinds, links, roles and masks, Sutras (the screens), forms, tests, versions, the packs that ship and the phone display." }
+          - { slug: docs-tutorials-05-build-a-pack, doc: tutorials/05-build-a-pack.md, title: "Build tutorial: a pack from your data", icon: mortarboard, kind: tutorial, summary: "Hands-on steps from a folder of JSON Lines to a pack with its screens, each in the UI, on the command line and in YAML." }
           - { slug: examples, doc: guides/examples/README.md, title: Sutra examples, icon: collection, summary: "Working Sutras with their data, covering every panel kind, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
-          - { slug: schema-to-pack, doc: guides/SCHEMA_TO_PACK_GUIDE.md, title: "Schema to pack: a pack from JSON Schema", icon: diagram-3, summary: "Every rule that turns JSON Schema files, a folder of JSON Lines, or both into a pack (Build → New pack, or drishti.py pack make): kinds, keys, links, labels, formats, the business date, x-drishti annotations, samples, the New pack page step by step, the command line and the pack that comes out." }
-          - { slug: write-back, doc: guides/WRITE_BACK.md, title: "Write-back: forms, edits and approval", icon: pencil-square, summary: "Forms beside a table, editable cells and guided drawers; drafts and submitting a change; for administrators: switching it on, where a change goes (a correction, an owned record, an amendment through a connector), approval, the edit log and lanes, Admin → Edits, writes:, audit; and the design with its reasons." }
       - title: "Extend and embed"
         guides:
-          - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe), the shared TLS and proxy modules, testing and a worked plugin." }
-          - { slug: client-renderer, doc: architecture/CLIENT_RENDERER.md, title: "Client renderer and {product} Elements: views in any web page", icon: window-stack, summary: "The one renderer in the browser (adoption in minutes, the public API, every panel kind, phones, security, live patches, parity), {product} Elements in your own web application (a five-minute start, the token exchange, versions, SRI and npm, CSP, every element, React, Angular and Vue, theming, a cookbook, troubleshooting by code), the Elements design, and GenUI (design, not built). The ViewModel contract it draws is its own page." }
+          - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: "Developer guide: connectors, plugins and the API", icon: plug, summary: "Write a connector (the source SPI, manifest, capabilities, TLS and proxy, its README), a plugin or a module; change Drishti's code; call the REST API from scripts, notebooks and Excel with a token." }
+          - { slug: embed-guide, pair: docs-tutorials-16-embed-drishti, doc: guides/EMBED_GUIDE.md, title: "Embed {product} in your pages", icon: window-stack, summary: "Views and reports in any web page with {product} Elements: the elements, their attributes and events, signing in, turning embedding on, the libraries in your own app, versions and integrity." }
+          - { slug: docs-tutorials-16-embed-drishti, doc: tutorials/16-embed-drishti.md, title: "Embed tutorial: a view in your page", icon: mortarboard, kind: tutorial, summary: "Hands-on steps to put a live view and a report in a page of your own." }
   - id: operate
     groups:
       - title: "Set up"
@@ -144,7 +148,7 @@ sections:
     groups:
       - title: "Programming"
         guides:
-          - { slug: api, doc: guides/API_GUIDE.md, title: API, icon: braces-asterisk, summary: "REST endpoints (BI, Python data prep, themes, {product}*net), the ViewModel contract and error codes." }
+          - { slug: api, doc: guides/API_REFERENCE.md, title: "API reference", icon: braces-asterisk, summary: "Every REST endpoint by area (views, search, BI, models, SQL, runs, reports, approvals, alerts, administration, {product}*net) and the one error code table." }
           - { slug: developer, title: "Developer: API references", icon: code-square, summary: "Every programming surface in one place: the REST API (OpenAPI), the renderer's TypeScript API, the Javadoc of the plugin and connector SPI and the shard machinery, and the Python references of the compute worker SDK, BI Python items, drishti.py and its client library and the pack and test-data generator helpers; generated at build time, versioned, self-contained, and how to document what you add." }
           - { slug: viewmodel, doc: architecture/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
           - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key (fragments and use:, emits and @panel.event, source:, children, refresh:, layout:, form:), panel option, format, tone, Rachana-EL expression and problem code." }
@@ -184,7 +188,7 @@ sections:
 moved:
   docs-architecture-controls-screens: docs-architecture-shared-screens#6-controls-screens-run-status-and-sign-off-the-breach-queue-number-honesty   # controls screens folded into docs/architecture/SHARED_SCREENS.md
   docs-architecture-editors: docs-architecture-shared-screens#7-the-editors-one-pattern-for-every-object-people-author   # editors folded into docs/architecture/SHARED_SCREENS.md
-  docs-architecture-bi-foundation-2911e: docs-architecture-bi-design#18-the-bi-foundation-bi-on-the-table-layer-and-rachana   # bi foundation 2911e folded into docs/architecture/BI_DESIGN.md
+  docs-architecture-bi-foundation-2911e: docs-architecture-bi-design#18-the-bi-foundation-bi-on-the-table-layer-and-rachana   # bi foundation 2911e folded into docs/architecture/ARCHITECTURE.md §28
   docs-architecture-virtual-tables: docs-architecture-architecture#24-virtual-tables-the-central-table-layer   # virtual tables folded into docs/architecture/ARCHITECTURE.md
   docs-architecture-one-grammar: docs-architecture-architecture#23-one-grammar-one-engine   # one grammar folded into docs/architecture/ARCHITECTURE.md
   docs-architecture-drishti-native: docs-architecture-architecture#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks   # drishti native folded into docs/architecture/ARCHITECTURE.md
@@ -192,7 +196,7 @@ moved:
   docs-admin-runbooks-sutra-broken: operations#172-a-sutra-is-broken-or-an-edit-does-not-show   # sutra-broken folded into docs/admin/OPERATIONS.md
   docs-admin-runbooks-live-latency-high: operations#173-live-latency-high-or-live-views-stop-ticking   # live-latency-high folded into docs/admin/OPERATIONS.md
   docs-admin-runbooks-sign-in: operations#174-users-cannot-sign-in   # sign-in folded into docs/admin/OPERATIONS.md
-  docs-guides-ag-grid-migration-guide: docs-guides-elements-in-your-app#9-moving-an-ag-grid-enterprise-pivot-app   # ag grid migration guide folded into docs/guides/ELEMENTS_IN_YOUR_APP.md
+  docs-guides-ag-grid-migration-guide: docs-guides-elements-in-your-app#9-moving-an-ag-grid-enterprise-pivot-app   # ag grid migration guide folded into docs/guides/EMBED_GUIDE.md
   docs-architecture-mobile-display: pack-developer-guide#part-ix-designing-for-phones   # mobile display folded into docs/guides/PACK_DEVELOPER_GUIDE.md
   docs-qa-windows-custom-data: docs-architecture-test-harness#9-manual-qa-on-windows-offline-with-your-own-trade-files   # windows-custom-data folded into docs/architecture/TEST_HARNESS.md
   docs-qa-qa-history: changelog   # qa history folded into CHANGELOG.md
@@ -283,7 +287,7 @@ moved:
   notebook: user-guide#the-notebook                                        # BI -> Notebook, /bi/notebook: SQL on the server, Python on its compute pool
   themes: bi-guide#52-themes                                               # report themes and the theme designer (2.4.0)
   console-themes: user-guide#themes                                       # the console's ten themes (three Terminal hues in 2.6.0)
-  statements: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/BI_GUIDE.md)
+  statements: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/REPORTS_GUIDE.md)
   history: user-guide#history-an-entity-over-time                         # TRD 1000015 30 <GO>: an entity over time (2.6.5)
   history-tutorial: docs-tutorials-21-an-entity-over-time                 # tutorial 21 (2.6.5)
   paginated-reports: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader
@@ -300,7 +304,7 @@ moved:
   on-a-phone: user-guide#on-a-phone
   lens-menu: user-guide#on-a-phone                                      # the lens menus folded into one on a phone (LX1 option C)
   pivot-tab: user-guide#pivot-slice-a-table-your-way
-  bi-runs: bi-guide#28-background-runs-long-bi-questions                                       # BI runs, the guide (docs/guides/BI_GUIDE.md, 2.6.7)
+  bi-runs: bi-guide#28-background-runs-long-bi-questions                                       # BI runs, the guide (docs/guides/REPORTS_GUIDE.md, 2.6.7)
   runs-tab: bi-guide#the-runs-tab                                           # the Runs tab of a BI workspace (2.6.7)
   run-card: bi-guide#the-run-card                                           # a visual's run card (2.6.7)
   run-confirm: bi-guide#confirming-a-large-run                              # the confirm card of a large run (2.6.7)
@@ -361,7 +365,7 @@ moved:
   decisions: docs-architecture-adr-readme
   plan: docs-architecture-implementation-plan
   docs-architecture-rupaka-poc: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
-  docs-architecture-bi-parity-plan: docs-architecture-bi-design#111-the-parity-studys-item-ids    # BI_PARITY_PLAN.md deleted (2.9.6): its item ids are BI_DESIGN section 11.1
+  docs-architecture-bi-parity-plan: docs-architecture-bi-design#111-the-parity-studys-item-ids    # BI_PARITY_PLAN.md deleted (2.9.6): its item ids are ARCHITECTURE §28 section 11.1
   notices: third-party-notices
   sutra-guide: sutra-developer-guide
   rachana-guide: sutra-developer-guide
@@ -373,7 +377,7 @@ moved:
   docs-connectors-connector-operations: connector-files#12-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into CONNECTOR_FILES.md section 12 and TROUBLESHOOTING
   docs-architecture-how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6)
   docs-architecture-live-bi: docs-architecture-data-architecture#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is DATA_ARCHITECTURE.md
-  docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # deleted (2.9.6); D1 to D6 now BI_DESIGN section 14
+  docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # deleted (2.9.6); D1 to D6 now ARCHITECTURE §28 section 14
   docs-architecture-screen-builder: rachana-reference#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is RACHANA_REFERENCE › Screen designer, section 32
   docs-architecture-cassandra-connector-design: connectors   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
   docs-admin-load-and-memory: docs-admin-performance#9-many-users-soak-runs-and-memory-profiling   # deleted (2.9.6); its method is PERFORMANCE method 9
@@ -382,21 +386,21 @@ moved:
   docs-guides-pack-modelling-guide: pack-developer-guide#part-ii-modelling-in-depth-kinds-data-and-content   # merged into PACK_DEVELOPER_GUIDE Part II
   docs-guides-pack-lifecycle-guide: pack-developer-guide#part-iii-around-the-pack-inheritance-tests-versions-the-registry   # merged into PACK_DEVELOPER_GUIDE Part III
   docs-guides-pack-generators-guide: pack-developer-guide#part-iv-generated-packs-the-readme-standard-json-lines   # merged into PACK_DEVELOPER_GUIDE Part IV
-  reports-page: bi-guide#0-scheduled-searches-and-the-reports-page   # the Reports page; docs/guides/SCHEDULED_REPORTS.md merged into BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0
+  reports-page: bi-guide#0-scheduled-searches-and-the-reports-page   # the Reports page; docs/guides/SCHEDULED_REPORTS.md merged into REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0
   docs-guides-scheduled-reports: bi-guide#0-scheduled-searches-and-the-reports-page   # docs/guides/SCHEDULED_REPORTS.md
-  bi-recipes: bi-guide#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md merged into BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17
+  bi-recipes: bi-guide#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md merged into REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17
   docs-guides-bi-recipes: bi-guide#17-worked-examples-the-shipped-models-row-rules-and-the-model-view   # docs/guides/BI_RECIPES.md
-  boards: bi-guide#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md merged into BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23
+  boards: bi-guide#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md merged into REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23
   docs-guides-boards: bi-guide#23-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md
-  docs-guides-statements: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader   # docs/guides/STATEMENTS.md merged into BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24
-  bi-ai: bi-guide#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md merged into BI_GUIDE.md section 29
+  docs-guides-statements: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader   # docs/guides/STATEMENTS.md merged into REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24
+  bi-ai: bi-guide#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md merged into REPORTS_GUIDE.md section 29
   docs-guides-bi-ai: bi-guide#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md
-  docs-guides-bi-runs-guide: bi-guide#28-background-runs-long-bi-questions   # docs/guides/BI_RUNS_GUIDE.md merged into BI_GUIDE.md section 28
+  docs-guides-bi-runs-guide: bi-guide#28-background-runs-long-bi-questions   # docs/guides/BI_RUNS_GUIDE.md merged into REPORTS_GUIDE.md section 28
   docs-guides-nested-documents: pack-developer-guide#sutras-over-deep-documents   # docs/guides/NESTED_DOCUMENTS.md
   docs-guides-sutra-testing-guide: cli-guide#testing-sutras-expectyaml-the-tests-convention-and-ci   # docs/guides/SUTRA_TESTING_GUIDE.md, beside the sutra command
   docs-guides-sutra-forms-guide: write-back   # docs/guides/SUTRA_FORMS_GUIDE.md, now WRITE_BACK.md sections 1 to 7
   docs-admin-edits: write-back#for-administrators-write-back-is-off-as-shipped   # docs/admin/EDITS.md, now WRITE_BACK.md sections 8 to 15
-  clients: api#clients-scripts-notebooks-and-excel   # Scripts, notebooks and Excel; docs/guides/CLIENTS.md merged into API_GUIDE.md
+  clients: api#clients-scripts-notebooks-and-excel   # Scripts, notebooks and Excel; docs/guides/CLIENTS.md merged into API_REFERENCE.md
   docs-guides-clients: api#clients-scripts-notebooks-and-excel   # docs/guides/CLIENTS.md
   docs-guides-ide-guide: install-and-run#running-from-intellij-idea-and-pycharm   # docs/guides/IDE_GUIDE.md merged into GETTING_STARTED.md
   docs-guides-real-data: external-data#the-world-economy-data-in-detail   # docs/guides/REAL_DATA.md merged into EXTERNAL_DATA.md
@@ -439,9 +443,9 @@ moved:
   docs-architecture-history-queries: docs-architecture-data-architecture#2-history-queries-an-entity-over-time   # architecture/HISTORY_QUERIES.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
   docs-architecture-live: docs-architecture-data-architecture#1-live-updates   # architecture/LIVE.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
   docs-architecture-reactive-connectors: docs-architecture-data-architecture#4-reactive-connectors   # architecture/REACTIVE_CONNECTORS.md merged into architecture/DATA_ARCHITECTURE.md (2.9.7)
-  docs-architecture-elements: client-renderer#20-drishti-elements-the-design   # architecture/ELEMENTS.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
-  docs-architecture-genui: client-renderer#21-genui-screens-composed-for-an-ai-agent-design-not-built   # architecture/GENUI.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
-  elements-guide: client-renderer#19-drishti-elements-developer-guide   # guides/ELEMENTS.md merged into architecture/CLIENT_RENDERER.md (2.9.7)
+  docs-architecture-elements: client-renderer#20-drishti-elements-the-design   # architecture/ELEMENTS.md merged into guides/EMBED_GUIDE.md (2.9.7)
+  docs-architecture-genui: client-renderer#21-genui-screens-composed-for-an-ai-agent-design-not-built   # architecture/GENUI.md merged into guides/EMBED_GUIDE.md (2.9.7)
+  elements-guide: client-renderer#19-drishti-elements-developer-guide   # guides/ELEMENTS.md merged into guides/EMBED_GUIDE.md (2.9.7)
   panels: rachana-reference   # guides/PANELS.md merged into guides/RACHANA_REFERENCE.md (2.9.7): no section, so /help/panels#<kind> keeps its #kind
   docs-architecture-build-workbench: rachana-reference#the-build-workbench-the-design   # architecture/BUILD_WORKBENCH.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   docs-architecture-context-help: rachana-reference#about-this-page-the-design-of-context-help   # architecture/CONTEXT_HELP.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
@@ -450,15 +454,15 @@ moved:
   docs-architecture-table-charts: rachana-reference#chart-any-table-the-design   # architecture/TABLE_CHARTS.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   screen-designer: rachana-reference#screen-designer-and-the-build-workbench   # guides/SCREEN_DESIGNER.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   expressions: rachana-reference#rachana-el-expressions   # guides/EXPRESSIONS.md, then RACHANA_REFERENCE.md: BI's expressions are Rachana (2.9.11.d)
-  sql: api#drishti-sql-apiv1bisql   # guides/SQL.md, then API_GUIDE.md, Drishti SQL: Drishti SQL is in the API guide (2.9.11.d)
-  bi-governance: bi-guide#32-publishing-and-governance-versions-review-certification-lineage-impact-environments   # guides/BI_GOVERNANCE.md merged into guides/BI_GUIDE.md (2.9.7)
-  datasets: bi-guide#30-datasets-the-yaml-the-expression-language-and-the-security-rules   # guides/DATASETS.md merged into guides/BI_GUIDE.md (2.9.7)
-  distribution: bi-guide#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding   # guides/DISTRIBUTION.md merged into guides/BI_GUIDE.md (2.9.7)
-  python-bi: bi-guide#34-python-in-bi-measures-visuals-and-data-prep-written-in-python   # guides/PYTHON_BI.md merged into guides/BI_GUIDE.md (2.9.7)
-  reports: bi-guide#31-reports-the-yaml-the-visuals-and-how-they-behave   # guides/REPORTS.md merged into guides/BI_GUIDE.md (2.9.7)
-  docs-architecture-bi-model-spec: docs-architecture-bi-design#15-the-model-layer-the-specification   # architecture/BI_MODEL_SPEC.md merged into architecture/BI_DESIGN.md (2.9.7)
-  docs-architecture-bi-runs: docs-architecture-bi-design#17-bi-runs-every-bi-query-as-a-bounded-visible-job   # architecture/BI_RUNS.md merged into architecture/BI_DESIGN.md (2.9.7)
-  docs-architecture-rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase   # architecture/RUPAKA.md merged into architecture/BI_DESIGN.md (2.9.7)
+  sql: api#drishti-sql-apiv1bisql   # guides/SQL.md, then API_REFERENCE.md, Drishti SQL: Drishti SQL is in the API guide (2.9.11.d)
+  bi-governance: bi-guide#32-publishing-and-governance-versions-review-certification-lineage-impact-environments   # guides/BI_GOVERNANCE.md merged into guides/REPORTS_GUIDE.md (2.9.7)
+  datasets: bi-guide#30-datasets-the-yaml-the-expression-language-and-the-security-rules   # guides/DATASETS.md merged into guides/REPORTS_GUIDE.md (2.9.7)
+  distribution: bi-guide#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding   # guides/DISTRIBUTION.md merged into guides/REPORTS_GUIDE.md (2.9.7)
+  python-bi: bi-guide#34-python-in-bi-measures-visuals-and-data-prep-written-in-python   # guides/PYTHON_BI.md merged into guides/REPORTS_GUIDE.md (2.9.7)
+  reports: bi-guide#31-reports-the-yaml-the-visuals-and-how-they-behave   # guides/REPORTS.md merged into guides/REPORTS_GUIDE.md (2.9.7)
+  docs-architecture-bi-model-spec: docs-architecture-bi-design#15-the-model-layer-the-specification   # architecture/BI_MODEL_SPEC.md merged into architecture/ARCHITECTURE.md §28 (2.9.7)
+  docs-architecture-bi-runs: docs-architecture-bi-design#17-bi-runs-every-bi-query-as-a-bounded-visible-job   # architecture/BI_RUNS.md merged into architecture/ARCHITECTURE.md §28 (2.9.7)
+  docs-architecture-rupaka: docs-architecture-bi-design#16-rupaka-the-original-design-and-every-phase   # architecture/RUPAKA.md merged into architecture/ARCHITECTURE.md §28 (2.9.7)
   docs-admin-cluster-deployment: cluster-deployment#appendices   # admin/CLUSTER_DEPLOYMENT.md (the consolidation's clusters, AWS and scale) merged into architecture/CLUSTER_DEPLOYMENT.md (2.9.7)
   feeds-guide: external-data   # docs/guides/FEEDS_GUIDE.md, folded into EXTERNAL_DATA.md (2.9.11.g)
   docs-guides-feeds-guide: external-data

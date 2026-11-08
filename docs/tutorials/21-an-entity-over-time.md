@@ -97,7 +97,7 @@ Date           Trade status  Trade version  Quantity  Price        Maturity date
 and 30 rows; the command line keeps `TRD 1000015 30 <GO>`, so `↑` recalls it as typed.
 
 **Programs** read `GET /api/v1/history/trade/1000015?days=30`, or `Drishti.history("trade", "1000015", days=30)` in the Python client
-([API_GUIDE.md (clients)](../guides/API_GUIDE.md#clients-scripts-notebooks-and-excel)).
+([API_REFERENCE.md (clients)](../guides/DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)).
 
 ## Step 2 · Reading the table
 

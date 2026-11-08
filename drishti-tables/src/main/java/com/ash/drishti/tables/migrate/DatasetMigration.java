@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * One BI dataset into the layer's form, key by key (docs/architecture/BI_DESIGN.md section 3.1). A {@code rachana: 2} dataset is one table; a
+ * One BI dataset into the layer's form, key by key (docs/architecture/ARCHITECTURE.md §28 section 3.1). A {@code rachana: 2} dataset is one table; a
  * {@code rachana: 1} dataset with {@code tables:} (the live samples) is a table per table and a model of its measures (Q19). Every DEL
  * expression goes through {@link Translate}. What the skeleton does not convert yet is refused by name ({@code group:} into a summary
  * table, a pack-generated dataset: regenerated, never migrated).
@@ -330,7 +330,7 @@ final class DatasetMigration {
             String del = r.path("where").asText("True");
             if (shared && namesAnotherTable(del, own)) {
                 // a rule about another table: here the role reads the rows related to the rows of that table it sees, never more than before the
-                // upgrade (BI_DESIGN.md 8.5, the owner's decision of 2026-11-07); a rule that names several tables, or this one and another, cannot
+                // upgrade (ARCHITECTURE.md §28 8.5, the owner's decision of 2026-11-07); a rule that names several tables, or this one and another, cannot
                 // be said per table, so the role reads none of this table's rows
                 Set<String> others = otherTables(del, own);
                 boolean alone = others.size() == 1 && !namesOwn(del, own);
@@ -462,7 +462,7 @@ final class DatasetMigration {
             String base = baseName(d.path("extends").asText());
             return new TableDef.Source(null, null, null, null, TableName.ofDataset(base), null, null, null, null, null, null);
         }
-        if (s.has("run")) {                                                   // a promoted run's snapshot (BI_DESIGN.md 9.4)
+        if (s.has("run")) {                                                   // a promoted run's snapshot (ARCHITECTURE.md §28 9.4)
             JsonNode v = s.path("version");
             return TableDef.Source.ofRun(s.path("run").asText(), v.isNumber() ? (Object) v.asInt() : v.asText("latest"), s.path("token").asText(""));
         }
@@ -538,7 +538,7 @@ final class DatasetMigration {
 
     /**
      * A table of a {@code rachana: 1} dataset: the dataset's title, and its audience and sample flag, so a table never shows to more readers than
-     * the dataset did (BI_DESIGN.md 8.5: nobody sees more data after the upgrade).
+     * the dataset did (ARCHITECTURE.md §28 8.5: nobody sees more data after the upgrade).
      */
     private static Map<String, Object> partAbout(JsonNode d, String item) {
         Map<String, Object> out = new LinkedHashMap<>();

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Reports bound to a model (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, sections 3, 4.1 and 9.4), in the report designer and the report page. A report whose YAML
+/* Reports bound to a model (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification of wave W1, sections 3, 4.1 and 9.4), in the report designer and the report page. A report whose YAML
    says `model: <name>@<major>` or `model: dataset:<name>` reads that model only: the Fields pane is the model as the person sees it (/models/{id}/describe,
    with the field properties, the perspective and the report's own measures), a filter's value picker asks the model, the header of the Fields pane says
    which model it is (an implicit model offers Make it a model), and each visual's Query panel shows the model query the server ran for it.
@@ -33,7 +33,7 @@
 
   const withModel = (yaml) => (/^model:/m.test(yaml) ? yaml : /^dataset:\s*""\s*$/m.test(yaml) ? yaml.replace(/^dataset:\s*""\s*$/m, 'model: ' + S.ref) : yaml.replace(/^(report:.*)$/m, '$1\nmodel: ' + S.ref));
   /** The report's own measures (`measures:`): read from its YAML by the console (the server's report reader does not keep them yet) and written back. */
-  /** And its perspective (`perspective:`, BI_DESIGN.md 3.1): the Fields pane shows only that perspective's fields. */
+  /** And its perspective (`perspective:`, ARCHITECTURE.md §28 3.1): the Fields pane shows only that perspective's fields. */
   const extrasOf = (yaml) => (/^(measures|perspective):/m.test(yaml || '') ? B.layer.post('report-measures', { yaml }).then((r) => ({ measures: r.measures || {}, perspective: r.perspective || '' }))
     .catch(() => ({ measures: {}, perspective: '' })) : Promise.resolve({ measures: {}, perspective: '' }));
   const localOf = (yaml) => extrasOf(yaml).then((x) => { S.perspective = x.perspective; return x.measures; });
@@ -67,7 +67,7 @@
     });
   }
   /**
-   * A reader who may view the report but not read its model (BI_DESIGN.md 5.3, the consumer envelope): the model's description is not theirs to see, so the
+   * A reader who may view the report but not read its model (ARCHITECTURE.md §28 5.3, the consumer envelope): the model's description is not theirs to see, so the
    * report's own envelope (`GET /reports/{id}/envelope`: the fields, measures and filters its visuals can ask) stands in for it, and every visual asks the
    * server's report query, which answers only inside the envelope (as the reader: their rules and masks).
    */
@@ -196,7 +196,7 @@
     }
   }
 
-  /** The perspective the report reads (BI_DESIGN.md 8.1): the Fields pane shows only its fields and measures; the report keeps it (`perspective:`). */
+  /** The perspective the report reads (ARCHITECTURE.md §28 8.1): the Fields pane shows only its fields and measures; the report keeps it (`perspective:`). */
   function perspectivePicker(head, f) {
     const names = Object.keys(f.perspectives || {});
     D.perspective = (D.model && D.model.perspective) || S.perspective || '';

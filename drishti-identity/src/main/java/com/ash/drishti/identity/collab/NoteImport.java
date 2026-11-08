@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Grows the notes of earlier releases into comment threads, once (COLLABORATION.md, Decision 1): each {@code drishti_note} row becomes
+ * Grows the notes of earlier releases into comment threads, once (ARCHITECTURE.md §31, Decision 1): each {@code drishti_note} row becomes
  * a single-comment thread on the whole view or, with a path, on that field, pinned with no business date, {@code knownAt} = the note's
  * creation and generation 0 (unknown). The table stays in place; {@code drishti_note_link} records which note became which comment, so
  * a second run (every start) imports only what is new, and the deprecated {@code /notes} facade keeps the old numbers.

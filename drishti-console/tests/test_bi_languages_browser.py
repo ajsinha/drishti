@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave A of the BI design, console lane, in Chromium (docs/architecture/BI_DESIGN.md section 12.2) over the real server and console on scratch ports
+"""Wave A of the BI design, console lane, in Chromium (docs/architecture/ARCHITECTURE.md §28 section 12.2) over the real server and console on scratch ports
 18916 and 17916 (the W1 model stack of tests/test_w1_model_designer_browser.py: security on, the trading and core packs, a small file lake of
 trades and desks). Checked, on a table and a model of the table layer seeded through the API (the dataset wizard and the model designer are
 gone: Build › Tables & models writes them): a report's own measure in the ExpressionEditor and the Query panel's MQ and SQL views; a report's
@@ -145,7 +145,7 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
     expect(page.locator(".bi-near").first).to_contain_text("Saved", timeout=15000)
     body = fetch(page, "GET", "/bi/api/items/" + page.url.rsplit("/", 1)[-1])["body"]["body"]
     assert "measures:" in body and "MTM in thousands" in body, body
-    # the same question as a visual, a model query and SQL: one plan hash (BI_DESIGN.md 12.2, acceptance 2)
+    # the same question as a visual, a model query and SQL: one plan hash (ARCHITECTURE.md §28 12.2, acceptance 2)
     mq = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": f"{name}@1", "select": {"fields": ["trade.DESK"], "measures": ["Sum of MTM"]}})
     sq = fetch(page, "POST", "/bi/api/sql", {"model": f"{name}@1", "sql": "SELECT trade.DESK, MEASURE('Sum of MTM') AS \"Sum of MTM\" FROM trade GROUP BY trade.DESK"})
     assert mq["status"] == 200 and sq["status"] == 200, (mq, sq)

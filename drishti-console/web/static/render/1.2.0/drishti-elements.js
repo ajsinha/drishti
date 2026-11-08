@@ -22,7 +22,7 @@
    The element API is Elements 1.x's (ELEMENTS.md sections 5 to 7): DrishtiElements.configure({ tokenProvider }), the attributes, the
    properties, reload() and refresh(), the drishti:* events and the loading, empty and error slots. Elements 1.x stays at /embed/v1/ for one
    release; a page uses one or the other. 2.1 adds auth: 'popup' (configure({ auth: 'popup' }) or auth="popup"): a page without a backend signs
-   its user in through the console's single sign-on in a window opened on a click (CLIENT_RENDERER.md 10.1). */
+   its user in through the console's single sign-on in a window opened on a click (EMBED_GUIDE.md 10.1). */
 import { cfg, API, ELEMENTS_VERSION, DrishtiView, DrishtiPanel, define, invalidateToken, providerChanged, connectionCount, resolve, usePopup } from './m/elements.js';
 import { VERSION, CONTRACTS } from './drishti-render.js';
 

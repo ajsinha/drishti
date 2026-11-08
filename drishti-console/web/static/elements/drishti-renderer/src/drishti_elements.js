@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Elements 2.3 (CLIENT_RENDERER.md sections 13 and 19; part of drishti-renderer, decision O7): <drishti-view> and <drishti-panel>
+/* Drishti Elements 2.3 (EMBED_GUIDE.md sections 13 and 19; part of drishti-renderer, decision O7): <drishti-view> and <drishti-panel>
    drawn by the renderer from the ViewModel of the embed API v2 (/embed/v2/views/{kind}/{id}). The element API is 2.2's, unchanged: the
    same attributes, properties, methods, events, slots, page-wide token provider and one live connection per page (drishti_embed.js); only
    the inside changed (the panels are drawn with drishti-grid and drishti-chart). <drishti-screen> is an alias of <drishti-view>. The

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* How the renderer makes DOM from a ViewModel (docs/architecture/CLIENT_RENDERER.md section 9): drishti-core's element maker with
+/* How the renderer makes DOM from a ViewModel (docs/guides/EMBED_GUIDE.md section 9): drishti-core's element maker with
    drishti-core's rules for untrusted data in front of it (attrAllowed, safeUrl). Text goes in as text nodes, attributes through the
    allow-list: no innerHTML, no outerHTML, no insertAdjacentHTML, no eval and no new Function anywhere in the library (a test reads the
    sources). A value from the ViewModel can never become markup, an event handler, a style attribute or a script URL. */

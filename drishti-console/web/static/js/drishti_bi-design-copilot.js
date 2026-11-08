@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The designer copilot (docs/guides/BI_GUIDE.md section 29.9): "Suggest visuals" proposes visuals, wells and filters for the dataset and the goal you type, each as YAML the
+/* The designer copilot (docs/guides/REPORTS_GUIDE.md section 29.9): "Suggest visuals" proposes visuals, wells and filters for the dataset and the goal you type, each as YAML the
    report checker has passed, and "Explain in plain words" explains the Check panel's problems. The model sees names, types and descriptions, never a row. A suggestion
    changes nothing until you press Add on it (a normal, undoable edit of the draft); an explanation changes nothing at all. Same-origin JSON only. */
 (function () {

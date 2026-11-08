@@ -945,7 +945,7 @@ settings; date and filters shared:
 
 **Built as Sutra panels.** The landing keeps its bar, meta line and switch; its body becomes a Sutra-drawn view of a page kind
 `market-quality` whose id is the business date (`MDQ 2026-09-30` opens the same page), painted by the one renderer
-([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md)). Each view is one Sutra of that kind (`market-quality`,
+([EMBED_GUIDE.md](../guides/EMBED_GUIDE.md)). Each view is one Sutra of that kind (`market-quality`,
 `market-quality-impact`, `market-quality-checks`), selected as `?sutra=` selects a Sutra
 ([RACHANA_REFERENCE](../guides/RACHANA_REFERENCE.md#events-sources-and-children-sutra-next)); the opened exception is a Sutra Next child of
 the exceptions table. **VaR at stake** is a computed kind `market-data-at-stake` (id the item, `params: { incremental }`) served by the
@@ -1400,7 +1400,7 @@ and debt, its LEI group's parent, its latest filing), internal only: the Risk le
 World row.
 
 **Embedding.** An entity page (`ECON CAN`, `LEIG …`) can be shown on an intranet page by the client renderer, with the optional sign-in
-window ([CLIENT_RENDERER.md section 10.1](../architecture/CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window));
+window ([EMBED_GUIDE.md section 10.1](../guides/EMBED_GUIDE.md#42-a-page-without-a-backend-the-sign-in-window));
 the World landings are not Sutras and cannot be embedded until a "home" Sutra kind exists. Internal-only data stays internal on any host.
 
 ## 5. Oversight lens
@@ -1460,8 +1460,8 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 | Stress: stored definitions and results per desk; the bank's P&L per scenario and each desk's stress limit use (derived) | **Partly** (no stress engine for any scope) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived), [STR.md](../contracts/STR.md) |
 | Concentration: VaR of any slice | **Partly**: scope words, rules and `WHERE:`; no concentration view | [VAR_GUIDE section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute) |
 | Counterparty exposure and credit limits (read for concentration) | **Built** | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) |
-| Alerts on numbers; comment threads anchored to the data; write-back approval with four eyes | **Built** (a person sets each alert) | [USER_GUIDE, Alerts](../guides/USER_GUIDE.md#alerts), [COLLABORATION.md](../architecture/COLLABORATION.md#discussion-comment-threads), [WRITE_BACK section 10](../guides/WRITE_BACK.md#10-approval) |
-| Certified BI reports; entitlements and audit per answer | **Built** | [BI_GUIDE, certification](../guides/BI_GUIDE.md#4-certification-and-endorsement), [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
+| Alerts on numbers; comment threads anchored to the data; write-back approval with four eyes | **Built** (a person sets each alert) | [USER_GUIDE, Alerts](../guides/USER_GUIDE.md#alerts), [ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion), [WRITE_BACK section 10](../guides/WRITE_BACK.md#10-approval) |
+| Certified BI reports; entitlements and audit per answer | **Built** | [BI_GUIDE, certification](../guides/REPORTS_GUIDE.md#174-certification-and-endorsement), [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
 | P&L explain by cause; PLA test; FRTB internal models | **Not built** (P&L explain stored per desk as read, `PNL`) | [PNL.md](../contracts/PNL.md), [REGULATORY_VAR_REPORTING section 8.1](../guides/REGULATORY_VAR_REPORTING.md#81-coverage-report-by-report) |
 
 ### 5.3 Gaps and proposals
@@ -1560,7 +1560,7 @@ child reading `source: { kind: limit-breach, id: "@queue.open.id" }`; `BRCH <id>
 fragment `breach-detail@1`. Each action is a Sutra Next form (`new: drawer`) whose `save:` writes a new record to the `owned` target
 ([WRITE_BACK section 4a](../guides/WRITE_BACK.md#4a-submitting-a-change-write-back)); the breach service hears the record's `edit.applied`
 event ([WRITE_BACK section 18.3](../guides/WRITE_BACK.md#183-the-applied-event-and-triggers)) and writes the breach's next version, pushed
-live to every viewer. The thread is the record's Discussion ([COLLABORATION.md](../architecture/COLLABORATION.md#discussion-comment-threads)).
+live to every viewer. The thread is the record's Discussion ([ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion)).
 
 | Action | Who | Form | `save:` | Approval |
 |---|---|---|---|---|
@@ -1769,7 +1769,7 @@ The **house style** is its own file per style (`config/reports/banking/styles/<s
 a US bank; margins), `logo` (the bank's PNG or JPEG beside the style), `colours` (heading, rule, breach, near), `font` (the standard PDF
 fonts; nothing downloaded), `header`, `footer` (*Data as at {data-date} · run v{run} · from the official records · page {page} of
 {pages}*), `confidentiality`, `sign-off` (roles and what is shown). **Rendering** extends the server's own page-exact PDF writer of BI
-statements ([BI_GUIDE section 24](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader)) with a **chart band**
+statements ([BI_GUIDE section 24](../guides/REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader)) with a **chart band**
 (lines, bars and the waterfall as PDF vector paths, every value also printed in a table) and an **image band** for the logo; the preview
 and the file are drawn from the same pages.
 
@@ -2160,7 +2160,7 @@ are included in the official run by default, with the list on the run. **Data:**
 | Method | When | How | Status |
 |---|---|---|---|
 | **copy** | the new trade resembles a booked one | a booked trade's vector scaled (1, −1, 0.5) | **Built** ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet); side by side per row in tab C) |
-| **price** | new terms | QLRisk prices the trade on the base market and under each scenario move; its vector joins the scope; its sensitivities feed the ladder and SBM | proposed (QLRisk design only until its API is stable; [PYTHON_COMPUTE.md section 9.2](../architecture/PYTHON_COMPUTE.md#92-qlrisk-default-python)) |
+| **price** | new terms | QLRisk prices the trade on the base market and under each scenario move; its vector joins the scope; its sensitivities feed the ladder and SBM | proposed (QLRisk design only until its API is stable; [NOTEBOOK_GUIDE.md section 9.2](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)) |
 | **delta-gamma** | no pricer, or a quick answer | `P&L_s ≈ Σ_f s_f Δx_{f,s} + ½ Σ_f Γ_f Δx_{f,s}²` from the trade's sensitivities and each scenario's factor moves; flagged, its error shown as the gap on the same product's booked trades | proposed |
 
 The QLRisk bridge is **shared with the CCR cube** (scenario P&L here, path MtMs there; CC12 in [7.3](#73-gaps-and-proposals)): one market
@@ -2194,7 +2194,7 @@ modellability ([D9](#6611-d9-the-factor-dictionary-risk-factor-and-the-bucket-gr
 
 - **Power Query:** a REST endpoint per saved view with the token in the header (the pattern exists for search). Tableau and Power BI
   through REST and Arrow. **Open decision** (recommended): no XMLA/MDX endpoint for Excel pivot tables and XLCubed (a product of its own).
-- **Embedding:** a `cube-view` screen kind of the client renderer ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md)), so
+- **Embedding:** a `cube-view` screen kind of the client renderer ([EMBED_GUIDE.md](../guides/EMBED_GUIDE.md)), so
   `render(el, {kind: 'cube-view', id: 'asha/morning'})` draws a saved view; the host receives `drishti:navigate` on drill. Not built.
 - **Phone tiers:** **must** the headline (VaR, ES, limit use) and the pivot's first five rows by the first measure, totals pinned;
   **glance** the sparkline column and the histogram as a strip; **more** explain, provenance, the waterfall; **desk** the pivot editor,
@@ -3240,7 +3240,7 @@ hardest families from trade-grain data (VaR at any scope; PFE by counterparty an
 | VaR change explanation by cause (RO1) | **Built** for VaR; exposure, liquidity and capital reasons not built | [VAR_GUIDE 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained) |
 | A breach as a record; one limit catalogue (RO2, RO3) | **Not built**, designed ([section 5.3](#53-gaps-and-proposals)) | — |
 | Temporary limit increases with four eyes | **Not built**; the pattern exists in write-back approval | [WRITE_BACK 10](../guides/WRITE_BACK.md#10-approval) |
-| Comments anchored to data; alerts on numbers | **Built**; alerts are set per person, not from a catalogue | [COLLABORATION](../architecture/COLLABORATION.md), [USER_GUIDE, alerts](../guides/USER_GUIDE.md#alerts-on-numbers) |
+| Comments anchored to data; alerts on numbers | **Built**; alerts are set per person, not from a catalogue | [COLLABORATION](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [USER_GUIDE, alerts](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | LCR, NSFR, survival horizon; CET1, RWA | **Not built** (balance-sheet roadmap; stored SA-CCR and FRTB charges are partial RWA inputs only) | [IMPLEMENTATION_PLAN 21.10](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory) |
 | Financed emissions | **Not built**; climate stays out of scope as a computed measure | — |
 | News, market moves, macro signals | **Built** (World and Market lenses; IMF data internal only) | [LENSES 8](../admin/LENSES.md#8-drishti-world) |
@@ -3738,7 +3738,7 @@ change and incidents, Ask, and an **evidence pack** for a supervisor or audit.
 | A contract per kind with validation and rejects | **Built** | [contracts README 10](../contracts/README.md#10-validation-and-rejects) |
 | Content checks (past maturity, unmapped factors, stale prices, no LEI match) | **Not built** as checks; the Market lens shows market-data quality | [section 3](#3-market-lens) |
 | Data versions and provenance on every answer | **Built** | [RESOURCES_AND_SCALE 4.2](../architecture/RESOURCES_AND_SCALE.md#42-data-versions-the-inputs-digest-and-provenance-today) |
-| BI lineage and impact; official VaR and exposure records for any past date | **Built** | [BI_GUIDE 32](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), [VAR_GUIDE 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
+| BI lineage and impact; official VaR and exposure records for any past date | **Built** | [BI_GUIDE 32](../guides/REPORTS_GUIDE.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments), [VAR_GUIDE 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | The configuration in one generated document, in the UI with value and origin | **Built** | [CONFIGURATION](../admin/CONFIGURATION.md#every-setting) |
 | Audit log (sign-ins, failures, locks, users, roles, tokens, packs, connectors, load settings, cache purges, secret rotations) | **Built** | [USER_MANAGEMENT, audit](../admin/USER_MANAGEMENT.md#step-6-read-the-audit-log) |
 | Write-back audit and four-eyes approval | **Built** | [WRITE_BACK 10](../guides/WRITE_BACK.md#10-approval) |

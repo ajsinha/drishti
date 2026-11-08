@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* What the renderer loads, once per page, all from the console that serves it (CLIENT_RENDERER.md section 5): its sheet (adopted by each
+/* What the renderer loads, once per page, all from the console that serves it (EMBED_GUIDE.md section 5): its sheet (adopted by each
    shadow root, so a host with style-src 'self' needs nothing more), the icon font (FontFace: an @font-face inside a shadow root is not
    used), the vendored ECharts (and ECharts GL for a 3D surface, and the map shapes' helper) as scripts, which drishti-chart's panel charts
    draw with. Nothing comes from a CDN. Script URLs go through one Trusted Types policy, `drishti-render`, that accepts only this console's

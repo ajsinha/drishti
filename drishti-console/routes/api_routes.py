@@ -161,7 +161,7 @@ async def view(request: Request, kind: str, id_: str):
 
 def view_problem(request: Request, e: BackendError, kind: str) -> JSONResponse:
     """A refused view for the renderer: with ``DRS-4023`` (the edition or the person's lens hides the kind) the fix names the lens plainly,
-    and ``lens`` says which one the person is inside (CLIENT_RENDERER.md 10)."""
+    and ``lens`` says which one the person is inside (EMBED_GUIDE.md 10)."""
     if e.code != "DRS-4023":
         return _problem(e)
     from core.edition import hidden_hint, lens_of
@@ -198,7 +198,7 @@ def _view_event(request: Request, event: str, data: str, embed: bool = False) ->
 @router.get("/stream/{kind}/{id_:path}")
 async def stream(request: Request, kind: str, id_: str):
     """Relays one view's live stream (kept for API clients; pages use /api/channel). ``?raw=1`` relays the server's own events unchanged
-    (the whole ViewModel, then frames whose panel patches are panels, not HTML): what the client-side renderer applies (CLIENT_RENDERER.md 10)."""
+    (the whole ViewModel, then frames whose panel patches are panels, not HTML): what the client-side renderer applies (EMBED_GUIDE.md 10)."""
     backend = request.app.state.backend
     raw = request.query_params.get("raw") == "1"
 

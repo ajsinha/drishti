@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* A whole view (CLIENT_RENDERER.md sections 7 and 8): the provenance banners, the head (title and strip), the panels in their grid,
+/* A whole view (EMBED_GUIDE.md sections 7 and 8): the provenance banners, the head (title and strip), the panels in their grid,
    and optionally the function keys; ports of _macros/view.html and terminal/_grid.html. */
 import { h, str, icon } from './dom.js';
 import { toneClass } from './format.js';

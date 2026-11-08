@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Every expression recipe (tests/resources/expression_recipes.yaml, written in Rachana: RACHANA_REFERENCE.md) runs on the demo lake
-(docs/architecture/BI_DESIGN.md section 12.2, wave A acceptance 6): the real server and console of tests/bi_report_stack.py on ports 18912 and
+(docs/architecture/ARCHITECTURE.md §28 section 12.2, wave A acceptance 6): the real server and console of tests/bi_report_stack.py on ports 18912 and
 17912 with the cross-pack Delta lake (tools/packgen/banking/make_data.py --lake, a few thousand rows) and the trading-risk sample. Each recipe has
 its expression, the fields it is grouped by and its scope. A measure is asked as a model query with ``define`` (as the risk reader, who sees every row) and must
 answer rows; a row expression is checked by the server and asked inside ``distinct(...)`` (a value) or ``count(..., where=...)`` (a condition); a rule

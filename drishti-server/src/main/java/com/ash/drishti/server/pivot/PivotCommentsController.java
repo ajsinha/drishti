@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Cell comments on saved pivot views (PIVOT_GUIDE.md, cell comments; API_GUIDE.md, the pivot engine), under
+ * Cell comments on saved pivot views (PIVOT_GUIDE.md, cell comments; API_REFERENCE.md, the pivot engine), under
  * {@code /api/v1/pivot/views/{owner}/{name}/comments}: listed (one cell's with {@code cell}, open only with {@code open=true}), added on a
  * cell by its coordinates, resolved, reopened and deleted by the author or the view's owner. Every change is audited with the view, the
  * cell and the comment's id, never its text. A personal API token needs the {@code pivot:comment} scope to change them.

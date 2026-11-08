@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """``drishti.py elements pack``: one JavaScript file and one style sheet with exactly the libraries an application names and the ones
-they require, for a page that wants two files and no loader (docs/guides/ELEMENTS_IN_YOUR_APP.md, Pick libraries).
+they require, for a page that wants two files and no loader (docs/guides/EMBED_GUIDE.md, Pick libraries).
 
 * the JavaScript: a header naming what is inside, the vendored engines the libraries need (ECharts for drishti-chart; ``--no-engines``
   when the page brings its own), then each library's bundle, deepest first. Loaded as a classic script it registers every library on

@@ -113,8 +113,8 @@ You land in the designer: a canvas on a 12-column grid, a **Filters** pane, **Vi
 The designer sits in **BI Studio**, the shell the report, model and theme designers share: the **Explorer** of your items on the left (with
 **New**), the items you opened as **tabs** above the canvas, and under it a **dock** with **Problems** (the server's check of your draft a second after each
 change, each problem linked to its visual) and **Query** (the selected visual's model query and its SQL). The steps below work the same in it;
-[BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product) is the tour, and
-[BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](../guides/BI_GUIDE.md#5-format) the Format pane, conditional formatting and themes.
+[REPORTS_GUIDE.md section 26](../guides/REPORTS_GUIDE.md#8-bi-studio-and-the-report-designer) is the tour, and
+[REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5](../guides/REPORTS_GUIDE.md#101-the-format-pane) the Format pane, conditional formatting and themes.
 
 ![BI Studio: the Explorer of your items on the left, the open item as a tab, the report designer, and the dock with Problems and Query under the canvas](../guides/img/bistudio/studio.jpg)
 
@@ -480,7 +480,7 @@ measures:
 and the report (`config/bi/reports/banking/pnl-vs-exposure.report.yaml`) only says `model: trading-risk@1`. When the two numbers live in **two models**
 (each with its own row rules), a report can still read both side by side and link their fields: that is [tutorial 18](18-several-datasets-in-one-report.md).
 The same table made by a Python Transform is in [tutorial 14](14-python-and-analyse.md); the reference is
-[BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification) and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/BI_GUIDE.md#16-reports-over-several-datasets).
+[ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana) and [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/REPORTS_GUIDE.md#913-reports-over-several-models).
 
 ## Step 12 · Relative dates, a tablet, and a view inside a report
 
@@ -533,7 +533,7 @@ where: [{ field: trade.TRADE_DATE, op: between, values: [2026-07-27, 2026-10-26]
 
 ![The relative-date slicer set to Last 3 months: a chip names it, the cards read 2,619 trades and +1,125,679,037](img/t10/31-relative-date.jpg)
 
-You should see the slicer's dropdown (the report's `default: last-90-days` is chosen until you pick another) and, after choosing **Last 3 months**, a chip `When: Last 3 months` and cards narrowed to the `2,619` trades booked in the three months ending on the report's date (MTM `+1,125,679,037`; the whole book is `15,000` trades). Your count depends on the day you built the lake: the trade dates stay (the newest is 2026-09-25), the business dates move, so a short window such as *Last 4 weeks* can hold no trades at all. The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 6.1](../guides/BI_GUIDE.md#61-the-relative-date-slicer).
+You should see the slicer's dropdown (the report's `default: last-90-days` is chosen until you pick another) and, after choosing **Last 3 months**, a chip `When: Last 3 months` and cards narrowed to the `2,619` trades booked in the three months ending on the report's date (MTM `+1,125,679,037`; the whole book is `15,000` trades). Your count depends on the day you built the lake: the trade dates stay (the newest is 2026-09-25), the business dates move, so a short window such as *Last 4 weeks* can hold no trades at all. The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 6.1](../guides/REPORTS_GUIDE.md#99-slicers).
 
 **A tablet layout.** A phone gets one column ([step 10](#step-10--on-a-phone)); a tablet (up to 1024 px) can get two, with some visuals across:
 
@@ -560,7 +560,7 @@ You should see the bar the whole width, then the cards in two columns. A phone, 
 
 ![Counterparty lookup: a bar of ten counterparties with CP-VERDANT selected, and its Drishti view beside it with the netting sets](img/t10/32-entity-view.jpg)
 
-You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-VERDANT` (the first bar: the largest computed expected exposure). It is the view page built **for you**: someone who may not see a field does not see it here either. [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3.4](../guides/BI_GUIDE.md#34-the-entity-view).
+You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-VERDANT` (the first bar: the largest computed expected exposure). It is the view page built **for you**: someone who may not see a field does not see it here either. [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3.4](../guides/REPORTS_GUIDE.md#95-the-entity-view).
 
 ## Step 13 · A dataset and a model of your own, in the wizard
 
@@ -687,19 +687,19 @@ Latin America & Caribbean                          12
 ```
 
 A draft model answers its owner (and is listed as `draft` by `bi model list`); a report on it is published once the model is. The reference for the
-wizard's every step is [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer) and
-[BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
+wizard's every step is [REPORTS_GUIDE.md section 23](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads) and
+[REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
 `rachana: 1` datasets, which the upgrade converts to models ([tutorial 17](17-run-it-in-production.md)).
 
 ### Notes: saving safely, and more than one dataset
 
 - **UI.** *New report* on the designer's start page asks for a **Main dataset** and an optional **Also add** (Ctrl or Shift for several): the designer opens with all of them in the **Fields** pane. A dataset you cannot use yet is greyed with the reason (for example *draft in a private workspace: publish it first*). **+ Add visual** makes an empty visual; the **Publish** button (Propose where review is required) saves first. Open the same draft in two tabs and save in both: the second is refused with **Reload theirs / Save mine as a copy / Overwrite with mine**.
 - **CLI.** `drishti.py bi catalogue get <id>` shows the item with its `etag`; a propose, approve or publish of a report that cannot be drawn is refused with `DRS-9030` and the errors (a bi-admin may force it).
-- **YAML.** Nothing new to write: the extra datasets are named in each visual's `dataset:` and the report's `links:` (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16); `?also=a,b` on the designer URL opens extra datasets in the Fields pane.
+- **YAML.** Nothing new to write: the extra datasets are named in each visual's `dataset:` and the report's `links:` (REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16); `?also=a,b` on the designer URL opens extra datasets in the Fields pane.
 
 ## Step 14 · Models: from a pack dataset to a report
 
-The **model layer** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer)): every
+The **model layer** ([REPORTS_GUIDE.md section 23](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads)): every
 kind of every pack is a dataset already, and a model is a few of them joined. This step goes from the pack's **Trade valuation** (one row per trade
 per business date, with its desk, MTM and P&L, in the `market-risk` pack) to a model of trades and desks with a row rule, published, analysed and
 watched. The numbers are from the demo lake (15,000 trade valuations over ten desks).
@@ -785,7 +785,7 @@ security:
 ```
 
 and the report of step 6 says `model: trades-and-desks@1`. It publishes like any report once its model is published and passes its safeguard
-([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 18](../guides/BI_GUIDE.md#18-a-report-on-a-model)).
+([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 18](../guides/REPORTS_GUIDE.md#83-a-report-on-a-model-fields-own-measures-mq-or-sql)).
 
 **Steps 7 to 9 from the command line.** Make the item, publish it and ask it (through the console the same calls are `/bi/api/items/<id>/publish`
 and **`/bi/api/mq`**):
@@ -822,7 +822,7 @@ condition: {type: threshold, op: above, value: 1000000}
 ## Next steps
 
 - [Tutorial 11](11-bi-that-runs-itself.md): refresh, subscribe people to this report, alert on a number, export to PDF, PNG, Excel and CSV.
-- [BI_GUIDE.md](../guides/BI_GUIDE.md) for every page of the BI area, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) for every visual and its wells (sections 3 and 6 are the map and the slicers), [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) for writing a dataset, and [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17](../guides/BI_GUIDE.md#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) for
+- [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md) for every page of the BI area, [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) for every visual and its wells (sections 3 and 6 are the map and the slicers), [REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads) for writing a dataset, and [REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17](../guides/REPORTS_GUIDE.md#59-worked-examples-the-shipped-models-row-rules-and-masks) for
   a stack with four people, row rules and masks at work, and the Model view.
 
 ## If something goes wrong
@@ -836,6 +836,6 @@ condition: {type: threshold, op: above, value: 1000000}
 | Publish is not offered | the report is in **My workspace**: move it to a shared workspace first |
 | a visual says `DRS-9020` | a slicer or a selection cannot reach that visual through the dataset's relationships |
 | a number is `•••` | the dataset masks it for your role; the report is working as it should |
-| `DRS-9190` on a dataset made of others (`from:` or `derived:`) | a composed or derived dataset, which BI does not read: `drishti.py bi migrate --models` converts it to a model ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11](../guides/BI_GUIDE.md#11-composed-and-derived-datasets)) |
+| `DRS-9190` on a dataset made of others (`from:` or `derived:`) | a composed or derived dataset, which BI does not read: `drishti.py bi migrate --models` converts it to a model ([REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11](../guides/REPORTS_GUIDE.md#53-relationships-and-how-a-question-joins)) |
 | `DRS-9021` "the join key ... is masked for you" | a source masks the column the join is made on; join on an unmasked key such as an id |
-| a slicer does not filter a visual of another dataset | no `link` in the report says the two fields are the same ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/BI_GUIDE.md#16-reports-over-several-datasets)) |
+| a slicer does not filter a visual of another dataset | no `link` in the report says the two fields are the same ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](../guides/REPORTS_GUIDE.md#913-reports-over-several-models)) |
