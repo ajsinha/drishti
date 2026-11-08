@@ -34,7 +34,7 @@ About 30 minutes.
   `DRISHTI_SERVER` (and `DRISHTI_CONSOLE`, the console's address, `http://localhost:17480`, for the administrator's calls of step 2); the AI features have no `drishti.py` command, so the command line here is `curl` on the API (the `bi/ai` calls are reads a personal
   token may make; **Test connection** is the console's, for administrators).
 
-**Where this data comes from.** The `world-economics` dataset reads the `world-economy` pack: World Bank figures (CC BY 4.0), fetched by `tools/publicdata/world_economy.py`; the trading data is synthetic. Each source, its licence and how to refresh it: [External data](../guides/EXTERNAL_DATA.md).
+**Where this data comes from.** The `world-economics` dataset reads the `world-economy` pack: World Bank figures (CC BY 4.0), fetched by `drishti.py feed run world-economy`; the trading data is synthetic. Each source, its licence and how to refresh it: [External data](../guides/EXTERNAL_DATA.md).
 
 ## What you will learn
 

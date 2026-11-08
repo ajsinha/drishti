@@ -56,6 +56,45 @@
   approve; decline on the limit and on a bucket; refer on a proxy, no limit, a measure not computed and no exposure; two people at once
   with their own entitlements; the grammar; the audit); the console's trading check, menus and under-construction tests; `test_expcli`.
 
+### drishti-feeds: external data into the lakes, every day
+
+- **drishti-feeds: one module to pull external data into the lakes every day** ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md), Help → Data
+  → External data feeds: one guide for the feeds and their sources). A feed is a feed file (`config/feeds/<feed>.yaml`: the source, its datasets and the pack, kind and table
+  each loads, the target lake, the daily schedule, the licence with its redistribution and internal-only flag, API keys as `${ENV}`
+  names only) and a `Feed` class in `tools/feeds/sources/` that pulls. The base class (`tools/feeds/feedbase.py`) does the rest:
+  incremental pulls from a state file (`data/datafeeds/<feed>/state.json`, saved only when the whole run succeeds), the polite client
+  (one User-Agent `DRISHTI_FEEDS_USER_AGENT` naming Drishti, no personal address; a pause between requests; retries with back-off
+  and `Retry-After`; a download cache, so a broken run resumes), JSONL.gz per dataset and business date under
+  `data/datafeeds/<feed>/<date>/` with a manifest of rows and SHA-256, a lock per feed, and a re-run of a date that replaces it whole.
+- **Three load routes, no new writer**: `java` (the default: `lake build --engine java`, the parallel loader `LakeLoad` from the
+  server's jar), `python` (`lake build`) and `inbox` (the files and their `.ready` with `lake:`, `sha256` and `rows` dropped into the
+  data inbox; several tables or dates as one tar of `<table>/<date>/` folders). Every route replaces the dates it loads; a table new to
+  the lake file gets its pack's recommended entry first (and the dataset's key as its id).
+- **`drishti.py feed list|run|status|schedule`** (`tools/feeds/cli.py`; the wrappers `tools/feeds/feed.sh` and
+  `tools/windows/feed.ps1`): `feed run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--dry-run] [--snapshot]`,
+  scheduler exit codes (0 ok, 1 failed, 2 refused, 3 locked, 4 partial) and one log line per run; `feed schedule --cron | --systemd |
+  --windows` prints ready-to-use daily entries. Every run appends a line to the run ledger `data/datafeeds/ledger.jsonl`.
+- **Admin → Data loads → Feeds**: every feed's last run, last success, rows, duration, failures and last error, and Run now
+  (`GET /api/v1/admin/feeds`, `POST /api/v1/admin/feeds/{feed}/run`, audited; console tables on drishti-grid). A failed run raises
+  the platform alert `data-feed-failed` through the one alert engine (the gauge `drishti.datafeed.failed`; a later success closes it;
+  the same rule for Prometheus). Server settings `drishti.feeds.config`, `root`, `python`, `sample-seconds`.
+- **The public-data refresh scripts are folded into the feeds** (no second way): `tools/publicdata/` is gone; its pack sources live
+  in `tools/feeds/sources/` and run as the feeds `gleif` (into the new **`referencelake`**, core reference data: `config/lakes/referencelake.yaml`,
+  `data/delta/referencelake/`, shipped empty like the other lakes), `us-equities` and `funds` (into `capitalmarket`; the index
+  members now include the **Russell 2000 from IWM's** N-PORT holdings beside the Dow 30 from DIA and the S&P 500 from SPY),
+  `yahoo-prices` (internal only, off as shipped), `world-economy` (internal only for the IMF forecasts, into `worldlake`),
+  `news-and-markets` (internal only, into `newslake`) and `market-data` (incremental by day from its state, each document under its own
+  date, `--since` for a backfill, into `capitalmarket`). The World Bank's WDI belongs to the public sector's world-development feed:
+  world-economy runs with `--no-wdi` (its kinds keyed on WDI series wait until the pack reads them from there).
+  Refreshing a pack's committed demo snapshot in `data/testdata` is `feed run <feed> --snapshot` (with `--internal-ok` for
+  internal-only data), writing exactly where the scripts wrote. Their per-pack `.sh` and `.ps1` wrappers are replaced by the one
+  wrapper per system; `DRISHTI_SEC_USER_AGENT` and `DRISHTI_GLEIF_USER_AGENT` are replaced by `DRISHTI_FEEDS_USER_AGENT`; the
+  sources' downloads and builds move from `<data>/publicdata/` to `<data>/datafeeds/sources/`; `DRISHTI_LIVE_FETCH` is replaced by
+  pytest's `--live` for the hand-run smokes.
+- **Tests on recorded responses only**: every feed's pull, incremental state, an idempotent re-run, retries, the lock, the ledger and
+  status, the inbox route's `.ready` and tar, the java and python routes into a temporary lake, the command line and the schedule
+  output; Admin → Feeds in the console and the server; one `--live` smoke per feed for a person to run.
+
 ## 2.9.11.h (unreleased)
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.

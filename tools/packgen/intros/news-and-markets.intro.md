@@ -45,4 +45,4 @@ snapshot.
 ## Refreshing the data
 
 The topics and companies are written by `config/packs/news-and-markets/tools/make_samples.py`; the offline snapshot by
-`tools/publicdata/news_and_markets.py`.
+`drishti.py feed run news-and-markets`.

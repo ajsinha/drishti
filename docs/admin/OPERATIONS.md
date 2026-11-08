@@ -590,7 +590,7 @@ the shipped lake files: `config/lakes/demo.yaml` holds an entry for every table 
 after the move `git status` shows nothing in `config/lakes`. Only when a site's own connector reads a table the file has no entry for
 (an older or edited connector file naming a kind the packs no longer have) is that entry added, at the end of the file's `tables:`, in
 its compact style, every other line kept byte for byte; the log names the file. The same holds for the data inbox's first load into a
-table a lake file lacks (the empty lakes `risklake`, `newslake`, `worldlake`, `regulators`, `capitalmarket`): only that entry is
+table a lake file lacks (the empty lakes `risklake`, `newslake`, `worldlake`, `regulators`, `capitalmarket`, `referencelake`): only that entry is
 added. A start that finds nothing to add writes nothing. To see what a site's start added: `git diff config/lakes`.
 
 By hand (stop the server first: its connectors hold the tables open), or to see what it would do:

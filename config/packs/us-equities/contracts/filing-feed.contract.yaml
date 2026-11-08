@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: EDGAR filings browser
 description: 'The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside.'
-source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
+source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)'
 grain: One row per edgar filings browser, keyed by FEED.
 key:
 - FEED
@@ -181,7 +181,7 @@ notes: []
 review:
 - 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/filing-feed/filing-feed.2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
-- 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
+- 'a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: ROWS[].FORM, ROWS[].DESCRIPTION: confirm they are closed lists.'
 - 'number types decided by the field''s name: BY[].VALUE amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts BY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'

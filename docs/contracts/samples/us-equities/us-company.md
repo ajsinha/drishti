@@ -17,7 +17,7 @@
 
 # US company: us-company (USEQ)
 
-A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data. One row per us company, keyed by TICKER. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/us-company/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py), refreshed whole by its script (External data); 586 records. A refresh replaces the whole snapshot.
+A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data. One row per us company, keyed by TICKER. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/us-company/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 586 records. A refresh replaces the whole snapshot.
 
 ## File layout
 
@@ -263,7 +263,7 @@ Fields no record above has, found by reading all 586 rows, with how many rows fi
 ## See also
 
 - Data contract: [USEQ in the us-equities pack's contracts](../../packs/us-equities.md#useq-us-company-us-company) (`config/packs/us-equities/contracts/us-company.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [Companies, funds and ETFs](../../../knowledge/companies-funds-and-etfs.md)
 - [Tutorial 27 · Groupings and analytics, computed](../../../tutorials/27-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

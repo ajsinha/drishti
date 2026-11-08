@@ -406,6 +406,39 @@ async def loads_inbox(request: Request, partial: int = 0):
                   inbox_failed=(st.get("board") or {}).get("failedTotal") or 0)
 
 
+@router.get("/loads/feeds")
+async def loads_feeds(request: Request):
+    """Admin → Data loads → Feeds (docs/guides/EXTERNAL_DATA.md section 6): every data feed with its last run, last success, rows, duration,
+    failures since the last success and the last error, Run now, and the latest runs of the ledger. Every figure is the server's
+    (GET /api/v1/admin/feeds, from config/feeds and <data>/datafeeds/ledger.jsonl)."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    error = None
+    try:
+        st = await request.app.state.backend.admin("GET", "/feeds?runs=30", me)
+    except BackendError as e:
+        if e.status in (401, 403):
+            return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
+        st, error = {}, e
+    return render(request, "admin/feeds.html", st=st or {}, error=error, status=await _status(request), feeds_failing=(st or {}).get("failing") or 0,
+                  **await _inbox_tab(request, me))
+
+
+@router.post("/api/feeds/{feed}/run")
+async def feeds_run(request: Request, feed: str):
+    """Run now: the server starts the feed in the background, or says a run of it is in progress."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    if not feed.replace("-", "").isalnum() or feed != feed.lower():
+        return JSONResponse({"detail": "not a feed's name"}, status_code=400)
+    try:
+        return await request.app.state.backend.admin("POST", f"/feeds/{feed}/run", me, {})
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.post("/api/dataload/run")
 async def dataload_run(request: Request):
     """Load now: the server starts a cycle, or answers skipped while a run still loads (runs never overlap); the page says which."""

@@ -26,8 +26,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GEN = ROOT / "tools" / "packgen" / "gleif"
 PACK = ROOT / "config" / "packs" / "gleif"
-FX = ROOT / "tools" / "publicdata" / "tests" / "fixtures" / "gleif"
-sys.path.insert(0, str(ROOT / "tools" / "publicdata"))
+FX = ROOT / "tools" / "feeds" / "tests" / "fixtures" / "gleif"
+sys.path[:0] = [str(ROOT / "tools" / "feeds" / "sources"), str(ROOT / "tools" / "feeds")]
 from gleif import F  # noqa: E402  (the generator's fetch.py by path: other packs have a fetch module too)
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))
 import publicsnap as SNAP  # noqa: E402  (the pack's data: data/testdata/gleif/<kind>/)

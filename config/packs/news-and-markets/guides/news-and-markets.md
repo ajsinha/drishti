@@ -331,32 +331,33 @@ Nested `PROVENANCE`:
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
 | `TOPIC` | `news-topic` | hand-written reference data: `python3 config/packs/news-and-markets/tools/make_samples.py` | `config/packs/news-and-markets/samples/` → `lake demo` → connector `news-store` |
-| `NEWS` | `news` | external: Google News RSS headlines (the news connector) (the headlines belong to their publishers; **internal only**) — refreshed by `tools/publicdata/news_and_markets.py` | `data/testdata/news-and-markets/news/` → `lake demo` → connector `news-store`; live through connector `news` (plugin `news`) when it is switched on (off as shipped) |
+| `NEWS` | `news` | external: Google News RSS headlines (the news connector) (the headlines belong to their publishers; **internal only**) — refreshed by `drishti.py feed run news-and-markets` | `data/testdata/news-and-markets/news/` → `lake demo` → connector `news-store`; live through connector `news` (plugin `news`) when it is switched on (off as shipped) |
 | `CO` | `listed-company` | hand-written reference data: `python3 config/packs/news-and-markets/tools/make_samples.py` | `config/packs/news-and-markets/samples/` → `lake demo` → connector `news-store` |
-| `QUOTE` | `quote` | external: Yahoo Finance quotes and daily history (the yfinance connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `tools/publicdata/news_and_markets.py` | `data/testdata/news-and-markets/quote/` → `lake demo` → connector `news-store`; live through connector `yfinance` (plugin `yfinance`) when it is switched on (off as shipped) |
+| `QUOTE` | `quote` | external: Yahoo Finance quotes and daily history (the yfinance connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `drishti.py feed run news-and-markets` | `data/testdata/news-and-markets/quote/` → `lake demo` → connector `news-store`; live through connector `yfinance` (plugin `yfinance`) when it is switched on (off as shipped) |
 
 ### External sources
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| Google News RSS headlines (the news connector) | https://news.google.com/rss | the headlines belong to their publishers | **yes** | `python3 tools/publicdata/news_and_markets.py refresh news` |
-| Yahoo Finance quotes and daily history (the yfinance connector) | https://finance.yahoo.com | Yahoo terms: personal use, no redistribution | **yes** | `python3 tools/publicdata/news_and_markets.py refresh quote` |
+| Google News RSS headlines (the news connector) | https://news.google.com/rss | the headlines belong to their publishers | **yes** | `python3 tools/drishti.py feed run news-and-markets -- news` |
+| Yahoo Finance quotes and daily history (the yfinance connector) | https://finance.yahoo.com | Yahoo terms: personal use, no redistribution | **yes** | `python3 tools/drishti.py feed run news-and-markets -- quote` |
 
 **Internal only:** Google News RSS headlines (the news connector); Yahoo Finance quotes and daily history (the yfinance connector). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
 
 ```bash
-python3 tools/publicdata/news_and_markets.py status                 # each source: licence, internal only or not, last refreshed (offline)
-python3 tools/publicdata/news_and_markets.py refresh --dry-run      # what would be fetched and written; changes nothing
-python3 tools/publicdata/news_and_markets.py refresh                # a new snapshot in <data>/publicdata/news-and-markets/testdata (through a scratch server's live connectors)
-python3 tools/publicdata/news_and_markets.py refresh --internal-ok  # replace the committed snapshot in data/testdata (internal demos only), then lake demo
+python3 tools/drishti.py feed status news-and-markets                                   # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run news-and-markets --dry-run                            # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run news-and-markets                                      # pull today's data and load it into the lake `newslake` (what the daily schedule runs)
+python3 tools/drishti.py feed run news-and-markets --set server=http://localhost:18480  # through a running server's live connectors instead of a scratch server
+python3 tools/drishti.py feed run news-and-markets --snapshot --internal-ok             # replace the committed snapshot in data/testdata instead (internal demos only), then lake demo
 ```
 
-The same through the wrappers: `tools/publicdata/news-and-markets.sh status` on Linux and macOS, `.\tools\windows\publicdata-news-and-markets.ps1 status` on Windows (every argument is passed on).
+The same through the wrappers: `tools/feeds/feed.sh run news-and-markets` on Linux and macOS, `.\tools\windows\feed.ps1 run news-and-markets` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Generators
 
@@ -368,6 +369,6 @@ The same through the wrappers: `tools/publicdata/news-and-markets.sh status` on 
 
 - **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../docs/guides/TOOLS.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
 
 <!-- /data-sections -->

@@ -13,25 +13,488 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# External data: where it comes from and how to refresh it
+# External data feeds
 
-Most of what Drishti ships is **synthetic** test data (fictitious banks, trades and risk, written by generators) or is **computed** by
-Drishti's engines when asked (VaR, exposure, groupings, correlations, beta). A few packs carry **external data** instead: published data
-fetched from a public source. This page lists every external source of every pack, where it comes from, its licence, whether it may
-leave the organisation, the script that refreshes it, what that script writes and where, how to check the result and how to work
-offline, with worked examples on Linux and on Windows.
+How Drishti pulls external data (GLEIF, the SEC, the IMF, the World Bank, central banks, news) and loads it into its lakes, every day,
+from the command line or a scheduler. One module does it all, **drishti-feeds**: a feed pulls its source in Python, writes what it
+pulled as JSON Lines, one gzipped file per dataset and business date, and hands the files to the loaders Drishti already has.
 
-Each pack's own guide says, kind by kind, where its data comes from (its *Data retrieval* section) and gives the data contract of every
-kind (*Data contracts*); this page is the one place for the external sources themselves.
+Sections 1 to 10 run, schedule, watch and write the feeds; sections 11 to 16 are the sources themselves: each external source of
+every pack, its licence, whether it may leave the organisation, what its feed writes and how to check it. The lakes, the `.ready`
+file and the data inbox are the [data lake guide](DATA_LAKE_GUIDE.md).
 
 !!! warning "Internal use only: IMF data and Yahoo prices"
     Two kinds of external data are for **internal demonstrations only**: the **IMF World Economic Outlook** figures in the
     world-economy pack (the IMF's terms need its permission for commercial reuse) and anything from **Yahoo Finance** (quotes and
     price history: Yahoo's terms forbid redistribution), together with the **Google News** headlines (they belong to their publishers).
-    The scripts never write them into a committed folder unless you pass `--internal-ok`. Raise it with the owner before any client
-    or external use, or rebuild without them (`world_economy.py refresh --no-imf`; leave the Yahoo connectors off).
+    Their feeds (`world-economy`, `news-and-markets`, `yahoo-prices`) are marked internal only: they load the bank's own lakes, and
+    `--snapshot` never writes them into a committed folder unless you pass `--internal-ok`. Raise it with the owner before any client
+    or external use, or pull without them (`drishti.py feed run world-economy -- --no-imf`; leave `yahoo-prices` off).
 
-## Every external source at a glance
+## Contents
+
+1. [The module](#1-the-module)
+2. [The feeds](#2-the-feeds)
+3. [Run a feed](#3-run-a-feed)
+4. [Loading: three routes](#4-loading-three-routes)
+5. [Run it every day](#5-run-it-every-day)
+6. [Monitor: status, the ledger, Admin → Feeds, alerts](#6-monitor-status-the-ledger-admin--feeds-alerts)
+7. [The feed file, every key](#7-the-feed-file-every-key)
+8. [Writing a feed](#8-writing-a-feed)
+9. [Licences and internal-only data](#9-licences-and-internal-only-data)
+10. [Tests](#10-tests)
+11. [Every external source at a glance](#11-every-external-source-at-a-glance)
+12. [A source's own options](#12-a-sources-own-options)
+13. [Worked examples](#13-worked-examples)
+14. [How external data reaches the server](#14-how-external-data-reaches-the-server)
+15. [The sources, pack by pack](#15-the-sources-pack-by-pack)
+16. [Not covered](#16-not-covered)
+
+## 1. The module
+
+drishti-feeds is the Python package `tools/feeds/` beside the other command-line tools, with one feed file per feed in
+`config/feeds/`. It is a package of the tools rather than a Maven module because the pull is Python (every source is an HTTP API or a
+bulk file that Python reads with its standard library) and the load is not new code at all: the module calls `drishti.py lake build`,
+which runs the parallel loader in the server's jar, or drops files into the data inbox. Nothing in it writes a lake.
+
+| Part | File | Does |
+|---|---|---|
+| the Feed base class, the feed file, one run's files | `tools/feeds/feedbase.py` | section 8; checks `config/feeds/<feed>.yaml` (section 7) |
+| one run end to end, the run ledger | `tools/feeds/feedrunner.py` | lock → pull → files → check → load → state → ledger → one log line |
+| the three load routes | `tools/feeds/feedload.py` | section 4 |
+| the schedule entries | `tools/feeds/feedschedule.py` | section 5 |
+| the command line | `tools/feeds/cli.py` | `drishti.py feed list|run|status|schedule` |
+| the polite HTTP client and download cache | `tools/feeds/pullkit.py` | User-Agent, pause, retries with back-off, `Retry-After`, the cache |
+| each source's pull | `tools/feeds/sources/<module>.py` | one module per source (a feed file's `class:`) |
+| the wrappers | `tools/feeds/feed.sh`, `tools/windows/feed.ps1` | what cron, systemd and Task Scheduler run |
+
+Every external source of the packs is pulled this way: each pack's source module in `tools/feeds/sources/` (gleif, us-equities, funds,
+world-economy, news-and-markets, market-data) is a feed's pull, and the same module refreshes its pack's committed demo snapshot with
+`feed run <feed> --snapshot` (section 3.4). There is one way to pull external data.
+
+**Where things are written**, all under the data folder (`DRISHTI_DATA_DIR`, else `./data`; never committed):
+
+```text
+data/datafeeds/
+├── ledger.jsonl                                    one line per run, every feed (section 6)
+└── gleif/
+    ├── state.json                                  what the feed has pulled (section 3.2)
+    ├── cache/                                      the downloads as served, with cache-index.json (a broken run resumes from it)
+    ├── 2026-11-07/
+    │   ├── manifest.json                           the files with their rows and SHA-256, the licence, the run
+    │   ├── lei-entity.2026-11-07.jsonl.gz          <table>.<YYYY-MM-DD>.jsonl.gz: the load rules' name (table and date)
+    │   ├── lei-relationship.2026-11-07.jsonl.gz
+    │   └── lei-mapping.2026-11-07.jsonl.gz
+    └── loads/<run>/                                the loader's summaries of each run
+```
+
+## 2. The feeds
+
+| Feed | Source | Datasets (pack: kinds) | Lake | Use | Daily at |
+|---|---|---|---|---|---|
+| `gleif` | GLEIF golden copy, LEI API, mapping files | gleif: lei-entity, lei-relationship, lei-mapping | `referencelake` | CC0, redistributable | 05:30 |
+| `funds` | SEC Form N-PORT, N-CEN, risk/return summaries; Nasdaq Trader; GLEIF | funds: fund, fund-holder, index-funds | `capitalmarket` | public domain | 06:15 |
+| `world-economy` | IMF WEO, UNDP HDI, CIA Factbook, World Bank WGI and country list (not WDI: the public sector's world-development feed owns it) | world-economy: region-economy, jurisdiction, party, office-holder, election, region, social-indicator (economy, macro-indicator, economic-forecast, labour-market and fiscal-position are keyed on WDI series: they return when the pack reads WDI from world-development's tables) | `worldlake` | **internal only** (the IMF forecasts) | 06:45 |
+| `us-equities` | SEC EDGAR; index members from SPY, DIA, QQQ and IWM N-PORT holdings (S&P 500, Dow 30, Nasdaq-100, Russell 2000); Nasdaq Trader; GLEIF; Wikidata | us-equities: us-company, index-membership, filing-feed, filing, financial-fact | `capitalmarket` | public domain, CC0 | 07:00 |
+| `news-and-markets` | Yahoo Finance quotes, Google News headlines (through Drishti's own live connectors) | news-and-markets: quote, news | `newslake` | **internal only** | 07:30 |
+| `market-data` | ECB euro reference rates, US Treasury par curve, SOFR, euro short-term rate | market-data: fx-spot, ir-curve, rate-fixing (each under its own date) | `capitalmarket` | attribution | weekdays 18:30 |
+| `yahoo-prices` | Yahoo Finance daily prices of the us-equities companies (through a running server's connector) | us-equities: price-history | `capitalmarket` | **internal only**, off as shipped | weekdays 22:30 |
+
+Each source has one feed: the World Bank's development indicators (WDI) are the world-development feed's, so world-economy runs with
+`-- --no-wdi` (its committed demo snapshot, `--snapshot`, still builds the whole pack). The funds feed runs before us-equities on purpose: its N-PORT download cache gives us-equities its index members.
+
+`drishti.py feed list` prints the same from the feed files. Each feed's source, data contract (with JSON examples) and licence are its
+pack's README and the [External data](EXTERNAL_DATA.md) page.
+
+## 3. Run a feed
+
+```bash
+python3 tools/drishti.py feed run gleif
+```
+
+```text
+fetch golden
+...
+  loaded lei-entity 2026-11-07: 1,204 rows into lake referencelake (java)
+2026-11-07T06:30:41-05:00 feed ok exit=0 feed=gleif date=2026-11-07 files=3 rows=4,377 load=java loaded=4,377 seconds=41.2
+```
+
+The last line is the run's **one log line**: what a scheduler's mail or the journal shows. The same in PowerShell:
+`.\tools\windows\feed.ps1 run gleif`.
+
+| Option | Means |
+|---|---|
+| `<feed>` or `--all` | one feed, or every enabled feed one after another |
+| `--date YYYY-MM-DD` | the business date (default today) |
+| `--since YYYY-MM-DD` | pull history from this date (default: the day after the state's last date; section 3.2) |
+| `--load java\|python\|inbox\|none` | the load route (default: the feed file's `load:`, `java` as shipped; section 4) |
+| `--lake NAME` | load into this lake instead of the feed file's |
+| `--dry-run` | say what would be fetched and loaded; nothing changes, no ledger line |
+| `--snapshot` | refresh the committed demo snapshot instead (section 3.4) |
+| `--offline` | the download cache only; nothing is fetched |
+| `--set NAME=VALUE` | override an option of the feed file (`--set indicators='["NY.GDP.MKTP.CD"]'`) |
+| `-- ARGS` | arguments for the source itself (`feed run gleif -- --scope GROUP:784F5XWPLTWKTBV3E584`) |
+| `--inbox DIR`, `--lake-root DIR`, `--jar`, `--java`, `--signal URL`, `--token-file` | for the load routes (section 4) |
+| `--json` | the run's ledger entry as JSON |
+
+### 3.1 Exit codes
+
+| Code | Means | A scheduler should |
+|---|---|---|
+| 0 | ok: pulled, written, loaded | nothing |
+| 1 | failed: the pull (after its retries), the feed's check or the load; the error in words | alert (Drishti already did, section 6) |
+| 2 | refused: a bad feed file, a key's variable not set, an unknown feed, internal-only data into a committed folder | fix the setting |
+| 3 | another run of the feed holds its lock (`data/datafeeds/<feed>/run.lock`) | nothing; the next day's run |
+| 4 | partial: some feeds of `--all` failed, or the load rejected rows | look at `feed status` |
+
+### 3.2 Incremental pulls, resume and re-runs
+
+- **State.** `data/datafeeds/<feed>/state.json` records, per dataset, the last business date pulled. The next run asks the source only for
+  what is newer (`run.window()`, section 8). The state is saved **only when the whole run succeeded**, so a failed run is pulled again
+  from the same point. The first run of a feed pulls `history.first-run-days` (30) days; `--since` pulls any history.
+- **Resume.** Every download goes through the cache `data/datafeeds/<feed>/cache/` (`cache-hours`, 12 by default); a run that broke half way
+  reuses what it fetched and asks only for the rest.
+- **Re-runs are idempotent.** A run writes each date's files to a work folder and then replaces the date's folder whole; every route
+  loads with replace-by-date. Running the same date twice leaves the same files and the same rows in the lake.
+- **Rate limits.** `source.pause` seconds between requests; `source.retries` retries after 2, 4, 8 … seconds on 429, 5xx and network
+  errors, or after the server's `Retry-After`.
+
+### 3.3 The User-Agent and keys
+
+Every request carries one User-Agent: `DRISHTI_FEEDS_USER_AGENT`, else the default `Drishti ajsinha@gmail.com` (Drishti and a contact,
+as the SEC asks of everyone who reads EDGAR; GLEIF and the other sources get the same). Set it to your organisation's contact in
+production:
+
+```bash
+export DRISHTI_FEEDS_USER_AGENT="Example Bank market data team marketdata@bank.example"
+```
+
+A key (an API key, a token) is only ever an environment variable named in the feed file (`keys:`, section 7); a key written in a file
+is refused, and a feed whose key's variable is not set exits 2 naming it.
+
+### 3.4 `--snapshot`: the committed demo snapshot
+
+A feed whose pack ships a committed snapshot (the demo data in `data/testdata/<pack>/`) refreshes it with `--snapshot`: the pack's
+generator writes its files where they live (the samples and guide, `data/testdata/<pack>/`), its check runs, nothing is loaded. Internal-only data
+(section 9) is written into the repository only with `--internal-ok`.
+
+```bash
+python3 tools/drishti.py feed run gleif --snapshot          # config/packs/gleif (samples, guide) and data/testdata/gleif
+python3 tools/drishti.py lake demo                          # then rebuild the demo lake from it
+```
+
+## 4. Loading: three routes
+
+None of the routes writes a lake itself; each hands the run's files to what Drishti already has, and each replaces the business dates it
+loads.
+
+| Route | What runs | Needs | Use it when |
+|---|---|---|---|
+| `java` (default) | `drishti.py lake build --engine java`: the parallel loader `com.ash.drishti.lakeload.LakeLoad` from the server's exec jar (`-Dloader.main`), under the lake's lock, one commit per business date | Java 21 and the jar (`DRISHTI_JAR` or `drishti-server/target`) | always, unless one of the others fits better |
+| `python` | `drishti.py lake build` with its default writer | the console's Python and the jar | a machine where the parallel loader is not wanted |
+| `inbox` | the files dropped into the data inbox with their `.ready` files; the server loads them at its next cycle | the server running with the inbox on | the server should load (one place for every load, its Admin → Data loads screen) |
+
+**The java and python routes** load one dataset of one date at a time (`--mode overwrite-dates`), into the lake the feed file names;
+a table the lake file does not describe yet gets its pack's recommended entry first. `--lake-root DIR` writes a scratch copy;
+`--signal URL` tells a server the data landed.
+
+**The inbox route** drops into `<data>/dataload/inbox/` (`DRISHTI_DATALOAD_DIR`, or `--inbox DIR`):
+
+- one dataset of one date: the file and its `.ready`:
+
+  ```yaml
+  # lei-mapping.2026-11-07.jsonl.gz.ready
+  lake: referencelake
+  pack: gleif
+  kind: lei-mapping
+  table: lei-mapping
+  business-date: '2026-11-07'
+  mode: replace
+  sha256: 9c1f...
+  rows: 3
+  ```
+
+- anything more: **one tar** of `<table>/<YYYY-MM-DD>/` folders, which the inbox loads completely or not at all:
+
+  ```text
+  gleif-2026-11-07.tar
+  ├── lei-entity/2026-11-07/lei-entity.2026-11-07.jsonl.gz
+  ├── lei-mapping/2026-11-07/lei-mapping.2026-11-07.jsonl.gz
+  └── lei-relationship/2026-11-07/lei-relationship.2026-11-07.jsonl.gz
+  ```
+
+  ```yaml
+  # gleif-2026-11-07.tar.ready
+  lake: referencelake
+  folders: {lei-entity: gleif, lei-mapping: gleif, lei-relationship: gleif}
+  mode: replace
+  sha256: 41d2...
+  rows: 4377
+  ```
+
+The data file is written under a `.part` name and renamed when complete; the `.ready` file comes last. The inbox checks the SHA-256 and
+the rows before anything is written ([DATA_LAKE_GUIDE.md section 4](DATA_LAKE_GUIDE.md#4-the-ready-file-every-key)).
+
+## 5. Run it every day
+
+`drishti.py feed schedule` prints ready-to-use daily entries, one per enabled feed, at the time its feed file's `schedule:` gives
+(local time). Every entry runs the wrapper of its system, so the Python is the console's.
+
+**Linux and macOS, cron:**
+
+```bash
+python3 tools/drishti.py feed schedule --cron
+```
+
+```text
+# Drishti data feeds: daily (crontab -e, then paste; the times are this machine's local time)
+# mkdir -p $HOME/drishti-feeds-logs   (one log file per feed; each run appends its one log line and any messages)
+SHELL=/bin/bash
+30 5 * * * /opt/drishti/tools/feeds/feed.sh run gleif --trigger schedule >> $HOME/drishti-feeds-logs/gleif.log 2>&1
+```
+
+**Linux, systemd** (a missed day runs at the next boot):
+
+```bash
+python3 tools/drishti.py feed schedule --systemd
+```
+
+```ini
+# ---- drishti-feed-gleif.service
+[Unit]
+Description=Drishti data feed gleif: GLEIF legal entities, ownership and identifier mappings
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/drishti
+ExecStart=/opt/drishti/tools/feeds/feed.sh run gleif --trigger schedule
+Nice=10
+
+# ---- drishti-feed-gleif.timer
+[Unit]
+Description=Run the Drishti data feed gleif daily
+
+[Timer]
+OnCalendar=*-*-* 05:30:00
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target
+```
+
+Save each block under `~/.config/systemd/user/`, then `systemctl --user daemon-reload && systemctl --user enable --now
+drishti-feed-gleif.timer`; `journalctl --user -u drishti-feed-gleif` shows each run's log line.
+
+**Windows, Task Scheduler** (run the printed commands in a command prompt as the user the feeds run as; `--root` names the Drishti
+folder on that machine when you print them elsewhere):
+
+```bash
+python3 tools/drishti.py feed schedule --windows --root 'C:\drishti'
+```
+
+```text
+schtasks /Create /F /TN "Drishti feed gleif" /SC DAILY /ST 05:30 /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\drishti\tools\windows\feed.ps1\" run gleif --trigger schedule"
+```
+
+Task Scheduler's *Last Run Result* is the exit code (section 3.1). One task for every feed instead: `feed.ps1 run --all` (the feeds run
+one after another in the order of their schedule times). `--trigger schedule` only marks the run in the ledger as the schedule's.
+
+## 6. Monitor: status, the ledger, Admin → Feeds, alerts
+
+```bash
+python3 tools/drishti.py feed status
+```
+
+```text
+FEED   LAST RUN             STATUS  LAST SUCCESS         DATE        ROWS   SECONDS  FAILURES
+gleif  2026-11-07T05:30:12  ok      2026-11-07T05:30:12  2026-11-07  4,377  41.2     0
+ledger: data/datafeeds/ledger.jsonl
+```
+
+`--runs N` adds the last N runs; `--json` gives the same for scripts. It exits 1 when a feed's last run failed.
+
+**The ledger**, `data/datafeeds/ledger.jsonl`, has one JSON line per run, kept for ever:
+
+```json
+{"at": "2026-11-07T05:30:12-05:00", "feed": "gleif", "run": "20261107T103012-drishti-main-41822", "trigger": "schedule",
+ "businessDate": "2026-11-07", "since": null, "lake": "referencelake", "status": "ok", "exit": 0, "files": 3, "rows": 4377,
+ "dates": ["2026-11-07"], "datasets": {"lei-entity": {"rows": 1204, "table": "lei-entity"}},
+ "load": {"route": "java", "status": "ok", "rows": 4377, "rejected": 0, "count": 3}, "licence": "CC0 1.0 (attribution appreciated)",
+ "internalOnly": false, "seconds": 41.2}
+```
+
+**Admin → Data loads → Feeds** (`/admin/loads/feeds`, administrators) shows the same from the server's side: every feed with its lake,
+schedule, last run and status, last success with its business date and rows, the duration, the failures since the last success, the
+last error in words and the licence (internal only marked), then the latest runs of the ledger. Both tables are console tables (sort,
+filter, keyboard). **Run now** starts `tools/drishti.py feed run <feed> --trigger admin` on the server's machine in the background,
+with the server's data folder (its output in `data/datafeeds/<feed>/admin-run.log`); while a run of the feed holds its lock it says so
+instead. The same over REST: `GET /api/v1/admin/feeds`, `POST /api/v1/admin/feeds/{feed}/run` (audited `feed.run`). The server finds
+the feed files, the tools and Python by `drishti.feeds.config`, `drishti.feeds.root` and `drishti.feeds.python`
+([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+
+**Alerts.** A failed (or refused, or partial) last run sets the gauge `drishti.datafeed.failed{feed}` to 1, and the platform alert rule
+`data-feed-failed` (`config/alerts/platform-alerts.yaml`) opens an alert in the one alert engine: the administrators are told in their
+inbox, Admin → Health and Alerts list it, and it closes by itself at the feed's next successful run. The server reads the ledger every
+`drishti.feeds.sample-seconds` (60), so a failure of a cron run is seen as surely as one of Run now. The same rule for a site's
+Prometheus is `DrishtiDataFeedFailed` (`deploy/prometheus/drishti-alerts.yaml`).
+
+## 7. The feed file, every key
+
+`config/feeds/<feed>.yaml`, named after the feed. An unknown key is refused, naming the keys there are.
+
+```yaml
+feed: gleif                            # the name: lower case, digits, dashes; the file's name
+title: GLEIF legal entities, ownership and identifier mappings
+description: >-                        # optional: what it holds, in a sentence or two
+  The Global LEI Foundation's golden copy ...
+class: gleif.GleifFeed                 # <module>.<Class>: tools/feeds/sources/<module>.py (or a module beside the feed file)
+source:
+  provider: GLEIF
+  url: https://www.gleif.org
+  pause: 1.0                           # seconds between requests (default 0.5): the rate limit
+  retries: 3                           # retries after 2, 4, 8 s on 429, 5xx, network errors (default 3)
+  timeout: 90                          # seconds a request may take
+  cache-hours: 20                      # a download younger than this is reused (default 12)
+lake: referencelake                    # the lake it loads (config/lakes/<lake>.yaml)
+load: java                             # java | python | inbox | none (default java)
+enabled: true                          # false: left out of --all and the schedule
+schedule: {at: "05:30", days: daily}   # HH:MM local time; daily | weekdays
+licence:
+  name: CC0 1.0 (attribution appreciated)
+  url: https://www.gleif.org/en/meta/lei-data-terms-of-use
+  redistribution: allowed              # allowed | attribution | internal-only
+  internal-only: false                 # true: never redistributed (section 9)
+  attribution: "Contains LEI data from GLEIF, CC0 1.0"
+keys:                                  # API keys: environment variables only, never values
+  api_key: ${FRED_API_KEY}             # required: the run exits 2 when it is not set
+  token: {env: "${SOME_TOKEN}", required: false}
+history: {first-run-days: 30}          # the first run, without a state, pulls this many days
+datasets:                              # each: the rows' pack and kind, and the table they load into
+  lei-entity:       {pack: gleif, kind: lei-entity, key: LEI}
+  lei-relationship: {pack: gleif, kind: lei-relationship, key: RELATIONSHIP_ID}
+  lei-mapping:      {pack: gleif, kind: lei-mapping, key: IDENTIFIER, table: lei-mapping, dated: run}
+options:                               # free settings the feed's class reads with run.option(name); --set NAME=VALUE overrides
+  args: []
+snapshot:                              # optional: what --snapshot does (args for the source; a note)
+  note: refreshes config/packs/gleif and data/testdata/gleif
+```
+
+| Dataset key | Means |
+|---|---|
+| `pack`, `kind` | the pack and kind of the rows: their layout, id and contract (required) |
+| `table` | the table (and the files' name); default the kind, as the demo lake names its tables |
+| `key` | the rows' id field: given to the load (`--key`), so a lake entry without an id takes it; an entry with one must agree |
+| `dated` | `run` (default): every row under the run's business date (a snapshot such as GLEIF's); `source`: the date the feed gives each emit (a time series) |
+| `description` | a line for `feed list --json` and the docs |
+
+## 8. Writing a feed
+
+A feed is a feed file (section 7) and one class. The class pulls; the base class does everything else: the cache, the retries, the
+dated files and their manifest, the state, the lock, the ledger, the load.
+
+```python
+# tools/feeds/sources/worldbank.py
+from feedbase import Feed, FeedError
+
+BASE = "https://api.worldbank.org/v2"
+
+
+class WorldBank(Feed):
+    def plan(self, run):                                       # what --dry-run prints
+        start, end = run.window("indicator")
+        return [f"{BASE}/country/all/indicator/{c}?date={start.year}:{end.year}" for c in run.option("indicators", [])]
+
+    def pull(self, run):
+        start, end = run.window("indicator")                   # --since; else the day after the state's last date; else history
+        for code in run.option("indicators", []):
+            doc = run.get_json(f"{BASE}/country/all/indicator/{code}?date={start.year}:{end.year}&format=json&per_page=20000",
+                               name=f"wdi-{code}-{start.year}-{end.year}.json")
+            if doc is None:
+                raise FeedError(f"{code}: no answer")          # a failed request also fails the run by itself
+            rows = [{"INDICATOR": code, "COUNTRY": x["countryiso3code"], "YEAR": int(x["date"]), "VALUE": x["value"]}
+                    for x in doc[1] or [] if x.get("value") is not None]
+            run.emit("indicator", rows)                        # under the run's business date (dated: run)
+        run.mark("indicator", end)                             # saved only when the whole run succeeds
+```
+
+```yaml
+# config/feeds/worldbank.yaml
+feed: worldbank
+title: World Bank World Development Indicators
+class: worldbank.WorldBank
+source: {provider: World Bank, url: "https://data.worldbank.org", pause: 0.5}
+lake: worldlake
+schedule: {at: "06:00", days: daily}
+licence: {name: CC BY 4.0, url: "https://www.worldbank.org/en/about/legal/terms-of-use-for-datasets", redistribution: attribution,
+          attribution: "The World Bank: World Development Indicators"}
+datasets:
+  indicator: {pack: world-economy, kind: indicator, key: INDICATOR}
+options:
+  indicators: [NY.GDP.MKTP.CD, SP.POP.TOTL]
+```
+
+**The API** (stable; `tools/feeds/feedbase.py`):
+
+| Call | Gives |
+|---|---|
+| `run.business_date` | the run's business date (`--date`, else today) |
+| `run.since` | `--since`, else `None` |
+| `run.window(dataset)` | `(first, last)` dates to pull: `--since`; else the day after the dataset's last date in the state; else `last - history.first-run-days` |
+| `run.option(name, default)` | the feed file's `options:` value, overridden by `--set name=value` (JSON values) |
+| `run.key(name)` | a key's value from its environment variable; exits the run with 2 when a required one is not set |
+| `run.get_json(url, name=None, headers=None)` | the parsed JSON, through the cache (`name`: its file name in the cache; default a hash of the URL); `None` after the retries |
+| `run.get_text(...)`, `run.get_bytes(...)` | the same as text or bytes (CSV, XML, RSS, zip) |
+| `run.emit(dataset, rows, business_date=None)` | rows (dicts) of a dataset of the feed file, appended to that date's file; returns how many |
+| `run.mark(dataset, last)` | records the last business date pulled (saved with the state when the run succeeds) |
+| `run.state` | the feed's `state.json` as a dict, for anything more (a cursor, an ETag); saved only on success |
+| `run.log(text)` | a line to the run's output |
+| `run.dry_run`, `run.offline` | what the command line asked |
+
+A class may also implement `check(run)` (problems with what it wrote, in words: the run fails with them) and `snapshot(run)` (for
+`--snapshot`). Rules that keep feeds alike:
+
+- **JSON Lines only**, contract fields only: the rows are what the pack's kind contract says, nothing Drishti-internal.
+- **Keys only via `run.key()`**: never logged, never written; pass them in `headers=` (the cache never stores request headers).
+- **Pull, do not load.** A feed never writes a lake or the inbox itself; the route is the operator's choice.
+- **Recorded fixtures for tests** (section 10), never the network.
+
+## 9. Licences and internal-only data
+
+Every feed file records its source's licence: its name, its terms' URL, whether the data may be redistributed and whether it is for
+internal use only. It is copied into every date's `manifest.json` and every ledger line, and `feed list` shows it. A feed marked
+`internal-only: true` (Yahoo's prices, the IMF's forecasts, news headlines) loads into the bank's own lakes like any other, which are
+never committed or shipped; `--snapshot` writes it into the repository only with `--internal-ok`, for internal demos.
+
+
+A source whose terms do not allow redistribution is never written into a committed folder of the repository unless you pass
+`--internal-ok` (with `--snapshot`); without it the feed refuses (exit 2) and explains why in words:
+
+```text
+refused: .../config/packs/world-economy is a committed folder of the repository, and these sources may not be redistributed:
+  - IMF World Economic Outlook (DataMapper): the IMF's terms allow reuse with attribution, but commercial reuse needs the IMF's permission; ...
+Write them to the data folder instead (leave out --out, or point it outside the repository), or pass --internal-ok
+if the result stays inside your organisation (internal demos only).
+```
+
+The committed world-economy pack carries the IMF forecasts, and the committed news-and-markets snapshot carries Yahoo and Google
+News data: both were the owner's choice for internal demos ([the world-economy data in detail](#the-world-economy-data-in-detail), `data/testdata/README.md`). The
+us-equities pack ships **no** prices: its Yahoo price connector is off as shipped. Before any external or client use, rebuild without
+them (`drishti.py feed run world-economy -- --no-imf`) or get permission.
+
+## 10. Tests
+
+`tools/feeds/tests/` runs every feed against **recorded responses** (`tools/feeds/tests/fixtures/`), never the network: the feed file's
+checks, a pull with its dated files, manifest and state, the next run pulling only what is new, an idempotent re-run, retries with
+back-off, the lock, the ledger and status, the inbox route's `.ready` and tar, the java and python routes into a temporary lake (with the
+server's jar), the command line and the schedule output. One `--live` smoke per feed is for a person to run by hand:
+
+```bash
+python3 -m pytest tools/feeds/tests/test_live.py --live -k gleif        # the real source, into a scratch data folder
+```
+## 11. Every external source at a glance
 
 | Pack | `SOURCE` | Where it comes from | Licence | Use |
 |---|---|---|---|---|
@@ -46,7 +509,7 @@ kind (*Data contracts*); this page is the one place for the external sources the
 | market-data | `sofr` | SOFR, Federal Reserve Bank of New York, `https://markets.newyorkfed.org/api/rates/secured/sofr` | NY Fed terms of use: reuse with attribution | committable, with attribution |
 | market-data | `estr` | Euro short-term rate, ECB, `https://data-api.ecb.europa.eu/service/data/EST` | ECB: free reuse with the source acknowledged | committable, with attribution |
 | us-equities | `wikidata` | Wikidata: company facts (headquarters, founded, website, LEI) and the date a member joined its index, `https://query.wikidata.org/sparql` | CC0 1.0 | committable |
-| us-equities | `trackers` | SEC Form N-PORT of SPY, QQQ and DIA: the S&P 500, Nasdaq-100 and Dow members (read from the funds cache, no download) | public domain (US Government work) | committable |
+| us-equities | `trackers` | SEC Form N-PORT of SPY, QQQ, DIA and IWM: the S&P 500, Nasdaq-100, Dow and Russell 2000 members (read from the funds cache, no download) | public domain (US Government work) | committable |
 | us-equities | `nasdaq` | Nasdaq Trader symbol directory, `https://www.nasdaqtrader.com/dynamic/SymDir/` | public symbol directory files | committable |
 | us-equities | `sec` | SEC EDGAR: tickers, submissions, XBRL company facts, `https://data.sec.gov` | public domain (US Government work); EDGAR fair access policy | committable |
 | us-equities | `gleif` | GLEIF LEI records, `https://api.gleif.org/api/v1` | CC0 1.0 | committable |
@@ -62,327 +525,134 @@ kind (*Data contracts*); this page is the one place for the external sources the
 | funds | `rr` | SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns), `https://www.sec.gov/data-research/sec-markets-data/mutual-fund-prospectus-riskreturn-summary-data-sets` | public domain (US Government work) | committable |
 | funds | `gleif` | GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to), `https://goldencopy.gleif.org` | CC0 1.0 | committable |
 
-A new pack built on external data adds its rows here and a section of its own below (the funds pack, SEC N-PORT and N-CEN, came
+A new pack built on external data adds its rows here and a section of its own in section 15 (the funds pack, SEC N-PORT and N-CEN, came
 this way). The market-data pack's committed samples and test data are synthetic: its official sources are optional and
 always go to the data folder. Every other pack (core, trading, market-risk, counterparty-risk, compute-demo) holds synthetic or
 computed data only, and has no external source.
 
-## The scripts
+## 12. A source's own options
 
-Each pack built on external data has **its own refresh script** in `tools/publicdata/`, with a shell wrapper beside it and a
-PowerShell wrapper in `tools/windows/`. There is no single script for every pack, on purpose: each pack's sources, licences and
-output are its own.
-
-| Pack | Script | Linux and macOS | Windows |
-|---|---|---|---|
-| `world-economy` | `tools/publicdata/world_economy.py` | `tools/publicdata/world-economy.sh` | `tools\windows\publicdata-world-economy.ps1` |
-| `news-and-markets` | `tools/publicdata/news_and_markets.py` | `tools/publicdata/news-and-markets.sh` | `tools\windows\publicdata-news-and-markets.ps1` |
-| `market-data` | `tools/publicdata/official_market_data.py` | `tools/publicdata/market-data.sh` | `tools\windows\publicdata-market-data.ps1` |
-| `us-equities` | `tools/publicdata/us_equities.py` | `tools/publicdata/us-equities.sh` | `tools\windows\publicdata-us-equities.ps1` |
-| `gleif` | `tools/publicdata/gleif.py` | `tools/publicdata/gleif.sh` | `tools\windows\publicdata-gleif.ps1` |
-| `funds` | `tools/publicdata/funds.py` | `tools/publicdata/funds.sh` | `tools\windows\publicdata-funds.ps1` |
-
-Every script has the same commands and the same options. `--help` on the script, on `status` and on `refresh` prints its worked
-examples and its wrappers:
-
-```bash
-python3 tools/publicdata/<script>.py status                 # each source: licence, use, last refreshed, cached size (offline)
-python3 tools/publicdata/<script>.py refresh --dry-run      # what would be fetched and written; changes nothing
-python3 tools/publicdata/<script>.py refresh [SOURCE ...]   # fetch, normalise, write, then the pack's own check
-python3 tools/publicdata/<script>.py refresh --help         # the options, the sources, what --scope takes, the examples
-```
+A source's own options go after `--` (`feed run gleif -- --scope NAME:allianz,CAP:200`):
 
 | Option | Meaning |
 |---|---|
-| `SOURCE ...` | only these sources of the pack (default: all of them except those marked "never by default") |
+| `SOURCE ...` | only these sources of the feed (default: all of them except those marked "never by default") |
 | `--years N` / `--since YEAR` | how much history: the last N years, or from YEAR |
-| `--scope A,B` | widen the source: more indicators, tickers, pairs (each source says what, in `refresh --help`) |
-| `--out DIR` | where to write (default: below) |
-| `--internal-ok` | allow internal-only data into a committed folder of the repository (internal demos only) |
-| `--cache DIR` | the download cache (default `<data>/publicdata/cache/<pack>`) |
+| `--scope A,B` | widen the source: more indicators, tickers, pairs, entities (each source's section below says what) |
 | `--max-age HOURS` | reuse a cached download younger than this (default 24); older files are fetched again |
-| `--offline` | use the cache only, fetch nothing (a rebuild on a machine without internet) |
-| `--pause S` | seconds between requests (default 0.4) |
-| `--no-check` | skip the pack's check after writing |
+| `--no-check` | skip the pack's check after the build |
 
-`<data>` is the configurable data folder: `DRISHTI_DATA_DIR`, else `data/` in the Drishti folder (git-ignored). Exit codes: 0 done,
-2 done with some downloads failed or a check problem, 1 nothing written, 3 refused (the reason is printed in words).
+The download cache of a source is `<data>/datafeeds/sources/cache/<pack>/` (a run that breaks resumes from it; `feed run --offline` uses
+it only). Every request carries the one User-Agent (section 3.3).
 
-The scripts are plain Python (the standard library and PyYAML, which the console's environment has); no other program is
-downloaded or run. The wrappers use the console's environment (`drishti-console/.venv`, made by `tools/windows/start-console.ps1` on
-Windows), else `python3` (`DRISHTI_PYTHON` or `python` on Windows), and pass every argument on unchanged.
+## 13. Worked examples
 
-## Worked examples
-
-The output below is real, from a fresh clone (the paths are shortened to `~/drishti`). `status` and `refresh --dry-run` change
-nothing and need no network: run them first, always.
-
-### status: what the pack holds, offline
-
-```console
-$ tools/publicdata/world-economy.sh status
-SOURCE     LICENCE                                           USE            LAST REFRESHED  CACHED
-worldbank  CC BY 4.0                                         committable    never           -
-imf        IMF terms: attribution; no commercial reuse with  internal only  never           -
-undp       CC BY 3.0 IGO                                     committable    never           -
-factbook   Public domain; the factbook.json mirror is CC0 1  committable    never           -
-
-pack world-economy: writes the committed dataset and pack with --internal-ok; else <data>/publicdata/world-economy
-cache ~/drishti/data/publicdata/cache/world-economy
-manifest ~/drishti/data/publicdata/world-economy/manifest.json
-internal only: imf: the IMF's terms allow reuse with attribution, but commercial reuse needs the IMF's permission; the owner kept it for internal demos only (2026-10-10)
-```
-
-```console
-$ python3 tools/publicdata/news_and_markets.py status
-committed snapshot quote: quote.2026-10-18.jsonl.gz, 20 documents, 130.6 KB
-committed snapshot news: news.2026-10-18.jsonl.gz, 71 documents, 141.4 KB
-SOURCE  LICENCE                                           USE            LAST REFRESHED  CACHED
-quote   Yahoo terms of service: personal use, no redistr  internal only  never           -
-news    Headlines and links belong to their publishers    internal only  never           -
-
-pack news-and-markets: writes data/testdata with --internal-ok; else <data>/publicdata/news-and-markets/testdata
-cache ~/drishti/data/publicdata/cache/news-and-markets
-manifest ~/drishti/data/publicdata/news-and-markets/manifest.json
-internal only: quote: Yahoo's terms forbid redistributing its prices; kept as a dated demo snapshot only
-internal only: news: the headlines belong to their publishers; shown for demonstration only
-```
-
-```console
-$ python3 tools/publicdata/official_market_data.py status
-SOURCE       LICENCE                                       USE          LAST REFRESHED  CACHED
-ecb-fx       ECB: free reuse with the source acknowledged  committable  never           -
-us-treasury  Public domain (US Government work)            committable  never           -
-sofr         NY Fed terms of use: reuse with attribution   committable  never           -
-estr         ECB: free reuse with the source acknowledged  committable  never           -
-
-pack market-data: writes <data>/publicdata/market-data (fx-spot.<date>.jsonl, ir-curve.<date>.jsonl, rate-fixing.<date>.jsonl)
-cache ~/drishti/data/publicdata/cache/market-data
-manifest ~/drishti/data/publicdata/market-data/manifest.json
-```
-
-```console
-$ python3 tools/publicdata/us_equities.py status
-committed pack: 586 companies, data retrieved 2026-10-24
-SOURCE    LICENCE                                           USE            LAST REFRESHED  CACHED
-wikidata  CC0 1.0                                           committable    never           -
-trackers  Public domain (U.S. Government work)              committable    never           -
-nasdaq    Public symbol directory files (Nasdaq Trader)     committable    never           -
-sec       Public domain (U.S. Government work); EDGAR fair  committable    never           -
-gleif     CC0 1.0                                           committable    never           -
-prices    Yahoo terms of service: personal use, no redistr  internal only  never           -
-
-pack us-equities: writes config/packs/us-equities; a widened build <data>/publicdata/us-equities/packs/us-equities; prices <data>/publicdata/us-equities/prices
-cache ~/drishti/data/publicdata/cache/us-equities
-manifest ~/drishti/data/publicdata/us-equities/manifest.json
-internal only: prices: Yahoo's terms forbid redistributing its prices; the pack ships none and keeps the connector off (internal demos only)
-```
-
-```console
-$ python3 tools/publicdata/gleif.py status
-committed pack: 9937 entities, golden copy of 2026-10-25
-SOURCE      LICENCE                                           USE          LAST REFRESHED  CACHED
-golden      CC0 1.0 (attribution appreciated)                 committable  never           -
-api         CC0 1.0 (attribution appreciated)                 committable  never           -
-mapping     CC0 1.0 (the BIC file with SWIFT, the ISIN file   committable  never           -
-golden-lei  CC0 1.0 (attribution appreciated)                 committable  never           -
-
-pack gleif: writes config/packs/gleif; a widened build <data>/publicdata/gleif/packs/gleif
-cache ~/drishti/data/publicdata/cache/gleif
-manifest ~/drishti/data/publicdata/gleif/manifest.json
-```
-
-"LAST REFRESHED never" and "CACHED -" mean this machine has not refreshed yet: the committed data (the first lines, where a pack
-has them) is what the pack serves.
-
-### refresh --dry-run: what a refresh would do, changing nothing
-
-```console
-$ python3 tools/publicdata/world_economy.py refresh --dry-run
-note: the build carries IMF data (the IMF's terms allow reuse with attribution, but commercial reuse needs the IMF's permission; the owner kept it for internal demos only (2026-10-10)), so it goes to the data folder; --internal-ok refreshes the committed pack
-dry run: world-economy, sources worldbank, imf, undp, factbook, years 2015-2025
-  worldbank (CC BY 4.0; committable): 51 request(s), cache ~/drishti/data/publicdata/cache/world-economy (empty)
-    https://api.worldbank.org/v2/country?format=json&per_page=400
-    https://api.worldbank.org/v2/country/all/indicator/NY.GDP.MKTP.CD?format=json&date=2015:2025&per_page=20000
-    https://api.worldbank.org/v2/country/all/indicator/NY.GDP.PCAP.CD?format=json&date=2015:2025&per_page=20000
-  imf (IMF terms: attribution; no commercial reuse without permission; internal only): 9 request(s), cache ~/drishti/data/publicdata/cache/world-economy
-    https://www.imf.org/external/datamapper/api/v1/indicators
-    https://www.imf.org/external/datamapper/api/v1/BCA_NGDPD
-    https://www.imf.org/external/datamapper/api/v1/GGXCNL_NGDP
-  undp (CC BY 3.0 IGO; committable): 1 request(s), cache ~/drishti/data/publicdata/cache/world-economy (empty)
-    https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_complete_time_series.csv
-  factbook (Public domain; the factbook.json mirror is CC0 1.0; committable): 3 request(s), cache ~/drishti/data/publicdata/cache/world-economy (empty)
-    https://api.github.com/repos/factbook/factbook.json/commits/master
-    https://api.github.com/repos/factbook/factbook.json/git/trees/<sha>?recursive=1
-    https://raw.githubusercontent.com/factbook/factbook.json/<sha>/<region>/<gec>.json (about 260 files)
-  then: normalise -> ~/drishti/data/publicdata/world-economy; run the pack generator; then its --check
-```
-
-```console
-$ python3 tools/publicdata/official_market_data.py refresh --dry-run
-dry run: market-data -> ~/drishti/data/publicdata/market-data
-  ecb-fx (ECB: free reuse with the source acknowledged): fx-spot.<date>.jsonl from 2025-10-26; https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip
-  us-treasury (Public domain (US Government work)): ir-curve.jsonl from 2025-10-26; https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2025/all?type=daily_treasury_yield_curve
-  sofr (NY Fed terms of use: reuse with attribution): rate-fixing.jsonl from 2025-10-26; https://markets.newyorkfed.org/api/rates/secured/sofr/search.json?startDate=2025-10-26&endDate=2026-10-26
-  estr (ECB: free reuse with the source acknowledged): rate-fixing.jsonl from 2025-10-26; https://data-api.ecb.europa.eu/service/data/EST/B.EU000A2X2A25.WT?startPeriod=2025-10-26&format=csvdata
-```
-
-```console
-$ python3 tools/publicdata/us_equities.py refresh --dry-run
-dry run: us-equities, sources wikidata, nasdaq, sec, gleif
-  wikidata (CC0 1.0; committable): 4 request(s), cache ~/drishti/data/publicdata/cache/us-equities
-    https://query.wikidata.org/sparql (current members of DJIA, Q180816)
-    https://query.wikidata.org/sparql (current members of NDX, Q507306)
-    https://query.wikidata.org/sparql (current members of SP500, Q242345)
-  nasdaq (Public symbol directory files (Nasdaq Trader); committable): 2 request(s), cache ~/drishti/data/publicdata/cache/us-equities
-    https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt
-    https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt
-  sec (Public domain (U.S. Government work); EDGAR fair access policy; committable): 3 request(s), cache ~/drishti/data/publicdata/cache/us-equities
-    https://www.sec.gov/files/company_tickers_exchange.json
-    https://data.sec.gov/submissions/CIK##########.json (about 500 companies, 20 filings each)
-    https://data.sec.gov/api/xbrl/companyfacts/CIK##########.json (9 concepts, 10 years)
-  gleif (CC0 1.0; committable): 1 request(s), cache ~/drishti/data/publicdata/cache/us-equities
-    https://api.gleif.org/api/v1/lei-records/<LEI> (or ?filter[entity.legalName]=<name>), one a company
-  then: make.py -> the committed pack (config/packs/us-equities); then make.py --check
-```
-
-```console
-$ python3 tools/publicdata/gleif.py refresh --dry-run
-dry run: gleif, sources golden, api, mapping
-  golden (CC0 1.0 (attribution appreciated); committable): 3 request(s) or file(s), cache ~/drishti/data/publicdata/cache/gleif
-    https://goldencopy.gleif.org/api/v2/golden-copies/publishes/latest
-    rr full file, csv (about 24 MB zipped)
-    repex full file, csv (about 62 MB zipped)
-  api (CC0 1.0 (attribution appreciated); committable): 2 request(s) or file(s), cache ~/drishti/data/publicdata/cache/gleif
-    https://api.gleif.org/api/v1/lei-records?filter[lei]=<200 LEIs> (one request per 200 entities; the count is known once the golden copy is reduced)
-    https://api.gleif.org/api/v1/entity-legal-forms, /countries, /lei-issuers (paged, about 20 requests)
-  mapping (CC0 1.0 (the BIC file with SWIFT, the ISIN file with ANNA); committable): 4 request(s) or file(s), cache ~/drishti/data/publicdata/cache/gleif
-    https://mapping.gleif.org/api/v2/bic-lei/latest
-    https://mapping.gleif.org/api/v2/isin-lei/latest
-    https://mapping.gleif.org/api/v2/mic-lei/latest
-    https://mapping.gleif.org/api/v2/oc-lei/latest
-  then: make.py -> the committed pack (config/packs/gleif); then make.py --check
-```
-
-The news-and-markets dry run lists the twenty `QUOTE-` ids and the 71 `NEWS-` ids it would capture (91 calls, at least 2 seconds apart),
-and says that the snapshot goes to `<data>/publicdata/news-and-markets/testdata` unless you pass `--internal-ok`.
-
-### refresh SOURCE: one source at a time
+*Captured* on a scratch data folder (paths shortened to `~/drishti`). A dry run changes nothing and needs no network: run it first.
 
 ```bash
-python3 tools/publicdata/official_market_data.py refresh estr               # the euro short-term rate only: one request, a few seconds
-python3 tools/publicdata/world_economy.py refresh worldbank undp            # the openly licensed sources only, into the data folder
-python3 tools/publicdata/us_equities.py refresh sec --offline               # rebuild the SEC part from the download cache
-python3 tools/publicdata/gleif.py refresh mapping                           # the BIC, ISIN, MIC and OpenCorporates files again
+python3 tools/drishti.py feed run market-data --dry-run --date 2026-11-06
 ```
-
-The habit: `status`, then `refresh --dry-run`, then `refresh` with the sources you need.
-
-A refresh prints each step (fetch, normalise, write, check) and ends with what it wrote; its manifest
-(`<data>/publicdata/<pack>/manifest.json`) keeps the last 20 runs, and `status` then shows `LAST REFRESHED` and `CACHED`.
-
-### On Windows
-
-The same commands through the PowerShell wrappers, from the Drishti folder; the output is the same, with Windows paths:
-
-```powershell
-.\tools\windows\publicdata-world-economy.ps1 status
-.\tools\windows\publicdata-world-economy.ps1 refresh --dry-run
-.\tools\windows\publicdata-market-data.ps1 refresh estr
-.\tools\windows\publicdata-market-data.ps1 refresh --years 2
-.\tools\windows\publicdata-news-and-markets.ps1 refresh --server http://localhost:18080
-.\tools\windows\publicdata-us-equities.ps1 refresh --dry-run
-.\tools\windows\publicdata-us-equities.ps1 refresh --scope TSLA,FILINGS:40
-.\tools\windows\publicdata-gleif.ps1 status
-.\tools\windows\publicdata-gleif.ps1 refresh --scope NAME:allianz,CAP:200
-```
-
-Set `$env:DRISHTI_DATA_DIR` to put the cache and the builds elsewhere. `Get-Help .\tools\windows\publicdata-gleif.ps1 -Examples`
-shows each wrapper's examples. Nothing but Python is needed: no `.exe` is downloaded or run.
-
-## The internal-only rule
-
-A source whose terms do not allow redistribution is never written into a committed folder of the repository unless you pass
-`--internal-ok`; without it the script either writes to the data folder (when you did not give `--out`, and it says so) or refuses
-(when `--out` names a committed folder), and explains why in words:
 
 ```text
-refused: .../config/packs/world-economy is a committed folder of the repository, and these sources may not be redistributed:
-  - IMF World Economic Outlook (DataMapper): the IMF's terms allow reuse with attribution, but commercial reuse needs the IMF's permission; ...
-Write them to the data folder instead (leave out --out, or point it outside the repository), or pass --internal-ok
-if the result stays inside your organisation (internal demos only).
+dry run: feed market-data (Official market data (ECB FX reference rates, US Treasury par curve, SOFR, euro short-term rate)), business date 2026-11-06, window 2026-10-07..2026-11-06, datasets fx-spot, ir-curve, rate-fixing -> lake capitalmarket by java
+    ecb-fx (ECB: free reuse with the source acknowledged): fx-spot.<date>.jsonl from 2025-11-07; https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip
+    us-treasury (Public domain (US Government work)): ir-curve.<date>.jsonl from 2025-11-07; https://home.treasury.gov/...
+    sofr (NY Fed terms of use: reuse with attribution): rate-fixing.<date>.jsonl from 2025-11-07; https://markets.newyorkfed.org/api/rates/secured/sofr/search.json?...
+    estr (ECB: free reuse with the source acknowledged): rate-fixing.<date>.jsonl from 2025-11-07; https://data-api.ecb.europa.eu/service/data/EST/...
+2026-11-07T19:01:23-05:00 feed dry-run exit=0 feed=market-data date=2026-11-06 files=0 rows=0 seconds=0.0
 ```
 
-The committed world-economy pack carries the IMF forecasts, and the committed news-and-markets snapshot carries Yahoo and Google
-News data: both were the owner's choice for internal demos ([the world-economy data in detail](#the-world-economy-data-in-detail), `data/testdata/README.md`). The
-us-equities pack ships **no** prices: its Yahoo price connector is off as shipped. Before any external or client use, rebuild without
-them (`world_economy.py refresh --no-imf`) or get permission.
+One source, written but not loaded (`--load none`):
 
-## How external data reaches the server
+```bash
+python3 tools/drishti.py feed run market-data --load none --date 2026-11-06 -- estr
+```
 
-1. **The refresh script** fetches into its download cache and writes the pack's data: for us-equities and gleif one gzipped JSON
-   Lines snapshot per kind named by the load rules, `data/testdata/<pack>/<kind>/<kind>.<date>.jsonl.gz` (a large kind a tar of
-   `<kind>/<date>/` parts), listed in `data/testdata/testdata.yaml`; for
-   world-economy the normalised dataset (`tools/realdata/dataset/`) and the pack's samples; for news-and-markets the snapshot in
-   `data/testdata/news-and-markets/`; for market-data JSON Lines files in the data folder.
-2. **The lake.** `python3 tools/drishti.py lake demo` (or `python3 tools/build_demo_lakes.py`) reads `data/testdata/testdata.yaml`
-   and writes every dataset into `<data>/delta/<domain>/<kind>/`. The market-data files go in with `tools/ingest_jsonl.py` (below).
-3. **The server** reads each kind through the pack's Delta connector (`us-equities-store`, `gleif-store`, `macro-store`,
-   `civic-store`, `news-store`, `market-store`), never through the demo connector. Restart it, or let it pick the tables up at its
-   next refresh.
+```text
+fetch estr
+normalise estr: 1 documents, 254 observations
+wrote ~/drishti/data/feeds/market-data/work/20261108T000123-oryxpro-1372281/build/rate-fixing.2026-11-05.jsonl
+2026-11-07T19:01:24-05:00 feed ok exit=0 feed=market-data date=2026-11-06 files=1 rows=1 load=none seconds=0.8
+```
 
-**Checking.** The script runs the pack's own check after writing (`make.py --check` for us-equities and gleif, the pack generator's
-`--check` for world-economy, the snapshot read back for news-and-markets, the document checks for market-data). Then
-`python3 tools/contracts.py check` compares every kind's data contract with the data, and in the console `USEQ <GO>`, `LEI <GO>`,
-`ECON <GO>`, `QUOTE <GO>` or `FX <GO>` lists the kind.
+The euro short-term rate's one document (its 254 daily observations inside) is written under its own business date, 2026-11-05
+(`dated: source`): `data/datafeeds/market-data/2026-11-05/rate-fixing.2026-11-05.jsonl.gz` with its `manifest.json`. More:
 
-**Offline.** Everything committed works without a network: the demo machine never fetches. A refresh on a machine without internet
+```bash
+python3 tools/drishti.py feed run world-economy -- worldbank undp        # the openly licensed sources only
+python3 tools/drishti.py feed run us-equities --offline -- sec           # the SEC part again, from the download cache
+python3 tools/drishti.py feed run gleif --snapshot -- mapping            # the BIC, ISIN, MIC and OpenCorporates files into the committed pack
+```
+
+On Windows the same through `.\tools\windows\feed.ps1` (`.\tools\windows\feed.ps1 run gleif --dry-run`); nothing but Python and
+Java is needed.
+
+## 14. How external data reaches the server
+
+1. **The feed** pulls into its download cache, builds the pack's data in its run folder and writes each kind as dated JSON Lines,
+   `<data>/datafeeds/<feed>/<YYYY-MM-DD>/<kind>.<YYYY-MM-DD>.jsonl.gz` with a `manifest.json` (rows, SHA-256, the licence).
+2. **The lake.** The feed loads them into its lake (`referencelake`, `capitalmarket`, `worldlake`, `newslake`) by the parallel loader,
+   `lake build` or the data inbox, replacing the dates it brings ([EXTERNAL_DATA.md section 4](#4-loading-three-routes)).
+   The demo lake is built from the committed snapshots instead: `--snapshot` refreshes them, then `python3 tools/drishti.py lake demo`.
+3. **The server** reads each kind through the pack's connector, which reads the lake its connector file names (`demo` as shipped; point
+   it at the feed's lake for live data: [DATA_LAKE_GUIDE.md section 6](DATA_LAKE_GUIDE.md#6-pointing-drishti-at-a-lake)).
+
+**Checking.** Each feed runs its pack's own check on the build (`make.py --check` for us-equities, gleif and funds, the pack
+generator's `--check` for world-economy, the snapshot read back for news-and-markets, the document checks for market-data); a failed
+check fails the run. `python3 tools/drishti.py feed status` shows the last runs; `python3 tools/contracts.py check` compares every
+kind's data contract with the data, and in the console `USEQ <GO>`, `LEI <GO>`, `ECON <GO>`, `QUOTE <GO>` or `FX <GO>` lists the kind.
+
+**Offline.** Everything committed works without a network: the demo machine never fetches. A feed on a machine without internet
 uses the download cache only (`--offline`; copy the cache folder from a machine that has one). The live connectors that reach the
-internet (news, yfinance, us-equities-prices, the public-data feeds) are off as shipped and never start on a machine configured
-offline (`drishti.offline.plugins`).
+internet (news, yfinance, us-equities-prices, the public-data feed connectors) are off as shipped and never start on a machine
+configured offline (`drishti.offline.plugins`).
 
-## world-economy
+## 15. The sources, pack by pack
+
+Each pack built on external data: its sources, what its feed writes and where, how to check it.
+
+### world-economy
 
 **Sources:** `worldbank` (World Bank WDI and WGI, CC BY 4.0), `imf` (IMF WEO, **internal only**), `undp` (UNDP HDI, CC BY 3.0 IGO),
 `factbook` (CIA World Factbook, public domain). The regional figures of `region-economy` are typed into the generator by hand from US
 Census Bureau and BEA figures (illustrative, rounded): there is no fetch for them.
 
-`tools/publicdata/world_economy.py` wraps `tools/realdata/` (see [the world-economy data in detail](#the-world-economy-data-in-detail)): the fetcher's downloads go
+`drishti.py feed run world-economy` wraps `tools/realdata/` (see [the world-economy data in detail](#the-world-economy-data-in-detail)): the fetcher's downloads go
 through the shared client into the same cache layout, then the normaliser, the pack generator
 (`tools/packgen/world/make.py`) and its `--check` run as `realdata.py all` would.
 
 ```bash
-python3 tools/publicdata/world_economy.py status
-python3 tools/publicdata/world_economy.py refresh --dry-run
-python3 tools/publicdata/world_economy.py refresh                    # a full build in <data>/publicdata/world-economy
-python3 tools/publicdata/world_economy.py refresh --internal-ok      # refresh the committed dataset, pack, glossary, tests and guide tables
-python3 tools/publicdata/world_economy.py refresh --no-imf           # no IMF data at all; always the data folder
-python3 tools/publicdata/world_economy.py refresh --internal-ok --offline --cache ~/.cache/drishti-realdata   # rebuild from an older realdata cache
+python3 tools/drishti.py feed status world-economy
+python3 tools/drishti.py feed run world-economy --dry-run
+python3 tools/drishti.py feed run world-economy --snapshot                    # a full build in <data>/datafeeds/sources/world-economy
+python3 tools/drishti.py feed run world-economy --snapshot --internal-ok      # refresh the committed dataset, pack, glossary, tests and guide tables
+python3 tools/drishti.py feed run world-economy --snapshot -- --no-imf           # no IMF data at all; always the data folder
+python3 tools/drishti.py feed run world-economy --snapshot --internal-ok --offline -- --cache ~/.cache/drishti-realdata   # rebuild from an older realdata cache
 ```
 
 Where it writes:
 
 - With `--internal-ok` (and no widening): the committed `tools/realdata/dataset/`, `config/packs/world-economy/`,
   `tools/packgen/world/about.yaml` and the generated tables of this page's world-economy section (`tools/realdata/realdata.py docs`). Commit the result.
-- Otherwise: `<data>/publicdata/world-economy/` with `sources.yaml` (what this build used), `dataset/`, `packs/world-economy/`
+- Otherwise: `<data>/datafeeds/sources/world-economy/` with `sources.yaml` (what this build used), `dataset/`, `packs/world-economy/`
   and `about/`. Serve that pack with `DRISHTI_PACKS_DIR` or copy what you need.
 
 **Widening.** `--since 2000` or `--years 25` fetches a longer window; `--scope` adds indicators:
 
 ```bash
-python3 tools/publicdata/world_economy.py refresh worldbank --since 2000 --scope SP.DYN.LE00.IN:social,EN.GHG.ALL.PC.CE.AR5
-python3 tools/publicdata/world_economy.py refresh imf --scope GGXWDG_NGDP:fiscal
+python3 tools/drishti.py feed run world-economy --snapshot -- worldbank --since 2000 --scope SP.DYN.LE00.IN:social,EN.GHG.ALL.PC.CE.AR5
+python3 tools/drishti.py feed run world-economy --snapshot -- imf --scope GGXWDG_NGDP:fiscal
 ```
 
 A scope item is a World Bank indicator code (it has dots) or an IMF WEO code, optionally `:group` (economy, labour, fiscal,
 social, governance; default economy). The name, unit and definition come from the source's own metadata. A widened build
 always goes to the data folder. To widen the committed pack, add the indicator to `tools/realdata/sources.yaml` (one line, with
-its name, unit and definition) and run `refresh --internal-ok`.
+its name, unit and definition) and run `feed run world-economy --snapshot --internal-ok`.
 
-**Check it:** the refresh runs `tools/packgen/world/make.py --check`; `ECON IND <GO>` opens India's economy, `FCST <GO>` the IMF
-forecasts. **Offline:** `refresh --offline` rebuilds from the cache.
+**Check it:** the feed runs `tools/packgen/world/make.py --check`; `ECON IND <GO>` opens India's economy, `FCST <GO>` the IMF
+forecasts. **Offline:** `feed run world-economy --offline` rebuilds from the cache.
 
-### The world-economy data in detail
+#### The world-economy data in detail
 
 (This was REAL_DATA.md.) The `world-economy` pack carries **published public data**, not samples: about 213 economies and 216 countries from the World Bank, the IMF, UNDP and
 the CIA World Factbook. Every number is a published value (a percentage stays a percentage, as the source states it) and every text is as the source publishes it (HTML
@@ -400,7 +670,7 @@ generated pack documents. The raw downloads are cached outside the repository an
 
 ![The economy of India](img/realdata/economy-india.jpg)
 
-#### Sources, licences and attribution
+##### Sources, licences and attribution
 
 <!-- realdata:begin sources -->
 | Source | Dataset and vintage | Licence | Terms |
@@ -427,7 +697,7 @@ demonstration. Ask copyright@imf.org before any commercial use. **UNDP:** the HD
 indicator also has its own upstream source (for example SIPRI for military spending, the Inter-Parliamentary Union for women in parliament, ILO for labour data) that WDI
 credits; the *About this series* panel shows the World Bank code to look it up.
 
-#### What is in the pack
+##### What is in the pack
 
 | Half of world-economy | Kind | Mnemonic | Documents | One document is |
 |---|---|---|---|---|
@@ -454,7 +724,7 @@ Identifiers use the ISO 3166 alpha-3 code: `ECON-IND`, `MACRO-BRA-GDP-GROWTH`, `
 
 ![A jurisdiction: India](img/realdata/jurisdiction-india.jpg)
 
-##### Provenance in every document
+###### Provenance in every document
 
 Each document has a `provenance` object (shown by the *Data source and licence* panel) and the same four facts in `_meta`:
 
@@ -469,7 +739,7 @@ Each document has a `provenance` object (shown by the *Data source and licence* 
 
 ![An IMF forecast with its provenance](img/realdata/forecast-japan.jpg)
 
-#### Coverage
+##### Coverage
 
 Years: World Bank and UNDP series 2015 to 2025 (a series shows the years the source has; the latest year differs by country and indicator), IMF series 2015 to 2031.
 Countries are the 217 economies the World Bank lists as countries or territories (Channel Islands has no Factbook profile, so 216 jurisdictions and 213 economies with
@@ -480,7 +750,7 @@ value is from 2022 or later.
 Size: the world-economy pack is about 19 MB (its economics half 6.9 MB, its politics half 12.1 MB) and the normalised dataset 2.4 MB (21.4 MB of text in all, under the 25 MB limit; git compresses it to
 about a fifth). Sample documents are written without indentation (`compact_json` in the pack generator) to keep it small.
 
-##### More countries and groups
+###### More countries and groups
 
 The same Sutras serve every country: the United States and Nigeria below, Brazil's government, and the World Bank's South Asia group with its largest economies.
 
@@ -489,9 +759,9 @@ The same Sutras serve every country: the United States and Nigeria below, Brazil
 ![A jurisdiction: Brazil](img/realdata/jurisdiction-brazil.jpg)
 ![A World Bank region as a country group](img/realdata/group-south-asia.jpg)
 
-#### Indicators
+##### Indicators
 
-##### Economy, labour and fiscal (world-economy pack, economics half)
+###### Economy, labour and fiscal (world-economy pack, economics half)
 
 <!-- realdata:begin indicators-economics -->
 | Key | Indicator | Unit | Source and code | Countries with data |
@@ -529,7 +799,7 @@ The same Sutras serve every country: the United States and Nigeria below, Brazil
 | `military` | Military expenditure | % of GDP | World Bank WDI `MS.MIL.XPND.GD.ZS` | 159 |
 <!-- realdata:end indicators-economics -->
 
-##### Society and governance (world-economy pack, politics half)
+###### Society and governance (world-economy pack, politics half)
 
 <!-- realdata:begin indicators-society -->
 | Key | Indicator | Unit | Source and code | Countries with data |
@@ -566,7 +836,7 @@ The definitions and units are in each pack's *About this page* glossary (`config
 `FORM world-economy economy` searches the real data (the picture was taken when the economics half was a pack of its own, `FORM economics`): the form above finds six economies larger than USD 100 bn growing above 6% (Ethiopia, India, Ireland, Kazakhstan,
 Uzbekistan, Viet Nam in the April 2026 data).
 
-#### The tool: `tools/realdata/`
+##### The tool: `tools/realdata/`
 
 ```
 python3 tools/realdata/realdata.py fetch     [--cache DIR] [--refresh] [--pause S]   download the raw data (network)
@@ -591,7 +861,7 @@ dataset: no raw cache at /home/ci/.cache/drishti-realdata, not re-derived     (w
 world-economy: <n> files up to date
 ```
 
-##### Building without the IMF
+###### Building without the IMF
 
 ```
 python3 tools/realdata/realdata.py all --no-imf [--out DIR]     # fetch (never the IMF), normalise, write the pack
@@ -621,9 +891,9 @@ reserves, not IMF data. The committed dataset, glossary, tests and this guide ar
 The cache defaults to `~/.cache/drishti-realdata` (outside the repository; use `--cache` to move it). A full fetch is about 50 World Bank calls, 8 IMF calls, one UNDP file and
 about 260 Factbook files, and takes 10 to 20 minutes at the default pause; the World Bank API is sometimes slow. Run it rarely and with the default pause.
 
-##### Refreshing
+###### Refreshing
 
-The everyday way is the pack's own refresh script, `tools/publicdata/world_economy.py` (status, dry run, `--years`, `--scope`,
+The everyday way is the pack's data feed, `drishti.py feed run world-economy` (status, dry run, `--years`, `--scope`,
 the internal-only rule for the IMF data, Windows wrappers): see this document. It runs the commands below for you.
 
 ```
@@ -645,7 +915,7 @@ How the Factbook is read: *Government type*, *Capital*, *Independence*, *Executi
 name; unmatched profiles are listed in `meta.json` (`factbookUnmatched`: dependencies and uninhabited territories the World Bank does not list). Texts such as office holders
 (`President Droupadi MURMU (since 25 July 2022)`) are shown as published: the tool splits off only the *since* date, it does not parse names.
 
-#### Generated outputs stay consistent
+##### Generated outputs stay consistent
 
 `tools/packgen/world/make.py` (joining the halves `tools/packgen/economics/make.py` and `tools/packgen/politics/make.py`) writes `pack.yaml`, the Sutras, `samples/`, `guides/`, `config/help.yaml` and `config/about.yaml`;
 `--check` fails if any differs. They also write `config/about.yaml`'s source and the pack `tests/` (see `about.py` and `pack_tests.py`). Only `config/formats.yaml` (the `pc1` and `pc2` formats that add a `%` sign to values already in percent) is kept by hand. The
@@ -667,20 +937,20 @@ $ python3 tools/drishti.py pack check config/packs/world-economy config/packs/wo
 The pictures are made by `tools/docs/shots/realdata.py` (`drishti-console/.venv/bin/python tools/docs/screenshots.py --guide realdata`) on a server started with
 `DRISHTI_PACKS=world-economy`.
 
-## news-and-markets
+### news-and-markets
 
 **Sources:** `quote` (Yahoo Finance quotes and daily history, **internal only**) and `news` (Google News RSS headlines, **internal
 only**). The topics and listed companies are hand-written reference data (`config/packs/news-and-markets/tools/make_samples.py`).
 
-`tools/publicdata/news_and_markets.py` wraps `tools/testdata/capture_market.py` (also `drishti.py testdata capture-market`): the
+`drishti.py feed run news-and-markets` wraps `tools/testdata/capture_market.py` (also `drishti.py testdata capture-market`): the
 documents come through Drishti's own live connectors, so they have exactly the shape the Sutras read. It starts a scratch server
 from the built jar (`mvn -q -DskipTests package` first), or uses `--server URL`. Both sources are internal only.
 
 ```bash
-python3 tools/publicdata/news_and_markets.py status                  # also shows the committed snapshot
-python3 tools/publicdata/news_and_markets.py refresh --dry-run
-python3 tools/publicdata/news_and_markets.py refresh                 # a snapshot in <data>/publicdata/news-and-markets/testdata
-python3 tools/publicdata/news_and_markets.py refresh --internal-ok   # replace the committed snapshot in data/testdata
+python3 tools/drishti.py feed status news-and-markets                  # also shows the committed snapshot
+python3 tools/drishti.py feed run news-and-markets --dry-run
+python3 tools/drishti.py feed run news-and-markets --snapshot                 # a snapshot in <data>/datafeeds/sources/news-and-markets/testdata
+python3 tools/drishti.py feed run news-and-markets --snapshot --internal-ok   # replace the committed snapshot in data/testdata
 python3 tools/drishti.py lake demo                                   # then rebuild the demo lake from it
 ```
 
@@ -695,43 +965,41 @@ python3 tools/drishti.py lake demo                                   # then rebu
 **Check it:** `QUOTE QUOTE-AAPL <GO>` shows the captured quote with its snapshot stamp. **Offline:** the committed snapshot is what the
 demo serves; the live `news` and `yfinance` connectors are off as shipped.
 
-## market-data
+### market-data
 
 **Sources:** `ecb-fx` (ECB euro reference rates), `us-treasury` (the par yield curve), `sofr` (New York Fed), `estr` (ECB); all
 openly licensed with attribution. The pack's committed samples and test data are synthetic (`tools/testdata/make_testdata.py`); these
 official sources are optional. FRED (the `fred-feed` connector) needs a personal API key and is left to the live connector.
 
-`tools/publicdata/official_market_data.py` captures the official sources the pack's feed connectors read live
+`drishti.py feed run market-data` captures the official sources the pack's feed connectors read live
 (`ecb-fx-feed`, `us-treasury-feed`, `nyfed-sofr-feed`, `ecb-estr-feed`; off by default), so the data works offline. The pack's
 committed samples are synthetic and generated, and are never overwritten: the output always goes to the data folder or to a
 folder outside the repository.
 
 ```bash
-python3 tools/publicdata/official_market_data.py refresh                       # a year of history into <data>/publicdata/market-data
-python3 tools/publicdata/official_market_data.py refresh ecb-fx --years 5 --scope USDMXN,EURSEK
-python3 tools/publicdata/official_market_data.py refresh us-treasury sofr --since 2020
+python3 tools/drishti.py feed run market-data                                  # a year of history, loaded into capitalmarket
+python3 tools/drishti.py feed run market-data -- ecb-fx --years 5 --scope USDMXN,EURSEK
+python3 tools/drishti.py feed run market-data -- us-treasury sofr --since 2020
 ```
 
 It writes one file a kind and business date, named by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
 the date is each document's `AS_OF`, the day of its newest observation, in the pack's own shapes (UPPER_SNAKE): `fx-spot.<date>.jsonl`
 (`FX-EURUSD` and eleven more pairs, crosses through EUR, with daily `HISTORY`), `ir-curve.<date>.jsonl` (`CRV-USD-UST-PAR`: the latest
 par curve and the 2Y, 10Y and 30Y history) and `rate-fixing.<date>.jsonl` (`FIX-SOFR`, `FIX-ESTR`, newest fixing first; two files when
-the two fixings are of different days). A rerun of one source keeps the other sources' documents. Every document carries `PROVENANCE` (source, URL, licence, retrieval time). Load them into the lake:
+the two fixings are of different days). Every document carries `PROVENANCE` (source, URL, licence, retrieval time). The feed loads
+each under the date in its name into `capitalmarket` (`dated: source` in its feed file), so a run replaces exactly the dates it brings.
+The daily run is **incremental by day**: it loads only the business dates after the last one in its state (`data/datafeeds/market-data/state.json`),
+so a holiday is a run with nothing to load; it asks the sources for a year before that day (`options.history-days`, 365) so each
+series document keeps its whole `HISTORY`. `--since YYYY-MM-DD` is the one-off backfill: everything from that day, every date loaded again.
 
-```bash
-uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py --from data/publicdata/market-data \
-    --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake data/delta/demo
-```
+**Check it:** the feed checks every document it wrote; after loading, `FIX FIX-SOFR <GO>` shows the fixing history. **Offline:**
+`feed run market-data --offline` rebuilds the files from the cache.
 
-Each file goes under the date in its name (the load rules); no date field is needed.
+### us-equities
 
-**Check it:** the script checks every document it wrote; after loading, `FIX FIX-SOFR <GO>` shows the fixing history. **Offline:**
-`refresh --offline` rebuilds the files from the cache.
-
-## us-equities
-
-**Sources:** `trackers` (the index members: the stocks the tracking ETFs SPY, QQQ and DIA report in their newest Form N-PORT, read
-from the funds pack's download cache, so refresh `funds` first; public domain), `wikidata` (headquarters, founded, website, LEI and
+**Sources:** `trackers` (the index members: the stocks the tracking ETFs SPY, QQQ, DIA and IWM (Russell 2000) report in their newest
+Form N-PORT, read from the funds feed's download cache, so the funds feed runs first; IWM joins when the data set has its report;
+public domain), `wikidata` (headquarters, founded, website, LEI and
 the date a member joined its index, CC0), `nasdaq` (the listing market), `sec` (companies, SIC codes, filings, financial facts; public
 domain), `gleif` (each company's LEI, CC0), and `prices` (Yahoo Finance daily prices, **internal only**, never part of a default
 refresh).
@@ -742,10 +1010,10 @@ filing). Wikidata's member lists are out of date (its S&P 500 lacks Exxon Mobil,
 about 80 others and still listed 44 former members. A company Wikidata still lists but no tracking ETF holds stays in the pack, in no
 index; a holding the SEC no longer lists (taken private or merged since the report) is named in the index page's note.
 
-`tools/publicdata/us_equities.py` wraps the pack's generator, `tools/packgen/us_equities/fetch.py` (the network) and `make.py`
+`drishti.py feed run us-equities` wraps the pack's generator, `tools/packgen/us_equities/fetch.py` (the network) and `make.py`
 (the build, offline): a refresh of the committed pack writes exactly what `make.py` writes, then runs `make.py --check`. The four
 company sources are openly licensed, so a plain refresh rebuilds the committed data. SEC EDGAR gets the
-User-Agent it asks for, `Drishti research ajsinha@gmail.com` (set `DRISHTI_SEC_USER_AGENT` to your own), and fewer than 8 requests a
+User-Agent it asks for, the feeds' one User-Agent (`Drishti ajsinha@gmail.com`; `DRISHTI_FEEDS_USER_AGENT` overrides it), and fewer than 8 requests a
 second (its limit is 10); GLEIF and Wikidata about one a second.
 
 **Where the refresh writes.** The documents follow the standard data pattern: one gzipped JSON Lines snapshot per kind,
@@ -755,17 +1023,17 @@ Delta connector `us-equities-store`, never through the demo connector, so after 
 `python3 tools/drishti.py lake demo` (or `python3 tools/build_demo_lakes.py`).
 
 ```bash
-python3 tools/publicdata/us_equities.py status                           # also the committed pack's companies and retrieval date
-python3 tools/publicdata/us_equities.py refresh --dry-run
-python3 tools/publicdata/us_equities.py refresh                          # the committed pack (about 1,100 SEC and 500 GLEIF calls)
-python3 tools/publicdata/us_equities.py refresh --offline                # rebuild the committed pack from the cache only
-python3 tools/publicdata/us_equities.py refresh --scope TSLA,CIK:1326380,FILINGS:40,YEARS:15
-                                                                         # a widened build in <data>/publicdata/us-equities
-python3 tools/publicdata/us_equities.py refresh prices --server http://localhost:18080 --scope AAPL,MSFT
+python3 tools/drishti.py feed status us-equities                           # also the committed pack's companies and retrieval date
+python3 tools/drishti.py feed run us-equities --dry-run
+python3 tools/drishti.py feed run us-equities --snapshot                          # the committed pack (about 1,100 SEC and 500 GLEIF calls)
+python3 tools/drishti.py feed run us-equities --snapshot --offline                # rebuild the committed pack from the cache only
+python3 tools/drishti.py feed run us-equities --snapshot -- --scope TSLA,CIK:1326380,FILINGS:40,YEARS:15
+                                                                         # a widened build in <data>/datafeeds/sources/us-equities
+python3 tools/drishti.py feed run us-equities --snapshot -- prices --server http://localhost:18080 --scope AAPL,MSFT
                                                                          # internal only: a price snapshot in the data folder
 ```
 
-- **The cache** (`<data>/publicdata/cache/us-equities`, or `--cache`) holds what `fetch.py` keeps: the Wikidata query results,
+- **The cache** (`<data>/datafeeds/sources/cache/us-equities`, or `--cache`) holds what `fetch.py` keeps: the Wikidata query results,
   the Nasdaq files, the SEC ticker file, each company's submissions (metadata of the recent filings) and its XBRL facts reduced
   to the annual values of the pack's concepts, and the GLEIF records. A file stays until it is removed, so a broken run resumes;
   `--max-age HOURS` fetches files older than that again (the old one is put back if the new fetch fails). Every file is in
@@ -775,31 +1043,31 @@ python3 tools/publicdata/us_equities.py refresh prices --server http://localhost
   (the QID of the index item in Wikidata); `FILINGS:<n>` keeps more recent filings a company (default 20);
   `YEARS:<n>` or `--years N` more fiscal years (default 10); `CONCEPT:<NAME>=<tag>[|<tag>...][@<unit>][@instant]` another
   annual XBRL concept (`CONCEPT:CASH=CashAndCashEquivalentsAtCarryingValue@USD@instant`).
-- **A widened build goes to the data folder**: `<data>/publicdata/us-equities/packs/us-equities`, a whole pack (the hand-written
+- **A widened build goes to the data folder**: `<data>/datafeeds/sources/us-equities/packs/us-equities`, a whole pack (the hand-written
   manifest, Sutras and help copied, the reference samples and guide generated), with its snapshot beside it in
-  `<data>/publicdata/us-equities/testdata/us-equities/<kind>/`, checked with `make.py --check --pack`. Its cache is
+  `<data>/datafeeds/sources/us-equities/testdata/us-equities/<kind>/`, checked with `make.py --check --pack`. Its cache is
   `scoped/<hash>` inside the cache, seeded from the plain cache less what the scope changes (submissions for `FILINGS`, facts for
   `YEARS` and `CONCEPT`, the Wikidata members for `INDEX`). `--into-pack` writes a widened build over the committed pack, on
   purpose only; without it `--out config/packs/us-equities` with a scope is refused.
 - **Prices are internal only.** The pack ships no prices; the `prices` source reads `price-history/PX-<ticker>` through the
   pack's `us-equities-prices` connector of a running server where you switched it on (`DRISHTI_US_EQUITIES_PRICES_ENABLED=true`,
-  `--server`, `--token-file`, `--delay` at least 2 s, `--limit N`). It is never part of a default refresh and writes
-  `<data>/publicdata/us-equities/prices/price-history/price-history.<date>.jsonl.gz`, each document stamped as a snapshot; into a
+  `--server`, `--token-file`, `--delay` at least 2 s, `--limit N`). It is the feed `yahoo-prices` (internal only, off as shipped) and writes
+  `<data>/datafeeds/sources/us-equities/prices/price-history/price-history.<date>.jsonl.gz`, each document stamped as a snapshot; into a
   committed folder only with `--internal-ok`. Each ticker is cached under `prices/` in the cache, so `--offline` rebuilds it.
 
-**Check it:** `make.py --check` (run by the refresh; without a cache it checks the committed snapshot); `USEQ AAPL <GO>` opens a
-company. **Offline:** `refresh --offline`.
+**Check it:** `make.py --check` (run by the feed; without a cache it checks the committed snapshot); `USEQ AAPL <GO>` opens a
+company. **Offline:** `feed run us-equities --offline`.
 
-## gleif
+### gleif
 
 **Sources:** `golden` (the golden copy's level 2 files), `api` (the LEI API), `mapping` (the BIC, ISIN, MIC and OpenCorporates
 mapping files), and `golden-lei` (the level 1 bulk file, for full-country pulls into the data folder only). Everything GLEIF publishes
 is CC0 1.0.
 
-`tools/publicdata/gleif.py` wraps the pack's generator, `tools/packgen/gleif/fetch.py` (the network) and `make.py` (the build,
+`drishti.py feed run gleif` wraps the pack's generator, `tools/packgen/gleif/fetch.py` (the network) and `make.py` (the build,
 offline): a refresh of the committed pack writes exactly what `make.py` writes, then runs `make.py --check`, and an offline refresh
 from an unchanged cache reproduces the committed data byte for byte. Everything GLEIF publishes is CC0 1.0 (attribution
-appreciated). GLEIF gets the User-Agent `Drishti research ajsinha@gmail.com` (set `DRISHTI_GLEIF_USER_AGENT` to your own) and at
+appreciated). GLEIF gets the feeds' one User-Agent (`Drishti ajsinha@gmail.com`; `DRISHTI_FEEDS_USER_AGENT` overrides it) and at
 most one API call a second (GLEIF allows 60 a minute).
 
 **Where the refresh writes.** As for us-equities: one snapshot per kind, `data/testdata/gleif/<kind>/<kind>.<date>.jsonl.gz`,
@@ -807,13 +1075,13 @@ listed in `data/testdata/testdata.yaml`, served from the demo lake by the pack's
 connector); `samples/` keeps a few reference documents. Rebuild the lake after a refresh: `python3 tools/drishti.py lake demo`.
 
 ```bash
-python3 tools/publicdata/gleif.py status                           # also the committed pack's entities and golden-copy date
-python3 tools/publicdata/gleif.py refresh --dry-run                # the universe today, the downloads; changes nothing
-python3 tools/publicdata/gleif.py refresh                          # the committed pack: ~90 MB of golden copy and mapping files, ~70 API calls
-python3 tools/publicdata/gleif.py refresh --offline                # rebuild the committed pack from the cache only
-python3 tools/publicdata/gleif.py refresh --scope GROUP:784F5XWPLTWKTBV3E584,CAP:600
-                                                                   # Goldman Sachs' whole group, in <data>/publicdata/gleif
-python3 tools/publicdata/gleif.py refresh golden golden-lei api mapping --scope COUNTRY:LU --since 2025
+python3 tools/drishti.py feed status gleif                           # also the committed pack's entities and golden-copy date
+python3 tools/drishti.py feed run gleif --dry-run                # the universe today, the downloads; changes nothing
+python3 tools/drishti.py feed run gleif --snapshot                          # the committed pack: ~90 MB of golden copy and mapping files, ~70 API calls
+python3 tools/drishti.py feed run gleif --snapshot --offline                # rebuild the committed pack from the cache only
+python3 tools/drishti.py feed run gleif --snapshot -- --scope GROUP:784F5XWPLTWKTBV3E584,CAP:600
+                                                                   # Goldman Sachs' whole group, in <data>/datafeeds/sources/gleif
+python3 tools/drishti.py feed run gleif --snapshot -- golden golden-lei api mapping --scope COUNTRY:LU --since 2025
                                                                    # every Luxembourg entity updated since 2025, from the bulk file
 ```
 
@@ -828,7 +1096,7 @@ python3 tools/publicdata/gleif.py refresh golden golden-lei api mapping --scope 
   insurers, asset managers and market infrastructures pinned in `fetch.py` (`SEEDS`, LEIs resolved once by legal name). Each
   seed brings its ownership group: its ultimate parent and every entity it consolidates, level by level, at most 50 a group
   (`GROUP_CAP`; a group page says when GLEIF has more).
-- **The cache** (`<data>/publicdata/cache/gleif`, or `--cache`) keeps every download as served (`golden/`, `mapping/`,
+- **The cache** (`<data>/datafeeds/sources/cache/gleif`, or `--cache`) keeps every download as served (`golden/`, `mapping/`,
   `api/records/` batches) and the reductions (`reduced/`); a file stays until removed, so a broken run resumes, and only LEIs
   not yet cached are asked for. `--max-age HOURS` fetches the golden copy, mapping files and code lists again when older (the old
   one is put back if the new fetch fails). Every download is in `cache-index.json`.
@@ -839,15 +1107,15 @@ python3 tools/publicdata/gleif.py refresh golden golden-lei api mapping --scope 
   `TICKERS-FROM:<a us-company .jsonl or .jsonl.gz>`);
   `CAP:<n>` up to n entities a group. `--years N` / `--since YEAR` keep only the `COUNTRY:` and `NAME:` entities whose LEI record
   was updated in that period.
-- **A widened build goes to the data folder**: `<data>/publicdata/gleif/packs/gleif`, a whole pack (the hand-written manifest,
-  Sutras and help copied, reference samples and guide generated), with its snapshot in `<data>/publicdata/gleif/testdata/gleif/`,
+- **A widened build goes to the data folder**: `<data>/datafeeds/sources/gleif/packs/gleif`, a whole pack (the hand-written manifest,
+  Sutras and help copied, reference samples and guide generated), with its snapshot in `<data>/datafeeds/sources/gleif/testdata/gleif/`,
   checked with `make.py --check --pack`. `--into-pack` writes it over the
   committed pack, on purpose only (never with `golden-lei`); without it `--out config/packs/gleif` with a scope is refused.
 
-**Check it:** `make.py --check` (run by the refresh); `LEI 8I5DZWZKVSZI1NUHU748 <GO>` opens an entity, `LEIG ALL <GO>` every group.
-**Offline:** `refresh --offline` reproduces the committed data from the cache byte for byte.
+**Check it:** `make.py --check` (run by the feed); `LEI 8I5DZWZKVSZI1NUHU748 <GO>` opens an entity, `LEIG ALL <GO>` every group.
+**Offline:** `feed run gleif --snapshot --offline` reproduces the committed data from the cache byte for byte.
 
-## funds
+### funds
 
 **Sources:** `tickers` (the SEC's fund share class and listed-company ticker files), `nasdaq` (the Nasdaq Trader symbol directory:
 which tickers are ETFs), `nport` (the newest quarter of the SEC's Form N-PORT data sets), `ncen` (the newest four quarters of the Form
@@ -855,30 +1123,30 @@ N-CEN data sets), `rr` (the newest four quarters of the prospectus risk/return s
 relationship records, reused from the gleif pack's cache when it has them). The SEC's data sets are U.S. public domain; GLEIF's are
 CC0 1.0.
 
-`tools/publicdata/funds.py` downloads the data sets into its cache and runs the pack's generator, `tools/packgen/funds/make.py` (the
+`drishti.py feed run funds` downloads the data sets into its cache and runs the pack's generator, `tools/packgen/funds/make.py` (the
 build, offline: it streams the N-PORT tables once and keeps the 200 largest funds and ETFs by net assets that have a ticker), then
-`make.py --check`. SEC requests use exactly the us-equities pack's User-Agent setting (`DRISHTI_SEC_USER_AGENT`, else
-`tools/packgen/us_equities/fetch.py`'s default) and one request at a time.
+`make.py --check`. SEC requests carry the one feeds User-Agent (`DRISHTI_FEEDS_USER_AGENT`; the SEC asks for a contact in it) and go
+one at a time.
 
 **The downloads are large** (an N-PORT quarter is about 450 MB, four quarters of risk/return summaries about 200 MB, N-CEN 6 to 16 MB
-a quarter) and stay in `<data>/publicdata/cache/funds`, never in git; a file younger than `--max-age` hours (a week by default) is
-reused. **Where the refresh writes:** the committed snapshot, gzipped JSON Lines under `data/testdata/funds/<kind>/` (the fund kind
+a quarter) and stay in `<data>/datafeeds/sources/cache/funds`, never in git; a file younger than `--max-age` hours (a week by default) is
+reused. **Where `--snapshot` writes:** the committed snapshot, gzipped JSON Lines under `data/testdata/funds/<kind>/` (the fund kind
 in parts of about 1.2 MB, 5.5 MB in all), listed in `data/testdata/testdata.yaml` and served from the demo lake by the pack's Delta
 connector `funds-store`; `samples/`, the README, the guide and the glossary (`config/about.yaml`) of `config/packs/funds`. Rebuild
-the lake after a refresh: `python3 tools/drishti.py lake demo`.
+the demo lake after it: `python3 tools/drishti.py lake demo`. A plain `feed run funds` loads the same kinds into `capitalmarket`.
 
 ```bash
-python3 tools/publicdata/funds.py status                           # the committed funds, each source's licence, last refresh and cache size
-python3 tools/publicdata/funds.py refresh --dry-run                # the quarters and files a refresh would fetch; changes nothing
-python3 tools/publicdata/funds.py refresh                          # the committed pack: about 700 MB of downloads, then make.py and --check
-python3 tools/publicdata/funds.py refresh --offline                # rebuild the committed pack from the downloads only
-python3 tools/publicdata/funds.py refresh ncen rr --since 2025     # every quarter of the census and the summaries since 2025
-python3 tools/publicdata/funds.py refresh --scope FUNDS:300,HOLDINGS:1000
-                                                                   # the 300 largest, 1,000 holdings a fund, in <data>/publicdata/funds
+python3 tools/drishti.py feed status funds                           # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run funds --dry-run                # the quarters and files a refresh would fetch; changes nothing
+python3 tools/drishti.py feed run funds --snapshot                          # the committed pack: about 700 MB of downloads, then make.py and --check
+python3 tools/drishti.py feed run funds --snapshot --offline                # rebuild the committed pack from the downloads only
+python3 tools/drishti.py feed run funds --snapshot -- ncen rr --since 2025     # every quarter of the census and the summaries since 2025
+python3 tools/drishti.py feed run funds --snapshot -- --scope FUNDS:300,HOLDINGS:1000
+                                                                   # the 300 largest, 1,000 holdings a fund, in <data>/datafeeds/sources/funds
 ```
 
-On Windows: `.\tools\windows\publicdata-funds.ps1 status`, `.\tools\windows\publicdata-funds.ps1 refresh --dry-run`,
-`.\tools\windows\publicdata-funds.ps1 refresh`; on Linux and macOS `tools/publicdata/funds.sh` takes the same arguments.
+On Windows the same through `.\tools\windows\feed.ps1` (`.\tools\windows\feed.ps1 run funds --dry-run`); on Linux and macOS
+`tools/feeds/feed.sh run funds` takes the same arguments.
 
 - **The 200.** Every fund's newest N-PORT report in the quarter (amendments win over the report they amend), ranked by net assets;
   a fund needs a ticker (a share class in `company_tickers_mf.json`, or, for a unit investment trust such as SPY or DIA, its
@@ -887,76 +1155,13 @@ On Windows: `.\tools\windows\publicdata-funds.ps1 status`, `.\tools\windows\publ
   reverse look-through (`HELD`) counts every holding. The index tab's weights are computed from SEC data (shares outstanding times
   the price the filings imply) because index weights are proprietary.
 - **`--scope`** widens the build: `FUNDS:<n>` the n largest funds, `HOLDINGS:<n>` the holdings kept a fund. A widened build goes to
-  `<data>/publicdata/funds` (`packs/funds` and `testdata/funds`); `--into-pack` writes it over the committed pack, on purpose only.
+  `<data>/datafeeds/sources/funds` (`packs/funds` and `testdata/funds`); `--into-pack` writes it over the committed pack, on purpose only.
 
-**Check it:** `make.py --check` (run by the refresh); `FUND QQQ <GO>` opens a fund, `HELD AAPL <GO>` the funds holding Apple.
-**Offline:** `refresh --offline` rebuilds the committed data from the downloads; without them `make.py --check` checks the committed
+**Check it:** `make.py --check` (run by the feed); `FUND QQQ <GO>` opens a fund, `HELD AAPL <GO>` the funds holding Apple.
+**Offline:** `feed run funds --snapshot --offline` rebuilds the committed data from the downloads; without them `make.py --check` checks the committed
 snapshot against what it derives. The guide is [FUNDS_GUIDE.md](FUNDS_GUIDE.md) (Part III: where the data comes from).
 
-## What every refresh does
-
-Each source is a small plug-in class (`pdbase.Source`): **fetch** (download into the cache), **normalise** (parse what was
-cached, count the rows), **write** (the pack's files). The shared library `tools/publicdata/pdbase.py` gives every script:
-
-- **Polite HTTP**: a `User-Agent` naming Drishti and a contact, at least `--pause` seconds between requests, retries after 2, 4
-  and 8 seconds (or the server's `Retry-After`) on 429, 5xx and network errors; a 404 is not retried.
-- **A download cache** under `<data>/publicdata/cache/<pack>/`: the raw files exactly as served, plus `cache-index.json`
-  (URL, fetched time, sha256, size of each). A file younger than `--max-age` is reused, and the index is saved every 25
-  downloads, so a run that breaks **resumes** where it stopped. A file asked for with another URL (a wider `--years`) is fetched again.
-- **A manifest** per pack, `<data>/publicdata/<pack>/manifest.json` (and a copy in `--out` when that is outside the
-  repository): each source's title, URL, licence, use, fetched time and row counts; the files written with their sha256 and size;
-  the last 20 runs. `status` reads it.
-- **Idempotent writes**: the same cache gives the same bytes. A refresh of the committed world-economy pack from an unchanged
-  cache is a no-op in git.
-- **The pack's check** after writing (skip with `--no-check`).
-- **The same help**: `pdbase.parser` gives every script the same options, and every subcommand's `--help` ends with the script's
-  worked examples (its docstring's) and its two wrappers.
-
-## Adding a source
-
-A source is a class with its licence and three steps. Here is SONIA from the Bank of England, added to
-`official_market_data.py` (the Bank's statistics may be reused with acknowledgement):
-
-```python
-class Sonia(MarketSource):
-    name, title, kind = "sonia", "Sterling Overnight Index Average (Bank of England)", "rate-fixing"
-    url = "https://www.bankofengland.co.uk/markets/sonia-benchmark"
-    licence, licence_url = "Bank of England: reuse with acknowledgement", "https://www.bankofengland.co.uk/legal"
-    cache_prefixes = ("sonia/",)
-    CSV = ("https://www.bankofengland.co.uk/boeapps/database/_iadb-fromshowcolumns.asp?csv.x=yes&SeriesCodes=IUDSOIA"
-           "&Datefrom={d:%d/%b/%Y}&Dateto=now&CSVF=TN&UsingCodes=Y")
-
-    def plan(self, run):
-        return [self.CSV.format(d=self.first(run))]
-
-    def fetch(self, run):                      # the shared client: User-Agent, pause, retries, cache
-        run.http.get(self.plan(run)[0], run.cache.folder / "sonia" / "sonia.csv", accept="text/csv")
-
-    def normalise(self, run):                  # a pure parser, tested against a recorded response
-        rows = csv.reader(io.StringIO((run.cache.folder / "sonia" / "sonia.csv").read_text()))
-        obs = [(datetime.strptime(d, "%d %b %Y").date().isoformat(), float(v), None) for d, v in list(rows)[1:]]
-        doc = fixing_doc("FIX-SONIA", "Sterling Overnight Index Average", "Bank of England", "GBP", obs, self, self.plan(run)[0], B.now())
-        self.docs = [doc] if doc else []
-        return {"rows": len(obs), "documents": len(self.docs)}
-
-SOURCES = [EcbFx(), UsTreasury(), Sofr(), Estr(), Sonia()]
-```
-
-Then:
-
-1. Record a trimmed real response in `tools/publicdata/tests/fixtures/` and test the parser in
-   `tools/publicdata/tests/test_publicdata.py` (no network in tests).
-2. If its terms forbid redistribution, set `use = B.INTERNAL` and `why_internal = "..."` in words: the guard does the rest.
-3. If `--scope` can widen it, set `scope_help` and read `run.scope` in `fetch`/`normalise`.
-4. Add a row to the table at the top of this page, an entry to `tools/packgen/common/data_retrieval.yaml` (so the pack guide's
-   *Data retrieval* section names it) and an entry to the CHANGELOG.
-
-**A new pack** gets a new script: copy `official_market_data.py`, keep `pdbase.parser`, `pdbase.status` and the guard, set
-`PACK`, its sources and where it writes; add its pack to `pdbase.WRAPPERS`, its `.sh` and `tools/windows/publicdata-<pack>.ps1`
-wrappers, its rows and section on this page, and its sources to `data_retrieval.yaml`.
-`tools/publicdata/tests/test_scripts.py` fails until all of these are there.
-
-## Not covered
+## 16. Not covered
 
 - **Genomics** reference facts (`tools/packgen/genomics/reference.py`: gene coordinates, UniProt accessions, dbSNP ids) are
   typed in by hand from public references; there is no fetcher to wrap. A script would query Ensembl and UniProt.
@@ -964,10 +1169,3 @@ wrappers, its rows and section on this page, and its sources to `data_retrieval.
   keeps its own download.
 - **FRED** (the market-data pack's `fred-feed`) needs a personal API key and FRED's terms limit redistribution of some
   series; it is left to the live connector.
-
-## Tests
-
-```bash
-python -m pytest -q tools/publicdata/tests                            # no network: recorded responses, the help, the wrappers, status offline
-DRISHTI_LIVE_FETCH=1 python -m pytest -q tools/publicdata/tests -k live   # one live fetch (the ECB's euro short-term rate)
-```

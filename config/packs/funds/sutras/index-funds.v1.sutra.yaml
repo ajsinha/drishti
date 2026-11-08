@@ -60,6 +60,6 @@ panels:
     with:
       title: About this page
       area: right
-      text: "Public data (U.S. public domain). * Active share is half the sum of the differences between the fund's weights and the index weights, over the members the pack can weight: the index weights are computed from SEC data (shares outstanding times the price the funds' filings imply), not the provider's, so a fund that replicates its index shows a few percent rather than zero. Source: tools/publicdata/funds.py."
+      text: "Public data (U.S. public domain). * Active share is half the sum of the differences between the fund's weights and the index weights, over the members the pack can weight: the index weights are computed from SEC data (shares outstanding times the price the funds' filings imply), not the provider's, so a fund that replicates its index shows a few percent rather than zero. Source: drishti.py feed run funds."
   - { use: data-provenance@1 }
 keys: { F5: "link($.INDEX, 'index-membership', $.NAME)", F9: raw }

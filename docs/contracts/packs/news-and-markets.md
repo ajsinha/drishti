@@ -77,7 +77,7 @@ A topic and the news about it: headlines (newest first) with their publishers an
 - key TOPIC_ID is the field holding the sample catalogue's id (TOPIC-FED): confirm it is the business key.
 - source 'reference' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Hand-written reference data (topics and listed companies)' for this kind (news-topic, listed-company): state when each source applies.
-- a snapshot refreshed when tools/publicdata/news_and_markets.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the news-and-markets data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: CATEGORY: confirm they are closed lists.
 
 ## NEWS: Headlines (`news`)
@@ -234,7 +234,7 @@ A listed company: its live quote and price history (yfinance connector) and its 
 - key COMPANY_ID is the field holding the sample catalogue's id (CO-AAPL): confirm it is the business key.
 - source 'reference' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Hand-written reference data (topics and listed companies)' for this kind (news-topic, listed-company): state when each source applies.
-- a snapshot refreshed when tools/publicdata/news_and_markets.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the news-and-markets data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: EXCHANGE: confirm they are closed lists.
 
 ## QUOTE: Quote and price history (`quote`)

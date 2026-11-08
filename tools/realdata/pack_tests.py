@@ -43,13 +43,15 @@ def header() -> str:
 
 
 def files(pack: str, docs: dict, base: Path | None = None) -> dict[Path, str]:
-    """Everything under <base>/tests for the pack (base defaults to config/packs/<pack>); kinds without documents (--no-imf) are skipped."""
+    """Everything under <base>/tests for the pack (base defaults to config/packs/<pack>); kinds without documents (--no-imf) are skipped,
+    and so are sample ids a narrower build has no document for (--no-wdi: the world-development feed owns WDI)."""
     tests = (base or PACKS / pack) / "tests"
     cfg, out = spec()[pack], {}
     for kind, t in cfg["kinds"].items():
-        if not docs.get(kind):
+        cases = [(sid, docs[kind][sid]) for sid in t["samples"] if sid in (docs.get(kind) or {})]
+        if not cases:
             continue
-        out[tests / kind / SC.FILE] = SC.text([(sid, docs[kind][sid]) for sid in t["samples"]])            # one case a line
+        out[tests / kind / SC.FILE] = SC.text(cases)            # one case a line
         out[tests / kind / "expect.yaml"] = f"{header()}\n\n\nnoErrors: true\nnonEmpty: [{', '.join(t['nonEmpty'])}]\nhelp: {{ about: true }}\n"
     out[tests / "help-coverage.txt"] = COVERAGE_NOTE + "".join(f"{k}={v}\n" for k, v in sorted(cfg["helpCoverage"].items()) if docs.get(k))
     return out

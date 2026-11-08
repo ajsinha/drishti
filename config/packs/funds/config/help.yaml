@@ -13,4 +13,4 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 guides:
-  - { slug: funds-pack, category: packs, title: "The funds pack", kind: guide, icon: building, file: guides/funds.md, summary: "The 200 largest US mutual funds and ETFs with their holdings, from SEC Form N-PORT, Form N-CEN and the prospectus risk/return summaries (public domain), GLEIF (CC0): a fact sheet per fund, the look-through, the ETF against its index, the funds that hold a company. Refreshed by tools/publicdata/funds.py. Type FUND QQQ, HELD AAPL or TRACK SP500." }
+  - { slug: funds-pack, category: packs, title: "The funds pack", kind: guide, icon: building, file: guides/funds.md, summary: "The 200 largest US mutual funds and ETFs with their holdings, from SEC Form N-PORT, Form N-CEN and the prospectus risk/return summaries (public domain), GLEIF (CC0): a fact sheet per fund, the look-through, the ETF against its index, the funds that hold a company. Refreshed by drishti.py feed run funds. Type FUND QQQ, HELD AAPL or TRACK SP500." }

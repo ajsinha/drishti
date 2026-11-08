@@ -36,7 +36,7 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 | Contract | [lei-entity.contract.yaml](../../../config/packs/gleif/contracts/lei-entity.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py) |
+| Source | public data: GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif) |
 | Grain | One row per lei legal entity, keyed by LEI. |
 | Key | `LEI` |
 | Id pattern | `^[0-9A-Z]{18}[0-9]{2}$` |
@@ -166,7 +166,7 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 **To review (3)**
 
 - required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/gleif/lei-entity/lei-entity.2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the gleif data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: CATEGORY, OTHER_NAMES[].TYPE, PARENT_EXCEPTIONS[].LEVEL, PARENT_EXCEPTIONS[].REASON, PARENT_EXCEPTIONS[].MEANING, PARENTS[].RELATIONSHIP: confirm they are closed lists.
 
 ## LEIG: LEI ownership group (`lei-group`)
@@ -264,7 +264,7 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 | Contract | [lei-relationship.contract.yaml](../../../config/packs/gleif/contracts/lei-relationship.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py) |
+| Source | public data: GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif) |
 | Grain | One row per lei parent relationship, keyed by RELATIONSHIP_ID. |
 | Key | `RELATIONSHIP_ID` |
 | Id pattern | `^LEIREL-` |
@@ -324,7 +324,7 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 **To review (3)**
 
 - required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-relationship/lei-relationship.2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the gleif data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: LEVEL, REGISTRATION_STATUS, ACCOUNTING_STANDARD, PERIODS[].TYPE: confirm they are closed lists.
 
 ## LEIC: LEI country (`lei-country`)
@@ -403,7 +403,7 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 | Contract | [lei-mapping.contract.yaml](../../../config/packs/gleif/contracts/lei-mapping.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py) |
+| Source | public data: GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif) |
 | Grain | One row per isin or bic to lei, keyed by IDENTIFIER. |
 | Key | `IDENTIFIER` |
 | Id pattern | — |
@@ -442,5 +442,5 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 **To review (3)**
 
 - required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-mapping/lei-mapping.2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.
+- a snapshot refreshed when the gleif data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: TYPE, MAPPING_FILE: confirm they are closed lists.

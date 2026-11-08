@@ -872,7 +872,7 @@ Lakes (one file per lake, `config/lakes/<lake>.yaml`), Delta and Iceberg, and re
 ## 4. External data: where it comes from and how to refresh it
 
 Every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, Google News, ECB, US Treasury, NY Fed, SEC
-EDGAR, Wikidata, Nasdaq Trader, GLEIF), where it comes from, its licence, which pack and kinds it feeds, and its standalone refresh script
+EDGAR, Wikidata, Nasdaq Trader, GLEIF), where it comes from, its licence, which pack and kinds it feeds, and the data feed that pulls it
 (`.sh` and `.ps1`) with examples, is its own guide: **[EXTERNAL_DATA.md](EXTERNAL_DATA.md)** (Help → External data).
 
 ## 5. Schema to pack: generate a pack from JSON Schema

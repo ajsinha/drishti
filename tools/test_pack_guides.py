@@ -15,7 +15,7 @@
 """Every pack guide is complete (the product owner's request of 2026-10-26: data contract, data retrieval and details for all packs):
 each pack with contracts has a guide listed in its help entry that ends with the generated Data contracts and Data retrieval sections,
 naming every kind and every column of its contracts; every stored kind has an origin in data_retrieval.yaml (an external source or a
-generator); every external source names a refresh script and a licence; the packs without a guide generator are current
+generator); every external source names its data feed (or the generator it is typed into) and a licence; the packs without a guide generator are current
 (guide_data.py --check); every pack README points to its guide's two sections and to the External data page when it has external
 sources."""
 from __future__ import annotations
@@ -77,7 +77,8 @@ def test_every_stored_kind_has_an_origin_and_every_source_a_script(pack):
         assert o.get("external") or o.get("generator"), f"{pack.name}/{c['kind']}: no origin in data_retrieval.yaml"
         for i in (o.get("external") or []) + (o.get("official") or []):
             e = SPEC["external"][i]
-            assert e["licence"] and e["url"].startswith("https://") and (ROOT / e["script"]).is_file(), i
+            pulled = (ROOT / "config" / "feeds" / f"{e['feed']}.yaml").is_file() if e.get("feed") else (ROOT / e["script"]).is_file()
+            assert e["licence"] and e["url"].startswith("https://") and pulled, i
         if o.get("generator"):
             assert o["generator"] in SPEC["generators"], o
 

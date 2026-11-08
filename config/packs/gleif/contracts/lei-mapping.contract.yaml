@@ -22,7 +22,7 @@ class: fundamental
 status: active
 title: ISIN or BIC to LEI
 description: An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
-source: 'public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)'
+source: 'public data: GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif)'
 grain: One row per isin or bic to lei, keyed by IDENTIFIER.
 key:
 - IDENTIFIER
@@ -138,5 +138,5 @@ notes: []
 review:
 - 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-mapping/lei-mapping.2026-10-25.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
-- 'a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.'
+- 'a snapshot refreshed when the gleif data feed runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: TYPE, MAPPING_FILE: confirm they are closed lists.'
