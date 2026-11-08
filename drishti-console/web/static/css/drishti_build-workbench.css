@@ -248,6 +248,7 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wbf-lbl { display: flex; flex-direction: column; font-size: var(--d-fs-11_52); color: var(--d-muted); margin: 0; }
 .wbf-wide, .wbf-ops, .wbf-flags { grid-column: 1 / -1; }
 .wbf-in { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-5); padding: var(--d-sp-2_4) var(--d-sp-5_6); min-height: 28px; font: inherit; font-size: var(--d-fs-13_12); }
+.wbf-pick { display: block; min-width: 0; font-size: var(--d-fs-13_12); }                        /* drishti-inputs' Select in a card: its look is the library's */
 .wbf-ops { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--d-sp-1_6) var(--d-sp-12_8); font-size: var(--d-fs-12_8); }
 .wbf-ops legend { font-size: var(--d-fs-11_52); color: var(--d-muted); width: 100%; float: none; margin: 0; }
 .wbf-chk { display: inline-flex; align-items: center; gap: var(--d-sp-4_8); margin: 0; font-size: var(--d-fs-12_8); }

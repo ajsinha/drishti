@@ -52,6 +52,7 @@
 .dz-h { margin: var(--d-sp-4_8) 0 0; font-size: var(--d-fs-11_84); letter-spacing: .08em; text-transform: uppercase; color: var(--d-muted); }
 .dz-sentence { display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4); align-items: center; font-size: var(--d-fs-14_72); }
 .dz-pill { max-width: 100%; padding: var(--d-sp-3_2) var(--d-sp-9_6); border-radius: var(--d-radius-pill); border: 1px solid var(--d-border); background: var(--d-surface-2); color: var(--d-ink); font: inherit; }
+.dz-select { max-width: 100%; font: inherit; }                                          /* drishti-inputs' Select in the designer's sentences */
 .dz-row { display: flex; gap: var(--d-sp-8); align-items: center; flex-wrap: wrap; }
 .dz-search { min-height: 2.3rem; padding: 0 var(--d-sp-11_2); border-radius: var(--d-radius-8); border: 1px solid var(--d-border); background: var(--d-bg); color: var(--d-ink); font: inherit; }
 .dz-kit { display: flex; flex-direction: column; gap: var(--d-sp-7_2); }
@@ -81,7 +82,7 @@
   border: 1px solid var(--d-border); color: var(--d-ink); }
 .dz-token.dz-unsure { border-color: var(--d-warn); }
 .dz-token.dz-error { border-color: var(--d-bad); color: var(--d-bad); }
-.dz-token select { border: 0; background: transparent; color: inherit; font: inherit; }
+.dz-token drishti-select { font: inherit; }                                            /* drishti-inputs' Select */
 .dz-messages { margin: 0 0 var(--d-sp-12_8); padding-left: var(--d-sp-17_6); color: var(--d-warn); font-size: var(--d-fs-14_08); }
 .dz-result { border: 1px solid var(--d-border); border-radius: var(--d-radius-12); background: var(--d-surface); padding: var(--d-sp-16); }
 .dz-result-h { font-size: var(--d-fs-11_84); letter-spacing: .06em; text-transform: uppercase; color: var(--d-muted); margin-bottom: var(--d-sp-9_6); }

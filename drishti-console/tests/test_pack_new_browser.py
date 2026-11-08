@@ -135,14 +135,14 @@ def test_the_whole_flow_three_schemas_and_a_folder_to_a_downloaded_bundle(browse
     assert page.evaluate("() => document.querySelector('.pk-graph').__drishtiGraph.model.edgeList().some((e) => e.source === 'trade' && e.target === 'counterparty')")
     trade = page.locator(".pk-card", has=page.locator("h3", has_text="Trade"))
     assert "trades.jsonl" in trade.inner_text() and "30 rows" in trade.inner_text()
-    assert trade.locator("select[data-focus^=key-]").input_value() == "tradeId"
-    assert trade.locator("select[data-focus^=match-]").input_value() == "productType"
+    assert trade.locator("drishti-select[data-focus^=key-]").input_value() == "tradeId"
+    assert trade.locator("drishti-select[data-focus^=match-]").input_value() == "productType"
     assert "3 Sutras" in trade.inner_text()                                       # IRS, FXS, FUT; no catch-all: every trade has a type
     # change the match column: the plan is redone
-    trade.locator("select[data-focus^=match-]").select_option("")
+    trade.locator("drishti-select[data-focus^=match-]").select_option("")
     page.locator(".pk-card h3:has-text('Trade')").wait_for()
     page.wait_for_function("() => document.querySelector('[data-kinds]').innerText.includes('3 kinds, 3 Sutras to create')")
-    trade.locator("select[data-focus^=match-]").select_option("productType")
+    trade.locator("drishti-select[data-focus^=match-]").select_option("productType")
     page.wait_for_function("() => document.querySelector('[data-kinds]').innerText.includes('3 kinds, 5 Sutras to create')")
     # 3. the pack
     page.click("[data-next]")
@@ -324,7 +324,7 @@ def test_an_ambiguous_key_must_be_chosen_before_going_on(browser, pack_console):
     page.click("[data-next]")
     page.locator(".pk-card.pk-needs").wait_for()
     assert "Ambiguous" in page.locator(".pk-card").inner_text()
-    page.select_option("select[data-focus^=key-]", "bId")
+    page.select_option("drishti-select[data-focus^=key-]", "bId")
     page.wait_for_function("() => document.querySelector('.pk-card').innerText.includes('chosen by you')")
     page.close()
 

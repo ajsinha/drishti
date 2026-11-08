@@ -670,7 +670,7 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .hist-h { display: flex; justify-content: space-between; align-items: center; padding: var(--d-sp-9_6) var(--d-sp-14_4); border-bottom: 1px solid var(--d-border); }
 .hist-h h3 { margin: 0; font-size: var(--d-fs-16); }
 .hist-tools { display: inline-flex; gap: var(--d-sp-8); align-items: center; }
-.hist-tools select { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); }
+.hist-tools drishti-select { color: var(--d-ink); }                                  /* drishti-inputs' Select */
 .hist-msg { margin: var(--d-sp-8) var(--d-sp-14_4) 0; font-size: var(--d-fs-13_12); }
 .hist-chart { margin: var(--d-sp-4_8) var(--d-sp-9_6); }                                         /* drishti-chart's card, 220 px */
 .hist-tbl { max-height: 220px; overflow: auto; margin: 0 var(--d-sp-14_4) var(--d-sp-14_4); }

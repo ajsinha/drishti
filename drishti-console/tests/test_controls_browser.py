@@ -24,6 +24,7 @@ import time
 
 import pytest
 
+import select_helpers
 from conftest import CONSOLE
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
@@ -264,20 +265,20 @@ def test_a_date_range_has_presets_and_ends_a_number_range_bounds_and_top_n_cuts(
     assert [r.split("|")[2] for r in rows(page)] == ["300", "400", "500", "600"]
     done(page, lambda: page.locator("[data-ctl='size'] .ctl-to").fill("450"))
     assert [r.split("|")[2] for r in rows(page)] == ["300", "400"]
-    done(page, lambda: page.locator("[data-ctl='top'] select").select_option("5"))
+    done(page, lambda: page.locator("[data-ctl='top'] drishti-select").select_option("5"))
     assert len(rows(page)) == 2 and "ctl.top=5" in query(page)
 
 
 def test_cascading_toggle_segmented_and_date_move_the_other_panel_only(page, backend):
-    assert page.locator("[data-ctl='country'] option").all_inner_texts() == ["UK", "DE"]
-    done(page, lambda: page.locator("[data-ctl='region'] select").select_option("APAC"))
-    assert page.locator("[data-ctl='country'] option").all_inner_texts() == ["JP", "AU", "SG"]     # the child's options moved with its parent
-    assert page.locator("[data-ctl='country'] select").input_value() == "JP"
+    assert select_helpers.labels(page, "[data-ctl='country'] drishti-select") == ["UK", "DE"]
+    done(page, lambda: page.locator("[data-ctl='region'] drishti-select").select_option("APAC"))
+    assert select_helpers.labels(page, "[data-ctl='country'] drishti-select") == ["JP", "AU", "SG"]     # the child's options moved with its parent
+    assert page.locator("[data-ctl='country'] drishti-select").input_value() == "JP"
     assert page.locator("#p-other h3").inner_text() == "Other APAC JP Net A"
     # only `other` was asked for and swapped in by the change (the live stream redraws `schedule` on its own ticks, so a mark on its element
     # would not tell the two apart)
     assert backend.asked[-1][1] == ["other"] and page.evaluate("window.Drishti.__controls.at(-1).panels") == ["other"]
-    done(page, lambda: page.locator("[data-ctl='country'] select").select_option("SG"))
+    done(page, lambda: page.locator("[data-ctl='country'] drishti-select").select_option("SG"))
     assert "SG" in page.locator("#p-other h3").inner_text()
     done(page, lambda: page.locator("button[role=switch]").click())
     assert page.locator("button[role=switch]").get_attribute("aria-checked") == "true" and "Gross" in page.locator("#p-other h3").inner_text()
@@ -369,9 +370,11 @@ def test_every_control_works_from_the_keyboard(page):
     sw.focus()
     done(page, lambda: page.keyboard.press("Space"))
     assert sw.get_attribute("aria-checked") == "true"
-    page.locator("[data-ctl='top'] select").focus()
-    done(page, lambda: page.keyboard.press("ArrowUp"))
-    assert page.locator("[data-ctl='top'] select").input_value() == "10"
+    page.locator("[data-ctl='top'] .di-select-control").focus()                  # drishti-inputs' Select: Up opens the list on the value,
+    page.keyboard.press("ArrowUp")
+    page.keyboard.press("ArrowUp")                                                # Up again moves to the one before, Enter picks it
+    done(page, lambda: page.keyboard.press("Enter"))
+    assert page.locator("[data-ctl='top'] drishti-select").input_value() == "10"
     focus_ring = page.evaluate("(() => { document.querySelector('[data-ctl=q] input').focus(); return getComputedStyle(document.activeElement).outlineStyle; })()")
     assert focus_ring != "none"
 

@@ -29,7 +29,8 @@ table.tbl th:hover .cf-btn, table.tbl th:focus-within .cf-btn, .cf-btn.cf-on, .c
 .cf-act[aria-pressed="true"] { border-color: var(--d-accent); color: var(--d-accent); }
 .cf-ok { background: var(--d-fill); color: var(--d-on-fill); border-color: var(--d-fill); text-align: center; }
 .cf-cond { display: flex; flex-wrap: wrap; gap: var(--d-sp-4_8); }
-.cf-cond select, .cf-cond input, .cf-q { flex: 1 1 100%; min-width: 0; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-3_2) var(--d-sp-6_4); font: inherit; min-height: 28px; }
+.cf-cond drishti-select { flex: 1 1 100%; min-width: 0; }                     /* drishti-inputs' Select: its look is the library's */
+.cf-cond input, .cf-q { flex: 1 1 100%; min-width: 0; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-3_2) var(--d-sp-6_4); font: inherit; min-height: 28px; }
 .cf-cond input:not([hidden]) { flex: 1 1 8rem; }
 .cf-err { color: var(--d-bad); min-height: 0; }
 .cf-err:empty { display: none; }
@@ -47,6 +48,6 @@ table.tbl th:hover .cf-btn, table.tbl th:focus-within .cf-btn, .cf-btn.cf-on, .c
 .cf-foot .cf-act { flex: 1; text-align: center; }
 .tbl-clear { color: var(--d-accent); }
 .tbl-clear[hidden] { display: none; }
-@media (pointer: coarse) { .cf-item { min-height: 44px; } .cf-act, .cf-cond select, .cf-cond input, .cf-q { min-height: 44px; } .cf-item input { min-width: 24px; min-height: 24px; } }
+@media (pointer: coarse) { .cf-item { min-height: 44px; } .cf-act, .cf-cond .di-control, .cf-cond input, .cf-q { min-height: 44px; } .cf-item input { min-width: 24px; min-height: 24px; } }
 @media print { .cf-btn, .cf-menu, .tbl-clear { display: none !important; } }
 .cf-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

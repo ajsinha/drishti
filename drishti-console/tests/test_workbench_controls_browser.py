@@ -50,8 +50,8 @@ def test_add_control_from_a_card_see_the_yaml_and_try_it_on_the_sample(live_cons
     assert card.get_attribute("aria-label").startswith("new control") is False and "control 1 of 1" in card.get_attribute("aria-label")
     card.locator("input[aria-label='control1 id']").fill("legs")
     card.locator("input[aria-label='legs options']").fill("$.cashflows[*].leg")
-    card.locator("select[aria-label='legs placement']").select_option("header")
-    card.locator("select[aria-label='legs panel']").select_option("cf")
+    card.locator("drishti-select:has([aria-label='legs placement'])").select_option("header")
+    card.locator("drishti-select:has([aria-label='legs panel'])").select_option("cf")
     card.locator("input[aria-label='legs label']").fill("Legs")
     text = page.input_value("[data-ctl-src]")
     assert text.startswith("- { id: \"legs\", kind: \"multi-select\", label: \"Legs\", options: \"$.cashflows[*].leg\"") and 'panel: "cf"' in text    # the YAML follows the cards

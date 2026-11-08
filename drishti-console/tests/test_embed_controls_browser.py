@@ -108,7 +108,7 @@ def test_a_live_views_subscription_is_built_with_the_control_values(host):
     h.until(lambda: h.js(f"!!{SR}.querySelector('[data-ctl=asset]') && document.querySelector('#main').getAttribute('data-state') === 'live'"), 30, "the live netting set")
     asset = h.js(f"[...{SR}.querySelectorAll('[data-ctl=asset] option')].map(o => o.value).filter(Boolean)[0]")
     assert asset, "the asset-class control has no option"
-    h.page.locator("#main").locator("[data-ctl=asset] select").select_option(asset)
+    h.page.locator("#main").locator("[data-ctl=asset] drishti-select").select_option(asset)
     h.until(lambda: h.js("window.__done && window.__done.length > 0"), 30, "the controls applied")
     assert urllib.parse.unquote(h.js("document.querySelector('#main').controls")) == f"asset={asset}"
     # the live subscription is built with the values: the channel is told

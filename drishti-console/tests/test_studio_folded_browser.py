@@ -21,6 +21,8 @@ import re
 
 import pytest
 
+import select_helpers
+
 from test_workbench_browser import browser, open_design, page, settle, state, wait  # noqa: F401 - fixtures and helpers
 from wb_live import live_console, post, showcase_json, showcase_sutra  # noqa: F401 - the fixture
 
@@ -149,7 +151,7 @@ def test_versions_tab_diffs_against_the_base_and_an_earlier_version_and_restores
     wait(page, "window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     page.locator("#wbTabVer").click()
     wait(page, "document.querySelector('[data-versions] .wb-sum').textContent.includes('same as')")
-    assert sutra in page.locator("#wbCompareWith option").first.inner_text()
+    assert sutra in select_helpers.labels(page, "#wbCompareWith")[0]
     # two edits, then the diff against the base shows them and against version 1 only the second
     rev = state(page, "rev")
     page.evaluate("window.Drishti.workbench.store.send([{op: 'text', yaml: window.Drishti.workbench.store.state.yaml + '\\n# first edit\\n'}])")
@@ -159,11 +161,11 @@ def test_versions_tab_diffs_against_the_base_and_an_earlier_version_and_restores
     settle(page, rev)
     # the list after the second save (base, version 0, version 1) and the comparison that list asked for has landed: until then the
     # diff on screen may be the one asked for after the first save (marked aria-busy while the newer one loads)
-    wait(page, "document.querySelectorAll('#wbCompareWith option').length >= 3 && !document.querySelector('[data-versions] .wb-diff').hasAttribute('aria-busy') && document.querySelector('[data-versions] .wb-sum').textContent.includes('against')")
+    wait(page, "document.getElementById('wbCompareWith').component.options.length >= 3 && !document.querySelector('[data-versions] .wb-diff').hasAttribute('aria-busy') && document.querySelector('[data-versions] .wb-sum').textContent.includes('against')")
     assert "first edit" in page.locator("[data-versions] .wb-diff").inner_text()
     diff = page.locator("[data-versions] .wb-diff")
     assert "second edit" in diff.inner_text() and diff.locator(".d-add").count() >= 2
-    page.evaluate("(() => { const s = document.getElementById('wbCompareWith'); s.value = '1'; s.dispatchEvent(new Event('change')); })()")
+    page.select_option("#wbCompareWith", "1")
     wait(page, "document.querySelector('[data-versions] .wb-diff').textContent.includes('second edit') && !document.querySelector('[data-versions] .wb-diff').textContent.includes('+# first edit')")
     # restore version 1 (as an operation: undo brings the second edit back)
     page.get_by_role("button", name=re.compile("Restore version 1")).click()

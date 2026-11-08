@@ -72,7 +72,7 @@
     if (numeric(f)) { return X.typed(f, a) === X.typed(f, b); }
     return String(a) === String(b);
   }
-  function valueOf(f, n) { return f.type === 'bool' ? n.checked : f.type === 'entity' ? (n.getAttribute('data-value') || '') : n.value; }
+  function valueOf(f, n) { return f.type === 'bool' ? n.checked : f.type === 'entity' ? (n.getAttribute('data-value') || '') : n.value == null ? '' : n.value; }
   function api(method, path, body) {
     return fetch('/api/drafts' + (path || ''), { method: method, credentials: 'same-origin',
       headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' }, body: body ? JSON.stringify(body) : undefined })
@@ -156,10 +156,10 @@
     var n, id = 'fm-' + st.id + '-' + f.id + '-' + (++st.seq);
     if (f.type === 'entity') { return entityInput(st, f, value, onChange, id); }
     if (f.type === 'enum' || f.type === 'lookup') {
-      n = el('select', 'fm-in');
-      n.appendChild(new Option(f.type === 'lookup' ? 'Choose…' : '', ''));
-      (f.options || []).forEach(function (o) { n.appendChild(new Option(f.type === 'lookup' && o.label !== o.value ? o.value + ' · ' + o.label : o.label, o.value)); });
-      n.value = X.empty(value) ? '' : String(value);
+      n = el('drishti-select', 'fm-pick');                              // drishti-inputs' Select (a cell's editor: it opens on the value)
+      var choices = [{ value: '', label: f.type === 'lookup' ? 'Choose…' : '—' }].concat((f.options || []).map(function (o) {
+        return { value: String(o.value), label: f.type === 'lookup' && o.label !== o.value ? o.value + ' · ' + o.label : String(o.label) }; }));
+      n.options = { label: f.label || f.id, options: choices, value: !X.empty(value) && choices.some(function (o) { return o.value === String(value); }) ? String(value) : '' };
     } else if (f.type === 'textarea') {
       n = el('textarea', 'fm-in'); n.rows = 3; n.value = X.empty(value) ? '' : String(value);
     } else if (f.type === 'bool') {
@@ -172,7 +172,7 @@
     if (f.placeholder && 'placeholder' in n) { n.placeholder = f.placeholder; }
     n.id = id; n.name = f.id; n.setAttribute('data-field', f.id);
     if (f.required) { n.setAttribute('aria-required', 'true'); }
-    n.addEventListener(f.type === 'bool' || n.tagName === 'SELECT' ? 'change' : 'input', function () {
+    n.addEventListener(f.type === 'bool' ? 'change' : n.component ? 'drishti:change' : 'input', function () {
       onChange(f.type === 'bool' ? n.checked : n.value);
     });
     if (f.type === 'money' || f.type === 'datetime') {         // the currency or the time zone beside the value
@@ -497,12 +497,13 @@
     var cur = f.id in ch ? ch[f.id] : r.values[f.id];
     st.vals = Object.assign({}, r.values, ch);
     var n = input(st, f, cur, function () {});
+    var sel = n.component || null;                                       // an enum or a lookup: drishti-inputs' Select
     n.classList.add('fm-cell-in');
-    n.setAttribute('aria-label', f.label);
+    if (!sel) { n.setAttribute('aria-label', f.label); }
     td.textContent = ''; td.appendChild(n.fmWrap || n);
     var dp = picker(f, n, '2026-11-06, T-1'), keys = dp ? dp.host : n;      // a date (and time): drishti-inputs' picker in the cell, its fields take the keys
-    var open = function () { return !!dp && !!dp.host.ownerDocument.querySelector('.di-pop'); };
-    (dp ? dp.input : n).focus(); if ((dp ? dp.input : n).select) { (dp ? dp.input : n).select(); }
+    var open = function () { return !!(dp || sel) && !!n.ownerDocument.querySelector('.di-pop'); };
+    if (sel) { sel.focus(); sel.open(); } else { (dp ? dp.input : n).focus(); if ((dp ? dp.input : n).select) { (dp ? dp.input : n).select(); } }
     var done = false;
     function finish(keep, move) {
       if (done) { return; }
@@ -519,7 +520,12 @@
       var next = move ? cells[at + move] : cells[at];
       if (next) { next.focus(); }
     }
+    if (sel) {
+      sel.on('pick', function () { finish(true, 0); });                    // a pick saves the cell
+      sel.on('close', function () { setTimeout(function () { if (!done && !keys.contains(keys.ownerDocument.activeElement)) { finish(true, null); } }, 0); });   // closed by a click away
+    }
     keys.addEventListener('keydown', function (e) {
+      if (sel && e.defaultPrevented && e.key !== 'Tab') { return; }        // the Select's own keys (open, move, pick)
       if (e.key === 'Enter') { e.preventDefault(); finish(true, 0); }
       else if (e.key === 'Escape') { if (open()) { return; } e.preventDefault(); e.stopPropagation(); finish(false, 0); }
       else if (e.key === 'Tab') {

@@ -31,6 +31,8 @@ from pathlib import Path
 
 import pytest
 
+import select_helpers
+
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
 from docshots import docs_img
@@ -202,12 +204,12 @@ def test_describe_says_what_it_did_not_understand_in_the_light_theme(stack, brow
 def test_a_click_shows_a_linked_record_of_another_pack_and_a_moved_panel(stack, browser):
     pg = page_in(browser, "light", {"width": 1440, "height": 900})
     customizing(pg, stack, BOOK)
-    pick = pg.locator("[data-dz-click-from] option").first.get_attribute("value")
+    pick = select_helpers.values(pg, "[data-dz-click-from]")[0]
     pg.select_option("[data-dz-click-from]", pick)
     if pick.startswith("u:"):                                                               # a used table: opened up by the first sentence
         reloaded(pg, lambda: pg.locator("[data-dz-click-apply]").click())
-    pid = pg.locator("[data-dz-click-from] option").first.get_attribute("value")[2:]
-    labels = pg.locator("[data-dz-click-show] option").all_inner_texts()
+    pid = select_helpers.values(pg, "[data-dz-click-from]")[0][2:]
+    labels = select_helpers.labels(pg, "[data-dz-click-show]")
     limits = next(x for x in labels if "credit limits" in x)
     assert "its counterparty (core)" in labels and "its events" in labels, labels                  # linked across packs, in plain words
     pg.select_option("[data-dz-click-show]", label=limits)
@@ -218,7 +220,7 @@ def test_a_click_shows_a_linked_record_of_another_pack_and_a_moved_panel(stack, 
     IMG.mkdir(parents=True, exist_ok=True)
     pg.screenshot(path=str(IMG / "customize-linked.jpg"), type="jpeg", quality=84)
 
-    moved = next(x for x in pg.locator("[data-dz-click-show] option").all_inner_texts() if "(moved here)" in x)
+    moved = next(x for x in select_helpers.labels(pg, "[data-dz-click-show]") if "(moved here)" in x)
     title = moved.split("“")[1].split("”")[0]
     tops = pg.locator(".dz-tools strong").all_inner_texts()
     pg.select_option("[data-dz-click-show]", label=moved)
@@ -249,7 +251,7 @@ def test_a_key_figure_opens_its_settings_shows_the_chosen_number_and_is_removed_
     wait(pg, "document.querySelector('[data-dz-settings-box] [data-dz-setting=\"value\"]')")       # its settings open at once
     box = pg.locator("[data-dz-settings-box]")
     assert "Which number?" in box.inner_text()
-    numbers = box.locator("[data-dz-setting='value'] option").evaluate_all("os => os.map(o => o.value)")
+    numbers = select_helpers.values(pg, "[data-dz-settings-box] [data-dz-setting='value']")
     pick = "$.QUANTITY" if "$.QUANTITY" in numbers else numbers[-1]
     box.locator("[data-dz-setting='value']").select_option(pick)
     box.locator("[data-dz-setting='label']").fill("The chosen number")

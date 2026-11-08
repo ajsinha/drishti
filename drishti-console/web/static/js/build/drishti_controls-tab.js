@@ -106,9 +106,9 @@
       return i;
     }
     function select(c, key, values, blank) {
-      var s = WB.el('select', 'wbf-in', null, { 'aria-label': (c.id || 'control') + ' ' + key });
-      if (blank !== undefined) { s.appendChild(WB.el('option', null, blank, { value: '' })); }
-      values.forEach(function (v) { var o = WB.el('option', null, v, { value: v }); if (v === c[key]) { o.selected = true; } s.appendChild(o); });
+      var s = WB.el('drishti-select', 'wbf-pick');                     // drishti-inputs' Select: its control carries the field's name
+      s.options = { label: (c.id || 'control') + ' ' + key, value: values.indexOf(c[key]) >= 0 ? c[key] : undefined,
+        options: (blank !== undefined ? [{ value: '', label: blank }] : []).concat(values.map(function (v) { return { value: v, label: v }; })) };
       return s;
     }
     function check(c, key, text) {
@@ -129,7 +129,7 @@
       var body = WB.el('div', 'wbf-body');
       body.appendChild(labelled('Id', field(c, 'id', 'text', { pattern: '[A-Za-z][A-Za-z0-9_]*', maxlength: '32' })));
       var kind = select(c, 'kind', KINDS);
-      kind.addEventListener('change', function () { c.kind = kind.value; if (!LISTED[c.kind]) { delete c.options; } if (c.kind !== 'cascading') { delete c.parent; } changed(true, i); });
+      kind.addEventListener('drishti:change', function () { c.kind = kind.value; if (!LISTED[c.kind]) { delete c.options; } if (c.kind !== 'cascading') { delete c.parent; } changed(true, i); });
       body.appendChild(labelled('Kind', kind));
       body.appendChild(labelled('Label', field(c, 'label')));
       if (LISTED[c.kind || 'dropdown']) {
@@ -140,19 +140,19 @@
       }
       if (c.kind === 'cascading') {
         var par = select(c, 'parent', items.slice(0, i).map(function (x) { return x.id; }).filter(Boolean), '(choose)');
-        par.addEventListener('change', function () { if (par.value) { c.parent = par.value; } else { delete c.parent; } changed(false); });
+        par.addEventListener('drishti:change', function () { if (par.value) { c.parent = par.value; } else { delete c.parent; } changed(false); });
         body.appendChild(labelled('Parent', par));
       }
       if (c.kind === 'number-range' || c.kind === 'slider') { body.appendChild(labelled('Min', field(c, 'min'))); body.appendChild(labelled('Max', field(c, 'max'))); }
       if (c.kind === 'slider') { body.appendChild(labelled('Step', field(c, 'step'))); }
       body.appendChild(labelled('Default', field(c, 'default')));
       var place = select(c, 'placement', PLACES);
-      place.addEventListener('change', function () { c.placement = place.value; if (c.placement !== 'header') { delete c.panel; } if (c.placement === 'strip') { delete c.placement; } changed(true, i); });
+      place.addEventListener('drishti:change', function () { c.placement = place.value; if (c.placement !== 'header') { delete c.panel; } if (c.placement === 'strip') { delete c.placement; } changed(true, i); });
       if (!c.placement) { place.value = 'strip'; }
       body.appendChild(labelled('Placement', place));
       if (c.placement === 'header') {
         var pn = select(c, 'panel', panelIds(), '(choose a panel)');
-        pn.addEventListener('change', function () { if (pn.value) { c.panel = pn.value; } else { delete c.panel; } changed(false); });
+        pn.addEventListener('drishti:change', function () { if (pn.value) { c.panel = pn.value; } else { delete c.panel; } changed(false); });
         body.appendChild(labelled('Panel', pn));
       }
       var flags = WB.el('div', 'wbf-flags');

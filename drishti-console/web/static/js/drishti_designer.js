@@ -207,16 +207,17 @@
     if (state.areas && state.areas.length) {
       var s = select('Area of ' + part.title, state.areas.map(function (a) { return [a, a.replace(/-/g, ' ')]; }), 'data-dz-area');
       s.value = part.area && state.areas.indexOf(part.area) >= 0 ? part.area : state.areas[0];
-      s.addEventListener('change', function () { step({ op: 'area', index: part.index, value: s.value }).catch(function () {}); });
+      s.addEventListener('drishti:change', function () { step({ op: 'area', index: part.index, value: s.value }).catch(function () {}); });
       box.appendChild(s);
     }
     return box;
   }
 
+  /** drishti-inputs' Select (<drishti-select>) from [value, label] pairs; its value and drishti:change as on any page. */
   function select(label, options, attr) {
-    var s = el('select', { 'class': 'dz-pill', 'aria-label': label });
+    var s = el('drishti-select', { 'class': 'dz-select' });
     s.setAttribute(attr, '');
-    options.forEach(function (o) { s.appendChild(el('option', { value: o[0], text: o[1] })); });
+    s.options = { label: label, options: options.map(function (o) { return { value: o[0], label: o[1] }; }) };
     return s;
   }
 
@@ -239,10 +240,9 @@
       function fillShows() {                                              // the row's details, the records linked from it, a panel of the page
         var t = state.tables.filter(function (x) { return 't:' + x.id === from.value; })[0];
         shows = t && t.shows && t.shows.length ? t.shows : [{ label: 'the row’s details', spec: { how: 'row' } }];
-        what.innerHTML = '';
-        shows.forEach(function (c, i) { what.appendChild(el('option', { value: String(i), text: c.label, 'data-how': c.spec.how })); });
+        what.component.setOptions(shows.map(function (c, i) { return { value: String(i), label: c.label }; }), '0');
       }
-      from.addEventListener('change', fillShows);
+      from.addEventListener('drishti:change', fillShows);
       if (set) { from.value = 't:' + set.id; where.value = set.place || 'expand-row'; }
       fillShows();
       side.appendChild(el('div', { 'class': 'dz-sentence' }, ['a row in ', from, ' show ', what, ' in ', where]));
@@ -268,10 +268,11 @@
     function rfill() {
       var p = state.parts.filter(function (x) { return String(x.index) === rpart.value; })[0] || {};
       var v = String(p.refresh || 0);
-      if (!rsecs.querySelector('option[value="' + v + '"]')) { rsecs.appendChild(el('option', { value: v, text: v + ' seconds' })); }
-      rsecs.value = v;
+      var every = rsecs.component;
+      if (!every.options.some(function (o) { return o.value === v; })) { every.setOptions(every.options.concat([{ value: v, label: v + ' seconds' }])); }
+      every.setValue(v);
     }
-    rpart.addEventListener('change', rfill); rfill();
+    rpart.addEventListener('drishti:change', rfill); rfill();
     side.appendChild(el('div', { 'class': 'dz-sentence' }, ['Refresh ', rpart, ' every ', rsecs]));
     side.appendChild(el('div', { 'class': 'dz-row' }, [
       el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-refresh-apply': '', text: 'Set', on: { click: function () {
