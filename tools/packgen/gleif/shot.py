@@ -43,7 +43,7 @@ JPM = "8I5DZWZKVSZI1NUHU748"
 def start_servers(work: Path) -> list:
     jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-server -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
     if not (work / "config").exists():
         (work / "config").symlink_to(ROOT / "config")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"

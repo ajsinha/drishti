@@ -359,7 +359,7 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
       - uses: astral-sh/setup-uv@v5
-      - run: ./mvnw -q -DskipTests package -pl drishti-server -am        # the exec jar that lint and test use
+      - run: ./mvnw -q -DskipTests package -pl drishti-app -am        # the exec jar that lint and test use
       - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/banking/trading --strict --junit build/reports
       - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/banking/trading --out dist
       - run: uv run --with pyyaml python tools/drishti.py pack verify dist/trading-*.tar.gz

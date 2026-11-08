@@ -114,7 +114,7 @@ def migrate_folder(bi_dir: Path, tmp: Path | None = None) -> None:
         return
     jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     if not jars:
-        raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+        raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     config = bi_dir.parent
     tmp = Path(tmp) if tmp else config.parent / "migrate-tmp"

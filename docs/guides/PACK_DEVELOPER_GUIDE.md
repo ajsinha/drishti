@@ -4378,7 +4378,7 @@ You should see `Java version: 21…` in the output. Maven itself comes with the 
 git clone https://github.com/ajsinha/drishti.git && cd drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
-./mvnw -q package -DskipTests -pl drishti-server -am                 # 1 min 12 s with ~/.m2 filled
+./mvnw -q package -DskipTests -pl drishti-app -am                 # 1 min 12 s with ~/.m2 filled
 drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 89 Delta tables, sixty days, under data/delta/demo
 ```
 
@@ -4391,7 +4391,7 @@ Run them from the repository root.
 | You want to… | Command |
 |---|---|
 | Build everything, no tests | `./mvnw -q package -DskipTests` |
-| Build only the server and what it needs | `./mvnw -q package -DskipTests -pl drishti-server -am` |
+| Build only the server and what it needs | `./mvnw -q package -DskipTests -pl drishti-app -am` |
 | Build and run every test and rule | `./mvnw -q verify` |
 | The same, without touching the network (what the drill runs) | `./mvnw -q -o verify` |
 | Build one module and what it needs | `./mvnw -q -pl drishti-engine -am package -DskipTests` |
@@ -4483,7 +4483,7 @@ Build the jar, then start it from the repository root (the server finds `./confi
 directory):
 
 ```bash
-./mvnw -q package -DskipTests -pl drishti-server -am
+./mvnw -q package -DskipTests -pl drishti-app -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
   java -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
 ```
@@ -4501,7 +4501,7 @@ The development loop that works best:
 | A Sutra under `config/packs/*/sutras/` or a site Sutra directory | Nothing: `drishti.rachana.hot-reload` reloads it; an invalid edit keeps the last good version |
 | A connector file in `config/connectors/` | Nothing: the folder is watched and only that connector restarts |
 | A BI file under `config/bi/` | Nothing: the folder is watched (`drishti.bi.watch`, `BiFolder`); a changed file becomes the next version, one that does not parse keeps its last good version and is listed as a problem |
-| Java code | Rebuild the module and the server jar (`./mvnw -q -o -pl drishti-server -am package -DskipTests`), restart the server |
+| Java code | Rebuild the module and the server jar (`./mvnw -q -o -pl drishti-app -am package -DskipTests`), restart the server |
 | `pack.yaml` or anything in a pack folder | Nothing, usually: the packs folder is watched (`drishti.packs.watch`, `PackReloader`) and the running packs are reconciled with it; a change that cannot be applied live keeps the last version running, is refused with the reason in the log and on Admin → Packs, and is tried again by itself |
 | The demo lakes | `drishti.py lake demo` again: a running server is told (or notices a rebuilt Delta date by itself), so no restart |
 | A console template | Reload the page |

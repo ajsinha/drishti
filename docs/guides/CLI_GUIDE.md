@@ -3152,7 +3152,7 @@ A GitHub Actions job (the jar is built once and reused):
 ```yaml
 - uses: actions/setup-java@v4
   with: { distribution: temurin, java-version: 21 }
-- run: ./mvnw -q -DskipTests -pl drishti-server -am package
+- run: ./mvnw -q -DskipTests -pl drishti-app -am package
 - uses: astral-sh/setup-uv@v5
 - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/my-bank --strict --junit build/reports
 - uses: actions/upload-artifact@v4

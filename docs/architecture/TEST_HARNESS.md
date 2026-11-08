@@ -373,7 +373,7 @@ $py = "<repo>\drishti-console\.venv\Scripts\python.exe"; $tools = "<repo>\tools"
    folder they overwrite each other's `.idea` (IntelliJ then says **module not specified**: close both, delete `<repo>\.idea`, reopen;
    or **Maven → Reload All Maven Projects**). Every PyCharm configuration runs `tools\drishti.py` (or `run_drishti_web.py`) from `<repo>`
    (`$PROJECT_DIR$/..`); a line such as `lake build …` below goes in its *Parameters* box, or after `& $py "$tools\drishti.py"` in a terminal.
-5. **The jar:** IntelliJ → **Drishti build server jar** → ▶ (Maven `package -DskipTests -pl drishti-server -am`): `BUILD SUCCESS`, and
+5. **The jar:** IntelliJ → **Drishti build server jar** → ▶ (Maven `package -DskipTests -pl drishti-app -am`): `BUILD SUCCESS`, and
    `drishti-server\target\drishti-server-*-exec.jar` exists.
 
 ### 9.2 Put the data in place

@@ -39,7 +39,7 @@ Three processes, on ports that are free. The commands are from the repository ro
 
 ```bash
 # 1. the Drishti server: security on, embedding on, the trading, counterparty-risk and market-risk packs, a scratch folder for ./data
-./mvnw -o -q package -DskipTests -pl drishti-server -am
+./mvnw -o -q package -DskipTests -pl drishti-app -am
 mkdir -p /tmp/drishti-elements && cd /tmp/drishti-elements
 DRISHTI_PACKS=trading,counterparty-risk,market-risk DRISHTI_PACKS_DIR=<repo>/config/packs DRISHTI_SECURITY_ENABLED=true \
 DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_ENABLED=true \

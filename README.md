@@ -182,7 +182,7 @@ root:
 
 ```bash
 # 1. Build the server
-./mvnw -q package -DskipTests -pl drishti-server -am
+./mvnw -q package -DskipTests -pl drishti-app -am
 
 # 2. The console's Python environment (it also runs tools/drishti.py)
 uv venv --python 3.13 drishti-console/.venv
