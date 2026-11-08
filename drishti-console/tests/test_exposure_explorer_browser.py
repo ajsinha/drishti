@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+import select_helpers
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
 
@@ -215,7 +216,7 @@ def test_pre_deal_check_opens_from_a_counterparty_and_the_server_answers(stack, 
     wait(pg, "document.querySelector('[data-predeal]') && document.querySelector('[data-predeal]').dataset.ready === '1'"
              " && +(document.querySelector('[data-predeal]').dataset.trades || 0) > 0", PAINT_S)
     assert pg.input_value("[data-pd-counterparty]") == CPTY.split(":", 1)[1]
-    like = pg.eval_on_selector("[data-pd-like]", "s => [...s.options].map(o => o.value).filter(Boolean)")
+    like = [v for v in select_helpers.values(pg, "[data-pd-like]") if v]   # a <drishti-select> (the one form kit)
     pg.select_option("[data-pd-like]", like[0])
     pg.locator("[data-pd-check]").click()
     wait(pg, "!!document.querySelector('[data-predeal]').dataset.decision"

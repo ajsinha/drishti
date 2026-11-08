@@ -14,7 +14,6 @@
 """Driving a <drishti-select> (drishti-inputs' Select) from a screen's browser test the way a person does: open it with a click, then
 click the option. The component is tested deeply against its harness (test_elements_inputs_browser.py); screens test their wiring."""
 
-OPTIONS = "(s) => { const c = document.querySelector(s).component; return c ? c.options.map((o) => ({ value: String(o.value), label: o.label, disabled: o.disabled, group: o.group })) : []; }"
 
 
 def options(pg, sel):
@@ -42,7 +41,8 @@ def has_option(sel, val=None):
     """A predicate for wait_for_function: the select under sel offers the value val (any option at all without val; more than one when
     val is the string ">1")."""
     want = "o.length > 1" if val == ">1" else "o.length > 0" if val is None else "o.some((x) => String(x.value) === %r)" % str(val)
-    return ("() => { const e = document.querySelector(%r); const o = e && e.component ? e.component.options : []; return %s; }" % (sel, want))
+    return ("() => { const q = document.querySelector(%r), e = q && (%s)(q); const o = e && e.component ? e.component.options : []; return %s; }"
+            % (sel, TARGET, want))
 
 
 def choose(pg, sel, val):
@@ -64,6 +64,11 @@ def choose(pg, sel, val):
 TARGET = ("(e) => { if (e && e.tagName === 'INPUT' && e.type === 'hidden' && e.closest('.di-names')) {"
           " const f = e.closest('.di-form-field'), s = f && f.querySelector('drishti-select'); if (s) { return s; } }"
           " const own = e && e.tagName !== 'DRISHTI-SELECT' && e.closest && e.closest('drishti-select'); return own || e; }")
+# The select a selector names: the <drishti-select> itself, the one around the element (a Form field's hook sits on its control), or the
+# one beside a Form field's hidden input.
+SELECT_OF = "(s) => (%s)(document.querySelector(s))" % TARGET
+OPTIONS = ("(s) => { const e = (%s)(s), c = e && e.component; return c ? c.options.map((o) => ({ value: String(o.value), label: o.label,"
+           " disabled: o.disabled, group: o.group })) : []; }" % SELECT_OF)
 IS_SELECT = "(e) => { const t = (%s)(e); return !!t && t.tagName === 'DRISHTI-SELECT'; }" % TARGET
 OPTION_AT = ("(e, want) => { const w = [].concat(want.value, want.label).map(String), m = e.component.matches;"
              " if (want.index !== null) { const o = e.component.options[want.index]; return o ? m.indexOf(o) : -1; }"
