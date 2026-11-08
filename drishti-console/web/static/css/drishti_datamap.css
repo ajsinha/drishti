@@ -36,30 +36,8 @@
 .dmap-body { display: flex; flex-wrap: wrap; gap: var(--d-sp-19_2); align-items: flex-start; }
 .dmap-map { flex: 999 1 36rem; min-width: 0; }
 .dmap-cards { flex: 1 1 22rem; min-width: 0; }
-.dmap-canvas { overflow: auto; max-height: 78vh; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-bg-2); }
-.dmap-svg { display: block; font-family: var(--d-font-sans); }
-.dm-region rect { fill: var(--d-surface); stroke: var(--d-border); }
-.dm-region.dm-dim { opacity: .35; }
-.dm-region-t { fill: var(--d-faint); font-size: var(--d-fs-12); letter-spacing: .08em; }
-.dm-j { stroke: var(--d-border); stroke-width: 1.5; }
-.dm-j-cross { stroke-dasharray: 4 6; }
-.dm-j-low { stroke: var(--d-warn); }
-.dm-j.dm-on { stroke: var(--d-accent); stroke-width: 2.5; stroke-dasharray: none; }
-.dm-j.dm-dim { opacity: .15; }
-.dm-n { cursor: pointer; }
-.dm-n rect { fill: var(--d-surface-2); stroke: var(--d-border); stroke-width: 1; }
-.dm-n-l { fill: var(--d-ink); font-size: var(--d-fs-13); text-anchor: middle; }
-.dm-n-c { fill: var(--d-muted); font-size: var(--d-fs-12); text-anchor: middle; }
-.dm-n.dm-computed rect { fill: var(--d-bg-2); stroke: var(--d-link); stroke-dasharray: 4 3; }
-.dm-n.dm-computed .dm-n-l { fill: var(--d-link); }
-.dm-n.dm-near rect { stroke: var(--d-accent); stroke-width: 1.5; }
-.dm-n.dm-sel rect { fill: var(--d-accent); stroke: var(--d-accent); stroke-width: 2; }
-.dm-n.dm-sel .dm-n-l { fill: var(--d-on-accent); font-weight: 650; }
-.dm-n.dm-sel .dm-n-c { fill: var(--d-on-accent); }
-.dm-n.dm-dim { opacity: .25; }
-.dm-n.dm-hidden, .dm-region.dm-hidden, .dm-j.dm-hidden { display: none; }
-.dm-n:hover rect, .dm-n:focus-visible rect { stroke: var(--d-accent-strong); stroke-width: 2; }
-.dm-n:focus { outline: none; }
+.dmap-graph { min-width: 0; }
+.dmap-nojs { columns: 2; }
 .dmap-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr)); gap: var(--d-sp-12); }
 .dm-card { display: flex; flex-direction: column; gap: var(--d-sp-5_6); padding: var(--d-sp-16); border-radius: var(--d-radius); border: 1px solid var(--d-border);
   background: var(--d-surface); color: var(--d-ink); text-decoration: none; min-height: 44px; }
@@ -98,23 +76,17 @@
 .dm-box { padding: var(--d-sp-13_6); border-radius: var(--d-radius-8); background: var(--d-bg-2); border: 1px solid var(--d-border); display: flex; flex-direction: column; gap: var(--d-sp-5_6); }
 .dm-box p { margin: 0; line-height: 1.5; }
 .dm-legend { display: flex; flex-direction: column; gap: var(--d-sp-5_6); border-top: 1px solid var(--d-border); padding-top: var(--d-sp-12_8); font-size: var(--d-fs-12_48); }
-.dm-key { display: inline-block; width: 14px; height: 10px; vertical-align: middle; margin-right: var(--d-sp-4_8); }
-.dm-key-stored { border: 1px solid var(--d-border); background: var(--d-surface-2); }
-.dm-key-computed { border: 1px dashed var(--d-link); }
-.dm-key-sel { height: 3px; background: var(--d-accent); }
-.dm-key-low { height: 3px; background: var(--d-warn); }
 /* Map view (product owner, 2026-10-29): the selection panel is a strip across the top and the map takes the full page width under it,
    taller, so the joins are readable; the Cards view keeps the side panel beside the cards. */
 .adm.dmap:has(.dmap-map:not([hidden])) { max-width: none; }
 .dmap-body:has(.dmap-map:not([hidden])) { flex-direction: column; align-items: stretch; }
 .dmap-map:not([hidden]) { flex: 1 1 auto; width: 100%; }
-.dmap-map:not([hidden]) .dmap-canvas { max-height: calc(100vh - 9rem); min-height: 60vh; }
 .dmap-map:not([hidden]) ~ .dmap-side { order: -1; flex: 0 0 auto; width: 100%; position: static; max-height: 40vh; padding: var(--d-sp-12_8) var(--d-sp-17_6); gap: var(--d-sp-9_6); }
 .dmap-map:not([hidden]) ~ .dmap-side .dm-legend { flex-direction: row; flex-wrap: wrap; gap: var(--d-sp-5_6) var(--d-sp-22_4); }
 @media (max-width: 640px) {
   .dmap-find { margin-left: 0; flex: 1 1 100%; }
   .dmap-find input { width: 100%; }
-  .dmap-canvas { max-height: 60vh; }
+
   .dmap-chips { flex-basis: 100%; }
   .dmap-side { position: static; max-height: none; }
 }

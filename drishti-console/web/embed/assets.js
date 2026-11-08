@@ -59,9 +59,9 @@ const script = (url) => memo('script:' + url, () => new Promise((resolve, reject
 }));
 
 // the console's own scripts, in order: Drishti Elements' drishti-core, drishti-grid (every table's sort, filter and pages; tree rows draw nested
-// pivots with it) and drishti-chart (the panel charts), the table engine (served from the allow-list in routes/embed_routes.py), and
+// pivots with it), drishti-chart (the panel charts), drishti-graph (a graph panel) and drishti-tree (a table with children), the table engine (served from the allow-list in routes/embed_routes.py), and
 // drishti-inputs (the controls' multi-select and dates; its style sheet goes on the host's page too: a picker's list floats in its body)
-export const ENHANCERS = ['elements-core', 'elements-grid', 'elements-chart', 'pivot-engine', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'elements-inputs', 'controls'];
+export const ENHANCERS = ['elements-core', 'elements-grid', 'elements-chart', 'elements-graph', 'elements-tree', 'pivot-engine', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'elements-inputs', 'controls'];
 const inputsSheet = (server) => memo('isheet:' + server, async () => {
   const link = document.createElement('link');
   link.rel = 'stylesheet'; link.href = server + API + '/elements/drishti-inputs/drishti_inputs.css';

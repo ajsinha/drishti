@@ -149,16 +149,8 @@
     }
     var tree = $("[data-rl-tree]");
     if (tree) {
-      tree.textContent = "";
       text("[data-rl-tree-title]", t.title || hierarchy);
-      nodes.filter(function (n) { return n.depth <= 2; }).forEach(function (n) {
-        var r = el("div", "rl-tr d" + Math.min(n.depth || 0, 3));
-        r.setAttribute("role", "treeitem");
-        r.appendChild(link("/var?scope=" + encodeURIComponent(n.scope) + "&hierarchy=" + hierarchy, n.name || n.id));
-        r.appendChild(el("span", "n", money(n.var)));
-        r.appendChild(n.limitUse === null || n.limitUse === undefined ? el("span", "rl-muted", "—") : el("span", "rl-pill " + tone(n.limitUse), pct(n.limitUse)));
-        tree.appendChild(r);
-      });
+      paintHierarchy(tree, nodes);
       var hs = $("[data-rl-hierarchies]");
       if (hs) {
         hs.textContent = "";
@@ -185,6 +177,22 @@
         heat.appendChild(a);
       });
     }
+  }
+  /** The hierarchy as drishti-tree (drishti-risk's VaR hierarchy preset, its tree grid inside this panel): the server's VaR and limit
+      use of every node, never summed here; open to the desks; a node's name a link to the VaR explorer at that scope. */
+  function paintHierarchy(box, nodes) {
+    var rows = nodes.map(function (n) {
+      return { ID: n.id, PARENT: n.parent || null, LABEL: n.name || n.id, LEVEL: n.level, scope: n.scope, VAR: n["var"], LIMIT_USE: n.limitUse,
+        LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit" };
+    });
+    var opts = R.varHierarchyTree(rows, { title: "Node", label: "VaR hierarchy " + hierarchy, chrome: false, openDepth: 2, fields: ["VAR", "LIMIT_USE"],
+      measures: { VAR: { label: "VaR", childSum: false, column: { width: 84 } }, LIMIT_USE: { label: "Limit use", column: { width: 120 } } },
+      grid: { fitRows: 14, phoneWidth: 1, labelColumn: { header: hierarchy, width: 190, cellRenderer: function (c) {
+        return link("/var?scope=" + encodeURIComponent(c.row.scope) + "&hierarchy=" + hierarchy, c.row.LABEL);
+      } }, rowData: function (r) { return { scope: r.scope || null }; } } });
+    var host = box.querySelector(":scope > drishti-tree");
+    if (!host) { box.textContent = ""; host = document.createElement("drishti-tree"); box.appendChild(host); }
+    host.options = opts;
   }
   function loadTree() {
     get("/api/var/tree?hierarchy=" + encodeURIComponent(hierarchy)).then(paintTree).catch(function (e) {

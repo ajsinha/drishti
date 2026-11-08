@@ -51,6 +51,5 @@
 .tbl-tree .tr-tog:focus-visible { outline: 2px solid var(--d-accent); }
 .tbl-tree .tr-sp { display: inline-block; width: 1.1rem; }
 .tbl-tree tr[data-kids] td:first-child { font-weight: 600; }
-.tr-q { margin: 0 0 var(--d-sp-6_4); max-width: 16rem; }
 .pv-tree-host { font-size: var(--d-fs-13_6); }
-@media print { .tr-tog, .tr-q { display: none !important; } }
+@media print { .tr-tog { display: none !important; } }

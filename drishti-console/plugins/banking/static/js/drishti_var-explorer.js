@@ -52,7 +52,7 @@
   var CCY_KEY = "drishti.var.ccy";
   function storedCcy() { try { return sessionStorage.getItem(CCY_KEY) || ""; } catch (e) { return ""; } }
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: root.dataset.tab || "path", by: "child", page: 0,
-            asOf: params.get("asOf") || "", tree: null, open: {}, asking: {}, treeGrid: null, children: {}, head: null, seq: 0, user: root.dataset.user || "",
+            asOf: params.get("asOf") || "", tree: null, open: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "",
             admin: root.dataset.admin === "true",            // an administrator: Delete on every basket listed (the server checks again)
             ccy: (root.dataset.ccy || params.get("ccy") || storedCcy() || "USD").toUpperCase(),
             // the lens (2.9.7): "" is the default (1-day; the setting's 10-day method; the configured confidences)
@@ -156,14 +156,6 @@
   }
   var int = R.riskInt, pct = R.riskPct;
   function utilClass(u) { return u >= 0.9 ? "bad" : u >= 0.75 ? "warn" : "ok"; }
-  function ubar(u, wide) {
-    var span = h("span", "vx-ubar" + (wide ? " wide" : ""));
-    var i = h("i", utilClass(u));
-    i.style.width = Math.max(0, Math.min(100, u * 100)) + "%";
-    span.appendChild(i);
-    span.title = (u * 100).toFixed(0) + "% of limit";
-    return span;
-  }
   function chip(dir) { return h("span", "vx-chip " + (dir === "LONG" ? "long" : dir === "SHORT" ? "short" : ""), dir || ""); }
   function fresh(which, text, cls) {
     var e = root.querySelector('[data-vx-fresh="' + which + '"]');
@@ -972,102 +964,102 @@
     history.replaceState(history.state, "", u.toString());
   }
 
-  /** A row of the tree: a hierarchy node, a book's position or a position's trade; path is the ids from the top (drishti-grid's tree data). */
-  function nodePath(n) {
-    var p = [], x = n;
-    while (x) { p.unshift(x.id); x = x.parent && S.byId[x.parent]; }
-    return p;
+  // The tree is drishti-tree (its tree grid, through drishti-risk's VaR hierarchy preset) inside this panel: every figure is the
+  // server's row as it came (VaR and ES never summed here); a book's positions and a position's trades come from the contributions of
+  // that scope the first time its row opens ("computing…" until then) and are kept for the next drawing, as is what is open.
+  /** A hierarchy node's row for the tree (2.9.7: "n/c" when the limit is of another horizon or confidence). */
+  function nodeRow(n) {
+    return { ID: n.id, PARENT: n.parent || null, LABEL: n.name, name: n.name, LEVEL: n.level, level: n.level, scope: n.scope, parametric: n.parametric,
+      VAR: n["var"], ES: n.es, LIMIT_USE: n.limitUse, LIMIT_NOTE: n.limitComparable === false ? "n/c" : "no limit" };
+  }
+  /** A book's positions, or a position's trades (the contributions of that scope), as rows under the part's row; a position's are lazy. */
+  function partRows(parentId, kids) {
+    return kids.map(function (r) {
+      var isPos = r.kind === "position", name = (isPos ? r.label : r.key) + (r.quantity !== undefined ? " · " + money(r.quantity) : "");
+      return { ID: parentId + "/" + r.scope, PARENT: parentId, LABEL: name, name: name, LEVEL: r.kind, kind: r.kind, scope: r.scope, direction: r.direction,
+        VAR: r.standaloneVar, ES: r.standaloneEs, LIMIT_USE: null, LIMIT_NOTE: "c " + money(r.componentVar), lazy: isPos };
+    });
   }
   function treeRows() {
     var out = [];
+    function parts(id, scope) {                       // the parts already asked go in at once; true: still to come (lazy)
+      var kids = S.children[scope];
+      if (!kids || kids.error) return true;
+      partRows(id, kids).forEach(function (r) { out.push(r); if (r.lazy) r.lazy = parts(r.ID, r.scope); });
+      return false;
+    }
     (S.tree.nodes || []).forEach(function (n) {
-      var path = nodePath(n);
-      out.push({ path: path, scope: n.scope, name: n.name, level: n.level, "var": n["var"], es: n.es, limitUse: n.limitUse, parametric: n.parametric,
-        noLimitText: n.limitComparable === false ? "n/c" : "no limit" });                // 2.9.7: a limit of another horizon or confidence
-      if (n.level === "book" && n.expandable) partRows(out, n.scope, path);
+      var r = nodeRow(n);
+      out.push(r);
+      if (n.level === "book" && n.expandable) r.lazy = parts(n.id, n.scope);
     });
     return out;
   }
-  /** A book's positions, or a position's trades, under its row (from the contributions of that scope); "computing…" until asked. */
-  function partRows(out, scope, path) {
-    var kids = S.children[scope];
-    if (!kids) { out.push({ path: path.concat(["…"]), placeholder: scope, name: "computing…" }); return; }
-    if (kids.error) { out.push({ path: path.concat(["!"]), placeholder: scope, name: kids.error }); return; }
-    kids.forEach(function (r) {
-      var isPos = r.kind === "position", p = path.concat([r.scope]);
-      out.push({ path: p, scope: r.scope, name: (isPos ? r.label : r.key) + (r.quantity !== undefined ? " · " + money(r.quantity) : ""), direction: r.direction,
-        "var": r.standaloneVar, es: r.standaloneEs, limitUse: null, noLimitText: "c " + money(r.componentVar), kind: r.kind });
-      if (isPos) partRows(out, r.scope, p);
+  /** drishti-tree's loadChildren: a part's children, asked the first time its row opens (an answer for an older lens or currency is dropped). */
+  function loadChildren(req) {
+    var scope = req.data.scope, box = S.children, have = box[scope];
+    var ask = have ? Promise.resolve(have) : api("scope/contributions", { scope: scope }).then(function (d) { return d.rows; }, function (e) { return { error: e.message }; });
+    return ask.then(function (rows) {
+      if (S.children === box) box[scope] = rows;
+      if (rows.error) throw new Error(rows.error);
+      return partRows(req.id, rows);
     });
   }
-  /** A part's children asked the first time its row opens. */
-  function loadParts(scope) {
-    if (S.children[scope] || S.asking[scope]) return;
-    S.asking[scope] = true;
-    api("scope/contributions", { scope: scope }).then(function (d) { S.children[scope] = d.rows; })
-      .catch(function (e) { S.children[scope] = { error: e.message }; })
-      .then(function () { delete S.asking[scope]; renderTree(); });
+
+  /** The scope's cell: the direction chip, the name, "+ basket". */
+  function nameCell(c) {
+    var r = c.row, s = h("span", "nm");
+    if (r.direction) s.appendChild(chip(r.direction));
+    s.appendChild(document.createTextNode(" " + r.name));
+    s.appendChild(addButton(r.scope, { type: r.kind === "position" ? "POS" : r.kind === "trade" ? "TRD" : r.scope.split(":")[0], id: r.scope.replace(/^[A-Z]+:/, ""), name: r.name }));
+    return s;
   }
 
-  function treeColumns() {
-    var cols = [{ field: "name", header: "Scope", width: 230, pinned: "left",
-        cellRenderer: function (c) {
-          var r = c.row, s = h("span", "nm");
-          if (r.placeholder) { s.className = "nm muted"; s.textContent = r.name; return s; }
-          if (r.direction) s.appendChild(chip(r.direction));
-          s.appendChild(document.createTextNode(" " + r.name));
-          s.appendChild(addButton(r.scope, { type: r.kind === "position" ? "POS" : r.kind === "trade" ? "TRD" : r.scope.split(":")[0], id: r.scope.replace(/^[A-Z]+:/, ""), name: r.name }));
-          return s;
-        } },
-      R.figureColumn("var", "VaR " + S.ccy, { format: function (v) { return v === null || v === undefined ? "" : money(v); }, width: 86 }),
-      R.figureColumn("es", "ES", { format: function (v) { return v === null || v === undefined ? "" : money(v); }, width: 80, tone: function () { return "muted"; } }),
-      { id: "limit", header: "Limit", width: 96, sortable: false, valueGetter: function (r) { return r.limitUse; },
-        format: function (v, r) { return r.placeholder ? "" : v === null || v === undefined ? r.noLimitText || "" : (v * 100).toFixed(0) + "% of limit"; },
-        cellRenderer: function (c) {
-          var r = c.row;
-          if (r.placeholder) return "";
-          return r.limitUse === null || r.limitUse === undefined ? h("span", "muted small", r.noLimitText || "") : ubar(r.limitUse);
-        } }];
-    var P = PM && window.Drishti.VarParametric;
-    return P ? cols.concat(P.treeColumns()) : cols;      // the Parametric and Gap columns, each with its ?
+  /** The tree's options: drishti-risk's VaR hierarchy with this screen's columns, its look of a scope's row and its lazy parts. */
+  function treeOptions(rows, pcols, wkey) {
+    var widths = {}, P = pcols && window.Drishti.VarParametric;
+    try { widths = JSON.parse(localStorage.getItem(wkey) || "{}") || {}; } catch (e) { widths = {}; }
+    return R.varHierarchyTree(rows, { title: "Scope", label: "Scope tree", chrome: false, openDepth: 2, lazyText: "computing…", loadChildren: loadChildren,
+      fields: ["VAR", "ES", "LIMIT_USE"],
+      measures: { VAR: { label: "VaR " + S.ccy, childSum: false, column: { width: 86 } },
+                  ES: { label: "ES", column: { width: 80, cellClass: function () { return R.TONES.muted; } } },
+                  LIMIT_USE: { label: "Limit", column: { width: 96, sortable: false } } },
+      grid: { fitRows: 40, widths: widths, labelColumn: { header: "Scope", width: 230, pinned: "left", cellRenderer: nameCell },
+        columns: P ? P.treeColumns() : [],                       // the Parametric and Gap columns, each with its ?
+        rowClass: function (r) { return r.scope && r.scope === S.scope ? "vx-current" : null; },
+        rowData: function (r) { return { scope: r.scope || null, current: r.scope ? String(r.scope === S.scope) : null }; },
+        onResize: function (w) { try { localStorage.setItem(wkey, JSON.stringify(w)); } catch (e) { /* kept for this page only */ } } } });
   }
 
+  /** The tree drawn: new rows into the same tree (what is open kept); made again when its columns change (the currency, Parametric). */
   function renderTree() {
     var t = $("[data-vx-tree]"), pcols = PM && !!window.Drishti.VarParametric, lay = t.closest(".vx-layout");
     if (lay) lay.setAttribute("data-resize-mode", pcols ? "parametric" : "historical");      // the side panel's width a person set, kept per mode
     t.classList.toggle("vp-cols", !!pcols);
     // the columns' widths a person set, kept per mode in this browser (drishti-grid's own resize handles)
-    var wkey = "drishti.var.tree.widths." + (pcols ? "parametric" : "historical"), widths = {};
-    try { widths = JSON.parse(localStorage.getItem(wkey) || "{}") || {}; } catch (e) { widths = {}; }
-    var cols = treeColumns().map(function (c) { var id = c.id || c.field; return widths[id] ? Object.assign({}, c, { width: widths[id] }) : c; });
-    var g = R.riskGrid(t, { title: "Scopes", label: "Scope tree", rows: treeRows(), columns: cols, treeData: true, groupDefaultExpanded: 2, fitRows: 40,
-      getDataPath: function (r) { return r.path; }, getRowId: function (r) { return r.path.join("/"); },
-      getRowClass: function (r) { return r.scope && r.scope === S.scope ? "vx-current" : null; },
-      getRowData: function (r) { return { scope: r.scope || null, current: r.scope ? String(r.scope === S.scope) : null }; },
-      onRow: function (r) { if (r.scope) select(r.scope); } });
-    Object.keys(S.open).forEach(function (k) { g.model.rowModel.setExpanded(k.split("\u001f"), S.open[k]); });
-    g.model.rowModel.rows.forEach(function (r) {                                  // an open book or position asks for its parts
-      if (r.placeholder && !S.children[r.placeholder] && g.model.rowModel.isExpanded(r.path.slice(0, -1))) loadParts(r.placeholder);
+    var wkey = "drishti.var.tree.widths." + (pcols ? "parametric" : "historical"), sig = wkey + "|" + S.ccy;
+    var el = t.querySelector(":scope > drishti-tree"), opts = treeOptions(treeRows(), pcols, wkey);
+    if (el && el.tree && el.dataset.sig === sig) { el.tree.setData(opts.data); markTree(); return; }
+    if (!el) { el = document.createElement("drishti-tree"); t.textContent = ""; t.appendChild(el); }
+    el.dataset.sig = sig;
+    el.options = opts;
+    var tree = el.tree;
+    Object.keys(S.open).forEach(function (id) { if (tree.model.hasChildren(id)) tree.toggle(id, S.open[id]); });
+    tree.on("nodeExpanded", function (e) { S.open[e.id] = true; });
+    tree.on("nodeCollapsed", function (e) { S.open[e.id] = false; });
+    tree.on("selectionChanged", function (e) {                 // a click on a row: that scope
+      var n = e.ids.length ? tree.model.node(e.ids[0]) : null;
+      if (n && n.data.scope) select(n.data.scope);
     });
-    g.on("columnResized", function () {
-      var w = {};
-      g.model.columns.all().forEach(function (c) { w[c.id] = c.width; });
-      try { localStorage.setItem(wkey, JSON.stringify(w)); } catch (e) { /* kept for this page only */ }
-    });
-    g.on("rowExpanded", function (e) { if (!e.pivot) opened(e.path, true); });
-    g.on("rowCollapsed", function (e) { if (!e.pivot) opened(e.path, false); });
-    S.treeGrid = g;
     markTree();
-  }
-  /** A node opened or closed: kept for the next drawing; a book or a position asks for its parts the first time. */
-  function opened(path, open) {
-    S.open[path.join("\u001f")] = open;
-    var row = (S.treeGrid.model.rowModel.rows || []).filter(function (r) { return r.path && r.path.join("\u001f") === path.join("\u001f"); })[0];
-    if (open && row && row.scope && !S.children[row.scope] && (row.level === "book" || row.kind === "position")) loadParts(row.scope);
   }
 
   function markTree() {
-    if (S.treeGrid) S.treeGrid.refresh();                                          // the current scope's row marked (vx-current)
+    var el = $("[data-vx-tree] > drishti-tree"), tree = el && el.tree;
+    if (tree) {                                                                     // the current scope's row marked (vx-current)
+      var at = tree.model.all().filter(function (n) { return n.data.scope === S.scope; })[0];
+      tree.select(at ? at.id : null, { quiet: true });
+    }
     if (window.Drishti.VarLayout) window.Drishti.VarLayout.mark(S.scope);          // the basket drop-downs name the scope when it is one of theirs
   }
 

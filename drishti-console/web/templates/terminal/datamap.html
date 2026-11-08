@@ -15,18 +15,19 @@
 #}
 {% extends "base.html" %}
 {% block title %}Data map · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_datamap.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_datamap.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-graph/drishti_graph.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}datamap{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {# The data map, DATAMAP <GO> (docs/guides/USER_GUIDE.md "The data map"; routes/datamap_routes.py, core/datamap.py). Everything drawn is
-   inferred: kinds and joins from the packs' data contracts, counts and each join's coverage from the data, positions from an automatic
-   layout. Map (default) and Cards share the selection, the domain chips and Find; static/js/drishti_datamap.js keeps them in the address, draws
-   the side panel from data-model and follows /datamap/data while the server is still counting and checking. #}
+   inferred: kinds and joins from the packs' data contracts, counts and each join's coverage from the data. The Map is drishti-graph
+   (Drishti Elements): domains as frames of the grouped layout, or the joins as a layered DAG. Map (default) and Cards share the selection,
+   the domain chips and Find; static/js/drishti_datamap.js keeps them in the address, draws the map and the side panel from data-model and
+   follows /datamap/data while the server is still counting and checking. #}
 {% set sel = selected.kind if selected else '' %}
 {% set dom = open_domain.id if open_domain else '' %}
-<div class="adm dmap" data-datamap data-view="{{ view }}" data-kind="{{ sel }}" data-domain="{{ dom }}" data-chip="{{ chip }}"
+<div class="adm dmap" data-datamap data-view="{{ view }}" data-kind="{{ sel }}" data-domain="{{ dom }}" data-chip="{{ chip }}" data-layout="{{ layout }}"
      data-model="{{ m | tojson | forceescape }}">
   <h1 class="ws-h">Data map <span class="func-word mono" title="Type DATAMAP, or DATAMAP and a domain or kind, then &lt;GO&gt;">DATAMAP</span>
     <a class="emb-help" href="/help/user-guide#the-data-map" aria-label="Help: the data map" title="Help: the data map">?</a></h1>
@@ -55,23 +56,8 @@
 
   <div class="dmap-body">
     <section class="dmap-map" data-pane="map" aria-label="Map"{% if view != 'map' %} hidden{% endif %}>
-      <div class="dmap-canvas" tabindex="0" aria-label="The data map: scroll to see all of it">
-        <svg class="dmap-svg" width="{{ m.width }}" height="{{ m.height }}" viewBox="0 0 {{ m.width }} {{ m.height }}" role="img" aria-labelledby="dmapSvgTitle">
-          <title id="dmapSvgTitle">Domains, their kinds and the joins between them</title>
-          {% for d in m.domains %}<g class="dm-region" data-domain="{{ d.id }}">
-            <rect x="{{ d.box.x }}" y="{{ d.box.y }}" width="{{ d.box.w }}" height="{{ d.box.h }}" rx="12"></rect>
-            <text class="dm-region-t" x="{{ d.box.x + 14 }}" y="{{ d.box.y + 20 }}">{{ d.title | upper }}{% if d.packs | length == 1 and d.title | lower != d.packs[0] %} · {{ d.packs[0] }}{% endif %}</text></g>
-          {% endfor %}
-          <g class="dm-lines">{% for l in m.lines %}<line class="dm-j{% if l.low %} dm-j-low{% endif %}{% if l.cross %} dm-j-cross{% endif %}" x1="{{ l.x1 }}" y1="{{ l.y1 }}" x2="{{ l.x2 }}" y2="{{ l.y2 }}" data-from="{{ l.from }}" data-to="{{ l.to }}" data-fields="{{ l.fields | join(' ') }}"></line>{% endfor %}</g>
-          {% for k in m.kinds %}<a class="dm-n{% if k.computed %} dm-computed{% endif %}{% if k.kind == sel %} dm-sel{% endif %}" href="{{ k.open or ('/datamap?kind=' ~ k.kind) }}" data-kind="{{ k.kind }}" data-domain="{{ k.domain }}"
-             data-text="{{ (k.kind ~ ' ' ~ k.label ~ ' ' ~ (k.code or '') ~ ' ' ~ (m.joins | selectattr('from', 'equalto', k.kind) | map(attribute='field') | join(' '))) | lower }}" aria-label="{{ k.label }}: {{ k.countText }}">
-            <title>{{ k.label }}{% if k.code %} ({{ k.code }}){% endif %}: {{ k.countText }}</title>
-            <rect x="{{ k.x }}" y="{{ k.y }}" width="{{ k.w }}" height="{{ k.h }}" rx="8"></rect>
-            <text class="dm-n-l" x="{{ k.x + k.w // 2 }}" y="{{ k.y + 21 }}">{{ k.label | truncate(21, True, '…', 0) }}</text>
-            <text class="dm-n-c" x="{{ k.x + k.w // 2 }}" y="{{ k.y + 39 }}" data-count>{{ k.countText }}</text></a>
-          {% endfor %}
-        </svg>
-      </div>
+      <div class="dmap-graph" data-graph></div>
+      <noscript><ul class="dmap-nojs">{% for k in m.kinds %}<li><a href="{{ k.open or ('/datamap?kind=' ~ k.kind) }}">{{ k.label }}</a> <span class="text-muted-d">{{ k.countText }}</span></li>{% endfor %}</ul></noscript>
     </section>
 
     <section class="dmap-cards" data-pane="cards" aria-label="Cards"{% if view != 'cards' %} hidden{% endif %}>
@@ -85,15 +71,11 @@
         <span class="dm-eyebrow">Nothing selected</span>
         <p class="text-muted-d">Click a kind on the map, or a domain card, to see its joins, how well the data honours them, and the commands that open it.</p>
       </div>
-      <div class="dm-legend text-muted-d">
-        <span><i class="dm-key dm-key-stored" aria-hidden="true"></i> stored in the lake</span>
-        <span><i class="dm-key dm-key-computed" aria-hidden="true"></i> computed on demand, never stored</span>
-        <span><i class="dm-key dm-key-sel" aria-hidden="true"></i> joins of the selected kind</span>
-        <span><i class="dm-key dm-key-low" aria-hidden="true"></i> a join whose ids mostly name nothing</span>
-      </div>
+      <p class="dm-legend text-muted-d">On the map: squares are stored in the lake, diamonds computed on demand; a kind with a join whose ids mostly
+        name nothing carries an amber badge and its line is thin. Double-click a kind to open it; the ▦ button lists every kind with its joins.</p>
     </aside>
   </div>
   <noscript><p class="text-muted-d">The side panel needs JavaScript; every node still opens its kind.</p></noscript>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_datamap.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-graph/drishti_graph.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_datamap.js?v={{ ASSET_V }}"></script>{% endblock %}

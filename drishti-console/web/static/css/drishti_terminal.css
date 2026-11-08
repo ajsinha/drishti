@@ -196,17 +196,14 @@ body.terminal { font-size: var(--d-fs-14); }
 .raw-dcount { font-size: var(--d-fs-12_48); }
 .raw-dpath, .raw-dmsg { margin: 0 var(--d-sp-14_4) var(--d-sp-4_8); font-size: var(--d-fs-12_8); } .raw-dmsg:empty { display: none; }
 .raw-dbody { flex: 1; overflow: auto; margin: 0 var(--d-sp-14_4) var(--d-sp-14_4); padding: var(--d-sp-8); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); background: var(--d-bg-2); font-size: var(--d-fs-12_8); }
-.jt-l { padding: var(--d-sp-0_8) var(--d-sp-4_8); border-radius: var(--d-radius-3); white-space: pre-wrap; word-break: break-word; cursor: default; line-height: 1.45; }
-.jt-l:hover { background: var(--d-highlight); }
-.jt-t { display: inline-block; width: 1.1rem; padding: 0; border: 0; background: none; color: var(--d-muted); cursor: pointer; font: inherit; }
-.jt-leaf { cursor: default; }
+.jt { display: flex; flex-direction: column; overflow: hidden; padding: 0; } .jt > * { flex: 1; min-height: 0; }   /* drishti-tree's tree grid fills it */
 .jt-key { color: var(--d-accent); } .jt-idx { color: var(--d-faint); } .jt-p { color: var(--d-muted); }
 .jt-str { color: var(--d-ok); } .jt-num { color: var(--d-link); } .jt-bool { color: var(--d-warn); } .jt-null { color: var(--d-muted); font-style: italic; }
 .jt-mask { color: var(--d-muted); letter-spacing: .1em; }
 .jt-sum { color: var(--d-muted); }
-.jt-hit { background: var(--d-accent-tint); }
-.jt-sel { background: var(--d-emph-bg); box-shadow: inset 2px 0 0 var(--d-accent); }
-.jt-more { margin: var(--d-sp-2_4) 0; border: 1px dashed var(--d-border); background: none; color: var(--d-link); border-radius: var(--d-radius-4); font-size: var(--d-fs-12); padding: var(--d-sp-0_8) var(--d-sp-8); }
+.jt .dg-row.jt-hit > .dg-cell { background: var(--d-accent-tint); }
+.jt .dg-row.jt-sel > .dg-cell { background: var(--d-emph-bg); } .jt .dg-row.jt-sel > .dg-cell:first-child { box-shadow: inset 2px 0 0 var(--d-accent); }
+.jt-more { color: var(--d-link); text-decoration: underline dashed; cursor: pointer; }
 @media (max-width: 640px) {
   .raw-dlg { width: 100vw; height: 100dvh; max-width: 100vw; max-height: 100dvh; margin: 0; border-radius: 0; border: 0; }
   .raw-dbody { margin: 0 var(--d-sp-8) var(--d-sp-8); }

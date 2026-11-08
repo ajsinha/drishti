@@ -108,25 +108,27 @@ def test_raw_document_opens_on_the_page_at_the_metric(url, browser, theme):
     ctx, pg, errors = _page(browser, theme)
     try:
         _open_viewer(pg, url)
-        hit = pg.locator('.raw-dlg [data-jp="$.SLOPE_2S_10S"] > .jt-l')
+        hit = pg.locator('.raw-dlg .dg-row[data-jp="$.SLOPE_2S_10S"]')            # drishti-tree's tree grid: a row per node
         assert "jt-hit" in hit.get_attribute("class") and "jt-sel" in hit.get_attribute("class")
         assert "42.5" in hit.inner_text()
         pg.wait_for_function("""() => { const r = document.querySelector('.raw-dlg [data-jp="$.SLOPE_2S_10S"]').getBoundingClientRect(),
             b = document.querySelector('.raw-dlg [data-rv-tree]').getBoundingClientRect(); return r.top >= b.top && r.bottom <= b.bottom; }""")
         assert pg.inner_text('.raw-dlg [data-jp="$.counterparty.name"] .jt-mask') == "•••"   # masked, as sent
-        keys = pg.eval_on_selector_all('.raw-dlg [data-jp="$"] > .jt-c > .jt-n', "ns => ns.map(n => n.getAttribute('data-jp'))")
-        assert keys == ["$.tradeId", "$.SLOPE_2S_10S", "$.counterparty", "$.legs", "$.live", "$.note"]   # the document's order
-        assert pg.locator('.raw-dlg [data-jp="$.legs"] > .jt-c > .jt-n').count() == 50   # the long array is cut at 50
-        pg.click('.raw-dlg [data-jp="$.legs"] > .jt-l .jt-t')                      # collapses
-        assert pg.get_attribute('.raw-dlg [data-jp="$.legs"]', "aria-expanded") == "false"
-        assert "120 items" in pg.inner_text('.raw-dlg [data-jp="$.legs"] > .jt-l')
-        pg.click('.raw-dlg [data-jp="$.legs"] > .jt-l .jt-t')                      # and opens again
-        pg.click(".raw-dlg [data-jt-more]")
-        assert pg.locator('.raw-dlg [data-jp="$.legs"] > .jt-c > .jt-n').count() == 120
+        kids = "(jp) => document.querySelector('.raw-dlg [data-rv-tree]')._jt.model.node(jp).children.map((c) => c.id)"
+        assert pg.evaluate(kids, "$") == ["$.tradeId", "$.SLOPE_2S_10S", "$.counterparty", "$.legs", "$.live", "$.note"]   # the document's order
+        legs = pg.evaluate(kids, "$.legs")
+        assert len(legs) == 51 and legs[-1] == "$.legs#more"                        # the long array is cut at 50, then "Show all"
+        pg.click('.raw-dlg .dg-row[data-jp="$.legs"] .dg-tw')                       # collapses
+        pg.wait_for_selector('.raw-dlg .dg-row[data-jp="$.legs"][aria-expanded="false"]')
+        assert "120 items" in pg.inner_text('.raw-dlg .dg-row[data-jp="$.legs"]')
+        pg.click('.raw-dlg .dg-row[data-jp="$.legs"] .dg-tw')                       # and opens again
+        pg.wait_for_selector('.raw-dlg .dg-row[data-jp="$.legs"][aria-expanded="true"]')
+        pg.evaluate("document.querySelector('.raw-dlg [data-rv-tree]')._jt.select('$.legs#more')")   # Show all (the row past the view)
+        assert len(pg.evaluate(kids, "$.legs")) == 120
         pg.fill(".raw-dlg [data-rv-search]", "1000007")                           # search: values (and keys)
         pg.wait_for_function("() => document.querySelector('.raw-dlg [data-rv-count]').textContent === '1 match'")
-        assert pg.locator(".raw-dlg .jt-hit").count() == 1 and pg.locator('.raw-dlg [data-jp="$.legs[7].notional"]').count() == 1
-        assert pg.locator('.raw-dlg [data-jp="$.tradeId"]').count() == 0
+        pg.wait_for_selector('.raw-dlg [data-jp="$.legs[7].notional"]')
+        assert pg.locator(".raw-dlg .jt-hit").count() == 1 and pg.locator('.raw-dlg [data-jp="$.tradeId"]').count() == 0
         pg.fill(".raw-dlg [data-rv-search]", "")
         pg.wait_for_selector('.raw-dlg [data-jp="$.tradeId"]')
         with pg.expect_download() as dl:

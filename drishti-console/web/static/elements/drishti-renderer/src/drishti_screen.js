@@ -19,6 +19,7 @@
 import { PanelCharts } from '../../drishti-chart/src/drishti_index.js';
 import { h, icon, str, clear } from './drishti_dom.js';
 import * as assets from './drishti_assets.js';
+import * as GraphLib from '../../drishti-graph/src/drishti_index.js';
 import { view, stripItem, banners, body } from './drishti_view.js';
 import { panel } from './drishti_kinds.js';
 import { enhance } from './drishti_behave.js';
@@ -428,7 +429,7 @@ function pendingPanel(p) {
 export function panelCharts(R, root) {
   const panelOf = (el) => { const p = el.closest('.pnl'); return p ? p.getAttribute('data-panel') : null; };
   return new PanelCharts(root, {
-    engine: assets.echarts, gl: assets.echartsGl, geo: assets.geo,
+    engine: assets.echarts, gl: assets.echartsGl, geo: assets.geo, graph: () => Promise.resolve(GraphLib),
     tokensFrom: () => root.querySelector('.view') || root.host || document.documentElement,
     onLink: (link, el) => R.open(link, { source: 'chart', panel: panelOf(el) }),
     onPlaces: (el, places, note) => {

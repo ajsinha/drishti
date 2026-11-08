@@ -29,28 +29,31 @@
     var $ = function (s) { return root.querySelector(s); };
     var list = $('[data-samples]'), shapeBox = $('[data-shape]'), skipped = $('[data-skipped]'), note = $('[data-data-note]');
     var fields = [];
+    function bindField(path) {
+      var s = opts.selection();
+      if (!s || s.type !== 'panel') { store.emit('say', 'Select a panel on the canvas first, then bind ' + path + ' to it.', true); return; }
+      actions.bind(s.id, path);
+    }
     var tree = window.Drishti.ShapeTree(shapeBox, {
-      onRow: function (r, li, line, detail) {
-        WB.drag.attach(line, { payload: function () { return { type: 'field', path: r.path }; }, label: function () { return r.path; } });
-        line.classList.add('wb-field-row');
-        line.title = 'Drag onto the canvas: a panel binds it, an empty place suggests panels';
+      rowClass: function () { return 'wb-field-row'; },
+      onField: function (r, detail) {
         var bar = WB.el('div', 'bs-actions');
         var sug = WB.el('button', 'btn-pill btn-ghost', 'Suggest panels…', { type: 'button' });
         sug.addEventListener('click', function () { var rect = sug.getBoundingClientRect(); actions.suggest(r.path, { x: rect.left, y: rect.bottom }, actions.afterSelected()); });
         var bind = WB.el('button', 'btn-pill btn-ghost', 'Bind to selected panel', { type: 'button' });
-        bind.addEventListener('click', function () {
-          var s = opts.selection();
-          if (!s || s.type !== 'panel') { store.emit('say', 'Select a panel on the canvas first, then bind ' + r.path + ' to it.', true); return; }
-          actions.bind(s.id, r.path);
-        });
+        bind.addEventListener('click', function () { bindField(r.path); });
         bar.appendChild(sug); bar.appendChild(bind); detail.appendChild(bar);
-        li.addEventListener('keydown', function (e) {
-          if (e.target !== li || e.ctrlKey || e.altKey || e.metaKey) { return; }
-          if (e.key === 's' || e.key === 'S') { e.preventDefault(); var rc = line.getBoundingClientRect(); actions.suggest(r.path, { x: rc.left, y: rc.bottom }, actions.afterSelected()); }
-          else if (e.key === 'b' || e.key === 'B') { e.preventDefault(); bind.click(); }
-        });
+      },
+      onKey: function (r, e) {                                                    // e.target: the tree grid, its focused row named by aria-activedescendant
+        var at = document.getElementById(e.target.getAttribute('aria-activedescendant') || '') || e.target;
+        if (e.key === 's' || e.key === 'S') { var rc = at.getBoundingClientRect(); actions.suggest(r.path, { x: rc.left, y: rc.bottom }, actions.afterSelected()); return true; }
+        if (e.key === 'b' || e.key === 'B') { bindField(r.path); return true; }
+        return false;
       }
     });
+    var treeHost = shapeBox.querySelector('[data-tree]');
+    treeHost.title = 'Drag a field onto the canvas: a panel binds it, an empty place suggests panels';
+    WB.drag.attach(treeHost, { payload: function (e) { var r = tree.fieldAt(e.target); return r ? { type: 'field', path: r.path } : null; }, label: function (p) { return p.path; } });
 
     function paintSamples() {
       var st = store.state;
@@ -104,8 +107,8 @@
       return WB.call('GET', '/build/designs/' + encodeURIComponent(store.state.id) + '/shape').then(function (r) {
         if (!r.ok) { note.textContent = 'The shape could not be made: ' + WB.why(r); return; }
         note.textContent = '';
+        shapeBox.hidden = false;                                                  // shown first: the tree grid measures its width
         tree.show(r.body.report);
-        shapeBox.hidden = false;
         fields = (r.body.report.paths || []).filter(function (p) { return p.path !== '$'; });
         actions.fields(fields);
         skipped.textContent = '';

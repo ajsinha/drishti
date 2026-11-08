@@ -21,7 +21,7 @@
   var D = root.Drishti = root.Drishti || {}, E = D.elements = D.elements || {}, libs = E.libs = E.libs || {};
   var cs = typeof document !== 'undefined' && document.currentScript;
   if (!E.base && cs && cs.src) { E.base = cs.src.replace(/[^/]*\/[^/]*(\?.*)?$/, ''); }   /* .../elements/ */
-  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-grid": "../drishti-grid/drishti_grid.js", "drishti-chart": "../drishti-chart/drishti_chart.js", "drishti-data": "../drishti-data/drishti_data.js"};
+  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-grid": "../drishti-grid/drishti_grid.js", "drishti-chart": "../drishti-chart/drishti_chart.js", "drishti-data": "../drishti-data/drishti_data.js", "drishti-graph": "../drishti-graph/drishti_graph.js", "drishti-tree": "../drishti-tree/drishti_tree.js"};
   var lib = function (name) {
     if (libs[name]) { return libs[name]; }
     if (typeof module === 'object' && module && typeof require === 'function' && needs[name]) { return require(needs[name]); }
@@ -686,6 +686,7 @@
   /* ---- src/drishti_behave.js ---- */
   __m["src/drishti_behave.js"] = (function () {
     var enhanceDocTables = __lib("drishti-grid").enhanceDocTables;
+    var treeTables = __lib("drishti-tree").treeTables;
     function widths(scope) {
       scope.querySelectorAll('[data-w]').forEach((x) => { const w = parseFloat(x.getAttribute('data-w')) || 0; x.style.width = Math.max(0, Math.min(100, w)) + '%'; });
     }
@@ -733,6 +734,8 @@
       if (R.behaviours === 'host') { return; }
       tabs(scope);
       enhanceDocTables(scope, { tables: R.tables !== false, sort: R.behaviours !== 'console' });
+      const trees = R.trees || (R.trees = { memory: {}, live: [] });
+      try { trees.live = treeTables(scope, { memory: trees.memory, live: trees.live }); } catch (e) { /* the server's tree table stays as drawn */ }
       events(scope, R);
     }
     return { "widths": widths, "enhance": enhance };
@@ -1218,6 +1221,7 @@
     var PanelCharts = __lib("drishti-chart").PanelCharts;
     var h = __m["src/drishti_dom.js"].h, icon = __m["src/drishti_dom.js"].icon, str = __m["src/drishti_dom.js"].str, clear = __m["src/drishti_dom.js"].clear;
     var assets = __m["src/drishti_assets.js"];
+    var GraphLib = __lib("drishti-graph");
     var view = __m["src/drishti_view.js"].view, stripItem = __m["src/drishti_view.js"].stripItem, banners = __m["src/drishti_view.js"].banners, body = __m["src/drishti_view.js"].body;
     var panel = __m["src/drishti_kinds.js"].panel;
     var enhance = __m["src/drishti_behave.js"].enhance;
@@ -1580,7 +1584,7 @@
     function panelCharts(R, root) {
       const panelOf = (el) => { const p = el.closest('.pnl'); return p ? p.getAttribute('data-panel') : null; };
       return new PanelCharts(root, {
-        engine: assets.echarts, gl: assets.echartsGl, geo: assets.geo,
+        engine: assets.echarts, gl: assets.echartsGl, geo: assets.geo, graph: () => Promise.resolve(GraphLib),
         tokensFrom: () => root.querySelector('.view') || root.host || document.documentElement,
         onLink: (link, el) => R.open(link, { source: 'chart', panel: panelOf(el) }),
         onPlaces: (el, places, note) => {
