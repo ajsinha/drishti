@@ -1598,7 +1598,8 @@ inbox. The wrappers `tools/feeds/feed.sh` and `tools/windows/feed.ps1` run the s
   `data/testdata` instead. Exit codes: 0 ok, 1 failed, 2 refused, 3 locked, 4 partial.
 - `feed status [<feed>] [--runs N] [--json]`: per feed the last run, the last success, rows, duration and failures (exit 1 when a
   feed's last run failed).
-- `feed schedule --cron | --systemd | --windows [<feed> ...] [--log-dir DIR]`: ready-to-use daily entries, one per enabled feed.
+- `feed schedule --cron | --systemd | --windows [<feed> ...] [--log-dir DIR] [--root DIR]`: ready-to-use daily entries, one per enabled
+  feed (`--root`: the Drishti folder on the machine that will run them).
 
 ```bash
 python3 tools/drishti.py feed list

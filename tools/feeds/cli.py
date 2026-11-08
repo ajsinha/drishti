@@ -109,7 +109,8 @@ def cmd_run(a, extra=None) -> int:
         return FB.REFUSED
     try:
         o = options(a)
-        specs = [s for s in FB.all_specs(a.config) if s.enabled] if a.all else [FB.load_spec(a.feed, a.config)]
+        specs = sorted((s for s in FB.all_specs(a.config) if s.enabled), key=lambda s: (s.schedule_at, s.name)) if a.all \
+            else [FB.load_spec(a.feed, a.config)]                  # --all: in the order of the schedule (funds before us-equities)
     except FB.FeedRefused as e:
         print(f"feed run: {e}", file=sys.stderr)
         return FB.REFUSED
@@ -167,12 +168,13 @@ def cmd_schedule(a, extra=None) -> int:
             print(f"feed schedule: no feed {', '.join(unknown)}", file=sys.stderr)
             return FB.REFUSED
         specs = [s for s in specs if s.name in a.feeds]
+    root = Path(a.root) if a.root else S.ROOT
     if a.windows:
-        sys.stdout.write(S.windows(specs))
+        sys.stdout.write(S.windows(specs, root))
     elif a.systemd:
-        sys.stdout.write(S.systemd(specs))
+        sys.stdout.write(S.systemd(specs, root))
     else:
-        sys.stdout.write(S.cron(specs, data=a.log_dir))
+        sys.stdout.write(S.cron(specs, root, data=a.log_dir))
     return 0
 
 
@@ -226,6 +228,7 @@ def register(groups, add=None) -> argparse.ArgumentParser:
     m.add_argument("--systemd", action="store_true", help="a service and a timer per feed")
     m.add_argument("--windows", action="store_true", help="schtasks commands (Windows Task Scheduler)")
     p.add_argument("--log-dir", help="--cron: the folder of the feeds' log files (default $HOME/drishti-feeds-logs)")
+    p.add_argument("--root", help="the Drishti folder on the machine that runs them (default this one; C:\\drishti for a Windows machine)")
     p.set_defaults(func=cmd_schedule)
     return g
 

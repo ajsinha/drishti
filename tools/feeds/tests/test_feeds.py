@@ -331,9 +331,9 @@ def test_cli_dry_run_and_source_arguments(data):
 
 def test_schedule_entries_for_cron_systemd_and_windows(spec):
     cron = S.cron([spec], Path("/opt/drishti"))
-    assert "15 7 * * 1-5 /opt/drishti/tools/feeds/feed.sh run sample-mapping >> $HOME/drishti-feeds-logs/sample-mapping.log 2>&1" in cron
+    assert "15 7 * * 1-5 /opt/drishti/tools/feeds/feed.sh run sample-mapping --trigger schedule >> $HOME/drishti-feeds-logs/sample-mapping.log 2>&1" in cron
     unit = S.systemd([spec], Path("/opt/drishti"))
-    assert "OnCalendar=Mon..Fri *-*-* 07:15:00" in unit and "ExecStart=/opt/drishti/tools/feeds/feed.sh run sample-mapping" in unit
+    assert "OnCalendar=Mon..Fri *-*-* 07:15:00" in unit and "ExecStart=/opt/drishti/tools/feeds/feed.sh run sample-mapping --trigger schedule" in unit
     assert "Persistent=true" in unit and "Type=oneshot" in unit
     win = S.windows([spec], Path("C:/drishti"))
     assert 'schtasks /Create /F /TN "Drishti feed sample-mapping" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 07:15' in win

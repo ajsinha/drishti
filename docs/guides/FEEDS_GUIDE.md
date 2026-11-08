@@ -233,7 +233,7 @@ python3 tools/drishti.py feed schedule --cron
 # Drishti data feeds: daily (crontab -e, then paste; the times are this machine's local time)
 # mkdir -p $HOME/drishti-feeds-logs   (one log file per feed; each run appends its one log line and any messages)
 SHELL=/bin/bash
-30 5 * * * /opt/drishti/tools/feeds/feed.sh run gleif >> $HOME/drishti-feeds-logs/gleif.log 2>&1
+30 5 * * * /opt/drishti/tools/feeds/feed.sh run gleif --trigger schedule >> $HOME/drishti-feeds-logs/gleif.log 2>&1
 ```
 
 **Linux, systemd** (a missed day runs at the next boot):
@@ -252,7 +252,7 @@ After=network-online.target
 [Service]
 Type=oneshot
 WorkingDirectory=/opt/drishti
-ExecStart=/opt/drishti/tools/feeds/feed.sh run gleif
+ExecStart=/opt/drishti/tools/feeds/feed.sh run gleif --trigger schedule
 Nice=10
 
 # ---- drishti-feed-gleif.timer
@@ -271,17 +271,19 @@ WantedBy=timers.target
 Save each block under `~/.config/systemd/user/`, then `systemctl --user daemon-reload && systemctl --user enable --now
 drishti-feed-gleif.timer`; `journalctl --user -u drishti-feed-gleif` shows each run's log line.
 
-**Windows, Task Scheduler** (run in a command prompt as the user the feeds run as):
+**Windows, Task Scheduler** (run the printed commands in a command prompt as the user the feeds run as; `--root` names the Drishti
+folder on that machine when you print them elsewhere):
 
 ```bash
-python3 tools/drishti.py feed schedule --windows
+python3 tools/drishti.py feed schedule --windows --root 'C:\drishti'
 ```
 
 ```text
-schtasks /Create /F /TN "Drishti feed gleif" /SC DAILY /ST 05:30 /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\drishti\tools\windows\feed.ps1\" run gleif"
+schtasks /Create /F /TN "Drishti feed gleif" /SC DAILY /ST 05:30 /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\drishti\tools\windows\feed.ps1\" run gleif --trigger schedule"
 ```
 
-Task Scheduler's *Last Run Result* is the exit code (section 3.1). One task for every feed instead: `feed.ps1 run --all`.
+Task Scheduler's *Last Run Result* is the exit code (section 3.1). One task for every feed instead: `feed.ps1 run --all` (the feeds run
+one after another in the order of their schedule times). `--trigger schedule` only marks the run in the ledger as the schedule's.
 
 ## 6. Monitor: status, the ledger, Admin → Feeds, alerts
 
@@ -306,6 +308,21 @@ ledger: data/feeds/ledger.jsonl
  "load": {"route": "java", "status": "ok", "rows": 4377, "rejected": 0, "count": 3}, "licence": "CC0 1.0 (attribution appreciated)",
  "internalOnly": false, "seconds": 41.2}
 ```
+
+**Admin → Data loads → Feeds** (`/admin/loads/feeds`, administrators) shows the same from the server's side: every feed with its lake,
+schedule, last run and status, last success with its business date and rows, the duration, the failures since the last success, the
+last error in words and the licence (internal only marked), then the latest runs of the ledger. Both tables are console tables (sort,
+filter, keyboard). **Run now** starts `tools/drishti.py feed run <feed> --trigger admin` on the server's machine in the background,
+with the server's data folder (its output in `data/feeds/<feed>/admin-run.log`); while a run of the feed holds its lock it says so
+instead. The same over REST: `GET /api/v1/admin/feeds`, `POST /api/v1/admin/feeds/{feed}/run` (audited `feed.run`). The server finds
+the feed files, the tools and Python by `drishti.feeds.config`, `drishti.feeds.root` and `drishti.feeds.python`
+([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+
+**Alerts.** A failed (or refused, or partial) last run sets the gauge `drishti.datafeed.failed{feed}` to 1, and the platform alert rule
+`data-feed-failed` (`config/alerts/platform-alerts.yaml`) opens an alert in the one alert engine: the administrators are told in their
+inbox, Admin → Health and Alerts list it, and it closes by itself at the feed's next successful run. The server reads the ledger every
+`drishti.feeds.sample-seconds` (60), so a failure of a cron run is seen as surely as one of Run now. The same rule for a site's
+Prometheus is `DrishtiDataFeedFailed` (`deploy/prometheus/drishti-alerts.yaml`).
 
 ## 7. The feed file, every key
 
