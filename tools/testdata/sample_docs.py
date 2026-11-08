@@ -135,8 +135,8 @@ LINKS = {
     "frtb-sensitivity": [("contracts/FRTB.md", "# ")], "pnl-explain": [("contracts/PNL.md", "# ")], "stress-result": [("contracts/STR.md", "# ")],
     "fund": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
     "fund-holder": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
-    "position-sensitivity": [("architecture/SENSITIVITIES_AND_FRTB_SA.md", "2. "), ("lenses/MR_CUBE_LENS.md", "7.9 ")],
-    "risk-factor": [("architecture/SENSITIVITIES_AND_FRTB_SA.md", "3. "), ("lenses/MR_CUBE_LENS.md", "7.10 ")],
+    "position-sensitivity": [("contracts/FRTB.md", "20. "), ("guides/FRTB_SA_GUIDE.md", "# ")],
+    "risk-factor": [("contracts/FRTB.md", "21. "), ("guides/FRTB_SA_GUIDE.md", "# ")],
     "index-funds": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
 }
 PACK_LINKS = {

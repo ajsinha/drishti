@@ -26,7 +26,7 @@ files:
 - reference-store.yaml
 - risk-store.yaml
 - trading-store.yaml
-doc: docs/connectors/DUCKDB_CONNECTOR.md
+doc: plugins/drishti-plugin-duckdb/README.md
 ---
 # DuckDB connector templates
 
@@ -97,5 +97,5 @@ Set `DRISHTI_DUCKDB_PATH` when the file is elsewhere. `trading-store.yaml` is a 
 
 ## See also
 
-- [The DuckDB connector](../../../docs/connectors/DUCKDB_CONNECTOR.md) and the [duckdb connector README](../../../plugins/drishti-plugin-duckdb/README.md).
+- The [duckdb connector README](../../../plugins/drishti-plugin-duckdb/README.md).
 - [Connector files](../../../docs/connectors/CONNECTOR_FILES.md) (copying examples, the trade union note) and [Demo data](../../../docs/connectors/DEMO_DATA.md).
