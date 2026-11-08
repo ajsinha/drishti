@@ -462,16 +462,23 @@
         this.doc = doc;
         this.o = o || {};
         this.el = null;
-        this.onDown = (e) => { if (this.el && !this.el.contains(e.target) && !(this.anchor && this.anchor.contains(e.target))) { this.close(); } };
+        this.onDown = (e) => { if (this.el && !this.el.contains(e.target) && !(this.anchor && this.anchor.contains(e.target)) && !this.nested(e.target)) { this.close(); } };
         this.onKey = (e) => { if (e.key === 'Escape' && this.el) { e.stopPropagation(); this.close(true); } };
       }
       isOpen() { return !!this.el; }
+      nested(t) {
+        for (let p = t && t.closest ? t.closest('.di-pop') : null; p && p.diAnchor; p = p.diAnchor.closest ? p.diAnchor.closest('.di-pop') : null) {
+          if (this.el.contains(p.diAnchor)) { return true; }
+        }
+        return false;
+      }
       open(anchor, content, o) {
         this.close();
         this.anchor = anchor;
         this.before = this.doc.activeElement;
         const el = this.el = h(this.doc, 'div', { cls: 'di-pop ' + (this.o.cls || ''), attrs: { role: this.o.role || 'dialog', 'aria-label': this.o.label || null } });
         if (this.o.theme && this.o.theme.closest) { const t = this.o.theme.closest('[data-density]'); if (t) { el.setAttribute('data-density', t.getAttribute('data-density')); } }
+        el.diAnchor = anchor;                                                  // a panel opened from inside another keeps the other open
         el.appendChild(content);
         el.addEventListener('keydown', this.onKey);
         (anchor.closest && anchor.closest('dialog[open]') || this.doc.body).appendChild(el);   /* inside an open modal dialog: in its top layer, not inert */
@@ -1362,11 +1369,174 @@
     }
     return { "DateRangePicker": DateRangePicker };
   })();
+  /* ---- src/drishti_select.js ---- */
+  __m["src/drishti_select.js"] = (function () {
+    var announce = __lib("drishti-core").announce;
+    var InputBase = __m["src/drishti_inputs-dom.js"].InputBase, Listbox = __m["src/drishti_inputs-dom.js"].Listbox, Popover = __m["src/drishti_inputs-dom.js"].Popover, normalizeOptions = __m["src/drishti_inputs-dom.js"].normalizeOptions, searchOptions = __m["src/drishti_inputs-dom.js"].searchOptions, uid = __m["src/drishti_inputs-dom.js"].uid;
+    const TYPE_AHEAD_MS = 500;
+    const same = (a, b) => a === b || (a !== null && a !== undefined && b !== null && b !== undefined && String(a) === String(b));
+    function fromMarkup(host) {
+      const out = [], picked = [];
+      const take = (o, group) => {
+        out.push({ value: o.hasAttribute('value') ? o.getAttribute('value') : o.textContent.trim(), label: o.textContent.trim(), group: group || '',
+          disabled: o.hasAttribute('disabled'), detail: o.getAttribute('title') || '' });
+        if (o.hasAttribute('selected')) { picked.push(out[out.length - 1].value); }
+      };
+      Array.prototype.slice.call(host.children).forEach((c) => {
+        const t = c.tagName.toLowerCase();
+        if (t === 'option') { take(c, ''); } else if (t === 'optgroup') { Array.prototype.forEach.call(c.querySelectorAll('option'), (o) => take(o, c.getAttribute('label'))); }
+        if (t === 'option' || t === 'optgroup') { c.remove(); }
+      });
+      return { options: out, value: picked.length ? picked[0] : undefined };
+    }
+    class Select extends InputBase {
+      constructor(host, options) {
+        super(host, options, 'di-select');
+        const o = this.o = Object.assign({ search: 'auto', searchMin: 8 }, this.o);
+        const marked = o.options === undefined ? fromMarkup(host) : null;
+        this.options = normalizeOptions(marked ? marked.options : o.options);
+        this.value = null;
+        this.typed = '';
+        this.typedAt = 0;
+        this.list = new Listbox(this.doc, { label: o.label || 'Options', render: o.renderOption, onPick: (it) => this.pick(it) });
+        this.pop = new Popover(this.doc, { cls: 'di-select-pop', role: 'presentation', theme: host, onClose: () => this.closed() });
+        this.query = this.el('input', { cls: 'di-field di-select-search', attrs: { type: 'text', role: 'combobox', 'aria-expanded': 'true', 'aria-autocomplete': 'list',
+          'aria-label': 'Search ' + (o.label || 'the options'), placeholder: 'Type to search', autocomplete: 'off', spellcheck: 'false', id: uid('sel-q') } });
+        this.query.addEventListener('input', () => this.filter(true));
+        this.query.addEventListener('keydown', (e) => this.onListKey(e, this.query));
+        this.status = this.el('div', { cls: 'di-select-status', attrs: { role: 'status', 'aria-live': 'polite' } });
+        this.panel = this.el('div', { cls: 'di-select-panel' });
+        this.text = this.el('span', { cls: 'di-select-text' });
+        this.control = this.el('div', { cls: 'di-control di-select-control', attrs: { role: 'combobox', tabindex: '0', 'aria-haspopup': 'listbox', 'aria-expanded': 'false',
+          'aria-label': o.label || null, id: uid('sel') } }, [this.text, this.el('span', { cls: 'di-caret', text: '▾', attrs: { 'aria-hidden': 'true' } })]);
+        host.appendChild(this.control);
+        if (o.name) { this.hidden = this.el('input', { attrs: { type: 'hidden', name: o.name } }); host.appendChild(this.hidden); }
+        this.control.addEventListener('mousedown', (e) => { e.preventDefault(); if (this.o.disabled) { return; } this.control.focus(); if (this.pop.isOpen()) { this.close(); } else { this.open(); } });
+        this.control.addEventListener('keydown', (e) => this.onKey(e));
+        this.control.addEventListener('blur', () => { if (this.pop.isOpen() && !this.searching()) { this.close(); } });
+        this.setDisabled(!!o.disabled);
+        const first = o.value !== undefined ? o.value : marked && marked.value !== undefined ? marked.value : undefined;
+        if (first !== undefined && first !== null) { this.setValue(first); } else if (!o.placeholder) { const f = this.options.find((x) => !x.disabled); this.setValue(f ? f.value : null); } else { this.show(); }
+      }
+      searching() { const s = this.o.search; return s === true || (s === 'auto' && this.options.length > this.o.searchMin); }
+      show() {
+        const it = this.getOption();
+        this.text.textContent = it ? it.label : this.value !== null ? String(this.value) : (this.o.placeholder || '');
+        this.control.classList.toggle('di-placeholder', this.value === null);
+        if (this.hidden) { this.hidden.value = this.value === null ? '' : String(this.value); }
+      }
+      open(at) {
+        if (this.o.disabled) { return; }
+        const search = this.searching();
+        this.query.value = '';
+        this.panel.textContent = '';
+        if (search) { this.panel.appendChild(this.query); }
+        this.panel.append(this.list.el, this.status);
+        this.filter(false);
+        this.pop.open(this.control, this.panel, { focus: false });
+        const owner = search ? this.query : this.control;
+        owner.setAttribute('aria-controls', this.list.id);
+        this.control.setAttribute('aria-controls', this.list.id);
+        this.control.setAttribute('aria-expanded', 'true');
+        const cur = this.matches.findIndex((x) => same(x.value, this.value));
+        this.list.setActive(at !== undefined ? at : cur >= 0 ? cur : 0, owner);
+        if (search) { this.query.focus(); }
+        this.emit('open');
+      }
+      close(refocus) { const had = this.doc.activeElement === this.query; this.pop.close(); if ((refocus || had) && this.control.isConnected) { this.control.focus(); } }
+      closed() {
+        this.control.setAttribute('aria-expanded', 'false');
+        this.control.removeAttribute('aria-activedescendant');
+        this.control.removeAttribute('aria-controls');
+        this.query.removeAttribute('aria-activedescendant');
+        this.emit('close');
+      }
+      filter(typed) {
+        const q = this.searching() ? this.query.value : '';
+        this.matches = searchOptions(this.options, q);
+        this.list.render(this.matches, (it) => same(it.value, this.value), { empty: q ? 'Nothing matches "' + q + '"' : 'Nothing to pick' });
+        this.status.textContent = q ? this.matches.length + (this.matches.length === 1 ? ' match' : ' matches') : '';
+        if (typed) { this.list.setActive(this.matches.length ? 0 : -1, this.query); }
+        if (this.pop.isOpen()) { this.pop.place(); }
+      }
+      onKey(e) {
+        if (this.o.disabled) { return; }
+        const k = e.key;
+        if (this.pop.isOpen()) { this.onListKey(e, this.control); return; }
+        if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'Enter' || k === ' ') { e.preventDefault(); this.open(); return; }
+        if (k === 'Home' || k === 'End') { e.preventDefault(); this.open(); this.list.setActive(k === 'Home' ? 0 : this.matches.length - 1, this.control); return; }
+        if (this.printable(e)) {
+          e.preventDefault();
+          if (this.searching()) { this.open(); this.query.value = k; this.filter(true); return; }
+          this.open();
+          this.typeAhead(k);
+        }
+      }
+      printable(e) { return e.key.length === 1 && e.key !== ' ' && !e.ctrlKey && !e.metaKey && !e.altKey; }
+      onListKey(e, owner) {
+        const k = e.key;
+        if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.close(true); return; }
+        if (k === 'Tab') { this.close(); return; }
+        if (k === 'ArrowUp' && e.altKey) { e.preventDefault(); const it = this.matches[this.list.active]; if (it && !it.disabled) { this.pick(it); } else { this.close(true); } return; }
+        if ((k === 'Home' || k === 'End') && owner === this.control) { e.preventDefault(); this.list.setActive(k === 'Home' ? 0 : this.matches.length - 1, owner); return; }
+        if (k === ' ' && owner === this.control) { e.preventDefault(); const it = this.matches[this.list.active]; if (it && !it.disabled) { this.pick(it); } return; }
+        if (this.list.key(e, owner)) { return; }
+        if (owner === this.control && this.printable(e)) { e.preventDefault(); this.typeAhead(k); }
+      }
+      typeAhead(ch) {
+        const now = Date.now();
+        this.typed = now - this.typedAt > TYPE_AHEAD_MS ? ch : this.typed + ch;
+        this.typedAt = now;
+        const t = this.typed.toLowerCase(), n = this.matches.length;
+        const repeat = t.length > 1 && t.split('').every((c) => c === t[0]);
+        const word = repeat ? t[0] : t, start = repeat || t.length === 1 ? this.list.active + 1 : this.list.active;
+        for (let i = 0; i < n; i++) {
+          const j = (Math.max(0, start) + i) % n;
+          if (this.matches[j].label.toLowerCase().indexOf(word) === 0) { this.list.setActive(j, this.control); return; }
+        }
+      }
+      pick(it) {
+        if (!it || it.disabled) { return; }
+        this.close(true);
+        this.setValue(it.value, true);
+        this.emit('pick', { value: this.value, option: this.getOption() });      // every pick, the same value too (a cell editor saves on it)
+      }
+      getValue() { return this.value; }
+      getOption() { const v = this.value; return v === null ? null : this.options.find((x) => same(x.value, v)) || null; }
+      setValue(v, emit) {
+        const before = this.value;
+        const it = v === null || v === undefined ? null : this.options.find((x) => same(x.value, v));
+        this.value = it ? it.value : v === undefined ? null : v;
+        this.show();
+        if (emit && !same(before, this.value)) {
+          announce((it ? it.label : String(this.value)) + ' picked');
+          this.emit('change', { value: this.value, option: this.getOption() });
+        }
+      }
+      setOptions(list, value) {
+        this.options = normalizeOptions(list);
+        const want = value !== undefined ? value : this.value;
+        const keep = want !== null && this.options.some((x) => same(x.value, want));
+        if (keep || (want !== null && value !== undefined)) { this.setValue(want); } else if (this.o.placeholder) { this.setValue(null); } else { const f = this.options.find((x) => !x.disabled); this.setValue(f ? f.value : null); }
+        if (this.pop.isOpen()) { this.filter(false); }
+      }
+      setDisabled(off) {
+        this.o.disabled = !!off;
+        this.control.setAttribute('aria-disabled', off ? 'true' : 'false');
+        this.control.setAttribute('tabindex', off ? '-1' : '0');
+        this.host.classList.toggle('di-disabled', !!off);
+        if (off) { this.close(); }
+      }
+      focus() { this.control.focus(); }
+    }
+    return { "Select": Select };
+  })();
   /* ---- src/drishti_filter-bar.js ---- */
   __m["src/drishti_filter-bar.js"] = (function () {
     var sharedBus = __lib("drishti-core").bus, FILTER_CHANNEL = __lib("drishti-core").FILTER_CHANNEL, filterWords = __lib("drishti-core").filterWords, formatDateRange = __lib("drishti-core").formatDateRange, announce = __lib("drishti-core").announce, parseNumberText = __lib("drishti-core").parseNumberText;
     var DATE_PRESETS = __m["src/drishti_calendar.js"].DATE_PRESETS, resolvePreset = __m["src/drishti_calendar.js"].resolvePreset, parseDateInput = __m["src/drishti_calendar.js"].parseDateInput, calendar = __m["src/drishti_calendar.js"].calendar;
     var InputBase = __m["src/drishti_inputs-dom.js"].InputBase, Popover = __m["src/drishti_inputs-dom.js"].Popover, Listbox = __m["src/drishti_inputs-dom.js"].Listbox, normalizeOptions = __m["src/drishti_inputs-dom.js"].normalizeOptions, searchOptions = __m["src/drishti_inputs-dom.js"].searchOptions, uid = __m["src/drishti_inputs-dom.js"].uid;
+    var Select = __m["src/drishti_select.js"].Select;
     const OPS = { number: [['gt', '>'], ['gte', '≥'], ['lt', '<'], ['lte', '≤'], ['equals', '='], ['notEquals', '≠'], ['between', 'between']],
       text: [['contains', 'contains'], ['notContains', 'does not contain'], ['equals', 'is'], ['notEquals', 'is not'], ['startsWith', 'starts with'], ['endsWith', 'ends with']] };
     class FilterModelBar {
@@ -1466,6 +1636,7 @@
         const f = this.state.field(id);
         if (!f) { return Promise.resolve(); }
         const at = anchor || this.addBtn, cur = this.state.model[id], box = this.el('div', { cls: 'di-fb-editor', data: { field: id } });
+        let first = null;
         const msg = this.el('div', { cls: 'di-msg', attrs: { 'aria-live': 'polite' } });
         const head = this.el('div', { cls: 'di-fb-editor-head', text: f.label });
         const done = this.el('button', { cls: 'di-btn di-primary', text: 'Apply', attrs: { type: 'button' }, data: { act: 'apply' } });
@@ -1486,36 +1657,41 @@
           done.addEventListener('click', () => { this.state.setMembers(id, members.filter((m) => picked.has(String(m.value))).map((m) => m.value).concat(Array.from(picked).filter((k) => !members.some((m) => String(m.value) === k)))); this.pop.close(true); this.changed(); });
           if (f.members) { Promise.resolve(f.members('')).then((m) => { members = normalizeOptions(m); draw(); }); } else { draw(); }
         } else if (f.type === 'date') {
-          const cal = calendar(this.o.calendar), preset = this.el('select', { cls: 'di-field', attrs: { 'aria-label': 'Preset' } });
-          preset.appendChild(this.el('option', { text: 'Custom range', attrs: { value: '' } }));
-          DATE_PRESETS.forEach((p) => { const o = this.el('option', { text: p.label, attrs: { value: p.id } }); if (cur && cur.preset === p.id) { o.selected = true; } preset.appendChild(o); });
+          const cal = calendar(this.o.calendar), preset = this.pick('Preset', [{ value: '', label: 'Custom range' }].concat(DATE_PRESETS.map((p) => ({ value: p.id, label: p.label }))), cur && cur.preset ? cur.preset : '');
           const from = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'From', placeholder: 'From: T-5, 1 Nov 2026' } });
           const to = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'To', placeholder: 'To: T, ME' } });
           if (cur && !cur.preset) { from.value = cur.value; to.value = cur.valueTo; }
           box.append(preset, this.el('div', { cls: 'di-range-ends' }, [from, this.el('span', { text: '→' }), to]));
+          first = from;
           done.addEventListener('click', () => {
-            const why = this.state.setDates(id, { preset: preset.value || null, from: from.value, to: to.value, asOf: this.o.asOf, calendar: cal });
+            const why = this.state.setDates(id, { preset: preset.component.getValue() || null, from: from.value, to: to.value, asOf: this.o.asOf, calendar: cal });
             if (why) { msg.textContent = why; return; }
             this.pop.close(true);
             this.changed();
           });
         } else {
-          const ops = OPS[f.type === 'number' ? 'number' : 'text'], op = this.el('select', { cls: 'di-field', attrs: { 'aria-label': 'Condition' } });
-          ops.forEach(([k, w]) => { const o = this.el('option', { text: w, attrs: { value: k } }); if (cur && cur.op === k) { o.selected = true; } op.appendChild(o); });
+          const ops = OPS[f.type === 'number' ? 'number' : 'text'], op = this.pick('Condition', ops.map(([k, w]) => ({ value: k, label: w })), cur && cur.op ? cur.op : ops[0][0]);
           const val = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Value', placeholder: f.type === 'number' ? '1m, 250k, −5,000' : 'Text' } });
           const val2 = this.el('input', { cls: 'di-field', attrs: { type: 'text', 'aria-label': 'Up to', placeholder: 'and' } });
           if (cur) { val.value = cur.value === undefined ? '' : String(cur.value); val2.value = cur.valueTo === undefined ? '' : String(cur.valueTo); }
-          const showTo = () => { val2.hidden = op.value !== 'between'; };
-          op.addEventListener('change', showTo);
+          const showTo = () => { val2.hidden = op.component.getValue() !== 'between'; };
+          op.component.on('change', showTo);
+          first = val;
           showTo();
-          const apply = () => { const why = this.state.setCondition(id, op.value, val.value, val2.value); if (why) { msg.textContent = why; val.setAttribute('aria-invalid', 'true'); return; } this.pop.close(true); this.changed(); };
+          const apply = () => { const why = this.state.setCondition(id, op.component.getValue(), val.value, val2.value); if (why) { msg.textContent = why; val.setAttribute('aria-invalid', 'true'); return; } this.pop.close(true); this.changed(); };
           [val, val2].forEach((x) => x.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); apply(); } }));
           done.addEventListener('click', apply);
           box.append(this.el('div', { cls: 'di-fb-cond' }, [op, val, val2]));
         }
         box.appendChild(foot);
         this.pop.open(at, box);
+        if (first) { first.focus(); }                                          // the value, not the condition's Select: typing starts the value
         return Promise.resolve();
+      }
+      pick(label, options, value) {
+        const box = this.el('drishti-select', { cls: 'di-fb-pick' });
+        box.component = new Select(box, { label, options, value, search: false });
+        return box;
       }
       getValue() { return this.state.payload(); }
       setValue(v) { this.state.model = Object.assign({}, v && v.model); this.state.quickFilter = (v && v.quickFilter) || ''; if (this.quickEl) { this.quickEl.value = this.state.quickFilter; } this.changed(); }
@@ -2286,6 +2462,7 @@
     var Combobox = __m["src/drishti_combobox.js"].Combobox;
     var TreePicker = __m["src/drishti_tree-picker.js"].TreePicker;
     var CodeEditor = __m["src/drishti_code-editor.js"].CodeEditor;
+    var Select = __m["src/drishti_select.js"].Select;
     var upgradeCodeArea = __m["src/drishti_code-upgrade.js"].upgradeCodeArea;
     const WIDGETS = new Map();
     function defineWidget(name, factory) { WIDGETS.set(name, factory); }
@@ -2381,12 +2558,27 @@
             wrap.append(label(null), control, help || '', msg);
             return wrap;
           }
-          const sel = part.input = named(form.el('select', { cls: 'di-field', attrs: { id: id, 'aria-describedby': described, disabled: ro || null, 'aria-required': f.required ? 'true' : null } }));
-          if (fs.allowEmpty !== false) { sel.appendChild(form.el('option', { text: fs.emptyLabel || (f.required ? 'Pick one' : '(none)'), attrs: { value: '' } })); }
-          list.forEach((o) => { const op = form.el('option', { text: o.label, attrs: { value: String(o.value) } }); if (v === o.value) { op.selected = true; } sel.appendChild(op); });
-          sel.addEventListener('change', () => { const o = list.find((x) => String(x.value) === sel.value); set(o ? o.value : undefined); touch(); });
-          control = sel;
-          break;
+          const box = form.doc.createElement('drishti-select'), empty = fs.allowEmpty !== false;
+          box.className = 'di-form-widget';
+          const choices = (empty ? [{ value: '', label: fs.emptyLabel || (f.required ? 'Pick one' : '(none)') }] : []).concat(list.map((o) => ({ value: String(o.value), label: o.label })));
+          const has = v !== undefined && v !== null && list.some((o) => String(o.value) === String(v));
+          const sel = part.widget = new Select(box, { options: choices, value: has ? String(v) : empty ? '' : undefined, label: f.label, disabled: ro,
+            placeholder: !has && !empty && f.required ? 'Pick one' : undefined });
+          box.component = sel;                                     // made here: the element does not make a second one when it joins the page
+          part.names = fs.name ? form.el('span', { cls: 'di-names', attrs: { hidden: true } }) : null;
+          sel.control.id = id;
+          sel.control.setAttribute('aria-describedby', described);
+          if (f.required) { sel.control.setAttribute('aria-required', 'true'); }
+          sel.on('change', (d) => {
+            const o = list.find((x) => String(x.value) === String(d.value));
+            set(o ? o.value : undefined); touch();
+            ['input', 'change'].forEach((t) => box.dispatchEvent(new form.win.Event(t, { bubbles: true })));
+          });
+          part.input = sel.control;
+          applyHook(box, fs.hook);
+          wrap.append(label(id), box, help || '', msg);
+          if (part.names) { wrap.appendChild(part.names); }
+          return wrap;
         }
         case 'date': control = mount(DatePicker, { value: v, businessOnly: fs.options && fs.options.businessOnly !== undefined ? fs.options.businessOnly : false, required: f.required }); break;
         case 'time': control = mount(TimePicker, { value: v, step: fs.stepMinutes || 15, required: f.required }); break;
@@ -2819,168 +3011,6 @@
       return Array.from(root.querySelectorAll(FORM_HOST_SELECTOR)).map((h) => formOf(h)).filter(Boolean);
     }
     return { "FORM_HOST_SELECTOR": FORM_HOST_SELECTOR, "formOf": formOf, "upgradeForms": upgradeForms };
-  })();
-  /* ---- src/drishti_select.js ---- */
-  __m["src/drishti_select.js"] = (function () {
-    var announce = __lib("drishti-core").announce;
-    var InputBase = __m["src/drishti_inputs-dom.js"].InputBase, Listbox = __m["src/drishti_inputs-dom.js"].Listbox, Popover = __m["src/drishti_inputs-dom.js"].Popover, normalizeOptions = __m["src/drishti_inputs-dom.js"].normalizeOptions, searchOptions = __m["src/drishti_inputs-dom.js"].searchOptions, uid = __m["src/drishti_inputs-dom.js"].uid;
-    const TYPE_AHEAD_MS = 500;
-    const same = (a, b) => a === b || (a !== null && a !== undefined && b !== null && b !== undefined && String(a) === String(b));
-    function fromMarkup(host) {
-      const out = [], picked = [];
-      const take = (o, group) => {
-        out.push({ value: o.hasAttribute('value') ? o.getAttribute('value') : o.textContent.trim(), label: o.textContent.trim(), group: group || '',
-          disabled: o.hasAttribute('disabled'), detail: o.getAttribute('title') || '' });
-        if (o.hasAttribute('selected')) { picked.push(out[out.length - 1].value); }
-      };
-      Array.prototype.slice.call(host.children).forEach((c) => {
-        const t = c.tagName.toLowerCase();
-        if (t === 'option') { take(c, ''); } else if (t === 'optgroup') { Array.prototype.forEach.call(c.querySelectorAll('option'), (o) => take(o, c.getAttribute('label'))); }
-        if (t === 'option' || t === 'optgroup') { c.remove(); }
-      });
-      return { options: out, value: picked.length ? picked[0] : undefined };
-    }
-    class Select extends InputBase {
-      constructor(host, options) {
-        super(host, options, 'di-select');
-        const o = this.o = Object.assign({ search: 'auto', searchMin: 8 }, this.o);
-        const marked = o.options === undefined ? fromMarkup(host) : null;
-        this.options = normalizeOptions(marked ? marked.options : o.options);
-        this.value = null;
-        this.typed = '';
-        this.typedAt = 0;
-        this.list = new Listbox(this.doc, { label: o.label || 'Options', render: o.renderOption, onPick: (it) => this.pick(it) });
-        this.pop = new Popover(this.doc, { cls: 'di-select-pop', role: 'presentation', theme: host, onClose: () => this.closed() });
-        this.query = this.el('input', { cls: 'di-field di-select-search', attrs: { type: 'text', role: 'combobox', 'aria-expanded': 'true', 'aria-autocomplete': 'list',
-          'aria-label': 'Search ' + (o.label || 'the options'), placeholder: 'Type to search', autocomplete: 'off', spellcheck: 'false', id: uid('sel-q') } });
-        this.query.addEventListener('input', () => this.filter(true));
-        this.query.addEventListener('keydown', (e) => this.onListKey(e, this.query));
-        this.status = this.el('div', { cls: 'di-select-status', attrs: { role: 'status', 'aria-live': 'polite' } });
-        this.panel = this.el('div', { cls: 'di-select-panel' });
-        this.text = this.el('span', { cls: 'di-select-text' });
-        this.control = this.el('div', { cls: 'di-control di-select-control', attrs: { role: 'combobox', tabindex: '0', 'aria-haspopup': 'listbox', 'aria-expanded': 'false',
-          'aria-label': o.label || null, id: uid('sel') } }, [this.text, this.el('span', { cls: 'di-caret', text: '▾', attrs: { 'aria-hidden': 'true' } })]);
-        host.appendChild(this.control);
-        if (o.name) { this.hidden = this.el('input', { attrs: { type: 'hidden', name: o.name } }); host.appendChild(this.hidden); }
-        this.control.addEventListener('mousedown', (e) => { e.preventDefault(); if (this.o.disabled) { return; } this.control.focus(); if (this.pop.isOpen()) { this.close(); } else { this.open(); } });
-        this.control.addEventListener('keydown', (e) => this.onKey(e));
-        this.control.addEventListener('blur', () => { if (this.pop.isOpen() && !this.searching()) { this.close(); } });
-        this.setDisabled(!!o.disabled);
-        const first = o.value !== undefined ? o.value : marked && marked.value !== undefined ? marked.value : undefined;
-        if (first !== undefined && first !== null) { this.setValue(first); } else if (!o.placeholder) { const f = this.options.find((x) => !x.disabled); this.setValue(f ? f.value : null); } else { this.show(); }
-      }
-      searching() { const s = this.o.search; return s === true || (s === 'auto' && this.options.length > this.o.searchMin); }
-      show() {
-        const it = this.getOption();
-        this.text.textContent = it ? it.label : this.value !== null ? String(this.value) : (this.o.placeholder || '');
-        this.control.classList.toggle('di-placeholder', this.value === null);
-        if (this.hidden) { this.hidden.value = this.value === null ? '' : String(this.value); }
-      }
-      open(at) {
-        if (this.o.disabled) { return; }
-        const search = this.searching();
-        this.query.value = '';
-        this.panel.textContent = '';
-        if (search) { this.panel.appendChild(this.query); }
-        this.panel.append(this.list.el, this.status);
-        this.filter(false);
-        this.pop.open(this.control, this.panel, { focus: false });
-        const owner = search ? this.query : this.control;
-        owner.setAttribute('aria-controls', this.list.id);
-        this.control.setAttribute('aria-controls', this.list.id);
-        this.control.setAttribute('aria-expanded', 'true');
-        const cur = this.matches.findIndex((x) => same(x.value, this.value));
-        this.list.setActive(at !== undefined ? at : cur >= 0 ? cur : 0, owner);
-        if (search) { this.query.focus(); }
-        this.emit('open');
-      }
-      close(refocus) { const had = this.doc.activeElement === this.query; this.pop.close(); if ((refocus || had) && this.control.isConnected) { this.control.focus(); } }
-      closed() {
-        this.control.setAttribute('aria-expanded', 'false');
-        this.control.removeAttribute('aria-activedescendant');
-        this.control.removeAttribute('aria-controls');
-        this.query.removeAttribute('aria-activedescendant');
-        this.emit('close');
-      }
-      filter(typed) {
-        const q = this.searching() ? this.query.value : '';
-        this.matches = searchOptions(this.options, q);
-        this.list.render(this.matches, (it) => same(it.value, this.value), { empty: q ? 'Nothing matches "' + q + '"' : 'Nothing to pick' });
-        this.status.textContent = q ? this.matches.length + (this.matches.length === 1 ? ' match' : ' matches') : '';
-        if (typed) { this.list.setActive(this.matches.length ? 0 : -1, this.query); }
-        if (this.pop.isOpen()) { this.pop.place(); }
-      }
-      onKey(e) {
-        if (this.o.disabled) { return; }
-        const k = e.key;
-        if (this.pop.isOpen()) { this.onListKey(e, this.control); return; }
-        if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'Enter' || k === ' ') { e.preventDefault(); this.open(); return; }
-        if (k === 'Home' || k === 'End') { e.preventDefault(); this.open(); this.list.setActive(k === 'Home' ? 0 : this.matches.length - 1, this.control); return; }
-        if (this.printable(e)) {
-          e.preventDefault();
-          if (this.searching()) { this.open(); this.query.value = k; this.filter(true); return; }
-          this.open();
-          this.typeAhead(k);
-        }
-      }
-      printable(e) { return e.key.length === 1 && e.key !== ' ' && !e.ctrlKey && !e.metaKey && !e.altKey; }
-      onListKey(e, owner) {
-        const k = e.key;
-        if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.close(true); return; }
-        if (k === 'Tab') { this.close(); return; }
-        if (k === 'ArrowUp' && e.altKey) { e.preventDefault(); const it = this.matches[this.list.active]; if (it && !it.disabled) { this.pick(it); } else { this.close(true); } return; }
-        if ((k === 'Home' || k === 'End') && owner === this.control) { e.preventDefault(); this.list.setActive(k === 'Home' ? 0 : this.matches.length - 1, owner); return; }
-        if (k === ' ' && owner === this.control) { e.preventDefault(); const it = this.matches[this.list.active]; if (it && !it.disabled) { this.pick(it); } return; }
-        if (this.list.key(e, owner)) { return; }
-        if (owner === this.control && this.printable(e)) { e.preventDefault(); this.typeAhead(k); }
-      }
-      typeAhead(ch) {
-        const now = Date.now();
-        this.typed = now - this.typedAt > TYPE_AHEAD_MS ? ch : this.typed + ch;
-        this.typedAt = now;
-        const t = this.typed.toLowerCase(), n = this.matches.length;
-        const repeat = t.length > 1 && t.split('').every((c) => c === t[0]);
-        const word = repeat ? t[0] : t, start = repeat || t.length === 1 ? this.list.active + 1 : this.list.active;
-        for (let i = 0; i < n; i++) {
-          const j = (Math.max(0, start) + i) % n;
-          if (this.matches[j].label.toLowerCase().indexOf(word) === 0) { this.list.setActive(j, this.control); return; }
-        }
-      }
-      pick(it) {
-        if (!it || it.disabled) { return; }
-        this.close(true);
-        this.setValue(it.value, true);
-        this.emit('pick', { value: this.value, option: this.getOption() });      // every pick, the same value too (a cell editor saves on it)
-      }
-      getValue() { return this.value; }
-      getOption() { const v = this.value; return v === null ? null : this.options.find((x) => same(x.value, v)) || null; }
-      setValue(v, emit) {
-        const before = this.value;
-        const it = v === null || v === undefined ? null : this.options.find((x) => same(x.value, v));
-        this.value = it ? it.value : v === undefined ? null : v;
-        this.show();
-        if (emit && !same(before, this.value)) {
-          announce((it ? it.label : String(this.value)) + ' picked');
-          this.emit('change', { value: this.value, option: this.getOption() });
-        }
-      }
-      setOptions(list, value) {
-        this.options = normalizeOptions(list);
-        const want = value !== undefined ? value : this.value;
-        const keep = want !== null && this.options.some((x) => same(x.value, want));
-        if (keep || (want !== null && value !== undefined)) { this.setValue(want); } else if (this.o.placeholder) { this.setValue(null); } else { const f = this.options.find((x) => !x.disabled); this.setValue(f ? f.value : null); }
-        if (this.pop.isOpen()) { this.filter(false); }
-      }
-      setDisabled(off) {
-        this.o.disabled = !!off;
-        this.control.setAttribute('aria-disabled', off ? 'true' : 'false');
-        this.control.setAttribute('tabindex', off ? '-1' : '0');
-        this.host.classList.toggle('di-disabled', !!off);
-        if (off) { this.close(); }
-      }
-      focus() { this.control.focus(); }
-    }
-    return { "Select": Select };
   })();
   /* ---- src/drishti_inputs-element.js ---- */
   __m["src/drishti_inputs-element.js"] = (function () {

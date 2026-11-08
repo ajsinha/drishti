@@ -625,7 +625,7 @@
     const viewAs = q('[data-view-as]');
     const viewHref = () => '/bi/r/' + B.id2path(itemId) + (viewAs.value === 'published' ? '?as=published' : '');
     q('[data-view-link]').href = viewHref();
-    if (item.publishedVersion > 0 || item.shipped) { viewAs.querySelector('option[value=published]').disabled = false; }
+    if (item.publishedVersion > 0 || item.shipped) { viewAs.component.setOptions(viewAs.component.options.map((o) => Object.assign({}, o, { disabled: false }))); }      // a Select (the shell's choice)
     viewAs.hidden = false;
     viewAs.addEventListener('change', () => { q('[data-view-link]').href = viewHref(); });
     q('[data-save-copy]').hidden = !D.readOnly;
