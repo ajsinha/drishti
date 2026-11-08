@@ -1090,7 +1090,7 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
   the note, even when its figure is cached. Nothing is counted in shared state, so parallel queries get the same answer. A
   diversification (`diversification`, `diversificationByColumn`) is `null` when the total or a part with members has no figure, never a
   partial sum; a sort or a top N by a capped measure is refused in words. Every figure computed is the engine's own for the cell's scope,
-  as before (`CappedMeasureTest`, `VarMrCubeCapTest`; MR_CUBE_GUIDE section 2, PIVOT_GUIDE section 9).
+  as before (`CappedMeasureTest`, `VarMrCubeCapTest`; PIVOT_GUIDE sections 9 and 29.2).
 - **The old explain endpoints answer for one release**: `GET /api/v1/var/explain`, `/api/v1/var/explain/matrix` and
   `/api/v1/pivot/mr/explain` (and their `/api/v1/risk/...` paths) answered `404` since the one Explain replaced them; like every other
   moved path of this release they now answer with the 2.9.11.d body (the one Explain's `why.answer`, its `matrix`, and the MR cube's
