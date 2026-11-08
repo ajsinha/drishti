@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 26 · Exposure from the bank to a trade
+# Tutorial 3 · Exposure from the bank to a trade
 
 Counterparty exposure answers *if this counterparty defaulted at some date in the future, how much would we lose, on an average path
 and on a bad one?* In this tutorial you build the counterparty-risk pack's exposure run into a lake, open the bank's exposure profile,
@@ -31,7 +31,7 @@ About 35 minutes.
 
 ## Before you start
 
-- [Tutorial 1](01-first-15-minutes.md) done: a server and console you can build, start and stop.
+- [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done: a server and console you can build, start and stop.
 - The counterparty-risk and core packs loaded (they are in the quick-start packs).
 - For the command-line steps: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens), or `--user`
   with sign-in off. The outputs below were captured as the user `rita` with sign-in off.
@@ -63,7 +63,7 @@ python3 tools/drishti.py lake demo --as-of data \
 ```
 
 (`--exposure committed` loads only the eight netting sets committed in `data/testdata/`; their figures are the same.) Start the server
-and console (tutorial 1), then ask for the bank:
+and console (tutorial 1, Part A), then ask for the bank:
 
 ```text
 $ drishti.py exposure show BANK
@@ -529,7 +529,7 @@ and the 43 nodes of the limit letters, a hierarchy built from the exposure paths
 with the market-risk pack's `risk-hierarchy` in the lake too, every MGMT and LEGAL node is captured as well: 250 scopes on the test data,
 `LL:LL~LL-0011` among them). It is also appended to the tables `risk-results/exposure-official` and `risk-results/exposure-official-cpty`
 of the lake: Delta by default (`"published": "… (Delta version 0)"`), Iceberg with `drishti.ccr.exposure.official.format: iceberg`
-([EXPOSURE_GUIDE.md section 20](../guides/EXPOSURE_GUIDE.md); [tutorial 29](29-var-on-iceberg.md) for VaR's). A
+([EXPOSURE_GUIDE.md section 20](../guides/EXPOSURE_GUIDE.md); [tutorial 16, Part E](16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg) for VaR's). A
 second capture of the same run is `unchanged`; a new run of the date makes `resultVersion` 2. `--capture` is for administrators.
 
 The settings (`drishti-server/src/main/resources/application.yaml`):
@@ -558,10 +558,10 @@ published tables in the lake.
   API ([section 11](../guides/EXPOSURE_GUIDE.md#11-the-api)), the data contract (Part II) and how a date is held in memory and on disk
   ([section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file)).
 - Load your own simulator's run: the columns are in [EXPOSURE_GUIDE.md section 15](../guides/EXPOSURE_GUIDE.md#15-inputs-from-upstream-engines);
-  send the data-load signal ([tutorial 7](07-load-data-daily.md)) and the date is reloaded and captured officially.
-- Compare with VaR: [tutorial 25](25-var-from-the-bank-to-a-trade.md) walks the same way from the bank to a trade for market risk.
+  send the data-load signal ([tutorial 12](12-a-day-of-bank-data.md)) and the date is reloaded and captured officially.
+- Compare with VaR: [tutorial 2, Part A](02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) walks the same way from the bank to a trade for market risk.
 
-## When something goes wrong
+## If something goes wrong
 
 | You see | Do |
 |---|---|
