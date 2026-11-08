@@ -131,7 +131,7 @@ export function drawField(form, f) {
     part.input = ret.input || null;
     part.names = fs.name ? form.el('span', { cls: 'di-names', attrs: { hidden: true } }) : null;
     applyHook(part.input || control, fs.hook);
-    wrap.append(fs.noLabel ? '' : part.input ? label(part.input.id || id) : label(null), control, help, msg);
+    wrap.append(fs.noLabel ? '' : part.input ? label(part.input.id || id) : label(null), control, help || '', msg);
     if (part.names) { wrap.appendChild(part.names); }
     return wrap;
   }
@@ -142,7 +142,7 @@ export function drawField(form, f) {
       box.checked = !!v;
       box.addEventListener('change', () => { set(box.checked); touch(); });
       applyHook(box, fs.hook);
-      wrap.append(form.el('label', { cls: 'di-check-label', attrs: { for: id } }, [box, ' ' + f.label]), help, msg);
+      wrap.append(form.el('label', { cls: 'di-check-label', attrs: { for: id } }, [box, ' ' + f.label]), help || '', msg);
       return wrap;
     }
     case 'checkboxes': {
@@ -156,7 +156,7 @@ export function drawField(form, f) {
         control.appendChild(form.el('label', { cls: 'di-check-label', attrs: { for: id + '-' + i } }, [c, ' ' + o.label]));
       });
       applyHook(control, fs.hook);
-      wrap.append(label(null), control, help, msg);
+      wrap.append(label(null), control, help || '', msg);
       return wrap;
     }
     case 'select': case 'radio': {
@@ -171,7 +171,7 @@ export function drawField(form, f) {
           control.appendChild(form.el('label', { cls: 'di-radio', attrs: { for: id + '-' + i } }, [r, ' ' + o.label]));
         });
         applyHook(control, fs.hook);
-        wrap.append(label(null), control, help, msg);
+        wrap.append(label(null), control, help || '', msg);
         return wrap;
       }
       const sel = part.input = named(form.el('select', { cls: 'di-field', attrs: { id: id, 'aria-describedby': described, disabled: ro || null, 'aria-required': f.required ? 'true' : null } }));
@@ -238,7 +238,7 @@ export function drawField(form, f) {
   }
   const lab = part.input ? label(id) : label(null);
   if (!part.input && control.firstElementChild) { control.setAttribute('role', 'group'); control.setAttribute('aria-labelledby', id + '-label'); }
-  wrap.append(lab, control, help, msg);
+  wrap.append(lab, control, help || '', msg);
   if (part.names) { wrap.appendChild(part.names); }
   return wrap;
 }

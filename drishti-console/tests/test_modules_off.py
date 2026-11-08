@@ -31,6 +31,7 @@ BANKING_OFF = {**FULL, "modules": ["core", "economy", "capitalmarkets"]}
 ALL_ON = {**FULL, "modules": ["core", "banking", "economy", "capitalmarkets"]}
 CORE_ASSET = "/static/js/drishti_keys.js"
 BANKING_ASSETS = ["/static/js/drishti_var-explorer.js", "/static/css/drishti_var.css", "/static/js/drishti_exposure-explorer.js",
+                  "/static/js/drishti_exposure-predeal.js",
                   "/static/js/drishti_mr-lens.js", "/static/elements/drishti-risk/drishti_risk.js"]
 
 
@@ -72,12 +73,12 @@ def test_banking_off_is_gone_from_every_door(backend, monkeypatch):
     assert "/var" not in links and "/exposure" not in links and "data-engines-menu" not in t      # the Engines menu: banking's columns gone
     assert "/admin/scopes" not in t                                                                   # the Admin strip's Saved VaR baskets
     assert '<meta name="drishti-modules" content="economy">' in t                                     # the Elements loader refuses drishti-risk
-    for page in ("/var", "/var/reports", "/exposure", "/frtb", "/simm", "/smat", "/play", "/mcube", "/admin/scopes"):
+    for page in ("/var", "/var/reports", "/exposure", "/predeal", "/frtb", "/simm", "/smat", "/play", "/mcube", "/admin/scopes"):
         assert c.get(page, follow_redirects=False).status_code == 404, page
     for api in ("/api/var/scope?scope=BANK", "/api/exposure/scope?scope=BANK", "/api/frtb/sa", "/api/simm/versions", "/api/pivot/mr/versions",
                 "/api/home/trading/me", "/api/home/market/desk"):
         assert c.get(api).status_code == 404, api
-    for typed in ("VAR BANK", "SMAT DESK:RATES", "PLAY VAR BANK", "FRSA BANK", "SIMM", "MCUBE", "EXP CPTY CP-X"):
+    for typed in ("VAR BANK", "SMAT DESK:RATES", "PLAY VAR BANK", "FRSA BANK", "SIMM", "MCUBE", "EXP CPTY CP-X", "PREDEAL CP-X LIKE T1 5M"):
         said = _refusal(c.get("/go", params={"q": typed + " <GO>"}, follow_redirects=False))
         assert said.startswith(f"/t?error={typed.split()[0]}") and "is not available to you: ask your administrator" in said, typed
     ahead = c.get("/api/search", params={"q": "SMAT", "in": "command"}).json()

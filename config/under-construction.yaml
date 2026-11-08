@@ -77,14 +77,6 @@ items:
     treatment: under-construction
     contracts: ["docs/contracts/LIM.md#64-pre-deal-check"]
 
-  - id: pre-deal-screen
-    what: menu item
-    about: "Counterparties → Pre-deal check, the screen: built on the Drishti Elements libraries when they reach develop; the check itself answers today (PREDEAL typed says so; POST /api/v1/exposure/predeal; drishti.py exposure predeal)"
-    release: 2.9.11.g
-    treatment: under-construction
-    menus: [predeal]
-    contracts: ["docs/guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check"]
-
   - id: pnl-explain-waterfall
     what: panel
     about: "The P&L explain's waterfall: a generator's stored steps that disagree with the Attribution bars on new trades (F19); the computed explain (by trade events, then by risk factor) is PNL.md's"

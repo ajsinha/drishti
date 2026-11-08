@@ -45,6 +45,8 @@ import { drawField, defaultWidget, writeNames } from './drishti_form-fields.js';
  * @property {function(Object): Promise<Object<string, string>>} [check] the server's checks: problems by path
  * @property {FourEyes} [fourEyes]
  * @property {string} [submitLabel='Save']
+ * @property {string} [doneText='Saved'] what the form says once onSubmit answered ('': nothing, for a page that shows the answer itself,
+ *   such as a check)
  * @property {boolean} [readOnly=false]
  * @property {('stacked'|'columns')} [layout='stacked']
  * @property {string} [locale] how numbers are read and shown
@@ -331,7 +333,8 @@ export class Form extends InputBase {
       return Promise.resolve(this.o.onSubmit ? this.o.onSubmit(values) : null).then((result) => {
         this.busy(false);
         this.initial = JSON.parse(JSON.stringify(this.values));
-        this.say('Saved', 'ok');
+        const done = this.o.doneText === undefined ? 'Saved' : this.o.doneText;
+        if (done) { this.say(done, 'ok'); }
         this.emit('submitted', { values: values, result: result });
         return true;
       });
