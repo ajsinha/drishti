@@ -37,7 +37,8 @@
 .dn-lbl { color: var(--d-faint); font-size: 0.92em; }
 .dn-div { width: 1px; height: 20px; background: var(--d-border); }
 .dn-sp { flex: 1; }
-.dn-input, .dn-select { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: 3px 6px; min-width: 0; }
+.dn-select { min-width: 6em; }
+.dn-input { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: 3px 6px; min-width: 0; }
 .dn-find { width: 160px; }
 .dn-end { width: 110px; }
 .dn-btn { background: transparent; border: 1px solid var(--d-border); border-radius: 7px; padding: 3px 9px; cursor: pointer; color: var(--d-muted); white-space: nowrap; }

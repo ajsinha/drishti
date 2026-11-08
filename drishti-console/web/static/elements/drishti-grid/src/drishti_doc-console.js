@@ -28,6 +28,7 @@
    A table with data-plain is left as it is (a form laid out as a table). */
 import { textSortKey, compareTextKeys } from '../../drishti-core/src/drishti_index.js';
 import { rowSelection } from './drishti_doc-select.js';
+import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 
 var SIZES = [25, 50, 100, 250];
 var MIN_FIT = 5;
@@ -183,10 +184,8 @@ export function consoleTables(root, options) {
     quick.type = 'search'; quick.placeholder = 'Filter rows'; quick.value = st.q;
     quick.setAttribute('aria-label', 'Filter the rows of this table');
     var funnel = button('⧩', 'Type a filter under each column heading (text, or >1m)', function () { columnFilters(!st.open); funnel.classList.toggle('on', st.open); });
-    var sizeSel = el('select', 'tbl-pg-size');
-    sizeSel.setAttribute('aria-label', 'Rows per page');
-    SIZES.forEach(function (n) { var o = el('option', null, n + ' rows'); o.value = n; sizeSel.appendChild(o); });
-    sizeSel.value = size();
+    var sizeOptions = SIZES.map(function (n) { return { value: String(n), label: n + ' rows' }; });   // drishti-inputs' Select
+    var sizeSel = selectElement(document, { options: sizeOptions, value: String(size()), label: 'Rows per page', search: false }, { class: 'tbl-pg-size' });
 
     // A zoomed panel fits its table to the height (fitOn): the page size is then a temporary one, `fitN` (measured) or the
     // reader's own pick while zoomed (`picked`); neither is remembered, and restoring puts the saved size back.
@@ -275,7 +274,7 @@ export function consoleTables(root, options) {
         return;
       }
       try { localStorage.setItem(KEY, sizeSel.value); } catch (e) { /* private window: this page only */ }
-      root.querySelectorAll('.tbl-pg-size').forEach(function (s) { s.value = sizeSel.value; });
+      root.querySelectorAll('.tbl-pg-size').forEach(function (s) { if (s !== sizeSel && s.component) { s.component.setValue(sizeSel.value); } });
       root.dispatchEvent(new CustomEvent('drishti:table-size'));
     });
     root.addEventListener('drishti:table-size', onSize);
@@ -291,14 +290,11 @@ export function consoleTables(root, options) {
       anchorPage = st.page;
     }
     function syncSel() {
-      var o = sizeSel.querySelector('option[value=fit]');
+      var pick = sizeSel.component;
       if (fitOn && fitN) {
-        if (!o) { o = el('option'); o.value = 'fit'; sizeSel.insertBefore(o, sizeSel.firstChild); }
-        o.textContent = 'Fit (' + fitN + ')';
-        sizeSel.value = picked ? picked : 'fit';
+        pick.setOptions([{ value: 'fit', label: 'Fit (' + fitN + ')' }].concat(sizeOptions), String(picked ? picked : 'fit'));
       } else {
-        if (o) { o.remove(); }
-        sizeSel.value = size();
+        pick.setOptions(sizeOptions, String(size()));
       }
     }
     // The height the table may use: the panel body minus everything that is not a row (heading, footer, padding), over a row's height.

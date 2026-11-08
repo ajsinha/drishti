@@ -27,6 +27,7 @@ import { TreeGrid } from './drishti_tree-grid.js';
 import { sideContent, statusParts } from './drishti_tree-side.js';
 import { exportTree, keyMove } from './drishti_tree-io.js';
 import { loadOpenChildren } from './drishti_tree-hooks.js';
+import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 
 /** The modes of one tree: grid (g6 B, the default), org (A), sunburst and icicle (C). */
 export const TREE_MODES = Object.freeze(['grid', 'org', 'sunburst', 'icicle']);
@@ -142,8 +143,8 @@ export class Tree {
     const modes = (o.modes || TREE_MODES).filter((m) => TREE_MODES.indexOf(m) >= 0);
     this.modeSeg = modes.length > 1 ? h(doc, 'span', { cls: 'dt-seg', attrs: { role: 'group', 'aria-label': 'Mode' } }, modes.map((m) => h(doc, 'button', { text: MODE_NAMES[m], attrs: { type: 'button', 'aria-pressed': 'false' }, data: { mode: m } }))) : null;
     const add = this.model.measures.filter((m) => m.additive !== false);
-    this.sizeSel = h(doc, 'select', { cls: 'dt-input', attrs: { 'aria-label': 'Size by (an additive measure)' }, data: { ctl: 'size' } }, add.map((m) => h(doc, 'option', { text: m.label, attrs: { value: m.field } })));
-    if (this.sizeBy) { this.sizeSel.value = this.sizeBy; }
+    this.sizeSel = selectElement(doc, { label: 'Size by (an additive measure)', search: false, options: add.map((m) => ({ value: m.field, label: m.label })),   // drishti-inputs' Select
+      value: this.sizeBy && add.some((m) => m.field === this.sizeBy) ? this.sizeBy : undefined }, { class: 'dt-pick', 'data-ctl': 'size' });
     this.sizeBox = h(doc, 'span', { cls: 'dt-sizebox' }, [h(doc, 'span', { cls: 'dt-lbl', text: 'size' }), this.sizeSel]);
     this.editBtn = o.editable ? b('edit', '✎ Edit (propose)', 'Re-parent nodes: the moves become one proposal for review') : null;
     this.altBtn = b('alt', '▦', 'The figures as a table');

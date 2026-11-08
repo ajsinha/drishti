@@ -36,21 +36,6 @@ export const MANIFEST = Object.freeze({
       "scripts": [],
       "module": "core"
     },
-    "drishti-grid": {
-      "version": "0.4.0",
-      "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions)",
-      "bundle": "drishti-grid/drishti_grid.js",
-      "entry": "drishti-grid/src/drishti_index.js",
-      "global": "grid",
-      "requires": [
-        "drishti-core"
-      ],
-      "css": [
-        "elements/drishti-grid/drishti_grid.css"
-      ],
-      "scripts": [],
-      "module": "core"
-    },
     "drishti-inputs": {
       "version": "0.3.0",
       "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place",
@@ -66,6 +51,22 @@ export const MANIFEST = Object.freeze({
       "scripts": [],
       "module": "core"
     },
+    "drishti-grid": {
+      "version": "0.4.0",
+      "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions)",
+      "bundle": "drishti-grid/drishti_grid.js",
+      "entry": "drishti-grid/src/drishti_index.js",
+      "global": "grid",
+      "requires": [
+        "drishti-core",
+        "drishti-inputs"
+      ],
+      "css": [
+        "elements/drishti-grid/drishti_grid.css"
+      ],
+      "scripts": [],
+      "module": "core"
+    },
     "drishti-tree": {
       "version": "0.2.0",
       "title": "The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA",
@@ -74,6 +75,7 @@ export const MANIFEST = Object.freeze({
       "global": "tree",
       "requires": [
         "drishti-core",
+        "drishti-inputs",
         "drishti-grid"
       ],
       "css": [
@@ -120,7 +122,8 @@ export const MANIFEST = Object.freeze({
       "entry": "drishti-chart/src/drishti_index.js",
       "global": "chart",
       "requires": [
-        "drishti-core"
+        "drishti-core",
+        "drishti-inputs"
       ],
       "css": [
         "elements/drishti-chart/drishti_chart.css"
@@ -138,6 +141,7 @@ export const MANIFEST = Object.freeze({
       "global": "graph",
       "requires": [
         "drishti-core",
+        "drishti-inputs",
         "drishti-grid"
       ],
       "css": [

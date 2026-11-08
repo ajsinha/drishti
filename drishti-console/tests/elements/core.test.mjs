@@ -168,7 +168,7 @@ test('roving tabindex arithmetic: arrows by orientation, wrap, Home and End, gri
 
 test('the loader: versions and requirements from the manifest; under Node it says so', async () => {
   assert.equal(C.libraryVersion('drishti-core'), C.manifest().libraries['drishti-core'].version);
-  assert.deepEqual(C.requirements('drishti-grid'), ['drishti-core', 'drishti-grid']);
+  assert.deepEqual(C.requirements('drishti-grid'), ['drishti-core', 'drishti-inputs', 'drishti-grid']);
   assert.throws(() => C.requirements('drishti-nothing'), /no library drishti-nothing/);
   await assert.rejects(C.load('drishti-grid'), /no page to load it into|is not loaded/);
 });

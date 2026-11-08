@@ -1649,7 +1649,7 @@ A table to export.
 
 ## drishti-grid
 
-Version 0.4.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
+Version 0.4.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core, drishti-inputs.
 
 ### drishti_columns.js
 
@@ -7496,6 +7496,28 @@ Puts the keyboard focus on the control.
 
 Returns `void`.
 
+#### `selectElement(doc, options, attrs)`
+
+A Select in its own &lt;drishti-select&gt; element, for a screen or a library that draws one in code: the element carries the attributes (an id, a hook, a class), its value and component are as on any page (el.value, el.component, el.disabled), and a pick fires input and change on it as a native select's did. options as the Select's; options.options may be values, [value, label] pairs or objects.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `options` | `SelectOptions` |  |
+| `[attrs]` | `Object&lt;string, *&gt;` | attributes of the element (null, undefined and false are left out; true is the empty value) |
+
+Returns `HTMLElement`: the &lt;drishti-select&gt;.
+
+#### `selectProperties(box)`
+
+Gives a &lt;drishti-select&gt; element the properties a native select had, read through its component: value and disabled.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `box` | `HTMLElement` |  |
+
+Returns `void`.
+
 ### drishti_schema.js
 
 #### `words(key)`
@@ -8800,6 +8822,7 @@ A field of a form schema.
 | `[name]` | `string` | a hidden input of this name carries the value in a plain form |
 | `[disabled=false]` | `boolean` |  |
 | `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
+| `[native=false]` | `boolean` | a change also fires input and change on the host, as a native select's did (a page's own listeners and delegated handlers keep working); &lt;drishti-select&gt; in a page's markup and selectElement turn it on |
 
 #### `TimePickerOptions` : `Object`
 
@@ -8867,7 +8890,7 @@ A visible row of the tree.
 
 ## drishti-tree
 
-Version 0.2.0. Bundle `static/elements/drishti-tree/drishti_tree.js`, global `Drishti.elements.tree`; requires drishti-core, drishti-grid.
+Version 0.2.0. Bundle `static/elements/drishti-tree/drishti_tree.js`, global `Drishti.elements.tree`; requires drishti-core, drishti-inputs, drishti-grid.
 
 ### drishti_tree-model.js
 
@@ -13021,7 +13044,7 @@ A data source.
 
 ## drishti-chart
 
-Version 0.2.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core.
+Version 0.2.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core, drishti-inputs.
 
 ### drishti_chart-spec.js
 
@@ -14542,7 +14565,7 @@ The options of a chart (the spec says what to draw; these say how it lives in it
 
 ## drishti-graph
 
-Version 0.1.0. Bundle `static/elements/drishti-graph/drishti_graph.js`, global `Drishti.elements.graph`; requires drishti-core, drishti-grid.
+Version 0.1.0. Bundle `static/elements/drishti-graph/drishti_graph.js`, global `Drishti.elements.graph`; requires drishti-core, drishti-inputs, drishti-grid.
 
 ### drishti_graph-model.js
 

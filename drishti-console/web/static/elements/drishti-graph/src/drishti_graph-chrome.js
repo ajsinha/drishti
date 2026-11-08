@@ -21,6 +21,7 @@
    strict CSP holds); the drawing of the parts that change (rail, legend, inspector, status, answers) is here too. */
 import { h, formatNumber } from '../../drishti-core/src/drishti_index.js';
 import { FUNCTION_KEYS } from './drishti_graph-terminal.js';
+import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 
 /** The modes of the graph: inspector (g5 A, the default), table (B) and terminal (C). */
 export const GRAPH_MODES = Object.freeze(['inspector', 'table', 'terminal']);
@@ -33,9 +34,10 @@ function seg(doc, G, cls) {
 }
 
 function picker(doc, G, what, label, values, current, set) {
-  return h(doc, 'label', { cls: 'dn-pick' }, [h(doc, 'span', { cls: 'dn-lbl', text: label }),
-    h(doc, 'select', { cls: 'dn-select', attrs: { 'data-ctl': what, 'aria-label': label }, on: { change: (e) => set(e.target.value === '' ? null : e.target.value) } },
-      values.map(([v, t]) => { const o = h(doc, 'option', { text: t, attrs: { value: v } }); if (String(current === null || current === undefined ? '' : current) === v) { o.selected = true; } return o; }))]);
+  const now = String(current === null || current === undefined ? '' : current);         // drishti-inputs' Select
+  const sel = selectElement(doc, { options: values, value: values.some(([v]) => v === now) ? now : undefined, label: label, search: 'auto' }, { class: 'dn-select', 'data-ctl': what });
+  sel.component.on('change', (d) => set(d.value === '' || d.value === null ? null : d.value));
+  return h(doc, 'span', { cls: 'dn-pick' }, [h(doc, 'span', { cls: 'dn-lbl', text: label }), sel]);
 }
 
 /** The group, size and colour pickers of the current fields. */

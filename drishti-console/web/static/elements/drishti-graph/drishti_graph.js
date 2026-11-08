@@ -21,7 +21,7 @@
   var D = root.Drishti = root.Drishti || {}, E = D.elements = D.elements || {}, libs = E.libs = E.libs || {};
   var cs = typeof document !== 'undefined' && document.currentScript;
   if (!E.base && cs && cs.src) { E.base = cs.src.replace(/[^/]*\/[^/]*(\?.*)?$/, ''); }   /* .../elements/ */
-  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-grid": "../drishti-grid/drishti_grid.js"};
+  var needs = {"drishti-core": "../drishti-core/drishti_core.js", "drishti-inputs": "../drishti-inputs/drishti_inputs.js", "drishti-grid": "../drishti-grid/drishti_grid.js"};
   var lib = function (name) {
     if (libs[name]) { return libs[name]; }
     if (typeof module === 'object' && module && typeof require === 'function' && needs[name]) { return require(needs[name]); }
@@ -929,6 +929,7 @@
   __m["src/drishti_graph-chrome.js"] = (function () {
     var h = __lib("drishti-core").h, formatNumber = __lib("drishti-core").formatNumber;
     var FUNCTION_KEYS = __m["src/drishti_graph-terminal.js"].FUNCTION_KEYS;
+    var selectElement = __lib("drishti-inputs").selectElement;
     const GRAPH_MODES = Object.freeze(['inspector', 'table', 'terminal']);
     const LAYOUT_NAMES = { force: 'Force', layered: 'Layered', radial: 'Radial', circular: 'Circular', grouped: 'Grouped', preset: 'As given' };
     function seg(doc, G, cls) {
@@ -936,9 +937,10 @@
         h(doc, 'button', { cls: 'dn-seg-b', text: LAYOUT_NAMES[l] || l, attrs: { type: 'button', 'data-layout': l, 'aria-pressed': String(G.state().layout === l) }, on: { click: () => G.setLayout(l) } })));
     }
     function picker(doc, G, what, label, values, current, set) {
-      return h(doc, 'label', { cls: 'dn-pick' }, [h(doc, 'span', { cls: 'dn-lbl', text: label }),
-        h(doc, 'select', { cls: 'dn-select', attrs: { 'data-ctl': what, 'aria-label': label }, on: { change: (e) => set(e.target.value === '' ? null : e.target.value) } },
-          values.map(([v, t]) => { const o = h(doc, 'option', { text: t, attrs: { value: v } }); if (String(current === null || current === undefined ? '' : current) === v) { o.selected = true; } return o; }))]);
+      const now = String(current === null || current === undefined ? '' : current);         // drishti-inputs' Select
+      const sel = selectElement(doc, { options: values, value: values.some(([v]) => v === now) ? now : undefined, label: label, search: 'auto' }, { class: 'dn-select', 'data-ctl': what });
+      sel.component.on('change', (d) => set(d.value === '' || d.value === null ? null : d.value));
+      return h(doc, 'span', { cls: 'dn-pick' }, [h(doc, 'span', { cls: 'dn-lbl', text: label }), sel]);
     }
     function pickers(doc, G) {
       const f = G.fields(), st = G.state(), ml = (m) => G.measureLabel(m);

@@ -39,15 +39,6 @@ SCREEN = "a screen not yet moved onto Select (the native-select sweep, 2.9.11.e)
 
 # file (relative to drishti-console) -> (how many, why)
 ALLOWED: dict = {
-    "web/static/elements/drishti-chart/src/drishti_chart-studio.js": (1, LIB),
-    "web/static/elements/drishti-chart/src/drishti_map-view.js": (1, LIB),
-    "web/static/elements/drishti-graph/src/drishti_graph-chrome.js": (1, LIB),
-    "web/static/elements/drishti-grid/src/drishti_doc-console.js": (1, LIB),
-    "web/static/elements/drishti-grid/src/drishti_grid-shell.js": (1, LIB),
-    "web/static/elements/drishti-tree/src/drishti_tree-side.js": (1, LIB),
-    "web/static/elements/drishti-tree/src/drishti_tree-view.js": (1, LIB),
-    "web/static/elements/drishti-renderer/drishti_harness.html": (3, "the renderer's test harness page (cases, behaviours, theme), not a product screen; loads no drishti-inputs"),
-    "web/static/gallery/drishti_gallery.js": (1, "the gallery's option panel for a demo's choices: next, with the gallery's own controls"),
     "plugins/banking/templates/home/trading_landing.html": (4, SCREEN),
     "plugins/banking/templates/terminal/_mr_panes.html": (1, SCREEN),
     "plugins/banking/templates/terminal/smat.html": (2, SCREEN),
