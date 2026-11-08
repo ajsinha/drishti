@@ -1,0 +1,4 @@
+{"commitInfo":{"timestamp":1794143096176,"operation":"DELETE"}}
+{"protocol":{"minReaderVersion":3,"minWriterVersion":7,"readerFeatures":["deletionVectors"],"writerFeatures":["deletionVectors"]}}
+{"remove":{"path":"business_date=2026-09-30/part-00000-16e397ee-2969-458e-9fa5-cbd2a9b1a014-c000.snappy.parquet","deletionTimestamp":1794143096176,"dataChange":true,"extendedFileMetadata":true,"partitionValues":{"business_date":"2026-09-30"},"size":6216,"deletionVector":{"storageType":"u","pathOrInlineDv":"Smh2RyX7l1KAJ>7q5![6","offset":1,"sizeInBytes":34,"cardinality":1}}}
+{"add":{"path":"business_date=2026-09-30/part-00000-16e397ee-2969-458e-9fa5-cbd2a9b1a014-c000.snappy.parquet","partitionValues":{"business_date":"2026-09-30"},"size":6216,"modificationTime":1794143096176,"dataChange":true,"deletionVector":{"storageType":"u","pathOrInlineDv":"s*19=6#rXbX0pu*eI5-E","offset":1,"sizeInBytes":36,"cardinality":2}}}

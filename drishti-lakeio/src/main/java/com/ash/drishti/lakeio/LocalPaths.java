@@ -124,11 +124,14 @@ public final class LocalPaths {
     }
 
     /**
-     * Decodes a percent-encoded {@code file:} URI, as {@code java.nio.file.Path#toUri()} writes it, to an unencoded one
-     * ({@code file:///C:/My%20Lake/} to {@code file:/C:/My Lake/}). Anything else is returned as it is.
+     * Decodes a percent-encoded {@code file://} URI, as {@code java.nio.file.Path#toUri()} writes it, to an unencoded one
+     * ({@code file:///C:/My%20Lake/} to {@code file:/C:/My Lake/}). Anything else is returned as it is, above all Delta Kernel's
+     * paths ({@code file:/lake/t/PRODUCT_GROUP=100%25/part.parquet}): Kernel hands every path unencoded, in the {@code file:/}
+     * form, and a Hive-escaped partition folder holds a literal {@code %XX} that is never decoded again (the Delta protocol: only
+     * {@code add.path} in the log is a URI, and Kernel decodes it once).
      */
     public static String decodeUri(String path) {
-        if (!path.regionMatches(true, 0, "file:", 0, 5) || path.indexOf('%') < 0) {
+        if (!path.regionMatches(true, 0, "file://", 0, 7) || path.indexOf('%') < 0) {
             return path;
         }
         try {

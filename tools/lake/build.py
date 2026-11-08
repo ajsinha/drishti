@@ -542,7 +542,23 @@ def data_dir() -> pathlib.Path:
     return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (HERE.parents[1] / "data"))
 
 
+PARTITION_NAME_REFUSED = set(" ,;{}()\n\t=/\\%:#?*\"'[]^") | {chr(c) for c in range(32)} | {"\x7f"}
+
+
+def check_partition_names(names) -> None:
+    """A partition column's name is a folder name as it is (Delta Kernel and Spark escape the value, never the name): one with a
+    character Spark refuses in a column name without column mapping (`` ,;{}()\\n\\t=``) or one a folder name would change
+    (``/ \\ % : # ? * " ' [ ] ^``, control characters) is refused, as Databricks refuses it."""
+    for n in names:
+        col = stage.column_name(n)
+        bad = sorted({c for c in col if c in PARTITION_NAME_REFUSED})
+        if not col or bad:
+            raise BuildError(f"partition column {n!r} cannot name a Delta partition folder (characters {''.join(bad)!r}); "
+                             "partition by a field with a plain name (letters, digits, _ and -)")
+
+
 def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str | None = None) -> tuple[int, dict]:
+    check_partition_names(p["partition_by"])
     staging = None
     if remote_root:
         import tempfile

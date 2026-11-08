@@ -1106,6 +1106,33 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
 
 ### Fixes (the train's bulk drill)
 
+- **Delta lakes follow the Delta protocol's path rules exactly, tested against delta-rs both ways**
+  ([DATA_LAKE_GUIDE.md section 14](docs/guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)). The native reader decoded Delta Kernel's
+  plain file paths a second time, so a table with a Hive-escaped partition folder (Spark's and Databricks' `PRODUCT_GROUP=100%25`,
+  `a%3Ab`) or one delta-rs wrote (`Money%20market`) could not be read; only a `java.nio` `file://` URI is decoded now
+  (`LocalPaths.decodeUri`). The Java lake writer and the parallel loader take Kernel's target folder, which Kernel hands as a URI,
+  decoded once (`LakeWriter.targetDirectory`): folders are Spark's Hive-escaped names and `add.path` is encoded exactly once (a value
+  `100%` failed the load; the loader wrote `Money%2520market` in the log for the folder `Money market`). An empty partition value is
+  null in `__HIVE_DEFAULT_PARTITION__`, as Spark writes it (Java writer, loader, Python writer). `lake build` refuses a partition column
+  name a folder would change (`PRODUCT GROUP`, `a=b`, `a/b`). `tools/lake/test_delta_interop.py`: delta-rs writes and Drishti's Java
+  reader reads; Drishti's three writers write and delta-rs, `pyarrow.dataset` and the Java reader read; 47 partition values (space, `%`,
+  a literal `%2F`, `:`, `/`, `..`, `\`, control characters, quotes, Unicode, emoji, 200 characters, the sentinel text, empty, null);
+  `LakeWriterTest`, `LocalPathsTest`. Upgrade: reload tables the parallel loader wrote since 2026-11-07 21:27 with such values
+  (RELEASE_NOTES, upgrade step 13).
+- **Column-mapped Delta tables (mode `name` or `id`, as Databricks writes them) are read correctly by every server path**: the fast
+  paths that read Parquet columns by name (the id map and type-ahead, columns with partition values, vectors with partition texts, one
+  entity's vector, the one-document read's id filter) read each column by its physical name (`col-<uuid>`), and the business date, a
+  partition column, the load id's and a key range's statistics are looked up by it (`DeltaTable.Layout.phys`); before, such a table's
+  columns read as empty. `DeltaColumnMappingTest`: column-mapped copies (written by delta-rs) of the layout, partitioned and vector
+  fixtures answer exactly what the plain tables answer, both engines.
+- **Python reads deletion vectors, column mapping and v2 checkpoints**: `tools/lake/deltaread.py` reads a table with delta-rs when its
+  pyarrow reader reads it completely, else with Delta Kernel through the server's exec jar
+  (`com.ash.drishti.deltalake.read.DeltaRowsCli`). delta-rs 1.6.6, the latest release, refuses deletion vectors and v2 checkpoints and
+  reads a column-mapped table of reader version 2 as all nulls. `lake maintain`'s relayout and the Delta-to-Iceberg copy read through
+  it. Fixtures `tools/lake/testdata/delta-features` (real deletion-vector files written by Kernel, a column-mapped table, a table only a
+  checkpoint describes); `test_delta_interop.py`: Python returns exactly what the Java reader returns
+  ([DATA_LAKE_GUIDE.md section 14.3](docs/guides/DATA_LAKE_GUIDE.md#143-table-features)).
+
 - **The MR cube's capped measures are deterministic**: stressed VaR (`drishti.cube.mr.stressed-max-cells`, 100) and SBM
   (`sbm-max-cells`, 60) were counted per evaluation, and cells already cached by an earlier view were not counted, so which cells got a
   figure depended on what was asked before and in what order (desks × currency alone: stressed VaR on 100 of 186 cells; after the same

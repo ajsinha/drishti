@@ -52,8 +52,9 @@ final class LocalWriteFileIO implements FileIO {
         this.reads = new NativeFileIO(S3Settings.from(Map.of()), conf);
     }
 
-    /** The operating-system path of a path or {@code file:} URI, decoded as the reads decode it ({@code LocalStorage#path}): Kernel
-     *  hands a partition folder percent-encoded ({@code PRODUCT_GROUP=Fixed%20income}), so a file is written where it is then read. */
+    /** The operating-system path of a path or {@code file:} URI, read as the reads read it ({@code LocalStorage#path}): Kernel's
+     *  paths are unencoded, so a Hive-escaped partition folder ({@code PRODUCT_GROUP=100%25}, Spark's name) is written literally;
+     *  only a {@code file://} URI (java.nio's) is decoded ({@link LocalPaths#decodeUri}). */
     static Path local(String path) {
         if (!LocalPaths.isLocal(path)) {
             throw new UnsupportedOperationException("the lake writer writes local tables only, not " + path
