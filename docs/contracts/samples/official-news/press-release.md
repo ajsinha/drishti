@@ -106,5 +106,5 @@ None: all 18 rows were read, and every field any of them has is in the record ab
 
 - Data contract: [PREL in the official-news pack's contracts](../../packs/official-news.md#prel-press-release-press-release) (`config/packs/official-news/contracts/press-release.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../../guides/PUBLIC_SECTOR_GUIDE.md)
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

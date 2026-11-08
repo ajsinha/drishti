@@ -16,7 +16,7 @@
 data sets (ZIP files of tab-delimited tables), the SEC's ticker files and GLEIF's level-2 relationship records. Each reader streams
 its tables once and keeps only what the build needs, so the ~1.6 GB of N-PORT tables never sit in memory.
 
-    the cache (tools/publicdata/funds.py fills it; <data>/publicdata/cache/funds by default)
+    the cache (drishti.py feed run funds fills it; <data>/datafeeds/sources/cache/funds by default)
       sec/company_tickers_mf.json          fund and ETF share classes: CIK, series id, class id, ticker
       sec/company_tickers_exchange.json    listed companies and unit investment trusts (SPY, DIA, MDY have no series id)
       nport/<yyyy>q<n>_nport.zip           Form N-PORT data sets: the newest quarter is read

@@ -290,7 +290,7 @@ def check(files: list[Path]) -> list[str]:
 
 def refresh(a, log=print) -> int:
     selected = B.pick(SOURCES, a.sources)
-    out = Path(a.out).expanduser().resolve() if a.out else B.data_dir() / "feeds" / "sources" / PACK
+    out = Path(a.out).expanduser().resolve() if a.out else B.data_dir() / "datafeeds" / "sources" / PACK
     if B.is_committed(out):
         raise B.Refusal(f"refused: {out} is inside the repository. The market-data pack's committed samples are synthetic and generated; "
                         "official market data goes to the data folder (leave out --out) or a folder outside the repository.")
@@ -324,8 +324,6 @@ def refresh(a, log=print) -> int:
     man.finish(out, files, sys.argv[1:], not problems and not run.http.failed)
     for f in files:
         log(f"wrote {f}")
-    if files:
-        log("load: python3 tools/drishti.py feed run market-data (pulls and loads into capitalmarket; docs/guides/FEEDS_GUIDE.md)")
     return 1 if not files else 2 if (problems or run.http.failed or len(done) < len(selected)) else 0
 
 
@@ -333,8 +331,8 @@ def main(argv: list[str] | None = None) -> int:
     a = B.parser("official_market_data.py", __doc__, SOURCES).parse_args(argv)
     try:
         if a.command == "status":
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
-                            "<data>/feeds/sources/market-data (fx-spot.<date>.jsonl, ir-curve.<date>.jsonl, rate-fixing.<date>.jsonl)")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "datafeeds" / "sources" / "cache" / PACK,
+                            "<data>/datafeeds/sources/market-data (fx-spot.<date>.jsonl, ir-curve.<date>.jsonl, rate-fixing.<date>.jsonl)")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)

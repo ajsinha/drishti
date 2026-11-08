@@ -144,5 +144,5 @@ Fields no record above has, found by reading all 9 rows, with how many rows fill
 
 - Data contract: [PRESS in the official-news pack's contracts](../../packs/official-news.md#press-official-press-releases-release-source) (`config/packs/official-news/contracts/release-source.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../../guides/PUBLIC_SECTOR_GUIDE.md)
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

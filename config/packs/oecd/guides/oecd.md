@@ -149,7 +149,7 @@ Nested `PROVENANCE`:
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
@@ -163,18 +163,18 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | OECD Data Explorer SDMX API | https://sdmx.oecd.org/public/rest | OECD terms: reuse with the source acknowledged (CC BY 4.0) | no | `python3 tools/drishti.py feed run oecd` |
 
 ```bash
-python3 tools/drishti.py feed run oecd --dry-run     # what the feed would pull; writes nothing
-python3 tools/drishti.py feed run oecd               # pull what is new into <data>/feeds/oecd/<date>/ and load it (the parallel loader)
+python3 tools/drishti.py feed status oecd            # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run oecd --dry-run     # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run oecd               # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
 python3 tools/drishti.py feed run oecd --load inbox  # the same through the data inbox: the server loads it
-python3 tools/drishti.py feed status oecd            # its last runs, rows and errors (the ledger)
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run oecd` on Linux and macOS, `.\tools\windows\feed.ps1 run oecd` on Windows. The feed file is `config/feeds/oecd.yaml` (its sources and their licences in `options.sources`, the schedule, the selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) and the [External data feeds guide](../../../../docs/guides/FEEDS_GUIDE.md) explain it.
+The same through the wrappers: `tools/feeds/feed.sh run oecd` on Linux and macOS, `.\tools\windows\feed.ps1 run oecd` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
 
 ### Into the lake, checking, offline
 
 - **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../docs/guides/TOOLS.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
 
 <!-- /data-sections -->

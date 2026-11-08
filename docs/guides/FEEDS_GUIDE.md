@@ -53,14 +53,14 @@ which runs the parallel loader in the server's jar, or drops files into the data
 | each source's pull | `tools/feeds/sources/<module>.py` | one module per source (a feed file's `class:`) |
 | the wrappers | `tools/feeds/feed.sh`, `tools/windows/feed.ps1` | what cron, systemd and Task Scheduler run |
 
-The public-data refresh scripts that were in `tools/publicdata/` are folded into it: each is now a feed's source module in
-`tools/feeds/sources/`, and its old "refresh the committed demo snapshot" is `feed run <feed> --snapshot` (section 3.4). There is one
-way to pull external data.
+Every external source of the packs is pulled this way: each pack's source module in `tools/feeds/sources/` (gleif, us-equities, funds,
+world-economy, news-and-markets, market-data) is a feed's pull, and the same module refreshes its pack's committed demo snapshot with
+`feed run <feed> --snapshot` (section 3.4). There is one way to pull external data.
 
 **Where things are written**, all under the data folder (`DRISHTI_DATA_DIR`, else `./data`; never committed):
 
 ```text
-data/feeds/
+data/datafeeds/
 ├── ledger.jsonl                                    one line per run, every feed (section 6)
 └── gleif/
     ├── state.json                                  what the feed has pulled (section 3.2)
@@ -78,6 +78,14 @@ data/feeds/
 | Feed | Source | Datasets (pack: kinds) | Lake | Use | Daily at |
 |---|---|---|---|---|---|
 | `gleif` | GLEIF golden copy, LEI API, mapping files | gleif: lei-entity, lei-relationship, lei-mapping | `referencelake` | CC0, redistributable | 05:30 |
+| `funds` | SEC Form N-PORT, N-CEN, risk/return summaries; Nasdaq Trader; GLEIF | funds: fund, fund-holder, index-funds | `capitalmarket` | public domain | 06:15 |
+| `world-economy` | World Bank WDI and WGI, IMF WEO, UNDP HDI, CIA Factbook | world-economy: economy, macro-indicator, economic-forecast, labour-market, fiscal-position, region-economy, jurisdiction, party, office-holder, election, region, social-indicator | `worldlake` | **internal only** (the IMF forecasts) | 06:45 |
+| `us-equities` | SEC EDGAR; index members from SPY, DIA, QQQ and IWM N-PORT holdings (S&P 500, Dow 30, Nasdaq-100, Russell 2000); Nasdaq Trader; GLEIF; Wikidata | us-equities: us-company, index-membership, filing-feed, filing, financial-fact | `capitalmarket` | public domain, CC0 | 07:00 |
+| `news-and-markets` | Yahoo Finance quotes, Google News headlines (through Drishti's own live connectors) | news-and-markets: quote, news | `newslake` | **internal only** | 07:30 |
+| `market-data` | ECB euro reference rates, US Treasury par curve, SOFR, euro short-term rate | market-data: fx-spot, ir-curve, rate-fixing (each under its own date) | `capitalmarket` | attribution | weekdays 18:30 |
+| `yahoo-prices` | Yahoo Finance daily prices of the us-equities companies (through a running server's connector) | us-equities: price-history | `capitalmarket` | **internal only**, off as shipped | weekdays 22:30 |
+
+The funds feed runs before us-equities on purpose: its N-PORT download cache gives us-equities its index members.
 
 `drishti.py feed list` prints the same from the feed files. Each feed's source, data contract (with JSON examples) and licence are its
 pack's README and the [External data](EXTERNAL_DATA.md) page.
@@ -120,15 +128,15 @@ The last line is the run's **one log line**: what a scheduler's mail or the jour
 | 0 | ok: pulled, written, loaded | nothing |
 | 1 | failed: the pull (after its retries), the feed's check or the load; the error in words | alert (Drishti already did, section 6) |
 | 2 | refused: a bad feed file, a key's variable not set, an unknown feed, internal-only data into a committed folder | fix the setting |
-| 3 | another run of the feed holds its lock (`data/feeds/<feed>/run.lock`) | nothing; the next day's run |
+| 3 | another run of the feed holds its lock (`data/datafeeds/<feed>/run.lock`) | nothing; the next day's run |
 | 4 | partial: some feeds of `--all` failed, or the load rejected rows | look at `feed status` |
 
 ### 3.2 Incremental pulls, resume and re-runs
 
-- **State.** `data/feeds/<feed>/state.json` records, per dataset, the last business date pulled. The next run asks the source only for
+- **State.** `data/datafeeds/<feed>/state.json` records, per dataset, the last business date pulled. The next run asks the source only for
   what is newer (`run.window()`, section 8). The state is saved **only when the whole run succeeded**, so a failed run is pulled again
   from the same point. The first run of a feed pulls `history.first-run-days` (30) days; `--since` pulls any history.
-- **Resume.** Every download goes through the cache `data/feeds/<feed>/cache/` (`cache-hours`, 12 by default); a run that broke half way
+- **Resume.** Every download goes through the cache `data/datafeeds/<feed>/cache/` (`cache-hours`, 12 by default); a run that broke half way
   reuses what it fetched and asks only for the rest.
 - **Re-runs are idempotent.** A run writes each date's files to a work folder and then replaces the date's folder whole; every route
   loads with replace-by-date. Running the same date twice leaves the same files and the same rows in the lake.
@@ -149,8 +157,8 @@ is refused, and a feed whose key's variable is not set exits 2 naming it.
 
 ### 3.4 `--snapshot`: the committed demo snapshot
 
-A feed whose pack ships a committed snapshot (the demo data in `data/testdata/<pack>/`) refreshes it with `--snapshot`, exactly as the
-old refresh scripts did: the same files in the same places, the pack's own check afterwards, nothing loaded. Internal-only data
+A feed whose pack ships a committed snapshot (the demo data in `data/testdata/<pack>/`) refreshes it with `--snapshot`: the pack's
+generator writes its files where they live (the samples and guide, `data/testdata/<pack>/`), its check runs, nothing is loaded. Internal-only data
 (section 9) is written into the repository only with `--internal-ok`.
 
 ```bash
@@ -225,7 +233,7 @@ python3 tools/drishti.py feed schedule --cron
 # Drishti data feeds: daily (crontab -e, then paste; the times are this machine's local time)
 # mkdir -p $HOME/drishti-feeds-logs   (one log file per feed; each run appends its one log line and any messages)
 SHELL=/bin/bash
-30 5 * * * /opt/drishti/tools/feeds/feed.sh run gleif >> $HOME/drishti-feeds-logs/gleif.log 2>&1
+30 5 * * * /opt/drishti/tools/feeds/feed.sh run gleif --trigger schedule >> $HOME/drishti-feeds-logs/gleif.log 2>&1
 ```
 
 **Linux, systemd** (a missed day runs at the next boot):
@@ -244,7 +252,7 @@ After=network-online.target
 [Service]
 Type=oneshot
 WorkingDirectory=/opt/drishti
-ExecStart=/opt/drishti/tools/feeds/feed.sh run gleif
+ExecStart=/opt/drishti/tools/feeds/feed.sh run gleif --trigger schedule
 Nice=10
 
 # ---- drishti-feed-gleif.timer
@@ -263,17 +271,19 @@ WantedBy=timers.target
 Save each block under `~/.config/systemd/user/`, then `systemctl --user daemon-reload && systemctl --user enable --now
 drishti-feed-gleif.timer`; `journalctl --user -u drishti-feed-gleif` shows each run's log line.
 
-**Windows, Task Scheduler** (run in a command prompt as the user the feeds run as):
+**Windows, Task Scheduler** (run the printed commands in a command prompt as the user the feeds run as; `--root` names the Drishti
+folder on that machine when you print them elsewhere):
 
 ```bash
-python3 tools/drishti.py feed schedule --windows
+python3 tools/drishti.py feed schedule --windows --root 'C:\drishti'
 ```
 
 ```text
-schtasks /Create /F /TN "Drishti feed gleif" /SC DAILY /ST 05:30 /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\drishti\tools\windows\feed.ps1\" run gleif"
+schtasks /Create /F /TN "Drishti feed gleif" /SC DAILY /ST 05:30 /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\drishti\tools\windows\feed.ps1\" run gleif --trigger schedule"
 ```
 
-Task Scheduler's *Last Run Result* is the exit code (section 3.1). One task for every feed instead: `feed.ps1 run --all`.
+Task Scheduler's *Last Run Result* is the exit code (section 3.1). One task for every feed instead: `feed.ps1 run --all` (the feeds run
+one after another in the order of their schedule times). `--trigger schedule` only marks the run in the ledger as the schedule's.
 
 ## 6. Monitor: status, the ledger, Admin → Feeds, alerts
 
@@ -284,12 +294,12 @@ python3 tools/drishti.py feed status
 ```text
 FEED   LAST RUN             STATUS  LAST SUCCESS         DATE        ROWS   SECONDS  FAILURES
 gleif  2026-11-07T05:30:12  ok      2026-11-07T05:30:12  2026-11-07  4,377  41.2     0
-ledger: data/feeds/ledger.jsonl
+ledger: data/datafeeds/ledger.jsonl
 ```
 
 `--runs N` adds the last N runs; `--json` gives the same for scripts. It exits 1 when a feed's last run failed.
 
-**The ledger**, `data/feeds/ledger.jsonl`, has one JSON line per run, kept for ever:
+**The ledger**, `data/datafeeds/ledger.jsonl`, has one JSON line per run, kept for ever:
 
 ```json
 {"at": "2026-11-07T05:30:12-05:00", "feed": "gleif", "run": "20261107T103012-drishti-main-41822", "trigger": "schedule",
@@ -298,6 +308,21 @@ ledger: data/feeds/ledger.jsonl
  "load": {"route": "java", "status": "ok", "rows": 4377, "rejected": 0, "count": 3}, "licence": "CC0 1.0 (attribution appreciated)",
  "internalOnly": false, "seconds": 41.2}
 ```
+
+**Admin → Data loads → Feeds** (`/admin/loads/feeds`, administrators) shows the same from the server's side: every feed with its lake,
+schedule, last run and status, last success with its business date and rows, the duration, the failures since the last success, the
+last error in words and the licence (internal only marked), then the latest runs of the ledger. Both tables are console tables (sort,
+filter, keyboard). **Run now** starts `tools/drishti.py feed run <feed> --trigger admin` on the server's machine in the background,
+with the server's data folder (its output in `data/datafeeds/<feed>/admin-run.log`); while a run of the feed holds its lock it says so
+instead. The same over REST: `GET /api/v1/admin/feeds`, `POST /api/v1/admin/feeds/{feed}/run` (audited `feed.run`). The server finds
+the feed files, the tools and Python by `drishti.feeds.config`, `drishti.feeds.root` and `drishti.feeds.python`
+([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+
+**Alerts.** A failed (or refused, or partial) last run sets the gauge `drishti.datafeed.failed{feed}` to 1, and the platform alert rule
+`data-feed-failed` (`config/alerts/platform-alerts.yaml`) opens an alert in the one alert engine: the administrators are told in their
+inbox, Admin → Health and Alerts list it, and it closes by itself at the feed's next successful run. The server reads the ledger every
+`drishti.feeds.sample-seconds` (60), so a failure of a cron run is seen as surely as one of Run now. The same rule for a site's
+Prometheus is `DrishtiDataFeedFailed` (`deploy/prometheus/drishti-alerts.yaml`).
 
 ## 7. The feed file, every key
 
@@ -344,7 +369,7 @@ snapshot:                              # optional: what --snapshot does (args fo
 |---|---|
 | `pack`, `kind` | the pack and kind of the rows: their layout, id and contract (required) |
 | `table` | the table (and the files' name); default the kind, as the demo lake names its tables |
-| `key` | the rows' id field, for the reader of the file (the lake takes it from the pack) |
+| `key` | the rows' id field: given to the load (`--key`), so a lake entry without an id takes it; an entry with one must agree |
 | `dated` | `run` (default): every row under the run's business date (a snapshot such as GLEIF's); `source`: the date the feed gives each emit (a time series) |
 | `description` | a line for `feed list --json` and the docs |
 

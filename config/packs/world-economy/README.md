@@ -637,9 +637,9 @@ retrieval date and licence.
 | CIA World Factbook | Public domain | no | governments, office holders, elections, parties |
 | UNDP Human Development Index | CC BY 3.0 IGO | no | social indicators |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/world-economy.md](guides/world-economy.md): *Data contracts* and *Data retrieval*.
+Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/world-economy.md](guides/world-economy.md): *Data contracts* and *Data retrieval*.
 
-External data: World Bank World Development Indicators and Worldwide Governance Indicators; IMF World Economic Outlook (**internal only**); CIA World Factbook; UNDP Human Development Index. Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
+External data: World Bank World Development Indicators and Worldwide Governance Indicators; IMF World Economic Outlook (**internal only**); CIA World Factbook; UNDP Human Development Index. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
 
 ## Enabling and dependencies
 
@@ -657,7 +657,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The data feed `world-economy` (config/feeds/world-economy.yaml) pulls `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `region-economy`, `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator`: `python3 tools/drishti.py feed run world-economy` fetches them daily into `data/feeds/world-economy/<date>/` and loads them into the lake `worldlake` (internal use only); `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `world-economy` (config/feeds/world-economy.yaml) pulls `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `region-economy`, `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator`: `python3 tools/drishti.py feed run world-economy` fetches them daily into `data/datafeeds/world-economy/<date>/` and loads them into the lake `worldlake` (internal use only); `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/world/make.py`; its `--check` fails when the committed files differ from what it would write.
 

@@ -120,9 +120,9 @@ Screens (Sutras):
 |---|---|---|---|
 | Statistics Canada Web Data Service (WDS) | Statistics Canada Open Licence | no | statistics-series |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/national-statistics.md](guides/national-statistics.md): *Data contracts* and *Data retrieval*.
+Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/national-statistics.md](guides/national-statistics.md): *Data contracts* and *Data retrieval*.
 
-External data: Statistics Canada Web Data Service (WDS). Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
+External data: Statistics Canada Web Data Service (WDS). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
 
 ## Enabling and dependencies
 
@@ -138,9 +138,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **national-statistics** feed (`config/feeds/national-statistics.yaml`: its sources and their licences in `options.sources`, its schedule, weekdays at 09:00 local time, and its selection in `options`) pulls what is new into `<data>/feeds/national-statistics/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run national-statistics` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run national-statistics`, `.\tools\windows\feed.ps1 run national-statistics`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **national-statistics** feed (`config/feeds/national-statistics.yaml`: its sources and their licences in `options.sources`, its schedule, weekdays at 09:00 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/national-statistics/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run national-statistics` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run national-statistics`, `.\tools\windows\feed.ps1 run national-statistics`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
 
-The data feed `national-statistics` (config/feeds/national-statistics.yaml) pulls `statistics-series`: `python3 tools/drishti.py feed run national-statistics` fetches them daily into `data/feeds/national-statistics/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `national-statistics` (config/feeds/national-statistics.yaml) pulls `statistics-series`: `python3 tools/drishti.py feed run national-statistics` fetches them daily into `data/datafeeds/national-statistics/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 

@@ -16,7 +16,7 @@
 # country and CAMEO category, into newslake, for the gdelt-events pack. Class: tools/feeds/sources/gdelt_events.py. Daily (a day's
 # file is complete the morning after, about 06:00 UTC); incremental (only the days after the last one processed; each about 7 MB
 # zipped, read as it streams, never kept). No key.
-# Run: python3 tools/drishti.py feed run gdelt-events (FEEDS_GUIDE.md); options.sources holds each source's licence and terms; the rest of
+# Run: python3 tools/drishti.py feed run gdelt-events (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
 # options is the default selection.
 feed: gdelt-events
 title: GDELT, events and tone by country

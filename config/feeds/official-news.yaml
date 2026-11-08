@@ -18,7 +18,7 @@
 # Each publisher below is a source with its own terms. A publisher whose terms allow no commercial reuse is internal-only: its releases
 # carry INTERNAL_ONLY true, Export data refuses them (internal-only-data off) and they never leave the organisation. The flags are the
 # owner's reading of each site's terms on 2026-11-07 (the terms: links); legal review may widen or narrow them here.
-# Run: python3 tools/drishti.py feed run official-news (FEEDS_GUIDE.md); options.sources holds each source's licence and terms; the rest of
+# Run: python3 tools/drishti.py feed run official-news (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
 # options is the default selection.
 feed: official-news
 title: Official press releases (central banks, regulators, governments)

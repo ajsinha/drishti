@@ -232,7 +232,7 @@ summaries, the SEC and Nasdaq Trader ticker files, GLEIF's fund relationships). 
 Look-through holdings and the fund against its index, as on the approved mock-ups), `fund-holder` (HELD: the funds holding a us-equities
 company, also USEQ's Held by funds tab) and `index-funds` (TRACK: the funds tracking an index, also on IDX). Index weights are computed
 from SEC data (shares outstanding times the price the filings imply); no prices. A 5.6 MB gzipped snapshot in parts
-(`data/testdata/funds`), the refresh script `tools/publicdata/funds.py` (downloads kept in the data folder), contracts, the guide
+(`data/testdata/funds`), the data feed `drishti.py feed run funds` (downloads kept in the data folder), contracts, the guide
 [FUNDS_GUIDE.md](../guides/FUNDS_GUIDE.md) and tutorial 28. Not built from the candidate: N-MFP (money-market funds) and 13F holdings.
 
 **After 2.9.0: synthetic test data from its generators (to plan).** A plan for regenerating the synthetic test data from the

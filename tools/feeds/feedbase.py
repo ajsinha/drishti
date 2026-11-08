@@ -15,7 +15,7 @@
 """drishti-feeds: the Feed base class, the feed file (config/feeds/<feed>.yaml) and one feed run (docs/guides/FEEDS_GUIDE.md).
 
 A feed PULLS one external source in Python and writes what it pulled as JSON Lines, one gzipped file per dataset and business date,
-under ``<data>/feeds/<feed>/<YYYY-MM-DD>/<table>.<YYYY-MM-DD>.jsonl.gz`` with a ``manifest.json`` (each file's rows and SHA-256). The
+under ``<data>/datafeeds/<feed>/<YYYY-MM-DD>/<table>.<YYYY-MM-DD>.jsonl.gz`` with a ``manifest.json`` (each file's rows and SHA-256). The
 LOAD into a lake is a separate step that reuses what Drishti already has (tools/feeds/feedload.py: the parallel loader, ``lake build`` or
 the data inbox). Writing a feed is one class:
 
@@ -39,7 +39,7 @@ The API a feed uses (stable; FEEDS_GUIDE.md "Writing a feed"):
     run.key(name)          a key of the feed file (only ever ${ENV}); FeedRefused when its variable is not set
     run.get_json / get_text / get_bytes(url, name=None, headers=None)
                            polite GETs (User-Agent, pause, retries with back-off, Retry-After) through the download cache
-                           <data>/feeds/<feed>/cache, so a broken run resumes; None after the retries (the run then fails)
+                           <data>/datafeeds/<feed>/cache, so a broken run resumes; None after the retries (the run then fails)
     run.emit(dataset, rows, business_date=None)   rows (dicts) of a dataset of the feed file, appended to that date's file
     run.state              the feed's state.json (a dict; saved only when the run succeeds)
     run.mark(dataset, last)                       records the last business date pulled for the dataset
@@ -99,8 +99,8 @@ class FeedLocked(FeedError):
 
 
 def feeds_dir() -> Path:
-    """<data>/feeds: every feed's files, states and the run ledger (DRISHTI_DATA_DIR, else ./data)."""
-    return K.data_dir() / "feeds"
+    """<data>/datafeeds: every feed's files, states and the run ledger (DRISHTI_DATA_DIR, else ./data)."""
+    return K.data_dir() / "datafeeds"
 
 
 def now_iso() -> str:
@@ -456,7 +456,7 @@ class FeedRun:
         by_day: dict[str, list[dict]] = {}
         for (dataset, day), w in sorted(self._writers.items(), key=lambda kv: (kv[0][1], kv[0][0])):
             ds = self.spec.datasets[dataset]
-            by_day.setdefault(day, []).append({"dataset": dataset, "pack": ds.pack, "kind": ds.kind, "table": ds.table,
+            by_day.setdefault(day, []).append({"dataset": dataset, "pack": ds.pack, "kind": ds.kind, "table": ds.table, "key": ds.key,
                                                "file": w.path.name, "rows": w.rows, "bytes": w.path.stat().st_size,
                                                "sha256": K.sha256(w.path)})
         for day, entries in by_day.items():
@@ -509,7 +509,7 @@ def licence_doc(spec: FeedSpec) -> dict:
 # ------------------------------------------------------------------------------------------------ the lock
 
 class Lock:
-    """<data>/feeds/<feed>/run.lock: one run of a feed at a time; a lock whose process is gone (same host) is taken over."""
+    """<data>/datafeeds/<feed>/run.lock: one run of a feed at a time; a lock whose process is gone (same host) is taken over."""
 
     def __init__(self, folder: Path):
         self.path = Path(folder) / "run.lock"

@@ -284,7 +284,7 @@ Screens (Sutras):
 ## Data sources and licences
 
 Every document names its source, licence and retrieval date in `PROVENANCE`. The downloads (about 700 MB a refresh) stay in the data
-folder, never in git; `tools/publicdata/funds.py` fetches them with the User-Agent setting the us-equities pack uses.
+folder, never in git; `drishti.py feed run funds` fetches them with the User-Agent setting the us-equities pack uses.
 
 | Source | Licence | Internal only | Used for |
 |---|---|---|---|
@@ -295,9 +295,9 @@ folder, never in git; `tools/publicdata/funds.py` fetches them with the User-Age
 | Nasdaq Trader symbol directory | Public directory, attribution | no | which tickers are ETFs and where they list |
 | GLEIF golden copy, level 2 relationships | CC0 | no | a fund's manager, umbrella and master fund (managed by, sub-fund of, feeder to) |
 
-Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/funds.md](guides/funds.md): *Data contracts* and *Data retrieval*.
+Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/funds.md](guides/funds.md): *Data contracts* and *Data retrieval*.
 
-External data: SEC Form N-PORT data sets; SEC Form N-CEN data sets; SEC mutual fund prospectus risk/return summary data sets; SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json); Nasdaq Trader symbol directory; GLEIF golden copy, level 2 relationships. Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
+External data: SEC Form N-PORT data sets; SEC Form N-CEN data sets; SEC mutual fund prospectus risk/return summary data sets; SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json); Nasdaq Trader symbol directory; GLEIF golden copy, level 2 relationships. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
 
 ## Enabling and dependencies
 
@@ -313,11 +313,11 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The data feed `funds` (config/feeds/funds.yaml) pulls `fund`, `fund-holder`, `index-funds`: `python3 tools/drishti.py feed run funds` fetches them daily into `data/feeds/funds/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `funds` (config/feeds/funds.yaml) pulls `fund`, `fund-holder`, `index-funds`: `python3 tools/drishti.py feed run funds` fetches them daily into `data/datafeeds/funds/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/funds/make.py`; its `--check` fails when the committed files differ from what it would write.
 
 ## See also
 
-- [The funds pack](guides/funds.md): The 200 largest US mutual funds and ETFs with their holdings, from SEC Form N-PORT, Form N-CEN and the prospectus risk/return summaries (public domain), GLEIF (CC0): a fact sheet per fund, the look-through, the ETF against its index, the funds that hold a company. Refreshed by tools/publicdata/funds.py. Type FUND QQQ, HELD AAPL or TRACK SP500.
+- [The funds pack](guides/funds.md): The 200 largest US mutual funds and ETFs with their holdings, from SEC Form N-PORT, Form N-CEN and the prospectus risk/return summaries (public domain), GLEIF (CC0): a fact sheet per fund, the look-through, the ETF against its index, the funds that hold a company. Refreshed by drishti.py feed run funds. Type FUND QQQ, HELD AAPL or TRACK SP500.
 - [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

@@ -139,5 +139,5 @@ Fields no record above has, found by reading all 7 rows, with how many rows fill
 
 - Data contract: [NSTAT in the national-statistics pack's contracts](../../packs/national-statistics.md#nstat-national-statistic-statistics-series) (`config/packs/national-statistics/contracts/statistics-series.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../../guides/PUBLIC_SECTOR_GUIDE.md)
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

@@ -115,7 +115,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 | A country dashboard for a committee | **Partly**: BI datasets `world-economics-economies`, `region-economics-regions` and their reports (`world.yaml` `bi`) | Companies, funds and LEI datasets in BI (section 5.8) |
 | Periodic client review: what changed in the profile | **Partly**: the latest of everything | A diff since the last review (section 5.4) |
 | The IMF vintage: what was revised | **Partly**: the vintage named (`VINTAGE`); the count of revised economies was replaced by the vintage | Compare two vintages (section 5.6) |
-| Refresh the public data | **Built**: one standalone script per pack (`tools/publicdata/*.py` with `.sh` and `.ps1`), `status`, `refresh --dry-run`, `refresh` ([EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md#the-scripts)) | A schedule and a freshness card (section 5.11) |
+| Refresh the public data | **Built**: one standalone script per pack (`tools/feeds/*.py` with `.sh` and `.ps1`), `status`, `refresh --dry-run`, `refresh` ([EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md#the-scripts)) | A schedule and a freshness card (section 5.11) |
 
 ---
 
@@ -247,7 +247,7 @@ this document's.
 ### 5.1 WL1: FX and index levels
 
 **FX.** Openly licensed official rates exist and Drishti already captures them for the market-data pack:
-`tools/publicdata/official_market_data.py` writes the **ECB euro reference rates** (twelve pairs including `USDCAD` as a cross through EUR,
+`drishti.py feed run market-data` writes the **ECB euro reference rates** (twelve pairs including `USDCAD` as a cross through EUR,
 with daily history), the US Treasury par curve, SOFR and €STR, "free reuse with the source acknowledged"
 ([EXTERNAL_DATA.md, market-data](../guides/EXTERNAL_DATA.md#market-data)). World's packs are allow-only and do not include market-data. The
 design: a small World kind (proposed `reference-rate`, in news-and-markets or world-economy, mnemonic to be chosen) filled by the same

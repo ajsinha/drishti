@@ -151,7 +151,7 @@ def test_a_run_writes_dated_jsonl_gz_with_manifest_state_and_ledger(spec, data):
     rc, entry, logs = run(spec, business_date=date(2026, 11, 7))
     assert rc == 0, logs
     assert entry["status"] == "ok" and entry["dates"] == ["2026-11-05", "2026-11-06", "2026-11-07"]      # first-run-days: 2
-    folder = data / "feeds" / "sample-mapping"
+    folder = data / "datafeeds" / "sample-mapping"
     f = folder / "2026-11-06" / "lei-mapping.2026-11-06.jsonl.gz"
     assert [r["IDENTIFIER"] for r in rows_of(f)] == ["WABTUS3WXXX", "US0378331005"]
     man = json.loads((folder / "2026-11-06" / "manifest.json").read_text())
@@ -178,7 +178,7 @@ def test_the_next_run_pulls_only_what_is_new(spec):
 
 def test_a_rerun_of_the_same_date_is_idempotent(spec, data):
     assert run(spec, business_date=date(2026, 11, 7), since=date(2026, 11, 7))[0] == 0
-    f = data / "feeds" / "sample-mapping" / "2026-11-07" / "lei-mapping.2026-11-07.jsonl.gz"
+    f = data / "datafeeds" / "sample-mapping" / "2026-11-07" / "lei-mapping.2026-11-07.jsonl.gz"
     before = f.read_bytes()
     assert run(spec, business_date=date(2026, 11, 7), since=date(2026, 11, 7))[0] == 0
     assert f.read_bytes() == before                               # replaced, never appended: the same bytes
@@ -205,24 +205,24 @@ def test_retries_with_back_off_then_succeeds(spec):
 
 def test_a_failed_pull_fails_the_run_keeps_the_state_and_says_why(spec, data):
     assert run(spec, business_date=date(2026, 11, 6))[0] == 0
-    state = (data / "feeds" / "sample-mapping" / "state.json").read_text()
+    state = (data / "datafeeds" / "sample-mapping" / "state.json").read_text()
     url = "https://mappings.example.test/api/v1/mappings?date=2026-11-07"
     rc, entry, logs = run(spec, Recorded(fail={url: 9}), business_date=date(2026, 11, 7))
     assert rc == FB.FAILED and entry["status"] == "failed" and "run again to resume" in entry["error"]
-    assert (data / "feeds" / "sample-mapping" / "state.json").read_text() == state
-    assert not (data / "feeds" / "sample-mapping" / "2026-11-07").exists()
+    assert (data / "datafeeds" / "sample-mapping" / "state.json").read_text() == state
+    assert not (data / "datafeeds" / "sample-mapping" / "2026-11-07").exists()
     assert "error=" in logs[-1] and R.Ledger().entries()[-1]["status"] == "failed"
 
 
 def test_a_second_run_while_one_holds_the_lock_exits_3(spec, data):
-    folder = data / "feeds" / "sample-mapping"
+    folder = data / "datafeeds" / "sample-mapping"
     with FB.Lock(folder):
         rc, entry, _ = run(spec, business_date=date(2026, 11, 7))
     assert rc == FB.LOCKED and entry["status"] == "locked"
 
 
 def test_a_stale_lock_is_taken_over(spec, data):
-    folder = data / "feeds" / "sample-mapping"
+    folder = data / "datafeeds" / "sample-mapping"
     folder.mkdir(parents=True)
     import socket
     (folder / "run.lock").write_text(json.dumps({"pid": 999999999, "host": socket.gethostname(), "since": "x"}))
@@ -234,7 +234,7 @@ def test_dry_run_says_what_it_would_fetch_and_changes_nothing(spec, data):
     rc, entry, logs = run(spec, rec, business_date=date(2026, 11, 7), dry_run=True)
     assert rc == 0 and rec.calls == [] and entry["status"] == "dry-run"
     assert any("mappings?date=2026-11-05" in x for x in logs)
-    assert not (data / "feeds" / "sample-mapping").exists() and R.Ledger().entries() == []
+    assert not (data / "datafeeds" / "sample-mapping").exists() and R.Ledger().entries() == []
 
 
 def test_the_api_key_header_is_sent_and_never_written(spec, data, monkeypatch):
@@ -243,7 +243,7 @@ def test_the_api_key_header_is_sent_and_never_written(spec, data, monkeypatch):
     assert run(spec, rec, business_date=date(2026, 11, 7), since=date(2026, 11, 7))[0] == 0
     assert rec.headers[0].get("Authorization") == "Bearer tok-123"
     assert "Drishti-feeds" in rec.headers[0].get("User-agent", "")
-    for f in (data / "feeds").rglob("*"):
+    for f in (data / "datafeeds").rglob("*"):
         if f.is_file() and not f.name.endswith(".gz"):
             assert b"tok-123" not in f.read_bytes(), f
 
@@ -331,9 +331,9 @@ def test_cli_dry_run_and_source_arguments(data):
 
 def test_schedule_entries_for_cron_systemd_and_windows(spec):
     cron = S.cron([spec], Path("/opt/drishti"))
-    assert "15 7 * * 1-5 /opt/drishti/tools/feeds/feed.sh run sample-mapping >> $HOME/drishti-feeds-logs/sample-mapping.log 2>&1" in cron
+    assert "15 7 * * 1-5 /opt/drishti/tools/feeds/feed.sh run sample-mapping --trigger schedule >> $HOME/drishti-feeds-logs/sample-mapping.log 2>&1" in cron
     unit = S.systemd([spec], Path("/opt/drishti"))
-    assert "OnCalendar=Mon..Fri *-*-* 07:15:00" in unit and "ExecStart=/opt/drishti/tools/feeds/feed.sh run sample-mapping" in unit
+    assert "OnCalendar=Mon..Fri *-*-* 07:15:00" in unit and "ExecStart=/opt/drishti/tools/feeds/feed.sh run sample-mapping --trigger schedule" in unit
     assert "Persistent=true" in unit and "Type=oneshot" in unit
     win = S.windows([spec], Path("C:/drishti"))
     assert 'schtasks /Create /F /TN "Drishti feed sample-mapping" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 07:15' in win
@@ -348,3 +348,8 @@ def test_the_wrappers_exist_and_run_the_feed_command():
     assert "tools/drishti.py feed" in sh and "drishti-console/.venv" in sh
     assert "tools\\drishti.py" in ps and "feed" in ps and "exit $LASTEXITCODE" in ps
     assert not list((ROOT / "tools").glob("publicdata")), "tools/publicdata folded into tools/feeds"
+
+
+def test_every_feed_has_its_generated_readme():
+    import feedreadme
+    assert feedreadme.main(["--check"]) == 0, "run python3 tools/feeds/feedreadme.py"

@@ -40,7 +40,7 @@ def cron(specs: list[FB.FeedSpec], root: Path = ROOT, data: str | None = None) -
         h, m = _hm(s)
         dow = "1-5" if s.schedule_days == "weekdays" else "*"
         prefix = "" if s.enabled else "# (disabled) "
-        lines.append(f"{prefix}{m} {h} * * {dow} {root}/tools/feeds/feed.sh run {s.name} >> {log}/{s.name}.log 2>&1")
+        lines.append(f"{prefix}{m} {h} * * {dow} {root}/tools/feeds/feed.sh run {s.name} --trigger schedule >> {log}/{s.name}.log 2>&1")
     return "\n".join(lines) + "\n"
 
 
@@ -57,7 +57,7 @@ def systemd(specs: list[FB.FeedSpec], root: Path = ROOT, user_unit: bool = True)
         days = "Mon..Fri " if s.schedule_days == "weekdays" else ""
         out += [f"# ---- drishti-feed-{s.name}.service",
                 "[Unit]", f"Description=Drishti data feed {s.name}: {s.title}", "Wants=network-online.target", "After=network-online.target", "",
-                "[Service]", "Type=oneshot", f"WorkingDirectory={root}", f"ExecStart={root}/tools/feeds/feed.sh run {s.name}",
+                "[Service]", "Type=oneshot", f"WorkingDirectory={root}", f"ExecStart={root}/tools/feeds/feed.sh run {s.name} --trigger schedule",
                 "Nice=10", "", f"# ---- drishti-feed-{s.name}.timer",
                 "[Unit]", f"Description=Run the Drishti data feed {s.name} daily", "",
                 "[Timer]", f"OnCalendar={days}*-*-* {h:02d}:{m:02d}:00", "Persistent=true", "RandomizedDelaySec=120", "",
@@ -73,7 +73,7 @@ def windows(specs: list[FB.FeedSpec], root: Path = ROOT) -> str:
     for s in specs:
         h, m = _hm(s)
         sched = "/SC WEEKLY /D MON,TUE,WED,THU,FRI" if s.schedule_days == "weekdays" else "/SC DAILY"
-        ps = (f"powershell.exe -NoProfile -ExecutionPolicy Bypass -File \\\"{win_root}\\tools\\windows\\feed.ps1\\\" run {s.name}")
+        ps = (f"powershell.exe -NoProfile -ExecutionPolicy Bypass -File \\\"{win_root}\\tools\\windows\\feed.ps1\\\" run {s.name} --trigger schedule")
         line = f"schtasks /Create /F /TN \"Drishti feed {s.name}\" {sched} /ST {h:02d}:{m:02d} /TR \"{ps}\""
         out.append(("REM (disabled) " if not s.enabled else "") + line)
     return "\r\n".join(out) + "\r\n"

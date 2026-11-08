@@ -1956,7 +1956,7 @@ shipped example is `config/packs/market-risk/config/about.fr.yaml` (the VaR page
 #### Generated packs
 
 A pack built on **public data** (world-economy, news-and-markets, market-data) has its own refresh script in
-`tools/publicdata/` (one a pack: fetch with a polite cached client, normalise, write, then the pack's check; licences and the
+`tools/feeds/` (one a pack: fetch with a polite cached client, normalise, write, then the pack's check; licences and the
 internal-only rule in each source class). To add a source or a script for a new pack, see [EXTERNAL_DATA.md](EXTERNAL_DATA.md#adding-a-source).
 
 The shipped packs are generated (see [How the shipped packs are generated](#how-the-shipped-packs-are-generated)).
@@ -3213,7 +3213,7 @@ commands: {BKC: book-copy, LOAN: loan, LIBS: pack overview}
 depends-on: {packs: [core], connectors: [library-store], plugins: [delta], settings: [DRISHTI_LAKE_ENABLED]}
 sources:
 - {name: The library's catalogue, licence: Proprietary, internal-only: false, used-for: book-copy}
-refresh: tools/publicdata/library.py      # or the generator, when the data has no refresh script
+refresh: tools/feeds/library.py      # or the generator, when the data has no refresh script
 generated-by: tools/packgen/library/make.py
 ---
 # The library pack
@@ -3673,11 +3673,11 @@ A demonstration often runs on a laptop with no internet. Both packs then work fu
   `lake demo` builds them into `news/quote` and `news/news`, which the pack's `news-store` connector serves beside the topics and
   companies. Every page reads the same documents it reads live (same Sutras, same panels); a quote's *As of* and the headlines'
   *Fetched* end in *(snapshot captured <date>)*, and the quote and headline pages add a **Snapshot** note. The data belongs to its
-  providers and is shown for demonstration only. Refresh it with `tools/publicdata/news_and_markets.py` ([PUBLIC_DATA](EXTERNAL_DATA.md)).
+  providers and is shown for demonstration only. Refresh it with `drishti.py feed run news-and-markets` ([PUBLIC_DATA](EXTERNAL_DATA.md)).
 - **world-economy.** Already offline: all thirteen kinds (`economy`, `macro-indicator`, `economic-forecast`, `labour-market`,
   `fiscal-position`, `country-group`, `region-economy`, `jurisdiction`, `party`, `office-holder`, `election`, `region`,
   `social-indicator`) are the pack's samples (real World Bank, IMF, CIA World Factbook and UNDP figures captured when the pack was
-  built; [REAL_DATA](EXTERNAL_DATA.md#the-world-economy-data-in-detail); refresh with `tools/publicdata/world_economy.py`, [PUBLIC_DATA](EXTERNAL_DATA.md)), served by `macro-store` and `civic-store` from the demo lake. The pack has no live connector.
+  built; [REAL_DATA](EXTERNAL_DATA.md#the-world-economy-data-in-detail); refresh with `drishti.py feed run world-economy`, [PUBLIC_DATA](EXTERNAL_DATA.md)), served by `macro-store` and `civic-store` from the demo lake. The pack has no live connector.
 - **Offline mode.** Start the server with `DRISHTI_OFFLINE=true` (the run configuration **Drishti server (demo lakes)** sets it):
   the `news`, `yfinance` and public-data `feed` connectors never start, even when a file enables them, so nothing waits on the
   network and Admin → Connectors shows them **off (offline mode)** while `news-store`, `macro-store` and `civic-store` run

@@ -15,7 +15,7 @@
 # The world-development feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): World Bank World Development Indicators by country and
 # year into worldlake, for the world-development pack. Class: tools/feeds/sources/world_development.py. Daily; incremental (the WDI
 # source's last-updated date: unchanged, nothing is written). Edit the selection below to choose the countries, years and indicators.
-# Run: python3 tools/drishti.py feed run world-development (FEEDS_GUIDE.md); options.sources holds each source's licence and terms; the rest of
+# Run: python3 tools/drishti.py feed run world-development (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
 # options is the default selection.
 feed: world-development
 title: World Bank, World Development Indicators

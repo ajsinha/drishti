@@ -21,7 +21,7 @@ member's cycle, the press releases of central banks, regulators and governments,
 Every source's licence is recorded; what may not be redistributed is marked internal only.
 
 The hands-on companion is [Tutorial 46](../tutorials/46-public-sector-data.md). The feeds machinery (run, load, schedule, monitor, write a
-feed) is the [External data feeds guide](FEEDS_GUIDE.md); every column of every kind is in the data contracts (section 4).
+feed) is the [External data guide](EXTERNAL_DATA.md); every column of every kind is in the data contracts (section 4).
 
 ## Contents
 
@@ -144,7 +144,7 @@ renderer's tests; they are never served beside the lake: demo and real data neve
 
 ## 5. The feeds
 
-Each pack has one feed on drishti-feeds: a feed file `config/feeds/<pack>.yaml` (every key: [FEEDS_GUIDE.md section 7](FEEDS_GUIDE.md))
+Each pack has one feed on drishti-feeds: a feed file `config/feeds/<pack>.yaml` (every key: [External data](EXTERNAL_DATA.md))
 and a Feed class in `tools/feeds/sources/`. Each pulls only what is new, writes one JSON Lines file a kind and business date with its
 manifest (rows, SHA-256), and is loaded into its lake, replacing that date (a re-run is idempotent).
 
@@ -162,7 +162,7 @@ Run them as any feed:
 ```bash
 python3 tools/drishti.py feed list                               # every feed: lake, route, schedule, licence, datasets
 python3 tools/drishti.py feed run world-development --dry-run    # what it would ask; nothing changes
-python3 tools/drishti.py feed run world-development              # pull, write <data>/feeds/world-development/<date>/, load into worldlake
+python3 tools/drishti.py feed run world-development              # pull, write <data>/datafeeds/world-development/<date>/, load into worldlake
 python3 tools/drishti.py feed run official-news --load inbox     # the same through the data inbox: the server loads it
 python3 tools/drishti.py feed status gdelt-events                # its last runs from the ledger
 python3 tools/drishti.py feed schedule --cron world-development central-banks national-statistics oecd official-news gdelt-events

@@ -51,7 +51,7 @@ class DataFeedsTest {
                 licence: {name: IMF terms, url: "https://www.imf.org", redistribution: internal-only, internal-only: true}
                 datasets: {economy: {pack: world-economy, kind: economy}}
                 """);
-        Path ledger = Files.createDirectories(tmp.resolve("data/feeds")).resolve("ledger.jsonl");
+        Path ledger = Files.createDirectories(tmp.resolve("data/datafeeds")).resolve("ledger.jsonl");
         Files.writeString(ledger, String.join("\n",
                 "{\"at\": \"2026-11-06T05:30:00-05:00\", \"feed\": \"gleif\", \"status\": \"ok\", \"exit\": 0, \"rows\": 4377, \"businessDate\": \"2026-11-06\", \"seconds\": 41.2}",
                 "{\"at\": \"2026-11-07T05:30:00-05:00\", \"feed\": \"gleif\", \"status\": \"failed\", \"exit\": 1, \"error\": \"HTTP 503\", \"seconds\": 9.0}",
@@ -98,12 +98,12 @@ class DataFeedsTest {
         DataFeeds f = feeds(null);
         assertThatThrownBy(() -> f.runNow("nope", "admin")).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("no data feed");
         assertThatThrownBy(() -> f.runNow("../x", "admin")).isInstanceOf(IllegalArgumentException.class);
-        Files.createDirectories(tmp.resolve("data/feeds/gleif"));
-        Files.writeString(tmp.resolve("data/feeds/gleif/run.lock"), "{}");
+        Files.createDirectories(tmp.resolve("data/datafeeds/gleif"));
+        Files.writeString(tmp.resolve("data/datafeeds/gleif/run.lock"), "{}");
         Map<String, Object> out = f.runNow("gleif", "admin");
         assertThat(out.get("started")).isEqualTo(false);
         assertThat(String.valueOf(out.get("skipped"))).contains("in progress");
-        Files.delete(tmp.resolve("data/feeds/gleif/run.lock"));
+        Files.delete(tmp.resolve("data/datafeeds/gleif/run.lock"));
         assertThatThrownBy(() -> f.runNow("gleif", "admin")).isInstanceOf(IllegalStateException.class).hasMessageContaining("tools");
     }
 

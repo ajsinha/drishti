@@ -71,7 +71,7 @@ More: [PUBLIC_SECTOR_GUIDE.md sections 1 and 2](../guides/PUBLIC_SECTOR_GUIDE.md
 
 ## Step 2 · Run the six feeds
 
-**Command line.** See them, ask what one would fetch, then run all six (each pulls, writes `data/feeds/<feed>/<date>/` and loads into
+**Command line.** See them, ask what one would fetch, then run all six (each pulls, writes `data/datafeeds/<feed>/<date>/` and loads into
 its lake with the parallel loader):
 
 ```bash
@@ -104,7 +104,7 @@ options:
   measures: [...]                     # CLI, unemployment, inflation, GDP growth
 ```
 
-More: [section 5](../guides/PUBLIC_SECTOR_GUIDE.md#5-the-feeds) and the [External data feeds guide](../guides/FEEDS_GUIDE.md).
+More: [section 5](../guides/PUBLIC_SECTOR_GUIDE.md#5-the-feeds) and the [External data guide](../guides/EXTERNAL_DATA.md).
 
 ## Step 3 · A country's development: WDI
 
@@ -231,7 +231,7 @@ python3 tools/drishti.py feed schedule --windows world-development       # Task 
 
 **YAML.** Each feed's `schedule: {at: "HH:MM", days: daily | weekdays}` (local time).
 
-More: [FEEDS_GUIDE.md section 5](../guides/FEEDS_GUIDE.md).
+More: [External data](../guides/EXTERNAL_DATA.md).
 
 ## Step 9 · Change what a feed pulls
 
@@ -256,6 +256,6 @@ More: [section 7](../guides/PUBLIC_SECTOR_GUIDE.md#7-changing-what-is-pulled).
 
 ## Next steps
 
-- [External data feeds](../guides/FEEDS_GUIDE.md): write a feed of your own.
+- [External data](../guides/EXTERNAL_DATA.md): write a feed of your own.
 - [Data lake and data load](../guides/DATA_LAKE_GUIDE.md): the lakes the feeds load.
 - [Access model](../architecture/ACCESS_MODEL.md): modules, lenses and functions.

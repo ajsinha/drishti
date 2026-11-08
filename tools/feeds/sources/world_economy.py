@@ -16,7 +16,7 @@
 
     python3 tools/drishti.py feed status world-economy
     python3 tools/drishti.py feed run world-economy --dry-run
-    python3 tools/drishti.py feed run world-economy --snapshot                a full build in <data>/feeds/sources/world-economy
+    python3 tools/drishti.py feed run world-economy --snapshot                a full build in <data>/datafeeds/sources/world-economy
     python3 tools/drishti.py feed run world-economy --snapshot --internal-ok  refresh the committed dataset and pack (carries IMF data)
     python3 tools/drishti.py feed run world-economy --snapshot -- --no-imf    a build without any IMF data, in the data folder
     python3 tools/drishti.py feed run world-economy --snapshot -- worldbank --since 2000 --scope SP.DYN.LE00.IN,EN.ATM.CO2E.PC:social
@@ -231,7 +231,7 @@ def plan_cfg(run: B.Run, selected: list[B.Source], dry: bool) -> tuple[dict, boo
 
 def resolve_out(a, no_imf: bool, widened: bool) -> tuple[Path, bool]:
     """(the output folder, True when it is the committed dataset and pack)."""
-    default = B.data_dir() / "feeds" / "sources" / PACK
+    default = B.data_dir() / "datafeeds" / "sources" / PACK
     if a.out:
         out = Path(a.out).expanduser().resolve()
         if B.is_committed(out):
@@ -344,8 +344,8 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     try:
         if a.command == "status":
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
-                            "the committed dataset and pack with --internal-ok; else <data>/feeds/sources/world-economy")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "datafeeds" / "sources" / "cache" / PACK,
+                            "the committed dataset and pack with --internal-ok; else <data>/datafeeds/sources/world-economy")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)

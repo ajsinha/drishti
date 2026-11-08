@@ -17,7 +17,7 @@
 
 # Index members: index-membership (IDX)
 
-An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF reports holding them; a click opens the member's summary beside. One row per index members, keyed by INDEX. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/index-membership/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py), refreshed whole by its script (External data); 6 records. A refresh replaces the whole snapshot.
+An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF reports holding them; a click opens the member's summary beside. One row per index members, keyed by INDEX. Read by the **us-equities** pack's connector `us-equities-store` (table `<root>/us-equities/index-membership/`). A **snapshot of public data**, captured 2026-10-24 from SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities), refreshed whole by its script (External data); 6 records. A refresh replaces the whole snapshot.
 
 ## File layout
 
@@ -134,7 +134,7 @@ None: all 6 rows were read, and every field any of them has is in the record abo
 ## See also
 
 - Data contract: [IDX in the us-equities pack's contracts](../../packs/us-equities.md#idx-index-members-index-membership) (`config/packs/us-equities/contracts/index-membership.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
 - [Companies, funds and ETFs](../../../knowledge/companies-funds-and-etfs.md)
 - [Tutorial 27 · Groupings and analytics, computed](../../../tutorials/27-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

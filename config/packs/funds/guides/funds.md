@@ -66,7 +66,7 @@ connector `funds-store` serves them; nothing is served by the demo connector. `s
 | Nasdaq Trader symbol directory | which tickers are ETFs, and where they list | Public directory file |
 | GLEIF golden copy, level 2 relationships | managed by, sub-fund of, feeder to | CC0 1.0 |
 
-The SEC asks for a descriptive User-Agent with a contact and at most 10 requests a second; the refresh script uses the same setting
+The SEC asks for a descriptive User-Agent with a contact and at most 10 requests a second; the funds feed uses the same setting
 as the us-equities pack (`DRISHTI_FEEDS_USER_AGENT`). **Not included:** index weights (proprietary to the index providers; the index tab
 computes market-cap weights from SEC data and says so), prices and NAV history, non-US funds and money market funds (they file Form
 N-MFP, not N-PORT).
@@ -74,14 +74,14 @@ N-MFP, not N-PORT).
 ## Refreshing the data
 
 ```bash
-python3 tools/publicdata/funds.py status                 # licences, last refreshed, cached size
-python3 tools/publicdata/funds.py refresh --dry-run      # what would be fetched; changes nothing
-python3 tools/publicdata/funds.py refresh                # the downloads (about 700 MB, kept in the data folder), then make.py and --check
+python3 tools/drishti.py feed status funds                 # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run funds --dry-run      # what would be fetched; changes nothing
+python3 tools/drishti.py feed run funds --snapshot                # the downloads (about 700 MB, kept in the data folder), then make.py and --check
 python3 tools/packgen/funds/make.py --check              # no network: the pack matches its generator
 ```
 
-`tools/publicdata/funds.sh` and `tools/windows/publicdata-funds.ps1` run the same script. The downloads stay in the data folder
-(`<data>/publicdata/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
+`tools/feeds/feed.sh run funds` and `tools/windows/feed.ps1 run funds` run the same script. The downloads stay in the data folder
+(`<data>/datafeeds/sources/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
 
 ## Data contracts
 
@@ -414,7 +414,7 @@ Nested `AUTHORISED_PARTICIPANTS[]`:
 
 - Reviewed by the pack owner: every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
 - A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted.
-- A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
+- A snapshot: refreshed when the funds data feed runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
 - Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust).
 
 ### HELD: Funds holding a company (`fund-holder`)
@@ -477,7 +477,7 @@ Nested `PROVENANCE`:
 
 - Reviewed by the pack owner: every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
 - A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted.
-- A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
+- A snapshot: refreshed when the funds data feed runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
 - Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust).
 
 ### TRACK: Funds tracking an index (`index-funds`)
@@ -526,42 +526,43 @@ Nested `PROVENANCE`:
 
 - Reviewed by the pack owner: every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).
 - A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted.
-- A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
+- A snapshot: refreshed when the funds data feed runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake.
 - Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust).
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `FUND` | `fund` | external: SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) (public domain (US Government work); SEC fair access policy); SEC Form N-CEN data sets (ETF facts, service providers, authorised participants) (public domain (US Government work); SEC fair access policy); SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns) (public domain (US Government work); SEC fair access policy); SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json) (public domain (US Government work)); Nasdaq Trader symbol directory (which tickers are ETFs) (public symbol directory files); GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to) (CC0 1.0) — refreshed by `tools/publicdata/funds.py` | `data/testdata/funds/fund/` → `lake demo` → connector `funds-store` |
-| `HELD` | `fund-holder` | external: SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) (public domain (US Government work); SEC fair access policy) — refreshed by `tools/publicdata/funds.py` | `data/testdata/funds/fund-holder/` → `lake demo` → connector `funds-store` |
-| `TRACK` | `index-funds` | external: SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) (public domain (US Government work); SEC fair access policy); SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns) (public domain (US Government work); SEC fair access policy) — refreshed by `tools/publicdata/funds.py` | `data/testdata/funds/index-funds/` → `lake demo` → connector `funds-store` |
+| `FUND` | `fund` | external: SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) (public domain (US Government work); SEC fair access policy); SEC Form N-CEN data sets (ETF facts, service providers, authorised participants) (public domain (US Government work); SEC fair access policy); SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns) (public domain (US Government work); SEC fair access policy); SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json) (public domain (US Government work)); Nasdaq Trader symbol directory (which tickers are ETFs) (public symbol directory files); GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to) (CC0 1.0) — refreshed by `drishti.py feed run funds` | `data/testdata/funds/fund/` → `lake demo` → connector `funds-store` |
+| `HELD` | `fund-holder` | external: SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) (public domain (US Government work); SEC fair access policy) — refreshed by `drishti.py feed run funds` | `data/testdata/funds/fund-holder/` → `lake demo` → connector `funds-store` |
+| `TRACK` | `index-funds` | external: SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) (public domain (US Government work); SEC fair access policy); SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns) (public domain (US Government work); SEC fair access policy) — refreshed by `drishti.py feed run funds` | `data/testdata/funds/index-funds/` → `lake demo` → connector `funds-store` |
 
 ### External sources
 
 | Source | Where | Licence | Internal only | Refresh |
 |---|---|---|---|---|
-| SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) | https://www.sec.gov/data-research/sec-markets-data/form-n-port-data-sets | public domain (US Government work); SEC fair access policy | no | `python3 tools/publicdata/funds.py refresh nport` |
-| SEC Form N-CEN data sets (ETF facts, service providers, authorised participants) | https://www.sec.gov/data-research/sec-markets-data/form-n-cen-data-sets | public domain (US Government work); SEC fair access policy | no | `python3 tools/publicdata/funds.py refresh ncen` |
-| SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns) | https://www.sec.gov/data-research/sec-markets-data/mutual-fund-prospectus-riskreturn-summary-data-sets | public domain (US Government work); SEC fair access policy | no | `python3 tools/publicdata/funds.py refresh rr` |
-| SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json) | https://www.sec.gov/file/company-tickers | public domain (US Government work) | no | `python3 tools/publicdata/funds.py refresh tickers` |
-| Nasdaq Trader symbol directory (which tickers are ETFs) | https://www.nasdaqtrader.com/dynamic/SymDir/ | public symbol directory files | no | `python3 tools/publicdata/funds.py refresh nasdaq` |
-| GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to) | https://goldencopy.gleif.org | CC0 1.0 | no | `python3 tools/publicdata/funds.py refresh gleif` |
+| SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) | https://www.sec.gov/data-research/sec-markets-data/form-n-port-data-sets | public domain (US Government work); SEC fair access policy | no | `python3 tools/drishti.py feed run funds -- nport` |
+| SEC Form N-CEN data sets (ETF facts, service providers, authorised participants) | https://www.sec.gov/data-research/sec-markets-data/form-n-cen-data-sets | public domain (US Government work); SEC fair access policy | no | `python3 tools/drishti.py feed run funds -- ncen` |
+| SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns) | https://www.sec.gov/data-research/sec-markets-data/mutual-fund-prospectus-riskreturn-summary-data-sets | public domain (US Government work); SEC fair access policy | no | `python3 tools/drishti.py feed run funds -- rr` |
+| SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json) | https://www.sec.gov/file/company-tickers | public domain (US Government work) | no | `python3 tools/drishti.py feed run funds -- tickers` |
+| Nasdaq Trader symbol directory (which tickers are ETFs) | https://www.nasdaqtrader.com/dynamic/SymDir/ | public symbol directory files | no | `python3 tools/drishti.py feed run funds -- nasdaq` |
+| GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to) | https://goldencopy.gleif.org | CC0 1.0 | no | `python3 tools/drishti.py feed run funds -- gleif` |
 
 ```bash
-python3 tools/publicdata/funds.py status                                   # each source: licence, internal only or not, last refreshed (offline)
-python3 tools/publicdata/funds.py refresh --dry-run                        # what would be fetched and written; changes nothing
-python3 tools/publicdata/funds.py refresh                                  # the committed pack: data/testdata/funds, samples/, the README and this guide, then make.py --check
-python3 tools/publicdata/funds.py refresh --offline                        # the same from the downloads only (about 700 MB in <data>/publicdata/cache/funds)
-python3 tools/publicdata/funds.py refresh --scope FUNDS:300,HOLDINGS:1000  # a widened build in <data>/publicdata/funds
+python3 tools/drishti.py feed status funds                                  # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run funds --dry-run                           # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run funds                                     # pull today's data and load it into the lake `capitalmarket` (what the daily schedule runs)
+python3 tools/drishti.py feed run funds --snapshot                          # refresh the committed pack instead: data/testdata/funds, samples/, the README and this guide, then make.py --check
+python3 tools/drishti.py feed run funds --snapshot --offline                # the same from the downloads only (about 700 MB in <data>/datafeeds/sources/cache/funds)
+python3 tools/drishti.py feed run funds -- --scope FUNDS:300,HOLDINGS:1000  # a widened pull of more funds and holdings
 ```
 
-The same through the wrappers: `tools/publicdata/funds.sh status` on Linux and macOS, `.\tools\windows\publicdata-funds.ps1 status` on Windows (every argument is passed on).
+The same through the wrappers: `tools/feeds/feed.sh run funds` on Linux and macOS, `.\tools\windows\feed.ps1 run funds` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
 
 ### Into the lake, checking, offline
 
 - **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../docs/guides/TOOLS.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

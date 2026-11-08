@@ -541,12 +541,12 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if F.glob("contracts/*.contract.yaml"):
         where = f"[{guide_files[0]}]({guide_files[0]})" if guide_files else "the pack's guide"
         out += [f"Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and "
-                f"its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, {where}: *Data contracts* and "
+                f"the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, {where}: *Data contracts* and "
                 "*Data retrieval*.", ""]
     ext = [s for s in sources if (s.get("name") or "").strip() and not str(s.get("licence", "")).startswith("Proprietary")]
     if ext:
         out += ["External data: " + "; ".join(f"{s['name']}" + (" (**internal only**)" if s.get("internal-only") else "") for s in ext) +
-                ". Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, "
+                ". Each source's URL, licence and data feed are on the External data help page, "
                 "[docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).", ""]
     # -- enabling
     out += ["## Enabling and dependencies", ""]
@@ -574,7 +574,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     for fd in feeds:
         kinds = ", ".join(f"`{k}`" for k in fd["kinds"])
         out += [f"The data feed `{fd['feed']}` (config/feeds/{fd['feed']}.yaml) pulls {kinds}: `python3 tools/drishti.py feed run {fd['feed']}` "
-                f"fetches them daily into `data/feeds/{fd['feed']}/<date>/` and loads them into the lake `{fd['lake']}`"
+                f"fetches them daily into `data/datafeeds/{fd['feed']}/<date>/` and loads them into the lake `{fd['lake']}`"
                 + (" (internal use only)" if fd["internal"] else "") + "; `--dry-run` says what it would fetch, changing nothing; "
                 + ("`--snapshot` refreshes the committed snapshot in data/testdata instead; " if fd["snapshot"] else "")
                 + "`feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries "

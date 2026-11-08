@@ -17,7 +17,7 @@
 # nothing written). No key; the OECD asks for no more than about 20 requests a minute (one a measure here).
 # A measure is a dataflow (agency,id,version) and an SDMX key whose {countries} is replaced by the countries joined with +; find both
 # in the Data Explorer (https://data-explorer.oecd.org/: "Developer API" on a table).
-# Run: python3 tools/drishti.py feed run oecd (FEEDS_GUIDE.md); options.sources holds each source's licence and terms; the rest of
+# Run: python3 tools/drishti.py feed run oecd (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
 # options is the default selection.
 feed: oecd
 title: OECD Data Explorer (SDMX)

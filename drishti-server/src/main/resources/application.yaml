@@ -214,6 +214,11 @@ drishti:
       file: ${DRISHTI_ALERTS_FILE:./config/alerts/platform-alerts.yaml}  # the rules: metric, threshold, how long, severity (a missing file: no rules, and Health says so)
       notify-roles: admin            # the roles told in their inbox (and the bell) when an alert opens, comma-separated; blank: nobody
       keep: 200                      # alerts opened and closed kept for the page, newest first (in memory: a restart starts afresh)
+  feeds:                             # the data feeds as the server sees them (docs/guides/FEEDS_GUIDE.md section 6; Admin -> Data loads -> Feeds)
+    config: ${DRISHTI_FEEDS_CONFIG:./config/feeds}   # the feed files' folder (config/feeds/<feed>.yaml); the run ledger is <data folder>/datafeeds/ledger.jsonl
+    root: ${DRISHTI_FEEDS_ROOT:.}    # the installation's folder, where tools/drishti.py is: Run now starts `tools/drishti.py feed run <feed>` there
+    python: ${DRISHTI_FEEDS_PYTHON:}  # the Python Run now starts (blank: the console's drishti-console/.venv, else python3, python on Windows)
+    sample-seconds: 60               # how often the ledger is read for the gauge drishti.datafeed.failed (the alert rule data-feed-failed)
   store:
     # The content store (docs/architecture/DATA_ARCHITECTURE.md): user content every node of a cluster can reach. Its settings are in their own file.
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}

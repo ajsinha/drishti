@@ -17,7 +17,7 @@
 # tools/feeds/sources/central_banks.py. Daily; incremental (each series asked from a few days before its last observation).
 # FRED needs a free API key (https://fred.stlouisfed.org/docs/api/api_key.html) in DRISHTI_FRED_API_KEY; without it the FRED series are
 # left out, said in the run's log, and the Bank of Canada's (no key) still load.
-# Run: python3 tools/drishti.py feed run central-banks (FEEDS_GUIDE.md); options.sources holds each source's licence and terms; the rest of
+# Run: python3 tools/drishti.py feed run central-banks (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
 # options is the default selection.
 feed: central-banks
 title: Central banks (FRED and the Bank of Canada)

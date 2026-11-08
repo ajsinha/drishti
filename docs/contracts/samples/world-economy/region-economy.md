@@ -130,6 +130,6 @@ Fields no record above has, found by reading all 59 rows, with how many rows fil
 ## See also
 
 - Data contract: [REGE in the world-economy pack's contracts](../../packs/world-economy.md#rege-region-economy-region-economy) (`config/packs/world-economy/contracts/region-economy.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
 - [Economies](../../../knowledge/economies.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

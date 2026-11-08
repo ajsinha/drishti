@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Our own feed files, written and read by the load rules (docs/guides/DATA_LAKE_GUIDE.md, section 5.2): the one place the
-generators (tools/testdata, tools/packgen, tools/publicdata) write a table's dated files, and the demo lake builder, the tests and the
+generators (tools/testdata, tools/packgen, tools/feeds) write a table's dated files, and the demo lake builder, the tests and the
 benchmarks read them back.
 
 **Written** (``write_table``), into one folder per table, every earlier feed file of the folder removed first:

@@ -108,7 +108,7 @@ rules:
     severity: warn                 # warn
     summary: "{value} expected loads are {state}"  # the line
   data-feed-failed:                # FEEDS_GUIDE section 6: a data feed's last run failed or was refused (cron, systemd, Task Scheduler or Run now)
-    metric: drishti.datafeed.failed  # 1 while the feed's last run in <data>/feeds/ledger.jsonl failed; a later success closes the alert
+    metric: drishti.datafeed.failed  # 1 while the feed's last run in <data>/datafeeds/ledger.jsonl failed; a later success closes the alert
     above: 0.5                     # failed
     severity: warn                 # warn
     summary: "data feed {feed} failed its last run: Admin -> Data loads -> Feeds"  # the line

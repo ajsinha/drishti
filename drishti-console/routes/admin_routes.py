@@ -410,7 +410,7 @@ async def loads_inbox(request: Request, partial: int = 0):
 async def loads_feeds(request: Request):
     """Admin → Data loads → Feeds (docs/guides/FEEDS_GUIDE.md section 6): every data feed with its last run, last success, rows, duration,
     failures since the last success and the last error, Run now, and the latest runs of the ledger. Every figure is the server's
-    (GET /api/v1/admin/feeds, from config/feeds and <data>/feeds/ledger.jsonl)."""
+    (GET /api/v1/admin/feeds, from config/feeds and <data>/datafeeds/ledger.jsonl)."""
     me = ident(request)
     if not me.is_admin:
         return _forbidden(request)

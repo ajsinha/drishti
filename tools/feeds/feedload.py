@@ -41,7 +41,8 @@ DRISHTI = ROOT / "tools" / "drishti.py"
 
 
 def packs_dir() -> Path:
-    return Path(os.environ.get("DRISHTI_FEEDS_PACKS") or ROOT / "config" / "packs")
+    """The packs' folder whose pack.yaml gives a table's kind, key and recommended layout."""
+    return ROOT / "config" / "packs"
 
 
 def inbox_dir(given: str | None = None) -> Path:
@@ -61,6 +62,8 @@ def lake_build_args(f: dict, lake: str, engine: str | None, summary: Path, opts:
             "--kind", f["kind"], "--mode", "overwrite-dates", "--summary", str(summary), "-q"]
     if f["table"] != f["kind"]:
         args += ["--table", f["table"]]
+    if f.get("key"):                                   # the dataset's id field (a lake entry without one takes it; one that has one must agree)
+        args += ["--key", f["key"]]
     if engine:
         args += ["--engine", engine]
     for k, flag in (("lake_root", "--lake-root"), ("jar", "--jar"), ("java", "--java"), ("signal", "--signal"), ("token_file", "--token-file")):
@@ -69,11 +72,61 @@ def lake_build_args(f: dict, lake: str, engine: str | None, summary: Path, opts:
     return args
 
 
+def ensure_entries(files: list[dict], lake: str, opts: dict, log=print) -> list[str]:
+    """A table the lake file does not describe yet gets its pack's recommended entry first (``LakesCli add-entry``, the same the data
+    inbox does for a new lake): the lake file is the truth from then on, and an entry already there is left as it is. The tables added."""
+    if opts.get("lake_root") is None and not _is_lake_name(lake):
+        return []
+    sys.path.insert(0, str(ROOT / "tools" / "lake"))
+    import lakeconfig
+    added = []
+    keys = {(f["pack"], f["kind"]): f.get("key") or "" for f in files if f["rows"]}
+    for pack, kind in sorted(keys):
+        args = ["add-entry", "--lake", lake, "--pack", str(packs_dir() / pack), "--kind", kind]
+        res = lakeconfig.run(args, jar=opts.get("jar"), java=opts.get("java"))
+        if res.get("added"):
+            added.append(str(res.get("table")))
+            log(f"  {res.get('message')}")
+            if keys[(pack, kind)]:
+                give_id(lakeconfig.lakes_dir() / f"{lake}.yaml", str(res.get("table")), keys[(pack, kind)], log)
+    return added
+
+
+def give_id(lake_file: Path, entry: str, key: str, log=print) -> bool:
+    """An entry just copied from a pack that names no id field gets the dataset's key (``id: <key>``): the parallel loader takes a table's
+    id from its lake entry only. An entry with an id, or one not written as a block, is left as it is."""
+    import yaml
+    text = lake_file.read_text(encoding="utf-8")
+    doc = yaml.safe_load(text) or {}
+    have = ((doc.get("tables") or {}).get(entry))
+    if have is None or not isinstance(have, dict) or have.get("id"):
+        return False
+    lines = text.splitlines(keepends=True)
+    for i, line in enumerate(lines):
+        if line.rstrip() == f"  {entry}:":
+            lines.insert(i + 1, f"    id: {key}                    # the feed's dataset key (drishti-feeds)\n")
+            lake_file.write_text("".join(lines), encoding="utf-8")
+            log(f"  {entry}: id {key} added to {lake_file} (the feed's dataset key)")
+            return True
+    return False
+
+
+def _is_lake_name(lake: str) -> bool:
+    sys.path.insert(0, str(ROOT / "tools" / "lake"))
+    import lakeconfig
+    return lakeconfig.is_lake_name(lake)
+
+
 def via_lake_build(files: list[dict], lake: str, route: str, work: Path, opts: dict, log=print) -> dict:
-    """java and python: one ``lake build`` per file (a file is one dataset of one business date), in date order."""
+    """java and python: one ``lake build`` per file (a file is one dataset of one business date), in date order; a table new to the lake
+    file gets its pack's recommended entry first."""
     engine = "java" if route == "java" else None
     out = {"route": route, "status": "ok", "loads": [], "rows": 0, "rejected": 0}
     work.mkdir(parents=True, exist_ok=True)
+    try:
+        out["entriesAdded"] = ensure_entries(files, lake, opts, log)
+    except Exception as e:  # noqa: BLE001  (the lake reader's refusal, in its words)
+        return {**out, "status": "failed", "error": f"lake {lake}: {e}"}
     for n, f in enumerate(sorted(files, key=lambda x: (x["businessDate"], x["table"]))):
         if not f["rows"]:
             out["loads"].append({"table": f["table"], "businessDate": f["businessDate"], "skipped": "no rows"})
@@ -87,20 +140,30 @@ def via_lake_build(files: list[dict], lake: str, route: str, work: Path, opts: d
             s = json.loads(summary.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             s = {}
-        entry = {"table": f["table"], "businessDate": f["businessDate"], "exit": proc.returncode, "rows": s.get("rows"),
-                 "rejected": s.get("rejected", 0), "engine": s.get("engine"), "line": said[-1] if said else ""}
+        entry = {"table": f["table"], "businessDate": f["businessDate"], "exit": proc.returncode, "rows": _count(s.get("rows")),
+                 "rejected": _count(s.get("rejected")), "engine": s.get("engine"), "line": said[-1] if said else ""}
         out["loads"].append(entry)
         if proc.returncode not in (0, 2):
             out["status"] = "failed"
             out["error"] = f"{f['table']} {f['businessDate']}: " + (said[-1] if said else f"lake build exit {proc.returncode}")
             log(f"  load failed: {out['error']}")
             break
-        out["rows"] += int(s.get("rows") or 0)
-        out["rejected"] += int(s.get("rejected") or 0)
-        log(f"  loaded {f['table']} {f['businessDate']}: {s.get('rows', '?')} rows into lake {lake} ({route})")
+        out["rows"] += _count(s.get("rows"))
+        out["rejected"] += _count(s.get("rejected"))
+        log(f"  loaded {f['table']} {f['businessDate']}: {_count(s.get('rows'))} rows into lake {lake} ({route})")
     if out["status"] == "ok" and out["rejected"]:
         out["status"] = "rejects"
     return out
+
+
+def _count(v) -> int:
+    """A summary's count: a number, or rows by business date ({date: rows})."""
+    if isinstance(v, dict):
+        return sum(_count(x) for x in v.values())
+    try:
+        return int(v or 0)
+    except (TypeError, ValueError):
+        return 0
 
 
 def _sha(path: Path) -> str:

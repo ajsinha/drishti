@@ -17,7 +17,7 @@
 
 # LEI parent relationship: lei-relationship (LEIR)
 
-One consolidation relationship from GLEIF's level 2 data: the child, its direct or ultimate parent, status and periods. One row per lei parent relationship, keyed by RELATIONSHIP_ID. Read by the **gleif** pack's connector `gleif-store` (table `<root>/gleif/lei-relationship/`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py), refreshed whole by its script (External data); 9,347 records. A refresh replaces the whole snapshot.
+One consolidation relationship from GLEIF's level 2 data: the child, its direct or ultimate parent, status and periods. One row per lei parent relationship, keyed by RELATIONSHIP_ID. Read by the **gleif** pack's connector `gleif-store` (table `<root>/gleif/lei-relationship/`). A **snapshot of public data**, captured 2026-10-25 from GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif), refreshed whole by its script (External data); 9,347 records. A refresh replaces the whole snapshot.
 
 ## File layout
 
@@ -148,7 +148,7 @@ Fields no record above has, found by reading all 9,347 rows, with how many rows 
 ## See also
 
 - Data contract: [LEIR in the gleif pack's contracts](../../packs/gleif.md#leir-lei-parent-relationship-lei-relationship) (`config/packs/gleif/contracts/lei-relationship.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and how to refresh it](../../../guides/EXTERNAL_DATA.md)
+- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
 - [Entities and ownership](../../../knowledge/entities-and-ownership.md)
 - [Tutorial 27 · Groupings and analytics, computed](../../../tutorials/27-groupings-and-analytics.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

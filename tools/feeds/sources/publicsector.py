@@ -19,7 +19,7 @@ folder, the values as published, and the recorded fixtures the tests answer from
 
     sources(run)              options.sources: [{id, name, title, url, terms, licence, redistributable, internal-only, attribution, ...}]
     provenance(run, ...)      {SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL, INTERNAL_ONLY} for a document
-    History                   <data>/feeds/<feed>/history/<name>.json: a series' kept points, merged with what a pull brought
+    History                   <data>/datafeeds/<feed>/history/<name>.json: a series' kept points, merged with what a pull brought
     Fixtures, Recorder        an opener answering from recorded responses (tests), and one recording them (new fixtures)
 """
 from __future__ import annotations

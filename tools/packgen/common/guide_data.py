@@ -50,6 +50,16 @@ END = "<!-- /data-sections -->"
 HEADER = "\n".join((ROOT / "docs" / "guides" / "RACHANA_REFERENCE.md").read_text(encoding="utf-8").splitlines()[:15])
 
 
+def _refresh(e: dict) -> str:
+    """What refreshes an external source: its data feed's command, else the generator it is typed into."""
+    return f"drishti.py feed run {e['feed']}" if e.get("feed") else e["script"]
+
+
+def _lake(feed: str) -> str:
+    """The lake a data feed loads (config/feeds/<feed>.yaml)."""
+    f = ROOT / "config" / "feeds" / f"{feed}.yaml"
+    return str((yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("lake") or "?") if f.is_file() else "?"
+
 def _cell(s) -> str:
     return str(s if s is not None else "").replace("|", "\\|").replace("\n", " ").strip()
 
@@ -170,7 +180,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
     s, td = spec(), _testdata()
     out = ["## Data retrieval", "",
            "Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched "
-           "from a public source by the pack's refresh script (each source, its licence and worked examples on the "
+           "from a public source by its data feed (each source, its licence and worked examples on the "
            f"{EXTERNAL_PAGE} help page); **synthetic** test data (or hand-written reference data), written by a generator with "
            "fictitious names; **computed** by a "
            "Drishti engine when it is asked, never stored by a source.", ""]
@@ -190,8 +200,8 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
         elif o.get("external"):
             used_ext += [i for i in o["external"] if i not in used_ext]
             origin = "external: " + "; ".join(_ext(s, o["external"]))
-            scripts = sorted({s["external"][i]["script"] for i in o["external"]})
-            origin += " — refreshed by " + ", ".join(f"`{x}`" if x != "tools/drishti.py" else f"`drishti.py feed run {o.get('feed')}`" for x in scripts)
+            scripts = sorted({_refresh(s["external"][i]) for i in o["external"]})
+            origin += " — refreshed by " + ", ".join(f"`{x}`" for x in scripts)
             lake = _feed_lake(o, c, conn) if o.get("feed") else None
         elif not o.get("generator"):                # a kind data_retrieval.yaml does not describe (a widened local pack): say so
             origin, lake = "not described in tools/packgen/common/data_retrieval.yaml", None
@@ -202,7 +212,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             if o.get("official"):
                 used_ext += [i for i in o["official"] if i not in used_ext]
                 origin += "; official public data optional: " + "; ".join(_ext(s, o["official"])) + \
-                          " (`tools/publicdata/official_market_data.py`, to the data folder; read live by the feed connectors, off as shipped)"
+                          " (`drishti.py feed run market-data`, to the data folder; read live by the feed connectors, off as shipped)"
             lake = None
         if lake is None:
             d = (td.get(c["kind"]) or [None])[0]
@@ -224,35 +234,25 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
         out += ["### External sources", ""]
         out += table(["Source", "Where", "Licence", "Internal only", "Refresh"], [[
             e["title"], e["url"], e["licence"], "**yes**" if e.get("internal") else "no",
-            f"`python3 {e['script']} refresh {e['source']}`" if e["script"].startswith("tools/publicdata/") else
-            f"`python3 tools/drishti.py feed run {e['source']}`" if e["script"] == "tools/drishti.py" else f"`{e['script']}` {e['source']}"]
+            f"`python3 tools/drishti.py feed run {e['feed']}" + (f" -- {e['source']}" if e.get("source") else "") + "`" if e.get("feed") else f"`{e['script']}` {e['source']}"]
             for e in (s["external"][i] for i in used_ext)])
         internal = [s["external"][i]["title"] for i in used_ext if s["external"][i].get("internal")]
         if internal:
             out += ["**Internal only:** " + "; ".join(internal) + ". The terms restrict reuse or forbid redistribution: the data is for "
                     "internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with "
                     "the owner before any client or external use.", ""]
-        scripts = sorted({s["external"][i]["script"] for i in used_ext if s["external"][i]["script"] in s["scripts"]})
-        for sc in scripts:
-            info = s["scripts"][sc]
-            ex = [["status", "each source: licence, internal only or not, last refreshed (offline)"],
-                  ["refresh --dry-run", "what would be fetched and written; changes nothing"]] + info["examples"]
-            w = max(len(f"python3 {sc} {e[0]}") for e in ex) + 2
-            out += ["```bash"] + [f"python3 {sc} {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
-                    f"The same through the wrappers: `tools/publicdata/{info['wrapper']}.sh status` on Linux and macOS, "
-                    f"`.\\tools\\windows\\publicdata-{info['wrapper']}.ps1 status` on Windows (every argument is passed on).", ""]
-    feeds = sorted({s["external"][i]["source"] for i in used_ext if s["external"][i]["script"] == "tools/drishti.py"})
-    for feed in feeds:
-        ex = [(f"feed run {feed} --dry-run", "what the feed would pull; writes nothing"),
-              (f"feed run {feed}", f"pull what is new into <data>/feeds/{feed}/<date>/ and load it (the parallel loader)"),
-              (f"feed run {feed} --load inbox", "the same through the data inbox: the server loads it"),
-              (f"feed status {feed}", "its last runs, rows and errors (the ledger)")]
-        w = max(len(f"python3 tools/drishti.py {e[0]}") for e in ex) + 2
-        out += ["```bash"] + [f"python3 tools/drishti.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
-                f"The same through the wrappers: `tools/feeds/feed.sh run {feed}` on Linux and macOS, `.\\tools\\windows\\feed.ps1 run {feed}` "
-                f"on Windows. The feed file is `config/feeds/{feed}.yaml` (its sources and their licences in `options.sources`, the schedule, "
-                "the selection); the [Public sector guide](../../../../docs/guides/PUBLIC_SECTOR_GUIDE.md) and the "
-                "[External data feeds guide](../../../../docs/guides/FEEDS_GUIDE.md) explain it.", ""]
+        feeds = sorted({s["external"][i]["feed"] for i in used_ext if s["external"][i].get("feed") in s["feeds"]})
+        for fd in feeds:
+            info = s["feeds"][fd]
+            ex = [(f"feed status {fd}", "its last runs: last success, rows, failures (offline: the run ledger)"),
+                  (f"feed run {fd} --dry-run", "what would be fetched and loaded; changes nothing"),
+                  (f"feed run {fd}", f"pull today's data and load it into the lake `{_lake(fd)}` (what the daily schedule runs)")]
+            ex += [(f"feed run {fd} {e[0]}", e[1]) for e in info.get("examples") or []]
+            w = max(len(f"python3 tools/drishti.py {e[0]}") for e in ex) + 2
+            out += ["```bash"] + [f"python3 tools/drishti.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
+                    f"The same through the wrappers: `tools/feeds/feed.sh run {fd}` on Linux and macOS, `.\\tools\\windows\\feed.ps1 run {fd}` "
+                    "on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or "
+                    "`--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).", ""]
     if used_gen:
         out += ["### Generators", ""]
         out += table(["Generator", "Writes", "Check"], [[f"`{s['generators'][g]['run']}`", s["generators"][g]["what"],
@@ -266,7 +266,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             "`--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists "
             "a kind and the pack's code opens its overview with the count of each kind.",
             "- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in "
-            "the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a "
+            "the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a "
             "connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine "
             "configured offline (`drishti.offline.plugins`).", ""]
     return out

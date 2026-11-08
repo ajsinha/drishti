@@ -18,9 +18,9 @@ imported, never run. Python standard library only.
 
     Source      one public source: its licence and use, then fetch -> normalise -> write
     Http        GET with a User-Agent, a polite pause between calls, retries with back-off (429, 5xx, time-outs)
-    Cache       the download cache under <data>/feeds/sources/cache/<pack>: raw files as served plus cache-index.json
+    Cache       the download cache under <data>/datafeeds/sources/cache/<pack>: raw files as served plus cache-index.json
                 (url, fetched time, sha256, bytes); a file younger than --max-age is reused, so a broken run resumes
-    Manifest    <data>/feeds/sources/<pack>/manifest.json (and a copy in --out outside the repository): what ran, when,
+    Manifest    <data>/datafeeds/sources/<pack>/manifest.json (and a copy in --out outside the repository): what ran, when,
                 from where, under which licence, the files written with their sha256 and row counts
     guard_out   the internal-only rule: a source whose terms do not allow redistribution is never written into a
                 committed folder of the repository unless --internal-ok, and the refusal says why in words
@@ -266,11 +266,11 @@ class Http:
 # ---------------------------------------------------------------- the manifest
 
 class Manifest:
-    """<data>/feeds/sources/<pack>/manifest.json: the last refresh of each source and the files written."""
+    """<data>/datafeeds/sources/<pack>/manifest.json: the last refresh of each source and the files written."""
 
     def __init__(self, pack: str):
         self.pack = pack
-        self.path = data_dir() / "feeds" / "sources" / pack / "manifest.json"
+        self.path = data_dir() / "datafeeds" / "sources" / pack / "manifest.json"
         try:
             self.data = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
@@ -304,7 +304,7 @@ class Run:
 
     def __init__(self, pack: str, a: argparse.Namespace, out: Path, log=print):
         self.pack, self.a, self.out, self.log = pack, a, Path(out), log
-        self.cache = Cache(Path(a.cache) if getattr(a, "cache", None) else data_dir() / "feeds" / "sources" / "cache" / pack)
+        self.cache = Cache(Path(a.cache) if getattr(a, "cache", None) else data_dir() / "datafeeds" / "sources" / "cache" / pack)
         self.http = Http(self.cache, a.pause, a.max_age, a.offline, log)
         self.scope = [s.strip() for s in (a.scope or "").split(",") if s.strip()]
         self.written: list[Path] = []
@@ -348,7 +348,7 @@ def parser(prog: str, description: str, sources: list[Source], extra=None) -> ar
         s = sub.add_parser(name, help=what, description=what + " (offline: reads the manifest and the cache only)",
                            formatter_class=argparse.RawDescriptionHelpFormatter, epilog=shown)
         s.set_defaults(command="status")
-        s.add_argument("--cache", help="the download cache (default <data>/feeds/sources/cache/<pack>)")
+        s.add_argument("--cache", help="the download cache (default <data>/datafeeds/sources/cache/<pack>)")
     r = sub.add_parser("refresh", help="fetch, normalise and write; then the pack's own check",
                        formatter_class=argparse.RawDescriptionHelpFormatter,
                        epilog="sources: " + ", ".join(s.name for s in sources) + "\n" +
@@ -358,8 +358,8 @@ def parser(prog: str, description: str, sources: list[Source], extra=None) -> ar
     r.add_argument("--years", type=int, help="this many years of history, ending with the latest")
     r.add_argument("--since", type=int, metavar="YEAR", help="history from this year")
     r.add_argument("--scope", help="widen the source (comma separated; see below)")
-    r.add_argument("--out", help="where to write (default: the pack's committed location, or <data>/feeds/sources/<pack> for internal-only data)")
-    r.add_argument("--cache", help="the download cache (default <data>/feeds/sources/cache/<pack>)")
+    r.add_argument("--out", help="where to write (default: the pack's committed location, or <data>/datafeeds/sources/<pack> for internal-only data)")
+    r.add_argument("--cache", help="the download cache (default <data>/datafeeds/sources/cache/<pack>)")
     r.add_argument("--max-age", type=float, default=24.0, metavar="HOURS", help="reuse a cached download younger than this (default 24)")
     r.add_argument("--offline", action="store_true", help="use the cache only; fetch nothing")
     r.add_argument("--pause", type=float, default=0.4, help="seconds between requests (default 0.4)")
