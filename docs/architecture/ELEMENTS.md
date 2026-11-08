@@ -679,7 +679,7 @@ library with its module: an unlicensed module's library is not served, its kinds
     source (the tag, `createElement('select')`, an element helper asked for one); its allow-list says how many each file still draws
     and why, and only shrinks: the libraries that do not require drishti-inputs (drishti-chart's studio options and map metric,
     drishti-graph's chrome, drishti-grid's document console and pivot measure, drishti-tree's move-to and size-by), the renderer's
-    harness page and the gallery's option panel, and the screens of the native-select sweep (60 files, 2026-11-07).
+    harness page and the gallery's option panel, and the screens of the native-select sweep (63 files with the plugins' pages, 2026-11-07).
 
   | Was | Now |
   |---|---|
@@ -1546,7 +1546,7 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
 - [x] drishti-inputs' single-choice `Select` (`<drishti-select>`, 8.2); the VaR family's and the exposure screens' native selects replaced (12.2: hierarchy, horizon, confidences, currency, the pre-deal form)
 - [x] The library's own native selects (a form's enum select, the grid's select editor, the designer kit's layout picker and choices, the filter bar's condition and preset) and FRTB-SA's and SIMM's choice selects on `Select`; the screens' tests through `select_helpers.py` (8.2)
-- [ ] The native-select sweep: the allow-list of `test_native_select_guard.py` empty (60 screens; the libraries without drishti-inputs, the renderer's harness and the gallery; 8.2)
+- [ ] The native-select sweep: the allow-list of `test_native_select_guard.py` empty (63 screens; the libraries without drishti-inputs, the renderer's harness and the gallery; 8.2)
 - [x] drishti-renderer 2.0.0 on the libraries (8.5; the console's controls, funnels and Zoom still its scripts until their screens move)
 - [x] drishti-insight 0.1.0 (8.10): the one Explain, the one search box, the Approvals queue and the workbook export, in the manifest, so
   packing and the gallery include it

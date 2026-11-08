@@ -250,7 +250,7 @@
   a field found by its name, `[name="op.mtm"]`, is its `<drishti-select>`; `index=` picks too; `has_option` waits for an option). Also on
   `Select`: the designer kit's layout picker and the shell's header choices (the report designer's *View which version*), the filter bar's
   condition and date preset (drishti-inputs' panels: one opened from inside another keeps it open). **A guard**
-  (`tests/test_native_select_guard.py`) fails on a raw `<select>` in a console page, script or library source; its allow-list (69 files:
+  (`tests/test_native_select_guard.py`) fails on a raw `<select>` in a console page, script, library source or plugin page; its allow-list (72 files:
   the libraries without drishti-inputs, the renderer's harness, the gallery, the screens of the native-select sweep) only shrinks.
 - **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the theme as YAML is BI Studio's YAML panel (Visual, YAML, Both), both ways: an edit is read by the server after a pause, a line that does
