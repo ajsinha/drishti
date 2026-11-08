@@ -37,7 +37,7 @@ engines:
     landings: []
     tiles: [VaR of the bank, VaR of the rates desk]
     lenses: []
-    bi: [bi.market_risk_var_]
+    bi: [banking.market_risk_var_]
     cli: [var, play var]
     playgrounds: [var, pvar]
     connectors: [var-engine, var-positions, var-pv-stream]
