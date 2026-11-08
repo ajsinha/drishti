@@ -30,6 +30,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import card_value, chart, clean, click_mark, open_report, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
+from select_helpers import has_option
 
 REPORT = "file:report:trades-overview"
 DAY = "2026-10-08"
@@ -276,7 +277,7 @@ def test_a_missing_report_says_so_with_its_code(stack, browser):
 
 def new_draft(page):
     page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-dataset] option[value='mq:trades-basic@1']", state="attached")
+    page.wait_for_function(has_option("[data-new-dataset]", "mq:trades-basic@1"))
     page.select_option("[data-new-dataset]", "mq:trades-basic@1")
     page.fill("[data-new-title]", "Designer test")
     page.click("[data-new] button[type=submit]")

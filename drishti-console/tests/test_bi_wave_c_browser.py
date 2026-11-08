@@ -37,6 +37,7 @@ from playwright.sync_api import sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import clean, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, ROOT  # noqa: E402
+from select_helpers import has_option
 
 CHART_REPORT = """rachana: 1
 report: {name}
@@ -174,7 +175,7 @@ STYLES = """async () => {
 # ---- the Notebook ---------------------------------------------------------------------------------------------------------------------------
 def open_extract(page):
     page.goto(CONSOLE_URL + "/bi/notebook")
-    page.wait_for_function("() => document.querySelectorAll('[data-dataset] option').length > 1", timeout=30000)
+    page.wait_for_function(has_option("[data-dataset]", ">1"), timeout=30000)
     page.select_option("[data-dataset]", "mq:trades-basic@1")
     page.wait_for_selector("[data-fields] input[name=f]", timeout=30000)
     page.click("[data-open-go]")
@@ -227,7 +228,7 @@ def test_a_sql_cell_becomes_a_visual_in_a_new_and_an_existing_report(stack, brow
     # an existing one
     page.reload()
     open_extract(page)
-    page.wait_for_function("() => document.querySelectorAll('[data-promote-target] option').length > 1", timeout=30000)
+    page.wait_for_function(has_option("[data-promote-target]", ">1"), timeout=30000)
     page.select_option("[data-promote-target]", mine["id"])
     page.click("#bxT-sql")
     page.click("[data-promote-report]")

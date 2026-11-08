@@ -59,10 +59,11 @@ def choose(pg, sel, val):
 # with select_option picks from the Select the way a person does (open it, click the option); input_value reads the element's value. A
 # native <select> is untouched. Installed once for the test session by conftest.py.
 
-# A field's name is on its hidden input (span.di-names, so the page's own form submits it); a test that found the field by its name
-# (`[name="op.mtm"]`) means the <drishti-select> a person sees beside it.
+# A field's name is on its hidden input (span.di-names, so the page's own form submits it; or inside a page's own <drishti-select>); a
+# test that found the field by its name (`[name="op.mtm"]`) means the <drishti-select> a person sees beside it or around it.
 TARGET = ("(e) => { if (e && e.tagName === 'INPUT' && e.type === 'hidden' && e.closest('.di-names')) {"
-          " const f = e.closest('.di-form-field'), s = f && f.querySelector('drishti-select'); if (s) { return s; } } return e; }")
+          " const f = e.closest('.di-form-field'), s = f && f.querySelector('drishti-select'); if (s) { return s; } }"
+          " const own = e && e.tagName !== 'DRISHTI-SELECT' && e.closest && e.closest('drishti-select'); return own || e; }")
 IS_SELECT = "(e) => { const t = (%s)(e); return !!t && t.tagName === 'DRISHTI-SELECT'; }" % TARGET
 OPTION_AT = ("(e, want) => { const w = [].concat(want.value, want.label).map(String), m = e.component.matches;"
              " if (want.index !== null) { const o = e.component.options[want.index]; return o ? m.indexOf(o) : -1; }"

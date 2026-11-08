@@ -38,6 +38,7 @@ import bi_report_stack  # noqa: E402
 from bi_report_helpers import CHART, card_value, clean, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
 import select_helpers  # noqa: E402
+from select_helpers import has_option
 
 DAY = "2026-10-08"
 STATE = {}
@@ -122,7 +123,7 @@ def fill(page, sel, value):
 def test_a_power_bi_author_builds_the_desk_pack_without_yaml(stack, browser):
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-dataset] option[value='mq:trades-basic@1']", state="attached")
+    page.wait_for_function(has_option("[data-new-dataset]", "mq:trades-basic@1"))
     page.select_option("[data-new-dataset]", "mq:trades-basic@1")
     page.fill("[data-new-title]", "Desk pack")
     page.click("[data-new] button[type=submit]")

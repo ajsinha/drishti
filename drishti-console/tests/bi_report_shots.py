@@ -29,6 +29,7 @@ from playwright.sync_api import sync_playwright
 import bi_report_stack
 from bi_report_helpers import chart, click_mark, open_report, settled, sign_in
 from bi_report_stack import CONSOLE_URL, api
+from select_helpers import has_option
 
 OVERVIEW = "file:report:trades-overview"
 COUNTERPARTY = "file:report:counterparty-risk"
@@ -150,7 +151,7 @@ def main(out: Path, captures: Path) -> None:
                 # ---- the designer: a report from scratch ---------------------------------------------------------------------------------------
                 page = sign_in(browser, "wes", viewport={"width": 1600, "height": 1000})
                 page.goto(CONSOLE_URL + "/bi/designer")
-                page.wait_for_selector("[data-new-dataset] option[value='file:dataset:trades-basic']", state="attached")
+                page.wait_for_function(has_option("[data-new-dataset]", "file:dataset:trades-basic"))
                 page.select_option("[data-new-dataset]", "file:dataset:trades-basic")
                 page.fill("[data-new-title]", "Desk overview")
                 shot_full(page, ".bi-canvas", out / "design-start.png")

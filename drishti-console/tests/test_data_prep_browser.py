@@ -40,6 +40,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import clean, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, ROOT  # noqa: E402
+from select_helpers import has_option
 
 DAY = "2026-10-08"
 BOOKS = ["BOOK-FX-1", "BOOK-FI-1", "BOOK-EQ-1"]
@@ -260,7 +261,7 @@ def test_a_failing_step_says_where_and_keeps_the_steps_before(stack, browser):
 
 def test_the_notebook_profiles_the_extract_with_the_editors_panel(stack, browser):
     page = sign_in(browser, "ann", "/bi/notebook")                                             # no raw power: PRICE is masked for her
-    page.wait_for_function("() => [...document.querySelectorAll('[data-dataset] option')].some(o => o.value === 'mq:prep-model@1')", timeout=30000)
+    page.wait_for_function(has_option("[data-dataset]", "mq:prep-model@1"), timeout=30000)
     page.select_option("[data-dataset]", "mq:prep-model@1")
     page.wait_for_selector("[data-fields] input[name=f]")
     page.check("[data-fields] input[value='trades.PRICE']")                                   # a masked field is not ticked for her: tick it

@@ -30,6 +30,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_gov_stack  # noqa: E402
 from bi_gov_stack import CONSOLE_URL, PASSWORD  # noqa: E402
 from bi_report_helpers import code_text, type_code  # noqa: E402
+from select_helpers import has_option
 
 
 @pytest.fixture(scope="module")
@@ -169,7 +170,7 @@ def test_the_certified_badge_shows_in_the_catalogue_and_search(stack, browser):
     cat.goto(CONSOLE_URL + "/bi/catalogue?kind=all")                                   # the All tab: every kind (the catalogue is split by kind)
     expect(cat.locator(".bi-card")).to_have_count(5)                                    # the two tables, the two models and the report
     expect(cat.locator(".bi-card").first.locator(".bi-certified")).to_be_visible()      # certified items are pinned first
-    cat.select_option("select[name=endorsement]", "certified")
+    cat.select_option("[name=endorsement]", "certified")
     cards = cat.locator(".bi-card")
     expect(cards).to_have_count(2)
     expect(cards.first.locator(".bi-certified")).to_contain_text("certified")
@@ -213,7 +214,7 @@ def test_a_model_change_that_breaks_its_contract_needs_a_new_major_version(stack
 def test_a_bundle_is_exported_and_imported_with_a_dry_run_first(stack, browser, tmp_path):
     ann = sign_in(browser, "ann")
     ann.goto(CONSOLE_URL + "/bi/environments")
-    expect(ann.locator("[data-ws-select] option")).not_to_have_count(0)
+    ann.wait_for_function(has_option("[data-ws-select]"))
     ann.select_option("[data-ws-select]", "rates-desk")
     with ann.expect_download() as d:
         ann.click("[data-export] button[type=submit]")

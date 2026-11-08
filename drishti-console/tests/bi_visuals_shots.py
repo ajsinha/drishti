@@ -33,6 +33,7 @@ import bi_report_stack  # noqa: E402
 from bi_report_helpers import open_report, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, api  # noqa: E402
 from test_bi_new_visuals_browser import DATASET, DATASET_YAML, REPORT, REPORT_YAML, Stack  # noqa: E402
+from select_helpers import has_option
 
 
 def main(out: Path, captures: Path) -> None:
@@ -70,7 +71,7 @@ def main(out: Path, captures: Path) -> None:
 
                 dz = sign_in(browser, "wes")
                 dz.goto(CONSOLE_URL + "/bi/designer")
-                dz.wait_for_selector("[data-new-dataset] option[value='file:dataset:" + DATASET + "']", state="attached")
+                dz.wait_for_function(has_option("[data-new-dataset]", "file:dataset:" + DATASET))
                 dz.select_option("[data-new-dataset]", "file:dataset:" + DATASET)
                 dz.fill("[data-new-title]", "New visuals draft")
                 dz.click("[data-new] button[type=submit]")

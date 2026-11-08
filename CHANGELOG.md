@@ -262,6 +262,17 @@
   condition and date preset (drishti-inputs' panels: one opened from inside another keeps it open). **A guard**
   (`tests/test_native_select_guard.py`) fails on a raw `<select>` in a console page, script, library source or plugin page; its allow-list (69 files:
   the libraries without drishti-inputs, the renderer's harness, the gallery, the screens of the native-select sweep) only shrinks.
+- **The native-select sweep, first half: the libraries and BI on `Select`** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  drishti-grid (a table's rows per page, the phone pivot's measure), drishti-chart (the studio's options, the map's metric), drishti-graph's
+  group, size and colour pickers and drishti-tree's size-by and move-to draw drishti-inputs' `Select`, so those four libraries require
+  drishti-inputs (the manifest lists it before the grid; the harness pages load it). Every BI page and script follows: the catalogue's
+  filters, the workspace's new item, runs filters and member role, the designer's start, the report's time, bookmarks, click mode and
+  export scope, the notebook, the transform, environments, history's Compare, the runs drawer's forms, the parameter slicers, the
+  statement settings, the drill and perspective pickers and the relative-date slicer (`B.select` in code, `<drishti-select>` in the
+  templates; *Also add* a `<drishti-multiselect>`); the renderer's harness and the gallery's option panel too. New in drishti-inputs:
+  `selectElement(doc, options, attrs)`; a page's `<drishti-select>` fires `change` and `input` for a pick as a native select did, its
+  `value`, `disabled` and `focus()` reach the control, and a named one's field reads and sets it (`form.elements.<name>.value`). The guard's
+  allow-list: 69 files and 149 selects → 39 and 78. Names, `data-*` hooks and the saved YAML are unchanged.
 - **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the theme as YAML is BI Studio's YAML panel (Visual, YAML, Both), both ways: an edit is read by the server after a pause, a line that does
   not read is marked and the theme keeps its last good version; the hand-made YAML writer and the text area are deleted (`dumpYaml` writes it).
