@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 15 · AI in Drishti
+# Tutorial 10 · The AI assistant
 
 Drishti can put a language model beside BI in three places and no more: **describe a report** in words, **ask the data** a question, **explain this number**. It is **off by default**, it can only do what a person could do by hand (**it writes a draft or a query; Drishti checks it, runs it as the reader and shows it**),
 and by default the model is never sent a row of data, only names. In this tutorial you turn it on with the **mock provider**, a deterministic stand-in with no network and no key, so you can see everything it does and everything it is stopped from doing, then you meet the AI **policy**, **Test connection** and the real providers.
@@ -24,8 +24,8 @@ About 30 minutes.
 
 ## Before you start
 
-- The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes and **Drishti server (demo lakes)**, sign-in on),
-  [tutorial 10](10-first-bi-report.md) done (the World economics report, which reads the model `world-economics@1`), [tutorial 13](13-govern-bi.md) for
+- The quick-start environment of [tutorial 8, Part A](08-reports-and-dashboards.md#before-you-start) (the demo lakes and **Drishti server (demo lakes)**, sign-in on),
+  [tutorial 8, Part A](08-reports-and-dashboards.md#part-a--your-first-bi-report) done (the World economics report, which reads the model `world-economics@1`), [tutorial 8, Part G](08-reports-and-dashboards.md#part-g--govern-bi) for
   the people `ann` (a writer) and `sue` (a steward).
 - The AI layer is a **restart** of the server and the console with two more variables (step 1): in the IDE, edit the run configurations **Drishti server
   (demo lakes)** and **Drishti console** and add them under *Environment variables*.
@@ -189,7 +189,7 @@ the report checker** on it, the same one **Check** and **Save** use. A draft tha
 
 ![The designer after using the draft: a GDP card with 117,327 and a bar chart of GDP for each region](img/t15/04-draft-used.jpg)
 
-You should see the draft in the designer as a card (`117,327`) and a bar of GDP by region, with real data. It is a draft in your editor like text you typed: **nothing was saved or published**, undo, Check and Save are unchanged, and publishing needs a person and the usual review ([tutorial 13](13-govern-bi.md)).
+You should see the draft in the designer as a card (`117,327`) and a bar of GDP by region, with real data. It is a draft in your editor like text you typed: **nothing was saved or published**, undo, Check and Save are unchanged, and publishing needs a person and the usual review ([tutorial 8, Part G](08-reports-and-dashboards.md#part-g--govern-bi)).
 The API behind the button:
 
 ```text
@@ -401,11 +401,11 @@ fields:
 ```
 
 (Asked of the shipped model itself, `{"dataset": "file:model:world-economics"}`, it proposes the same three items, but **Accept** needs a model you may
-edit. Asked of a version 1 dataset by its id, the helper still answers in that dataset's own YAML: `book: { type: string, description: ... }`.) The same layer writes the **summary at the top of a subscription's email** ([tutorial 11](11-bi-that-runs-itself.md), step 8). [BI_GUIDE.md sections 9 to 11](../guides/BI_GUIDE.md#299-a-written-summary-at-the-top-of-a-subscriptions-email).
+edit. Asked of a version 1 dataset by its id, the helper still answers in that dataset's own YAML: `book: { type: string, description: ... }`.) The same layer writes the **summary at the top of a subscription's email** ([tutorial 8, Part D](08-reports-and-dashboards.md#part-d--bi-that-runs-itself), step 37). [BI_GUIDE.md sections 9 to 11](../guides/BI_GUIDE.md#299-a-written-summary-at-the-top-of-a-subscriptions-email).
 
 ## Next steps
 
-- [Tutorial 16](16-embed-drishti.md): put a view or a report on another web page.
+- [Tutorial 20](20-embed-drishti.md): put a view or a report on another web page.
 - [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [AI.md](../admin/AI.md#1-model-providers) and the policy settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings).
 
 ## If something goes wrong
