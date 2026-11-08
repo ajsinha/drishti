@@ -1,45 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 676" width="760" height="676" role="img" aria-label="Migration with banking as the proving ground" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 676" width="760" height="676" role="img" aria-label="Migration in three releases, banking as the proving ground" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
 <!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
-<title>Migration with banking as the proving ground</title>
+<title>Migration in three releases, banking as the proving ground</title>
 <defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker></defs>
 <rect x="0.5" y="0.5" width="759" height="675" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
-<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">Migration with banking as the proving ground</text>
-<text x="24" y="60" font-size="13" fill="#5c6a80">Each phase ends with a proof; VaR stays exactly equal throughout.</text>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">Migration in three releases, banking as the proving ground</text>
+<text x="24" y="60" font-size="13" fill="#5c6a80">i1, i2, i3, then trust in j; each phase ends with a proof; VaR exactly equal.</text>
 <path d="M24,84 L104,84 L124,136 L104,188 L24,188 Z" fill="#1f5fbf"/>
 <text x="64" y="144" font-size="22" font-weight="800" fill="#ffffff" text-anchor="middle">P1</text>
 <rect x="134" y="84" width="602" height="104" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
-<text x="148" y="108" font-size="16" font-weight="700" fill="#1a2333" text-anchor="start">Kernel boundary to zero</text>
-<rect x="688" y="93" width="34" height="22" rx="11" fill="#ffffff" stroke="#1f5fbf"/>
-<text x="714" y="109" font-size="12" font-weight="700" fill="#1f5fbf" text-anchor="end">i1</text>
-<text x="148" y="132" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• kernel API jar (SPIs → kernel.api) · KindProvider</text>
-<text x="148" y="152" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• domain strings 39 files → 0 · bindings.yaml</text>
+<text x="148" y="108" font-size="16" font-weight="700" fill="#1a2333" text-anchor="start">Foundations: kernel boundary to zero</text>
+<rect x="625" y="93" width="97" height="22" rx="11" fill="#ffffff" stroke="#1f5fbf"/>
+<text x="714" y="109" font-size="12" font-weight="700" fill="#1f5fbf" text-anchor="end">2.9.11.i1</text>
+<text x="148" y="132" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• data standards · kernel API jar · KindProvider</text>
+<text x="148" y="152" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• domain strings → 0 · drill under 60 min · memory</text>
 <text x="148" y="178" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">proof: kernel boots with no module · VaR exactly equal</text>
 <path d="M24,200 L104,200 L124,252 L104,304 L24,304 Z" fill="#1f5fbf"/>
 <text x="64" y="260" font-size="22" font-weight="800" fill="#ffffff" text-anchor="middle">P2</text>
 <rect x="134" y="200" width="602" height="104" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
-<text x="148" y="224" font-size="16" font-weight="700" fill="#1a2333" text-anchor="start">Package and module path</text>
-<rect x="688" y="209" width="34" height="22" rx="11" fill="#ffffff" stroke="#1f5fbf"/>
-<text x="714" y="225" font-size="12" font-weight="700" fill="#1f5fbf" text-anchor="end">i2</text>
-<text x="148" y="248" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• .dmod + packager · class loader per module</text>
-<text x="148" y="268" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• thin jar · console plugins from folders · Admin pages</text>
-<text x="148" y="294" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">proof: banking passes against the kernel alone</text>
+<text x="148" y="224" font-size="16" font-weight="700" fill="#1a2333" text-anchor="start">Modules on one node</text>
+<rect x="625" y="209" width="97" height="22" rx="11" fill="#ffffff" stroke="#1f5fbf"/>
+<text x="714" y="225" font-size="12" font-weight="700" fill="#1f5fbf" text-anchor="end">2.9.11.i2</text>
+<text x="148" y="248" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• .dmod · pages, route table · clean unload</text>
+<text x="148" y="268" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• SDK (archetype, Maven plugin) · deploy CLI + Admin</text>
+<text x="148" y="294" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">proof: banking as .dmod · install, remove, reinstall clean</text>
 <path d="M24,316 L104,316 L124,368 L104,420 L24,420 Z" fill="#2bb3a3"/>
 <text x="64" y="376" font-size="22" font-weight="800" fill="#ffffff" text-anchor="middle">P3</text>
 <rect x="134" y="316" width="602" height="104" rx="8" fill="#dcf3f0" stroke="#2bb3a3" stroke-width="1.5"/>
-<text x="148" y="340" font-size="16" font-weight="700" fill="#1a2333" text-anchor="start">Distributions</text>
-<rect x="688" y="325" width="34" height="22" rx="11" fill="#ffffff" stroke="#2bb3a3"/>
-<text x="714" y="341" font-size="12" font-weight="700" fill="#2bb3a3" text-anchor="end">i2</text>
-<text x="148" y="364" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• distribution file · branding literals → 0</text>
-<text x="148" y="384" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• drishti.finance · genomics sample</text>
-<text x="148" y="410" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">proof: drishti.genomics boots from config only</text>
+<text x="148" y="340" font-size="16" font-weight="700" fill="#1a2333" text-anchor="start">Cluster and white label</text>
+<rect x="625" y="325" width="97" height="22" rx="11" fill="#ffffff" stroke="#2bb3a3"/>
+<text x="714" y="341" font-size="12" font-weight="700" fill="#2bb3a3" text-anchor="end">2.9.11.i3</text>
+<text x="148" y="364" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• placement per part · singletons · heavy guards</text>
+<text x="148" y="384" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• cluster deploy · rolling · distributions</text>
+<text x="148" y="410" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">proof: banking on main + b only · genomics from config</text>
 <path d="M24,432 L104,432 L124,484 L104,536 L24,536 Z" fill="#e8a33a"/>
 <text x="64" y="492" font-size="22" font-weight="800" fill="#ffffff" text-anchor="middle">P4</text>
 <rect x="134" y="432" width="602" height="104" rx="8" fill="#fbefd9" stroke="#e8a33a" stroke-width="1.5"/>
 <text x="148" y="456" font-size="16" font-weight="700" fill="#1a2333" text-anchor="start">Trust</text>
-<rect x="562" y="441" width="160" height="22" rx="11" fill="#ffffff" stroke="#e8a33a"/>
-<text x="714" y="457" font-size="12" font-weight="700" fill="#e8a33a" text-anchor="end">security release</text>
-<text x="148" y="480" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• publisher signing · signed licence · four eyes</text>
-<text x="148" y="500" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• cluster fingerprint · taint · CSP + SRI</text>
+<rect x="634" y="441" width="88" height="22" rx="11" fill="#ffffff" stroke="#e8a33a"/>
+<text x="714" y="457" font-size="12" font-weight="700" fill="#e8a33a" text-anchor="end">2.9.11.j</text>
+<text x="148" y="480" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• publisher signing · revocation · signed licence</text>
+<text x="148" y="500" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">• taint · CSP + SRI · signed kernel</text>
 <text x="148" y="526" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">proof: tampered or unlicensed module absent</text>
 <path d="M24,548 L104,548 L124,600 L104,652 L24,652 Z" fill="#5c6a80"/>
 <text x="64" y="608" font-size="22" font-weight="800" fill="#ffffff" text-anchor="middle">P5</text>

@@ -1,0 +1,62 @@
+EXAMPLE (design, not built): the source tree of the genomics sample module as `drishti.py module new genomics --template full` (the
+archetype) lays it out (docs/architecture/KERNEL_AND_MODULES.md sections 8.2 and 8.9). One Maven multi-module project; `mvn verify` builds,
+tests and checks it; `mvn package` writes target/dmod/genomics-0.1.0.dmod. Every folder maps to one folder of the .dmod (right column).
+
+genomics/                                       a Git repository of its own (or modules/genomics/ in a monorepo)
+├── pom.xml                                     the parent: drishti-module-parent, the kernel API `provided`, the sub-modules, the plugin
+├── module.yaml                                 the manifest                                                  → module.yaml
+├── genomics-compute/                           Java compute: engines, KindProviders, pivot measures         → java/
+│   ├── pom.xml                                 depends on drishti-kernel-api (provided) only
+│   └── src/main/java/com/example/genomics/compute/
+│       ├── AlleleFrequencyEngine.java          implements ComputeEngine (words AF, HWE)
+│       ├── VariantSummaryProvider.java         implements KindProvider (computed kind variant-summary)
+│       └── CarrierRatePivot.java               implements PivotProvider (a non-additive total)
+├── genomics-service/                           Java service: the module's entry point and REST under /api/v1/genomics → java/
+│   ├── pom.xml                                 depends on genomics-compute + drishti-kernel-api (provided)
+│   └── src/main/java/com/example/genomics/
+│       ├── GenomicsModule.java                 implements DrishtiModule (start, stop, health)
+│       ├── GenomicsSettings.java               implements ModuleSettings (record bound to settings/schema.json)
+│       └── api/VariantController.java          @ModuleApi: GET /variants, GET /variants/{id}/carriers, POST /cohorts/{id}/notes
+├── genomics-python/                            Python compute items, run in the kernel's sandbox                → python/
+│   ├── pom.xml                                 packaging pom; runs pytest in `test` through the plugin
+│   ├── requirements.txt                        must sit inside the kernel's lock (numpy, pandas, pyarrow)
+│   ├── drishti_genomics/{__init__.py,ld_decay.py,qc_metrics.py}
+│   └── tests/test_ld_decay.py
+├── genomics-packs/                             packs: kinds, contracts, Sutras, samples, lenses, BI          → packs/, lenses/, bi/, data/
+│   ├── pom.xml                                 packaging pom; drishti:validate checks contracts and Sutras
+│   ├── data/needs.yaml                         kinds it reads (sample, cohort, variant-call, calendar) and writes
+│   ├── packs/genomics/
+│   │   ├── pack.yaml                           kinds: sample, cohort, variant-call, variant-summary (computed)
+│   │   ├── contracts/{sample,cohort,variant-call,variant-summary}.contract.yaml
+│   │   ├── sutras/{sample,cohort,variant-call}.v1.sutra.yaml
+│   │   └── samples/{catalog,sample,cohort,variant-call}.jsonl.gz      synthetic, for the demo lake and the harness
+│   ├── lenses/lenses.yaml                      lens cohorts: modules, functions, Home cards, chips
+│   ├── functions.yaml                          SAMPLE, COHORT, VARIANT, VARX, AF, HWE, LD, QC
+│   └── bi/reports/cohort-overview.report.yaml
+├── genomics-console/                           the console part: routes, own templates, static, Elements library → console/, elements/
+│   ├── pom.xml                                 packaging pom; drishti:conformance lints templates, CSS and JS
+│   ├── plugin.yaml                             routes, menus, functions' pages, Home cards, slots, API proxy (format 2)
+│   ├── templates/variant_explorer.html         a composed page: extends kernel/page.html, Elements macros only
+│   ├── templates/_cohort_strip.html            a partial of its own (genomics:_cohort_strip.html)
+│   ├── pages.py                                optional console handlers named by plugin.yaml (no routes registered by code)
+│   ├── static/js/drishti_genomics-explorer.js  ES module on the Elements public API; drishti_ prefix
+│   ├── static/css/drishti_genomics.css         theme tokens only
+│   ├── i18n/{en,fr}.yaml
+│   └── elements/drishti-genomics/{index.js,drishti_genomics.css,index.d.ts,manifest.json}   tier 3: domain components
+├── genomics-docs/                              Help, the guide, the tutorial, glossary, README                → docs/
+│   ├── pom.xml                                 packaging pom; drishti:docs runs the docs gates on this folder
+│   ├── README.md                               front matter + data structures (the README rule)
+│   ├── help.yaml                               Help section "Genomics" and its pages
+│   ├── guides/GENOMICS_GUIDE.md                the one guide (with its data contracts)
+│   ├── tutorials/genomics-01-a-cohort-from-vcf.md   the one tutorial (UI + CLI + YAML at each step)
+│   ├── img/                                    screenshots taken by `drishti.py module run --shots`
+│   └── glossary.yaml, features.yaml
+├── genomics-test/                              the harness and conformance tests (never packed)
+│   ├── pom.xml                                 depends on drishti-kernel-testkit (test)
+│   └── src/test/java/com/example/genomics/
+│       ├── GenomicsConformanceTest.java        extends ModuleConformanceSuite (every check of section 8.6)
+│       ├── GenomicsAbsenceTest.java            extends AbsenceSuite (install, record, remove, assert gone: section 10.11)
+│       └── VariantApiTest.java                 the module's own API through the harness, as two people at once
+├── settings/{schema.json,defaults.yaml}                                                                       → settings/
+├── NOTICES/{LICENSE,THIRD-PARTY-NOTICES.md}                                                                   → NOTICES/
+└── target/dmod/genomics-0.1.0.dmod             the build's output (git-ignored)

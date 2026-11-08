@@ -1,0 +1,31 @@
+{
+  "_comment": "EXAMPLE (design, not built). Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. The plan the deployment API returns for banking 3.0.0 -> 3.0.1 (docs/architecture/KERNEL_AND_MODULES.md section 7.6); written by `drishti.py module deploy --plan` and shown by Admin -> Modules -> Deploy, byte-equal for the same input. --apply executes this plan only and is refused (DRS-1029) when the cluster no longer matches basedOn.",
+  "format": 1,
+  "id": "dpl-2026-1108-0012",
+  "kind": "upgrade",
+  "module": { "id": "banking", "from": "3.0.0", "to": "3.0.1", "dmodSha256": "8d2e41c07a9b5f36e1d0c4b2a7f98e6d5c3b1a0f9e8d7c6b5a4f3e2d1c0b9a87", "publisher": "drishti", "signature": "ok", "licence": "ok", "kernelRange": ">=1.0 <2.0" },
+  "basedOn": { "clusterFingerprint": "9b1e7c42", "configVersion": 318, "placementSha256": "c4f1a9e2", "nodes": ["drishti-main", "drishti-b", "drishti-c"] },
+  "placement": {
+    "api":      { "class": "light",     "nodes": ["drishti-main", "drishti-b"] },
+    "compute":  { "class": "heavy",     "nodes": ["drishti-b"], "maxNodes": 1, "memoryMb": 6144 },
+    "exposure": { "class": "heavy",     "nodes": ["drishti-b"], "maxNodes": 1, "memoryMb": 4096 },
+    "jobs":     { "class": "singleton", "nodes": ["drishti-main"], "leader": "drishti-main" },
+    "console":  { "class": "light",     "consoles": "all" }
+  },
+  "nodes": {
+    "drishti-main": { "copy": true,  "before": { "banking": "3.0.0", "parts": ["api", "jobs"] }, "after": { "banking": "3.0.1", "parts": ["api", "jobs"] },
+                      "memory": { "neededMb": 512, "freeMb": 9100, "ok": true }, "restart": true },
+    "drishti-b":    { "copy": true,  "before": { "banking": "3.0.0", "parts": ["api", "compute", "exposure"] }, "after": { "banking": "3.0.1", "parts": ["api", "compute", "exposure"] },
+                      "memory": { "neededMb": 10240, "freeMb": 22528, "ok": true }, "restart": true },
+    "drishti-c":    { "copy": false, "before": { "banking": null }, "after": { "banking": null }, "state": "NOT_PLACED" }
+  },
+  "replaces": [ { "module": "banking", "version": "3.0.0", "nodes": ["drishti-main", "drishti-b"], "kept": "until module prune" } ],
+  "removes": [],
+  "rolling": { "windowMinutes": 30, "sessionPinning": true, "restartOrder": ["drishti-b", "drishti-main"] },
+  "consoleBundle": { "version": "3.0.1", "consoles": 2 },
+  "warnings": [],
+  "refusals": [],
+  "approval": { "required": true, "rule": "four eyes: an administrator other than the proposer" },
+  "createdBy": "alice",
+  "createdAt": "2026-11-08T10:52:17-05:00"
+}

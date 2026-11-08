@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  EXAMPLE (design, not built): the parent pom of the genomics sample module (docs/architecture/KERNEL_AND_MODULES.md sections 8.2 and 8.9).
+  The kernel API is `provided` (the kernel supplies it at run time, never packed); the testkit is `test`; the drishti-module-maven-plugin
+  binds validate, conformance, assemble and sign to Maven's lifecycle, so `mvn verify` checks and `mvn package` writes the .dmod.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.ash.drishti.sdk</groupId>
+    <artifactId>drishti-module-parent</artifactId>      <!-- Java 21, the shared-library versions of the kernel API, the plugin's defaults -->
+    <version>1.0.0</version>
+  </parent>
+
+  <groupId>com.example.genomics</groupId>
+  <artifactId>genomics</artifactId>
+  <version>0.1.0</version>                              <!-- must equal module.yaml's version (drishti:validate) -->
+  <packaging>pom</packaging>
+  <name>Genomics module</name>
+
+  <modules>
+    <module>genomics-compute</module>
+    <module>genomics-service</module>
+    <module>genomics-python</module>
+    <module>genomics-packs</module>
+    <module>genomics-console</module>
+    <module>genomics-docs</module>
+    <module>genomics-test</module>
+  </modules>
+
+  <properties>
+    <drishti.kernel-api.version>1.0.0</drishti.kernel-api.version>   <!-- the lowest kernel API it compiles against; module.yaml says ">=1.0 <2.0" -->
+    <drishti.module.id>genomics</drishti.module.id>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.ash.drishti.sdk</groupId>
+        <artifactId>drishti-kernel-api</artifactId>
+        <version>${drishti.kernel-api.version}</version>
+        <scope>provided</scope>                         <!-- never inside the .dmod: the kernel API class loader serves it -->
+      </dependency>
+      <dependency>
+        <groupId>com.ash.drishti.sdk</groupId>
+        <artifactId>drishti-kernel-testkit</artifactId>
+        <version>${drishti.kernel-api.version}</version>
+        <scope>test</scope>                             <!-- KernelHarness, ModuleConformanceSuite, AbsenceSuite -->
+      </dependency>
+      <dependency>
+        <groupId>com.example.genomics</groupId>
+        <artifactId>genomics-compute</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.ash.drishti.sdk</groupId>
+        <artifactId>drishti-module-maven-plugin</artifactId>
+        <version>1.0.0</version>
+        <inherited>false</inherited>                    <!-- runs once, on the parent, after the sub-modules -->
+        <configuration>
+          <manifest>module.yaml</manifest>
+          <jars>
+            <jar>genomics-compute</jar>
+            <jar>genomics-service</jar>
+          </jars>
+          <python>genomics-python</python>
+          <packs>genomics-packs</packs>
+          <console>genomics-console</console>
+          <docs>genomics-docs</docs>
+          <settings>settings</settings>
+          <signing>
+            <key>${drishti.sign.key}</key>              <!-- dev (default) or a PKCS#11 URI in CI; never a file in Git -->
+          </signing>
+        </configuration>
+        <executions>
+          <execution><id>validate</id><phase>validate</phase><goals><goal>validate</goal></goals></execution>       <!-- manifest, ids, versions, needs, contracts, Sutras -->
+          <execution><id>conformance</id><phase>verify</phase><goals><goal>conformance</goal></goals></execution> <!-- section 8.6, after the tests -->
+          <execution><id>assemble</id><phase>package</phase><goals><goal>assemble</goal></goals></execution>     <!-- target/dmod/genomics-0.1.0.dmod, DMOD.MF -->
+          <execution><id>sign</id><phase>package</phase><goals><goal>sign</goal></goals></execution>             <!-- DMOD.SIG (Ed25519) + publisher.pem -->
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>release</id>                                  <!-- mvn deploy -Prelease: the publisher's key, then the module repository -->
+      <properties><drishti.sign.key>pkcs11:token=example-modules;object=publisher</drishti.sign.key></properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.ash.drishti.sdk</groupId>
+            <artifactId>drishti-module-maven-plugin</artifactId>
+            <executions>
+              <execution><id>publish</id><phase>deploy</phase><goals><goal>publish</goal></goals></execution>   <!-- .dmod + .sha256 + release notes -->
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

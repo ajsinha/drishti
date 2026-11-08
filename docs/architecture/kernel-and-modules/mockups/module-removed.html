@@ -1,0 +1,158 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up (static, design only): "module removed" states, two alternatives (docs/architecture/KERNEL_AND_MODULES.md sections 10.4,
+  10.6 and 15): the notice on an open page of the removed module, and saved views marked "needs module genomics".
+  ?v=A|B and ?theme=dark|light pick the view (for screenshots); ?admin=0 shows what a person who is not an administrator sees.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module removed mock-ups</title>
+<style>
+:root{--bg:#0e1628;--bg2:#121c33;--sf:#16213a;--sf2:#1b2744;--bd:#26345a;--ink:#e7ecf5;--mu:#93a0b8;--ac:#e8a33a;--acink:#14100a;--ln:#7fb2ff;--ok:#5fd39a;--wa:#f2c14e;--bad:#ff7a7a;--code:#0a1120;--top:#0a1120}
+:root[data-theme=light]{--bg:#f4f6fa;--bg2:#e9eef5;--sf:#ffffff;--sf2:#eef2f8;--bd:#cdd6e3;--ink:#1a2333;--mu:#5c6a80;--ac:#c47d12;--acink:#ffffff;--ln:#1f5fbf;--ok:#1e8a55;--wa:#a86f00;--bad:#c62828;--code:#f1f4f9;--top:#ffffff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+.top{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--top);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.top b{color:var(--ac);letter-spacing:.08em}.top .cmd{flex:1;min-width:160px;background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:5px 9px;color:var(--mu);font-family:ui-monospace,monospace}
+.menu{display:flex;gap:14px;color:var(--mu);font-size:12px}.menu span.on{color:var(--ink);font-weight:600}
+.pick{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--bg2);align-items:center;flex-wrap:wrap}
+.pick button{background:var(--sf);color:var(--ink);border:1px solid var(--bd);border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:600}
+.pick button.on{background:var(--ac);color:var(--acink);border-color:var(--ac)}.sp{flex:1}
+.v{display:none;padding:14px 16px}.v.on{display:block}
+.cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:0 0 6px}
+.frame{border:1px solid var(--bd);border-radius:8px;background:var(--bg);overflow:hidden;position:relative}
+.ph{padding:10px 12px;border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid var(--ac);color:var(--ac);font-weight:600}
+.ph h2{margin:0;font-size:16px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 12px}
+.kpi{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:8px}.kpi .t{color:var(--mu);font-size:11px}.kpi .n{font:600 17px ui-monospace,monospace}
+.body{display:grid;grid-template-columns:2fr 1fr;gap:8px;padding:0 12px 12px}
+table{width:100%;border-collapse:collapse}td,th{padding:5px 6px;border-bottom:1px solid var(--bd);text-align:left;font-size:12px;white-space:nowrap}th{color:var(--mu);font-weight:600}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:8px 10px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:110px;padding-top:6px}.bars i{flex:1;background:var(--ln);opacity:.75;border-radius:2px 2px 0 0}
+.frozen .ph,.frozen .kpis,.frozen .body{filter:grayscale(1);opacity:.38;pointer-events:none}
+.notice{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-bottom:1px solid var(--wa);background:var(--sf);border-left:4px solid var(--wa)}
+.notice .ic{font:700 16px ui-monospace,monospace;color:var(--wa);line-height:1.2}
+.notice h3{margin:0 0 2px;font-size:14px}.notice p{margin:0;color:var(--mu);font-size:12px}
+.notice .adm{margin-top:6px;font-size:12px;color:var(--ink);background:var(--sf2);border:1px dashed var(--bd);border-radius:4px;padding:5px 8px}
+.btn{display:inline-block;background:var(--sf2);border:1px solid var(--bd);color:var(--ink);border-radius:4px;padding:4px 10px;font-size:12px;white-space:nowrap;margin-top:6px}
+.btn.p{background:var(--ac);color:var(--acink);border-color:var(--ac);font-weight:700}
+.list{border:1px solid var(--bd);border-radius:8px;background:var(--sf)}
+.list .h{padding:8px 10px;border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center}
+.row{display:flex;gap:8px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--bd);font-size:12px;flex-wrap:wrap}
+.row:last-child{border-bottom:0}.row .n{flex:1;min-width:140px}.row .m{color:var(--mu);font-size:11px}
+.row.need .n{color:var(--mu)}
+.chip{font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid var(--wa);color:var(--wa);font-weight:600;white-space:nowrap}
+.chip.ok{border-color:var(--ok);color:var(--ok)}
+.grp{padding:6px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);background:var(--bg2);border-bottom:1px solid var(--bd)}
+.full{display:flex;align-items:center;justify-content:center;min-height:340px;padding:20px}
+.fcard{max-width:440px;background:var(--sf);border:1px solid var(--bd);border-top:4px solid var(--wa);border-radius:8px;padding:18px 20px}
+.fcard h3{margin:0 0 6px;font-size:17px}.fcard p{margin:0 0 6px;color:var(--mu)}
+.toast{position:absolute;right:12px;top:12px;background:var(--sf2);border:1px solid var(--wa);border-radius:6px;padding:7px 10px;font-size:12px;max-width:260px}
+.note{margin-top:14px;padding:10px 12px;border-left:3px solid var(--ln);background:var(--bg2);color:var(--mu);font-size:12px}.note b{color:var(--ink)}
+.no-admin .adm{display:none}
+@media (max-width:860px){.cols{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.body{grid-template-columns:1fr}}
+</style></head><body>
+<div class="top"><b>DRISHTI GENOMICS</b><div class="cmd">VARX BRCA-2026 &lt;GO&gt;</div><div class="menu"><span>Home</span><span class="on">Analyse</span><span>Build</span><span>Data</span><span>Admin</span><span>Help</span></div></div>
+<div class="pick"><button data-v="A" class="on">A · In place (frozen page + chips)</button><button data-v="B">B · Replaced (notice card + Unavailable group)</button>
+<span class="sp"></span><button id="adm">Administrator / person</button><button id="theme">Light / dark</button></div>
+
+<!-- ================= A ================= -->
+<div class="v on" id="A">
+<div class="cols">
+<div>
+<div class="lbl">An open page of the removed module (the variant explorer, open when the removal was approved)</div>
+<div class="frame frozen">
+  <div class="notice"><div class="ic">!</div><div>
+    <h3>Genomics is no longer installed on this system</h3>
+    <p>This page belonged to the Genomics module. It stopped updating; nothing you saved is lost. Saved views that use it are kept and marked.</p>
+    <div class="adm"><b>Administrator:</b> removed by alice, approved by bob, 2026-11-08 10:42 · change CHG-2026-1108-0057 · <u>Admin › Modules</u></div>
+    <span class="btn p">Go to Home</span> <span class="btn">Search</span> <span class="btn">My saved views</span>
+  </div></div>
+  <div class="ph"><span class="pill">Genomics · Variants</span><h2>BRCA-2026</h2><span class="sp"></span><span class="btn">Export</span></div>
+  <div class="kpis"><div class="kpi"><div class="t">Samples</div><div class="n">1,284</div></div><div class="kpi"><div class="t">Variants</div><div class="n">48,912</div></div><div class="kpi"><div class="t">Median AF</div><div class="n">0.41%</div></div><div class="kpi"><div class="t">QC pass</div><div class="n">97.3%</div></div></div>
+  <div class="body">
+    <div class="card"><table><tr><th>Variant</th><th>Gene</th><th>Consequence</th><th>AF</th><th>Carriers</th></tr>
+      <tr><td>chr17:43044295 G&gt;A</td><td>BRCA1</td><td>missense</td><td>0.38%</td><td>9</td></tr>
+      <tr><td>chr13:32340300 T&gt;-</td><td>BRCA2</td><td>frameshift</td><td>0.08%</td><td>2</td></tr>
+      <tr><td>chr17:43091983 C&gt;T</td><td>BRCA1</td><td>nonsense</td><td>0.04%</td><td>1</td></tr>
+      <tr><td>chr13:32362523 A&gt;G</td><td>BRCA2</td><td>splice</td><td>0.16%</td><td>4</td></tr></table></div>
+    <div class="card"><div class="t mu" style="color:var(--mu);font-size:11px">AF distribution</div><div class="bars"><i style="height:90%"></i><i style="height:70%"></i><i style="height:52%"></i><i style="height:38%"></i><i style="height:26%"></i><i style="height:18%"></i><i style="height:12%"></i><i style="height:8%"></i><i style="height:5%"></i><i style="height:3%"></i></div></div>
+  </div>
+</div>
+</div>
+<div>
+<div class="lbl">Saved views (Home › My work), after the removal</div>
+<div class="list">
+  <div class="h"><b>My saved views</b><span class="sp"></span><span class="m mu" style="color:var(--mu);font-size:11px">7 views</span></div>
+  <div class="row"><span class="n">Liquidity by region (Pivot)</span><span class="m">yesterday</span></div>
+  <div class="row need"><span class="n">BRCA-2026 rare missense</span><span class="chip">needs module genomics</span><span class="m">2 days ago</span></div>
+  <div class="row"><span class="n">Lab throughput, weekly (BI)</span><span class="m">last week</span></div>
+  <div class="row need"><span class="n">Carriers, AF &lt; 0.5%</span><span class="chip">needs module genomics</span><span class="m">last week</span></div>
+  <div class="row"><span class="n">Sample intake by site (Pivot)</span><span class="m">2 weeks ago</span></div>
+  <div class="row need"><span class="n">Nightly cohort export (schedule)</span><span class="chip">paused · needs genomics</span><span class="m">was 02:00</span></div>
+  <div class="row"><span class="n">GLEIF lookups (table)</span><span class="m">last month</span></div>
+</div>
+<div class="note" style="margin-top:8px"><b>Opening a marked view</b> shows: <i>This view needs the Genomics module, which is no longer installed. It is kept and comes back when the module is reinstalled.</i> Delete stays available to its owner.</div>
+</div>
+</div>
+<div class="note"><b>A, in place (recommended).</b> The page stays where the person was, frozen and greyed under the kernel's notice (no broken JavaScript: the kernel shell froze the Elements and detached them); menus and the command line still work. Saved views keep their place and order with a chip, so nothing seems to vanish. Administrators see who removed it and the change id; others see the plain notice. Weak spot: a greyed page can look like a loading glitch for a moment; the notice bar is first in the page and in the reading order.</div>
+</div>
+
+<!-- ================= B ================= -->
+<div class="v" id="B">
+<div class="cols">
+<div>
+<div class="lbl">An open page of the removed module</div>
+<div class="frame">
+  <div class="full"><div class="fcard">
+    <h3>Genomics is no longer installed</h3>
+    <p>The page you had open (Variant explorer · BRCA-2026) belonged to the Genomics module, which was removed from this system.</p>
+    <p>Your saved views that use it are kept under <b>Unavailable</b> and come back if the module is reinstalled.</p>
+    <div class="adm"><b>Administrator:</b> removed by alice, approved by bob, 2026-11-08 10:42 · CHG-2026-1108-0057</div>
+    <span class="btn p">Go to Home</span> <span class="btn">Search</span>
+  </div></div>
+  <div class="toast"><b>Genomics was removed.</b> 2 open tabs updated.</div>
+</div>
+</div>
+<div>
+<div class="lbl">Saved views, after the removal</div>
+<div class="list">
+  <div class="h"><b>My saved views</b><span class="sp"></span><span class="m" style="color:var(--mu);font-size:11px">4 available · 3 unavailable</span></div>
+  <div class="row"><span class="n">Liquidity by region (Pivot)</span><span class="m">yesterday</span></div>
+  <div class="row"><span class="n">Lab throughput, weekly (BI)</span><span class="m">last week</span></div>
+  <div class="row"><span class="n">Sample intake by site (Pivot)</span><span class="m">2 weeks ago</span></div>
+  <div class="row"><span class="n">GLEIF lookups (table)</span><span class="m">last month</span></div>
+  <div class="grp">Unavailable · needs module genomics</div>
+  <div class="row need"><span class="n">BRCA-2026 rare missense</span><span class="m">2 days ago</span></div>
+  <div class="row need"><span class="n">Carriers, AF &lt; 0.5%</span><span class="m">last week</span></div>
+  <div class="row need"><span class="n">Nightly cohort export (schedule, paused)</span><span class="m">was 02:00</span></div>
+</div>
+</div>
+</div>
+<div class="note"><b>B, replaced.</b> Unmistakable: the page is swapped for a notice card and the views that cannot open are grouped apart. Weak spots: the person loses the picture they were looking at, and their saved views reorder (a view "jumps" to another group), which reads as loss. Recommended only for the phone layout, where a frozen page is too small to be useful.</div>
+</div>
+
+<script>
+(function(){var q=new URLSearchParams(location.search);function show(v){document.querySelectorAll('.v').forEach(function(e){e.classList.toggle('on',e.id===v)});document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)})}
+document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
+var t=q.get('theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t;
+document.getElementById('theme').onclick=function(){var r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light'};
+if(q.get('admin')==='0')document.body.classList.add('no-admin');
+document.getElementById('adm').onclick=function(){document.body.classList.toggle('no-admin')};
+if(q.get('v'))show(q.get('v'));})();
+</script>
+</body></html>

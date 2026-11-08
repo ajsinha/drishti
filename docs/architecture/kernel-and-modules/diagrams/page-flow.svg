@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 662" width="760" height="662" role="img" aria-label="A module page, request to data" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif">
+<!-- Copyright (c) 2026 Ashutosh Sinha. All rights reserved. PROPRIETARY AND CONFIDENTIAL. -->
+<title>A module page, request to data</title>
+<defs><marker id="a1a2333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1a2333"/></marker><marker id="a1f5fbf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1f5fbf"/></marker><marker id="a1e8a55" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1e8a55"/></marker><marker id="ac62828" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#c62828"/></marker><marker id="ae8a33a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8a33a"/></marker><marker id="a2bb3a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#2bb3a3"/></marker><marker id="a5c6a80" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#5c6a80"/></marker><marker id="a12324f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#12324f"/></marker></defs>
+<rect x="0.5" y="0.5" width="759" height="661" rx="14" fill="#f7f9fc" stroke="#cdd6e3"/>
+<text x="24" y="38" font-size="20" font-weight="700" fill="#12324f">A module page, request to data</text>
+<text x="24" y="60" font-size="13" fill="#5c6a80">Routes are looked up per request; templates render inside the kernel&#x27;s shell; data goes through the proxy.</text>
+<rect x="24" y="84" width="180" height="92" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="36" y="106" font-size="14" font-weight="700" fill="#12324f" text-anchor="start">Browser</text>
+<text x="36" y="125" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">GET /m/genomics/</text>
+<text x="36" y="143" font-size="13" font-weight="400" fill="#1a2333" text-anchor="start">variants/BRCA-2026</text>
+<rect x="24" y="196" width="180" height="74" rx="8" fill="#ffffff" stroke="#12324f" stroke-width="1.5"/>
+<text x="36" y="218" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">the open page</text>
+<text x="36" y="236" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Elements grid + chart</text>
+<rect x="236" y="84" width="248" height="186" rx="8" fill="#e1ebfa" stroke="#1f5fbf" stroke-width="1.5"/>
+<text x="248" y="106" font-size="13" font-weight="700" fill="#1f5fbf" text-anchor="start">Console dispatcher (kernel)</text>
+<text x="248" y="124" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">1 identity · CSRF · lens</text>
+<text x="248" y="141" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">2 look up the live route table</text>
+<text x="248" y="158" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">3 module on for this person?</text>
+<text x="248" y="175" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">   its function allowed?</text>
+<text x="248" y="192" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">4 render in the kernel shell</text>
+<text x="248" y="209" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">   (the module&#x27;s namespace)</text>
+<rect x="516" y="84" width="220" height="124" rx="8" fill="#ebe5f7" stroke="#6a4fb3" stroke-width="1.5"/>
+<text x="528" y="106" font-size="13" font-weight="700" fill="#6a4fb3" text-anchor="start">Live route table</text>
+<text x="528" y="124" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">/m/genomics/variants/{cohort}</text>
+<text x="528" y="141" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">  → genomics:variant_explorer.html</text>
+<text x="528" y="158" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">/m/banking/var  (alias /var)</text>
+<text x="528" y="175" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">/m/oldmod/…  → TOMBSTONE (410)</text>
+<rect x="516" y="220" width="220" height="50" rx="8" fill="#ffffff" stroke="#5c6a80" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="528" y="242" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">rebuilt on module.* events</text>
+<text x="528" y="259" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">no console restart</text>
+<path d="M204,120 L234,120" fill="none" stroke="#12324f" stroke-width="1.8" marker-end="url(#a12324f)"/>
+<path d="M484,130 L514,130" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M514,160 L486,160" fill="none" stroke="#6a4fb3" stroke-width="1.8" marker-end="url(#a6a4fb3)"/>
+<rect x="236" y="302" width="248" height="130" rx="8" fill="#fbefd9" stroke="#e8a33a" stroke-width="1.5"/>
+<text x="248" y="324" font-size="13" font-weight="700" fill="#e8a33a" text-anchor="start">Module template</text>
+<text x="248" y="342" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">genomics:variant_explorer.html</text>
+<text x="248" y="359" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">{% extends &#x27;kernel/page.html&#x27; %}</text>
+<text x="248" y="376" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Elements macros only</text>
+<text x="248" y="393" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">kernel context: user, lens, theme,</text>
+<text x="248" y="410" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">i18n, csrf, module.settings</text>
+<rect x="516" y="302" width="220" height="130" rx="8" fill="#dcf3f0" stroke="#2bb3a3" stroke-width="1.5"/>
+<text x="528" y="324" font-size="13" font-weight="700" fill="#2bb3a3" text-anchor="start">Elements (static)</text>
+<text x="528" y="342" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">/static/elements/… (kernel)</text>
+<text x="528" y="359" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">/m/genomics/static/0.1.0/</text>
+<text x="528" y="376" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">  drishti_genomics.js</text>
+<text x="528" y="393" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">CSP &#x27;self&#x27; + SRI hashes</text>
+<path d="M360,270 L360,300" fill="none" stroke="#1f5fbf" stroke-width="1.8" marker-end="url(#a1f5fbf)"/>
+<path d="M484,366 L514,366" fill="none" stroke="#e8a33a" stroke-width="1.8" marker-end="url(#ae8a33a)"/>
+<path d="M236,380 C160,380 120,330 120,272" fill="none" stroke="#e8a33a" stroke-width="1.8" marker-end="url(#ae8a33a)"/>
+<text x="150" y="300" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="middle" font-style="italic">HTML</text>
+<rect x="24" y="464" width="330" height="104" rx="8" fill="#dff1e7" stroke="#1e8a55" stroke-width="1.5"/>
+<text x="36" y="486" font-size="13" font-weight="700" fill="#1e8a55" text-anchor="start">Kernel API proxy (console)</text>
+<text x="36" y="504" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">fetch(&#x27;/m/genomics/api/variants?…&#x27;)</text>
+<text x="36" y="521" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">same origin · session cookie · CSRF on writes</text>
+<text x="36" y="538" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">→ /api/v1/genomics/… as the person</text>
+<path d="M80,270 L80,462" fill="none" stroke="#1e8a55" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#a1e8a55)"/>
+<text x="116" y="420" font-size="12" font-weight="400" fill="#5c6a80" text-anchor="middle" font-style="italic">data calls</text>
+<rect x="406" y="464" width="330" height="104" rx="8" fill="#e3eaf3" stroke="#12324f" stroke-width="1.5"/>
+<text x="418" y="486" font-size="13" font-weight="700" fill="#12324f" text-anchor="start">Server: the module&#x27;s child context</text>
+<text x="418" y="504" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">gates: module → function → permission → audit</text>
+<text x="418" y="521" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">@ModuleApi controllers under /api/v1/genomics</text>
+<text x="418" y="538" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Kinds read as the person (row rules)</text>
+<path d="M354,516 L404,516" fill="none" stroke="#1e8a55" stroke-width="1.8" marker-end="url(#a1e8a55)"/>
+<rect x="24" y="590" width="712" height="50" rx="8" fill="#ffffff" stroke="#c62828" stroke-width="1.5"/>
+<text x="36" y="612" font-size="12" font-weight="400" fill="#1a2333" text-anchor="start">Never: a module template reaching another module&#x27;s templates, the server directly, other origins, or inline script.</text>
+</svg>

@@ -1,0 +1,126 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up (static, design only): Admin -> Modules -> Deploy, three alternatives (docs/architecture/KERNEL_AND_MODULES.md sections 7.6
+  and 15): A a step wizard, B one page with the plan updating live, C a split view (placement left, plan right).
+  ?v=A|B|C and ?theme=dark|light pick the view (for screenshots).
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module deploy mock-ups</title>
+<style>
+:root{--bg:#0e1628;--bg2:#121c33;--sf:#16213a;--sf2:#1b2744;--bd:#26345a;--ink:#e7ecf5;--mu:#93a0b8;--ac:#e8a33a;--acink:#14100a;--ln:#7fb2ff;--ok:#5fd39a;--wa:#f2c14e;--bad:#ff7a7a;--code:#0a1120;--top:#0a1120}
+:root[data-theme=light]{--bg:#f4f6fa;--bg2:#e9eef5;--sf:#ffffff;--sf2:#eef2f8;--bd:#cdd6e3;--ink:#1a2333;--mu:#5c6a80;--ac:#c47d12;--acink:#ffffff;--ln:#1f5fbf;--ok:#1e8a55;--wa:#a86f00;--bad:#c62828;--code:#f1f4f9;--top:#ffffff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+.top{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--top);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.top b{color:var(--ac);letter-spacing:.08em}.top .cmd{flex:1;min-width:160px;background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:5px 9px;color:var(--mu);font-family:ui-monospace,monospace}
+.pick{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--bg2);align-items:center;flex-wrap:wrap}
+.pick button{background:var(--sf);color:var(--ink);border:1px solid var(--bd);border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:600}
+.pick button.on{background:var(--ac);color:var(--acink);border-color:var(--ac)}.sp{flex:1}
+.v{display:none;padding:14px 16px}.v.on{display:block}
+.hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.hdr h1{font-size:17px;margin:0}.crumb{color:var(--mu);font-size:12px}
+.btn{display:inline-block;background:var(--sf2);border:1px solid var(--bd);color:var(--ink);border-radius:4px;padding:5px 10px;font-size:12px;white-space:nowrap}
+.btn.p{background:var(--ac);color:var(--acink);border-color:var(--ac);font-weight:700}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 12px;margin-top:10px}
+.card h3{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left;font-size:12px;white-space:nowrap}th{color:var(--mu);font-weight:600}
+.ok{color:var(--ok)}.wa{color:var(--wa)}.bad{color:var(--bad)}.mu{color:var(--mu)}
+.steps{display:flex;gap:0;margin-bottom:12px;flex-wrap:wrap}.steps span{padding:7px 14px;border:1px solid var(--bd);background:var(--sf);color:var(--mu);font-weight:600;font-size:12px}
+.steps span.done{color:var(--ok)}.steps span.cur{background:var(--ac);color:var(--acink);border-color:var(--ac)}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:4px 10px;font-size:12px}.kv div:nth-child(odd){color:var(--mu)}
+.chip{font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid var(--bd);white-space:nowrap;display:inline-block;margin:1px}
+.chip.on{border-color:var(--ln);color:var(--ln);font-weight:600}.chip.h{border-color:var(--wa);color:var(--wa)}
+.node{display:grid;grid-template-columns:20px 120px 120px 1fr;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--bd);font-size:12px}
+.box{display:inline-block;width:14px;height:14px;border:1px solid var(--bd);border-radius:3px}.box.x{background:var(--ln);border-color:var(--ln)}
+.bar{height:6px;background:var(--sf2);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.warn{padding:7px 10px;border-left:3px solid var(--wa);background:var(--sf2);font-size:12px;margin-top:8px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:12px}
+.cell-new{color:var(--ok);font-weight:600}.cell-none{color:var(--mu)}
+.note{margin-top:14px;padding:10px 12px;border-left:3px solid var(--ln);background:var(--bg2);color:var(--mu);font-size:12px}.note b{color:var(--ink)}
+@media (max-width:900px){.split{grid-template-columns:1fr}}
+</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">ADMIN MODULES DEPLOY &lt;GO&gt;</div><span class="mu">Admin › Modules › Deploy</span></div>
+<div class="pick"><button data-v="A">A · Step wizard</button><button data-v="B">B · One page, live plan</button><button data-v="C" class="on">C · Split: placement | plan</button>
+<span class="sp"></span><button id="theme">Light / dark</button></div>
+
+<!-- ================= A ================= -->
+<div class="v" id="A">
+<div class="hdr"><div><div class="crumb">Admin › Modules › Deploy</div><h1>Deploy banking 3.0.1</h1></div></div>
+<div class="steps"><span class="done">1 Package ✓</span><span class="cur">2 Placement</span><span>3 Plan</span><span>4 Approval</span><span>5 Apply</span><span>6 Result</span></div>
+<div class="card"><h3>Step 2 · Where does each part run?</h3>
+<table><tr><th>Part</th><th>Class</th><th>Nodes or roles</th><th>Memory</th></tr>
+<tr><td><b>api</b></td><td>light</td><td><span class="chip on">drishti-main</span><span class="chip on">drishti-b</span></td><td>512 MB</td></tr>
+<tr><td><b>compute</b></td><td class="wa">heavy</td><td><span class="chip on">drishti-b</span> <span class="mu">max nodes 1</span></td><td>6,144 MB</td></tr>
+<tr><td><b>exposure</b></td><td class="wa">heavy</td><td><span class="chip on">drishti-b</span></td><td>4,096 MB</td></tr>
+<tr><td><b>jobs</b></td><td>singleton</td><td><span class="chip on">drishti-main</span> <span class="mu">one elected runner</span></td><td>—</td></tr>
+<tr><td><b>console</b></td><td>light</td><td><span class="mu">every console, through the registry</span></td><td>—</td></tr></table>
+<div class="warn">Placement carried over from 3.0.0. Heavy parts on 1 of 3 nodes.</div>
+<div style="margin-top:10px"><span class="btn">Back</span> <span class="btn p">Next: the plan</span></div></div>
+<div class="note"><b>A, step wizard.</b> Easiest the first time: one question per screen. Weak spot: the plan (the consequence) is only seen on the next step, so an administrator flips back and forth while placing heavy parts. Recommended as the <b>guided</b> toggle of C for first-time administrators.</div>
+</div>
+
+<!-- ================= B ================= -->
+<div class="v" id="B">
+<div class="hdr"><div><div class="crumb">Admin › Modules › Deploy</div><h1>Deploy banking 3.0.1</h1></div><span class="sp"></span><span class="btn p">Propose (four eyes)</span></div>
+<div class="card"><h3>Placement and plan · each click updates the matrix</h3>
+<div class="tw"><table><tr><th>Part</th><th>drishti-main · data-serving · 9.1 GB free</th><th>drishti-b · risk-compute · 22.5 GB free</th><th>drishti-c · 30.2 GB free</th></tr>
+<tr><td><b>api</b> light</td><td><span class="box x"></span> 3.0.0 → <span class="cell-new">3.0.1</span></td><td><span class="box x"></span> 3.0.0 → <span class="cell-new">3.0.1</span></td><td><span class="box"></span> <span class="cell-none">not placed</span></td></tr>
+<tr><td><b>compute</b> <span class="wa">heavy</span></td><td><span class="box"></span> <span class="cell-none">—</span></td><td><span class="box x"></span> 3.0.0 → <span class="cell-new">3.0.1</span> · 6.1 GB</td><td><span class="box"></span> <span class="cell-none">—</span></td></tr>
+<tr><td><b>exposure</b> <span class="wa">heavy</span></td><td><span class="box"></span> —</td><td><span class="box x"></span> 3.0.0 → <span class="cell-new">3.0.1</span> · 4.1 GB</td><td><span class="box"></span> —</td></tr>
+<tr><td><b>jobs</b> singleton</td><td><span class="box x"></span> leader</td><td><span class="box"></span> —</td><td><span class="box"></span> —</td></tr></table></div>
+<div class="kv" style="margin-top:10px"><div>Copy to</div><div>drishti-main, drishti-b (drishti-c receives nothing)</div><div>Restart</div><div>drishti-b, then drishti-main (code changed)</div><div>Warnings</div><div class="ok">none</div></div></div>
+<div class="note"><b>B, one page.</b> The fastest for an expert: tick boxes in the matrix and the plan is the matrix. Weak spots: with more than five nodes or many parts it becomes a wide grid; approval and apply need a second page anyway.</div>
+</div>
+
+<!-- ================= C ================= -->
+<div class="v on" id="C">
+<div class="hdr"><div><div class="crumb">Admin › Modules › Deploy</div><h1>Deploy banking 3.0.1 <span class="mu" style="font-size:12px;font-weight:400">upgrade of 3.0.0</span></h1></div><span class="sp"></span><span class="btn">Guided</span><span class="btn">Plan as JSON</span></div>
+<div class="split">
+<div>
+<div class="card"><h3>Package</h3><div class="kv"><div>File</div><div>banking-3.0.1.dmod · 38.9 MB · from the module store</div><div>Signature</div><div class="ok">Ed25519 ok · publisher drishti · not revoked</div><div>Licence</div><div class="ok">feature banking · valid to 2027-10-31</div><div>Kernel range</div><div class="ok">&gt;=1.0 &lt;2.0 · this kernel 1.4</div></div></div>
+<div class="card"><h3>Placement · part: compute (heavy, 6,144 MB, max nodes 1)</h3>
+<div class="node"><span></span><b class="mu">Node</b><b class="mu">Role</b><b class="mu">Free in module budget · modules</b></div>
+<div class="node"><span class="box"></span><span>drishti-main</span><span class="mu">data-serving</span><span><div class="bar"><i style="width:40%"></i></div>9.1 GB · banking api, jobs · capitalmarkets</span></div>
+<div class="node"><span class="box x"></span><span><b>drishti-b</b></span><span class="mu">risk-compute</span><span><div class="bar"><i style="width:72%"></i></div>22.5 GB · banking api, compute, exposure</span></div>
+<div class="node"><span class="box"></span><span>drishti-c</span><span class="mu">—</span><span><div class="bar"><i style="width:88%"></i></div>30.2 GB · capitalmarkets</span></div>
+<div style="margin-top:8px"><span class="chip">api: main, b</span><span class="chip on">compute: b</span><span class="chip">exposure: b</span><span class="chip">jobs: main ★</span><span class="chip">console: all</span></div>
+<div class="warn">Heavy parts warn as they widen; all three nodes would need <b>allow all</b> and a second approval.</div></div>
+</div>
+<div>
+<div class="card"><h3>The plan · dpl-2026-1108-0012 · against cluster 9b1e… v318</h3>
+<div class="tw"><table><tr><th>Part</th><th>drishti-main</th><th>drishti-b</th><th>drishti-c</th></tr>
+<tr><td>api</td><td>3.0.0 → <span class="cell-new">3.0.1</span></td><td>3.0.0 → <span class="cell-new">3.0.1</span></td><td class="cell-none">not placed</td></tr>
+<tr><td>compute <span class="wa">heavy</span></td><td class="cell-none">—</td><td>3.0.0 → <span class="cell-new">3.0.1</span></td><td class="cell-none">—</td></tr>
+<tr><td>exposure <span class="wa">heavy</span></td><td class="cell-none">—</td><td>3.0.0 → <span class="cell-new">3.0.1</span></td><td class="cell-none">—</td></tr>
+<tr><td>jobs ★</td><td>leader → <span class="cell-new">3.0.1</span></td><td class="cell-none">—</td><td class="cell-none">—</td></tr></table></div>
+<div class="kv" style="margin-top:8px"><div>Copy to</div><div>drishti-main, drishti-b · drishti-c receives nothing</div><div>Headroom</div><div class="ok">b needs 10.2 GB while both are staged, 22.5 GB free · main 0.5 of 9.1 GB</div><div>Rolling</div><div>30 min window · sessions pinned to 3.0.0 until reload</div><div>Restart</div><div>drishti-b, then drishti-main</div><div>Warnings</div><div class="ok">none</div></div></div>
+<div class="card"><h3>Approval and apply</h3>
+<div class="kv"><div>Proposed</div><div>alice · 10:52</div><div>Approval</div><div class="wa">waiting for a second administrator (bob, carol)</div></div>
+<div class="node"><span></span><span>drishti-b</span><span class="mu">copy · stage · activate</span><span><div class="bar"><i style="width:0%"></i></div></span></div>
+<div class="node"><span></span><span>drishti-main</span><span class="mu">copy · stage · activate</span><span><div class="bar"><i style="width:0%"></i></div></span></div>
+<div style="margin-top:8px"><span class="btn p">Propose (four eyes)</span> <span class="btn">Cancel</span> <span class="mu">After apply: Health · node × module matrix · audit entry</span></div></div>
+</div>
+</div>
+<div class="note"><b>C, split view (recommended).</b> Placement and its consequence side by side: every change on the left re-plans on the right through the same API call the CLI uses, so what the approver sees is exactly what the script would apply. Approval and live progress stay in the right pane, so the whole deployment is one screen. Weak spot: dense on a laptop; the <b>Guided</b> button turns it into A's steps.</div>
+</div>
+
+<script>
+(function(){var q=new URLSearchParams(location.search);function show(v){document.querySelectorAll('.v').forEach(function(e){e.classList.toggle('on',e.id===v)});document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)})}
+document.querySelectorAll('.pick button[data-v]').forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
+var t=q.get('theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t;
+document.getElementById('theme').onclick=function(){var r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light'};
+if(q.get('v'))show(q.get('v'));})();
+</script>
+</body></html>
