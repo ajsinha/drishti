@@ -24,7 +24,7 @@
    carries its node's own row's fields, so a host's columns read them as they would in a plain grid. */
 import { h, toneColour } from '../../drishti-core/src/drishti_index.js';
 import { Grid } from '../../drishti-grid/src/drishti_index.js';
-import { bandTone } from './drishti_tree-layout.js';
+import { statusTone } from './drishti_tree-layout.js';
 
 const LABEL = '__label';
 const WAIT = '\u0000wait:';
@@ -113,8 +113,8 @@ export class TreeGrid {
     const doc = p.doc, row = p.row;
     if ((p.value === null || p.value === undefined) && m.additive === false && row && this.tree.model.isPending(row.__id, m.field)) { return h(doc, 'span', { cls: 'dg-text dt-wait', text: '…', attrs: { title: 'asked of the server' } }); }
     if (!m.bar || typeof p.value !== 'number') { return null; }
-    const max = m.bar.max || 1, tone = bandTone(p.value, m.bar.bands);
-    const fill = h(doc, 'i', { style: { width: Math.round(Math.max(0, Math.min(1, p.value / max)) * 100) + '%', 'background-color': toneColour(this.tree.theme, tone || 'accent') } });
+    const max = m.bar.max || 1, tone = statusTone(row && this.tree.model.node(row.__id), m.bar);
+    const fill = h(doc, 'i', { style: { width: Math.round(Math.max(0, Math.min(1, p.value / max)) * 100) + '%', 'background-color': toneColour(this.tree.theme, tone || 'faint') } });
     return h(doc, 'span', { cls: 'dg-text dt-barcell' }, [h(doc, 'span', { cls: 'dt-bar', attrs: { 'aria-hidden': 'true' } }, [fill]), h(doc, 'span', { text: p.text })]);
   }
 

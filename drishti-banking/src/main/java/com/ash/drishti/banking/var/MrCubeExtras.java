@@ -52,13 +52,15 @@ public final class MrCubeExtras {
     private final PivotCore core;
     private final VarPivotProvider provider;
     private final MrSensitivities sensitivities;
+    private final com.ash.drishti.banking.RiskLimits limits;
 
-    MrCubeExtras(VarService svc, PivotCore core, VarPivotProvider provider) {
+    MrCubeExtras(VarService svc, PivotCore core, VarPivotProvider provider, com.ash.drishti.banking.RiskLimits limits) {
         this.svc = svc;
         this.whatIf = new VarWhatIf(svc);
         this.core = core;
         this.provider = provider;
-        this.sensitivities = new MrSensitivities(provider.props(), provider.frtb());
+        this.sensitivities = new MrSensitivities(provider.props(), provider.frtb(), limits);
+        this.limits = limits == null ? com.ash.drishti.banking.RiskLimits.defaults() : limits;
     }
 
     VarPivotProvider provider() {
@@ -109,10 +111,12 @@ public final class MrCubeExtras {
             h.put("limit", n.limit());
             if (o.limitOnBasis(n)) {
                 h.put("limitUse", m.var() / n.limit());
+                h.put("limitStatus", limits.status(m.var() / n.limit()));   // within, near (drishti.risk.limit-near), breach
             } else {
                 h.put("limitNote", "the limit is set for another horizon or confidence than the view's");
             }
         }
+        h.put("limitNear", limits.limitNear());
         boolean stressedOpen = svc.stressedOpen(o.date());
         h.put("stressedOpen", stressedOpen);
         Object s = stressedOpen ? o.stressed(o.scope) : "no stress set is open for " + o.date();

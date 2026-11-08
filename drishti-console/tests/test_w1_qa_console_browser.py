@@ -35,6 +35,7 @@ MAIN = Path(os.environ.get("DRISHTI_MAIN_CHECKOUT", "/home/ashutosh/IdeaProjects
 if not list((base.ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar")) and (MAIN / "drishti-server" / "target").exists():
     base.ROOT = MAIN                                   # the jar, the packs and the sample config are read-only inputs; the console under test is this checkout's
 from test_w1_model_designer_browser import browser, clean, fetch, sign_in, stack  # noqa: E402,F401
+import select_helpers  # noqa: E402
 
 PORTS = base.worker_ports(18914, 17914)              # this file's own stack: the stack fixture switches the base module to them
 CONSOLE_URL = f"http://127.0.0.1:{PORTS[1]}"
@@ -58,11 +59,11 @@ def test_analyse_opens_a_pack_dataset_through_the_grouped_picker(browser):
 def test_an_alert_on_a_measure_of_a_model_uses_pickers(browser):
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/alerts/new")
-    page.select_option('select[name="source_type"]', "model")
+    page.select_option('[name="source_type"]', "model")
     model = page.locator("[data-al-model]")
-    expect(model.locator("option")).not_to_have_count(1, timeout=20000)
+    page.wait_for_function(select_helpers.has_option("[data-al-model]", ">1"), timeout=20000)
     model.select_option("dataset:pack.trading.trade")
-    expect(page.locator("[data-al-measure] option")).not_to_have_count(1, timeout=20000)
+    page.wait_for_function(select_helpers.has_option("[data-al-measure]", ">1"), timeout=20000)
     page.select_option("[data-al-measure]", index=1)
     page.click("[data-al-addfilter]")
     expect(page.locator("[data-al-filter]")).to_have_count(1)

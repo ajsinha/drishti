@@ -326,7 +326,7 @@ wins over both when configured.
 box; scoping only chooses which books the landing asks about. A role without raw sees `TRADER_ID` masked, so the Desk head's figures by
 trader say so instead of guessing.
 
-**Other settings** (all in `trading:`): `near-limit` (0.8: from this share of a limit a book is "near"), `limit-days` (5),
+**Other settings** (all in `trading:`): `limit-days` (5),
 `pnl-var-days` (60), `max-rows` (20,000 valuations a date before the figures say **partial**), `live-statuses` (`NEW`, `VALIDATED`,
 `AMENDED`).
 
@@ -363,10 +363,13 @@ then the chosen book's, then the largest notional), scaled to the notional (nega
 engines, each asked once, as the person:
 
 - **VaR**: `POST /api/v1/var/what-if {scope: BOOK:<book>, items: [{copyOf, factor}]}` (the VaR page's what-if) gives VaR before and after;
-  the book's limit gives limit use before and after: **fits** below `near-limit`, **near** from it, **breaches** above 100%.
-- **Counterparty**: `POST /api/v1/exposure/what-if` (the exposure page's pre-deal check, the copy dealt into the counterparty's largest
-  netting set) gives peak PFE before and after against the counterparty's credit limit. When the exact `paths` method cannot run, the
-  engine's conservative `addon` proxy answers, labelled **proxy** with the reason.
+  the answer's `limit` gives the book's limit, its use before and after and the status after, the server's: **fits** (`within`),
+  **near** (from `drishti.risk.limit-near`), **breaches** (`breach`); no comparable limit: the change only.
+- **Counterparty**: the exposure engine's pre-deal check, `POST /api/v1/risk/exposure/predeal {counterparty, like: <the copy>, notional,
+  side}` (EXPOSURE_GUIDE.md section 18.9): the decision and the counterparty's credit limit before and after, and the state as the server
+  says it: **fits** (the limit `within`), **near** (from the engine's `drishti.ccr.exposure.limit-near`), **breaches** (a decline), or
+  **refer** with the reason; the console applies no share of its own. When the copied trade has no paths on the run the same check is
+  asked described, the engine's conservative proxy, labelled **proxy**, which refers.
 
 A verdict reads: *Fits my VaR · 6.12m → 6.30m · limit use 83% → 85%* and *Counterparty near its limit · peak PFE 401.5m → 409.2m · 97%
 of limit*. Both halves are the server's engines and need no compute workers.

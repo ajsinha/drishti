@@ -35,6 +35,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import chart, clean, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
+import select_helpers  # noqa: E402
 
 DAY = "2026-10-08"
 STATE = {}
@@ -155,8 +156,8 @@ def test_the_studio_wells_offer_field_parameters_and_the_slicer_switches_the_cha
     page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'column'; }")
     page.click("[data-ptab='build']")
     # the axis well offers the field parameter of fields only; the values well the one of measures only
-    axis_params = page.eval_on_selector_all('[data-add="axis"] option[value^="param."]', "os => os.map(o => o.value)")
-    value_params = page.eval_on_selector_all('[data-add="values"] option[value^="param."]', "os => os.map(o => o.value)")
+    axis_params = [v for v in select_helpers.values(page, '[data-add="axis"]') if v.startswith("param.")]
+    value_params = [v for v in select_helpers.values(page, '[data-add="values"]') if v.startswith("param.")]
     assert axis_params == ["param.breakdown"] and value_params == ["param.metric"], (axis_params, value_params)
     page.select_option('[data-add="axis"]', "param.breakdown")
     page.select_option('[data-add="values"]', "param.metric")

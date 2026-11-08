@@ -19,7 +19,7 @@
    exported as SVG keeps them; states (selected, found, proposed, a drop target) are classes the style sheet draws. Each node is a
    focusable treeitem (org) or a labelled slice; the sunburst and icicle also give a table of the same figures (the text alternative). */
 import { h, toneColour } from '../../drishti-core/src/drishti_index.js';
-import { orgLayout, partition, arcPath, bandTone } from './drishti_tree-layout.js';
+import { orgLayout, partition, arcPath, statusTone } from './drishti_tree-layout.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -46,7 +46,7 @@ export function svg(doc, tag, attrs, kids) {
  * @property {function(string, *): string} text a measure's figure as text (field, value)
  * @property {?string} selected
  * @property {Set<string>} hits the search's matches
- * @property {?string} colourBy the measure whose bands colour a node (else its kind)
+ * @property {?string} colourBy the measure whose bar's status colours a node (else its kind)
  * @property {string[]} shown the measures a box shows
  * @property {?string} sizeBy the additive measure of the partition
  * @property {?string} focus the partition's centre
@@ -55,14 +55,14 @@ export function svg(doc, tag, attrs, kids) {
  */
 
 /**
- * A node's fill: the tone of its colourBy figure by the measure's bands, else its kind's colour of the palette.
+ * A node's fill: the tone of its status on the colourBy measure's bar (none: the no-data colour), else its kind's colour of the palette.
  * @param {DrawContext} c
  * @param {Object} n a TreeNode
  * @returns {string}
  */
 export function nodeColour(c, n) {
   const m = c.colourBy && c.model.measure(c.colourBy);
-  if (m && m.bar && m.bar.bands) { const t = bandTone(n.values[m.field], m.bar.bands); if (t) { return toneColour(c.theme, t); } return c.theme.nodata; }
+  if (m && m.bar && m.bar.status) { const t = statusTone(n, m.bar); if (t) { return toneColour(c.theme, t); } return c.theme.nodata; }
   const kinds = c.kinds || (c.kinds = Array.from(new Set(c.model.all().map((x) => x.kind))));
   return toneColour(c.theme, null, Math.max(0, kinds.indexOf(n.kind)));
 }
@@ -104,7 +104,7 @@ export function drawOrg(doc, c) {
     if (bar && typeof n.values[bar.field] === 'number') {
       const v = n.values[bar.field], max = bar.bar.max || 1, w = Math.max(0, Math.min(1, v / max)) * (b.w - 24);
       g.appendChild(svg(doc, 'rect', { class: 'dt-barbg', x: 12, y: b.h - 9, width: b.w - 24, height: 4, rx: 2, fill: t.border }));
-      g.appendChild(svg(doc, 'rect', { class: 'dt-barfg', x: 12, y: b.h - 9, width: Math.round(w * 10) / 10, height: 4, rx: 2, fill: toneColour(t, bandTone(v, bar.bar.bands) || 'accent') }));
+      g.appendChild(svg(doc, 'rect', { class: 'dt-barfg', x: 12, y: b.h - 9, width: Math.round(w * 10) / 10, height: 4, rx: 2, fill: toneColour(t, statusTone(n, bar.bar) || 'faint') }));
     }
     if (kids) {
       const tg = svg(doc, 'g', { class: 'dt-tg', transform: 'translate(' + (b.w / 2) + ',' + b.h + ')', 'data-toggle': n.id, 'aria-hidden': 'true' });

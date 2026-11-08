@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
  * </ul>
  *
  * Every answer shows the method and the template, and is audited ({@code ccr-predeal}, with its check id and the decision). The limit and
- * each bucket say {@code within}, {@code near} (from {@code limit-near} of the limit, 80% by default: still within, said in amber) or
+ * each bucket say {@code within}, {@code near} (from {@code drishti.risk.limit-near} of the limit, 0.8, {@link com.ash.drishti.banking.RiskLimits}) or
  * {@code breach}. With EEPE in the answer (the exact method) the exposure also carries the IMM EAD, alpha x EEPE, before, with and
  * incremental. SA-CCR's incremental EAD is release 2.9.11.k: the answer says it is under construction.
  */
@@ -61,8 +61,11 @@ final class ExposurePreDeal {
     private final ExposureService svc;
     private final ExposureWhatIf whatIf;
 
-    ExposurePreDeal(ExposureService svc, ExposureWhatIf whatIf) {
+    private final com.ash.drishti.banking.RiskLimits limits;
+
+    ExposurePreDeal(ExposureService svc, ExposureWhatIf whatIf, com.ash.drishti.banking.RiskLimits limits) {
         this.svc = svc;
+        this.limits = limits == null ? com.ash.drishti.banking.RiskLimits.defaults() : limits;
         this.whatIf = whatIf;
     }
 
@@ -257,7 +260,7 @@ final class ExposurePreDeal {
         if (flags.contains("stale-run")) {
             reasons.add("the date's run is stale (" + String.join("; ", d.warnings()) + "): the check is not made on it");
         }
-        double near = svc.props().limitNear();
+        double near = limits.limitNear();
         Map<String, Object> lim = limit == null || measure == null ? null : limitUse(limit, measure, w, near);
         String decision;
         if (!reasons.isEmpty()) {
@@ -373,9 +376,9 @@ final class ExposurePreDeal {
         exp.put("alpha", alpha);
     }
 
-    /** {@code breach} over 100%, {@code near} from the near share, else {@code within}. */
+    /** {@code breach} over 100%, {@code near} from the near share, else {@code within}: the module's one rule (RiskLimits). */
     static String status(double use, double near) {
-        return use > 1 ? "breach" : use >= near ? "near" : "within";
+        return new com.ash.drishti.banking.RiskLimits(near).status(use);
     }
 
     /**

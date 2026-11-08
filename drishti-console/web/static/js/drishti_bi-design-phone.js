@@ -15,7 +15,8 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 7 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6): the designer's Phone and Tablet tabs. For the page being edited each lists the visuals in the order that device shows
-   them; a row is dragged (or moved with its arrows) to change the order, hidden with its checkbox, and given a height in grid rows. A tablet row can also be made
+   them; a row is dragged (or moved with its arrows) to change the order, hidden with its checkbox, and given a height in grid rows: the
+   order, the hidden visuals, the heights and the wide ones are a breakpoint of drishti-designer's LayoutModel over the page's visuals. A tablet row can also be made
    wide (the whole width instead of half). Beside the list a preview shows the result to scale: a 390 px screen for a phone, a 768 px one for a tablet. A change is
    one step of the designer's history and is written to `layouts.phone.<page id>` or `layouts.tablet.<page id>` of the draft; arranging nothing removes the entry, so
    the page is the automatic arrangement again. */
@@ -41,30 +42,43 @@
       onMove: (from, to) => move(rowsOf(), from, to, 'Reorder on ' + word) });
     const titleOf = (v) => v.title || v.id;
 
-    /** The rows of the list: the shown visuals in the device's order, then the hidden ones. */
-    function rowsOf() {
+    /** The page's arrangement on this device as drishti-designer's LayoutModel: the page's visuals as grid items (the reading order is
+        the model's), the device a breakpoint of it (its order, hidden visuals, heights in rows and, on a tablet, the wide ones). The
+        designer keeps its own undo (stack: null); each change is written back to the draft as one step of its history. */
+    function layoutModel() {
       const page = D.page(), lay = B.phone.layoutOf(D.model, page.id, device);
-      const wide = new Set((lay && lay.wide) || []);
-      const shown = B.phone.arrange(page, lay).map(({ spec, rows }) => ({ spec, rows, hidden: false, wide: wide.has(spec.id) }));
-      const hide = new Set((lay && lay.hide) || []);
-      const hidden = B.phone.reading(page).filter((v) => hide.has(v.id)).map((spec) => ({ spec, rows: ((lay && lay.span) || {})[spec.id] || null, hidden: true, wide: wide.has(spec.id) }));
-      return shown.concat(hidden);
+      const lm = new window.Drishti.elements.designer.LayoutModel({ stack: null });
+      const shown = B.phone.arrange(page, lay).map((x) => x.spec.id), hidden = (lay && lay.hide) || [];
+      const bp = lay ? { order: shown.concat(B.phone.reading(page).map((v) => v.id).filter((id) => hidden.indexOf(id) >= 0)), hidden: hidden.slice(),
+        heights: Object.assign({}, lay.span), wide: ((lay && lay.wide) || []).slice() } : null;
+      lm.load(page.visuals.map((v) => ({ id: v.id, x: v.at.x, y: v.at.y, w: v.at.w, h: v.at.h, label: titleOf(v) })), bp ? { [device]: bp } : {});
+      return lm;
     }
 
-    /** Writes the arrangement `rows` (shown first, in order; then hidden) as the page's layout for this device. */
-    function commit(rows, label) {
+    /** The rows of the list: the shown visuals in the device's order, then the hidden ones (in the page's reading order). */
+    function rowsOf() {
+      const page = D.page(), lm = layoutModel(), bp = lm.breakpoint(device) || { hidden: [], heights: {} };
+      const spec = (id) => page.visuals.find((v) => v.id === id), wide = new Set(bp.wide || []), hidden = new Set(bp.hidden);
+      const row = (id, isHidden) => ({ spec: spec(id), rows: bp.heights[id] || null, hidden: isHidden, wide: wide.has(id) });
+      return lm.order(device).map((id) => row(id, false)).concat(lm.order(device, { withHidden: true }).filter((id) => hidden.has(id)).map((id) => row(id, true)));
+    }
+
+    /** One change of the device's arrangement (the LayoutModel's breakpoint), written as the page's layout for this device: the shown
+        visuals in order, the hidden ones, the heights and the wide ones; the automatic arrangement again removes the entry. */
+    function arrange(change, label) {
+      const lm = layoutModel();
+      if (!lm.arrange(device, change, label)) { return; }
+      const bp = lm.breakpoint(device);
       D.change(label, (m) => {
         const page = D.page();
-        const reading = B.phone.reading(page).map((v) => v.id);
-        const order = rows.filter((r) => !r.hidden).map((r) => r.spec.id);
-        const hide = rows.filter((r) => r.hidden).map((r) => r.spec.id);
-        const wide = tablet ? rows.filter((r) => r.wide).map((r) => r.spec.id) : [];
-        const span = {};
-        rows.forEach((r) => { if (r.rows) { span[r.spec.id] = r.rows; } });
-        const plain = !hide.length && !wide.length && !Object.keys(span).length && order.join() === reading.join();
+        let lay = null;
+        if (bp) {
+          const shown = bp.order.filter((id) => bp.hidden.indexOf(id) < 0);
+          const wide = tablet ? shown.concat(bp.hidden).filter((id) => (bp.wide || []).indexOf(id) >= 0) : [];
+          lay = B.phone.tidy({ order: shown, hide: bp.hidden, span: bp.heights, wide });
+        }
         const all = (m.layouts = m.layouts || {});
         const dev = (all[device] = all[device] || {});
-        const lay = plain ? null : B.phone.tidy({ order, hide, span, wide });
         if (lay) { dev[page.id] = lay; } else { delete dev[page.id]; }
         if (!Object.keys(dev).length) { delete all[device]; }
         if (!Object.keys(all).length) { delete m.layouts; }
@@ -72,10 +86,10 @@
     }
 
     function move(rows, from, to, label) {
-      const next = rows.slice();
+      const next = rows.map((r) => r.spec.id);
       const [it] = next.splice(from, 1);
       next.splice(to, 0, it);
-      commit(next, label);
+      arrange({ order: next }, label);
     }
 
     function draw() {
@@ -92,30 +106,17 @@
           h('span', { class: 'bi-phone-grip', 'aria-hidden': 'true' }, B.icon('grip-vertical')),
           h('span', { class: 'bi-phone-name' }, h('strong', { text: titleOf(v) }), ' ', h('span', { class: 'text-muted-d', text: v.type })),
           up, down, settings);
-        up.addEventListener('click', () => { move(rows, i, i - 1, 'Move up on ' + word); focusAfter('[data-' + device + '-up="' + v.id + '"]', '[data-' + device + '-down="' + v.id + '"]'); });
-        down.addEventListener('click', () => { move(rows, i, i + 1, 'Move down on ' + word); focusAfter('[data-' + device + '-down="' + v.id + '"]', '[data-' + device + '-up="' + v.id + '"]'); });
+        up.addEventListener('click', () => { arrange({ move: [v.id, -1] }, 'Move up on ' + word); focusAfter('[data-' + device + '-up="' + v.id + '"]', '[data-' + device + '-down="' + v.id + '"]'); });
+        down.addEventListener('click', () => { arrange({ move: [v.id, 1] }, 'Move down on ' + word); focusAfter('[data-' + device + '-down="' + v.id + '"]', '[data-' + device + '-up="' + v.id + '"]'); });
         const fields = { hide: { type: 'boolean', title: 'Hide', hook: { ['data-' + device + '-hide']: v.id, 'aria-label': 'Hide ' + titleOf(v) + ' on ' + word } } };
         if (tablet) { fields.wide = { type: 'boolean', title: 'Wide', readOnly: r.hidden, hook: { 'data-tablet-wide': v.id, 'aria-label': 'Whole width for ' + titleOf(v) + ' on a tablet' } }; }
         fields.rows = { type: 'integer', title: 'Rows', minimum: 1, maximum: 40, lazy: true, placeholder: 'auto', hook: { ['data-' + device + '-rows']: v.id, class: 'bi-phone-rows', 'aria-label': 'Height of ' + titleOf(v) + ' in rows' } };
         B.formatPane.form(settings, { fields, value: { hide: !!r.hidden, wide: !!r.wide, rows: r.rows || undefined }, label: titleOf(v) + ' on ' + word, on: {
-          hide: (on) => {
-            const next = rows.slice();
-            const [it] = next.splice(i, 1);
-            const row = { spec: it.spec, rows: it.rows, hidden: !!on, wide: it.wide };
-            next.splice(on ? next.length : next.filter((x) => !x.hidden).length, 0, row);
-            commit(next, on ? 'Hide on ' + word : 'Show on ' + word);
-          },
-          wide: (on) => {
-            const next = rows.slice();
-            next[i] = { spec: r.spec, rows: r.rows, hidden: r.hidden, wide: !!on };
-            commit(next, on ? 'Whole width on a tablet' : 'Half width on a tablet');
-          },
+          hide: (on) => arrange({ hide: [v.id, !!on] }, on ? 'Hide on ' + word : 'Show on ' + word),
+          wide: (on) => arrange({ wide: [v.id, !!on] }, on ? 'Whole width on a tablet' : 'Half width on a tablet'),
           rows: (x) => {
             if (x !== undefined && isNaN(x)) { return; }
-            const n = Math.max(0, Math.min(40, Math.round(Number(x) || 0)));
-            const next = rows.slice();
-            next[i] = { spec: r.spec, rows: n || null, hidden: r.hidden, wide: r.wide };
-            commit(next, (tablet ? 'Tablet' : 'Phone') + ' height');
+            arrange({ height: [v.id, Math.max(0, Math.min(40, Math.round(Number(x) || 0)))] }, (tablet ? 'Tablet' : 'Phone') + ' height');
           }
         } });
         list.appendChild(li);

@@ -109,7 +109,10 @@ class RunTheGenerators(unittest.TestCase):
         self.tmp.cleanup()
 
     def run_tool(self, *args, env=None, timeout=600):
-        r = subprocess.run([PY, *map(str, args)], cwd=ROOT, capture_output=True, text=True, timeout=timeout, env={**os.environ, **(env or {})})
+        # the data folder is the test's own: a generator that writes beside its rows (make_data.py's feed, <data>/feeds/fixing.jsonl) never
+        # reaches the repository's data/
+        r = subprocess.run([PY, *map(str, args)], cwd=ROOT, capture_output=True, text=True, timeout=timeout,
+                           env={**os.environ, "DRISHTI_DATA_DIR": str(self.d), **(env or {})})
         self.assertEqual(r.returncode, 0, r.stdout[-2000:] + r.stderr[-2000:])
         return r
 
@@ -188,7 +191,7 @@ class RunTheGenerators(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("tar", r.stderr)
         r = subprocess.run([PY, "tools/packgen/banking/make_data.py", "--jsonl", str(self.d / "banking.jsonl")],
-                           cwd=ROOT, capture_output=True, text=True, timeout=300)
+                           cwd=ROOT, capture_output=True, text=True, timeout=300, env={**os.environ, "DRISHTI_DATA_DIR": str(self.d)})
         self.assertNotEqual(r.returncode, 0, "several kinds and days in one plain file")
 
     def test_a_pack_generator_writes_jsonl_samples_and_sutra_cases(self):

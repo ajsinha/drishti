@@ -47,6 +47,8 @@
 .help-toc [aria-current="page"] a { color: var(--d-accent); font-weight: 700; }
 .help-crumbs { margin-bottom: var(--d-sp-16); }
 .help-article { min-width: 0; line-height: 1.65; }
+/* a long word (a URL, a path, a setting in a heading or a list) wraps rather than widening a phone's page; code blocks keep their own scroll */
+.help-article :is(p, li, dd, h1, h2, h3, h4, h5, h6, blockquote) { overflow-wrap: anywhere; }
 .help-article header h1 { font-size: var(--d-fs-30_4); font-weight: 800; margin: var(--d-sp-4_8) 0; }
 .help-article .lead { color: var(--d-muted); font-size: var(--d-fs-16_8); }
 .help-article h2 { font-size: var(--d-fs-21_6); font-weight: 750; margin: var(--d-sp-32) 0 var(--d-sp-9_6); padding-top: var(--d-sp-9_6); border-top: 1px solid var(--d-border); scroll-margin-top: 70px; }

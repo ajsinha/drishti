@@ -155,7 +155,7 @@ def test_keyboard_only(page, url):
     page.focus('[name="v.tradeId"]')
     page.keyboard.type("IRS-48213 IRS-47102")
     page.keyboard.press("Tab")                                                                           # on to the next control, in reading order
-    assert page.evaluate("document.activeElement.name") == "op.counterparty.name"
+    assert page.evaluate("document.activeElement.closest('.di-form-field').querySelector('.di-names [name]').name") == "op.counterparty.name"   # its Select
     page.keyboard.press("Escape")                                                                        # Esc clears every field
     assert page.input_value('[name="v.tradeId"]') == ""
     page.fill('[name="v.mtm"]', "250k")

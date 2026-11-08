@@ -77,7 +77,8 @@ async def save(request: Request):
     f = {k: v[0] for k, v in parse_qs((await request.body()).decode(), keep_blank_values=True).items()}
     name = f.get("name", "").strip()
     body = {"query": f.get("query", ""), "schedule": f.get("schedule", ""), "deliver": f.get("deliver", "folder"),
-            "webhook": f.get("webhook", ""), "date": f.get("date", "today"), "format": f.get("format", "csv"), "enabled": f.get("enabled", "on") == "on"}
+            "webhook": f.get("webhook", ""), "date": f.get("date", "today"), "format": f.get("format", "csv"),
+            "enabled": f.get("enabled") == "on"}                               # a checkbox: an unchecked one is not sent, so a missing field is off
     try:
         await request.app.state.backend.save_report(name, body, ident(request))
     except BackendError as e:

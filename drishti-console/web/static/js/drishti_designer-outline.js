@@ -18,7 +18,7 @@
    sections, the panels in each and what a click opens under a table, each in plain words. Drag an item to reorder it or move it to
    another section; drop it on a table (or its "opens on a click" line) to nest it (a short sentence asks where it opens); drag a child
    out (or press Un-nest) to put it back on the page; "+ Add a section". Picking an item shows its description and settings. The tree is
-   drishti-designer's Outline (its keys, Alt+arrows and drags); this script turns its moves into the server's steps. After every step
+   the one outline (drishti-tree's TreeOutline, drishti-designer's Outline: its keys, Alt+arrows and drags); this script turns its moves into the server's steps. After every step
    the live preview is drawn again in place (its panels swapped, no reload), and the outline is read again. */
 (function () {
   'use strict';

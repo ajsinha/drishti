@@ -18,6 +18,7 @@ package com.ash.drishti.banking;
 import com.ash.drishti.server.modules.ApiAlias;
 import com.ash.drishti.server.modules.ConditionalOnModule;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.context.annotation.ComponentScan;
@@ -34,6 +35,7 @@ import org.springframework.context.annotation.FilterType;
  */
 @AutoConfiguration
 @ConditionalOnModule("banking")
+@EnableConfigurationProperties(RiskLimits.class)         // drishti.risk.limit-near: one rule for every limit (RiskLimits)
 // as the application's own scan: test configurations excluded (TypeExcludeFilter), and this class itself not scanned twice
 @ComponentScan(basePackages = "com.ash.drishti.banking", excludeFilters = {
         @ComponentScan.Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),

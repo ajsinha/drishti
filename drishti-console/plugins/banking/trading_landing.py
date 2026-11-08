@@ -89,16 +89,6 @@ def _num(v: Any) -> float | None:
     return f if math.isfinite(f) else None
 
 
-def _share(cfg: dict, key: str, default: float) -> float:
-    v = _num(cfg.get(key))
-    return default if v is None or v <= 0 else v
-
-
-def near_limit(cfg: dict) -> float:
-    """``trading.near-limit``: the share of a limit from which a book is "near" it (0.8)."""
-    return _share(cfg, "near-limit", 0.8)
-
-
 def _count(cfg: dict, key: str, default: int, lo: int, hi: int) -> int:
     v = _num(cfg.get(key))
     return default if v is None else max(lo, min(int(v), hi))
@@ -629,11 +619,14 @@ def events(answer: dict, business: date) -> dict:
 
 
 # -- VaR and limits -----------------------------------------------------------------------------------------------------------------
-def limit_state(use: float | None, near: float) -> str:
-    """``breach`` above the limit, ``near`` at or above the near-limit share, ``ok`` below; ``none`` without a limit."""
-    if use is None:
-        return "none"
-    return "breach" if use > 1 else "near" if use >= near else "ok"
+#: a limit's status as the server says it (within, near from drishti.risk.limit-near, breach) in the landing's words: the console decides
+#: nothing, it only names the server's status (none: no limit, or none comparable)
+STATES = {"within": "ok", "near": "near", "breach": "breach"}
+
+
+def state_of(status: Any) -> str:
+    """The landing's state for the server's limit status: ``ok``, ``near``, ``breach``; ``none`` without one."""
+    return STATES.get(str(status or ""), "none")
 
 
 async def _ask(fn, *args, **params) -> tuple[Any, str | None, str | None]:
@@ -657,7 +650,6 @@ async def risk(backend, me, scope: Scope, cfg: dict) -> dict:
     text = var_scope(scope)
     if text is None:
         return {"available": False, "reason": "no books in your scope"}
-    near = _share(cfg, "near-limit", 0.8)
     head_t = asyncio.create_task(_ask(risk_api.var, backend, "GET", "/scope", me, scope=text))
     book_ts = [asyncio.create_task(_ask(risk_api.var, backend, "GET", "/scope", me, scope=f"BOOK:{b}")) for b in scope.books]
     parts_t = asyncio.create_task(_ask(risk_api.var, backend, "GET", "/scope/contributions", me, scope=text, by="position"))
@@ -670,7 +662,7 @@ async def risk(backend, me, scope: Scope, cfg: dict) -> dict:
             books.append({"book": b, "var": None, "limit": None, "limitUse": None, "state": "none"})
             continue
         use = _num(a.get("limitUse"))
-        books.append({"book": b, "var": _num(a.get("var")), "limit": _num(a.get("limit")), "limitUse": use, "state": limit_state(use, near),
+        books.append({"book": b, "var": _num(a.get("var")), "limit": _num(a.get("limit")), "limitUse": use, "state": state_of(a.get("limitStatus")),
                       "trades": a.get("trades")})
     parts, pwhy, _c3 = await parts_t
     if head is None:
@@ -686,7 +678,7 @@ async def risk(backend, me, scope: Scope, cfg: dict) -> dict:
     use = _num(head.get("limitUse"))
     return {"available": True, "scope": text, "businessDate": head.get("businessDate"), "var": _num(head.get("var")), "es": _num(head.get("es")),
             "confidence": head.get("confidence"), "currency": head.get("currency") or "USD", "trades": head.get("trades"),
-            "limit": _num(head.get("limit")), "limitUse": use, "state": limit_state(use, near), "near": near,
+            "limit": _num(head.get("limit")), "limitUse": use, "state": state_of(head.get("limitStatus")), "near": _num(head.get("limitNear")),
             "intraday": {"trades": intraday.get("trades"), "lastAt": intraday.get("lastAt"), "updates": intraday.get("updates")} if intraday else None,
             "books": books, "worst": worst, "breaches": [b for b in books if b["state"] == "breach"],
             "nearLimit": [b for b in books if b["state"] == "near"], "positions": positions, "positionsProblem": pwhy, "problems": problems}
@@ -708,7 +700,7 @@ async def limits(backend, me, scope: Scope, cfg: dict) -> dict:
     answers = await asyncio.gather(*(_ask(risk_api.var, backend, "GET", "/official", me, asOf=d.isoformat()) for d in days))
     if all(a is None for a, _w, _c in answers):
         return {"available": False, "reason": answers[-1][1] or "no official record"}
-    near = _share(cfg, "near-limit", 0.8)
+    near = next((_num(a.get("limitNear")) for a, _w, _c in answers if a), None)          # the server's rule, said with its records
     grid = []
     for b in scope.books:
         cells = []
@@ -716,7 +708,7 @@ async def limits(backend, me, scope: Scope, cfg: dict) -> dict:
             n = _node((a or {}).get("nodes") or {}, b) if a else None
             use = _num(n.get("limitUse")) if n else None
             cells.append({"date": d.isoformat(), "var": _num(n.get("var")) if n else None, "limit": _num(n.get("limit")) if n else None,
-                          "limitUse": use, "state": limit_state(use, near) if n else "missing",
+                          "limitUse": use, "state": state_of(n.get("limitStatus")) if n else "missing",
                           "why": None if n else ("no official record of this date" if a is None else "the book is not a node of the record")})
         grid.append({"book": b, "cells": cells})
     return {"available": True, "dates": [d.isoformat() for d in days], "near": near, "books": grid,
@@ -832,10 +824,9 @@ async def check(backend, me, scope: Scope, cfg: dict, body: dict) -> dict:
     sign = -1.0 if side in ("B", "S") and own in ("B", "S") and side != own else 1.0
     factor = sign * notional / base_notional
     book = book or (str(t.get("PORTFOLIO")) if str(t.get("PORTFOLIO")) in scope.books else (scope.books or [None])[0])
-    near = _share(cfg, "near-limit", 0.8)
     label = f"{product} {notional:,.0f} with {cp}"
-    var_t = asyncio.create_task(_var_check(backend, me, book, tid, factor, label, near))
-    exp_t = asyncio.create_task(_exposure_check(backend, me, cp, tid, t, factor, notional, sign, label, near))
+    var_t = asyncio.create_task(_var_check(backend, me, book, tid, factor, label))
+    exp_t = asyncio.create_task(_exposure_check(backend, me, cp, tid, t, factor, notional, sign, label))
     v = await var_t
     x = await exp_t
     return {"ok": True, "template": {"trade": tid, "product": product, "notional": base_notional, "book": t.get("PORTFOLIO"),
@@ -843,31 +834,29 @@ async def check(backend, me, scope: Scope, cfg: dict, body: dict) -> dict:
             "factor": factor, "notional": notional, "counterparty": cp, "book": book, "var": v, "exposure": x}
 
 
-async def _var_check(backend, me, book: str | None, tid: str, factor: float, label: str, near: float) -> dict:
-    """The VaR what-if on the book (``POST /var/what-if``), against the book's limit (its ``/var/scope`` answer)."""
+async def _var_check(backend, me, book: str | None, tid: str, factor: float, label: str) -> dict:
+    """The VaR what-if on the book (``POST /var/what-if``): VaR before and after, and the book's limit, its use before and after and the
+    status after as the engine answers them (none: the book has no comparable limit)."""
     if not book:
         return {"state": "unavailable", "reason": "no book in your scope"}
     scope = f"BOOK:{book}"
-    head_t = asyncio.create_task(_ask(risk_api.var, backend, "GET", "/scope", me, scope=scope))
     w, why, code = await _ask(risk_api.var, backend, "POST", "/what-if", me, body={"scope": scope, "items": [{"copyOf": tid, "factor": factor, "label": label}]})
-    head, _hw, _hc = await head_t
     if w is None:
         return {"state": "unavailable", "scope": scope, "reason": why, "code": code}
     before, after = _num((w.get("before") or {}).get("var")), _num((w.get("after") or {}).get("var"))
-    limit = _num((head or {}).get("limit"))
-    ub = before / limit if limit and before is not None else None
-    ua = after / limit if limit and after is not None else None
-    return {"state": limit_state(ua, near), "scope": scope, "before": before, "after": after, "change": _num((w.get("change") or {}).get("var")),
+    lim = w.get("limit") if isinstance(w.get("limit"), dict) else {}
+    limit, ub, ua = _num(lim.get("limit")), _num(lim.get("useBefore")), _num(lim.get("useAfter"))
+    return {"state": state_of(lim.get("status")), "scope": scope, "before": before, "after": after, "change": _num((w.get("change") or {}).get("var")),
             "limit": limit, "useBefore": ub, "useAfter": ua, "confidence": w.get("confidence"), "currency": w.get("currency"),
             "engine": w.get("engine"), "note": w.get("note")}
 
 
-async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float, notional: float, sign: float, label: str,
-                          near: float) -> dict:
+async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float, notional: float, sign: float, label: str) -> dict:
     """The exposure engine's pre-deal check on the counterparty (``POST /api/v1/risk/exposure/predeal``, EXPOSURE_GUIDE.md section 18.9): the
     copy's paths on the date's run, exact (``LIKE`` the template); when the copy has no paths on the run, the same check described (asset
     class, notional, maturity), the engine's conservative proxy, which only refers. The decision, the limit use and every figure are the
-    server's; here only ``near`` (a display share) is applied to an approval."""
+    server's, the state too: a decline is a breach, a referral a referral, an approval the limit's status as the server says it (within,
+    near from ``drishti.risk.limit-near``, breach); no limit applied: ``none``."""
     side = "reverse" if sign < 0 else "same"
     body = {"counterparty": cp, "like": tid, "notional": notional, "side": side}
     a, why, code = await _ask(risk_api.exposure, backend, "POST", "/predeal", me, body=body)
@@ -887,7 +876,7 @@ async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float
         return {"state": "unavailable", "scope": f"CPTY:{cp}", "reason": why, "code": code}
     lim = a.get("limit") if isinstance(a.get("limit"), dict) else {}
     decision = a.get("decision")
-    state = {"decline": "breach", "refer": "refer"}.get(decision) or limit_state(_num(lim.get("useAfter")), near)
+    state = {"decline": "breach", "refer": "refer"}.get(decision) or state_of(lim.get("status"))
     method = a.get("method") or {}
     base, wth = (a.get("exposure") or {}).get("base") or {}, (a.get("exposure") or {}).get("with") or {}
     return {"state": state, "decision": decision, "reason": a.get("reason"), "reasons": a.get("reasons") or [], "checkId": a.get("checkId"),

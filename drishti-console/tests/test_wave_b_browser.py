@@ -28,6 +28,7 @@ from playwright.sync_api import expect  # noqa: E402
 import bi_live_stack as S  # noqa: E402
 from bi_live_stack import CONSOLE_URL, PASSWORD, REPORT  # noqa: E402
 from test_bi_live_browser import browser, clean, sign_in, stack  # noqa: E402,F401  (the module's stack and browser fixtures)
+import select_helpers  # noqa: E402
 
 BOARD_REPORT = "file:report:live-trading-desk"
 
@@ -57,9 +58,9 @@ def add_tile(page, visual="desk/mtm"):
     page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'tile'; }")
     tile = page.evaluate("window.drishtiBi.design.sel().id")
     page.click("[data-ptab='format']")
-    page.wait_for_selector(f'[data-tile-report] option[value="{BOARD_REPORT}"]', state="attached", timeout=15000)
+    page.wait_for_function(select_helpers.has_option("[data-tile-report]", BOARD_REPORT), timeout=15000)
     page.select_option("[data-tile-report]", BOARD_REPORT)
-    page.wait_for_function("() => document.querySelectorAll('[data-tile-visual] option').length > 1")
+    page.wait_for_function(select_helpers.has_option("[data-tile-visual]", ">1"))
     page.select_option("[data-tile-visual]", visual)
     return tile
 

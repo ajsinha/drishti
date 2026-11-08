@@ -179,7 +179,9 @@ def test_the_form_guard_finds_what_it_looks_for():
 def test_the_kit_is_where_the_designers_live():
     """The libraries the rule points to exist and every designer page loads the kit."""
     kit = WEB / "static" / "elements" / "drishti-designer" / "src"
-    for name in ("drishti_layout-canvas.js", "drishti_palette.js", "drishti_inspector.js", "drishti_outline.js", "drishti_yaml-pane.js", "drishti_shell.js"):
+    for name in ("drishti_layout-canvas.js", "drishti_palette.js", "drishti_inspector.js", "drishti_yaml-pane.js", "drishti_shell.js"):
         assert (kit / name).is_file(), name
+    assert (WEB / "static" / "elements" / "drishti-tree" / "src" / "drishti_tree-outline.js").is_file()   # the one outline; the kit re-exports it
+    assert not (kit / "drishti_outline.js").exists()                                                       # never a second one beside it
     for page in ("build/design.html", "build/tables.html", "bi/design.html"):
         assert '{% include "_designer_kit.html" %}' in (WEB / "templates" / page).read_text(encoding="utf-8"), page

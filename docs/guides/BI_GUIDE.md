@@ -1170,7 +1170,9 @@ type does not use is not shown; whatever the pane offers the server accepts.
 | View, Themes, Customize current theme | Format, *Report*, *Theme*; **Make a theme** (the theme designer) | `theme: corporate`; a `theme` item ([section 31, its section 5.2](#52-themes)) |
 
 **The theme designer** (`/bi/design/theme/<id>`; *New: theme* in the Explorer, or **Make a theme** in Format) edits a theme item: its title and name, its series colours (rows you add, remove and move up or down; 3 to 12), page, text, good and bad colours, type, and the
-format defaults of each kind of visual, drawn by the same generated pane, with a preview of a chart, a table and a card in the theme. Save keeps the draft; Publish makes it what reports read.
+format defaults of each kind of visual, drawn by the same generated pane, with a preview of a chart, a table and a card in the theme. The theme's YAML is the Studio's YAML
+panel under the designer (**Visual**, **YAML** or **Both** in the header, as in the table and model editors): a change on either side shows on the other; an edit of the
+YAML is read by the server after a pause, and a line that does not read is marked while the theme keeps its last good version. Save keeps the draft; Publish makes it what reports read.
 
 ![The theme designer: series colours, the format defaults of matrices, and the preview](img/bistudio/theme-designer.jpg)
 
@@ -3484,7 +3486,7 @@ background under a contrast of 4.5 is an `A11Y` warning. `GET /api/v1/bi/themes`
 **In the console:** a report picks its theme in Format with no visual selected (*Report*, *Theme*); **Make a theme** (also *New: theme* in BI Studio's Explorer) opens
 the **theme designer** (`/bi/design/theme/<id>`, `/bi/design/theme/new` starts from Corporate in your private workspace): the series colours (add, remove, move),
 the page, text, good and bad colours, the type, and the format defaults of each kind of visual, drawn by the same generated Format pane, with a live preview of a chart,
-a table and a card; Save, then Publish so that reports read it.
+a table and a card, and the theme as YAML in the Studio's YAML panel (both ways); Save, then Publish so that reports read it.
 
 #### 5.3 Number formats
 

@@ -30,7 +30,7 @@ About 30 minutes (the first runs of the feeds download a few megabytes).
 
 - [Tutorial 1](01-first-15-minutes.md) done: a server and console you can build, start and stop.
 - A network to the public sources (the feeds' tests use recorded answers; this tutorial uses the real sources).
-- Optional: a free FRED key (https://fred.stlouisfed.org/docs/api/api_key.html) in `DRISHTI_FRED_API_KEY` for the Federal Reserve's
+- Optional: a [free FRED key](https://fred.stlouisfed.org/docs/api/api_key.html) in `DRISHTI_FRED_API_KEY` for the Federal Reserve's
   series; without it the Bank of Canada's still load.
 - For the command-line steps: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens), or sign-in off.
 

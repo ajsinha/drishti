@@ -44,6 +44,14 @@ BOOK_VAR = {"BOOK-RATES-1": (6_120_000, 7_400_000), "BOOK-RATES-2": (3_000_000, 
 OFFICIAL_DAYS = ["2026-09-24", "2026-09-28", "2026-09-29", "2026-09-30"]          # 2026-09-25 has none
 
 
+def status(use):
+    """A limit use's status as the server says it (RiskLimits, drishti.risk.limit-near 0.8): within, near, breach; None without a use."""
+    return None if use is None else "breach" if use > 1 else "near" if use >= NEAR else "within"
+
+
+NEAR = 0.8                                                                        # the server's drishti.risk.limit-near in this stand-in
+
+
 def trade(i: int, day: str) -> dict:
     tid = f"MX-{20000001 + i}"
     book = BOOKS[i % 3]
@@ -73,6 +81,8 @@ class TradingBackend(FakeBackend):
         self.previous, self.paths, self.history = previous, paths, history
         self.carried = carried                    # every date's valuations are of this day (a lake not loaded since)
         self.asked: list = []
+        self.var_status = None                    # the VaR what-if's status, when a test makes the server say another
+        self.limit_status = "near"                # the pre-deal answer's limit status, as the server says it (97% of 420m: near from its 0.8)
 
     @staticmethod
     def _raw_role(ident) -> bool:
@@ -142,11 +152,11 @@ class TradingBackend(FakeBackend):
             if scope.startswith("BOOK:") and " " not in scope:
                 v, lim = BOOK_VAR[scope[5:]]
                 return {"scope": scope, "businessDate": "2026-09-30", "var": v, "es": int(v * 1.1), "limit": lim, "limitUse": v / lim,
-                        "confidence": 0.99, "trades": 4}
+                        "limitStatus": status(v / lim), "limitNear": NEAR, "confidence": 0.99, "trades": 4}
             if scope.startswith("DESK:"):
-                return {"scope": scope, "businessDate": "2026-09-30", "var": 15_000_000, "limit": 20_000_000, "limitUse": 0.75, "confidence": 0.99,
+                return {"scope": scope, "businessDate": "2026-09-30", "var": 15_000_000, "limit": 20_000_000, "limitUse": 0.75, "limitStatus": "within", "limitNear": NEAR, "confidence": 0.99,
                         "trades": 11}
-            return {"scope": scope, "businessDate": "2026-09-30", "var": 8_000_000, "limit": None, "limitUse": None, "confidence": 0.99, "trades": 8,
+            return {"scope": scope, "businessDate": "2026-09-30", "var": 8_000_000, "limit": None, "limitUse": None, "limitStatus": None, "limitNear": NEAR, "confidence": 0.99, "trades": 8,
                     "intraday": {"updates": 2, "trades": 3, "lastAt": "2026-09-30T14:05:00Z"}}
         if method == "GET" and path == "/scope/contributions":
             if params.get("by") == "attribute:TRADER_ID":            # the server sums each trader's trades (masked without raw)
@@ -168,8 +178,9 @@ class TradingBackend(FakeBackend):
             if day not in OFFICIAL_DAYS:
                 raise BackendError(404, "DRS-1001", f"no official VaR record of {day}")
             k = OFFICIAL_DAYS.index(day)
-            nodes = {f"MGMT~{b}": {"var": v * (0.9 + 0.025 * k), "limit": lim, "limitUse": v * (0.9 + 0.025 * k) / lim} for b, (v, lim) in BOOK_VAR.items()}
-            return {"businessDate": day, "nodes": nodes}
+            nodes = {f"MGMT~{b}": {"var": v * (0.9 + 0.025 * k), "limit": lim, "limitUse": v * (0.9 + 0.025 * k) / lim,
+                                   "limitStatus": status(v * (0.9 + 0.025 * k) / lim)} for b, (v, lim) in BOOK_VAR.items()}
+            return {"businessDate": day, "nodes": nodes, "limitNear": NEAR}
         if method == "GET" and path == "/scope/history":
             if self.history != "official":
                 return {"mode": "replay", "rows": [{"date": "2025-01-01", "var": 1, "pnl": -2, "exception": True}]}
@@ -182,6 +193,8 @@ class TradingBackend(FakeBackend):
             f = body["items"][0]["factor"]
             after = int(v + 360_000 * f)
             return {"scope": scope, "before": {"var": v}, "after": {"var": after}, "change": {"var": after - v}, "confidence": 0.99, "currency": "USD",
+                    "limit": {"limit": lim, "useBefore": v / lim, "useAfter": after / lim, "statusBefore": status(v / lim),
+                              "status": self.var_status or status(after / lim), "near": NEAR},
                     "engine": "Java VaR engine (the server)", "note": "copies"}
         raise BackendError(404, "DRS-1001", f"no VaR endpoint {path}")
 
@@ -202,7 +215,8 @@ class TradingBackend(FakeBackend):
             base = 401_500_000 if cp == "CP-ALDERSHOT" else 50_000_000
             exact = bool(body.get("like"))
             lim = {"id": "LIM-ALDERSHOT", "limit": 420_000_000, "confidence": 0.95, "before": base, "after": base + 7_700_000,
-                   "useBefore": base / 420_000_000, "useAfter": (base + 7_700_000) / 420_000_000} if cp == "CP-ALDERSHOT" else None
+                   "useBefore": base / 420_000_000, "useAfter": (base + 7_700_000) / 420_000_000, "near": 0.8,
+                   "status": self.limit_status} if cp == "CP-ALDERSHOT" else None
             reasons = ([] if exact else ["a proxy answer only refers, never approves"]) + ([] if lim else ["no credit limit on record for " + cp])
             decision = "refer" if reasons else "approve"
             reasons = reasons or ["exact: within the limit"]

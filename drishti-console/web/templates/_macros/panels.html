@@ -18,7 +18,7 @@
 
 {% macro cell_text(c) -%}
 {%- if c.tone == 'inactive' -%}<span class="lnk-off" title="Not active: an administrator turned this command off">{{ c.text }}</span> <span class="lk-badge lk-off">not active</span>
-{%- elif c.link -%}<a class="lnk" href="/v/{{ c.link.kind }}/{{ c.link.id }}">{{ c.text }}</a>
+{%- elif c.link -%}<a class="lnk" href="/v/{{ c.link.kind | urlencode }}/{{ c.link.id | urlencode }}">{{ c.text }}</a>
 {%- elif c.text is string and (c.text.startswith('https://') or c.text.startswith('http://')) and ' ' not in c.text -%}<a class="lnk ext" href="{{ c.text }}" target="_blank" rel="noopener noreferrer nofollow" title="{{ c.text }}">{{ c.text }}</a>
 {%- else -%}{{ c.text }}{%- endif -%}
 {%- endmacro %}
@@ -182,7 +182,7 @@
   {% if d.limit %}<li><span class="sw sw-limit"></span>{{ d.limitLabel or 'Limit' }}</li>{% endif %}</ul>
 {% endif %}
 {% if d.markText or d.source %}<div class="chart-foot"><span class="mono">{% if d.markText %}{{ d.markText }}{% endif %}</span>
-  {% if d.source %}<a class="lnk" href="/v/{{ d.source.kind }}/{{ d.source.id }}">{{ d.source.id }}</a>{% endif %}</div>{% endif %}
+  {% if d.source %}<a class="lnk" href="/v/{{ d.source.kind | urlencode }}/{{ d.source.id | urlencode }}">{{ d.source.id }}</a>{% endif %}</div>{% endif %}
 {%- endmacro %}
 
 {% macro surface(p) -%}
@@ -218,7 +218,7 @@
 {% macro links(d) -%}
 <ul class="links">
   {% for l in (d.links or []) %}<li class="lk-{{ l.status }}"><span class="lk-label">{{ l.label }}</span>
-    <span class="lk-target">{% if l.link %}<a class="lnk mono" href="/v/{{ l.link.kind }}/{{ l.link.id }}">{{ l.text }}</a>{% else %}<span class="mono">{{ l.text }}</span>{% endif %}
+    <span class="lk-target">{% if l.link %}<a class="lnk mono" href="/v/{{ l.link.kind | urlencode }}/{{ l.link.id | urlencode }}">{{ l.text }}</a>{% else %}<span class="mono">{{ l.text }}</span>{% endif %}
     {% if l.badge %}<span class="lk-badge">{{ l.badge }}</span>{% elif l.status != 'resolved' %}<span class="lk-badge">{{ l.status }}</span>{% endif %}</span></li>{% endfor %}
 </ul>
 {%- endmacro %}
@@ -238,7 +238,7 @@
 {%- endmacro %}
 
 {% macro entity(text, link) -%}
-{%- if link and link.kind and link.id -%}<a class="lnk" href="/v/{{ link.kind }}/{{ link.id }}">{{ text }}</a>{%- else -%}{{ text }}{%- endif -%}
+{%- if link and link.kind and link.id -%}<a class="lnk" href="/v/{{ link.kind | urlencode }}/{{ link.id | urlencode }}">{{ text }}</a>{%- else -%}{{ text }}{%- endif -%}
 {%- endmacro %}
 
 {% macro waterfall(p) -%}

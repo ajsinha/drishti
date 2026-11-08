@@ -98,7 +98,6 @@ trading:                                 # the Trading landings (LENSES.md › T
   match-records: true                    # fall back to a matching trader record (TRADER_ID = TRDR-<USER>, or the same NAME)
   landing-by-role: { desk-head: desk, trader: trader }   # the same {role: landing} hook for the trading role: below the person's own choice
   live-statuses: [NEW, VALIDATED, AMENDED]                # a trade counts in DV01, top lists and the check when its status is one of these
-  near-limit: 0.8                        # a book at or above this share of its VaR limit is "near limit"; above 1 it breaches
   limit-days: 5                          # the Desk head's limit use by book: this many business dates (the official records)
   pnl-var-days: 60                       # the Desk head's P&L against VaR: this many days of the desk's official history
   max-rows: 20000                        # the most trade valuations read per date for a scope (more: the figures say partial)

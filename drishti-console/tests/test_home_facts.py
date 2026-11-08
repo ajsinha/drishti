@@ -134,12 +134,17 @@ class FakeFetcher:
         return self.answers[key]
 
 
+def _status(use):
+    """The stand-in server's limit status (RiskLimits, drishti.risk.limit-near 0.8): the fact reads it, never a use of its own."""
+    return None if use is None else "breach" if use > 1 else "near" if use >= 0.8 else "within"
+
+
 def _tree(book_use, desk_use):
     return {"hierarchies": ["MGMT"], "nodes": [
         {"id": "MGMT~DESK-COMM", "name": "Commodities", "level": "desk", "parent": None, "var": 19_000_000, "limit": 25_000_000,
-         "limitUse": desk_use},
+         "limitUse": desk_use, "limitStatus": _status(desk_use)},
         {"id": "MGMT~BOOK-COMM-1", "name": "BOOK-COMM-1", "level": "book", "parent": "MGMT~DESK-COMM", "var": 6_465_756,
-         "limit": 2_500_000, "limitUse": book_use}]}
+         "limit": 2_500_000, "limitUse": book_use, "limitStatus": _status(book_use)}]}
 
 
 def _book_fact():

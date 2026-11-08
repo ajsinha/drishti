@@ -62,8 +62,8 @@ public class MrCubeConfiguration {
     }
 
     @Bean
-    public MrCubeExtras mrCubeExtras(VarService svc, PivotCore core) {
-        return new MrCubeExtras(svc, core, provider(core));
+    public MrCubeExtras mrCubeExtras(VarService svc, PivotCore core, com.ash.drishti.banking.RiskLimits limits) {
+        return new MrCubeExtras(svc, core, provider(core), limits);
     }
 
     @Bean

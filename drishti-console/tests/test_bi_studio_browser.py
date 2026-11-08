@@ -37,6 +37,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import CHART, card_value, clean, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
+import select_helpers  # noqa: E402
 
 DAY = "2026-10-08"
 STATE = {}
@@ -183,7 +184,7 @@ def test_a_power_bi_author_builds_the_desk_pack_without_yaml(stack, browser):
     # 4. the report's theme: the shipped Corporate one
     deselect(page)
     page.click("[data-ptab='format']")
-    page.wait_for_selector("[data-report-theme] option[value='corporate']", state="attached")
+    page.wait_for_function(select_helpers.has_option("[data-report-theme]", "corporate"))
     page.select_option("[data-report-theme]", "corporate")
     page.wait_for_function("() => window.drishtiBi.design.theme && window.drishtiBi.design.theme.name === 'corporate'")
     assert model(page)["theme"] == {"use": "corporate"}
@@ -277,6 +278,18 @@ def test_a_theme_is_made_published_and_offered_to_reports(stack, browser):
     page.check('[data-theme-family="matrix"] [data-format-row-banding]')
     expect(page.locator("[data-theme-valid]")).to_have_text("The theme is valid.", timeout=15000)
     expect(page.locator('[data-theme-preview] [data-theme-sample="column"] .bi-chart')).to_have_count(1)
+    # the theme's YAML is the Studio shell's YAML panel (the kit's YamlPane), both ways: the visual side's edits are in it; an edit of the
+    # YAML, read after a pause, shows in the form; a line that does not read keeps the theme as it was
+    yaml_text = "() => document.querySelector('[data-theme-yaml] .CodeMirror').CodeMirror.getValue()"
+    page.wait_for_function(f"() => ({yaml_text})().includes('theme: desk-blue') && ({yaml_text})().includes('title: Desk blue')")
+    edit = """([a, b]) => { const cm = document.querySelector('[data-theme-yaml] .CodeMirror').CodeMirror, t = cm.getValue();
+      cm.replaceRange(t.replace(a, b), { line: 0, ch: 0 }, { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }, 'paste'); }"""
+    page.evaluate(edit, ["title: Desk blue", "title: Desk navy"])
+    page.wait_for_function("() => document.querySelector('[data-theme-title] input, input[data-theme-title]').value === 'Desk navy'", timeout=15000)
+    page.evaluate(edit, ["title: Desk navy", "title: [Desk navy"])
+    expect(page.locator("[data-theme-yaml][data-dd-problem]")).to_have_count(1, timeout=15000)
+    page.evaluate(edit, ["title: [Desk navy", "title: Desk blue"])
+    page.wait_for_function("() => document.querySelector('[data-theme-title] input, input[data-theme-title]').value === 'Desk blue'", timeout=15000)
     page.click("[data-save]")
     expect(page.locator("[data-status]")).to_have_text("Saved", timeout=20000)
     page.click("[data-publish]")
@@ -286,5 +299,5 @@ def test_a_theme_is_made_published_and_offered_to_reports(stack, browser):
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     deselect(page)
     page.click("[data-ptab='format']")
-    page.wait_for_selector("[data-report-theme] option[value='desk-blue']", state="attached", timeout=15000)
+    page.wait_for_function(select_helpers.has_option("[data-report-theme]", "desk-blue"), timeout=15000)
     clean(page)

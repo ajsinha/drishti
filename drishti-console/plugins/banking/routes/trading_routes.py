@@ -88,7 +88,7 @@ async def trading_part(request: Request, part: str):
     if request.query_params.get("for") == "desk":               # the Desk head landing of a trader: their desk
         scope = await tl.desk_of(backend, me, scope)
     if part == "me":
-        out = {"scope": scope.as_dict(), "near": tl.near_limit(cfg), "admin": bool(me.is_admin),
+        out = {"scope": scope.as_dict(), "admin": bool(me.is_admin),
                "check": ed.word_on("VAR") and ed.word_on("EXP")}
         if scope.can_pick:
             out["options"] = await tl.options(backend, me)

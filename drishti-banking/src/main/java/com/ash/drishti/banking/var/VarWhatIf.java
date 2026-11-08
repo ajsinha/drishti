@@ -42,9 +42,16 @@ final class VarWhatIf {
     static final String ENGINE = "Java VaR engine (the server)";
     private static final int MAX_ITEMS = 50;
     private final VarService svc;
+    private final VarViews views;
 
     VarWhatIf(VarService svc) {
+        this(svc, null);
+    }
+
+    /** With the views: the answer also holds the scope's limit, the use before and after and its status (within, near, breach). */
+    VarWhatIf(VarService svc, VarViews views) {
         this.svc = svc;
+        this.views = views;
     }
 
     @SuppressWarnings("unchecked")
@@ -167,6 +174,7 @@ final class VarWhatIf {
         out.put("after", after);
         out.put("change", change);
         out.put("items", items);
+        out.put("limit", views == null ? null : views.limitAfter(base, r.beforeVar(), r.afterVar()));   // null: no comparable limit
         out.put("engine", ENGINE);
         out.put("note", "each hypothetical trade is a copy of a booked trade's P&L vector over the " + base.date().book().width()
                 + " scenario days, scaled by its factor, added to the scope; incremental VaR in the order listed; the stressed VaR is the "

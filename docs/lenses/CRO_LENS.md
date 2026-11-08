@@ -129,7 +129,7 @@ comment, escalate), and only for people with the power to take them ([section 10
 | Peak PFE by counterparty, connected group (`GROUP:`), legal entity, against the stored credit limit | **Built**; group limits on the group's own PFE and limits by tenor are CC4 | [EXPOSURE_GUIDE sections 3.3, 4](../guides/EXPOSURE_GUIDE.md#4-scopes); [CCR_CUBE_LENS section 7.10](CCR_CUBE_LENS.md#710-c9-credit-limit-lim-existing-extended) |
 | Official end-of-day exposure results | **Built** | [EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) |
 | Top-10 concentration (share of bank EPE in the ten largest) | **Partly**: EPE per counterparty is served (the `tree` answer); the share and its limit are not a measure | [EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md); [OVERSIGHT_LENS section 3.7](OVERSIGHT_LENS.md#37-concentration-and-liquidity) |
-| A within / near / breach state against a limit | **Built** on the Trading landing: `breach` above 1, `near` at or above `trading.near-limit` (0.8), `ok` below (`drishti-console/plugins/banking/trading_landing.py`); the Risk landing's limits in breach | [LENSES.md section 5](../admin/LENSES.md#5-drishti-risk) |
+| A within / near / breach state against a limit | **Built** on the Trading landing: `breach` above 1, `near` at or above `drishti.risk.limit-near` (0.8), `within` below: the server's status on every VaR answer (`limitStatus`), the landing only shows it; the Risk landing's limits in breach | [LENSES.md sections 5, 6](../admin/LENSES.md#5-drishti-risk) |
 | Headline tiles of VaR, ES, backtest, EPE, peak PFE and limits in breach | **Built** (Drishti Risk's desk landing) | [LENSES.md section 5](../admin/LENSES.md#5-drishti-risk) |
 | Compare with an earlier capture; component VaR that adds up | **Built** | [VAR_GUIDE sections 6, 18.3](../guides/VAR_GUIDE.md#6-captures-and-compare) |
 | VaR change explanation by cause (window roll, market, trades in and out) | **Not built**, designed (RO1, MC12) | [OVERSIGHT_LENS section 4.1](OVERSIGHT_LENS.md#41-ro1-var-change-explanation) |
@@ -653,7 +653,7 @@ connector, tested with the demo off.
 ### 8.1 The status of a metric
 
 - **Ceilings** (VaR, stressed VaR, stress loss, PFE, concentration, RWA, emissions): `USE = VALUE / LIMIT`; `BREACH` when `USE > 1`;
-  `NEAR` when `USE ≥ WARNING_AT` (default 0.8, the same default as `trading.near-limit`); `WITHIN` below.
+  `NEAR` when `USE ≥ WARNING_AT` (default 0.8, the same default as `drishti.risk.limit-near`); `WITHIN` below.
 - **Floors** (LCR, NSFR, survival horizon, CET1): **decided (product owner, 2026-10-31): shown as headroom above the floor with a
   board-set warning band.** `HEADROOM = VALUE − LIMIT`; `BREACH` when `HEADROOM < 0`; `NEAR` when `HEADROOM < WARNING_BAND`; `WITHIN`
   otherwise. The tile prints the headroom in the metric's own unit (*18 pts*, *8 d*, *1.6 pp*), never a percentage of the floor, because

@@ -24,7 +24,6 @@ drishti:
     exposure:                        # the exposure engine (docs/guides/EXPOSURE_GUIDE.md): EE, ENE, EEE, PFE, EPE, EEPE of any counterparty scope from the exposure paths
       confidence: [0.95, 0.99]       # PFE confidences computed for every answer (any q in (0.5, 1) may be asked)
       limit-confidence: 0.95         # the PFE credit limits are set on; the default q of an answer
-      limit-near: 0.8                # the pre-deal check says near from this share of a limit (or a tenor bucket's limit); over 100% a breach
       rank-rule: kth                 # kth (the ceil(P q)-th smallest exposure) or interpolated
       collateral-model: lagged       # lagged (called at the look-back point), current (today's collateral on every path) or none
       im-model: current              # current (the initial margin held today on every path) or none

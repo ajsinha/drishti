@@ -413,14 +413,13 @@ before and after with the headroom and the status, and the exposure before, with
 python3 tools/drishti.py exposure predeal "PREDEAL CP-ALDERSHOT LIKE MX-30001587 REVERSE IN NS-ALDERSHOT-LDN"
 ```
 
-**In YAML.** From which share of a limit the check says *near* is a setting of the exposure engine, in `config/engines/exposure.yaml`
-(restart to apply):
+**In YAML.** From which share of a limit the check says *near* is the banking module's one limit rule, the same for VaR limits and
+sensitivity limits, in `config/engines/var.yaml` (restart to apply):
 
 ```yaml
 drishti:
-  ccr:
-    exposure:
-      limit-near: 0.8                # near from 80% of the limit or of a tenor bucket's limit; over 100% a breach
+  risk:
+    limit-near: 0.8                  # near from 80% of a limit (here the credit limit and each tenor bucket's); over 100% a breach
 ```
 
 The what-if alone, without the limit and the decision, is the command line's `exposure whatif` (and `POST /api/v1/risk/exposure/what-if`).

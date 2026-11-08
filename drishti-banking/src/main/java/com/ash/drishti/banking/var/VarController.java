@@ -92,7 +92,7 @@ public class VarController {
         this.official = official;
         this.views = views;
         this.captures = new VarCaptures(svc, views);
-        this.whatIf = new VarWhatIf(svc);
+        this.whatIf = new VarWhatIf(svc, views);
         this.entitlements = entitlements;
         this.baskets = new VarBasketDelete(svc, entitlements, inbox::getIfAvailable, hub::getIfAvailable);
         this.edits = new VarBasketEdit(svc, entitlements, inbox::getIfAvailable, hub::getIfAvailable);
@@ -408,9 +408,34 @@ public class VarController {
         }
         String c = VarCurrencies.normalise(ccy);
         LocalDate d = svc.date(date(asOf)).date();
-        return svc.official().index(d, c).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no official VaR record of " + d
+        Map<String, Object> rec = svc.official().index(d, c).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no official VaR record of " + d
                 + (c.equals(VarDate.USD) ? "" : " in " + c + " (the currencies captured officially: " + svc.props().official().currencies()
                 + ", drishti.var.official.currencies)")));
+        return withLimitStatus(rec, views.limits());
+    }
+
+    /**
+     * An official record with each node's limit status (within, near, breach) said by today's rule (drishti.risk.limit-near), from the
+     * node's recorded limit use: the record is kept as captured, the status is read with it.
+     */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> withLimitStatus(Map<String, Object> rec, com.ash.drishti.banking.RiskLimits limits) {
+        Map<String, Object> out = new java.util.LinkedHashMap<>(rec);
+        if (rec.get("nodes") instanceof Map<?, ?> nodes) {
+            Map<String, Object> ns = new java.util.LinkedHashMap<>();
+            nodes.forEach((k, v) -> {
+                if (v instanceof Map<?, ?> n) {
+                    Map<String, Object> m = new java.util.LinkedHashMap<>((Map<String, Object>) n);
+                    m.put("limitStatus", limits.status(n.get("limitUse") instanceof Number u ? u.doubleValue() : null));
+                    ns.put(String.valueOf(k), m);
+                } else {
+                    ns.put(String.valueOf(k), v);
+                }
+            });
+            out.put("nodes", ns);
+        }
+        out.put("limitNear", limits.limitNear());
+        return out;
     }
 
     /** Captures a date officially now (the data-load signal does it by itself). Administrators only; says what it did. */

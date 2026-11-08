@@ -56,13 +56,15 @@
       rows.forEach((r) => { if (r.parent) { (kids[r.parent] = kids[r.parent] || []).push(r.id); } });
       const sum = (id, f) => (teams[id] ? teams[id][f] : kids[id].reduce((a, k) => a + sum(k, f), 0));
       const eng = (id) => (teams[id] ? teams[id].engagement : Math.round(kids[id].reduce((a, k) => a + eng(k) * sum(k, 'headcount'), 0) / sum(id, 'headcount') * 10) / 10);
-      const server = (reqs) => new Promise((resolve) => setTimeout(() => resolve(reqs.map((r) => ({ id: r.id, values: { engagement: eng(r.id), use: Math.round(sum(r.id, 'cost') / sum(r.id, 'budget') * 1000) / 1000 } }))), 20));
+      const used = (id) => Math.round(sum(id, 'cost') / sum(id, 'budget') * 1000) / 1000;
+      const said = (u) => (u > 1 ? 'over' : u >= 0.9 ? 'near' : 'within');            // the stand-in server's status; the tree only shows it
+      const server = (reqs) => new Promise((resolve) => setTimeout(() => resolve(reqs.map((r) => ({ id: r.id, values: { engagement: eng(r.id), use: used(r.id), useStatus: said(used(r.id)) } }))), 20));
       const explain = (c) => ({ title: (c.measure || 'Node') + ' · ' + c.label, value: c.text, scope: c.path.join(' › '),
         steps: c.additive ? [{ label: 'Its teams added up', value: c.text }] : [{ label: 'Weighted by headcount, by the server', value: c.text }, { label: 'The children\'s figures', value: (kids[c.id] || []).length + ' parts' }],
         note: c.additive ? null : 'Not additive: the server computes it for the node; it is never the sum of the children.' });
       const measures = [{ field: 'headcount', label: 'Headcount', format: 'integer' }, { field: 'cost', label: 'Cost', format: 'money' },
         { field: 'engagement', label: 'Engagement', format: 'number', additive: false, childSum: false },
-        { field: 'use', label: 'Budget use', format: 'percent', additive: false, bar: { max: 1, bands: [{ to: 0.9, tone: 'good' }, { to: 1, tone: 'warn' }, { to: Infinity, tone: 'bad' }] } }];
+        { field: 'use', label: 'Budget use', format: 'percent', additive: false, bar: { max: 1, status: 'useStatus', tones: { within: 'good', near: 'warn', over: 'bad' } } }];
       return { rows: rows, measures: measures, server: server, explain: explain };
     });
   }
@@ -140,6 +142,7 @@
       const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
       const DIV = { MKT: ['Markets', ['Rates', 'Credit', 'FX']], EQD: ['Equities', ['Cash equities', 'Derivatives']], TSY: ['Treasury', ['ALM', 'Funding']] };
       const rows = [{ ID: 'BANK', LABEL: 'Bank (synthetic)', LEVEL: 'bank' }], book = {}, kids = {};
+      const st = (u) => (u > 1 ? 'breach' : u >= 0.8 ? 'near' : 'within');              // the stand-in server's limit status (drishti.risk.limit-near 0.8)
       Object.keys(DIV).forEach((d) => {
         rows.push({ ID: d, PARENT: 'BANK', LABEL: DIV[d][0], LEVEL: 'division' });
         DIV[d][1].forEach((desk, i) => {
@@ -147,7 +150,7 @@
           rows.push({ ID: id, PARENT: d, LABEL: desk, LEVEL: 'desk' });
           for (let b = 1; b <= 3; b++) {
             const v = Math.round((0.4 + rnd() * 2.6) * 1e6), lim = Math.round(v * (0.9 + rnd() * 0.6) / 1e5) * 1e5;
-            const r = { ID: id + '-B' + b, PARENT: id, LABEL: desk + ' book ' + b, LEVEL: 'book', VAR: v, ES: Math.round(v * 1.27), LIMIT: lim, LIMIT_USE: Math.round(v / lim * 1000) / 1000,
+            const r = { ID: id + '-B' + b, PARENT: id, LABEL: desk + ' book ' + b, LEVEL: 'book', VAR: v, ES: Math.round(v * 1.27), LIMIT: lim, LIMIT_USE: Math.round(v / lim * 1000) / 1000, LIMIT_STATUS: st(v / lim),
               POSITIONS: 20 + Math.floor(rnd() * 400), NOTIONAL: Math.round((20 + rnd() * 900) * 1e6) };
             book[r.ID] = r;
             rows.push(r);
@@ -157,7 +160,7 @@
       rows.forEach((r) => { if (r.PARENT) { (kids[r.PARENT] = kids[r.PARENT] || []).push(r.ID); } });
       const vr = (id) => { if (book[id]) { return book[id].VAR; } const xs = kids[id].map(vr), sq = xs.reduce((a, x) => a + x * x, 0), s = xs.reduce((a, x) => a + x, 0); return Math.round(Math.sqrt(sq + 0.35 * (s * s - sq))); };
       const lim = (id) => (book[id] ? book[id].LIMIT : Math.round(kids[id].map(lim).reduce((a, x) => a + x, 0) * 0.62 / 1e5) * 1e5);
-      const server = (reqs) => new Promise((resolve) => setTimeout(() => resolve(reqs.map((r) => ({ id: r.id, values: { VAR: vr(r.id), ES: Math.round(vr(r.id) * 1.26), LIMIT: lim(r.id), LIMIT_USE: Math.round(vr(r.id) / lim(r.id) * 1000) / 1000 } }))), 20));
+      const server = (reqs) => new Promise((resolve) => setTimeout(() => resolve(reqs.map((r) => ({ id: r.id, values: { VAR: vr(r.id), ES: Math.round(vr(r.id) * 1.26), LIMIT: lim(r.id), LIMIT_USE: Math.round(vr(r.id) / lim(r.id) * 1000) / 1000, LIMIT_STATUS: st(vr(r.id) / lim(r.id)) } }))), 20));
       const explain = (c) => ({ title: (c.measure || 'Node') + ' · ' + c.label, value: c.text, scope: c.path.join(' › ') + ' · 509 scenarios',
         parts: (kids[c.id] || []).map((k) => ({ label: rows.find((r) => r.ID === k).LABEL, value: vr(k), text: String(vr(k)) })), partsTitle: 'Stand-alone by child',
         note: (kids[c.id] || []).length ? 'The children\'s VaRs add up to more than the parent\'s: the gap is the diversification.' : 'A book: its own scenario P&L.' });

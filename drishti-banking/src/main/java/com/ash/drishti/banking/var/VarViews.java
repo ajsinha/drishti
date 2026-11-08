@@ -49,6 +49,37 @@ final class VarViews {
     private final VarSelection selection;
     private final VarAttributeGroups attributes;
 
+    private com.ash.drishti.banking.RiskLimits limits = com.ash.drishti.banking.RiskLimits.defaults();
+
+    /** The module's limit rule (drishti.risk.limit-near): a limit use's status, within, near or breach. */
+    VarViews limits(com.ash.drishti.banking.RiskLimits l) {
+        this.limits = l == null ? com.ash.drishti.banking.RiskLimits.defaults() : l;
+        return this;
+    }
+
+    com.ash.drishti.banking.RiskLimits limits() {
+        return limits;
+    }
+
+    /**
+     * A what-if's limit figures for its scope: the scope's limit (when comparable with its VaR), the use before and after, and the status
+     * after (within, near, breach); null when the scope has no comparable limit.
+     */
+    Map<String, Object> limitAfter(VarService.Scoped s, double before, double after) {
+        double limit = limitOf(s);
+        if (Double.isNaN(limit) || limit == 0 || !limitBasis(s).matches(lens(s))) {
+            return null;
+        }
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("limit", round(limit));
+        m.put("useBefore", before / limit);
+        m.put("useAfter", after / limit);
+        m.put("statusBefore", limits.status(before / limit));
+        m.put("status", limits.status(after / limit));
+        m.put("near", limits.limitNear());
+        return m;
+    }
+
     VarViews(VarService svc) {
         this.svc = svc;
         this.selection = new VarSelection(svc);
@@ -302,6 +333,8 @@ final class VarViews {
         out.put("limitBasis", Double.isNaN(limit) ? null : basis.describe());
         out.put("limitComparable", Double.isNaN(limit) ? null : comparable);
         out.put("limitUse", Double.isNaN(limit) || limit == 0 || !comparable ? null : s.measures().var() / limit);
+        out.put("limitStatus", limits.status((Double) out.get("limitUse")));         // within, near (drishti.risk.limit-near), breach
+        out.put("limitNear", limits.limitNear());
         if (!Double.isNaN(limit) && !comparable) {
             out.put("limitNote", "limit is for " + basis.label() + (lens(s).stressed() ? " VaR: stressed VaR is not compared with it"
                     : ": not comparable"));
@@ -1387,6 +1420,7 @@ final class VarViews {
         m.put("limit", Double.isNaN(n.limit()) ? null : round(n.limit()));
         boolean comparable = svc.loader().limitBasis(s.date().date(), n.id()).matches(lens(s));
         m.put("limitUse", Double.isNaN(n.limit()) || n.limit() == 0 || !comparable ? null : s.measures().var() / n.limit());
+        m.put("limitStatus", limits.status((Double) m.get("limitUse")));
         m.put("limitComparable", Double.isNaN(n.limit()) ? null : comparable);
         m.put("trades", s.set().size());
         m.put("hidden", s.hidden());

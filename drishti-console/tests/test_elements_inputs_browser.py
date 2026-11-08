@@ -265,10 +265,9 @@ def test_a_form_from_a_schema_with_conditions_arrays_the_servers_check_and_four_
         assert "Book code must look like a book code such as RT-123" in summary and "Notional must be at least 1,000" in summary
         assert await pg.evaluate("() => document.activeElement.classList.contains('di-form-summary')")
         assert await pg.locator(f"{f} [data-path='strike']").is_hidden()
-        await pg.click(f"{f} [data-path='product'] select")
-        await pg.select_option(f"{f} [data-path='product'] select", label="Option")
+        await pg.select_option(f"{f} [data-path='product'] drishti-select", label="Option")
         assert await pg.locator(f"{f} [data-path='strike']").is_visible() and await pg.locator(f"{f} [data-path='legs']").is_hidden()
-        await pg.select_option(f"{f} [data-path='product'] select", label="Swap")
+        await pg.select_option(f"{f} [data-path='product'] drishti-select", label="Swap")
         await pg.click(f"{f} [data-path='legs'] [data-act='add']")
         assert await pg.locator(f"{f} .di-repeat-item").count() == 2
         await pg.check(f"{f} [data-path='legs[1].pay'] input[type=radio] >> nth=1")

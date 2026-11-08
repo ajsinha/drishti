@@ -186,7 +186,7 @@ def test_var_and_limits_are_the_engines_own():
     r = asyncio.run(tl.risk(b, me, d, {}))
     assert r["scope"] == "DESK:DESK-RATES" and r["state"] == "ok" and [x["book"] for x in r["breaches"]] == ["BOOK-RATES-3"]
     assert [x["book"] for x in r["nearLimit"]] == ["BOOK-RATES-1"]
-    assert asyncio.run(tl.risk(b, me, d, {"near-limit": 0.5}))["nearLimit"][1]["book"] == "BOOK-RATES-2"
+    assert asyncio.run(tl.risk(b, me, d, {"near-limit": 0.5}))["nearLimit"] == asyncio.run(tl.risk(b, me, d, {}))["nearLimit"]   # no console share
 
 
 def test_limit_use_by_book_from_the_official_records_with_the_missing_day_said():
@@ -286,6 +286,16 @@ def test_the_check_is_one_var_what_if_and_one_pre_deal_check():
     assert predeal[2] == "/predeal" and predeal[4]["like"] == "MX-20000010" and predeal[4]["side"] == "same"   # the server's pre-deal service
     sold = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "250m", "counterparty": "CP-ALDERSHOT", "side": "B"}))
     assert sold["factor"] < 0                                                            # the other side: the copy's unwind direction
+    # the exposure half's state is the server's limit status (within, near from the engine's limit-near, breach), never a share of the console's
+    b.limit_status = "within"
+    w = asyncio.run(tl.check(b, me, s, {"near-limit": 0.5}, {"product": "IR_SWAP", "notional": "250m", "counterparty": "CP-ALDERSHOT", "side": "S"}))
+    assert w["exposure"]["state"] == "ok" and w["exposure"]["useAfter"] == pytest.approx(409_200_000 / 420_000_000)
+    b.limit_status = "near"
+    # so is the VaR half's: the what-if's own limit block (use before and after, the status after), not a division here
+    b.var_status = "breach"
+    vb = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "250m", "counterparty": "CP-ALDERSHOT", "side": "S"}))["var"]
+    assert vb["state"] == "breach" and vb["useAfter"] == pytest.approx(6_300_000 / 7_400_000) and vb["limit"] == 7_400_000
+    b.var_status = None
 
 
 def test_the_check_falls_back_to_the_engines_proxy_and_says_so():

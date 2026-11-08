@@ -54,8 +54,9 @@ def area(title: str, name: str | None = None, *, rows: int = 3, hook=None, mono:
     return _put({"type": "string", "title": title, "name": name, "format": "textarea", "options": {"rows": rows}, "mono": mono or None}, hook, **more)
 
 
-def number(title: str, name: str | None = None, *, hook=None, **more) -> dict:
-    return _put({"type": "number", "title": title, "name": name}, hook, **more)
+def number(title: str, name: str | None = None, *, hook=None, integer: bool = False, **more) -> dict:
+    """A number, read loosely and shown grouped (``integer``: whole numbers only; ``minimum``, ``maximum`` checked in words)."""
+    return _put({"type": "integer" if integer else "number", "title": title, "name": name}, hook, **more)
 
 
 def select(title: str, name: str | None, choices: Iterable, *, hook=None, empty: str | None = None, **more) -> dict:
@@ -86,6 +87,11 @@ def checks(title: str, name: str | None, choices: Iterable, *, hook=None, option
 
 def date(title: str, name: str | None = None, *, hook=None, **more) -> dict:
     return _put({"type": "date", "title": title, "name": name}, hook, **more)
+
+
+def time(title: str, name: str | None = None, *, hook=None, **more) -> dict:
+    """A time of day (HH:mm): drishti-inputs' time picker."""
+    return _put({"type": "time", "title": title, "name": name}, hook, **more)
 
 
 def file(title: str, name: str | None = None, *, accept: str | None = None, hook=None, **more) -> dict:
