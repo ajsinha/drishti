@@ -31,7 +31,8 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
   its mode) since the table layer, and the frozen 1.x `<drishti-report>` reads `dataset.tables`, so it took every report for static; the
   embed route names the model's datasets as `tables` for the frozen element (the console viewer follows each visual's standing query).
 - **Fixed: the World lens's map landing draws the US sectors and the largest funds** (the capital-markets switch was set only on the
-  explorer landing), and on a phone the known-at field takes a row of its own under the business date (its date and time were 19 px wide).
+  explorer landing), and on a phone the known-at field takes a row of its own under the business date (its date and time were 19 px wide)
+  and a table's rows-per-page Select is finger-sized (its control stayed 24 px tall).
 - **The terminal's query form on the one server-drawn form** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
   `core/forms.py`'s `form_host` sends the criteria through `core/form_kit.host` (`data-di-form` + `data-schema`), and `drishti_form.js`
   finds the `Form` with `formOf(host, {widgets})`; its own `new Form` path and the `data-qf-schema` attribute are deleted. `formOf`
