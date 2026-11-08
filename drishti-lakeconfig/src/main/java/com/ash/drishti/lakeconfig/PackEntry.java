@@ -62,7 +62,8 @@ public record PackEntry(String domain, String table, String key, String date, Li
                     Map<String, String> into = flat;
                     ingest.path("flatten").fields().forEachRemaining(f -> into.put(f.getKey(), f.getValue().asText()));
                 }
-                return new PackEntry(t.domain(), t.folder().equals(kind) ? null : t.folder(), t.id() != null ? t.id() : text(ingest, "key"),
+                String key = t.id() != null ? t.id() : text(ingest, "key") != null ? text(ingest, "key") : contractKey(file.getParent(), kind);
+                return new PackEntry(t.domain(), t.folder().equals(kind) ? null : t.folder(), key,
                         t.date() != null ? t.date() : text(ingest, "date"), t.promote(), t.vectors(), flat, t.sortBy(),
                         t.latestBy() != null ? t.latestBy() : text(ingest, "latest-by"), t);
             }
@@ -108,18 +109,73 @@ public record PackEntry(String domain, String table, String key, String date, Li
             flatten.clear();
             ingest.path("flatten").fields().forEachRemaining(e -> flatten.put(e.getKey(), e.getValue().asText()));
         }
-        return new PackEntry(domain, table, text(ingest, "key"), text(ingest, "date"), promote, vectors, flatten, sortBy,
+        return new PackEntry(domain, table, text(ingest, "key") != null ? text(ingest, "key") : contractKey(file.getParent(), kind), text(ingest, "date"),
+                promote, vectors, flatten, sortBy,
                 text(ingest, "latest-by"), null);
     }
 
-    /** The entry as a lake file's table ({@code <domain>.<kind>}): the pack's own {@code lake:} entry as written when it has one. */
+    /**
+     * The entry as a lake file's table ({@code <domain>.<kind>}): the pack's own {@code lake:} entry as written when it has one, with the
+     * kind's key as its {@code id:} when the entry names none (the ingest key, else the key of the kind's data contract), so a table created
+     * by its first load never rejects every row for want of an id.
+     */
     public LakeTable toTable(String kind) {
         if (entry != null) {
-            return entry;
+            return entry.id() == null && key != null ? entry.withId(key) : entry;
         }
         String folder = table == null ? kind : table;
         return new LakeTable(domain, folder, kind, domain + "/" + folder, "delta", List.of(), promote, vectors, flatten, key, date, latestBy,
                 LakeTable.REPLACE, sortBy, Map.of(), null, Map.of(), null, Map.of());
+    }
+
+    /**
+     * The key of a kind's data contract ({@code <pack>/contracts/<kind>.contract.yaml}, {@code key:}): every kind declares one. Only a
+     * single field is an id (a row's one value); a key of several fields, or none, gives null.
+     */
+    public static String contractKey(Path packDir, String kind) {
+        if (packDir == null || kind == null) {
+            return null;
+        }
+        Path f = packDir.resolve("contracts").resolve(kind + ".contract.yaml");
+        if (!Files.isRegularFile(f)) {
+            return null;
+        }
+        try {
+            JsonNode k = new YAMLMapper().readTree(Files.readString(f)).path("key");
+            if (k.isArray() && k.size() == 1 && k.get(0).isTextual() && !k.get(0).asText().isBlank()) {
+                return k.get(0).asText().trim();
+            }
+            return k.isTextual() && !k.asText().isBlank() && !k.asText().contains(",") ? k.asText().trim() : null;
+        } catch (IOException | RuntimeException e) {
+            return null;
+        }
+    }
+
+    /** One table a pack's Delta or Iceberg connector writes: its folder ({@code trade_endur}), its kind and the connector. */
+    public record PackTable(String table, String kind, String connector) {}
+
+    /**
+     * Every table the pack's Delta and Iceberg connectors write, by folder ({@code trade_endur} of {@code trade-endur}; a kind's own name
+     * when the connector names no table): a tar's folder or a file's name may be a table name, which resolves to its kind and connector.
+     */
+    public static List<PackTable> tables(Path pack) throws IOException {
+        Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
+        JsonNode m = new YAMLMapper().readTree(Files.readString(file));
+        JsonNode defs = m.path("connectors").isObject() ? m.path("connectors") : m.path("connector-templates");
+        List<PackTable> out = new ArrayList<>();
+        for (var it = defs.fields(); it.hasNext(); ) {
+            var e = it.next();
+            JsonNode c = e.getValue();
+            if (!"delta".equals(c.path("plugin").asText()) && !"iceberg".equals(c.path("plugin").asText())) {
+                continue;
+            }
+            for (JsonNode k : c.path("kinds")) {
+                String kind = k.asText();
+                String folder = tableOf(m, e.getKey(), kind);
+                out.add(new PackTable(folder == null ? kind : folder, kind, e.getKey()));
+            }
+        }
+        return out;
     }
 
     /** The {@code table.<kind>} folder a pack's connector template names (null: none, the kind's own name). */

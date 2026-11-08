@@ -252,7 +252,7 @@ again into a fresh table), and `drishti.py lake check` reports a table whose par
 | `promote` | `[TRADE_ID, DESK, BOOK, PRODUCT_TYPE, COUNTERPARTY_ID]` | these fields of the document are also written as typed columns: what filters, sorting, the pivot engine and BI read without opening documents. Promote the fields people filter by; twenty or thirty is normal |
 | `vectors` | `[SCENARIO_PV]` | list-of-numbers fields written as `list<double>` columns and kept out of the document (it keeps a marker). VaR reads the vector column directly |
 | `flatten` | `{LEGS[0].NOTIONAL: LEG1_NOTIONAL}` | a nested field written as a column of its own (and promoted) |
-| `id` | `TRADE_ID` | the field that holds each row's id (default: the pack's key, else `id`) |
+| `id` | `TRADE_ID` | the field that holds each row's id (default: the kind's key from its pack, its ingest key else the single `key:` field of the kind's data contract; else `id`) |
 | `date` | `BUSINESS_DATE` | the rows' own business-date field. It **never** decides a row's partition (section 5.2): rows whose own date differs from the file's are loaded under the file's date and counted |
 | `latest-by` | `UPDATED_AT`, `COMPUTED_AT` | when one id appears twice on one date, the copy with the latest of this timestamp is kept (default `COMPUTED_AT`; empty: the last read). The others are dropped and counted, never a failure |
 
@@ -507,8 +507,10 @@ and their rows checked in the lake; they are checked in under [examples/lake-pus
 
 **Name the file `<table>.<YYYY-MM-DD>.jsonl.gz`** (the business date in the name), or give `table:` and `business-date:` in the `.ready`
 file. The table is a pack's kind or, with `connector:`, one of its tables: for trades, whose kind `trade` has one table per source system,
-name the connector (`trade-endur` writes `trading/trade_endur`). **Give `key:`** (the id field, `TRADE_ID`) when the lake has no entry for
-the table yet: a lake made by its first load takes the pack's layout, and the rows need an id.
+name the connector (`trade-endur` writes `trading/trade_endur`), or name the file after the table (`trade_endur.2026-11-06.jsonl.gz`
+resolves to the kind `trade` and the connector `trade-endur`). **No `key:` is needed**, also into a lake that does not exist yet: a table
+created by its first load takes the pack's layout and its kind's key as its `id:` (the pack's ingest key, else the `key:` of the kind's data
+contract, `TRADE_ID` for trades); `key:` in the `.ready` file wins when you give it.
 
 #### (a) Python: one file, a tar, and `lake build`
 
@@ -516,7 +518,7 @@ The script uses Python's standard library only. One file:
 
 ```bash
 python3 push_inbox.py --inbox <data>/dataload/inbox --table trade_endur --date 2026-11-06 --source export.jsonl.gz \
-    --lake risklake --pack trading --kind trade --connector trade-endur --key TRADE_ID
+    --lake risklake --pack trading --kind trade --connector trade-endur
 ```
 
 ```text
@@ -530,31 +532,32 @@ kind: trade
 connector: trade-endur
 lake: risklake
 mode: replace
-key: TRADE_ID
 sha256: ef759f8486980a5b311b5efdf90ea575be65655412b28e983963b61dfb4139c6
 rows: 164
 ```
 
-**A tar of several dates (and tables)**, all or nothing: `<table>/<YYYY-MM-DD>/part-0001.jsonl.gz` inside. A tar's folders are **kinds**
-(`risk-hierarchy`, `scenario-pv`) with one table in the lake; a kind with several tables (trades: one per source system) goes as one file
-per table and date instead, with `connector:`.
+**A tar of several tables and dates**, all or nothing: `<folder>/<YYYY-MM-DD>/part-0001.jsonl.gz` inside. A folder is a **table**
+(`trade_endur`, `trade_calypso`: the tables of the kind `trade`, one per source system) or a **kind** with one table (`risk-hierarchy`,
+written `risk_hierarchy` too), so one archive may mix the trades of several systems with the hierarchy:
 
 ```bash
-python3 push_inbox.py --inbox <data>/dataload/inbox --tar eod-2026-11-02 \
-    --part risk-hierarchy:2026-10-30:nodes-1030.jsonl --part risk-hierarchy:2026-11-02:nodes-1102.jsonl \
-    --folders risk-hierarchy=market-risk --lake demo
+python3 push_inbox.py --inbox <data>/dataload/inbox --tar eod-2026-11-06 \
+    --part trade_endur:2026-11-05:endur-1105.jsonl --part trade_endur:2026-11-06:endur-1106.jsonl \
+    --part trade_calypso:2026-11-05:calypso-1105.jsonl --part trade_calypso:2026-11-06:calypso-1106.jsonl \
+    --part risk_hierarchy:2026-11-05:nodes-1105.jsonl --part risk_hierarchy:2026-11-06:nodes-1106.jsonl \
+    --folders trade_endur=trading,trade_calypso=trading,risk_hierarchy=market-risk --lake risklake
 ```
 
-You should see the pair go through the inbox within a cycle; the outbox's `eod-2026-11-02.tar.loaded.json` says `"outcome" : "loaded"`
-and the table has a folder per date (`business_date=2026-10-30`, `business_date=2026-11-02`). The demo lake's file describes its tables with
-their `id:`; for a tar into another lake, give each table its entry (with `id:`) in that lake's file first (section 2), since a tar's
-`.ready` has no per-table `key:`.
+You should see the pair go through the inbox within a cycle; the outbox's `eod-2026-11-06.tar.loaded.json` says `"outcome" : "loaded"`
+with one entry per table, and each table has a folder per date (`business_date=2026-11-05`, `business_date=2026-11-06`). A lake with no
+entry for a table yet (or no file at all) gets the pack's entry for it, with the kind's key as its `id:` (`TRADE_ID`, `NODE_ID`): nothing to
+prepare. `--folders` is optional when each folder names one pack's table or kind.
 
 ```python
 """Push rows into a Drishti lake through the data inbox (docs/guides/DATA_LAKE_GUIDE.md section 3.4). Python's standard library only.
 
 One file:  push_inbox.py --inbox <data>/dataload/inbox --table trade_endur --date 2026-11-06 --source rows.jsonl.gz --lake risklake \
-               --pack trading --kind trade --connector trade-endur --key TRADE_ID
+               --pack trading --kind trade --connector trade-endur
 A tar:     push_inbox.py --inbox ... --tar eod-2026-11-06 --part trade_endur:2026-11-06:a.jsonl.gz --part risk_hierarchy:2026-11-06:b.jsonl \
                --folders trade_endur=trading,risk_hierarchy=market-risk --lake risklake
 
@@ -654,7 +657,7 @@ def main() -> int:
     ap.add_argument("--part", action="append", default=[], help="table:YYYY-MM-DD:source, for --tar")
     ap.add_argument("--folders", help="table=pack,... for --tar")
     ap.add_argument("--lake"), ap.add_argument("--pack"), ap.add_argument("--kind"), ap.add_argument("--connector")
-    ap.add_argument("--key", help="the id field, when the lake entry and the pack name none (TRADE_ID)")
+    ap.add_argument("--key", help="the id field (default: the lake entry's id:, else the kind's key from its pack: TRADE_ID)")
     ap.add_argument("--mode", default="replace", choices=["replace", "append"])
     ap.add_argument("--hold", action="store_true", help="the inbox waits until hold is removed from the .ready file")
     a = ap.parse_args()
@@ -694,7 +697,7 @@ python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lak
 
 ```bash
 javac PushInbox.java
-java PushInbox <data>/dataload/inbox trade_endur 2026-11-04 rows.jsonl lake=risklake pack=trading kind=trade connector=trade-endur key=TRADE_ID
+java PushInbox <data>/dataload/inbox trade_endur 2026-11-04 rows.jsonl lake=risklake pack=trading kind=trade connector=trade-endur
 ```
 
 ```text
@@ -725,7 +728,7 @@ import java.util.zip.GZIPOutputStream;
  *
  * <pre>
  * javac PushInbox.java
- * java PushInbox &lt;data&gt;/dataload/inbox trade_endur 2026-11-06 rows.jsonl lake=risklake pack=trading kind=trade connector=trade-endur key=TRADE_ID
+ * java PushInbox &lt;data&gt;/dataload/inbox trade_endur 2026-11-06 rows.jsonl lake=risklake pack=trading kind=trade connector=trade-endur
  * </pre>
  *
  * The rows (one JSON object a line) are written gzipped into &lt;dataload&gt;/staging/ and renamed into the inbox when complete; the
@@ -796,8 +799,8 @@ public final class PushInbox {
 ```
 
 **The parallel loader instead of the inbox** (every core, bounded memory, a file of any size; section 3.3): `lake build … --engine java`
-into a lake whose file gives the table its `id:` (here the demo lake's `trading.trade_endur`), or the loader alone from the server's jar
-with a load file:
+into a lake whose file has the table's entry (here the demo lake's `trading.trade_endur`; `--key` is passed to the loader, and an entry
+without `id:` takes it, else the kind's key), or the loader alone from the server's jar with a load file:
 
 ```bash
 python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake demo \
@@ -827,8 +830,8 @@ java -Xmx4g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-
 
 #### (d) At scale
 
-- **One file per table and business date**, gzipped, up to a few GB each; or **one tar** per batch when several tables of one-table kinds
-  must land together (all or nothing). Many small files cost more than a few large ones: aim for 100 MB to 2 GB per file.
+- **One file per table and business date**, gzipped, up to a few GB each; or **one tar** per batch when several tables (the trades of
+  several systems, the hierarchy, the PVs) must land together (all or nothing). Many small files cost more than a few large ones: aim for 100 MB to 2 GB per file.
 - **One `.ready` per data file**; or, when a whole batch is written, one `ready.all` in the inbox releases every file there at once.
 - **Order:** a cycle takes every ready, stable file at that moment, oldest first, and loads the files of one table together; files that
   become ready during a run wait for the next cycle (`interval`, 10 minutes; **Load now** starts one at once). Send a table's dates in
@@ -878,13 +881,15 @@ business-date: 2026-11-06    # every row's business date (YYYY-MM-DD), the parti
 # --- How it loads ------------------------------------------------------------------------------------------------------------------------------
 mode: replace                # replace: the file's business date(s) replaced in one commit, so a re-run is safe; append: rows added.
                              #   Default: the lake entry's load-mode (replace in the shipped lake files), else drishti.dataload.default-mode (append)
-key: TRADE_ID                # the id field. Default: the lake entry's id:, else the pack's key, else a field named id. A new table needs one
+key: TRADE_ID                # the id field. Default: the lake entry's id:, else the kind's key (the pack's ingest key, else the key: of
+                             #   the kind's data contract), else a field named id. A table created by its first load takes it as its id:
 new-table: false             # true: this file may create a table no pack has (with pack:, and drishti.dataload.new-tables: true). Default false
 #
 # --- A tar only ----------------------------------------------------------------------------------------------------------------------------------
-folders: {scenario-pv: market-risk, risk-hierarchy: market-risk}
-                             # each top folder's pack (a tar holds <kind>/<YYYY-MM-DD>/ files). Default: the one pack with a kind of
-                             #   that name, else a pack of that name with one kind; an unresolved folder refuses the whole tar. Section 4.4
+folders: {trade_endur: trading, scenario-pv: market-risk, risk_hierarchy: market-risk}
+                             # each top folder's pack (a tar holds <table or kind>/<YYYY-MM-DD>/ files). Default: the one pack with a
+                             #   kind or table of that name (_ and - alike), else a pack of that name with one kind; an unresolved folder
+                             #   refuses the whole tar. Section 4.4
 #
 # --- Checks before anything is written (the inbox: a mismatch sends the pair to failed/, nothing committed) -------------------------------
 sha256: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae
@@ -905,10 +910,10 @@ for a tar only. The table below says the same per key.
 | `table` | a table name | over the name's; refused for a tar |
 | `business-date` | `YYYY-MM-DD` | over the name's date; refused for a tar |
 | `mode` | `replace` or `append` | over the lake entry's `load-mode` and the inbox's default |
-| `key` | a field | the id field; a new table needs one (else a field named `id`) |
+| `key` | a field | the id field; default the lake entry's `id:`, else the kind's key from its pack (ingest key, else data contract), which a new table takes as its `id:` |
 | `sha256`, `rows` | 64 hex characters; a whole number | checked by the inbox before anything is written; a mismatch sends the file to `failed/` |
 | `new-table` | `true`/`false` | see section 5.6 |
-| `folders` | `{<folder>: <pack>}` | a tar only (section 4.4) |
+| `folders` | `{<folder>: <pack>}` | a tar only; a folder is a table or a kind (section 4.4) |
 | `hold` | `true`/`false` | the Inbox screen shows the file as *held* |
 
 **An unknown key is refused** (the file goes to `failed/` naming the keys there are), so a typo never goes unnoticed; so is a bad date, a
@@ -958,32 +963,35 @@ The Inbox screen shows it as *held*; delete the `hold:` line (or set it to `fals
 ### 4.4 A tar with several tables and dates
 
 A tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<folder>/<YYYY-MM-DD>/<files>.jsonl[.gz]`, nothing else (operating-system litter
-such as `__MACOSX/` and `.DS_Store` is ignored). **Each top folder is a kind** of its pack (`scenario-pv`, `risk-hierarchy`) that has one
-table in the lake:
+such as `__MACOSX/` and `.DS_Store` is ignored). **Each top folder is a table or a kind**: a table name (`trade_endur`, `trade_calypso`,
+`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv`, `risk-hierarchy`)
+writes the kind's one table. Names compare without case and with `_` and `-` alike (`risk_hierarchy` is the kind `risk-hierarchy`):
 
 ```text
 eod-2026-11-06.tar.gz
-├── scenario-pv/2026-11-05/restated.jsonl.gz
+├── trade_endur/2026-11-05/part-0001.jsonl.gz
+├── trade_endur/2026-11-06/part-0001.jsonl.gz
+├── trade_calypso/2026-11-06/part-0001.jsonl.gz
 ├── scenario-pv/2026-11-06/part-0001.jsonl.gz
 ├── scenario-pv/2026-11-06/part-0002.jsonl.gz
-└── risk-hierarchy/2026-11-06/nodes.jsonl
+└── risk_hierarchy/2026-11-06/nodes.jsonl
 ```
 
 ```yaml
 # eod-2026-11-06.tar.gz.ready
 lake: risklake
-folders: {scenario-pv: market-risk, risk-hierarchy: market-risk}
+folders: {trade_endur: trading, trade_calypso: trading, scenario-pv: market-risk, risk_hierarchy: market-risk}
 rows: 2050326
 ```
 
 **A tar names its own tables and dates; nothing overrides them**: `business-date:` or `table:` in its `.ready` is refused. Each folder's
-pack is `folders:`, else the one pack with a kind of that name, else a pack of that name with one kind; an unresolved folder refuses the
-whole archive, listing the kinds there are. A kind with **several tables in the lake** (trades: `trade_endur`, `trade_calypso`,
-`trade_murex`) cannot go in a tar: the archive is refused naming the tables; send each table as its own file with `connector:` (section
-3.4). The lake's entry gives each table its id (`id:`), since a tar's `.ready` has no per-table `key:`. Every table of the archive shares
+pack is `folders:`, else the one pack with a kind or table of that name, else a pack of that name with one kind; an unresolved folder
+refuses the whole archive, listing the kinds and tables there are. A folder named after a kind with **several tables** (`trade`) is
+refused naming them: name the table's folder (`trade_endur`). Each table's id is its lake entry's `id:`; a table the lake has no entry for
+gets the pack's entry with the kind's key as `id:` (section 5.1), so a tar into a new lake needs nothing prepared. Every table of the archive shares
 one load id, and **an archive loads completely or not at all**: if one table's load fails, the tables already committed are undone and the
 archive goes to `failed/` saying what failed and what was rolled back. Make one from dated folders with
-`tar -czf eod-2026-11-06.tar.gz scenario-pv risk-hierarchy` run in the folder holding them.
+`tar -czf eod-2026-11-06.tar.gz trade_endur trade_calypso scenario-pv risk_hierarchy` run in the folder holding them.
 
 ### 4.5 Checks: sha256 and rows
 
@@ -1030,8 +1038,9 @@ Every key of a rule: `match`, `pack`, `kind`, and optionally `connector`, `table
 `lake` (a lake's name; a folder is the older form), `format` (`delta` or `iceberg`).
 
 **Which lake**: the `.ready` file's `lake:`, else the rule's `lake:`, else `drishti.dataload.lake` (`demo` as shipped). When the lake
-file has no entry for the kind, the pack's recommended entry is copied into it first (said in the log); when the lake has no file at all,
-`config/lakes/<lake>.yaml` is created. From then on the lake file is the truth: edit it there.
+file has no entry for the table (a kind's, or one of a kind's several tables: `trade_endur`), the pack's recommended entry is copied into it
+first (said in the log), with the kind's key as its `id:` when the entry names none (the `.ready` file's `key:`, else the pack's ingest
+key, else the single `key:` field of the kind's data contract); when the lake has no file at all, `config/lakes/<lake>.yaml` is created. From then on the lake file is the truth: edit it there.
 
 A file of *lake rows* or *loader rows* (the row forms of [DATA_GUIDE.md section 2.2](DATA_GUIDE.md#2-the-row-forms)) is refused with the
 tool that loads it (`tools/samplegen/load_rows.py`, or the store's own loader): the loader reads documents.

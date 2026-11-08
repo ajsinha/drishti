@@ -22,7 +22,11 @@
   sha256, rows, hold, lake (the lake the file goes to: a lake of config/lakes/). An unknown key refuses the file. The command line's own
   options win over the marker's (``--lake`` over ``lake:``).
 * **The pack of a table**: the pack given (``--pack``, ``pack:``, a tar's ``folders:``); else the pack that already has a kind or table
-  of that name (compared without case); else a pack of that name with a single kind. Two candidates or none: refused, listing them."""
+  of that name (compared without case, ``_`` and ``-`` alike: ``risk_hierarchy`` is the kind ``risk-hierarchy``); else a pack of that
+  name with a single kind. Two candidates or none: refused, listing them. A table name (``trade_endur``, one of the kind ``trade``'s tables)
+  resolves to its kind and connector, so a tar's folders may be table names.
+* **The key of a kind**: the pack's ingest key, else the single field of its data contract's ``key:`` (``contract_key``): a table created by
+  its first load takes it as its ``id:``."""
 from __future__ import annotations
 
 import hashlib
@@ -126,15 +130,45 @@ def read_marker(path) -> dict:
 
 @dataclass(frozen=True)
 class Target:
-    """A table's pack (its folder), kind and Delta connector (None: the first that serves the kind)."""
+    """A table's pack (its folder), kind and Delta connector (None: the first that serves the kind); ``table`` the table's folder when
+    the name was a table's (``trade_endur``), else None."""
     pack: pathlib.Path
     kind: str
     connector: str | None
+    table: str | None = None
+
+
+def norm(name: str) -> str:
+    """A table or kind name as compared: lower case, ``_`` as ``-``."""
+    return str(name).lower().replace("_", "-")
 
 
 def _pack_doc(pack: pathlib.Path) -> dict:
+    """The pack's pack.yaml, a template in the lake form (``lake-tables:``) shown with its ``table.<kind>`` (tools/packlake.py)."""
     import yaml
-    return yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    tools = str(pathlib.Path(__file__).resolve().parents[1])
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    import packlake
+    return packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
+
+
+def contract_key(pack: pathlib.Path, kind: str | None) -> str | None:
+    """The key of a kind's data contract (``<pack>/contracts/<kind>.contract.yaml``, ``key:``): every kind declares one. Only a single
+    field is a row id; a key of several fields, or none, gives None (the same rule as drishti-lakeconfig PackEntry.contractKey)."""
+    if not kind:
+        return None
+    f = pathlib.Path(pack) / "contracts" / f"{kind}.contract.yaml"
+    if not f.is_file():
+        return None
+    import yaml
+    try:
+        k = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("key")
+    except yaml.YAMLError:
+        return None
+    if isinstance(k, list) and len(k) == 1 and isinstance(k[0], str) and k[0].strip():
+        return k[0].strip()
+    return k.strip() if isinstance(k, str) and k.strip() and "," not in k else None
 
 
 def pack_tables(pack: pathlib.Path) -> list[tuple[str, str, str | None]]:
@@ -144,7 +178,7 @@ def pack_tables(pack: pathlib.Path) -> list[tuple[str, str, str | None]]:
     out: list[tuple[str, str, str | None]] = []
     kinds = list((m.get("ingest") or {}).keys())
     for name, c in (defs or {}).items():
-        if not isinstance(c, dict) or c.get("plugin") != "delta":
+        if not isinstance(c, dict) or c.get("plugin") not in ("delta", "iceberg"):
             continue
         st = c.get("settings") or {}
         for k in c.get("kinds") or []:
@@ -175,7 +209,7 @@ def resolve(table: str, packs_root, pack=None, kind: str | None = None, connecto
     except RouteError as e:
         if "more than one" in str(e):
             raise
-        named = [p for p in packs if p.name.lower() == table.lower()]
+        named = [p for p in packs if norm(p.name) == norm(table)]
         if named:
             kinds = [n for n, _k, c in pack_tables(named[0]) if c is None]
             if kind or len(kinds) == 1:
@@ -189,8 +223,8 @@ def _one(table: str, packs, connector, given: bool = False) -> Target:
     for p in packs:
         for n, k, c in pack_tables(p):
             names.append(f"{p.name}/{n}")
-            if n.lower() == table.lower() and (connector is None or c in (None, connector)):
-                t = Target(p, k, c or connector)
+            if norm(n) == norm(table) and (connector is None or c in (None, connector)):
+                t = Target(p, k, c or connector, n if c and norm(n) != norm(k) else None)
                 if t not in hits and not any(h.pack == p and h.kind == k and h.connector == (c or connector) for h in hits):
                     hits.append(t)
     if len(hits) == 1:

@@ -1201,6 +1201,23 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   publishers' sources found in their domain modules; `css_visual_check.py` names the demo lake's variable through `lakeconfig`; importing
   `drishti-stack/stack.py` in a test leaves no `__pycache__` in the checkout.
 
+### Fixes (pushing into a new lake)
+
+- **A table created by its first load gets its kind's key as `id:`**
+  ([DATA_LAKE_GUIDE.md sections 3.4, 4.0 and 5.1](docs/guides/DATA_LAKE_GUIDE.md#34-pushing-data-from-your-own-programs)). A lake made
+  by the data inbox (or a table it added) copied the pack's entry without `id:`, so every row was rejected (*no id (field 'id' is missing
+  or empty)*) unless the `.ready` file gave `key:`. The entry now takes the `.ready` file's `key:`, else the pack's ingest key, else the
+  single `key:` field of the kind's data contract (`PackEntry.contractKey`, `feedroute.contract_key`); the parallel loader falls back to
+  the pack's key for an entry still without `id:`. A tar into a new lake works the same way.
+- **A tar may mix the tables of one kind**: a tar's folder may be a table name (`trade_endur`, `trade_calypso`, `trade_murex`), which
+  resolves to its kind and connector, as well as a kind name; names compare with `_` and `-` alike (`risk_hierarchy` is the kind
+  `risk-hierarchy`). The inbox adds each table's entry to the lake (it used to add only the kind's first). Java `Routes`, Python
+  `feedroute` (which now reads a lake-form pack's `lake-tables:`) and `lake build`'s tars alike.
+- **`lake build --engine java --key`** passes the key to the loader for a lake of `config/lakes/` (it was dropped, and an entry without
+  `id:` rejected every row).
+- Tests: `NewLakeKeysTest` (the real loader: one file and a tar of `trade_endur`, `trade_calypso` and `risk_hierarchy` over two dates
+  into a lake that does not exist, every row landed, the archive again replaced), `test_feedroute.py`, `test_javaload.py`.
+
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.
 

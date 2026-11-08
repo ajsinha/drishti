@@ -87,8 +87,8 @@ public final class Routes {
         }
 
         /** The same route for one table folder of a tar ({@code source.dataset}). */
-        Route forFolder(String folder, String pack2, String kind2, Path dir2, String by2) {
-            return new Route(pack2, kind2, null, null, dateField, null, key, lake, format, by2, dir2, dateFrom, null,
+        Route forFolder(String folder, String pack2, String kind2, String connector2, Path dir2, String by2) {
+            return new Route(pack2, kind2, connector2, null, dateField, null, key, lake, format, by2, dir2, dateFrom, null,
                     "each table and date from the archive's folders", mode, folder, null, modeGiven);
         }
     }
@@ -295,6 +295,7 @@ public final class Routes {
         String pack = n.pack() != null ? n.pack() : rule == null ? null : rule.pack();
         String kind = n.kind() != null ? n.kind() : rule == null ? null : rule.kind();
         String by;
+        String tableConnector = null;                           // a table name (trade_endur) resolves to its kind and connector
         if (anyPack && (pack == null || kind == null)) {         // a tar: each folder routed by routeTar; the rule's mode, lake and format kept
             List<String> names = packs.names();
             pack = names.isEmpty() ? null : names.get(0);
@@ -321,6 +322,7 @@ public final class Routes {
             }
             pack = pk[0];
             kind = pk[1];
+            tableConnector = pk[2];
             by = (n.table() != null ? "the .ready file's table " : "the name's table ") + table;
         } else {
             by = n.pack() != null || n.kind() != null ? "the .ready file" + (rule == null ? "" : " over the rule " + rule.match()) : "the rule " + rule.match();
@@ -349,7 +351,7 @@ public final class Routes {
             dateBy = FileDates.businessToday() + " (today: no date in the name)";
         }
         String mode = n.mode() != null ? n.mode() : defaultMode;
-        return new Route(pack, kind, n.connector() != null ? n.connector() : rule == null ? null : rule.connector(),
+        return new Route(pack, kind, n.connector() != null ? n.connector() : rule != null && rule.connector() != null ? rule.connector() : tableConnector,
                 rule == null ? null : rule.table(), rule == null ? null : rule.dateField(), asOf,
                 n.key() != null ? n.key() : rule == null ? null : rule.key(), lake(n, rule),
                 rule == null ? "delta" : rule.format(), by, info.dir(), dateFrom, nameDate, dateBy, mode, null, null, n.mode() != null);
@@ -410,7 +412,8 @@ public final class Routes {
                 if (info == null) {
                     throw new Unrouted("no loaded pack is named " + pk[0]);
                 }
-                out.add(base.forFolder(t, pk[0], pk[1], info.dir(), "the archive's folder " + t + (pack != null ? " (pack " + pack + ")" : "")));
+                out.add(base.forFolder(t, pk[0], pk[1], pk[2], info.dir(), "the archive's folder " + t + (pack != null ? " (pack " + pack + ")" : "")
+                        + (pk[2] != null ? " (the table of " + pk[2] + ")" : "")));
             } catch (Unrouted e) {
                 problems.add(e.getMessage());
             }
@@ -422,11 +425,15 @@ public final class Routes {
     }
 
     /**
-     * The pack and kind of a table name (DATA_LAKE_GUIDE.md section 5): the pack given (its kind of that name, or the kind given); else the
-     * one pack with a kind of that name; else a pack of that name with a single kind. None or several: refused, listing them.
+     * The pack, kind and connector of a table name (DATA_LAKE_GUIDE.md sections 4.4 and 5): the pack given (its kind of that name, or the
+     * kind given); else the one pack with a kind of that name; else the one pack whose Delta or Iceberg connector writes a table of that
+     * name ({@code trade_endur}: the kind {@code trade}, the connector {@code trade-endur}); else a pack of that name with a single kind.
+     * Names compare without case, and {@code _} and {@code -} alike ({@code risk_hierarchy} is the kind {@code risk-hierarchy}). None or
+     * several: refused, listing them. The connector is null for a kind's name.
      */
     private String[] byTable(String table, String givenPack, String givenKind) throws Unrouted {
         List<String> names = givenPack != null ? List.of(givenPack) : packs.names();
+        String want = norm(table);
         List<String[]> hits = new ArrayList<>();
         List<String> known = new ArrayList<>();
         for (String p : names) {
@@ -436,8 +443,25 @@ public final class Routes {
             }
             for (String k : info.kinds()) {
                 known.add(p + "/" + k);
-                if (k.equalsIgnoreCase(table) && (givenKind == null || givenKind.equals(k))) {
-                    hits.add(new String[] {p, k});
+                if (norm(k).equals(want) && (givenKind == null || givenKind.equals(k))) {
+                    hits.add(new String[] {p, k, null});
+                }
+            }
+        }
+        if (hits.isEmpty()) {
+            for (String p : names) {
+                PackInfo info = packs.find(p);
+                if (info == null) {
+                    continue;
+                }
+                for (com.ash.drishti.lakeconfig.PackEntry.PackTable t : tablesOf(info)) {
+                    if (norm(t.table()).equals(norm(t.kind())) || !info.kinds().contains(t.kind())) {
+                        continue;                               // a kind's own name: matched above
+                    }
+                    known.add(p + "/" + t.table());
+                    if (norm(t.table()).equals(want) && (givenKind == null || givenKind.equals(t.kind()))) {
+                        hits.add(new String[] {p, t.kind(), t.connector()});
+                    }
                 }
             }
         }
@@ -445,17 +469,45 @@ public final class Routes {
             return hits.get(0);
         }
         if (hits.size() > 1) {
-            throw new Unrouted(table + ": more than one table of that name (" + String.join(", ", hits.stream().map(h -> h[0] + "/" + h[1]).toList())
-                    + "): give the pack and kind (pack: and kind: in the .ready file)");
+            throw new Unrouted(table + ": more than one table of that name (" + String.join(", ", hits.stream().map(h -> h[0] + "/" + h[1]
+                    + (h[2] == null ? "" : " (" + h[2] + ")")).toList()) + "): give the pack and kind (pack: and kind: in the .ready file)");
         }
         for (String p : names) {
             PackInfo info = packs.find(p);
-            if (info != null && p.equalsIgnoreCase(table) && (givenKind != null || info.kinds().size() == 1)) {
-                return new String[] {p, givenKind != null ? givenKind : info.kinds().get(0)};
+            if (info != null && norm(p).equals(want) && (givenKind != null || info.kinds().size() == 1)) {
+                return new String[] {p, givenKind != null ? givenKind : info.kinds().get(0), null};
             }
         }
         known.sort(String.CASE_INSENSITIVE_ORDER);
         throw new Unrouted(table + ": no pack, kind or table of that name (known: " + (known.isEmpty() ? "none" : String.join(", ", known)) + ")");
+    }
+
+    /** A table or kind name as compared: lower case, {@code _} as {@code -}. */
+    static String norm(String name) {
+        return name == null ? "" : name.toLowerCase(Locale.ROOT).replace('_', '-');
+    }
+
+    /** The pack's tables by connector (its pack.yaml read once per change of the file). */
+    private final Map<Path, Map.Entry<Long, List<com.ash.drishti.lakeconfig.PackEntry.PackTable>>> packTables =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    private List<com.ash.drishti.lakeconfig.PackEntry.PackTable> tablesOf(PackInfo info) {
+        if (info.dir() == null) {
+            return List.of();
+        }
+        Path f = Files.isDirectory(info.dir()) ? info.dir().resolve("pack.yaml") : info.dir();
+        try {
+            long stamp = Files.getLastModifiedTime(f).toMillis();
+            var hit = packTables.get(f);
+            if (hit != null && hit.getKey() == stamp) {
+                return hit.getValue();
+            }
+            List<com.ash.drishti.lakeconfig.PackEntry.PackTable> ts = com.ash.drishti.lakeconfig.PackEntry.tables(f);
+            packTables.put(f, Map.entry(stamp, ts));
+            return ts;
+        } catch (IOException | RuntimeException e) {
+            return List.of();
+        }
     }
 
     /** The lake a file goes to (DATA_LAKE_GUIDE.md section 4): the {@code .ready} file's {@code lake:}, else the rule's, else the inbox's. */

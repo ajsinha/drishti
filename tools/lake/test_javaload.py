@@ -86,3 +86,14 @@ def test_s3_input_needs_the_loader(tmp_path):
     code, s = build.run(args(src=["s3://bucket/pv/"], lake=str(tmp_path / "lake"), domain="risk", kind="pv", date="BUSINESS_DATE", quiet=True),
                         say=lambda *x: None)
     assert code == build.EXIT_FAILED and "--engine java" in s["error"]
+
+
+def test_key_goes_to_the_loader_for_a_lake_of_config_lakes(tmp_path):
+    """lake build --engine java --key into a lake of config/lakes/ (DATA_LAKE_GUIDE.md section 3.4): the key reaches the loader as source.id
+    (it was dropped, and a lake entry without id: rejected every row); without one the lake file's id: (or the pack's key) decides."""
+    p = {"key": "TRADE_ID", "date": None, "domain": "trading", "kind": "trade", "table": "trade_endur", "promote": [], "partition_by": [],
+         "lake_name": "pushlake"}
+    c = javaload.config(args(src=["x.jsonl"]), p, None, "/lake", False, tmp_path, {})
+    assert c["target"]["lake"] == "pushlake" and c["source"]["id"] == "TRADE_ID"
+    none = javaload.config(args(src=["x.jsonl"]), {**p, "key": "id"}, None, "/lake", False, tmp_path, {})
+    assert "id" not in none["source"]

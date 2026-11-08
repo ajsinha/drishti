@@ -150,8 +150,12 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         target = {"lake": p["lake_name"], "kind": p["kind"]}
         if getattr(a, "_mode_given", False) and target_mode:
             target["mode"] = target_mode                    # --mode or a .ready file's mode:, over the entry's (the table's default)
-        for k in ("promote", "vectors", "flatten", "partition-by", "latest-by", "id"):
+        for k in ("promote", "vectors", "flatten", "partition-by", "latest-by"):
             src.pop(k, None)
+        if not p.get("key") or p["key"] == "id":
+            src.pop("id", None)                         # the lake file's id: (else the pack's key, which the loader reads itself)
+        # else --key, or the lake entry's id: (lake_layout took it): the loader checks it agrees with the entry, and an entry without
+        # id: (a lake made by its first load before it took the kind's key) loads with it instead of rejecting every row
     else:                                          # a folder (--lake DIR, or --lake-root): the table's path, its layout given here
         target = {"format": "iceberg" if iceberg else "delta", "path": path, "domain": p["domain"], "kind": p["kind"]}
         if target_mode:

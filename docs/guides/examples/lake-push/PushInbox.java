@@ -37,7 +37,7 @@ import java.util.zip.GZIPOutputStream;
  *
  * <pre>
  * javac PushInbox.java
- * java PushInbox &lt;data&gt;/dataload/inbox trade_endur 2026-11-06 rows.jsonl lake=risklake pack=trading kind=trade connector=trade-endur key=TRADE_ID
+ * java PushInbox &lt;data&gt;/dataload/inbox trade_endur 2026-11-06 rows.jsonl lake=risklake pack=trading kind=trade connector=trade-endur
  * </pre>
  *
  * The rows (one JSON object a line) are written gzipped into &lt;dataload&gt;/staging/ and renamed into the inbox when complete; the
