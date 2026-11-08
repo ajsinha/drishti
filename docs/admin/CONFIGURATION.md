@@ -2912,7 +2912,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
 | `drishti.feeds.config` | string | `./config/feeds` | `DRISHTI_FEEDS_CONFIG` | server | the feed files' folder (config/feeds/&lt;feed&gt;.yaml); the run ledger is &lt;data folder&gt;/datafeeds/ledger.jsonl | restart |  | admin |
-| `drishti.feeds.root` | string | `.` | `DRISHTI_FEEDS_ROOT` | server | the installation's folder, where tools/drishti.py is: Run now starts `tools/drishti.py feed run <feed>` there | restart |  | admin |
+| `drishti.feeds.root` | string | `.` | `DRISHTI_FEEDS_ROOT` | server | the installation's folder (the one holding tools/drishti.py): Run now starts `tools/drishti.py feed run <feed>` there | restart |  | admin |
 | `drishti.feeds.python` | string | empty | `DRISHTI_FEEDS_PYTHON` | server | the Python Run now starts (blank: the console's drishti-console/.venv, else python3, python on Windows) | restart |  | admin |
 | `drishti.feeds.sample-seconds` | integer | `60` |  | server | how often the ledger is read for the gauge drishti.datafeed.failed (the alert rule data-feed-failed) | restart |  | admin |
 
@@ -6245,7 +6245,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FEEDS_CONFIG` | `drishti.feeds.config` | `./config/feeds` | server | the feed files' folder (config/feeds/&lt;feed&gt;.yaml); the run ledger is &lt;data folder&gt;/datafeeds/ledger.jsonl |
 | `DRISHTI_FEEDS_DEBUG` | drishti.py feed | none | tools | Set (any value): a feed's own error prints its Python stack trace too (the ledger keeps the one line either way) |
 | `DRISHTI_FEEDS_PYTHON` | `drishti.feeds.python` | empty | server | the Python Run now starts (blank: the console's drishti-console/.venv, else python3, python on Windows) |
-| `DRISHTI_FEEDS_ROOT` | `drishti.feeds.root` | `.` | server | the installation's folder, where tools/drishti.py is: Run now starts `tools/drishti.py feed run <feed>` there |
+| `DRISHTI_FEEDS_ROOT` | `drishti.feeds.root` | `.` | server | the installation's folder (the one holding tools/drishti.py): Run now starts `tools/drishti.py feed run <feed>` there |
 | `DRISHTI_FEEDS_USER_AGENT` | drishti.py feed | `Drishti ajsinha@gmail.com` | tools | The User-Agent every data feed sends (SEC EDGAR, GLEIF and the rest; the SEC asks for a contact in it): set it to your organisation's contact in production |
 | `DRISHTI_FEED_ECB_ESTR` | ecb-estr-feed enabled | `false` | packs | The ECB euro short-term rate feed on |
 | `DRISHTI_FEED_ECB_FX` | ecb-fx-feed enabled | `false` | packs | The ECB reference FX rates feed on |

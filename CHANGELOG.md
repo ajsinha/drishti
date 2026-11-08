@@ -17,6 +17,31 @@
 
 ## 2.9.11.g (unreleased)
 
+### The public sector: the first new domain, government data and free news
+
+- **Part of the economy module, with a lens of its own** (PUBLIC_SECTOR_GUIDE.md; one module, the owner's decision of 2026-11-07): ten
+  functions (`WDI`, `WDIS`, `CBANK`, `CBSER`, `NSTAT`, `OECD`, `OECDS`, `PRESS`, `PREL`, `GDELT`) in the economy's manifest, the
+  **Public sector** lens, and the free news (`PRESS`, `PREL`, `GDELT`) in the World lens. The economy module off: all its packs,
+  connectors, functions and both lenses are gone, banking, capital markets and GLEIF untouched (`EconomyModuleOffTest`,
+  `PublicSectorLensTest`).
+- **Six packs** with `domain: economy`, each with its kinds, data contracts (worked examples under docs/contracts/samples), README,
+  pack guide and Sutras built from the UI kit only: **world-development** (World Bank WDI: a country's profile with the world map by GDP
+  per head, every indicator's history), **central-banks** (FRED and the Bank of Canada: a bank's policy rate, its last move and its
+  series), **national-statistics** (Statistics Canada by vector), **oecd** (the members' leading indicator, unemployment, inflation and
+  growth, a map by inflation), **official-news** (the press releases of the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, the US
+  Federal Register and the Canada Gazette, each a link) and **gdelt-events** (a country's day in the world's news: events, tone,
+  conflict, CAMEO categories, a map by tone, the top stories).
+- **Six daily feeds on drishti-feeds** (`config/feeds/<pack>.yaml`, `tools/feeds/sources/`): incremental (the source's last update, each
+  series from its last observation, releases already seen, the GDELT days after the last), JSON Lines into `worldlake` and `newslake`,
+  whose lake files now ship with exactly these tables (`tools/test_empty_lakes.py` says only these packs read them). Every source's
+  licence and terms are in the feed file (`options.sources`); the Bank of England, OSFI and the Canada Gazette are internal only and their
+  releases say so. FRED's key is `DRISHTI_FRED_API_KEY`; without it the Bank of Canada still loads. One publisher down or a day GDELT
+  skipped never fails a run.
+- **Tests on recorded fixtures** (`tools/feeds/tests/test_publicsector.py`, never the network) and a browser test of the six screens on a
+  scratch lake loaded from them (`test_public_sector_browser.py`); `tools/packgen/publicsector/make.py` writes the samples and READMEs.
+- **Docs**: the Public sector guide and Tutorial 46 (two Help entries), the External data page's public-sector rows and section, the
+  contract pages, OPERATIONS' modules.
+
 ### The pre-deal service and the exposure what-if in Java
 
 - **The pre-deal check is a service of the exposure engine** (EXPOSURE_GUIDE.md section 18.9): `POST /api/v1/exposure/predeal` and the
@@ -220,6 +245,10 @@
   completion hook offers the fields, measures, functions and keywords (also after `(`, `,` and `=` in a call); its own suggestion list
   and CSS deleted. Deleted: the Format pane's small controls (`row`, `select`, `text`, `checkbox`, `colour`) and the designer's own
   text, date and checkbox helpers. drishti-inputs: `upgradeCodeArea` passes `completeAfter`. Saved reports are unchanged.
+  The second pass: the Filters pane's editor (a `Form` whose fields follow the kind of filter; Pick from the data a row of checkboxes),
+  the drill-through target, the links between datasets, the bookmarks, the Phone and Tablet rows, a report measure's name, the
+  Copilot's question and a transform step's parameters are `Form`s too; the designer's `frow` and `selectInput` deleted; the form
+  guard's allow-list from 2 files to 1.
 - **Vega retired (the owner's decision O1): one drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite`
   are translated by drishti-chart (`fromVegaLite`) and drawn by drishti-chart; a feature it does not translate is refused in words with
   what to use instead (`vegaLiteAlternative`, `vegaLiteRefusal`, `vegaLiteIn`; `chartIn(host, spec)` puts any spec in a host), never

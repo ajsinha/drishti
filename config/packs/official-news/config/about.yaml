@@ -1,0 +1,87 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this page: what the official-news pack's kinds and fields mean (the README, the contracts and the About card read it).
+about: 1
+vocabulary:
+  provenance: { term: Provenance, means: "Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY." }
+  source: { term: Source, means: "The publisher." }
+  dataset: { term: Dataset, means: "The publisher's feed the record was read from." }
+  retrieved: { term: Retrieved, means: "The business date of the feed's pull that wrote the record." }
+  licence: { term: Licence, means: "The publisher's terms of reuse, as recorded in the feed's YAML." }
+  attribution: { term: Attribution, means: "The credit line to repeat when the release is shown or republished." }
+  url: { term: Address, means: "The original on the publisher's site." }
+  internal: { term: Internal only, means: "True when the publisher's terms allow no commercial reuse: the record stays inside the organisation (Export data refuses it)." }
+  publisher_type: { term: Publisher type, means: "What the publisher is.", values: { central bank: "A central bank", regulator: "A financial regulator", government: "A government's official journal or register" } }
+kinds:
+  release-source:
+    title: Official press releases
+    about: ${$.NAME} (${$.PUBLISHER_TYPE}, ${$.COUNTRY}) has ${$.RELEASES} releases kept, the latest at ${$.LAST_PUBLISHED}.
+    guide: official-news
+    glossary:
+      SOURCE_ID: { term: Publisher id, means: "PRESS- and the publisher's id in the feed's YAML (FED, ECB, BOC, BOE, SEC, OSFI, FEDREG, GAZETTE1, GAZETTE2)." }
+      NAME: { term: Name, means: "The publisher's name." }
+      PUBLISHER_TYPE: { use: publisher_type }
+      COUNTRY: { term: Country, means: "The ISO 3166-1 alpha-3 code of the publisher's country (EMU for the euro area)." }
+      WEBSITE: { term: Website, means: "The publisher's page of releases." }
+      FEED_URL: { term: Feed, means: "The address the feed reads (RSS, Atom, or the Federal Register's API)." }
+      LICENCE: { term: Licence, means: "The publisher's terms of reuse, as recorded in the feed's YAML." }
+      TERMS_URL: { term: Terms, means: "The publisher's terms page." }
+      INTERNAL_ONLY: { use: internal }
+      WHY_INTERNAL: { term: Why internal, means: "Why the publisher's releases are internal only, in words; empty when they are not." }
+      RELEASES: { term: Releases, means: "How many releases are kept (the last keep-days, at most keep-per-source)." }
+      LAST_PUBLISHED: { term: Latest, means: "When the newest kept release was published (UTC)." }
+      LAST_PULL: { term: Last pull, means: "ok, or failed (the kept releases are shown) when the publisher's feed could not be read." }
+      LATEST: { term: Latest releases, means: "The newest 25 releases, newest first: PUBLISHED, TITLE, URL, CATEGORY and PRESS_RELEASE." }
+      LATEST.PUBLISHED: { term: Published, means: "When the release was published (UTC)." }
+      LATEST.TITLE: { term: Title, means: "The release's title." }
+      LATEST.URL: { term: Original, means: "The release on the publisher's site." }
+      LATEST.CATEGORY: { term: Category, means: "The publisher's category for it, where its feed gives one." }
+      LATEST.PRESS_RELEASE: { term: Release, means: "The release's page in Drishti (PREL-...)." }
+      BY_CATEGORY: { term: By category, means: "The kept releases counted by category (CATEGORY, COUNT), the largest first." }
+      BY_CATEGORY.CATEGORY: { term: Category, means: "The category, Uncategorised when the feed gives none." }
+      BY_CATEGORY.COUNT: { term: Releases, means: "How many kept releases have that category." }
+      PROVENANCE: { use: provenance }
+      PROVENANCE.SOURCE: { use: source }
+      PROVENANCE.DATASET: { use: dataset }
+      PROVENANCE.RETRIEVED_AT: { use: retrieved }
+      PROVENANCE.LICENCE: { use: licence }
+      PROVENANCE.ATTRIBUTION: { use: attribution }
+      PROVENANCE.URL: { use: url }
+      PROVENANCE.INTERNAL_ONLY: { use: internal }
+  press-release:
+    title: Press release
+    about: ${$.PUBLISHER_NAME} published "${$.TITLE}" on ${$.DATE}.
+    guide: official-news
+    glossary:
+      RELEASE_ID: { term: Release id, means: "PREL-, the publisher's id and the first ten hex digits of the SHA-1 of the release's address." }
+      TITLE: { term: Title, means: "The release's title as the publisher's feed gives it." }
+      PUBLISHED: { term: Published, means: "When the release was published, in UTC." }
+      DATE: { term: Date, means: "The day it was published (UTC)." }
+      URL: { term: Original, means: "The release on the publisher's site: open it for the full text." }
+      SUMMARY: { term: Summary, means: "The summary the publisher's feed gives, as plain text cut at 400 characters; empty when the feed gives none." }
+      CATEGORY: { term: Category, means: "The publisher's category (the Federal Register: the document type and agencies)." }
+      RELEASE_SOURCE: { term: Publisher, means: "The publisher's page (PRESS-<id>)." }
+      PUBLISHER_NAME: { term: Publisher name, means: "The publisher's name." }
+      PUBLISHER_TYPE: { use: publisher_type }
+      COUNTRY: { term: Country, means: "The ISO 3166-1 alpha-3 code of the publisher's country (EMU for the euro area)." }
+      INTERNAL_ONLY: { use: internal }
+      PROVENANCE: { use: provenance }
+      PROVENANCE.SOURCE: { use: source }
+      PROVENANCE.DATASET: { use: dataset }
+      PROVENANCE.RETRIEVED_AT: { use: retrieved }
+      PROVENANCE.LICENCE: { use: licence }
+      PROVENANCE.ATTRIBUTION: { use: attribution }
+      PROVENANCE.URL: { use: url }
+      PROVENANCE.INTERNAL_ONLY: { use: internal }

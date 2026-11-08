@@ -1,0 +1,90 @@
+{
+ "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-EG-ELC-ACCS-ZS-4ca85375fa2c": {
+  "file": "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-EG-ELC-ACCS-ZS-4ca85375fa2c.gz",
+  "url": "https://api.worldbank.org/v2/country/CAN;USA;MEX;BRA;GBR;DEU;IND;CHN;JPN;NGA;ZAF;AUS/indicator/EG.ELC.ACCS.ZS?format=json&per_page=20000&date=2019:2026&page=1"
+ },
+ "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-FP-CPI-TOTL-ZG-099634f83339": {
+  "file": "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-FP-CPI-TOTL-ZG-099634f83339.gz",
+  "url": "https://api.worldbank.org/v2/country/CAN;USA;MEX;BRA;GBR;DEU;IND;CHN;JPN;NGA;ZAF;AUS/indicator/FP.CPI.TOTL.ZG?format=json&per_page=20000&date=2019:2026&page=1"
+ },
+ "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-IT-NET-USER-ZS-2de3e82eab12": {
+  "file": "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-IT-NET-USER-ZS-2de3e82eab12.gz",
+  "url": "https://api.worldbank.org/v2/country/CAN;USA;MEX;BRA;GBR;DEU;IND;CHN;JPN;NGA;ZAF;AUS/indicator/IT.NET.USER.ZS?format=json&per_page=20000&date=2019:2026&page=1"
+ },
+ "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-NY-GDP-PCAP-CD-74d821b725a4": {
+  "file": "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-NY-GDP-PCAP-CD-74d821b725a4.gz",
+  "url": "https://api.worldbank.org/v2/country/CAN;USA;MEX;BRA;GBR;DEU;IND;CHN;JPN;NGA;ZAF;AUS/indicator/NY.GDP.PCAP.CD?format=json&per_page=20000&date=2019:2026&page=1"
+ },
+ "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-SL-UEM-TOTL-ZS-2e9601ddd04a": {
+  "file": "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-SL-UEM-TOTL-ZS-2e9601ddd04a.gz",
+  "url": "https://api.worldbank.org/v2/country/CAN;USA;MEX;BRA;GBR;DEU;IND;CHN;JPN;NGA;ZAF;AUS/indicator/SL.UEM.TOTL.ZS?format=json&per_page=20000&date=2019:2026&page=1"
+ },
+ "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-SP-DYN-LE00-IN-b4c65fec6194": {
+  "file": "BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-SP-DYN-LE00-IN-b4c65fec6194.gz",
+  "url": "https://api.worldbank.org/v2/country/CAN;USA;MEX;BRA;GBR;DEU;IND;CHN;JPN;NGA;ZAF;AUS/indicator/SP.DYN.LE00.IN?format=json&per_page=20000&date=2019:2026&page=1"
+ },
+ "EX-BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-SI-POV-DDAY-103195160f64": {
+  "file": "EX-BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-SI-POV-DDAY-103195160f64.gz",
+  "url": "https://api.worldbank.org/v2/country/CAN;USA;MEX;BRA;GBR;DEU;IND;CHN;JPN;NGA;ZAF;AUS/indicator/SI.POV.DDAY?format=json&per_page=20000&date=2019:2026&page=1"
+ },
+ "EX-BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-SP-POP-TOTL-58d6d71de923": {
+  "file": "EX-BRA-GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-SP-POP-TOTL-58d6d71de923.gz",
+  "url": "https://api.worldbank.org/v2/country/CAN;USA;MEX;BRA;GBR;DEU;IND;CHN;JPN;NGA;ZAF;AUS/indicator/SP.POP.TOTL?format=json&per_page=20000&date=2019:2026&page=1"
+ },
+ "GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-GC-DOD-TOTL-GD-ZS-a4865b6bd7f3": {
+  "file": "GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-GC-DOD-TOTL-GD-ZS-a4865b6bd7f3.gz",
+  "url": "https://api.worldbank.org/v2/country/CAN;USA;MEX;BRA;GBR;DEU;IND;CHN;JPN;NGA;ZAF;AUS/indicator/GC.DOD.TOTL.GD.ZS?format=json&per_page=20000&date=2019:2026&page=1"
+ },
+ "GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-NY-GDP-MKTP-KD-ZG-5b7164682174": {
+  "file": "GBR-DEU-IND-CHN-JPN-NGA-ZAF-AUS-indicator-NY-GDP-MKTP-KD-ZG-5b7164682174.gz",
+  "url": "https://api.worldbank.org/v2/country/CAN;USA;MEX;BRA;GBR;DEU;IND;CHN;JPN;NGA;ZAF;AUS/indicator/NY.GDP.MKTP.KD.ZG?format=json&per_page=20000&date=2019:2026&page=1"
+ },
+ "v2-country-4d855f33e657": {
+  "file": "v2-country-4d855f33e657.gz",
+  "url": "https://api.worldbank.org/v2/country?format=json&per_page=400"
+ },
+ "v2-indicator-EG-ELC-ACCS-ZS-99b0a6bc2a0b": {
+  "file": "v2-indicator-EG-ELC-ACCS-ZS-99b0a6bc2a0b",
+  "url": "https://api.worldbank.org/v2/indicator/EG.ELC.ACCS.ZS?format=json"
+ },
+ "v2-indicator-FP-CPI-TOTL-ZG-bba0dd0b178d": {
+  "file": "v2-indicator-FP-CPI-TOTL-ZG-bba0dd0b178d",
+  "url": "https://api.worldbank.org/v2/indicator/FP.CPI.TOTL.ZG?format=json"
+ },
+ "v2-indicator-GC-DOD-TOTL-GD-ZS-68c948a47349": {
+  "file": "v2-indicator-GC-DOD-TOTL-GD-ZS-68c948a47349",
+  "url": "https://api.worldbank.org/v2/indicator/GC.DOD.TOTL.GD.ZS?format=json"
+ },
+ "v2-indicator-IT-NET-USER-ZS-2d5ab8736438": {
+  "file": "v2-indicator-IT-NET-USER-ZS-2d5ab8736438",
+  "url": "https://api.worldbank.org/v2/indicator/IT.NET.USER.ZS?format=json"
+ },
+ "v2-indicator-NY-GDP-MKTP-KD-ZG-a79652e1d581": {
+  "file": "v2-indicator-NY-GDP-MKTP-KD-ZG-a79652e1d581",
+  "url": "https://api.worldbank.org/v2/indicator/NY.GDP.MKTP.KD.ZG?format=json"
+ },
+ "v2-indicator-NY-GDP-PCAP-CD-31dd0a322033": {
+  "file": "v2-indicator-NY-GDP-PCAP-CD-31dd0a322033",
+  "url": "https://api.worldbank.org/v2/indicator/NY.GDP.PCAP.CD?format=json"
+ },
+ "v2-indicator-SI-POV-DDAY-cb95a6220bd1": {
+  "file": "v2-indicator-SI-POV-DDAY-cb95a6220bd1",
+  "url": "https://api.worldbank.org/v2/indicator/SI.POV.DDAY?format=json"
+ },
+ "v2-indicator-SL-UEM-TOTL-ZS-7e2418a8b3bd": {
+  "file": "v2-indicator-SL-UEM-TOTL-ZS-7e2418a8b3bd",
+  "url": "https://api.worldbank.org/v2/indicator/SL.UEM.TOTL.ZS?format=json"
+ },
+ "v2-indicator-SP-DYN-LE00-IN-26e31e5c53fd": {
+  "file": "v2-indicator-SP-DYN-LE00-IN-26e31e5c53fd",
+  "url": "https://api.worldbank.org/v2/indicator/SP.DYN.LE00.IN?format=json"
+ },
+ "v2-indicator-SP-POP-TOTL-513572473f0c": {
+  "file": "v2-indicator-SP-POP-TOTL-513572473f0c",
+  "url": "https://api.worldbank.org/v2/indicator/SP.POP.TOTL?format=json"
+ },
+ "v2-sources-2-d2bae0454686": {
+  "file": "v2-sources-2-d2bae0454686",
+  "url": "https://api.worldbank.org/v2/sources/2?format=json"
+ }
+}

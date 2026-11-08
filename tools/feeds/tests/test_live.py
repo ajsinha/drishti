@@ -41,6 +41,15 @@ SMALL = {
     "news-and-markets": ["news", "--scope", "NEWS-TESLA"],
     "yahoo-prices": ["--scope", "AAPL"],
 }
+# per feed: options overridden as --set would, for the feeds whose selection is their options (the public-sector feeds)
+SMALL_SETS = {
+    "world-development": {"countries": ["CAN", "USA"], "years": 3, "indicators": [{"code": "SP.POP.TOTL", "field": "POPULATION", "unit": "persons"}]},
+    "central-banks": {"history-days": 30, "series": [{"source": "boc", "code": "V39079", "bank": "BOC", "unit": "%"}]},
+    "national-statistics": {"history-years": 1, "vectors": [{"vector": 2062815, "title": "Unemployment rate", "unit": "%"}]},
+    "oecd": {"countries": ["CAN"], "start-period": "2026-01"},
+    "official-news": {"keep-per-source": 3},
+    "gdelt-events": {"backfill-days": 1, "rows-per-day": 5000},
+}
 
 
 @pytest.mark.live
@@ -48,7 +57,8 @@ SMALL = {
 def test_live_smoke(feed, tmp_path, monkeypatch):
     monkeypatch.setenv("DRISHTI_DATA_DIR", str(tmp_path / "data"))
     spec = FB.load_spec(feed)
-    o = R.RunOptions(business_date=date.today() - timedelta(days=1), load="none", extra_args=SMALL.get(feed, []))
+    o = R.RunOptions(business_date=date.today() - timedelta(days=1), load="none", extra_args=SMALL.get(feed, []),
+                     sets=SMALL_SETS.get(feed, {}))
     logs: list[str] = []
     rc, entry = R.run_feed(spec, o, log=logs.append)
     assert rc == 0, "\n".join(logs[-30:])

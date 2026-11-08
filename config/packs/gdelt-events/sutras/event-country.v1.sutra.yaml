@@ -1,0 +1,64 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Built from the Drishti UI kit only (config/ui-kit/fragments): no screen code of its own.
+rachana: 1
+sutra: event-country
+version: 1
+description: "What the world's news reported about one country yesterday (GDELT): events, tone, conflict, categories, the world map by tone, the top stories."
+doc:
+  summary: "A country's day in the news: events, mentions, average tone and Goldstein scale, conflict share, by CAMEO category, the history, the top stories."
+  description: >-
+    One page per country with enough events on the latest day: the strip gives the day, the events whose first actor is the country,
+    how often they were mentioned, the average tone (mention-weighted; below zero is negative coverage) and its change on the window's
+    average, the average Goldstein scale (-10 conflict to +10 cooperation) and the share of conflict; the chart draws the daily tone over
+    the window; the bars count the day's events by CAMEO category; the map shades every country by tone (a click opens it); the most
+    mentioned stories link to the originals.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/event-country/GDELT-USA"
+    - "GDELT GDELT-USA"
+  since: "2.9.11"
+match: { kind: event-country, priority: 10 }
+title: { pill: Public sector · World events, id: $.EVENT_COUNTRY_ID, with: $.COUNTRY_NAME }
+strip:
+  - { label: Day, bind: $.DATE, fmt: date }
+  - { label: Events, bind: $.EVENTS, fmt: amount0, emphasis: true }
+  - { label: Mentions, bind: $.MENTIONS, fmt: amount0 }
+  - { label: Average tone, bind: $.AVG_TONE, fmt: signed2 }
+  - { label: Tone vs window, bind: $.TONE_CHANGE, fmt: signed2 }
+  - { label: Goldstein, bind: $.AVG_GOLDSTEIN, fmt: signed2 }
+  - { label: "Conflict, %", bind: $.CONFLICT_SHARE, fmt: price2 }
+panels:
+  - { use: series-line@1, with: { id: tone, title: "Average tone by day", key: F2, rows: $.HISTORY, x: DATE, y: AVG_TONE, fmt: signed2 } }
+  - { use: ranked-bars@1, with: { id: categories, title: "The day's events by CAMEO category", key: F3, area: right, rows: $.BY_CATEGORY, label: CATEGORY, value: EVENTS, fmt: amount0 } }
+  - use: region-map@1
+    with: { id: world, title: "Average tone by country (a country opens its page)", key: F4, highlight: $.ISO3, link-kind: event-country,
+            link-id: "GDELT-{iso3}", shade-kind: event-country, shade-field: $.AVG_TONE, shade-by: $.ISO3, shade-fmt: signed2,
+            shade-label: Average tone }
+  - id: stories
+    kind: table
+    title: "The most-mentioned stories (an address opens the original)"
+    key: F5
+    code: TOP
+    rows: $.TOP_STORIES
+    search: false
+    columns:
+      - { label: Mentions, bind: "@.MENTIONS", fmt: amount0 }
+      - { label: Category, bind: "@.CATEGORY" }
+      - { label: Story, bind: "@.URL" }
+  - { use: source-footer@1 }
+keys: { F9: raw }

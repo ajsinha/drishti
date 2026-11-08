@@ -1,0 +1,12 @@
+{
+ "events-20261104-export-CSV-zip-01efcbfb2a88": {
+  "file": "events-20261104-export-CSV-zip-01efcbfb2a88.zip",
+  "note": "the day's real file cut to its first 4000 rows",
+  "url": "https://data.gdeltproject.org/events/20261104.export.CSV.zip"
+ },
+ "events-20261105-export-CSV-zip-7f6f6a427cda": {
+  "file": "events-20261105-export-CSV-zip-7f6f6a427cda.zip",
+  "note": "the day's real file cut to its first 4000 rows",
+  "url": "https://data.gdeltproject.org/events/20261105.export.CSV.zip"
+ }
+}

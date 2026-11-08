@@ -1,0 +1,62 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this page: what the national-statistics pack's kind and fields mean (the README, the contracts and the About card read it).
+about: 1
+vocabulary:
+  provenance: { term: Provenance, means: "Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY." }
+  source: { term: Source, means: "The organisation whose published data the record holds." }
+  dataset: { term: Dataset, means: "The Statistics Canada table and vector the record was built from." }
+  retrieved: { term: Retrieved, means: "The business date of the feed's pull that wrote the record." }
+  licence: { term: Licence, means: "The terms under which the source allows reuse, as recorded in the feed's YAML." }
+  attribution: { term: Attribution, means: "The credit line to repeat when the data is shown or republished." }
+  url: { term: Address, means: "The table's page on the Statistics Canada website." }
+  internal: { term: Internal only, means: "True when the source's terms forbid redistribution outside the organisation (Export data refuses the record)." }
+kinds:
+  statistics-series:
+    title: National statistic
+    about: ${$.TITLE} was ${fmt($.LATEST, 'amount2')} (${$.UNIT}) in ${$.LATEST_PERIOD}, released ${$.RELEASED}.
+    guide: national-statistics
+    glossary:
+      SERIES_ID: { term: Series id, means: "NSTAT-V and the Statistics Canada vector number." }
+      NAME: { term: Name, means: "The series' title in the feed's YAML, as NAME for search." }
+      VECTOR: { term: Vector, means: "The Statistics Canada vector id (v and a number): one series of one table." }
+      TITLE: { term: Title, means: "The series' title in the feed's YAML." }
+      MEMBERS: { term: Members, means: "The table's dimension members that make the series, as Statistics Canada names them (Canada;All-items)." }
+      GEOGRAPHY: { term: Geography, means: "The series' first member: its geography." }
+      TABLE_ID: { term: Table, means: "The Statistics Canada table number (18-10-0004-01)." }
+      TABLE_TITLE: { term: Table title, means: "The table's title in the feed's YAML." }
+      TOPIC: { term: Topic, means: "The theme the feed's YAML gives the series (Prices, Labour, Output, Population, Housing, Money markets)." }
+      FREQUENCY: { term: Frequency, means: "How often the series is published (Statistics Canada's frequency code, or the feed's YAML when it says)." }
+      UNIT: { term: Unit, means: "What the value measures, from the feed's YAML (an index, %, CAD, persons, units)." }
+      SCALE: { term: Scale, means: "The scalar factor the values carry (units, thousands, millions)." }
+      LATEST: { term: Latest, means: "The latest published value, in the unit and scale shown." }
+      LATEST_PERIOD: { term: Period, means: "The reference period of the latest value (its first day)." }
+      PREVIOUS: { term: Previous, means: "The value of the period before." }
+      PREVIOUS_PERIOD: { term: Previous period, means: "The reference period of the previous value." }
+      CHANGE: { term: Change, means: "The latest value less the previous one." }
+      CHANGE_PCT: { term: "Change, %", means: "The change on the period in per cent.", unit: "%" }
+      YEAR_ON_YEAR_PCT: { term: "On the year, %", means: "The change on the same period a year before, in per cent; empty when the history is shorter.", unit: "%" }
+      RELEASED: { term: Released, means: "When Statistics Canada released the latest value (Eastern time)." }
+      HISTORY: { term: History, means: "The value by reference period, oldest first, over the feed's history-periods (PERIOD, VALUE)." }
+      HISTORY.PERIOD: { term: Period, means: "The reference period (its first day)." }
+      HISTORY.VALUE: { term: Value, means: "The published value for that period." }
+      PROVENANCE: { use: provenance }
+      PROVENANCE.SOURCE: { use: source }
+      PROVENANCE.DATASET: { use: dataset }
+      PROVENANCE.RETRIEVED_AT: { use: retrieved }
+      PROVENANCE.LICENCE: { use: licence }
+      PROVENANCE.ATTRIBUTION: { use: attribution }
+      PROVENANCE.URL: { use: url }
+      PROVENANCE.INTERNAL_ONLY: { use: internal }

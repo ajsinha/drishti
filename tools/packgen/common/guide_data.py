@@ -166,6 +166,14 @@ def _origin(s: dict, pack: str, c: dict) -> dict:
     return (p.get("kinds") or {}).get(c["kind"]) or p.get("default") or {}
 
 
+def _feed_lake(o: dict, c: dict, conn: str | None) -> str:
+    """How a feed-filled kind reaches Drishti: its feed, its lake's table, its connector (the samples are never served beside it)."""
+    feed = yaml.safe_load((ROOT / "config" / "feeds" / f"{o['feed']}.yaml").read_text(encoding="utf-8"))
+    st = c.get("storage") or {}
+    return (f"the daily feed `{o['feed']}` → `<data>/delta/{feed['lake']}/{st.get('domain')}/{c['kind']}/` (lake `{feed['lake']}`) → connector "
+            f"`{conn}`; nothing is committed but a few documents in `samples/` for the tests")
+
+
 def retrieval_section(pack: str, items: list[dict]) -> list[str]:
     if not items:
         return []
@@ -194,7 +202,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             origin = "external: " + "; ".join(_ext(s, o["external"]))
             scripts = sorted({_refresh(s["external"][i]) for i in o["external"]})
             origin += " — refreshed by " + ", ".join(f"`{x}`" for x in scripts)
-            lake = None
+            lake = _feed_lake(o, c, conn) if o.get("feed") else None
         elif not o.get("generator"):                # a kind data_retrieval.yaml does not describe (a widened local pack): say so
             origin, lake = "not described in tools/packgen/common/data_retrieval.yaml", None
         else:
@@ -226,7 +234,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
         out += ["### External sources", ""]
         out += table(["Source", "Where", "Licence", "Internal only", "Refresh"], [[
             e["title"], e["url"], e["licence"], "**yes**" if e.get("internal") else "no",
-            f"`python3 tools/drishti.py feed run {e['feed']} -- {e['source']}`" if e.get("feed") else f"`{e['script']}` {e['source']}"]
+            f"`python3 tools/drishti.py feed run {e['feed']}" + (f" -- {e['source']}" if e.get("source") else "") + "`" if e.get("feed") else f"`{e['script']}` {e['source']}"]
             for e in (s["external"][i] for i in used_ext)])
         internal = [s["external"][i]["title"] for i in used_ext if s["external"][i].get("internal")]
         if internal:
@@ -312,7 +320,14 @@ def files() -> dict[Path, str]:
     out = _compute_demo()
     nm = PACKS / "news-and-markets" / "guides" / "news-and-markets.md"
     out[nm] = _block(nm, nm.parents[1])
+    for pack in PUBLIC_SECTOR:                       # the public-sector packs: hand-written guides, this block at their end
+        g = PACKS / pack / "guides" / f"{pack}.md"
+        out[g] = _block(g, g.parents[1])
     return out
+
+
+# the public-sector packs (economy module; docs/guides/PUBLIC_SECTOR_GUIDE.md), whose guides end with the generated block
+PUBLIC_SECTOR = ("world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events")
 
 
 def main(argv: list[str]) -> int:
