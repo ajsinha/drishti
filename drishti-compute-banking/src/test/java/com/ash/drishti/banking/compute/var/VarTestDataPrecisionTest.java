@@ -118,6 +118,9 @@ class VarTestDataPrecisionTest {
 
     /** The same from the normal set's files, or ({@code stress}) from the stress set's. */
     static void fill(VarBook.Builder b, Path data, PositionRules rules, double scale, boolean stress) throws IOException {
+        // MGMT and LEGAL from the trades' promoted columns, as the market-risk pack configures them (the limits are var-limit's: this test
+        // checks the figures)
+        b.columnHierarchies(HierarchyEquivalenceTest.MGMT_LEGAL, Map.of());
         ScenarioFx fx = fx(data, b.width(), stress);
         b.currencyRates(c -> fx.rates(c).orElse(null));                // the per-trade-currency totals (VAR_GUIDE.md section 15.11)
         lines(data.resolve("scenario-pv"), stress, n -> {
@@ -148,18 +151,13 @@ class VarTestDataPrecisionTest {
             }
             add(b, n, rules, v, n.path("PV").asDouble(Double.NaN), null);
         });
-        lines(data.resolve("risk-hierarchy"), n -> {
-            List<String> books = new ArrayList<>();
-            n.path("BOOKS").forEach(x -> books.add(x.asText()));
-            b.node(text(n, "NODE_ID"), text(n, "HIERARCHY"), text(n, "LEVEL"), text(n, "NAME"), text(n, "PARENT_ID"), books,
-                    Double.NaN);                                         // the limits are var-limit's (2.9.7): this test checks the figures
-        });
     }
 
     private static void add(VarBook.Builder b, JsonNode n, PositionRules rules, double[] v, double pvUsd, String pvCurrency) {
-        String[] texts = new String[VarBook.TRADE_TEXTS.size()];
+        List<String> cols = b.textColumns();
+        String[] texts = new String[cols.size()];
         for (int c = 0; c < texts.length; c++) {
-            texts[c] = text(n, VarBook.TRADE_TEXTS.get(c));
+            texts[c] = text(n, cols.get(c));
         }
         String trade = text(n, "TRADE_ID");
         PositionRules.Derived d = rules.derive(trade, text(n, "TT_BOOK"), text(n, "PRODUCT_GROUP"), text(n, "PRODUCT_TYPE"), k -> text(n, k));

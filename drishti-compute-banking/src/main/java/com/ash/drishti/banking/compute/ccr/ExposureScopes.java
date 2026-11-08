@@ -72,7 +72,7 @@ public final class ExposureScopes {
         this.book = book;
         this.groups = groups == null ? g -> Optional.empty() : groups;
         for (com.ash.drishti.banking.compute.var.HierarchySpec s : hierarchies == null ? List.<com.ash.drishti.banking.compute.var.HierarchySpec>of() : hierarchies) {
-            if (s.columns() && s.word() != null) {
+            if (s.word() != null) {
                 words.put(s.word(), s);
             }
         }

@@ -1104,6 +1104,7 @@ public final class VarBook {
         private List<String> cellColumns = List.of();
         private List<HierarchySpec> columnSpecs = List.of();
         private Map<String, Double> columnLimits = Map.of();
+        private Cells.Names columnNames = Cells.Names.NONE;
         private final java.util.Set<String> seen = new java.util.HashSet<>();
         private final List<String[]> nodeRows = new ArrayList<>();
         private final Map<String, List<String>> nodeBooks = new HashMap<>();
@@ -1156,12 +1157,18 @@ public final class VarBook {
         }
 
         /**
-         * The hierarchies built from the trades' columns ({@link HierarchySpec#columns()}): their nodes are derived when the date is built,
+         * The hierarchies, built from the trades' promoted columns ({@link HierarchySpec}): their nodes are derived when the date is built,
          * with the VaR limits of {@code limits} (node id to USD; a node without one has none). Sets the cell columns too.
          */
         public Builder columnHierarchies(List<HierarchySpec> specs, Map<String, Double> limits) {
-            this.columnSpecs = specs.stream().filter(HierarchySpec::columns).toList();
+            return columnHierarchies(specs, limits, Cells.Names.NONE);
+        }
+
+        /** The same, each node named from its reference entity ({@code names}; its own value when there is none). */
+        public Builder columnHierarchies(List<HierarchySpec> specs, Map<String, Double> limits, Cells.Names names) {
+            this.columnSpecs = List.copyOf(specs);
             this.columnLimits = limits == null ? Map.of() : Map.copyOf(limits);
+            this.columnNames = names == null ? Cells.Names.NONE : names;
             return cells(Cells.columns(columnSpecs));
         }
 
@@ -1300,7 +1307,8 @@ public final class VarBook {
             Map<String, List<String>> units = new HashMap<>(nodeBooks);
             Map<String, Double> limits = new HashMap<>(nodeLimits);
             for (HierarchySpec s : columnSpecs) {
-                Cells.derive(s, tcols, cellColumns.isEmpty() ? lay.books() : lay.cells(), columnLimits, rows, units, limits);
+                Cells.derive(s, tcols, cellColumns.isEmpty() ? lay.books() : lay.cells(), lay.books(), columnLimits, columnNames, rows, units,
+                        limits);
             }
             Map<String, Node> nodes = nodes(rows, units, limits, books);
             String[] positionIds = pids.toArray(new String[0]);

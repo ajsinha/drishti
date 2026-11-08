@@ -44,15 +44,18 @@ positions:
       key: [SECURITY_ID, CONTRACT]
     - name: otc                         # everything else: one position per trade
 
-# The hierarchies the VaR and exposure engines build (docs/guides/VAR_GUIDE.md section 16); drishti.var.hierarchies in the
-# server's settings wins over this block. source: risk-hierarchy reads the risk-hierarchy rows (book-based: each node lists its books,
-# with its name); source: columns (the default when levels are given) builds the nodes from the trades' own columns, every
-# distinct path of values a node under one root (LL~BANK), its members the rows (a letter may hold part of a book). ids: path (default,
-# LL~LL-0003/DESK-RATES) or leaf (LL~DESK-RATES, when each value has one parent). word: the scope word naming a node (LL:LL-0003).
-# limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no limit). Every VaR
-# limit lives in var-limit, with its currency (docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes): the risk-hierarchy rows
-# and the portfolios carry none (a portfolio's limit is the var-limit row of hierarchy PORTFOLIO and its id).
+# The hierarchies the VaR and exposure engines build (docs/guides/VAR_GUIDE.md section 15.14), any number of them; drishti.var.hierarchies
+# in the server's settings wins over this block. Every hierarchy is built from the trades' PROMOTED columns: levels names them, top first
+# (each must be in layout.scenario-pv.columns, layout.pnl-vector.columns and layout.exposure-path.columns), and every distinct path of
+# values is a node under one root (MGMT~BANK), its members the rows (a letter may hold part of a book). A row with an empty level value
+# goes under a (Blank) node at that level (empty-label:, else drishti.var.hierarchy.empty-label). level-names: the level of each column's
+# nodes, also the reference kind their display names are read from (desk, book, legal-entity; the value itself when there is none).
+# ids: path (default, LL~LL-0003/DESK-RATES) or leaf (MGMT~DESK-RATES, when each value has one parent). word: the scope word naming a
+# node (LL:LL-0003). limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no
+# limit). Every VaR limit lives in var-limit, with its currency (docs/architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes).
 hierarchies:
-  MGMT: { title: Management, source: risk-hierarchy, limits: var-limit }
-  LEGAL: { title: Legal entities, source: risk-hierarchy, limits: var-limit }
+  MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
+          root: { id: BANK, name: Drishti Bank }, limits: var-limit }
+  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf,
+           root: { id: BANK, name: Drishti Bank }, limits: var-limit }
   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }

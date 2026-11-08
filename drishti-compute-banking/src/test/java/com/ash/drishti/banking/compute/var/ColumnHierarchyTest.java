@@ -43,8 +43,8 @@ import org.junit.jupiter.api.io.TempDir;
 class ColumnHierarchyTest {
 
     static final int W = SyntheticBank.WIDTH;
-    static final HierarchySpec LL = new HierarchySpec("LL", "Limit letters", "columns", List.of("LIMIT_LETTER", "DESK"), null, null, null,
-            false, "LL", "var-limit");
+    static final HierarchySpec LL = new HierarchySpec("LL", "Limit letters", List.of("LIMIT_LETTER", "DESK"), null, null, null,
+            false, "LL", "var-limit", null);
     static ParallelSums sums;
     @TempDir
     static Path dir;
@@ -195,12 +195,12 @@ class ColumnHierarchyTest {
 
     @Test
     void leafIdsAreRefusedWhenAValueHasTwoParents() {
-        HierarchySpec leaf = new HierarchySpec("LL", "Limit letters", "columns", List.of("LIMIT_LETTER", "DESK"), null, null, null, true, "LL", null);
+        HierarchySpec leaf = new HierarchySpec("LL", "Limit letters", List.of("LIMIT_LETTER", "DESK"), null, null, null, true, "LL", null, null);
         // DESK-A sits under LL-1 and LL-2
         assertThatThrownBy(() -> build(TRADES, null, List.of(leaf))).isInstanceOf(IllegalStateException.class).hasMessageContaining("DESK-A")
                 .hasMessageContaining("ids: path");
         // a tree where each value has one parent: leaf ids work
-        HierarchySpec deskBook = new HierarchySpec("DB", "Desks", "columns", List.of("DESK", "TT_BOOK"), null, null, null, true, "DB", null);
+        HierarchySpec deskBook = new HierarchySpec("DB", "Desks", List.of("DESK", "TT_BOOK"), null, null, null, true, "DB", null, null);
         VarBook b = build(TRADES, null, List.of(deskBook));
         assertThat(b.node("DB~BOOK-0").parent()).isEqualTo("DB~DESK-A");
         assertThat(b.node("DB~BOOK-0").members()).isEqualTo(b.node("MGMT~BOOK-0").members());

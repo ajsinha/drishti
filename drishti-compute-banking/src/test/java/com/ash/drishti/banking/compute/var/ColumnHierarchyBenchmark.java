@@ -44,7 +44,7 @@ class ColumnHierarchyBenchmark {
                 v[t][j] = Math.rint(1e4 * r.nextGaussian());
             }
         }
-        HierarchySpec ll = new HierarchySpec("LL", "Limit letters", "columns", List.of("LIMIT_LETTER", "DESK"), null, null, null, false, "LL", null);
+        HierarchySpec ll = new HierarchySpec("LL", "Limit letters", List.of("LIMIT_LETTER", "DESK"), null, null, null, false, "LL", null, null);
         try (ParallelSums sums = new ParallelSums(4, 4096)) {
             for (int round = 0; round < 3; round++) {
                 long[] plain = run(v, List.of(), sums);
