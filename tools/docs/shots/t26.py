@@ -22,8 +22,7 @@ The pictures, in the tutorial's order: the bank, a legal entity's counterparty b
 collateral and trades, a trade alone and in its set, a capture compared with now, a pre-deal what-if by paths and by the addon."""
 from __future__ import annotations
 
-from _exp import open_exp, painted, start_servers, tab
-from _var import choose  # noqa: F401 - start_servers is the driver's hook
+from _exp import open_exp, painted, predeal_check, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
 from _tut import OUT
 from shotlib import Ctx, register
 
@@ -99,23 +98,11 @@ def capture(c: Ctx):
     c.save("07-capture-compare.jpg", locator=".xx-main")
 
 
-def _whatif(c: Ctx, method: str, name: str):
-    open_exp(c, "/exposure?scope=" + SET)
-    painted(c, SET)
-    tab(c, "predeal")
-    c.page.locator("[data-xx-factor]").fill("-1")
-    choose(c, "[data-xx-method]", method)
-    c.page.locator("[data-xx-whatif]").click()
-    c.until("document.querySelector('[data-exposure]').dataset.whatif === %r" % method, 120)
-    c.page.wait_for_timeout(600)
-    c.save(name, locator=".xx-main")
-
-
 @shot("08-predeal-paths.jpg")
 def predeal_paths(c: Ctx):
-    _whatif(c, "paths", "08-predeal-paths.jpg")
+    predeal_check(c, "PREDEAL CP-ALDERSHOT LIKE MX-30001587 REVERSE IN NS-ALDERSHOT-LDN", "08-predeal-paths.jpg")
 
 
 @shot("09-predeal-addon.jpg")
 def predeal_addon(c: Ctx):
-    _whatif(c, "addon", "09-predeal-addon.jpg")
+    predeal_check(c, "PREDEAL CP-ALDERSHOT EQUITY 768495000 2031-10-20 MTM 9227785", "09-predeal-addon.jpg")

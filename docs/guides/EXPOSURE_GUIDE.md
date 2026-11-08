@@ -301,7 +301,9 @@ On a phone the panels stack: the command line, the tree, then the tiles and the 
   the dates that keep today's collateral (no look-back point after today).
 - **Trades** (netting set): every trade, 25 a page, by EE contribution at the set's peak date (read from the lake on request): product,
   desk, EE contribution, share, **peak PFE alone**; a row opens the trade's exposure, its id opens `TRD`.
-- **Pre-deal** (netting set and counterparty): the pre-deal what-if form, [section 7](#7-pre-deal-what-if); on a counterparty it first asks which of its netting sets the new trade goes into.
+- **Pre-deal check ›** (a button under the tabs, at a counterparty and at a netting set): opens **Counterparties → Pre-deal check** at
+  that counterparty or netting set, [section 7](#7-pre-deal-what-if). The explorer has no pre-deal form of its own: the check is one
+  screen, and an old link to the explorer's Pre-deal tab (`/exposure?scope=…&tab=predeal`) opens it.
 - **By tenor**: the profile as a table (EE, ENE, EEE, PFE at q, PFE 99%, EE uncollateralised per tenor), with the CSV link and the CLI and
   API equivalents.
 - **Captures**: capture now with a note, the scope's captures (id, date, captured, by, peak PFE, EPE, note), **Compare with now**,
@@ -309,7 +311,7 @@ On a phone the panels stack: the command line, the tree, then the tiles and the 
 
 ![NS-ALDERSHOT-LDN's Collateral tab: the CSA's terms, posted collateral and its effect at the peak tenor](img/exp/03-collateral.jpg)
 
-![Pre-deal on NS-ALDERSHOT-LDN: an unwind by the exact paths method, the incremental PFE by tenor](img/exp/05-predeal.jpg)
+![Counterparties → Pre-deal check: the unwind of a booked trade into NS-ALDERSHOT-LDN by the exact paths method, the verdict, the limit and its buckets, the overlay and the incremental PFE by tenor](img/exp/05-predeal.jpg)
 
 ![A capture of CP-ALDERSHOT compared with now](img/exp/06-capture-compare.jpg)
 
@@ -421,7 +423,7 @@ field: value` lines and then the profile.
 **Both methods run in the server's exposure engine**, wherever exposure runs: no compute pool, no worker, no setting of their own.
 
 **The candidate.** A candidate's paths are one of:
-- `{copyOf: <trade>, factor}`: a booked trade's paths on the run, scaled (`factor: -1` is its unwind) — what the explorer and
+- `{copyOf: <trade>, factor}`: a booked trade's paths on the run, scaled (`factor: -1` is its unwind) — what the pre-deal check (`LIKE`) and
   `--like` use;
 - `{runId, mtm}`: G lists of P numbers (or one list of G × P, grid-date-major);
 - `{runId, arrow}`: base64 Arrow IPC with `GRID_INDEX` and `MTM` as a fixed-size list of P.
@@ -430,20 +432,35 @@ Paths of another run or another length are refused (`400 DRS-5442`). A candidate
 collateral with it); without, it is a netting set of its own, uncollateralised. For `addon` give `assetClass`, `notional`,
 `maturityDate`, `mtm` and `delta`.
 
-**In the explorer** (a netting set's **Pre-deal** tab): *Candidate: like trade* (one of the set's trades), *Factor* (−1: its unwind),
-*Method* (`paths (exact, the same run)` or `addon (conservative proxy)`), *Figures of* (its counterparty, the credit limit's scope, or this
-netting set), **Run what-if**. The chip says **exact** or **proxy** and the time; the answer: peak PFE before and after, the incremental
-(red when it adds), EPE before and after, the limit headroom after (when q is the limit's confidence) and a per-tenor table of EE and
-PFE before and after with the incremental PFE.
+**On the screen: Counterparties → Pre-deal check** (`PREDEAL <GO>`, the menu Counterparties, or **Pre-deal check ›** in the explorer
+at a counterparty or a netting set; `/predeal`). One screen for the question, built on the Drishti Elements libraries; every number on it
+is the server's pre-deal check ([section 18.9](#189-the-pre-deal-check)), the page only places them.
 
-**On a counterparty** (its **Pre-deal** tab): the same pre-deal what-if, with one field more, *Into the netting set*: the
-counterparty's netting sets, the largest by peak PFE first (picked by default); the candidates are that set's trades, and changing the
-set lists its trades. *Figures of* is **this counterparty** (the credit limit's scope, the default) or the netting set picked. The
-answer has the same layout as the netting set's tab: before, after, the incremental, the limit headroom and the table by tenor.
+- **The trade** (a form, on the right): *Counterparty* (those you see, the largest peak PFE first, each with its limit use), *Into the
+  netting set* (the counterparty's; left empty, the server takes the template's or the only one), *The trade is* **like a booked trade
+  (exact)** or **described (proxy, only refers)**; like a trade: *Like the trade* (the netting set's trades, the largest EE contribution
+  first), the *Side* (the template's, or the other side: reverse); described: *Asset class* and *Maturity*; then the *Notional* (money:
+  `250m`, `1.5bn`, `400k`; blank copies the template as it is) and the *MtM today*. **Check** asks the server.
+- **The verdict**: the decision (**approve**, **refer**, **decline**) with its lamp, the limit's status (**within**, **near the limit**
+  from `limit-near` of it, 80% by default, or **over the limit**), the reason and every other reason; the tiles: the new trade, the limit
+  use before → after with its status, the headroom after (and before), the incremental figure the limit is set on, EPE before → after,
+  the EAD (IMM, α × EEPE) before → after (the exact method only), SA-CCR's incremental EAD (under construction, 2.9.11.k); the table of
+  the limit and each tenor bucket: limit, before, with the trade, increment, use before and after, headroom and status.
+- **Explain ›** (or a tile, or **E**): the one Explain of the check (kind `predeal`): the formula with its values (use = with ÷ limit,
+  headroom = limit − with, each bucket, the near rule, EAD = α × EEPE, the decision rule), the inputs (the command, the netting set and how
+  it was chosen, the method, the template) and the checks (the reasons). A figure of a table explains itself in the table's own pane.
+- **The what-if**: the profile overlay (PFE with the trade over PFE before, EE with and before, EEPE, the limit line when the limit is on
+  PFE), the incremental PFE per tenor as bars, the figures current and with the trade (peak PFE, EPE, EEPE, peak EE, CE, EAD) and the
+  table by tenor. Under the verdict the same check as a command line: `drishti.py exposure predeal "PREDEAL …"`.
 
-![Pre-deal on CP-ALDERSHOT: the netting set picked, a booked trade's unwind by the exact paths method, the counterparty's figures before and after](img/exp/09-predeal-counterparty.jpg)
+A typed command checks at once: `PREDEAL CP-ALDERSHOT LIKE MX-30001587 REVERSE IN NS-ALDERSHOT-LDN <GO>` opens the screen with that check
+made and the form filled from it. On a phone the screen stacks: the verdict first, then the trade, the charts and the tables (a wide
+table scrolls inside its card). With the banking module off the screen, its word and its script are gone.
 
-`--method addon`, or `--candidates new-swap.json`. **API**: `POST /api/v1/risk/exposure/what-if`, [section 11](#11-the-api).
+![Pre-deal check opened from CP-ALDERSHOT in the explorer: the form at the counterparty, its netting sets and the trades to copy](img/exp/09-predeal-counterparty.jpg)
+
+The what-if alone, without a limit or a decision, is the API's and the command line's (`drishti.py exposure whatif --like <trade>
+--factor -1 --set <netting set>`, `--method addon`, or `--candidates new-swap.json`). **API**: `POST /api/v1/risk/exposure/what-if`, [section 11](#11-the-api).
 
 **How the exact method computes**: the engine reads the scope and each netting set a candidate joins as the asking person (their
 entitlements apply; a set must be one the scope covers whole), adds each candidate's paths to its set's value V path by path, computes
@@ -799,6 +816,7 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 |---|---|---|
 | `confidence` | `[0.95, 0.99]` | PFE confidences computed (any q may be asked per request) |
 | `limit-confidence` | `0.95` | the PFE that LIM uses by default |
+| `limit-near` | `0.8` | the pre-deal check says **near** from this share of the limit or of a tenor bucket's limit (still within; over 100% a breach), §18.9 |
 | `rank-rule` | `kth` | §17 |
 | `collateral-model` | `lagged` | `lagged` (§18.3), `current` (today's collateral held constant), `none` |
 | `im-model` | `current` | initial margin held kept at today's amount on every path, `none`; [SIMM.md](../contracts/SIMM.md) paths later |
@@ -995,6 +1013,10 @@ The same request as fields: `{"command": "PREDEAL CP-ALDERSHOT LIKE 1000001 250M
 against those figures. Each tenor bucket (`0-1Y`, `1-3Y`, `3-5Y`, `5-10Y`, `10Y+`; `3M-1Y` and the like) is held against its own limit:
 the profile's peak among the primary dates in the bucket, before and after.
 
+**Within, near or over.** The limit and each bucket say `within`, `near` (from `limit-near` of its limit, 0.8 by default: still within,
+said in amber, and the approve reason says which: *near the limit (80.0% or more of it: the 0-1Y bucket at 90.0% of its limit)*) or
+`breach` (over 100%). Near never changes the decision; it is the warning before the limit.
+
 **The decision** (in this order):
 
 | Decision | When |
@@ -1010,8 +1032,10 @@ trade by trade (`403`); a template not on the date's run is `404 DRS-1001`; a ne
 or `addon`, `exact`, `name`, `text`: how it was computed), `template` (the trade copied: id, product, asset class, notional, maturity,
 counterparty, netting set, MtM, the `factor`, `side`, the candidate's notional and MtM; or the trade described), `nettingSet` (`id`,
 `how`: named, the template's, the counterparty's only, its own; `sets`), `limit` (`id`, `measure`, `confidence`, `limit`, `before`,
-`after`, `increment`, `useBefore`, `useAfter`, `headroomAfter`, `status`, `buckets[]` with `bucket`, `limit`, `before`, `after`,
-`useAfter`, `status`), `exposure` (`base`, `with`, `incremental` with the profile, as section 18.7), `saCcr` (SA-CCR's incremental EAD:
+`after`, `increment`, `useBefore`, `useAfter`, `headroomBefore`, `headroomAfter`, `near`, `status` (`within`, `near`, `breach`),
+`buckets[]` with `bucket`, `limit`, `before`, `after`, `increment`, `useBefore`, `useAfter`, `headroomAfter`, `status`), `exposure`
+(`base`, `with`, `incremental` with the profile, as section 18.7; with the exact method also `ead`, the IMM EAD α × EEPE, in each, and
+`alpha`), `saCcr` (SA-CCR's incremental EAD:
 **under construction**, release 2.9.11.k), `flags`, `businessDate`, `runId`, `confidence`, `engine`.
 
 **Entitlements and audit.** The check is computed as the person asking: the counterparty's netting sets they see (others left out and
@@ -1019,15 +1043,20 @@ the answer refers), a template only of a trade they see trade by trade; nothing 
 at the same time get their own answers). Every check is audited (`ccr-predeal`: the person, the counterparty scope, the check id, the
 decision, the method, the command and the limit use), the what-if inside it is not audited twice.
 
-**Where**: `POST /api/v1/risk/exposure/predeal` and `GET /api/v1/risk/exposure/predeal/grammar` (section 11); `drishti.py exposure predeal
-"PREDEAL CP-ALDERSHOT LIKE 1000001 250M"`; the Trading landing's new-trade check (its exposure half is this check). The screen,
-**Counterparties → Pre-deal check**, is under construction: it is built on the Drishti Elements libraries; until then `PREDEAL` typed in
-the console says so and names the API and the command line. SA-CCR's incremental EAD and the other limits a trade touches (soft and hard
+**Explain.** The one Explain explains a check (kind `predeal`, measures `decision`, `headroom`, `increment`, `ead`; arguments the
+`command` as the check wrote it back, or its fields, and `date`): it makes the same check again as the person asks, so the same numbers,
+and does not audit it a second time (`ExposurePreDealExplainer`).
+
+**Where**: the screen **Counterparties → Pre-deal check** (`PREDEAL <GO>`, `/predeal`, [section 7](#7-pre-deal-what-if));
+`POST /api/v1/risk/exposure/predeal` and `GET /api/v1/risk/exposure/predeal/grammar` (section 11); `drishti.py exposure predeal
+"PREDEAL CP-ALDERSHOT LIKE 1000001 250M"`; the Trading landing's new-trade check (its exposure half is this check). SA-CCR's incremental EAD and the other limits a trade touches (soft and hard
 limits, warnings, the maximum size: [LIM.md section 6.4](../contracts/LIM.md#64-pre-deal-check)) come with release 2.9.11.k.
 
 **Tests**: `ExposurePreDealApiTest` (the what-if equal to the full recompute with the trade booked, figure by figure and date by date;
 approve, decline on the limit and on a bucket, refer on a proxy, no limit, a measure not computed and no exposure; two people at once
-with their own entitlements; the grammar; the audit).
+with their own entitlements; the grammar; the audit; the EAD and the Explain, not audited again), `ExposurePreDealLimitTest` (within,
+near and breach on the limit and on a bucket, the headroom, the EAD), and the screen's `tests/test_predeal_browser.py` (each verdict,
+a proxy, the form, Explain, a phone, the banking module off).
 
 ## 19. What Drishti answers
 
