@@ -243,6 +243,29 @@
   drishti-grid's select cell editor opens a `Select` on the value (a pick saves; `Select` gains a `pick` event); FRTB-SA's and SIMM's
   playground choices (method switches, *Compare with*, *By*, *Side*) are `<drishti-select>`s. Tests pick through `tests/select_helpers.py`;
   Playwright's `select_option` and `input_value` work on a `<drishti-select>` (installed by `conftest.py`).
+- **One outline** ([ELEMENTS.md section 8.8](docs/architecture/ELEMENTS.md#88-as-built-drishti-graph-and-drishti-tree)): drishti-designer's own
+  outline (`drishti_outline.js`, 286 lines) is folded into drishti-tree's `TreeOutline` and deleted; the kit re-exports it as `Outline`
+  (drishti-designer 0.2.0 requires drishti-tree 0.2.0; `_designer_kit.html` loads drishti-tree). `TreeOutline` (292 → 526 lines) takes
+  nested nodes (`nodes`, `setNodes`: a detail, an icon, `fixed` rows that are drop places, the host's class and `data-*` on each row, every
+  row's `data-node`), follows a `Selection` both ways, and moves by drag (before, after, inside) or Alt+arrows with the host's `canDrop`
+  (`move`, `open`, `toggle` events); a node that gains children opens. The Sutra designer's Outline mode and the kit's harness use it;
+  the tests read `.dt-oname` and `.dt-odetail`. `tools/docs/elements_api.py` and `tools/elements/dts.py` follow a name re-exported under
+  another (`TreeOutline as Outline`).
+- **The workbench's menus on drishti-inputs** (Add panel, Bind field, File, Ship, the command palette, a dropped field's kinds): `Listbox`
+  under a search ranked by `searchOptions`, placed by drishti-core (`build/drishti_menus.js` 132 → 119 lines; the hand-made listbox and
+  its CSS deleted). `Listbox` gains `followActive`; `searchOptions` ranks a label that is the word first.
+- **Admin forms, part 1, on the one server-drawn form** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
+  Collaboration (search, holds, export, verify, the list toggles, a comment's hide reason), Data loads (the filter embedded in its GET
+  form, Announce, Expectations with a repeatable row per kind), Embedding (filter, new application, the secret, rotate) and Lakes ›
+  Maintain (the choices, settings, a new schedule) are drawn by the same machinery as part 2: `core/form_kit.py`'s field helpers, the one
+  `admin_form` registry in `core/admin_forms.py`, `data-di-form` + `data-schema` and drishti-inputs' `formOf`. The two parallel
+  machineries are folded into one: `core/form_schema.py` and `formFromData` deleted, the alert form (`core/alert_form.py`) on the same host and
+  `form_kit`; `formOf` called again with a page's options (`onSubmit`, `check`) adds them to the Form already drawn. Lakes › Maintain's
+  per-row picks are drishti-grid's row selection (a column of checkboxes, *Select all* in its head). A new guard
+  (`test_admin_forms_guard.py`): no Admin template writes a raw `<input>`, `<select>` or `<textarea>`; its allow-list is empty.
+- **Fixed: an unchecked "Active" saved as active.** The alert form, a scheduled report and a subscription read a missing `enabled` field
+  (an unchecked checkbox is not sent) as on; now as off, and the subscribe form drawn again after a refusal keeps the box as it was. Tests
+  in `test_alert_routes.py` and `test_dist_routes.py`.
 - **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
   field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice

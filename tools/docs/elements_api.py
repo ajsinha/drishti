@@ -91,17 +91,33 @@ def parse_doc(block: str) -> dict:
     return d
 
 
-def origin(name: str, module: Path, seen: int = 0) -> Path:
-    """The module that declares a name a module re-exports (a chain of ``export { a } from``, across libraries too: drishti-chart
-    re-exports drishti-core's visual theme, documented where it is written)."""
+# (public name, declaring module) -> the name it is declared under there, for a name re-exported under another one
+# (drishti-designer's Outline is drishti-tree's TreeOutline)
+DECLARED: dict[tuple[str, str], str] = {}
+
+
+def resolve(name: str, module: Path, seen: int = 0) -> tuple[Path, str]:
+    """The module that declares a name a module re-exports and the name it is declared under (a chain of ``export { a } from`` and
+    ``export { a as b } from``, across libraries too: drishti-chart re-exports drishti-core's visual theme, documented where it is
+    written)."""
     if seen > 8:
-        return module
+        return module, name
     for m in EXPORT_LIST.finditer(module.read_text(encoding="utf-8")):
         for part in m.group(1).split(","):
             part = part.strip()
             if part and part.split(" as ")[-1].strip() == name:
-                return origin(part.split(" as ")[0].strip(), (module.parent / m.group(2)).resolve(), seen + 1)
-    return module
+                return resolve(part.split(" as ")[0].strip(), (module.parent / m.group(2)).resolve(), seen + 1)
+    return module, name
+
+
+def origin(name: str, module: Path, seen: int = 0) -> Path:
+    """The module that declares a name a module re-exports."""
+    return resolve(name, module, seen)[0]
+
+
+def declared(name: str, module: Path) -> str:
+    """The name a public name is declared under in its module (itself unless re-exported under another name)."""
+    return DECLARED.get((name, str(module)), name)
 
 
 def exports_of(entry: Path) -> list[tuple[str, Path]]:
@@ -112,7 +128,11 @@ def exports_of(entry: Path) -> list[tuple[str, Path]]:
         for part in m.group(1).split(","):
             part = part.strip()
             if part:
-                out.append((part.split(" as ")[-1].strip(), origin(part.split(" as ")[0].strip(), (entry.parent / m.group(2)).resolve())))
+                public = part.split(" as ")[-1].strip()
+                module, own = resolve(part.split(" as ")[0].strip(), (entry.parent / m.group(2)).resolve())
+                if own != public:
+                    DECLARED[(public, str(module))] = own
+                out.append((public, module))
     for m in ANY_DECL.finditer(text):
         out.append((m.group(1) or m.group(2) or m.group(3), entry))
     return out
@@ -134,9 +154,10 @@ def class_body(text: str, start: int) -> str:
 def symbol(name: str, module: Path, problems: list[str]) -> dict | None:
     text = module.read_text(encoding="utf-8")
     where = module.relative_to(ROOT)
+    own = declared(name, module)
     for m in DOC_DECL.finditer(text):
         fn, cls, const = m.group(4), m.group(6), m.group(7)
-        if name not in (fn, cls, const):
+        if own not in (fn, cls, const):
             continue
         if m.group(1).count("/**"):
             continue

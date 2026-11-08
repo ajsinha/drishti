@@ -14,20 +14,27 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The outline: a tree (Tree, its grid mode, chrome: false) inside a narrow panel of an authoring screen that has its own filter box and
-   buttons (a structure browser, a field list). One engine and one grid; the outline adds the panel's part. Marks after a node's label
-   (a type, a badge with a tone and a title, a share), drawn through the tree grid's labelColumn hook; a class on a node's row; a filter
-   that keeps the matches and the nodes above them (the rest leave the tree; their open state is remembered); the keys of a tree on the
-   rows (arrows, Home and End, Right and Left to open, close and go up; Enter or Space: a node with children opens or closes, a node
-   without shows its detail); and the detail: the host's words about a node in a box under the tree (Enter, a click; Enter again or
-   Escape closes it). The host's own keys on a node come first (onKey). Every text goes in as text, never as HTML.
+   buttons (a structure browser, a field list, a design's pages and visuals, a screen's sections and panels). One engine and one grid;
+   the outline adds the panel's part. Marks after a node's label (a type, a badge with a tone and a title, a share), drawn through the
+   tree grid's labelColumn hook; a class and data-* attributes on a node's row; a filter that keeps the matches and the nodes above them
+   (the rest leave the tree; their open state is remembered); the keys of a tree on the rows (arrows, Home and End, Right and Left to
+   open, close and go up; Enter or Space: a node with children opens or closes, a node without shows its detail and is "opened"); and
+   the detail: the host's words about a node in a box under the tree (Enter, a click; Enter again or Escape closes it). The host's own
+   keys on a node come first (onKey). Every text goes in as text, never as HTML.
+   For a designer it also follows a Selection both ways (drishti-designer's: a click or the arrows pick, Shift or Ctrl add; a pick
+   elsewhere shows and marks the rows), and moves: a row dragged to a line between rows (before, after) or onto a row (inside), or
+   moved with the keys (Alt+Up and Alt+Down among its siblings, Alt+Right into the node before it, Alt+Left out of its parent). The
+   host decides whether a move is allowed (canDrop) and does it ("move" event); moveNode is the move on plain nested nodes for a host
+   that keeps its tree itself. A fixed node (a heading, a "drop here" row) is never dragged and is still a place to drop on.
    A field list (the BI designer's Fields pane) adds: a node's line as a button that does the node's job (button: a click or the host's
    Enter adds the field; its data-* attributes are the host's selectors; wire gives the host the button, for a drag), a mark that is a
    link (href) or carries the host's data-* attributes, small buttons after the line (actions: remove a dataset), branches that start
    closed (startOpen) and the node's column as wide as the panel (fill). */
-import { h, announce } from '../../drishti-core/src/drishti_index.js';
+import { h, announce, EventBus, trackPointer } from '../../drishti-core/src/drishti_index.js';
 import { HierarchyModel } from './drishti_tree-model.js';
 import { keyMove } from './drishti_tree-io.js';
 import { Tree } from './drishti_tree-view.js';
+import { nodesSource, rowDataset } from './drishti_tree-nodes.js';
 
 /** The tones a mark may take. */
 export const OUTLINE_TONES = Object.freeze(['muted', 'accent', 'link', 'good', 'warn', 'bad']);
@@ -62,7 +69,8 @@ const dataAttrs = (a) => { const out = {}; Object.keys(a || {}).forEach((k) => {
 /**
  * The options of an outline.
  * @typedef {Object} OutlineOptions
- * @property {import('./drishti_tree-model.js').HierarchySource} data the hierarchy (rows with parents, a nested root, or paths)
+ * @property {import('./drishti_tree-model.js').HierarchySource} [data] the hierarchy (rows with parents, a nested root, or paths)
+ * @property {OutlineNode[]} [nodes] or the hierarchy as nested nodes (a designer's structure); neither: an empty outline (setNodes later)
  * @property {string} [title='Node'] the grid's heading
  * @property {string} [label] its name for a screen reader (default: the title)
  * @property {('comfortable'|'compact'|'terminal')} [density='compact']
@@ -86,6 +94,12 @@ const dataAttrs = (a) => { const out = {}; Object.keys(a || {}).forEach((k) => {
  * @property {function(import('./drishti_tree-model.js').TreeNode): OutlineAction[]} [actions] small buttons after a node's line
  * @property {function(import('./drishti_tree-model.js').TreeNode): boolean} [startOpen] false: the branch starts closed (a date's parts)
  * @property {boolean} [fill=false] the node's column as wide as the panel (it follows the panel's width)
+ * @property {boolean} [mono] the node's name in the monospace face (default: true with data, false with nodes)
+ * @property {Object} [selection] a Selection to follow both ways (drishti-designer's: pick, set, list, has, primary, on('change'))
+ * @property {function(string, string, string): (boolean|string)} [canDrop] canDrop(id, target, where): true, false, or why not in words;
+ *   without it a node may go anywhere but inside itself
+ * @property {boolean} [movable] rows may be dragged and moved with Alt+arrows (default: true when canDrop or selection is given)
+ * @property {boolean} [readOnly=false] no moves (a design that cannot change)
  */
 
 /**
@@ -128,9 +142,13 @@ export function outlineKey(key, model, order, at) {
 }
 
 const OID = '__oid', OPARENT = '__oparent', OLABEL = '__olabel', OKIND = '__okind';
+const DROPS = ['dt-drop-before', 'dt-drop-after', 'dt-drop-inside'];
 
 /**
- * The outline: a hierarchy as a compact tree grid (a Tree without its chrome), with marks, a hiding filter, a tree's keys and a detail.
+ * The outline: a hierarchy as a compact tree grid (a Tree without its chrome), with marks, a hiding filter, a tree's keys and a detail;
+ * for a designer, a Selection followed both ways and moves by drag or Alt+arrows. Its rows carry data-node (the node's id) and the
+ * host's data-* attributes. Events (on): move {id, target, where, parent}, open {id} (Enter on a node without children, a double
+ * click), toggle {id, open}.
  */
 export class TreeOutline {
   /**
@@ -140,9 +158,14 @@ export class TreeOutline {
   constructor(host, options) {
     if (!host || !host.ownerDocument) { throw new Error('an outline needs an element to fill'); }
     const o = this.o = Object.assign({ title: 'Node', labelWidth: 480, openDepth: -1, fitRows: 24 }, options);
-    if (!o.data) { throw new Error('an outline needs data (rows, root or getPath)'); }
+    if (!o.data) { o.data = nodesSource(o.nodes || []); if (o.mono === undefined) { o.mono = false; } }
     this.host = host;
     this.doc = host.ownerDocument;
+    this.events = new EventBus();
+    this.sel = o.selection || null;
+    this.movable = !o.readOnly && (o.movable !== undefined ? !!o.movable : !!(o.canDrop || o.selection));
+    this.syncing = false;
+    this.mods = false;
     /** @type {HierarchyModel} every node, whatever the filter keeps */
     this.full = new HierarchyModel(o.data);
     this.keep = null;
@@ -158,10 +181,24 @@ export class TreeOutline {
     /** @type {Tree} the tree drawn (grid mode, no chrome) */
     this.tree = new Tree(this.treeBox, { data: this.source(), chrome: false, modes: ['grid'], title: o.title, label: o.label || o.title, density: o.density,
       openDepth: o.openDepth, grid: { fitRows: o.fitRows, phoneWidth: 1, labelColumn: { width: o.labelWidth, cellRenderer: (p) => this.labelCell(p) },
-        rowClass: o.rowClass ? (r) => { const n = this.full.node(r.__id); return n ? o.rowClass(n) : null; } : undefined } });
-    this.offSel = this.tree.on('selectionChanged', (p) => { if (p.ids && p.ids.length) { this.showDetail(p.ids[0]); } });
+        rowClass: (r) => this.rowClass(r.__id), rowData: (r) => { const n = this.full.node(r.__id); return n ? Object.assign(rowDataset(n.data.attrs), { node: n.id }) : null; } } });
+    this.offs = [
+      this.tree.on('selectionChanged', (p) => {
+        if (!p.ids || !p.ids.length) { return; }
+        if (this.sel && !this.syncing) { this.sel.pick(p.ids[0], this.mods, 'outline'); }
+        this.showDetail(p.ids[0]);
+      }),
+      this.tree.on('nodeExpanded', (p) => this.events.emit('toggle', { id: p.id, open: true })),
+      this.tree.on('nodeCollapsed', (p) => this.events.emit('toggle', { id: p.id, open: false }))
+    ];
+    if (this.sel) { this.offs.push(this.sel.on('change', (x) => { if (x.source !== 'outline') { this.follow(); } else { this.repaint(); } })); }
     this.onKeyDown = (e) => this.key(e);
+    this.onDown = (e) => { this.mods = !!(e.shiftKey || e.ctrlKey || e.metaKey); this.dragStart(e); };
+    this.onDbl = (e) => { const n = this.nodeAt(e.target); if (n) { this.events.emit('open', { id: n.id }); } };
     host.addEventListener('keydown', this.onKeyDown, true);
+    host.addEventListener('pointerdown', this.onDown);
+    host.addEventListener('dblclick', this.onDbl);
+    if (this.sel) { this.follow(); }
     this.closeStarters(this.full.all());
     const win = this.doc.defaultView;
     if (o.fill && win && win.ResizeObserver) {
@@ -186,6 +223,39 @@ export class TreeOutline {
     if (col && Math.abs(col.width - w) > 1) { g.grid.model.columns.setWidth(col.id, w); }
   }
 
+  /**
+   * Listens to one of its events (move, open, toggle); answers the function that stops listening.
+   * @param {string} name
+   * @param {function(Object): void} fn
+   * @returns {function(): void}
+   */
+  on(name, fn) { return this.events.on(name, fn); }
+
+  /**
+   * New nested nodes (the design changed): the open state kept, the filter applied again, the selection shown.
+   * @param {OutlineNode[]} nodes
+   * @returns {void}
+   */
+  setNodes(nodes) { this.setData(nodesSource(nodes)); if (this.sel) { this.follow(); } }
+
+  /** @private the rows drawn again (their classes: a pick, a drop) */
+  repaint() { if (this.tree.grid) { this.tree.grid.repaint(); } }
+
+  /** @private a node's row classes: the host's, its own (cls), fixed, picked in the selection */
+  rowClass(id) {
+    const n = this.full.node(id);
+    if (!n) { return null; }
+    const c = [this.o.rowClass ? this.o.rowClass(n) : null, n.data.cls || null, n.data.fixed ? 'dt-fixed' : null, this.sel && this.sel.has(n.id) ? 'dt-picked' : null];
+    return c.filter(Boolean).join(' ') || null;
+  }
+
+  /** @private the selection changed elsewhere (a canvas, the YAML): its primary shown and focused, every picked row marked */
+  follow() {
+    const p = this.sel.primary(), t = this.tree;
+    this.syncing = true;
+    try { if (p && t.model.node(p) && t.selected !== p) { t.select(p, { silent: true }); } } finally { this.syncing = false; }
+    this.repaint();
+  }
   /** @private the tree's rows: the kept nodes, each with its node's own row */
   source() {
     const keep = this.keep;
@@ -201,11 +271,13 @@ export class TreeOutline {
   labelCell(p) {
     const n = p.row ? this.full.node(p.row.__id) : null;
     if (!n) { return null; }
-    const o = this.o, doc = p.doc, marks = o.marks ? o.marks(n) || [] : [];
+    const o = this.o, doc = p.doc, marks = (o.marks ? o.marks(n) || [] : []).slice();
+    if (n.data.detail) { marks.push({ text: n.data.detail, detail: true }); }                 // a nested node's detail: a muted mark
     const mark = (m) => h(doc, m.href ? 'a' : 'span', {
-      cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : m.href ? 'link' : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : ''),
+      cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : m.href ? 'link' : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : '') + (m.detail ? ' dt-odetail' : ''),
       text: String(m.text), attrs: Object.assign({ title: m.title || null, href: m.href || null }, dataAttrs(m.attrs)) });
-    const inner = [h(doc, 'span', { cls: 'dt-oname', text: n.label })].concat(marks.filter((m) => !m.href).map(mark));
+    const icon = n.data.icon ? h(doc, 'i', { cls: 'dt-oicon ' + n.data.icon, attrs: { 'aria-hidden': 'true' } }) : null;
+    const inner = [icon, h(doc, 'span', { cls: 'dt-oname' + (o.mono === false ? ' dt-plain' : ''), text: n.label })].concat(marks.filter((m) => !m.href).map(mark));
     const b = o.button ? o.button(n) : null;
     let line;
     if (b) {
@@ -224,7 +296,7 @@ export class TreeOutline {
   /** @private the tree's rows again (the kept nodes), the open state remembered across the filter */
   reload(fresh) {
     const t = this.tree;
-    t.model.all().forEach((n) => this.memory.delete(n.id));
+    t.model.all().forEach((n) => { if (n.children.length) { this.memory.delete(n.id); } });   // a branch shown: its open state is the tree's
     t.model.open.forEach((id) => this.memory.add(id));
     t.setData(this.source());
     const m = t.model;
@@ -240,11 +312,11 @@ export class TreeOutline {
    * @returns {void}
    */
   setData(data) {
-    const known = new Set(this.full.all().map((n) => n.id)), d = this.o.openDepth < 0 ? Infinity : this.o.openDepth;
+    const known = new Set(this.full.all().filter((n) => n.children.length).map((n) => n.id)), d = this.o.openDepth < 0 ? Infinity : this.o.openDepth;
     this.full.load(data);
     if (this.detailOf && !this.full.node(this.detailOf)) { this.closeDetail(); }
     this.memory.forEach((id) => { if (!this.full.node(id)) { this.memory.delete(id); } });
-    this.full.all().forEach((n) => { if (!known.has(n.id) && n.children.length && n.depth < d && !(this.o.startOpen && this.o.startOpen(n) === false)) { this.memory.add(n.id); } });   // a new branch opens as at the start
+    this.full.all().forEach((n) => { if (!known.has(n.id) && n.children.length && n.depth < d && !(this.o.startOpen && this.o.startOpen(n) === false)) { this.memory.add(n.id); } });   // a new branch (or a node that now has children) opens as at the start
     const f = outlineFilter(this.full, this.query, this.o.text);
     this.keep = f.keep;
     this.tree.hits = new Set(f.hits);
@@ -333,25 +405,87 @@ export class TreeOutline {
   /** @private the keys of a tree on the rows, the host's first */
   key(e) {
     const g = this.tree.grid;
-    if (e.ctrlKey || e.metaKey || e.altKey || !g || !g.grid.body.scroller.contains(e.target)) { return; }
+    if (e.ctrlKey || e.metaKey || !g || !g.grid.body.scroller.contains(e.target)) { return; }
     const order = this.shownIds(), at = this.focusedId() || order[0];
     if (!at) { return; }
     const stop = () => { e.preventDefault(); e.stopPropagation(); };
     if (this.o.onKey && this.o.onKey(this.full.node(at), e) === true) { stop(); return; }
+    if (e.altKey) { if (this.movable && /^Arrow/.test(e.key)) { stop(); this.keyMove(at, e.key); } return; }
     if (e.key === 'Escape' && this.detailOf) { stop(); this.closeDetail(); return; }
     const mv = outlineKey(e.key, this.tree.model, order, at);
     if (!mv) { return; }
     stop();
+    this.mods = !!e.shiftKey;
     if (mv.act === 'open' || mv.act === 'close') { this.tree.toggle(mv.to, mv.act === 'open'); }
-    if (mv.act === 'detail') { if (this.detailOf === mv.to) { this.closeDetail(); } else { this.tree.select(mv.to, { from: 'grid' }); } }
+    if (mv.act === 'detail') {
+      if (this.detailOf === mv.to) { this.closeDetail(); } else { this.tree.select(mv.to, { from: 'grid' }); }
+      this.events.emit('open', { id: mv.to });
+    }
+    if (mv.act === 'focus' && this.sel) { this.tree.select(mv.to, { from: 'grid' }); }     // a designer's pick follows the focus
     this.focusNode(mv.to);
+  }
+
+  /** @private Alt+arrows: among the siblings, into the node before, out of the parent */
+  keyMove(id, key) {
+    const n = this.full.node(id), sibs = n ? (n.parent ? n.parent.children : this.full.roots) : [], i = sibs.indexOf(n);
+    if (key === 'ArrowUp' && i > 0) { this.requestMove(id, sibs[i - 1].id, 'before'); }
+    else if (key === 'ArrowDown' && i >= 0 && i < sibs.length - 1) { this.requestMove(id, sibs[i + 1].id, 'after'); }
+    else if (key === 'ArrowRight' && i > 0) { this.requestMove(id, sibs[i - 1].id, 'inside'); }
+    else if (key === 'ArrowLeft' && n && n.parent) { this.requestMove(id, n.parent.id, 'after'); }
+    else { announce('It cannot move that way.'); }
+  }
+
+  /**
+   * Asks for a move: the host's canDrop decides, the "move" event asks the host to do it (the outline changes when the host gives it
+   * the new nodes).
+   * @param {string} id
+   * @param {string} target
+   * @param {('before'|'after'|'inside')} where
+   * @returns {boolean} whether it was asked
+   */
+  requestMove(id, target, where) {
+    if (this.o.readOnly) { announce('This design is read-only.'); return false; }
+    const t = this.full.node(target);
+    if (!t || !this.full.node(id)) { return false; }
+    if (this.full.pathOf(target).some((x) => x.id === id)) { announce('An item cannot go inside itself.'); return false; }
+    const ok = this.o.canDrop ? this.o.canDrop(id, target, where) : true;
+    if (ok !== true) { announce(typeof ok === 'string' ? ok : 'It cannot go there.'); return false; }
+    this.events.emit('move', { id, target, where, parent: where === 'inside' ? target : (t.parent ? t.parent.id : null) });
+    return true;
+  }
+
+  /** @private a row dragged: a line before or after a row, or the row marked when it would go inside */
+  dragStart(e) {
+    const n = this.movable ? this.nodeAt(e.target) : null;
+    if (!n || n.data.fixed || (e.target.closest && e.target.closest('.dg-tw, .dt-oact, a[href]')) || (e.pointerType === 'mouse' && e.button !== 0)) { return; }
+    let drop = null;
+    const box = this.treeBox, clear = () => box.querySelectorAll('.' + DROPS.join(', .')).forEach((x) => DROPS.forEach((c) => x.classList.remove(c)));
+    trackPointer(e, {
+      start: () => { box.classList.add('dt-dragging'); const b = this.tree.grid && this.tree.grid.grid.body; if (b) { b.drag = null; } },
+      move: (ev) => {
+        clear();
+        const under = this.doc.elementFromPoint(ev.clientX, ev.clientY), row = under && under.closest ? under.closest('[data-node]') : null;
+        if (!row || !box.contains(row)) { drop = null; return; }
+        const r = row.getBoundingClientRect(), y = (ev.clientY - r.top) / (r.height || 1);
+        drop = { target: row.getAttribute('data-node'), where: y < 0.3 ? 'before' : y > 0.7 ? 'after' : 'inside' };
+        row.classList.add('dt-drop-' + drop.where);
+      },
+      end: (ev, committed) => {
+        clear();
+        box.classList.remove('dt-dragging');
+        if (committed && drop && drop.target !== n.id) { this.requestMove(n.id, drop.target, drop.where); }
+      }
+    });
   }
 
   /** Takes the outline down. @returns {void} */
   destroy() {
+    this.offs.forEach((off) => off());
+    this.events.clear();
     if (this.sizer) { this.sizer.disconnect(); }
-    this.offSel();
     this.host.removeEventListener('keydown', this.onKeyDown, true);
+    this.host.removeEventListener('pointerdown', this.onDown);
+    this.host.removeEventListener('dblclick', this.onDbl);
     this.tree.destroy();
     this.host.textContent = '';
     this.host.classList.remove('dt-outline');
