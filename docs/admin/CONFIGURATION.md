@@ -2164,15 +2164,17 @@ top, how long after its period a report run is due, and the size of the question
 
 Design: [ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals). A person writes a note on a view, picks people and roles from the
 directory, and Drishti notifies them in the app (always) and by email (off until configured); the link reopens the view
-pinned to the same business date and "known at" instant, with the **recipient's** rights. Shares, recipients and inbox rows are in
-the identity database (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, the thread, comment, revision, mention
-and follow tables, `drishti_collab_hold`; back them up with the rest of the identity database, [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#123-retention-legal-holds-and-the-compliance-export)). Who may share is the role power `roles.<role>.collaborate`; who may read any share is `compliance` (see
+pinned to the same business date and "known at" instant, with the **recipient's** rights. Shares, recipients, threads, the inbox,
+the outbox, holds and seals are in the content store by default, which every node of a cluster reaches (`store: content`); with
+`store: jpa` they are the identity database's `drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, thread, comment,
+revision, mention, follow and `drishti_collab_hold` tables, one node only (back them up with the store they are in,
+[OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#123-retention-legal-holds-and-the-compliance-export)). Who may share is the role power `roles.<role>.collaborate`; who may read any share is `compliance` (see
 [`drishti.security`](#drishtisecurity--tokens-roles-field-masks)).
 
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` (`DRISHTI_COLLAB_ENABLED`) | Everything below. Off: every collaboration endpoint answers `403 DRS-7004`, and `GET /api/v1/collab` says `enabled: false`. |
-| `store` | `jpa` | Where shares and inbox rows are kept: `jpa` (the identity database, SQLite or PostgreSQL) or `file` (`dir`, one server only). The server refuses to start with `file` while `drishti.identity.database-url` is PostgreSQL. |
+| `store` | `content` | Where shares, threads and inbox rows are kept: `content` (the content store, every node of a cluster), `jpa` (the identity database, SQLite or PostgreSQL, one node) or `file` (`dir`, one server only). The server refuses to start with `file` while `drishti.identity.database-url` is PostgreSQL. |
 | `dir` | `./data/collab` (`DRISHTI_COLLAB_DIR`) | The file store's folder, and exports. |
 | `console-url` | empty (`DRISHTI_CONSOLE_URL`) | The console's address; a share's `link` is this plus `/share/sh_…` (relative when empty). Email stays off while it is empty. |
 | `directory.scope` | `shared-packs` | `shared-packs`: the picker lists only users who share at least one assigned pack with the caller (and roles by those people); `all`: every enabled user, for small firms. |
