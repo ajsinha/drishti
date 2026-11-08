@@ -71,11 +71,9 @@
     return { el: box, input: cb.input };
   }
 
-  var qform = null, host = form && form.querySelector('[data-qf-fields]'), data = host && host.getAttribute('data-qf-schema');
-  if (form && host && data && I) {
-    var given = JSON.parse(data);                                   // the form's schema and value, sent with the page
-    qform = new I.Form(host, { schema: given.schema, value: given.value, embedded: true, label: 'Search criteria', layout: 'columns',
-      widgets: { 'qf-constant': constantWidget, 'qf-big': bigWidget } });
+  var qform = null, host = form && form.querySelector('[data-qf-fields][data-di-form]');
+  if (form && host && I) {                                          // the one server-drawn form (core/forms.form_host): the page adds its two widgets
+    qform = I.formOf(host, { widgets: { 'qf-constant': constantWidget, 'qf-big': bigWidget } });
   }
   /** Every field back to empty; how each field compares is kept. */
   function clearAll() {

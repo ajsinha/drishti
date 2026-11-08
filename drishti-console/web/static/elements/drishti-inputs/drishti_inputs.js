@@ -2796,7 +2796,11 @@
     function formOf(host, extra) {
       if (!host) { return null; }
       if (host.diForm) {                                         // drawn already (upgradeForms, or the page's script before): the page's options join it
-        if (extra) { Object.assign(host.diForm.o, extra); }
+        if (extra) {
+          const widgets = extra.widgets;
+          Object.assign(host.diForm.o, extra, widgets ? { widgets: Object.assign({}, host.diForm.o.widgets, widgets) } : {});
+          if (widgets) { host.diForm.render(); }               // its fields drawn again with the page's widgets, the values kept
+        }
         return host.diForm;
       }
       let spec;

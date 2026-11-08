@@ -7834,7 +7834,7 @@ The Form of a host the server drew (made at the first call; later calls answer t
 | Parameter | Type | Meaning |
 |---|---|---|
 | `host` | `HTMLElement` | an element with data-schema: {schema, value, options} |
-| `[extra]` | `Object` | options added by the page's script (onSubmit, check: read when the Form is submitted, so they join a Form already drawn; widgets and other drawing options count only at the first call) |
+| `[extra]` | `Object` | options added by the page's script: onSubmit and check join a Form already drawn (they are read when it is submitted); widgets too (the fields are drawn again with them, the values kept); other drawing options count only at the first call |
 
 Returns `Form\|null`.
 

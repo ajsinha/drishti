@@ -229,6 +229,11 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The terminal's query form on the one server-drawn form** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  `core/forms.py`'s `form_host` sends the criteria through `core/form_kit.host` (`data-di-form` + `data-schema`), and `drishti_form.js`
+  finds the `Form` with `formOf(host, {widgets})`; its own `new Form` path and the `data-qf-schema` attribute are deleted. `formOf`
+  called with `widgets` on a `Form` already drawn draws its fields again with them, the values kept. The page's GET address and every
+  criterion's name (`op.`, `v.`, `v2.`, `cs.<path>`) are unchanged.
 - **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS.md#123-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-of-31)):
   Users, Roles, Access, Audit, Configuration (search and *Propose a change*), Connectors (the list's filters and the connector editor),
   Artifacts (filters, a BI file), Packs (the archive, the signature, the breaking-change box), a pack's *Load a data file*, Lakes,
