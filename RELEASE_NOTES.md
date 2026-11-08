@@ -191,6 +191,13 @@ Follow these steps when upgrading an installation of 2.9.11.d.
     `exposure-whatif` with its kind and the command `XWIF` are gone; the exact what-if (`POST /api/v1/risk/exposure/what-if`) answers the
     same request field by field from Java. A never-edited `exposure-whatif.yaml` connector file is removed at start (kept as
     `.retired-<time>.bak`).
+13. **Reload the Delta tables the parallel loader wrote since 2026-11-07 21:27 whose partition values hold a space or a special
+    character** (`lake build --engine java`, the data inbox's large loads; for example trades partitioned by `PRODUCT_GROUP` with
+    `Fixed income`). Those loads wrote the folder `PRODUCT_GROUP=Fixed income` but the log's `add.path` as `Fixed%2520income` (encoded
+    twice): Spark, Databricks and delta-rs could never read them, and the corrected reader no longer finds them either. Load the same
+    files again (mode replace). Tables of plain values (letters, digits, `_`, `-`), tables loaded before then or by the other engines
+    need nothing. Lakes now follow the Delta protocol's path rules exactly
+    ([DATA_LAKE_GUIDE.md section 14](docs/guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
 
 ### Removed endpoints and screens
 

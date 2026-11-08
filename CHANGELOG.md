@@ -1081,6 +1081,20 @@ The release train ships 2.9.11.e, 2.9.11.f and 2.9.11.g as one tag, v2.9.11.g: e
 
 ### Fixes (the train's bulk drill)
 
+- **Delta lakes follow the Delta protocol's path rules exactly, tested against delta-rs both ways**
+  ([DATA_LAKE_GUIDE.md section 14](docs/guides/DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)). The native reader decoded Delta Kernel's
+  plain file paths a second time, so a table with a Hive-escaped partition folder (Spark's and Databricks' `PRODUCT_GROUP=100%25`,
+  `a%3Ab`) or one delta-rs wrote (`Money%20market`) could not be read; only a `java.nio` `file://` URI is decoded now
+  (`LocalPaths.decodeUri`). The Java lake writer and the parallel loader take Kernel's target folder, which Kernel hands as a URI,
+  decoded once (`LakeWriter.targetDirectory`): folders are Spark's Hive-escaped names and `add.path` is encoded exactly once (a value
+  `100%` failed the load; the loader wrote `Money%2520market` in the log for the folder `Money market`). An empty partition value is
+  null in `__HIVE_DEFAULT_PARTITION__`, as Spark writes it (Java writer, loader, Python writer). `lake build` refuses a partition column
+  name a folder would change (`PRODUCT GROUP`, `a=b`, `a/b`). `tools/lake/test_delta_interop.py`: delta-rs writes and Drishti's Java
+  reader reads; Drishti's three writers write and delta-rs, `pyarrow.dataset` and the Java reader read; 47 partition values (space, `%`,
+  a literal `%2F`, `:`, `/`, `..`, `\`, control characters, quotes, Unicode, emoji, 200 characters, the sentinel text, empty, null);
+  `LakeWriterTest`, `LocalPathsTest`. Upgrade: reload tables the parallel loader wrote since 2026-11-07 21:27 with such values
+  (RELEASE_NOTES, upgrade step 13).
+
 - **The MR cube's capped measures are deterministic**: stressed VaR (`drishti.cube.mr.stressed-max-cells`, 100) and SBM
   (`sbm-max-cells`, 60) were counted per evaluation, and cells already cached by an earlier view were not counted, so which cells got a
   figure depended on what was asked before and in what order (desks × currency alone: stressed VaR on 100 of 186 cells; after the same
