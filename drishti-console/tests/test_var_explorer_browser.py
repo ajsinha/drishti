@@ -51,7 +51,7 @@ from wb_live import _stack
 from select_helpers import choose, labels  # <drishti-select>: drishti-inputs' Select
 
 ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "portfolio", "var-limit")] + ["trades/murex"])
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "portfolio", "var-limit")] + ["core/desk", "core/book", "core/legal-entity"] + ["trades/murex"])
 SHOTS = os.environ.get("DRISHTI_VAR_SHOTS")
 #: the time from a click on a desk to its painted panels (the product owner's target is 300 ms on the demo data); generous here, as the
 #: suite runs beside builds: the measured time is printed and kept in the docs

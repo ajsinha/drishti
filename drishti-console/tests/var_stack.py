@@ -43,7 +43,7 @@ VAR_HEAP = "1536m"
 
 def var_data(*more: str, limits: bool = True) -> str:
     """The ``--only`` list: the market-risk VaR tables (and the limits, when ``limits``), then ``more`` (trades/murex, trades/endur ...)."""
-    return ",".join([f"market-risk/{k}" for k in RISK + (("var-limit",) if limits else ())] + list(more))
+    return ",".join([f"market-risk/{k}" for k in RISK + (("var-limit",) if limits else ())] + ["core/desk", "core/book", "core/legal-entity"] + list(more))
 
 
 def last_weekday() -> str:
