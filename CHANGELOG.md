@@ -17,6 +17,34 @@
 
 ## Unreleased
 
+### Breaking
+
+- **The `risk-hierarchy` kind is removed (HIER):** every VaR and exposure hierarchy is built by the server from the trades' **promoted
+  columns**, as the pack's `hierarchies:` block (or `drishti.var.hierarchies`) configures them, any number of them: MGMT
+  `DIVISION > DESK > TT_BOOK`, LEGAL `LEGAL_ENTITY > DESK > TT_BOOK` and LL `LIMIT_LETTER > DESK` in the market-risk pack, with the same
+  node ids as before (`MGMT~DESK-RATES`, `LL~LL-0003/DESK-RATES`), so `var-limit` rows, captures, links and saved views keep working. A
+  site that sent `risk-hierarchy` rows now puts the level columns on every `scenario-pv`, `pnl-vector` (and `exposure-path`) row,
+  promotes them in the connector's `layout.<kind>.columns`, and configures `hierarchies:`; the setting `source:` is refused
+  (`DRS-5213`), `drishti.var.kinds.hierarchy` and `drishti.ccr.exposure.kinds.hierarchy` are gone, and a data-load file of the kind is
+  refused saying what replaces it. With no hierarchy configured the engines build no tree. A connector file written before still naming
+  the kind is kept as it is, the kind listed as obsolete. The demo lake needs a rebuild (it holds a `risk-hierarchy` table no connector reads).
+  [VAR_GUIDE.md section 15.14](docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns).
+
+### Features
+
+- **(Blank) nodes:** a row whose level column is empty, or whose source does not promote it, sits under a **(Blank)** node at that level,
+  under its real parent, the deeper levels beneath it (Power BI's convention): never refused, never dropped, the totals complete. The
+  name is `empty-label` per hierarchy, else `drishti.var.hierarchy.empty-label` (default `(Blank)`); the id is always a path (`~` for the
+  empty value: `MGMT~DIV-MARKETS/~`), so two (Blank) desks never collide; no limit unless a `var-limit` row names it. The explorer shows
+  it muted and in italics with a `?` (the trades without a value and the fix). A level column a source does not promote is a `DRS-5211`
+  warning (provenance, Admin → Health *Hierarchy warnings*, the log), replacing the hierarchy skipped before; a column no source promotes
+  and no pack names is a typo, refused (`DRS-5213`). `/api/v1/health`'s `hierarchiesSkipped` is now `hierarchyWarnings`.
+- **Node names from the reference entities:** a node is named by its `desk`, `book` or `legal-entity` record (the level's name is the
+  kind), else by its value.
+- **`var-limit`:** a row of a node its hierarchy can build but with no positions on the date shows as *limit, no positions*
+  (`limitsNoPositions` of the tree); one its hierarchy cannot build is said with the reason (`DRS-5212`). The exposure paths carry
+  `DIVISION`.
+
 ### Docs
 
 - **Kernel and modules, the console tier (design):** [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) opens with the

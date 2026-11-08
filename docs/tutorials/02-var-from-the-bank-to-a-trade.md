@@ -93,7 +93,7 @@ ones below (`--as-of today`, the default, moves the date to your today and trade
 
 ```bash
 python3 tools/drishti.py lake demo --as-of data \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio,market-risk/var-limit
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/portfolio,market-risk/var-limit
 ```
 
 Start the server and console (tutorial 1, Part A), then ask for the bank:
@@ -535,7 +535,7 @@ var-engine:
       result: { required: [VAR, ES, PNL], types: { VAR: number, ES: number } }
   engine: { type: java, class: com.ash.drishti.banking.var.VarResultEngine, version: "1.0" }
   triggers:
-    - { on: data-version, kinds: [pnl-vector, risk-hierarchy, scenario-set, portfolio], affects: all }
+    - { on: data-version, kinds: [pnl-vector, scenario-pv, fx-scenario, scenario-set, portfolio, var-limit], affects: all }
 ```
 
 **You should see** the explorer's figures (74,633,680 and 75,377,415): it is the same engine, computed as you, with your entitlements.
@@ -653,22 +653,26 @@ record is still the morning run's. The same updates can come from Kafka (the `pv
 
 ## Step 14 · Limit letters: a hierarchy from the trades' own columns
 
-A **limit letter** is the letter of authority a trade's VaR limit is granted under. Every P&L and scenario-PV row of the demo carries one
-(`LIMIT_LETTER`: twelve letters dealt over the books, two books split between two letters), and the market-risk pack configures a third
-hierarchy built from it, beside MGMT and LEGAL from the [`risk-hierarchy`](../contracts/samples/market-risk.md#risk-hierarchy) ([contract](../contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy)) rows:
+Every tree of the VaR engine is built by the server from the trades' own **promoted columns**: there is no hierarchy feed. Every P&L and
+scenario-PV row of the demo carries `DIVISION`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK` and a **limit letter** (`LIMIT_LETTER`, the letter of
+authority a trade's VaR limit is granted under: twelve letters dealt over the books, two books split between two letters), and the
+market-risk pack configures three hierarchies over them:
 
 ```yaml
 # config/packs/banking/market-risk/pack.yaml (generated from tools/packgen/banking/kept/market-risk.yaml); drishti.var.hierarchies wins over it
 hierarchies:
-  MGMT:  { title: Management, source: risk-hierarchy, limits: var-limit }
-  LEGAL: { title: Legal entities, source: risk-hierarchy, limits: var-limit }
-  LL:    { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
+  MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
+          root: { id: BANK, name: Drishti Bank }, limits: var-limit }
+  LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf,
+           root: { id: BANK, name: Drishti Bank }, limits: var-limit }
+  LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
 ```
 
-Its nodes are every distinct path of the rows' values (`LL~LL-0011`, `LL~LL-0011/DESK-RATES`), its limits come from the new kind
-[`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)) (one row per node, USD), and its word names a node in any scope (`LL:LL-0011`). Every VaR limit lives in
-`var-limit`, with its currency: MGMT's and LEGAL's too (`limits: var-limit` above) and each portfolio's (a row of hierarchy `PORTFOLIO`);
-the `risk-hierarchy` rows and the portfolios carry none. The limits are the same, so every limit use below is unchanged.
+A node is every distinct path of the rows' values (`MGMT~DESK-RATES`, `LL~LL-0011`, `LL~LL-0011/DESK-RATES`), named by its reference
+entity when there is one (the desk `DESK-RATES` is *Rates · Swaps and options*), its limit a row of
+[`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit))
+(one row per node, USD), and LL's word names a node in any scope (`LL:LL-0011`). Every VaR limit lives in `var-limit`, with its
+currency: MGMT's, LEGAL's, LL's and each portfolio's (a row of hierarchy `PORTFOLIO`).
 
 **In the UI**, choose **Limit letters** in the select above the tree (the link keeps it: `&hierarchy=LL`), then **LL-0011**:
 
@@ -704,7 +708,7 @@ VAR LL:LL-0011  ·  LL-0011  ·  node  ·  2026-09-30
   limit      41,000,000 USD   use 71.4%
   parts      2 desk   standalone sum 37,020,400   diversification 7,739,747
   ...
-  warning: 9 positions had trades under two nodes of a hierarchy built from columns and are split, one part per node (<position>@<value>)
+  warning: 9 positions had trades under two nodes of a hierarchy and are split, one part per node (<position>@<value>)
 
 $ drishti.py var show 'BOOK:BOOK-RATES-1 & LL:LL-0011'
 VAR BOOK:BOOK-RATES-1 & LL:LL-0011  ·  BOOK:BOOK-RATES-1 & LL:LL-0011  ·  adhoc  ·  2026-09-30
@@ -719,14 +723,53 @@ whose trades sit under both letters is split in two, one part per letter: `POS:P
 `…@LL-0011`, four trades each; the provenance says how many were split (nine). A letter's VaR is exactly that of its trades, to the cent:
 `LL:LL-0011` equals the same trades named one by one.
 
-**Your own hierarchy.** Any column the trades carry can be a hierarchy: add it to the connector's layout and to the rows, then a block in
-`drishti.var.hierarchies` (or the pack's `hierarchies:`). A row that leaves the column empty is refused (`DRS-5211`); data without the column
-skips that hierarchy alone, with a `DRS-5211` warning, and everything else answers; a configuration that is not valid refuses the
+**Add your own hierarchy in YAML.** Any promoted column the trades carry can be a hierarchy. The demo's rows carry `PRODUCT_GROUP`
+(promoted in both layouts of `risk-store`), so a fourth tree, product groups over desks, needs one line of YAML:
+
+1. **The YAML.** Add the hierarchy beside the pack's three, in the server's settings (`config/application.yaml` or your profile;
+   `drishti.var.hierarchies` replaces the pack's block, so it lists all four):
+
+   ```yaml
+   drishti:
+     var:
+       hierarchies:
+         MGMT: { title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
+                 root: { id: BANK, name: Drishti Bank }, limits: var-limit }
+         LEGAL: { title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: leaf,
+                  root: { id: BANK, name: Drishti Bank }, limits: var-limit }
+         LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
+         PG: { title: Product groups, levels: "PRODUCT_GROUP > DESK", word: PG }
+   ```
+
+   (Or add the `PG:` line to the pack's `hierarchies:` block in `tools/packgen/banking/kept/market-risk.yaml` and regenerate the pack with
+   `python3 tools/packgen/banking/make_packs.py`.) A column that is not promoted by every source is a warning, and one no source promotes
+   and no pack names refuses the date: check `layout.scenario-pv.columns` and `layout.pnl-vector.columns` first.
+
+2. **Restart** the server (the hierarchies are read at start). Admin → Health lists no *Hierarchy warning* when every level column is
+   promoted.
+
+3. **In the UI**, the select above the tree now lists **Product groups**: choose it, then a group, and its desks open beneath it. A row
+   without a product group would sit under ***(Blank)***, muted and in italics, its **?** saying how many trades and the fix.
+
+4. **From the command line:**
+
+   ```text
+   $ drishti.py var tree --hierarchy PG
+   $ drishti.py var show PG:Rates
+   ```
+
+**You should see** the bank's VaR at the top of the product groups' tree (112,041,646 again: the same trades, a fourth tree), a node per
+product group with its desks beneath it, `PG:<group>` naming a node in any scope (`VAR PG:Rates <GO>`, `BOOK:BOOK-RATES-1 & PG:Rates`), and
+the official capture recording the new tree's nodes beside the other three. The new nodes have no limit until `var-limit` rows of
+hierarchy `PG` name them (`NODE_ID: PG~Rates`).
+
+A row that leaves a level column empty, or a source that does not promote it, puts the row under the (Blank) node at that level (named
+by `empty-label`, default `(Blank)`, as in Power BI), never refused and never dropped; a configuration that is not valid refuses the
 start (`DRS-5213`).
 
-**Further in the guide:** [section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)
-(the configuration, cells, split positions, the equality tests), [section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)
-(`var-limit`).
+**Further in the guide:** [section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)
+(the configuration, the promoted-columns rule, (Blank) nodes, names, cells, split positions, the golden test),
+[section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits) (`var-limit`).
 
 ## Step 15 · Ten days and another confidence
 
@@ -826,7 +869,7 @@ signal tells the running server.
 
 ```text
 $ python3 tools/drishti.py lake demo --as-of 2026-09-25 --keep-other-dates -q \
-    --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy
+    --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
 **In the UI**, type `SMAT BOOK BOOK-RATES-1 5 <GO>` (or open a book, a position or a trade in the explorer and click **Scenario
@@ -1244,7 +1287,7 @@ build and its output are [tutorial 16, step 30](16-load-your-own-data-into-a-new
 
 ```bash
 drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio,market-risk/var-limit
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/portfolio,market-risk/var-limit
 ```
 
 **In the UI.** `VAR BANK`, then **Limit letters** in the select above the tree and **LL-0011**:

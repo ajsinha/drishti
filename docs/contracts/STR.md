@@ -182,7 +182,7 @@ proposed as **one limit table for every market-risk measure** (VaR's `LIMIT_VAR`
 
 | Master (kind) | Key | What for |
 |---|---|---|
-| `trade` (TRD), `risk-hierarchy` (HIER) | `TRADE_ID`, `NODE_ID` | live trades, nodes |
+| `trade` (TRD), the VaR hierarchies (built from the trades' columns) | `TRADE_ID`, `NODE_ID` | live trades, nodes |
 | `valuation` ([TVAL.md](TVAL.md#32-valuation-one-row-per-trade-per-business-date-planned)) | `TRADE_ID` | the base MtM (check of `BASE_MTM`; scenario value = base + P&L) |
 | `stress-scenario` (SCN) | `SCENARIO_ID`, `VERSION` | definitions and shocks |
 | qualifier groups (configuration) | group name | `G10`, `EM`, `IG`, `HY`, `OIL`, `METALS` … → qualifiers |

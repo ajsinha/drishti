@@ -50,7 +50,6 @@ bindings:
   pnl-vector:     { read: [risk-store] }
   fx-scenario:    { read: [risk-store] }
   scenario-set:   { read: [risk-store] }
-  risk-hierarchy: { read: [risk-store] }
   portfolio:      { read: [risk-store] }
   var-limit:      { read: [risk-store] }
   desk-pnl:       { read: [finance-pnl-jdbc] }          # the finance ledger's P&L (a JDBC connector on the bank's warehouse)

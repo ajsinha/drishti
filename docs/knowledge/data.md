@@ -310,7 +310,7 @@ where data comes from                  how Drishti reads it                     
 booking systems (ENDUR, MUREX,  ──►  lake: Delta tables per kind and     ──►  fundamental kinds   TRD, CPTY, NSET, CSA ...
 CALYPSO), credit, market data        business date, read by the pack's
                                      connector (data/testdata in the demo)
-risk engines (P&L vectors,      ──►  the common risk lake               ──►  engine inputs        PNLV, XRUN, XPATH, SSET, HIER
+risk engines (P&L vectors,      ──►  the common risk lake               ──►  engine inputs        PNLV, XRUN, XPATH, SSET, VLIM
 exposure paths)                                                                  │
                                                                                  ▼
                                      Drishti's engines (Java; Python    ──►  computed kinds       VRES, EXP, LEIG, LEIC, ECG, CORR, EQB
@@ -338,7 +338,7 @@ has an id (an LEI, an ISIN, a ticker, a booking system's trade id). A computed k
 ### Data and contracts: a worked example on the demo data
 
 **The classes, counted.** `drishti.py contract list` names every command's contract: of the 100 commands of the shipped packs, **73**
-are fundamental, **8** engine inputs (`PNLV`, `SSET`, `HIER`, `PORT`, `XRUN`, `XPATH` and the compute demo's two), **1** is Drishti's own
+are fundamental, **8** engine inputs (`PNLV`, `SSET`, `VLIM`, `PORT`, `XRUN`, `XPATH` and the compute demo's two), **1** is Drishti's own
 (`POS`, the derived positions) and **18** are computed (among them `VRES`, `EXP`, `LEIG`, `LEIC`, `SIC`, `ECG`, `CORRC`, `EQB`, `CTRD`).
 
 **One contract, read.** `drishti.py contract show NSET` (the netting-set kind, `config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml`):

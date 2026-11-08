@@ -29,7 +29,7 @@ banking-3.0.0.dmod                                         a zip; module.yaml st
 │   │   ├── python/  guides/  config/  tests/
 │   ├── market-risk/                                       <- config/packs/banking/market-risk
 │   │   ├── pack.yaml  README.md  capital/
-│   │   ├── contracts/scenario-pv.contract.yaml pnl-vector.contract.yaml risk-hierarchy.contract.yaml … (28)
+│   │   ├── contracts/scenario-pv.contract.yaml pnl-vector.contract.yaml var-limit.contract.yaml … (27)
 │   │   ├── sutras/market-risk/position.v1.sutra.yaml var-desk.v1.sutra.yaml …
 │   │   ├── samples/  python/  guides/  config/  tests/
 │   └── counterparty-risk/                                 <- config/packs/banking/counterparty-risk

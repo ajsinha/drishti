@@ -1172,8 +1172,9 @@ the official capture, §26.2), so a node's PFE is the PFE of everything it faces
 
 **Implementation:** `ExposureOfficial` captures every netting set, counterparty and group (`exposure-official-cpty`, `HIERARCHY`
 `NSET`, `CPTY`, `GROUP`; `NODE_ID` the scope text; `COUNTERPARTY` and `LEGAL_ENTITY`; LEI and rating are not published) and every
-node of the MGMT and LEGAL hierarchies (`risk-hierarchy`: a node's trades are its books', the sets it cuts recomputed; without the
-hierarchy kind, the bank and each legal entity) into `exposure-official`, at `limit-confidence` under the default collateral model, with
+node of every configured hierarchy (MGMT, LEGAL, LL in the demo, built from the paths' promoted columns: a node's trades are those
+whose values start with its path, the sets it cuts recomputed; with no hierarchy configured, the bank and each legal entity) into
+`exposure-official`, at `limit-confidence` under the default collateral model, with
 `PARTIAL_SETS` and `TRADES` besides the columns above, contract version `1.1`. Idempotent per inputs; a restated date is captured again
 with the next `RESULT_VERSION`; append-only, logs kept `official.retention-years`. The record (`exposure/official/<date>.json`) keeps
 every scope's figures and profile; every trade's EE contribution per primary date is kept beside it
@@ -1197,15 +1198,18 @@ risk=iceberg` switches `exposure-store.yaml` with the market-risk pack's `risk-s
 EE, PFE, EPE, the profiles, the contributions and the official records equal to the cent (`ExposureFormatEqualityTest`). Exposure has
 one reporting currency, so there is no second one to compare.
 
-**Hierarchies.** The nodes are those of the hierarchies VaR builds (`drishti.var.hierarchies`, else the market-risk pack's
-`hierarchies:` block; [VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)):
-a hierarchy of the `risk-hierarchy` rows keeps its book-based scope (`BOOK:a + BOOK:b`); a hierarchy built from columns (the demo's limit
-letters `LL`, `LIMIT_LETTER > DESK`) has the root `LL~BANK` (scope `BANK`) and a node for every distinct path of its trades' values, its
-scope a rule over them (`WHERE:LIMIT_LETTER == 'LL-0003' and DESK == 'DESK-RATES'`), so a letter's EE, PFE and EPE are those of exactly
-its trades (the sets it cuts recomputed). The level columns are read from the exposure paths' rows (the pack's layout promotes
-`LIMIT_LETTER`; a table without the column skips that hierarchy alone, a `DRS-5211` warning in the provenance and Admin → Health, the
-rest as usual; a row that leaves it empty is refused and listed) and kept per trade
-in the hot file; a rule may read them (`WHERE:LIMIT_LETTER == 'LL-0003'`), and a hierarchy's word names a node in any exposure scope
+**Hierarchies.** The nodes are those of the hierarchies VaR builds, every one from the trades' promoted columns
+(`drishti.var.hierarchies`, else the market-risk pack's `hierarchies:` block: MGMT `DIVISION > DESK > TT_BOOK`, LEGAL
+`LEGAL_ENTITY > DESK > TT_BOOK`, LL `LIMIT_LETTER > DESK`; [VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)).
+A hierarchy has the root `<id>~BANK` (scope `BANK`) and a node for every distinct path of its trades' values, its scope a rule over them
+(`WHERE:LIMIT_LETTER == 'LL-0003' and DESK == 'DESK-RATES'`), so a node's EE, PFE and EPE are those of exactly its trades (the sets it
+cuts recomputed). The level columns are read from the exposure paths' rows: the counterparty-risk pack's `layout.exposure-path.columns`
+promotes `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK` and `LIMIT_LETTER`, and the simulator sends them on every row. A path row that
+leaves a level column empty, or a paths table that does not promote it, sits under the **(Blank)** node at that level, as in VaR: a path
+id (`MGMT~DIV-MARKETS/~`), its scope the hierarchy's path with `~` for the empty value (`MGMT:DIV-MARKETS/~`), its name the
+`empty-label` ((Blank) by default), never a skipped hierarchy; the columns the table does not promote are a `DRS-5211` warning in the
+provenance and Admin → Health (*Hierarchy warnings*), with the fix (*promote LIMIT_LETTER in layout.exposure-path.columns*). The level
+columns are kept per trade in the hot file; a rule may read them (`WHERE:LIMIT_LETTER == 'LL-0003'`), and a hierarchy's word names a node in any exposure scope
 (`LL:LL-0003`, `LL:LL-0003/DESK-RATES`). `ExposureOfficialHierarchiesTest` checks a letter's figures against the same rule and the desk it
 is alone on.
 

@@ -17,8 +17,8 @@
 
 One file:  push_inbox.py --inbox <data>/dataload/inbox --table trade_endur --date 2026-11-06 --source rows.jsonl.gz --lake risklake \
                --pack trading --kind trade --connector trade-endur
-A tar:     push_inbox.py --inbox ... --tar eod-2026-11-06 --part trade_endur:2026-11-06:a.jsonl.gz --part risk_hierarchy:2026-11-06:b.jsonl \
-               --folders trade_endur=trading,risk_hierarchy=market-risk --lake risklake
+A tar:     push_inbox.py --inbox ... --tar eod-2026-11-06 --part trade_endur:2026-11-06:a.jsonl.gz --part var_limit:2026-11-06:b.jsonl \
+               --folders trade_endur=trading,var_limit=market-risk --lake risklake
 
 The data file is written in <dataload>/staging/ and renamed into the inbox when complete (one atomic rename); its .ready file,
 with the SHA-256 and the row count, is written LAST, the same way. A re-run of a day is safe with --mode replace."""

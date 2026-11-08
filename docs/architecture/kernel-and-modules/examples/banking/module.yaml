@@ -75,7 +75,7 @@ provides:
     banking-reference: [counterparty, counterparty-group, issuer, ccp, legal-entity, book, desk, trader, clearing-account]
     trading: [trade, counterparty-trades, portfolio-trades, legal-entity-trades, index-trades]
     market-risk: [stress-scenario, stress-result, frtb-sensitivity, pnl-explain, trade-valuation, portfolio, pnl-vector, scenario-pv,
-                  fx-scenario, scenario-set, risk-hierarchy, var-limit, desk-pnl, pnl-history, position-sensitivity, risk-factor,
+                  fx-scenario, scenario-set, var-limit, desk-pnl, pnl-history, position-sensitivity, risk-factor,
                   var-official, stress-scenario-pnl]
     counterparty-risk: [agreement, csa, netting-set, credit-limit, cva, sa-ccr, collateral-balance, margin-call, simm, simulation-run,
                         exposure-path, exposure-official-cpty, nset-mtm, cpty-mtm]
@@ -112,7 +112,7 @@ console:
   elements: [elements/drishti-risk]       # its domain Elements library (licensed with it)
 
 functions: functions.yaml                 # 60 command words: VAR, PVAR, SMAT, SWIN, PREDEAL, EXP, FRSA, SIMM, MCUBE, SENS, RFAC, TRD,
-                                          # CTRD, PTRD, LTRD, ITRD, SCN, STR, FRTB, PNL, TVAL, POS, PORT, PNLV, SPV, FXS, SSET, HIER,
+                                          # CTRD, PTRD, LTRD, ITRD, SCN, STR, FRTB, PNL, TVAL, POS, PORT, PNLV, SPV, FXS, SSET,
                                           # VLIM, DPNL, PNLH, VRES, VOFF, SSPNL, AGR, CSA, NSET, LIM, CVA, SACCR, COLL, MC, XRUN, XPATH,
                                           # XOFC, NSMTM, CPMTM, CPTY, GRP, LE, BOOK, DESK, TRDR, CCP, PLAY, CCUBE, …
 
@@ -124,7 +124,7 @@ home:
       - { title: VaR of the rates desk, cmd: VAR DESK RATES, icon: bar-chart-line }
       - { title: VaR results by desk, cmd: "VRES DESK:RATES", icon: table }
       - { title: Exposure of a counterparty, cmd: "EXP CPTY:CP-ALDERSHOT", icon: graph-up }
-    chips: [VAR BANK, VAR DESK RATES, EXP BANK, "EXP CPTY:CP-ALDERSHOT", "VRES DESK:RATES", HIER, VOFF]
+    chips: [VAR BANK, VAR DESK RATES, EXP BANK, "EXP CPTY:CP-ALDERSHOT", "VRES DESK:RATES", VLIM, VOFF]
   trading:
     cards:
       - { title: "A book: its trades, positions and MtM", cmd: BOOK BOOK-RATES-1, icon: journal-text }

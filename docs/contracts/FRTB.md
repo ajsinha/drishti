@@ -303,7 +303,7 @@ any later batch.
 | `risk-factor` (RFAC) | `RISK_FACTOR`, `SOURCE_NAMES` | every factor's class, bucket, tenor and grid mapping; the bank's names (section 4.1) |
 | `trade` (TRD) | `TRADE_ID` | live status, gross notional (RRAO), the DRC's derived inputs |
 | `issuer` (ISS), `lei-entity` (LEI) | `OBLIGOR`, the issuer in a factor name | the obligor's rating and sector (DRC bucket and risk weight when derived) |
-| `risk-hierarchy` (HIER) | `NODE_ID` | the scopes: desks, legal entities, limit letters; the FRTB desks |
+| the VaR hierarchies (built from the trades' columns) | `NODE_ID` | the scopes: desks, legal entities, limit letters; the FRTB desks |
 | `pnl-vector` (positions) | `POSITION_ID` | the completeness check and the consistency check against VaR |
 | FX rates of the date | currency pair | conversion of every element to the reporting currency |
 | The parameter files | file name, version and hash | section 6.1 |

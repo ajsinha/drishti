@@ -116,7 +116,7 @@ governance ([section 5](#5-oversight-lens)).
 | Stressed VaR and its 12-week average; the stress window review (`SWIN`) | **Built** in the engine; not yet on the landings (RL1) | [VAR_GUIDE sections 18.8](../guides/VAR_GUIDE.md#188-stressed-var), [18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window) |
 | Why did VaR move? | **Built** as the VaR figure's Explain (*Why it moved*, causes that add up exactly); not yet a card on the landings (RL4) | [VAR_GUIDE section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained) |
 | Which scenario drives it and who loses on it; the scenario matrix (`SMAT`) | **Built** | [VAR_GUIDE sections 3.4](../guides/VAR_GUIDE.md#34-the-tabs), [3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
-| Several hierarchies (MGMT, LEGAL, limit letters `LL`, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
+| Several hierarchies (MGMT, LEGAL, limit letters `LL`, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns) |
 | Captures, compare, history, backtest on Drishti's derived hypothetical P&L | **Built**; the bank's actual and hypothetical P&L not yet (RL3) | [VAR_GUIDE sections 6](../guides/VAR_GUIDE.md#6-captures-and-compare), [7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 | A large trade's effect; intraday VaR from files and Kafka; the pre-deal basket | **Built** | [VAR_GUIDE section 8](../guides/VAR_GUIDE.md#8-what-if-and-var-as-a-kind) |
 | The VaR of every short EUR position, of a basket | **Built**: scope words, rule portfolios, `WHERE:`, baskets | [VAR_GUIDE section 3.5](../guides/VAR_GUIDE.md#35-construct-your-basket) |
@@ -1458,7 +1458,7 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 |---|---|---|
 | VaR 99% and ES 97.5% of any scope; component, incremental, marginal VaR; any confidence and window per request | **Built** | [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts), [18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences) |
 | 10-day VaR (√10 and overlapping sum); stressed VaR; the stress-window selection `SWIN` | **Built** | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen), [18.8](../guides/VAR_GUIDE.md#188-stressed-var), [18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window) |
-| Several hierarchies (management, legal entity, limit letters `LL`) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
+| Several hierarchies (management, legal entity, limit letters `LL`) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns) |
 | VaR limits per node and stored portfolio; `LIMIT_USE` on every answer and official record; near from `drishti.risk.limit-near` (0.8) | **Built** | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits), [3.2](../guides/VAR_GUIDE.md#32-the-screen), [19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | Why VaR moved (RO1) | **Built** | [VAR_GUIDE section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained); [5.3.1](#531-ro1-var-change-explanation) |
 | Worst scenarios and who lost on them; the scenario matrix `SMAT` | **Built** | [VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs), [3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
@@ -1941,7 +1941,7 @@ edition: oversight
 title: Drishti Oversight
 packs: { enabled: [core, market-data, trading, market-risk, counterparty-risk], allow-only: true }  # counterparty read for concentration
 commands:
-  allow: [VRES, VOFF, VLIM, HIER, PORT, POS, TVAL, PNLV, STR, SCN, SSPNL, PNL, FRTB, SENS, SMAT,
+  allow: [VRES, VOFF, VLIM, PORT, POS, TVAL, PNLV, STR, SCN, SSPNL, PNL, FRTB, SENS, SMAT,
           CPTY, GRP, LE, BOOK, DESK, TRDR, ISS, TRD, CTRD, PTRD, LTRD, EXP, XOFC, LIM,
           CRV, FX, FXV, EQ, CMD, CDS, BND, BRCH, LREQ]
   words: { BI: on, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on, FORM: off, RUPAKA: off }
@@ -2325,7 +2325,7 @@ CCR cube, [ARCHITECTURE.md section 26.4](ARCHITECTURE.md#264-the-providers)).
 
 A **cube view** is a scope, dimensions on rows and columns, measures, filters, a business date (or two for a change) and a lens (horizon,
 confidence, reporting currency). **Dimensions** come from any attribute the inputs carry, any hierarchy the engine holds
-([VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns)), the risk-factor parts
+([VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)), the risk-factor parts
 of the sensitivities, reference data joined by id (an issuer's sector, a counterparty's country), and the scenario day.
 
 | Class | Examples | How a cell and a total are made |
@@ -2442,7 +2442,7 @@ input is the bank's**; the demo's synthetic data is labelled as such.
 | 2 | Positions | the position grain; market value | [D2](#664-d2-position-pos-existing-derived-by-drishti) | existing |
 | 3 | Scenario P&L vectors, scenario PVs, FX scenarios | VaR, ES, components, histogram, explain | [D3](#665-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) | existing; per-class vectors proposed |
 | 4 | Scenario sets, the stress set | scenario days; Normal / Stressed | [D4](#666-d4-scenario-set-sset-existing-extended) | existing; `PURPOSE` proposed |
-| 5 | Hierarchies and VaR limits | rows; `limit()` | [D5](#667-d5-risk-hierarchy-and-var-limit-existing) | existing |
+| 5 | Hierarchies and VaR limits | rows; `limit()` | [D5](#667-d5-the-hierarchies-and-var-limit-existing) | existing |
 | 6 | Limits of every measure | ladder, stress, ES, capital limits | [D6](#668-d6-risk-limit-new-one-limit-table-for-every-measure) | proposed (DV01 limits are configuration today) |
 | 7 | Market data curves and surfaces | explain's overlay; QLRisk pricing | [D7](#669-d7-market-data-existing-read-for-explain-and-pricing) | existing; factor mapping proposed |
 | 8 | FX rates | the reporting currency | [D3](#665-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) | existing |
@@ -2471,7 +2471,7 @@ the sparklines and explain; the sensitivities and factor dictionary light up tab
 | D2 | `position` (POS) | drishti-owned | existing | the position grain; market value |
 | D3 | `pnl-vector` (PNLV), `scenario-pv` (SPV), `fx-scenario` (FXS) | input | existing; extension proposed | the vector measures |
 | D4 | `scenario-set` (SSET) | input | existing; extension proposed | scenario days, the stress set |
-| D5 | `risk-hierarchy` (HIER), `var-limit` (VLIM) | input | existing | dimensions; VaR limits |
+| D5 | the hierarchies (from the trades' columns), `var-limit` (VLIM) | input | existing | dimensions; VaR limits |
 | D6 | `risk-limit` | fundamental | proposed (RO3) | sensitivity, stress, ES, capital limits |
 | D7 | market data (`ir-curve`, `credit-curve`, `fx-spot`, vol surfaces …) | fundamental | existing | factor moves; pricing |
 | D8 | `position-sensitivity` (SENS) | input | existing | sensitivities, ladders, SBM, SIMM (CCR) |
@@ -2516,10 +2516,10 @@ One row per set per date (`SCENARIO_DATES` oldest first, count, window, horizon,
 `REDUCED_FACTOR_SET`. Every set is a lens (Normal / Stressed). Validation: one `NORMAL` set per date; a `STRESSED` window inside the
 approved stress period.
 
-#### 6.6.7 D5 `risk-hierarchy` and `var-limit`: existing
+#### 6.6.7 D5 the hierarchies and `var-limit`: existing
 
-Nodes per date (`NODE_ID` `LEGAL~LE-NY`, hierarchy, level, parent, books) or built from the vectors' columns; VaR limits per node with
-horizon and confidence. The cube draws a cell's limit only when the cell is exactly a node and the lens matches the limit's horizon and
+Nodes per date (`NODE_ID` `LEGAL~LE-NY`, hierarchy, level, parent), built by the engine from the vectors' promoted columns; VaR limits
+per node with horizon and confidence. The cube draws a cell's limit only when the cell is exactly a node and the lens matches the limit's horizon and
 confidence; otherwise no limit, with the reason in the cell's notes.
 
 #### 6.6.8 D6 `risk-limit`: new (one limit table for every measure)
@@ -3008,7 +3008,7 @@ Steps 2 and 3 are why trades cannot be summed across netting sets: exposures of 
 
 **Two hierarchies:** the legal one (GLEIF ultimate parent → … → netting set → trade; exact, sets summed per path) and the desk one
 (bank → division → desk → book → trade, and the legal-entity and limit-letter hierarchies,
-[VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns); allocated).
+[VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns); allocated).
 
 #### 7.5.2 Shards by counterparty and netting set
 
@@ -3021,7 +3021,7 @@ second round for PFE (the quantile paths), as contributions do today. Planned wi
 ### 7.6 CCR data and contracts
 
 The conventions and the shared contracts are [section 6.6](#66-data-and-contracts): `trade` ([D1](#663-d1-trade-trd-existing-read-as-dimensions)),
-the risk hierarchies ([D5](#667-d5-risk-hierarchy-and-var-limit-existing)) for allocation by desk, and `position-sensitivity`
+the risk hierarchies ([D5](#667-d5-the-hierarchies-and-var-limit-existing)) for allocation by desk, and `position-sensitivity`
 ([D8](#6610-d8-position-sensitivity-sens-existing)) read as CRIF for SIMM and SA-CVA hedges. CCR demo data lives in
 `data/testdata/counterparty-risk/<kind>/`; the built contracts are documented in
 [docs/contracts/packs/counterparty-risk.md](../contracts/packs/counterparty-risk.md) and
@@ -3623,7 +3623,7 @@ packs:
     economy: [news-and-markets, world-economy]
   allow-only: true
 commands:
-  allow: [CRO, VOFF, VLIM, VRES, HIER, STR, SCN, SSPNL, EXP, XOFC, LIM, CPTY, GRP, LE, DESK, BOOK, NEWS, TOPIC, QUOTE, ECON, MACRO,
+  allow: [CRO, VOFF, VLIM, VRES, STR, SCN, SSPNL, EXP, XOFC, LIM, CPTY, GRP, LE, DESK, BOOK, NEWS, TOPIC, QUOTE, ECON, MACRO,
           RAPM, RAPS, BRCH, LREQ, GCAL, LIQM, CAPP, FEMS]
   words: { BI: on, FUNC: on, WHAT: on, DATAMAP: off, VAR: on, EXP: on, SMAT: on, FORM: off, RUPAKA: off }
 home: { landing: appetite, landings: [appetite, brief, detail], template: home/cro_landing.html }
@@ -4046,7 +4046,7 @@ Fields: `PACK`, `KIND`, `SOURCE`, `STATE` (the six states), `DEADLINE`, `LANDED_
 
 #### 9.5.3 FDEP: feed-dependency, what each official output needs
 
-New, fundamental, from the data office, checked against what the engines read (VaR: `pnl-vector`, `risk-hierarchy`, `scenario-set`,
+New, fundamental, from the data office, checked against what the engines read (VaR: `pnl-vector`, `var-limit`, `scenario-set`,
 `scenario-pv`; exposure: `simulation-run`, `exposure-path`). Key `OUTPUT` (`VAR-OFFICIAL`, `EXPOSURE-OFFICIAL`, `STRESS`, or a feed for
 chains), `INPUT`; fields `READY_BY`, `TYPICAL_MINUTES`, `REQUIRED` (false when a fallback exists). Validation: no cycles; inputs known; an
 output with no input refused.

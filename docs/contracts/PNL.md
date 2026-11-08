@@ -144,7 +144,7 @@ time: after the T valuation batch (to be agreed, open question 3).
 | Master (kind) | Key | What for |
 |---|---|---|
 | `trade` (TRD) | `TRADE_ID` | status and version at T−1 and T; derived events (new, matured, cancelled) |
-| `risk-hierarchy` (HIER) | `NODE_ID` | nodes; the scope of a trade that moved books between T−1 and T (it counts in its T book; open question 4) |
+| the VaR hierarchies (built from the trades' columns) | `NODE_ID` | nodes; the scope of a trade that moved books between T−1 and T (it counts in its T book; open question 4) |
 | business-day calendar (USNY) | | the previous business date |
 | `fx-rate` | | none (every amount in USD) |
 

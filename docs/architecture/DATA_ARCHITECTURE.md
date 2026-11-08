@@ -4096,8 +4096,8 @@ counterparty asking for CAD or EUR) is designed in the open steps.
   (`CSA-<counterparty>-<legal entity>`, named by the netting set, the collateral balance and the margin call; an agreement lists its
   `CSAS`); CSA terms are numeric with a currency (`CSA_CURRENCY`, `MTA_US`, `MTA_THEM`, `MARGIN_FREQUENCY_DAYS`, `MPOR_DAYS`); maturity
   buckets are named sets per purpose (`display`, `limit`) in `config/packs/banking/counterparty-risk/config/maturity-buckets.yaml`; every
-  VaR limit lives in `var-limit` (MGMT, LEGAL and limit-letter nodes, and each portfolio as hierarchy `PORTFOLIO`), so `risk-hierarchy`
-  and `portfolio` carry none; a counterparty group's `LIMIT` is its own approved limit; `netting-set.UTILISATION` is not delivered. The
+  VaR limit lives in `var-limit` (MGMT, LEGAL and limit-letter nodes, and each portfolio as hierarchy `PORTFOLIO`), so `portfolio`
+  carries none, and the hierarchies themselves are built from the trades' promoted columns (no hierarchy feed); a counterparty group's `LIMIT` is its own approved limit; `netting-set.UTILISATION` is not delivered. The
   retirement guard (`tools/contracts.policy.yaml`, `removed:`) fails the build if a retired field returns.
 - **The exposure engine's inputs** (`ExposureLoader`): a netting set's members and their current MtM come from `trade-valuation` (a live
   status, the set in `NETTING_SET`), not the set's stored `TRADES[]` (a date without valuations reads the stored members and logs it); the

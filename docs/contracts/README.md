@@ -92,7 +92,6 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
     ├── position/                             one Delta table per kind
     ├── pnl-vector/
     ├── scenario-set/
-    ├── risk-hierarchy/
     ├── portfolio/
     ├── position-sensitivity/
     ├── risk-factor/
@@ -140,7 +139,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 | `LEI` | The counterparty's Legal Entity Identifier | 20 characters | `lei-entity` (LEI) |
 | `NETTING_SET` | A netting set under one agreement | `NS-…` | `netting-set` (NSET) |
 | `CSA` | The credit support annex | `CSA-…` | `csa` (CSA) |
-| `NODE_ID` | A node of a risk hierarchy | `MGMT~DESK-RATES` (hierarchy, `~`, node) | `risk-hierarchy` (HIER) |
+| `NODE_ID` | A node of a hierarchy, built by the engine from the trades' promoted columns | `MGMT~DESK-RATES` (hierarchy, `~`, node) | none (the engine's tree; `var-limit` rows name it) |
 | `SCENARIO_SET_ID` | A set of historical scenarios | `HS-509` | `scenario-set` (SSET) |
 | `SCENARIO_ID` | A stress scenario | `SCN-…` | `stress-scenario` (SCN) |
 | `BUSINESS_DATE` | The close of business a row describes | `YYYY-MM-DD` | |

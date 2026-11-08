@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """A day of synthetic, Endur-style risk data for tutorial 16, Part A and docs/guides/DATA_LAKE_GUIDE.md: trades, positions' scenario PVs and the
-VaR hierarchy's nodes, as JSON Lines named by the load rules (<table>.<YYYY-MM-DD>.jsonl[.gz]). Every value is invented; the same
+VaR limits of the management hierarchy's nodes (the hierarchy itself is built by the server from the rows' DESK and TT_BOOK), as JSON Lines named by the load rules (<table>.<YYYY-MM-DD>.jsonl[.gz]). Every value is invented; the same
 arguments always write the same files. For each file it prints the rows and the SHA-256 to put in its .ready file.
 
     python3 docs/tutorials/data/risklake/make_day.py --out drop --date 2026-11-06
@@ -74,13 +74,16 @@ def positions(rnd: random.Random, day: str, n: int, scenarios: int):
                "STATUS": "ok", "COMPUTED_AT": f"{day}T06:00:00Z", "BATCH_ID": f"B-{day}-01", "RUN_KIND": "FULL"}
 
 
-def nodes(day: str):
-    yield {"NODE_ID": "BANK", "HIERARCHY": "MGMT", "LEVEL": "BANK", "PARENT_ID": None, "NAME": "The bank", "BUSINESS_DATE": day}
+def limits(day: str):
+    """The VaR limit of each node of MGMT (the bank, every desk, every book): 26 var-limit rows."""
+    def row(node: str, limit: float):
+        return {"LIMIT_ID": f"VL-MGMT~{node}", "HIERARCHY": "MGMT", "NODE_ID": f"MGMT~{node}", "LIMIT_VAR": limit, "CURRENCY": "USD",
+                "BUSINESS_DATE": day}
+    yield row("BANK", 250_000_000.0)
     for desk in DESKS:
-        yield {"NODE_ID": desk, "HIERARCHY": "MGMT", "LEVEL": "DESK", "PARENT_ID": "BANK", "NAME": desk.title(), "BUSINESS_DATE": day}
+        yield row(desk, 60_000_000.0)
         for b in range(1, 5):
-            book = f"BOOK-{desk[5:]}-{b}"
-            yield {"NODE_ID": book, "HIERARCHY": "MGMT", "LEVEL": "BOOK", "PARENT_ID": desk, "NAME": book, "BUSINESS_DATE": day}
+            yield row(f"BOOK-{desk[5:]}-{b}", 20_000_000.0)
 
 
 def write(path: Path, rows) -> int:
@@ -105,7 +108,7 @@ def main(argv=None) -> int:
     rnd = random.Random(a.date)
     for name, rows in ((f"trade_endur.{a.date}.jsonl.gz", trades(rnd, a.date, a.trades)),
                        (f"scenario_pv.{a.date}.jsonl.gz", positions(rnd, a.date, a.positions, a.scenarios)),
-                       (f"risk_hierarchy.{a.date}.jsonl", nodes(a.date))):
+                       (f"var_limit.{a.date}.jsonl", limits(a.date))):
         n = write(out / name, rows)
         sha = hashlib.sha256((out / name).read_bytes()).hexdigest()
         print(f"{out / name}  rows: {n}  sha256: {sha}")
