@@ -51,7 +51,7 @@ import java.util.stream.Stream;
 
 /**
  * The one-time move of a lake built in the older layout, its tables directly in {@code <data>/delta/<domain>/<table>}, into its own folder
- * {@code <data>/delta/<lake>/} (docs/admin/OPERATIONS.md, "The lakes' folders"). Safe by construction:
+ * {@code <data>/delta/<lake>/} (docs/guides/OPERATIONS_GUIDE.md, "The lakes' folders"). Safe by construction:
  * <ul>
  *   <li>only the lake's known top folders move (the first folder of each of its tables' paths, and its state folder {@code _drishti-lake}),
  *       by a rename on the same file system; another lake's folders at the same place stay where they are;</li>

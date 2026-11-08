@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /**
- * Admin → Capacity (RESOURCES_AND_SCALE.md 9.7), administrators only:
+ * Admin → Capacity (CLUSTER_GUIDE.md 9.7), administrators only:
  * <pre>
  *   GET /api/v1/admin/capacity                                      the planner (capacity/planner.yaml) as JSON, for the page to evaluate
  *   GET /api/v1/admin/capacity/live                                 this server's measured figures, with when, and the inputs they stand for

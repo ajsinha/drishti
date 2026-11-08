@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/modules/banking.yaml: the banking module at this site (docs/architecture/ACCESS_MODEL.md, docs/admin/OPERATIONS.md › Modules).
+# config/modules/banking.yaml: the banking module at this site (docs/architecture/ACCESS_MODEL.md, docs/guides/OPERATIONS_GUIDE.md › Modules).
 # The module's manifest ships in its jar (drishti-banking: META-INF/drishti/module.yaml); this file holds the administrator's switch and
 # the module's name.
 # Admin -> Modules writes it; the setting drishti.modules.banking.enabled (DRISHTI_MODULES_BANKING_ENABLED) wins over it. A change takes

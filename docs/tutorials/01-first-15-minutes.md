@@ -36,8 +36,8 @@ About 1 h 50 min in all; each part can be done on its own day.
 
 ## Before you start
 
-You need a Linux, macOS or Windows machine with Java 21 or newer, Python 3.13 ([the minimum](../guides/GETTING_STARTED.md#step-1--install-the-prerequisites)), [uv](https://docs.astral.sh/uv/) and git. Nothing else: no database, no
-Docker. On Windows follow [GETTING_STARTED.md (Windows)](../guides/GETTING_STARTED.md#drishti-on-windows) for the same steps in PowerShell.
+You need a Linux, macOS or Windows machine with Java 21 or newer, Python 3.13 ([the minimum](../guides/OPERATIONS_GUIDE.md#21-prerequisites)), [uv](https://docs.astral.sh/uv/) and git. Nothing else: no database, no
+Docker. On Windows follow [OPERATIONS_GUIDE.md (Windows)](../guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) for the same steps in PowerShell.
 
 These tutorials run on the **quick-start environment** of [data/testdata/README.md](../../data/testdata/README.md): the seven packs (`core`, `market-data`, `trading`,
 `counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`) reading the **demo lakes**, sixty business days of production-shaped test data (5,000 trades from
@@ -45,7 +45,7 @@ each of three booking systems, ENDUR, CALYPSO and MUREX, and everything the pack
 `QUANTITY`), as in production.
 
 In these tutorials `<GO>` means "press Enter", commands are run from the repository root (the folder called `drishti`), and the server and the console are the two
-programs from [GETTING_STARTED.md](../guides/GETTING_STARTED.md): the **server** reads the data (port 18480), the **console** is the web pages you open (port 17480).
+programs from [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine): the **server** reads the data (port 18480), the **console** is the web pages you open (port 17480).
 Every step says what to do **in the UI** (IntelliJ IDEA and PyCharm run configurations, or the console's pages) and **from the command line** where a command exists.
 
 **Where this data comes from.** The banking packs' data is synthetic test data (fictitious names, `tools/testdata/make_testdata.py`); the `world-economy` pack's figures are published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `drishti.py feed run world-economy`; the `news-and-markets` pack's quotes and headlines are a captured snapshot of Yahoo Finance and Google News, **internal only** (`drishti.py feed run news-and-markets`). Each source, its licence and how to refresh it: [External data](../guides/EXTERNAL_DATA.md).
@@ -136,7 +136,7 @@ will also have a token that lets the command line talk to your server, which tut
 
 ## Step 1 · Install, build and check the machine
 
-**In the UI.** Open the repository in IntelliJ IDEA (its run configurations are in `run-configs/`, [GETTING_STARTED.md (IDE)](../guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)) and run **Drishti build server jar**.
+**In the UI.** Open the repository in IntelliJ IDEA (its run configurations are in `run-configs/`, [OPERATIONS_GUIDE.md (IDE)](../guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)) and run **Drishti build server jar**.
 Then, in PyCharm opened on `drishti-console/` (its run configurations are in `drishti-console/run-configs/`), run **Build demo lakes**.
 
 **From the command line:**
@@ -437,7 +437,7 @@ export DRISHTI_SERVER=http://localhost:18480
 export DRISHTI_TOKEN=$(cat ~/drishti-tokens/tutorial.token)
 ```
 
-(The IDE's QA walk keeps it in `data/qa/token.txt` instead: [GETTING_STARTED.md (IDE)](../guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm). The folder `data/` is git-ignored.)
+(The IDE's QA walk keeps it in `data/qa/token.txt` instead: [OPERATIONS_GUIDE.md (IDE)](../guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm). The folder `data/` is git-ignored.)
 
 Without a token a signed-in server says no, in plain words:
 
@@ -938,7 +938,7 @@ sees it with **her own** access, write in the view's discussion and mention her,
 ## Step 22 · Make a colleague
 
 Open **Admin**, then **Users**, and press **New user**: user name `vera`, display name `Vera Lim`, the role `viewer`, an email address, a password of at least ten characters with letters and digits, and tick *must change password* only if you
-want that to be part of your test. (Roles and packs per user are explained in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).)
+want that to be part of your test. (Roles and packs per user are explained in [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md).)
 
 ![Admin → Users: the development administrator and Vera Lim, role viewer](img/t08/00-users.jpg)
 
@@ -1026,7 +1026,7 @@ data, one row per day. What moved is tinted, and you can open any day as it was.
 numbers. This part walks through a trade and an equity, changes only and DIFF, opening a day, exporting, the `history:` block that
 shapes a kind's screen, and the limits. Each step shows the UI, the command line and, where there is one, the YAML. The references are
 [USER_GUIDE › History](../guides/USER_GUIDE.md#history-an-entity-over-time),
-[CLI_GUIDE › history](../guides/CLI_GUIDE.md#history-an-entity-over-time) and the design,
+[CLI_GUIDE › history](../guides/CLI_REFERENCE.md#history-an-entity-over-time) and the design,
 [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time).
 
 ## Step 27 · A range after the id
@@ -1280,19 +1280,9 @@ days*.
 
 ## Next steps
 
-- The [User guide](../guides/USER_GUIDE.md) describes every feature of the console; [CLI_GUIDE.md](../guides/CLI_GUIDE.md) every command; [data/testdata/README.md](../../data/testdata/README.md) the test data and its demo pages.
-- [USER_GUIDE.md › The command line](../guides/USER_GUIDE.md#the-command-line) lists every reserved word, alias and error message; [Business dates](../guides/USER_GUIDE.md#business-dates-live-or-a-day-in-the-past) explains *known at* (time travel).
-- [data/testdata/README.md](../../data/testdata/README.md) lists more demo pages (an ENDUR ComSwap `1000001`, a CALYPSO bond `CLY-3000157`, `CP-NORTHPLAINS`).
-- [Tutorial 8, Part E · Reports](08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions) runs a search on a schedule.
-- [USER_GUIDE.md › Search with a form](../guides/USER_GUIDE.md#search-with-a-form-form-pack) is the reference, including keyboard and phone use; the pack's author decides what the form offers
-  ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)).
-
-The form has no `drishti.py` command of its own: the search it writes is an ordinary command, which you can paste into the command line, send to `/api/v1/search` (as above) or put in a scheduled report.
-- [USER_GUIDE.md › Share a view with a note](../guides/USER_GUIDE.md#share-a-view-with-a-note), [Your inbox](../guides/USER_GUIDE.md#your-inbox) and [Discussion](../guides/USER_GUIDE.md#discussion) are the references.
-- Sharing, the inbox and discussions have no `drishti.py` command: they belong to people, and the API takes a signed-in session for them ([API_GUIDE.md](../guides/API_GUIDE.md)).
-  An administrator sets collaboration limits and the email channel in **Admin → Collaboration** ([OPERATIONS.md](../admin/OPERATIONS.md)).
-- [Tutorial 12](12-a-day-of-bank-data.md): load a day at a time, so history has days to show.
-- [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time): how each store answers a history fast (Delta, Iceberg, Cassandra, JDBC, …).
+- [Tutorial 2 · Look up anything](#part-b--look-up-anything): mnemonics, type-ahead, links, a past date, Compare.
+- [Tutorial 3 · Query by form](#part-c--query-by-form): the form in depth, and keeping a search.
+- The [User guide](../guides/USER_GUIDE.md) describes every feature of the console; [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) every command; [data/testdata/README.md](../../data/testdata/README.md) the test data and its demo pages.
 
 ## If something goes wrong
 

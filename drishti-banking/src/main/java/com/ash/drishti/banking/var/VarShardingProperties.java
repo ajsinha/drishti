@@ -40,7 +40,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param skeletonTimeoutSeconds how long an owner may take to build and send a shard's skeleton (600)
  * @param rebalanceSeconds how often this member looks at the members and its shards (2)
  * @param releaseAfterSeconds how long a shard book is kept after no member has had its date open and nothing read it (900), unless the
- *     date is among the lake's newest {@code hot-dates}; 2.9.7 (RESOURCES_AND_SCALE.md section 5.3)
+ *     date is among the lake's newest {@code hot-dates}; 2.9.7 (CLUSTER_GUIDE.md section 5.3)
  */
 @ConfigurationProperties("drishti.var.sharding")
 public record VarShardingProperties(Boolean enabled, List<String> key, List<String> kinds, Double targetShardMb, Integer replicas,

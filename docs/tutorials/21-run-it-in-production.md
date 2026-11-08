@@ -16,7 +16,7 @@
 # Tutorial 21 · Run it in production
 
 Everything so far ran on your own machine as the development administrator. This tutorial is the walk from there to a shared installation you can hand to other people: **security on**, **your own administrator** instead of the development one, **roles and BI powers** that give each person what they need and no more, **tokens** and the secret that signs them, **backups** that you have tried
-to restore, the **heap** and the **connection pools** sized for the machine and the databases, **health** you can watch, an **upgrade** you can roll back, and where to look when something goes wrong. It is a checklist you do, with the real output of each check. The complete reference is [OPERATIONS.md](../admin/OPERATIONS.md), and every step
+to restore, the **heap** and the **connection pools** sized for the machine and the databases, **health** you can watch, an **upgrade** you can roll back, and where to look when something goes wrong. It is a checklist you do, with the real output of each check. The complete reference is [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md), and every step
 names its section.
 
 ## Time to complete
@@ -33,7 +33,7 @@ About 60 minutes (most of it waiting for a restart or a backup you then read).
 
 ## What you will learn
 
-- the production checklist of [OPERATIONS.md section 9](../admin/OPERATIONS.md#9-production-checklist), item by item, and how to check each one;
+- the production checklist of [OPERATIONS_GUIDE.md section 9](../guides/OPERATIONS_GUIDE.md#111-the-checklist), item by item, and how to check each one;
 - how to retire the development administrator the safe way;
 - users, roles and BI powers; what a token can and cannot do; why `DRISHTI_TOKEN_SECRET` is a master key and how to rotate it;
 - what to back up, a backup script, and how to look inside the archive;
@@ -59,8 +59,8 @@ $ curl -s localhost:18480/api/v1/sources
 
 You should see `401 DRS-5010`. (A server with security off answers the request: never do that on a shared machine.) And check the console: a private browser window opening it must be sent to the sign-in page; sessions follow the user, so disabling or demoting someone takes effect within ten seconds.
 
-The other switches of the checklist, each with its check in OPERATIONS.md: **demo source off** (`DRISHTI_DEMO_ENABLED=false`: the tutorials used its live ticks; production reads your real sources), **authoring off** (`DRISHTI_STUDIO_SAVE=false` except where you author, with `DRISHTI_SUTRA_REVIEW=true` and `DRISHTI_SUTRA_FOUR_EYES=true`), **TLS at a reverse proxy** with `DRISHTI_SECURE_COOKIE` left at `true`
-([section 8](../admin/OPERATIONS.md#8-tls-and-the-reverse-proxy)), and **the ports**: only the proxy reaches the console, only the console reaches the server's `/api`, only monitoring reaches `/actuator`.
+The other switches of the checklist, each with its check in OPERATIONS_GUIDE.md: **demo source off** (`DRISHTI_DEMO_ENABLED=false`: the tutorials used its live ticks; production reads your real sources), **authoring off** (`DRISHTI_STUDIO_SAVE=false` except where you author, with `DRISHTI_SUTRA_REVIEW=true` and `DRISHTI_SUTRA_FOUR_EYES=true`), **TLS at a reverse proxy** with `DRISHTI_SECURE_COOKIE` left at `true`
+([section 8](../guides/OPERATIONS_GUIDE.md#113-tls-and-the-reverse-proxy)), and **the ports**: only the proxy reaches the console, only the console reaches the server's `/api`, only monitoring reaches `/actuator`.
 
 ## Step 2 · Your own administrator, and the development one gone
 
@@ -107,7 +107,7 @@ You should see the built-in roles (read-only, from configuration) and the ones y
 
 ![Admin, BI: the roles with the four BI powers as columns (shown in tutorial 13)](img/t13/01-bi-settings.jpg)
 
-Single sign-on is optional: `DRISHTI_OIDC_ENABLED=true`, the issuer and client id on both processes, the client secret and redirect address on the console, and a map from the identity provider's groups to Drishti roles on the server ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)).
+Single sign-on is optional: `DRISHTI_OIDC_ENABLED=true`, the issuer and client id on both processes, the client secret and redirect address on the console, and a map from the identity provider's groups to Drishti roles on the server ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md)).
 
 ## Step 4 · Tokens, and the secret that signs them
 
@@ -141,7 +141,7 @@ There is no overlap window for two secrets, so choose a quiet moment. Review **A
 
 ## Step 5 · Back it up, and look inside
 
-Drishti's own state is a few folders: the **identity database** (users, password hashes, the audit log, saved preferences, BI drafts and history), the **governance** folder (proposals and approvals), your **sutras**, `config/` (connectors, BI, AI), and your **environment file**. The lake is yours to back up with your data platform. The console writes nothing. [OPERATIONS.md section 10](../admin/OPERATIONS.md#10-backups-and-restore) has the full table;
+Drishti's own state is a few folders: the **identity database** (users, password hashes, the audit log, saved preferences, BI drafts and history), the **governance** folder (proposals and approvals), your **sutras**, `config/` (connectors, BI, AI), and your **environment file**. The lake is yours to back up with your data platform. The console writes nothing. [OPERATIONS_GUIDE.md section 10](../guides/OPERATIONS_GUIDE.md#17-backups-and-restore) has the full table;
 this is the script, and it works on any machine with `python3` (the database is copied with SQLite's own backup call, which is safe while the server runs; `sqlite3 data/identity/drishti.db ".backup ..."` does the same where that program is installed):
 
 ```bash
@@ -195,7 +195,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" localhost:18480/api/v1/admin
 {'version': '2.5.0', 'uptimeSeconds': 567, 'java': '21.0.12.1', 'heapUsedMb': 637, 'heapMaxMb': 15576, 'threads': 67, 'cpus': 24}
 ```
 
-On this 64 GB machine the ceiling is `15576` MB (a quarter). Set it on purpose in the service's environment, with a collector that suits a server (`-XX:+UseZGC -XX:+ZGenerational`, [OPERATIONS.md section 7](../admin/OPERATIONS.md#7-running-as-services-systemd)):
+On this 64 GB machine the ceiling is `15576` MB (a quarter). Set it on purpose in the service's environment, with a collector that suits a server (`-XX:+UseZGC -XX:+ZGenerational`, [OPERATIONS_GUIDE.md section 7](../guides/OPERATIONS_GUIDE.md#53-running-as-services-systemd)):
 
 ```bash
 Environment=JAVA_TOOL_OPTIONS=-Xmx2g -XX:+UseZGC -XX:+ZGenerational     # in the systemd unit, or export it before starting the server
@@ -206,7 +206,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" localhost:18480/api/v1/admin
 {'version': '2.5.0', 'uptimeSeconds': 7, 'java': '21.0.12.1', 'heapUsedMb': 866, 'heapMaxMb': 2048, 'threads': 64, 'cpus': 24}
 ```
 
-You should see `heapMaxMb` at `2048`. How big? Give the server a heap of **8 GB or more** when it serves a big lake or many live streams ([OPERATIONS.md section 11](../admin/OPERATIONS.md#11-the-lake-where-it-lives-and-keeping-it-bounded)); for VaR, `-Xmx6g` served 1,000,000 positions with two dates open and 200 users, about 0.72 GB of heap a date ([BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)); leave the machine memory for the BI engine (`drishti.bi.query.memory-limit`, 768 MB by default, and its threads), and watch **Heap high** in monitoring: `sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.9` for ten minutes means raise it or lower a cache.
+You should see `heapMaxMb` at `2048`. How big? Give the server a heap of **8 GB or more** when it serves a big lake or many live streams ([OPERATIONS_GUIDE.md section 11](../guides/OPERATIONS_GUIDE.md#7-data-stores-lakes-and-feeds)); for VaR, `-Xmx6g` served 1,000,000 positions with two dates open and 200 users, about 0.72 GB of heap a date ([BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)); leave the machine memory for the BI engine (`drishti.bi.query.memory-limit`, 768 MB by default, and its threads), and watch **Heap high** in monitoring: `sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.9` for ten minutes means raise it or lower a cache.
 Every cache has a bound you can set; **Admin → Caches** lists them with their statistics and a purge button. Its first row is the
 **memory budget**: the Delta connectors share caches sized from the heap (half of it in all) unless a connector sets its own, and the row
 shows each shared cache against its cap. The same list and purge from the terminal: `drishti.py server caches [purge NAME|all]`.
@@ -231,7 +231,7 @@ PostgreSQL's default max_connections is 100: NOT enough
 ```
 
 You should see that the default is **not enough**, and the symptom when it is not: `FATAL: sorry, too many clients already` from the database, long before a Drishti pool is exhausted. Raise `max_connections`, put PgBouncer in front (transaction mode), or lower the pools (`pool-size` per connector, or `drishti.db.pool.size`). A pool opens connections only as used and closes extras after `pool-idle-timeout`, so the sum is a ceiling; start from the busiest reads, since a pool needs `scan-threads` plus the reads you expect at once, and a quiet connector needs 2 to 4.
-[OPERATIONS.md section 16](../admin/OPERATIONS.md#16-capacity) has the rest, and says what MongoDB, Redis and Aerospike limit.
+[OPERATIONS_GUIDE.md section 16](../guides/OPERATIONS_GUIDE.md#148-capacity-figures-database-pools-and-bi-scale) has the rest, and says what MongoDB, Redis and Aerospike limit.
 
 ## Step 7 · Health: what to watch
 
@@ -259,9 +259,9 @@ Under the status line, **Temp folders** names the one folder each process keeps 
 
 ![Admin, a connector's Index panel: the automatic check times, and the days of trade with where each is kept, its ids, size, build time and state; the second day was just reloaded](img/t17/11-index-reload.jpg)
 
-You should see the day you reloaded get a new *Built* time and stay *fresh*; the old day answered type-ahead until the new one replaced it, and one reload runs per connector at a time. Each reload is in the audit log. Sizing and the settings: [OPERATIONS.md section 12.2](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index) and [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiindex--the-multi-day-type-ahead-index). (This picture was made on a stack that reads a demo lake with `index.days: 3` on its trade connector; on the quick-start environment the trades are in `trade-endur`, `trade-calypso` and `trade-murex`.)
+You should see the day you reloaded get a new *Built* time and stay *fresh*; the old day answered type-ahead until the new one replaced it, and one reload runs per connector at a time. Each reload is in the audit log. Sizing and the settings: [OPERATIONS_GUIDE.md section 12.2](../guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index) and [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiindex--the-multi-day-type-ahead-index). (This picture was made on a stack that reads a demo lake with `index.days: 3` on its trade connector; on the quick-start environment the trades are in `trade-endur`, `trade-calypso` and `trade-murex`.)
 
-For **monitoring**, Prometheus scrapes `/actuator/prometheus` with `Authorization: Bearer $DRISHTI_METRICS_TOKEN` (with security on every `/actuator` endpoint but health needs it), and there is a Grafana dashboard and a list of suggested alerts in [OPERATIONS.md section 13](../admin/OPERATIONS.md#13-monitoring). The one-call summary for a script is `GET /api/v1/admin/health`:
+For **monitoring**, Prometheus scrapes `/actuator/prometheus` with `Authorization: Bearer $DRISHTI_METRICS_TOKEN` (with security on every `/actuator` endpoint but health needs it), and there is a Grafana dashboard and a list of suggested alerts in [OPERATIONS_GUIDE.md section 13](../guides/OPERATIONS_GUIDE.md#13-monitoring-and-health). The one-call summary for a script is `GET /api/v1/admin/health`:
 
 ```text
 {"status": "DEGRADED", "summary": {"failedToStart": 0, "packsWithProblems": 1, "sourcesDown": 1, "sourcesDegraded": 0, "sources": 16, "packs": 8},
@@ -299,7 +299,7 @@ The **audit log** is the other thing to watch. Everything an administrator does 
 
 ![Admin, Audit log filtered to drishti-dev-admin: logins, user-disabled by ops, sessions-ended, user-enabled by ops](img/t17/10-audit.jpg)
 
-You should see the story of step 2, filtered to the development administrator with the box at the top (a user name; empty shows everything): `user-created` for `ops` (by the development administrator), `user-disabled` by `ops`, `sessions-ended` (its sessions: `4 session(s): disabled`), `user-enabled` by `ops`, and the logins between them. (Unfiltered, the log also lists the system's own events such as a connector that could not be reached and is being retried.) Logs go to the service's standard output ([OPERATIONS.md section 14](../admin/OPERATIONS.md#14-logs)); the AI layer's Test connection and retry actions are lines in the console's log.
+You should see the story of step 2, filtered to the development administrator with the box at the top (a user name; empty shows everything): `user-created` for `ops` (by the development administrator), `user-disabled` by `ops`, `sessions-ended` (its sessions: `4 session(s): disabled`), `user-enabled` by `ops`, and the logins between them. (Unfiltered, the log also lists the system's own events such as a connector that could not be reached and is being retried.) Logs go to the service's standard output ([OPERATIONS_GUIDE.md section 14](../guides/OPERATIONS_GUIDE.md#139-logs)); the AI layer's Test connection and retry actions are lines in the console's log.
 
 ## Step 8 · Upgrade, and roll back
 
@@ -343,26 +343,26 @@ the same list.) Choose **Disable instead**; the server says the child pack build
 You should see *Nothing depends on scratch-conn*. **Uninstall** moves its file to `data/uninstalled/<time>-connector-scratch-conn/`; the connector stops, and the **Uninstalled** tab
 lists it with who did it and what depended on it. **Restore** moves it back and the connector starts again. Archives older than 30 days (`drishti.admin.uninstalled-keep`) are removed
 once a day; **Delete permanently** needs the name typed. Everything above is in the audit log as `artifact-*` events, refusals included. The whole page, the API and the codes
-(`DRS-5040` to `DRS-5044`) are in [OPERATIONALISING.md section 18](../guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely); no API token can do any of it.
+(`DRS-5040` to `DRS-5044`) are in [OPERATIONS_GUIDE.md section 18](../guides/OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely); no API token can do any of it.
 
 ## Next steps
 
-- [OPERATIONS.md](../admin/OPERATIONS.md) for everything above in full, and [CONFIGURATION.md](../admin/CONFIGURATION.md) for every setting. [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) for users, roles, single sign-on and embedding.
-- [PERFORMANCE.md](../admin/PERFORMANCE.md) and [PERFORMANCE.md, method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) before you size a big installation; [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) and the runbooks in [the runbooks](../admin/OPERATIONS.md#17-runbooks) for incidents.
-- Several servers, each with its own data, as one cluster: [tutorial 22](22-a-cluster-of-three.md) and [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one).
-- The tutorials again, now as users: [tutorial 1, Part D](01-first-15-minutes.md#part-d--share-and-collaborate) and [tutorial 8, Part E](08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions) are what your people will do first.
+- [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md) for everything above in full, and [CONFIGURATION.md](../admin/CONFIGURATION.md) for every setting. [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md) for users, roles, single sign-on and embedding.
+- [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#16-tuning) and [CLUSTER_GUIDE.md, method 9](../admin/BENCHMARK.md#213-many-users-soaks-and-memory) before you size a big installation; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#21-troubleshooting) and the runbooks in [the runbooks](../guides/OPERATIONS_GUIDE.md#20-runbooks) for incidents.
+- Several servers, each with its own data, as one cluster: [tutorial 19](22-a-cluster-of-three.md) and [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet).
+- The tutorials again, now as users: [tutorial 8](01-first-15-minutes.md#part-d--share-and-collaborate) and [tutorial 9](08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions) are what your people will do first.
 
 ## If something goes wrong
 
 | You see | Meaning and the first thing to do |
 |---|---|
 | everyone gets `401 DRS-5010` from the console | the two processes have different `DRISHTI_TOKEN_SECRET` values, or the server restarted with a new one and the console did not; make them equal and restart both |
-| `DRS-5041` uninstalling a pack, connector or BI file | other things depend on it: read the list, **Disable instead**, or take the dependants along and type the name ([OPERATIONALISING.md section 18](../guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) |
+| `DRS-5041` uninstalling a pack, connector or BI file | other things depend on it: read the list, **Disable instead**, or take the dependants along and type the name ([OPERATIONS_GUIDE.md section 18](../guides/OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely)) |
 | `DRS-6006` disabling a user | they are the last enabled administrator: make another first |
 | the console is blank after sign-in | the server is unreachable: `curl localhost:17480/readyz` says `503`; start the server, check the address in the console's environment |
 | users are signed out every few minutes | `DRISHTI_SESSION_SECRET` differs between console instances, or the proxy drops the cookie (`DRISHTI_SECURE_COOKIE=true` needs https) |
 | `FATAL: sorry, too many clients already` | database pools exceed `max_connections`: step 6 |
 | `OutOfMemoryError` or a heap above 90% for long | raise `-Xmx`, lower a cache (Admin → Caches), check live streams (`drishti.live.max-streams`) |
-| a connector is `DOWN` | Admin → Health names it and the error; it is retried by itself with growing waits; **Retry all now** tries at once ([runbook](../admin/OPERATIONS.md#171-source-down-or-slow)) |
-| live views lag | [runbook: live latency high](../admin/OPERATIONS.md#173-live-latency-high-or-live-views-stop-ticking) |
+| a connector is `DOWN` | Admin → Health names it and the error; it is retried by itself with growing waits; **Retry all now** tries at once ([runbook](../guides/OPERATIONS_GUIDE.md#201-source-down-or-slow)) |
+| live views lag | [runbook: live latency high](../guides/OPERATIONS_GUIDE.md#203-live-latency-high-or-live-views-stop-ticking) |
 | a restore does not show the users | the unpacked `data/identity/backup.db` was not renamed to `drishti.db`, or the owner is wrong |

@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.ObjectProvider;
 
 /**
- * Every cache on this server in one place (RESOURCES_AND_SCALE.md section 8.1, O1 and O2, 2.9.7): the engine's, history's, the connectors'
+ * Every cache on this server in one place (CLUSTER_GUIDE.md section 8.1, O1 and O2, 2.9.7): the engine's, history's, the connectors'
  * (as they report themselves), and every {@link CacheReport.Owner} (VaR, exposure, BI, pack access, the id maps); the memory and disk
  * totals above them; a purge of one cache, of every cache, or of one business date; the last purge of each, and by whom.
  */

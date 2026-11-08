@@ -129,9 +129,9 @@ is the job of your own ETL (or of a pipeline engine such as DishtaYantra). What 
 there**. One small signal, "this batch has landed", makes Drishti refresh what it caches, check the data is really readable, evaluate the
 alert rules on it, and tell the right people. Expectations then flag a batch that has *not* landed in time.
 
-Related: [API_GUIDE.md](API_GUIDE.md) (every endpoint, the error codes), [CLI_GUIDE.md](CLI_GUIDE.md) (the `drishti.py` program),
+Related: [API_GUIDE.md](API_GUIDE.md) (every endpoint, the error codes), [CLI_REFERENCE.md](CLI_REFERENCE.md) (the `drishti.py` program),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),
-[OPERATIONALISING.md](OPERATIONALISING.md) (shipping packs and data to servers).
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) (shipping packs and data to servers).
 
 ### 1. Why: what the signal is for
 
@@ -152,7 +152,7 @@ With the signal, the same four things happen every time, in order, and each leav
 
 **What this is not.** Drishti will not copy, parse, transform or schedule your data. `drishti.py data ingest`, `data ingest --watch` and
 `pack make` exist to stage data for a demo, a small team or a proof of concept; they are not a production ETL (see
-[OPERATIONALISING.md](OPERATIONALISING.md) and [DATA_GUIDE.md section 11](#11-the-demo-data)). In production your ETL loads the store and, as its
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) and [DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#11-the-demo-data)). In production your ETL loads the store and, as its
 last step, makes the one call this guide describes.
 
 ### 2. Concepts
@@ -330,7 +330,7 @@ A token with only the default `read` scope may call every `GET` above (as the us
 
 ### 5. The command line reference
 
-`tools/drishti.py` (see [CLI_GUIDE.md](CLI_GUIDE.md) for installing it and the connection options `--server`, `--token-file`, `--user`,
+`tools/drishti.py` (see [CLI_REFERENCE.md](CLI_REFERENCE.md) for installing it and the connection options `--server`, `--token-file`, `--user`,
 `--timeout`, and the `DRISHTI_SERVER` / `DRISHTI_TOKEN` / `DRISHTI_USER` environment). The token is never printed.
 
 #### `data landed`
@@ -784,7 +784,7 @@ entity (`<kind>/<id>.json`); `lake build`, `build_demo_lakes.py`, `data ingest` 
 (`UP (CSV input is deprecated: fixing/X.csv (convert to JSON Lines: drishti.py convert))`) until it is gone.
 
 **`drishti.py convert FILE [--out X.jsonl]`** turns CSV, a JSON array (or one object) or a folder of per-entity `.json` files into
-JSON Lines ([CLI_GUIDE.md](CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)):
+JSON Lines ([CLI_REFERENCE.md](CLI_REFERENCE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)):
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py convert trades.csv                    # trades.jsonl, a line per row
@@ -1042,7 +1042,7 @@ zcat trade-valuation_2026-09-30.jsonl.gz | head -2
 
 ### 6. The command line
 
-`drishti.py data get` does the same from a terminal ([CLI_GUIDE.md](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-export-data)):
+`drishti.py data get` does the same from a terminal ([CLI_REFERENCE.md](CLI_REFERENCE.md#data-get-a-dataset-as-jsonlgz-export-data)):
 
 ```bash
 python3 tools/drishti.py data get                                     # the datasets you may download
@@ -1171,7 +1171,7 @@ settings:
 
 A connector behind the union (a stream of today's changes, the demo samples) is still not asked once the union holds the date. The
 trading pack ships its three trade connectors this way ([the delta README](../../plugins/drishti-plugin-delta/README.md#declaring-the-layout-in-a-pack));
-`drishti.py lake build --connector trade-endur` writes the table that connector reads ([TOOLS.md](TOOLS.md)).
+`drishti.py lake build --connector trade-endur` writes the table that connector reads ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 ### 8.4 Combining connectors
 
@@ -1429,7 +1429,7 @@ The connector folder, the file format (with an example for every store), how a p
 connectors serving one kind), live reload, the **Admin → Connectors** page, the REST API, the `drishti.py connector` commands, moving off
 `application.yaml`, health and connection pools. The settings each plugin reads are in its README ([8.2](#82-which-connector)). Every
 command output below was captured on a fresh clone with the demo lakes (`drishti.py lake demo`,
-[GETTING_STARTED.md](GETTING_STARTED.md#step-5--build-the-demo-lakes)).
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#24-build-the-demo-lakes)).
 
 ### 9.1 The model in one minute
 
@@ -1524,7 +1524,7 @@ libraries by Maven coordinates and sha256 (`java:`), and connector plugins (`plu
 approved by an administrator stays off**: Admin → Connectors shows it as *waiting for approval* (state `NOT_APPROVED`) with the request
 to decide in Admin → Compute. The person who asked is `requires.requested-by`, else the administrator who last saved the file here.
 Editing the connector in the form keeps its `requires:` block. The keys, the lock file and the approval are in
-[OPERATIONS.md › Compute workers, section 6](../admin/OPERATIONS.md#6-requirements-environments-and-approval).
+[OPERATIONS_GUIDE.md › Compute workers, section 6](OPERATIONS_GUIDE.md#154-requirements-environments-and-approval).
 
 #### A computation: `plugin: reactive`
 
@@ -1576,7 +1576,7 @@ settings:
 `trade-calypso.yaml` and `trade-murex.yaml` are the same with `table.trade: trade_calypso` / `trade_murex` and their own
 `source-name`. The `layout.trade.columns` are the attributes promoted beside each document as Delta columns (UPPER_SNAKE, as in the
 documents), so searches, type-ahead and BI read them without opening documents. `drishti.py lake demo` writes these three tables;
-`drishti.py lake build` writes one from your own export ([TOOLS.md](TOOLS.md)).
+`drishti.py lake build` writes one from your own export ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 **A derived connector** (`config/connectors/trade-pages.yaml`, generated from the trading pack): no store behind it; it computes the
 counterparty, portfolio, legal-entity and index pages from the `trade` kind (whichever connectors serve it). The first of its four
@@ -2050,7 +2050,7 @@ Health show *failed — next retry in 20 s (attempt 3)* with the last error on t
 Health, `POST /api/v1/admin/retry/connectors[?name=site-quotes]`, admin role, audited as `connector-retry-now`, token scope
 `packs:admin`) tries at once. Saving the file starts the count again. Failures and recoveries are audited (`connector-retry-failed`,
 `connector-recovered`). All settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings); the overview:
-[OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#138-retries-what-failed-is-tried-again-by-itself).
 
 What is **not** live: a connector defined in the server's own configuration (`application.yaml`, deprecated) and a change of
 `connectors-dir` itself; both need a restart.
@@ -2070,7 +2070,7 @@ On the demo lakes it lists the seven packs' connectors: the three trade connecto
 anything does, and otherwise **moves the file** to `<data dir>/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it. A
 connector created or edited through Admin (the shared overlay in the content store) is archived the same way: the text in force goes to the
 archive, the overlay is removed (its text stays in the shared history) with any file under it, and a restore puts it back as a file. A
-connector a pack's template names is only disabled or reset. See [OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
+connector a pack's template names is only disabled or reset. See [OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely).
 
 The list shows each connector's **origin** (`file`, `pack` for a template with no file yet, `application` for the deprecated
 configuration), plugin, kinds, **status** with the plugin's own health beside it, which packs use it (and for which kinds), and when it
@@ -2496,7 +2496,7 @@ it.
   hundred bytes per entity held (estimated); `aerospike` `columns-cache-mb` (1024) of promoted
   bins plus one id per entity in the index set (not the days kept). Add them up across connectors when sizing the heap (`-Xmx`).
 - **Database connections**: `pool-size` (20, the site default `drishti.db.pool.size`) per database connector, per server; the sum of the pools of all
-  servers must fit the database's `max_connections` ([OPERATIONS.md](../admin/OPERATIONS.md#sizing-the-database-connection-pools)).
+  servers must fit the database's `max_connections` ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#148-capacity-figures-database-pools-and-bi-scale)).
 - **Writing a database connector**: do not open connections yourself. Build a `ResourcePool` from `com.ash.drishti.api.pool` with
   `PoolSettings.resolve(ctx.settings())` (it reads `pool-size`, the site default and the other `pool-*` keys), borrow in a try-with-resources
   (`try (var lease = pool.borrow()) { ... }`) for one unit of work, `lease.invalidate()` on a broken connection, and return `pool.stats()` from
@@ -2584,7 +2584,7 @@ output of the default SQLite identity database; a pool that cannot time borrows 
 
 A connector's pool looks the same with `"type": "jdbc"` and `"exempt": false`. Prometheus has one series per connector (`connector`
 and `type` labels): `drishti_db_pool_max`, `_open`, `_in_use`, `_idle`, `_waiting`, `_longest_borrow_seconds`, `_leaks` and `_timeouts`
-([OPERATIONS.md, Monitoring](../admin/OPERATIONS.md#134-prometheus-and-grafana)).
+([OPERATIONS_GUIDE.md, Monitoring](OPERATIONS_GUIDE.md#134-prometheus-grafana-and-the-suggested-alerts)).
 
 What the log says when a borrow is held (from the pool's test, `pool-leak-threshold: 150ms`; the frames after the first two are the
 borrower's):
@@ -2604,8 +2604,8 @@ no free connection in the pool-test pool within 250 ms (1 of 1 in use, 0 waiting
 ```
 
 Sizing the pools against the database's `max_connections` is in
-[OPERATIONS.md](../admin/OPERATIONS.md#sizing-the-database-connection-pools); the symptoms and what to do are in
-[TROUBLESHOOTING.md](TROUBLESHOOTING.md#a-connector-says-no-free-connection-in-the--pool).
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#148-capacity-figures-database-pools-and-bi-scale); the symptoms and what to do are in
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#212-things-that-failed-to-load-or-lost-their-connection).
 
 ### Status words, warnings and what the page tells you
 
@@ -3263,7 +3263,7 @@ table per source system, `data/delta/demo/trading/trade_endur`, `trade_calypso` 
 `trade`; every other dataset goes to `data/delta/demo/<domain>/<kind>/`, partitioned by business date. Datasets of static reference data
 (world-economy, news-and-markets) are built from those packs' samples, the same on every day. The real output, the options
 (`--lake`, `--only`, `--with-real`, `--server`, `--no-signal`) and what a running server is told are in
-[GETTING_STARTED.md, Step 5](GETTING_STARTED.md#step-5--build-the-demo-lakes); the datasets, one row each (key, connector,
+[OPERATIONS_GUIDE.md, Step 5](OPERATIONS_GUIDE.md#24-build-the-demo-lakes); the datasets, one row each (key, connector,
 table, partitions, documents on day 1, changes a day, size), are in [data/testdata/README.md](../../data/testdata/README.md). One record of
 every data type, every field explained for the query that must produce it, is in the **[data samples](../contracts/samples/README.md)**.
 
@@ -3380,7 +3380,7 @@ it is (`--no-lake` stops after the JSONL). Neither step rewrites the packs' samp
 picks a new load up within a minute; no restart is needed. The layout: [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md).
 
 For your own export (a large JSON array or JSON Lines of real trades), `drishti.py lake build` streams it into a Delta table with flat
-memory, partitions and promoted columns ([TOOLS.md](TOOLS.md)).
+memory, partitions and promoted columns ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 ### 11.5 PostgreSQL
 
@@ -3502,7 +3502,7 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 the business today ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)); `--date FIELD` only names a field whose differing rows are
 counted. See
 [Generating a pack from JSON Lines](PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines) and
-[CLI_GUIDE.md](CLI_GUIDE.md).
+[CLI_REFERENCE.md](CLI_REFERENCE.md).
 
 ### 11.14 Your bank's names
 

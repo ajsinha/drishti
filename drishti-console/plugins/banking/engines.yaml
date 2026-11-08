@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The banking module's compute engines (docs/architecture/COMPUTE_ENGINES.md section 2, DOMAIN_MODULES.md): the same shape as the
+# The banking module's compute engines (docs/guides/ADMIN_GUIDE.md section 2, DOMAIN_MODULES.md): the same shape as the
 # core's engines/catalogue.yaml, read with it by EngineCatalogue (a module's entries first). The console's byte-equal copy is
 # drishti-console/plugins/banking/engines.yaml. Absent (the module not installed), these engines are not in the catalogue at all.
 engines:

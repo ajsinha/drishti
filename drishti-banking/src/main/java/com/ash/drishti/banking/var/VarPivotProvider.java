@@ -109,7 +109,7 @@ public final class VarPivotProvider implements PivotProvider {
         this(svc, () -> true);
     }
 
-    /** {@code on}: whether the VaR engine runs here (COMPUTE_ENGINES.md: the pivot engine uses var); off, the source is not offered. */
+    /** {@code on}: whether the VaR engine runs here (ADMIN_GUIDE.md: the pivot engine uses var); off, the source is not offered. */
     public VarPivotProvider(VarService svc, BooleanSupplier on) {
         this(svc, on, () -> false, MrCubeProperties.defaults(), () -> null);
     }
@@ -308,7 +308,7 @@ public final class VarPivotProvider implements PivotProvider {
     }
 
     /**
-     * The MR cube's landing view (layout A, docs/lenses/README.md section 6.7): rows the management hierarchy's desks (then books, positions and
+     * The MR cube's landing view (layout A, docs/architecture/LENSES.md section 6.7): rows the management hierarchy's desks (then books, positions and
      * trades as each node is opened), columns the risk class, the VaR; the bank as the scope.
      */
     Map<String, Object> defaultView(VarPivotLens o) {

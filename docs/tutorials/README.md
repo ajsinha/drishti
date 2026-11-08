@@ -22,7 +22,7 @@ netting sets, market data and risk), the public data of the world packs, and a f
 command exists, shows the YAML it produces, shows a real screenshot, and tells you what you should see. Each ends with next steps and what to do when something goes wrong.
 A tutorial that covers several related tasks is in parts (Part A, Part B ...); each part can be done on its own day, and its steps are numbered on from the part before.
 
-They are written for someone who has never used Drishti. The reference documents ([USER_GUIDE.md](../guides/USER_GUIDE.md), [CLI_GUIDE.md](../guides/CLI_GUIDE.md) and the rest of [guides/](../guides/)) say everything;
+They are written for someone who has never used Drishti. The reference documents ([USER_GUIDE.md](../guides/USER_GUIDE.md), [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) and the rest of [guides/](../guides/)) say everything;
 the tutorials say what to do first.
 
 ## The tutorials
@@ -107,7 +107,7 @@ step 1).
 
 ## What you need once
 
-Every tutorial needs only [tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around): Java 21 or newer, Python 3.13 ([the minimum](../guides/GETTING_STARTED.md#step-1--install-the-prerequisites)), `uv`, git, the demo lakes built (`lake demo`, about 15 minutes), and
+Tutorials 1 to 3 need only [tutorial 1](01-first-15-minutes.md): Java 21 or newer, Python 3.13 ([the minimum](../guides/OPERATIONS_GUIDE.md#21-prerequisites)), `uv`, git, the demo lakes built (`lake demo`, about 15 minutes), and
 the server and console started with sign-in on: the quick-start environment of [data/testdata/README.md](../../data/testdata/README.md), which the IDE run configurations
 **Build demo lakes**, **Drishti server (demo lakes)** and **Drishti console** set up in three clicks. Later tutorials say what else they need. For the command line you need a
 personal API token (tutorial 1, Step 9) in `DRISHTI_TOKEN`.

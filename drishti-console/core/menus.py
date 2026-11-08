@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The sitemap (config/sitemap.yaml, 2.9.11.e): the top bar's menus, the Admin pages' tab strip, the BI rail, Help's sections, the footer
-and the command line's placeholder, as data (docs/admin/LENSES.md › The design): each item's ``requires:`` and
+and the command line's placeholder, as data (docs/guides/ADMIN_GUIDE.md › The design): each item's ``requires:`` and
 the edition's (or the person's lens's) ``menus:`` lists decide what one request shows; nothing is kept per person.
 Read again when the file changes. The lens items ("Open Drishti Risk", "Leave Drishti Risk") are added here, from the lenses the server
 offers. The Engines menu (``engines: true``) has a column per compute engine, drawn for the engines running in the cluster that the person's
@@ -72,7 +72,7 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
         return edition.typed_shown(value)
     if kind == "route":
         return _has_route(request, value)
-    if kind == "engine":                                         # requires: engine:frtb-sa (COMPUTE_ENGINES.md 5.2)
+    if kind == "engine":                                         # requires: engine:frtb-sa (ADMIN_GUIDE.md 5.2)
         return engines.engine_available(value)
     if kind == "module":                                         # requires: module:banking (ACCESS_MODEL.md: on for this person)
         return modules.module_on(value)
@@ -325,7 +325,7 @@ def top_bar(request, ctx: dict) -> list:
 
 
 def lens_menu(request, menus: list, product: str = "") -> dict | None:
-    """The lens menus' phone form (LX1 option C, docs/lenses/README.md): on a phone the edition's (or lens's) subject menus fold into one
+    """The lens menus' phone form (LX1 option C, docs/architecture/LENSES.md): on a phone the edition's (or lens's) subject menus fold into one
     menu named after the lens, a column per subject, so the bar keeps a few finger-sized buttons; on a wider screen the subject menus
     stand in the bar as before (static/css/drishti_phone.css switches them at 640 px). ``menus`` is :func:`top_bar`'s answer; None without
     subject menus. ``{"label", "subjects": [labels], "columns": [(title, items)]}``."""

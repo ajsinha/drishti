@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * One cache as Admin, Caches shows it (RESOURCES_AND_SCALE.md section 8.1, O1, 2.9.7): where it lives, its size against its limit, its age,
+ * One cache as Admin, Caches shows it (CLUSTER_GUIDE.md section 8.1, O1, 2.9.7): where it lives, its size against its limit, its age,
  * its hit rate, whether it holds business dates, how it learns of new data, and the raw statistics its owner reports. A value it cannot say
  * is null (an unknown size, no TTL).
  *

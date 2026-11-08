@@ -424,7 +424,7 @@ public final class VarService implements AutoCloseable {
         return r != null && r[0].equals(loader.version(d));
     }
 
-    /** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): a new date load asks the gate; absent in a test that makes the service. */
+    /** Busy protection (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): a new date load asks the gate; absent in a test that makes the service. */
     private com.ash.drishti.server.admission.AdmissionGate gate;
     private com.ash.drishti.server.admission.AdmissionGate.Loads gateLoads;
 
@@ -1082,7 +1082,7 @@ public final class VarService implements AutoCloseable {
     }
 
     /** What is loaded, for the provenance box and Admin. */
-    /** The engine registry's word on whether VaR runs on this node (COMPUTE_ENGINES.md); unset (a test of the service alone): the old switch. */
+    /** The engine registry's word on whether VaR runs on this node (ADMIN_GUIDE.md); unset (a test of the service alone): the old switch. */
     private volatile java.util.function.BooleanSupplier running;
 
     public void running(java.util.function.BooleanSupplier on) {

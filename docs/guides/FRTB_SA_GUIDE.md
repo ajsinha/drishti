@@ -297,7 +297,7 @@ Every FRTB endpoint takes the switches (`curvatureSource`, `girrCurvatureShock`,
 `override=path=value` (repeatable), `ccy` and `asOf`. Every answer carries its provenance: the date, the knowledge time, the batches, the
 dictionary's version, the parameter files' regimes, versions and SHA-256, the choices, the overrides, what was refused and why.
 
-**Settings** (`drishti.frtb.*` in the engine's own file `config/engines/frtb-sa.yaml`, all in [CONFIGURATION.md](../admin/CONFIGURATION.md)): the switch `drishti.engines.frtb-sa.enabled` (the old name `drishti.frtb.enabled` still works; off: `404 DRS-1020`; it needs VaR and the sensitivities on the same server, [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)), `parameters-dir` (else the
+**Settings** (`drishti.frtb.*` in the engine's own file `config/engines/frtb-sa.yaml`, all in [CONFIGURATION.md](../admin/CONFIGURATION.md)): the switch `drishti.engines.frtb-sa.enabled` (the old name `drishti.frtb.enabled` still works; off: `404 DRS-1020`; it needs VaR and the sensitivities on the same server, [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)), `parameters-dir` (else the
 market-risk pack's `capital/`), `sensitivity-kind`, `factor-kind` (now `drishti.sensitivities.*` in `config/engines/sensitivities.yaml`, read under the old names too), `default-risk-kind`, `residual-risk-kind`, `rrao-from-positions`,
 `max-factors` (2,000), `recipes-dir` (under the data folder), `cache-minutes`, `playground-template`.
 

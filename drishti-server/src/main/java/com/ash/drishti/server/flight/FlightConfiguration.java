@@ -144,7 +144,7 @@ public class FlightConfiguration {
         return service;
     }
 
-    /** Arrow Flight as a compute engine (COMPUTE_ENGINES.md): off stops the port live; on needs a restart. */
+    /** Arrow Flight as a compute engine (ADMIN_GUIDE.md): off stops the port live; on needs a restart. */
     @Bean
     public BasicEngine flightComputeEngine(FlightService service) {
         return new BasicEngine("flight").onStop(service::close).memory(() -> service.memory()[0]).threads("flight-");

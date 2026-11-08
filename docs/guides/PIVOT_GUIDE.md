@@ -63,7 +63,7 @@ market risk as a pivot, is [section 29](#29-the-mr-cube-preset) and [tutorial 7,
 | A page's table | **Pivot** under a table or ladder whose Sutra says `pivot:` (the source `panel/<kind>/<panel>/<id>`: the panel's own rows, the Sutra's arrangement as the opening view) |
 | Search results | **Pivot** above the results of a kind whose pack says `pivot:` (the kind, the pack's arrangement as the opening view) |
 
-The engine is a compute engine with its own file, `config/engines/pivot.yaml` ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md)):
+The engine is a compute engine with its own file, `config/engines/pivot.yaml` ([ADMIN_GUIDE.md](ADMIN_GUIDE.md#21-compute-engines-on-or-off)):
 switch it with `drishti.engines.pivot.enabled` (on as shipped; `DRISHTI_PIVOT_ENGINE_ENABLED`), from Admin → Engines or
 `drishti.py admin engines`, live. Off, `/api/v1/pivot` answers `404 DRS-1020` in words, and `PIVOT`, Views → Pivot, its Help pages and
 `drishti.py pivot` disappear. The old name `drishti.pivot.enabled` still works (it is also the Pivot tab's switch). The MR cube needs it.
@@ -514,7 +514,7 @@ drishti.py pivot explain --view asha/desk-risk --cell DESK=EMEA --from 2026-09-3
 drishti.py pivot whatif --view asha/desk-risk --scale PRICE=1.1@DESK=RATES --exclude BOOK=B-17
 ```
 
-More in [TOOLS.md](TOOLS.md#516-pivot).
+More in [CLI_REFERENCE.md](CLI_REFERENCE.md#pivot-the-pivot-engine).
 
 ## 16. Settings
 
@@ -1521,7 +1521,7 @@ The grid is the pivot engine's API ([section 14](#14-the-api)) with `"source": "
 
 A `view` is the view itself or a saved view's id (`owner/name`). On the command line: `drishti.py pivot run --source var --rows MGMT.DESK
 --cols RISK_CLASS --values "var()" --option horizon=10d`, and `drishti.py pivot mr headline|cell|versions|explain|ladder|heat|whatif`
-([TOOLS.md](TOOLS.md)). In the console: `MCUBE <GO>`.
+([CLI_REFERENCE.md](CLI_REFERENCE.md)). In the console: `MCUBE <GO>`.
 
 ### 29.11 Refusals and error codes
 

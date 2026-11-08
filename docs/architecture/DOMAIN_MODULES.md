@@ -305,7 +305,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   carries its Home cards and chips (`cards:`, `chips:` in its module's `META-INF/drishti/lenses.yaml`, answered per person by
   `/api/v1/modules`; each shown only while its function is on), and the lens file its landing, menus, Help, Admin pages, BI lists and
   branding; `drishti.edition` (a lens for the
-  whole instance) and `drishti.lenses` are unchanged ([LENSES.md](../admin/LENSES.md), *Editions are lenses of modules*).
+  whole instance) and `drishti.lenses` are unchanged ([LENSES.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), *Editions are lenses of modules*).
 
 **Phase 2, still to do:**
 

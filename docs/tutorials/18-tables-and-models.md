@@ -30,7 +30,7 @@ About 30 minutes.
 ## Before you start
 
 - A checkout of the repository and the server's exec jar built (`./mvnw -q -DskipTests package`): the `tables` commands run from it
-  without starting a server ([CLI_GUIDE.md](../guides/CLI_GUIDE.md)).
+  without starting a server ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 - Sample documents as JSON Lines, one entity a line, in the folder you work in:
 
   ```text

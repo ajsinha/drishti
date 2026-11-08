@@ -19,7 +19,7 @@ run-configs/; PyCharm opens drishti-console/ and reads the Python ones in drisht
 the project interpreter (SDK_HOME empty, IS_MODULE_SDK false: PyCharm's "Project Default"), never a path such as
 drishti-console/.venv/bin/python, which does not exist on Windows (there it is .venv\\Scripts\\python.exe). Every configuration runs
 from the repository root ($PROJECT_DIR$ for IntelliJ, $PROJECT_DIR$/.. for PyCharm) and parses as XML. docs/architecture/TEST_HARNESS.md and
-docs/guides/GETTING_STARTED.md (Running from IntelliJ IDEA and PyCharm, section 4) rely on this.
+docs/guides/OPERATIONS_GUIDE.md (Running from IntelliJ IDEA and PyCharm, section 4) rely on this.
 """
 import pathlib
 import unittest

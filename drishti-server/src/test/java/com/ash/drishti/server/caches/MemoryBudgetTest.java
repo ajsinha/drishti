@@ -25,7 +25,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * One cache budget (2.9.7, RESOURCES_AND_SCALE.md section 5.2, D3, PO-2): every pool filled to its limit at once stays within the share of
+ * One cache budget (2.9.7, CLUSTER_GUIDE.md section 5.2, D3, PO-2): every pool filled to its limit at once stays within the share of
  * a 2 GB heap; a pool's members split its share (each held to its own limit when smaller); a squeeze halves the connectors' and small pools
  * for a minute and the answers' pool keeps its share.
  */

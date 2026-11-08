@@ -27,7 +27,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The viewers' views are bounded and released with their date (2.9.7, RESOURCES_AND_SCALE.md section 5.3, soak audit H10): before, one
+ * The viewers' views are bounded and released with their date (2.9.7, CLUSTER_GUIDE.md section 5.3, soak audit H10): before, one
  * view per date, version, currency and role set stayed for ever.
  */
 class VarAccessViewsTest {

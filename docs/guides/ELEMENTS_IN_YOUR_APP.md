@@ -32,7 +32,7 @@ Contents: [1. Install](#1-install) · [2. Pick libraries](#2-pick-libraries) · 
 ## 1. Install
 
 Every form holds the same bytes; choose the one your build already uses. The tools are `drishti.py elements …`
-([TOOLS.md section 5.18](TOOLS.md#518-elements)); they run offline with Python only.
+([CLI_REFERENCE.md section 5.18](CLI_REFERENCE.md#elements-drishti-elements-for-other-applications)); they run offline with Python only.
 
 | Form | Make it | What you get | Size (Elements 1.0.0) |
 |---|---|---|---|

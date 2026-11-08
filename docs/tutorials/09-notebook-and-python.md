@@ -25,11 +25,11 @@ About 60 minutes (step 12: 15 minutes).
 
 ## Before you start
 
-- The quick-start environment of [tutorial 8, Part A](08-reports-and-dashboards.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
-  business date 2026-10-16) and tutorial 8, Part A done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (SQL cells need only `bi`).
-- Python on the server: compute switched on, and the server's compute pool `python` pointed at an interpreter that carries the pinned libraries (`DRISHTI_COMPUTE_ENABLED=true`, `DRISHTI_PYTHON=<python with pandas, numpy, pyarrow and scipy at the versions of config/compute/locks/python.lock>`; [OPERATIONS.md](../admin/OPERATIONS.md)). Every Python item runs on that pool, in a strict sandbox (no network, files held to its own folder), never in the console or your browser; on a Windows server Python is off and says why.
+- The quick-start environment of [tutorial 10](08-reports-and-dashboards.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
+  business date 2026-10-16) and tutorial 10 done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (SQL cells need only `bi`).
+- Python on the server: compute switched on, and the server's compute pool `python` pointed at an interpreter that carries the pinned libraries (`DRISHTI_COMPUTE_ENABLED=true`, `DRISHTI_PYTHON=<python with pandas, numpy, pyarrow and scipy at the versions of config/compute/locks/python.lock>`; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md)). Every Python item runs on that pool, in a strict sandbox (no network, files held to its own folder), never in the console or your browser; on a Windows server Python is off and says why.
   the browser. **Calc** (the step that asks a BI model from a view, Alt+C) is the one exception: it is Python on the screen you are on, in your browser, so its
-  runtime must be installed once on the console with `tools/fetch-pyodide.sh` ([GETTING_STARTED.md](../guides/GETTING_STARTED.md)); without it Calc says
+  runtime must be installed once on the console with `tools/fetch-pyodide.sh` ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine)); without it Calc says
   *Python runtime not installed* and Run stays disabled.
 - Two small files in [data/](data/): [notional-by-desk.python.yaml](data/notional-by-desk.python.yaml) (a Python visual) and [desk-python.report.yaml](data/desk-python.report.yaml) (a report on the model `trades-basic@1` that uses it).
 - The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN` (with `bi:write`),

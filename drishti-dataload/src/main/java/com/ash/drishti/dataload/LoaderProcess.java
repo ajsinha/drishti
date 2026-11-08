@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The load itself (DATA_LAKE_GUIDE.md): the parallel lake loader, {@code com.ash.drishti.lakeload.LakeLoad}, started as a child
  * Java process of the server with its own heap ({@code loader-heap}), at a lower priority ({@code nice}) and the server's temp folder, on a
- * load file this class writes (the loader's own keys: TOOLS.md section 4.13). A large or malformed file can never take the server's heap;
+ * load file this class writes (the loader's own keys: CLI_REFERENCE.md section 4.13). A large or malformed file can never take the server's heap;
  * the loader's exit code says what happened (0 loaded, 2 loaded with rejects, 1 failed, 3 the table locked); a load past
  * {@code load-timeout} is stopped. There is no second loader: everything that reads or writes data is the loader's.
  */

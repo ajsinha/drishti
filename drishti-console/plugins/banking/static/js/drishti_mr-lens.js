@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The MR lens of the pivot screen (MCUBE; docs/guides/PIVOT_GUIDE.md section 29; docs/lenses/README.md section 6.7): the pivot is the pivot engine's own
+/* The MR lens of the pivot screen (MCUBE; docs/guides/PIVOT_GUIDE.md section 29; docs/architecture/LENSES.md section 6.7): the pivot is the pivot engine's own
    grid (drishti_pivot.js, drishti_pivot-grid.js) on source var; this file draws what the MR cube adds around it. Layout A: the headline strip, the lens
    controls (they change the view's options and the engine answers again), the time-travel slider, sparklines in the grid's cells and the
    rail of a clicked cell's tail and explain (the one Explain). Tab B: components (the engine's comp_var by the first row dimension), the waterfall, the

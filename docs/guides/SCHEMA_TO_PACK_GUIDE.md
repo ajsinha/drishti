@@ -20,7 +20,7 @@ with real documents. Drishti turns them into a **pack**: a screen (Sutra) per ki
 tests, and a bundle you can deploy. It does it two ways with the same rules:
 
 - **The page**: **Build → New pack** (`/build/pack/new`). Five steps, a preview of every Sutra, a download or a deploy.
-- **The command line**: `drishti.py sutra design --schema ...` and `drishti.py pack make --schema ...` ([CLI guide](CLI_GUIDE.md)).
+- **The command line**: `drishti.py sutra design --schema ...` and `drishti.py pack make --schema ...` ([CLI guide](CLI_REFERENCE.md)).
 
 ```text
 schemas (JSON Schema, JSON or YAML)  +  JSON Lines (optional)
@@ -340,7 +340,7 @@ description is listed. **Deploy** hands the bundle to Admin → Packs → Deploy
 ![The hand-off: the server's checks and what the deploy would change](img/schemapack/10-deploy.jpg)
 
 The server checks the archive (checksums, `pack.yaml`, server version, `sutra lint` and `sutra test`), shows what changes (breaking changes first, which you must acknowledge), and only on your
-confirmation deploys. The version it replaces is kept: **roll back** there ([OPERATIONALISING §17](OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back)).
+confirmation deploys. The version it replaces is kept: **roll back** there ([OPERATIONALISING §17](OPERATIONS_GUIDE.md#9-admin--packs-deploy-an-archive-history-and-roll-back)).
 
 ### Drafts, keyboard, phone, themes
 
@@ -352,7 +352,7 @@ and every state has a word as well as a colour. At phone width the columns stack
 
 ## The command line
 
-`sutra design --schema` and `pack make --schema` (see [CLI guide](CLI_GUIDE.md#sutra-design---schema-and-pack-make---schema)) run the same rules.
+`sutra design --schema` and `pack make --schema` (see [CLI guide](CLI_REFERENCE.md#sutra-design---schema-and-pack-make---schema)) run the same rules.
 
 | Option | Meaning |
 |---|---|
@@ -471,7 +471,7 @@ says so. The `extra` field of `trades.jsonl` is not in the schema: it is reporte
 
 ## The pack that comes out
 
-The folder is the one `pack make` writes ([CLI guide](CLI_GUIDE.md#quickest-path-pack-make)): `README.txt`, `pack/<name>/`, `data/` (only when real, dated documents were given), `bundle/`, `config/`,
+The folder is the one `pack make` writes ([CLI guide](CLI_REFERENCE.md#quickest-path-pack-make)): `README.txt`, `pack/<name>/`, `data/` (only when real, dated documents were given), `bundle/`, `config/`,
 `run-server.sh`, `run-server.ps1`, `MANIFEST.json`. In the pack:
 
 ```text

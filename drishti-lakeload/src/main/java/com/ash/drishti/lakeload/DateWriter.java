@@ -101,7 +101,7 @@ final class DateWriter {
         int[] seq = {0};
         Runs.merge(runs, lo, hi, (buf, off, len) -> {
             if (!dropped.isEmpty() && dropped.contains((long) Bytes.LONG.get(buf, off + len - 8))) {
-                return;                                                 // a duplicate's copy that is not kept (TOOLS.md section 4.13)
+                return;                                                 // a duplicate's copy that is not kept (CLI_REFERENCE.md section 4.13)
             }
             view.at(buf, off);
             String[] values = new String[view.partitions()];

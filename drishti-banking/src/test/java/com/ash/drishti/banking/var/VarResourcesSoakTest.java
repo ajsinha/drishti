@@ -34,13 +34,13 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 /**
- * The flat-memory and flat-disk soak (RESOURCES_AND_SCALE.md section 10.4, O8, 2.9.7), in its short form for CI: many business dates and
+ * The flat-memory and flat-disk soak (CLUSTER_GUIDE.md section 10.4, O8, 2.9.7), in its short form for CI: many business dates and
  * many versions of each opened, restated and reloaded in turn; the views, open dates, hot files, mapped id maps and deleted-but-mapped
  * files stay within their bounds at every step, and the heap after a collection does not grow with the dates. Also the version watch (O9)
  * on a real lake: a date restated with no data-load signal is reloaded within the interval, the request meanwhile warned.
  *
  * <p>The long form: {@code -Dsoak.versions=60} (five dates, the fixture's, each restated 60 times); the short form (the default) is
- * 3 versions. The 24-hour soak at 200K positions of section 10.4 is run by hand against a server (PERFORMANCE.md, soak).
+ * 3 versions. The 24-hour soak at 200K positions of section 10.4 is run by hand against a server (CLUSTER_GUIDE.md, soak).
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",

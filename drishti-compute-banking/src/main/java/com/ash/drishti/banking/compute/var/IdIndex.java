@@ -19,7 +19,7 @@ import java.util.BitSet;
 import java.util.Locale;
 
 /**
- * An id to its index, compactly (2.9.7, RESOURCES_AND_SCALE.md section 5.1 (b), D2): the indexes sorted by their id, and a binary search.
+ * An id to its index, compactly (2.9.7, CLUSTER_GUIDE.md section 5.1 (b), D2): the indexes sorted by their id, and a binary search.
  * It replaces a {@code HashMap<String, Integer>} per trade and position (an entry object, a table slot and a boxed {@code Integer}: about
  * 56 bytes an id) with 4 bytes an id; a lookup is about 20 string compares instead of one hash probe (well under a microsecond warm).
  *

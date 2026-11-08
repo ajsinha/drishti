@@ -259,7 +259,7 @@ memory, so the shipped launchers raise the JVM's `-XX:MaxDirectMemorySize` for t
 plus the in-memory lake's stores, plus Arrow's budget (512 MB for the compute exchange and BI answers, `DRISHTI_ARROW_EXCHANGE_MB`, plus
 `memory.total-mb` when Flight is on), and set Arrow's own cap (`-Ddrishti.arrow.max-bytes`) to that budget. With Flight on and the
 defaults: 256 + 512 + 4,096 = 4,864 MB. Check it with `python3 tools/lake/memory_caps.py --arrow-only`; on ECS set `DRISHTI_ARROW_MB` to
-what it prints ([OPERATIONS.md](../admin/OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run), section 12.1a); the host must
+what it prints ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#143-direct-memory-and-the-diagnostics-of-a-long-run), section 12.1a); the host must
 have that memory beside the heap. Changing `memory.total-mb` needs a restart (the limit is set at start).
 
 Measured on one node (the test data of 2026-09-30, the defaults): `memory_caps.py` prints 4864 with Flight on (`--arrow-only` 4608);

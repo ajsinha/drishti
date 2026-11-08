@@ -56,13 +56,13 @@ Access is decided in one place, the **access registry**: licence → module → 
 - **A module** is on when it is installed, licensed and enabled (`config/modules/<module>.yaml`, or `/api/v1/admin/modules` with a
   reason, audited). A module that is off
   loads no bean, engine, job, pack or API, and its pages, menus, commands, Help pages and Build items are gone from every door of the
-  console ([OPERATIONS.md section 22](docs/admin/OPERATIONS.md#22-modules-on-or-off)).
+  console ([OPERATIONS_GUIDE.md section 22](docs/guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)).
 - **Packs name their domain** and live in its folder: `config/packs/<domain>/<pack>` (core, banking, capitalmarkets, economy).
 - **A function** is a command word (`VAR`, `TRD`, `WDI` …), the finest unit of access: each belongs to one module, and an administrator
   can switch any one off.
 - **A lens** is what a person works in: its modules, functions, Home cards and chips. Shipped lenses: Risk, Trading, Market, CRO, the
   market-risk and counterparty-risk cubes (banking); World and Public sector (economy); CIO and Oversight (core). A lens file is
-  `config/lenses/<module>/<lens>.yaml` ([LENSES.md](docs/admin/LENSES.md)). **Editions are now lenses**: the former Risk, Trading, Market
+  `config/lenses/<module>/<lens>.yaml` ([LENSES.md](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is)). **Editions are now lenses**: the former Risk, Trading, Market
   and World editions are these lenses, and `drishti.edition` still runs a whole instance as one lens.
 
 ## Risk, computed and explained
@@ -192,23 +192,23 @@ SA-CCR and xVA figures and SA-CCR's incremental EAD in the pre-deal check.
 ## Operate
 
 - **Security**: passwords or OpenID Connect, roles per kind, field masks, API tokens, an access log and an audit trail; **off by default**
-  for a developer machine and turned on for any shared one ([USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md), [tutorial 21](docs/tutorials/21-run-it-in-production.md)).
+  for a developer machine and turned on for any shared one ([ADMIN_GUIDE.md](docs/guides/ADMIN_GUIDE.md), [tutorial 17](docs/tutorials/21-run-it-in-production.md)).
 - **Admin → Configuration**: every setting in three tiers (everyday, admin, expert), with its value in effect and where it came from; a
   change is a proposal a second administrator approves. Every setting is listed in [CONFIGURATION.md](docs/admin/CONFIGURATION.md).
-- **Modules and engines on or off** per node ([OPERATIONS.md section 22](docs/admin/OPERATIONS.md#22-modules-on-or-off); Admin → Engines,
-  [section 21](docs/admin/OPERATIONS.md#21-compute-engines-on-or-off)).
+- **Modules and engines on or off** per node ([OPERATIONS_GUIDE.md section 22](docs/guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions); Admin → Engines,
+  [section 21](docs/guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off)).
 - **Clustering** (Drishti\*net, off by default): servers join by gossip, any member answers any request, VaR shards across members
-  ([OPERATIONS.md section 18](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 22](docs/tutorials/22-a-cluster-of-three.md)).
+  ([OPERATIONS_GUIDE.md section 18](docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 19](docs/tutorials/22-a-cluster-of-three.md)).
 - **Linear algebra**: OpenBLAS is bundled for Linux and Windows x86-64, **off as shipped**; turn it on per node after measuring
-  ([OPERATIONS.md section 2.1](docs/admin/OPERATIONS.md#21-server-requirements-native-libraries-blas)).
+  ([OPERATIONS_GUIDE.md section 2.1](docs/guides/OPERATIONS_GUIDE.md#149-native-libraries-blas)).
 - **Deployment** by hand, with systemd, Docker Compose ([deploy/docker/compose.yaml](deploy/docker/compose.yaml)), AWS ECS, and on
-  Windows with Java and Python only ([OPERATIONS.md](docs/admin/OPERATIONS.md)). Prometheus metrics; an **AI layer** and an **MCP
+  Windows with Java and Python only ([OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md)). Prometheus metrics; an **AI layer** and an **MCP
   client**, both off by default, with masking and audit of every call ([AI.md](docs/admin/AI.md)).
 
 ## Run it
 
-[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) installs and starts Drishti from a clean machine, and
-[tutorial 1, Part A](docs/tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around) walks through your first quarter of an hour. The short version, from the repository
+[OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) installs and starts Drishti from a clean machine, and
+[tutorial 1](docs/tutorials/01-first-15-minutes.md) walks through your first quarter of an hour. The short version, from the repository
 root, with a 64-bit Java 21 (JDK) and [uv](https://docs.astral.sh/uv/) for the console's Python (Maven ships with the repository):
 
 ```bash
@@ -232,16 +232,16 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 
 Then open http://localhost:17480/t and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`. Security is off in this
 start, which is meant for one developer machine; the tutorials run with sign-in
-([GETTING_STARTED.md, Step 8](docs/guides/GETTING_STARTED.md#step-8--sign-in-and-change-the-admin-password)).
+([OPERATIONS_GUIDE.md, Step 8](docs/guides/OPERATIONS_GUIDE.md#27-sign-in-change-the-admin-password-first-views)).
 
 - **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads (`lake demo|build|check|undo`), feeds
-  (`feed run|status|schedule`), Elements (`elements pack|dist`), approvals, VaR, exposure and more ([CLI_GUIDE.md](docs/guides/CLI_GUIDE.md)).
+  (`feed run|status|schedule`), Elements (`elements pack|dist`), approvals, VaR, exposure and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md)).
 - **The stack**: a ready-made local three-server Drishti\*net cluster with its consoles, from [drishti-stack/](drishti-stack/README.md).
-- **Other ways**: [Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows) (`tools/windows/start-server.ps1`; Java and Python only),
-  [Docker](docs/guides/GETTING_STARTED.md#running-everything-in-docker-optional) and the
-  [IDEs](docs/guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm).
+- **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (`tools/windows/start-server.ps1`; Java and Python only),
+  [Docker](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
+  [IDEs](docs/guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).
 - **Lenses, not editions**: to run an instance as one lens set `drishti.edition` (for example `risk`); offer several with `drishti.lenses`.
-  A site's own edition file moves to `config/lenses/<module>/` ([LENSES.md section 14](docs/admin/LENSES.md#14-formerly-editions-upgrading)).
+  A site's own edition file moves to `config/lenses/<module>/` ([LENSES.md section 14](docs/guides/ADMIN_GUIDE.md#122-where-a-lens-is-defined)).
 
 ## Measured performance
 
@@ -269,8 +269,8 @@ only those of the modules they may use.
 | work with economies and the public sector | [PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md), [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md), [EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md) |
 | add data or an industry | [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md), [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [TABLES_GUIDE.md](docs/guides/TABLES_GUIDE.md) |
 | build screens or use the libraries | [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [ELEMENTS_IN_YOUR_APP.md](docs/guides/ELEMENTS_IN_YOUR_APP.md), [ELEMENTS_API.md](docs/guides/ELEMENTS_API.md) |
-| run and administer it | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md), [OPERATIONS.md](docs/admin/OPERATIONS.md), [LENSES.md](docs/admin/LENSES.md), [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
-| develop on it | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [API_GUIDE.md](docs/guides/API_GUIDE.md), [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |
+| run and administer it | [OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine), [OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md), [LENSES.md](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is), [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
+| develop on it | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [API_GUIDE.md](docs/guides/API_GUIDE.md), [CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md) |
 
 **Learn by doing**: [the tutorials](docs/tutorials/README.md) run on the shipped demo data and show the UI, the command line and the YAML
 at every step. **Where it's going**: [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#the-roadmap-from-2911c-product-owner-2026-11-04-supersedes-every-later-release-table-in-this-file).

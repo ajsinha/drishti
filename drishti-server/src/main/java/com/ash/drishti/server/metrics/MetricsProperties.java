@@ -20,7 +20,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The platform metrics and their alerts, {@code drishti.metrics.*} (OPERATIONS.md section 13.6, RESOURCES_AND_SCALE.md 8.3 and 8.5).
+ * The platform metrics and their alerts, {@code drishti.metrics.*} (OPERATIONS_GUIDE.md section 13.6, CLUSTER_GUIDE.md 8.3 and 8.5).
  *
  * @param enabled export the platform gauges and evaluate the alert rules (true)
  * @param sampleInterval how often the gauges are sampled and the rules evaluated (15 s)

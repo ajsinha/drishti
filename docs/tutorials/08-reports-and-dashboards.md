@@ -78,7 +78,7 @@ The outputs below were captured on this version against the test stack of `drish
 **Part E · Scheduled searches and subscriptions.**
 
 - [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done (signed in as the development administrator, the token for the command line set) and [tutorial 1, Part D](01-first-15-minutes.md#part-d--share-and-collaborate) for the user `vera`.
-- Email needs an SMTP server, which a fresh install does not have. The tutorial shows what Drishti does without one (it keeps the run and retries); [OPERATIONS.md](../admin/OPERATIONS.md) says how to set `spring.mail.host` and the email channel.
+- Email needs an SMTP server, which a fresh install does not have. The tutorial shows what Drishti does without one (it keeps the run and retries); [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md) says how to set `spring.mail.host` and the email channel.
 
 **Part F · Live BI and boards.**
 
@@ -1831,7 +1831,7 @@ export DRISHTI_CONSOLE_URL=https://drishti.example.com                  # where 
 export DRISHTI_MAIL_FROM=drishti@example.com
 ```
 
-(The same keys as `spring.mail.host` and so on in the server's `application.yml`; [OPERATIONS.md](../admin/OPERATIONS.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md#email-springmail-and-the-outbox) have all of them.) To try it **without sending anything anywhere**, use the catcher that ships with this
+(The same keys as `spring.mail.host` and so on in the server's `application.yml`; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md#email-springmail-and-the-outbox) have all of them.) To try it **without sending anything anywhere**, use the catcher that ships with this
 tutorial: a small program that accepts any mail on your machine and writes each message to a file.
 
 ```bash
@@ -2287,7 +2287,7 @@ On a phone the page is one column:
 
 ## Step 44 · From the command line and the API
 
-Creating and editing reports and subscriptions is done in the console (`drishti.py` has no command for scheduled reports or subscriptions; its `bi` commands, such as `drishti.py bi catalogue list` and `bi runs`, are for BI items: [CLI_GUIDE.md](../guides/CLI_GUIDE.md)). Reading them is REST, with the token of tutorial 1, Part A. A
+Creating and editing reports and subscriptions is done in the console (`drishti.py` has no command for scheduled reports or subscriptions; its `bi` commands, such as `drishti.py bi catalogue list` and `bi runs`, are for BI items: [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)). Reading them is REST, with the token of tutorial 1, Part A. A
 personal token may read but never change your reports: a `PUT` with it is refused, `403 DRS-5002 API tokens may not call this endpoint`.
 
 ```text
@@ -2821,7 +2821,7 @@ $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: ap
 {"username":"ann","displayName":"Ann","email":"","desk":"","roles":["bi-writer"],"enabled":true,"mustChangePassword":false,"locked":false, ...}
 ```
 
-There is no YAML for people: roles and users live in the server's user store ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)).
+There is no YAML for people: roles and users live in the server's user store ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md)).
 
 ## Step 55 · A workspace that asks for review
 
@@ -3188,16 +3188,16 @@ The YAML behind it is the connector's own file (`config/connectors/orders-lake.y
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): schedules, recipients and retries of a subscription.
 - [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](../guides/BI_GUIDE.md#21-field-parameters-in-a-well): field parameters in every kind of well.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): every schedule word, retries, alerts on models and fields, chat bridges, board notifications.
-- [CLI_GUIDE.md](../guides/CLI_GUIDE.md): `bi item`, `bi dataset refresh` and `bi mq` with every option.
+- [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md): `bi item`, `bi dataset refresh` and `bi mq` with every option.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding): export formats (PDF, PNG, Excel, CSV), subscriptions in depth, alerts on numbers, boards, embedding a report in another web application.
 - [USER_GUIDE.md › Scheduled reports](../guides/BI_GUIDE.md#scheduled-reports) is the reference for the CSV reports.
 - Tutorial 1, Part C made the search; tutorial 12 told Drishti when the data lands, which is what `after-load` waits for.
 - [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5) is the live-table reference.
-- [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) and [DEMO_DATA.md](../guides/DATA_GUIDE.md#11-the-demo-data) say exactly what ticks and how.
+- [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md) and [../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#11-the-demo-data) say exactly what ticks and how.
 - [Tutorial 9](09-notebook-and-python.md): Python in a measure, a visual and a notebook.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
 - [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer): models, their contract and their versions.
-- [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md): roles and users in depth; tutorial 21 summarises them.
+- [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md): roles and users in depth; tutorial 21 summarises them.
 
 ## If something goes wrong
 

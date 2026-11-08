@@ -36,7 +36,7 @@
     .then(function (j) { count += (j && j.unread) || 0; show(); })
     .catch(function () { /* the count is a convenience */ });
   document.addEventListener('drishti:unread', function (e) { count = e.detail; });
-  /* Admin -> Commands changed what is on (docs/admin/USER_MANAGEMENT.md): a page of a kind now off is drawn again (the server says "not active"),
+  /* Admin -> Commands changed what is on (docs/guides/ADMIN_GUIDE.md): a page of a kind now off is drawn again (the server says "not active"),
      the not-active page of a command now on too, and links to a kind now off stop being links at once. Other pages hear it as drishti:switches. */
   function onSwitches(d) {
     var kinds = (d && d.kinds) || [], commands = (d && d.commands) || [];

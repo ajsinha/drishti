@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The platform alerts (OPERATIONS.md section 13.6, RESOURCES_AND_SCALE.md 8.5): the rules of {@code drishti.metrics.alerts.file} evaluated
+ * The platform alerts (OPERATIONS_GUIDE.md section 13.6, CLUSTER_GUIDE.md 8.5): the rules of {@code drishti.metrics.alerts.file} evaluated
  * against this server's own meters every {@code sample-interval}, without Prometheus. A series that breaks its rule for the rule's
  * {@code for} opens an alert (logged, counted in {@code drishti.alerts.open}, and told to the {@code notify-roles} in their inbox); it closes
  * when the series is back within the threshold or gone. The file is read again when it changes. Each member of a cluster evaluates its own

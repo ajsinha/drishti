@@ -14,7 +14,7 @@
 
 <#
 .SYNOPSIS
-  The rolling upgrade runner on Windows (the PowerShell form of tools/rolling-upgrade.sh; CD3, CLUSTER_DEPLOYMENT.md section 10.1).
+  The rolling upgrade runner on Windows (the PowerShell form of tools/rolling-upgrade.sh; CD3, CLUSTER_GUIDE.md section 10.1).
 
 .DESCRIPTION
   One node at a time: consoles, BI and data-serving, coordinators, then owners one zone at a time; each drained, stopped, upgraded,

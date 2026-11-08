@@ -266,7 +266,7 @@ class ShardReadAheadTest {
     }
 
     /**
-     * A cube view's cells (docs/lenses/README.md section 4.11): many sets at once through {@link VarBook#vectors}, each equal to the bit to the
+     * A cube view's cells (docs/architecture/LENSES.md section 4.11): many sets at once through {@link VarBook#vectors}, each equal to the bit to the
      * same set's {@link VarBook#vector} (the planner's aggregates, then the rows it adds and takes away), with each remote shard asked once
      * for all of them instead of once per set.
      */

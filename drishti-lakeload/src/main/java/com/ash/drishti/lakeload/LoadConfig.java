@@ -39,7 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Everything one load does, from a YAML file (docs/guides/TOOLS.md section 4.13 lists every key): where the JSON Lines are, what a row
+ * Everything one load does, from a YAML file (docs/guides/CLI_REFERENCE.md section 4.13 lists every key): where the JSON Lines are, what a row
  * is (the same words as {@code lake build} and a pack's connector: {@code id} is {@code --key} and the ingest key, {@code date},
  * {@code promote} is {@code layout.<kind>.columns}, {@code vectors} is {@code layout.<kind>.vectors}, {@code flatten},
  * {@code partition-by}), where the table is ({@code lake}, {@code domain}, {@code kind}, {@code table}, or {@code path}), how it is laid
@@ -112,7 +112,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     record Report(String summary, String manifest, String progress, boolean runLog, boolean dryRun) {}
 
-    /** The timestamp field that decides which of an id's records on one date is kept (TOOLS.md section 4.13); blank: the last read. */
+    /** The timestamp field that decides which of an id's records on one date is kept (CLI_REFERENCE.md section 4.13); blank: the last read. */
     static final String DEFAULT_LATEST_BY = "COMPUTED_AT";
     static final List<String> DEFAULT_SORT = List.of("LEGAL_ENTITY", "DESK", "id");
     private static final Pattern ENV = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?}");
@@ -604,7 +604,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         n.fieldNames().forEachRemaining(k -> {
             if (!known.contains(k)) {
                 throw new IllegalArgumentException((section.isEmpty() ? "" : section + ".") + k + " is not a key of the loader (" + String.join(", ",
-                        known.stream().sorted().toList()) + "); docs/guides/TOOLS.md section 4.13 lists them");
+                        known.stream().sorted().toList()) + "); docs/guides/CLI_REFERENCE.md section 4.13 lists them");
             }
         });
     }

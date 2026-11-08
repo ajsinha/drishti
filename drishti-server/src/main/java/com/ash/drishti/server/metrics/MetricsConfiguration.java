@@ -42,7 +42,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
 /**
- * The platform metrics and alerts (OPERATIONS.md section 13.6): the gauges, the rules' evaluator, and the one thread that samples and
+ * The platform metrics and alerts (OPERATIONS_GUIDE.md section 13.6): the gauges, the rules' evaluator, and the one thread that samples and
  * evaluates every {@code drishti.metrics.sample-interval} once the server is ready.
  */
 @Configuration(proxyBeanMethods = false)

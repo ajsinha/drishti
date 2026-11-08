@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The platform alert rules (OPERATIONS.md section 13.6): read from their file, evaluated against the registry, opened and closed, told once. */
+/** The platform alert rules (OPERATIONS_GUIDE.md section 13.6): read from their file, evaluated against the registry, opened and closed, told once. */
 class PlatformAlertsTest {
 
     @TempDir Path dir;

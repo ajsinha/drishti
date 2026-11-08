@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Admin -> Health: the Native libraries line, and the administrators' notice while BLAS runs on the pure-Java path in auto mode (this server
-or a member); nothing when OpenBLAS serves or Java was chosen (docs/admin/OPERATIONS.md section 2.1)."""
+or a member); nothing when OpenBLAS serves or Java was chosen (docs/guides/OPERATIONS_GUIDE.md section 2.1)."""
 from test_admin_detail_pages import serve
 
 BASE = {"summary": {"sources": 0, "sourcesDown": 0, "sourcesDegraded": 0, "failedToStart": 0, "packs": 0, "packsWithProblems": 0},

@@ -34,7 +34,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
- * The compute engines' beans (docs/architecture/COMPUTE_ENGINES.md): the catalogue, each switch as the server starts with it, the site's
+ * The compute engines' beans (docs/guides/ADMIN_GUIDE.md): the catalogue, each switch as the server starts with it, the site's
  * files, the History, the registry (which finds every {@link ComputeEngine} bean the engines' own configurations make), the API's gate,
  * the cluster's view, the {@code engines} health entry, and the digest's {@code engines} service.
  */

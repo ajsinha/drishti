@@ -32,7 +32,7 @@ import javax.management.NotificationEmitter;
 import javax.management.openmbean.CompositeData;
 
 /**
- * What busy protection reads (docs/admin/OPERATIONS.md, "Busy protection"): the heap after the last clean-up, the requests being
+ * What busy protection reads (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): the heap after the last clean-up, the requests being
  * answered, the free disk. The loads running and the open dates' heap are told to the gate by the engines themselves.
  */
 public interface Signals {

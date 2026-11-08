@@ -32,14 +32,14 @@ About 1 h 20 min in all; each part can be done on its own day.
 - The server and console running on the demo lake (`drishti.py lake demo`, [tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around)); `EXPORT trade <GO>` lists
   the trades. The figures below are those of the demo lake on business date 2026-09-30.
 - For step 6, the VaR engine on with the demo risk lake (`VAR BANK <GO>` answers).
-- A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([TOOLS.md](../guides/TOOLS.md)).
+- A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 
 **Part B · Custom functions, why did it move and what-if.**
 
 - [Part A](#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk) done: `PIVOT trade <GO>` answers with the demo trades.
 - Two users: you (an analyst) and a second user who may approve: an administrator, or a member of the role named by
   `drishti.pivot.functions.approver-role` (`pivot-approver`, one of the built-in roles as shipped: give it to the second user in
-  Admin → Users). See [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#2-roles).
+  Admin → Users). See [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#3-roles).
 
 **Part C · The MR cube: desks by risk class, with the right totals.**
 
@@ -543,7 +543,7 @@ The MR cube is the pivot engine on the VaR source with the market-risk lens arou
 class), check its totals against `VAR BANK` and see the diversification, read a cell's tail and why it moved, change the lens (10 days,
 97.5%, stressed), re-pivot by currency and open a desk down to its trades, read the components and their waterfall, the DV01 ladder and a
 what-if side by side, and save, share and export a view. Each step shows the UI, the command line and the view's JSON. The guide is
-[MR_CUBE_GUIDE.md](../guides/PIVOT_GUIDE.md#29-the-mr-cube-preset); the pivot screen itself is [Part A](#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk).
+[PIVOT_GUIDE.md section 29](../guides/PIVOT_GUIDE.md#29-the-mr-cube-preset); the pivot screen itself is [Part A](#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk).
 
 ## Step 20 · The landing: desks by risk class
 
@@ -699,8 +699,8 @@ drishti.py pivot export --view you/morning --format xlsx -o morning.xlsx
   [PIVOT_GUIDE.md, Documents](../guides/PIVOT_GUIDE.md#documents-paths-lists-and-grains).
 - Every setting, the API and the refusals: [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) sections 14 to 17.
 - Make a path a column read for everyone: promote it in the connector's `layout.<kind>.columns`
-  ([CONNECTORS.md](../guides/DATA_GUIDE.md#8-connectors)) or add it to a BI dataset as a `path:` column ([BI_GUIDE.md](../guides/BI_GUIDE.md)).
+  ([../guides/DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connectors)) or add it to a BI dataset as a `path:` column ([BI_GUIDE.md](../guides/BI_GUIDE.md)).
 - [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) sections 19 to 22: the languages, the harness, approval, explain, what-if, BI's totals.
-- [PIVOT_ENGINE.md](../architecture/ARCHITECTURE.md#26-the-pivot-engine) sections 8, 10 and 12: the design.
-- The guide: [MR_CUBE_GUIDE.md](../guides/PIVOT_GUIDE.md#29-the-mr-cube-preset) (every measure, option, setting and code).
+- [ARCHITECTURE.md section 26](../architecture/ARCHITECTURE.md#26-the-pivot-engine) sections 8, 10 and 12: the design.
+- The guide: [PIVOT_GUIDE.md section 29](../guides/PIVOT_GUIDE.md#29-the-mr-cube-preset) (every measure, option, setting and code).
 - The pivot screen: [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md); the VaR engine: [VAR_GUIDE.md](../guides/VAR_GUIDE.md).

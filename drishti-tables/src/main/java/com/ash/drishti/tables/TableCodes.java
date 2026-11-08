@@ -16,7 +16,7 @@
 package com.ash.drishti.tables;
 
 /**
- * The table layer's problem codes (docs/guides/TROUBLESHOOTING.md, "Virtual tables"). The language's own codes are kept where the problem
+ * The table layer's problem codes (docs/guides/OPERATIONS_GUIDE.md, "Virtual tables"). The language's own codes are kept where the problem
  * is the language's: {@code DRS-9127} (an aggregate in row or rule scope), {@code DRS-9152} (an unknown name), {@code DRS-9122}
  * (relationships), as docs/architecture/BI_DESIGN.md section 2.1 decides.
  */

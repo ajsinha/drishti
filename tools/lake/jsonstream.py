@@ -64,7 +64,7 @@ def _key(f) -> str:
 def input_files(inputs, recursive: bool = False, table: str | None = None, limits: archives.Limits | None = None,
                 tar_table: str | None = None, known=None) -> list:
     """The files named by ``inputs`` (files or folders), in one deterministic order: sorted by absolute path (as text), whatever the
-    order of the inputs, so "the last one read" means the same in the Python path and the Java loader (TOOLS.md section 4.13). An
+    order of the inputs, so "the last one read" means the same in the Python path and the Java loader (CLI_REFERENCE.md section 4.13). An
     archive gives its JSON Lines members (``archives.Member``, its members after the archive's path, in name order); every archive is
     checked before any is read, as a loader's feed (DATA_GUIDE.md section 2.8): a zip is one table, loose files; a tar holds
     <table>/<YYYY-MM-DD>/ folders (``known``: its tables must be among them) and gives the members of ``tar_table`` only (none given: a

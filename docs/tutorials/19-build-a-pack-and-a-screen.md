@@ -47,7 +47,7 @@ About 2 h 10 min in all; each part can be done on its own day.
 - **For the Sutra designer (steps 16 to 22)**: the designer switched on. It is off by default; in the console's `config/application.yaml` set `ui.designer: true`, or start the console
   with `DRISHTI_UI_DESIGNER=true` ([CONFIGURATION.md](../admin/CONFIGURATION.md)), and restart the console. Off, there is no **Customize** button and
   `/designer/*` answers 404. For its command-line steps: a token, `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API
-  tokens; [CLI_GUIDE.md](../guides/CLI_GUIDE.md#3-connecting-to-a-server-url-tokens-and-permissions)), and `B=$DRISHTI_SERVER/api/v1` for `curl`.
+  tokens; [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#3-connecting-to-a-server-url-tokens-and-permissions)), and `B=$DRISHTI_SERVER/api/v1` for `curl`.
   Nothing you do there changes the pack's screen: the designer keeps **your own design**, which only you see until you share it.
 
 **Where this data comes from.** The country pages of the map step are the `world-economy` pack's, published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `drishti.py feed run world-economy`. Each source, its licence and how to refresh it: [External data](../guides/EXTERNAL_DATA.md).
@@ -604,7 +604,7 @@ You should see `map` among the kinds with an **Add** button (or drag it onto the
 
 The design is yours (see **My drafts** on the Build home). To make it live for everyone: **Submit for review**, a reviewer with the approve power reads the diff and the evidence, and approves; or export it as a pack
 fragment (**Ship**) and put it in a pack. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) walks through proposing and approving as two people; from the command line,
-`drishti.py design create|save|check|propose|approve` do the same over REST ([CLI_GUIDE.md](../guides/CLI_GUIDE.md)).
+`drishti.py design create|save|check|propose|approve` do the same over REST ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 
 You should see, under **Build → Build home → My drafts**, `Desk book` with the status *draft* and your edits listed.
 
@@ -1093,8 +1093,8 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 
 ## Next steps
 
-- [DATA_GUIDE.md](../guides/SCHEMA_TO_PACK_GUIDE.md) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_GUIDE.md](../guides/CLI_GUIDE.md) the commands; [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md)
-  how a pack is laid out; [OPERATIONALISING.md](../guides/OPERATIONALISING.md) how to promote a pack between servers.
+- [DATA_GUIDE.md](../guides/SCHEMA_TO_PACK_GUIDE.md) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) the commands; [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md)
+  how a pack is laid out; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) how to promote a pack between servers.
 - [Tutorial 12 · Load data daily](12-a-day-of-bank-data.md) keeps the screens' data fresh.
 - [Tutorial 11 · Correct a trade and approve it](11-correct-and-approve.md): a form like the one of step 19 that writes back, with four eyes.
 - [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) is the workbench reference and
@@ -1107,7 +1107,7 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 You read a computed kind on a screen (typed parameters on a panel's source), watched it compute without the page waiting, compared a
 Python engine fanned out over a pool's workers with a Java engine in the server, asked and refused the computation from the command line,
 and recomputed a watched result from an event. Next: the [reactive connector reference](../connectors/types/reactive/README.md) (sandboxes for
-private what-ifs, live and scheduled triggers, the HTTP API) and [operating compute](../admin/OPERATIONS.md#19-compute-workers).
+private what-ifs, live and scheduled triggers, the HTTP API) and [operating compute](../guides/OPERATIONS_GUIDE.md#15-compute-workers).
 
 ## If something goes wrong
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Linear algebra switch in a real browser (docs/admin/OPERATIONS.md section 2.1), over a real server and console, the engines' folder a
+"""The Linear algebra switch in a real browser (docs/guides/OPERATIONS_GUIDE.md section 2.1), over a real server and console, the engines' folder a
 temporary one:
 
 - Admin -> Engines lists "Linear algebra: OpenBLAS" with its switch; turned off with a reason it applies live (no restart), History says so;

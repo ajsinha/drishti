@@ -105,7 +105,7 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
   or by any Delta writer that follows the contract.
 - **The masters stay where they are:** trades, counterparties, books, market data and GLEIF entities. Each is read through its own pack's
   connector, by id ([section 4](#4-shared-keys)). The risk lake holds only measure inputs and the hierarchies and portfolios that scope them.
-- **The same layout on every storage:** a local disk, a shared file system, or S3 ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-c-a-high-performance-delta-lake-on-aws-past-200-tb));
+- **The same layout on every storage:** a local disk, a shared file system, or S3 ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#13-the-delta-lake-in-s3-at-scale));
   Iceberg instead of Delta per table ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)).
 - **Test data:** follows the repository's pattern: `data/testdata/market-risk/<kind>/*.jsonl.gz` (one file per business date), listed in
   `data/testdata/testdata.yaml`, built into the lake by `drishti.py lake demo`. Each contract's generator is named in its section 13.
@@ -177,7 +177,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 - **Every input row carries `BUSINESS_DATE`.** A table holds many business dates; the engines read one date at a time (the request's
   as-of, else the newest date present).
 - **A business date is replaced as a whole.** Writing a date again (a rerun, a restatement) replaces every row of that date in that
-  table, never a part of it (`lake build` replaces a day: [TOOLS.md section 4.4](../guides/TOOLS.md#44-re-running-a-day-replaces-that-day-only)).
+  table, never a part of it (`lake build` replaces a day: [CLI_REFERENCE.md section 4.4](../guides/CLI_REFERENCE.md#74-re-running-a-day-replaces-that-day-only)).
   The previous version stays readable through Delta time travel ("as known at").
 - **As-of on the screen and in the API:** `asOf=YYYY-MM-DD` selects the business date; a date later than the newest present reads the
   newest. "As known at" (`knownAt=`) reads a table version as it stood at that time, for audit.
@@ -371,7 +371,7 @@ are the contracts.
 | `links`, `validation` | The fields that link to another kind; the rules: `required`, `unique` (key per date), `enum`, `pattern`, `link`, `range`, `vector-length` |
 | `notes`, `review` | What a reader should know; the points a person must still confirm (anything the draft inferred rather than read) |
 
-**How a contract is made and kept true** (`drishti.py contract`, [TOOLS.md](../guides/TOOLS.md)):
+**How a contract is made and kept true** (`drishti.py contract`, [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)):
 - `contract bootstrap KIND --write` drafts one from the pack (mnemonics, graph, connectors and their layout), its samples and test data
   (`data/testdata`), its `config/about.yaml` glossary (descriptions, units, values) and its Sutras (labels). The product owner's decisions
   that the data cannot tell (class, retirement, which fields are computed figures) come from `tools/contracts.policy.yaml`. What the draft
@@ -389,7 +389,7 @@ are the contracts.
 analytics, pivot) has a section listing every dataset the feature reads: what it is for, whether it is required, its sample files and one
 real record from `data/testdata`, formatted. `tools/docs/guide_data.py` writes those sections from `tools/docs/guide_data.yaml` and these
 contracts (the key, the field and required counts, the link to the pack's page); `--check` fails when a section is stale or shows a field
-its kind's contract does not have ([TOOLS.md](../guides/TOOLS.md)).
+its kind's contract does not have ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 
 ---
 

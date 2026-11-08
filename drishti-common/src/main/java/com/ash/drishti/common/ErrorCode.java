@@ -44,12 +44,12 @@ public enum ErrorCode {
      */
     COMMAND_OFF("DRS-1016", 403),
     /**
-     * The server's edition (drishti.edition, docs/admin/LENSES.md) refuses the pack: the edition lists its packs with
+     * The server's edition (drishti.edition, docs/guides/ADMIN_GUIDE.md) refuses the pack: the edition lists its packs with
      * {@code allow-only}, so Admin → Packs, Deploy archive and the registry may not load another one.
      */
     EDITION_PACK_REFUSED("DRS-1017", 403),
     /**
-     * A compute engine is not running on this server and no other server of the cluster runs it (docs/architecture/COMPUTE_ENGINES.md
+     * A compute engine is not running on this server and no other server of the cluster runs it (docs/guides/ADMIN_GUIDE.md
      * section 5.1): its API answers 404 in words, never 403 (nothing is forbidden; the engine is not here).
      */
     ENGINE_OFF("DRS-1020", 404),
@@ -206,7 +206,7 @@ public enum ErrorCode {
      */
     VAR_NOT_SHARDABLE("DRS-5217", 422),
     /**
-     * The free-space guard (2.9.7, RESOURCES_AND_SCALE.md section 7.2): a hot file, shard book or currency's book was not built because the
+     * The free-space guard (2.9.7, CLUSTER_GUIDE.md section 7.2): a hot file, shard book or currency's book was not built because the
      * disk would fall under {@code drishti.disk.min-free-percent} / {@code min-free-gb} even after every folder freed space down to 90% of its
      * cap. Nothing was written; a date already open keeps answering; the answer says what is free, what was needed and the guard.
      */
@@ -603,7 +603,7 @@ public enum ErrorCode {
     EDIT_NOT_FOUND("DRS-9305", 404),
     /** Write-back: edits are paused (the edit primary is not reachable, or this cluster has no shared edit log); reading is not affected. */
     EDIT_PAUSED("DRS-9306", 503),
-    /** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): the server is very busy, a new sign-in waits; people signed in keep working. */
+    /** Busy protection (docs/guides/OPERATIONS_GUIDE.md, "Busy protection"): the server is very busy, a new sign-in waits; people signed in keep working. */
     BUSY_SIGN_IN("DRS-9501", 503),
     /** Busy protection: a business date cannot be opened just yet (memory, the loads running, the open dates' memory, disk); open dates keep working. */
     BUSY_LOAD("DRS-9502", 503),

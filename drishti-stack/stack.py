@@ -190,7 +190,7 @@ def wait_up(url: str, seconds: float, proc: subprocess.Popen | None = None) -> b
 def stack_host(stack: dict) -> str:
     """The address every node advertises and the console is given: stack.yaml's host (for a machine with several interfaces), else this
     machine's primary IPv4 address (the default route's interface; never a loopback or a container bridge). Members never advertise
-    localhost, 127.x.x.x or 0.0.0.0 (docs/admin/OPERATIONS.md)."""
+    localhost, 127.x.x.x or 0.0.0.0 (docs/guides/OPERATIONS_GUIDE.md)."""
     host = str(stack.get("host") or "").strip() or hostaddr.primary_ipv4()
     if not host:
         sys.exit("this machine has no address but loopback: set host: in stack.yaml to the address the nodes advertise")
@@ -253,7 +253,7 @@ def build_lake(stack: dict, name: str) -> None:
     shutil.rmtree(tmp, ignore_errors=True)
 
 
-# Native memory of a long-running server (SOAK-05, PERFORMANCE.md *Resident memory*): direct buffers capped, freed native memory given back,
+# Native memory of a long-running server (SOAK-05, CLUSTER_GUIDE.md *Resident memory*): direct buffers capped, freed native memory given back,
 # the JDK's per-thread temporary direct buffers cached only up to 256 KB (a larger one is freed after its read), and native memory tracked
 # (jcmd <pid> VM.native_memory summary)
 SERVER_MEMORY_FLAGS = ["-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144",
@@ -281,7 +281,7 @@ def direct_memory_flags(cwd: Path, env: dict) -> list[str]:
 
 def diagnostic_flags(name: str) -> list[str]:
     """A heap dump on OutOfMemoryError (run/dumps/<node>) and a rotated GC log (run/logs/gc-<node>-<pid>.log, 5 x 20 MB): what a
-    multi-day soak needs to explain a failure (OPERATIONS.md, Diagnostics of a long run). The folders are made first: the JVM does
+    multi-day soak needs to explain a failure (OPERATIONS_GUIDE.md, Diagnostics of a long run). The folders are made first: the JVM does
     not start when the GC log's folder is missing."""
     dumps = DUMPS / name
     dumps.mkdir(parents=True, exist_ok=True)
@@ -298,7 +298,7 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     env["DRISHTI_NET_DIR"] = str(node_net(stack, node))
     env["DRISHTI_STACK_HOST"] = stack_host(stack)
     env["DRISHTI_PACKS"] = node["packs"]
-    env.setdefault("MALLOC_ARENA_MAX", "2")                 # glibc: two malloc arenas, not one per busy thread (PERFORMANCE.md, Resident memory)
+    env.setdefault("MALLOC_ARENA_MAX", "2")                 # glibc: two malloc arenas, not one per busy thread (CLUSTER_GUIDE.md, Resident memory)
     env.setdefault("DRISHTI_STORE_ROOT", str(ROOT / "data" / "fstore"))
     env.setdefault("DRISHTI_UI_KIT_DIR", str(ROOT / "config" / "ui-kit"))   # the platform UI kit for every node, whatever its working folder   # one content store for every node of this machine's cluster (DATA_ARCHITECTURE.md)
     if node.get("home") == "repo":
@@ -329,7 +329,7 @@ def start_node(stack: dict, node: dict, keys: dict, jar: Path, pids: dict) -> bo
     args = [f"-Xmx{node.get('heap', '1536m')}", *SERVER_MEMORY_FLAGS, *direct_memory_flags(cwd, env), *diagnostic_flags(name), *node.get("jvm", []),
             "-jar", str(jar), f"--server.port={port}"]
     args += [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])]
-    # 2.9.7 (RESOURCES_AND_SCALE.md 6.4): the server writes run/logs/<node>.log itself, rotated (100 MB a file, 1 GB in all); standard
+    # 2.9.7 (CLUSTER_GUIDE.md 6.4): the server writes run/logs/<node>.log itself, rotated (100 MB a file, 1 GB in all); standard
     # output (the JVM's own lines, a crash) goes to run/logs/<node>.out, which stays small
     args += [f"--drishti.logging.file={LOGS / (name + '.log')}", "--logging.threshold.console=OFF"]
     args += node.get("args", [])

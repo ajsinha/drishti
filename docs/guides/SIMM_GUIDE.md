@@ -276,7 +276,7 @@ The answer is the computed kind `simm-result` of [SIMM.md section 9.1](../contra
 the CSA's terms used, the version and the file's checksum, the choices, what was left out and why).
 
 **Settings** (`drishti.simm.*` in the engine's own file `config/engines/simm.yaml`, all in [CONFIGURATION.md](../admin/CONFIGURATION.md)): the switch `drishti.engines.simm.enabled` (default true; the old name `drishti.simm.enabled` still works; off, every request answers
-`404 DRS-1020` and SIMM disappears from the console, [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)), `parameters-dir`, `default-version`, `netting-set-kind`, `csa-kind`, `add-on-kind`, `external-kind`, `stored-kind`,
+`404 DRS-1020` and SIMM disappears from the console, [OPERATIONS_GUIDE.md section 21](ADMIN_GUIDE.md#21-compute-engines-on-or-off)), `parameters-dir`, `default-version`, `netting-set-kind`, `csa-kind`, `add-on-kind`, `external-kind`, `stored-kind`,
 `product-classes`, `default-product-class`, `max-factors` (1,500), `recipes-dir` (under the data folder), `cache-minutes`,
 `playground-template`. The sensitivity and dictionary kinds are FRTB-SA's (`drishti.frtb.sensitivity-kind`, `factor-kind`).
 

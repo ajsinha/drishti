@@ -97,12 +97,12 @@ AREAS = [
          "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. "
          "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
          "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
-         "([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#21-compute-engines-on-or-off)). "
+         "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). "
          "The old switch names are listed last: they still work, with a warning at start (`DRS-1024`)."),
     Area("modules", "Modules: `config/modules/*.yaml`",
          "One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of "
          "its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), "
-         "[OPERATIONS.md](OPERATIONS.md)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module "
+         "[OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module "
          "is on when installed, licensed and enabled; a change takes effect at the next start."),
     Area("console", "The console: `application.yaml`",
          "`drishti-console/config/application.yaml`. Override a key in `config/application.local.yaml`, with the variable named, with "
@@ -125,7 +125,7 @@ AREAS = [
          "the default packs (`config/packs/default-packs.yaml`, by module), read by the server (`Editions.java`) and the console "
          "(`core/edition.py`). The site's own configuration "
          "wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console "
-         "([LENSES.md](LENSES.md))."),
+         "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is))."),
     Area("store", "The content store: `config/store/store.yaml`",
          "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),
@@ -136,12 +136,12 @@ AREAS = [
          "Write-back's four files ([WRITE_BACK.md](../guides/WRITE_BACK.md): the administrator's guide and, in its section 16, "
          "the design); `drishti.edit.file` names `edit.yaml`, the others sit beside it."),
     Area("compute", "Compute workers: `config/compute/compute.yaml`",
-         "The supervisor, the Python pools and their environments ([OPERATIONS.md](OPERATIONS.md#19-compute-workers))."),
+         "The supervisor, the Python pools and their environments ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#15-compute-workers))."),
     Area("net", "Drishti*net: `config/net/`",
-         "The cluster folder (`drishti.net.dir`), watched while the server runs ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)); the shipped examples are in "
+         "The cluster folder (`drishti.net.dir`), watched while the server runs ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)); the shipped examples are in "
          "`config/net.examples/`."),
     Area("alerts", "Platform alert rules: `config/alerts/platform-alerts.yaml`",
-         "The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATIONS.md#136-platform-metrics-and-alerts)); "
+         "The rules each server evaluates against its own metrics ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules)); "
          "`drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own."),
     Area("feeds", "Data feeds: `config/feeds/<feed>.yaml`",
          "One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys "

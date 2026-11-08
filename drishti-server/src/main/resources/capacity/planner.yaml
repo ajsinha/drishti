@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The single-node capacity planner (docs/architecture/RESOURCES_AND_SCALE.md 9.7): ONE file read by three evaluators that must agree.
+# The single-node capacity planner (docs/guides/CLUSTER_GUIDE.md 9.7): ONE file read by three evaluators that must agree.
 #   tools/sizing_planner.py   writes docs/architecture/Drishti-Sizing-Planner.xlsx and the server's template (capacity/template/)
 #   the server                GET /api/v1/admin/capacity serves this file as JSON; capacity.xlsx fills the template's Inputs
 #   the console               static/js/drishti_capacity.js evaluates the expressions as you type (Admin -> Capacity)
@@ -157,25 +157,25 @@ coefficients:
   - {name: "BaseTradeRows", value: 20000, unit: "rows a day", status: "calibrated",
      source: "The measured start heap already holds the benchmark's trades (20,000 a day over 2 days, 2,000 counterparties); only rows above it are added."}
   - {name: "FooterCacheDefaultMB", value: 64, unit: "MB", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.5: -Ddrishti.parquet.footer-cache-mb, 64 MB by default."}
+     source: "CLUSTER_GUIDE.md 3.5: -Ddrishti.parquet.footer-cache-mb, 64 MB by default."}
   - {name: "FooterBytesPerChunk", value: 700, unit: "bytes", status: "measured",
-     source: "RESOURCES_AND_SCALE.md 3.5: about 700 bytes a column chunk of a Parquet footer."}
+     source: "CLUSTER_GUIDE.md 3.5: about 700 bytes a column chunk of a Parquet footer."}
   - {name: "RowsPerRowGroup", value: 128000, unit: "rows", status: "estimate",
      source: "Rows in one Parquet row group of a trade table."}
   - {name: "ColumnsPerTable", value: 60, unit: "columns", status: "estimate",
      source: "Columns of a trade table's Parquet files (each a column chunk in the footer)."}
   - {name: "SearchIndexCapMB", value: 600, unit: "MB", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.5, CONFIGURATION.md: the type-ahead index's index.max-memory, 600 MB."}
+     source: "CLUSTER_GUIDE.md 3.5, CONFIGURATION.md: the type-ahead index's index.max-memory, 600 MB."}
   - {name: "SearchBytesPerRow", value: 200, unit: "bytes", status: "estimate",
      source: "Heap of the type-ahead index a trade row of the kept day."}
   - {name: "BiQueryCacheMB", value: 64, unit: "MB", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.3: drishti.bi.query.cache-max-bytes, 64 MB."}
+     source: "CLUSTER_GUIDE.md 3.3: drishti.bi.query.cache-max-bytes, 64 MB."}
   - {name: "BiPlanAnswersMB", value: 50, unit: "MB", status: "estimate",
-     source: "RESOURCES_AND_SCALE.md 3.3: plan answers, 2,000 entries (drishti.bi.plan.cache-entries), about 25 KB each."}
+     source: "CLUSTER_GUIDE.md 3.3: plan answers, 2,000 entries (drishti.bi.plan.cache-entries), about 25 KB each."}
   - {name: "HistoryCacheMB", value: 256, unit: "MB", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.4, CONFIGURATION.md: drishti.history.cache-mb, 256 MB."}
+     source: "CLUSTER_GUIDE.md 3.4, CONFIGURATION.md: drishti.history.cache-mb, 256 MB."}
   - {name: "VarAnswersMB", value: 32, unit: "MB", status: "estimate",
-     source: "RESOURCES_AND_SCALE.md 3.1: the VaR answers, 512 entries, about 64 KB each."}
+     source: "CLUSTER_GUIDE.md 3.1: the VaR answers, 512 entries, about 64 KB each."}
   - {name: "TradeCacheBytesPerRow", value: 1300, unit: "bytes", status: "estimate",
      source: "BENCHMARK.md 8.2 and 8.4: 1.2 to 1.8 GB of heap after GC with 1.16 million trades on the latest day and 50 users."}
   - {name: "PerLoadMBAt1M", value: 1600, unit: "MB", status: "formula",
@@ -185,7 +185,7 @@ coefficients:
   - {name: "PerUserMB", value: 2.466, unit: "MB", status: "measured",
      source: "PER-USER WORKING MEMORY. The 1,000,000-position users run (6 GB heap, Java 21, G1): heap after GC 2,336.2 MB warm at 50 users against 2,212.9 MB with two dates open, (2,336.2 − 2,212.9) ÷ 50; 2,355 MB at the end after 200 users."}
   - {name: "LiveShare", value: 0.61, unit: "share", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 9.5 and BENCHMARK.md 11: the heap needed is the heap after collection ÷ 0.61 (39% headroom for the collector)."}
+     source: "CLUSTER_GUIDE.md 9.5 and BENCHMARK.md 11: the heap needed is the heap after collection ÷ 0.61 (39% headroom for the collector)."}
   - {name: "Java25HeapFactor", value: 0.977, unit: "factor", status: "measured",
      source: "BENCHMARK.md 4.4: Java 25 with compact object headers, 7,335 MB against 7,505 MB at 1,000,000 positions."}
   - {name: "CompressedOopsMaxGB", value: 31, unit: "GB", status: "formula",
@@ -193,11 +193,11 @@ coefficients:
   - {name: "AlignedOopsMaxGB", value: 64, unit: "GB", status: "formula",
      source: "Java: with -XX:ObjectAlignmentInBytes=16 compressed references reach 64 GB (objects pad to 16 bytes)."}
   - {name: "ZgcFromGB", value: 16, unit: "GB", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 5.5, PERFORMANCE.md (JVM settings): generational ZGC for large single servers (16 to 36 GB), G1 for small ones."}
+     source: "CLUSTER_GUIDE.md 5.5, CLUSTER_GUIDE.md (JVM settings): generational ZGC for large single servers (16 to 36 GB), G1 for small ones."}
   - {name: "OpenHeapStepMB", value: 64, unit: "MB", status: "formula",
      source: "drishti.var.open-heap-mb is rounded up to a multiple of this."}
   - {name: "ZgcSoftMaxShare", value: 0.8, unit: "share", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 5.5: -XX:SoftMaxHeapSize = 0.8 × -Xmx with ZGC (planned in the docs)."}
+     source: "CLUSTER_GUIDE.md 5.5: -XX:SoftMaxHeapSize = 0.8 × -Xmx with ZGC (planned in the docs)."}
   - {name: "ExpShardLoadMB", value: 8192, unit: "MB", status: "estimate",
      source: "BENCHMARK.md 6: past about 8 GB of value matrices an exposure date's load should be sharded."}
   - {name: "SingleNodeRamGB", value: 512, unit: "GB", status: "estimate",
@@ -219,7 +219,7 @@ coefficients:
   - {name: "ExpLoadBytesPerValue", value: 8, unit: "bytes", status: "measured",
      source: "BENCHMARK.md 6: while loading, every set's value matrix in float64 (sets × paths × steps × 8): 380 MB at 9,901 sets, 200 paths, 24 steps."}
   - {name: "ExpPathsCacheMB", value: 256, unit: "MB", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.2: the exposure trade-paths cache, 256 MB."}
+     source: "CLUSTER_GUIDE.md 3.2: the exposure trade-paths cache, 256 MB."}
   - {name: "ExpHotBytesPerValue", value: 6, unit: "bytes", status: "formula",
      source: "EXPOSURE_GUIDE.md 27.2: V in float32 (4 bytes) and E on the primary dates, half the grid (2 bytes a value)."}
   - {name: "ExpHotBytesPerTrade", value: 1256, unit: "bytes", status: "calibrated",
@@ -237,19 +237,19 @@ coefficients:
   - {name: "HotSmallBytesPerTrade", value: 354, unit: "bytes", status: "calibrated",
      source: "BENCHMARK.md 3: the hot file measured 3.14 GB a date at 1,000,000 positions; the rows, aggregates and totals are 2.79 GB, the rest (ids, columns, runs) 354 bytes a trade (VAR_GUIDE.md 27.1 says about 120)."}
   - {name: "StressScenarios", value: 250, unit: "scenarios", status: "estimate",
-     source: "RESOURCES_AND_SCALE.md 2.3: a stress window of 250 days."}
+     source: "CLUSTER_GUIDE.md 2.3: a stress window of 250 days."}
   - {name: "LakeBytesPerValue", value: 2.9535, unit: "bytes", status: "calibrated",
      source: "Re-benchmark: 2.8 GB of lake for two dates of 1,000,000 vectors of 509 values (read as GB of 1,024 MB, the larger reading)."}
   - {name: "DiskDates", value: 60, unit: "files", status: "formula",
      source: "CONFIGURATION.md: drishti.var.tier.disk-dates, 60 hot files kept on disk."}
   - {name: "CurrencyRetentionDates", value: 5, unit: "dates", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.1: currency books kept on disk for 5 dates."}
+     source: "CLUSTER_GUIDE.md 3.1: currency books kept on disk for 5 dates."}
   - {name: "SpillFactor", value: 3, unit: "× hot file", status: "formula",
      source: "VAR_GUIDE.md 26.8: before a build the tier reserves three times its largest hot file (the disk guard)."}
   - {name: "LogsGB", value: 1.1, unit: "GB", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.8, 6.4: the server log rotated at 1 GB in all, the GC log 5 × 20 MB."}
+     source: "CLUSTER_GUIDE.md 3.8, 6.4: the server log rotated at 1 GB in all, the GC log 5 × 20 MB."}
   - {name: "DumpsKept", value: 1, unit: "dumps", status: "estimate",
-     source: "OPERATIONS.md: a heap dump is about the size of the heap; one kept."}
+     source: "OPERATIONS_GUIDE.md: a heap dump is about the size of the heap; one kept."}
   - {name: "IdMapBytesPerRow", value: 15, unit: "bytes", status: "measured",
      source: "BENCHMARK.md 8.4: id maps on disk, about 15 bytes a trade a date."}
   - {name: "TradeLakeBytesPerRow", value: 1500, unit: "bytes", status: "measured",
@@ -257,15 +257,15 @@ coefficients:
   - {name: "GroupedPagesBytesPerRow", value: 550, unit: "bytes", status: "measured",
      source: "BENCHMARK.md 8.4: grouped pages, about 0.55 KB a trade a cached date."}
   - {name: "GroupedPagesDates", value: 16, unit: "dates", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.4: grouped pages keep 16 dates."}
+     source: "CLUSTER_GUIDE.md 3.4: grouped pages keep 16 dates."}
   - {name: "DocCacheGB", value: 1, unit: "GB", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.5: the document disk cache, 1 GB a connector."}
+     source: "CLUSTER_GUIDE.md 3.5: the document disk cache, 1 GB a connector."}
   - {name: "IndexDiskGB", value: 2, unit: "GB", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.5: the type-ahead index, index.max-disk 2 GB a connector."}
+     source: "CLUSTER_GUIDE.md 3.5: the type-ahead index, index.max-disk 2 GB a connector."}
   - {name: "BiLayerBytesPerRow", value: 300, unit: "bytes", status: "estimate",
      source: "BI layers on disk a trade row a day read."}
   - {name: "BiRunsGB", value: 20, unit: "GB", status: "formula",
-     source: "RESOURCES_AND_SCALE.md 3.3: the BI runs' store, 20 GB."}
+     source: "CLUSTER_GUIDE.md 3.3: the BI runs' store, 20 GB."}
   - {name: "MinFreePercent", value: 10, unit: "%", status: "formula",
      source: "CONFIGURATION.md: drishti.disk.min-free-percent, 10."}
   - {name: "MinFreeGB", value: 20, unit: "GB", status: "formula",
@@ -301,11 +301,11 @@ coefficients:
   - {name: "RssStartMB", value: 2875, unit: "MB", status: "measured",
      source: "The users run: RSS at start, 1,000,000 positions, 6 GB heap, Java 21 (2,708 MB in the earlier run)."}
   - {name: "MetaspaceCodeMB", value: 215, unit: "MB", status: "measured",
-     source: "PERFORMANCE.md (Resident memory): metaspace 131 MB and code cache 84 MB, flat."}
+     source: "CLUSTER_GUIDE.md (Resident memory): metaspace 131 MB and code cache 84 MB, flat."}
   - {name: "DirectMaxMB", value: 256, unit: "MB", status: "formula",
-     source: "PERFORMANCE.md, OPERATIONS.md: -XX:MaxDirectMemorySize=256m on every launcher."}
+     source: "CLUSTER_GUIDE.md, OPERATIONS_GUIDE.md: -XX:MaxDirectMemorySize=256m on every launcher."}
   - {name: "OtherNativeMB", value: 600, unit: "MB", status: "estimate",
-     source: "PERFORMANCE.md (Resident memory): RSS levels off at about -Xmx + 0.4 GB (two malloc arenas) to + 1 GB (default allocator); the rest beyond metaspace and direct memory."}
+     source: "CLUSTER_GUIDE.md (Resident memory): RSS levels off at about -Xmx + 0.4 GB (two malloc arenas) to + 1 GB (default allocator); the rest beyond metaspace and direct memory."}
   - {name: "OsReserveGB", value: 2, unit: "GB", status: "estimate",
      source: "The operating system and its own services."}
   - {name: "ConsoleGB", value: 1, unit: "GB", status: "estimate",
@@ -457,7 +457,7 @@ results:
          why: "Under 32 GB Java uses 4-byte references; from 32 GB they double unless objects align to 16 bytes (up to 64 GB)."}
       - {name: "GcChoice", label: "Garbage collector", unit: "text",
          expression: "IF(Collector=\"auto\",IF(XmxGB>=ZgcFromGB,\"ZGC\",\"G1\"),Collector)",
-         why: "Generational ZGC from 16 GB of heap, G1 below (RESOURCES_AND_SCALE.md 5.5)."}
+         why: "Generational ZGC from 16 GB of heap, G1 below (CLUSTER_GUIDE.md 5.5)."}
   - band: "Page cache and RAM"
     rows:
       - {name: "TmatRows", label: "Trade rows of shared positions", unit: "rows",

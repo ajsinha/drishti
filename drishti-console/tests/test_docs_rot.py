@@ -24,7 +24,7 @@ the console's own help guides. For each one the checks below compare a name the 
 * a ``drishti.py`` command and its sub-commands exist in the CLI's argparse tree;
 * a ``DRISHTI_*`` environment variable, a ``drishti.*`` server setting and a console ``application.yaml`` key exist;
 * a ``DRS-NNNN`` code is one the code has, and every code the code has is in the one error-code table (API_GUIDE's *Error code
-  table*, status and meaning; TROUBLESHOOTING keeps cause and fix only where needed) or RACHANA_REFERENCE;
+  table*, status and meaning; OPERATIONS_GUIDE keeps cause and fix only where needed) or RACHANA_REFERENCE;
 * a command word typed with ``<GO>`` is a pack's mnemonic, a pack code or a reserved word;
 * a kind named as a kind (``the `trade` kind``, ``kind `trade```, ``--kind trade``, ``/v/trade/``) is a kind of some pack.
 
@@ -71,7 +71,7 @@ def documents() -> tuple[str, ...]:
     return tuple(p for p in tracked() if p.endswith(".md") and not p.startswith(NOT_DOCS) and (ROOT / p).is_file())
 
 
-# "analysis and product description": a lens document (docs/lenses/) whose built parts are cited as built and the rest are proposals.
+# "analysis and product description": a lens product document (docs/architecture/LENSES.md) whose built parts are cited as built and the rest are proposals.
 _PLANNED = re.compile(r"Status:\W*(design, not built|proposed|target design|design note, proposed|analysis and product description)", re.I)
 
 
@@ -249,7 +249,7 @@ EXAMPLE_PATHS = {
     "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank",
                                             "MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
                                             "sources.html", "sources.js", "test_sources.py"),
-    "docs/guides/CLI_GUIDE.md": ("config/packs/curves-demo",),
+    "docs/guides/CLI_REFERENCE.md": ("config/packs/curves-demo",),
     "docs/guides/DATA_GUIDE.md": ("config/packs/equity-desk", "docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),
 }
 

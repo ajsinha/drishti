@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The drain before a stop (CD2, CLUSTER_DEPLOYMENT.md section 4.6): one action drains every {@link Drainable} part of this node at once
+ * The drain before a stop (CD2, CLUSTER_GUIDE.md section 4.6): one action drains every {@link Drainable} part of this node at once
  * (Drishti*net's forwarding, the VaR shards), makes readiness {@code OUT_OF_SERVICE}, and says {@code safeToStop} once every part has
  * handed its work over. The flag is in memory: a restarted node takes work again (the rolling upgrade relies on it). Requests in flight
  * finish either way: the stop itself is Spring's graceful shutdown.

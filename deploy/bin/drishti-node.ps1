@@ -15,7 +15,7 @@
 <#
 .SYNOPSIS
   One Drishti server as a node of a cluster on Windows: its drain before a stop and its readiness (the PowerShell form of
-  deploy/bin/drishti-node.sh; docs/architecture/CLUSTER_DEPLOYMENT.md sections 4.6, 9.1 and 10.1, CD1 and CD2).
+  deploy/bin/drishti-node.sh; docs/guides/CLUSTER_GUIDE.md sections 4.6, 9.1 and 10.1, CD1 and CD2).
 
 .DESCRIPTION
   drain       drains the node (forwarded work and VaR shards go to other members, readiness OUT_OF_SERVICE) and waits until it is

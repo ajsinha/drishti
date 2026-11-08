@@ -50,7 +50,7 @@ def test_every_catalogued_guide_exists_and_renders(client):
 
 
 def test_guides_render_examples_boxes_toc_and_internal_links(client):
-    page = client.get("/help/install-and-run").text
+    page = client.get("/help/operations").text
     assert 'class="help-example"' in page and "data-copy" in page
     assert "On this page" in page and 'href="/help/user-guide"' in page
     assert 'class="help-box tip"' in client.get("/help/pack-developer-guide").text   # its deep-documents section (was NESTED_DOCUMENTS.md) has a tip box
@@ -62,7 +62,7 @@ def test_guides_render_examples_boxes_toc_and_internal_links(client):
 
 def test_search_and_missing_guides(client):
     r = client.get("/help/search", params={"q": "lockout"})
-    assert r.status_code == 200 and "/help/user-management" in r.text
+    assert r.status_code == 200 and "/help/admin" in r.text
     missing = client.get("/help/no-such-guide")
     assert missing.status_code == 404 and "There is no guide" in missing.text
 
@@ -100,7 +100,7 @@ def test_about_page(client):
     assert r.status_code == 200
     for text in ("1.2.0", 'id="what"', 'id="problem"', 'id="features"', 'id="performance"', 'id="capabilities"', 'id="competitive"',
                  'id="stack"', 'id="use-cases"', 'id="author"', 'id="legal"', "Ashutosh Sinha", "Documentation", "/help/third-party-notices",
-                 "docs/admin/PERFORMANCE.md", "System details for admins", 'href="/admin/health"'):
+                 "docs/guides/CLUSTER_GUIDE.md", "System details for admins", 'href="/admin/health"'):
         assert text in r.text, text
     # a product page: no Sutra, source or pack listing
     for text in ("irs-vanilla v3", "Sutras loaded", "Domain packs</dt>", "<dt>Java</dt>", "pnl-code"):

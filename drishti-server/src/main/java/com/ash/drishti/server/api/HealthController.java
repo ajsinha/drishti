@@ -87,7 +87,7 @@ public class HealthController {
         this.nativeLibraries = n;
     }
 
-    /** Busy protection (OPERATIONS.md, "Busy protection"): its card on Health; absent in a test that makes the controller itself. */
+    /** Busy protection (OPERATIONS_GUIDE.md, "Busy protection"): its card on Health; absent in a test that makes the controller itself. */
     private com.ash.drishti.server.admission.AdmissionGate busy;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
@@ -103,7 +103,7 @@ public class HealthController {
         this.memoryLake = m;
     }
 
-    /** The platform alerts (OPERATIONS.md section 13.6): the open ones on Health; absent in a test that makes the controller itself. */
+    /** The platform alerts (OPERATIONS_GUIDE.md section 13.6): the open ones on Health; absent in a test that makes the controller itself. */
     private com.ash.drishti.server.metrics.PlatformAlerts alerts;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)

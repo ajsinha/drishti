@@ -37,10 +37,10 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 | Show a report in another web application | [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide) (`<drishti-report>`, with `<drishti-search>` and `<drishti-about>`), [tutorial 20](../tutorials/20-embed-drishti.md) |
 | Publish, review, certify, trace lineage, move content between servers | [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
 | See what ships in `config/bi` and how the folder is read | [config/bi/README.md](../../config/bi/README.md) |
-| Grant the powers, set the limits | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
-| Call it from a program or the command line | [API_GUIDE.md](API_GUIDE.md#business-intelligence-rupaka-apiv1bi), [CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka) |
+| Grant the powers, set the limits | [ADMIN_GUIDE.md](ADMIN_GUIDE.md#34-bi-powers-rupaka), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Call it from a program or the command line | [API_GUIDE.md](API_GUIDE.md#business-intelligence-rupaka-apiv1bi), [CLI_REFERENCE.md](CLI_REFERENCE.md#bi-workspaces-and-the-catalogue-rupaka) |
 | Understand the design and what each phase built | [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) (section 20: every phase and wave as built, ending in the one list of what is not built), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (the target design), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#results-computed-by-a-streaming-producer) (heavy continuous aggregation belongs in a producer), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (server-side pricing, proposed) |
-| Fix a problem | section 12 here, [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
+| Fix a problem | section 12 here, [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting) |
 
 A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), then set up a stack with [section 30, its section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) (the *Set up* section) and do tutorial 8, Part A.
 
@@ -206,7 +206,7 @@ URLs: `/bi` (home), `/bi/catalogue`, `/bi/workspaces`, `/bi/w/<workspace>` (`me`
 
 ## 3. Who may do what: the four powers
 
-BI powers are granted on roles, beside `raw`, `author` and `approve` (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka)).
+BI powers are granted on roles, beside `raw`, `author` and `approve` (see [ADMIN_GUIDE.md](ADMIN_GUIDE.md#34-bi-powers-rupaka)).
 
 | Power | Lets a holder |
 |---|---|
@@ -456,7 +456,7 @@ console's `bi.enabled` (`DRISHTI_BI_ENABLED`). Each later phase has a group of i
 The model layer is the production design of what the phase 0 proof of concept showed.
 
 **The command line.** `drishti.py bi workspace list|get` and `drishti.py bi catalogue list|get|publish` talk to the API as the
-token's user ([CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka)):
+token's user ([CLI_REFERENCE.md](CLI_REFERENCE.md#bi-workspaces-and-the-catalogue-rupaka)):
 
 ```
 $ drishti.py bi workspace list
@@ -476,7 +476,7 @@ bi-cd5f8b2cc5   board    promoted  published v1   Counterparty exposure  (Rates 
 **Disabling and uninstalling a shipped file.** **Admin → Artifacts** (and *Shipped files* on *Admin → BI*) lists the files of `config/bi`. **Disable** hides a file from the catalogue and keeps
 it; **Uninstall…** shows the reports, boards, models, alerts and subscriptions that depend on it, refuses while any do, and otherwise moves the file to
 `data/uninstalled/`, from where it is restored. An administrator can also upload a `<name>.<kind>.yaml` file there: it is checked and its impact shown before it is placed. See
-[OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
+[OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely).
 
 ## 11. Built and not built
 
@@ -537,11 +537,11 @@ The codes of the later phases are described once, in the reference that raises t
 | `DRS-9050`, `9051` | live tables and streams: a table that cannot be kept live, too many streams | [section 30, its sections 7.1 and 9](#71-live-tables-phase-5) |
 | `DRS-9052`, `9053` | a board: malformed, or using a reserved, unbuilt setting | [section 31, its section 7](#237-checking-a-board-drs-9052-and-drs-9053) |
 
-Every code is also listed in [TROUBLESHOOTING.md](TROUBLESHOOTING.md#error-codes).
+Every code is also listed in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#22-error-codes).
 
 The menu is missing: you hold no BI power (ask an administrator to grant `bi` on one of your roles in Admin, Roles), the console's
 `bi.enabled` is off, or the server could not be asked (the menu then hides rather than failing the page). *Publish* is not offered:
-the workspace requires review, or you are not a member with `bi-author`. More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+the workspace requires review, or you are not a member with `bi-author`. More in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting).
 
 ## 13. Datasets and the query engine (phase 2)
 
@@ -559,7 +559,7 @@ columns, and the layers on disk) and a **query preview**: choose fields, measure
   datasets by everyone who may read them.
 * **Refresh.** Layers are rebuilt per business date when a data-load signal names the date ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)); an author can also clear and rebuild the current date from the API
   (`POST /api/v1/bi/datasets/{id}/refresh`). Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
-* **API.** [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2). Problems: DRS-9010 to 9017 (the dataset, composed and derived datasets included) and 9020 to 9027 (the query) in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+* **API.** [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2). Problems: DRS-9010 to 9017 (the dataset, composed and derived datasets included) and 9020 to 9027 (the query) in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting).
 
 **Several datasets in BI.** *(Facts from several packs sit in one model with several fact tables, and a Transform feeds a Python dataset, [section 30, its section 11.5](#115-the-samples-converted); composed and derived datasets do not run.)* A dataset written in the older shape need not come from a connector: it may be **composed** of other datasets (`from:` and `join:`: each source is asked as the person reading, with *its own* row rules and masks, and the answers are joined, with measures of the dataset's own over the joined columns) or **derived** by a **Python Transform** that receives the sources' answers as masked pandas frames and returns the table. Either is used wherever a dataset is (reports, alerts, subscriptions, refresh, the Notebook); its page lists **Built from other datasets** and the Model view draws the sources, the join and the table. A **report** may name a dataset per visual and link fields across datasets, so a slicer on one filters the visuals of another ([section 31, its section 16](#16-reports-over-several-datasets)); the **Notebook** loads several extracts in one notebook, joins them in pandas, and promotes the join to a Transform. A join on a column a source masks for you is refused, and so is a YAML join that would repeat rows (`DRS-9015`: aggregate the many side by the key, swap the ends, or accept it with `allow-repeat: true` on the join, which Check then shows as a warning). The sample *Desk P&L vs counterparty exposure* is built both ways. Reference: [section 30, its section 11](#11-composed-and-derived-datasets); tutorials [10](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report) and [14](../tutorials/09-notebook-and-python.md).
 
@@ -1178,7 +1178,7 @@ YAML is read by the server after a pause, and a line that does not read is marke
 
 **Boards** are designed here too: a page's *Layout: board*, the *tile* visual and its report, visual and alert ([section 31, its section 11](#2311-designing-a-board)).
 
-From the command line a theme and a report are items like any other (`drishti.py bi item save`, [CLI_GUIDE.md](CLI_GUIDE.md)); `drishti.py bi migrate --boards` converts 2.3 board files and the stored boards
+From the command line a theme and a report are items like any other (`drishti.py bi item save`, [CLI_REFERENCE.md](CLI_REFERENCE.md)); `drishti.py bi migrate --boards` converts 2.3 board files and the stored boards
 ([section 31, its section 12](#2312-from-a-board-item-to-a-board-page)). The acceptance of the wave, a Power BI author's desk pack made without the YAML tab, is the browser test
 `drishti-console/tests/test_bi_studio_browser.py` and [section 31, its section 20](#20-report-schema-v2-in-one-report).
 
@@ -1205,7 +1205,7 @@ recipient their own statement, made as them ([section 31, its section 24](#24-st
 ![The Paper tab and page 2 of the preview](img/bi-wave-d/statement-designer.jpg)
 
 From the command line: `drishti.py bi statement preview <report>` lists the pages with their header and footer, `drishti.py bi statement file <report> -o
-statement.pdf` writes the PDF (`--format xlsx` the workbook) ([CLI_GUIDE.md](CLI_GUIDE.md#bi-statement)); tutorial 8, Part C does both in the UI, the CLI and the
+statement.pdf` writes the PDF (`--format xlsx` the workbook) ([CLI_REFERENCE.md](CLI_REFERENCE.md#bi-statement)); tutorial 20 does both in the UI, the CLI and the
 YAML ([20-statements-and-field-parameters.md](../tutorials/08-reports-and-dashboards.md#part-c--statements-and-field-parameters)).
 
 ## 28. Background runs: long BI questions
@@ -1400,7 +1400,7 @@ the Runs tab. The inbox has a **Runs** tab of its own (`/inbox?tab=run`).
 
 ### On the command line
 
-`drishti.py bi runs` does what the Runs tab does, as the token's user (the full list is in [TOOLS.md](TOOLS.md) section 5.7 and
+`drishti.py bi runs` does what the Runs tab does, as the token's user (the full list is in [CLI_REFERENCE.md](CLI_REFERENCE.md) section 5.7 and
 [BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job) section 14.4):
 
 ```
@@ -1478,7 +1478,7 @@ times this week: a rollup would answer it at once. Review the suggested rollups"
 | `cancelled` | Cancelled: *by whom* | by you, an administrator, a newer selection, or the page closing |
 | `expired` | Expired | the result was removed by retention or the storage budget |
 
-The codes `DRS-9080` to `DRS-9089` are listed with their fixes in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+The codes `DRS-9080` to `DRS-9089` are listed with their fixes in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting).
 
 ## 29. AI in BI: report from words, ask the data, explain this number
 
@@ -2794,7 +2794,7 @@ and, in a second terminal, the console (the run configuration **Drishti console*
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480
 ```
 
-Open http://localhost:17480 and sign in as `drishti-dev-admin` with `drishti-dev-admin123` (change it later; [GETTING_STARTED.md](GETTING_STARTED.md)).
+Open http://localhost:17480 and sign in as `drishti-dev-admin` with `drishti-dev-admin123` (change it later; [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine)).
 The server reads `data/delta/demo` (the demo lake `lake demo` built) and `config/bi` is the BI folder, so the samples are there already. The seven packs are
 loaded by default (`DRISHTI_PACKS` unset).
 
@@ -2858,7 +2858,7 @@ What happened: the first query **built the columns layer** for the table: the co
 `<data>/bi-store/columns/file_model_trades-basic/trade/date=2026-10-26/part-<id>.parquet`. Run it again and the answer comes from the **result cache**
 (`cached: true`, in microseconds). The date is the newest the lake holds; give `time: {as-of: "2026-10-15"}` (a report's date picker) for another day.
 If the lake is built again (`lake demo` once more), the server reads it again: `lake demo` tells it, and a changed Delta date is noticed by itself
-([TOOLS.md section 4.7](TOOLS.md#47-a-pack-a-connector-and-the-data-load-signal)).
+([CLI_REFERENCE.md section 4.7](CLI_REFERENCE.md#78-a-pack-a-connector-and-the-data-load-signal)).
 
 As an author add `options: {explain: true}` to see the SQL the server compiled (see [section 30, its section 4](#4-measures-and-the-expression-language)): names quoted from the model, **no value in the text**.
 
@@ -4422,7 +4422,7 @@ A board is designed in the **report designer** (BI Studio, [section 15](#15-the-
 | *Warning: < 0* | `alert: { warn: { op: lt, value: 0 } }` |
 | *Kiosk: 20* | `board: { rotate: 20s }` |
 
-From the command line a board is a report: `drishti.py bi item save` stores its YAML like any report ([CLI_GUIDE.md](CLI_GUIDE.md)).
+From the command line a board is a report: `drishti.py bi item save` stores its YAML like any report ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 #### 23.12 From a board item to a board page
 
@@ -4662,7 +4662,7 @@ Monthly statement: 2 pages, A4 portrait, December 9999, 3 rows
   page 2: Monthly statement | December 9999 | For wes  ...  Run 2026-10-20 · by DESK | Page 2 of 2  (1 cell)
 ```
 
-([CLI_GUIDE.md](CLI_GUIDE.md#bi-statement), [API_GUIDE.md](API_GUIDE.md#statements-apiv1bireportsstatement).)
+([CLI_REFERENCE.md](CLI_REFERENCE.md#bi-statement), [API_GUIDE.md](API_GUIDE.md#statements-apiv1bireportsstatement).)
 
 #### 24.8 Checks: DRS-9038
 
@@ -6082,7 +6082,7 @@ The server answers them as `DRS-9071` to `9073` (the traceback for authors only)
  "pool": "python", "packages": ["pandas", "numpy", "pyarrow", "scipy"], "pins": {"numpy": "2.5.3", "pandas": "3.0.6", ...}, "calls": 0, "failures": 0}
 ```
 
-More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+More in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting).
 
 ### 11. Measured
 
@@ -6440,7 +6440,7 @@ trades: 1,000 rows of dataset:pack.trading.trade as of 2026-10-16
   TRADE_STATUS                 text      empty     0  distinct      5  AMENDED .. VALIDATED
 ```
 
-See [CLI_GUIDE.md](CLI_GUIDE.md#bi-transform-a-transforms-inputs-as-you-and-the-snippets).
+See [CLI_REFERENCE.md](CLI_REFERENCE.md#bi-transform-a-transforms-inputs-as-you-and-the-snippets).
 
 #### 17.7 Warm workers
 

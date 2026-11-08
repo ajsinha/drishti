@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin -> Health: the platform alerts the server evaluates (OPERATIONS.md section 13.6) and the console's live-channel relay."""
+"""Admin -> Health: the platform alerts the server evaluates (OPERATIONS_GUIDE.md section 13.6) and the console's live-channel relay."""
 import re
 
 

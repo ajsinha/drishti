@@ -141,7 +141,7 @@ It is not in `config/packs/`, so no server loads it by accident. To follow along
 **A scratch server to try things on.** Every step ends with something you can see. Use a scratch server and console on
 ports of their own, so that nothing of yours is touched: the seven shipped packs plus the one you are writing
 (`DRISHTI_PACKS` is explained in [Part V. Domain packs: the packs that ship, turning them on, who sees which](#turning-packs-on); the start-up recipe, the token and the run configurations are in
-[GETTING_STARTED.md](GETTING_STARTED.md)). Keep the demo source on (`DRISHTI_DEMO_ENABLED=true`, the default): it serves the pack's
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine)). Keep the demo source on (`DRISHTI_DEMO_ENABLED=true`, the default): it serves the pack's
 `samples/`. Security is off unless you turn it on, so the `curl` lines below need no token; on a server with security on add
 `-H "Authorization: Bearer $DRISHTI_TOKEN"`.
 
@@ -264,7 +264,7 @@ helpdesk 0.1.0
 ```
 
 If the server stopped instead (or, on a running server, Admin → Packs shows the pack *refused*), the message says why: a typo
-in a folder name, a kind another pack owns, a clash with an unrelated pack ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#building-and-starting)).
+in a folder name, a kind another pack owns, a clash with an unrelated pack ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#211-building-and-starting)).
 The console needs no restart: it asks the server which packs are on.
 
 ### Step 5. Open it (inference only)
@@ -520,7 +520,7 @@ Open `TKT TKT-1001`: the strip reads *Subject Cannot sign in · Status Open · P
 ![The ticket, laid out by the Sutra: a title with the client, six figures, a History ladder with the latest event lit, links with badges](img/packs/04-ticket-view.jpg)
 
 *How this view was built* now says `Sutra ticket v1 + inference`. A mistake (`kind: ladderr`) is reported with its line
-and the view keeps the last good version ([OPERATIONS.md › A Sutra is broken](../admin/OPERATIONS.md#172-a-sutra-is-broken-or-an-edit-does-not-show)).
+and the view keeps the last good version ([OPERATIONS_GUIDE.md › A Sutra is broken](OPERATIONS_GUIDE.md#202-a-sutra-is-broken-or-an-edit-does-not-show)).
 
 Writing Sutras is taught in the [Sutra guide](SUTRA_DEVELOPER_GUIDE.md); every key is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md). You can design the Sutra in the **Build workbench** instead of by hand:
@@ -1345,7 +1345,7 @@ connectors:
   ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).
 
 The measured effect, for 1,000,000 trades a day, is in [BENCHMARK.md section 8.1](../admin/BENCHMARK.md#81-a-million-trades-a-day-on-delta); every option
-of `lake build`, `lake demo` and `lake maintain` is in [TOOLS.md](TOOLS.md).
+of `lake build`, `lake demo` and `lake maintain` is in [CLI_REFERENCE.md](CLI_REFERENCE.md).
 
 ### Several source systems for one kind: the trading pack
 
@@ -2094,7 +2094,7 @@ roles:
 | `calc` | may use Calc, Python in the browser on what the role opens ([USER_GUIDE.md](USER_GUIDE.md#9-roles-who-may-use-calc)) |
 
 The core always has `viewer`, `author`, `approver` and `admin`. Roles are given to users by an administrator; see
-[USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md). Security is off by default for local development; roles take effect when
+[ADMIN_GUIDE.md](ADMIN_GUIDE.md). Security is off by default for local development; roles take effect when
 it is on.
 
 A pack's roles appear in *Admin → Roles* marked **built-in**, read-only: change them in the pack (or, for a
@@ -2974,7 +2974,7 @@ handful of kinds, writing the pack by hand ([above](#build-it-step-by-step)) is 
 ##### What you need
 
 - the repository checked out, and Python 3 with `pyyaml` (the console's virtual environment has it);
-- the server and console running (see [GETTING_STARTED.md](GETTING_STARTED.md)), so you can open the result.
+- the server and console running (see [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine)), so you can open the result.
 
 ##### Generator step 1. Create the generator script
 
@@ -3183,7 +3183,7 @@ or alongside others: `DRISHTI_PACKS=market-risk,library`. The console reads the 
 4. Open **Help → Domain packs**: the *Library pack* guide is there.
 
 If an admin assigns packs per user, add `library` to your user under **Admin → Users** (see
-[Users and roles](../admin/USER_MANAGEMENT.md)).
+[Users and roles](ADMIN_GUIDE.md)).
 
 > **Live data and history.** Live views work from the samples straight away. Real history for the date picker needs the Delta Lake built
 > with `--lake`; without it, a picked date shows the samples as they are, with a note that the source is not a
@@ -3298,8 +3298,8 @@ kind is the file stem unless `--kind` is given (an envelope file may hold severa
 the server's exec jar (build the server first; `--jar`/`--java` to choose). Behind it are `tools/packgen/pack_from_jsonl.py`,
 `tools/sutragen.py` (Sutras only) and `tools/ingest_jsonl.py` (`drishti.py data ingest`, new days into the store). The whole command line
 (`pack make`, `pack check`, `pack about-check`, `pack regenerate`, loading into a running server, the workbench's workflow) is in
-[CLI_GUIDE.md](CLI_GUIDE.md); shipping a finished pack by copying a versioned, checksummed bundle (`pack bundle`, `verify`, `deploy`,
-`rollback`) is in [OPERATIONALISING.md](OPERATIONALISING.md).
+[CLI_REFERENCE.md](CLI_REFERENCE.md); shipping a finished pack by copying a versioned, checksummed bundle (`pack bundle`, `verify`, `deploy`,
+`rollback`) is in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying).
 
 Worked example, run as written: 300 ENDUR trades on two business days (600 rows, with a `BUSINESS_DATE` added) and the 22
 counterparties they name, taken from `data/testdata/` into a folder `jsonl/` (`trade.jsonl`, `counterparty.jsonl`).
@@ -3369,7 +3369,7 @@ DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=$PWD/lake java -jar drishti-server/targ
 - **New days later:** `drishti.py data ingest --from new/trade.jsonl --pack config/packs/my-bank --lake lake/` replaces only the dates in the
   input (`--mode overwrite-dates`, the default; `append` adds, `replace` rewrites the table; `--dry-run` prints counts per kind and date); a
   running server picks the new data up at its next refresh (Delta: 10 s, files: `rescan-seconds`), or at once with the data-load signal.
-  For large exports (a book of a million trades), `drishti.py lake build` streams the input with flat memory ([TOOLS.md](TOOLS.md)).
+  For large exports (a book of a million trades), `drishti.py lake build` streams the input with flat memory ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 - **New data, new shapes:** `drishti.py pack regenerate` drafts Sutras, About text and tests from the new data and three-way merges them
   into the pack against `generated/`, keeping your edits.
 
@@ -3529,7 +3529,7 @@ MX-20000003  MUREX          IRS_FIXFLOAT   VALIDATED     2026-09-18   B         
 ```
 
 `drishti.py lake demo` builds the three tables from the committed test data ([the demo lakes](#the-demo-lakes-where-the-seven-packs-read-their-data));
-for your own extracts, `drishti.py lake build --connector trade-murex …` writes one ([TOOLS.md](TOOLS.md)).
+for your own extracts, `drishti.py lake build --connector trade-murex …` writes one ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 **The deal screen** (one per product type, the same layout for all): **F2 DES** the deal ticket; **F3 LEGS** the legs side by side,
 each with its terms, its notional profile (a step line), its fixings and its cash flows opening to their resets; **F4 FLOWS** every
@@ -3666,7 +3666,7 @@ Start the server with the samples off so that every page reads the lakes: the ru
 `DRISHTI_DEMO_ENABLED=false` with the seven packs. Running `lake demo` again while a server runs is safe: it sends the data-load
 signal for every table and date it wrote (`--server`, `--token-file`), and a running server also sees each rebuilt Delta date by
 itself and reads it again, so BI never shows old figures. The steps, the demo pages and the timings are in
-[data/testdata/README.md](../../data/testdata/README.md); every option of `lake demo` and `lake build` is in [TOOLS.md](TOOLS.md).
+[data/testdata/README.md](../../data/testdata/README.md); every option of `lake demo` and `lake build` is in [CLI_REFERENCE.md](CLI_REFERENCE.md).
 
 #### news-and-markets and world-economy offline
 
@@ -3709,7 +3709,7 @@ server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EX
    DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11.d-exec.jar
    ```
 
-   (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
+   (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)).
 3. Check what loaded. With security on, an API token goes in the header (`-H "Authorization: Bearer $DRISHTI_TOKEN"`;
    [API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel) says how to make one):
 
@@ -3849,7 +3849,7 @@ curl -s -X POST localhost:18480/api/v1/admin/users -H "Authorization: Bearer $DR
 ```
 
 `PUT /api/v1/admin/users/priya` with a `packs` list changes it later. See
-[USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) for the user dialog, roles, and where assignments are stored
+[ADMIN_GUIDE.md](ADMIN_GUIDE.md) for the user dialog, roles, and where assignments are stored
 (`drishti_user_pack`).
 
 **To choose which packs you see** (any user with more than one pack): click the round box tool in the top bar
@@ -3921,7 +3921,7 @@ runs at a time. (Copying the help-desk pack into `config/packs/` of a running se
 **Taking a pack out safely.** Deleting the folder works, but **Admin → Artifacts** (and the *Uninstall…* button on each pack in Admin → Packs) first lists what depends on
 the pack (packs that extend it, connectors only it uses, BI datasets and reports over its kinds, monitors, alert rules, subscriptions, workspaces, shares, embed hosts),
 refuses while anything does and offers *Disable instead*, and otherwise moves the folder to `<data>/uninstalled/` where it can be restored for 30 days. See
-[OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
+[OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely).
 
 #### A pack that was refused is tried again by itself
 
@@ -3940,7 +3940,7 @@ Admin → Packs and Health show it on the pack's row: *failed — next retry in 
 once. When a pack loads because its blocker went away, the audit log has `pack-loaded` (actor `retry`) and `pack-recovered`; failures are
 audited as `pack-retry-failed`, only on attempts 1, 2, 4, 8, … so a pack that stays broken for a day does not fill the log. The settings
 are in [CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings) and the whole behaviour in
-[OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself). With `drishti.packs.watch: off` nothing looks at the
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#138-retries-what-failed-is-tried-again-by-itself). With `drishti.packs.watch: off` nothing looks at the
 folder on a timer, and so nothing retries either: use Retry now.
 
 Each change is audited (`pack-loaded`, `pack-reloaded`, `pack-unloaded`, `pack-problem`). Connectors that only unloaded packs used stay held back until
@@ -4033,7 +4033,7 @@ the running server without a restart; only that connector restarts. The model, t
 
 The precedence for a connector's settings, highest first: environment variables and `drishti.sources.connectors.*` in the server's own configuration (deprecated; they
 override a file setting by setting), the connector file, the pack's template. `drishti.py connector list|get|apply|test|reset|...`
-([CLI_GUIDE.md](CLI_GUIDE.md#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)) does from a terminal what Admin → Connectors does.
+([CLI_REFERENCE.md](CLI_REFERENCE.md#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)) does from a terminal what Admin → Connectors does.
 
 ### History: an entity over time
 
@@ -4061,12 +4061,12 @@ back to pack kinds and their connectors ([BI_DESIGN.md section 14.3](../architec
   shipped pack defines, a `pack.<pack>.<kind>` that exists), so a renamed kind or a retired pack cannot leave a broken BI sample behind.
 - **BI inside a pack archive.** A pack may carry its own BI items in `config/bi/` inside the pack folder; deploying the pack imports them
   as a bundle into the shared workspace `packs`, with the pack as their audience ([BI_GUIDE.md](BI_GUIDE.md#bi-content-in-a-pack-archive)).
-- **Before an uninstall**, Admin → Artifacts lists the BI datasets and reports over the pack's kinds ([OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)).
+- **Before an uninstall**, Admin → Artifacts lists the BI datasets and reports over the pack's kinds ([OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely)).
 
 ### Deploying an archive, history, and the pack's connectors (Admin → Packs)
 
 Three more things live on **Admin → Packs**; each is written up step by step, with pictures, in
-[OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back).
+[OPERATIONS_GUIDE.md, section 17](OPERATIONS_GUIDE.md#9-admin--packs-deploy-an-archive-history-and-roll-back).
 
 - **Deploy an archive.** Upload a `.tar.gz` made by `drishti.py pack bundle` or `pack make` (the pack only, never data). The server checks the
   checksums and manifest, that no path leaves the pack folder, the server version it needs, the Sutras (lint and tests), the packs it extends, and an
@@ -4081,7 +4081,7 @@ Three more things live on **Admin → Packs**; each is written up step by step, 
   The earlier per-pack override file `<data>/packs/settings/<pack>.yaml` is moved into connector files once, at the first start after the upgrade.
 
 The same from the terminal: `drishti.py server packs deploy|history|rollback|datasource get`
-([CLI_GUIDE.md](CLI_GUIDE.md#server-packs-deploy-history-rollback-and-datasource)). A personal API token needs the `packs:admin` scope; connectors have their own commands, `drishti.py connector ...`.
+([CLI_REFERENCE.md](CLI_REFERENCE.md#server-packs-deploy-history-rollback-and-datasource)). A personal API token needs the `packs:admin` scope; connectors have their own commands, `drishti.py connector ...`.
 
 #### One pack: its own page
 
@@ -4210,11 +4210,11 @@ fresh clone, which rules the build enforces, how a request (a view, a BI questio
 gives worked recipes for the changes people make most often. Every class, path and command here exists in the repository (checked
 against this release on a fresh clone); the recipes follow the idioms of the real classes they imitate.
 
-If you only want to run Drishti, read [GETTING_STARTED.md](GETTING_STARTED.md); to run it from IntelliJ IDEA and PyCharm, read
-[GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm). For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), the BI model
+If you only want to run Drishti, read [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine); to run it from IntelliJ IDEA and PyCharm, read
+[OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm). For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), the BI model
 architecture [BI_DESIGN.md section 14](../architecture/BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6) and the [decision records](../architecture/adr/README.md).
 
-The API references are at **Help → Developer**, generated from the code: the Javadoc of the [plugin and connector SPI](/help/reference/latest/java/drishti-api/index.html) and the [shard machinery](/help/reference/latest/java/drishti-compute/index.html) with [`ShardedMeasure`](/help/reference/latest/java/drishti-server/com/ash/drishti/server/shard/ShardedMeasure.html), and the Python references of the [compute worker SDK](/help/reference/latest/python/drishti_compute/engine.html), [BI Python items](/help/reference/latest/python/core/python_items.html), [`drishti.py`](/help/reference/latest/python/drishti.html) and [`drishti_client`](/help/reference/latest/python/drishti_client.html), the pack generator helpers ([`readme`](/help/reference/latest/python/readme.html), [`packsamples`](/help/reference/latest/python/packsamples.html), [`upper`](/help/reference/latest/python/upper.html), [`walks`](/help/reference/latest/python/walks.html)) and the test-data helpers ([`samplegen`](/help/reference/latest/python/samplegen/dates.html)). What you add to these surfaces is documented as you write it: the drill fails on a public Java member without a comment, a broken `{@link}`, or a public Python function without a docstring and type hints (`python3 tools/api_docs.py check`; [Tools](TOOLS.md#api-references)).
+The API references are at **Help → Developer**, generated from the code: the Javadoc of the [plugin and connector SPI](/help/reference/latest/java/drishti-api/index.html) and the [shard machinery](/help/reference/latest/java/drishti-compute/index.html) with [`ShardedMeasure`](/help/reference/latest/java/drishti-server/com/ash/drishti/server/shard/ShardedMeasure.html), and the Python references of the [compute worker SDK](/help/reference/latest/python/drishti_compute/engine.html), [BI Python items](/help/reference/latest/python/core/python_items.html), [`drishti.py`](/help/reference/latest/python/drishti.html) and [`drishti_client`](/help/reference/latest/python/drishti_client.html), the pack generator helpers ([`readme`](/help/reference/latest/python/readme.html), [`packsamples`](/help/reference/latest/python/packsamples.html), [`upper`](/help/reference/latest/python/upper.html), [`walks`](/help/reference/latest/python/walks.html)) and the test-data helpers ([`samplegen`](/help/reference/latest/python/samplegen/dates.html)). What you add to these surfaces is documented as you write it: the drill fails on a public Java member without a comment, a broken `{@link}`, or a public Python function without a docstring and type hints (`python3 tools/api_docs.py check`; [Tools](CLI_REFERENCE.md#api-references)).
 
 ---
 
@@ -4329,23 +4329,23 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `examples/packs/` | The retired packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`, `liquidity-risk`), kept as examples and as fixtures for tests written against them; loaded only with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` |
 | `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
 | `config/bi/` | Shipped BI files: datasets, models, reports, boards |
-| `run-configs/` | The IntelliJ IDEA run configurations (IntelliJ opens the repository root; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)): **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**, **Drishti server (QA profile)**. The PyCharm ones (PyCharm opens `drishti-console/`, so the two IDEs never share one `.idea`) are in `drishti-console/run-configs/`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the QA console and the CLI tools |
+| `run-configs/` | The IntelliJ IDEA run configurations (IntelliJ opens the repository root; [OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)): **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**, **Drishti server (QA profile)**. The PyCharm ones (PyCharm opens `drishti-console/`, so the two IDEs never share one `.idea`) are in `drishti-console/run-configs/`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the QA console and the CLI tools |
 | `data/testdata/` | The committed test data: sixty business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
-| `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|publish|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_GUIDE.md](CLI_GUIDE.md) and [TOOLS.md](TOOLS.md) |
+| `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|publish|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_REFERENCE.md](CLI_REFERENCE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md) |
 | `tools/lake/` | Delta lakes from Python: `build.py` (`lake build`: a large JSON export streamed into a Delta table, flat memory, partitions, promoted columns, the data-load signal or the BI-store stamp), `demo.py` (`lake demo`: the demo lakes from `data/testdata`), `scan.py`, `laketables.py` (`lake status`), `maintain.py` (retention, compaction, checkpoints, vacuum, `relayout`), each with its tests |
 | `tools/testdata/` | `make_testdata.py` (writes `data/testdata`, deterministic, `--check`), `universe.py` (the fictitious counterparties, books and legal entities), `test_testdata.py`, `test_deterministic.py` (the same bytes on every Python) |
 | `tools/packgen/` | Pack generators: `banking/` (the five banking packs from one taxonomy, `make_data.py` for their samples and `--lake`/`--jsonl`), `trades/` (the common trade schema every source system writes, `schema.py`, and the ENDUR, CALYPSO and MUREX generators), `common/` (`packbuild.py`, `packsamples.py`, `walks.py`, `upper.py`), `world/`, `economics/`, `politics/`, and the retired packs' generators |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (a pack's sample history as JSONL loader rows), `load_rows.py` (loads such rows into Delta), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for one source system: `--trades`, `--days`, `--system`), `stream.py` (Kafka ticker), `dates.py` (business-day calendars) |
 | `tools/load-*.sh` | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)) |
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [BENCHMARK.md](../admin/BENCHMARK.md) |
-| `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see this document, [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md), [CLI_GUIDE.md](CLI_GUIDE.md)) |
-| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](EXTERNAL_DATA.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows)); the map region builder |
+| `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see this document, [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md), [CLI_REFERENCE.md](CLI_REFERENCE.md)) |
+| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](EXTERNAL_DATA.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([OPERATIONS_GUIDE.md (Windows)](OPERATIONS_GUIDE.md#4-drishti-on-windows)); the map region builder |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
 | `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras to `*.sutra.yaml`) |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | The **data folder** (`DRISHTI_DATA_DIR`): everything Drishti writes at run time, all git-ignored except `testdata/`: `delta/` (the demo lakes), `bi-store/` (BI columns and rollups), `connectors/` (`generated/` and `history/`), `identity/`, `feeds/`, `packs/` (`added.yaml`, installed archives), `loads/`, `governance/`, `collab/`, `reports/`, `qa/` (the QA profile), `build/` (tool output and staging), `drill/` (the drill's logs) |
-| `docs/` | These documents, by audience: `guides/` (getting started, user, developer, API, Rachana, BI and troubleshooting guides), `tutorials/` (18 hands-on tutorials), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance; the runbooks are in OPERATIONS.md), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
+| `docs/` | These documents, by audience: `guides/` (getting started, user, developer, API, Rachana, BI and troubleshooting guides), `tutorials/` (18 hands-on tutorials), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance; the runbooks are in OPERATIONS_GUIDE.md), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
 | `.github/workflows/fast.yml`, `windows.yml` | CI: `fast.yml` runs `./mvnw -B -q verify` and the header check on Java 21 and 25 and `pytest` for the console on Python 3.13; `windows.yml` builds on Windows, runs the native Delta engine, the Delta connector and server tests, and asks a server on a small lake for a view, a search and a past date |
 
 ---
@@ -4356,8 +4356,8 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 
 | Tool | Version | Notes |
 |---|---|---|
-| JDK | 21 or newer (any vendor; Java 21 is the production target) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [PERFORMANCE.md](../admin/PERFORMANCE.md#java-21-and-virtual-thread-pinning)). |
-| Python | 3.13 ([the minimum and why](GETTING_STARTED.md#step-1--install-the-prerequisites)) | The console and the tools. CI uses 3.13. |
+| JDK | 21 or newer (any vendor; Java 21 is the production target) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [CLUSTER_GUIDE.md](../architecture/ARCHITECTURE.md#14-concurrency-and-performance)). |
+| Python | 3.13 ([the minimum and why](OPERATIONS_GUIDE.md#21-prerequisites)) | The console and the tools. CI uses 3.13. |
 | uv | any recent | Creates the console's environment (`uv venv --python 3.13`), which works where the system Python has no `ensurepip` (Debian and Ubuntu without `python3.X-venv`); runs some tools with `uv run --with …` so nothing is installed globally. |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, Cassandra, ScyllaDB, ActiveMQ, RabbitMQ, MinIO) and `deploy/docker/compose.yaml`. |
 
@@ -4371,7 +4371,7 @@ export PATH="$JAVA_HOME/bin:$PATH"
 
 You should see `Java version: 21…` in the output. Maven itself comes with the repository (`./mvnw`, Maven 3.9.12).
 
-**From a fresh clone to a running stack** (what [GETTING_STARTED.md](GETTING_STARTED.md) and
+**From a fresh clone to a running stack** (what [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) and
 [data/testdata/README.md](../../data/testdata/README.md) walk through; measured on a 24-core laptop):
 
 ```bash
@@ -4382,7 +4382,7 @@ uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requ
 drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 89 Delta tables, sixty days, under data/delta/demo
 ```
 
-then the server and the console as the run configurations start them ([GETTING_STARTED.md, Steps 6 and 7](GETTING_STARTED.md#step-6--start-the-server)).
+then the server and the console as the run configurations start them ([OPERATIONS_GUIDE.md, Steps 6 and 7](OPERATIONS_GUIDE.md#25-start-the-server)).
 
 #### 2.2 Maven commands
 
@@ -4492,7 +4492,7 @@ Server settings follow the same precedence as the console: `drishti-server/src/m
 `./application.local.yaml` (git-ignored; imported by `spring.config.import`), then environment variables, then `--key=value`
 arguments. For example `--drishti.live.frame=100ms` or `--server.port=18481`. The run configurations in `run-configs/` carry the
 settings of each way of starting it (sign-in on with the development admin, the demo source on or off, the QA profile on its own ports
-and data folder); [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm) lists them.
+and data folder); [OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm) lists them.
 
 The development loop that works best:
 
@@ -5145,7 +5145,7 @@ class MnemonicApiTest {
 ```
 
 **4. Document it.** Add the endpoint to [API_GUIDE.md](API_GUIDE.md) and the new code to its error-code table, and to the code table in
-[TROUBLESHOOTING.md](TROUBLESHOOTING.md) (the console tests `test_docs_api_endpoints.py` and `test_docs_error_codes.py` fail when one is
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#21-troubleshooting) (the console tests `test_docs_api_endpoints.py` and `test_docs_error_codes.py` fail when one is
 missing). The OpenAPI document at `/api/docs` picks the endpoint up by itself.
 
 **5. Call it from the console** (if a page needs it): add a method to `BackendClient` in `drishti-console/core/backend.py`, following
@@ -5715,7 +5715,7 @@ A script that makes a rendered view interactive (sorting, charts, popovers) must
 #### 5.10 Retry and live-reload utilities
 
 Two small, Spring-light pieces in `drishti-common` serve every area that keeps something running from files (packs, connectors, AI
-providers, MCP servers, BI artifacts). Operator view: [OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
+providers, MCP servers, BI artifacts). Operator view: [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#138-retries-what-failed-is-tried-again-by-itself).
 
 **Retrying what failed** (`com.ash.drishti.common`, no Spring, virtual-thread friendly, locks are `ReentrantLock`, nothing blocks under
 `synchronized`):
@@ -5754,7 +5754,7 @@ the state more than once. Examples: `ReferenceCatalog`, `SearchProperties`, `Rol
 | Repository rules | `drishti-it`, `tools/` | ArchUnit and file walks | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest`, `tools/test_no_hidden_names.py` |
 | Documentation | rachana, server, console | the docs are parsed as code | `DocumentedSutrasTest` (every complete Sutra, a ```` ```yaml ```` block starting `rachana:`, in `docs/`, `drishti-console/web/guides/` and pack guides), `RachanaReferenceExampleTest`, `PackSutrasTest`; console `test_docs_*.py` (endpoints, error codes, settings, plugins, placeholders), `test_help*.py`, `test_tutorials.py`, `test_guide_images.py`, `test_tools_guide.py` |
 | Performance gate | `drishti-server` | timed in the test | `ViewPipelineTest.warmViewsStayWellUnderFiftyMillisecondsAtP99`: 300 warm-up views, then 2000 timed; p99 must be under 50ms and the layout cache hit rate above 0.99 |
-| Micro-benchmarks | `drishti-benchmarks` | JMH, run by hand | `HotPathBenchmark` ([PERFORMANCE.md](../admin/PERFORMANCE.md) has the commands) |
+| Micro-benchmarks | `drishti-benchmarks` | JMH, run by hand | `HotPathBenchmark` ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#16-tuning) has the commands) |
 | Console | `drishti-console/tests` | pytest with `FakeBackend`; fixtures in `tests/fixtures/` are ViewModels captured from the real server | `test_terminal.py` (every panel kind with broken data), `test_assets_policy.py` (no CDN, no inline code, Python size), `test_contrast.py` (theme contrast), `test_help.py` (every catalogued guide renders) |
 | Python tools | `tools/` | `unittest` | `tools/samplegen/test_samplegen.py`, `tools/lake/test_build.py`, `tools/lake/test_demo.py`, `tools/lake/test_maintain.py`, `tools/testdata/test_testdata.py` |
 | Generated content | `tools/packgen`, pack tools | `--check` | run by the drill |
@@ -5785,7 +5785,7 @@ Habits that keep the suite fast and reliable:
 #### 7.1 Where to look
 
 With sign-in on (the run configurations), every `/api/v1` call needs `-H "Authorization: Bearer <token>"`: a personal API token
-([GETTING_STARTED.md, Step 10](GETTING_STARTED.md#step-10--a-personal-api-token-for-the-command-line)). With it off, add
+([OPERATIONS_GUIDE.md, Step 10](OPERATIONS_GUIDE.md#28-a-personal-api-token-for-the-command-line)). With it off, add
 `-H 'X-Drishti-User: ash'` to act as a user. The answers below were captured on the demo lakes.
 
 | Question | Ask |
@@ -5797,7 +5797,7 @@ With sign-in on (the run configurations), every `/api/v1` call needs `-H "Author
 | What did the source send? | `F9` in the view, or `curl -s localhost:18480/api/v1/entities/trade/MX-20000001/raw` (provenance `"source":"trade-murex"`; masked fields read `•••` for roles without `raw`) |
 | Which Sutra, how long? | The view JSON's `provenance.layout` (`Sutra irs-fixfloat v1 + inference`, or `inference only`) and `timings` (`fetch`, `layout`, `links`, `bind`, `total` in ms) |
 | What would inference do on its own? | `curl -s localhost:18480/api/v1/studio/inferred/trade/MX-20000001` returns the inferred Sutra as YAML (`text/yaml`, starting with a comment, then `rachana: 1`, `sutra: trade-custom`) |
-| Is a Sutra broken? | `curl -s localhost:18480/api/v1/sutras/problems` (`{}` when none); see [OPERATIONS.md › A Sutra is broken](../admin/OPERATIONS.md#172-a-sutra-is-broken-or-an-edit-does-not-show) |
+| Is a Sutra broken? | `curl -s localhost:18480/api/v1/sutras/problems` (`{}` when none); see [OPERATIONS_GUIDE.md › A Sutra is broken](OPERATIONS_GUIDE.md#202-a-sutra-is-broken-or-an-edit-does-not-show) |
 | Which sources run? | `curl -s localhost:18480/api/v1/sources` (and `failures`); `drishti.py connector list` for the connector files |
 | What changed between dates? | `curl -s localhost:18480/api/v1/history/trade/MX-20000001/diff` |
 | How are live streams doing? | `curl -s localhost:18480/api/v1/health/live` → `{"streams":0,"topics":2000,"frames":0,"p50Ms":0.0,"p99Ms":0.0}` |
@@ -5820,7 +5820,7 @@ LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-serv
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server
 (debug-friendly)** is the one to start with **Debug** in IntelliJ: sign-in off (no token to mint while you step through), a 1 GB heap, port
-18580 and the QA data folder `data/qa/data`, so it runs beside a normal server ([GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
+18580 and the QA data folder `data/qa/data`, so it runs beside a normal server ([OPERATIONS_GUIDE.md (IDE)](OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)).
 
 #### 7.3 Debugging a live view
 
@@ -5943,7 +5943,7 @@ Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git ta
    summary; the previous release's heading becomes `# Previous release: Drishti …`). Add upgrade notes when the identity schema,
    configuration keys, on-disk formats or pack attribute names change.
 4. **Verify locally on a fresh clone.** Clone, build the jar, `lake demo`, start the server and the console as
-   [GETTING_STARTED.md](GETTING_STARTED.md) says, and follow the tutorials; `curl -s localhost:18480/api/v1/about` reports the
+   [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) says, and follow the tutorials; `curl -s localhost:18480/api/v1/about` reports the
    `version` (on 2.6.7: `"version":"2.6.7"`).
 5. **Commit** as `Release X.Y.Z` on `develop`.
 6. **Drill:** `tools/drill.sh`. Nothing reaches `main` unless the whole build, every test, the console tests, the header check and the
@@ -5957,7 +5957,7 @@ Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git ta
 
 8. **Images (optional):** `docker build -f deploy/docker/server.Dockerfile -t drishti-server:X.Y.Z .` and
    `docker build -f deploy/docker/console.Dockerfile -t drishti-console:X.Y.Z .` from the repository root, after building the jar.
-   [OPERATIONS.md](../admin/OPERATIONS.md) covers deployment and upgrades.
+   [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md) covers deployment and upgrades.
 
 ## Part IX. Designing for phones
 

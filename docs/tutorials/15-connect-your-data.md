@@ -250,7 +250,7 @@ settings:
     no-proxy: [localhost, .internal.example.com]
 ```
 
-The page then shows the effective proxy, masked, and where it came from; **Test connection** goes through it and says so. [TLS.md (proxy)](../guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) is the reference.
+The page then shows the effective proxy, masked, and where it came from; **Test connection** goes through it and says so. [DATA_GUIDE.md section 10 (proxy)](../guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) is the reference.
 
 ## Step 7 · Look at all of it, then tidy up
 
@@ -314,7 +314,7 @@ You should see both commands answer in one line. Keep `desk-quotes`: tutorial 19
 ## Next steps
 
 - [Tutorial 19, Part A · Build a pack from your data](19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) gives the `desk-quote` kind a screen.
-- [CONNECTOR_FILES.md](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) is the reference, with an example for every store; [TLS.md](../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) the shared TLS settings;
+- [../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) is the reference, with an example for every store; [DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) the shared TLS settings;
   [POSTGRES_CONNECTOR.md](../../plugins/drishti-plugin-jdbc/README.md) the real thing, with its own pool and a loader.
 - To try a real PostgreSQL, start your own throwaway container and point a connector at it; never aim a tutorial at a database that matters.
 

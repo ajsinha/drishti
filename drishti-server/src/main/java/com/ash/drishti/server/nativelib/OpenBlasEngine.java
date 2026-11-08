@@ -21,7 +21,7 @@ import java.time.Instant;
 import org.springframework.stereotype.Component;
 
 /**
- * "Linear algebra: OpenBLAS" as a switch of Admin -> Engines (docs/admin/OPERATIONS.md section 2.1): the engine-switch mechanism keeps the
+ * "Linear algebra: OpenBLAS" as a switch of Admin -> Engines (docs/guides/OPERATIONS_GUIDE.md section 2.1): the engine-switch mechanism keeps the
  * administrator's choice ({@code config/engines/openblas.yaml}), audits it, requires the admin right and reaches other nodes; this engine
  * only acts on it, live. Off: the pure-Java path, chosen ({@code java (chosen by admin: switched off by <who> at <when>)}, a notice, not the
  * fallback warning). On: the self-test against Java first, then OpenBLAS; a failed self-test refuses the switch in words (the engine shows

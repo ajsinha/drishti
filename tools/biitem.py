@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI items from files on the command line (docs/guides/CLI_GUIDE.md "bi item, bi dataset"): what My workspace's New item, the item page's Edit and
+"""BI items from files on the command line (docs/guides/CLI_REFERENCE.md "bi item, bi dataset"): what My workspace's New item, the item page's Edit and
 the pages' Run the tests and Refresh do, over REST as the token's user. Loaded by drishti.py; the server checks every text and decides who may do what.
 
   bi item new WORKSPACE FILE [--title T] [--audience ROLE,...]   a draft from a YAML file (kind from the file name: x.model.yaml, x.dataset.yaml ...)

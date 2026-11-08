@@ -539,7 +539,7 @@ or after `end`. A channel opened with no subscriptions stays open, waiting for `
 Open channels live in the memory of the console process that served them, and the channel's id names that process (its host and relay
 port). A `POST /api/channel/{id}` that reaches another worker, or another console behind the load balancer, is relayed to the holder
 (`core/channel_relay.py`, signed with the relay key; across hosts with `live.relay.across_hosts`,
-[CLUSTER_DEPLOYMENT.md section 9.4](CLUSTER_DEPLOYMENT.md#94-sticky-sessions-and-the-relay)), so sessions need not be sticky. A channel
+[CLUSTER_GUIDE.md section 9.4](../guides/CLUSTER_GUIDE.md#74-no-sticky-sessions-the-console-relay)), so sessions need not be sticky. A channel
 whose holder has stopped gets `404` and the browser's hub reopens its channel.
 
 ### Guarantees and limits
@@ -775,8 +775,8 @@ drishti_live_streams 0.0
 drishti_live_topics 0.0
 ```
 
-If p99 stays above 40 ms, follow [runbooks/live-latency-high.md](../admin/OPERATIONS.md#173-live-latency-high-or-live-views-stop-ticking).
-Measured numbers are in [PERFORMANCE.md](../admin/PERFORMANCE.md).
+If p99 stays above 40 ms, follow [runbooks/live-latency-high.md](../guides/OPERATIONS_GUIDE.md#203-live-latency-high-or-live-views-stop-ticking).
+Measured numbers are in [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#16-tuning).
 
 ### Settings
 
@@ -804,7 +804,7 @@ The console has one live setting, in `drishti-console/config/application.yaml`:
 
 Behind a reverse proxy, turn off response buffering for SSE (`proxy_buffering off;` in nginx; the console
 already sends `X-Accel-Buffering: no`) and set the read timeout above the heartbeat interval. See
-[OPERATIONS.md](../admin/OPERATIONS.md).
+[OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md).
 
 ### Streaming sources
 
@@ -914,8 +914,8 @@ Status: **built**; the implementation notes say where
 the build differs from the design. Written 2026-10-20 from the
 design agreed with the product owner, checked against the code on `develop` and against the two connector branches that are not merged
 yet (drishti-iceberg and iceberg-external; Cassandra). Related: [ARCHITECTURE.md section 5](ARCHITECTURE.md#5-walk-through-one-request) (a command becomes a screen),
-[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (forwarding), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built) section 10 (slices and owners),
-[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap) (the history row of its table), [section 3](#3-drishti-iceberg-drishtis-own-apache-iceberg-engine),
+[CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) (forwarding), [CLUSTER_GUIDE.md](ARCHITECTURE.md#2813-super-scale-design-not-built) section 10 (slices and owners),
+[CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#14-scale-strategy-for-one-server) (the history row of its table), [section 3](#3-drishti-iceberg-drishtis-own-apache-iceberg-engine),
 [CASSANDRA_CONNECTOR.md](../../plugins/drishti-plugin-cassandra/README.md).
 
 ### 1. The ask
@@ -953,7 +953,7 @@ History queries are built from parts that are in the code now. Nothing below is 
 | Pinned links | console `core/asof.py` (`?asOf=&knownAt=`), `share_url()` and `view()` in `routes/terminal_routes.py` (`?gen=`, `pin = asit / changed / retry`) | A history row opens "the normal view as of that day" with the machinery that exists. |
 | Export | console `routes/export_routes.py`, `core/export.py` (`to_csv` with BOM and CRLF, `filename()`, `to_xlsx`, the formula guard) | The conventions history export follows. |
 
-CLUSTER_DEPLOYMENT.md measured the series at **0.02–0.12 s for 30 days** and diffs at 6–14 ms (2026-10-18, Delta). History queries
+CLUSTER_GUIDE.md measured the series at **0.02–0.12 s for 30 days** and diffs at 6–14 ms (2026-10-18, Delta). History queries
 generalise the series from one field to a whole row and give it its own page, command and API.
 
 ### 3. Principles
@@ -1541,7 +1541,7 @@ a key of `application.yaml` or a `@ConfigurationProperties` binding is not in th
   history of trade/10000901: …*, as a view says, never `DRS-1003`, which names a source of the server that answered. A date that one
   peer failed and another answered is not failed.
 
-**Super scale (CLUSTER_DEPLOYMENT.md › Super scale: 500 GB of JSON a day for seven years (design, not built), section 10, not built).** A slice is `(table, business day, group)`; each slice has owners on the ring
+**Super scale (CLUSTER_GUIDE.md › Super scale: 500 GB of JSON a day for seven years (design, not built), section 10, not built).** A slice is `(table, business day, group)`; each slice has owners on the ring
 (`hash(table, day, group)`, 64 virtual nodes, 2 owners for the `hot-days`). A history of one entity spans one slice per day, so the days
 spread over owners. `HistorySlices` (built with that design) groups the window's days by `owners[0]` of each day's slice
 (the group comes from the day's range map, section 9.1 there), sends one `/net/history` per owner with its days, merges, and reads any
@@ -1582,7 +1582,7 @@ another, or about 300–600 ms eight at a time, and each new day also reads its 
 way on Iceberg: the planned scan (section 10) prunes to one file per day by the manifests' id bounds, reads no id map, and reads only the
 needed columns, so the per-day cost is a footer (cached by the native engine) and one row group.
 
-The benchmark (section 19.4) measures these at 10K trades × 30 days and records them in CLUSTER_DEPLOYMENT.md's history row.
+The benchmark (section 19.4) measures these at 10K trades × 30 days and records them in CLUSTER_GUIDE.md's history row.
 
 **Measured (2026-10-20, H14).** `HistoryBench` (`drishti-benchmarks`), 10,000 synthetic trades × 30 business days (2026-08-19 ..
 2026-09-30, about 6% amended a day) written with Drishti's writer under `target/`, the native Delta engine, 200 random trades, the 30-day
@@ -1693,7 +1693,7 @@ New codes in `drishti-common` `ErrorCode` (none of them used before):
 A `knownAt` on a store without time travel stays `DRS-1007`; an unknown entity stays `DRS-1001`; a Drishti*net node that holds the kind
 and cannot be reached, refuses the connection or fails its read is `DRS-5052` naming it, only for the dates it may hold (section 12); a
 peer's time-out is `DRS-1014`. `DRS-1003` names only a source of the server that answered, so the console never sets a healthy server aside
-for another node's failure (CLUSTER_DEPLOYMENT.md 11.1). The server logs `DRS-5052`, `DRS-5053` and `DRS-1014` as one short WARN line per change
+for another node's failure (CLUSTER_GUIDE.md 11.1). The server logs `DRS-5052`, `DRS-5053` and `DRS-1014` as one short WARN line per change
 of what they say about a node, with a count once a minute, never with a stack trace. Each new code goes into API_GUIDE's
 "Error code table" and TROUBLESHOOTING's "Error codes" table in the same push; `drishti-console/tests/test_docs_error_codes.py` fails
 otherwise (and checks `DRS-2061` in TROUBLESHOOTING). The console shows each on the history page as the view's `missing.html` does,
@@ -1740,7 +1740,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 | **H1** | A | The contract: `HistoryRequest`, `HistoryDay`, `HistoryRead`, `SourcePlugin.history` and `days` defaults, `HistoryReads.perDay`; `ConnectorInstance` delegation; the fixture `drishti-testkit/src/main/resources/history/trade-1000015-30.json` (and an equity one); `DatedSourceContract` history cases | every plugin that extends `DatedSourceContract` passes the new cases with the default | `docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md` (the SPI) |
 | **H2** | A | `engine/history`: `HistoryProperties`, `HistoryWindow` (ranges, business days, baseline), `HistoryRows` (latest per day, `changed`, parts, summary, diff), `HistoryCache`, `HistorySpec` (+ `DRS-2061`), `HistoryService`; `SourceRouter.history` (read order, coverage, budget, partial) | unit tests (section 19.1) | CONFIGURATION (settings), API_GUIDE and TROUBLESHOOTING (codes) |
 | **H3** | A | `HistoryController.rows` (`/{kind}/{id}` and `/~`), the new `ErrorCode`s, masks, `AccessRecorder.ACTIONS`; `series` re-pointed at the service (260 becomes `max-days`); `HistoryDefinitions` reading `history:`; deploy and `sutra lint` checks | controller tests with a fake router: masks per row, rights, every error, the JSON equals the fixture's shape | API_GUIDE endpoint, PACK_DEVELOPER_GUIDE `history:` |
-| **H4** | A | Drishti\*net: `PeerSource.history`, `NetDataController` `/net/history`, merge by date | in-process cluster test (two nodes, a kind's dates split across them) | OPERATIONS.md routing table |
+| **H4** | A | Drishti\*net: `PeerSource.history`, `NetDataController` `/net/history`, merge by date | in-process cluster test (two nodes, a kind's dates split across them) | OPERATIONS_GUIDE.md routing table |
 | **H5** | A | Fast paths: delta (with promoted-column row read and versions), jdbc table and query mode, duckdb, mongodb, aerospike, redis, file | the contract test per plugin with the fast path, plus "reads no document when the fields are promoted" for delta | each connector's document in `docs/connectors/` |
 | **H6** | A | Fast paths on the merged branches: drishti-iceberg / iceberg-external (planned scan), cassandra (`entity_days`) | their contract tests; starts only after those branches are on develop | ICEBERG_CONNECTOR, CASSANDRA_CONNECTOR |
 | **H7** | B | The command: `HistoryRange`, `CommandController.resolve` (range after alias expansion, before pick), `CommandResponse.history`, `SuggestionService` range suggestions | `HistoryRangeTest` (every row of section 4.2's table), `CommandControllerTest` cases | USER_GUIDE command line |
@@ -1814,17 +1814,17 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 |---|---|
 | `docs/guides/USER_GUIDE.md` › The command line | the range after the id (section 4), the history page, keys, changes only, DIFF, plain words |
 | `docs/guides/API_GUIDE.md` | `GET /api/v1/history/{kind}/{id}` with the JSON of section 8; `/net/history`; the codes in "Error code table"; the console's export routes |
-| `docs/guides/CLI_GUIDE.md` | `drishti.py history` |
+| `docs/guides/CLI_REFERENCE.md` | `drishti.py history` |
 | `docs/guides/PACK_DEVELOPER_GUIDE.md`, `docs/guides/PACK_DEVELOPER_GUIDE.md` | the `history:` block (section 6), with the shipped packs' blocks as examples |
 | `docs/admin/CONFIGURATION.md` | `drishti.history.*` (test_docs_settings.py) |
-| `docs/guides/TROUBLESHOOTING.md` | the six codes, each with its fix (test_docs_error_codes.py) |
-| `docs/admin/OPERATIONS.md` | `/net/history` in the routing section |
+| `docs/guides/OPERATIONS_GUIDE.md` | the six codes, each with its fix (test_docs_error_codes.py) |
+| `docs/guides/OPERATIONS_GUIDE.md` | `/net/history` in the routing section |
 | `docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md` and each connector's document | the SPI methods and each connector's fast path |
 | help cards | `drishti-console/config/help.yaml` (a "History" guide under the command line category) and the trading and market-data packs' `config/help.yaml` |
 | `CHANGELOG.md`, `RELEASE_NOTES.md` | each step's line |
-| `docs/architecture/CLUSTER_DEPLOYMENT.md` | the history row with the new measurements |
-| this document | implementation notes, as WRITE_BACK.md and CLUSTER_DEPLOYMENT.md keep them |
-| **tutorial 1, Part E** `docs/tutorials/01-first-15-minutes.md` | hands-on and complete: (1) `TRD 1000015 30` in the UI, the same with `drishti.py history trade 1000015 --days 30`, and the `history:` YAML that shapes it; (2) changes only and DIFF (UI, `--changes-only`, `--diff`); (3) open a day (UI; `drishti.py view get trade/1000015 --date …`); (4) `EQ EQ-CSCA 3M`, the chart and the numbers (UI, CLI, YAML `chart:`, `headline:`); (5) add `history:` to your own pack and `sutra lint` it (YAML, CLI, Admin → Packs); (6) export (UI, `--csv`); (7) plain words; (8) limits and errors (`max-days`, `DRS-4021`). Every step shows the UI, the CLI where there is one, and the YAML, with screenshots in `img/` |
+| `docs/guides/CLUSTER_GUIDE.md` | the history row with the new measurements |
+| this document | implementation notes, as WRITE_BACK.md and CLUSTER_GUIDE.md keep them |
+| **tutorial 21** `docs/tutorials/01-first-15-minutes.md` | hands-on and complete: (1) `TRD 1000015 30` in the UI, the same with `drishti.py history trade 1000015 --days 30`, and the `history:` YAML that shapes it; (2) changes only and DIFF (UI, `--changes-only`, `--diff`); (3) open a day (UI; `drishti.py view get trade/1000015 --date …`); (4) `EQ EQ-CSCA 3M`, the chart and the numbers (UI, CLI, YAML `chart:`, `headline:`); (5) add `history:` to your own pack and `sutra lint` it (YAML, CLI, Admin → Packs); (6) export (UI, `--csv`); (7) plain words; (8) limits and errors (`max-days`, `DRS-4021`). Every step shows the UI, the CLI where there is one, and the YAML, with screenshots in `img/` |
 
 ### 21. Where the code forced a change from the agreed design
 
@@ -1867,7 +1867,7 @@ All five were decided by the product owner on 2026-10-20, before the build start
 
 Status: **built** (steps I1 to I6; `native` is the default engine, the library kept as `engine: library`; the Windows laptop run of step I5 is still to do). Modules `drishti-lakeio`, `drishti-iceberg`, `plugins/drishti-plugin-iceberg` (engines `native|library|auto`) and `plugins/drishti-plugin-iceberg-external`; measured in [ICEBERG_CONNECTOR.md section 17](../../plugins/drishti-plugin-iceberg/README.md#engines-and-caches). Related: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (the connector today),
 [DELTA_CONNECTOR.md section 16](../../plugins/drishti-plugin-delta/README.md#engines-native-and-hadoop) (the same move made for
-Delta Lake), [GETTING_STARTED.md: Windows](../guides/GETTING_STARTED.md#drishti-on-windows).
+Delta Lake), [OPERATIONS_GUIDE.md: Windows](../guides/OPERATIONS_GUIDE.md#4-drishti-on-windows).
 
 ### 1. The ask
 
@@ -2645,7 +2645,7 @@ the cache (marked stale) or refused, for 30 s, then one probe is let through. He
 ### 14. Several servers (Drishti*net)
 
 - **Who computes a key:** the key's **owner node**, chosen on the Drishti\*net ring by the key's hash among the nodes that serve the
-  connector ([CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)). Any node receiving a request forwards it to the owner (signed, on behalf of the
+  connector ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). Any node receiving a request forwards it to the owner (signed, on behalf of the
   user, as views are forwarded today), so single flight and the cache hold across the cluster.
 - **Triggers** are received by every node (an applied edit is published on the cluster; a Kafka consumer group gives each partition to
   one node) and routed to the owner of each affected key.
@@ -2831,7 +2831,7 @@ machinery:
 ## 5. The content store: user content every node reaches
 
 Status: **built (Designs; BI content and BI runs; collaboration and notes; embed apps, pack switches and audit; governance proposals; load history), built.** Front-loaded from item 0 of write-back, the one Drishti database. Related:
-[section 6](#6-the-one-drishti-database-design-not-built) (the one Drishti database), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
+[section 6](#6-the-one-drishti-database-design-not-built) (the one Drishti database), [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (`config/store/store.yaml`).
 
 ### 1. The problem
@@ -2973,7 +2973,7 @@ cache (`DRISHTI_TOOLS_CACHE`, default `tools/cache/minio/`), else downloads it f
 release) and checks it against `DRISHTI_MINIO_SHA256` or the published `.sha256sum`. It starts it on a free port in 18750-18759 with
 its data under `target/` and stops it by PID. It skips with the reason on Windows, offline, or when no binary is served: MinIO stopped
 serving its community binaries (dl.min.io answers `410 Gone`), so put a binary you trust in `tools/cache/minio/` or point
-`DRISHTI_MINIO_BIN` at it. How to run all S3 tests: [TOOLS.md §4.12](../guides/TOOLS.md#412-the-s3-tests-s3mock-moto-and-minio).
+`DRISHTI_MINIO_BIN` at it. How to run all S3 tests: [CLI_REFERENCE.md §4.12](../guides/CLI_REFERENCE.md#712-the-s3-tests-s3mock-moto-and-minio).
 `ContentDesignStoreTest`: two in-process nodes on one filesystem root (a Design saved through A is read and updated through B;
 concurrent saves give one conflict; owners stay isolated) and the import (idempotent, folder renamed, marker for the database).
 
@@ -3212,7 +3212,7 @@ Status: **design, not built** (`DrishtiDatabase`, `config/db/database.yaml`, the
 ([WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-implementation)). To be built as **item 0 of write-back**, before write-back itself (decided by the product owner). The content store
 ([section 5](#5-the-content-store-user-content-every-node-reaches))
 was front-loaded from it. Related:
-[WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (the edit log, lanes and overlays that live here), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
+[WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) (the edit log, lanes and overlays that live here), [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (the settings).
 
 ### 1. The decision
@@ -3247,7 +3247,7 @@ There is no second store to back up, secure, size or switch.
 | BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are legacy, read once by the import and kept ([section 5](#5-the-content-store-user-content-every-node-reaches) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([section 5](#5-the-content-store-user-content-every-node-reaches)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
 | Write-back (built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([WRITE_BACK.md](../guides/WRITE_BACK.md#16-the-design-and-its-reasons) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
 | Compute approvals (built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
-| Administrators' switches (built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#where-it-is-kept)). New tables only: the schema version does not move | |
+| Administrators' switches (built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([ADMIN_GUIDE.md (Functions)](../guides/ADMIN_GUIDE.md#206-where-it-is-kept)). New tables only: the schema version does not move | |
 | Anything relational added later | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
 
 The rule for a new feature: **state Drishti owns and must not lose, with rows and keys, goes in the Drishti database.** A feature
@@ -3602,7 +3602,7 @@ and a guard refuses every other way the data could reach one. It is a general la
 
 Keeping the format brings the rest for free: time travel and versions, atomic commits, the same loaders, the same connector, the same
 footer and page codecs as the disk lake, and a table can be moved between `mem://` and disk by copying its files when a contract allows
-it. The measured ratios are in [RESOURCES_AND_SCALE.md 5.8](RESOURCES_AND_SCALE.md#58-the-in-memory-lake-measured).
+it. The measured ratios are in [CLUSTER_GUIDE.md 5.8](../admin/BENCHMARK.md#216-bounded-resources-of-one-server).
 
 ### 9.3 The memory store: `mem://` on Java 21
 
@@ -3684,7 +3684,7 @@ sink is in [DATA_LAKE_GUIDE.md 13.6](../guides/DATA_LAKE_GUIDE.md#136-never-on-d
 A memory store is **owned by one node**, which binds the pack whose connectors read it (`node.yaml`: `memory-stores: [news]`), holds the
 store, runs its jobs and compaction, and answers its pack's reads for the whole cluster, so the memory is spent once. The other nodes do
 not load the store; a request for the pack's kinds is forwarded to the owner over the encrypted node-to-node link and shown, never cached
-on their disks, exactly as any pack a peer holds ([CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), `peer-only-packs`). The code is
+on their disks, exactly as any pack a peer holds ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md), `peer-only-packs`). The code is
 `MemoryBinding`: local routing and the digest leave the kinds to the owner.
 
 ### 9.8 The module: drishti-memlake
@@ -3739,7 +3739,7 @@ the missing module, never a quiet detour through a disk.
 
 How the Java loader is built: module `drishti-lakeload`, main class `com.ash.drishti.lakeload.LakeLoad`, in the server's exec jar. How to
 run it: [DATA_LAKE_GUIDE.md 3.3](../guides/DATA_LAKE_GUIDE.md#33-the-parallel-loader); every key of a load file:
-[TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader). Its target: the bank's full scenario-PV load (2.3 million
+[CLI_REFERENCE.md section 4.13](../guides/CLI_REFERENCE.md#713-the-parallel-lake-loader). Its target: the bank's full scenario-PV load (2.3 million
 positions × about 510 scenarios, about 1.2 billion doubles, 20+ GB of JSON Lines) in at most 10 minutes on a real server, into Delta or
 Iceberg, from a folder or S3, with memory bounded by configuration whatever the input's size.
 
@@ -4159,7 +4159,7 @@ aggregates), because a question names positions by their attributes and node fig
 owners, never rebuilt from the lake by non-owners. Measured at 1,000,000 positions: 0.72 KB a position a date on the heap
 ([BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)); at 2.3 million positions
 about 1.7 GB a date, the same on every member (adding members does not reduce it). Memory-mapping it, dictionary-encoding it, or sharding
-it too are the ways to shrink it ([RESOURCES_AND_SCALE.md section 5.1](RESOURCES_AND_SCALE.md#51-the-heap-skeleton-d1)).
+it too are the ways to shrink it ([CLUSTER_GUIDE.md section 5.1](ARCHITECTURE.md#2812-bounded-resources-inside-one-server)).
 
 **Putting a date together** (`ShardAssembly`): the shards' trades side by side in shard order are the whole date's trades in one server's
 order (a shard is a range of that order), so positions, books, cells and nodes are derived by the same code (`Cells.layout`,

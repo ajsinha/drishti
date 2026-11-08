@@ -282,18 +282,18 @@ Each row names what to change for a common need and the document that explains i
 | Change how a figure is formatted | `fmt:` in the Sutra; named formats in the pack's `config/formats.yaml` | RACHANA_REFERENCE.md |
 | Change how inference reads field names | The pack's `config/semantics.yaml` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra) |
 | Add a panel kind | The engine (`Binder` and the panel model) and a console renderer (`_macros/panels.html`) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide) |
-| Decide who may see what | `roles:` in `pack.yaml` (kinds, `raw`), `drishti.security.redact` (fields shown as `•••`), the Admin pages | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
+| Decide who may see what | `roles:` in `pack.yaml` (kinds, `raw`), `drishti.security.redact` (fields shown as `•••`), the Admin pages | [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md) |
 | Add a command word | `mnemonics:` in `pack.yaml` (or under `drishti.commands` for a site) | PACK_DEVELOPER_GUIDE.md |
 | Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACK_DEVELOPER_GUIDE.md |
 | Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary) |
 | Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [RACHANA_REFERENCE.md › About this page: the design of context help](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
 | Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/drishti_about.js`, `static/css/drishti_about.css` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help) |
 | Change what the explanation says about the layout and the data | `ExplainService`, `PageContext`, `EmptinessReason` (`drishti-engine`, package `explain`), `MatchTrace` (`SutraMatcher.explain`); the endpoint is `ExplainController`; limits under `drishti.explain.*` | [API_GUIDE.md](../guides/API_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
-| Decide who may share, comment or be mentioned | the role power `roles.<role>.collaborate` (on unless removed); `drishti.collab.packs.<pack>.share-enabled`; `mentionable-roles`, `directory.scope`, `share.max-recipients`, `limits.*` under `drishti.collab` | [CONFIGURATION.md](../admin/CONFIGURATION.md), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
+| Decide who may share, comment or be mentioned | the role power `roles.<role>.collaborate` (on unless removed); `drishti.collab.packs.<pack>.share-enabled`; `mentionable-roles`, `directory.scope`, `share.max-recipients`, `limits.*` under `drishti.collab` | [CONFIGURATION.md](../admin/CONFIGURATION.md), [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md) |
 | Change what a note or comment may contain, or what is masked in it | `drishti.security.redact` (the fields), `drishti.collab.text.on-masked-copy` and `deny-patterns`; the logic is `NoteText`, `Entitlements.maskedValues`, `CommentRenderer` | CONFIGURATION.md, §3.10 |
-| Switch on email, or change what it says | `spring.mail.*`, `drishti.collab.console-url`, `email.enabled`; per pack `packs.<pack>.email.content` (`comment`, `title`, `link-only`); templates in `drishti.collab.email.templates-dir`; the code is `EmailNotifier`, `OutboxDispatcher`, `MailRenderer` | [OPERATIONS.md](../admin/OPERATIONS.md#9a-2-collaboration-email-and-the-outbox) |
+| Switch on email, or change what it says | `spring.mail.*`, `drishti.collab.console-url`, `email.enabled`; per pack `packs.<pack>.email.content` (`comment`, `title`, `link-only`); templates in `drishti.collab.email.templates-dir`; the code is `EmailNotifier`, `OutboxDispatcher`, `MailRenderer` | [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#122-collaboration-email-and-the-outbox) |
 | Add another channel (a chat bridge) | one more `Notifier` bean: `ShareService` and `ThreadService` hand every bean the audience, so neither service changes | [COLLABORATION.md](../architecture/COLLABORATION.md) (phase 2) |
-| Keep, hold or export what people wrote | `drishti.collab.retention.*` and `packs.<pack>.retention-days`; legal holds and the export through `/api/v1/admin/collab` (`CollabPurge`, `HoldService`, `ExportService`, `ChainVerifier`) | [OPERATIONS.md](../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) |
+| Keep, hold or export what people wrote | `drishti.collab.retention.*` and `packs.<pack>.retention-days`; legal holds and the export through `/api/v1/admin/collab` (`CollabPurge`, `HoldService`, `ExportService`, `ChainVerifier`) | [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#123-retention-legal-holds-and-the-compliance-export) |
 | Change how the Share dialog, the inbox or the Discussion tab look or behave | `drishti-console/web/templates/terminal/_share.html`, `inbox.html`, `_discussion.html`; `static/js/drishti_share.js`, `drishti_inbox.js`, `drishti_alerts.js`, `discussion*.js`; `static/css/drishti_collab.css` | [COLLABORATION.md](../architecture/COLLABORATION.md) (console design) |
 | Let people search a kind by filling in a form | the `form:` section of `pack.yaml` (fields, types, operators), or a Design's Form tab; people open it with `FORM <pack>` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind), [USER_GUIDE.md](../guides/USER_GUIDE.md) |
 | Let people choose what a panel shows | `controls:` in the Sutra (dropdowns, sliders, date ranges), read by panels as `ctl.<id>` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#controls) |
@@ -302,9 +302,9 @@ Each row names what to change for a common need and the document that explains i
 | Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [BI_GUIDE.md](../guides/BI_GUIDE.md), [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), [BI_DESIGN.md](BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) |
 | Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [CLIENT_RENDERER.md](CLIENT_RENDERER.md#20-drishti-elements-the-design) |
 | Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI.md](../admin/AI.md#1-model-providers), [AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) |
-| Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Net → Files; members advertise a real address, never a loopback one | [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 22](../tutorials/22-a-cluster-of-three.md) |
+| Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Net → Files; members advertise a real address, never a loopback one | [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 19](../tutorials/22-a-cluster-of-three.md) |
 | Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader) |
-| Make something that failed (a pack, a connector, a provider) try again | nothing: it is retried with backoff; Retry now in Admin | [OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself) |
+| Make something that failed (a pack, a connector, a provider) try again | nothing: it is retried with backoff; Retry now in Admin | [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#138-retries-what-failed-is-tried-again-by-itself) |
 
 ---
 
@@ -840,7 +840,7 @@ type-ahead for a past business date answers from that day's own ids, never from 
 The settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiindex--the-multi-day-type-ahead-index). Streaming
 connectors keep the newest day only. Measured: a prefix lookup over 100,000 ids a day for five days takes 0.002 ms on
 the heap and 0.04 ms from a segment file read with positional reads (548 KB on disk for 100,000 ids)
-([PERFORMANCE.md](../admin/PERFORMANCE.md#multi-day-type-ahead)).
+([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#161-the-servers-knobs)).
 
 ---
 
@@ -917,7 +917,7 @@ console ──X-Drishti-As-Of──▶ AsOfResolver ─▶ BusinessDates ─▶ 
 
 Named connectors (one file each in `config/connectors/`, written at the first start from a pack's `connectors:` template when absent; `drishti.sources.connectors` still works but is deprecated) give each domain its own lake
 connector, e.g. `market-store` and `trading-store`. Lake retention, compaction and vacuum run outside the server
-(`tools/lake/`, `deploy/lake-maintenance.yaml`; see OPERATIONS.md).
+(`tools/lake/`, `deploy/lake-maintenance.yaml`; see OPERATIONS_GUIDE.md).
 
 ---
 
@@ -986,7 +986,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine)) | – |
 | `drishti-deltalake` | A Delta Kernel engine without Hadoop (local disk, Windows included, and S3), used by the Delta connector | – |
 | `drishti-lakeload` | The parallel lake loader: JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)) | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
-| `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
+| `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
 | `drishti-registry` | The access registry, plain Java ([ACCESS_MODEL.md](ACCESS_MODEL.md)): licence → module → lens → function → permission decided in one place (`AccessRegistry`, `EmbeddedAccessRegistry`), over the YAML store (`AccessStore`, `YamlAccessStore`: the modules' manifests, `config/modules/`, `config/access/`); nothing else reads the access model | wired by `server.modules.ModuleConfiguration` |
 | `drishti-server` | **The** Spring Boot application, the core: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI; the SPIs a domain module fills (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`, `ApiAlias`, `@ConditionalOnModule`) | controllers, filters |
 | `drishti-compute-banking` | The banking domain's maths, no Spring ([DOMAIN_MODULES.md](DOMAIN_MODULES.md)): VaR and ES, parametric, components, backtesting, the scope algebra, exposure, FRTB-SA, SIMM, beta and correlation (`com.ash.drishti.banking.compute`) | – |
@@ -1008,9 +1008,9 @@ Spring Data repositories in `identity.db` are the exception).
 ## 13a. Several servers as one (Drishti*net)
 
 How a production cluster is deployed (roles, counts, sharding of VaR and exposure, high availability, load balancing, zero
-downtime) is [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), the deployment reference.
+downtime) is [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md), the deployment reference.
 
-Off by default ([CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti), [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)). With `config/net/node.yaml` switched on, a server is a **node**:
+Off by default ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). With `config/net/node.yaml` switched on, a server is a **node**:
 `NetService` keeps the member table and runs a gossip round every second on a virtual thread (push-pull with three random members over
 `POST /api/v1/net/gossip`, probes, suspicion, death), saves `<data dir>/net/peers.json` and rejoins from it after a restart. `NetCallFilter`
 (before the token filter) checks the cluster key on every call between nodes. What each node offers, and the routing of a request to the
@@ -1033,14 +1033,14 @@ and never kept from gossip).
 | Request I/O (fetch, links, search) | Spring MVC on virtual threads (`spring.threads.virtual.enabled`); the engine's `drishtiVirtualExecutor` runs one virtual thread per fetch, with a deadline (`orTimeout`) |
 | CPU work (bind) | Bounded `ForkJoinPool` (`drishti.engine.bind-parallelism`, 0 = one per core); panels bound in parallel |
 | Live state | One topic per `EntityRef`, one source subscription each (connected exactly once, even when subscribers arrive together); ticks land in a latest-wins slot and a single flush per frame delivers them; frames are timed by a small platform-thread scheduler (`drishti-frame-*`); one drainer per view stream, failed rebuilds retried with backoff |
-| Caching | Caffeine in the engine: layouts (`layout-cache-size`, 10,000, keyed by Sutra version, kind and fingerprint), fingerprints (`fingerprint-cache-size`, 100,000, keyed by entity, generation and date), compiled expressions (`drishti.rachana.expression-cache-size`, 10,000). Connectors keep their own caches (Delta partitions by size, `cache-mb`; Kafka documents; RocksDB disk caches). The Delta plugin's loads that do I/O use async caches loading on virtual threads, so no lock is held during I/O. A Sutra change clears the layout cache. Admins see and purge the engine's, history's and the connectors' caches at **Admin → Caches** (`GET /api/v1/admin/caches`); VaR and exposure have their own `reload`, BI its dataset refresh. Every cache and memory-mapped file, its bound and the proposals to bound them all are in [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) |
+| Caching | Caffeine in the engine: layouts (`layout-cache-size`, 10,000, keyed by Sutra version, kind and fingerprint), fingerprints (`fingerprint-cache-size`, 100,000, keyed by entity, generation and date), compiled expressions (`drishti.rachana.expression-cache-size`, 10,000). Connectors keep their own caches (Delta partitions by size, `cache-mb`; Kafka documents; RocksDB disk caches). The Delta plugin's loads that do I/O use async caches loading on virtual threads, so no lock is held during I/O. A Sutra change clears the layout cache. Admins see and purge the engine's, history's and the connectors' caches at **Admin → Caches** (`GET /api/v1/admin/caches`); VaR and exposure have their own `reload`, BI its dataset refresh. Every cache and memory-mapped file, its bound and the proposals to bound them all are in [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk) |
 | Locks | `ReentrantLock` around anything that can block (file I/O, network, subscribes): Java 21 pinned a virtual thread blocked in `synchronized` to its carrier (Java 24 and later do not; the rule stays, so locks that may block remain explicit). `synchronized` remains only around short in-memory sections. Read-modify-write of shared records happens under the record's lock on the *current* value |
 | Publication | State that readers need together is published in one volatile write of an immutable snapshot (Sutra registry, search index); readers never lock |
 | Native resources | RocksDB generations are reference counted: a call enters the current generation and leaves after, and a retired generation closes only when its last caller has left, so a nightly clear or a purge never frees memory under a running read |
 | Schedulers | The plugins' shared scheduler runs on virtual-thread workers, so a slow refresh or scan never delays another plugin's ticks or the nightly cache clearing |
 | Back-pressure | One coalescing `FrameMailbox` per live client (pending frames merge, newest value wins), bounded alert queues; a slow client costs one slot, never a growing queue |
 | Proof | Race tests reproduce each hazard with many threads and fail on the unsafe version: lockout under parallel guessing, admin changes against late sign-ins, the last-admin rule, simultaneous topic subscribers, index rebuilds during search, the stream cap, and RocksDB clear/close under 32 threads |
-| Targets | warm view p99 < 50 ms, cold (first fingerprint) p99 < 150 ms, tick → screen p99 < 40 ms, 10k concurrent SSE subscribers per node (see PERFORMANCE.md for measured numbers) |
+| Targets | warm view p99 < 50 ms, cold (first fingerprint) p99 < 150 ms, tick → screen p99 < 40 ms, 10k concurrent SSE subscribers per node (see CLUSTER_GUIDE.md for measured numbers) |
 
 ---
 
@@ -1085,13 +1085,13 @@ The main endpoints; [API_GUIDE.md](../guides/API_GUIDE.md) lists every one with 
 | `GET` | `/health/live` · `/admin/health` · `/admin/caches` | live latency · everything's health · caches |
 | `GET`/`PUT` | `/me/workspaces`, `/me/monitors`, `/me/settings`, `/alerts/rules` | per-user state |
 | `GET`/`POST` | `/alerts`, `/approvals` | the one alert engine (the alerts raised for you) and the one Approvals queue |
-| `POST` | `/auth/login` · `/auth/oidc` · `/admin/users…` | identity (see USER_MANAGEMENT.md) |
+| `POST` | `/auth/login` · `/auth/oidc` · `/admin/users…` | identity (see ADMIN_GUIDE.md) |
 | `GET`/`POST` | `/forms/{pack}` · `/forms/{pack}/{kind}/compile` | query by form |
 | `POST` | `/packs/{pack}/loads` | the batch-landed signal ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) |
 | `GET`/`PUT`/`POST` | `/admin/connectors…` · `/admin/packs…` · `/admin/registry…` | connectors as files, packs, deploy, the signed registry |
 | `GET`/`POST` | `/threads…` · `/shares…` · `/me/inbox…` | discussion and sharing ([COLLABORATION.md](COLLABORATION.md)) |
 | `GET`/`POST`/`PUT` | `/bi/…` | Rūpaka: workspaces, datasets, models and the model query, Drishti SQL, reports (format schemas, themes; boards are report pages), Python, governance |
-| `GET`/`POST`/`PUT` | `/net/…` | Drishti\*net between nodes (signed with the cluster key: gossip, digest, fetch, search, group, subscribe, state) and for administrators (members, files, capabilities, access, security, explain, traffic) ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)) |
+| `GET`/`POST`/`PUT` | `/net/…` | Drishti\*net between nodes (signed with the cluster key: gossip, digest, fetch, search, group, subscribe, state) and for administrators (members, files, capabilities, access, security, explain, traffic) ([OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)) |
 | `POST` | `/ai/chat` · `/ai/mcp/{server}/tools/{tool}` | the AI and MCP layers (off by default) |
 | `POST` | `/embed/token` and the `embed:` scopes | embedded views for other web applications ([CLIENT_RENDERER.md](CLIENT_RENDERER.md#20-drishti-elements-the-design)) |
 
@@ -1175,7 +1175,7 @@ version is compared with the one it was loaded from; when it moved, the date is 
 answers meanwhile carry the warning "the lake's data of D changed at T; a new version is loading". A VaR date with an intraday layer is
 left to its signal. Staleness without a signal is so bounded by the interval plus a load; the signal still makes the change visible at
 once, which is why it stays part of every production loader. Detail in
-[RESOURCES_AND_SCALE.md section 4](RESOURCES_AND_SCALE.md#4-freshness-and-invalidation) and section 14.
+[CLUSTER_GUIDE.md section 4](../guides/CLUSTER_GUIDE.md#84-data-loads-configuration-and-maintenance-without-downtime) and section 14.
 
 ---
 
@@ -1260,7 +1260,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 - **Sign-in.** Users, roles, preferences and the audit trail live in the **server** (`drishti-identity`), in a JPA
   database: SQLite by default (one file) or PostgreSQL. The console verifies a sign-in by calling
   `POST /api/v1/auth/login` with its own service token and never sees password hashes (PBKDF2). It then keeps a
-  signed, expiring session cookie. Details, storage and administration: [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
+  signed, expiring session cookie. Details, storage and administration: [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md).
 - **Token boundary.** For every server call the console mints a short-lived HS256 token (`auth.token_secret` =
   server `drishti.security.secret`, `DRISHTI_TOKEN_SECRET`; 300 s). With `drishti.security.enabled`, `TokenFilter`
   requires it on every `/api/**` request (algorithm pinned, constant-time check) and answers 401 problem+json
@@ -1968,7 +1968,433 @@ definition the person sees before it runs, never computing a figure); automatic 
 with the reason); references in formulas and Excel; the native PivotTable export; tabular reads of the BI layers and of object stores
 through the pivot (local Parquet files are read today).
 
-<!-- h-docs: compute engines (builder C) -->
+## 27. Compute engines
+
+A compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, the MR cube, the pivot engine, the in-memory lake, the data inbox, Arrow
+Flight, OpenBLAS) is switched on or off per node, each with its own configuration file, and off means the engine does not exist on that
+node. How an administrator uses it (the files, what off means for people, dependencies, Admin → Engines, the cluster, the command line) is
+[ADMIN_GUIDE.md section 21](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off); this section is how it is built.
+
+### 27.1 The catalogue
+
+The engine catalogue is part of the product: `drishti-server/src/main/resources/engines/catalogue.yaml`, with the console's byte-identical
+copy `drishti-console/config/engines.yaml` (`EngineCatalogueTest`). Each entry holds the engine's id, title, file, the settings prefixes it
+owns, what it **needs** (on the same node: the needing engine calls the needed one in process) and **uses** (works without it, with the
+parts that read it hidden), and everything it brings to the screen: `words`, `menus`, `help`, `landings`, `tiles`, `lenses`, `bi`, `cli`,
+`playgrounds`, `connectors`, `kinds`, `ai-tools`, and the console's paths (`console:`; `=/play` is that path only). The console's menus,
+Help, tiles and lens links, and Admin → Engines' "what turning it off hides", all read these entries; nothing is coded per engine. The
+longest API prefix wins (`/api/v1/risk/sensitivities` is the sensitivities', not FRTB-SA's). A new engine (SA-CCR, FVA, the CCR cube,
+liquidity, climate) adds one entry, its files and a `ComputeEngine` bean; `installed: false` marks an engine listed ahead of its build. The
+catalogue's build test refuses a cycle in `needs`. A dependency read over Drishti\*net (`needs-anywhere`) is reserved; no engine declares
+one.
+
+### 27.2 The files and their order
+
+Each engine's file exists twice, byte for byte: `drishti-server/src/main/resources/engines/<id>.yaml` in the jar and
+`config/engines/<id>.yaml` for the site. `application.yaml` imports both, jar copy first, **before** the local file and the packs overlay:
+
+```yaml
+spring:
+  config:
+    import:
+      - classpath:engines/var.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/var.yaml
+      # ... one pair per engine, in the catalogue's order
+      - optional:file:./application.local.yaml
+      - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}
+```
+
+Spring Boot's order gives, strongest first: the command line and environment, the packs overlay (no engine keys), `application.local.yaml`,
+the site's engine file, the jar copy, `application.yaml` (no engine keys). `drishti.engines.{dir, drain, watch-seconds}` stay in
+`application.yaml`, and so do `drishti.admission.*`, `drishti.memory.*` and `drishti.disk.*`, which guard the whole server. A lens's
+presets (`EditionEnvironmentPostProcessor`) sit above the engine files.
+
+**Switch and source** (`EngineSwitches`) reads Spring's own property sources in order and reports which one decided each switch. The keys
+`drishti.var.enabled`, `drishti.ccr.exposure.enabled`, `drishti.frtb.enabled`, `drishti.simm.enabled` and `drishti.pivot.enabled`, set above
+the shipped files, decide their engine's switch (`DRS-1024` logged once); the in-memory lake is on when its stores are configured in the
+local file and nothing sets its switch; `drishti.frtb.sensitivity-kind`, `factor-kind` and `cache-minutes` read `drishti.sensitivities.*`
+through a lowest-precedence alias layer (`EngineKeyAliases`). Each lens's `config/lenses/features.yaml` entry names the engine switch
+(`var: { server: [drishti.engines.var.enabled] }`).
+
+### 27.3 The lifecycle and what off means on the server
+
+Every engine implements one lifecycle, `ComputeEngine` (`start`, `stop(drain)`, `state`, `memory`, `health`); each engine's configuration
+makes one `BasicEngine` bean, and `EngineRegistry` finds every `ComputeEngine` bean, so an engine still to come registers by itself. The
+services keep their Spring beans, but they are thin: their open dates, caches, pools, schedulers, watchers and answers are created on first
+use and released by `stop` (the same release as Admin → Caches' purge of the engine). Each service asks the registry before any work and
+refuses with `EngineOffException` (`404 DRS-1020`). An engine off at start creates no thread, opens no date, registers no connector of its
+own and no computed kind (`var-result`, `exposure-result` ...), and reserves no memory in the safety nets (the automatic `open-heap-mb`
+shares go to the engines that run); `/actuator/health` shows it `off`, never `down`. The in-memory lake off at start is built with no
+store.
+
+**Connectors and kinds.** An engine's catalogue entry splits what it touches: **its own** connectors and computed kinds (not registered
+while off) and **what it reads**. An input kind marked `engine-input: true` (large, used only to feed engines: `pnl-vector`, `scenario-pv`,
+`exposure-path`, `simulation-run`, `position-sensitivity`) is not read ahead, warmed or pinned on a node where no running engine reads it;
+its connector stays registered for the pack's own pages (`XPATH` browses a path). Reference kinds are never affected.
+
+**Live on and off.** Off: the gate refuses new requests, the requests in flight drain (`drishti.engines.drain`, then cancelled with a
+message), then `stop` releases everything and unregisters connectors and kinds; the live channel tells open pages. On: `start` reads and
+checks parameter files, registers connectors, creates threads. `memory-lake` and `flight` are written to their file and wait for a restart
+(direct-memory caps and the Flight port are set at start; the launchers' `tools/lake/memory_caps.py` reads the lake's file).
+
+**Writing the file.** Admin → Engines writes only `enabled` (keeping its `${VARIABLE:default}` form) and `changed`, with every comment and
+other key kept; atomically (a temporary file in the same folder, then a rename); refused with `409 DRS-1023` when the file changed on disk
+since it was read or the folder is not writable. The folder is watched (`drishti.engines.watch-seconds`), so a hand edit applies as a page
+change does and is recorded in History with no actor.
+
+### 27.4 The gate, routing and the digest
+
+`EngineGateFilter` (filter order 4, after the caller is known) maps a request's path to its engine by the catalogue and counts the requests
+in flight per engine (the drain). Not running here: `EngineCluster` forwards it to the least loaded peer whose digest says it runs the
+engine (`RunCluster.call`, signed with the cluster key, on behalf of the caller; the answer carries `X-Drishti-Engine-Node`), else `404
+DRS-1020`. An engine `starting` or `stopping` on a node is not routed to. The capability digest carries the engines in its `services` map
+(entry `engines`: `var:running,frtb-sa:off,...`), so the digest's shape is unchanged and an older peer reads it; a change announces a new
+`digestHash` at once. A node with `var` off never owns a VaR shard (it leaves the shard map as a draining owner does). A peer's change from
+another node's Admin → Engines arrives as `POST /api/v1/net/engines`, signed, and is applied as a local change; both nodes audit it.
+
+### 27.5 The console
+
+`/public/about` (what the console polls) and `/api/v1/about` carry `engines: [{id, title, here, cluster}]`; the console learns them with the
+edition (`core/engines.py`, `Editions.learn`) and again at once after a change made on Admin → Engines. `core/engines.py` answers every
+question: `engine_available` (running here or on any node), `word_hidden`, `typed_engine`, `path_engine`, `menu_hidden`, `help_hidden`,
+`tile_hidden`, `lens_hidden`. What runs is each app's own (`engines.State` on its editions, read per request through `AppEngines` in
+`core/app.py`), never shared between apps of one process. It is wired into `Edition.word_on`, `command_shown` and `typed_shown` (so FUNC,
+type-ahead, Home cards and chips follow), the route gate (`core/edition_gate.py`), the menus (`requires: engine:<id>` and the catalogue's
+`menus:`; an Engines-menu column names its engine with `engine: <id>` and its readers with `opens:`, checked by `core/menus.py`
+`engine_refused` for the column and the typed word alike), Help (`help.yaml engine:` and the catalogue's `help:`), the lens links and `/go`.
+BI: `EditionBi.engines(...)` drops a dataset or model whose name starts with an engine's `bi:` prefix, and every item on it, while the
+engine runs nowhere. Admin → Engines is `routes/admin_engines_routes.py`, `templates/admin/engines.html`,
+`static/js/drishti_admin-engines.js` and `static/css/drishti_admin-engines.css`; the command line is `tools/enginescli.py` (`server engines`
+and `admin engines`; `problem_error` maps `DRS-1020` to exit 3 for every command).
+
+### 27.6 Configuration document and checks
+
+`tools/settings_catalogue.py` has the area **Compute engines: `config/engines/*.yaml`**, one table per file, read with the same comment
+reader as `application.yaml`; CONFIGURATION.md and Help → Configuration list every engine key under its file. `--check` fails when a shipped
+engine file and its jar copy differ, when a catalogue entry has no file or a file no entry, and when a key appears in both
+`application.yaml` and an engine file.
+
+### 27.7 Decisions
+
+| # | Question | Decided |
+|---|---|---|
+| 1 | Where the command line lives | `drishti.py server engines` beside `server commands` and `server packs`, with `admin engines` accepted |
+| 2 | Off answers `404` or `403` | **404** (`DRS-1020`): nothing is forbidden, the engine is not on this server; the words say so |
+| 3 | `memory-lake` turned on from the page | written to the file with **restart needed** |
+| 4 | Changing another node's engine from any node | yes, signed with the cluster key and audited on both nodes |
+| 5 | Regulatory VaR (backtesting, reports, sign-off) | part of `var`: it reads only VaR's official records; split when a node needs one without the other |
+
+### 27.8 Mock-ups and build checklist
+
+Three options of Admin → Engines, self-contained HTML (dark by default, light with `#light`); **A was chosen**, with C as its Cluster tab:
+
+| Option | What it is | Screenshot |
+|---|---|---|
+| [A: the engine list with a review panel](mockups/engines/A.html) (**chosen**) | one table of engines on this node (switch, state, memory bar, needs, used by, where the switch comes from); a side panel opened by a change: the reason, the dependency check, what will be hidden, live or restart; History below; the cluster as a second tab | [A.png](mockups/engines/A.png) |
+| [B: engine cards and a dependency map](mockups/engines/B.html) | a card per engine arranged by family, with a small dependency map; a change opens a confirm dialog | [B.png](mockups/engines/B.png) |
+| [C: the cluster matrix](mockups/engines/C.html) | nodes × engines in one grid, each cell a switch with its state and memory; an "available to people" row | [C.png](mockups/engines/C.png) |
+
+A is the shape administrators know from Functions (a list, staged changes, a review panel with the reason, History) and shows what depends
+on an engine and what disappears at the moment of the change; C's matrix is the better view for a large cluster and is A's Cluster tab.
+
+| # | Part | Status |
+|---|---|---|
+| 1 | The catalogue and its build test | built |
+| 2 | The engine files, their jar copies, the imports, the other key names and the start warning, `features.yaml` naming the switches | built |
+| 3 | `ComputeEngine`, `BasicEngine`, `EngineRegistry`; every built engine behind `start` and `stop`; `404 DRS-1020` | built |
+| 4 | Connectors and kinds registered only while the engine runs; `engine-input` kinds not read ahead | built |
+| 5 | Live on and off: drain, release, unregister, the live-channel notice | built; the admission check on an engine coming on (`503 DRS-9502`) waits for its first consumer |
+| 6 | Admin → Engines (mock-up A, Cluster tab C), the admin API, writing the file, History, audit | built; the impact answer lists the engines that need or use it and the nodes that still run it, not yet the saved BI reports and monitors that read its kinds |
+| 7 | The console everywhere: words, menus, Help, landings, tiles, lenses, FUNC, type-ahead, playgrounds, BI | built; AI tools per engine wait for their consumers |
+| 8 | Drishti\*net: `engines` in the digest, routing by engine, the cluster matrix and a peer's change | built |
+| 9 | `drishti.py server engines` (and `admin engines`) | built |
+| 10 | CONFIGURATION.md's engines area and its checks | built |
+| 11 | SA-CCR, FVA and the CCR cube as engines | each adds its entry, files and bean when its engine is built |
+
+### 27.9 Tests that prove it
+
+| Test | Proves |
+|---|---|
+| `EngineCatalogueTest` | the catalogue and the console's copy are identical; no cycle; every word known |
+| `EngineFilesTest` | the import order (environment > local file > engine file > shipped copy), each other key name with its warning, the jar copies identical to the site files |
+| `EngineRegistryTest` | an engine off at start creates no thread, opens no date, registers no connector or computed kind, reserves no memory; on, it does |
+| `EngineApiTest` | a whole server: an engine turned off answers `404 DRS-1020` in words and on again answers; a dependency refusal (`DRS-1021`); the file written with its switch and `changed`; History; VaR off with its dependents hides its BI datasets and API |
+| `EngineClusterTest` (two members) | `frtb-sa` on one member only: the other's console shows FRSA and its answer is the first member's, routed; off there: `404` within the gossip time; the digest carries `engines` |
+| `EditionWorldServerTest` | a lens's `var: off` preset switches the engine off |
+| `tests/test_engine_off_everywhere.py` (console) | for every engine of the catalogue (generated from it): its words unknown on the command line, in FUNC, type-ahead and search; no menu item, Help entry, tile, chip, BI dataset or playground link on any route; the CLI exits 3 with the words |
+| `tests/test_engines_browser.py` | the page: switch, reason, review, refusal words, restart pill, history (with the guide's screenshots) |
+| `tools/test_enginescli.py` | the command line and its exit codes |
+
+## 28. Clusters inside: membership, placement and routing
+
+How Drishti\*net and the shard machinery work inside: the member table and gossip, the capability digest, routing, the copying of
+identity and user state, the shard map, rendezvous placement, handover and the scatter-gather of partials, and the resource bounds of
+one server. Running a cluster (files, Admin → Net, roles, sizing, AWS, tuning) is the operators' [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md).
+Section 13a is the short form.
+
+### 28.1 Membership by gossip (SWIM over HTTP)
+
+`drishti-net` (no Spring, no engine; an ArchUnit rule keeps it so) holds `MemberTable`, `Gossiper`, `PeersFile`, `NodeIdentity`,
+`NetFolder` and `NetSchema` (the `config/net/` folder with line numbers, history and `If-Match`), `ClusterKey`, `OnBehalfOf` and `PeerHttp`.
+In the server, `NetService` runs the node, `NetCallFilter` checks the cluster key before the token filter, `NetController` and
+`NetAdminController` serve the membership and management endpoints.
+
+**The member entry** (`Member`): `nodeId` (generated once, kept in `<data dir>/net/node-id`), `url` (a real address; loopback, wildcard,
+link-local and container-bridge addresses in any spelling are refused at the intake by `MemberTable.merge` and `HostAddress.callableUrl`),
+`gossipPort`, `incarnation` (raised only by the member itself), `heartbeat` (raised every round), `state` (`alive`, `suspect`, `dead`,
+`left`), `digestHash`, `switchesHash`, `version`, `protocol` (`Member.PROTOCOL` = 1; another protocol is listed, never routed), `tags`,
+`since` and `drained`. Beside each entry a member keeps local times only (`beatAt`, `heardAt`, a smoothed latency, `stateAt`,
+`MemberTable.Known`), so clock skew never makes a member suspect.
+
+**A round** (`Gossiper.round`, every `interval`, on the platform thread `drishti-net-gossip`):
+
+1. raise its own heartbeat;
+2. push-pull with `fanout` random members that are alive or suspect (a suspect one hears of its suspicion and can refute), in parallel
+   on the eight platform threads `drishti-net-gossip-io-*`, each cut at `max(200 ms, 2 × interval)`: `POST /api/v1/net/gossip` with the
+   whole table; the answer is the peer's whole table; both merge;
+3. reaching no one: try the join list (seeds, then `peers.json`, alive first), three at a time; and every 30th round exchange with one seed
+   or saved member outside the reachable table, which heals a split;
+4. detect: an alive member whose heartbeat has not risen here for `suspect-after` is pinged directly on its gossip port, then through
+   `indirect-probes` others (`GET /api/v1/net/ping?target=`); still silent, `suspect`, keeping its incarnation;
+5. suspect for `dead-after`: `dead`; dead or left entries are forgotten after `forget-after`;
+6. tell the listeners (save `peers.json` on a join or leave, pull new digests); save `peers.json` every `persist-every` anyway.
+
+**The merge rule** (`Member.supersededBy`): the higher incarnation wins; at equal incarnation the worse state (`left` > `dead` > `suspect`
+> `alive`); at equal incarnation and state the higher heartbeat (it carries the newest url, tags, digest hash and drain flag). A member's
+own entry is changed only by itself: news of itself worse than `alive`, or at a higher incarnation, makes it raise its incarnation and stay
+`alive`. **Leaving** (`Gossiper.leave(3)`): `left` with a raised heartbeat, pushed to every reachable member three times. **Rejoining**
+raises the incarnation. **Joining** happens on Spring's `ApplicationReadyEvent`; the node is *joining* (`DigestService.joining()`) until it
+has the digest of every alive peer, at most `join-grace`.
+
+**Two lanes.** `PeerHttp` has a **control lane** (gossip, probes, digest pulls: HTTP/1.1, its own connections, two platform threads, a
+connect timeout of half the gossip timeout, to the member's gossip port) and a **data lane** (views, documents, history, searches, state,
+the live relay: HTTP/2 when routing.yaml's `peer-protocol` is `http2`). The receiver's **gossip port** (`GossipConnector`) is a second
+Tomcat connector with its own acceptor, 4,096 connections and eight platform threads, serving only gossip, ping and digest; on both ports
+those three are answered by the first filter (`GossipPath`), from memory, after the cluster key check. A per-path executor is not possible
+in Tomcat (an executor belongs to a connector) and a priority filter alone still needs a request thread, which is what a busy server lacks
+(`NetGossipBusyTest`: with `gossip-port: off` every node suspected both peers under load; with the port, none). HTTP/2 is primed per peer by
+one signed ping made alone (the first call, and the first after 30 s of quiet), so the upgrade happens once; streams per connection are
+raised to 1,000 (`NetConfiguration.peerHttp2Limits`); a peer without HTTP/2 answers in HTTP/1.1 on the same call.
+
+**Signatures.** `METHOD\npath?query\ntime\nnode\nsha256(body)`, HMAC-SHA256 with the cluster key, the node in `X-Drishti-Net-Node`, a 60 s
+window (`ClusterKey.WINDOW_MS`). The on-behalf-of token names the user, roles, embed app, the forwarding node, the request id and its
+audience node (`aud`), valid 30 s. Mutual TLS is the transport on top, never in place of the HMAC (which binds the call to its body, path,
+time and node).
+
+### 28.2 Message sizes and convergence
+
+A member entry is about 350 to 450 bytes of JSON. Each round a member sends and receives `fanout` whole tables (estimates):
+
+| Members | Table | Bytes a member a second | Rounds for news to reach all |
+|---|---|---|---|
+| 8 | ~3.5 KB | ~21 KB | 2 |
+| 20 | ~9 KB | ~54 KB | 2–3 |
+| 50 | ~22 KB | ~130 KB | 3–4 |
+| 100 | ~45 KB | ~270 KB | 4–5 |
+
+With push-pull the informed share grows about fourfold a round: log₄ N rounds plus one or two. A heartbeat seen second-hand is up to that
+many rounds old, so at 100 members a healthy member's heartbeat can look 4 to 5 s old, just under `suspect-after`: probes answer, but
+their traffic rises, which is why larger clusters raise `suspect-after`.
+
+### 28.3 Failure detection and its timing
+
+With the defaults (1 s, 5 s, 30 s), a member that crashes at t = 0: at 5–6 s peers find its heartbeat stale, the direct ping fails
+(refused at once, or cut at 2 s on a black hole), two indirect pings fail; at 5–8 s it is `suspect` everywhere within 1–3 rounds, and
+`ShardPeers.peers` and `Member.routable` leave it out; at 35–38 s `dead`; at 24 h forgotten. A member that was only slow answers a probe
+or refutes with a higher incarnation, and nothing moved unless it stayed out longer than `stable-seconds`.
+
+### 28.4 The capability digest
+
+`Digest` and `CapabilityTable` live in `drishti-net`; the server's `DigestService` rebuilds this node's digest every round from cheap reads,
+announces a new hash at once (a round out of turn), compares peers' hashes every 250 ms, pulls a changed digest (`GET /api/v1/net/digest`)
+and swaps the capability table whole. The digest holds `nodeId`, `url`, `version`, `protocol`; `packs` (name, code, version, content hash,
+`peerOnly`); `kinds` with their sources (connector, type, table identity, `earliestDate`, `latestDate`, `dataVersion`, columnar, dated,
+live); `load` (the average latency of the last full minute, from `RequestActivity`); `calendar`; masked fields, nodes per role and BI
+report ids; and `services` (name to compact text: `engines`, the VaR engine's `var-shards`). The hash leaves out the load and the build
+time, so it moves only when what the node serves moves; a held digest is refreshed once a minute for the load.
+
+**Table identity** is `SourcePlugin.tableIdentity(kind)`: the Delta connector gives `delta:<id>` from the first commit, else its location (a
+local path qualified by the machine's name); the `file` connector its folder and a SHA-256 of the kind's files (`file:<folder>#<hex>`); any
+other source nothing, and is a shard of its own node. `SourcePlugin.holdsNone(kind)` leaves out a source that surely holds nothing of the
+kind. Two nodes naming the same identity are replicas for the kind; different identities are shards.
+
+**Switches** (commands and packs on or off) carry a hybrid-logical-clock stamp; their hash rides the member entry (`switchesHash`), and a
+node whose hash differs pulls the peer's switches and keeps the newer of each.
+
+### 28.5 Routing a request
+
+`NetRouting` answers three questions from the capability table cut to the caller's roles and to the member table's newest word: answer
+here (the pack is on, the newest version among reachable nodes, not peer-only here, a local source holds the entity); **view forwarding**
+(`ViewForwardFilter`, after the token filter: the whole request, with `X-Drishti-Net-Hop: 1` and an on-behalf-of token, the answer
+streamed back unchanged); **data forwarding** (`PeerSources`, the source router's `Fallback`: after the local sources, `PeerSource` fetches
+`GET /api/v1/net/fetch/{kind}/{id}` and this node renders and masks again). A `PeerSource` is not in the source registry, so nothing that
+lists sources (BI, caches, Health) sees a peer. A forwarded read answered `404` goes to the next renderer (at most three), renderers whose
+sources hold data first. Peers are chosen: alive → holds the date → freshest data version → lowest latency → a stable hash of the entity id.
+A digest of a member that left or died is kept (never routed to) until it is forgotten, so an answer can name the holder that is down; a down
+node counts only for the dates between its sources' `earliestDate` and `latestDate` (`Fallback.downHolders`).
+
+- **History** goes to peers in one call for every date this node lacks (`GET /api/v1/net/history/{kind}/~`), merged by date, the higher
+  generation winning an overlap; never cached when failed, partial or empty.
+- **Scatter-gather** (`SearchScatter`): the targets are `CapabilityTable.scatterTargets` (shards, never a replica of a node already asked;
+  the fewest nodes that cover every table, fastest first), asked in parallel through `GET /api/v1/net/search` within `scatter-budget`;
+  rows merged by kind and id (this node's first), re-sorted, cut; `matched` and `scanned` deduplicated through each share's `matchedIds`
+  (up to 20,000, removed from the client's answer); a down holder named in `failed`.
+- **Grouped pages** (`GroupGather`, `GET /api/v1/net/group/{kind}/{id}`, `DerivedSourcePlugin.share`): exact (members united by id) when
+  every node lists all its members up to `max-members`, otherwise combined from each node's totals; partial pages carry `partial` and
+  `missing`.
+- **Live relay** (`PeerSource.subscribe`, `GET /api/v1/net/subscribe/{kind}/{id}`): the topic hub is partitioned by the subscriber's roles
+  while the cluster runs (an upstream is masked at the peer for the user it was opened for); a broken relay reopens with a fresh token.
+- **BI reports** route by `NetRouting.report` to a node whose digest lists the report and holds its datasets' kinds; **BI runs** go to the
+  model's owner by rendezvous (`RunCluster`), their actions to the run's node (`RunForwardFilter`), adoption after a lapsed lease by one
+  conditional update in the shared database.
+- **Selections** of a Sutra Next screen are tokens kept on the node that issued them (`tok_<node>~…`); `SelectionForwardFilter` forwards a
+  request that reaches another node to the issuing one.
+- **Masks across nodes**: a cache of what a peer sent masked is keyed by the caller's security signature (`Principal.securitySignature()`:
+  sorted roles and embedding app), through `SourceRouter.partition()`.
+- **The node that answered**: `NetServedBy` adds the *Node* line for administrators; `NetCaller.Served` records what a request asked of
+  other nodes.
+
+### 28.6 Identity and user state across nodes
+
+`StateSync` (signed `POST /api/v1/net/state`, batches of 200 every quarter second, up to 10,000 waiting per peer) copies the namespaces
+`settings`, `layouts`, `pivots` and `workspaces` (`ReplicatedPreferences`), console sessions (the SHA-256 of the id) and, through
+`IdentitySync` (a `StateSync.Part`), `identity-users` (with the password hash), `identity-roles` (`RoleStore.adopt`) and `identity-tokens`
+(the secret's SHA-256). A change is queued for every member not gone (alive or suspect, drained included) and sent once it is alive; a member
+that joins gets a catch-up applied only where absent; a member that goes dead drops its queue and gets the catch-up when back. Applied
+changes are written under a thread-local flag so listeners do not echo them. The newest write wins (each node's wall clock, within the key's
+60 s); one user name made apart on two nodes is settled by the older creation (`UserStore.putIfEmpty` seeds only into an empty store);
+deletions are tombstones (`<data dir>/net/identity-deleted.json`, 90 days). The last-enabled-administrator rule is checked where a change
+is made and again where it is applied, under a lock, one change at a time: the disabled administrator with the newest `updatedAt` (then the
+name) is enabled again, so every node picks the same; audited `last-admin-kept`, listed in `NetHealth.summary().warnings`. Alerts, monitors
+and scheduled reports are not copied: they act.
+
+### 28.7 The shard map
+
+`ShardMap` (`drishti-compute/.../shard/`): per business date, the rows counted per value of the shard key (VaR: `LEGAL_ENTITY`, then
+`DESK`), read as columns without the vectors; walked in key order, a shard closes when the next key would take it over `target-shard-mb`
+(2048 by default; a row is 4 × scenarios bytes, the float32 hot row). A key value (a desk) is never split; the ranges cover the whole key
+space, so every row has exactly one shard. The map is a pure function of the counts, so every member computes the same map; its digest names
+the cut, not the data, so an intraday batch that moves no cut keeps the map. At 1-day width (509 scenarios) 2.3M positions are 4.7 GB of
+rows, 3 shards at the default; at 1,518 values 14 GB, 7 shards (estimates).
+
+### 28.8 Rendezvous placement
+
+`ShardOwners.owners`:
+
+```
+weight(node, key) = first 60 bits of SHA-256( node + "|" + key )      key = the shard's range "LE-A/DESK-X..LE-B/DESK-Y"
+ranked            = candidates sorted by weight descending, ties by node id
+owners            = the pinned member first (if a candidate), then repeatedly the heaviest candidate not chosen whose zone is unused,
+                    else the heaviest candidate not chosen, until `replicas` owners
+```
+
+**The candidates** (`ShardMembership`, `ShardPeers.Peer.eligible`): this server and every member that is alive, speaks the protocol, is not
+drained, has sharding on, owns shards (not `coordinator-only`) and is not draining. The view moves only once it has been the same for
+`stable-seconds`; a draining member leaves at once; it is looked at again at most every 250 ms.
+
+**Why rendezvous and not a ring.** A consistent-hashing ring needs hundreds of virtual nodes per member to balance and a shared ring state;
+rendezvous needs neither: each shard ranks the members independently (even in expectation, no tuning), gives the top-k replica set
+directly, moves only what a joiner wins or a leaver held, makes the zone rule "the next heaviest in an unused zone", and is a pure function
+with nothing to agree on. Its cost, O(members) hashes a shard, is microseconds. **Rebalancing:** with N members and R × S owner slots, a
+joiner wins each slot with probability 1/(N + 1); a leaver's slots go each to the next heaviest member (`ShardOwnersTest`: a fourth member
+takes 20 to 30% of first owners and replica slots over 2,000 shards). The same rendezvous choice places a BI model's runs (`RunCluster`).
+
+### 28.9 Handover, readiness and the gather of partials
+
+**Handover** (`ShardHandover.decide`, `VarShards` every `rebalance-seconds`): a new owner builds its shard from the lake (its key range only,
+the files skipped by statistics), writes `<hot>/<date>-shard-<i>/`, announces it ready in the digest service `var-shards`; the old owner keeps
+serving and releases (unmaps, deletes) only `grace-seconds` after every owner announced it ready. So a shard in use always has a ready
+holder. A date put together again is swapped in whole (`VarService.swap`) only when complete.
+
+**Readiness in the digest** (`ShardPeers.State`): sharding on, owner, draining, per date the maps held and per shard the first 16 characters
+of the data digest it serves, and the dates open (a member of an older release has its held dates counted as open,
+`State.openOrHeld`). A change rebuilds the digest at once (`ShardPeers.announce`): readiness needs no protocol of its own. A USD shard book
+(and its currencies) of a date open nowhere for `release-after-seconds`, not among the newest `hot-dates` and not read here meanwhile is
+released (unmapped; its file left to the disk budget).
+
+**The gather** (`ShardGather`): each shard's part of a scope goes to one member, in this order: owners ready at the date's data version
+(first owner first), any other member ready at it (an old owner mid-handover), owners not yet ready (they build). `POST
+/api/v1/risk/var/partial`, signed, one hop, on behalf of the caller; the answer is labelled with shard, map digest, data digest and row
+count and refused when any differs. Exactly one answer per shard, added in shard order; a shard nobody answers fails the scope (`503
+DRS-5215`); a member at another data version answers `409 DRS-5216` and the next is asked. Never a partial VaR. The skeleton (ids,
+columns, links, aggregates) is fetched from owners (`GET /api/v1/risk/var/shards/skeleton`, `ShardSkeleton`) and copied to every member;
+node figures are summed bottom-up from the shards' book aggregates, equal to one server to the bit (`VarShardClusterTest`,
+`ShardAssemblyTest`). The machinery (`com.ash.drishti.compute.shard`, `com.ash.drishti.server.shard`) is measure-agnostic; VaR is its
+first `ShardedMeasure`.
+
+### 28.10 Why no consensus protocol
+
+Ownership is a pure function of shared inputs (the shard map from the same lake, the membership gossip converges on). Two members that
+briefly disagree cannot produce a wrong number: a partial is served only by a member that holds the shard at the data version asked, so
+disagreement costs a refused call. A Raft or ZooKeeper quorum would add a service and a leader for no gain in read correctness. It would help
+singleton writers under a partition (one official capture, one PV-stream reader); Drishti uses its database for that, by lease, as BI runs
+do. A second site is a separate cluster, never one cluster over a WAN.
+
+### 28.11 Exposure sharding (design, not built)
+
+Exposure runs on one server today. The design reuses `ShardMap`, `ShardOwners`, `ShardHandover`, `ShardMembership` and `ShardPeers` under a
+digest service of its own (`exp-shards`), behind `drishti.ccr.exposure.sharding.enabled`:
+
+- **Key** `[COUNTERPARTY, NETTING_SET]`, no group prefix: a netting set is never split, a counterparty's sets sit together.
+- **Sharded:** per set the V, E and N matrices (float32, `VMAT`, `EMAT`, `NMAT`) and the load itself, each owner streaming only its sets'
+  `exposure-path` rows one set at a time (the heap holds one set's float64 matrix, not the date's). **Copied:** the set index (about 200 B a
+  set), the run's grid, memberships, collateral, CSAs, limits, credit curves.
+- **The owner** nets paths, applies collateral with the margin period of risk, computes E and N per path and step. **The partial** is the
+  summed E matrix of the scope's sets (steps × paths float64: 800 KB at 50 × 2,000), plus per-counterparty EE rows for CVA. **The
+  coordinator** adds partials in shard order, then EE, ENE, EEE, EPE, EEPE, PFE quantiles, peaks and CVA: quantiles only after adding.
+  Contributions take a second round for the paths around the quantile.
+- **Sizes:** 800 KB a set at P = 2,000, G = 50 (80 GB a date for 100,000 sets, 40 GB an owner of 4 with two replicas); 4 MB a set at
+  P = 5,000, G = 100.
+- **Before switching it on:** bit equality against one server for every scope kind on Delta and Iceberg, with an owner joining, one down and
+  both down; official captures of 20 dates identical; a week side by side with the single server as the reference.
+
+### 28.12 Bounded resources inside one server
+
+- **One cache budget** (`MemoryBudget`, `drishti.memory.cache-share` 0.5 of `-Xmx`): weighted pools (`connector.idmaps` 20,
+  `connector.columns` 20, `connector.documents` 6, `connector.parts` 4, `engine.answers` 20, `engine.layouts` 10, `small` 20), each a set
+  of Caffeine caches weighed in bytes. At `squeeze-at` (0.85 of the old generation after a collection) the connectors' and small pools are
+  halved for a minute. `CachesWeighedInBytesTest` fails the build on a count-only cache not listed in `count-only-caches.txt`.
+- **One disk budget** (`DiskBudget`): folders register name, path, cap, size and how to free their least recently used items; a writer
+  calls `reserve(folder, bytes, what)` before a build (VaR reserves three times its largest file, exposure twice), which trims, checks the
+  guard and refuses with `503 DRS-5218` before anything is written; every folder is checked each `drishti.disk.check-interval`.
+- **Mapped id maps** (`MappedIdFile`, `IdMapFolder` in `drishti-api`; `FileMaps` for unmapping): one mapping a file, reads inside a guard,
+  `close` unmaps once no reader is inside; release by idleness, the folder's cap, an optional TTL, never a map being read or of a date open
+  in an engine (`DatesInUse`).
+- **Load pools** (`LoadPools`): VaR dates on `drishti-var-load-*`, shard books on `drishti-var-shard-load-*`, exposure on
+  `drishti-exposure-load-*`, bounded `ForkJoinPool`s that compensate a nested join; never the common pool.
+- **A fixed reduction order** (`ParallelSums.sum`): a set under 1,024 rows in row order, a larger one in blocks aligned to the absolute
+  ordinal (about 64 blocks, a power of two), each from zero, partials added in block order: any scope's bits depend on the set only, never on
+  the thread count.
+- **The skeleton** of a VaR date (ids, columns, links, aggregates; about 0.72 KB a position measured) is on the heap and copied to every
+  member; its id indexes are sorted `int` permutations with a binary search (`IdIndex`). **Designed, not built:** memory-mapping it from
+  hot-file format 4 (`TIDX`, `PIDX`, mapped `TCOL`, `PCOL`, `AGGS`), which takes an owner from `-Xmx36g` to about `-Xmx20g` at 2.3M and
+  makes 10M practical.
+- **Busy protection** (`AdmissionGate`, `com.ash.drishti.server.admission`) gates new sign-ins, date loads, exports, BI runs and bulk
+  loads on the heap after collection, loads in flight, open dates' heap, requests in flight and free disk; reads of open dates are never
+  gated.
+
+### 28.13 Super scale (design, not built)
+
+The target: 500 GB of JSON a day (about 50 million documents) kept seven years (about 88 billion rows, 115 TB of Parquet) in one Delta lake
+in S3, read by many servers and consoles as one Drishti, each server's heap 8 GB. What breaks today at that volume: per-day id maps and
+column sets on the heap (3 GB and 11.5 GB a day), grouped pages computed by every server, one table per source holding every year (350,000
+files in one log), one loader per source (about 3 hours for 500 GB), servers on one lake as replicas that each cache everything. The design:
+
+- **Products computed when loading, not when asked:** link indexes, group totals, rollups and id lists written with the data by the slice
+  that has the rows sorted in hand.
+- **Find by ranges, not maps:** files of a day hold sorted, disjoint id ranges; the log's per-file min and max id (and Parquet Bloom
+  filters on `id`) give a range map, nothing per entity on the heap.
+- **Tables by year** (`root: …/{year}`), closed when the year ends.
+- **A loader fleet:** a planner cuts the day into slices; loader tasks parse, promote, sort, write and compute products; safe concurrent
+  commits (conditional PUT); a publisher and a day register, so a day appears whole or not at all.
+- **Each server owns a share:** (table, day, group) slices placed on the Drishti\*net ring; a request is forwarded to the slice's owner
+  (one hop), searches and aggregates split over owners, so the cluster's memory adds up instead of repeating; anyone can still read
+  anything from S3.
+- **Warm tier:** memory-mapped column files of owned days; type-ahead from the day's id-list product.
+- **Questions over all of history** go to an external engine (Athena, Trino, Spark) on the same tables.
+
+Steps S1 (range maps, Bloom filters), S2 (tables by year), S3 (the loader fleet), S4 (products), S5 and S6 (slice ownership, split
+queries), S7 (the warm tier) and S8 (a benchmark at scale in AWS) are not scheduled.
 
 <!-- h-docs: BI, Python compute, client renderer, collaboration (builder D) -->
 

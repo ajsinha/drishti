@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The console's log carries a timestamp on every line, uvicorn's and its own (2.9.7, RESOURCES_AND_SCALE.md 6.4, D9)."""
+"""The console's log carries a timestamp on every line, uvicorn's and its own (2.9.7, CLUSTER_GUIDE.md 6.4, D9)."""
 import io
 import logging
 import logging.config

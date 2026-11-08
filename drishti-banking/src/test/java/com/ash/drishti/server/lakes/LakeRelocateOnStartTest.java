@@ -24,7 +24,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.mock.env.MockEnvironment;
 
 /**
- * The move at start (docs/admin/OPERATIONS.md, "The lakes' folders"): the demo lake's folders found directly in {@code <data>/delta} are
+ * The move at start (docs/guides/OPERATIONS_GUIDE.md, "The lakes' folders"): the demo lake's folders found directly in {@code <data>/delta} are
  * moved into {@code <data>/delta/demo} once, with the server's own settings ({@code drishti.data.dir}, {@code drishti.lakes.dir}); with
  * {@code drishti.lakes.relocate-on-start: false} nothing moves. The moving itself is LakeRelocateTest's (drishti-lakeload).
  */

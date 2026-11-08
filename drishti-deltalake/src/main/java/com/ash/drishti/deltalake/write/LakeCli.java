@@ -52,7 +52,7 @@ public final class LakeCli {
     public static int run(String[] args, PrintStream out, PrintStream err) {
         List<String> a = List.of(args);
         if (a.size() != 4 || !a.get(1).equals("write") || !a.get(2).equals("--manifest")) {
-            err.println("usage: lake write --manifest FILE   (written by tools/lake/build.py; see docs/guides/TOOLS.md)");
+            err.println("usage: lake write --manifest FILE   (written by tools/lake/build.py; see docs/guides/CLI_REFERENCE.md)");
             return USAGE;
         }
         Path manifest = Path.of(a.get(3));

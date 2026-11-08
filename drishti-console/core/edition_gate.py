@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Route gating by module, edition, lens and feature switch (docs/admin/LENSES.md › The design;
+"""Route gating by module, edition, lens and feature switch (docs/guides/ADMIN_GUIDE.md › The design;
 docs/architecture/ACCESS_MODEL.md: a module that is off is gone, its pages and APIs too): a page whose module is off, or whose word,
 feature or Admin page the edition (or the person's lens) hides, or that a console ``features.*`` switch turns off, answers the console's
 404 page (or a 404 problem under /api). Called by the auth gate (core/app.py) once the person's edition is known. Without an edition and
@@ -52,7 +52,7 @@ def hidden(request, edition: Edition, path: str) -> str | None:
     gone = modules.path_refusal(path)                               # a module that is off: its pages and APIs are not here (ACCESS_MODEL.md)
     if gone is not None:
         return gone
-    off = engines.path_engine(path)                                 # a compute engine that runs nowhere (COMPUTE_ENGINES.md 5.2)
+    off = engines.path_engine(path)                                 # a compute engine that runs nowhere (ADMIN_GUIDE.md 5.2)
     if off is not None:
         return f"{off.get('title') or off.get('id')} is not running on this server, and no other server of this cluster runs it"
     for word, prefixes in WORD_PATHS.items():

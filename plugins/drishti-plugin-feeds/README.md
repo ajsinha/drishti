@@ -240,7 +240,7 @@ once for all of them.
 
 **Longer history.** To keep more than the window, archive the feed's documents into a dated store under the **same ids**: a daily job
 reads `GET /api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?asOf=<date>` and loads the day with `drishti.py lake build`
-([TOOLS.md](../../docs/guides/TOOLS.md#4-lake-build-a-large-json-export-into-a-delta-lake); the key is the archived document's field,
+([CLI_REFERENCE.md](../../docs/guides/CLI_REFERENCE.md#7-lake-a-large-json-export-into-a-delta-lake); the key is the archived document's field,
 `indexId`). With the pack's route (`rate-fixing: market-store`) the lake is asked first, so once it holds the id it answers every date
 within its `lookback-days` of its newest row, Live included: keep the archive current, or route the kind to the feed
 (`drishti.sources.routes.rate-fixing: nyfed-sofr-feed`) so the feed answers inside its window and the lake before it. Public data loaded

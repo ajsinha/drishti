@@ -1371,7 +1371,7 @@ settings:
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
 
 **Further:** [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (the connector, sections 18 and 19),
-[DEMO_DATA.md](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage) (mixed storage).
+[../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage) (mixed storage).
 
 ## Step 31 · Publish the official results to Iceberg
 
@@ -1412,7 +1412,7 @@ With the root of the YAML above it publishes (step 32). A date already captured 
 applies from the next capture.
 
 **Further:** [VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results),
-[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (section 20), on S3: [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws).
+[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (section 20), on S3: [CLUSTER_GUIDE.md › Drishti on AWS: ECS, EFS and S3, section 22](../guides/CLUSTER_GUIDE.md#1212-iceberg-on-aws-and-official-results-in-s3).
 
 ## Step 32 · Start the server and look at the connectors
 
@@ -1443,7 +1443,7 @@ $ drishti.py var official
 `data/iceberg/risk-results/var-official` with its JSON Lines beside it (`data/iceberg/risk-results/jsonl/var-official/2026-09-30/var-official-v1.jsonl`).
 `var-results` still says `delta`: step 34 is about it.
 
-**Further:** [CONNECTOR_FILES.md](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (Admin → Connectors).
+**Further:** [../guides/DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (Admin → Connectors).
 
 ## Step 33 · Each table's format in Admin → Lakes
 
@@ -1456,13 +1456,13 @@ $ drishti.py var official
 
 **The YAML** (`data/lakes/lake-maintenance.yaml`, what the page writes): a lake `format: auto` (the default) maintains each table in
 its own format, Iceberg's by snapshot expiry and orphan-file removal under the 7-year floor of `risk` and `risk-results`
-([OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)).
+([OPERATIONS_GUIDE.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../guides/OPERATIONS_GUIDE.md#163-iceberg-lakes)).
 
 **You should see** `trading/trade_murex` as **Delta**, the seven risk tables and `risk-results/var-official` as **Iceberg**. The risk
 tables are maintained here like the ones `drishti.py lake build --format iceberg` writes: the copy leaves the same build record
 (`<iceberg root>/_drishti-lake/tables-built.json`, with the Delta table's pack and kind).
 
-**Further:** [OPERATIONS.md](../admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain).
+**Further:** [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling).
 
 ## Step 34 · BI's reader of the official results follows the format
 
@@ -1500,7 +1500,7 @@ settings:
 **You should see** `var-results` on `iceberg` and running, and the official records read back: `VOFF HIERARCHY == 'LL'` on
 2026-09-30 finds 43 of the 131 rows.
 
-**Further:** [CONNECTOR_FILES.md "Upgrades"](../guides/DATA_GUIDE.md#upgrades) (stamped files, edited files, Use the
+**Further:** [../guides/DATA_GUIDE.md section 9 "Upgrades"](../guides/DATA_GUIDE.md#upgrades) (stamped files, edited files, Use the
 pack's value).
 
 ## Step 35 · Back to Delta
@@ -1529,11 +1529,11 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 - [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md): every key, a Delta lake in S3, an Iceberg lake over REST, an in-memory store.
 - [the data lake guide, section 3.1](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox): every part of the Inbox screen and where each figure comes from.
 - [Data guide, section 1](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed): the data-load signal each load sends, expectations and late data.
-- The parallel lake loader the inbox runs: [TOOLS.md, section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader).
+- The parallel lake loader the inbox runs: [CLI_REFERENCE.md, section 4.13](../guides/CLI_REFERENCE.md#713-the-parallel-lake-loader).
 - The [in-memory lake guide](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake): every setting, the replenish sources and the guard.
 - The design: [IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
 - Your own lake on Iceberg, Databricks or a REST catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
-- On AWS (S3, Glue, S3 Tables, the scripts in `deploy/aws/iceberg/`): [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws).
+- On AWS (S3, Glue, S3 Tables, the scripts in `deploy/aws/iceberg/`): [CLUSTER_GUIDE.md › Drishti on AWS: ECS, EFS and S3, section 22](../guides/CLUSTER_GUIDE.md#1212-iceberg-on-aws-and-official-results-in-s3).
 - Exposure on the same lake: [tutorial 3](03-exposure-from-the-bank-to-a-trade.md) after a full `--store risk=iceberg` build.
 
 ## If something goes wrong

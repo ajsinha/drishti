@@ -213,7 +213,7 @@ A failed read never returns "not held": it throws, so a view says the source fai
 **Linked panels and the link budget.** A page that reads headlines through `source: link(...)` waits for them at most
 `drishti.graph.link-budget` (40 ms by default). A web call takes longer, so the first view of a name shows its news panels as *pending*
 and the next view (within `cache-ttl-seconds`) shows the headlines. A site using this pack sets the budget to a second or two
-(`drishti.graph.link-budget: 2s`, [PERFORMANCE.md](../../docs/admin/PERFORMANCE.md)). While the connector is off the panels stay empty
+(`drishti.graph.link-budget: 2s`, [CLUSTER_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md#16-tuning)). While the connector is off the panels stay empty
 with the reason (`waiting for NEWS-...`).
 
 ## Using it from a pack

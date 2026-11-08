@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 /**
- * Every cache is bounded in bytes (2.9.7, RESOURCES_AND_SCALE.md section 5.2, D3): a Caffeine cache in main code bounded by a count
+ * Every cache is bounded in bytes (2.9.7, CLUSTER_GUIDE.md section 5.2, D3): a Caffeine cache in main code bounded by a count
  * ({@code maximumSize}) with no weigher fails the build, unless its entries are of a fixed, small size and it is listed with the reason in
  * {@code count-only-caches.txt} (a count of entries of very different sizes is a defect, principle P2). The list only shrinks: a new
  * count-only cache is weighed in bytes, or listed with its reason in review.

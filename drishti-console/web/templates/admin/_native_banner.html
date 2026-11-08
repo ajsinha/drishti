@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The administrators' notice while drishti.native.blas.mode is auto and BLAS runs on the pure-Java path (docs/admin/OPERATIONS.md section
+{# The administrators' notice while drishti.native.blas.mode is auto and BLAS runs on the pure-Java path (docs/guides/OPERATIONS_GUIDE.md section
    2.1): shown on Admin -> Health and Admin -> Engines until fixed; the platform alert native-blas-fallback tells the inbox. `blas` is the
    server's native.blas (GET /api/v1/admin/health or /api/v1/admin/engines); members on the Java path are named too. #}
 {% set nb = blas or {} %}
@@ -34,6 +34,6 @@
   {% if slow %}Members: <span class="mono" data-native-members>{{ slow | join('; ') }}</span>.{% endif %}
   Results are identical (within 1e-12); many-scope VaR/ES sums are slower. Fix: a 64-bit Java on Linux or Windows x86-64 with the native
   cache writable (<span class="mono">drishti.native.cache-dir</span>); or choose Java with <span class="mono">drishti.native.blas.mode: java</span>
-  to silence this (Help → Configuration; OPERATIONS.md section 2.1).</span>
+  to silence this (Help → Configuration; OPERATIONS_GUIDE.md section 2.1).</span>
 </p>
 {% endif %}

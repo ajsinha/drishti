@@ -328,7 +328,7 @@ the partition is vacuumed after a large load.
 - **Type-ahead** answers from memory, never a query per keystroke. With `index.days: 5` (and `index.storage: mmap` for a lake
   searched often by past date) the ids of the last five business days are kept, so a past date answers from its own ids
   ([several business days](../../docs/architecture/ARCHITECTURE.md#91-several-business-days),
-  [sizing](../../docs/admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)); a change of `loaded_at` rebuilds them, a
+  [sizing](../../docs/guides/OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index)); a change of `loaded_at` rebuilds them, a
   restated day is caught every `index.reload-every`, and **Admin → Connectors → this connector → Index** reloads a day by hand.
   Query mode keeps the newest day only.
 - **A day's columns:** `percentile_disc` over the day's ids gives `scan-threads - 1` boundaries; the ranges are read at once, each on
@@ -612,7 +612,7 @@ connector starts while the database is down. A read borrows one for one query an
 across a stream to a client. `statement-timeout` is set as the connection's `statement_timeout`; a borrow held longer than
 `pool-leak-threshold` is logged with the borrower's stack. `pool-size` must be at least `scan-threads` plus the reads you expect at
 once (and, in query mode, room for parts). See [connection pools](../../docs/guides/DATA_GUIDE.md#914-connection-pools) and
-[sizing them](../../docs/admin/OPERATIONS.md#sizing-the-database-connection-pools). The loader uses its own pool: one connection
+[sizing them](../../docs/guides/OPERATIONS_GUIDE.md#148-capacity-figures-database-pools-and-bi-scale). The loader uses its own pool: one connection
 for the whole load (it holds the advisory lock) and one per batch, never more than `--pool-size`.
 
 ## Production checklist
