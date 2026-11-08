@@ -38,6 +38,8 @@ def embed(backend):
             return {"visuals": {"bar": {"group": "chart"}}}
         if path == "/reports/file:report:draft":
             return dict(REPORT, id="file:report:draft", status="draft")
+        if path == "/reports/file:report:live":
+            return dict(REPORT, id="file:report:live", dataset={"datasets": [{"alias": "trade", "mode": "live"}, {"alias": "desk", "mode": "snapshot"}], "measures": []})
         if path == "/reports/file:report:gone":
             raise BackendError(404, "DRS-9031", "no such report")
         if path.endswith("/query"):
@@ -62,6 +64,13 @@ def test_the_definition_is_the_reports_model_without_the_yaml_the_warnings_or_th
     assert [p["level"] for p in body["problems"]] == ["error"] and "mayEdit" not in body and "status" not in body
     method, path, me, _body = embed.seen[-1]
     assert (method, path) == ("GET", "/reports/file:report:sales") and me.user == "alice" and me.headers()["Authorization"].startswith("Bearer ")
+
+
+def test_a_model_names_its_datasets_as_the_tables_the_frozen_element_follows_live(embed):
+    """The 1.x <drishti-report> is frozen: it follows a report live when dataset.tables has a live table; the model says it by its datasets."""
+    body = embed.get("/embed/v1/reports/file:report:live", headers=headers()).json()
+    assert body["dataset"]["tables"] == [{"name": "trade", "mode": "live", "columns": []}, {"name": "desk", "mode": "snapshot", "columns": []}]
+    assert body["dataset"]["datasets"][0]["alias"] == "trade"
 
 
 def test_only_a_published_report_is_embedded(embed):

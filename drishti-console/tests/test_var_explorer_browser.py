@@ -46,6 +46,7 @@ from pathlib import Path
 import pytest
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
+from var_stack import VAR_HEAP
 from wb_live import _stack
 from select_helpers import choose, labels  # <drishti-select>: drishti-inputs' Select
 
@@ -68,7 +69,7 @@ def stack(tmp_path_factory):
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
                                         "DRISHTI_COMPUTE_ENABLED": "false",    # the what-if needs no compute workers
-                                        "DRISHTI_VAR_SCENARIO_WINDOW": "all"}):   # the full 509-scenario set the figures below are written for
+                                        "DRISHTI_VAR_SCENARIO_WINDOW": "all"}, heap=VAR_HEAP):   # the full 509-scenario set the figures below are written for
         _engine_ready(str(st))
         yield st
 

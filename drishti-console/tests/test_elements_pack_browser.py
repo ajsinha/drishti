@@ -60,7 +60,7 @@ APP_JS = """(function () {
 def test_a_static_page_with_only_the_packed_files_draws_a_grid_and_a_chart(browsers, tmp_path):
     site = tmp_path / "site"
     rec = pack.pack(["grid", "chart"], site / "vendor" / "drishti", theme="light")
-    assert list(rec["libraries"]) == ["drishti-core", "drishti-grid", "drishti-chart"]
+    assert list(rec["libraries"]) == ["drishti-core", "drishti-inputs", "drishti-grid", "drishti-chart"]   # drishti-inputs is a requirement of grid and chart (their Selects)
     (site / "index.html").write_text(PAGE, encoding="utf-8")
     (site / "app.css").write_text(APP_CSS, encoding="utf-8")
     (site / "app.js").write_text(APP_JS, encoding="utf-8")

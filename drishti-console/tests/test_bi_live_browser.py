@@ -137,7 +137,8 @@ def test_the_live_report_redraws_in_place_as_the_trades_tick_and_says_when(stack
     # the rolling line collects one point for each update
     points = page.evaluate("echarts.getInstanceByDom(document.querySelector('[data-visual=\"rolling\"] .bi-chart')).getOption().series[0].data.length")
     assert points >= 3
-    assert page.inner_text('[data-visual="latest"] tbody tr:first-child td:first-child').strip() in TRADE_IDS          # a trade the feed pushed
+    first = page.locator('[data-visual="latest"] .dg-row .dg-cell').first                       # the table, drawn by drishti-grid
+    assert first.inner_text().strip() in TRADE_IDS          # a trade the feed pushed
     clean(page)
 
 

@@ -267,10 +267,10 @@ def test_the_applications_kinds_decide_which_reports_open(stack, browser):
 def test_the_report_at_390_pixels_uses_its_phone_layout_in_the_element_and_in_the_console(stack, browser):
     wide = host_page(browser)
     ready(wide)
-    assert wide.locator("#rep [data-grid]").get_attribute("data-phone") == "auto"
+    assert wide.locator("#rep .bi-rgrid[data-grid]").get_attribute("data-phone") == "auto"
     assert wide.locator("#rep [data-visual]").count() == 10
     wide.set_viewport_size({"width": 390, "height": 844})                                           # the element's width follows: it swaps to the phone layout by itself
-    wide.wait_for_function("() => document.querySelector('#rep').shadowRoot.querySelector('[data-grid]').getAttribute('data-phone') === 'layout'", timeout=20000)
+    wide.wait_for_function("() => document.querySelector('#rep').shadowRoot.querySelector('.bi-rgrid[data-grid]').getAttribute('data-phone') === 'layout'", timeout=20000)
     ready(wide)
     assert wide.evaluate("[...document.querySelector('#rep').shadowRoot.querySelectorAll('.bi-vis')].map(v => v.dataset.visual)") == PHONE_ORDER
     height = wide.evaluate("document.querySelector('#rep').shadowRoot.querySelector('[data-visual=\"by-desk\"]').getBoundingClientRect().height")

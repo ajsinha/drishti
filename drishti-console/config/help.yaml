@@ -411,7 +411,6 @@ moved:
   docs-architecture-drishti-net: cluster#1-several-servers-as-one-drishtinet   # architecture/DRISHTI_NET.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
   docs-architecture-scale-strategy: cluster#14-scale-strategy-for-one-server   # architecture/SCALE_STRATEGY.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
   docs-architecture-super-scale: docs-architecture-architecture#3213-super-scale-design-not-built   # architecture/SUPER_SCALE.md merged into guides/CLUSTER_GUIDE.md (2.9.7)
-  developer-guide: pack-developer-guide#part-viii-changing-drishtis-code-the-developer-guide   # guides/DEVELOPER_GUIDE.md merged into guides/PACK_DEVELOPER_GUIDE.md (2.9.7)
   packs: build-guide#31-the-packs-that-ship-turning-them-on-who-sees-which   # guides/PACKS.md merged into guides/BUILD_GUIDE.md (2.9.7)
   data-loads: data-guide#1-telling-drishti-new-data-has-landed   # guides/DATA_LOADS.md merged into guides/DATA_GUIDE.md (2.9.7)
   docs-guides-data-formats: data-guide#2-data-formats-json-lines-is-the-standard   # guides/DATA_FORMATS.md merged into guides/DATA_GUIDE.md (2.9.7)

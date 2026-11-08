@@ -27,6 +27,7 @@
 {% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
+{% set cm = module_on('capitalmarkets') %}{# the World lens is economy with capital markets: their parts (every landing's) only while that module is on #}
 {{ back(request) }}
 <div class="wl" data-world-landing="{{ landing }}" data-topics="{{ topics | join(',') }}">
   <nav class="wl-switch" aria-label="Choose your Home">
@@ -50,7 +51,6 @@
     {% if chips %}<div class="wl-chips">{% for c in chips %}<a class="wl-chip mono" href="{{ go(c) }}">{{ c }}</a>{% endfor %}</div>{% endif %}
     <div class="wl-strip" data-wl-counts>
       <span>Economies <b class="mono" data-wl-count="ECON">…</b></span>
-      {% set cm = module_on('capitalmarkets') %}{# the World lens is economy with capital markets: their parts only while that module is on #}
       {% if cm %}<span>US companies <b class="mono" data-wl-count="USEQ">…</b></span>{% endif %}
       <span>Legal entities <b class="mono" data-wl-count="LEI">…</b></span>
       {% if cm %}<span>Funds and ETFs <b class="mono" data-wl-count="FUND">…</b></span>
@@ -103,8 +103,8 @@
     <a class="wl-tile" href="{{ go('ECG ECG-WLD') }}" data-wl-tile="world"><span class="k">World GDP growth</span><span class="v mono" data-wl-world>…</span><span class="s" data-wl-world-s></span></a>
     <a class="wl-tile" href="{{ go('QUOTE where PRICE > 0 order by CHANGE_PCT desc') }}" data-wl-tile="breadth"><span class="k">Quotes up · down</span><span class="v mono" data-wl-breadth>…</span><span class="s" data-wl-breadth-s></span></a>
     <a class="wl-tile" href="{{ go('QUOTE where PRICE > 0 order by CHANGE_PCT desc') }}" data-wl-tile="mover"><span class="k">Biggest mover</span><span class="v mono" data-wl-mover>…</span><span class="s" data-wl-mover-s></span></a>
-    {% if module_on('capitalmarkets') %}<a class="wl-tile" href="{{ go('EDGAR 8-K') }}" data-wl-tile="filings"><span class="k">New SEC filings</span><span class="v mono" data-wl-filings>…</span><span class="s" data-wl-filings-s></span></a>{% endif %}
-    {% if module_on('capitalmarkets') %}<a class="wl-tile" href="{{ go('FUND where NET_ASSETS > 0 order by NET_ASSETS desc') }}" data-wl-tile="funds"><span class="k">Funds and ETFs</span><span class="v mono" data-wl-funds-n>…</span><span class="s" data-wl-funds-s></span></a>{% endif %}
+    {% if cm %}<a class="wl-tile" href="{{ go('EDGAR 8-K') }}" data-wl-tile="filings"><span class="k">New SEC filings</span><span class="v mono" data-wl-filings>…</span><span class="s" data-wl-filings-s></span></a>{% endif %}
+    {% if cm %}<a class="wl-tile" href="{{ go('FUND where NET_ASSETS > 0 order by NET_ASSETS desc') }}" data-wl-tile="funds"><span class="k">Funds and ETFs</span><span class="v mono" data-wl-funds-n>…</span><span class="s" data-wl-funds-s></span></a>{% endif %}
   </section>
   <div class="wl-cols">
     <section class="wl-card" aria-labelledby="wlMovedH"{{ part(PP, 'table') }}>

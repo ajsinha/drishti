@@ -16618,7 +16618,7 @@ The console the elements read when no server is named: the one that serves the l
 
 #### `usePopup(server)`
 
-auth 'popup' (configure({ auth: 'popup' }) or the auth="popup" attribute): the page's token comes from the console's sign-in window (EMBED_GUIDE.md 10.1) instead of a host backend; every element and the live channel share it.
+auth 'popup' (configure({ auth: 'popup' }) or the auth="popup" attribute): the page's token comes from the console's sign-in window (CLIENT_RENDERER.md 10.1) instead of a host backend; every element and the live channel share it.
 
 | Parameter | Type | Meaning |
 |---|---|---|

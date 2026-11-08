@@ -29,6 +29,7 @@
   .tbar .dropdown-item { display: flex; align-items: center; gap: var(--d-sp-6_4); min-height: 44px; white-space: normal; }
   .tbl-pg-size, .tbl-pg-q, .srch-q, input[type="search"], input[type="text"], input[type="number"], input[type="password"], input[type="date"],
   input[type="datetime-local"], select, .studio-in { min-height: 44px; }
+  .tbl-pg-size .di-select-control { min-height: 44px; }   /* the rows-per-page Select's control, not only its element (the bar's own rule is 24 px) */
   input[type="checkbox"], input[type="radio"] { min-width: 24px; min-height: 24px; }
   .help-example .copy, .lp-replay, .btn-pill, .btn, .chip, .tbar-link, .asof-known-btn, .asof-known-x, .srch-vs, .pnl-help, .pnl-dl-menu a, .help-shot, summary { min-height: 44px; min-width: 44px; }
   .btn-pill, .btn, .chip, .tbar-link, .help-shot, .pnl-help, summary { display: inline-flex; align-items: center; justify-content: center; }

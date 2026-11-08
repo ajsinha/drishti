@@ -103,9 +103,11 @@ def tests_of(console: Path) -> dict[str, dict]:
 
 
 def changelog(root: Path, names: list[str]) -> dict[str, list[dict]]:
-    """Each library's entries of the product CHANGELOG: a release's bullets whose bold lead names the library (one home: the CHANGELOG)."""
+    """Each library's entries of the product CHANGELOG: a release's bullets whose bold lead names the library (one home: the CHANGELOG).
+    A release train lists the releases it ships under its own heading, each as a section that ends with its number
+    (``## 2.9.11.g`` > ``### Drishti Elements, ... (2.9.11.e)``): an entry there is that release's; a section without one is the train's."""
     out: dict[str, list[dict]] = {n: [] for n in names}
-    release, bullet = None, None
+    release, base, bullet = None, None, None
 
     def flush():
         if release and bullet:
@@ -119,7 +121,12 @@ def changelog(root: Path, names: list[str]) -> dict[str, list[dict]]:
     for line in (root / "CHANGELOG.md").read_text(encoding="utf-8").splitlines():
         if line.startswith("## "):
             flush()
-            release, bullet = line[3:].split(" ")[0], None
+            release = base = line[3:].split(" ")[0]
+            bullet = None
+        elif line.startswith("### "):
+            flush()
+            shipped = re.search(r"\((\d+(?:\.\d+)+(?:\.[a-z])?)\)\s*$", line)
+            release, bullet = (shipped.group(1) if shipped else base), None
         elif line.startswith("- "):
             flush()
             bullet = [line[2:]]

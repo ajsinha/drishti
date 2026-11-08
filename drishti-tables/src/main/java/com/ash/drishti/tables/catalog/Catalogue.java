@@ -61,6 +61,8 @@ public final class Catalogue {
     private final Map<String, Entry> models = new LinkedHashMap<>();
     private final Map<String, String> was = new LinkedHashMap<>();
     private final List<Problem> problems = new ArrayList<>();
+    /** The names two definitions claimed (key: kind + name): refused, so neither is read and every reference to the name fails. */
+    private final Map<String, List<String>> refusedTwice = new LinkedHashMap<>();
 
     private Catalogue() {}
 
@@ -158,9 +160,24 @@ public final class Catalogue {
             into.put("unreadable:" + e.source(), e);
             return;
         }
+        List<String> twice = refusedTwice.get(e.kind() + ":" + e.name());
+        if (twice != null) {                                                  // a third definition of a refused name: refused too
+            twice.add(e.source());
+            problems.add(Problem.error(TableCodes.DUPLICATE, e.kind(), "'" + e.name() + "' is defined in " + String.join(", ", twice)
+                    + "; none is read: a name is unique across every domain folder (keep one, rename or remove the others)").in(e.source()));
+            return;
+        }
         Entry before = into.putIfAbsent(e.name(), e);
         if (before != null) {
-            problems.add(Problem.error(TableCodes.DUPLICATE, e.kind(), "'" + e.name() + "' is defined twice: " + before.source() + " and " + e.source()).in(e.source()));
+            // two definitions of one name (in two domain folders, or a file and a stored item): NEITHER is read. Picking one would serve
+            // the other's readers a table or model without the rules and masks they were written with (a security hole, not a choice).
+            into.remove(e.name());
+            if (before.table() != null && before.table().was() != null && e.name().equals(was.get(before.table().was()))) {
+                was.remove(before.table().was());
+            }
+            refusedTwice.put(e.kind() + ":" + e.name(), new ArrayList<>(List.of(before.source(), e.source())));
+            problems.add(Problem.error(TableCodes.DUPLICATE, e.kind(), "'" + e.name() + "' is defined twice: " + before.source() + " and " + e.source()
+                    + "; neither is read: a name is unique across every domain folder (keep one, rename or remove the other)").in(e.source()));
             return;
         }
         if (e.table() != null && e.table().was() != null) {
