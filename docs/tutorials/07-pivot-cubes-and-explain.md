@@ -574,7 +574,7 @@ drishti.py pivot mr headline --source var
  "values": [{"measure": "var()", "as": "VaR"}], "options": {"scope": "BANK"}, "expandTo": {"rows": 1, "columns": 1}}
 ```
 
-![The MR cube's landing: desks by risk class, the headline strip and the lens controls](img/t38/01-landing.jpg)
+![The MR cube's landing: desks by risk class, the headline strip and the lens controls](img/t38/01-landing.png)
 
 **You should see** desks by risk class with a grand total; the grand total equals `VAR BANK` to the cent, and the headline's VaR is the same number.
 

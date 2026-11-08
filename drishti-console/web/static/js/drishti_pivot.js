@@ -590,7 +590,7 @@
       // a saved view, a preset or the source's default: the wells are always there
       ["rows", "columns", "values", "expanded"].forEach(function (k) { view[k] = view[k] || []; });
       if (!state.firstView) { state.firstView = JSON.parse(JSON.stringify(view)); state.snapNext = true; }
-      if (!state.viewEntry && !state.savedView) { state.viewEntry = {id: "landing", name: landingName()}; }
+      if (!state.viewEntry && !state.savedView) { state.viewEntry = readyViews().filter(function (x) { return x.landing; })[0] || {id: "landing", name: landingName()}; }
       view.filters = view.filters || {};
       view.source = view.source || source;
       $("[data-pv-title]").textContent = c.title || source;

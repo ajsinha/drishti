@@ -289,7 +289,9 @@ class VarMrCubeApiTest {
         assertThat(cat.path("hierarchies").findValuesAsText("id")).contains("POSITIONS");
         for (JsonNode f : cat.path("fields")) {
             String name = f.path("name").asText();
-            if (name.startsWith("MGMT.")) {
+            if (name.endsWith(".BANK")) {
+                assertThat(f.path("hidden").asBoolean()).as(name + ": the root, every view's total, under More fields").isTrue();
+            } else if (name.startsWith("MGMT.")) {
                 assertThat(f.path("group").asText()).as(name).isEqualTo("hierarchy");
                 assertThat(f.path("hierarchy").asText()).as(name).isEqualTo("MGMT");
                 assertThat(f.path("hidden").asBoolean()).as(name + ": offered through its hierarchy").isTrue();

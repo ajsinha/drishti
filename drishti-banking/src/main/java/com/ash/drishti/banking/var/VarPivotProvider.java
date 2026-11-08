@@ -303,6 +303,8 @@ public final class VarPivotProvider implements PivotProvider {
         }
         notes.put("folders", FOLDERS);
         notes.put("hierarchies", hierarchies(o, fields));
+        notes.put("hidden", fields.stream().map(Field::name).filter(n -> n.endsWith("." + com.ash.drishti.banking.compute.var.HierarchySpec.ROOT_LEVEL
+                .toUpperCase(Locale.ROOT))).toList());          // a hierarchy's root level: the grand total, under More fields
         return new Catalogue(SOURCE, mr() ? "VaR · MR cube" : "VaR", fields, natives(), o.date().toString(), dates, version(v, source, date), 0, notes);
     }
 
@@ -333,6 +335,9 @@ public final class VarPivotProvider implements PivotProvider {
                 continue;
             }
             String h = l.substring(0, l.indexOf('.'));
+            if (l.substring(l.indexOf('.') + 1).equalsIgnoreCase(com.ash.drishti.banking.compute.var.HierarchySpec.ROOT_LEVEL)) {
+                continue;                                                  // the root (the bank): every view's total already, no level to pick
+            }
             String word = l.substring(l.indexOf('.') + 1).toLowerCase(Locale.ROOT).replace('_', ' ').replace('-', ' ');
             levels.computeIfAbsent(h, k -> new ArrayList<>()).add(Map.of("field", l, "label", Character.toUpperCase(word.charAt(0)) + word.substring(1)));
         }

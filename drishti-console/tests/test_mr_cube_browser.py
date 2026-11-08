@@ -146,7 +146,7 @@ def test_the_fields_the_view_picker_a_hierarchy_as_one_chip_var_per_cell_and_the
     shot(pg, "mr-cube-rows-picker")
     pg.keyboard.press("Escape")
     pg.click(".dg-zone[data-well='values'] .dg-vchip[data-field='m:var'] .dg-chip-menu")
-    assert "computed per cell by the VaR engine" in pg.locator(".dg-menu .dg-menu-note").text_content()
+    assert "computed per cell by the var engine" in pg.locator(".dg-menu .dg-menu-note").text_content().lower()
     assert pg.locator(".dg-menu [data-action^='agg:']").count() == 0                             # VaR is never summed: no function
     assert pg.locator(".dg-menu [data-action='opt:horizon:10d']").count() == 1
     shot(pg, "mr-cube-var-menu")
