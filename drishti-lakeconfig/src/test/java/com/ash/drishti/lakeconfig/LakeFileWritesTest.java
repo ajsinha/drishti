@@ -185,8 +185,8 @@ class LakeFileWritesTest {
     void theOfficialResultsReaderIsNotMovedIntoTheDemoLake() throws Exception {
         Path lakes = Files.createDirectories(tmp.resolve("lakes"));
         Path conns = Files.createDirectories(tmp.resolve("connectors"));
-        for (String n : List.of("demo.yaml", "var-official.yaml")) {
-            Files.copy(REPO.resolve("config/lakes").resolve(n), lakes.resolve(n));
+        for (String n : List.of("demo.yaml", "banking/var-official.yaml")) {         // the banking lakes in their module's folder
+            Files.copy(REPO.resolve("config/lakes").resolve(n), Files.createDirectories(lakes.resolve(n).getParent()).resolve(Path.of(n).getFileName()));
         }
         String results = "plugin: delta\nkinds:\n- var-official\nsettings:\n  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n"
                 + "  domain: risk-results\n";

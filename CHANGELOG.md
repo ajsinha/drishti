@@ -155,6 +155,8 @@
 - **A pack filled by a feed counts as served without the demo connector**: `PacksServedWithoutDemoTest` accepts a Delta connector
   reading the lake an enabled feed loads the kind into (the six public-sector packs, `worldlake` and `newslake`); PACK_DEVELOPER_GUIDE
   step 16 says so.
+- **A table's `highlight`**: a `table` panel accepts `highlight` (an expression per row, as a ladder has), which the GLEIF entity's
+  parents chain uses for the entity itself; Rachana refused it with DRS-2023 (`PackSutrasTest`; RACHANA_REFERENCE's table options).
 - Tests brought up to date: the demo lake's trades by `PRODUCT_TYPE` (Endur) and `PRODUCT_GROUP` (Calypso, Murex); the engines' and
   publishers' sources found in their domain modules; `css_visual_check.py` names the demo lake's variable through `lakeconfig`; importing
   `drishti-stack/stack.py` in a test leaves no `__pycache__` in the checkout.

@@ -667,14 +667,24 @@ public final class LakeFiles {
         if (names.isEmpty()) {
             return null;
         }
-        for (String lake : Lakes.SHIPPED) {
+        // every lake file in the folder (a module's lakes sit in its own subfolder, shipped by that module's jar), then the jar's own
+        java.util.Set<String> lakes = new java.util.LinkedHashSet<>();
+        for (Path f : Lakes.files(lakesDir)) {
+            lakes.add(f.getFileName().toString().replaceFirst("\\.yaml$", ""));
+        }
+        lakes.addAll(Lakes.SHIPPED);
+        for (String lake : lakes) {
             if (lake.equals("demo")) {
                 continue;
             }
             Path f = Lakes.file(lakesDir, lake);
             JsonNode root = null;
             if (Files.isRegularFile(f)) {
-                root = YAML.readTree(Files.readString(f));
+                try {
+                    root = YAML.readTree(Files.readString(f));
+                } catch (com.fasterxml.jackson.core.JacksonException e) {
+                    continue;                                       // not a lake file this can read: it owns nothing
+                }
             } else {
                 try (java.io.InputStream in = LakeFiles.class.getClassLoader().getResourceAsStream("drishti/lakes/" + lake + ".yaml")) {
                     root = in == null ? null : YAML.readTree(in);
