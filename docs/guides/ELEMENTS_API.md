@@ -14818,7 +14818,7 @@ Draws every server tree table under a scope (table.tbl-tree not yet drawn) as a 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `scope` | `ParentNode` | a view, a panel a live patch replaced, a shadow root |
-| `[options]` | `{memory: Object&lt;string, TreePanelState&gt;, scope: string, density: string, live: TreePanel[]}` | memory: the state by table (kept by the host across calls, so a live patch keeps the mode, the open rows and the filter); scope: a prefix of the keys (the page's address); live: the panels drawn before (those whose table left the page are destroyed) |
+| `[options]` | `{memory: Object&lt;string, TreePanelState&gt;, scope: string, density: string, live: TreePanel[], address: TreeAddress}` | memory: the state by table (kept by the host across calls, so a live patch keeps the mode, the open rows and the filter); scope: a prefix of the keys (the page's address); live: the panels drawn before (those whose table left the page are destroyed); address: the host's page address, which carries each panel's filter (a link or a reload shows the same rows) |
 
 Returns `TreePanel[]`: the panels drawn now and still in the page.
 
@@ -15170,6 +15170,15 @@ What a table tree keeps between two drawings of the same table (a live patch).
 | `[mode]` | `string` | 'grid' or 'org' |
 | `[q]` | `string` | the filter's words |
 | `[open]` | `string[]` | the ids of the open rows |
+
+#### `TreeAddress` : `Object`
+
+A host's page address for its table trees' filters (treeTables' options.address).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `read` | `function(string): ?string` | the filter's words in the address for a panel id (null: none) |
+| `write` | `function(string, string): void` | the panel's filter's words into the address ('' takes them out) |
 
 #### `TreeOptions` : `Object`
 

@@ -655,8 +655,20 @@ def test_tree_rows_are_drishti_tree_whose_filter_keeps_the_ancestors_and_survive
     push(page, backend, tree())
     page.wait_for_function("document.querySelector('#p-org .dt-tp-q') && document.querySelector('#p-org .dt-tp-q').value === 'book 1'", timeout=5000)
     assert tree_rows(page, 3) == ["Group", "Desk A", "Book 1"]
+    assert "tf.org=book+1" in page.evaluate("location.search")                            # the filter is in the address
     page.fill("#p-org .dt-tp-q", "")
     assert tree_rows(page, 7)[0] == "Group"
+    assert "tf.org" not in page.evaluate("location.search")
+
+
+def test_a_tree_filter_in_the_address_shows_the_same_rows(browser, url):
+    """A reload or a shared link with ?tf.<panel>=<words> draws the tree filtered (its box holding the words)."""
+    ctx = browser.new_context(viewport={"width": 1280, "height": 900}, bypass_csp=True)
+    pg = ctx.new_page()
+    pg.goto(url + VIEW + "?tf.org=book+2", wait_until="load")
+    assert tree_rows(pg, 3) == ["Group", "Desk A", "Book 2"]
+    assert pg.input_value("#p-org .dt-tp-q") == "book 2"
+    ctx.close()
 
 
 def test_a_pivot_has_column_filters_on_its_rows_and_values(page):

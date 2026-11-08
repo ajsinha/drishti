@@ -324,12 +324,20 @@ export class TreePanel {
 }
 
 /**
+ * A host's page address for its table trees' filters (treeTables' options.address).
+ * @typedef {Object} TreeAddress
+ * @property {function(string): ?string} read the filter's words in the address for a panel id (null: none)
+ * @property {function(string, string): void} write the panel's filter's words into the address ('' takes them out)
+ */
+
+/**
  * Draws every server tree table under a scope (table.tbl-tree not yet drawn) as a table tree: the panel goes before the table's
  * wrapper, which stays in the page hidden (print, no scripts). Panels whose table left the page are taken down on the next call.
  * @param {ParentNode} scope a view, a panel a live patch replaced, a shadow root
- * @param {{memory: Object<string, TreePanelState>, scope: string, density: string, live: TreePanel[]}} [options] memory: the state by
- *   table (kept by the host across calls, so a live patch keeps the mode, the open rows and the filter); scope: a prefix of the keys
- *   (the page's address); live: the panels drawn before (those whose table left the page are destroyed)
+ * @param {{memory: Object<string, TreePanelState>, scope: string, density: string, live: TreePanel[], address: TreeAddress}} [options]
+ *   memory: the state by table (kept by the host across calls, so a live patch keeps the mode, the open rows and the filter); scope: a
+ *   prefix of the keys (the page's address); live: the panels drawn before (those whose table left the page are destroyed); address:
+ *   the host's page address, which carries each panel's filter (a link or a reload shows the same rows)
  * @returns {TreePanel[]} the panels drawn now and still in the page
  */
 export function treeTables(scope, options) {
@@ -350,7 +358,7 @@ export function treeTables(scope, options) {
     const title = pnl ? clean((pnl.querySelector('h2, h3') || {}).textContent) : '';
     try {
       live.push(new TreePanel(host, { tree: tree, label: title || tree.headers[0], search: !t.hasAttribute('data-no-search'), density: o.density,
-        state: memory[key], onState: (s) => { memory[key] = s; } }));
+        state: memory[key] || seed(o.address, pid), onState: (s) => { memory[key] = s; if (o.address) { o.address.write(pid, s.q || ''); } } }));
     } catch (e) {
       host.remove();
       wrap.hidden = false;                                  // the server's table stays as drawn
@@ -358,4 +366,10 @@ export function treeTables(scope, options) {
     }
   });
   return live;
+}
+
+/** @private a panel's first state from the host's address (its filter's words), else none */
+function seed(address, pid) {
+  const q = address ? address.read(pid) : null;
+  return q ? { q: q } : undefined;
 }

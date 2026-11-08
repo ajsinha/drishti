@@ -34,14 +34,25 @@
   // ---- table rows with children: drishti-tree's table tree ---------------------------------------------------------
   var memory = {};                                         // each tree's mode, open rows and filter by table, so a live patch that replaces it keeps them
   var live = [];                                           // the trees drawn (those whose table left the page are taken down on the next scan)
+  // a tree's filter is in the console's address (?tf.<panel id>=<words>), so a reload or a shared link shows the same rows (not inside
+  // <drishti-view>: the host's address is not touched)
+  var ADDRESS = {
+    read: function (pid) { return new URLSearchParams(location.search).get('tf.' + pid); },
+    write: function (pid, q) {
+      var u = new URL(location.href), k = 'tf.' + pid;
+      if ((u.searchParams.get(k) || '') === q) { return; }
+      if (q) { u.searchParams.set(k, q); } else { u.searchParams.delete(k); }
+      history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+    }
+  };
   /** Draws the tree tables under node with drishti-tree (Drishti Elements: loaded on demand); without the library the server's table stays. */
-  function treeTables(node, scope) {
+  function treeTables(node, scope, root) {
     var E = window.Drishti && window.Drishti.elements;
     if (!E) { return; }
     var loader = E.load || (E.core && E.core.load);
     if (!E.tree && !loader) { return; }
     (E.tree ? Promise.resolve(E.tree) : loader('drishti-tree')).then(function (T) {
-      live = T.treeTables(node, { memory: memory, scope: scope, live: live });
+      live = T.treeTables(node, { memory: memory, scope: scope, live: live, address: root === document ? ADDRESS : null });
     }, function () { /* the server's table stays */ });
   }
 
@@ -144,7 +155,7 @@
     function scan(node) {
       if (!node.querySelectorAll) { return; }
       if (node.querySelector('table.tbl-tree:not([data-tree-ready])') || (node.matches && node.matches('table.tbl-tree:not([data-tree-ready])'))) {
-        treeTables(node, (options && options.scope) || location.pathname);
+        treeTables(node, (options && options.scope) || location.pathname, root);
       }
       var hosts = Array.prototype.slice.call(node.querySelectorAll('.pv-tree-host:not([data-tree-ready])'));
       if (node.matches && node.matches('.pv-tree-host:not([data-tree-ready])')) { hosts.push(node); }

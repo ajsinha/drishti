@@ -1384,7 +1384,7 @@
         const title = pnl ? clean((pnl.querySelector('h2, h3') || {}).textContent) : '';
         try {
           live.push(new TreePanel(host, { tree: tree, label: title || tree.headers[0], search: !t.hasAttribute('data-no-search'), density: o.density,
-            state: memory[key], onState: (s) => { memory[key] = s; } }));
+            state: memory[key] || seed(o.address, pid), onState: (s) => { memory[key] = s; if (o.address) { o.address.write(pid, s.q || ''); } } }));
         } catch (e) {
           host.remove();
           wrap.hidden = false;                                  // the server's table stays as drawn
@@ -1392,6 +1392,10 @@
         }
       });
       return live;
+    }
+    function seed(address, pid) {
+      const q = address ? address.read(pid) : null;
+      return q ? { q: q } : undefined;
     }
     return { "PANEL_MODES": PANEL_MODES, "readTableTree": readTableTree, "isChain": isChain, "TreePanel": TreePanel, "treeTables": treeTables };
   })();

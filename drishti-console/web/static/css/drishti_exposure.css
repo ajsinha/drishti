@@ -57,15 +57,12 @@
 .xx-link { background: none; border: 0; padding: 0; color: var(--d-link); cursor: pointer; font-size: inherit; text-decoration: underline; }
 
 /* the tree */
-.xx-tree { font-size: var(--d-fs-12); max-height: 760px; overflow: auto; }
-.xx-row { display: flex; gap: var(--d-sp-6); align-items: center; padding: var(--d-sp-4) var(--d-sp-8); border-bottom: 1px solid var(--d-border); cursor: pointer; white-space: nowrap; }
-.xx-row:hover { background: var(--d-highlight); }
-.xx-row[aria-current="true"] { background: var(--d-accent-tint); box-shadow: inset 2px 0 0 var(--d-accent); font-weight: 600; }
-.xx-row .lvl { font: var(--d-fs-9_5) var(--d-font-mono); color: var(--d-muted); min-width: 34px; }
-.xx-row .nm { overflow: hidden; text-overflow: ellipsis; }
-.xx-row .n { margin-left: auto; font: var(--d-fs-11_5) var(--d-font-mono); color: var(--d-muted); }
-.xx-row.nopaths { color: var(--d-faint); cursor: default; }
-.xx-row .tw { width: 12px; border: 0; padding: 0; background: none; color: var(--d-faint); font-size: var(--d-fs-10); cursor: pointer; }
+.xx-tree { font-size: var(--d-fs-12); max-height: 760px; overflow: auto; }   /* drishti-tree's tree grid (the screen's look below) */
+.xx-tree .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xx-tree .nm .lvl { font: var(--d-fs-9_5) var(--d-font-mono); color: var(--d-muted); margin-right: var(--d-sp-6); }
+.xx-tree .dg-row.xx-current > .dg-cell { background: var(--d-accent-tint); font-weight: 600; }
+.xx-tree .dg-row.xx-current > .dg-cell:first-child { box-shadow: inset 2px 0 0 var(--d-accent); }
+.xx-tree .dg-row.xx-nopaths > .dg-cell { color: var(--d-faint); cursor: default; }
 
 /* tiles, chart */
 .xx-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--d-sp-8); margin-bottom: var(--d-sp-10); }

@@ -30,7 +30,7 @@
   var $ = function (sel) { return root.querySelector(sel); };
   var params = new URLSearchParams(location.search);
   var S = { scope: root.dataset.scope || "BANK", q: Number(params.get("q")) || 0.95, collateral: params.get("collateral") || "lagged",
-            asOf: params.get("asOf") || "", tab: null, tree: null, head: null, seq: 0, back: [], via: {}, expanded: {}, page: 0, board: 25,
+            asOf: params.get("asOf") || "", tab: null, tree: null, head: null, seq: 0, back: [], via: {}, page: 0, board: 25,
             user: root.dataset.user || "" };
   var cache = new Map();
   var retired = params.get("from") || "";
@@ -165,8 +165,7 @@
       noticeRetired(d);
       renderHead(d);
       renderTabs();
-      Object.keys(openPath()).forEach(function (k) { delete S.expanded[k]; });   // the way to the new scope opens again
-      if (S.tree) renderTree();
+      if (S.tree) showPath();                                                 // the way to the new scope opens again
       var ms = Math.round(performance.now() - t0);
       root.dataset.painted = scope;
       root.dataset.paintMs = String(ms);
@@ -182,7 +181,7 @@
         errorBox($("[data-xx-tiles]"), e);
       }
       root.dataset.painted = scope;
-      treeReady().then(function () { if (seq !== S.seq) return; renderCrumb(null); Object.keys(openPath()).forEach(function (k) { delete S.expanded[k]; }); renderTree(); });
+      treeReady().then(function () { if (seq !== S.seq) return; renderCrumb(null); showPath(); });
     });
   }
 
@@ -589,7 +588,7 @@
         pg.appendChild(b);
       });
       pane.appendChild(pg);
-      if (S.tree) renderTree();
+      if (S.tree) markTree();
     });
   }
 
@@ -830,87 +829,103 @@
     }).catch(function (e) { S.treeLoading = false; errorBox($("[data-xx-tree]"), e, loadTree); treeWaiters.splice(0).forEach(function (f) { f(null); }); });
   }
 
-  /** The keys of the rows open along the current scope: the bank, its legal entity, its counterparty, its netting set. */
+  /** The ids of the tree's nodes along the current scope: the bank, its legal entity, its counterparty, its netting set (a node's id is
+      the path of scopes from the legal entity down, "|" between, so a counterparty under two legal entities is two nodes). */
   function openPath() {
-    var keys = { BANK: true }, p = path(S.head);
+    var keys = ["BANK"], p = path(S.head);
     var le = null, cp = null;
     p.concat([{ scope: S.scope, kind: S.head ? S.head.kind : "" }]).forEach(function (x) {
-      if (/^LE:/.test(x.scope)) { le = x.scope; keys[le] = true; }
-      if (/^CPTY:/.test(x.scope)) { cp = x.scope; keys[(le || "") + "|" + cp] = true; }
-      if (/^NSET:/.test(x.scope)) keys[(le || "") + "|" + (cp || "") + "|" + x.scope] = true;
+      if (/^LE:/.test(x.scope)) { le = x.scope; keys.push(le); }
+      if (/^CPTY:/.test(x.scope)) { cp = x.scope; keys.push((le || "") + "|" + cp); }
+      if (/^NSET:/.test(x.scope)) keys.push((le || "") + "|" + (cp || "") + "|" + x.scope);
     });
     return keys;
   }
 
-  function treeRow(t, depth, lvl, label, scope, value, opts) {
-    opts = opts || {};
-    var row = h("div", "xx-row" + (opts.noPaths ? " nopaths" : ""));
-    row.setAttribute("role", "treeitem");
-    row.tabIndex = 0;
-    row.dataset.scope = scope;
-    row.style.paddingLeft = (6 + depth * 12) + "px";
-    row.title = words(scope);
-    if (opts.key) {
-      var tw = h("button", "tw", opts.open ? "▾" : "▸");
-      tw.type = "button";
-      tw.tabIndex = -1;
-      tw.setAttribute("aria-label", opts.open ? "Collapse" : "Expand");
-      row.setAttribute("aria-expanded", opts.open ? "true" : "false");
-      tw.addEventListener("click", function (ev) { ev.stopPropagation(); S.expanded[opts.key] = !opts.open; renderTree(); });
-      row.appendChild(tw);
-    } else row.appendChild(h("span", "tw", "·"));
-    row.appendChild(h("span", "lvl", lvl));
-    row.appendChild(h("span", "nm", label));
-    row.appendChild(h("span", "n", opts.noPaths ? "no paths" : value === null || value === undefined ? "" : m(value)));
-    row.addEventListener("click", function () { select(scope, { via: opts.via }); });
-    row.addEventListener("keydown", function (ev) { if (ev.key === "Enter") select(scope, { via: opts.via }); });
-    t.appendChild(row);
+  // The tree is drishti-tree (its tree grid, chrome off, inside this panel): the bank, its legal entities, their counterparties, their
+  // netting sets and a set's trades (asked the first time its row opens: the 30 largest by EE contribution, the open trade wherever it
+  // ranks, the rest in the Trades tab). Peak PFE is not additive: every figure is the server's for that node, never a sum of its children.
+  function treeRows() {
+    var d = S.tree, cps = counterparties(), rows = [];
+    function row(id, parent, lvl, label, scope, value, more) {
+      rows.push(Object.assign({ ID: id, PARENT: parent, LABEL: label, LEVEL: lvl, scope: scope, PFE: value === undefined ? null : value }, more || {}));
+    }
+    row("BANK", null, "BANK", "Bank", "BANK", (d.bankNode || {}).peakPfe);
+    (d.legalEntities || []).forEach(function (le) {
+      row(le.scope, "BANK", "LE", le.label, le.scope, le.peakPfe);
+      cps.filter(function (cp) { return (cp.legalEntities || []).indexOf(le.id) >= 0; })
+        .sort(function (a, b) { return (b.peakPfe || -1) - (a.peakPfe || -1); }).forEach(function (cp) {
+          var k = le.scope + "|" + cp.scope;
+          row(k, le.scope, "CPTY", cp.label, cp.scope, cp.peakPfe, { noPaths: !!cp.noPaths, via: le.scope });
+          (cp.children || []).filter(function (st) { return st.legalEntity === le.id; }).forEach(function (st) {
+            row(k + "|" + st.scope, k, "NSET", st.id, st.scope, st.peakPfe, { noPaths: !!st.noPaths, lazy: !st.noPaths });
+          });
+        });
+    });
+    return rows;
+  }
+
+  /** drishti-tree's loadChildren: a netting set's trades. */
+  function loadTrades(req) {
+    return setTrades(req.data.scope).then(function (c) {
+      var rows = c.rows || [], top = rows.slice(0, 30);
+      rows.slice(30).forEach(function (r) { if ("TRD:" + r.key === S.scope) top.push(r); });          // the open trade, wherever it ranks
+      var out = top.map(function (r) { return { ID: req.id + "|TRD:" + r.key, PARENT: req.id, LABEL: r.key, LEVEL: "TRD", scope: "TRD:" + r.key, PFE: r.peakPfeAlone }; });
+      if (rows.length > 30) out.push({ ID: req.id + "|more", PARENT: req.id, LABEL: "… " + (rows.length - 30) + " more in the Trades tab", LEVEL: "", scope: null, PFE: null });
+      setTimeout(markTree, 0);                                                  // the open trade's row marked once it is in
+      return out;
+    }, function () { throw new Error("trades: not for your role"); });
+  }
+
+  /** The node's cell: its level and its name. */
+  function nodeCell(c) {
+    var r = c.row, s = h("span", "nm");
+    if (r.LEVEL) s.appendChild(h("span", "lvl", r.LEVEL));
+    s.appendChild(document.createTextNode(r.LABEL));
+    s.title = r.scope ? words(r.scope) : "";
+    return s;
   }
 
   function renderTree() {
     var t = $("[data-xx-tree]"), d = S.tree;
     if (!d) return;
     if (!d.t && S.head && S.head.profile) d.t = S.head.profile.map(function (r) { return r.t; });
+    var data = { rows: treeRows(), idField: "ID", parentField: "PARENT", labelField: "LABEL", kindField: "LEVEL",
+      measures: [{ field: "PFE", label: "Peak PFE", format: m, additive: false, column: { width: 84, format: function (v, r) { return r && r.noPaths ? "no paths" : v === null || v === undefined ? "" : m(v); } } }] };
+    var el = t.querySelector(":scope > drishti-tree");
+    if (el && el.tree) { el.tree.setData(data); showPath(); return; }
     t.textContent = "";
-    var open = openPath(), cps = counterparties();
-    var isOpen = function (k) { return S.expanded[k] === undefined ? !!open[k] : S.expanded[k]; };
-    treeRow(t, 0, "BANK", "Bank", "BANK", (d.bankNode || {}).peakPfe, {});
-    (d.legalEntities || []).forEach(function (le) {
-      var leOpen = isOpen(le.scope);
-      treeRow(t, 1, "LE", le.label, le.scope, le.peakPfe, { key: le.scope, open: leOpen });
-      if (!leOpen) return;
-      cps.filter(function (cp) { return (cp.legalEntities || []).indexOf(le.id) >= 0; })
-        .sort(function (a, b) { return (b.peakPfe || -1) - (a.peakPfe || -1); }).forEach(function (cp) {
-          var k = le.scope + "|" + cp.scope, cpOpen = isOpen(k);
-          treeRow(t, 2, "CPTY", cp.label, cp.scope, cp.peakPfe, { key: k, open: cpOpen, noPaths: cp.noPaths, via: le.scope });
-          if (!cpOpen) return;
-          (cp.children || []).filter(function (s) { return s.legalEntity === le.id; }).forEach(function (s) {
-            var sk = k + "|" + s.scope, sOpen = !s.noPaths && isOpen(sk);
-            treeRow(t, 3, "NSET", s.id, s.scope, s.peakPfe, { key: s.noPaths ? null : sk, open: sOpen, noPaths: s.noPaths });
-            if (sOpen) treeTrades(t, s.scope);
-          });
-        });
+    el = document.createElement("drishti-tree");
+    t.appendChild(el);
+    el.options = { data: data, title: "Scope", label: "Scopes", chrome: false, mode: "grid", density: "terminal", gridLayout: "terminal", openDepth: 1,
+      lazyText: "trades…", loadChildren: loadTrades,
+      grid: { phoneWidth: 1, labelColumn: { header: "Scope", width: 200, cellRenderer: nodeCell },
+        rowClass: function (r) { return (r.noPaths ? "xx-nopaths" : "") + (r.scope && r.scope === S.scope ? " xx-current" : "") || null; },
+        rowData: function (r) { return { scope: r.scope || null, current: r.scope ? String(r.scope === S.scope) : null }; } } };
+    el.tree.on("selectionChanged", function (e) {                    // a click on a row: that scope (a set without paths has no answer)
+      var n = e.ids.length ? el.tree.model.node(e.ids[0]) : null;
+      if (n && n.data.scope && !n.data.noPaths) select(n.data.scope, { via: n.data.via });
     });
+    showPath();
+  }
+
+  /** The way to the current scope opened, its row marked. */
+  function showPath() {
+    var el = $("[data-xx-tree] > drishti-tree"), tree = el && el.tree;
+    if (!tree) return;
+    openPath().forEach(function (id) { if (tree.model.node(id) && !tree.model.isOpen(id)) tree.toggle(id, true); });
     markTree();
   }
 
-  /** The open netting set's trades below its row (from its contributions, largest EE contribution first; the rest in the Trades tab). */
-  function treeTrades(t, set) {
-    var key = "/api/exposure/scope?" + query({ scope: set });
-    var holder = h("div");
-    t.appendChild(holder);
-    setTrades(set).then(function (c) {
-      var rows = c.rows || [], top = rows.slice(0, 30);
-      rows.slice(30).forEach(function (r) { if ("TRD:" + r.key === S.scope) top.push(r); });          // the open trade, wherever it ranks
-      top.forEach(function (r) { treeRow(holder, 4, "TRD", r.key, "TRD:" + r.key, r.peakPfeAlone, {}); });
-      if (rows.length > 30) holder.appendChild(h("div", "xx-row muted", "… " + (rows.length - 30) + " more in the Trades tab"));
-      markTree();
-    }).catch(function () { holder.appendChild(h("div", "xx-row muted", "trades: not for your role")); });
-    void key;
-  }
-
   function markTree() {
-    root.querySelectorAll(".xx-row[data-scope]").forEach(function (r) { r.setAttribute("aria-current", r.dataset.scope === S.scope ? "true" : "false"); });
+    var el = $("[data-xx-tree] > drishti-tree"), tree = el && el.tree;
+    if (!tree) return;
+    var ids = openPath(), at = null;
+    tree.model.all().forEach(function (n) {                                     // the scope's node on the open path (else the first)
+      if (n.data.scope !== S.scope) return;
+      if (!at || ids.indexOf(n.data.PARENT) >= 0 || ids.indexOf(n.id) >= 0) at = n;
+    });
+    tree.select(at ? at.id : null, { quiet: true });
   }
 
   // ---------------------------------------------------------------------------------------------------------------- switches, back, start

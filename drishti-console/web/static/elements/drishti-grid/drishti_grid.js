@@ -3748,6 +3748,7 @@
   __m["src/drishti_grid-body.js"] = (function () {
     var h = __lib("drishti-core").h;
     var GridPointer = __m["src/drishti_grid-pointer.js"].GridPointer;
+    var DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES;
     var getValue = __m["src/drishti_columns.js"].getValue, formatValue = __m["src/drishti_columns.js"].formatValue;
     var headerSpans = __m["src/drishti_grid-ui.js"].headerSpans, pivotColumnLabels = __m["src/drishti_grid-ui.js"].pivotColumnLabels, markGroups = __m["src/drishti_grid-ui.js"].markGroups, isTotalCell = __m["src/drishti_grid-ui.js"].isTotalCell, nonAdditiveNote = __m["src/drishti_grid-ui.js"].nonAdditiveNote, cfBackground = __m["src/drishti_grid-ui.js"].cfBackground, figureRange = __m["src/drishti_grid-ui.js"].figureRange, ruleFor = __m["src/drishti_grid-ui.js"].ruleFor, cellLook = __m["src/drishti_grid-ui.js"].cellLook;
     const CF_SCAN = 100000;
@@ -3837,6 +3838,9 @@
         const m = this.model, v = this.view, vp = m.viewport, doc = this.doc;
         const disp = v.displayColumns();
         const win = doc.defaultView, touch = !!(win && win.matchMedia && win.matchMedia('(pointer: coarse)').matches);
+        const twisty = (touch || this.view.host.hasAttribute('data-phone')) && !!(m.pivotMode || m.rowModel.treeData || (m.rowModel.groupBy && m.rowModel.groupBy.length));
+        const want = twisty ? Math.max(44, DENSITIES[m.density] || 28) : DENSITIES[m.density] || vp.rowHeight;
+        if (vp.rowHeight !== want) { vp.rowHeight = want; }
         const rh = vp.rowHeight, hrh = touch ? Math.max(44, rh + 4) : rh + 4;   // a heading is a target a finger can hit on a touch screen (44 px)
         const sp = this.paneSpans(disp);
         const pinned = v.o.pinnedTopRows || [];
