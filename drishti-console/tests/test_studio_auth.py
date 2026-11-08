@@ -13,6 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Sutra Studio pages and the sign-in flow."""
+import html
 import sys
 from pathlib import Path
 
@@ -109,7 +110,8 @@ def test_the_sign_in_form_sends_a_signed_in_visitor_on_and_is_never_cached(backe
 def test_admin_pages_and_actions(client, backend):
     page = client.get("/admin/users")
     assert page.status_code == 200 and "drishti-dev-admin" in page.text and "default password" in page.text
-    assert 'name="mustChangePassword">' in page.text  # not pre-ticked unless configured
+    form = html.unescape(page.text)                   # the user form is drishti-inputs' Form from the server's schema (core/admin_forms.py)
+    assert '"name":"mustChangePassword"' in form and '"mustChangePassword":false' in form  # offered, not pre-ticked unless configured
     assert "user-seeded" in client.get("/admin/audit").text
     created = client.post("/admin/api/users", json={"username": "tina", "roles": ["trader"], "password": "trader-pass-1"})
     assert created.status_code == 201
