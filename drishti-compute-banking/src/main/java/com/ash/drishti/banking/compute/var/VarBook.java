@@ -1156,10 +1156,7 @@ public final class VarBook {
             return this;
         }
 
-        /**
-         * The hierarchies, built from the trades' promoted columns ({@link HierarchySpec}): their nodes are derived when the date is built,
-         * with the VaR limits of {@code limits} (node id to USD; a node without one has none). Sets the cell columns too.
-         */
+        /** The hierarchies from the trades' promoted columns, nodes derived at build with {@code limits} (node id to USD); sets the cell columns. */
         public Builder columnHierarchies(List<HierarchySpec> specs, Map<String, Double> limits) {
             return columnHierarchies(specs, limits, Cells.Names.NONE);
         }

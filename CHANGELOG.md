@@ -100,6 +100,9 @@
 - **Drishti Elements:** drishti-grid's WellsModel (hierarchies, functions per field, arguments, formulas, show-as), the compact line, the
   panes and the View picker; drishti-inputs' FieldPicker; drishti-core's `columnScale` and `formatScaled`. Docs: PIVOT_GUIDE sections 2, 4,
   11 and 29, tutorial 7 (a new step 21 with new pictures), REPORTS_GUIDE 8.2, RACHANA_REFERENCE (`mode`), USER_GUIDE, Help.
+- **The source names its measures:** the VaR source's catalogue carries the measures' group and their per-cell notes (`notes.measureGroup`,
+  `perCellNote`, `perCellSumNote`, `addsUp`), so the pivot screen names no engine itself. Tutorial 7's step 21 pictures and VAR_GUIDE
+  15.14's (Blank) and hierarchy-warning pictures are made by their screenshot scripts (t38, varskip).
 
 ### Docs
 

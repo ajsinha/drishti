@@ -38,7 +38,8 @@ def before(c: Ctx, _name: str) -> None:
 
 
 def _grid(c: Ctx) -> None:
-    c.until("document.querySelectorAll('[data-pv-grid] td.pv-c').length > 0", 300)
+    c.until("document.querySelectorAll('[data-pv-grid] .dg-cell[data-cell]').length > 0", 300)
+    c.until("!!document.querySelector('[data-mr-tiles] .mr-tile .mr-tv')", 120)
     c.page.wait_for_timeout(1500)
 
 
@@ -77,8 +78,8 @@ def diversification(c: Ctx):
 @shot("03-cell-provenance.jpg")
 def cell(c: Ctx):
     _cube(c)
-    c.page.evaluate("""() => { const tr = Array.from(document.querySelectorAll('[data-pv-grid] tr')).find(r => /DESK-RATES/.test(r.textContent));
-        const cells = Array.from(tr.querySelectorAll('td.pv-c')).filter(td => td.textContent.trim()); cells[0].click(); }""")
+    c.page.evaluate("""() => { const cells = Array.from(document.querySelectorAll('[data-pv-grid] .dg-cell[data-cell]')).filter(e => e.textContent.trim());
+        (cells.find(e => /DESK-RATES/.test(e.getAttribute('data-cell'))) || cells[0]).click(); }""")
     c.page.wait_for_timeout(3500)
     page_shot(c, "03-cell-provenance.jpg", _union(c, "[data-pv-grid]", "[data-pv-pop]", "[data-mr-tail]", "[data-mr-explain]"))
 
