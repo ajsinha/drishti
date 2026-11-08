@@ -21,11 +21,11 @@ the SEC and Nasdaq Trader ticker files and GLEIF's level-2 relationship records.
     python3 tools/drishti.py feed run funds --snapshot --offline              rebuild the pack from the downloads only
     python3 tools/drishti.py feed run funds --snapshot -- ncen rr --since 2025  more quarters of the census and the prospectus summaries
     python3 tools/drishti.py feed run funds --snapshot -- --scope FUNDS:300,HOLDINGS:1000
-                                                                            a widened build in <data>/feeds/sources/funds
+                                                                            a widened build in <data>/datafeeds/sources/funds
 
 Every source is openly licensed (SEC: U.S. public domain; GLEIF: CC0 1.0; the Nasdaq Trader directory is a public file) and the
 built pack is committed. The downloads are large (an N-PORT quarter is about 450 MB, the four quarters of risk/return summaries about
-200 MB) and stay in the download cache, <data>/feeds/sources/cache/funds, never in git; a file younger than --max-age hours (default a
+200 MB) and stay in the download cache, <data>/datafeeds/sources/cache/funds, never in git; a file younger than --max-age hours (default a
 week) is reused. SEC asks for a descriptive User-Agent with a contact and under 10 requests a second: the script uses exactly the
 setting of the us-equities pack (tools/packgen/us_equities/fetch.py USER_AGENT, DRISHTI_FEEDS_USER_AGENT) and one request at a time.
 
@@ -250,7 +250,7 @@ class Gleif(B.Source):
 
     def fetch(self, run):
         dest = run.cache.folder / "gleif" / "rr.csv.zip"
-        shared = B.data_dir() / "feeds" / "sources" / "cache" / "gleif" / "golden" / "rr.csv.zip"
+        shared = B.data_dir() / "datafeeds" / "sources" / "cache" / "gleif" / "golden" / "rr.csv.zip"
         if shared.is_file() and (run.a.offline or time.time() - shared.stat().st_mtime < run.a.max_age * 3600) and not dest.is_file():
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(shared, dest)
@@ -299,7 +299,7 @@ def refresh(a, log=print, opener=None) -> int:
     scope = _scope([x.strip() for x in (a.scope or "").split(",") if x.strip()])
     widened = bool(scope) and scope != {"FUNDS": 200, "HOLDINGS": 600}
     if (widened and not a.into_pack) or a.out:                  # a widened build, or any build given --out (a feed run's folder)
-        out = Path(a.out).expanduser().resolve() if a.out else B.data_dir() / "feeds" / "sources" / PACK
+        out = Path(a.out).expanduser().resolve() if a.out else B.data_dir() / "datafeeds" / "sources" / PACK
         if B.is_committed(out):
             raise B.Refusal(f"refused: a build with --out or --scope goes to the data folder, not {out}; leave out --out for the committed "
                             "pack, or pass --into-pack to write a widened build over it on purpose")
@@ -363,8 +363,8 @@ def main(argv: list[str] | None = None) -> int:
             n = sum(1 for p in parts for _ in p.lines())
             first = json.loads(next(parts[0].lines())) if parts else {}
             print(f"committed pack: {n} funds in {len(parts)} parts, data retrieved {first.get('PROVENANCE', {}).get('RETRIEVED_AT', '-')}")
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
-                            "data/testdata/funds and config/packs/funds; a widened build <data>/feeds/sources/funds")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "datafeeds" / "sources" / "cache" / PACK,
+                            "data/testdata/funds and config/packs/funds; a widened build <data>/datafeeds/sources/funds")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)

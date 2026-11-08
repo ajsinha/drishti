@@ -109,7 +109,7 @@ def test_offline_build_from_the_recorded_cache(tmp_path, cache, data_dir):
     first = built(pack)
     assert UE.refresh(ns(cache, offline=True, out=str(out)), log=lambda *_: None) == 0
     assert first == built(pack)          # deterministic
-    man = json.loads((data_dir / "feeds" / "sources" / "us-equities" / "manifest.json").read_text())
+    man = json.loads((data_dir / "datafeeds" / "sources" / "us-equities" / "manifest.json").read_text())
     assert set(man["sources"]) == {"wikidata", "trackers", "nasdaq", "sec", "gleif"} and man["runs"][-1]["ok"]
     assert (out / "manifest.json").is_file()
 
@@ -118,7 +118,7 @@ def test_scope_widens_into_the_data_folder(cache, data_dir):
     calls, logs = [], []
     a = ns(cache, scope="GME,FILINGS:1,CONCEPT:CASH=CashAndCashEquivalentsAtCarryingValue@USD@instant")
     assert UE.refresh(a, log=logs.append, opener=sec_opener(calls)) == 0
-    pack = data_dir / "feeds" / "sources" / "us-equities" / "packs" / "us-equities"
+    pack = data_dir / "datafeeds" / "sources" / "us-equities" / "packs" / "us-equities"
     cos = {d["TICKER"]: d for d in snap(pack, "us-company")}
     assert set(cos) == {"AAPL", "MSFT", "GME"}
     assert all(len(d["FILINGS"]) == 1 for d in cos.values())
@@ -172,7 +172,7 @@ def test_prices_are_internal_only(cache, data_dir):
     a = ns(cache, sources=["prices"], scope="AAPL,MSFT", server="http://x")
     assert UE.refresh(a, log=lambda *_: None, price_getter=getter) == 0
     assert got == [("price-history", "PX-AAPL"), ("price-history", "PX-MSFT")]
-    f = next((data_dir / "feeds" / "sources" / "us-equities" / "prices" / "price-history").glob("price-history.*.jsonl.gz"))
+    f = next((data_dir / "datafeeds" / "sources" / "us-equities" / "prices" / "price-history").glob("price-history.*.jsonl.gz"))
     with gzip.open(f, "rt") as fh:
         docs = [json.loads(x) for x in fh]
     assert [d["PRICE_ID"] for d in docs] == ["PX-AAPL", "PX-MSFT"] and all(d["SNAPSHOT"] for d in docs)

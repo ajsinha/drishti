@@ -794,7 +794,7 @@ Settings (environment variables) its connectors read: `DRISHTI_FEED_ECB_ESTR`, `
 
 ## Refreshing the data
 
-The data feed `market-data` (config/feeds/market-data.yaml) pulls `fx-spot`, `ir-curve`, `rate-fixing`: `python3 tools/drishti.py feed run market-data` fetches them daily into `data/feeds/market-data/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `market-data` (config/feeds/market-data.yaml) pulls `fx-spot`, `ir-curve`, `rate-fixing`: `python3 tools/drishti.py feed run market-data` fetches them daily into `data/datafeeds/market-data/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--check` fails when the committed files differ from what it would write.
 

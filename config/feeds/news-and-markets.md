@@ -25,7 +25,7 @@ Quotes and daily price history of the listed companies the news-and-markets pack
 
 ```bash
 python3 tools/drishti.py feed run news-and-markets --dry-run      # what it would fetch and load; changes nothing
-python3 tools/drishti.py feed run news-and-markets                # pull today, write data/feeds/news-and-markets/<date>/, load into newslake
+python3 tools/drishti.py feed run news-and-markets                # pull today, write data/datafeeds/news-and-markets/<date>/, load into newslake
 python3 tools/drishti.py feed status news-and-markets             # its last runs
 python3 tools/drishti.py feed run news-and-markets --snapshot     # refresh the committed demo snapshot instead (with --internal-ok)
 ```
@@ -36,7 +36,7 @@ Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windo
 
 ### quote
 
-Pack `news-and-markets`, kind `quote` (Quote and price history), table `quote`, key `QUOTE_ID`; files `data/feeds/news-and-markets/<date>/quote.<date>.jsonl.gz`, each row under the run's business date.
+Pack `news-and-markets`, kind `quote` (Quote and price history), table `quote`, key `QUOTE_ID`; files `data/datafeeds/news-and-markets/<date>/quote.<date>.jsonl.gz`, each row under the run's business date.
 
 A listed company's quote and daily history.
 
@@ -79,7 +79,7 @@ The contract: `config/packs/news-and-markets/contracts/quote.contract.yaml` ([ne
 
 ### news
 
-Pack `news-and-markets`, kind `news` (Headlines), table `news`, key `NEWS_ID`; files `data/feeds/news-and-markets/<date>/news.<date>.jsonl.gz`, each row under the run's business date.
+Pack `news-and-markets`, kind `news` (Headlines), table `news`, key `NEWS_ID`; files `data/datafeeds/news-and-markets/<date>/news.<date>.jsonl.gz`, each row under the run's business date.
 
 The headlines of a company or topic.
 

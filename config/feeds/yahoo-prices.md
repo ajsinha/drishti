@@ -25,7 +25,7 @@ The daily price history of every us-equities company, read through Drishti's own
 
 ```bash
 python3 tools/drishti.py feed run yahoo-prices --dry-run      # what it would fetch and load; changes nothing
-python3 tools/drishti.py feed run yahoo-prices                # pull today, write data/feeds/yahoo-prices/<date>/, load into capitalmarket
+python3 tools/drishti.py feed run yahoo-prices                # pull today, write data/datafeeds/yahoo-prices/<date>/, load into capitalmarket
 python3 tools/drishti.py feed status yahoo-prices             # its last runs
 ```
 
@@ -35,7 +35,7 @@ Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windo
 
 ### price-history
 
-Pack `us-equities`, kind `price-history` (Price history (live, internal use only)), table `price-history`; files `data/feeds/yahoo-prices/<date>/price-history.<date>.jsonl.gz`, each row under the run's business date.
+Pack `us-equities`, kind `price-history` (Price history (live, internal use only)), table `price-history`; files `data/datafeeds/yahoo-prices/<date>/price-history.<date>.jsonl.gz`, each row under the run's business date.
 
 A company's daily prices.
 

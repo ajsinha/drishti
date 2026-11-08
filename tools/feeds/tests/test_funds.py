@@ -85,12 +85,12 @@ def test_the_build_chooses_by_net_assets_and_links_holdings_to_companies(cache):
 def test_an_offline_widened_refresh_writes_a_pack_in_the_data_folder(cache, data_dir, capsys):
     rc = FU.refresh(ns(cache, scope="FUNDS:2,HOLDINGS:20"))
     assert rc == 0, capsys.readouterr().out
-    folder = data_dir / "feeds" / "sources" / "funds" / "testdata" / "funds" / "fund"
+    folder = data_dir / "datafeeds" / "sources" / "funds" / "testdata" / "funds" / "fund"
     assert folder.is_dir() and any(folder.iterdir()), "the widened build's snapshot"
     docs = [json.loads(x) for _d, x in FF.lines(folder)]                 # fund.<date>.jsonl.gz, or a tar of its parts
     assert [d["TICKER"] for d in docs] == ["VOO", "QQQ"] and all(len(d["HOLDINGS"]) <= 20 for d in docs)
-    assert (data_dir / "feeds" / "sources" / "funds" / "packs" / "funds" / "pack.yaml").is_file()
-    man = json.loads((data_dir / "feeds" / "sources" / "funds" / "manifest.json").read_text(encoding="utf-8"))
+    assert (data_dir / "datafeeds" / "sources" / "funds" / "packs" / "funds" / "pack.yaml").is_file()
+    man = json.loads((data_dir / "datafeeds" / "sources" / "funds" / "manifest.json").read_text(encoding="utf-8"))
     assert set(man["sources"]) == {s.name for s in FU.SOURCES} and man["runs"][-1]["ok"] is True
 
 
@@ -98,7 +98,7 @@ def test_the_dry_run_names_the_quarters_and_writes_nothing(cache, data_dir, caps
     assert FU.refresh(ns(cache, dry_run=True, offline=False)) == 0
     out = capsys.readouterr().out
     assert "form-n-port-data-sets" in out and "form-n-cen-data-sets" in out and "return-summary-data-sets" in out
-    assert not (data_dir / "feeds" / "sources" / "funds").exists()
+    assert not (data_dir / "datafeeds" / "sources" / "funds").exists()
 
 
 def test_refusals(cache):

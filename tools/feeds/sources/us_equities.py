@@ -20,7 +20,7 @@ read from the funds pack's cache: refresh funds first), the Nasdaq Trader symbol
     python3 tools/drishti.py feed run us-equities --snapshot                  the committed pack (config/packs/us-equities)
     python3 tools/drishti.py feed run us-equities --snapshot --offline -- sec gleif  rebuild the pack from the cache only
     python3 tools/drishti.py feed run us-equities --snapshot -- --scope TSLA,CIK:1318605,FILINGS:40,YEARS:15
-                                                                            a widened build in <data>/feeds/sources/us-equities
+                                                                            a widened build in <data>/datafeeds/sources/us-equities
     python3 tools/drishti.py feed run us-equities --snapshot -- prices --server URL  internal only: a price snapshot in the data folder
 
 It wraps tools/packgen/us_equities/fetch.py (the network) and make.py (the build), so a refresh of the committed pack writes
@@ -413,7 +413,7 @@ def _scope_companies(run: B.Run, scope: Scope, widened: bool) -> None:
 
 def resolve_out(a, widened: bool, prices_only: bool) -> tuple[Path, bool]:
     """(the output folder, True when it is the committed pack)."""
-    default = B.data_dir() / "feeds" / "sources" / PACK
+    default = B.data_dir() / "datafeeds" / "sources" / PACK
     if a.out:
         out = Path(a.out).expanduser().resolve()
         if B.is_committed(out) and not prices_only and out != COMMITTED.resolve():
@@ -442,7 +442,7 @@ def refresh(a, log=print, opener=None, price_getter=None) -> int:
     if not companies_on:
         prices_out = out if a.out else out / "prices"
     else:
-        prices_out = (out / "prices") if not committed else B.data_dir() / "feeds" / "sources" / PACK / "prices"
+        prices_out = (out / "prices") if not committed else B.data_dir() / "datafeeds" / "sources" / PACK / "prices"
     if prices_on:
         B.guard_out([SOURCES[-1]], prices_out, a.internal_ok)
     run = B.Run(PACK, a, out, log)
@@ -584,9 +584,9 @@ def main(argv: list[str] | None = None) -> int:
         if a.command == "status":
             cos = _companies(COMMITTED)
             print(f"committed pack: {len(cos)} companies, data retrieved {cos[0].get('PROVENANCE', {}).get('RETRIEVED_AT', '?') if cos else '-'}")
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
-                            "config/packs/us-equities; a widened build <data>/feeds/sources/us-equities/packs/us-equities; prices "
-                            "<data>/feeds/sources/us-equities/prices")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "datafeeds" / "sources" / "cache" / PACK,
+                            "config/packs/us-equities; a widened build <data>/datafeeds/sources/us-equities/packs/us-equities; prices "
+                            "<data>/datafeeds/sources/us-equities/prices")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)

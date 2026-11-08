@@ -610,7 +610,7 @@ tools/feeds/feed.sh run funds --dry-run                     # the quarters and f
 tools/feeds/feed.sh run funds --snapshot                               # download (about 700 MB the first time), build, check
 tools/feeds/feed.sh run funds --snapshot --offline                     # rebuild from the downloads only
 tools/feeds/feed.sh run funds --snapshot ncen rr --since 2025          # every census and summary quarter since 2025
-tools/feeds/feed.sh run funds --snapshot --scope FUNDS:300,HOLDINGS:1000   # a wider build in <data>/feeds/sources/funds
+tools/feeds/feed.sh run funds --snapshot --scope FUNDS:300,HOLDINGS:1000   # a wider build in <data>/datafeeds/sources/funds
 python3 tools/drishti.py lake demo                              # then rebuild the lake
 ```
 
@@ -640,10 +640,10 @@ The dry run names every request and writes nothing:
 ```text
 $ tools/feeds/feed.sh run funds --dry-run
 dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
-  tickers (Public domain (U.S. Government work); SEC fair access policy; committable): 2 request(s), cache <data>/feeds/sources/cache/funds
+  tickers (Public domain (U.S. Government work); SEC fair access policy; committable): 2 request(s), cache <data>/datafeeds/sources/cache/funds
     https://www.sec.gov/files/company_tickers_mf.json
     https://www.sec.gov/files/company_tickers_exchange.json
-  nport (Public domain (U.S. Government work); SEC fair access policy; committable): 3 request(s), cache <data>/feeds/sources/cache/funds
+  nport (Public domain (U.S. Government work); SEC fair access policy; committable): 3 request(s), cache <data>/datafeeds/sources/cache/funds
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q3_nport.zip
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q2_nport.zip
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q1_nport.zip
@@ -652,9 +652,9 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
 ```
 
 A quarterly source tries the newest quarters first and takes the published ones (N-PORT one, N-CEN and the summaries four); a quarter
-not yet published answers 404 and is passed over. The downloads go to `<data>/feeds/sources/cache/funds` (`DRISHTI_DATA_DIR`, else the
+not yet published answers 404 and is passed over. The downloads go to `<data>/datafeeds/sources/cache/funds` (`DRISHTI_DATA_DIR`, else the
 repository's git-ignored `data/`), each recorded in `cache-index.json` with its URL, time, size and checksum; the run is recorded in
-`<data>/feeds/sources/funds/manifest.json`. A widened build goes to `<data>/feeds/sources/funds` (`packs/funds`, `testdata/funds`); only
+`<data>/datafeeds/sources/funds/manifest.json`. A widened build goes to `<data>/datafeeds/sources/funds` (`packs/funds`, `testdata/funds`); only
 `--into-pack` writes it over the committed pack.
 
 ## 16. The gzipped snapshot and offline use

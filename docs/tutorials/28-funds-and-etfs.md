@@ -444,7 +444,7 @@ python3 tools/drishti.py lake demo               # rebuild the lake
 ```text
 $ tools/feeds/feed.sh run funds --dry-run
 dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
-  tickers (Public domain (U.S. Government work); SEC fair access policy; committable): 2 request(s), cache <data>/feeds/sources/cache/funds
+  tickers (Public domain (U.S. Government work); SEC fair access policy; committable): 2 request(s), cache <data>/datafeeds/sources/cache/funds
     https://www.sec.gov/files/company_tickers_mf.json
     https://www.sec.gov/files/company_tickers_exchange.json
   ...

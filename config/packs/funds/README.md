@@ -313,7 +313,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The data feed `funds` (config/feeds/funds.yaml) pulls `fund`, `fund-holder`, `index-funds`: `python3 tools/drishti.py feed run funds` fetches them daily into `data/feeds/funds/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `funds` (config/feeds/funds.yaml) pulls `fund`, `fund-holder`, `index-funds`: `python3 tools/drishti.py feed run funds` fetches them daily into `data/datafeeds/funds/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/funds/make.py`; its `--check` fails when the committed files differ from what it would write.
 

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # config/feeds/us-equities.yaml: the US equities feed (docs/guides/FEEDS_GUIDE.md; every key in its section "The feed file").
-#   python3 tools/drishti.py feed run us-equities                pull, write data/feeds/us-equities/<date>/, load into capitalmarket
+#   python3 tools/drishti.py feed run us-equities                pull, write data/datafeeds/us-equities/<date>/, load into capitalmarket
 #   python3 tools/drishti.py feed run us-equities --snapshot     refresh the committed pack and data/testdata/us-equities instead
 #   python3 tools/drishti.py feed run us-equities -- --scope TSLA,YEARS:15        arguments after -- go to the source
 # Index membership comes from the tracking ETFs' Form N-PORT holdings (Dow 30 via DIA, S&P 500 via SPY, Nasdaq-100 via QQQ,

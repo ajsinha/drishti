@@ -24,7 +24,7 @@ The ECB's euro foreign exchange reference rates, the US Treasury par yield curve
 
 ```bash
 python3 tools/drishti.py feed run market-data --dry-run      # what it would fetch and load; changes nothing
-python3 tools/drishti.py feed run market-data                # pull today, write data/feeds/market-data/<date>/, load into capitalmarket
+python3 tools/drishti.py feed run market-data                # pull today, write data/datafeeds/market-data/<date>/, load into capitalmarket
 python3 tools/drishti.py feed status market-data             # its last runs
 ```
 
@@ -34,7 +34,7 @@ Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windo
 
 ### fx-spot
 
-Pack `market-data`, kind `fx-spot` (FX spot rate), table `fx-spot`, key `PAIR`; files `data/feeds/market-data/<date>/fx-spot.<date>.jsonl.gz`, each row under the business date the source gives it.
+Pack `market-data`, kind `fx-spot` (FX spot rate), table `fx-spot`, key `PAIR`; files `data/datafeeds/market-data/<date>/fx-spot.<date>.jsonl.gz`, each row under the business date the source gives it.
 
 An ECB euro reference rate.
 
@@ -62,7 +62,7 @@ The contract: `config/packs/market-data/contracts/fx-spot.contract.yaml` ([marke
 
 ### ir-curve
 
-Pack `market-data`, kind `ir-curve` (Interest rate curve), table `ir-curve`, key `CURVE_ID`; files `data/feeds/market-data/<date>/ir-curve.<date>.jsonl.gz`, each row under the business date the source gives it.
+Pack `market-data`, kind `ir-curve` (Interest rate curve), table `ir-curve`, key `CURVE_ID`; files `data/datafeeds/market-data/<date>/ir-curve.<date>.jsonl.gz`, each row under the business date the source gives it.
 
 The US Treasury par yield curve.
 
@@ -94,7 +94,7 @@ The contract: `config/packs/market-data/contracts/ir-curve.contract.yaml` ([mark
 
 ### rate-fixing
 
-Pack `market-data`, kind `rate-fixing` (Rate index fixings), table `rate-fixing`, key `INDEX_ID`; files `data/feeds/market-data/<date>/rate-fixing.<date>.jsonl.gz`, each row under the business date the source gives it.
+Pack `market-data`, kind `rate-fixing` (Rate index fixings), table `rate-fixing`, key `INDEX_ID`; files `data/datafeeds/market-data/<date>/rate-fixing.<date>.jsonl.gz`, each row under the business date the source gives it.
 
 SOFR and the euro short-term rate.
 

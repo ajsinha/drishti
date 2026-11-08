@@ -1593,8 +1593,8 @@ inbox. The wrappers `tools/feeds/feed.sh` and `tools/windows/feed.ps1` run the s
 - `feed list [--json]`: every feed: its lake, load route, schedule, licence (internal only or not) and datasets.
 - `feed run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--lake L] [--dry-run] [--snapshot [--internal-ok]]
   [--offline] [--set NAME=VALUE] [-- SOURCE ARGS]`: pull (incrementally, from the feed's state), write
-  `<data>/feeds/<feed>/<date>/<table>.<date>.jsonl.gz` with a manifest, load into the feed's lake, replacing the dates it brings; one
-  log line and one ledger line (`<data>/feeds/ledger.jsonl`) per run. `--snapshot` refreshes the committed demo snapshot in
+  `<data>/datafeeds/<feed>/<date>/<table>.<date>.jsonl.gz` with a manifest, load into the feed's lake, replacing the dates it brings; one
+  log line and one ledger line (`<data>/datafeeds/ledger.jsonl`) per run. `--snapshot` refreshes the committed demo snapshot in
   `data/testdata` instead. Exit codes: 0 ok, 1 failed, 2 refused, 3 locked, 4 partial.
 - `feed status [<feed>] [--runs N] [--json]`: per feed the last run, the last success, rows, duration and failures (exit 1 when a
   feed's last run failed).
@@ -1916,7 +1916,7 @@ on and off and deploys a pack archive with its connectors (the twins: `drishti.p
 | `drishti.py pack check` | 0 passed, 1 failed, 2 usage | none | stdout, JUnit with `--junit` | yes |
 | `tools/load-*.sh` | 0 ok, non-zero failed | none: one loader per store at a time | stdout | yes (each day replaced in one step) |
 | `tools/drill.sh` | 0 all passed and pushed | none: one drill at a time | `data/drill/*.log` | yes |
-| `drishti.py feed run` | 0 ok, 1 failed, 2 refused, 3 locked, 4 partial | `<data>/feeds/<feed>/run.lock` (a dead process's is taken over) | one line per run to stdout and `<data>/feeds/ledger.jsonl` | yes: each date replaced ([FEEDS_GUIDE.md](FEEDS_GUIDE.md)) |
+| `drishti.py feed run` | 0 ok, 1 failed, 2 refused, 3 locked, 4 partial | `<data>/datafeeds/<feed>/run.lock` (a dead process's is taken over) | one line per run to stdout and `<data>/datafeeds/ledger.jsonl` | yes: each date replaced ([FEEDS_GUIDE.md](FEEDS_GUIDE.md)) |
 
 Rules that hold for all of them: run as a service user that owns the lake or data folder; pass the server explicitly
 (`--server`, `--signal`); keep tokens in a file readable only by that user (`--token-file`), never on the command line; send

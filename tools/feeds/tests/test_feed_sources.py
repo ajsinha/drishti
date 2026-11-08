@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The shipped feeds (config/feeds/) run against their recorded caches (tools/feeds/tests/fixtures/), never the network: each writes
-its datasets as dated JSONL.gz under data/feeds/<feed>/<date>/, a re-run gives the same bytes, and the internal-only ones refuse a
+its datasets as dated JSONL.gz under data/datafeeds/<feed>/<date>/, a re-run gives the same bytes, and the internal-only ones refuse a
 committed snapshot without --internal-ok. gleif's own feed test is in test_gleif.py."""
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def run(name, *args, offline=True, **kw):
 
 
 def rows(data, feed, table, day="2026-11-07"):
-    with gzip.open(data / "feeds" / feed / day / f"{table}.{day}.jsonl.gz", "rt", encoding="utf-8") as fh:
+    with gzip.open(data / "datafeeds" / feed / day / f"{table}.{day}.jsonl.gz", "rt", encoding="utf-8") as fh:
         return [json.loads(x) for x in fh]
 
 
@@ -62,9 +62,9 @@ def test_us_equities_feed_from_the_recorded_cache(tmp_path, data):
     assert rc == 0, logs
     assert {"us-company", "index-membership", "filing", "financial-fact"} <= set(entry["datasets"])
     assert {d["TICKER"] for d in rows(data, "us-equities", "us-company")} == {"AAPL", "MSFT"}
-    first = (data / "feeds" / "us-equities" / "2026-11-07" / "us-company.2026-11-07.jsonl.gz").read_bytes()
+    first = (data / "datafeeds" / "us-equities" / "2026-11-07" / "us-company.2026-11-07.jsonl.gz").read_bytes()
     assert run("us-equities", "--cache", str(cache))[0] == 0
-    assert (data / "feeds" / "us-equities" / "2026-11-07" / "us-company.2026-11-07.jsonl.gz").read_bytes() == first
+    assert (data / "datafeeds" / "us-equities" / "2026-11-07" / "us-company.2026-11-07.jsonl.gz").read_bytes() == first
 
 
 def test_funds_feed_from_the_recorded_cache(tmp_path, data):
@@ -93,7 +93,7 @@ def test_market_data_feed_keeps_each_documents_own_date(tmp_path, data):
     assert set(entry["datasets"]) == {"fx-spot", "ir-curve", "rate-fixing"}
     assert len(entry["dates"]) >= 1 and all(d <= "2026-11-07" for d in entry["dates"])           # dated: source (each AS_OF)
     day = entry["dates"][-1]
-    man = json.loads((data / "feeds" / "market-data" / day / "manifest.json").read_text())
+    man = json.loads((data / "datafeeds" / "market-data" / day / "manifest.json").read_text())
     assert man["licence"]["redistribution"] == "attribution" and all(f["rows"] > 0 for f in man["files"])
 
 

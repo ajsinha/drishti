@@ -41,7 +41,7 @@ import org.yaml.snakeyaml.Yaml;
 
 /**
  * The data feeds as the server sees them (docs/guides/FEEDS_GUIDE.md section 6): the feed files of {@code config/feeds/} and the run
- * ledger {@code <data>/feeds/ledger.jsonl} that every run appends to, whoever started it (cron, systemd, Task Scheduler, the command line or
+ * ledger {@code <data>/datafeeds/ledger.jsonl} that every run appends to, whoever started it (cron, systemd, Task Scheduler, the command line or
  * Run now). The feeds themselves run in Python ({@code tools/drishti.py feed run}); the server only reads what they wrote, starts a run on
  * an administrator's Run now, and keeps the gauge {@code drishti.datafeed.failed} (tag {@code feed}: 1 when the feed's last run failed or
  * was refused) that the platform alert rule {@code data-feed-failed} watches, so a failure opens an alert in the one alert engine and a
@@ -64,7 +64,7 @@ public final class DataFeeds {
 
     /**
      * @param config the feed files' folder ({@code config/feeds})
-     * @param data the data folder ({@code drishti.data.dir}): the ledger is {@code <data>/feeds/ledger.jsonl}
+     * @param data the data folder ({@code drishti.data.dir}): the ledger is {@code <data>/datafeeds/ledger.jsonl}
      * @param root the installation's folder, where {@code tools/drishti.py} is (Run now)
      * @param python the Python Run now starts (blank: the console's {@code drishti-console/.venv}, else python3)
      */
@@ -96,7 +96,7 @@ public final class DataFeeds {
     }
 
     Path ledgerPath() {
-        return data.resolve("feeds").resolve("ledger.jsonl");
+        return data.resolve("datafeeds").resolve("ledger.jsonl");
     }
 
     /** The feed files: name, title, lake, load route, schedule, licence, enabled; in name order. A file that does not read is listed with its problem. */
@@ -193,7 +193,7 @@ public final class DataFeeds {
         for (Map<String, Object> f : feeds()) {
             Map<String, Object> r = new LinkedHashMap<>(f);
             r.putAll(summary(by.getOrDefault(str(f.get("feed")), List.of())));
-            r.put("running", Files.exists(data.resolve("feeds").resolve(str(f.get("feed"))).resolve("run.lock")));
+            r.put("running", Files.exists(data.resolve("datafeeds").resolve(str(f.get("feed"))).resolve("run.lock")));
             rows.add(r);
         }
         List<Map<String, Object>> recent = new ArrayList<>(ledger.subList(Math.max(0, ledger.size() - Math.max(0, runs)), ledger.size()));
@@ -265,14 +265,14 @@ public final class DataFeeds {
 
     /**
      * Run now: {@code tools/drishti.py feed run <feed> --trigger admin} started in the background with the server's data folder; its output
-     * goes to {@code <data>/feeds/<feed>/admin-run.log} and its result to the ledger like any run. While the feed's lock is held, nothing
+     * goes to {@code <data>/datafeeds/<feed>/admin-run.log} and its result to the ledger like any run. While the feed's lock is held, nothing
      * starts and the answer says so.
      */
     public Map<String, Object> runNow(String feed, String user) throws IOException {
         if (feed == null || !NAME.matcher(feed).matches() || !Files.isRegularFile(config.resolve(feed + ".yaml"))) {
             throw new IllegalArgumentException("no data feed '" + feed + "' in " + config);
         }
-        Path folder = data.resolve("feeds").resolve(feed);
+        Path folder = data.resolve("datafeeds").resolve(feed);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("feed", feed);
         out.put("by", user);

@@ -252,7 +252,7 @@ def update_manifest(testdata: Path) -> None:
 
 def default_testdata(pack_dir: Path, committed: Path) -> Path:
     """Where a generator writes the snapshot: data/testdata for the committed pack; beside a widened build's pack folder otherwise
-    (<data>/feeds/sources/<pack>/packs/<pack> -> <data>/feeds/sources/<pack>/testdata), never into the committed test data."""
+    (<data>/datafeeds/sources/<pack>/packs/<pack> -> <data>/datafeeds/sources/<pack>/testdata), never into the committed test data."""
     return TESTDATA if Path(pack_dir).resolve() == Path(committed).resolve() else Path(pack_dir).resolve().parent.parent / "testdata"
 
 

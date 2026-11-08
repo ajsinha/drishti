@@ -60,7 +60,7 @@ world-economy, news-and-markets, market-data) is a feed's pull, and the same mod
 **Where things are written**, all under the data folder (`DRISHTI_DATA_DIR`, else `./data`; never committed):
 
 ```text
-data/feeds/
+data/datafeeds/
 ├── ledger.jsonl                                    one line per run, every feed (section 6)
 └── gleif/
     ├── state.json                                  what the feed has pulled (section 3.2)
@@ -128,15 +128,15 @@ The last line is the run's **one log line**: what a scheduler's mail or the jour
 | 0 | ok: pulled, written, loaded | nothing |
 | 1 | failed: the pull (after its retries), the feed's check or the load; the error in words | alert (Drishti already did, section 6) |
 | 2 | refused: a bad feed file, a key's variable not set, an unknown feed, internal-only data into a committed folder | fix the setting |
-| 3 | another run of the feed holds its lock (`data/feeds/<feed>/run.lock`) | nothing; the next day's run |
+| 3 | another run of the feed holds its lock (`data/datafeeds/<feed>/run.lock`) | nothing; the next day's run |
 | 4 | partial: some feeds of `--all` failed, or the load rejected rows | look at `feed status` |
 
 ### 3.2 Incremental pulls, resume and re-runs
 
-- **State.** `data/feeds/<feed>/state.json` records, per dataset, the last business date pulled. The next run asks the source only for
+- **State.** `data/datafeeds/<feed>/state.json` records, per dataset, the last business date pulled. The next run asks the source only for
   what is newer (`run.window()`, section 8). The state is saved **only when the whole run succeeded**, so a failed run is pulled again
   from the same point. The first run of a feed pulls `history.first-run-days` (30) days; `--since` pulls any history.
-- **Resume.** Every download goes through the cache `data/feeds/<feed>/cache/` (`cache-hours`, 12 by default); a run that broke half way
+- **Resume.** Every download goes through the cache `data/datafeeds/<feed>/cache/` (`cache-hours`, 12 by default); a run that broke half way
   reuses what it fetched and asks only for the rest.
 - **Re-runs are idempotent.** A run writes each date's files to a work folder and then replaces the date's folder whole; every route
   loads with replace-by-date. Running the same date twice leaves the same files and the same rows in the lake.
@@ -294,12 +294,12 @@ python3 tools/drishti.py feed status
 ```text
 FEED   LAST RUN             STATUS  LAST SUCCESS         DATE        ROWS   SECONDS  FAILURES
 gleif  2026-11-07T05:30:12  ok      2026-11-07T05:30:12  2026-11-07  4,377  41.2     0
-ledger: data/feeds/ledger.jsonl
+ledger: data/datafeeds/ledger.jsonl
 ```
 
 `--runs N` adds the last N runs; `--json` gives the same for scripts. It exits 1 when a feed's last run failed.
 
-**The ledger**, `data/feeds/ledger.jsonl`, has one JSON line per run, kept for ever:
+**The ledger**, `data/datafeeds/ledger.jsonl`, has one JSON line per run, kept for ever:
 
 ```json
 {"at": "2026-11-07T05:30:12-05:00", "feed": "gleif", "run": "20261107T103012-drishti-main-41822", "trigger": "schedule",
@@ -313,7 +313,7 @@ ledger: data/feeds/ledger.jsonl
 schedule, last run and status, last success with its business date and rows, the duration, the failures since the last success, the
 last error in words and the licence (internal only marked), then the latest runs of the ledger. Both tables are console tables (sort,
 filter, keyboard). **Run now** starts `tools/drishti.py feed run <feed> --trigger admin` on the server's machine in the background,
-with the server's data folder (its output in `data/feeds/<feed>/admin-run.log`); while a run of the feed holds its lock it says so
+with the server's data folder (its output in `data/datafeeds/<feed>/admin-run.log`); while a run of the feed holds its lock it says so
 instead. The same over REST: `GET /api/v1/admin/feeds`, `POST /api/v1/admin/feeds/{feed}/run` (audited `feed.run`). The server finds
 the feed files, the tools and Python by `drishti.feeds.config`, `drishti.feeds.root` and `drishti.feeds.python`
 ([CONFIGURATION.md](../admin/CONFIGURATION.md)).

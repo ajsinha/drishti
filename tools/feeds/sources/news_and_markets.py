@@ -16,7 +16,7 @@
 
     python3 tools/drishti.py feed status news-and-markets
     python3 tools/drishti.py feed run news-and-markets --dry-run
-    python3 tools/drishti.py feed run news-and-markets --snapshot             a snapshot in <data>/feeds/sources/news-and-markets/testdata
+    python3 tools/drishti.py feed run news-and-markets --snapshot             a snapshot in <data>/datafeeds/sources/news-and-markets/testdata
     python3 tools/drishti.py feed run news-and-markets --snapshot --internal-ok  replace the committed snapshot in data/testdata
     python3 tools/drishti.py feed run news-and-markets --snapshot -- quote --years 5 --scope TSLA,NVDA,NEWS-TESLA
 
@@ -103,7 +103,7 @@ def refresh(a, log=print) -> int:
     if a.out:
         out = Path(a.out).expanduser().resolve()
     else:
-        out = COMMITTED if a.internal_ok else B.data_dir() / "feeds" / "sources" / PACK / "testdata"
+        out = COMMITTED if a.internal_ok else B.data_dir() / "datafeeds" / "sources" / PACK / "testdata"
     B.guard_out(selected, out, a.internal_ok)
     if B.is_committed(out) and out != COMMITTED.resolve():
         raise B.Refusal(f"refused: {out} is inside the repository; the committed snapshot lives in {COMMITTED} only")
@@ -149,8 +149,8 @@ def main(argv: list[str] | None = None) -> int:
         if a.command == "status":
             for kind, (f, n, _p) in snapshot_counts(COMMITTED).items():
                 print(f"committed snapshot {kind}: {f.name}, {n} documents, {B.human(f.stat().st_size)}")
-            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "feeds" / "sources" / "cache" / PACK,
-                            "data/testdata with --internal-ok; else <data>/feeds/sources/news-and-markets/testdata")
+            return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "datafeeds" / "sources" / "cache" / PACK,
+                            "data/testdata with --internal-ok; else <data>/datafeeds/sources/news-and-markets/testdata")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)

@@ -84,7 +84,7 @@ class Opener:
 def test_committed_folders():
     assert B.is_committed(B.ROOT / "config" / "packs" / "world-economy")
     assert B.is_committed(B.ROOT / "data" / "testdata")
-    assert not B.is_committed(B.ROOT / "data" / "feeds" / "sources")
+    assert not B.is_committed(B.ROOT / "data" / "datafeeds" / "sources")
     assert not B.is_committed(Path("/tmp/elsewhere"))
 
 
@@ -130,7 +130,7 @@ def test_manifest_records_sources_and_files(tmp_path, data_dir):
     m = B.Manifest("market-data")
     m.record(MD.SOURCES[0], ["http://x"], {"rows": 5, "documents": 1}, out)
     m.finish(out, [f], ["refresh"], True)
-    saved = json.loads((data_dir / "feeds" / "sources" / "market-data" / "manifest.json").read_text())
+    saved = json.loads((data_dir / "datafeeds" / "sources" / "market-data" / "manifest.json").read_text())
     assert saved["sources"]["ecb-fx"]["rows"] == 5 and saved["sources"]["ecb-fx"]["licence"].startswith("ECB")
     assert saved["files"][0]["sha256"] == B.sha256(f) and saved["runs"][-1]["ok"] is True
     assert (out / "manifest.json").is_file()                       # a copy beside a build outside the repository
@@ -142,7 +142,7 @@ def test_internal_only_sources_are_refused_in_committed_folders(data_dir):
         B.guard_out([imf], B.ROOT / "config" / "packs" / "world-economy", internal_ok=False)
     assert "may not be redistributed" in str(e.value) and "--internal-ok" in str(e.value) and "commercial reuse" in str(e.value)
     B.guard_out([imf], B.ROOT / "config" / "packs" / "world-economy", internal_ok=True)
-    B.guard_out([imf], data_dir / "feeds" / "sources", internal_ok=False)
+    B.guard_out([imf], data_dir / "datafeeds" / "sources", internal_ok=False)
     B.guard_out([WE.SOURCES[0]], B.ROOT / "config" / "packs" / "world-economy", internal_ok=False)   # World Bank: committable
 
 
@@ -174,7 +174,7 @@ def test_world_economy_sources_normalise_the_recorded_responses(we_run):
 
 def test_world_economy_out_and_guard():
     out, committed = WE.resolve_out(ns(), no_imf=False, widened=False)
-    assert not committed and out == B.data_dir() / "feeds" / "sources" / "world-economy"
+    assert not committed and out == B.data_dir() / "datafeeds" / "sources" / "world-economy"
     assert WE.resolve_out(ns(internal_ok=True), no_imf=False, widened=False) == (B.ROOT, True)
     assert WE.resolve_out(ns(internal_ok=True), no_imf=True, widened=False)[1] is False      # no IMF: always the data folder
     with pytest.raises(B.Refusal, match="sources.yaml"):
@@ -192,7 +192,7 @@ def test_world_economy_dry_run_writes_nothing(capsys, data_dir):
     assert WE.main(["refresh", "--dry-run", "--since", "2005", "--scope", "SP.DYN.LE00.IN"]) == 0
     text = capsys.readouterr().out
     assert "years 2005-" in text and "widened" in text and "worldbank" in text and "date=2005:" in text
-    assert not (data_dir / "feeds" / "sources" / "world-economy").exists()
+    assert not (data_dir / "datafeeds" / "sources" / "world-economy").exists()
 
 
 def test_world_economy_scope_adds_an_indicator(we_run):
@@ -236,7 +236,7 @@ def test_news_dry_run_lists_the_scope(capsys, data_dir):
     assert NM.main(["refresh", "quote", "--dry-run", "--scope", "ZZZZ"]) == 0
     text = capsys.readouterr().out
     assert "QUOTE-ZZZZ" in text and "QUOTE-AAPL" in text and "capture-market" in text
-    assert not (data_dir / "feeds" / "sources").exists()
+    assert not (data_dir / "datafeeds" / "sources").exists()
 
 
 def test_news_snapshot_check(tmp_path):
@@ -301,7 +301,7 @@ def test_market_data_refuses_the_repository_and_dry_runs(capsys, data_dir):
     assert MD.main(["refresh", "--dry-run", "--since", "2024"]) == 0
     text = capsys.readouterr().out
     assert "ecb-fx" in text and "2024-01-01" in text and "daily-treasury-rates.csv/2024" in text
-    assert not (data_dir / "feeds" / "sources").exists()
+    assert not (data_dir / "datafeeds" / "sources").exists()
     assert MD.main(["status"]) == 0 and "Public domain" in capsys.readouterr().out
 
 
@@ -321,7 +321,7 @@ def test_market_data_refresh_from_the_cache(tmp_path, data_dir, capsys):
     data = sorted(p.name for p in out.iterdir() if p.name != "manifest.json")       # <kind>.<AS_OF>.jsonl: the load rules' names
     assert all(re.fullmatch(r"(fx-spot|ir-curve|rate-fixing)\.\d{4}-\d{2}-\d{2}\.jsonl", n) for n in data), data
     assert {n.split(".")[0] for n in data} == {"fx-spot", "ir-curve", "rate-fixing"} and (out / "manifest.json").is_file()
-    man = json.loads((data_dir / "feeds" / "sources" / "market-data" / "manifest.json").read_text())
+    man = json.loads((data_dir / "datafeeds" / "sources" / "market-data" / "manifest.json").read_text())
     assert man["sources"]["sofr"]["rows"] == 3 and len(man["files"]) == len(data)
 
 

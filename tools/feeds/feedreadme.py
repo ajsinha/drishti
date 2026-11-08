@@ -86,7 +86,7 @@ def render(spec: FB.FeedSpec) -> str:
                                          for k, v in spec.keys.items()) + " |")
     out += ["", "## Run it", "", "```bash",
             f"python3 tools/drishti.py feed run {spec.name} --dry-run      # what it would fetch and load; changes nothing",
-            f"python3 tools/drishti.py feed run {spec.name}                # pull today, write data/feeds/{spec.name}/<date>/, load into {spec.lake}",
+            f"python3 tools/drishti.py feed run {spec.name}                # pull today, write data/datafeeds/{spec.name}/<date>/, load into {spec.lake}",
             f"python3 tools/drishti.py feed status {spec.name}             # its last runs"]
     if spec.snapshot:
         out.append(f"python3 tools/drishti.py feed run {spec.name} --snapshot     # refresh the committed demo snapshot instead"
@@ -97,7 +97,7 @@ def render(spec: FB.FeedSpec) -> str:
         c = contract(ds.pack, ds.kind)
         out += [f"### {ds.name}", "",
                 f"Pack `{ds.pack}`, kind `{ds.kind}`" + (f" ({_cell(c.get('title'))})" if c.get("title") else "") + f", table `{ds.table}`"
-                + (f", key `{ds.key}`" if ds.key else "") + "; files `data/feeds/" + spec.name + f"/<date>/{ds.table}.<date>.jsonl.gz`, "
+                + (f", key `{ds.key}`" if ds.key else "") + "; files `data/datafeeds/" + spec.name + f"/<date>/{ds.table}.<date>.jsonl.gz`, "
                 + ("each row under the run's business date." if ds.dated == "run" else "each row under the business date the source gives it."), ""]
         if ds.description:
             out += [_cell(ds.description)[:1].upper() + _cell(ds.description)[1:] + ".", ""]

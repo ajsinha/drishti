@@ -406,9 +406,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`, `D
 
 ## Refreshing the data
 
-The data feed `us-equities` (config/feeds/us-equities.yaml) pulls `us-company`, `index-membership`, `filing-feed`, `filing`, `financial-fact`: `python3 tools/drishti.py feed run us-equities` fetches them daily into `data/feeds/us-equities/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `us-equities` (config/feeds/us-equities.yaml) pulls `us-company`, `index-membership`, `filing-feed`, `filing`, `financial-fact`: `python3 tools/drishti.py feed run us-equities` fetches them daily into `data/datafeeds/us-equities/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
-The data feed `yahoo-prices` (config/feeds/yahoo-prices.yaml) pulls `price-history`: `python3 tools/drishti.py feed run yahoo-prices` fetches them daily into `data/feeds/yahoo-prices/<date>/` and loads them into the lake `capitalmarket` (internal use only); `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `yahoo-prices` (config/feeds/yahoo-prices.yaml) pulls `price-history`: `python3 tools/drishti.py feed run yahoo-prices` fetches them daily into `data/datafeeds/yahoo-prices/<date>/` and loads them into the lake `capitalmarket` (internal use only); `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/us_equities/make.py`; its `--check` fails when the committed files differ from what it would write.
 

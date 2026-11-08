@@ -81,7 +81,7 @@ python3 tools/packgen/funds/make.py --check              # no network: the pack 
 ```
 
 `tools/feeds/feed.sh run funds` and `tools/windows/feed.ps1 run funds` run the same script. The downloads stay in the data folder
-(`<data>/feeds/sources/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
+(`<data>/datafeeds/sources/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
 
 ## Data contracts
 
@@ -555,7 +555,7 @@ python3 tools/drishti.py feed status funds                                  # it
 python3 tools/drishti.py feed run funds --dry-run                           # what would be fetched and loaded; changes nothing
 python3 tools/drishti.py feed run funds                                     # pull today's data and load it into the lake `capitalmarket` (what the daily schedule runs)
 python3 tools/drishti.py feed run funds --snapshot                          # refresh the committed pack instead: data/testdata/funds, samples/, the README and this guide, then make.py --check
-python3 tools/drishti.py feed run funds --snapshot --offline                # the same from the downloads only (about 700 MB in <data>/feeds/sources/cache/funds)
+python3 tools/drishti.py feed run funds --snapshot --offline                # the same from the downloads only (about 700 MB in <data>/datafeeds/sources/cache/funds)
 python3 tools/drishti.py feed run funds -- --scope FUNDS:300,HOLDINGS:1000  # a widened pull of more funds and holdings
 ```
 

@@ -30,7 +30,7 @@
   {% with sub='feeds' %}{% include "admin/_loads_tabs.html" %}{% endwith %}
   <p class="text-muted-d ib-intro">The data feeds pull external data (GLEIF, the SEC, the World Bank, the IMF, central banks, news) every day and load
     it into their lakes. They run from cron, systemd or Task Scheduler (<span class="mono">drishti.py feed schedule</span>) or from here; every run,
-    whoever started it, is a line of the ledger <span class="mono">{{ st.ledger or 'data/feeds/ledger.jsonl' }}</span>. A failed run opens an alert
+    whoever started it, is a line of the ledger <span class="mono">{{ st.ledger or 'data/datafeeds/ledger.jsonl' }}</span>. A failed run opens an alert
     (<span class="mono">data-feed-failed</span>). See the <a href="/help/feeds-guide">External data feeds guide</a>.</p>
   <p class="ib-said" data-feeds-said role="status" aria-live="polite"></p>
 {% if error %}

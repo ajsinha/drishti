@@ -44,7 +44,7 @@ import fundsread as R  # noqa: E402
 
 TRACKERS = {"SP500": "SPY", "NDX": "QQQ", "DJIA": "DIA", "R2000": "IWM"}
 REQUIRED = {"SP500", "NDX", "DJIA"}      # IWM (Russell 2000) joins when the N-PORT data set has its report; the others must be there
-FUNDS_CACHE = ROOT / "data" / "feeds" / "sources" / "cache" / "funds"
+FUNDS_CACHE = ROOT / "data" / "datafeeds" / "sources" / "cache" / "funds"
 _FOREIGN = {"nv", "n", "v", "plc", "public", "limited", "sa", "ag", "se"}
 
 
@@ -132,7 +132,7 @@ def extract(funds_cache: Path, cache: Path, log=print) -> dict:
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--funds-cache", type=Path, default=FUNDS_CACHE)
-    p.add_argument("--cache", type=Path, default=ROOT / "data" / "feeds" / "sources" / "cache" / "us-equities")
+    p.add_argument("--cache", type=Path, default=ROOT / "data" / "datafeeds" / "sources" / "cache" / "us-equities")
     a = p.parse_args(argv)
     extract(a.funds_cache, a.cache)
     return 0

@@ -24,7 +24,7 @@ The Global LEI Foundation's golden copy (level 2 relationships and reporting exc
 
 ```bash
 python3 tools/drishti.py feed run gleif --dry-run      # what it would fetch and load; changes nothing
-python3 tools/drishti.py feed run gleif                # pull today, write data/feeds/gleif/<date>/, load into referencelake
+python3 tools/drishti.py feed run gleif                # pull today, write data/datafeeds/gleif/<date>/, load into referencelake
 python3 tools/drishti.py feed status gleif             # its last runs
 python3 tools/drishti.py feed run gleif --snapshot     # refresh the committed demo snapshot instead
 ```
@@ -35,7 +35,7 @@ Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windo
 
 ### lei-entity
 
-Pack `gleif`, kind `lei-entity` (LEI legal entity), table `lei-entity`, key `LEI`; files `data/feeds/gleif/<date>/lei-entity.<date>.jsonl.gz`, each row under the run's business date.
+Pack `gleif`, kind `lei-entity` (LEI legal entity), table `lei-entity`, key `LEI`; files `data/datafeeds/gleif/<date>/lei-entity.<date>.jsonl.gz`, each row under the run's business date.
 
 One legal entity: name, addresses, legal form, status, renewal.
 
@@ -95,7 +95,7 @@ The contract: `config/packs/gleif/contracts/lei-entity.contract.yaml` ([gleif](.
 
 ### lei-relationship
 
-Pack `gleif`, kind `lei-relationship` (LEI parent relationship), table `lei-relationship`, key `RELATIONSHIP_ID`; files `data/feeds/gleif/<date>/lei-relationship.<date>.jsonl.gz`, each row under the run's business date.
+Pack `gleif`, kind `lei-relationship` (LEI parent relationship), table `lei-relationship`, key `RELATIONSHIP_ID`; files `data/datafeeds/gleif/<date>/lei-relationship.<date>.jsonl.gz`, each row under the run's business date.
 
 A direct or ultimate parent relationship (level 2).
 
@@ -126,7 +126,7 @@ The contract: `config/packs/gleif/contracts/lei-relationship.contract.yaml` ([gl
 
 ### lei-mapping
 
-Pack `gleif`, kind `lei-mapping` (ISIN or BIC to LEI), table `lei-mapping`, key `IDENTIFIER`; files `data/feeds/gleif/<date>/lei-mapping.<date>.jsonl.gz`, each row under the run's business date.
+Pack `gleif`, kind `lei-mapping` (ISIN or BIC to LEI), table `lei-mapping`, key `IDENTIFIER`; files `data/datafeeds/gleif/<date>/lei-mapping.<date>.jsonl.gz`, each row under the run's business date.
 
 An ISIN or BIC mapped to its LEI.
 

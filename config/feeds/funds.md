@@ -25,7 +25,7 @@ The largest US mutual funds and ETFs: their holdings (Form N-PORT), census data 
 
 ```bash
 python3 tools/drishti.py feed run funds --dry-run      # what it would fetch and load; changes nothing
-python3 tools/drishti.py feed run funds                # pull today, write data/feeds/funds/<date>/, load into capitalmarket
+python3 tools/drishti.py feed run funds                # pull today, write data/datafeeds/funds/<date>/, load into capitalmarket
 python3 tools/drishti.py feed status funds             # its last runs
 python3 tools/drishti.py feed run funds --snapshot     # refresh the committed demo snapshot instead
 ```
@@ -36,7 +36,7 @@ Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windo
 
 ### fund
 
-Pack `funds`, kind `fund` (Fund or ETF), table `fund`, key `TICKER`; files `data/feeds/funds/<date>/fund.<date>.jsonl.gz`, each row under the run's business date.
+Pack `funds`, kind `fund` (Fund or ETF), table `fund`, key `TICKER`; files `data/datafeeds/funds/<date>/fund.<date>.jsonl.gz`, each row under the run's business date.
 
 A fund or ETF: fact sheet, fees, holdings summary.
 
@@ -141,7 +141,7 @@ The contract: `config/packs/funds/contracts/fund.contract.yaml` ([funds](../../d
 
 ### fund-holder
 
-Pack `funds`, kind `fund-holder` (Funds holding a company), table `fund-holder`, key `TICKER`; files `data/feeds/funds/<date>/fund-holder.<date>.jsonl.gz`, each row under the run's business date.
+Pack `funds`, kind `fund-holder` (Funds holding a company), table `fund-holder`, key `TICKER`; files `data/datafeeds/funds/<date>/fund-holder.<date>.jsonl.gz`, each row under the run's business date.
 
 A listed company and the funds holding it.
 
@@ -174,7 +174,7 @@ The contract: `config/packs/funds/contracts/fund-holder.contract.yaml` ([funds](
 
 ### index-funds
 
-Pack `funds`, kind `index-funds` (Funds tracking an index), table `index-funds`, key `INDEX`; files `data/feeds/funds/<date>/index-funds.<date>.jsonl.gz`, each row under the run's business date.
+Pack `funds`, kind `index-funds` (Funds tracking an index), table `index-funds`, key `INDEX`; files `data/datafeeds/funds/<date>/index-funds.<date>.jsonl.gz`, each row under the run's business date.
 
 An index and the funds tracking it.
 

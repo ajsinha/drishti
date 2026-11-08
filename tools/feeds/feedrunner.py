@@ -16,7 +16,7 @@
 
     run_feed(spec, opts)    lock -> pull (Feed.pull) -> write the dated files and manifests -> the feed's check -> load (loaders.py)
                             -> save the state (only after success) -> one ledger line -> one log line; returns (exit code, entry)
-    Ledger                  <data>/feeds/ledger.jsonl: one JSON line per run, kept for ever (Admin → Feeds and `feed status` read it)
+    Ledger                  <data>/datafeeds/ledger.jsonl: one JSON line per run, kept for ever (Admin → Feeds and `feed status` read it)
 
 The one log line of a run (what a scheduler's mail or journal shows):
 
@@ -53,7 +53,7 @@ class RunOptions:
 
 
 class Ledger:
-    """<data>/feeds/ledger.jsonl: one line per run (never rewritten; appended under a lock file so two feeds finishing at once do not
+    """<data>/datafeeds/ledger.jsonl: one line per run (never rewritten; appended under a lock file so two feeds finishing at once do not
     interleave)."""
 
     def __init__(self, root: Path | None = None):

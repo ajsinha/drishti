@@ -657,7 +657,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The data feed `world-economy` (config/feeds/world-economy.yaml) pulls `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `region-economy`, `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator`: `python3 tools/drishti.py feed run world-economy` fetches them daily into `data/feeds/world-economy/<date>/` and loads them into the lake `worldlake` (internal use only); `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `world-economy` (config/feeds/world-economy.yaml) pulls `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `region-economy`, `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator`: `python3 tools/drishti.py feed run world-economy` fetches them daily into `data/datafeeds/world-economy/<date>/` and loads them into the lake `worldlake` (internal use only); `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/world/make.py`; its `--check` fails when the committed files differ from what it would write.
 

@@ -25,7 +25,7 @@ The companies of the Dow 30, the S&P 500, the Nasdaq-100 and the Russell 2000 (i
 
 ```bash
 python3 tools/drishti.py feed run us-equities --dry-run      # what it would fetch and load; changes nothing
-python3 tools/drishti.py feed run us-equities                # pull today, write data/feeds/us-equities/<date>/, load into capitalmarket
+python3 tools/drishti.py feed run us-equities                # pull today, write data/datafeeds/us-equities/<date>/, load into capitalmarket
 python3 tools/drishti.py feed status us-equities             # its last runs
 python3 tools/drishti.py feed run us-equities --snapshot     # refresh the committed demo snapshot instead
 ```
@@ -36,7 +36,7 @@ Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windo
 
 ### us-company
 
-Pack `us-equities`, kind `us-company` (US company), table `us-company`, key `TICKER`; files `data/feeds/us-equities/<date>/us-company.<date>.jsonl.gz`, each row under the run's business date.
+Pack `us-equities`, kind `us-company` (US company), table `us-company`, key `TICKER`; files `data/datafeeds/us-equities/<date>/us-company.<date>.jsonl.gz`, each row under the run's business date.
 
 A listed company: CIK, ticker, LEI, SIC, headquarters.
 
@@ -99,7 +99,7 @@ The contract: `config/packs/us-equities/contracts/us-company.contract.yaml` ([us
 
 ### index-membership
 
-Pack `us-equities`, kind `index-membership` (Index members), table `index-membership`, key `INDEX`; files `data/feeds/us-equities/<date>/index-membership.<date>.jsonl.gz`, each row under the run's business date.
+Pack `us-equities`, kind `index-membership` (Index members), table `index-membership`, key `INDEX`; files `data/datafeeds/us-equities/<date>/index-membership.<date>.jsonl.gz`, each row under the run's business date.
 
 An index's members (SP500, NDX, DJIA, R2000, bank lists).
 
@@ -121,7 +121,7 @@ The contract: `config/packs/us-equities/contracts/index-membership.contract.yaml
 
 ### filing-feed
 
-Pack `us-equities`, kind `filing-feed` (EDGAR filings browser), table `filing-feed`, key `FEED`; files `data/feeds/us-equities/<date>/filing-feed.<date>.jsonl.gz`, each row under the run's business date.
+Pack `us-equities`, kind `filing-feed` (EDGAR filings browser), table `filing-feed`, key `FEED`; files `data/datafeeds/us-equities/<date>/filing-feed.<date>.jsonl.gz`, each row under the run's business date.
 
 A company's recent filings as one feed.
 
@@ -149,7 +149,7 @@ The contract: `config/packs/us-equities/contracts/filing-feed.contract.yaml` ([u
 
 ### filing
 
-Pack `us-equities`, kind `filing` (SEC filing), table `filing`, key `ACCESSION`; files `data/feeds/us-equities/<date>/filing.<date>.jsonl.gz`, each row under the run's business date.
+Pack `us-equities`, kind `filing` (SEC filing), table `filing`, key `ACCESSION`; files `data/datafeeds/us-equities/<date>/filing.<date>.jsonl.gz`, each row under the run's business date.
 
 One filing (10-K, 10-Q, 8-K, ...).
 
@@ -179,7 +179,7 @@ The contract: `config/packs/us-equities/contracts/filing.contract.yaml` ([us-equ
 
 ### financial-fact
 
-Pack `us-equities`, kind `financial-fact` (Financial fact), table `financial-fact`, key `FACT_ID`; files `data/feeds/us-equities/<date>/financial-fact.<date>.jsonl.gz`, each row under the run's business date.
+Pack `us-equities`, kind `financial-fact` (Financial fact), table `financial-fact`, key `FACT_ID`; files `data/datafeeds/us-equities/<date>/financial-fact.<date>.jsonl.gz`, each row under the run's business date.
 
 One XBRL fact of a fiscal year.
 

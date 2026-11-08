@@ -17,7 +17,7 @@
     python3 tools/packgen/funds/make.py [--cache DIR]           write data/testdata/funds/, the pack's samples, README and guide
     python3 tools/packgen/funds/make.py --check [--cache DIR]   fail if what would be written differs from the pack
 
-With a cache (<data>/feeds/sources/cache/funds by default: N-PORT, N-CEN and risk/return summary data sets, the ticker files), --check
+With a cache (<data>/datafeeds/sources/cache/funds by default: N-PORT, N-CEN and risk/return summary data sets, the ticker files), --check
 rebuilds every document from it. Without one (a fresh clone, CI), --check reads the committed snapshot back (data/testdata/funds/) and
 rebuilds what is derived from it (the reference samples, the guide, the README), so it needs no network and no 500 MB download.
 
@@ -52,7 +52,7 @@ HEADER = "\n".join(Path(__file__).read_text(encoding="utf-8").splitlines()[:13])
 
 
 def default_cache() -> Path:
-    return Path(os.environ.get("DRISHTI_DATA_DIR") or ROOT / "data").expanduser().resolve() / "feeds" / "sources" / "cache" / "funds"
+    return Path(os.environ.get("DRISHTI_DATA_DIR") or ROOT / "data").expanduser().resolve() / "datafeeds" / "sources" / "cache" / "funds"
 
 
 def build(cache: Path, retrieved: str | None = None) -> dict[str, dict[str, dict]]:
@@ -178,7 +178,7 @@ python3 tools/packgen/funds/make.py --check              # no network: the pack 
 ```
 
 `tools/feeds/feed.sh run funds` and `tools/windows/feed.ps1 run funds` run the same script. The downloads stay in the data folder
-(`<data>/feeds/sources/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
+(`<data>/datafeeds/sources/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
 """
 
 
@@ -206,7 +206,7 @@ def files(docs: dict[str, dict[str, dict]]) -> dict[Path, str]:
 
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description="Build the funds pack from the downloaded data sets (no network).")
-    p.add_argument("--cache", type=Path, default=None, help="the downloads (default <data>/feeds/sources/cache/funds)")
+    p.add_argument("--cache", type=Path, default=None, help="the downloads (default <data>/datafeeds/sources/cache/funds)")
     p.add_argument("--check", action="store_true")
     p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/funds)")
     p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed pack)")

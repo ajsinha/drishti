@@ -96,7 +96,7 @@ def test_offline_build_from_the_recorded_cache_is_complete_and_deterministic(tmp
     first = built(pack)
     assert GL.refresh(ns(cache, offline=True, out=str(out)), log=lambda *_: None) == 0
     assert first == built(pack)           # the same cache, the same bytes
-    man = json.loads((data_dir / "feeds" / "sources" / "gleif" / "manifest.json").read_text())
+    man = json.loads((data_dir / "datafeeds" / "sources" / "gleif" / "manifest.json").read_text())
     assert set(man["sources"]) == {"golden", "api", "mapping"} and man["runs"][-1]["ok"]
     assert (out / "manifest.json").is_file()
 
@@ -122,7 +122,7 @@ def test_scope_name_widens_into_the_data_folder_through_the_api(cache, data_dir)
         raise AssertionError("unexpected " + url)
 
     assert GL.refresh(ns(cache, offline=False, scope="NAME:moody,CAP:5", sources=["api"]), log=logs.append, opener=opener) == 0
-    pack = data_dir / "feeds" / "sources" / "gleif" / "packs" / "gleif"
+    pack = data_dir / "datafeeds" / "sources" / "gleif" / "packs" / "gleif"
     ents = {d["LEI"] for d in snap(pack, "lei-entity")}
     assert {d["id"] for d in moodys_kids} <= ents
     assert any("filter[fulltext]=moody" in u for u in calls)
@@ -186,7 +186,7 @@ def test_the_gleif_feed_pulls_the_recorded_cache_into_dated_files(tmp_path, cach
     rc, entry = R.run_feed(spec, o, log=logs.append)
     assert rc == 0, logs
     assert set(entry["datasets"]) == {"lei-entity", "lei-relationship", "lei-mapping"} and entry["dates"] == ["2026-11-07"]
-    day = data_dir / "feeds" / "gleif" / "2026-11-07"
+    day = data_dir / "datafeeds" / "gleif" / "2026-11-07"
     assert sorted(p.name for p in day.glob("*.gz")) == ["lei-entity.2026-11-07.jsonl.gz", "lei-mapping.2026-11-07.jsonl.gz",
                                                         "lei-relationship.2026-11-07.jsonl.gz"]
     import gzip

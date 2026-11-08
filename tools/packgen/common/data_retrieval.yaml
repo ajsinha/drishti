@@ -111,7 +111,7 @@ feeds:
   funds:
     examples:
       - ["--snapshot", "refresh the committed pack instead: data/testdata/funds, samples/, the README and this guide, then make.py --check"]
-      - ["--snapshot --offline", "the same from the downloads only (about 700 MB in <data>/feeds/sources/cache/funds)"]
+      - ["--snapshot --offline", "the same from the downloads only (about 700 MB in <data>/datafeeds/sources/cache/funds)"]
       - ["-- --scope FUNDS:300,HOLDINGS:1000", "a widened pull of more funds and holdings"]
 
 # Generators of synthetic (or hand-written) data: id -> the command, what it writes, its check and the origin it is shown as (label,

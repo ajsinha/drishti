@@ -15,7 +15,7 @@
 """feed: pull external data and load it into the lakes (drishti-feeds; docs/guides/FEEDS_GUIDE.md).
 
     python3 tools/drishti.py feed list                                    every feed: lake, route, schedule, licence
-    python3 tools/drishti.py feed run gleif                               pull today, write data/feeds/gleif/<date>/, load (java)
+    python3 tools/drishti.py feed run gleif                               pull today, write data/datafeeds/gleif/<date>/, load (java)
     python3 tools/drishti.py feed run --all                               every enabled feed, one after another
     python3 tools/drishti.py feed run us-equities --date 2026-11-06 --load inbox
     python3 tools/drishti.py feed run world-economy --since 2026-10-01 --load python
@@ -30,7 +30,7 @@
 
 Exit codes (for schedulers): 0 ok, 1 failed, 2 refused or a usage error (a bad feed file, a key not set, an unknown feed), 3 another
 run of the feed holds its lock, 4 partial (some feeds of --all failed, or the load rejected rows). Every run prints one log line and
-appends one line to <data>/feeds/ledger.jsonl (Admin → Feeds)."""
+appends one line to <data>/datafeeds/ledger.jsonl (Admin → Feeds)."""
 from __future__ import annotations
 
 import argparse

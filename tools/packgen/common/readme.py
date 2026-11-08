@@ -574,7 +574,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     for fd in feeds:
         kinds = ", ".join(f"`{k}`" for k in fd["kinds"])
         out += [f"The data feed `{fd['feed']}` (config/feeds/{fd['feed']}.yaml) pulls {kinds}: `python3 tools/drishti.py feed run {fd['feed']}` "
-                f"fetches them daily into `data/feeds/{fd['feed']}/<date>/` and loads them into the lake `{fd['lake']}`"
+                f"fetches them daily into `data/datafeeds/{fd['feed']}/<date>/` and loads them into the lake `{fd['lake']}`"
                 + (" (internal use only)" if fd["internal"] else "") + "; `--dry-run` says what it would fetch, changing nothing; "
                 + ("`--snapshot` refreshes the committed snapshot in data/testdata instead; " if fd["snapshot"] else "")
                 + "`feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries "

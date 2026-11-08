@@ -2899,7 +2899,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.feeds.config` | string | `./config/feeds` | `DRISHTI_FEEDS_CONFIG` | server | the feed files' folder (config/feeds/&lt;feed&gt;.yaml); the run ledger is &lt;data folder&gt;/feeds/ledger.jsonl | restart |  | admin |
+| `drishti.feeds.config` | string | `./config/feeds` | `DRISHTI_FEEDS_CONFIG` | server | the feed files' folder (config/feeds/&lt;feed&gt;.yaml); the run ledger is &lt;data folder&gt;/datafeeds/ledger.jsonl | restart |  | admin |
 | `drishti.feeds.root` | string | `.` | `DRISHTI_FEEDS_ROOT` | server | the installation's folder, where tools/drishti.py is: Run now starts `tools/drishti.py feed run <feed>` there | restart |  | admin |
 | `drishti.feeds.python` | string | empty | `DRISHTI_FEEDS_PYTHON` | server | the Python Run now starts (blank: the console's drishti-console/.venv, else python3, python on Windows) | restart |  | admin |
 | `drishti.feeds.sample-seconds` | integer | `60` |  | server | how often the ledger is read for the gauge drishti.datafeed.failed (the alert rule data-feed-failed) | restart |  | admin |
@@ -5919,7 +5919,7 @@ One file per data feed: the source, its datasets and the lake they load, the sch
 | `source.pause` | number | `1.0` |  | drishti.py feed (each run) | seconds between requests: the rate limit (GLEIF asks for at most one API call a second) | live |  | admin |
 | `source.retries` | integer | `3` |  | drishti.py feed (each run) | retries after 2, 4, 8 s on 429, 5xx and network errors (or the server's Retry-After) | live |  | admin |
 | `source.timeout` | integer | `90` |  | drishti.py feed (each run) | seconds a request may take | live |  | admin |
-| `source.cache-hours` | integer | `20` |  | drishti.py feed (each run) | a download younger than this is reused from data/feeds/&lt;feed&gt;/cache (a broken run resumes) | live |  | admin |
+| `source.cache-hours` | integer | `20` |  | drishti.py feed (each run) | a download younger than this is reused from data/datafeeds/&lt;feed&gt;/cache (a broken run resumes) | live |  | admin |
 | `lake` | string | `referencelake` |  | drishti.py feed (each run) | the lake the feed loads (config/lakes/&lt;lake&gt;.yaml); --lake on the command line overrides it | live |  | admin |
 | `load` | string | `java` |  | drishti.py feed (each run) | the load route: java (the parallel loader), python (lake build), inbox (the data inbox) or none | live |  | admin |
 | `enabled` | boolean | `true` |  | drishti.py feed (each run) | false: left out of `feed run --all` and the schedule entries (still runnable by name) | live |  | admin |
@@ -5930,7 +5930,7 @@ One file per data feed: the source, its datasets and the lake they load, the sch
 | `licence.redistribution` | string | `allowed` |  | drishti.py feed (each run) | allowed, attribution or internal-only | live |  | admin |
 | `licence.internal-only` | boolean | `false` |  | drishti.py feed (each run) | true: never redistributed (written into the repository only with --snapshot --internal-ok) | live |  | admin |
 | `licence.attribution` | string | `"Contains LEI data from the Global Legal Entity Identifier Foundation (GLEIF)...` |  | drishti.py feed (each run) | the line to show with the data | live |  | admin |
-| `history.first-run-days` | integer | `30` |  | drishti.py feed (each run) | the first run without data/feeds/&lt;feed&gt;/state.json pulls this many days (--since overrides) | live |  | admin |
+| `history.first-run-days` | integer | `30` |  | drishti.py feed (each run) | the first run without data/datafeeds/&lt;feed&gt;/state.json pulls this many days (--since overrides) | live |  | admin |
 | `datasets.<dataset>` | map | `{pack: gleif, kind: lei-entity, key: LEI, description: "one legal entity: nam...` |  | drishti.py feed (each run) | one dataset: pack and kind (required), table (default the kind), key (the id field), dated (run or source), description | live |  | admin |
 | `options.args` | list | `[]` |  | drishti.py feed (each run) | arguments given to the source before the command line's (e.g. \[--scope, "NAME:allianz,CAP:200"]) | live |  | admin |
 | `snapshot.note` | string | `refreshes config/packs/gleif (samples, guide) and data/testdata/gleif, as the...` |  | drishti.py feed (each run) | a line for the docs | live |  | admin |
@@ -6217,7 +6217,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_EXPOSURE_VERSION_CHECK` | `drishti.ccr.exposure.version-check` (engine) | `30s` | engine | an open date compares its lake version this often; moved: reloaded in the background (0: off) |
 | `DRISHTI_EXTERNAL_LIB` | `external_lib` | empty | console | base of the external library folder (blank: external\_lib in the repository root); &lt;base&gt;/python is importable, &lt;base&gt;/java is the server's |
 | `DRISHTI_FEEDS` | `drishti.sources.plugins.file.settings.root` | `./data/feeds` | server | the folder the bundled file source reads |
-| `DRISHTI_FEEDS_CONFIG` | `drishti.feeds.config` | `./config/feeds` | server | the feed files' folder (config/feeds/&lt;feed&gt;.yaml); the run ledger is &lt;data folder&gt;/feeds/ledger.jsonl |
+| `DRISHTI_FEEDS_CONFIG` | `drishti.feeds.config` | `./config/feeds` | server | the feed files' folder (config/feeds/&lt;feed&gt;.yaml); the run ledger is &lt;data folder&gt;/datafeeds/ledger.jsonl |
 | `DRISHTI_FEEDS_DEBUG` | drishti.py feed | none | tools | Set (any value): a feed's own error prints its Python stack trace too (the ledger keeps the one line either way) |
 | `DRISHTI_FEEDS_PYTHON` | `drishti.feeds.python` | empty | server | the Python Run now starts (blank: the console's drishti-console/.venv, else python3, python on Windows) |
 | `DRISHTI_FEEDS_ROOT` | `drishti.feeds.root` | `.` | server | the installation's folder, where tools/drishti.py is: Run now starts `tools/drishti.py feed run <feed>` there |

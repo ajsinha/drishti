@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # config/feeds/funds.yaml: the US funds and ETFs feed (docs/guides/FEEDS_GUIDE.md; every key in its section "The feed file").
-#   python3 tools/drishti.py feed run funds                   pull, write data/feeds/funds/<date>/, load into capitalmarket
+#   python3 tools/drishti.py feed run funds                   pull, write data/datafeeds/funds/<date>/, load into capitalmarket
 #   python3 tools/drishti.py feed run funds --snapshot        refresh the committed pack and data/testdata/funds instead
 #   python3 tools/drishti.py feed run funds -- --scope FUNDS:300,HOLDINGS:1000      arguments after -- go to the source
 # Its N-PORT download cache also gives the us-equities feed its index members (SPY, DIA, QQQ, IWM): it runs first.

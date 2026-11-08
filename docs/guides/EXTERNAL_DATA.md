@@ -95,7 +95,7 @@ A source's own options go after `--` (`feed run gleif -- --scope NAME:allianz,CA
 | `--max-age HOURS` | reuse a cached download younger than this (default 24); older files are fetched again |
 | `--no-check` | skip the pack's check after the build |
 
-The download cache of a source is `<data>/feeds/sources/cache/<pack>/` (a run that breaks resumes from it; `feed run --offline` uses
+The download cache of a source is `<data>/datafeeds/sources/cache/<pack>/` (a run that breaks resumes from it; `feed run --offline` uses
 it only). Every request carries the one User-Agent `DRISHTI_FEEDS_USER_AGENT` (the SEC asks for a contact in it).
 
 ## Worked examples
@@ -129,7 +129,7 @@ wrote ~/drishti/data/feeds/market-data/work/20261108T000123-oryxpro-1372281/buil
 ```
 
 The euro short-term rate's one document (its 254 daily observations inside) is written under its own business date, 2026-11-05
-(`dated: source`): `data/feeds/market-data/2026-11-05/rate-fixing.2026-11-05.jsonl.gz` with its `manifest.json`. More:
+(`dated: source`): `data/datafeeds/market-data/2026-11-05/rate-fixing.2026-11-05.jsonl.gz` with its `manifest.json`. More:
 
 ```bash
 python3 tools/drishti.py feed run world-economy -- worldbank undp        # the openly licensed sources only
@@ -160,7 +160,7 @@ them (`drishti.py feed run world-economy -- --no-imf`) or get permission.
 ## How external data reaches the server
 
 1. **The feed** pulls into its download cache, builds the pack's data in its run folder and writes each kind as dated JSON Lines,
-   `<data>/feeds/<feed>/<YYYY-MM-DD>/<kind>.<YYYY-MM-DD>.jsonl.gz` with a `manifest.json` (rows, SHA-256, the licence).
+   `<data>/datafeeds/<feed>/<YYYY-MM-DD>/<kind>.<YYYY-MM-DD>.jsonl.gz` with a `manifest.json` (rows, SHA-256, the licence).
 2. **The lake.** The feed loads them into its lake (`referencelake`, `capitalmarket`, `worldlake`, `newslake`) by the parallel loader,
    `lake build` or the data inbox, replacing the dates it brings ([FEEDS_GUIDE.md section 4](FEEDS_GUIDE.md#4-loading-three-routes)).
    The demo lake is built from the committed snapshots instead: `--snapshot` refreshes them, then `python3 tools/drishti.py lake demo`.
@@ -190,7 +190,7 @@ through the shared client into the same cache layout, then the normaliser, the p
 ```bash
 python3 tools/drishti.py feed status world-economy
 python3 tools/drishti.py feed run world-economy --dry-run
-python3 tools/drishti.py feed run world-economy --snapshot                    # a full build in <data>/feeds/sources/world-economy
+python3 tools/drishti.py feed run world-economy --snapshot                    # a full build in <data>/datafeeds/sources/world-economy
 python3 tools/drishti.py feed run world-economy --snapshot --internal-ok      # refresh the committed dataset, pack, glossary, tests and guide tables
 python3 tools/drishti.py feed run world-economy --snapshot -- --no-imf           # no IMF data at all; always the data folder
 python3 tools/drishti.py feed run world-economy --snapshot --internal-ok --offline -- --cache ~/.cache/drishti-realdata   # rebuild from an older realdata cache
@@ -200,7 +200,7 @@ Where it writes:
 
 - With `--internal-ok` (and no widening): the committed `tools/realdata/dataset/`, `config/packs/world-economy/`,
   `tools/packgen/world/about.yaml` and the generated tables of this page's world-economy section (`tools/realdata/realdata.py docs`). Commit the result.
-- Otherwise: `<data>/feeds/sources/world-economy/` with `sources.yaml` (what this build used), `dataset/`, `packs/world-economy/`
+- Otherwise: `<data>/datafeeds/sources/world-economy/` with `sources.yaml` (what this build used), `dataset/`, `packs/world-economy/`
   and `about/`. Serve that pack with `DRISHTI_PACKS_DIR` or copy what you need.
 
 **Widening.** `--since 2000` or `--years 25` fetches a longer window; `--scope` adds indicators:
@@ -515,7 +515,7 @@ from the built jar (`mvn -q -DskipTests package` first), or uses `--server URL`.
 ```bash
 python3 tools/drishti.py feed status news-and-markets                  # also shows the committed snapshot
 python3 tools/drishti.py feed run news-and-markets --dry-run
-python3 tools/drishti.py feed run news-and-markets --snapshot                 # a snapshot in <data>/feeds/sources/news-and-markets/testdata
+python3 tools/drishti.py feed run news-and-markets --snapshot                 # a snapshot in <data>/datafeeds/sources/news-and-markets/testdata
 python3 tools/drishti.py feed run news-and-markets --snapshot --internal-ok   # replace the committed snapshot in data/testdata
 python3 tools/drishti.py lake demo                                   # then rebuild the demo lake from it
 ```
@@ -591,12 +591,12 @@ python3 tools/drishti.py feed run us-equities --dry-run
 python3 tools/drishti.py feed run us-equities --snapshot                          # the committed pack (about 1,100 SEC and 500 GLEIF calls)
 python3 tools/drishti.py feed run us-equities --snapshot --offline                # rebuild the committed pack from the cache only
 python3 tools/drishti.py feed run us-equities --snapshot -- --scope TSLA,CIK:1326380,FILINGS:40,YEARS:15
-                                                                         # a widened build in <data>/feeds/sources/us-equities
+                                                                         # a widened build in <data>/datafeeds/sources/us-equities
 python3 tools/drishti.py feed run us-equities --snapshot -- prices --server http://localhost:18080 --scope AAPL,MSFT
                                                                          # internal only: a price snapshot in the data folder
 ```
 
-- **The cache** (`<data>/feeds/sources/cache/us-equities`, or `--cache`) holds what `fetch.py` keeps: the Wikidata query results,
+- **The cache** (`<data>/datafeeds/sources/cache/us-equities`, or `--cache`) holds what `fetch.py` keeps: the Wikidata query results,
   the Nasdaq files, the SEC ticker file, each company's submissions (metadata of the recent filings) and its XBRL facts reduced
   to the annual values of the pack's concepts, and the GLEIF records. A file stays until it is removed, so a broken run resumes;
   `--max-age HOURS` fetches files older than that again (the old one is put back if the new fetch fails). Every file is in
@@ -606,16 +606,16 @@ python3 tools/drishti.py feed run us-equities --snapshot -- prices --server http
   (the QID of the index item in Wikidata); `FILINGS:<n>` keeps more recent filings a company (default 20);
   `YEARS:<n>` or `--years N` more fiscal years (default 10); `CONCEPT:<NAME>=<tag>[|<tag>...][@<unit>][@instant]` another
   annual XBRL concept (`CONCEPT:CASH=CashAndCashEquivalentsAtCarryingValue@USD@instant`).
-- **A widened build goes to the data folder**: `<data>/feeds/sources/us-equities/packs/us-equities`, a whole pack (the hand-written
+- **A widened build goes to the data folder**: `<data>/datafeeds/sources/us-equities/packs/us-equities`, a whole pack (the hand-written
   manifest, Sutras and help copied, the reference samples and guide generated), with its snapshot beside it in
-  `<data>/feeds/sources/us-equities/testdata/us-equities/<kind>/`, checked with `make.py --check --pack`. Its cache is
+  `<data>/datafeeds/sources/us-equities/testdata/us-equities/<kind>/`, checked with `make.py --check --pack`. Its cache is
   `scoped/<hash>` inside the cache, seeded from the plain cache less what the scope changes (submissions for `FILINGS`, facts for
   `YEARS` and `CONCEPT`, the Wikidata members for `INDEX`). `--into-pack` writes a widened build over the committed pack, on
   purpose only; without it `--out config/packs/us-equities` with a scope is refused.
 - **Prices are internal only.** The pack ships no prices; the `prices` source reads `price-history/PX-<ticker>` through the
   pack's `us-equities-prices` connector of a running server where you switched it on (`DRISHTI_US_EQUITIES_PRICES_ENABLED=true`,
   `--server`, `--token-file`, `--delay` at least 2 s, `--limit N`). It is the feed `yahoo-prices` (internal only, off as shipped) and writes
-  `<data>/feeds/sources/us-equities/prices/price-history/price-history.<date>.jsonl.gz`, each document stamped as a snapshot; into a
+  `<data>/datafeeds/sources/us-equities/prices/price-history/price-history.<date>.jsonl.gz`, each document stamped as a snapshot; into a
   committed folder only with `--internal-ok`. Each ticker is cached under `prices/` in the cache, so `--offline` rebuilds it.
 
 **Check it:** `make.py --check` (run by the feed; without a cache it checks the committed snapshot); `USEQ AAPL <GO>` opens a
@@ -643,7 +643,7 @@ python3 tools/drishti.py feed run gleif --dry-run                # the universe 
 python3 tools/drishti.py feed run gleif --snapshot                          # the committed pack: ~90 MB of golden copy and mapping files, ~70 API calls
 python3 tools/drishti.py feed run gleif --snapshot --offline                # rebuild the committed pack from the cache only
 python3 tools/drishti.py feed run gleif --snapshot -- --scope GROUP:784F5XWPLTWKTBV3E584,CAP:600
-                                                                   # Goldman Sachs' whole group, in <data>/feeds/sources/gleif
+                                                                   # Goldman Sachs' whole group, in <data>/datafeeds/sources/gleif
 python3 tools/drishti.py feed run gleif --snapshot -- golden golden-lei api mapping --scope COUNTRY:LU --since 2025
                                                                    # every Luxembourg entity updated since 2025, from the bulk file
 ```
@@ -659,7 +659,7 @@ python3 tools/drishti.py feed run gleif --snapshot -- golden golden-lei api mapp
   insurers, asset managers and market infrastructures pinned in `fetch.py` (`SEEDS`, LEIs resolved once by legal name). Each
   seed brings its ownership group: its ultimate parent and every entity it consolidates, level by level, at most 50 a group
   (`GROUP_CAP`; a group page says when GLEIF has more).
-- **The cache** (`<data>/feeds/sources/cache/gleif`, or `--cache`) keeps every download as served (`golden/`, `mapping/`,
+- **The cache** (`<data>/datafeeds/sources/cache/gleif`, or `--cache`) keeps every download as served (`golden/`, `mapping/`,
   `api/records/` batches) and the reductions (`reduced/`); a file stays until removed, so a broken run resumes, and only LEIs
   not yet cached are asked for. `--max-age HOURS` fetches the golden copy, mapping files and code lists again when older (the old
   one is put back if the new fetch fails). Every download is in `cache-index.json`.
@@ -670,8 +670,8 @@ python3 tools/drishti.py feed run gleif --snapshot -- golden golden-lei api mapp
   `TICKERS-FROM:<a us-company .jsonl or .jsonl.gz>`);
   `CAP:<n>` up to n entities a group. `--years N` / `--since YEAR` keep only the `COUNTRY:` and `NAME:` entities whose LEI record
   was updated in that period.
-- **A widened build goes to the data folder**: `<data>/feeds/sources/gleif/packs/gleif`, a whole pack (the hand-written manifest,
-  Sutras and help copied, reference samples and guide generated), with its snapshot in `<data>/feeds/sources/gleif/testdata/gleif/`,
+- **A widened build goes to the data folder**: `<data>/datafeeds/sources/gleif/packs/gleif`, a whole pack (the hand-written manifest,
+  Sutras and help copied, reference samples and guide generated), with its snapshot in `<data>/datafeeds/sources/gleif/testdata/gleif/`,
   checked with `make.py --check --pack`. `--into-pack` writes it over the
   committed pack, on purpose only (never with `golden-lei`); without it `--out config/packs/gleif` with a scope is refused.
 
@@ -692,7 +692,7 @@ build, offline: it streams the N-PORT tables once and keeps the 200 largest fund
 one at a time.
 
 **The downloads are large** (an N-PORT quarter is about 450 MB, four quarters of risk/return summaries about 200 MB, N-CEN 6 to 16 MB
-a quarter) and stay in `<data>/feeds/sources/cache/funds`, never in git; a file younger than `--max-age` hours (a week by default) is
+a quarter) and stay in `<data>/datafeeds/sources/cache/funds`, never in git; a file younger than `--max-age` hours (a week by default) is
 reused. **Where `--snapshot` writes:** the committed snapshot, gzipped JSON Lines under `data/testdata/funds/<kind>/` (the fund kind
 in parts of about 1.2 MB, 5.5 MB in all), listed in `data/testdata/testdata.yaml` and served from the demo lake by the pack's Delta
 connector `funds-store`; `samples/`, the README, the guide and the glossary (`config/about.yaml`) of `config/packs/funds`. Rebuild
@@ -705,7 +705,7 @@ python3 tools/drishti.py feed run funds --snapshot                          # th
 python3 tools/drishti.py feed run funds --snapshot --offline                # rebuild the committed pack from the downloads only
 python3 tools/drishti.py feed run funds --snapshot -- ncen rr --since 2025     # every quarter of the census and the summaries since 2025
 python3 tools/drishti.py feed run funds --snapshot -- --scope FUNDS:300,HOLDINGS:1000
-                                                                   # the 300 largest, 1,000 holdings a fund, in <data>/feeds/sources/funds
+                                                                   # the 300 largest, 1,000 holdings a fund, in <data>/datafeeds/sources/funds
 ```
 
 On Windows the same through `.\tools\windows\feed.ps1` (`.\tools\windows\feed.ps1 run funds --dry-run`); on Linux and macOS
@@ -718,7 +718,7 @@ On Windows the same through `.\tools\windows\feed.ps1` (`.\tools\windows\feed.ps
   reverse look-through (`HELD`) counts every holding. The index tab's weights are computed from SEC data (shares outstanding times
   the price the filings imply) because index weights are proprietary.
 - **`--scope`** widens the build: `FUNDS:<n>` the n largest funds, `HOLDINGS:<n>` the holdings kept a fund. A widened build goes to
-  `<data>/feeds/sources/funds` (`packs/funds` and `testdata/funds`); `--into-pack` writes it over the committed pack, on purpose only.
+  `<data>/datafeeds/sources/funds` (`packs/funds` and `testdata/funds`); `--into-pack` writes it over the committed pack, on purpose only.
 
 **Check it:** `make.py --check` (run by the feed); `FUND QQQ <GO>` opens a fund, `HELD AAPL <GO>` the funds holding Apple.
 **Offline:** `feed run funds --snapshot --offline` rebuilds the committed data from the downloads; without them `make.py --check` checks the committed

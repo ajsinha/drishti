@@ -25,7 +25,7 @@ Economies, macro indicators, labour markets, fiscal positions and forecasts of e
 
 ```bash
 python3 tools/drishti.py feed run world-economy --dry-run      # what it would fetch and load; changes nothing
-python3 tools/drishti.py feed run world-economy                # pull today, write data/feeds/world-economy/<date>/, load into worldlake
+python3 tools/drishti.py feed run world-economy                # pull today, write data/datafeeds/world-economy/<date>/, load into worldlake
 python3 tools/drishti.py feed status world-economy             # its last runs
 python3 tools/drishti.py feed run world-economy --snapshot     # refresh the committed demo snapshot instead (with --internal-ok)
 ```
@@ -36,7 +36,7 @@ Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windo
 
 ### economy
 
-Pack `world-economy`, kind `economy` (Economy), table `economy`; files `data/feeds/world-economy/<date>/economy.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `economy` (Economy), table `economy`; files `data/datafeeds/world-economy/<date>/economy.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
@@ -79,7 +79,7 @@ The contract: `config/packs/world-economy/contracts/economy.contract.yaml` ([wor
 
 ### macro-indicator
 
-Pack `world-economy`, kind `macro-indicator` (Macro indicator), table `macro-indicator`; files `data/feeds/world-economy/<date>/macro-indicator.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `macro-indicator` (Macro indicator), table `macro-indicator`; files `data/datafeeds/world-economy/<date>/macro-indicator.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
@@ -110,7 +110,7 @@ The contract: `config/packs/world-economy/contracts/macro-indicator.contract.yam
 
 ### economic-forecast
 
-Pack `world-economy`, kind `economic-forecast` (Economic forecast), table `economic-forecast`; files `data/feeds/world-economy/<date>/economic-forecast.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `economic-forecast` (Economic forecast), table `economic-forecast`; files `data/datafeeds/world-economy/<date>/economic-forecast.<date>.jsonl.gz`, each row under the run's business date.
 
 IMF WEO forecasts (internal use only).
 
@@ -137,7 +137,7 @@ The contract: `config/packs/world-economy/contracts/economic-forecast.contract.y
 
 ### labour-market
 
-Pack `world-economy`, kind `labour-market` (Labour market), table `labour-market`; files `data/feeds/world-economy/<date>/labour-market.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `labour-market` (Labour market), table `labour-market`; files `data/datafeeds/world-economy/<date>/labour-market.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
@@ -165,7 +165,7 @@ The contract: `config/packs/world-economy/contracts/labour-market.contract.yaml`
 
 ### fiscal-position
 
-Pack `world-economy`, kind `fiscal-position` (Fiscal position), table `fiscal-position`; files `data/feeds/world-economy/<date>/fiscal-position.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `fiscal-position` (Fiscal position), table `fiscal-position`; files `data/datafeeds/world-economy/<date>/fiscal-position.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
@@ -193,7 +193,7 @@ The contract: `config/packs/world-economy/contracts/fiscal-position.contract.yam
 
 ### region-economy
 
-Pack `world-economy`, kind `region-economy` (Region economy), table `region-economy`; files `data/feeds/world-economy/<date>/region-economy.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `region-economy` (Region economy), table `region-economy`; files `data/datafeeds/world-economy/<date>/region-economy.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
@@ -222,7 +222,7 @@ The contract: `config/packs/world-economy/contracts/region-economy.contract.yaml
 
 ### jurisdiction
 
-Pack `world-economy`, kind `jurisdiction` (Jurisdiction), table `jurisdiction`; files `data/feeds/world-economy/<date>/jurisdiction.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `jurisdiction` (Jurisdiction), table `jurisdiction`; files `data/datafeeds/world-economy/<date>/jurisdiction.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
@@ -262,7 +262,7 @@ The contract: `config/packs/world-economy/contracts/jurisdiction.contract.yaml` 
 
 ### party
 
-Pack `world-economy`, kind `party` (Party), table `party`; files `data/feeds/world-economy/<date>/party.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `party` (Party), table `party`; files `data/datafeeds/world-economy/<date>/party.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
@@ -290,7 +290,7 @@ The contract: `config/packs/world-economy/contracts/party.contract.yaml` ([world
 
 ### office-holder
 
-Pack `world-economy`, kind `office-holder` (Office holder), table `office-holder`; files `data/feeds/world-economy/<date>/office-holder.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `office-holder` (Office holder), table `office-holder`; files `data/datafeeds/world-economy/<date>/office-holder.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
@@ -320,7 +320,7 @@ The contract: `config/packs/world-economy/contracts/office-holder.contract.yaml`
 
 ### election
 
-Pack `world-economy`, kind `election` (Election), table `election`; files `data/feeds/world-economy/<date>/election.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `election` (Election), table `election`; files `data/datafeeds/world-economy/<date>/election.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
@@ -351,7 +351,7 @@ The contract: `config/packs/world-economy/contracts/election.contract.yaml` ([wo
 
 ### region
 
-Pack `world-economy`, kind `region` (World region), table `region`; files `data/feeds/world-economy/<date>/region.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `region` (World region), table `region`; files `data/datafeeds/world-economy/<date>/region.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
@@ -380,7 +380,7 @@ The contract: `config/packs/world-economy/contracts/region.contract.yaml` ([worl
 
 ### social-indicator
 
-Pack `world-economy`, kind `social-indicator` (Social indicator), table `social-indicator`; files `data/feeds/world-economy/<date>/social-indicator.<date>.jsonl.gz`, each row under the run's business date.
+Pack `world-economy`, kind `social-indicator` (Social indicator), table `social-indicator`; files `data/datafeeds/world-economy/<date>/social-indicator.<date>.jsonl.gz`, each row under the run's business date.
 
 | Field | Type | Presence | Meaning |
 |---|---|---|---|
