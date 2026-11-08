@@ -78,6 +78,7 @@ def make_alert(page, name: str) -> None:
     page.locator('[data-visual="mtm"] [data-act="alert-me"]').click()
     page.wait_for_url("**/alerts/new**")
     assert page.input_value('input[name="report"]') == REPORT and page.input_value('input[name="visual"]') == "mtm"
+    expect(page.locator("[data-visual-titles]")).to_contain_text("Visual: ", timeout=15000)       # the visual found: its columns offered (the form drawn again once)
     page.fill('input[name="name"]', name)
     page.select_option('select[name="condition_type"]', "threshold")
     page.select_option('select[name="op"]', "below")

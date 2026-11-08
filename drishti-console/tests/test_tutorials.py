@@ -50,7 +50,7 @@ TRACKS = ["Start", "Risk engines", "BI and analysis", "Data in and out", "Build"
 
 def test_the_written_tutorials_are_the_ones_kept_and_the_index_names_every_one_once_in_a_track():
     # A tutorial's number is its name: 22 was merged into 6 (part B) and 39 to 42 were never written (the tutorial tracks, 2026-11-04).
-    numbers = [n for n in range(1, 39) if n != 22] + [43, 44, 45]
+    numbers = [n for n in range(1, 39) if n != 22] + [43, 44, 45, 46]
     assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in numbers]
     index = (TUTORIALS / "README.md").read_text()
     rows = re.findall(r"^\|\s*(\d{1,2})\s*\|", index, re.M)

@@ -128,6 +128,52 @@ def yaml(pg):
     return pg.evaluate("window.Drishti.editors.yamlText()")
 
 
+# ---- an editor's row grids (drishti-grid with cell editing: E.rowGrid) -------------------------------------------------------------
+
+
+def gcell(pg, key, rid, c):
+    """Focuses a cell of an editor's row grid by its row id and column number and starts editing it, as Enter on it does (a checkbox
+    turns at once). The grid draws only the rows in view, so the row is found in its model, not in the page."""
+    wait(pg, f"!!(document.querySelector(\"[data-rowgrid='{key}']\") || {{}}).grid")
+    pg.evaluate("""([k, id, c]) => { const g = document.querySelector(`[data-rowgrid='${k}']`).grid;
+      for (let r = 0; r < g.model.rowCount(); r++) { if (g.model.idAt(r) === id) { g.focusCell(r, c); g.startEditing(r, c); return; } }
+      throw new Error('no row ' + id + ' in ' + k); }""", [key, str(rid), c])
+
+
+def row_js(key, rid):
+    """A JavaScript test: the row grid holds a row of that id (in its model: drawn or not)."""
+    return (f"(() => {{ const b = document.querySelector(\"[data-rowgrid='{key}']\"); if (!b || !b.grid) {{ return false; }} const m = b.grid.model;"
+            f" for (let r = 0; r < m.rowCount(); r++) {{ if (m.idAt(r) === {str(rid)!r}) {{ return true; }} }} return false; }})()")
+
+
+OPEN = ("!!document.querySelector('.dg-editor') && document.querySelector('.dg-editor').style.visibility !== 'hidden'"
+        " && document.querySelector('.dg-editor').contains(document.activeElement)")      # the cell editor over its cell, with the focus
+
+
+def gselect(pg, key, rid, c, label):
+    gcell(pg, key, rid, c)
+    wait(pg, OPEN)
+    pg.select_option(".dg-editor select", label=label)
+    pg.keyboard.press("Enter")
+
+
+def gtext(pg, key, rid, c, text):
+    gcell(pg, key, rid, c)
+    wait(pg, OPEN)
+    pg.fill(".dg-editor input", text)
+    pg.keyboard.press("Enter")
+
+
+def gcode(pg, key, rid, c, text):
+    """A formula cell (drishti-inputs' one-line code editor over the cell) given new text, as a paste, then Enter."""
+    gcell(pg, key, rid, c)
+    wait(pg, "!!document.querySelector('.dg-editor-code .CodeMirror')")
+    pg.evaluate("""t => { const cm = document.querySelector('.dg-editor-code .CodeMirror').CodeMirror; cm.focus();
+      cm.replaceRange(t, { line: 0, ch: 0 }, { line: cm.lastLine(), ch: cm.getLine(cm.lastLine()).length }, 'paste'); }""", text)
+    pg.keyboard.press("Enter")
+    wait(pg, "!document.querySelector('.dg-editor')")
+
+
 # ---- the shell --------------------------------------------------------------------------------------------------------------------
 
 
@@ -239,27 +285,32 @@ def test_new_table_steps_land_in_the_editor_and_both_sides_follow_each_other(pg)
     assert f"[data-col-row='{dropped}']" and pg.locator(f"[data-col-row='{dropped}']").count() == 0
     assert "table: mine.trade_view" in yaml(pg)
     # a visual edit shows in the YAML with its line highlighted
-    pg.click("[data-add-computed]")
-    fx(pg, "[data-col-from='NEW_COLUMN']", "$.QUANTITY / 1000")
+    pg.click("[data-add-computed]")                                            # its formula cell opens for typing
+    wait(pg, "!!document.querySelector('.dg-editor-code .CodeMirror')")
+    pg.keyboard.press("Escape")
+    gcode(pg, "columns", "chosen:NEW_COLUMN", 2, "$.QUANTITY / 1000")
     wait(pg, "window.Drishti.editors.yamlText().includes('$.QUANTITY / 1000')")
     settle(pg)
     assert pg.locator("[data-yaml] .di-code[data-hl]").count() == 1            # the line being edited is marked in the YAML
-    pg.fill("[data-col-name='NEW_COLUMN']", "MTM_K")
-    pg.press("[data-col-name='NEW_COLUMN']", "Tab")
+    gtext(pg, "columns", "chosen:NEW_COLUMN", 1, "MTM_K")
     wait(pg, "window.Drishti.editors.yamlText().includes('MTM_K:')")
     settle(pg)
-    pg.select_option("[data-col-type='MTM_K']", "integer")
-    wait(pg, "/MTM_K:.*integer/.test(window.Drishti.editors.yamlText())")
-    pg.check("[data-col-key='MTM_K']")
-    wait(pg, "/(keys: \\[[^\\]]*MTM_K|MTM_K:.*key: true)/.test(window.Drishti.editors.yamlText())")
-    pg.uncheck("[data-col-key='MTM_K']")
+    gselect(pg, "columns", "chosen:MTM_K", 3, "integer")
+    wait(pg, "/MTM_K:[\\s\\S]{0,120}integer/.test(window.Drishti.editors.yamlText())")
+    gcell(pg, "columns", "chosen:MTM_K", 4)                                    # a checkbox cell turns at once
+    wait(pg, "/(keys: \\[[^\\]]*MTM_K|MTM_K:[\\s\\S]{0,160}key: true)/.test(window.Drishti.editors.yamlText())")
+    gcell(pg, "columns", "chosen:MTM_K", 4)
     settle(pg)
-    # a source column added from the checklist, then shown off again
-    avail = pg.get_attribute("[data-col-add] >> nth=0", "data-col-add")
-    pg.click(f"[data-col-add='{avail}']")
-    wait(pg, f"!!document.querySelector(\"[data-col-row='{avail}']\")")
-    pg.click(f"[data-col-show='{avail}']")
-    wait(pg, f"!document.querySelector(\"[data-col-row='{avail}']\")")
+    # a source column added from the checklist (the grid's Show cell), then shown off again
+    avail = pg.evaluate("""() => { const g = document.querySelector("[data-rowgrid='columns']").grid;
+      for (let r = 0; r < g.model.rowCount(); r++) { const id = g.model.idAt(r); if (id.startsWith('available:')) { return id.slice(10); } } return null; }""")
+    assert avail, "the source offers a column not chosen yet"
+    gcell(pg, "columns", f"available:{avail}", 0)
+    wait(pg, row_js("columns", f"chosen:{avail}"))
+    settle(pg)
+    gcell(pg, "columns", f"chosen:{avail}", 0)
+    wait(pg, row_js("columns", f"available:{avail}"))
+    settle(pg)
     # the filter, with type-ahead from the function catalogue
     fx(pg, "[data-path=filter]", "")
     pg.keyboard.type("abs")
@@ -276,17 +327,18 @@ def test_new_table_steps_land_in_the_editor_and_both_sides_follow_each_other(pg)
     wait(pg, "document.querySelector('[data-path=title]').value === 'Our trades'")
     fill_yaml(pg, text + "columns: [\n")
     wait(pg, "/not valid/.test(document.querySelector('[data-yaml-state]').textContent)")
-    assert pg.locator("[data-yaml] .di-lint-sign.di-lint-error").count() >= 1
+    wait(pg, "document.querySelectorAll('[data-yaml] .di-problem.di-lint-error').length >= 1")       # the problem listed under the editor (its gutter sign may be out of view: CodeMirror draws the lines in view)
     pg.click("[data-yaml] .di-problem button >> nth=0")                                   # a problem leads to its line (the code editor's list)
     pg.click("[data-mode=visual]")
     assert "waits until the YAML reads" in pg.inner_text("[data-msg]")
     fill_yaml(pg, text)
     wait(pg, "/live/.test(document.querySelector('[data-yaml-state]').textContent) && !/not valid/.test(document.querySelector('[data-yaml-state]').textContent)")
     settle(pg)
-    # the source picker
-    pg.select_option("[data-source-pick]", "table:trading.trade_summary")
+    # the source picker (the base row's Source cell: a select of the kinds and tables)
+    gselect(pg, "sources", "base", 0, "trading.trade_summary")
     wait(pg, "window.Drishti.editors.yamlText().includes('table: trading.trade_summary')")
-    pg.select_option("[data-source-pick]", "kind:trade")
+    settle(pg)
+    gselect(pg, "sources", "base", 0, "trade")
     wait(pg, "window.Drishti.editors.yamlText().includes('kind: trade')")
     settle(pg)
 
@@ -345,18 +397,19 @@ def test_model_tabs_measure_card_and_access(pg):
     pg.click("[data-add-table]")
     wait(pg, "document.querySelectorAll('[data-model-table]').length === 3")
     last = pg.get_attribute("[data-model-table] >> nth=2", "data-model-table")
-    pg.select_option(f"[data-model-role='{last}']", "dimension")
+    gselect(pg, "tables", last, 2, "dimension")                               # the Role cell: a select in drishti-grid's editor
+    wait(pg, f"/{last}:[\\s\\S]*role: dimension/.test(window.Drishti.editors.yamlText())")
     pg.click("[data-add-rel]")
-    wait(pg, "document.querySelectorAll('[data-rel-active]').length === 2")
-    pg.uncheck("[data-rel-active='1']")
+    wait(pg, "document.querySelectorAll('[data-rel]').length === 2")
+    gcell(pg, "relationships", "1", 2)                                       # Active: a checkbox cell turns at once
     wait(pg, "window.Drishti.editors.yamlText().includes('active: false')")
     pg.click("[data-remove-rel] >> nth=1")
     pg.click("[data-remove-alias] >> nth=2")
     wait(pg, "document.querySelectorAll('[data-model-table]').length === 2")
     pg.click("[data-tab=fields]")
-    wait(pg, "document.querySelectorAll('[data-panel=fields] tbody tr').length >= 4")
+    wait(pg, "document.querySelectorAll('[data-panel=fields] [data-field]').length >= 4")
     pg.click("[data-tab=measures]")
-    wait(pg, "document.querySelector(\"[data-adds-up='MTM']\").textContent.startsWith('yes')")
+    wait(pg, "!!document.querySelector(\"[data-adds-up='MTM']\") && document.querySelector(\"[data-adds-up='MTM']\").textContent.startsWith('yes')")
     assert "per total" in pg.inner_text("[data-adds-up='Avg MTM']")
     pg.click("[data-measure-card='MTM']")
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-card]')")
@@ -365,8 +418,9 @@ def test_model_tabs_measure_card_and_access(pg):
     pg.fill("[data-new-measure-name]", "Rows")
     pg.click("[data-add-measure]")
     wait(pg, "window.Drishti.editors.yamlText().includes('Rows:')")
-    fx(pg, "[data-path='measures.Rows.expr']", "count(t)")
-    pg.fill("[data-path='measures.Rows.format']", "#,##0")
+    gcode(pg, "measures", "Rows", 1, "count(t)")                             # the formula cell: a one-line Rachana code editor
+    wait(pg, "window.Drishti.editors.yamlText().includes('count(t)')")
+    gtext(pg, "measures", "Rows", 2, "#,##0")
     wait(pg, "window.Drishti.editors.yamlText().includes('#,##0')")
     pg.click("[data-remove-measure] >> nth=2")
     wait(pg, "!document.querySelector(\"[data-measure='Rows']\")")
@@ -374,10 +428,15 @@ def test_model_tabs_measure_card_and_access(pg):
     pg.fill("[data-new-hierarchy-name]", "By product")
     pg.click("[data-add-hierarchy]")
     wait(pg, "window.Drishti.editors.yamlText().includes('By product')")
+    gcode(pg, "hierarchies", "By product", 1, "p.PRODUCT, p.NAME")
+    wait(pg, "window.Drishti.editors.yamlText().includes('p.NAME')")
     pg.click("[data-remove-hierarchy] >> nth=1")
     pg.click("[data-tab=rules]")
     pg.click("[data-add-rule]")
     wait(pg, "window.Drishti.editors.yamlText().includes('user.desks')")
+    rule = pg.evaluate("document.querySelector(\"[data-rowgrid='rules']\").grid.model.idAt(0)")
+    gcode(pg, "rules", rule, 2, "t.PRODUCT in user.desks")
+    wait(pg, "window.Drishti.editors.yamlText().includes('t.PRODUCT in user.desks')")
     pg.click("[data-remove-rule]")
     wait(pg, "!window.Drishti.editors.yamlText().includes('user.desks')")
     pg.click("[data-tab=masks]")

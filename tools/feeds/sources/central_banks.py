@@ -14,7 +14,7 @@
 
 """The central-banks feed (config/feeds/central-banks.yaml): FRED series (the Federal Reserve Bank of St. Louis; a free key in
 DRISHTI_FRED_API_KEY) and the Bank of Canada's Valet API, for the central-banks pack. Incremental: each series is asked only from a few
-days before its last observation, merged into its kept history (history/<series>.json); no new observation anywhere, nothing emitted.
+days before its last observation, merged into its kept history (history/<series>.jsonl); no new observation anywhere, nothing emitted.
 Without the FRED key the FRED series are left out, said in words, and the Bank of Canada's still run. Emits the rate-series kind (one a
 series: the latest value, the changes, the history) and the central-bank kind (one a bank: its policy rate, its last move, its series)."""
 from __future__ import annotations

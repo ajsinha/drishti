@@ -14,7 +14,7 @@
 
 """The oecd feed (config/feeds/oecd.yaml): the OECD Data Explorer's SDMX REST API (SDMX-JSON 2.0), for the oecd pack. One request a
 measure for every selected country. Incremental: later runs ask from three periods before each measure's last one, merged into the kept
-history (history/<measure>-<country>.json); nothing newer, nothing emitted. Emits the oecd-country kind (one a country: the latest of
+history (history/<measure>-<country>.jsonl); nothing newer, nothing emitted. Emits the oecd-country kind (one a country: the latest of
 each measure) and the oecd-series kind (one a country and measure: the history)."""
 from __future__ import annotations
 

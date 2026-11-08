@@ -3550,7 +3550,7 @@ Returns `function(): void`: disconnects.
 
 #### `EDITORS`
 
-The editors a column may name; a column without one gets its type's.
+The editors a column may name; a column without one gets its type's. 'code' is a formula: drishti-inputs' one-line CodeEditor (the column's codeMode, default Rachana, and its complete hook) when that library is on the page, else text.
 
 #### `editorOf(col)`
 
@@ -5871,6 +5871,9 @@ A row as the grid sees it at a display index.
 | `[filterable=true]` | `boolean` |  |
 | `[resizable=true]` | `boolean` |  |
 | `[editable=false]` | `boolean` | a person may change its values (setCellValue) |
+| `[editor]` | `('text'\|'number'\|'date'\|'select'\|'checkbox'\|'code')` | the cell editor (default: by type); 'code' is a one-line formula |
+| `[codeMode='rachana']` | `string` | the code editor's mode (rachana, yaml, python, text) for editor 'code' |
+| `[complete]` | `function(Object): (Array\|Promise&lt;Array&gt;)` | the code editor's completion hook for editor 'code' (drishti-inputs' CodeEditor) |
 | `[aggFunc]` | `string` | the aggregation of a value column (sum, count, min, max, avg, first, last, distinct, or a server measure) |
 | `[additive]` | `boolean` | whether its figures may be summed: false for VaR, ES, ratios (a total is asked of the server); default: true for numbers |
 | `[aggregate]` | `string` | 'server': the same as additive false (ELEMENTS.md's name) |
@@ -7731,6 +7734,18 @@ One field's value set from outside (a page's own control, a server's answer); th
 
 Returns `void`.
 
+##### `Form.setOptions(path, list, labels)`
+
+A list field's values replaced (a server's answer that arrives later: the measures of the model just chosen); the form drawn again, the focus kept. A value no longer offered stays until a person changes it (its check says so).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` | the field in the schema, an array's item fields by name (filters.field) |
+| `list` | `Array` | the values offered |
+| `[labels]` | `string[]` | their words |
+
+Returns `void`.
+
 ##### `Form.getField(path)`
 
 A field's value.
@@ -8728,6 +8743,8 @@ A field of a form schema.
 | `[lazy]` | `boolean` | text and numbers: the value changes when the field is left or Enter is pressed, not at each key |
 | `[noLabel]` | `boolean` | a custom widget that draws its own label |
 | `[addLabel]` | `string` | an array of objects: the words of its Add button |
+| `[itemHook]` | `(string\|Object&lt;string, string&gt;)` | an array of objects: data attributes on each item's group (as hook) |
+| `[addHook]` | `(string\|Object&lt;string, string&gt;)` | an array of objects: data attributes on its Add button (as hook) |
 | `[parseMessage]` | `string` | the words when typed text does not read as the field's type (default: the form's own) |
 
 #### `SelectOptions` : `Object`

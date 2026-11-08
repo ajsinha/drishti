@@ -254,11 +254,16 @@ function drawRepeat(form, f, wrap, msg, help, ro) {
       ro ? null : form.el('button', { cls: 'di-btn', text: '↑', attrs: { type: 'button', 'aria-label': 'Move ' + name + ' up', disabled: i === 0 || null }, on: { click: () => form.moveItem(f.path, i, -1) } }),
       ro ? null : form.el('button', { cls: 'di-btn', text: '↓', attrs: { type: 'button', 'aria-label': 'Move ' + name + ' down', disabled: i === list.length - 1 || null }, on: { click: () => form.moveItem(f.path, i, 1) } }),
       ro ? null : form.el('button', { cls: 'di-btn', text: 'Remove', attrs: { type: 'button', 'aria-label': 'Remove ' + name, disabled: (fs.minItems && list.length <= fs.minItems) || null }, data: { act: 'remove' }, on: { click: () => form.removeItem(f.path, i) } })])]);
+    applyHook(group, fs.itemHook);
     const subs = fieldsOf(fs.items, p);
     subs.forEach((sub) => group.appendChild(drawField(form, subs.length === 1 ? Object.assign({}, sub, { label: name }) : sub)));   // one field an item: it is named as the item
     box.appendChild(group);
   });
-  if (!ro) { box.appendChild(form.el('button', { cls: 'di-btn', text: fs.addLabel || 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => form.addItem(f.path) } })); }
+  if (!ro) {
+    const add = form.el('button', { cls: 'di-btn', text: fs.addLabel || 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => form.addItem(f.path) } });
+    applyHook(add, fs.addHook);
+    box.appendChild(add);
+  }
   box.appendChild(msg);
   applyHook(box, fs.hook);
   wrap.appendChild(box);

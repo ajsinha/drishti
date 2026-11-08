@@ -39,6 +39,9 @@ export const ADDITIVE_FUNCS = Object.freeze(['sum', 'count']);
  * @property {boolean} [filterable=true]
  * @property {boolean} [resizable=true]
  * @property {boolean} [editable=false] a person may change its values (setCellValue)
+ * @property {('text'|'number'|'date'|'select'|'checkbox'|'code')} [editor] the cell editor (default: by type); 'code' is a one-line formula
+ * @property {string} [codeMode='rachana'] the code editor's mode (rachana, yaml, python, text) for editor 'code'
+ * @property {function(Object): (Array|Promise<Array>)} [complete] the code editor's completion hook for editor 'code' (drishti-inputs' CodeEditor)
  * @property {string} [aggFunc] the aggregation of a value column (sum, count, min, max, avg, first, last, distinct, or a server measure)
  * @property {boolean} [additive] whether its figures may be summed: false for VaR, ES, ratios (a total is asked of the server);
  *   default: true for numbers
