@@ -23,8 +23,8 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | Library | Version | What it is |
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
-| [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-inputs](#drishti-inputs) | 0.3.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
+| [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
 | [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
@@ -1646,6 +1646,2702 @@ A table to export.
 | `sequential` | `string[]` | five colours from faint to strong |
 | `diverging` | `string[]` | five colours, negative to positive through the ground |
 | `nodata` | `string` |  |
+
+## drishti-inputs
+
+Version 0.3.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
+
+### drishti_calendar.js
+
+#### `CALENDAR_RULES`
+
+The bundled market calendars as rules (illustrative; a site's own calendars replace them through defineCalendar).
+
+#### `easterSunday(y)`
+
+Easter Sunday of a year (the Gregorian computus).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `y` | `number` |  |
+
+Returns `string`: ISO date.
+
+#### `ruleDate(r, y)`
+
+The day a rule falls on in a year (null when it does not hold that year).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `HolidayRule` |  |
+| `y` | `number` |  |
+
+Returns `?string`: ISO date.
+
+#### class `HolidayCalendar`
+
+A business calendar: its weekend, its holidays (from rules and from dates), and the business dates asked of it.
+
+##### `new HolidayCalendar(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{name: string, rules: HolidayRule[], dates: Array&lt;(string\|{date: string, name: string})&gt;, weekend: number[]}` | weekend: the days that are never business days (default [0, 6], Sunday and Saturday); dates: holidays as given (the server's list) |
+
+##### `HolidayCalendar.holidays(y)`
+
+The holidays of a year in order, each with its name.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `y` | `number` |  |
+
+Returns `Array&lt;{date: string, name: string}&gt;`.
+
+##### `HolidayCalendar.holidayName(v)`
+
+A holiday's name, or null when the day is not a holiday (weekends are not holidays).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` | a date |
+
+Returns `?string`.
+
+##### `HolidayCalendar.isBusinessDay(v)`
+
+Whether a day is a business day: not a weekend day and not a holiday.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `boolean`.
+
+##### `HolidayCalendar.isWeekend(v)`
+
+Whether a day is a weekend day of this calendar.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `boolean`.
+
+##### `HolidayCalendar.addBusinessDays(v, n)`
+
+The business date n business days away (n negative goes back; 0 rolls a holiday forward to the next business day).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `n` | `number` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.tMinus(v, n)`
+
+T-n: the n-th business day before a date (T-1 is the previous close).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` | the day T (default today) |
+| `[n=1]` | `number` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.onOrBefore(v)`
+
+The business day on or before a date (a date that is not a business day rolls back).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.onOrAfter(v)`
+
+The business day on or after a date.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.monthEnd(v)`
+
+The last business day of the month a date is in (month-end).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.monthStart(v)`
+
+The first business day of the month a date is in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.quarterEnd(v)`
+
+The last business day of the quarter a date is in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.yearEnd(v)`
+
+The last business day of the year a date is in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.previousMonthEnd(v)`
+
+The last month-end before a date (the latest month-end that has happened by it, the date itself when it is one).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.businessDaysBetween(from, to)`
+
+Business days after from, up to and including to (negative when to is earlier).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `from` | `*` |  |
+| `to` | `*` |  |
+
+Returns `number`.
+
+#### `defineCalendar(name, spec)`
+
+Defines (or replaces) a named calendar: rules, the server's dates, a weekend.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `spec` | `{rules: HolidayRule[], dates: Array&lt;(string\|{date: string, name: string})&gt;, weekend: number[]}` |  |
+
+Returns `HolidayCalendar`.
+
+#### `calendar(name)`
+
+A calendar by name ("US", "UK", "TARGET", "CA", a defined one, "weekends", or a union "US+UK": a day is a holiday in the union when it is one in any), or the calendar itself when one is given.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[name='weekends']` | `(string\|HolidayCalendar)` |  |
+
+Returns `HolidayCalendar`.
+
+#### `DATE_PRESETS` : `Array&lt;{id: string, label: string}&gt;`
+
+The date-range presets, in the order a picker shows them.
+
+#### `resolvePreset(id, o)`
+
+A preset as dates, from a business date and a calendar: {from, to, label}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` | one of DATE_PRESETS |
+| `[o]` | `{asOf: string, calendar: (string\|HolidayCalendar)}` | asOf: the business date (default today, rolled back to a business day) |
+
+Returns `{from: string, to: string, label: string}`.
+
+#### `parseDateInput(text, o)`
+
+Reads what a person typed as a business date: ISO (2026-11-06), "6 Nov 2026", "Nov 6 2026", T (the business date), T-3 or T+2 (business days), ME, QE, YE (this month's, quarter's, year's last business day), PME (the previous month-end). Null when it does not read.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `[o]` | `{asOf: string, calendar: (string\|HolidayCalendar)}` |  |
+
+Returns `?string`: ISO date.
+
+#### `monthGrid(y, m, weekStart)`
+
+The days a month view shows: six weeks of seven days from the week the month starts in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `y` | `number` |  |
+| `m` | `number` | 1 to 12 |
+| `[weekStart=1]` | `number` | 0 Sunday, 1 Monday |
+
+Returns `Array&lt;Array&lt;{iso: string, day: number, inMonth: boolean, weekday: number}&gt;&gt;`.
+
+#### `shiftDate(v, n, unit)`
+
+A date moved by whole days, months or years (a month that is shorter keeps its last day: 31 Jan + 1 month is 28 or 29 Feb).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `n` | `number` |  |
+| `unit` | `('day'\|'month'\|'year')` |  |
+
+Returns `string`.
+
+### drishti_inputs-dom.js
+
+#### `uid(prefix)`
+
+A new id for an element of a component ("di-&lt;prefix&gt;-&lt;n&gt;").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `prefix` | `string` |  |
+
+Returns `string`.
+
+#### `debounce(fn, ms)`
+
+A function that runs fn once calls stop for ms milliseconds (the last call's arguments); .cancel() drops a pending call, .flush() runs it now.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fn` | `function(...*): void` |  |
+| `ms` | `number` |  |
+
+Returns `function(...*): void`.
+
+#### class `InputBase`
+
+The base of every input component: the host element, the options, typed events on a bus and on the element.
+
+##### `new InputBase(host, options, cls)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the component fills |
+| `options` | `Object` |  |
+| `cls` | `string` | the component's class on the host (di-date, di-multiselect ...) |
+
+##### `InputBase.on(name, fn)`
+
+Listens to one of the component's events.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object, string): void` |  |
+
+Returns `function(): void`: stops listening.
+
+##### `InputBase.emit(name, detail)`
+
+Emits an event on the bus and as a DOM event drishti:&lt;kebab-name&gt; on the host (bubbling).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `[detail]` | `Object` |  |
+
+Returns `void`.
+
+##### `InputBase.el(tag, p, children)`
+
+Makes an element of this document.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tag` | `string` |  |
+| `[p]` | `Object` | as drishti-core's h |
+| `[children]` | `Array` |  |
+
+Returns `HTMLElement`.
+
+##### `InputBase.destroy()`
+
+Takes the component out of its element.
+
+Returns `void`.
+
+#### class `Popover`
+
+A floating panel under an anchor (position fixed, in the page's body): a click outside and Escape close it; focus goes back to where it was.
+
+##### `new Popover(doc, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `[o]` | `{cls: string, label: string, role: string, onClose: function(): void, theme: Element}` | theme: the element whose density the panel copies |
+
+##### `Popover.isOpen()`
+
+Whether it is open.
+
+Returns `boolean`.
+
+##### `Popover.open(anchor, content, o)`
+
+Opens the panel under an anchor with its content.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `anchor` | `Element` |  |
+| `content` | `Node` |  |
+| `[o]` | `{focus: boolean}` | focus: keep the focus where it is (a combobox's field keeps it) |
+
+Returns `HTMLElement`.
+
+##### `Popover.place()`
+
+Places the panel again (its content changed size).
+
+Returns `void`.
+
+##### `Popover.close(refocus)`
+
+Closes the panel.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[refocus]` | `boolean` | give the focus back to what had it |
+
+Returns `void`.
+
+#### class `Listbox`
+
+Options in a list (role listbox): drawn up to a cap, the active one kept by aria-activedescendant on the element that keeps the focus.
+
+##### `new Listbox(doc, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `o` | `{multiple: boolean, cap: number, label: string, render: function(Object, HTMLElement): void, onPick: function(Object, Event): void, followActive: boolean}` | cap: options drawn at most (default 300); render: draws an option's content into its element (default: its label and detail); followActive: the active option is the selected one (a menu or a command list: aria-selected follows the keys) |
+
+##### `Listbox.render(items, selected, o)`
+
+Draws options.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `Array&lt;{value: *, label: string, detail: string, disabled: boolean, group: string}&gt;` |  |
+| `selected` | `function(Object): boolean` | whether an option is selected |
+| `[o]` | `{more: number, empty: string}` | more: how many matched beyond these; empty: the words when there are none |
+
+Returns `void`.
+
+##### `Listbox.setActive(i, owner)`
+
+Makes an option the active one (scrolled into view) and tells the focused element.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `i` | `number` |  |
+| `[owner]` | `Element` | the element with the focus (its aria-activedescendant) |
+
+Returns `void`.
+
+##### `Listbox.key(e, owner)`
+
+A key from the element with the focus: moves the active option or picks it. Returns whether the key was the list's.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `e` | `KeyboardEvent` |  |
+| `owner` | `Element` |  |
+
+Returns `boolean`.
+
+#### `normalizeOptions(list)`
+
+Options as the components take them: strings, numbers, or {value, label, detail, disabled, group}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Array&lt;(string\|number\|Object)&gt;` |  |
+
+Returns `Array&lt;{value: *, label: string, detail: string, disabled: boolean, group: string}&gt;`.
+
+#### `searchOptions(items, q)`
+
+Options that match a search, best first: the label that is the word, then the label starting with it, then a word of it starting with it, then containing it; the detail last. Every word of the search must match.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `Array&lt;{label: string, detail: string}&gt;` |  |
+| `q` | `string` |  |
+
+Returns `Array&lt;Object&gt;`.
+
+### drishti_date-picker.js
+
+#### class `CalendarView`
+
+One or more months of days as a grid (role grid), keyed by the business calendar: what the pickers draw in their popovers.
+
+##### `new CalendarView(doc, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `o` | `{calendar: Object, months: number, weekStart: number, businessOnly: boolean, min: string, max: string, focus: string, range: function(): {from: ?string, to: ?string, hover: ?string}, selected: function(string): boolean, onPick: function(string): void, onHover: function(string): void}` | months: how many months side by side (default 1); range: the range to shade (range picker) |
+
+##### `CalendarView.refusal(d)`
+
+Why a day may not be picked, or null when it may.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `string` |  |
+
+Returns `?string`.
+
+##### `CalendarView.render()`
+
+Draws the months from the focused day's.
+
+Returns `void`.
+
+##### `CalendarView.move(n, unit)`
+
+Moves the focused day (and the months shown) and focuses its button.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `number` |  |
+| `unit` | `('day'\|'month'\|'year')` |  |
+
+Returns `void`.
+
+##### `CalendarView.focusDay()`
+
+Puts the keyboard focus on the focused day's button.
+
+Returns `void`.
+
+#### class `DatePicker`
+
+A business-date picker: a field and a calendar. Events: change {value}, invalid {text, reason}, open, close.
+
+##### `new DatePicker(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `DatePickerOptions` |  |
+
+##### `DatePicker.refusal(d)`
+
+Why a date may not be picked, or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `string` | ISO |
+
+Returns `?string`.
+
+##### `DatePicker.open()`
+
+Opens the calendar on the value (or the business date).
+
+Returns `void`.
+
+##### `DatePicker.close()`
+
+Closes the calendar.
+
+Returns `void`.
+
+##### `DatePicker.getValue()`
+
+The date (ISO), or null.
+
+Returns `?string`.
+
+##### `DatePicker.setValue(v, emit)`
+
+Sets the date (ISO, a Date or null); change is emitted when a person changed it (or when emit is true).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `[emit]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DatePicker.validate()`
+
+Whether the field holds a date that may be picked (and one when it is required).
+
+Returns `boolean`.
+
+##### `DatePicker.focus()`
+
+Puts the keyboard focus in the field.
+
+Returns `void`.
+
+### drishti_date-range.js
+
+#### class `DateRangePicker`
+
+A date-range picker with presets. Events: change {from, to, preset}, invalid {reason}, open, close.
+
+##### `new DateRangePicker(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `DateRangeOptions` |  |
+
+##### `DateRangePicker.presets()`
+
+The presets this picker offers.
+
+Returns `Array&lt;{id: string, label: string}&gt;`.
+
+##### `DateRangePicker.presetRange(id)`
+
+A preset's dates: a given range as it is, a named one from the business date and the calendar.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `{from: string, to: string}`.
+
+##### `DateRangePicker.text()`
+
+The range in words: "3–7 Nov 2026 · Month to date".
+
+Returns `string`.
+
+##### `DateRangePicker.refusal(from, to)`
+
+Why a range may not be kept, or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `from` | `?string` |  |
+| `to` | `?string` |  |
+
+Returns `?string`.
+
+##### `DateRangePicker.open()`
+
+Opens the panel: presets, two months, the two ends.
+
+Returns `void`.
+
+##### `DateRangePicker.apply()`
+
+Keeps the panel's range (when it may be kept) and closes it.
+
+Returns `boolean`: whether it was kept.
+
+##### `DateRangePicker.close()`
+
+Closes the panel without keeping it.
+
+Returns `void`.
+
+##### `DateRangePicker.getValue()`
+
+The range ({from, to, preset}); a preset's dates as of the business date.
+
+Returns `DateRange`.
+
+##### `DateRangePicker.setValue(v, emit)`
+
+Sets the range: {from, to}, or {preset} (its dates from the business date), or a preset's id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `(DateRange\|string)` |  |
+| `[emit]` | `boolean` | tell listeners (change) |
+
+Returns `void`.
+
+##### `DateRangePicker.setAsOf(asOf)`
+
+Moves the business date: a preset's dates follow it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `asOf` | `string` |  |
+
+Returns `void`.
+
+### drishti_time-picker.js
+
+#### `parseTime(text)`
+
+Reads a typed time as "HH:MM", or null: 14:05, 14.05, 1405, 905, 9, 2pm, 2:30 pm, 12am, noon, midnight.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `?string`.
+
+#### `parseDateTime(text)`
+
+Reads a date with a time as "YYYY-MM-DDTHH:MM", or null: 2026-12-31T17:00, 2026-12-31 17:00, 2026-12-31 5pm; a date alone is midnight.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `?string`.
+
+#### `timeSlots(step, min, max)`
+
+The times of a day by a step in minutes, between min and max ("HH:MM").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[step=15]` | `number` |  |
+| `[min]` | `string` |  |
+| `[max]` | `string` |  |
+
+Returns `string[]`.
+
+#### class `TimePicker`
+
+A time field with the day's times under it. Events: change {value}, invalid {text, reason}.
+
+##### `new TimePicker(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `TimePickerOptions` |  |
+
+##### `TimePicker.open()`
+
+Opens the day's times, the value's (or the nearest) active.
+
+Returns `void`.
+
+##### `TimePicker.close()`
+
+Closes the list.
+
+Returns `void`.
+
+##### `TimePicker.getValue()`
+
+The time ("HH:MM") or null.
+
+Returns `?string`.
+
+##### `TimePicker.setValue(v, emit)`
+
+Sets the time; change is emitted when emit is true and it changed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?string` |  |
+| `[emit]` | `boolean` |  |
+
+Returns `void`.
+
+##### `TimePicker.validate()`
+
+Whether the field holds a time (and one when it is required).
+
+Returns `boolean`.
+
+##### `TimePicker.focus()`
+
+Puts the keyboard focus in the field.
+
+Returns `void`.
+
+##### `TimePicker.destroy()`
+
+Takes the picker out of its element.
+
+Returns `void`.
+
+#### class `DateTimePicker`
+
+A date and a time with its zone. Events: change {value}, invalid {reason}.
+
+##### `new DateTimePicker(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `DateTimePickerOptions` |  |
+
+##### `DateTimePicker.getValue()`
+
+The value ("YYYY-MM-DDTHH:MM") or null.
+
+Returns `?string`.
+
+##### `DateTimePicker.setValue(v, emit)`
+
+Sets the value.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?string` |  |
+| `[emit]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DateTimePicker.setTimeZone(zone)`
+
+Names the time zone beside the time.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `zone` | `string` |  |
+
+Returns `void`.
+
+##### `DateTimePicker.validate()`
+
+Whether both parts read (and a date when required).
+
+Returns `boolean`.
+
+##### `DateTimePicker.focus()`
+
+Puts the keyboard focus on the date.
+
+Returns `void`.
+
+##### `DateTimePicker.destroy()`
+
+Takes the picker out of its element.
+
+Returns `void`.
+
+### drishti_tree.js
+
+#### class `TreeModel`
+
+A tree with lazy children, tri-state checks and search.
+
+##### `new TreeModel(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{nodes: TreeNode[], loadChildren: function(TreeNode): Promise&lt;TreeNode[]&gt;, multiple: boolean, value: string[]}` | multiple default true (false: one node is picked) |
+
+##### `TreeModel.setNodes(nodes)`
+
+Replaces the roots (and everything under them).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `TreeNode[]` |  |
+
+Returns `void`.
+
+##### `TreeModel.node(id)`
+
+A node by id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?TreeNode`.
+
+##### `TreeModel.isBranch(n)`
+
+Whether a node has, or may have, children.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `TreeNode` |  |
+
+Returns `boolean`.
+
+##### `TreeModel.ancestors(id)`
+
+The ids from the root down to a node's parent.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `string[]`.
+
+##### `TreeModel.pathLabel(id)`
+
+The path of labels to a node ("Rates › Swaps").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `string`.
+
+##### `TreeModel.toggle(id, open)`
+
+Opens or closes a node; opening an unloaded branch asks the loader for its children.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[open]` | `boolean` | default: the other way |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `TreeModel.ensureChildren(n)`
+
+Loads a node's children when they are not known yet.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `TreeNode` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `TreeModel.stateOf(id)`
+
+A node's state: checked (it or an ancestor is), mixed (something under it is), unchecked.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `('checked'\|'mixed'\|'unchecked')`.
+
+##### `TreeModel.check(id, on)`
+
+Checks or unchecks a node (single: picks it alone). The selection stays compact: a parent whose children are all checked becomes the parent; unchecking under a checked parent checks the parent's other children instead.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[on]` | `boolean` | default: the other way (a mixed node becomes checked) |
+
+Returns `void`.
+
+##### `TreeModel.checkAll(on)`
+
+Checks every root (everything), or nothing.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `TreeModel.getValue(o)`
+
+The selection: compact (a checked node stands for everything under it; the default) or the loaded leaves under it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{mode: ('compact'\|'leaves')}` |  |
+
+Returns `string[]`.
+
+##### `TreeModel.setValue(ids)`
+
+Sets the selection (ids; ids not loaded yet are kept and apply when they load).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `void`.
+
+##### `TreeModel.search(q, server)`
+
+Searches: the loaded nodes whose label or detail holds every word, with their ancestors opened. With a server hook, its answer (nodes with their paths) is merged in first.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+| `[server]` | `function(string): Promise&lt;Array&lt;{node: TreeNode, path: TreeNode[]}&gt;&gt;` |  |
+
+Returns `Promise&lt;number&gt;`: how many matched.
+
+##### `TreeModel.rows()`
+
+The visible rows, in order: the roots and the children of open nodes (only the search's matches and their ancestors while searching).
+
+Returns `TreeRow[]`.
+
+##### `TreeModel.summary(o)`
+
+The selection in words: "Rates, FX › Spot" or "3 selected" past a few; "Everything" when every root is checked.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{max: number, none: string}` | max: names shown before a count (default 2) |
+
+Returns `string`.
+
+### drishti_tree-picker.js
+
+#### class `TreePicker`
+
+A tree picker. Events: change {value, leaves}, open, close, loadFailed {id, error}.
+
+##### `new TreePicker(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `TreePickerOptions` |  |
+
+##### `TreePicker.open()`
+
+Opens the panel (focus in the search field).
+
+Returns `void`.
+
+##### `TreePicker.close()`
+
+Closes the panel.
+
+Returns `void`.
+
+##### `TreePicker.render()`
+
+Draws the tree, the count and the button's words.
+
+Returns `void`.
+
+##### `TreePicker.expand(id, open)`
+
+Opens or closes a node (children from the server the first time).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[open]` | `boolean` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `TreePicker.checkAll(on)`
+
+Checks everything or nothing.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `TreePicker.getValue(o)`
+
+The checked ids (compact), or the loaded leaves under them.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{mode: ('compact'\|'leaves')}` |  |
+
+Returns `string[]`.
+
+##### `TreePicker.setValue(ids)`
+
+Sets the checked ids.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `void`.
+
+##### `TreePicker.setNodes(nodes)`
+
+Replaces the roots.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `import('./drishti_tree.js').TreeNode[]` |  |
+
+Returns `void`.
+
+### drishti_multiselect.js
+
+#### class `MultiSelect`
+
+A multi-select with search, chips and select-all. Events: change {value, added, removed}, open, close.
+
+##### `new MultiSelect(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `MultiSelectOptions` |  |
+
+##### `MultiSelect.open()`
+
+Opens the list.
+
+Returns `void`.
+
+##### `MultiSelect.close()`
+
+Closes the list.
+
+Returns `void`.
+
+##### `MultiSelect.toggle(v)`
+
+Picks or unpicks one value.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `void`.
+
+##### `MultiSelect.selectAll(on)`
+
+Picks every option the search matches (or every option), or none (Clear: every pick, matching or not).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `MultiSelect.render()`
+
+Draws the chips.
+
+Returns `void`.
+
+##### `MultiSelect.getValue()`
+
+The picked values, in the options' order.
+
+Returns `Array&lt;*&gt;`.
+
+##### `MultiSelect.setValue(values)`
+
+Sets the picked values.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `Array&lt;*&gt;` |  |
+
+Returns `void`.
+
+##### `MultiSelect.setOptions(options)`
+
+Replaces the options (picks that are no longer options are dropped).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `options` | `Array` |  |
+
+Returns `void`.
+
+##### `MultiSelect.focus()`
+
+Puts the keyboard focus in the field.
+
+Returns `void`.
+
+### drishti_combobox.js
+
+#### class `TypeAhead`
+
+Options from a source as a person types: debounced, cached, aborted and in order.
+
+##### `new TypeAhead(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{source: (Array\|function(string, AbortSignal): Promise&lt;Array&gt;), debounceMs: number, minChars: number, cacheSize: number, onResult: function({query: string, options: Array, error: ?Error, loading: boolean}): void}` | debounceMs default 200 (0 for a list); minChars default 1 (0 for a list); cacheSize default 50 queries |
+
+##### `TypeAhead.query(q)`
+
+Asks for the options of a query (after the debounce); the answer goes to onResult.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+
+Returns `void`.
+
+##### `TypeAhead.abort()`
+
+Aborts the request in flight.
+
+Returns `void`.
+
+##### `TypeAhead.cancel()`
+
+Stops: no answer is given after this.
+
+Returns `void`.
+
+#### class `Combobox`
+
+A combobox with type-ahead. Events: change {value, option}, search {query}, error {error}.
+
+##### `new Combobox(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `ComboboxOptions` |  |
+
+##### `Combobox.isOpen()`
+
+Whether the list is open.
+
+Returns `boolean`.
+
+##### `Combobox.close()`
+
+Closes the list.
+
+Returns `void`.
+
+##### `Combobox.pick(it)`
+
+Picks an option.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `it` | `{value: *, label: string}` |  |
+
+Returns `void`.
+
+##### `Combobox.getValue()`
+
+The value ({value, label}) or null.
+
+Returns `?{value: *, label: string}`.
+
+##### `Combobox.setValue(v, emit, option)`
+
+Sets the value.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?{value: *, label: string}` |  |
+| `[emit]` | `boolean` |  |
+| `[option]` | `Object` | the option picked (passed on in change) |
+
+Returns `void`.
+
+##### `Combobox.focus()`
+
+Puts the keyboard focus in the field.
+
+Returns `void`.
+
+##### `Combobox.destroy()`
+
+Stops the type-ahead and takes the combobox out.
+
+Returns `void`.
+
+### drishti_select.js
+
+#### class `Select`
+
+A single-choice select with keyboard, type-ahead and search. Events: change {value, option} (the value changed), pick {value, option} (a person picked, the same value too), open, close.
+
+##### `new Select(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `SelectOptions` |  |
+
+##### `Select.open(at)`
+
+Opens the list (on the picked option, or the first).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[at]` | `number` | the option to make active (an index of the list drawn) |
+
+Returns `void`.
+
+##### `Select.close(refocus)`
+
+Closes the list.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[refocus]` | `boolean` | put the focus back on the control |
+
+Returns `void`.
+
+##### `Select.pick(it)`
+
+Picks an option (a disabled one is refused).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `it` | `{value: *, label: string}` |  |
+
+Returns `void`.
+
+##### `Select.getValue()`
+
+The value picked, or null.
+
+Returns `*`.
+
+##### `Select.getOption()`
+
+The option picked ({value, label, detail, group, disabled}), or null (nothing picked, or a value no option has).
+
+Returns `?Object`.
+
+##### `Select.setValue(v, emit)`
+
+Sets the value: an option's value (the option's own value is kept: "0.99" picks the option 0.99), or one no option has (shown as it is).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `[emit]` | `boolean` | emit change when it changed |
+
+Returns `void`.
+
+##### `Select.setOptions(list, value)`
+
+Replaces the options; the value is kept when an option still has it, else value (when given), else the first enabled option.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Array` | as the options option |
+| `[value]` | `*` |  |
+
+Returns `void`.
+
+##### `Select.setDisabled(off)`
+
+Turns the select on or off.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `off` | `boolean` |  |
+
+Returns `void`.
+
+##### `Select.focus()`
+
+Puts the keyboard focus on the control.
+
+Returns `void`.
+
+#### `selectElement(doc, options, attrs)`
+
+A Select in its own &lt;drishti-select&gt; element, for a screen or a library that draws one in code: the element carries the attributes (an id, a hook, a class), its value and component are as on any page (el.value, el.component, el.disabled, el.focus()), and a pick fires input and change on it as a native select's did. options as the Select's; options.options may be values, [value, label] pairs or objects.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `options` | `SelectOptions` |  |
+| `[attrs]` | `Object&lt;string, *&gt;` | attributes of the element (null, undefined and false are left out; true is the empty value) |
+
+Returns `HTMLElement`: the &lt;drishti-select&gt;.
+
+#### `selectProperties(box)`
+
+Gives a &lt;drishti-select&gt; element the properties a native select had, read through its component: value, disabled and focus().
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `box` | `HTMLElement` |  |
+
+Returns `void`.
+
+### drishti_schema.js
+
+#### `words(key)`
+
+A key in words: tradeDate and TRADE_DATE read "Trade date".
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `key` | `string` |  |
+
+Returns `string`.
+
+#### `pathParts(path)`
+
+A path's parts: "legs[1].notional" is ['legs', 1, 'notional'].
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` |  |
+
+Returns `Array&lt;(string\|number)&gt;`.
+
+#### `getPath(obj, path)`
+
+The value at a path.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `obj` | `Object` |  |
+| `path` | `string` |  |
+
+Returns `*`.
+
+#### `setPath(obj, path, value)`
+
+A copy of obj with the value at a path set (objects and arrays on the way are copied, never changed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `obj` | `Object` |  |
+| `path` | `string` |  |
+| `value` | `*` |  |
+
+Returns `Object`.
+
+#### `conditionHolds(cond, values, path)`
+
+Whether a condition holds for a field at a path: {field, equals \| notEquals \| in \| notIn \| gt \| gte \| lt \| lte \| truthy \| falsy \| empty}, {all: [...]}, {any: [...]}, {not: {...}}. field is a sibling's key, or "/path" from the root.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `cond` | `Object` |  |
+| `values` | `Object` | the whole form's value |
+| `path` | `string` | the field the condition belongs to |
+
+Returns `boolean`.
+
+#### `fieldsOf(schema, base)`
+
+The fields of an object schema in order, each with its key, path, label and whether it is required.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `FieldSchema` | an object schema |
+| `[base]` | `string` | the object's path |
+
+Returns `Array&lt;{key: string, path: string, field: FieldSchema, label: string, required: boolean}&gt;`.
+
+#### `defaults(schema)`
+
+A schema's starting value: every default, objects filled in, arrays at their minItems.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `FieldSchema` |  |
+
+Returns `*`.
+
+#### `fieldProblem(field, v, c)`
+
+One field's problem in words, or null (its own rules; not the fields inside it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `FieldSchema` |  |
+| `v` | `*` |  |
+| `c` | `{label: string, required: boolean, values: Object, path: string, labelOf: function(string): string}` |  |
+
+Returns `?string`.
+
+#### `validate(schema, values)`
+
+Validates a value against a schema: every shown field's problem, by path.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `FieldSchema` | the form's object schema |
+| `values` | `Object` |  |
+
+Returns `{ok: boolean, errors: Object&lt;string, string&gt;}`.
+
+#### `visibleValue(schema, values)`
+
+The value without the fields that are hidden (what a form submits).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `FieldSchema` |  |
+| `values` | `Object` |  |
+
+Returns `Object`.
+
+#### `changes(before, after, base)`
+
+What changed between two values, leaf by leaf (a four-eyes proposal's diff).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `before` | `*` |  |
+| `after` | `*` |  |
+| `[base]` | `string` |  |
+
+Returns `Array&lt;{path: string, old: *, value: *}&gt;`.
+
+#### `parseField(field, text, label)`
+
+Reads typed text as a field's value: numbers with grouping, a true minus, k, m and bn, percentages; integers; booleans; dates (ISO). Returns {value} or {error} in words.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `FieldSchema` |  |
+| `text` | `string` |  |
+| `[label]` | `string` |  |
+
+Returns `{value: *, error: ?string}`.
+
+#### `currencyOf(field, values, path)`
+
+A money field's currency: its fixed code, or what the field it names holds.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `FieldSchema` |  |
+| `values` | `Object` | the whole form's value |
+| `path` | `string` | the money field's path |
+
+Returns `string`.
+
+#### `offeredValues(field, values, path)`
+
+The values an enum list offers now: those whose parents include a value chosen in the field it depends on (all when none is chosen).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `FieldSchema` |  |
+| `values` | `Object` |  |
+| `path` | `string` |  |
+
+Returns `Array`.
+
+### drishti_form.js
+
+#### class `Form`
+
+A form from a schema. Events: change {path, value, values}, invalid {errors}, submitted {values, result}, proposed {proposal, result}, reset, step {index, id}.
+
+##### `new Form(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `FormOptions` |  |
+
+##### `Form.render()`
+
+Draws the form again (after an array changed shape); the focus goes back to the field that had it.
+
+Returns `void`.
+
+##### `Form.step()`
+
+The current step (its index), or 0.
+
+Returns `number`.
+
+##### `Form.goTo(i)`
+
+Goes to a step (Back always; forward only through Next, which checks the step's fields).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `i` | `number` |  |
+
+Returns `void`.
+
+##### `Form.next()`
+
+Checks the current step's fields and, when they hold, goes on.
+
+Returns `boolean`: whether it went on.
+
+##### `Form.refresh()`
+
+Shows and hides fields by their conditions, and shows each touched field's problem.
+
+Returns `void`.
+
+##### `Form.focusField(path)`
+
+Puts the focus on a field.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` |  |
+
+Returns `void`.
+
+##### `Form.validate()`
+
+Validates every shown field (and shows every problem).
+
+Returns `{ok: boolean, errors: Object&lt;string, string&gt;}`.
+
+##### `Form.submit()`
+
+Submits: validates, asks the server's checks, then hands the value to onSubmit, or files a proposal when the form has four eyes.
+
+Returns `Promise&lt;boolean&gt;`: whether it was submitted (or proposed).
+
+##### `Form.resolveProposal(decision, note)`
+
+The proposal's decision came back: approved keeps the value as the new start; rejected puts the start back. Either way the form is editable again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `decision` | `('approved'\|'rejected')` |  |
+| `[note]` | `string` |  |
+
+Returns `void`.
+
+##### `Form.setField(path, value)`
+
+One field's value set from outside (a page's own control, a server's answer); the field is drawn again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` |  |
+| `value` | `*` |  |
+
+Returns `void`.
+
+##### `Form.setOptions(path, list, labels)`
+
+A list field's values replaced (a server's answer that arrives later: the measures of the model just chosen); the form drawn again, the focus kept. A value no longer offered stays until a person changes it (its check says so).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` | the field in the schema, an array's item fields by name (filters.field) |
+| `list` | `Array` | the values offered |
+| `[labels]` | `string[]` | their words |
+
+Returns `void`.
+
+##### `Form.getField(path)`
+
+A field's value.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` |  |
+
+Returns `*`.
+
+##### `Form.getValue()`
+
+The value: the shown fields only.
+
+Returns `Object`.
+
+##### `Form.setValue(v)`
+
+Replaces the value (and the start Reset goes back to).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `Object` |  |
+
+Returns `void`.
+
+##### `Form.reset()`
+
+Puts the start value back.
+
+Returns `void`.
+
+##### `Form.setErrors(errors)`
+
+Problems from elsewhere (a server's answer), by path.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `errors` | `Object&lt;string, string&gt;` |  |
+
+Returns `void`.
+
+##### `Form.setNotes(notes)`
+
+Notes by path that do not stop a submit (a warning: "above the desk limit"), shown where a problem would be when there is none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `notes` | `Object&lt;string, string&gt;` |  |
+
+Returns `void`.
+
+##### `Form.showErrors(errors)`
+
+Problems from elsewhere shown at once, without marking every field tried (a live check as people type).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `errors` | `Object&lt;string, string&gt;` |  |
+
+Returns `void`.
+
+### drishti_form-host.js
+
+#### `FORM_HOST_SELECTOR`
+
+The attribute that marks a form host.
+
+#### `formOf(host, extra)`
+
+The Form of a host the server drew (made at the first call; later calls answer the same Form).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | an element with data-schema: {schema, value, options} |
+| `[extra]` | `Object` | options added by the page's script: onSubmit and check join a Form already drawn (they are read when it is submitted); widgets too (the fields are drawn again with them, the values kept); other drawing options count only at the first call |
+
+Returns `Form\|null`.
+
+#### `upgradeForms(root)`
+
+Every form host under a root made a Form (drishti_app.js does it for each page, with upgradeFields).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `(Document\|HTMLElement)` |  |
+
+Returns `Form[]`.
+
+### drishti_form-fields.js
+
+#### `defineWidget(name, factory)`
+
+Defines a widget every form may name in a field's widget (a form's own widgets option wins over it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `factory` | `WidgetFactory` |  |
+
+Returns `void`.
+
+#### `defaultWidget(fs)`
+
+A field's widget when the schema names none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fs` | `Object` |  |
+
+Returns `string`.
+
+#### `applyHook(el, hook)`
+
+Puts a field's hook on its control: a name gives data-&lt;name&gt;, an object its attributes.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `Element` |  |
+| `hook` | `(string\|Object&lt;string, string&gt;)` |  |
+
+Returns `void`.
+
+### drishti_filter-bar.js
+
+#### class `FilterModelBar`
+
+The filter bar's model: fields, the filter model, the chips' words and every edit.
+
+##### `new FilterModelBar(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{fields: FilterField[], model: Object, quickFilter: string}` |  |
+
+##### `FilterModelBar.field(id)`
+
+A field by id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?FilterField`.
+
+##### `FilterModelBar.chips()`
+
+The chips: each filtered field and its words.
+
+Returns `Array&lt;{id: string, label: string, text: string}&gt;`.
+
+##### `FilterModelBar.set(id, filter)`
+
+Sets one field's filter (null takes it away).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `filter` | `?Object` | a ColumnFilter |
+
+Returns `void`.
+
+##### `FilterModelBar.setMembers(id, values)`
+
+Keeps a set's members (none: the filter goes).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `values` | `Array` |  |
+
+Returns `void`.
+
+##### `FilterModelBar.setCondition(id, op, text, textTo)`
+
+A number or text condition; a value that does not read takes nothing and says why.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `op` | `string` |  |
+| `text` | `string` |  |
+| `[textTo]` | `string` | between's upper end |
+
+Returns `?string`: the problem in words, or null.
+
+##### `FilterModelBar.setDates(id, r)`
+
+A date range: a preset (it moves with the business date) or two ends as typed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `r` | `{preset: string, from: string, to: string, asOf: string, calendar: string}` |  |
+
+Returns `?string`: the problem in words, or null.
+
+##### `FilterModelBar.clear()`
+
+Takes every filter away (and the quick filter).
+
+Returns `void`.
+
+##### `FilterModelBar.payload()`
+
+What the bar emits: the model (a copy), the quick filter.
+
+Returns `{model: Object, quickFilter: string}`.
+
+#### class `FilterBar`
+
+The filter bar. Events: change {model, quickFilter}; the same payload on the bus under the channel.
+
+##### `new FilterBar(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `FilterBarOptions` |  |
+
+##### `FilterBar.render()`
+
+Draws the chips.
+
+Returns `void`.
+
+##### `FilterBar.edit(id, anchor)`
+
+Opens a field's editor under an anchor.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[anchor]` | `Element` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `FilterBar.getValue()`
+
+The filter model and the quick filter.
+
+Returns `{model: Object, quickFilter: string}`.
+
+##### `FilterBar.setValue(v)`
+
+Sets the filters (and tells the bus).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `{model: Object, quickFilter: string}` |  |
+
+Returns `void`.
+
+### drishti_native.js
+
+#### `upgradeDateInput(input, options)`
+
+Upgrades an `&lt;input type="date"&gt;` to the business-date picker in place (once; a second call answers the same picker). The input becomes a hidden input with its name, id and value; the picker is drawn just after it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `input` | `HTMLInputElement` |  |
+| `[options]` | `UpgradeDateOptions` |  |
+
+Returns `?DatePicker`.
+
+#### `upgradeTimeInput(input, options)`
+
+Upgrades an `&lt;input type="time"&gt;` to the time picker in place ("HH:MM"), as upgradeDateInput does a date.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `input` | `HTMLInputElement` |  |
+| `[options]` | `{label: string, stepMinutes: number}` | stepMinutes: default the field's step (seconds) in minutes, else 15 |
+
+Returns `?TimePicker`.
+
+#### `upgradeDateTimeInput(input, options)`
+
+Upgrades an `&lt;input type="datetime-local"&gt;` to the date-and-time picker in place ("YYYY-MM-DDTHH:MM"; data-time-zone names the zone).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `input` | `HTMLInputElement` |  |
+| `[options]` | `{label: string, timeZone: string}` |  |
+
+Returns `?DateTimePicker`.
+
+#### `upgradeCheckboxes(group, options)`
+
+Upgrades a group of checkbox labels to the multi-select in place (once). The group stays in the page, hidden, with its checkboxes: the form submits them as before. Each option is a checkbox: its value, and as its label the checkbox's data-text or its label's text.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `group` | `HTMLElement` |  |
+| `[options]` | `UpgradeChecksOptions` |  |
+
+Returns `?{picker: MultiSelect, host: HTMLElement, sync: function(): void}`.
+
+#### `upgradeFields(root, options)`
+
+Upgrades every `&lt;input type="date"&gt;`, `"time"` and `"datetime-local"` under a root (not those marked data-native) and every group marked `[data-multiselect]` with more than `small` checkboxes (fewer stay a compact row of checkboxes).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `(Document\|Element)` |  |
+| `[options]` | `{small: number, offClass: string, dates: UpgradeDateOptions}` |  |
+
+Returns `{dates: DatePicker[], checks: Array&lt;Object&gt;, forms: Array&lt;Object&gt;}`: (forms: the server's form hosts made Forms, drishti_form-host.js).
+
+### drishti_code-modes.js
+
+#### `rachanaMode()`
+
+The Rachana expression mode.
+
+Returns `{startState: function(): Object, token: function(Object, Object): ?string, lineComment: string}`.
+
+#### `yamlMode()`
+
+The Rachana YAML mode: comments, keys, quoted strings, numbers, booleans, the Rachana-EL markers ($, @, #index), F1 to F12.
+
+Returns `{startState: function(): Object, token: function(Object, Object): ?string, lineComment: string}`.
+
+#### `MODES`
+
+The languages by name: the CodeMirror mode each is, and whether it is ours (defined here) or vendored (loaded).
+
+#### `defineModes(CM)`
+
+Defines our modes on a CodeMirror (once each).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `CM` | `Object` | the CodeMirror global |
+
+Returns `void`.
+
+#### class `MiniStream`
+
+A stream over one line with CodeMirror's StringStream methods (what a mode's token reads).
+
+##### `new MiniStream(line)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `line` | `string` |  |
+
+##### `MiniStream.sol()`
+
+At the line's start.
+
+Returns `boolean`.
+
+##### `MiniStream.eol()`
+
+At the line's end.
+
+Returns `boolean`.
+
+##### `MiniStream.peek()`
+
+The next character, not taken.
+
+Returns `?string`.
+
+##### `MiniStream.next()`
+
+Takes the next character.
+
+Returns `?string`.
+
+##### `MiniStream.eatSpace()`
+
+Takes white space.
+
+Returns `boolean`: whether any was taken.
+
+##### `MiniStream.skipToEnd()`
+
+Takes the rest of the line.
+
+Returns `void`.
+
+##### `MiniStream.match(pattern, consume)`
+
+Takes text that matches (a string or a regular expression anchored with ^), unless consume is false.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `pattern` | `(string\|RegExp)` |  |
+| `[consume=true]` | `boolean` |  |
+
+Returns `*`: the match, or false/null.
+
+##### `MiniStream.current()`
+
+The text taken since the token started.
+
+Returns `string`.
+
+#### `tokens(lang, text)`
+
+Text as tokens by one of our modes, line by line: [{text, style}] per line (style null for plain text).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `lang` | `string` | rachana or yaml (python and text come back plain) |
+| `text` | `string` |  |
+
+Returns `Array&lt;Array&lt;{text: string, style: ?string}&gt;&gt;`.
+
+### drishti_code-text.js
+
+#### `wordAt(line, ch)`
+
+The word at a cursor: letters, digits, _, . and a leading $ or @ (a Rachana path); from and to are its columns.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `line` | `string` |  |
+| `ch` | `number` | the cursor's column |
+
+Returns `{word: string, from: number, to: number}`.
+
+#### `completions(catalogue, word, limit)`
+
+What completes a word, best first (at most limit): the name starting with it, then a dotted or camel-case part starting with it, then the name containing it; ties by name. The word is matched without case.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `catalogue` | `CatalogueEntry[]` |  |
+| `word` | `string` |  |
+| `[limit=50]` | `number` |  |
+
+Returns `CatalogueEntry[]`.
+
+#### `insertText(e)`
+
+The text an entry puts in: its insert, or its name with "()" for a function (the cursor goes between them: caret is its place).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `e` | `CatalogueEntry` |  |
+
+Returns `{text: string, caret: number}`.
+
+#### `lineDiff(a, b)`
+
+The lines that changed from a to b (Myers): equal, delete (a line of a only) and insert (a line of b only), in order.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `a` | `string` | the original text |
+| `b` | `string` | the new text |
+
+Returns `Array&lt;{op: ('equal'\|'delete'\|'insert'), a: ?number, b: ?number, text: string}&gt;`: a and b are 1-based line numbers.
+
+#### `sideBySide(ops)`
+
+A diff as side-by-side rows: equal lines on both sides, a run of deletions paired with the insertions after it (a changed line), the rest alone. Each side {n, text, kind} or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ops` | `Array&lt;{op: string, a: ?number, b: ?number, text: string}&gt;` | lineDiff's answer |
+
+Returns `Array&lt;{left: ?{n: number, text: string, kind: string}, right: ?{n: number, text: string, kind: string}}&gt;`.
+
+#### `diffStats(ops)`
+
+How many lines a diff adds, removes and keeps.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ops` | `Array&lt;{op: string}&gt;` |  |
+
+Returns `{added: number, removed: number, same: number}`.
+
+### drishti_code-editor.js
+
+#### `ensureCodeMirror(given)`
+
+CodeMirror on the page: the one given, the page's, or the vendored one loaded now (with its style sheet).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[given]` | `Object` | a CodeMirror to use |
+
+Returns `Promise&lt;Object&gt;`.
+
+#### `yamlIndentAfter(before)`
+
+The indentation of a new YAML line after the text before the cursor: the line's own, a list item's content column, two more after a key that opens a block ("key:", "key: \|").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `before` | `string` |  |
+
+Returns `number`.
+
+#### class `CodeEditor`
+
+The code editor. Events: change {value, origin} (origin 'setValue' when the page set the text), ready, lint {problems}, completed {entry}, cursor {line, ch} (0-based, as the cursor moves).
+
+##### `new CodeEditor(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `CodeEditorOptions` |  |
+
+##### `CodeEditor.refresh()`
+
+Lays the editor out again (after it was hidden: a drawer or a tab opened).
+
+Returns `void`.
+
+##### `CodeEditor.complete(forced)`
+
+Opens the completions at the cursor (forced: even for an empty word).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[forced]` | `boolean` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `CodeEditor.accept(entry)`
+
+Puts a completion in place of the word at the cursor.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `entry` | `import('./drishti_code-text.js').CatalogueEntry` |  |
+
+Returns `void`.
+
+##### `CodeEditor.runLint()`
+
+Asks the lint hook now and draws its problems.
+
+Returns `Promise&lt;LintProblem[]&gt;`.
+
+##### `CodeEditor.setProblems(problems)`
+
+Draws problems: marks under the text, signs in the gutter, the list under the editor.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `problems` | `LintProblem[]` |  |
+
+Returns `void`.
+
+##### `CodeEditor.goTo(line, ch)`
+
+Puts the cursor at a line (1-based) and column.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `line` | `number` |  |
+| `[ch]` | `number` |  |
+
+Returns `void`.
+
+##### `CodeEditor.getValue()`
+
+The text.
+
+Returns `string`.
+
+##### `CodeEditor.setValue(text)`
+
+Replaces the text.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
+##### `CodeEditor.updateValue(text)`
+
+Replaces the text where it differs, keeping the cursor, the selection and the scroll (the document changed elsewhere: an undo, the visual side). Answers whether anything changed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `boolean`.
+
+##### `CodeEditor.highlight(from, to, o)`
+
+Marks lines (0-based, inclusive) as the selected item's, and brings them into view; null clears the mark.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `from` | `?number` |  |
+| `[to]` | `number` |  |
+| `[o]` | `{scroll: boolean}` | scroll: bring the lines into view (default true) |
+
+Returns `void`.
+
+##### `CodeEditor.cursor()`
+
+The cursor (0-based line and column).
+
+Returns `{line: number, ch: number}`.
+
+##### `CodeEditor.insert(text)`
+
+Puts text in place of the selection (at the cursor), as if typed: a key of the page's own (Shift+Enter: a new line).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
+##### `CodeEditor.setInvalid(on)`
+
+Marks the text as not valid (aria-invalid on the input, the editor drawn as an error) or valid again: a host's own check (a formula the server could not read).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `CodeEditor.setReadOnly(on)`
+
+Makes it read-only, or editable.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `CodeEditor.focus()`
+
+Puts the keyboard focus in the editor.
+
+Returns `void`.
+
+##### `CodeEditor.destroy()`
+
+Takes the editor out.
+
+Returns `void`.
+
+#### class `CodeDiff`
+
+A diff of two texts, side by side or unified, highlighted by the language; no CodeMirror needed. Events: none (read-only).
+
+##### `new CodeDiff(host, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `o` | `{original: string, value: string, mode: string, layout: ('side'\|'unified'), labels: string[]}` | labels: the two sides' names (default Before, After) |
+
+##### `CodeDiff.render()`
+
+Draws the diff again (after setTexts or a layout change).
+
+Returns `void`.
+
+##### `CodeDiff.setTexts(original, value)`
+
+Shows two other texts.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `original` | `string` |  |
+| `value` | `string` |  |
+
+Returns `void`.
+
+##### `CodeDiff.stats()`
+
+How many lines were added, removed and kept.
+
+Returns `{added: number, removed: number, same: number}`.
+
+### drishti_code-upgrade.js
+
+#### `upgradeCodeArea(ta, o)`
+
+Makes one text area (or one-line input) a code editor (once); answers the editor.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ta` | `(HTMLTextAreaElement\|HTMLInputElement)` |  |
+| `[o]` | `{mode: string, height: number, complete: Function, completeAfter: Function, lint: Function, keys: Object}` | beside the element's own attributes and drishtiCodeOptions |
+
+Returns `CodeEditor`.
+
+#### `upgradeCodeAreas(root)`
+
+Upgrades every &lt;textarea data-di-code&gt; and &lt;input data-di-code&gt; inside a root (a page, a dialog drawn later).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `ParentNode` |  |
+
+Returns `CodeEditor[]`.
+
+#### `CODE_AREA_SELECTOR`
+
+The elements upgradeCodeAreas makes code editors (install's observer looks for them).
+
+### drishti_inputs-element.js
+
+#### `INPUT_ELEMENTS`
+
+Every element of drishti-inputs and the class it draws.
+
+#### `defineInputElements(registry, win)`
+
+Defines the elements (once each) on a registry.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `registry` | `CustomElementRegistry` |  |
+| `win` | `Window` |  |
+
+Returns `void`.
+
+### drishti_index.js
+
+#### `install(root)`
+
+Starts drishti-inputs in a page (the bundle calls it when it loads; nothing happens without a document): defines its elements and makes the page's code areas (&lt;textarea data-di-code&gt;) code editors.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.
+
+### Types of drishti-inputs
+
+#### `HolidayRule` : `Object`
+
+A holiday rule. One of: {fixed: 'MM-DD', roll}, {nth, weekday, month} (nth -1: the last), {before: 'MM-DD', weekday} (the weekday strictly before a day: Victoria Day), {easter: offset} (days from Easter Sunday: -2 Good Friday, 1 Easter Monday). roll for a fixed day on a weekend: 'nearest' (Saturday to Friday, Sunday to Monday), 'monday' (to the next Monday, or Tuesday when Monday is taken), 'none'. from and to bound the years the rule holds.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `[fixed]` | `string` |  |
+| `[roll='none']` | `('nearest'\|'monday'\|'none')` |  |
+| `[nth]` | `number` |  |
+| `[weekday]` | `number` | 0 Sunday to 6 Saturday |
+| `[month]` | `number` | 1 to 12 |
+| `[before]` | `string` |  |
+| `[easter]` | `number` |  |
+| `[from]` | `number` | the first year |
+| `[to]` | `number` | the last year |
+
+#### `LintProblem` : `Object`
+
+A lint problem.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `line` | `number` | 1-based |
+| `[from]` | `number` | the first column (0-based; default the line's start) |
+| `[to]` | `number` | after the last column (default the line's end) |
+| `[severity='error']` | `('error'\|'warning'\|'info')` |  |
+| `message` | `string` | in words |
+
+#### `CodeEditorOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[value]` | `string` |  |
+| `[mode='rachana']` | `('rachana'\|'yaml'\|'python'\|'text')` |  |
+| `[readOnly=false]` | `boolean` |  |
+| `[lineNumbers=true]` | `boolean` |  |
+| `[height=200]` | `(number\|'auto')` | px, or 'auto': the editor grows with its text (a formula bar), between minHeight and maxHeight |
+| `[minHeight]` | `number` | px, with height 'auto' |
+| `[maxHeight]` | `number` | px, with height 'auto' (past it the editor scrolls) |
+| `[catalogue]` | `import('./drishti_code-text.js').CatalogueEntry[]` | the functions completion offers |
+| `[complete]` | `function({word: string, line: string, ch: number, mode: string}): (Promise&lt;Array&gt;\|Array)` | the completion hook (the server's catalogue); answers CatalogueEntry objects |
+| `[lint]` | `function(string): (Promise&lt;LintProblem[]&gt;\|LintProblem[])` | the lint hook |
+| `[lintDelay=400]` | `number` | ms after typing stops |
+| `[label]` | `string` |  |
+| `[indentUnit=2]` | `number` | spaces an indent is (Python: 4) |
+| `[keys]` | `Object&lt;string, function(): *&gt;` | the page's own keys in the editor, CodeMirror's names ('Ctrl-Enter': run, Esc: close); Tab and Shift-Tab indent and dedent a selection |
+| `[CodeMirror]` | `Object` | a CodeMirror to use (default: the vendored one) |
+| `[completeAfter]` | `function(string): boolean` | also opens the completions when the text before the cursor passes this test (a YAML key's "kind: ", a path's "$.") |
+| `[lineWrapping=false]` | `boolean` |  |
+| `[tabLeaves=false]` | `boolean` | Tab and Shift+Tab move the focus out of the editor (a small box in a form) instead of indenting |
+| `[singleLine=false]` | `boolean` | one line, as a form's text field (a formula, a filter): Enter adds no line (the page's Enter key still runs), a line break pasted or set becomes a space; with height 'auto' it grows as the line wraps |
+
+#### `CatalogueEntry` : `Object`
+
+An entry of the function catalogue (the server's: GET /api/v1/functions, or a page's own).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `[signature]` | `string` | "var(confidence, horizon)" |
+| `[description]` | `string` |  |
+| `[kind]` | `string` | function, field, keyword, measure |
+| `[insert]` | `string` | the text put in (default: the name, with "(" for a function) |
+
+#### `ComboboxOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `source` | `(Array\|function(string, AbortSignal): Promise&lt;Array&gt;)` | the options, or a server search: (text, signal) to options |
+| `[value]` | `{value: *, label: string}` |  |
+| `[debounceMs=200]` | `number` |  |
+| `[minChars=1]` | `number` |  |
+| `[cacheSize=50]` | `number` | recent answers kept by query (0: every search asks again) |
+| `[allowFree=false]` | `boolean` | typed text that is not an option is a value of its own |
+| `[label]` | `string` |  |
+| `[placeholder]` | `string` |  |
+| `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
+| `[input]` | `HTMLInputElement` | a field of the page to use (wrapped in place) instead of a new one |
+| `[suggest=false]` | `boolean` | suggestions only: the field's text is the page's; Enter and Escape with the list closed are not taken |
+
+#### `DatePickerOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[value]` | `string` | the date (ISO) |
+| `[calendar='weekends']` | `(string\|Object)` | the business calendar: US, UK, TARGET, CA, US+UK, a defined one, or a HolidayCalendar |
+| `[asOf]` | `string` | the business date T (default today rolled back to a business day) |
+| `[businessOnly=true]` | `boolean` | only business days may be picked |
+| `[min]` | `string` |  |
+| `[max]` | `string` |  |
+| `[format='d MMM yyyy']` | `string` | how the field shows the date |
+| `[weekStart=1]` | `number` | 0 Sunday, 1 Monday |
+| `[shortcuts=true]` | `boolean` | the business date, T-1 and the previous month-end under the calendar |
+| `[required=false]` | `boolean` |  |
+| `[label]` | `string` | the field's name for a reader |
+| `[placeholder]` | `string` |  |
+
+#### `DateRange` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `from` | `?string` | ISO |
+| `to` | `?string` | ISO |
+| `preset` | `?string` | the preset's id when the range is one (it moves with the business date) |
+
+#### `DateRangeOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[value]` | `DateRange` |  |
+| `[calendar='weekends']` | `(string\|Object)` |  |
+| `[asOf]` | `string` | the business date the presets count from |
+| `[presets=true]` | `(boolean\|Array&lt;(string\|{id: string, label: string, from: string, to: string})&gt;)` | true: every preset; or the ids to offer; or ranges given whole (a server's own presets, already resolved: id, label, from, to), mixed with ids as wished |
+| `[businessOnly=false]` | `boolean` | the ends must be business days |
+| `[min]` | `string` |  |
+| `[max]` | `string` |  |
+| `[maxDays]` | `number` | the longest range in calendar days |
+| `[openEnded=false]` | `boolean` | one end may stay open (from a day on, or up to a day) |
+| `[weekStart=1]` | `number` |  |
+| `[label]` | `string` |  |
+
+#### `FilterField` : `Object`
+
+A field the bar may filter.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` | the column id the model uses |
+| `[label]` | `string` |  |
+| `[type='set']` | `('set'\|'number'\|'text'\|'date')` |  |
+| `[options]` | `Array` | a set's members (strings or {value, label}) |
+| `[members]` | `function(string): (Promise&lt;Array&gt;\|Array)` | a set's members from a server, by search text |
+
+#### `FilterBarOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `fields` | `FilterField[]` |  |
+| `[model]` | `Object` | the filters at the start |
+| `[bus]` | `Object` | the drishti-core EventBus it emits on (default: the page's shared bus) |
+| `[channel]` | `string` | the event name (default FILTER_CHANNEL) |
+| `[quick=true]` | `boolean` | the quick-search field |
+| `[asOf]` | `string` | the business date date presets count from |
+| `[calendar]` | `string` | the business calendar of date fields |
+| `[label='Filters']` | `string` |  |
+
+#### `WidgetContext` : `Object`
+
+What a custom widget is given.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `form` | `Object` | the Form |
+| `field` | `Object` | the field's schema |
+| `path` | `string` |  |
+| `label` | `string` |  |
+| `value` | `*` |  |
+| `id` | `string` | the id its focusable element should take (the label points at it) |
+| `readOnly` | `boolean` |  |
+| `required` | `boolean` |  |
+| `describedBy` | `string` | the ids of its help and problem, for aria-describedby |
+| `set` | `function(*): void` | gives the form a new value |
+| `touch` | `function(): void` | marks the field touched (its problem shows) |
+
+#### `WidgetFactory` : `function(WidgetContext): {el: HTMLElement, setValue: function(*): void, focus: function(): void, input: HTMLElement, destroy: function(): void}`
+
+A custom widget: draws a field's control. Returns its element and, as it can, setValue(v), focus(), input (the focusable element) and destroy().
+
+#### `FourEyes` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `submit` | `function({values: Object, changes: Array, comment: string, approver: *}): Promise&lt;{id: string, status: string}&gt;` | files the proposal (the server's approvals); its answer is shown |
+| `[approvers]` | `(Array\|function(string, AbortSignal): Promise&lt;Array&gt;)` | who may approve (a list or a server search); none: any approver |
+| `[requireComment=true]` | `boolean` |  |
+
+#### `FormOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `schema` | `import('./drishti_schema.js').FieldSchema` | an object schema |
+| `[value]` | `Object` | the starting value (default: the schema's defaults) |
+| `[onSubmit]` | `function(Object): (Promise&lt;*&gt;\|*)` | the value, when it is valid (and there are no four eyes) |
+| `[check]` | `function(Object): Promise&lt;Object&lt;string, string&gt;&gt;` | the server's checks: problems by path |
+| `[fourEyes]` | `FourEyes` |  |
+| `[submitLabel='Save']` | `string` |  |
+| `[doneText='Saved']` | `string` | what the form says once onSubmit answered ('': nothing, for a page that shows the answer itself, such as a check) |
+| `[readOnly=false]` | `boolean` |  |
+| `[layout='stacked']` | `('stacked'\|'columns'\|'inline')` | inline: the fields side by side in a row (a filter bar's search and lists) |
+| `[locale]` | `string` | how numbers are read and shown |
+| `[live=false]` | `boolean` | no Save or Reset: each change is the host's at once (a designer's inspector, a property pane) |
+| `[embedded=false]` | `boolean` | no &lt;form&gt; element of its own (the fields sit inside a page's server form, which submits the fields that have a name); implies live |
+| `[pathAttr='data-path']` | `string` | the attribute each field's block carries its path in (a page whose own controls use data-path names another) |
+| `[actions=true]` | `boolean` | the Save and Reset buttons (false: none, the page has its own) |
+| `[steps]` | `Array&lt;{id: string, title: string, description: string}&gt;` | the form in steps: a field's step names one; Back and Next, Next checks the step's fields; the last step submits |
+| `[widgets]` | `Object&lt;string, import('./drishti_form-fields.js').WidgetFactory&gt;` | custom widgets by name (a field's widget) |
+| `[label]` | `string` | the form's name for a reader (default: the schema's title) |
+| `[submitHook]` | `string` | a data attribute on the submit button ("lookup-go" is data-lookup-go), for tutorials and tests |
+| `[resetButton=true]` | `boolean` | the Reset button |
+
+#### `MultiSelectOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `options` | `Array&lt;(string\|number\|{value: *, label: string, detail: string, group: string, disabled: boolean})&gt;` |  |
+| `[value]` | `Array&lt;*&gt;` | the picked values |
+| `[maxChips=3]` | `number` | chips shown before "+N" |
+| `[max]` | `number` | the most that may be picked |
+| `[selectAll=true]` | `boolean` | the Select all and Clear buttons |
+| `[label]` | `string` |  |
+| `[placeholder='Any']` | `string` |  |
+
+#### `UpgradeDateOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[calendar]` | `(string\|Object)` | the business calendar; default: the field's data-calendar, or its data-holidays (dates, comma separated, from the server) as a calendar of their own, else weekends only |
+| `[businessOnly]` | `boolean` | only business days; default: the field's data-business attribute |
+| `[asOf]` | `string` | the business date T; default: the field's data-current |
+| `[shortcuts]` | `boolean` | the business date, T-1 and month-end; default true when businessOnly |
+| `[label]` | `string` | default: the field's aria-label or its label's text |
+| `[placeholder]` | `string` |  |
+
+#### `UpgradeChecksOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[label]` | `string` | default: the group's aria-label |
+| `[offClass]` | `string` | a label with this class is not offered (a dependent list's values that do not apply) |
+| `[maxChips]` | `number` |  |
+| `[placeholder]` | `string` |  |
+
+#### `FieldSchema` : `Object`
+
+A field of a form schema.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `type` | `('string'\|'number'\|'integer'\|'money'\|'boolean'\|'date'\|'time'\|'datetime'\|'daterange'\|'array'\|'object')` | money: a number shown grouped with its currency; time: "HH:MM"; datetime: "YYYY-MM-DDTHH:MM" in its timeZone |
+| `[title]` | `string` | the label (default: the key in words) |
+| `[description]` | `string` | help under the field |
+| `[default]` | `*` |  |
+| `[enum]` | `Array` | the values allowed |
+| `[enumLabels]` | `string[]` | words for each value |
+| `[minimum]` | `number` |  |
+| `[maximum]` | `number` |  |
+| `[multipleOf]` | `number` |  |
+| `[minLength]` | `number` |  |
+| `[maxLength]` | `number` |  |
+| `[pattern]` | `string` | a regular expression the whole text must match |
+| `[patternMessage]` | `string` | the words when it does not ("a book code such as RT-123") |
+| `[format]` | `string` | number: a named display format; string: email, textarea, code |
+| `[after]` | `string` | date: a field it must be after |
+| `[before]` | `string` | date: a field it must be before |
+| `[when]` | `Object` | the condition that shows it |
+| `[items]` | `FieldSchema` | array: each item's schema |
+| `[minItems]` | `number` |  |
+| `[maxItems]` | `number` |  |
+| `[uniqueItems]` | `boolean` |  |
+| `[properties]` | `Object&lt;string, FieldSchema&gt;` | object: its fields |
+| `[required]` | `string[]` | object: the keys that must have a value |
+| `[order]` | `string[]` | object: the order of its fields (default: as written) |
+| `[widget]` | `string` | how it is drawn: text, textarea, select, radio, checkbox, switch, multiselect, combobox, tree, date, daterange, code, formula (one line, options.mode and options.complete) |
+| `[options]` | `Object` | the widget's options (a combobox's source, a tree's nodes, a code editor's mode) |
+| `[readOnly]` | `boolean` |  |
+| `[placeholder]` | `string` |  |
+| `[currency]` | `string` | money: its currency code (USD), or the key of the field that holds it (a sibling, or "/path") |
+| `[timeZone]` | `string` | datetime: the zone named beside it |
+| `[stepMinutes]` | `number` | time, datetime: the minutes between the times offered (default 15) |
+| `[name]` | `string` | the name a surrounding server form submits the value under (hidden inputs; a native control carries it) |
+| `[nameValue]` | `*` | boolean with a name: what is submitted when it is on (default "true") |
+| `[hook]` | `(string\|Object&lt;string, string&gt;)` | data attributes on the field's control: "format-title" is data-format-title=""; an object sets each attribute as given (the hooks tutorials and tests find a field by) |
+| `[step]` | `string` | the step (of the form's steps) the field belongs to |
+| `[dependsOn]` | `string` | enum lists: the field whose chosen values narrow the values offered (see parents) |
+| `[parents]` | `Object&lt;string, string[]&gt;` | enum lists: for each value, the values of dependsOn it goes with |
+| `[optionHook]` | `string` | checkboxes and radios: each option's control gets data-&lt;optionHook&gt;="&lt;value&gt;" |
+| `[allowEmpty]` | `boolean` | select: false leaves out the empty choice |
+| `[emptyLabel]` | `string` | select: the words of the empty choice |
+| `[lazy]` | `boolean` | text and numbers: the value changes when the field is left or Enter is pressed, not at each key |
+| `[noLabel]` | `boolean` | a custom widget that draws its own label |
+| `[addLabel]` | `string` | an array of objects: the words of its Add button |
+| `[itemHook]` | `(string\|Object&lt;string, string&gt;)` | an array of objects: data attributes on each item's group (as hook) |
+| `[addHook]` | `(string\|Object&lt;string, string&gt;)` | an array of objects: data attributes on its Add button (as hook) |
+| `[parseMessage]` | `string` | the words when typed text does not read as the field's type (default: the form's own) |
+
+#### `SelectOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[options]` | `Array&lt;(string\|number\|{value: *, label: string, detail: string, group: string, disabled: boolean})&gt;` | default: the host's &lt;option&gt; and &lt;optgroup&gt; children |
+| `[value]` | `*` | the value picked (default: the option marked selected, else the first enabled option; null with placeholder) |
+| `[label]` | `string` | the control's accessible name |
+| `[placeholder]` | `string` | the words while nothing is picked (and nothing is picked at first) |
+| `[search='auto']` | `(boolean\|string)` | the search field in the open list: true, false, or auto (more than searchMin options) |
+| `[searchMin=8]` | `number` |  |
+| `[name]` | `string` | a hidden input of this name carries the value in a plain form |
+| `[disabled=false]` | `boolean` |  |
+| `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
+| `[native=false]` | `boolean` | a change also fires input and change on the host, as a native select's did (a page's own listeners and delegated handlers keep working); &lt;drishti-select&gt; in a page's markup and selectElement turn it on |
+
+#### `TimePickerOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[value]` | `string` | "HH:MM" |
+| `[step=15]` | `number` | minutes between the times offered |
+| `[min]` | `string` |  |
+| `[max]` | `string` |  |
+| `[required=false]` | `boolean` |  |
+| `[label]` | `string` |  |
+| `[placeholder]` | `string` |  |
+
+#### `DateTimePickerOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[value]` | `string` | "YYYY-MM-DDTHH:MM" |
+| `[timeZone]` | `string` | the zone the time is in, named beside it (America/New_York) |
+| `[step=15]` | `number` | the time list's step in minutes |
+| `[calendar]` | `(string\|Object)` |  |
+| `[businessOnly=false]` | `boolean` |  |
+| `[min]` | `string` | "YYYY-MM-DDTHH:MM" |
+| `[max]` | `string` | "YYYY-MM-DDTHH:MM" |
+| `[required=false]` | `boolean` |  |
+| `[label]` | `string` |  |
+
+#### `TreePickerOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `nodes` | `import('./drishti_tree.js').TreeNode[]` | the roots (with children, or hasChildren for the loader) |
+| `[loadChildren]` | `function(Object): Promise&lt;Array&gt;` | a node's children from the server, the first time it opens |
+| `[search]` | `function(string): Promise&lt;Array&lt;{node: Object, path: Object[]}&gt;&gt;` | search on the server (else the loaded levels) |
+| `[multiple=true]` | `boolean` |  |
+| `[value]` | `string[]` | the checked ids (compact: a node stands for everything under it) |
+| `[inline=false]` | `boolean` | the tree in the page rather than in a panel |
+| `[label]` | `string` |  |
+| `[placeholder='Everything']` | `string` | the words when nothing is checked |
+
+#### `TreeNode` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` | unique across the tree |
+| `label` | `string` |  |
+| `[detail]` | `string` | words after the label (a count, a code) |
+| `[children]` | `TreeNode[]` | the children when known |
+| `[hasChildren]` | `boolean` | the node has children the loader brings (lazy) |
+| `[disabled]` | `boolean` |  |
+
+#### `TreeRow` : `Object`
+
+A visible row of the tree.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `node` | `TreeNode` |  |
+| `depth` | `number` | 0 for the roots |
+| `branch` | `boolean` | whether it has (or may have) children |
+| `expanded` | `boolean` |  |
+| `state` | `('checked'\|'mixed'\|'unchecked')` |  |
+| `status` | `?string` | 'loading' or the error's words while its children are asked for |
+| `match` | `boolean` | whether it matched the search |
 
 ## drishti-grid
 
@@ -6191,2702 +8887,6 @@ A tree node.
 | `aggFunc` | `string` |  |
 | `[as]` | `string` | its label |
 | `[showAs]` | `string` | how the server shows it (pct-grand, rank, diff:1:MONTH) |
-
-## drishti-inputs
-
-Version 0.3.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
-
-### drishti_calendar.js
-
-#### `CALENDAR_RULES`
-
-The bundled market calendars as rules (illustrative; a site's own calendars replace them through defineCalendar).
-
-#### `easterSunday(y)`
-
-Easter Sunday of a year (the Gregorian computus).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `y` | `number` |  |
-
-Returns `string`: ISO date.
-
-#### `ruleDate(r, y)`
-
-The day a rule falls on in a year (null when it does not hold that year).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `r` | `HolidayRule` |  |
-| `y` | `number` |  |
-
-Returns `?string`: ISO date.
-
-#### class `HolidayCalendar`
-
-A business calendar: its weekend, its holidays (from rules and from dates), and the business dates asked of it.
-
-##### `new HolidayCalendar(o)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[o]` | `{name: string, rules: HolidayRule[], dates: Array&lt;(string\|{date: string, name: string})&gt;, weekend: number[]}` | weekend: the days that are never business days (default [0, 6], Sunday and Saturday); dates: holidays as given (the server's list) |
-
-##### `HolidayCalendar.holidays(y)`
-
-The holidays of a year in order, each with its name.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `y` | `number` |  |
-
-Returns `Array&lt;{date: string, name: string}&gt;`.
-
-##### `HolidayCalendar.holidayName(v)`
-
-A holiday's name, or null when the day is not a holiday (weekends are not holidays).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` | a date |
-
-Returns `?string`.
-
-##### `HolidayCalendar.isBusinessDay(v)`
-
-Whether a day is a business day: not a weekend day and not a holiday.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `boolean`.
-
-##### `HolidayCalendar.isWeekend(v)`
-
-Whether a day is a weekend day of this calendar.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `boolean`.
-
-##### `HolidayCalendar.addBusinessDays(v, n)`
-
-The business date n business days away (n negative goes back; 0 rolls a holiday forward to the next business day).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-| `n` | `number` |  |
-
-Returns `string`.
-
-##### `HolidayCalendar.tMinus(v, n)`
-
-T-n: the n-th business day before a date (T-1 is the previous close).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` | the day T (default today) |
-| `[n=1]` | `number` |  |
-
-Returns `string`.
-
-##### `HolidayCalendar.onOrBefore(v)`
-
-The business day on or before a date (a date that is not a business day rolls back).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `string`.
-
-##### `HolidayCalendar.onOrAfter(v)`
-
-The business day on or after a date.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `string`.
-
-##### `HolidayCalendar.monthEnd(v)`
-
-The last business day of the month a date is in (month-end).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `string`.
-
-##### `HolidayCalendar.monthStart(v)`
-
-The first business day of the month a date is in.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `string`.
-
-##### `HolidayCalendar.quarterEnd(v)`
-
-The last business day of the quarter a date is in.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `string`.
-
-##### `HolidayCalendar.yearEnd(v)`
-
-The last business day of the year a date is in.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `string`.
-
-##### `HolidayCalendar.previousMonthEnd(v)`
-
-The last month-end before a date (the latest month-end that has happened by it, the date itself when it is one).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `string`.
-
-##### `HolidayCalendar.businessDaysBetween(from, to)`
-
-Business days after from, up to and including to (negative when to is earlier).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `from` | `*` |  |
-| `to` | `*` |  |
-
-Returns `number`.
-
-#### `defineCalendar(name, spec)`
-
-Defines (or replaces) a named calendar: rules, the server's dates, a weekend.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `name` | `string` |  |
-| `spec` | `{rules: HolidayRule[], dates: Array&lt;(string\|{date: string, name: string})&gt;, weekend: number[]}` |  |
-
-Returns `HolidayCalendar`.
-
-#### `calendar(name)`
-
-A calendar by name ("US", "UK", "TARGET", "CA", a defined one, "weekends", or a union "US+UK": a day is a holiday in the union when it is one in any), or the calendar itself when one is given.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[name='weekends']` | `(string\|HolidayCalendar)` |  |
-
-Returns `HolidayCalendar`.
-
-#### `DATE_PRESETS` : `Array&lt;{id: string, label: string}&gt;`
-
-The date-range presets, in the order a picker shows them.
-
-#### `resolvePreset(id, o)`
-
-A preset as dates, from a business date and a calendar: {from, to, label}.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` | one of DATE_PRESETS |
-| `[o]` | `{asOf: string, calendar: (string\|HolidayCalendar)}` | asOf: the business date (default today, rolled back to a business day) |
-
-Returns `{from: string, to: string, label: string}`.
-
-#### `parseDateInput(text, o)`
-
-Reads what a person typed as a business date: ISO (2026-11-06), "6 Nov 2026", "Nov 6 2026", T (the business date), T-3 or T+2 (business days), ME, QE, YE (this month's, quarter's, year's last business day), PME (the previous month-end). Null when it does not read.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `text` | `string` |  |
-| `[o]` | `{asOf: string, calendar: (string\|HolidayCalendar)}` |  |
-
-Returns `?string`: ISO date.
-
-#### `monthGrid(y, m, weekStart)`
-
-The days a month view shows: six weeks of seven days from the week the month starts in.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `y` | `number` |  |
-| `m` | `number` | 1 to 12 |
-| `[weekStart=1]` | `number` | 0 Sunday, 1 Monday |
-
-Returns `Array&lt;Array&lt;{iso: string, day: number, inMonth: boolean, weekday: number}&gt;&gt;`.
-
-#### `shiftDate(v, n, unit)`
-
-A date moved by whole days, months or years (a month that is shorter keeps its last day: 31 Jan + 1 month is 28 or 29 Feb).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-| `n` | `number` |  |
-| `unit` | `('day'\|'month'\|'year')` |  |
-
-Returns `string`.
-
-### drishti_inputs-dom.js
-
-#### `uid(prefix)`
-
-A new id for an element of a component ("di-&lt;prefix&gt;-&lt;n&gt;").
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `prefix` | `string` |  |
-
-Returns `string`.
-
-#### `debounce(fn, ms)`
-
-A function that runs fn once calls stop for ms milliseconds (the last call's arguments); .cancel() drops a pending call, .flush() runs it now.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `fn` | `function(...*): void` |  |
-| `ms` | `number` |  |
-
-Returns `function(...*): void`.
-
-#### class `InputBase`
-
-The base of every input component: the host element, the options, typed events on a bus and on the element.
-
-##### `new InputBase(host, options, cls)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` | the element the component fills |
-| `options` | `Object` |  |
-| `cls` | `string` | the component's class on the host (di-date, di-multiselect ...) |
-
-##### `InputBase.on(name, fn)`
-
-Listens to one of the component's events.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `name` | `string` |  |
-| `fn` | `function(Object, string): void` |  |
-
-Returns `function(): void`: stops listening.
-
-##### `InputBase.emit(name, detail)`
-
-Emits an event on the bus and as a DOM event drishti:&lt;kebab-name&gt; on the host (bubbling).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `name` | `string` |  |
-| `[detail]` | `Object` |  |
-
-Returns `void`.
-
-##### `InputBase.el(tag, p, children)`
-
-Makes an element of this document.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `tag` | `string` |  |
-| `[p]` | `Object` | as drishti-core's h |
-| `[children]` | `Array` |  |
-
-Returns `HTMLElement`.
-
-##### `InputBase.destroy()`
-
-Takes the component out of its element.
-
-Returns `void`.
-
-#### class `Popover`
-
-A floating panel under an anchor (position fixed, in the page's body): a click outside and Escape close it; focus goes back to where it was.
-
-##### `new Popover(doc, o)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `doc` | `Document` |  |
-| `[o]` | `{cls: string, label: string, role: string, onClose: function(): void, theme: Element}` | theme: the element whose density the panel copies |
-
-##### `Popover.isOpen()`
-
-Whether it is open.
-
-Returns `boolean`.
-
-##### `Popover.open(anchor, content, o)`
-
-Opens the panel under an anchor with its content.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `anchor` | `Element` |  |
-| `content` | `Node` |  |
-| `[o]` | `{focus: boolean}` | focus: keep the focus where it is (a combobox's field keeps it) |
-
-Returns `HTMLElement`.
-
-##### `Popover.place()`
-
-Places the panel again (its content changed size).
-
-Returns `void`.
-
-##### `Popover.close(refocus)`
-
-Closes the panel.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[refocus]` | `boolean` | give the focus back to what had it |
-
-Returns `void`.
-
-#### class `Listbox`
-
-Options in a list (role listbox): drawn up to a cap, the active one kept by aria-activedescendant on the element that keeps the focus.
-
-##### `new Listbox(doc, o)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `doc` | `Document` |  |
-| `o` | `{multiple: boolean, cap: number, label: string, render: function(Object, HTMLElement): void, onPick: function(Object, Event): void, followActive: boolean}` | cap: options drawn at most (default 300); render: draws an option's content into its element (default: its label and detail); followActive: the active option is the selected one (a menu or a command list: aria-selected follows the keys) |
-
-##### `Listbox.render(items, selected, o)`
-
-Draws options.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `items` | `Array&lt;{value: *, label: string, detail: string, disabled: boolean, group: string}&gt;` |  |
-| `selected` | `function(Object): boolean` | whether an option is selected |
-| `[o]` | `{more: number, empty: string}` | more: how many matched beyond these; empty: the words when there are none |
-
-Returns `void`.
-
-##### `Listbox.setActive(i, owner)`
-
-Makes an option the active one (scrolled into view) and tells the focused element.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `i` | `number` |  |
-| `[owner]` | `Element` | the element with the focus (its aria-activedescendant) |
-
-Returns `void`.
-
-##### `Listbox.key(e, owner)`
-
-A key from the element with the focus: moves the active option or picks it. Returns whether the key was the list's.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `e` | `KeyboardEvent` |  |
-| `owner` | `Element` |  |
-
-Returns `boolean`.
-
-#### `normalizeOptions(list)`
-
-Options as the components take them: strings, numbers, or {value, label, detail, disabled, group}.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `list` | `Array&lt;(string\|number\|Object)&gt;` |  |
-
-Returns `Array&lt;{value: *, label: string, detail: string, disabled: boolean, group: string}&gt;`.
-
-#### `searchOptions(items, q)`
-
-Options that match a search, best first: the label that is the word, then the label starting with it, then a word of it starting with it, then containing it; the detail last. Every word of the search must match.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `items` | `Array&lt;{label: string, detail: string}&gt;` |  |
-| `q` | `string` |  |
-
-Returns `Array&lt;Object&gt;`.
-
-### drishti_date-picker.js
-
-#### class `CalendarView`
-
-One or more months of days as a grid (role grid), keyed by the business calendar: what the pickers draw in their popovers.
-
-##### `new CalendarView(doc, o)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `doc` | `Document` |  |
-| `o` | `{calendar: Object, months: number, weekStart: number, businessOnly: boolean, min: string, max: string, focus: string, range: function(): {from: ?string, to: ?string, hover: ?string}, selected: function(string): boolean, onPick: function(string): void, onHover: function(string): void}` | months: how many months side by side (default 1); range: the range to shade (range picker) |
-
-##### `CalendarView.refusal(d)`
-
-Why a day may not be picked, or null when it may.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `d` | `string` |  |
-
-Returns `?string`.
-
-##### `CalendarView.render()`
-
-Draws the months from the focused day's.
-
-Returns `void`.
-
-##### `CalendarView.move(n, unit)`
-
-Moves the focused day (and the months shown) and focuses its button.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `n` | `number` |  |
-| `unit` | `('day'\|'month'\|'year')` |  |
-
-Returns `void`.
-
-##### `CalendarView.focusDay()`
-
-Puts the keyboard focus on the focused day's button.
-
-Returns `void`.
-
-#### class `DatePicker`
-
-A business-date picker: a field and a calendar. Events: change {value}, invalid {text, reason}, open, close.
-
-##### `new DatePicker(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `[options]` | `DatePickerOptions` |  |
-
-##### `DatePicker.refusal(d)`
-
-Why a date may not be picked, or null.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `d` | `string` | ISO |
-
-Returns `?string`.
-
-##### `DatePicker.open()`
-
-Opens the calendar on the value (or the business date).
-
-Returns `void`.
-
-##### `DatePicker.close()`
-
-Closes the calendar.
-
-Returns `void`.
-
-##### `DatePicker.getValue()`
-
-The date (ISO), or null.
-
-Returns `?string`.
-
-##### `DatePicker.setValue(v, emit)`
-
-Sets the date (ISO, a Date or null); change is emitted when a person changed it (or when emit is true).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-| `[emit]` | `boolean` |  |
-
-Returns `void`.
-
-##### `DatePicker.validate()`
-
-Whether the field holds a date that may be picked (and one when it is required).
-
-Returns `boolean`.
-
-##### `DatePicker.focus()`
-
-Puts the keyboard focus in the field.
-
-Returns `void`.
-
-### drishti_date-range.js
-
-#### class `DateRangePicker`
-
-A date-range picker with presets. Events: change {from, to, preset}, invalid {reason}, open, close.
-
-##### `new DateRangePicker(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `[options]` | `DateRangeOptions` |  |
-
-##### `DateRangePicker.presets()`
-
-The presets this picker offers.
-
-Returns `Array&lt;{id: string, label: string}&gt;`.
-
-##### `DateRangePicker.presetRange(id)`
-
-A preset's dates: a given range as it is, a named one from the business date and the calendar.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-
-Returns `{from: string, to: string}`.
-
-##### `DateRangePicker.text()`
-
-The range in words: "3–7 Nov 2026 · Month to date".
-
-Returns `string`.
-
-##### `DateRangePicker.refusal(from, to)`
-
-Why a range may not be kept, or null.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `from` | `?string` |  |
-| `to` | `?string` |  |
-
-Returns `?string`.
-
-##### `DateRangePicker.open()`
-
-Opens the panel: presets, two months, the two ends.
-
-Returns `void`.
-
-##### `DateRangePicker.apply()`
-
-Keeps the panel's range (when it may be kept) and closes it.
-
-Returns `boolean`: whether it was kept.
-
-##### `DateRangePicker.close()`
-
-Closes the panel without keeping it.
-
-Returns `void`.
-
-##### `DateRangePicker.getValue()`
-
-The range ({from, to, preset}); a preset's dates as of the business date.
-
-Returns `DateRange`.
-
-##### `DateRangePicker.setValue(v, emit)`
-
-Sets the range: {from, to}, or {preset} (its dates from the business date), or a preset's id.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `(DateRange\|string)` |  |
-| `[emit]` | `boolean` | tell listeners (change) |
-
-Returns `void`.
-
-##### `DateRangePicker.setAsOf(asOf)`
-
-Moves the business date: a preset's dates follow it.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `asOf` | `string` |  |
-
-Returns `void`.
-
-### drishti_time-picker.js
-
-#### `parseTime(text)`
-
-Reads a typed time as "HH:MM", or null: 14:05, 14.05, 1405, 905, 9, 2pm, 2:30 pm, 12am, noon, midnight.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `text` | `string` |  |
-
-Returns `?string`.
-
-#### `parseDateTime(text)`
-
-Reads a date with a time as "YYYY-MM-DDTHH:MM", or null: 2026-12-31T17:00, 2026-12-31 17:00, 2026-12-31 5pm; a date alone is midnight.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `text` | `string` |  |
-
-Returns `?string`.
-
-#### `timeSlots(step, min, max)`
-
-The times of a day by a step in minutes, between min and max ("HH:MM").
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[step=15]` | `number` |  |
-| `[min]` | `string` |  |
-| `[max]` | `string` |  |
-
-Returns `string[]`.
-
-#### class `TimePicker`
-
-A time field with the day's times under it. Events: change {value}, invalid {text, reason}.
-
-##### `new TimePicker(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `[options]` | `TimePickerOptions` |  |
-
-##### `TimePicker.open()`
-
-Opens the day's times, the value's (or the nearest) active.
-
-Returns `void`.
-
-##### `TimePicker.close()`
-
-Closes the list.
-
-Returns `void`.
-
-##### `TimePicker.getValue()`
-
-The time ("HH:MM") or null.
-
-Returns `?string`.
-
-##### `TimePicker.setValue(v, emit)`
-
-Sets the time; change is emitted when emit is true and it changed.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `?string` |  |
-| `[emit]` | `boolean` |  |
-
-Returns `void`.
-
-##### `TimePicker.validate()`
-
-Whether the field holds a time (and one when it is required).
-
-Returns `boolean`.
-
-##### `TimePicker.focus()`
-
-Puts the keyboard focus in the field.
-
-Returns `void`.
-
-##### `TimePicker.destroy()`
-
-Takes the picker out of its element.
-
-Returns `void`.
-
-#### class `DateTimePicker`
-
-A date and a time with its zone. Events: change {value}, invalid {reason}.
-
-##### `new DateTimePicker(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `[options]` | `DateTimePickerOptions` |  |
-
-##### `DateTimePicker.getValue()`
-
-The value ("YYYY-MM-DDTHH:MM") or null.
-
-Returns `?string`.
-
-##### `DateTimePicker.setValue(v, emit)`
-
-Sets the value.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `?string` |  |
-| `[emit]` | `boolean` |  |
-
-Returns `void`.
-
-##### `DateTimePicker.setTimeZone(zone)`
-
-Names the time zone beside the time.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `zone` | `string` |  |
-
-Returns `void`.
-
-##### `DateTimePicker.validate()`
-
-Whether both parts read (and a date when required).
-
-Returns `boolean`.
-
-##### `DateTimePicker.focus()`
-
-Puts the keyboard focus on the date.
-
-Returns `void`.
-
-##### `DateTimePicker.destroy()`
-
-Takes the picker out of its element.
-
-Returns `void`.
-
-### drishti_tree.js
-
-#### class `TreeModel`
-
-A tree with lazy children, tri-state checks and search.
-
-##### `new TreeModel(o)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `o` | `{nodes: TreeNode[], loadChildren: function(TreeNode): Promise&lt;TreeNode[]&gt;, multiple: boolean, value: string[]}` | multiple default true (false: one node is picked) |
-
-##### `TreeModel.setNodes(nodes)`
-
-Replaces the roots (and everything under them).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `nodes` | `TreeNode[]` |  |
-
-Returns `void`.
-
-##### `TreeModel.node(id)`
-
-A node by id.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-
-Returns `?TreeNode`.
-
-##### `TreeModel.isBranch(n)`
-
-Whether a node has, or may have, children.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `n` | `TreeNode` |  |
-
-Returns `boolean`.
-
-##### `TreeModel.ancestors(id)`
-
-The ids from the root down to a node's parent.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-
-Returns `string[]`.
-
-##### `TreeModel.pathLabel(id)`
-
-The path of labels to a node ("Rates › Swaps").
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-
-Returns `string`.
-
-##### `TreeModel.toggle(id, open)`
-
-Opens or closes a node; opening an unloaded branch asks the loader for its children.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-| `[open]` | `boolean` | default: the other way |
-
-Returns `Promise&lt;void&gt;`.
-
-##### `TreeModel.ensureChildren(n)`
-
-Loads a node's children when they are not known yet.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `n` | `TreeNode` |  |
-
-Returns `Promise&lt;void&gt;`.
-
-##### `TreeModel.stateOf(id)`
-
-A node's state: checked (it or an ancestor is), mixed (something under it is), unchecked.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-
-Returns `('checked'\|'mixed'\|'unchecked')`.
-
-##### `TreeModel.check(id, on)`
-
-Checks or unchecks a node (single: picks it alone). The selection stays compact: a parent whose children are all checked becomes the parent; unchecking under a checked parent checks the parent's other children instead.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-| `[on]` | `boolean` | default: the other way (a mixed node becomes checked) |
-
-Returns `void`.
-
-##### `TreeModel.checkAll(on)`
-
-Checks every root (everything), or nothing.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `on` | `boolean` |  |
-
-Returns `void`.
-
-##### `TreeModel.getValue(o)`
-
-The selection: compact (a checked node stands for everything under it; the default) or the loaded leaves under it.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[o]` | `{mode: ('compact'\|'leaves')}` |  |
-
-Returns `string[]`.
-
-##### `TreeModel.setValue(ids)`
-
-Sets the selection (ids; ids not loaded yet are kept and apply when they load).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `ids` | `string[]` |  |
-
-Returns `void`.
-
-##### `TreeModel.search(q, server)`
-
-Searches: the loaded nodes whose label or detail holds every word, with their ancestors opened. With a server hook, its answer (nodes with their paths) is merged in first.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `q` | `string` |  |
-| `[server]` | `function(string): Promise&lt;Array&lt;{node: TreeNode, path: TreeNode[]}&gt;&gt;` |  |
-
-Returns `Promise&lt;number&gt;`: how many matched.
-
-##### `TreeModel.rows()`
-
-The visible rows, in order: the roots and the children of open nodes (only the search's matches and their ancestors while searching).
-
-Returns `TreeRow[]`.
-
-##### `TreeModel.summary(o)`
-
-The selection in words: "Rates, FX › Spot" or "3 selected" past a few; "Everything" when every root is checked.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[o]` | `{max: number, none: string}` | max: names shown before a count (default 2) |
-
-Returns `string`.
-
-### drishti_tree-picker.js
-
-#### class `TreePicker`
-
-A tree picker. Events: change {value, leaves}, open, close, loadFailed {id, error}.
-
-##### `new TreePicker(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `options` | `TreePickerOptions` |  |
-
-##### `TreePicker.open()`
-
-Opens the panel (focus in the search field).
-
-Returns `void`.
-
-##### `TreePicker.close()`
-
-Closes the panel.
-
-Returns `void`.
-
-##### `TreePicker.render()`
-
-Draws the tree, the count and the button's words.
-
-Returns `void`.
-
-##### `TreePicker.expand(id, open)`
-
-Opens or closes a node (children from the server the first time).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-| `[open]` | `boolean` |  |
-
-Returns `Promise&lt;void&gt;`.
-
-##### `TreePicker.checkAll(on)`
-
-Checks everything or nothing.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `on` | `boolean` |  |
-
-Returns `void`.
-
-##### `TreePicker.getValue(o)`
-
-The checked ids (compact), or the loaded leaves under them.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[o]` | `{mode: ('compact'\|'leaves')}` |  |
-
-Returns `string[]`.
-
-##### `TreePicker.setValue(ids)`
-
-Sets the checked ids.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `ids` | `string[]` |  |
-
-Returns `void`.
-
-##### `TreePicker.setNodes(nodes)`
-
-Replaces the roots.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `nodes` | `import('./drishti_tree.js').TreeNode[]` |  |
-
-Returns `void`.
-
-### drishti_multiselect.js
-
-#### class `MultiSelect`
-
-A multi-select with search, chips and select-all. Events: change {value, added, removed}, open, close.
-
-##### `new MultiSelect(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `options` | `MultiSelectOptions` |  |
-
-##### `MultiSelect.open()`
-
-Opens the list.
-
-Returns `void`.
-
-##### `MultiSelect.close()`
-
-Closes the list.
-
-Returns `void`.
-
-##### `MultiSelect.toggle(v)`
-
-Picks or unpicks one value.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `void`.
-
-##### `MultiSelect.selectAll(on)`
-
-Picks every option the search matches (or every option), or none (Clear: every pick, matching or not).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `on` | `boolean` |  |
-
-Returns `void`.
-
-##### `MultiSelect.render()`
-
-Draws the chips.
-
-Returns `void`.
-
-##### `MultiSelect.getValue()`
-
-The picked values, in the options' order.
-
-Returns `Array&lt;*&gt;`.
-
-##### `MultiSelect.setValue(values)`
-
-Sets the picked values.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `values` | `Array&lt;*&gt;` |  |
-
-Returns `void`.
-
-##### `MultiSelect.setOptions(options)`
-
-Replaces the options (picks that are no longer options are dropped).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `options` | `Array` |  |
-
-Returns `void`.
-
-##### `MultiSelect.focus()`
-
-Puts the keyboard focus in the field.
-
-Returns `void`.
-
-### drishti_combobox.js
-
-#### class `TypeAhead`
-
-Options from a source as a person types: debounced, cached, aborted and in order.
-
-##### `new TypeAhead(o)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `o` | `{source: (Array\|function(string, AbortSignal): Promise&lt;Array&gt;), debounceMs: number, minChars: number, cacheSize: number, onResult: function({query: string, options: Array, error: ?Error, loading: boolean}): void}` | debounceMs default 200 (0 for a list); minChars default 1 (0 for a list); cacheSize default 50 queries |
-
-##### `TypeAhead.query(q)`
-
-Asks for the options of a query (after the debounce); the answer goes to onResult.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `q` | `string` |  |
-
-Returns `void`.
-
-##### `TypeAhead.abort()`
-
-Aborts the request in flight.
-
-Returns `void`.
-
-##### `TypeAhead.cancel()`
-
-Stops: no answer is given after this.
-
-Returns `void`.
-
-#### class `Combobox`
-
-A combobox with type-ahead. Events: change {value, option}, search {query}, error {error}.
-
-##### `new Combobox(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `options` | `ComboboxOptions` |  |
-
-##### `Combobox.isOpen()`
-
-Whether the list is open.
-
-Returns `boolean`.
-
-##### `Combobox.close()`
-
-Closes the list.
-
-Returns `void`.
-
-##### `Combobox.pick(it)`
-
-Picks an option.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `it` | `{value: *, label: string}` |  |
-
-Returns `void`.
-
-##### `Combobox.getValue()`
-
-The value ({value, label}) or null.
-
-Returns `?{value: *, label: string}`.
-
-##### `Combobox.setValue(v, emit, option)`
-
-Sets the value.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `?{value: *, label: string}` |  |
-| `[emit]` | `boolean` |  |
-| `[option]` | `Object` | the option picked (passed on in change) |
-
-Returns `void`.
-
-##### `Combobox.focus()`
-
-Puts the keyboard focus in the field.
-
-Returns `void`.
-
-##### `Combobox.destroy()`
-
-Stops the type-ahead and takes the combobox out.
-
-Returns `void`.
-
-### drishti_select.js
-
-#### class `Select`
-
-A single-choice select with keyboard, type-ahead and search. Events: change {value, option} (the value changed), pick {value, option} (a person picked, the same value too), open, close.
-
-##### `new Select(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `options` | `SelectOptions` |  |
-
-##### `Select.open(at)`
-
-Opens the list (on the picked option, or the first).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[at]` | `number` | the option to make active (an index of the list drawn) |
-
-Returns `void`.
-
-##### `Select.close(refocus)`
-
-Closes the list.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[refocus]` | `boolean` | put the focus back on the control |
-
-Returns `void`.
-
-##### `Select.pick(it)`
-
-Picks an option (a disabled one is refused).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `it` | `{value: *, label: string}` |  |
-
-Returns `void`.
-
-##### `Select.getValue()`
-
-The value picked, or null.
-
-Returns `*`.
-
-##### `Select.getOption()`
-
-The option picked ({value, label, detail, group, disabled}), or null (nothing picked, or a value no option has).
-
-Returns `?Object`.
-
-##### `Select.setValue(v, emit)`
-
-Sets the value: an option's value (the option's own value is kept: "0.99" picks the option 0.99), or one no option has (shown as it is).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-| `[emit]` | `boolean` | emit change when it changed |
-
-Returns `void`.
-
-##### `Select.setOptions(list, value)`
-
-Replaces the options; the value is kept when an option still has it, else value (when given), else the first enabled option.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `list` | `Array` | as the options option |
-| `[value]` | `*` |  |
-
-Returns `void`.
-
-##### `Select.setDisabled(off)`
-
-Turns the select on or off.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `off` | `boolean` |  |
-
-Returns `void`.
-
-##### `Select.focus()`
-
-Puts the keyboard focus on the control.
-
-Returns `void`.
-
-#### `selectElement(doc, options, attrs)`
-
-A Select in its own &lt;drishti-select&gt; element, for a screen or a library that draws one in code: the element carries the attributes (an id, a hook, a class), its value and component are as on any page (el.value, el.component, el.disabled), and a pick fires input and change on it as a native select's did. options as the Select's; options.options may be values, [value, label] pairs or objects.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `doc` | `Document` |  |
-| `options` | `SelectOptions` |  |
-| `[attrs]` | `Object&lt;string, *&gt;` | attributes of the element (null, undefined and false are left out; true is the empty value) |
-
-Returns `HTMLElement`: the &lt;drishti-select&gt;.
-
-#### `selectProperties(box)`
-
-Gives a &lt;drishti-select&gt; element the properties a native select had, read through its component: value and disabled.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `box` | `HTMLElement` |  |
-
-Returns `void`.
-
-### drishti_schema.js
-
-#### `words(key)`
-
-A key in words: tradeDate and TRADE_DATE read "Trade date".
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `key` | `string` |  |
-
-Returns `string`.
-
-#### `pathParts(path)`
-
-A path's parts: "legs[1].notional" is ['legs', 1, 'notional'].
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `path` | `string` |  |
-
-Returns `Array&lt;(string\|number)&gt;`.
-
-#### `getPath(obj, path)`
-
-The value at a path.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `obj` | `Object` |  |
-| `path` | `string` |  |
-
-Returns `*`.
-
-#### `setPath(obj, path, value)`
-
-A copy of obj with the value at a path set (objects and arrays on the way are copied, never changed).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `obj` | `Object` |  |
-| `path` | `string` |  |
-| `value` | `*` |  |
-
-Returns `Object`.
-
-#### `conditionHolds(cond, values, path)`
-
-Whether a condition holds for a field at a path: {field, equals \| notEquals \| in \| notIn \| gt \| gte \| lt \| lte \| truthy \| falsy \| empty}, {all: [...]}, {any: [...]}, {not: {...}}. field is a sibling's key, or "/path" from the root.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `cond` | `Object` |  |
-| `values` | `Object` | the whole form's value |
-| `path` | `string` | the field the condition belongs to |
-
-Returns `boolean`.
-
-#### `fieldsOf(schema, base)`
-
-The fields of an object schema in order, each with its key, path, label and whether it is required.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `schema` | `FieldSchema` | an object schema |
-| `[base]` | `string` | the object's path |
-
-Returns `Array&lt;{key: string, path: string, field: FieldSchema, label: string, required: boolean}&gt;`.
-
-#### `defaults(schema)`
-
-A schema's starting value: every default, objects filled in, arrays at their minItems.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `schema` | `FieldSchema` |  |
-
-Returns `*`.
-
-#### `fieldProblem(field, v, c)`
-
-One field's problem in words, or null (its own rules; not the fields inside it).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `field` | `FieldSchema` |  |
-| `v` | `*` |  |
-| `c` | `{label: string, required: boolean, values: Object, path: string, labelOf: function(string): string}` |  |
-
-Returns `?string`.
-
-#### `validate(schema, values)`
-
-Validates a value against a schema: every shown field's problem, by path.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `schema` | `FieldSchema` | the form's object schema |
-| `values` | `Object` |  |
-
-Returns `{ok: boolean, errors: Object&lt;string, string&gt;}`.
-
-#### `visibleValue(schema, values)`
-
-The value without the fields that are hidden (what a form submits).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `schema` | `FieldSchema` |  |
-| `values` | `Object` |  |
-
-Returns `Object`.
-
-#### `changes(before, after, base)`
-
-What changed between two values, leaf by leaf (a four-eyes proposal's diff).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `before` | `*` |  |
-| `after` | `*` |  |
-| `[base]` | `string` |  |
-
-Returns `Array&lt;{path: string, old: *, value: *}&gt;`.
-
-#### `parseField(field, text, label)`
-
-Reads typed text as a field's value: numbers with grouping, a true minus, k, m and bn, percentages; integers; booleans; dates (ISO). Returns {value} or {error} in words.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `field` | `FieldSchema` |  |
-| `text` | `string` |  |
-| `[label]` | `string` |  |
-
-Returns `{value: *, error: ?string}`.
-
-#### `currencyOf(field, values, path)`
-
-A money field's currency: its fixed code, or what the field it names holds.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `field` | `FieldSchema` |  |
-| `values` | `Object` | the whole form's value |
-| `path` | `string` | the money field's path |
-
-Returns `string`.
-
-#### `offeredValues(field, values, path)`
-
-The values an enum list offers now: those whose parents include a value chosen in the field it depends on (all when none is chosen).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `field` | `FieldSchema` |  |
-| `values` | `Object` |  |
-| `path` | `string` |  |
-
-Returns `Array`.
-
-### drishti_form.js
-
-#### class `Form`
-
-A form from a schema. Events: change {path, value, values}, invalid {errors}, submitted {values, result}, proposed {proposal, result}, reset, step {index, id}.
-
-##### `new Form(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `options` | `FormOptions` |  |
-
-##### `Form.render()`
-
-Draws the form again (after an array changed shape); the focus goes back to the field that had it.
-
-Returns `void`.
-
-##### `Form.step()`
-
-The current step (its index), or 0.
-
-Returns `number`.
-
-##### `Form.goTo(i)`
-
-Goes to a step (Back always; forward only through Next, which checks the step's fields).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `i` | `number` |  |
-
-Returns `void`.
-
-##### `Form.next()`
-
-Checks the current step's fields and, when they hold, goes on.
-
-Returns `boolean`: whether it went on.
-
-##### `Form.refresh()`
-
-Shows and hides fields by their conditions, and shows each touched field's problem.
-
-Returns `void`.
-
-##### `Form.focusField(path)`
-
-Puts the focus on a field.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `path` | `string` |  |
-
-Returns `void`.
-
-##### `Form.validate()`
-
-Validates every shown field (and shows every problem).
-
-Returns `{ok: boolean, errors: Object&lt;string, string&gt;}`.
-
-##### `Form.submit()`
-
-Submits: validates, asks the server's checks, then hands the value to onSubmit, or files a proposal when the form has four eyes.
-
-Returns `Promise&lt;boolean&gt;`: whether it was submitted (or proposed).
-
-##### `Form.resolveProposal(decision, note)`
-
-The proposal's decision came back: approved keeps the value as the new start; rejected puts the start back. Either way the form is editable again.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `decision` | `('approved'\|'rejected')` |  |
-| `[note]` | `string` |  |
-
-Returns `void`.
-
-##### `Form.setField(path, value)`
-
-One field's value set from outside (a page's own control, a server's answer); the field is drawn again.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `path` | `string` |  |
-| `value` | `*` |  |
-
-Returns `void`.
-
-##### `Form.setOptions(path, list, labels)`
-
-A list field's values replaced (a server's answer that arrives later: the measures of the model just chosen); the form drawn again, the focus kept. A value no longer offered stays until a person changes it (its check says so).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `path` | `string` | the field in the schema, an array's item fields by name (filters.field) |
-| `list` | `Array` | the values offered |
-| `[labels]` | `string[]` | their words |
-
-Returns `void`.
-
-##### `Form.getField(path)`
-
-A field's value.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `path` | `string` |  |
-
-Returns `*`.
-
-##### `Form.getValue()`
-
-The value: the shown fields only.
-
-Returns `Object`.
-
-##### `Form.setValue(v)`
-
-Replaces the value (and the start Reset goes back to).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `Object` |  |
-
-Returns `void`.
-
-##### `Form.reset()`
-
-Puts the start value back.
-
-Returns `void`.
-
-##### `Form.setErrors(errors)`
-
-Problems from elsewhere (a server's answer), by path.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `errors` | `Object&lt;string, string&gt;` |  |
-
-Returns `void`.
-
-##### `Form.setNotes(notes)`
-
-Notes by path that do not stop a submit (a warning: "above the desk limit"), shown where a problem would be when there is none.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `notes` | `Object&lt;string, string&gt;` |  |
-
-Returns `void`.
-
-##### `Form.showErrors(errors)`
-
-Problems from elsewhere shown at once, without marking every field tried (a live check as people type).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `errors` | `Object&lt;string, string&gt;` |  |
-
-Returns `void`.
-
-### drishti_form-host.js
-
-#### `FORM_HOST_SELECTOR`
-
-The attribute that marks a form host.
-
-#### `formOf(host, extra)`
-
-The Form of a host the server drew (made at the first call; later calls answer the same Form).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` | an element with data-schema: {schema, value, options} |
-| `[extra]` | `Object` | options added by the page's script: onSubmit and check join a Form already drawn (they are read when it is submitted); widgets too (the fields are drawn again with them, the values kept); other drawing options count only at the first call |
-
-Returns `Form\|null`.
-
-#### `upgradeForms(root)`
-
-Every form host under a root made a Form (drishti_app.js does it for each page, with upgradeFields).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `root` | `(Document\|HTMLElement)` |  |
-
-Returns `Form[]`.
-
-### drishti_form-fields.js
-
-#### `defineWidget(name, factory)`
-
-Defines a widget every form may name in a field's widget (a form's own widgets option wins over it).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `name` | `string` |  |
-| `factory` | `WidgetFactory` |  |
-
-Returns `void`.
-
-#### `defaultWidget(fs)`
-
-A field's widget when the schema names none.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `fs` | `Object` |  |
-
-Returns `string`.
-
-#### `applyHook(el, hook)`
-
-Puts a field's hook on its control: a name gives data-&lt;name&gt;, an object its attributes.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `el` | `Element` |  |
-| `hook` | `(string\|Object&lt;string, string&gt;)` |  |
-
-Returns `void`.
-
-### drishti_filter-bar.js
-
-#### class `FilterModelBar`
-
-The filter bar's model: fields, the filter model, the chips' words and every edit.
-
-##### `new FilterModelBar(o)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `o` | `{fields: FilterField[], model: Object, quickFilter: string}` |  |
-
-##### `FilterModelBar.field(id)`
-
-A field by id.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-
-Returns `?FilterField`.
-
-##### `FilterModelBar.chips()`
-
-The chips: each filtered field and its words.
-
-Returns `Array&lt;{id: string, label: string, text: string}&gt;`.
-
-##### `FilterModelBar.set(id, filter)`
-
-Sets one field's filter (null takes it away).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-| `filter` | `?Object` | a ColumnFilter |
-
-Returns `void`.
-
-##### `FilterModelBar.setMembers(id, values)`
-
-Keeps a set's members (none: the filter goes).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-| `values` | `Array` |  |
-
-Returns `void`.
-
-##### `FilterModelBar.setCondition(id, op, text, textTo)`
-
-A number or text condition; a value that does not read takes nothing and says why.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-| `op` | `string` |  |
-| `text` | `string` |  |
-| `[textTo]` | `string` | between's upper end |
-
-Returns `?string`: the problem in words, or null.
-
-##### `FilterModelBar.setDates(id, r)`
-
-A date range: a preset (it moves with the business date) or two ends as typed.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-| `r` | `{preset: string, from: string, to: string, asOf: string, calendar: string}` |  |
-
-Returns `?string`: the problem in words, or null.
-
-##### `FilterModelBar.clear()`
-
-Takes every filter away (and the quick filter).
-
-Returns `void`.
-
-##### `FilterModelBar.payload()`
-
-What the bar emits: the model (a copy), the quick filter.
-
-Returns `{model: Object, quickFilter: string}`.
-
-#### class `FilterBar`
-
-The filter bar. Events: change {model, quickFilter}; the same payload on the bus under the channel.
-
-##### `new FilterBar(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `options` | `FilterBarOptions` |  |
-
-##### `FilterBar.render()`
-
-Draws the chips.
-
-Returns `void`.
-
-##### `FilterBar.edit(id, anchor)`
-
-Opens a field's editor under an anchor.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `id` | `string` |  |
-| `[anchor]` | `Element` |  |
-
-Returns `Promise&lt;void&gt;`.
-
-##### `FilterBar.getValue()`
-
-The filter model and the quick filter.
-
-Returns `{model: Object, quickFilter: string}`.
-
-##### `FilterBar.setValue(v)`
-
-Sets the filters (and tells the bus).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `{model: Object, quickFilter: string}` |  |
-
-Returns `void`.
-
-### drishti_native.js
-
-#### `upgradeDateInput(input, options)`
-
-Upgrades an `&lt;input type="date"&gt;` to the business-date picker in place (once; a second call answers the same picker). The input becomes a hidden input with its name, id and value; the picker is drawn just after it.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `input` | `HTMLInputElement` |  |
-| `[options]` | `UpgradeDateOptions` |  |
-
-Returns `?DatePicker`.
-
-#### `upgradeTimeInput(input, options)`
-
-Upgrades an `&lt;input type="time"&gt;` to the time picker in place ("HH:MM"), as upgradeDateInput does a date.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `input` | `HTMLInputElement` |  |
-| `[options]` | `{label: string, stepMinutes: number}` | stepMinutes: default the field's step (seconds) in minutes, else 15 |
-
-Returns `?TimePicker`.
-
-#### `upgradeDateTimeInput(input, options)`
-
-Upgrades an `&lt;input type="datetime-local"&gt;` to the date-and-time picker in place ("YYYY-MM-DDTHH:MM"; data-time-zone names the zone).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `input` | `HTMLInputElement` |  |
-| `[options]` | `{label: string, timeZone: string}` |  |
-
-Returns `?DateTimePicker`.
-
-#### `upgradeCheckboxes(group, options)`
-
-Upgrades a group of checkbox labels to the multi-select in place (once). The group stays in the page, hidden, with its checkboxes: the form submits them as before. Each option is a checkbox: its value, and as its label the checkbox's data-text or its label's text.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `group` | `HTMLElement` |  |
-| `[options]` | `UpgradeChecksOptions` |  |
-
-Returns `?{picker: MultiSelect, host: HTMLElement, sync: function(): void}`.
-
-#### `upgradeFields(root, options)`
-
-Upgrades every `&lt;input type="date"&gt;`, `"time"` and `"datetime-local"` under a root (not those marked data-native) and every group marked `[data-multiselect]` with more than `small` checkboxes (fewer stay a compact row of checkboxes).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `root` | `(Document\|Element)` |  |
-| `[options]` | `{small: number, offClass: string, dates: UpgradeDateOptions}` |  |
-
-Returns `{dates: DatePicker[], checks: Array&lt;Object&gt;, forms: Array&lt;Object&gt;}`: (forms: the server's form hosts made Forms, drishti_form-host.js).
-
-### drishti_code-modes.js
-
-#### `rachanaMode()`
-
-The Rachana expression mode.
-
-Returns `{startState: function(): Object, token: function(Object, Object): ?string, lineComment: string}`.
-
-#### `yamlMode()`
-
-The Rachana YAML mode: comments, keys, quoted strings, numbers, booleans, the Rachana-EL markers ($, @, #index), F1 to F12.
-
-Returns `{startState: function(): Object, token: function(Object, Object): ?string, lineComment: string}`.
-
-#### `MODES`
-
-The languages by name: the CodeMirror mode each is, and whether it is ours (defined here) or vendored (loaded).
-
-#### `defineModes(CM)`
-
-Defines our modes on a CodeMirror (once each).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `CM` | `Object` | the CodeMirror global |
-
-Returns `void`.
-
-#### class `MiniStream`
-
-A stream over one line with CodeMirror's StringStream methods (what a mode's token reads).
-
-##### `new MiniStream(line)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `line` | `string` |  |
-
-##### `MiniStream.sol()`
-
-At the line's start.
-
-Returns `boolean`.
-
-##### `MiniStream.eol()`
-
-At the line's end.
-
-Returns `boolean`.
-
-##### `MiniStream.peek()`
-
-The next character, not taken.
-
-Returns `?string`.
-
-##### `MiniStream.next()`
-
-Takes the next character.
-
-Returns `?string`.
-
-##### `MiniStream.eatSpace()`
-
-Takes white space.
-
-Returns `boolean`: whether any was taken.
-
-##### `MiniStream.skipToEnd()`
-
-Takes the rest of the line.
-
-Returns `void`.
-
-##### `MiniStream.match(pattern, consume)`
-
-Takes text that matches (a string or a regular expression anchored with ^), unless consume is false.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `pattern` | `(string\|RegExp)` |  |
-| `[consume=true]` | `boolean` |  |
-
-Returns `*`: the match, or false/null.
-
-##### `MiniStream.current()`
-
-The text taken since the token started.
-
-Returns `string`.
-
-#### `tokens(lang, text)`
-
-Text as tokens by one of our modes, line by line: [{text, style}] per line (style null for plain text).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `lang` | `string` | rachana or yaml (python and text come back plain) |
-| `text` | `string` |  |
-
-Returns `Array&lt;Array&lt;{text: string, style: ?string}&gt;&gt;`.
-
-### drishti_code-text.js
-
-#### `wordAt(line, ch)`
-
-The word at a cursor: letters, digits, _, . and a leading $ or @ (a Rachana path); from and to are its columns.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `line` | `string` |  |
-| `ch` | `number` | the cursor's column |
-
-Returns `{word: string, from: number, to: number}`.
-
-#### `completions(catalogue, word, limit)`
-
-What completes a word, best first (at most limit): the name starting with it, then a dotted or camel-case part starting with it, then the name containing it; ties by name. The word is matched without case.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `catalogue` | `CatalogueEntry[]` |  |
-| `word` | `string` |  |
-| `[limit=50]` | `number` |  |
-
-Returns `CatalogueEntry[]`.
-
-#### `insertText(e)`
-
-The text an entry puts in: its insert, or its name with "()" for a function (the cursor goes between them: caret is its place).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `e` | `CatalogueEntry` |  |
-
-Returns `{text: string, caret: number}`.
-
-#### `lineDiff(a, b)`
-
-The lines that changed from a to b (Myers): equal, delete (a line of a only) and insert (a line of b only), in order.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `a` | `string` | the original text |
-| `b` | `string` | the new text |
-
-Returns `Array&lt;{op: ('equal'\|'delete'\|'insert'), a: ?number, b: ?number, text: string}&gt;`: a and b are 1-based line numbers.
-
-#### `sideBySide(ops)`
-
-A diff as side-by-side rows: equal lines on both sides, a run of deletions paired with the insertions after it (a changed line), the rest alone. Each side {n, text, kind} or null.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `ops` | `Array&lt;{op: string, a: ?number, b: ?number, text: string}&gt;` | lineDiff's answer |
-
-Returns `Array&lt;{left: ?{n: number, text: string, kind: string}, right: ?{n: number, text: string, kind: string}}&gt;`.
-
-#### `diffStats(ops)`
-
-How many lines a diff adds, removes and keeps.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `ops` | `Array&lt;{op: string}&gt;` |  |
-
-Returns `{added: number, removed: number, same: number}`.
-
-### drishti_code-editor.js
-
-#### `ensureCodeMirror(given)`
-
-CodeMirror on the page: the one given, the page's, or the vendored one loaded now (with its style sheet).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[given]` | `Object` | a CodeMirror to use |
-
-Returns `Promise&lt;Object&gt;`.
-
-#### `yamlIndentAfter(before)`
-
-The indentation of a new YAML line after the text before the cursor: the line's own, a list item's content column, two more after a key that opens a block ("key:", "key: \|").
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `before` | `string` |  |
-
-Returns `number`.
-
-#### class `CodeEditor`
-
-The code editor. Events: change {value, origin} (origin 'setValue' when the page set the text), ready, lint {problems}, completed {entry}, cursor {line, ch} (0-based, as the cursor moves).
-
-##### `new CodeEditor(host, options)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `[options]` | `CodeEditorOptions` |  |
-
-##### `CodeEditor.refresh()`
-
-Lays the editor out again (after it was hidden: a drawer or a tab opened).
-
-Returns `void`.
-
-##### `CodeEditor.complete(forced)`
-
-Opens the completions at the cursor (forced: even for an empty word).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `[forced]` | `boolean` |  |
-
-Returns `Promise&lt;void&gt;`.
-
-##### `CodeEditor.accept(entry)`
-
-Puts a completion in place of the word at the cursor.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `entry` | `import('./drishti_code-text.js').CatalogueEntry` |  |
-
-Returns `void`.
-
-##### `CodeEditor.runLint()`
-
-Asks the lint hook now and draws its problems.
-
-Returns `Promise&lt;LintProblem[]&gt;`.
-
-##### `CodeEditor.setProblems(problems)`
-
-Draws problems: marks under the text, signs in the gutter, the list under the editor.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `problems` | `LintProblem[]` |  |
-
-Returns `void`.
-
-##### `CodeEditor.goTo(line, ch)`
-
-Puts the cursor at a line (1-based) and column.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `line` | `number` |  |
-| `[ch]` | `number` |  |
-
-Returns `void`.
-
-##### `CodeEditor.getValue()`
-
-The text.
-
-Returns `string`.
-
-##### `CodeEditor.setValue(text)`
-
-Replaces the text.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `text` | `string` |  |
-
-Returns `void`.
-
-##### `CodeEditor.updateValue(text)`
-
-Replaces the text where it differs, keeping the cursor, the selection and the scroll (the document changed elsewhere: an undo, the visual side). Answers whether anything changed.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `text` | `string` |  |
-
-Returns `boolean`.
-
-##### `CodeEditor.highlight(from, to, o)`
-
-Marks lines (0-based, inclusive) as the selected item's, and brings them into view; null clears the mark.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `from` | `?number` |  |
-| `[to]` | `number` |  |
-| `[o]` | `{scroll: boolean}` | scroll: bring the lines into view (default true) |
-
-Returns `void`.
-
-##### `CodeEditor.cursor()`
-
-The cursor (0-based line and column).
-
-Returns `{line: number, ch: number}`.
-
-##### `CodeEditor.insert(text)`
-
-Puts text in place of the selection (at the cursor), as if typed: a key of the page's own (Shift+Enter: a new line).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `text` | `string` |  |
-
-Returns `void`.
-
-##### `CodeEditor.setInvalid(on)`
-
-Marks the text as not valid (aria-invalid on the input, the editor drawn as an error) or valid again: a host's own check (a formula the server could not read).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `on` | `boolean` |  |
-
-Returns `void`.
-
-##### `CodeEditor.setReadOnly(on)`
-
-Makes it read-only, or editable.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `on` | `boolean` |  |
-
-Returns `void`.
-
-##### `CodeEditor.focus()`
-
-Puts the keyboard focus in the editor.
-
-Returns `void`.
-
-##### `CodeEditor.destroy()`
-
-Takes the editor out.
-
-Returns `void`.
-
-#### class `CodeDiff`
-
-A diff of two texts, side by side or unified, highlighted by the language; no CodeMirror needed. Events: none (read-only).
-
-##### `new CodeDiff(host, o)`
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `host` | `HTMLElement` |  |
-| `o` | `{original: string, value: string, mode: string, layout: ('side'\|'unified'), labels: string[]}` | labels: the two sides' names (default Before, After) |
-
-##### `CodeDiff.render()`
-
-Draws the diff again (after setTexts or a layout change).
-
-Returns `void`.
-
-##### `CodeDiff.setTexts(original, value)`
-
-Shows two other texts.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `original` | `string` |  |
-| `value` | `string` |  |
-
-Returns `void`.
-
-##### `CodeDiff.stats()`
-
-How many lines were added, removed and kept.
-
-Returns `{added: number, removed: number, same: number}`.
-
-### drishti_code-upgrade.js
-
-#### `upgradeCodeArea(ta, o)`
-
-Makes one text area (or one-line input) a code editor (once); answers the editor.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `ta` | `(HTMLTextAreaElement\|HTMLInputElement)` |  |
-| `[o]` | `{mode: string, height: number, complete: Function, completeAfter: Function, lint: Function, keys: Object}` | beside the element's own attributes and drishtiCodeOptions |
-
-Returns `CodeEditor`.
-
-#### `upgradeCodeAreas(root)`
-
-Upgrades every &lt;textarea data-di-code&gt; and &lt;input data-di-code&gt; inside a root (a page, a dialog drawn later).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `root` | `ParentNode` |  |
-
-Returns `CodeEditor[]`.
-
-#### `CODE_AREA_SELECTOR`
-
-The elements upgradeCodeAreas makes code editors (install's observer looks for them).
-
-### drishti_inputs-element.js
-
-#### `INPUT_ELEMENTS`
-
-Every element of drishti-inputs and the class it draws.
-
-#### `defineInputElements(registry, win)`
-
-Defines the elements (once each) on a registry.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `registry` | `CustomElementRegistry` |  |
-| `win` | `Window` |  |
-
-Returns `void`.
-
-### drishti_index.js
-
-#### `install(root)`
-
-Starts drishti-inputs in a page (the bundle calls it when it loads; nothing happens without a document): defines its elements and makes the page's code areas (&lt;textarea data-di-code&gt;) code editors.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `root` | `Window` |  |
-
-Returns `void`.
-
-### Types of drishti-inputs
-
-#### `HolidayRule` : `Object`
-
-A holiday rule. One of: {fixed: 'MM-DD', roll}, {nth, weekday, month} (nth -1: the last), {before: 'MM-DD', weekday} (the weekday strictly before a day: Victoria Day), {easter: offset} (days from Easter Sunday: -2 Good Friday, 1 Easter Monday). roll for a fixed day on a weekend: 'nearest' (Saturday to Friday, Sunday to Monday), 'monday' (to the next Monday, or Tuesday when Monday is taken), 'none'. from and to bound the years the rule holds.
-
-| Name | Type | Meaning |
-|---|---|---|
-| `name` | `string` |  |
-| `[fixed]` | `string` |  |
-| `[roll='none']` | `('nearest'\|'monday'\|'none')` |  |
-| `[nth]` | `number` |  |
-| `[weekday]` | `number` | 0 Sunday to 6 Saturday |
-| `[month]` | `number` | 1 to 12 |
-| `[before]` | `string` |  |
-| `[easter]` | `number` |  |
-| `[from]` | `number` | the first year |
-| `[to]` | `number` | the last year |
-
-#### `LintProblem` : `Object`
-
-A lint problem.
-
-| Name | Type | Meaning |
-|---|---|---|
-| `line` | `number` | 1-based |
-| `[from]` | `number` | the first column (0-based; default the line's start) |
-| `[to]` | `number` | after the last column (default the line's end) |
-| `[severity='error']` | `('error'\|'warning'\|'info')` |  |
-| `message` | `string` | in words |
-
-#### `CodeEditorOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `[value]` | `string` |  |
-| `[mode='rachana']` | `('rachana'\|'yaml'\|'python'\|'text')` |  |
-| `[readOnly=false]` | `boolean` |  |
-| `[lineNumbers=true]` | `boolean` |  |
-| `[height=200]` | `(number\|'auto')` | px, or 'auto': the editor grows with its text (a formula bar), between minHeight and maxHeight |
-| `[minHeight]` | `number` | px, with height 'auto' |
-| `[maxHeight]` | `number` | px, with height 'auto' (past it the editor scrolls) |
-| `[catalogue]` | `import('./drishti_code-text.js').CatalogueEntry[]` | the functions completion offers |
-| `[complete]` | `function({word: string, line: string, ch: number, mode: string}): (Promise&lt;Array&gt;\|Array)` | the completion hook (the server's catalogue); answers CatalogueEntry objects |
-| `[lint]` | `function(string): (Promise&lt;LintProblem[]&gt;\|LintProblem[])` | the lint hook |
-| `[lintDelay=400]` | `number` | ms after typing stops |
-| `[label]` | `string` |  |
-| `[indentUnit=2]` | `number` | spaces an indent is (Python: 4) |
-| `[keys]` | `Object&lt;string, function(): *&gt;` | the page's own keys in the editor, CodeMirror's names ('Ctrl-Enter': run, Esc: close); Tab and Shift-Tab indent and dedent a selection |
-| `[CodeMirror]` | `Object` | a CodeMirror to use (default: the vendored one) |
-| `[completeAfter]` | `function(string): boolean` | also opens the completions when the text before the cursor passes this test (a YAML key's "kind: ", a path's "$.") |
-| `[lineWrapping=false]` | `boolean` |  |
-| `[tabLeaves=false]` | `boolean` | Tab and Shift+Tab move the focus out of the editor (a small box in a form) instead of indenting |
-| `[singleLine=false]` | `boolean` | one line, as a form's text field (a formula, a filter): Enter adds no line (the page's Enter key still runs), a line break pasted or set becomes a space; with height 'auto' it grows as the line wraps |
-
-#### `CatalogueEntry` : `Object`
-
-An entry of the function catalogue (the server's: GET /api/v1/functions, or a page's own).
-
-| Name | Type | Meaning |
-|---|---|---|
-| `name` | `string` |  |
-| `[signature]` | `string` | "var(confidence, horizon)" |
-| `[description]` | `string` |  |
-| `[kind]` | `string` | function, field, keyword, measure |
-| `[insert]` | `string` | the text put in (default: the name, with "(" for a function) |
-
-#### `ComboboxOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `source` | `(Array\|function(string, AbortSignal): Promise&lt;Array&gt;)` | the options, or a server search: (text, signal) to options |
-| `[value]` | `{value: *, label: string}` |  |
-| `[debounceMs=200]` | `number` |  |
-| `[minChars=1]` | `number` |  |
-| `[cacheSize=50]` | `number` | recent answers kept by query (0: every search asks again) |
-| `[allowFree=false]` | `boolean` | typed text that is not an option is a value of its own |
-| `[label]` | `string` |  |
-| `[placeholder]` | `string` |  |
-| `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
-| `[input]` | `HTMLInputElement` | a field of the page to use (wrapped in place) instead of a new one |
-| `[suggest=false]` | `boolean` | suggestions only: the field's text is the page's; Enter and Escape with the list closed are not taken |
-
-#### `DatePickerOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `[value]` | `string` | the date (ISO) |
-| `[calendar='weekends']` | `(string\|Object)` | the business calendar: US, UK, TARGET, CA, US+UK, a defined one, or a HolidayCalendar |
-| `[asOf]` | `string` | the business date T (default today rolled back to a business day) |
-| `[businessOnly=true]` | `boolean` | only business days may be picked |
-| `[min]` | `string` |  |
-| `[max]` | `string` |  |
-| `[format='d MMM yyyy']` | `string` | how the field shows the date |
-| `[weekStart=1]` | `number` | 0 Sunday, 1 Monday |
-| `[shortcuts=true]` | `boolean` | the business date, T-1 and the previous month-end under the calendar |
-| `[required=false]` | `boolean` |  |
-| `[label]` | `string` | the field's name for a reader |
-| `[placeholder]` | `string` |  |
-
-#### `DateRange` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `from` | `?string` | ISO |
-| `to` | `?string` | ISO |
-| `preset` | `?string` | the preset's id when the range is one (it moves with the business date) |
-
-#### `DateRangeOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `[value]` | `DateRange` |  |
-| `[calendar='weekends']` | `(string\|Object)` |  |
-| `[asOf]` | `string` | the business date the presets count from |
-| `[presets=true]` | `(boolean\|Array&lt;(string\|{id: string, label: string, from: string, to: string})&gt;)` | true: every preset; or the ids to offer; or ranges given whole (a server's own presets, already resolved: id, label, from, to), mixed with ids as wished |
-| `[businessOnly=false]` | `boolean` | the ends must be business days |
-| `[min]` | `string` |  |
-| `[max]` | `string` |  |
-| `[maxDays]` | `number` | the longest range in calendar days |
-| `[openEnded=false]` | `boolean` | one end may stay open (from a day on, or up to a day) |
-| `[weekStart=1]` | `number` |  |
-| `[label]` | `string` |  |
-
-#### `FilterField` : `Object`
-
-A field the bar may filter.
-
-| Name | Type | Meaning |
-|---|---|---|
-| `id` | `string` | the column id the model uses |
-| `[label]` | `string` |  |
-| `[type='set']` | `('set'\|'number'\|'text'\|'date')` |  |
-| `[options]` | `Array` | a set's members (strings or {value, label}) |
-| `[members]` | `function(string): (Promise&lt;Array&gt;\|Array)` | a set's members from a server, by search text |
-
-#### `FilterBarOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `fields` | `FilterField[]` |  |
-| `[model]` | `Object` | the filters at the start |
-| `[bus]` | `Object` | the drishti-core EventBus it emits on (default: the page's shared bus) |
-| `[channel]` | `string` | the event name (default FILTER_CHANNEL) |
-| `[quick=true]` | `boolean` | the quick-search field |
-| `[asOf]` | `string` | the business date date presets count from |
-| `[calendar]` | `string` | the business calendar of date fields |
-| `[label='Filters']` | `string` |  |
-
-#### `WidgetContext` : `Object`
-
-What a custom widget is given.
-
-| Name | Type | Meaning |
-|---|---|---|
-| `form` | `Object` | the Form |
-| `field` | `Object` | the field's schema |
-| `path` | `string` |  |
-| `label` | `string` |  |
-| `value` | `*` |  |
-| `id` | `string` | the id its focusable element should take (the label points at it) |
-| `readOnly` | `boolean` |  |
-| `required` | `boolean` |  |
-| `describedBy` | `string` | the ids of its help and problem, for aria-describedby |
-| `set` | `function(*): void` | gives the form a new value |
-| `touch` | `function(): void` | marks the field touched (its problem shows) |
-
-#### `WidgetFactory` : `function(WidgetContext): {el: HTMLElement, setValue: function(*): void, focus: function(): void, input: HTMLElement, destroy: function(): void}`
-
-A custom widget: draws a field's control. Returns its element and, as it can, setValue(v), focus(), input (the focusable element) and destroy().
-
-#### `FourEyes` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `submit` | `function({values: Object, changes: Array, comment: string, approver: *}): Promise&lt;{id: string, status: string}&gt;` | files the proposal (the server's approvals); its answer is shown |
-| `[approvers]` | `(Array\|function(string, AbortSignal): Promise&lt;Array&gt;)` | who may approve (a list or a server search); none: any approver |
-| `[requireComment=true]` | `boolean` |  |
-
-#### `FormOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `schema` | `import('./drishti_schema.js').FieldSchema` | an object schema |
-| `[value]` | `Object` | the starting value (default: the schema's defaults) |
-| `[onSubmit]` | `function(Object): (Promise&lt;*&gt;\|*)` | the value, when it is valid (and there are no four eyes) |
-| `[check]` | `function(Object): Promise&lt;Object&lt;string, string&gt;&gt;` | the server's checks: problems by path |
-| `[fourEyes]` | `FourEyes` |  |
-| `[submitLabel='Save']` | `string` |  |
-| `[doneText='Saved']` | `string` | what the form says once onSubmit answered ('': nothing, for a page that shows the answer itself, such as a check) |
-| `[readOnly=false]` | `boolean` |  |
-| `[layout='stacked']` | `('stacked'\|'columns'\|'inline')` | inline: the fields side by side in a row (a filter bar's search and lists) |
-| `[locale]` | `string` | how numbers are read and shown |
-| `[live=false]` | `boolean` | no Save or Reset: each change is the host's at once (a designer's inspector, a property pane) |
-| `[embedded=false]` | `boolean` | no &lt;form&gt; element of its own (the fields sit inside a page's server form, which submits the fields that have a name); implies live |
-| `[pathAttr='data-path']` | `string` | the attribute each field's block carries its path in (a page whose own controls use data-path names another) |
-| `[actions=true]` | `boolean` | the Save and Reset buttons (false: none, the page has its own) |
-| `[steps]` | `Array&lt;{id: string, title: string, description: string}&gt;` | the form in steps: a field's step names one; Back and Next, Next checks the step's fields; the last step submits |
-| `[widgets]` | `Object&lt;string, import('./drishti_form-fields.js').WidgetFactory&gt;` | custom widgets by name (a field's widget) |
-| `[label]` | `string` | the form's name for a reader (default: the schema's title) |
-| `[submitHook]` | `string` | a data attribute on the submit button ("lookup-go" is data-lookup-go), for tutorials and tests |
-| `[resetButton=true]` | `boolean` | the Reset button |
-
-#### `MultiSelectOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `options` | `Array&lt;(string\|number\|{value: *, label: string, detail: string, group: string, disabled: boolean})&gt;` |  |
-| `[value]` | `Array&lt;*&gt;` | the picked values |
-| `[maxChips=3]` | `number` | chips shown before "+N" |
-| `[max]` | `number` | the most that may be picked |
-| `[selectAll=true]` | `boolean` | the Select all and Clear buttons |
-| `[label]` | `string` |  |
-| `[placeholder='Any']` | `string` |  |
-
-#### `UpgradeDateOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `[calendar]` | `(string\|Object)` | the business calendar; default: the field's data-calendar, or its data-holidays (dates, comma separated, from the server) as a calendar of their own, else weekends only |
-| `[businessOnly]` | `boolean` | only business days; default: the field's data-business attribute |
-| `[asOf]` | `string` | the business date T; default: the field's data-current |
-| `[shortcuts]` | `boolean` | the business date, T-1 and month-end; default true when businessOnly |
-| `[label]` | `string` | default: the field's aria-label or its label's text |
-| `[placeholder]` | `string` |  |
-
-#### `UpgradeChecksOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `[label]` | `string` | default: the group's aria-label |
-| `[offClass]` | `string` | a label with this class is not offered (a dependent list's values that do not apply) |
-| `[maxChips]` | `number` |  |
-| `[placeholder]` | `string` |  |
-
-#### `FieldSchema` : `Object`
-
-A field of a form schema.
-
-| Name | Type | Meaning |
-|---|---|---|
-| `type` | `('string'\|'number'\|'integer'\|'money'\|'boolean'\|'date'\|'time'\|'datetime'\|'daterange'\|'array'\|'object')` | money: a number shown grouped with its currency; time: "HH:MM"; datetime: "YYYY-MM-DDTHH:MM" in its timeZone |
-| `[title]` | `string` | the label (default: the key in words) |
-| `[description]` | `string` | help under the field |
-| `[default]` | `*` |  |
-| `[enum]` | `Array` | the values allowed |
-| `[enumLabels]` | `string[]` | words for each value |
-| `[minimum]` | `number` |  |
-| `[maximum]` | `number` |  |
-| `[multipleOf]` | `number` |  |
-| `[minLength]` | `number` |  |
-| `[maxLength]` | `number` |  |
-| `[pattern]` | `string` | a regular expression the whole text must match |
-| `[patternMessage]` | `string` | the words when it does not ("a book code such as RT-123") |
-| `[format]` | `string` | number: a named display format; string: email, textarea, code |
-| `[after]` | `string` | date: a field it must be after |
-| `[before]` | `string` | date: a field it must be before |
-| `[when]` | `Object` | the condition that shows it |
-| `[items]` | `FieldSchema` | array: each item's schema |
-| `[minItems]` | `number` |  |
-| `[maxItems]` | `number` |  |
-| `[uniqueItems]` | `boolean` |  |
-| `[properties]` | `Object&lt;string, FieldSchema&gt;` | object: its fields |
-| `[required]` | `string[]` | object: the keys that must have a value |
-| `[order]` | `string[]` | object: the order of its fields (default: as written) |
-| `[widget]` | `string` | how it is drawn: text, textarea, select, radio, checkbox, switch, multiselect, combobox, tree, date, daterange, code, formula (one line, options.mode and options.complete) |
-| `[options]` | `Object` | the widget's options (a combobox's source, a tree's nodes, a code editor's mode) |
-| `[readOnly]` | `boolean` |  |
-| `[placeholder]` | `string` |  |
-| `[currency]` | `string` | money: its currency code (USD), or the key of the field that holds it (a sibling, or "/path") |
-| `[timeZone]` | `string` | datetime: the zone named beside it |
-| `[stepMinutes]` | `number` | time, datetime: the minutes between the times offered (default 15) |
-| `[name]` | `string` | the name a surrounding server form submits the value under (hidden inputs; a native control carries it) |
-| `[nameValue]` | `*` | boolean with a name: what is submitted when it is on (default "true") |
-| `[hook]` | `(string\|Object&lt;string, string&gt;)` | data attributes on the field's control: "format-title" is data-format-title=""; an object sets each attribute as given (the hooks tutorials and tests find a field by) |
-| `[step]` | `string` | the step (of the form's steps) the field belongs to |
-| `[dependsOn]` | `string` | enum lists: the field whose chosen values narrow the values offered (see parents) |
-| `[parents]` | `Object&lt;string, string[]&gt;` | enum lists: for each value, the values of dependsOn it goes with |
-| `[optionHook]` | `string` | checkboxes and radios: each option's control gets data-&lt;optionHook&gt;="&lt;value&gt;" |
-| `[allowEmpty]` | `boolean` | select: false leaves out the empty choice |
-| `[emptyLabel]` | `string` | select: the words of the empty choice |
-| `[lazy]` | `boolean` | text and numbers: the value changes when the field is left or Enter is pressed, not at each key |
-| `[noLabel]` | `boolean` | a custom widget that draws its own label |
-| `[addLabel]` | `string` | an array of objects: the words of its Add button |
-| `[itemHook]` | `(string\|Object&lt;string, string&gt;)` | an array of objects: data attributes on each item's group (as hook) |
-| `[addHook]` | `(string\|Object&lt;string, string&gt;)` | an array of objects: data attributes on its Add button (as hook) |
-| `[parseMessage]` | `string` | the words when typed text does not read as the field's type (default: the form's own) |
-
-#### `SelectOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `[options]` | `Array&lt;(string\|number\|{value: *, label: string, detail: string, group: string, disabled: boolean})&gt;` | default: the host's &lt;option&gt; and &lt;optgroup&gt; children |
-| `[value]` | `*` | the value picked (default: the option marked selected, else the first enabled option; null with placeholder) |
-| `[label]` | `string` | the control's accessible name |
-| `[placeholder]` | `string` | the words while nothing is picked (and nothing is picked at first) |
-| `[search='auto']` | `(boolean\|string)` | the search field in the open list: true, false, or auto (more than searchMin options) |
-| `[searchMin=8]` | `number` |  |
-| `[name]` | `string` | a hidden input of this name carries the value in a plain form |
-| `[disabled=false]` | `boolean` |  |
-| `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
-| `[native=false]` | `boolean` | a change also fires input and change on the host, as a native select's did (a page's own listeners and delegated handlers keep working); &lt;drishti-select&gt; in a page's markup and selectElement turn it on |
-
-#### `TimePickerOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `[value]` | `string` | "HH:MM" |
-| `[step=15]` | `number` | minutes between the times offered |
-| `[min]` | `string` |  |
-| `[max]` | `string` |  |
-| `[required=false]` | `boolean` |  |
-| `[label]` | `string` |  |
-| `[placeholder]` | `string` |  |
-
-#### `DateTimePickerOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `[value]` | `string` | "YYYY-MM-DDTHH:MM" |
-| `[timeZone]` | `string` | the zone the time is in, named beside it (America/New_York) |
-| `[step=15]` | `number` | the time list's step in minutes |
-| `[calendar]` | `(string\|Object)` |  |
-| `[businessOnly=false]` | `boolean` |  |
-| `[min]` | `string` | "YYYY-MM-DDTHH:MM" |
-| `[max]` | `string` | "YYYY-MM-DDTHH:MM" |
-| `[required=false]` | `boolean` |  |
-| `[label]` | `string` |  |
-
-#### `TreePickerOptions` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `nodes` | `import('./drishti_tree.js').TreeNode[]` | the roots (with children, or hasChildren for the loader) |
-| `[loadChildren]` | `function(Object): Promise&lt;Array&gt;` | a node's children from the server, the first time it opens |
-| `[search]` | `function(string): Promise&lt;Array&lt;{node: Object, path: Object[]}&gt;&gt;` | search on the server (else the loaded levels) |
-| `[multiple=true]` | `boolean` |  |
-| `[value]` | `string[]` | the checked ids (compact: a node stands for everything under it) |
-| `[inline=false]` | `boolean` | the tree in the page rather than in a panel |
-| `[label]` | `string` |  |
-| `[placeholder='Everything']` | `string` | the words when nothing is checked |
-
-#### `TreeNode` : `Object`
-
-| Name | Type | Meaning |
-|---|---|---|
-| `id` | `string` | unique across the tree |
-| `label` | `string` |  |
-| `[detail]` | `string` | words after the label (a count, a code) |
-| `[children]` | `TreeNode[]` | the children when known |
-| `[hasChildren]` | `boolean` | the node has children the loader brings (lazy) |
-| `[disabled]` | `boolean` |  |
-
-#### `TreeRow` : `Object`
-
-A visible row of the tree.
-
-| Name | Type | Meaning |
-|---|---|---|
-| `node` | `TreeNode` |  |
-| `depth` | `number` | 0 for the roots |
-| `branch` | `boolean` | whether it has (or may have) children |
-| `expanded` | `boolean` |  |
-| `state` | `('checked'\|'mixed'\|'unchecked')` |  |
-| `status` | `?string` | 'loading' or the error's words while its children are asked for |
-| `match` | `boolean` | whether it matched the search |
 
 ## drishti-tree
 

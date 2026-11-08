@@ -540,7 +540,7 @@
     q('[data-reset]').addEventListener('click', reset);
     q('[data-back]').addEventListener('click', () => { window.history.back(); });
     const bm = q('[data-bookmarks]');
-    (rep.report.bookmarks || []).forEach((b) => bm.appendChild(h('option', { value: b.name, text: b.name })));
+    bm.component.setOptions(bm.component.options.concat((rep.report.bookmarks || []).map((x) => ({ value: x.name, label: x.name }))), '');   // drishti-inputs' Select: Choose one, then each bookmark
     q('[data-bookmarks-wrap]').hidden = !(rep.report.bookmarks || []).length;
     bm.addEventListener('change', () => { if (bm.value) { applyBookmark(bm.value); bm.value = ''; } });
     window.addEventListener('popstate', () => { const m = window.location.pathname.split('/bi/r/' + B.id2path(reportId))[1]; const p = m ? decodeURIComponent(m.replace(/^\//, '')) : rep.report.pages[0].id; if (pageOf(p)) { go(p, readCarry(), false); } });

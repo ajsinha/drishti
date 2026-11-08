@@ -68,6 +68,7 @@ export function defineInputElements(registry, win) {
       set value(v) { if (this.component && this.component.setValue) { this.component.setValue(v); } }
       get disabled() { return !!(this.component && this.component.o && this.component.o.disabled); }
       set disabled(v) { if (this.component && this.component.setDisabled) { this.component.setDisabled(!!v); } }
+      focus(o) { if (this.component && this.component.focus) { this.component.focus(); } else { super.focus(o); } }
       disconnectedCallback() { /* kept: an element moved in the page keeps its component */ }
     });
   });

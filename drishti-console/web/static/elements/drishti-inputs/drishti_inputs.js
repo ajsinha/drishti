@@ -1410,7 +1410,12 @@
         this.control = this.el('div', { cls: 'di-control di-select-control', attrs: { role: 'combobox', tabindex: '0', 'aria-haspopup': 'listbox', 'aria-expanded': 'false',
           'aria-label': o.label || null, id: uid('sel') } }, [this.text, this.el('span', { cls: 'di-caret', text: '▾', attrs: { 'aria-hidden': 'true' } })]);
         host.appendChild(this.control);
-        if (o.name) { this.hidden = this.el('input', { attrs: { type: 'hidden', name: o.name } }); host.appendChild(this.hidden); }
+        if (o.name) {
+          this.hidden = this.el('input', { attrs: { type: 'hidden', name: o.name } });
+          const sel = this;
+          Object.defineProperty(this.hidden, 'value', { configurable: true, get() { return this.getAttribute('value') || ''; }, set(v) { sel.setValue(v === '' && !sel.options.some((x) => same(x.value, '')) ? null : v); } });
+          host.appendChild(this.hidden);
+        }
         this.control.addEventListener('mousedown', (e) => { e.preventDefault(); if (this.o.disabled) { return; } this.control.focus(); if (this.pop.isOpen()) { this.close(); } else { this.open(); } });
         this.control.addEventListener('keydown', (e) => this.onKey(e));
         this.control.addEventListener('blur', () => { if (this.pop.isOpen() && !this.searching()) { this.close(); } });
@@ -1423,7 +1428,7 @@
         const it = this.getOption();
         this.text.textContent = it ? it.label : this.value !== null ? String(this.value) : (this.o.placeholder || '');
         this.control.classList.toggle('di-placeholder', this.value === null);
-        if (this.hidden) { this.hidden.value = this.value === null ? '' : String(this.value); }
+        if (this.hidden) { this.hidden.setAttribute('value', this.value === null ? '' : String(this.value)); }
       }
       open(at) {
         if (this.o.disabled) { return; }
@@ -1540,6 +1545,7 @@
     }
     function selectProperties(box) {
       Object.defineProperty(box, 'value', { configurable: true, get() { return this.component ? this.component.getValue() : null; }, set(v) { if (this.component) { this.component.setValue(v); } } });
+      box.focus = function () { if (this.component) { this.component.focus(); } };
       Object.defineProperty(box, 'disabled', { configurable: true, get() { return !!(this.component && this.component.o.disabled); }, set(v) { if (this.component) { this.component.setDisabled(!!v); } } });
     }
     return { "Select": Select, "selectElement": selectElement, "selectProperties": selectProperties };
@@ -3065,6 +3071,7 @@
           set value(v) { if (this.component && this.component.setValue) { this.component.setValue(v); } }
           get disabled() { return !!(this.component && this.component.o && this.component.o.disabled); }
           set disabled(v) { if (this.component && this.component.setDisabled) { this.component.setDisabled(!!v); } }
+          focus(o) { if (this.component && this.component.focus) { this.component.focus(); } else { super.focus(o); } }
           disconnectedCallback() { /* kept: an element moved in the page keeps its component */ }
         });
       });

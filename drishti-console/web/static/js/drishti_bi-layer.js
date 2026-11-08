@@ -82,10 +82,10 @@
     });
   };
   /** Fills a select with `groups` (optgroups) after a placeholder option. */
-  B.layer.fillSelect = function (sel, groups, placeholder) {
-    B.clear(sel);
-    sel.appendChild(B.h('option', { value: '', text: placeholder || '(choose)' }));
-    groups.forEach((g) => sel.appendChild(B.h('optgroup', { label: g.label }, g.items.map((i) => B.h('option', { value: i.value, text: i.label })))));
+  B.layer.fillSelect = function (sel, groups, placeholder) {            // a <drishti-select> (drishti-inputs' Select): the placeholder, then each group's items
+    const items = [{ value: '', label: placeholder || '(choose)' }];
+    groups.forEach((g) => g.items.forEach((i) => items.push({ value: i.value, label: i.label, group: g.label })));
+    sel.component.setOptions(items, '');
   };
 
   /** Who uses a model: {known, consumers[{kind, id, title, href}]} from the server's consumers list. A report references a model, it never owns it. */

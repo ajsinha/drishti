@@ -63,8 +63,7 @@
     return h('label', { class: 'bi-frow bi-st-row' }, h('span', { text: label }), ctl, hint ? h('small', { class: 'text-muted-d', text: hint }) : null);
   }
   function select(options, value, attrs, onChange) {
-    const s = h('select', Object.assign({ class: 'studio-select' }, attrs), options.map((o) => h('option', { value: Array.isArray(o) ? o[0] : o, text: Array.isArray(o) ? o[1] : o })));
-    s.value = value;
+    const s = B.select(attrs, options, value);                            // drishti-inputs' Select
     s.addEventListener('change', () => onChange(s.value));
     return s;
   }

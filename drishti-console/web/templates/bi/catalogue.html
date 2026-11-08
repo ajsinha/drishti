@@ -29,12 +29,12 @@
 <form class="bi-filters" data-catalogue-form role="search" aria-label="Search the catalogue" autocomplete="off">
   <label class="bi-find"><span class="visually-hidden">Search</span>
     <input type="search" name="q" class="studio-in" placeholder="Search this tab: title, description, tags, owner" data-search></label>
-  <label>Workspace<select name="workspace" class="studio-select" data-filter="workspace"><option value="">any</option></select></label>
-  <label>Owner<select name="owner" class="studio-select" data-filter="owner"><option value="">any</option></select></label>
-  <label>Endorsement<select name="endorsement" class="studio-select" data-filter="endorsement"><option value="">any</option></select></label>
-  <label>Tag<select name="tag" class="studio-select" data-filter="tag"><option value="">any</option></select></label>
-  <label>Updated<select name="fresh" class="studio-select"><option value="">any time</option><option value="1">last day</option><option value="7">last week</option><option value="30">last 30 days</option></select></label>
-  <label>Sort<select name="sort" class="studio-select"><option value="use">most used</option><option value="date">newest</option><option value="title">title</option></select></label>
+  <label>Workspace<drishti-select name="workspace" class="studio-select" data-filter="workspace" label="Workspace"><option value="">any</option></drishti-select></label>
+  <label>Owner<drishti-select name="owner" class="studio-select" data-filter="owner" label="Owner"><option value="">any</option></drishti-select></label>
+  <label>Endorsement<drishti-select name="endorsement" class="studio-select" data-filter="endorsement" label="Endorsement"><option value="">any</option></drishti-select></label>
+  <label>Tag<drishti-select name="tag" class="studio-select" data-filter="tag" label="Tag"><option value="">any</option></drishti-select></label>
+  <label>Updated<drishti-select name="fresh" class="studio-select" label="Updated"><option value="">any time</option><option value="1">last day</option><option value="7">last week</option><option value="30">last 30 days</option></drishti-select></label>
+  <label>Sort<drishti-select name="sort" class="studio-select" label="Sort"><option value="use">most used</option><option value="date">newest</option><option value="title">title</option></drishti-select></label>
   <button type="button" class="btn-pill btn-ghost" data-clear>Clear</button>
 </form>
 <p class="bi-count" data-count role="status" aria-live="polite"></p>

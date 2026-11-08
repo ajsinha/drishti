@@ -234,6 +234,7 @@ kbd { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var
 /* ---- Sutra Studio ---- */
 .studio { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--d-sp-12_8); padding: var(--d-sp-12_8) var(--d-sp-20); height: calc(100vh - 58px); }
 .studio-select, .studio-in { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-5); padding: var(--d-sp-4_48) var(--d-sp-8); font-size: var(--d-fs-13_6); }
+drishti-select.studio-select, drishti-multiselect.studio-select { background: transparent; border: 0; padding: 0; }   /* drishti-inputs' Select: its control draws the field */
 .studio-in { width: 9.5rem; }
 .studio-preview { flex: 1; overflow: auto; }
 .studio-view .vtitle { padding: var(--d-sp-11_2) var(--d-sp-14_4) 0; margin-bottom: var(--d-sp-8); }

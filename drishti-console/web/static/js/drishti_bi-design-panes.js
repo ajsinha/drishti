@@ -306,16 +306,16 @@
       });
       const group = (D.catalogue.visuals[v.type] || {}).group;
       if (group === 'chart' || group === 'table') {
-        const sel = h('select', { class: 'studio-select', 'aria-label': 'Drill down along a hierarchy', 'data-hierarchy': '' }, h('option', { value: '', text: 'none' }), Object.keys(D.idxOf(v).hierarchies).map((n) => h('option', { value: n, text: n })));
+        const sel = B.select({ 'aria-label': 'Drill down along a hierarchy', 'data-hierarchy': '' }, [['', 'none']].concat(Object.keys(D.idxOf(v).hierarchies)));      // drishti-inputs' Select
         sel.value = v.hierarchy || '';
         sel.addEventListener('change', () => D.change('Set the hierarchy', () => { if (sel.value) { v.hierarchy = sel.value; } else { delete v.hierarchy; } }));
         build.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'Drill down along' }), sel));
       }
       if (group !== 'static' && group !== 'slicer') {
         const pages = D.model.pages.filter((p) => p.id !== D.pageId);
-        const pg = h('select', { class: 'studio-select', 'aria-label': 'Drill through to page', 'data-through-page': '' }, h('option', { value: '', text: 'none' }), pages.map((p) => h('option', { value: p.id, text: p.title })));
+        const pg = B.select({ 'aria-label': 'Drill through to page', 'data-through-page': '' }, [['', 'none']].concat(pages.map((p) => [p.id, p.title])));
         const allFields = Object.keys(v.wells).reduce((a, k) => a.concat(v.wells[k]), []).filter((x) => D.kindOf(x) === 'field');
-        const fl = h('select', { class: 'studio-select', 'aria-label': 'Drill through carries', 'data-through-field': '' }, allFields.map((x) => h('option', { value: x, text: x })));
+        const fl = B.select({ 'aria-label': 'Drill through carries', 'data-through-field': '' }, allFields);
         pg.value = v.drillthrough ? v.drillthrough.page : '';
         if (v.drillthrough) { fl.value = v.drillthrough.field; }
         const apply = () => D.change('Set the drill-through', (m) => {

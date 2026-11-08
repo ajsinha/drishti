@@ -65,18 +65,19 @@
       if (mine !== seq) { return; }                                   // the item was drawn again since: a newer answer is on its way
       sec.hidden = false;
       var tb = q('[data-history] tbody'), from = q('[data-diff-from]'), to = q('[data-diff-to]');
-      clear(tb); clear(from); clear(to);
+      clear(tb);
+      var states = [];                                                 // what Compare and with offer (drishti-inputs' Select each)
       d.revisions.forEach(function (r, k) {
         var ref = 'r' + r.seq, label = 'saved state ' + r.seq + (r.draft ? ' (the draft)' : '');
-        from.appendChild(h('option', { value: ref, text: label })); to.appendChild(h('option', { value: ref, text: label }));
+        states.push({ value: ref, label: label });
         var acts = [button('Compare with draft', function () { show(ref, 'draft'); }, 'btn-ghost')];
         if (d.canRestore && !r.draft) { acts.push(button('Restore as draft', function () { restore(r.seq); }, 'btn-ghost')); }
         tb.appendChild(h('tr', { 'data-seq': r.seq },
           h('th', { scope: 'row', text: '#' + r.seq + (r.draft ? ' (draft)' : '') }), h('td', { text: stamp(r.createdAt) }), h('td', { text: r.author }), h('td', { text: r.message || r.origin }),
           h('td', { text: r.publishedVersion ? 'published v' + r.publishedVersion : '' }), h('td', {}, acts)));
       });
-      [['published', 'the published version'], ['draft', 'the draft']].forEach(function (p) { from.appendChild(h('option', { value: p[0], text: p[1] })); to.appendChild(h('option', { value: p[0], text: p[1] })); });
-      from.value = d.revisions.length > 1 ? 'r' + d.revisions[1].seq : 'published'; to.value = 'draft';
+      states.push({ value: 'published', label: 'the published version' }, { value: 'draft', label: 'the draft' });
+      from.component.setOptions(states, d.revisions.length > 1 ? 'r' + d.revisions[1].seq : 'published'); to.component.setOptions(states, 'draft');
       var ev = q('[data-events]'); clear(ev);
       d.events.forEach(function (e) { ev.appendChild(h('li', { text: stamp(e.at) + ' · ' + e.actor + ' · ' + e.action + (e.note ? ': ' + e.note : '') })); });
       q('[data-events-wrap]').hidden = !d.events.length;

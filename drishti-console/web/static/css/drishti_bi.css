@@ -15,7 +15,7 @@
  */
 /* Rupaka phase 1: the BI shell, home, catalogue, workspaces and items. Colours come from the theme tokens (dark, light, high contrast); every state also has its word. */
 .bi-shell, [data-bi-settings] { white-space: normal; }
-.bi-shell select.studio-select { max-width: 100%; text-overflow: ellipsis; }                                  /* a long workspace or dataset name is cut with an ellipsis, never silently */
+.bi-shell .studio-select { max-width: 100%; text-overflow: ellipsis; }                                  /* a long workspace or dataset name is cut with an ellipsis, never silently */
 .bi-shell { display: grid; grid-template-columns: 13.5rem minmax(0, 1fr); gap: var(--d-sp-20); width: 100%; max-width: 100rem; margin: 0 auto; padding: var(--d-sp-16) var(--d-sp-20) var(--d-sp-32); box-sizing: border-box; }
 .bi-rail { display: flex; flex-direction: column; gap: var(--d-sp-2_4); position: sticky; top: 4.5rem; align-self: start; }
 .bi-rail-link { display: flex; align-items: center; gap: var(--d-sp-9_6); padding: var(--d-sp-8_8) var(--d-sp-11_2); border-radius: var(--d-radius); color: var(--d-ink); text-decoration: none; background: none; border: 0; font: inherit; text-align: left; cursor: pointer; min-height: 2.4rem; }

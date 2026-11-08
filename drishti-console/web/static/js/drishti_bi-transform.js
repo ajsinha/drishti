@@ -61,9 +61,9 @@
     return B.layer.groups().then((gs) => {
       groups = gs;
       const packs = gs.filter((g) => /^Pack /.test(g.label));
-      B.clear(kindSel);
-      kindSel.appendChild(h('option', { value: '', text: '(choose a kind)' }));
-      packs.forEach((g) => kindSel.appendChild(h('optgroup', { label: g.label }, g.items.map((i) => h('option', { value: i.value, text: i.label + ' (' + i.value.replace(/^dataset:pack\./, '') + ')' })))));
+      const kinds = [{ value: '', label: '(choose a kind)' }];             // drishti-inputs' Select, the kinds in their packs' groups
+      packs.forEach((g) => g.items.forEach((i) => kinds.push({ value: i.value, label: i.label + ' (' + i.value.replace(/^dataset:pack\./, '') + ')', group: g.label })));
+      kindSel.component.setOptions(kinds, '');
       B.layer.fillSelect(modelSel, gs, '(choose a model or a dataset)');
     });
   }
@@ -201,11 +201,10 @@
   function loadSnippets() {
     return fetch('/bi/transform/snippets', { credentials: 'same-origin' }).then((r) => r.json()).then((d) => {
       S.snippets = d.snippets || [];
-      B.clear(snipSel);
-      snipSel.appendChild(h('option', { value: '', text: '(choose a snippet)' }));
-      const byGroup = {};
+      const byGroup = {}, items = [{ value: '', label: '(choose a snippet)' }];      // drishti-inputs' Select, the snippets in their groups
       S.snippets.forEach((s) => { (byGroup[s.group] = byGroup[s.group] || []).push(s); });
-      Object.keys(byGroup).forEach((g) => snipSel.appendChild(h('optgroup', { label: g }, byGroup[g].map((s) => h('option', { value: s.id, text: s.title })))));
+      Object.keys(byGroup).forEach((g) => byGroup[g].forEach((s) => items.push({ value: s.id, label: s.title, group: g })));
+      snipSel.component.setOptions(items, '');
     });
   }
   /** The columns the new step starts from: those of the step it goes after (else of the first input). */

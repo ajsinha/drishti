@@ -186,8 +186,7 @@
     if (spec.format && spec.format.mode === 'relative-date') {
       const options = spec.format.options && spec.format.options.length ? spec.format.options : RELATIVE;
       const cur = ctx.slicer && ctx.slicer.value ? (typeof ctx.slicer.value === 'string' ? ctx.slicer.value : ctx.slicer.value.relative) : (spec.format.default || 'all');
-      const sel = h('select', { class: 'studio-select', 'aria-label': spec.title || 'Relative dates', 'data-relative': '' },
-        options.map((o) => h('option', { value: o, text: V.relativeLabel(o), selected: o === cur })));
+      const sel = B.select({ 'aria-label': spec.title || 'Relative dates', 'data-relative': '' }, options.map((o) => [o, V.relativeLabel(o)]), options.indexOf(cur) >= 0 ? cur : undefined);   // drishti-inputs' Select
       sel.addEventListener('change', () => { if (ctx.slicer && ctx.slicer.onChange) { ctx.slicer.onChange({ relative: sel.value }); } });
       B.clear(host).appendChild(h('div', { class: 'bi-slicer', 'data-mode': 'relative-date' }, sel));
       return NONE;

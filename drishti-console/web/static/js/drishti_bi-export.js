@@ -29,15 +29,9 @@
 
   function fillScope() {
     const rv = B.reportView;
-    const keep = scope.value;
-    while (scope.options.length > 1) { scope.remove(1); }
-    rv.visuals().forEach((v) => {
-      const o = document.createElement('option');
-      o.value = v.id;
-      o.textContent = 'visual: ' + (v.title || v.id);
-      scope.appendChild(o);
-    });
-    scope.value = Array.prototype.some.call(scope.options, (o) => o.value === keep) ? keep : '';
+    const keep = scope.value, pick = scope.component;                  // drishti-inputs' Select: this page, then each visual
+    pick.setOptions(pick.options.slice(0, 1).concat(rv.visuals().map((v) => ({ value: v.id, label: 'visual: ' + (v.title || v.id) }))), '');
+    if (keep && pick.options.some((o) => o.value === keep)) { pick.setValue(keep); }
   }
 
   /** The address query of the screen's state; `dropped` is set when the state was too long to carry, so the file or the subscription starts without the filters. */
