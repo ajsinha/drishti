@@ -256,7 +256,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             out += ["```bash"] + [f"python3 tools/drishti.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
                     f"The same through the wrappers: `tools/feeds/feed.sh run {fd}` on Linux and macOS, `.\\tools\\windows\\feed.ps1 run {fd}` "
                     "on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or "
-                    "`--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).", ""]
+                    "`--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../../docs/guides/EXTERNAL_DATA.md)).", ""]
     if used_gen:
         out += ["### Generators", ""]
         out += table(["Generator", "Writes", "Check"], [[f"`{s['generators'][g]['run']}`", s["generators"][g]["what"],
@@ -326,7 +326,7 @@ def files() -> dict[Path, str]:
     nm = PP.pack_dir("news-and-markets") / "guides" / "news-and-markets.md"
     out[nm] = _block(nm, nm.parents[1])
     for pack in PUBLIC_SECTOR:                       # the public-sector packs: hand-written guides, this block at their end
-        g = PACKS / pack / "guides" / f"{pack}.md"
+        g = PP.pack_dir(pack) / "guides" / f"{pack}.md"
         out[g] = _block(g, g.parents[1])
     return out
 

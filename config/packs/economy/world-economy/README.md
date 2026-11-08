@@ -639,7 +639,7 @@ retrieval date and licence.
 
 Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/world-economy.md](guides/world-economy.md): *Data contracts* and *Data retrieval*.
 
-External data: World Bank World Development Indicators and Worldwide Governance Indicators; IMF World Economic Outlook (**internal only**); CIA World Factbook; UNDP Human Development Index. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
+External data: World Bank World Development Indicators and Worldwide Governance Indicators; IMF World Economic Outlook (**internal only**); CIA World Factbook; UNDP Human Development Index. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
 ## Enabling and dependencies
 

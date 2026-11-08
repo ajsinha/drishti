@@ -122,7 +122,7 @@ Screens (Sutras):
 
 Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/national-statistics.md](guides/national-statistics.md): *Data contracts* and *Data retrieval*.
 
-External data: Statistics Canada Web Data Service (WDS). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
+External data: Statistics Canada Web Data Service (WDS). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
 ## Enabling and dependencies
 
@@ -147,4 +147,4 @@ The pack's files are written by `tools/packgen/publicsector/make.py`; its `--che
 ## See also
 
 - [The national-statistics pack](guides/national-statistics.md): Statistics Canada's headline series by vector (Statistics Canada Open Licence), filled daily by the national-statistics feed into worldlake: CPI, unemployment, monthly GDP, population, housing starts, the overnight rate. Type NSTAT NSTAT-V41690973.
-- [Packs](../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).
+- [Packs](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

@@ -109,7 +109,7 @@ def _check(doc: dict, fields: list[dict], where: str) -> list[str]:
 def test_every_document_follows_its_contract(pulled, feed):
     run, docs = pulled[feed]
     for name, ds in run.spec.datasets.items():
-        c = yaml.safe_load((ROOT / "config" / "packs" / ds.pack / "contracts" / f"{ds.kind}.contract.yaml").read_text(encoding="utf-8"))
+        c = yaml.safe_load((FB.K.pack_dir(ds.pack) / "contracts" / f"{ds.kind}.contract.yaml").read_text(encoding="utf-8"))
         rows = docs.get(name)
         assert rows, f"{feed}: no {ds.kind}"
         assert c["key"] == [ds.key], ds
@@ -176,7 +176,7 @@ def test_every_source_records_its_licence_and_terms():
             if src["internal-only"]:
                 assert src.get("why-internal"), (feed, src["id"])
         for ds in spec.datasets.values():
-            assert (ROOT / "config" / "packs" / ds.pack / "contracts" / f"{ds.kind}.contract.yaml").is_file(), ds
+            assert (FB.K.pack_dir(ds.pack) / "contracts" / f"{ds.kind}.contract.yaml").is_file(), ds
     internal = {s["id"] for s in FB.load_spec("official-news").options["sources"] if s["internal-only"]}
     assert internal == {"BOE", "OSFI", "GAZETTE1", "GAZETTE2"}
 

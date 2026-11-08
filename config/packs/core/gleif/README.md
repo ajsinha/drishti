@@ -290,7 +290,7 @@ The groups use the consolidation relationships only; fund management, sub-fund, 
 
 Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gleif.md](guides/gleif.md): *Data contracts* and *Data retrieval*.
 
-External data: GLEIF golden copy, level 2 (relationship records, reporting exceptions); GLEIF LEI API (lei-records, entity-legal-forms, countries, lei-issuers); GLEIF mapping files (BIC, ISIN, MIC, OpenCorporates to LEI); GLEIF golden copy, level 1 bulk file. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
+External data: GLEIF golden copy, level 2 (relationship records, reporting exceptions); GLEIF LEI API (lei-records, entity-legal-forms, countries, lei-issuers); GLEIF mapping files (BIC, ISIN, MIC, OpenCorporates to LEI); GLEIF golden copy, level 1 bulk file. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
 ## Enabling and dependencies
 

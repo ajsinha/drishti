@@ -771,7 +771,7 @@ The committed samples are synthetic. Five feed connectors (off by default) read 
 
 Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/market-data.md](guides/market-data.md): *Data contracts* and *Data retrieval*.
 
-External data: Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../docs/guides/EXTERNAL_DATA.md).
+External data: Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
 
 ## Enabling and dependencies
 

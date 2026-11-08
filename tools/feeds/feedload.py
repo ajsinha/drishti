@@ -38,6 +38,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DRISHTI = ROOT / "tools" / "drishti.py"
+if str(ROOT / "drishti-console") not in sys.path:
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
 
 
 def packs_dir() -> Path:
@@ -58,7 +61,7 @@ def inbox_dir(given: str | None = None) -> Path:
 
 
 def lake_build_args(f: dict, lake: str, engine: str | None, summary: Path, opts: dict) -> list[str]:
-    args = [sys.executable, str(DRISHTI), "lake", "build", "--from", f["path"], "--lake", lake, "--pack", str(packs_dir() / f["pack"]),
+    args = [sys.executable, str(DRISHTI), "lake", "build", "--from", f["path"], "--lake", lake, "--pack", str(pack_dir(f["pack"], packs_dir())),
             "--kind", f["kind"], "--mode", "overwrite-dates", "--summary", str(summary), "-q"]
     if f["table"] != f["kind"]:
         args += ["--table", f["table"]]
@@ -82,7 +85,7 @@ def ensure_entries(files: list[dict], lake: str, opts: dict, log=print) -> list[
     added = []
     keys = {(f["pack"], f["kind"]): f.get("key") or "" for f in files if f["rows"]}
     for pack, kind in sorted(keys):
-        args = ["add-entry", "--lake", lake, "--pack", str(packs_dir() / pack), "--kind", kind]
+        args = ["add-entry", "--lake", lake, "--pack", str(pack_dir(pack, packs_dir())), "--kind", kind]
         res = lakeconfig.run(args, jar=opts.get("jar"), java=opts.get("java"))
         if res.get("added"):
             added.append(str(res.get("table")))

@@ -531,7 +531,7 @@ Nested `PROVENANCE`:
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
@@ -559,7 +559,7 @@ python3 tools/drishti.py feed run funds --snapshot --offline                # th
 python3 tools/drishti.py feed run funds -- --scope FUNDS:300,HOLDINGS:1000  # a widened pull of more funds and holdings
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run funds` on Linux and macOS, `.\tools\windows\feed.ps1 run funds` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
+The same through the wrappers: `tools/feeds/feed.sh run funds` on Linux and macOS, `.\tools\windows\feed.ps1 run funds` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

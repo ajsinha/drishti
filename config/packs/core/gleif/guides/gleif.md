@@ -404,14 +404,14 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
 | `LEI` | `lei-entity` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `drishti.py feed run gleif` | `data/testdata/gleif/lei-entity/` → `lake demo` → connector `gleif-store` |
-| `LEIG` | `lei-group` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `LEIG` | `lei-group` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `LEIR` | `lei-relationship` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `drishti.py feed run gleif` | `data/testdata/gleif/lei-relationship/` → `lake demo` → connector `gleif-store` |
-| `LEIC` | `lei-country` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `LEIC` | `lei-country` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `LEIM` | `lei-mapping` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `drishti.py feed run gleif` | `data/testdata/gleif/lei-mapping/` → `lake demo` → connector `gleif-store` |
 
 ### External sources
@@ -431,7 +431,7 @@ python3 tools/drishti.py feed run gleif --snapshot --offline             # the s
 python3 tools/drishti.py feed run gleif -- --scope NAME:allianz,CAP:200  # a widened pull of more entities
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run gleif` on Linux and macOS, `.\tools\windows\feed.ps1 run gleif` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
+The same through the wrappers: `tools/feeds/feed.sh run gleif` on Linux and macOS, `.\tools\windows\feed.ps1 run gleif` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 
