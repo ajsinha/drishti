@@ -280,7 +280,7 @@ least: its worst days are not the desk's.
 
 **In the UI: Construct your basket.** On the rates desk, click **+ basket** on its row in the tree (point at the row to see it): the
 basket's sheet opens at the top, a column per kind of part (Trade, Position, System basket, Book, Desk, Limit letter, Counterparty) and the
-**Op** column (+ or −), with `DESK-RATES` in the Desk column. Type `pf usd` in **Find and add** above it: the engine's hints list *PORT ·
+**Op** column (+ or −), with `DESK-RATES` in the Desk column. Type `pf-usd` in **Find and add** above it: the engine's hints list *PORT ·
 PF-USD-RATES · USD rates exposure*, its trades and its VaR alone; **Enter** puts it in the System basket column. Click **Take away (−)**, type
 `book-rates-1` and **Enter**: the book lands in the Book column on a row marked **−**. Or paste: copy a column of trade ids from Excel,
 click the first free cell of the Trade column and press **Ctrl+V**; the ids fill downward, and a leading `-` on an id takes it away.

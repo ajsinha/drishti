@@ -38,7 +38,7 @@ SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false"}   # marks the guide as one th
 def bank(c: Ctx):
     open_var(c, "/go?q=" + "VAR BANK <GO>".replace(" ", "+"))
     painted(c, "BANK")
-    c.until("document.querySelectorAll('.vx-tree .vx-row[data-scope]').length > 5")
+    c.until("document.querySelectorAll('.vx-tree .dg-row[data-scope]').length > 5")
     c.save("01-bank.jpg")
 
 
@@ -47,13 +47,13 @@ def trade(c: Ctx):
     open_var(c, "/var?scope=BOOK:BOOK-RATES-1")
     painted(c, "BOOK:BOOK-RATES-1")
     tab(c, "contrib")
-    c.until("document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length > 0")
-    pos = c.page.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.get_attribute("data-scope")
-    c.page.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.click()
+    c.until("document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"POS:\"]').length > 0")
+    pos = c.page.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"]').first.get_attribute("data-scope")
+    c.page.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"]').first.click()
     painted(c, pos)
-    c.until("document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"TRD:\"]').length > 0")
-    trd = c.page.locator('[data-vx-ctable] tbody tr[data-scope^="TRD:"]').first.get_attribute("data-scope")
-    c.page.locator('[data-vx-ctable] tbody tr[data-scope^="TRD:"]').first.click()
+    c.until("document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"TRD:\"]').length > 0")
+    trd = c.page.locator('[data-vx-ctable] .dg-row[data-scope^="TRD:"]').first.get_attribute("data-scope")
+    c.page.locator('[data-vx-ctable] .dg-row[data-scope^="TRD:"]').first.click()
     painted(c, trd)
     c.save("02-trade.jpg")
 
@@ -63,7 +63,7 @@ def book_positions(c: Ctx):
     open_var(c, "/var?scope=BOOK:BOOK-EQD-2")
     painted(c, "BOOK:BOOK-EQD-2")
     tab(c, "contrib")
-    c.until("document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length > 1")
+    c.until("document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"POS:\"]').length > 1")
     c.save("03-book-positions.jpg", locator=".vx-main")
 
 
@@ -88,9 +88,9 @@ def basket(c: Ctx):
     c.page.evaluate("localStorage.removeItem('drishti.varBasket2'); localStorage.removeItem('drishti.varBasket')")
     c.page.reload()
     painted(c, "DESK:DESK-RATES")
-    c.until("document.querySelectorAll('.vx-tree .vx-row[data-scope]').length > 5")
-    c.page.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-RATES"] [data-vx-add]').click(force=True)
-    for text in ("pf usd", "-book-rates-1"):
+    c.until("document.querySelectorAll('.vx-tree .dg-row[data-scope]').length > 5")
+    c.page.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-RATES"] [data-vx-add]').click(force=True)
+    for text in ("pf-usd", "-book-rates-1"):
         n = c.page.evaluate("window.Drishti.VarBasket.parts()")
         c.page.locator("[data-vb-find]").fill("")
         c.page.locator("[data-vb-find]").type(text, delay=20)
@@ -112,9 +112,9 @@ def capture(c: Ctx):
     c.page.locator("[data-vx-cap-note]").fill("tutorial 2, Part A")
     c.page.locator("[data-vx-capture]").click()
     c.until("document.querySelector('[data-var]').dataset.lastCapture && "
-            "document.querySelectorAll('[data-vx-captable] tbody tr[data-capture]').length > 0")
+            "document.querySelectorAll('[data-vx-captable] .dg-row[data-capture]').length > 0")
     cap = c.page.get_attribute("[data-var]", "data-last-capture")
-    c.page.locator(f'[data-vx-captable] tr[data-capture="{cap}"] button', has_text="Compare with now").click()
+    c.page.locator(f'[data-vx-captable] .dg-row[data-capture="{cap}"] button', has_text="Compare with now").click()
     c.until("(document.querySelector('[data-vx-compare]').dataset.compared || '').indexOf('now') > 0")
     c.page.wait_for_timeout(600)
     c.save("07-capture.jpg", locator=".vx-main")
@@ -139,11 +139,17 @@ def position(c: Ctx):
 
 @shot("10-provenance.jpg")
 def provenance(c: Ctx):
-    open_var(c, "/var?scope=DESK:DESK-RATES%20-%20BOOK:BOOK-RATES-1&how=1")    # How calculated open: the drawer (how=1)
+    open_var(c, "/var?scope=DESK:DESK-RATES%20-%20BOOK:BOOK-RATES-1")
     painted(c, "DESK:DESK-RATES - BOOK:BOOK-RATES-1")
     c.page.set_viewport_size({"width": WIDE, "height": 1900})          # the drawer is the window's height: tall enough for every line
-    c.page.wait_for_timeout(300)
-    c.save("10-provenance.jpg", locator=".vx-prov")
+    c.page.locator("[data-vx-explain]").click()                         # Explain: the drawer, then its Inputs & lineage tab
+    ready = ("(() => { const d = document.querySelector('[data-explain-drawer]'); return d && !d.hidden && d.dataset.state === 'ready'"
+             " && d.dataset.tab === %r; })()")
+    c.until(ready % "formula", 180)
+    c.page.locator('[data-dx-tab="inputs"]').click()
+    c.until(ready % "inputs", 180)
+    c.page.wait_for_timeout(500)
+    c.save("10-provenance.jpg", locator="[data-explain-drawer]")
     c.page.set_viewport_size({"width": WIDE, "height": HIGH})
 
 
@@ -165,7 +171,7 @@ def reporting_currency(c: Ctx):
     c.until("document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf('EUR') >= 0", 90)
     painted(c, "BANK")
     tab(c, "ccy")
-    c.until("document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    c.until("((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid ? document.querySelector('[data-vx-ccytable] drishti-grid').grid.model.rowCount() : 0) >= 5", 60)
     c.page.wait_for_timeout(600)
     c.save("12-reporting-currency.jpg")
     c.page.evaluate("sessionStorage.removeItem('drishti.var.ccy')")
@@ -177,7 +183,7 @@ def limit_letters(c: Ctx):
     desks with their limit bars."""
     open_var(c, "/var?scope=LL:LL-0011&hierarchy=LL")
     painted(c, "LL:LL-0011")
-    c.until("document.querySelectorAll('.vx-tree .vx-row[data-scope^=\"NODE:LL~LL-\"]').length > 3", 60)
+    c.until("document.querySelectorAll('.vx-tree .dg-row[data-scope^=\"NODE:LL~LL-\"]').length > 3", 60)
     c.page.wait_for_timeout(600)
     c.save("14-limit-letters.jpg")
 
@@ -188,7 +194,7 @@ def letter_desks(c: Ctx):
     open_var(c, "/var?scope=LL:LL-0011&hierarchy=LL")
     painted(c, "LL:LL-0011")
     tab(c, "contrib")
-    c.until("document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope]').length > 0")
+    c.until("document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope]').length > 0")
     c.save("15-letter-desks.jpg", locator=".vx-main")
 
 
@@ -197,7 +203,7 @@ def lens(c: Ctx, link: str, want: str) -> None:
     open_var(c, link)
     painted(c, "BANK")
     c.until("(document.querySelector('[data-var]').dataset.lens || '').indexOf(%r) === 0" % want, 90)
-    c.until("document.querySelectorAll('.vx-tree .vx-row[data-scope]').length > 5", 60)
+    c.until("document.querySelectorAll('.vx-tree .dg-row[data-scope]').length > 5", 60)
     c.page.wait_for_timeout(700)
 
 

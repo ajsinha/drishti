@@ -78,8 +78,9 @@ def diversification(c: Ctx):
 @shot("03-cell-provenance.jpg")
 def cell(c: Ctx):
     _cube(c)
-    c.page.evaluate("""() => { const cells = Array.from(document.querySelectorAll('[data-pv-grid] .dg-cell[data-cell]')).filter(e => e.textContent.trim());
-        (cells.find(e => /DESK-RATES/.test(e.getAttribute('data-cell'))) || cells[0]).click(); }""")
+    rates = c.page.locator("[data-pv-grid] .dg-cell[data-cell*='DESK-RATES']").filter(has_text="m")     # the RATES × IR cell
+    (rates if rates.count() else c.page.locator("[data-pv-grid] .dg-cell[data-cell]")).first.click()
+    c.until("!!document.querySelector('[data-pv-grid] [data-pv-pop]')", 60)
     c.page.wait_for_timeout(3500)
     page_shot(c, "03-cell-provenance.jpg", _union(c, "[data-pv-grid]", "[data-pv-pop]", "[data-mr-tail]", "[data-mr-explain]"))
 

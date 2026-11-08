@@ -51,7 +51,7 @@ def start_servers(work) -> list:
         sys.exit("could not build the Iceberg risk lake: " + (r.stderr or r.stdout)[-800:])
     (work / "application.local.yaml").write_text(f"drishti:\n  var:\n    official:\n      format: iceberg\n      root: {ice}\n", encoding="utf-8")
     procs = _start(work, {DEMO_ROOT_ENV: str(lake), "DRISHTI_ICEBERG_ROOT": str(ice), "DRISHTI_CONNECTORS_DIR": str(conns),
-                          "DRISHTI_DATA_DIR": str(work / "data"), "DRISHTI_LAKE_ROOTS": f"{lake},{ice}", "DRISHTI_DEMO_ENABLED": "false",
+                          "DRISHTI_DATA_DIR": str(work / "data"), "DRISHTI_LAKE_ROOTS": f"{lake},{ice}", "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
                           "DRISHTI_OFFLINE": "true", "DRISHTI_SECURITY_ENABLED": "false"})
     deadline = time.monotonic() + 300
     while True:
@@ -136,5 +136,5 @@ def letters(c: Ctx):
     open_var(c, "/var?scope=LL:LL-0011&hierarchy=LL")
     painted(c, "LL:LL-0011")
     tab(c, "contrib")
-    c.until("document.querySelectorAll('.vx-tree .vx-row[data-scope^=\"NODE:LL~LL-\"]').length > 3", 60)
+    c.until("document.querySelectorAll('.vx-tree .dg-row[data-scope^=\"NODE:LL~LL-\"]').length > 3", 60)
     c.save("05-letters-on-iceberg.jpg")

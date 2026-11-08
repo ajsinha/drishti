@@ -43,7 +43,7 @@ def start_servers(work) -> list:
                         "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=900)
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         sys.exit("could not build the VaR lake: " + (r.stderr or r.stdout)[-600:])
-    procs = _start(work, {DEMO_ROOT_ENV: str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
+    procs = _start(work, {DEMO_ROOT_ENV: str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true", "DRISHTI_OFFLINE": "true",
                           "DRISHTI_SECURITY_ENABLED": "false"})
     deadline = time.monotonic() + 240
     while True:
