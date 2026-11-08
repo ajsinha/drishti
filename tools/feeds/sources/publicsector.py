@@ -19,7 +19,8 @@ folder, the values as published, and the recorded fixtures the tests answer from
 
     sources(run)              options.sources: [{id, name, title, url, terms, licence, redistributable, internal-only, attribution, ...}]
     provenance(run, ...)      {SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL, INTERNAL_ONLY} for a document
-    History                   <data>/datafeeds/<feed>/history/<name>.json: a series' kept points, merged with what a pull brought
+    History                   <data>/datafeeds/<feed>/history/<name>.jsonl: a series' kept points, merged with what a pull brought
+    read_kept, write_kept     a feed's kept rows in its folder as JSON Lines (one object a line: the data standard, DATA_GUIDE.md)
     wdi_rows(codes, first, last)  WDI observations from the world-development feed's latest output, in the World Bank API's row shape
                               (the world-economy feed reads WDI this way: one fetcher)
     Fixtures, Recorder        an opener answering from recorded responses (tests), and one recording them (new fixtures)
@@ -77,24 +78,37 @@ def tolerate(run, url: str) -> None:
     run.http.failed[:] = [u for u in run.http.failed if u != url]
 
 
+def read_kept(path: Path) -> list[dict]:
+    """A feed's kept rows (JSON Lines, one object a line); none when the file is missing or cannot be read (the next pull refills it)."""
+    try:
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    except (OSError, ValueError):
+        return []
+
+
+def write_kept(path: Path, rows) -> None:
+    """Writes a feed's kept rows as JSON Lines, replacing the file whole (written beside it, then moved: never half a file)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".part")
+    tmp.write_text("".join(json.dumps(r, ensure_ascii=False, separators=(",", ":")) + "\n" for r in rows), encoding="utf-8")
+    tmp.replace(path)
+
+
 class History:
-    """A time series' kept points under the feed's folder (history/<name>.json), merged with what a pull brought: a revised point
-    replaces the old one, the oldest beyond `keep` (points, or a floor key) are dropped. Written at once: a failed run merges again."""
+    """A time series' kept points under the feed's folder (history/<name>.jsonl, a point a line), merged with what a pull brought: a
+    revised point replaces the old one, the oldest beyond `keep` (points, or a floor key) are dropped. Written at once: a failed run
+    merges again."""
 
     def __init__(self, run, name: str):
-        self.file = Path(run.folder) / "history" / f"{name}.json"
+        self.file = Path(run.folder) / "history" / f"{name}.jsonl"
 
     def merge(self, points: dict, keep: int | None = None, floor: str | None = None, key: str = "DATE") -> list[dict]:
-        try:
-            kept = {h[key]: h["VALUE"] for h in json.loads(self.file.read_text(encoding="utf-8"))}
-        except (OSError, ValueError):
-            kept = {}
+        kept = {h[key]: h["VALUE"] for h in read_kept(self.file)}
         kept.update({k: v for k, v in points.items() if v is not None})
         hist = [{key: k, "VALUE": v} for k, v in sorted(kept.items()) if floor is None or k >= floor]
         if keep:
             hist = hist[-keep:]
-        self.file.parent.mkdir(parents=True, exist_ok=True)
-        self.file.write_text(json.dumps(hist, separators=(",", ":")) + "\n", encoding="utf-8")
+        write_kept(self.file, hist)
         return hist
 
 

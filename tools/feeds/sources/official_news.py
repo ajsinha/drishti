@@ -15,7 +15,7 @@
 """The official-news feed (config/feeds/official-news.yaml): press releases and notices of central banks, regulators and governments from their own RSS 2.0, RSS 1.0
 (RDF) and Atom feeds and the US Federal Register's API, for the official-news pack; each publisher's
 terms are its entry in the feed file's options.sources. Incremental: a
-release already kept (by its link) is not added again; the kept releases (history/<publisher>.json) are trimmed to `keep-days` and
+release already kept (by its link) is not added again; the kept releases (history/<publisher>.jsonl) are trimmed to `keep-days` and
 `keep-per-source`; no new release anywhere, nothing emitted. Emits the press-release kind (one a release: title, date, link, summary)
 and the release-source kind (one a publisher: its terms and its latest releases with their links)."""
 from __future__ import annotations
@@ -30,7 +30,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 from feedbase import Feed, FeedError
-from publicsector import provenance, sources, tolerate
+from publicsector import provenance, read_kept, sources, tolerate, write_kept
 
 _TAG = re.compile(r"<[^>]+>")
 _COMMENT = re.compile(r"<!--.*?-->", re.S)
@@ -134,11 +134,8 @@ class OfficialNewsFeed(Feed):
             except (FeedError, ET.ParseError, ValueError) as e:
                 failed.append(f"{s['id']}: {e}")
                 run.log(f"  {s['id']}: {e} (its kept releases are shown)")
-            hist = Path(run.folder) / "history" / f"{s['id']}.json"
-            try:
-                kept = {r["URL"]: r for r in json.loads(hist.read_text(encoding="utf-8"))}
-            except (OSError, ValueError):
-                kept = {}
+            hist = Path(run.folder) / "history" / f"{s['id']}.jsonl"
+            kept = {r["URL"]: r for r in read_kept(hist)}
             known = seen.setdefault(s["id"], [])
             for it in got or []:
                 rid = release_id(s["id"], it["link"])
@@ -149,8 +146,7 @@ class OfficialNewsFeed(Feed):
             del known[:-2000]
             mine = sorted((r for r in kept.values() if (r.get("PUBLISHED") or run.business_date.isoformat()) >= cutoff),
                           key=lambda r: r.get("PUBLISHED") or "", reverse=True)[:keep_n]
-            hist.parent.mkdir(parents=True, exist_ok=True)
-            hist.write_text(json.dumps(mine, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+            write_kept(hist, mine)
             releases += mine
             pubs.append(self._source(run, s, mine, got is None))
         if live and len(failed) == len(live):
