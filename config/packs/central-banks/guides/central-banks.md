@@ -15,7 +15,7 @@
 -->
 # The central-banks pack
 
-**Policy rates and the market series around them**, part of the **public-sector module** (the Public sector lens): FRED (the Federal
+**Policy rates and the market series around them**, part of the **economy module**'s public sector (the Public sector lens): FRED (the Federal
 Reserve Bank of St. Louis) for the Federal Reserve and US markets, the Bank of Canada's Valet API for Canada. The central-banks feed pulls
 them daily into the `worldlake` lake.
 
@@ -182,7 +182,7 @@ python3 tools/drishti.py feed run central-banks               # pull today's dat
 python3 tools/drishti.py feed run central-banks --load inbox  # the same through the data inbox (FRED needs DRISHTI_FRED_API_KEY; without it the Bank of Canada still loads)
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run central-banks` on Linux and macOS, `.\tools\windows\feed.ps1 run central-banks` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run central-banks` on Linux and macOS, `.\tools\windows\feed.ps1 run central-banks` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

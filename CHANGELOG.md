@@ -56,12 +56,12 @@
 
 ### The public sector: the first new domain, government data and free news
 
-- **A module from day one** (PUBLIC_SECTOR_GUIDE.md): `publicsector`, content only, declared in the core server's manifest with ten
-  functions (`WDI`, `WDIS`, `CBANK`, `CBSER`, `NSTAT`, `OECD`, `OECDS`, `PRESS`, `PREL`, `GDELT`), its switch
-  `config/modules/publicsector.yaml`, the **Public sector** lens (and its edition file `config/editions/publicsector.yaml`: Home cards,
-  menus, Help) and the free news (`PRESS`, `PREL`, `GDELT`) in the World lens. Off: its packs, connectors, functions and lens are gone,
-  banking and the World lens untouched (`PublicSectorModuleOffTest`, `PublicSectorModuleOnTest`).
-- **Six packs** with `domain: publicsector`, each with its kinds, data contracts (worked examples under docs/contracts/samples), README,
+- **Part of the economy module, with a lens of its own** (PUBLIC_SECTOR_GUIDE.md; one module, the owner's decision of 2026-11-07): ten
+  functions (`WDI`, `WDIS`, `CBANK`, `CBSER`, `NSTAT`, `OECD`, `OECDS`, `PRESS`, `PREL`, `GDELT`) in the economy's manifest, the
+  **Public sector** lens, and the free news (`PRESS`, `PREL`, `GDELT`) in the World lens. The economy module off: all its packs,
+  connectors, functions and both lenses are gone, banking, capital markets and GLEIF untouched (`EconomyModuleOffTest`,
+  `PublicSectorLensTest`).
+- **Six packs** with `domain: economy`, each with its kinds, data contracts (worked examples under docs/contracts/samples), README,
   pack guide and Sutras built from the UI kit only: **world-development** (World Bank WDI: a country's profile with the world map by GDP
   per head, every indicator's history), **central-banks** (FRED and the Bank of Canada: a bank's policy rate, its last move and its
   series), **national-statistics** (Statistics Canada by vector), **oecd** (the members' leading indicator, unemployment, inflation and

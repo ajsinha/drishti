@@ -9,7 +9,7 @@
 
 World Bank, World Development Indicators.
 
-The public-sector module's world-development pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake.
+The economy module's public-sector world-development pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake.
 
 | | |
 |---|---|
@@ -28,7 +28,7 @@ python3 tools/drishti.py feed run world-development                # pull today,
 python3 tools/drishti.py feed status world-development             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [FEEDS_GUIDE.md](../../docs/guides/FEEDS_GUIDE.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
 
 ## Data contract
 

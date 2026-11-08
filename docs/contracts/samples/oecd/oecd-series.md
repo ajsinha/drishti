@@ -27,7 +27,7 @@ One OECD measure of one member by period: the history, the latest value and the 
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `SERIES_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
-| Promoted columns | none (the whole record is kept as `doc`) |
+| Promoted columns | `ISO3`, `COUNTRY_NAME`, `MEASURE`, `TITLE`, `UNIT`, `LATEST`, `LATEST_PERIOD` |
 | Vector fields | none |
 | Partitioned by | `business_date` |
 | A day's file | no committed files |
@@ -126,5 +126,5 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 
 - Data contract: [OECDS in the oecd pack's contracts](../../packs/oecd.md#oecds-oecd-series-oecd-series) (`config/packs/oecd/contracts/oecd-series.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../../guides/PUBLIC_SECTOR_GUIDE.md)
-- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

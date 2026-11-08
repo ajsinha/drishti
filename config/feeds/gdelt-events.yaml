@@ -20,7 +20,7 @@
 # options is the default selection.
 feed: gdelt-events
 title: GDELT, events and tone by country
-description: 'The public-sector module''s gdelt-events pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): What the world''s news reported about each country yesterday,
+description: 'The economy module''s public-sector gdelt-events pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): What the world''s news reported about each country yesterday,
   from the GDELT Project''s daily event files: the number of events whose first actor is the country, how widely they were reported, their average tone
   and Goldstein scale, the share of conflict and of cooperation, the events by CAMEO category, thirty days of history and the most-mentioned stories, each
   a link to the original. The world map is shaded by tone. Free and open with a citation (GDELT terms). Filled daily by the gdelt-events feed into the newslake
@@ -51,7 +51,7 @@ datasets:
     kind: event-country
     key: EVENT_COUNTRY_ID
 options:
-  module: publicsector
+  module: economy
   sources:
   - id: gdelt
     name: GDELT 1.0 daily event files

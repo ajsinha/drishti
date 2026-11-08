@@ -9,7 +9,7 @@
 
 Statistics Canada (Web Data Service).
 
-The public-sector module's national-statistics pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Statistics Canada's headline statistics by vector from its Web Data Service (Statistics Canada Open Licence): the consumer price index, unemployment, monthly GDP, population, housing starts and the overnight money market rate. Each series shows its latest value, the change on the period and on the year, and its history. Filled daily by the national-statistics feed into the worldlake lake; more vectors are a line each in the feed's YAML.
+The economy module's public-sector national-statistics pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Statistics Canada's headline statistics by vector from its Web Data Service (Statistics Canada Open Licence): the consumer price index, unemployment, monthly GDP, population, housing starts and the overnight money market rate. Each series shows its latest value, the change on the period and on the year, and its history. Filled daily by the national-statistics feed into the worldlake lake; more vectors are a line each in the feed's YAML.
 
 | | |
 |---|---|
@@ -28,7 +28,7 @@ python3 tools/drishti.py feed run national-statistics                # pull toda
 python3 tools/drishti.py feed status national-statistics             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [FEEDS_GUIDE.md](../../docs/guides/FEEDS_GUIDE.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
 
 ## Data contract
 

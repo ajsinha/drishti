@@ -169,7 +169,7 @@ python3 tools/drishti.py feed run oecd               # pull today's data and loa
 python3 tools/drishti.py feed run oecd --load inbox  # the same through the data inbox: the server loads it
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run oecd` on Linux and macOS, `.\tools\windows\feed.ps1 run oecd` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run oecd` on Linux and macOS, `.\tools\windows\feed.ps1 run oecd` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

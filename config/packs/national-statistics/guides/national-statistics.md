@@ -15,7 +15,7 @@
 -->
 # The national-statistics pack
 
-**Statistics Canada's headline statistics** by vector from its Web Data Service, part of the **public-sector module** (the Public sector
+**Statistics Canada's headline statistics** by vector from its Web Data Service, part of the **economy module**'s public sector (the Public sector
 lens). The national-statistics feed pulls them daily (after the 08:30 Eastern releases) into the `worldlake` lake.
 
 | Type | Shows |
@@ -115,7 +115,7 @@ python3 tools/drishti.py feed run national-statistics               # pull today
 python3 tools/drishti.py feed run national-statistics --load inbox  # the same through the data inbox: the server loads it
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run national-statistics` on Linux and macOS, `.\tools\windows\feed.ps1 run national-statistics` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run national-statistics` on Linux and macOS, `.\tools\windows\feed.ps1 run national-statistics` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

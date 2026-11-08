@@ -19,13 +19,15 @@ modules:
   - id: economy
     domain: economy
     title: Economy and markets
-    about: "Public economic and public-sector data: the IMF and World Bank economy, elections and governments, news and markets"
+    about: "Public economic and public-sector data: the IMF and World Bank economy, elections and governments, news and markets; development indicators, central banks, national statistics, the OECD, official press releases and GDELT world events"
     code: false
     feature: economy
     enabled: true
     contributes:
-      packs: [world-economy, news-and-markets]
-      functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE]
+      # the public sector's packs (the owner, 2026-11-07: one module; their own lens, Public sector): each filled daily by its feed
+      packs: [world-economy, news-and-markets, world-development, central-banks, national-statistics, oecd, official-news, gdelt-events]
+      functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE,
+        WDI, WDIS, CBANK, CBSER, NSTAT, OECD, OECDS, PRESS, PREL, GDELT]
   # capital markets (the owner, 2026-11-07): listed companies, funds, and the market data's prices, curves and volatilities as functions.
   # The market-data pack itself stays the banking module's while the banking engines read it (it moves here when banking can require this
   # module); its commands are this module's functions already. GLEIF's legal entities are core reference data (every domain uses them).
@@ -39,15 +41,3 @@ modules:
     contributes:
       packs: [us-equities, funds]
       functions: [USEQ, IDX, SIC, EDGAR, FILING, FACT, PXH, FUND, HELD, TRACK, CRV, REPO, FX, FXF, FXV, IRV, CPV, EQ, EQX, DIV, EQV, CDS, INF, INFC, CMD, CMDC, CMDV, FIX, BND, CORR, CORRC, EQB]
-  # the public sector (the owner, 2026-11-07): the first new domain, a module from day one. Government and official data and free news,
-  # each pack filled daily by its feed (config/feeds/<pack>.yaml) into worldlake or newslake (docs/guides/PUBLIC_SECTOR_GUIDE.md).
-  - id: publicsector
-    domain: publicsector
-    title: Public sector
-    about: "Government and official data and free news: World Bank development indicators, central banks' rates (FRED, Bank of Canada), Statistics Canada, the OECD, official press releases and GDELT world events"
-    code: false
-    feature: publicsector
-    enabled: true
-    contributes:
-      packs: [world-development, central-banks, national-statistics, oecd, official-news, gdelt-events]
-      functions: [WDI, WDIS, CBANK, CBSER, NSTAT, OECD, OECDS, PRESS, PREL, GDELT]

@@ -17,8 +17,8 @@
 
 Where is Canada on GDP per head, when did the Bank of Canada last move, what did Statistics Canada release this morning, which OECD
 member has the highest inflation, what did the Fed publish this week, and how did the world's news read the United States yesterday? The
-**public-sector module** answers from public sources, each pulled every day by its own feed. In this tutorial you turn the module's packs
-on, run the six feeds, open each screen, schedule the feeds daily and change what one of them pulls. Each step shows the UI, the command
+**public sector** (part of the economy module, with its own Public sector lens) answers from public sources, each pulled every day by
+its own feed. In this tutorial you turn its packs on, run the six feeds, open each screen, schedule the feeds daily and change what one of them pulls. Each step shows the UI, the command
 line and the YAML behind it. Every option, source and licence is in the one reference,
 [PUBLIC_SECTOR_GUIDE.md](../guides/PUBLIC_SECTOR_GUIDE.md); each step ends with its section.
 
@@ -47,8 +47,8 @@ documents; the feeds write into your own `worldlake` and `newslake`. Every sourc
 
 ## Step 1 · Turn the packs on and see the module
 
-**UI.** Admin → Modules lists **publicsector** (*Public sector*, content only) as on, with its six packs, its ten functions and the
-Public sector lens. Start the server with the packs loaded:
+**UI.** Admin → Modules lists **economy** (*Economy and markets*, content only) as on, with its packs (the six public-sector ones
+among them), its functions and the World and Public sector lenses. Start the server with the packs loaded:
 
 ```bash
 DRISHTI_PACKS=core,world-economy,world-development,central-banks,national-statistics,oecd,official-news,gdelt-events \
@@ -58,13 +58,13 @@ DRISHTI_PACKS=core,world-economy,world-development,central-banks,national-statis
 **Command line.**
 
 ```bash
-curl -s "$DRISHTI_SERVER/api/v1/modules" -H "Authorization: Bearer $DRISHTI_TOKEN" | python3 -m json.tool | grep -A3 publicsector
+curl -s "$DRISHTI_SERVER/api/v1/modules" -H "Authorization: Bearer $DRISHTI_TOKEN" | python3 -m json.tool | grep -B2 -A6 '"publicsector"'      # the Public sector lens
 ```
 
-**YAML.** The site's switch, `config/modules/publicsector.yaml`:
+**YAML.** The public sector is part of the economy module; the site's switch is `config/modules/economy.yaml`:
 
 ```yaml
-enabled: true            # false, then a restart: the packs, functions and lens are gone; banking is untouched
+enabled: true            # false, then a restart: the economy's packs, functions and lenses are gone; banking is untouched
 ```
 
 More: [PUBLIC_SECTOR_GUIDE.md sections 1 and 2](../guides/PUBLIC_SECTOR_GUIDE.md#1-the-module-its-lens-and-its-functions).

@@ -169,7 +169,7 @@ def test_without_the_fred_key_the_bank_of_canada_still_loads(tmp_path, monkeypat
 def test_every_source_records_its_licence_and_terms():
     for feed in NAMES:
         spec = FB.load_spec(feed)
-        assert spec.options["module"] == "publicsector" and spec.lake in ("worldlake", "newslake") and spec.load == "java", feed
+        assert spec.options["module"] == "economy" and spec.lake in ("worldlake", "newslake") and spec.load == "java", feed
         for src in spec.options["sources"]:
             assert src["licence"] and src["terms"].startswith("https://") and src["attribution"], (feed, src.get("id"))
             assert isinstance(src["internal-only"], bool) and src["redistributable"] is (not src["internal-only"]), (feed, src["id"])

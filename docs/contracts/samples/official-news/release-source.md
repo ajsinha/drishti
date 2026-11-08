@@ -27,7 +27,7 @@ One publisher of official news (a central bank, a regulator, a government): its 
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `SOURCE_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
-| Promoted columns | none (the whole record is kept as `doc`) |
+| Promoted columns | `NAME`, `PUBLISHER_TYPE`, `COUNTRY`, `INTERNAL_ONLY`, `RELEASES`, `LAST_PUBLISHED` |
 | Vector fields | none |
 | Partitioned by | `business_date` |
 | A day's file | no committed files |
@@ -144,5 +144,5 @@ Fields no record above has, found by reading all 9 rows, with how many rows fill
 
 - Data contract: [PRESS in the official-news pack's contracts](../../packs/official-news.md#press-official-press-releases-release-source) (`config/packs/official-news/contracts/release-source.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../../guides/PUBLIC_SECTOR_GUIDE.md)
-- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

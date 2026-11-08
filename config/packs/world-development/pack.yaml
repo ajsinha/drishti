@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# World development · the public-sector module's World Bank pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Development Indicators by
+# World development · the economy module's public-sector World Bank pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Development Indicators by
 # country and year, filled daily by the world-development feed (config/feeds/world-development.yaml) into the worldlake lake.
 pack: world-development
-domain: publicsector   # the public-sector module's (docs/architecture/ACCESS_MODEL.md): it loads only while that module is on
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
 version: 1.0.0
 code: WDEV             # typed alone, opens this pack's overview
 title: World development

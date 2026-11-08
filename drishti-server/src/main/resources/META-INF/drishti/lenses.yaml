@@ -21,11 +21,11 @@ lenses:
     home: home/world_landing.html
     functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE, USEQ, IDX, SIC, EDGAR, FILING,
       FACT, PXH, LEI, LEIG, LEIR, LEIC, LEIM, FUND, HELD, TRACK,
-      PRESS, PREL, GDELT]               # the public sector's free news (official press releases, GDELT world events), on while that module is
-  # the public-sector module's lens: development indicators, central banks, national statistics, the OECD, official news, world events
+      PRESS, PREL, GDELT]               # the public sector's free news (official press releases, GDELT world events)
+  # the economy module's Public sector lens: development indicators, central banks, national statistics, the OECD, official news, world events
   - id: publicsector
     title: Public sector
-    modules: [publicsector]
+    modules: [economy]
     functions: [WDI, WDIS, CBANK, CBSER, NSTAT, OECD, OECDS, PRESS, PREL, GDELT]
   - id: cio
     title: Chief information officer

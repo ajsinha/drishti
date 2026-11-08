@@ -16,7 +16,7 @@
 # The official-news pack
 
 **Free official news**: the press releases and notices of central banks, regulators and governments from their own RSS, Atom and API
-feeds, part of the **public-sector module** (the Public sector lens; the World lens shows them too). The official-news feed pulls them
+feeds, part of the **economy module**'s public sector (the Public sector lens; the World lens shows them too). The official-news feed pulls them
 daily into the `newslake` lake; each release is a link to the original.
 
 | Type | Shows |
@@ -172,7 +172,7 @@ python3 tools/drishti.py feed run official-news               # pull today's dat
 python3 tools/drishti.py feed run official-news --load inbox  # the same through the data inbox: the server loads it
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run official-news` on Linux and macOS, `.\tools\windows\feed.ps1 run official-news` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run official-news` on Linux and macOS, `.\tools\windows\feed.ps1 run official-news` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

@@ -22,7 +22,7 @@
 # options is the default selection.
 feed: national-statistics
 title: Statistics Canada (Web Data Service)
-description: 'The public-sector module''s national-statistics pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Statistics Canada''s headline statistics by vector
+description: 'The economy module''s public-sector national-statistics pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Statistics Canada''s headline statistics by vector
   from its Web Data Service (Statistics Canada Open Licence): the consumer price index, unemployment, monthly GDP, population, housing starts and the overnight
   money market rate. Each series shows its latest value, the change on the period and on the year, and its history. Filled daily by the national-statistics
   feed into the worldlake lake; more vectors are a line each in the feed''s YAML.'
@@ -52,7 +52,7 @@ datasets:
     kind: statistics-series
     key: SERIES_ID
 options:
-  module: publicsector
+  module: economy
   sources:
   - id: statcan
     name: Statistics Canada Web Data Service (WDS)

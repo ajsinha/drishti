@@ -326,7 +326,7 @@ def files() -> dict[Path, str]:
     return out
 
 
-# the public-sector module's packs (docs/guides/PUBLIC_SECTOR_GUIDE.md), whose guides end with the generated block
+# the public-sector packs (economy module; docs/guides/PUBLIC_SECTOR_GUIDE.md), whose guides end with the generated block
 PUBLIC_SECTOR = ("world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events")
 
 

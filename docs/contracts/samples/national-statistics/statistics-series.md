@@ -27,7 +27,7 @@ One Statistics Canada series by vector: the latest value, the change on the peri
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `SERIES_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
-| Promoted columns | none (the whole record is kept as `doc`) |
+| Promoted columns | `VECTOR`, `TITLE`, `TABLE_ID`, `TOPIC`, `UNIT`, `LATEST`, `LATEST_PERIOD`, `CHANGE_PCT`, `YEAR_ON_YEAR_PCT`, `RELEASED` |
 | Vector fields | none |
 | Partitioned by | `business_date` |
 | A day's file | no committed files |
@@ -139,5 +139,5 @@ Fields no record above has, found by reading all 7 rows, with how many rows fill
 
 - Data contract: [NSTAT in the national-statistics pack's contracts](../../packs/national-statistics.md#nstat-national-statistic-statistics-series) (`config/packs/national-statistics/contracts/statistics-series.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../../guides/PUBLIC_SECTOR_GUIDE.md)
-- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

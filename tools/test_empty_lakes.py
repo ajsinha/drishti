@@ -63,11 +63,11 @@ def test_worldlake_and_newslake_hold_exactly_the_public_sector_tables():
 def test_each_public_sector_pack_reads_its_lake_and_its_feed_loads_it():
     for pack, lake in PUBLIC_SECTOR.items():
         m = yaml.safe_load((ROOT / "config" / "packs" / pack / "pack.yaml").read_text(encoding="utf-8"))
-        assert m["domain"] == "publicsector", pack
+        assert m["domain"] == "economy", pack
         lakes = {(c.get("settings") or {}).get("lake") for c in (m.get("connectors") or {}).values()}
         assert lakes == {lake}, pack
         feed = yaml.safe_load((ROOT / "config" / "feeds" / f"{pack}.yaml").read_text(encoding="utf-8"))
-        assert feed["lake"] == lake and feed["options"]["module"] == "publicsector", pack
+        assert feed["lake"] == lake and feed["options"]["module"] == "economy", pack
         assert {d["pack"] for d in feed["datasets"].values()} == {pack}, pack
         assert {d["kind"] for d in feed["datasets"].values()} == set(m["kinds"]), pack
 

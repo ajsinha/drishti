@@ -15,8 +15,8 @@
 -->
 # Public sector: government data and free news
 
-The **public-sector module** is Drishti's first domain after banking: government and official data, and free news, from public sources.
-Six packs, each filled every day by its own feed, show a country's development, a central bank's rates, a national statistic, an OECD
+The **public sector** is government and official data, and free news, from public sources: part of the **economy module**, with a lens
+of its own (Public sector). Six packs, each filled every day by its own feed, show a country's development, a central bank's rates, a national statistic, an OECD
 member's cycle, the press releases of central banks, regulators and governments, and what the world's news said about a country yesterday.
 Every source's licence is recorded; what may not be redistributed is marked internal only.
 
@@ -40,14 +40,14 @@ feed) is the [External data guide](EXTERNAL_DATA.md); every column of every kind
 
 | Part | What it is |
 |---|---|
-| Module | `publicsector`: content only (packs, functions, a lens; no Java of its own), declared in the core server's manifest (`drishti-server/src/main/resources/META-INF/drishti/module.yaml`) and switched by `config/modules/publicsector.yaml` ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md)) |
-| Lens | **Public sector** (`publicsector`, in `META-INF/drishti/lenses.yaml`): its ten functions; offered only while the module is on. Its edition file, `config/editions/publicsector.yaml`, gives the lens its Home cards, menus and Help (Drishti Public Sector) |
-| World lens | carries the module's free news too: `PRESS`, `PREL` and `GDELT` (on while the module is on) |
-| Packs | `world-development`, `central-banks`, `national-statistics`, `oecd`, `official-news`, `gdelt-events`, each with `domain: publicsector` |
+| Module | `economy`: content only (packs, functions, lenses; no Java of its own), declared in the core server's manifest (`drishti-server/src/main/resources/META-INF/drishti/module.yaml`) beside world-economy and news-and-markets, and switched by `config/modules/economy.yaml` ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md)). One module (the owner, 2026-11-07): the public sector is not licensed or switched apart from the economy |
+| Lens | **Public sector** (`publicsector`, in `META-INF/drishti/lenses.yaml`): the ten functions below; offered while the economy module is on |
+| World lens | carries the free news too: `PRESS`, `PREL` and `GDELT` |
+| Packs | `world-development`, `central-banks`, `national-statistics`, `oecd`, `official-news`, `gdelt-events`, each with `domain: economy` |
 | Lakes | `worldlake` (development, central banks, statistics, OECD) and `newslake` (official news, GDELT): their lake files ship with exactly these packs' tables |
 | Feeds | one a pack, `config/feeds/<pack>.yaml`, daily, on drishti-feeds (section 5) |
 
-The functions (command words), each owned by the module and gated by the access registry:
+The functions (command words), each owned by the economy module and gated by the access registry:
 
 | Word | Kind | Opens |
 |---|---|---|
@@ -66,21 +66,21 @@ The packs' own codes open their overviews: `WDEV`, `CBNK`, `STCAN`, `OECDP`, `ON
 
 ## 2. Turn it on, or off
 
-The module is **on** as shipped (installed with the core server, licensed by the development licence, `enabled: true`). Its packs load
-when the server's pack list names them:
+The economy module is **on** as shipped (installed with the core server, licensed by the development licence, `enabled: true`). The
+public-sector packs load when the server's pack list names them:
 
 ```bash
 DRISHTI_PACKS=core,world-economy,world-development,central-banks,national-statistics,oecd,official-news,gdelt-events \
   java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-or as an edition or a lens: `DRISHTI_EDITION=publicsector` (the whole instance is Drishti Public Sector), or `drishti.lenses:
-risk,world,publicsector` (a person opens the lens from Views; [EDITIONS.md](../admin/EDITIONS.md)).
+and a person opens the Public sector lens from Views (`drishti.lenses: risk,world,publicsector`).
 
-**Off** (Admin → Modules, or `config/modules/publicsector.yaml` `enabled: false`, or `DRISHTI_MODULES_PUBLICSECTOR_ENABLED=false`, then a
-restart): its packs and connectors do not load, its ten functions are gone everywhere (command line, type-ahead, search, menus, the APIs
-behind them, `404 DRS-1026`), and the Public sector lens is not offered. Banking and the economy module are unaffected; the World lens
-keeps its own functions. The guarantee is `PublicSectorModuleOffTest` (and `PublicSectorModuleOnTest` for the module on).
+**Off** is the economy module off (Admin → Modules, or `config/modules/economy.yaml` `enabled: false`, or
+`DRISHTI_MODULES_ECONOMY_ENABLED=false`, then a restart): all eight of its packs and their connectors do not load, its functions (these
+ten and the economy's own) are gone everywhere (command line, type-ahead, search, menus, the APIs behind them, `404 DRS-1026`), and the
+World and Public sector lenses are not offered. Banking, capital markets and GLEIF are unaffected. A single function is switched off on
+Admin → Commands. The guarantees are `EconomyModuleOffTest` and `PublicSectorLensTest`.
 
 ## 3. The screens
 
@@ -183,7 +183,7 @@ and the next run asks again from the same point.
 
 Each feed file records every source's licence and terms in `options.sources` (`licence`, `terms`, `redistributable`, `internal-only`,
 `why-internal`, `attribution`) and a summary in `licence:`; every document repeats its source's in `PROVENANCE`. The reading of each
-site's terms is the owner's of 2026-11-07; a legal review may widen or narrow a flag in the feed file.
+site's terms is the owner's, confirmed on 2026-11-07.
 
 | Source | Licence and terms | Redistributable | Internal only |
 |---|---|---|---|
@@ -235,7 +235,7 @@ date 2026-11-06 with a narrower selection, `selection.yaml`):
 |---|---|
 | `tools/feeds/tests/test_publicsector.py` | each feed's documents against their contracts (fields, types, keys, patterns); the files, manifest and the inbox's `.ready`; the second run of the day finds nothing new; the runner and its ledger; no FRED key: the Bank of Canada still loads; one publisher down never fails the others; every source's licence; internal-only releases; the parsers (RSS 2.0, RSS 1.0, Atom, debug text before the XML, SDMX-JSON, GDELT's columns); the samples and READMEs current |
 | `tools/test_empty_lakes.py` | `worldlake` and `newslake` hold exactly these packs' tables, only these packs read them, the other named lakes ship empty |
-| `PublicSectorModuleOffTest`, `PublicSectorModuleOnTest` (drishti-banking) | module off: packs, connectors, functions and lens gone, banking and the World lens unaffected; on: all there |
+| `EconomyModuleOffTest`, `PublicSectorLensTest` (drishti-banking) | the economy module off: its eight packs, connectors, functions and both lenses gone, banking, capital markets and GLEIF unaffected; on: the six packs, their connectors, functions and the lens there |
 | `drishti-console/tests/test_public_sector_browser.py` | the feeds' recorded output loaded into a scratch worldlake and newslake, a real server and console: each screen drawn with its map, chart, table and links |
 | `tools/test_readmes.py`, `tools/test_pack_guides.py`, `tools/contracts.py check` | the READMEs, the pack guides and the contracts against the packs and their data |
 

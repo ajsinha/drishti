@@ -9,7 +9,7 @@
 
 OECD Data Explorer (SDMX).
 
-The public-sector module's oecd pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): The OECD members' business cycle, jobs, prices and growth from the OECD Data Explorer's SDMX API: the composite leading indicator, the harmonised unemployment rate, consumer price inflation and real GDP growth. A country's page shows the latest of each measure and the members on a map shaded by inflation; each series shows its monthly or quarterly history. Filled daily by the oecd feed into the worldlake lake.
+The economy module's public-sector oecd pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): The OECD members' business cycle, jobs, prices and growth from the OECD Data Explorer's SDMX API: the composite leading indicator, the harmonised unemployment rate, consumer price inflation and real GDP growth. A country's page shows the latest of each measure and the members on a map shaded by inflation; each series shows its monthly or quarterly history. Filled daily by the oecd feed into the worldlake lake.
 
 | | |
 |---|---|
@@ -28,7 +28,7 @@ python3 tools/drishti.py feed run oecd                # pull today, write data/d
 python3 tools/drishti.py feed status oecd             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [FEEDS_GUIDE.md](../../docs/guides/FEEDS_GUIDE.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
 
 ## Data contract
 

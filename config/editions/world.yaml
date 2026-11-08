@@ -22,7 +22,7 @@ title: Drishti World
 description: Economies, markets, companies, legal entities and funds, from public data, in one place
 
 packs:
-  enabled: [world-economy, news-and-markets, us-equities, gleif, funds, official-news, gdelt-events]   # no link of these packs leads into core or market-data; the last two: the public-sector module's free news (loaded while that module is on)
+  enabled: [world-economy, news-and-markets, us-equities, gleif, funds, official-news, gdelt-events]   # no link of these packs leads into core or market-data; the last two: the public sector's free news
   allow-only: true                       # Admin -> Packs, Deploy archive and the registry refuse any other pack (DRS-1017)
 
 commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)
@@ -37,7 +37,7 @@ commands:                                # what people may type and see (command
      LEI, LEIG, LEIR, LEIC, LEIM,
     # funds and ETFs: funds, who holds a company, the funds that track an index
      FUND, HELD, TRACK,
-    # free news of the public-sector module: official press releases, world events (GDELT)
+    # the public sector's free news: official press releases, world events (GDELT)
      PRESS, PREL, GDELT]
   words: { BI: on, RUPAKA: off, FORM: on, FUNC: on, WHAT: on, DATAMAP: on, DATA: on, VAR: off, EXP: off, SMAT: off, PLAY: off }
 

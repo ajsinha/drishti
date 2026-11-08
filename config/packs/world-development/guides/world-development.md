@@ -15,7 +15,7 @@
 -->
 # The world-development pack
 
-World Bank **World Development Indicators** by country and year, part of the **public-sector module** (the Public sector lens). The
+World Bank **World Development Indicators** by country and year, part of the **economy module**'s public sector (the Public sector lens). The
 world-development feed pulls them daily from the World Bank's API into the `worldlake` lake; nothing is read live and nothing large is
 committed.
 
@@ -177,7 +177,7 @@ python3 tools/drishti.py feed run world-development --load inbox        # the sa
 python3 tools/drishti.py feed run world-development --since 2026-01-01  # pull again although the World Bank has not changed (after editing the indicators)
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run world-development` on Linux and macOS, `.\tools\windows\feed.ps1 run world-development` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run world-development` on Linux and macOS, `.\tools\windows\feed.ps1 run world-development` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

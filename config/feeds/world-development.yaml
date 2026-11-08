@@ -19,7 +19,7 @@
 # options is the default selection.
 feed: world-development
 title: World Bank, World Development Indicators
-description: 'The public-sector module''s world-development pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Bank World Development Indicators by country
+description: 'The economy module''s public-sector world-development pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Bank World Development Indicators by country
   and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government
   debt for every economy, from the World Bank''s API (CC BY 4.0). A country''s profile shows the latest of each indicator and the world map shaded by GDP
   per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake.'
@@ -53,7 +53,7 @@ datasets:
     kind: development-series
     key: SERIES_ID
 options:
-  module: publicsector
+  module: economy
   sources:
   - id: wdi
     name: World Bank World Development Indicators API (v2)

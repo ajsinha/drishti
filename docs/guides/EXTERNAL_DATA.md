@@ -1172,7 +1172,7 @@ snapshot against what it derives. The guide is [FUNDS_GUIDE.md](FUNDS_GUIDE.md) 
 
 ### The public-sector packs
 
-Six packs of the public-sector module, each filled every day by its own feed into the bank's own `worldlake` or `newslake`; nothing is
+Six public-sector packs of the economy module, each filled every day by its own feed into the bank's own `worldlake` or `newslake`; nothing is
 committed but a few sample documents (from the feeds' recorded fixtures). The guide is [PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md)
 (the default selection of each source, the licences, changing what is pulled); the tutorial is
 [Tutorial 46](../tutorials/46-public-sector-data.md).

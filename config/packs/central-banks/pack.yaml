@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Central banks · the public-sector module's policy-rate pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): policy rates and market series from
+# Central banks · the economy module's public-sector policy-rate pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): policy rates and market series from
 # FRED and the Bank of Canada's Valet API, filled daily by the central-banks feed (config/feeds/central-banks.yaml) into worldlake.
 pack: central-banks
-domain: publicsector
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
 version: 1.0.0
 code: CBNK
 title: Central banks

@@ -15,7 +15,7 @@
 -->
 # The gdelt-events pack
 
-**What the world's news reported about each country**, from the GDELT Project's daily event files, part of the **public-sector module**
+**What the world's news reported about each country**, from the GDELT Project's daily event files, part of the **economy module**'s public sector
 (the Public sector lens; the World lens shows it too). The gdelt-events feed reads each day's file once (about 7 MB zipped, streamed,
 never kept), reduces it to per-country aggregates and loads them into the `newslake` lake.
 
@@ -131,7 +131,7 @@ python3 tools/drishti.py feed run gdelt-events                     # pull today'
 python3 tools/drishti.py feed run gdelt-events --since 2026-11-01  # read the GDELT days from this date (a run reads at most a week by default)
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run gdelt-events` on Linux and macOS, `.\tools\windows\feed.ps1 run gdelt-events` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run gdelt-events` on Linux and macOS, `.\tools\windows\feed.ps1 run gdelt-events` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

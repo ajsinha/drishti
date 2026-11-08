@@ -4234,7 +4234,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 ### Modules: `config/modules/*.yaml`
 
-One file per module (banking, capitalmarkets, economy, publicsector), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch only; the module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), [OPERATIONS.md](OPERATIONS.md)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed, licensed and enabled; a change takes effect at the next start.
+One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch only; the module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), [OPERATIONS.md](OPERATIONS.md)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed, licensed and enabled; a change takes effect at the next start.
 
 #### A module's switch: `config/modules/<module>.yaml` (docs/architecture/ACCESS_MODEL.md)
 
@@ -5396,7 +5396,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `pack` | string | none |  | the pack | Required: the pack's name, equal to its folder's name (else the pack is refused) | live |  | admin |
 | `version` | string | `0` |  | the pack | X.Y.Z, shown in About, Admin -&gt; Health and Admin -&gt; Packs and checked by deploys and the registry | live |  | admin |
 | `code` | string | `none` |  | the pack | The pack's short code: typed alone it opens the pack's overview (/p/&lt;pack&gt;); must not equal a mnemonic | live |  | admin |
-| `domain` | string | `core` |  | the pack | The domain it serves (core, banking, economy, capitalmarkets, publicsector): a pack of a domain loads only while a module of that domain is on (docs/architecture/ACCESS\_MODEL.md) | live |  | admin |
+| `domain` | string | `core` |  | the pack | The domain it serves (core, banking, economy, capitalmarkets): a pack of a domain loads only while a module of that domain is on (docs/architecture/ACCESS\_MODEL.md) | live |  | admin |
 | `title` | string | `the pack's name` |  | the pack | Its name in menus, help and admin pages | live |  | admin |
 | `description` | string | empty |  | the pack | One paragraph for About and the help centre | live |  | admin |
 | `sample` | boolean | `false` |  | the pack | A demonstration pack: drishti.packs.samples can hide it from business users | live |  | admin |

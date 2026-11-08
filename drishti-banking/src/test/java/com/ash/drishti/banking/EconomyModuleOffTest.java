@@ -37,20 +37,27 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The public-sector module off (a content module: the world-development, central-banks, national-statistics, oecd, official-news and
- * gdelt-events packs, their functions and the Public sector lens; docs/guides/PUBLIC_SECTOR_GUIDE.md): its packs and their connectors do
- * not load, its functions are off and its lens is not offered, while the banking module (its beans, engines and API) and the economy
- * module (the World lens, which keeps its own functions) are unaffected.
+ * The economy module off (a content module: the world-economy and news-and-markets packs and the public sector's six packs, their
+ * functions, and the World and Public sector lenses; docs/guides/PUBLIC_SECTOR_GUIDE.md): every one of its packs and their connectors
+ * is gone, its functions are off and neither lens is offered, while the banking module (its beans, engines and API), capital markets
+ * and the core reference data (GLEIF) are unaffected.
  */
-@SpringBootTest(properties = {"drishti.modules.publicsector.enabled=false", "drishti.rachana.hot-reload=false",
-        "drishti.packs.enabled=core,market-data,world-economy,world-development,central-banks,national-statistics,oecd,official-news,gdelt-events",
+@SpringBootTest(properties = {"drishti.modules.economy.enabled=false", "drishti.rachana.hot-reload=false",
+        "drishti.packs.enabled=core,market-data,gleif,us-equities,world-economy,news-and-markets,world-development,central-banks,"
+                + "national-statistics,oecd,official-news,gdelt-events",
         "drishti.sources.plugins.demo.enabled=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
-class PublicSectorModuleOffTest {
+class EconomyModuleOffTest {
 
-    static final List<String> PACKS = List.of("world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events");
+    static final List<String> PUBLIC_SECTOR = List.of("world-development", "central-banks", "national-statistics", "oecd", "official-news",
+            "gdelt-events");
+    static final List<String> PACKS = new ArrayList<>(List.of("world-economy", "news-and-markets"));
+
+    static {
+        PACKS.addAll(PUBLIC_SECTOR);
+    }
 
     @Autowired AccessRegistry registry;
     @Autowired PackRegistry packs;
@@ -60,15 +67,15 @@ class PublicSectorModuleOffTest {
     @Autowired TokenVerifier tokens;
 
     @Test
-    void itsPacksAndConnectorsAreGone() throws Exception {
-        assertThat(registry.moduleOn("publicsector")).isFalse();
+    void everyPackOfItAndItsConnectorsAreGone() throws Exception {
+        assertThat(registry.moduleOn("economy")).isFalse();
         List<String> loaded = packs.packs().stream().map(Pack::name).toList();
-        assertThat(loaded).contains("core", "market-data", "world-economy").doesNotContainAnyElementsOf(PACKS);
+        assertThat(loaded).contains("core", "market-data", "gleif", "us-equities").doesNotContainAnyElementsOf(PACKS);
         List<String> theirs = new ArrayList<>();
         ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
-        for (String p : PACKS) {
+        for (String p : PUBLIC_SECTOR) {
             JsonNode pack = yaml.readTree(Path.of(System.getProperty("drishti.packs.dir", "../config/packs"), p, "pack.yaml").toFile());
-            assertThat(pack.path("domain").asText()).as(p).isEqualTo("publicsector");
+            assertThat(pack.path("domain").asText()).as(p).isEqualTo("economy");
             pack.path("connectors").fieldNames().forEachRemaining(theirs::add);
         }
         assertThat(theirs).hasSize(6);
@@ -76,15 +83,15 @@ class PublicSectorModuleOffTest {
     }
 
     @Test
-    void itsFunctionsAndItsLensAreGoneAndTheOthersStay() {
-        for (String w : List.of("WDI", "WDIS", "CBANK", "CBSER", "NSTAT", "OECD", "OECDS", "PRESS", "PREL", "GDELT")) {
+    void itsFunctionsAndBothLensesAreGoneAndTheOthersStay() {
+        for (String w : List.of("ECON", "NEWS", "WDI", "WDIS", "CBANK", "CBSER", "NSTAT", "OECD", "OECDS", "PRESS", "PREL", "GDELT")) {
             assertThat(registry.functionOn(w)).as(w).isFalse();
         }
-        for (String w : List.of("VAR", "EXP", "TRD", "ECON", "NEWS", "BI")) {
+        for (String w : List.of("VAR", "EXP", "TRD", "USEQ", "LEI", "BI")) {
             assertThat(registry.functionOn(w)).as(w).isTrue();
         }
         assertThat(registry.lensOffered("publicsector")).isFalse();
-        assertThat(registry.lensOffered("world")).isTrue();
+        assertThat(registry.lensOffered("world")).isFalse();
         assertThat(registry.lensOffered("risk")).isTrue();
     }
 
