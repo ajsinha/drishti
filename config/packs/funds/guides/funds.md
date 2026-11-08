@@ -559,7 +559,7 @@ python3 tools/drishti.py feed run funds --snapshot --offline                # th
 python3 tools/drishti.py feed run funds -- --scope FUNDS:300,HOLDINGS:1000  # a widened pull of more funds and holdings
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run funds` on Linux and macOS, `.\tools\windows\feed.ps1 run funds` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run funds` on Linux and macOS, `.\tools\windows\feed.ps1 run funds` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

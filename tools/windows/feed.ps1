@@ -21,7 +21,7 @@
   when it exists, else DRISHTI_PYTHON or python. Python and Java only: no other program is needed. Every argument is passed on
   unchanged: list, run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--dry-run] [--snapshot], status,
   schedule --windows. The exit code is the command's (0 ok, 1 failed, 2 refused, 3 locked, 4 partial), so Task Scheduler's
-  "Last Run Result" shows it. Guide: docs\guides\FEEDS_GUIDE.md.
+  "Last Run Result" shows it. Guide: docs\guides\EXTERNAL_DATA.md.
 
 .EXAMPLE
   .\tools\windows\feed.ps1 list

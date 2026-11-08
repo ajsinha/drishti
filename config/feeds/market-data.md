@@ -28,7 +28,7 @@ python3 tools/drishti.py feed run market-data                # pull today, write
 python3 tools/drishti.py feed status market-data             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [FEEDS_GUIDE.md](../../docs/guides/FEEDS_GUIDE.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
 
 ## Data contract
 

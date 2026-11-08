@@ -357,7 +357,7 @@ python3 tools/drishti.py feed run news-and-markets --set server=http://localhost
 python3 tools/drishti.py feed run news-and-markets --snapshot --internal-ok             # replace the committed snapshot in data/testdata instead (internal demos only), then lake demo
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run news-and-markets` on Linux and macOS, `.\tools\windows\feed.ps1 run news-and-markets` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run news-and-markets` on Linux and macOS, `.\tools\windows\feed.ps1 run news-and-markets` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Generators
 

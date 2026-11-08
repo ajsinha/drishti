@@ -503,7 +503,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 
-# ---------------------------------------------------------------- the feed (config/feeds/gleif.yaml; docs/guides/FEEDS_GUIDE.md)
+# ---------------------------------------------------------------- the feed (config/feeds/gleif.yaml; docs/guides/EXTERNAL_DATA.md)
 
 import packscript as PS  # noqa: E402
 

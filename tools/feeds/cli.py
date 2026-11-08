@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""feed: pull external data and load it into the lakes (drishti-feeds; docs/guides/FEEDS_GUIDE.md).
+"""feed: pull external data and load it into the lakes (drishti-feeds; docs/guides/EXTERNAL_DATA.md).
 
     python3 tools/drishti.py feed list                                    every feed: lake, route, schedule, licence
     python3 tools/drishti.py feed run gleif                               pull today, write data/datafeeds/gleif/<date>/, load (java)

@@ -1000,7 +1000,7 @@ python3 tools/drishti.py feed run world-economy -- --no-imf               # the 
 python3 tools/drishti.py feed run world-economy --snapshot --internal-ok  # refresh the committed dataset and pack instead (they carry IMF data: internal demos only)
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run world-economy` on Linux and macOS, `.\tools\windows\feed.ps1 run world-economy` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([FEEDS_GUIDE.md](../../../../docs/guides/FEEDS_GUIDE.md)).
+The same through the wrappers: `tools/feeds/feed.sh run world-economy` on Linux and macOS, `.\tools\windows\feed.ps1 run world-economy` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md)).
 
 ### Into the lake, checking, offline
 

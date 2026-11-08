@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # config/feeds/news-and-markets.yaml: listed companies' quotes (Yahoo Finance) and headlines (Google News). INTERNAL USE ONLY: Yahoo's
-# terms forbid redistributing its prices and the headlines belong to their publishers (docs/guides/FEEDS_GUIDE.md).
+# terms forbid redistributing its prices and the headlines belong to their publishers (docs/guides/EXTERNAL_DATA.md).
 #   python3 tools/drishti.py feed run news-and-markets                        pull through a scratch server, load into newslake
 #   python3 tools/drishti.py feed run news-and-markets --set server=http://localhost:18480    through a running server instead
 #   python3 tools/drishti.py feed run news-and-markets --snapshot --internal-ok    replace the committed offline snapshot (data/testdata)

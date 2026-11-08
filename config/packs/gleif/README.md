@@ -307,7 +307,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The data feed `gleif` (config/feeds/gleif.yaml) pulls `lei-entity`, `lei-relationship`, `lei-mapping`: `python3 tools/drishti.py feed run gleif` fetches them daily into `data/datafeeds/gleif/<date>/` and loads them into the lake `referencelake`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `gleif` (config/feeds/gleif.yaml) pulls `lei-entity`, `lei-relationship`, `lei-mapping`: `python3 tools/drishti.py feed run gleif` fetches them daily into `data/datafeeds/gleif/<date>/` and loads them into the lake `referencelake`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/EXTERNAL_DATA.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/gleif/make.py`; its `--check` fails when the committed files differ from what it would write.
 

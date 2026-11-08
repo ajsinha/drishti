@@ -94,5 +94,5 @@ None: all 15 rows were read, and every field any of them has is in the record ab
 ## See also
 
 - Data contract: [TOPIC in the news-and-markets pack's contracts](../../packs/news-and-markets.md#topic-news-topic-news-topic) (`config/packs/news-and-markets/contracts/news-topic.contract.yaml`, the source of every meaning on this page).
-- [External data: where it comes from and the feed that pulls it](../../../guides/EXTERNAL_DATA.md)
+- [External data feeds](../../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../../connectors/DEMO_DATA.md#the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](../README.md).

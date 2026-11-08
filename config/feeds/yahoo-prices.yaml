@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # config/feeds/yahoo-prices.yaml: daily prices of the US equities companies from Yahoo Finance. INTERNAL USE ONLY: Yahoo's terms forbid
-# redistributing its prices, so this feed is off as shipped and nothing it pulls is ever committed (docs/guides/FEEDS_GUIDE.md).
+# redistributing its prices, so this feed is off as shipped and nothing it pulls is ever committed (docs/guides/EXTERNAL_DATA.md).
 #   python3 tools/drishti.py feed run yahoo-prices --set server=http://localhost:18480
 # The prices are read through a running server's us-equities-prices connector (DRISHTI_US_EQUITIES_PRICES_ENABLED=true).
 feed: yahoo-prices

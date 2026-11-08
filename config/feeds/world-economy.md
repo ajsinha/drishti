@@ -7,13 +7,13 @@
 
 # The world-economy feed
 
-World economy (World Bank, IMF, UNDP, CIA World Factbook).
+World economy (IMF forecasts, UNDP, CIA World Factbook, World Bank governance indicators).
 
-Economies, macro indicators, labour markets, fiscal positions and forecasts of every country and region (World Bank WDI and WGI, IMF World Economic Outlook, UNDP Human Development Index), and jurisdictions, parties, office holders and elections (CIA World Factbook).
+Forecasts and fiscal figures of every country (IMF World Economic Outlook), human development (UNDP), governance (World Bank WGI) and jurisdictions, parties, office holders and elections (CIA World Factbook). The World Bank's development indicators (WDI) come from the world-development feed.
 
 | | |
 |---|---|
-| Source | World Bank, IMF, UNDP, CIA World Factbook (https://data.worldbank.org) |
+| Source | IMF, UNDP, CIA World Factbook, World Bank (WGI) (https://data.worldbank.org) |
 | Licence | [World Bank CC BY 4.0; IMF terms (no commercial reuse without permission); UNDP CC BY 3.0 IGO; Factbook public domain](https://www.imf.org/en/About/copyright-and-terms): **internal only** |
 | Attribution | World Bank World Development Indicators (CC BY 4.0); IMF World Economic Outlook; UNDP Human Development Reports; CIA World Factbook |
 | Notes | internal only because of the IMF forecasts; a build with -- --no-imf carries only redistributable data |
@@ -30,166 +30,9 @@ python3 tools/drishti.py feed status world-economy             # its last runs
 python3 tools/drishti.py feed run world-economy --snapshot     # refresh the committed demo snapshot instead (with --internal-ok)
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [FEEDS_GUIDE.md](../../docs/guides/FEEDS_GUIDE.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
 
 ## Data contract
-
-### economy
-
-Pack `world-economy`, kind `economy` (Economy), table `economy`; files `data/datafeeds/world-economy/<date>/economy.<date>.jsonl.gz`, each row under the run's business date.
-
-| Field | Type | Presence | Meaning |
-|---|---|---|---|
-| `ECONOMY_ID` | id | required | The record's id (the business key) |
-| `NAME` | text | required | The country or territory, with the name the World Bank uses. |
-| `ISO3` | text | required | The country's ISO 3166 alpha-3 code. |
-| `REGION_NAME` | text | required | The World Bank geographic region the economy belongs to. |
-| `INCOME_NAME` | text | required | The World Bank income group (High income, Upper middle income, Lower middle income, Low income). |
-| `CURRENCY` | text | optional | The currency code as the source gives it. |
-| `CAPITAL` | text | optional | The capital city's name, from the CIA World Factbook. |
-| `YEAR` | text | required | The year of the headline figures. |
-| `GDP_USD_BN` | amount | required | The value of all goods and services produced in the economy in a year, in current US dollars at market exchange rates. |
-| `GDP_PER_CAPITA` | amount | required | GDP divided by the mid-year population, in current US dollars. |
-| `GROWTH` | rate | optional | The yearly change of GDP after removing inflation, so it measures the growth of output rather than of prices. |
-| `INFLATION` | rate | optional | The yearly change of consumer prices (the consumer price index). |
-| `UNEMPLOYMENT` | amount | optional | The share of the labour force without work but available for and seeking employment (ILO modelled estimate). |
-| `DEBT_TO_GDP` | amount | optional | General government gross debt as a share of a year's GDP (IMF), the usual measure of how heavy public debt is. |
-| `CURRENT_ACCOUNT` | amount | optional | Net exports of goods and services plus net income and transfers, as a share of GDP. |
-| `RESERVES_USD_BN` | amount | optional | Total reserves including gold (World Bank). |
-| `TRADE_SHARE` | rate | optional | Trade (exports plus imports) as a share of GDP (World Bank). |
-| `POPULATION_M` | amount | required | Total mid-year population of the latest year, in millions (World Bank SP.POP.TOTL divided by one million). |
-| `GROWTH_PATH` | record list | required | Real GDP growth by year, one element per year: YEAR and GROWTH in % a year (World Bank). |
-| `GDP_PATH` | record list | required | GDP in current US dollars by year, one element per year: YEAR and GDP in USD billions (World Bank). |
-| `SECTORS` | record list | required | Value added by sector, one element per sector (Agriculture, Industry, Services): SECTOR and SHARE in % of GDP (World Bank). |
-| `REGION_GROUP` | id | required | The economy's World Bank region: an id of the computed country-group kind (ECG-<World Bank region code>, ECG-LCN). |
-| `INCOME_GROUP` | id | required | The economy's World Bank income group: an id of the computed country-group kind (ECG-HIC, ECG-UMC, ECG-LMC, ECG-LIC). |
-| `LABOUR` | id | optional | The economy's labour market: an id of the labour-market kind (LABR-<ISO3>); absent when the World Bank has no labour data. |
-| `FISCAL` | id | optional | The economy's public finances: an id of the fiscal-position kind (FISC-<ISO3>). |
-| `OUTLOOK` | id | optional | The economy's IMF outlook: an id of the economic-forecast kind (FCST-<ISO3>-WEO). |
-| `INDICATORS` | id list | required | The economy's macro indicators: ids of the macro-indicator kind (MACRO-<ISO3>-<indicator>). |
-| `PROVENANCE` | record | required | Where the record comes from, one object: SOURCE (World Bank WDI, IMF WEO, CIA World Factbook), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |
-
-One row (JSON Lines: one object a line; the values are the contract's examples):
-
-```json
-{"ECONOMY_ID": "ECON-ABW", "NAME": "Aruba", "ISO3": "ABW", "REGION_NAME": "Latin America & Caribbean", "INCOME_NAME": "High income", "CURRENCY": "AFA", "CAPITAL": "Oranjestad", "YEAR": "2024", "GDP_USD_BN": 4.16759, "GDP_PER_CAPITA": 38590.6, "GROWTH": 6.81078, "INFLATION": 4.25746, "UNEMPLOYMENT": 13.351, "DEBT_TO_GDP": 48, "CURRENT_ACCOUNT": 5.19137, "RESERVES_USD_BN": 2.23143, "TRADE_SHARE": 164.139, "POPULATION_M": 0.108785, "REGION_GROUP": "ECG-LCN", "INCOME_GROUP": "ECG-HIC", "LABOUR": "LABR-AFG", "FISCAL": "FISC-ABW", "OUTLOOK": "FCST-ABW-WEO"}
-```
-
-The contract: `config/packs/world-economy/contracts/economy.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
-
-### macro-indicator
-
-Pack `world-economy`, kind `macro-indicator` (Macro indicator), table `macro-indicator`; files `data/datafeeds/world-economy/<date>/macro-indicator.<date>.jsonl.gz`, each row under the run's business date.
-
-| Field | Type | Presence | Meaning |
-|---|---|---|---|
-| `INDICATOR_ID` | id | required | The record's id (the business key) |
-| `NAME` | text | required | The economy and the statistic, as one name. |
-| `INDICATOR` | text | required | The indicator's name as the World Bank publishes it (Agriculture, value added). |
-| `COUNTRY_NAME` | text | required | The economy's name (Aruba). |
-| `UNIT` | text | required | What the value measures: a rate, a share of GDP, a level in US dollars. |
-| `DEFINITION` | text | required | The source's definition of the indicator. |
-| `LATEST` | amount | required | The most recent published value of the statistic, in the unit shown. |
-| `LATEST_YEAR` | text | required | The calendar year the latest value refers to. |
-| `PREVIOUS` | amount | optional | The value one year before the latest observation, where published. |
-| `PREVIOUS_YEAR` | text | optional | The year of the previous value the change is measured from. |
-| `RANK` | integer | optional | The position of the economy among all economies with a value from 2022 or later, highest value first. |
-| `OF_COUNT` | integer | optional | How many economies the rank is among. |
-| `HISTORY` | record list | required | The indicator by year, oldest first, one element per year: YEAR (text) and VALUE in the unit of FACTS.UNIT. |
-| `FACTS` | record | required | About the indicator, one object: INDICATOR, UNIT (% of GDP, t CO2e …), LATEST_YEAR, RANK ("34 of 182", highest value first) and WORLD_BANK_CODE. |
-| `ECONOMY` | id | required | The economy: an id of the economy kind (ECON-<ISO3>). |
-| `PROVENANCE` | record | required | Where the record comes from, one object: SOURCE (World Bank WDI), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |
-
-One row (JSON Lines: one object a line; the values are the contract's examples):
-
-```json
-{"INDICATOR_ID": "MACRO-ABW-AGRICULTURE", "NAME": "Aruba · Agriculture, value added", "INDICATOR": "Agriculture, value added", "COUNTRY_NAME": "Aruba", "UNIT": "% of GDP", "DEFINITION": "Value added of agriculture, forestry and fishing as a share…", "LATEST": 0.0395295, "LATEST_YEAR": "2023", "PREVIOUS": 0.0341749, "PREVIOUS_YEAR": "2022", "RANK": 193, "OF_COUNT": 196, "ECONOMY": "ECON-ABW"}
-```
-
-The contract: `config/packs/world-economy/contracts/macro-indicator.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
-
-### economic-forecast
-
-Pack `world-economy`, kind `economic-forecast` (Economic forecast), table `economic-forecast`; files `data/datafeeds/world-economy/<date>/economic-forecast.<date>.jsonl.gz`, each row under the run's business date.
-
-IMF WEO forecasts (internal use only).
-
-| Field | Type | Presence | Meaning |
-|---|---|---|---|
-| `FORECAST_ID` | id | required | The record's id (the business key) |
-| `ECONOMY_NAME` | text | required | The country or territory the figures describe. |
-| `VINTAGE` | text | required | The IMF World Economic Outlook edition the figures come from; the IMF revises them twice a year. |
-| `GROWTH_2027` | rate | optional | The IMF projection of real GDP growth in 2027. |
-| `INFLATION_2027` | rate | optional | The IMF projection of average consumer-price inflation in 2027. |
-| `DEBT_2030` | amount | optional | The IMF projection of general government gross debt as a share of GDP in 2030. |
-| `PROJECTIONS` | record list | required | The IMF World Economic Outlook series by year, outturn then projection, one element per year: YEAR, BASIS (outturn or projection), GROWTH (NGDP_RPCH), INFLATION (PCPIPCH), UNEMPLOYMENT (LUR), CURRENT_ACCOUNT (BCA_NGDPD), DEBT (GGXWDG_NGDP), NET_LENDING (GGXCNL_NGDP) and GDP (NGDPD). |
-| `PATH` | record list | required | Real GDP growth by year, outturn then projection, one element per year: YEAR and GROWTH in % a year (IMF NGDP_RPCH). |
-| `ECONOMY` | id | required | The economy forecast: an id of the economy kind (ECON-<ISO 3166-1 alpha-3>). |
-| `PROVENANCE` | record | required | Where the record comes from, one object: SOURCE (IMF World Economic Outlook, DataMapper), DATASET (the WEO edition), RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |
-
-One row (JSON Lines: one object a line; the values are the contract's examples):
-
-```json
-{"FORECAST_ID": "FCST-ABW-WEO", "ECONOMY_NAME": "Aruba", "VINTAGE": "IMF World Economic Outlook, April 2026 edition", "GROWTH_2027": 2, "INFLATION_2027": 2, "DEBT_2030": 50.3, "ECONOMY": "ECON-ABW"}
-```
-
-The contract: `config/packs/world-economy/contracts/economic-forecast.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
-
-### labour-market
-
-Pack `world-economy`, kind `labour-market` (Labour market), table `labour-market`; files `data/datafeeds/world-economy/<date>/labour-market.<date>.jsonl.gz`, each row under the run's business date.
-
-| Field | Type | Presence | Meaning |
-|---|---|---|---|
-| `LABOUR_ID` | id | required | The record's id (the business key) |
-| `ECONOMY_NAME` | text | required | The country or territory the figures describe. |
-| `YEAR` | text | required | The year of the figures. |
-| `UNEMPLOYMENT` | amount | required | The share of the labour force without work but available for and seeking employment. |
-| `PARTICIPATION` | amount | required | The share of people aged 15 and over who work or look for work. |
-| `YOUTH_UNEMPLOYMENT` | amount | required | The unemployment rate of 15 to 24 year-olds. |
-| `EMPLOYMENT_RATIO` | rate | required | The share of people aged 15 and over who are employed. |
-| `FEMALE_PARTICIPATION` | amount | required | The labour force participation rate of women aged 15 and over. |
-| `VULNERABLE` | amount | required | Vulnerable employment (own-account and contributing family workers) as a share of total employment (World Bank). |
-| `UNEMPLOYMENT_PATH` | record list | required | The unemployment rate by year, one element per year: YEAR and RATE in % of the labour force (World Bank, ILO modelled estimate). |
-| `BY_SECTOR` | record list | required | Jobs and output by sector, one element per sector (Agriculture, Industry, Services): EMPLOYMENT_SHARE in % of employment and VALUE_ADDED_SHARE in % of GDP. |
-| `ECONOMY` | id | required | The economy: an id of the economy kind (ECON-<ISO3>). |
-| `PROVENANCE` | record | required | Where the record comes from, one object: SOURCE (World Bank WDI), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |
-
-One row (JSON Lines: one object a line; the values are the contract's examples):
-
-```json
-{"LABOUR_ID": "LABR-AFG", "ECONOMY_NAME": "Afghanistan", "YEAR": "2025", "UNEMPLOYMENT": 13.351, "PARTICIPATION": 37.457, "YOUTH_UNEMPLOYMENT": 16.785, "EMPLOYMENT_RATIO": 32.457, "FEMALE_PARTICIPATION": 5.086, "VULNERABLE": 81.7702, "ECONOMY": "ECON-AFG"}
-```
-
-The contract: `config/packs/world-economy/contracts/labour-market.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
-
-### fiscal-position
-
-Pack `world-economy`, kind `fiscal-position` (Fiscal position), table `fiscal-position`; files `data/datafeeds/world-economy/<date>/fiscal-position.<date>.jsonl.gz`, each row under the run's business date.
-
-| Field | Type | Presence | Meaning |
-|---|---|---|---|
-| `FISCAL_ID` | id | required | The record's id (the business key) |
-| `ECONOMY_NAME` | text | required | The country or territory the figures describe. |
-| `YEAR` | text | optional | The year of the figures. |
-| `DEBT` | amount | optional | All liabilities of the general government that require payment of interest or principal, as a share of GDP (IMF). |
-| `BALANCE` | amount | required | General government revenue minus total expenditure, as a share of GDP (IMF). |
-| `REVENUE` | amount | optional | Central government revenue excluding grants, as a share of GDP (World Bank). |
-| `SPENDING` | amount | optional | Central government cash payments for operating activities, as a share of GDP (World Bank). |
-| `MILITARY` | amount | optional | All spending on the armed forces, as a share of GDP (SIPRI via the World Bank). |
-| `RATIOS` | record list | required | Central-government ratios of the latest year, one element per item (Tax revenue, Revenue (excl. grants), Expense, Military expenditure): ITEM and VALUE in % of GDP (World Bank); empty when none is published. |
-| `DEBT_PATH` | record list | required | General government gross debt by year, one element per year: YEAR and DEBT in % of GDP (IMF WEO GGXWDG_NGDP; later years are projections). |
-| `BALANCE_PATH` | record list | required | General government net lending (+) or borrowing (−) by year, one element per year: YEAR and BALANCE in % of GDP (IMF WEO GGXCNL_NGDP; later years are projections). |
-| `ECONOMY` | id | required | The economy: an id of the economy kind (ECON-<ISO3>). |
-| `PROVENANCE` | record | required | Where the record comes from, one object: SOURCE (World Bank WDI, IMF WEO), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL. |
-
-One row (JSON Lines: one object a line; the values are the contract's examples):
-
-```json
-{"FISCAL_ID": "FISC-ABW", "ECONOMY_NAME": "Aruba", "YEAR": "2025", "DEBT": 63.6, "BALANCE": 1.9, "REVENUE": 13.0393, "SPENDING": 39.2201, "MILITARY": 1.82793, "ECONOMY": "ECON-ABW"}
-```
-
-The contract: `config/packs/world-economy/contracts/fiscal-position.contract.yaml` ([world-economy](../../docs/contracts/packs/world-economy.md)).
 
 ### region-economy
 

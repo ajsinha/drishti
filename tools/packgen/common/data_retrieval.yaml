@@ -104,7 +104,7 @@ external:
   gdelt: { title: "GDELT 1.0 daily event files", url: "https://data.gdeltproject.org/events/", licence: "GDELT terms: free for any use with a citation",
            internal: false, feed: gdelt-events }
 
-# The data feeds (config/feeds/<feed>.yaml, docs/guides/FEEDS_GUIDE.md): the examples each guide shows besides status, --dry-run and a
+# The data feeds (config/feeds/<feed>.yaml, docs/guides/EXTERNAL_DATA.md): the examples each guide shows besides status, --dry-run and a
 # plain run (pull and load into the feed's lake). Arguments after -- go to the source.
 feeds:
   world-economy:
